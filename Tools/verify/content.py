@@ -693,18 +693,20 @@ def check_siege(lid, chapter_id, level, block):
     empty = dict(id=lid, chapter=chapter_id, w=0, h=0, par=0, budget=0,
                  gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
                  crossings=0, briars=0, mode='siege',
-                 ways=0, greedy=-1, nodes=0, goals=0, deal='')
+                 ways=0, greedy=-1, nodes=0, goals=0, cogs=0, deal='')
 
     w, h = block.get('width') or 0, block.get('height') or 0
 
     try:
-        grid = proto.Grid(block.get('rows') or [], w, h, rules.LETTERS)
+        # `CELLS` rather than `LETTERS`: a field may stand a cog on it, and a cog is not a
+        # colour (`SiegeLayout.Cells`).
+        grid = proto.Grid(block.get('rows') or [], w, h, rules.CELLS)
     except ValueError as bad:
         errors.append("%s: %s" % (lid, bad))
         return empty
 
     layout = rules.Layout(grid, block.get('gems'), block.get('wards'), block.get('waves'),
-                          block.get('boss'))
+                          block.get('boss'), block.get('cogs') or 0)
 
     if layout.fault:
         errors.append("%s: %s" % (lid, layout.fault))
@@ -753,6 +755,12 @@ def check_siege(lid, chapter_id, level, block):
         warnings.append("%s: everything coming down this hill wears one colour, so which ward to "
                         "feed is not a question" % lid)
 
+    # Invariant 5d asked of the cogs. A cog asks the player which colour to spend on the *line*
+    # rather than on the hill, and a short line is a short question.
+    if layout.cogs and read['wards'] < 3:
+        warnings.append("%s: this siege deals cogs onto a line of %d wards, so which one an "
+                        "upgrade goes to is very nearly a coin toss" % (lid, read['wards']))
+
     if not read['threat']:
         warnings.append("%s: no wave here holds enough raiders to bring a ward down even if every "
                         "one of them reached the line, so this siege cannot be lost" % lid)
@@ -768,6 +776,7 @@ def check_siege(lid, chapter_id, level, block):
                 budget=0, gold=gold, silver=silver, lamps=0, sources=0, fragile=0,
                 bound=0, crossings=0, briars=0, mode='siege',
                 ways=0, greedy=-1, nodes=0, goals=layout.raiders,
+                cogs=layout.cogs,
                 deal=layout.deal, siege=read)
 
 
@@ -2682,10 +2691,12 @@ def main():
                 # A siege counts what is coming and what is holding it, because neither is a
                 # reading of a search - there is no search (see check_siege).
                 r = c['siege']
-                boss = f", a '{r['boss']}' warlord last" if r.get('boss') else ""
+                boss = (f", a '{r['boss']}' {r['kind']} ({r['spell']}) last"
+                        if r.get('boss') else "")
+                cogs = f", cogs {r['cogs']}%" if r.get('cogs') else ""
                 held = (f"{r['raiders']} raider(s) in {r['waves']} wave(s) "
                         f"({r['brutes']} brute(s), {r['colours']} colour(s)){boss} against "
-                        f"{r['wards']} ward(s), deals {c['deal']}")
+                        f"{r['wards']} ward(s){cogs}, deals {c['deal']}")
             elif c['mode'] in MODE_RULES:
                 held = f"{c['goals']} to finish"
             else:

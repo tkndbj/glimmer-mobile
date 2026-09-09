@@ -118,5 +118,22 @@ namespace GlimmerGrove.Content
         /// </summary>
         public virtual IReadOnlyList<AssetPipeline.AssetRequest> Art
             => System.Array.Empty<AssetPipeline.AssetRequest>();
+
+        /// <summary>
+        /// The same question asked with the chapter in hand: art this chapter's boards draw.
+        ///
+        /// <para>
+        /// <b>Because <see cref="Art"/> bounds memory by how much content a <em>mode</em> has
+        /// rather than by what is on the screen</b>, which is invariant 7b's rule stopping one
+        /// step short. It cost nothing while a mode's cast was a fixed set every level drew from;
+        /// it stops being free the moment a mode has objects only *some* chapters send — four
+        /// bosses are twelve flipbooks, and a chapter that sends one of them was paying for four.
+        /// </para>
+        /// <para>
+        /// The default answers <see cref="Art"/>, so every mode that does not care is unchanged
+        /// and a mode may narrow when it has something to narrow on.
+        /// </para>
+        /// </summary>
+        public virtual IReadOnlyList<AssetPipeline.AssetRequest> ArtFor(ChapterBody chapter) => Art;
     }
 }

@@ -108,6 +108,87 @@ namespace GlimmerGrove.EditorTools
             new Shot { Key = "spell", Prefab = "vfx_Projectile_Sun01", Hue = Pal.Foxglove };
 
         /// <summary>
+        /// What the <em>overlord</em> throws: the same class of magic, hotter and in a colour
+        /// nothing else on the board wears.
+        ///
+        /// <para>
+        /// <b>Magenta rather than violet</b>, which is the other <c>Pal</c> entry that is none of
+        /// the board's four colours — so it can no more be read as a colour rule than the
+        /// warlord's violet can, and the two cannot be confused with each other either. The
+        /// overlord is the last thing in the chapter and it stands on the same hill a warlord did
+        /// five levels earlier, so its spell has to be told apart at a glance.
+        /// </para>
+        /// <para>
+        /// <b>And it is a sun rather than the two things tried first, which is a framing fact
+        /// rather than a taste.</b> A spiral and a spinning disc were both baked and both looked
+        /// at: the spiral came out as invariant 37k's sliver again — a thin ribbon framed square,
+        /// eighty per cent empty, drawn on the board as a magenta thread — and the disc is drawn
+        /// nearly black by the pack, so a hue rotation toward magenta had nothing to work on and it
+        /// arrived as a dot. What frames well here is what already framed well for the warlord: a
+        /// round, bright, self-lit thing. The difference between the two is carried by the colour,
+        /// by the size the view draws it at, and by the impact — which is where a player is looking
+        /// when it lands.
+        /// </para>
+        /// </summary>
+        static readonly Shot Omen =
+            new Shot { Key = "omen", Prefab = "vfx_Projectile_Sun03", Hue = Pal.Bloom };
+
+        /// <summary>
+        /// What the <em>blightcaller</em> throws: a spectral wisp that puts a ward out.
+        ///
+        /// <para>
+        /// <b>Teal, which is the third <c>Pal</c> entry that is none of the board's four</b> — and
+        /// it is the closest of the four spell colours to a gem (the blue one), which is exactly
+        /// why this is the one drawn as something <em>trailing</em> rather than as anything round.
+        /// A player never has to tell a teal orb from a blue one, because there is no teal orb:
+        /// there is a wisp that drifts across the hill and a bolt that goes straight up it.
+        /// </para>
+        /// <para>
+        /// <b>An electric orb rather than the wisp it was first baked as</b>, and that is invariant
+        /// 37k's sliver for the third time in this file. A hex <em>ought</em> to trail — it
+        /// smothers rather than detonating, and a drifting shape says that — so the first cut was
+        /// a ghostly comet, and it came out of the bake as a hairline: eight pixels of thread in a
+        /// 384-pixel square, drawn on the hill as a scratch. What frames well here is what framed
+        /// well for the warlord and the overlord, and what carries the "not an impact" reading
+        /// instead is the <em>path</em> — <c>SiegeView.Hurl</c> wafts a douse across the hill where
+        /// a smite and an omen go straight. The drawing says it, and the framing does not have to.
+        /// </para>
+        /// <para>
+        /// Six candidates were baked and looked at side by side, which is the only way to choose
+        /// one of these (<c>Siege Projectile Contact Sheet</c>): two ghostly wisps and a firework
+        /// framed as slivers, one orb was a dot, and this one is a compact cyan sphere with a white
+        /// crackling core that holds its size for every frame of its flight.
+        /// </para>
+        /// </summary>
+        static readonly Shot Hex =
+            new Shot { Key = "hex", Prefab = "vfx_Projectile_Orb18_blue", Hue = Pal.Aqua };
+
+        /// <summary>
+        /// What the <em>warbringer</em> roars with — and it is the one of the four that is not
+        /// thrown at anything.
+        ///
+        /// <para>
+        /// <b>Near-white, which is the fourth and last <c>Pal</c> entry that is none of the
+        /// board's four.</b> A roar is pressure rather than magic, so the one colour that says "no
+        /// colour" is the right one for it: nothing about a warbringer is a rule about which ward
+        /// is which, and a coloured shout would imply one.
+        /// </para>
+        /// <para>
+        /// <b>Wind rather than a projectile, and only two of its three reels are ever drawn.</b>
+        /// Its <em>impact</em> is a white ring that opens outward with shards in it, which is
+        /// exactly what a roar looks like, and its <em>muzzle</em> is a flat horizontal ellipse
+        /// spreading — which over a hill drawn in perspective reads as the same pressure crossing
+        /// the ground. <c>SiegeView.Roar</c> draws both, one upright and one flat, and the flight
+        /// reel is baked because <see cref="BakeSpell"/> bakes a set and is never asked for
+        /// (<c>SiegeMode.Bosses</c> does not load it). A roar is thrown at nothing, so it has no
+        /// flight.
+        /// </para>
+        /// </summary>
+        static readonly Shot Roar =
+            new Shot { Key = "roar", Prefab = "vfx_Projectile_Wind01", Hue = Pal.Radiance };
+
+
+        /// <summary>
         /// How much bigger the warlord's three reels are than a ward's.
         ///
         /// <b>A boss's spell is on screen about twice a minute against a bolt's twenty-eight a
@@ -337,12 +418,20 @@ namespace GlimmerGrove.EditorTools
                     BakeOne(stage.transform, cam, prefab, shot, made);
                 }
 
-                var warlord = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(Spell.Prefab));
+                // **One row per boss, and four rather than two.** A chapter shipped two bosses
+                // sharing a body reel and separated by a run-time hue; this is the same fault's
+                // other half — two spells that were one prefab at two colours. Each of the four
+                // now throws a different *kind* of object, which is invariant 33e's test asked of
+                // the thing the author places rather than of the thing the player makes.
+                foreach (var thrown in new[] { Hex, Spell, Roar, Omen })
+                {
+                    var warlord = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(thrown.Prefab));
 
-                if (warlord == null)
-                    Debug.LogWarning($"[siege shots] {Spell.Prefab} is not in this project — skipped.");
-                else
-                    BakeSpell(stage.transform, cam, warlord, made);
+                    if (warlord == null)
+                        Debug.LogWarning($"[siege shots] {thrown.Prefab} is not in this project — skipped.");
+                    else
+                        BakeSpell(stage.transform, cam, warlord, thrown, made);
+                }
 
                 if (made.Count == 0)
                 {
@@ -419,7 +508,7 @@ namespace GlimmerGrove.EditorTools
         /// and a <c>BakeOne</c> with six extra parameters would be the same method twice with the
         /// two versions interleaved.
         /// </summary>
-        static void BakeSpell(Transform stage, Camera cam, GameObject prefab,
+        static void BakeSpell(Transform stage, Camera cam, GameObject prefab, Shot thrown,
                               Dictionary<string, Book> made)
         {
             float warm = WarmFor(TrailOf(prefab));
@@ -435,22 +524,22 @@ namespace GlimmerGrove.EditorTools
             //
             // It also does the job invariant 33e asks of anything the boss brings: a slow round
             // orb is a different *kind* of object from four streaking comets, not a bigger one.
-            made[Spell.Key] =
-                Capture(stage, cam, prefab, Spell.Hue, SpellFrames, seconds,
+            made[thrown.Key] =
+                Capture(stage, cam, prefab, thrown.Hue, SpellFrames, seconds,
                         Mathf.Max(1f, Reflected(prefab, "speed", 30f)), warm,
                         .5f, SpellTall, SpellTall, SpellTall, 1f, 1f, comet: false);
 
             var muzzle = Companion(prefab, "muzzlePrefab");
             if (muzzle != null)
-                made[Spell.Key + "_muzzle"] =
-                    Capture(stage, cam, muzzle, Spell.Hue, SpellBurstFrames, Burst(muzzle), 0f, 0f,
+                made[thrown.Key + "_muzzle"] =
+                    Capture(stage, cam, muzzle, thrown.Hue, SpellBurstFrames, Burst(muzzle), 0f, 0f,
                             SiegeView.MuzzleAt, SpellBurst, NarrowestMuzzle, SpellBurst,
                             LeanestMuzzle, LongestMuzzle, comet: false);
 
             var hit = Companion(prefab, "hitPrefab");
             if (hit != null)
-                made[Spell.Key + "_hit"] =
-                    Capture(stage, cam, hit, Spell.Hue, SpellBurstFrames, Burst(hit), 0f, 0f,
+                made[thrown.Key + "_hit"] =
+                    Capture(stage, cam, hit, thrown.Hue, SpellBurstFrames, Burst(hit), 0f, 0f,
                             .5f, SpellBurst, SpellBurst, SpellBurst, 1f, 1f, comet: false);
         }
 

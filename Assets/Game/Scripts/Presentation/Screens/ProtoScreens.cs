@@ -418,6 +418,33 @@ namespace GlimmerGrove
         protected override Mechanic Friend => Mechanic.SiegeLine;
 
         /// <summary>
+        /// The two the shared screen declares, plus the one only some boards hold.
+        ///
+        /// <para>
+        /// <b>Declared as a fact about <em>this</em> board</b>, which is what
+        /// <c>ProtoScreen.Lessons</c> is for: a cog is dealt by the level rather than by the mode,
+        /// so a lesson about one on a level that deals none would be spent on something that is
+        /// not on the screen — and a lesson is shown once in a player's life. The first rung of
+        /// this chapter deals no cogs on purpose (invariant 24's argument about attention), so
+        /// this is genuinely per level and not per mode.
+        /// </para>
+        /// <para>
+        /// It goes up <b>after</b> the two the mode already teaches, because a cog is only worth
+        /// anything to somebody who already knows what a match is for.
+        /// </para>
+        /// </summary>
+        protected internal override void Lessons(List<Lesson> into)
+        {
+            base.Lessons(into);
+
+            var board = _siege != null ? _siege.Siege : null;
+            if (board == null || !board.Upgrades) return;
+
+            var anchor = _siege.WardAnchor;
+            if (anchor != null) into.Add(Lesson.At(Mechanic.SiegeCog, anchor));
+        }
+
+        /// <summary>
         /// A siege does not run out of board — its line falls while the hill is still full, which
         /// is a different piece of news and wants different words. See
         /// <c>ProtoScreen.StuckReason</c>.

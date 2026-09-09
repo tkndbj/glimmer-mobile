@@ -69,6 +69,19 @@ BLASTS = "craftpix-517297-explosions-sprite.zip"
 MONSTERS = "craftpix-net-205925-monster-v3-character-sprites.zip"
 BRUTES = "craftpix-net-894353-monster-v4-character-sprites.zip"
 
+#: The overlord: the greatest of the four, and the thing the chapter ends on.
+#:
+#: **A third pack, for the reason the second one exists.** Three creepers come from one pack so they
+#: read as three of a kind; the brute comes from another so a player can see at a glance it is not
+#: one of those; the warlord from a third at three times the size. An overlord has to clear that bar
+#: again - it is the last thing in the chapter and the one object a player spends a whole minute
+#: looking at - so it is a different alien in different armour, and it is drawn taller still.
+OVERLORDS = "craftpix-net-104412-alien-v5-enemy-sprite-set.zip"
+
+OVER_IDLE = "PNG/Alien02/Idle"
+OVER_WALK = "PNG/Alien02/Walk"
+OVER_ATTACK = "PNG/Alien02/Attack"
+
 #: The warlord, from a pack none of the creepers came from.
 #:
 #: **A different pack on purpose, and it is the same argument the brute already makes one step
@@ -77,6 +90,31 @@ BRUTES = "craftpix-net-894353-monster-v4-character-sprites.zip"
 #: those. A boss has to clear that bar by more: it is an armoured alien in a machine, against four
 #: round soft monsters, at three times the size.
 WARLORDS = "craftpix-net-515480-alien-v4-character-sprites.zip"
+
+#: The blightcaller: the first boss a chapter shows, and the only one that does not walk.
+#:
+#: **A floating eye, and the pack it comes from is the point.** Four bosses on one hill have to be
+#: told apart before any of them has done anything, and the two that shipped were an armoured alien
+#: and another armoured alien. This one hovers, has one enormous eye and a tail instead of legs -
+#: nothing else on this board is round, airborne or watching. Its `Fly` reel stands in for a walk,
+#: which is exactly right: it is the only thing here that arrives without touching the ground.
+BLIGHTCALLERS = "craftpix-net-248806-robots-v4-game-sprite-set.zip"
+
+BLIGHT_IDLE = "PNG/Char04/Idle"
+BLIGHT_WALK = "PNG/Char04/Fly"
+BLIGHT_ATTACK = "PNG/Char04/Attack"
+
+#: The warbringer: the one boss in this mode that reaches the line.
+#:
+#: **A slab**, and it is chosen for the silhouette rather than for the paint. Everything else on
+#: this hill is round - four monsters, an eye, two domed aliens - so the thing whose whole fight is
+#: "it is coming and it will get here" is a walking rectangle with fists, which reads as weight at
+#: any size and at any distance down the hill.
+WARBRINGERS = "craftpix-net-684986-robot-v3-enemy-character-sprites.zip"
+
+BRINGER_IDLE = "PNG/Char05/Idle"
+BRINGER_WALK = "PNG/Char05/Walk"
+BRINGER_ATTACK = "PNG/Char05/Attack"
 
 #: The turrets, their bullets and their muzzle flash.
 TURRETS = "craftpix-net-715522-turrets-asset-pack-for-merge-shooter.zip"
@@ -171,11 +209,27 @@ BOSS_ATTACK = "PNG/Alien05/Attack"
 #:
 #: The models are picked for how different they are from one another head-on, which is the only
 #: view this board has of them.
-WARD_MODELS = (
-    ("Turret01", 0.986),        # Poppy   #F2404F
-    ("Turret03", 0.308),        # Mint    #7BD86A
-    ("Turret06", 0.561),        # Azure   #4FC1FF
-    ("Turret09", 0.122),        # Sun     #FFC93C
+#: **Five tiers rather than four models, which is a change of what a ward's picture is *for*.**
+#: A line used to be told apart by silhouette (four turrets from four moulds) and by hue; a ward can
+#: now be *upgraded*, so the silhouette has to carry the tier instead - a player who has spent a cog
+#: on the red ward must be able to see that they did, from across the board, without reading a
+#: number. Colour is then carried by the hue rotation alone, which is exactly what it was already
+#: doing (see `hued`), and by the badge the view pins to the turret's shoulder.
+#:
+#: The five are guns six to ten of the merge kit's own upgrade ladder, which is a ladder somebody
+#: drew as a ladder: each tier adds plating, then a second barrel, then a core - so a rank reads as
+#: *more machine* rather than as the same machine in a different colour. Guns one to five are the
+#: same ladder's bottom half and are deliberately unused; at the size this board draws a turret they
+#: are a plain box with a barrel, which is not a turret anybody wants to be given five of.
+WARD_TIERS = ("Gun06", "Gun07", "Gun08", "Gun09", "Gun10")
+
+#: Which colour each ward is painted, as a hue angle. `Pal.Poppy`, `Pal.Mint`, `Pal.Azure` and
+#: `Pal.Sun`, measured - so the line still agrees with the gems that feed it.
+WARD_HUES = (
+    ("r", 0.986),               # Poppy   #F2404F
+    ("g", 0.308),               # Mint    #7BD86A
+    ("b", 0.561),               # Azure   #4FC1FF
+    ("y", 0.122),               # Sun     #FFC93C
 )
 
 #: How tall a warlord is drawn, in pixels, and how many frames each of its two reels keeps.
@@ -187,6 +241,34 @@ WARD_MODELS = (
 #: and a fourteen-frame throw at twelve a second is the difference between a lunge and a jerk.
 BOSS = 340
 BOSS_FRAMES, BOSS_CAST_FRAMES = 12, 14
+
+#: How tall an overlord is cut. Larger again, because the view draws it larger again - it is the
+#: last thing in the chapter and the one object a player watches for a whole minute.
+OVERLORD = 400
+
+#: How tall the other two are cut. **Each one is cut at the height the view draws it**, so nothing
+#: here is ever upscaled: `SiegeView.TallOf` gives a blightcaller 2.6 cells and a warbringer 3.3,
+#: against a warlord's 3.1 and an overlord's 3.5, and the ladder those four numbers make is the
+#: first thing a player reads about which boss has arrived.
+BLIGHT = 290
+WARBRINGER = 360
+
+#: The four bosses, each from a pack none of the others came from.
+#:
+#: **Four bodies, four packs, four sizes**, because a boss has to be told apart before it has done
+#: anything. The chapter shipped two of these drawn from one *reel* and separated by a run-time
+#: hue, which is the thinnest possible difference and read exactly as what it was.
+#:
+#: Each row is (pack, [idle, walk, attack], height, folders allowed to overflow the frame). All
+#: three reels of one boss come off **one canvas** (`paired`), or it changes size when it throws.
+BOSS_SET = {
+    "blight": (BLIGHTCALLERS, [BLIGHT_IDLE, BLIGHT_WALK, BLIGHT_ATTACK], BLIGHT,
+               (BLIGHT_ATTACK,)),
+    "boss": (WARLORDS, [BOSS_IDLE, BOSS_WALK, BOSS_ATTACK], BOSS, (BOSS_ATTACK,)),
+    "bringer": (WARBRINGERS, [BRINGER_IDLE, BRINGER_WALK, BRINGER_ATTACK], WARBRINGER,
+                (BRINGER_ATTACK,)),
+    "over": (OVERLORDS, [OVER_IDLE, OVER_WALK, OVER_ATTACK], OVERLORD, (OVER_ATTACK,)),
+}
 
 #: How many frames of a turret's recoil are kept. They are 10 to 20 in the pack and the whole
 #: motion is over in a fifth of a second on screen.
@@ -482,23 +564,94 @@ def hued(im, hue):
         "RGBA")
 
 
-def turret(z, model, frame=None):
-    """One turret, cut from the pack and centred on a ward-sized canvas.
+#: The tallest gun of the ladder, in source pixels, measured once so every tier is fitted to the
+#: *same* scale. Gun10 is 156 x 192 and Gun06 is 135 x 198; fitting each to its own canvas would
+#: draw them at two different scales, so a turret would visibly change size when it went up a rank
+#: - which is the fault `paired` exists to stop happening to the warlord, met again one folder over.
+TIER_BOX = (156, 200)
 
-    <b>No colour is baked in.</b> Which colour a ward burns is applied at run time
-    (`SiegeView.Coat`), from the same `Pal` entry the gems and the raiders take theirs from - so
-    the four cannot drift apart and a palette retune moves all of them at once.
+
+def turret(z, model, frame=None):
+    """One turret of the upgrade ladder, cut from the kit and centred on a ward-sized canvas.
+
+    <b>No colour is baked in here.</b> `hued` is what paints it; this is the shape.
+
+    **Every tier is fitted to one box**, not to its own extent - see `TIER_BOX`. Its *foot* is
+    pinned rather than its middle, because the tiers differ mostly at the top (a second barrel, a
+    taller core) and a turret that rose off its plinth when it was upgraded would read as the
+    plinth having sunk.
     """
-    name = ("Png/%s/Idle/%s-Idle_0.png" % (model, model) if frame is None
-            else "Png/%s/Shoot/%s-Shoot_%02d.png" % (model, model, frame))
+    name = ("Png/Guns/%s/Idle/%s-Idle_0.png" % (model, model) if frame is None
+            else "Png/Guns/%s/Shoot/%s-Shoot_%02d.png" % (model, model, frame))
 
     im = read(z, name)
 
     out = Image.new("RGBA", (WARD_W, WARD_H), (0, 0, 0, 0))
-    ratio = min(WARD_W / im.width, WARD_H / im.height)
+    ratio = min(WARD_W / TIER_BOX[0], WARD_H / TIER_BOX[1])
     im = im.resize((max(1, int(im.width * ratio)), max(1, int(im.height * ratio))), Image.LANCZOS)
-    out.alpha_composite(im, ((WARD_W - im.width) // 2, (WARD_H - im.height) // 2))
+
+    out.alpha_composite(im, ((WARD_W - im.width) // 2, WARD_H - im.height))
     return out
+
+
+def cog():
+    """The upgrade gem: a machine part standing in a field of jewels.
+
+    **Drawn rather than cut, and that is invariant 32b taken before it costs anything.** Five goals
+    in this project have been approximated out of a licensed sheet and every one had to be re-done
+    after somebody looked at it. This one has a harder job than most: it stands among four
+    hand-drawn jewels and has to read as *not one of them* at a glance, at cell size, while still
+    looking like it belongs on the same board. A gear does that by silhouette alone - it is the one
+    shape here with teeth - and drawing it is what lets the teeth be big enough to survive being
+    forty pixels wide.
+
+    It is deliberately **grey steel with a white core** and wears none of the board's four colours,
+    for the warlord's spell's reason (`SiegeView.Spellfire`): a cog takes whichever colour destroys
+    it, so a cog that was already a colour would be saying something the rules do not mean.
+    """
+    side = TILE
+    up = 4
+    big = side * up
+    im = Image.new("RGBA", (big, big), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+
+    mid = big / 2
+    teeth = 8
+    outer, root, bore = big * 0.455, big * 0.345, big * 0.150
+
+    rim = (214, 222, 236, 255)
+    body = (150, 163, 190, 255)
+    dark = (74, 84, 110, 255)
+
+    # The teeth first, as wedges around the rim, then the disc over their roots - so a tooth is a
+    # tooth rather than a bump, which is the whole reason this shape reads at forty pixels.
+    for t in range(teeth):
+        a = 2 * math.pi * t / teeth
+        wide = math.pi / teeth * 0.52
+        pts = []
+        for k, (r, off) in enumerate(((outer, -wide), (outer, wide),
+                                      (root, wide * 1.9), (root, -wide * 1.9))):
+            pts.append((mid + math.cos(a + off) * r, mid + math.sin(a + off) * r))
+        d.polygon(pts, fill=dark)
+        pts = [(mid + (x - mid) * 0.93, mid + (y - mid) * 0.93) for x, y in pts]
+        d.polygon(pts, fill=body)
+
+    d.ellipse([mid - root, mid - root, mid + root, mid + root], fill=dark)
+    d.ellipse([mid - root * 0.9, mid - root * 0.9, mid + root * 0.9, mid + root * 0.9], fill=body)
+    d.ellipse([mid - root * 0.9, mid - root * 0.9, mid + root * 0.62, mid + root * 0.62], fill=rim)
+    d.ellipse([mid - root * 0.66, mid - root * 0.66, mid + root * 0.66, mid + root * 0.66],
+              fill=body)
+
+    # The core: a white eye, so the one thing that says "this is worth something" is the brightest
+    # thing in the picture and survives being drawn over a dark socket.
+    d.ellipse([mid - bore * 1.5, mid - bore * 1.5, mid + bore * 1.5, mid + bore * 1.5], fill=dark)
+    d.ellipse([mid - bore, mid - bore, mid + bore, mid + bore], fill=(255, 252, 240, 255))
+
+    im = im.resize((side, side), Image.LANCZOS)
+
+    halo = glow(side, side, side / 2, side / 2, side * 0.44, (255, 250, 226), 0.42)
+    halo.alpha_composite(im)
+    return halo
 
 
 def wrecked(z, model):
@@ -731,20 +884,38 @@ def build():
     made["Siege/plate.png"] = plate()
     made["Siege/socket.png"] = socket()
 
-    # The ward line. Four models, no baked colour - see WARD_MODELS.
-    for i, (model, hue) in enumerate(WARD_MODELS):
-        made["Siege/ward%d.png" % (i + 1)] = hued(turret(turrets, model), hue)
+    # **The ward line: five tiers times four colours.** Twenty turrets and twenty recoils, because
+    # a ward now carries its rank in its silhouette (see WARD_TIERS) and its colour in its hue.
+    # Cut once per pair rather than tinting one reel four times, for `hued`'s reason: a tint is a
+    # multiply and can only darken, and these have to read as *lit* on a bright hill.
+    for tier, model in enumerate(WARD_TIERS, start=1):
+        shots = sorted(n for n in kit.namelist()
+                       if n.startswith("Png/Guns/%s/Shoot/" % model) and n.endswith(".png"))
 
-        shots = sorted(n for n in turrets.namelist()
-                       if n.startswith("Png/%s/Shoot/" % model) and n.endswith(".png"))
-
+        stand = turret(kit, model)
         step = max(1, len(shots) // FIRE_FRAMES)
-        for f in range(FIRE_FRAMES):
-            made["Siege/fire%d/f%02d.png" % (i + 1, f)] = hued(
-                turret(turrets, model, min(len(shots) - 1, f * step)), hue)
+        recoil = [turret(kit, model, min(len(shots) - 1, f * step)) for f in range(FIRE_FRAMES)]
 
-    made["Siege/ward_dead.png"] = wrecked(turrets, WARD_MODELS[0][0])
+        for letter, hue in WARD_HUES:
+            made["Siege/ward%d_%s.png" % (tier, letter)] = hued(stand, hue)
+
+            for f, frame in enumerate(recoil):
+                made["Siege/fire%d_%s/f%02d.png" % (tier, letter, f)] = hued(frame, hue)
+
+    # A fallen ward is the tier it stood up in, whatever rank it had reached: what the gap in the
+    # line has to say is "this one is gone", and five wrecks would say "this one is gone and it was
+    # a good one", which is a sentence nobody needs at the moment the line is coming down.
+    made["Siege/ward_dead.png"] = wrecked(kit, WARD_TIERS[0])
     made["Siege/bullet.png"] = bullet(turrets)
+
+    # The rank badge, pinned to a turret's shoulder. The kit's own shield, which is the shape its
+    # upgrade ladder is drawn with - the number is written on it at run time, because a number
+    # drawn into a texture is five textures and one of them will be the wrong colour.
+    made["Siege/crest.png"] = fit(read(kit, "Png/User interfaces/game play area Ui/shield icon.png"),
+                                  128, 0.96)
+
+    # The cog: the one thing on the field that is not a jewel.
+    made["Siege/gem_cog.png"] = cog()
 
     # The muzzle flash, drained to white so a ward's own colour can be put on it at run time.
     flashes = sorted(n for n in turrets.namelist()
@@ -776,19 +947,27 @@ def build():
         for i, im in enumerate(cast_frames(z, folder)):
             made["Siege/%s/f%02d.png" % (key, i)] = im
 
-    # The warlord: two reels off one canvas, so it neither jumps nor changes size when it throws.
-    warlord = zipped(WARLORDS)
-    if warlord is not None:
-        reels = paired(warlord, [BOSS_IDLE, BOSS_WALK, BOSS_ATTACK],
-                       max(BOSS_FRAMES, BOSS_CAST_FRAMES), BOSS,
-                       overflow=(BOSS_ATTACK,))
+    # The four bosses: three reels each, all off one canvas so none of them jumps or changes size
+    # when it throws. One loop rather than one block per boss, which is what stopped a third and a
+    # fourth being expensive - and what makes the *set* something a reader can see at once.
+    for key, (pack, folders, tall, overflow) in BOSS_SET.items():
+        if pack not in packs:
+            packs[pack] = zipped(pack)
 
-        if reels is not None:
-            for key, frames, want in (("boss", reels[0], BOSS_FRAMES),
-                                      ("boss_walk", reels[1], BOSS_FRAMES),
-                                      ("boss_cast", reels[2], BOSS_CAST_FRAMES)):
-                for i, im in enumerate(spaced(frames, want)):
-                    made["Siege/%s/f%02d.png" % (key, i)] = im
+        source = packs[pack]
+        if source is None:
+            continue
+
+        reels = paired(source, folders, max(BOSS_FRAMES, BOSS_CAST_FRAMES), tall,
+                       overflow=overflow)
+        if reels is None:
+            continue
+
+        for name, frames, want in ((key, reels[0], BOSS_FRAMES),
+                                   (key + "_walk", reels[1], BOSS_FRAMES),
+                                   (key + "_cast", reels[2], BOSS_CAST_FRAMES)):
+            for i, im in enumerate(spaced(frames, want)):
+                made["Siege/%s/f%02d.png" % (name, i)] = im
 
     return made
 

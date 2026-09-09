@@ -4,32 +4,49 @@
     python Tools/chapters/s01_thornwatch.py            # check the shipped body is this
     python Tools/chapters/s01_thornwatch.py --write
 
-**One level, and that is the whole commission.** This mode was built to be *played* and judged,
-exactly as the five prototypes were (invariant 29), Hollowmarch after them and Prismvale after
-that - a whole mode with a real par, both star lines, a real fail state, a heart, a chest, a streak
-and a star ledger, and no save-file cost at all. One rung is enough to answer the only question
-that matters, which is whether feeding coloured turrets off a jewel board is a thing anybody wants
-to do; ten would be nine levels built before anybody had said.
+**Ten rungs, and the ramp is what is coming rather than how fast it comes** - invariant 5d's
+division of labour read across to a siege. Every level authors the same four things (a field, the
+colours it refills from, a ward line, and the waves walking down at it) and no numbers at all: how
+much fuel a match is worth, how hard a bolt hits and what a blow costs a ward are `SiegeTuning`,
+constants in code, one place, retuned for every level at once.
 
-**The field is dealt and the siege is designed**, which is the split `32d` asks for. Where the
-wards stand, what comes down the hill and in what order are things a player *reads*, so they are
-written by hand; which gem sits in which socket is exactly the sort of arrangement nobody can
-eyeball, so the opening field below is a seed that was swept for and kept for what it measured - an
-even spread of all four colours and seven opening swaps, which is a field with something to do on
-it and not a field of accidents. The seed is recorded so the board can be re-derived rather than
-only re-typed.
+**What each rung adds, in order.**
 
-**Par is 22 and it is arithmetic rather than a search** (invariant 20d's rule met a different way,
-and the honest cost of a mode that runs on a clock). The hill sends 264 health; a match is worth at
-most 12 - three gems into the ward its target is weak to, every one of that fuel spent as a bolt -
-so no run of fewer than 22 matches could have destroyed it. Everything a good player does beyond
-that is free upside the count does not model: a four-match is worth more than a three, and a
-cascade feeds a second ward for no move at all. That is the right direction for a floor to be wrong
-in, because it keeps three stars reachable.
+  1. *First Watch* - the verb, and nothing else. Twelve creepers in two waves, four wards, no
+     brutes, no cogs and no warlord. It is the one rung with nothing on the field but gems.
+  2. *The Ironward* - the **cog**, standing on the field where it will be met. A cog never matches;
+     it is destroyed by a run of gems *beside* it, and the colour of that run decides which turret
+     goes up a rank. One brute, so the ramp adds a mechanic and a monster in different levels.
+  3. *Stonewatch* - brutes in numbers, and cogs from the deal rather than the author.
+  4. *Thornhollow* - **three wards and three colours**. Par dips here on purpose (par is length,
+     not difficulty), and what makes it hard is that a third of the line's answers are gone.
+  5. *The Warlord's Gate* - the **warlord**: it walks to the middle of the hill, stops, and throws
+     at the line from where nothing can reach it.
+  6. *Bramble Run* - the first hill that is mostly brutes.
+  7. *Ashenfield* - and the first that is more brute than creeper.
+  8. *Black March* - a warlord *behind* a hill of brutes, so the duel is fought on a bled line.
+  9. *The Long Siege* - the longest hill in the chapter, and the most cogs.
+ 10. *Last Light* - the **overlord**: a warlord of the greater kind, nearly twice the health, half
+     again the casting rate, and a spell that takes five off a ward instead of three. It stops
+     further up the hill than a warlord does, which is the compensation.
 
-**And there is no move allowance at all**, which is invariant 24 and also the mode: a siege is lost
-when the last ward falls, so an allowance would be a second fail state whose meter counts down to
-an ending that never happens.
+**The field is dealt and the siege is designed**, which is invariant 32d's split. Where the wards
+stand, what comes down the hill and how often a cog turns up are things a player *reads*, so they
+are written by hand below; which gem sits in which socket is exactly the sort of arrangement nobody
+can eyeball, so each field is a seed swept for by `Tools/siege_sweep.py` and kept for what it
+measured - an even spread of the colours, no three alike already touching, and a chosen number of
+opening swaps. **The rows are re-derived from the seed here rather than typed**, so a board can
+never drift from the thing that produced it.
+
+**Par is arithmetic rather than a search** (invariant 37a), and on a rung that deals cogs it is
+looser than a floor: a rank-four ward turns one match into 2.33 times what `SiegeTuning.PerfectMatch`
+assumes. That errs toward three stars being reachable, which is the direction invariant 22 says to
+err in - and what actually proves a rung is holdable is
+`SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine`, which plays every one of these with the real rules.
+
+**And there is no move allowance anywhere in this chapter**, which is invariant 24 and also the
+mode: a siege is lost when the last ward falls, so an allowance would be a second fail state whose
+meter counts down to an ending that never happens.
 """
 from __future__ import annotations
 
@@ -45,6 +62,7 @@ sys.path.insert(0, str(REPO / "Tools" / "verify"))
 import chapters.mapart as mapart                                        # noqa: E402
 import proto                                                            # noqa: E402
 import siege                                                            # noqa: E402
+import siege_sweep as sweep                                             # noqa: E402
 
 OUT = REPO / "Assets" / "StreamingAssets" / "Content" / "chapters" / "s01_thornwatch.json"
 
@@ -55,84 +73,113 @@ CHAPTER = "s01_thornwatch"
 #: first block of skies, exactly as every other mode's first chapter does.
 ORDINAL = 1
 
-#: The seed the opening field was dealt from. Recorded so the board can be re-derived; nothing
-#: reads it at run time, because the field is written out below in full.
-SEED = 164686
+#: Every field in this chapter, in cells. Eight wide because a render said so - at seven the field
+#: was a column of air either side of it, and the field is where the finger goes.
+WIDE, TALL = 8, 5
 
-#: The field as it is dealt: eight by five, ten gems of each colour, no three alike touching, and
-#: seven swaps that line something up. Eight wide because a render said so - at seven the field was
-#: a column of air either side of it, and the field is where the finger goes.
-FIELD = [
-    "rgrgyrry",
-    "bgygybbg",
-    "grrbbgyr",
-    "bybbgryg",
-    "ryygybrb",
-]
-
-#: The ward line, left to right. All four, because the one decision this mode has is which colour
-#: is wanted next and a line of two would make it a coin toss.
-WARDS = "rgby"
-
-#: What the field refills from. All four, so no ward can be starved by the deal.
-GEMS = "rgby"
-
-#: The three waves. One letter per raider - lower case a creeper, upper case a brute.
+#: The rungs.
 #:
-#: **The ramp is what is coming rather than how fast it comes**, because a siege's difficulty is
-#: the hill and not the field (invariant 5d's division of labour, read across). Wave one is one
-#: raider of each colour, which is the mode stated in four objects: whichever ward you feed is the
-#: one that answers. Wave two is twice as many, so every ward wants feeding twice. Wave three is
-#: eight *brutes* - two and a half times the health each, two blows a swing - and it is the only
-#: part of this level that can really take the line down.
+#: ``seed`` and ``stood`` deal the field (see `Tools/siege_sweep.py`); ``swaps`` is what that seed
+#: measured and is recorded so a re-sweep can be checked rather than trusted. ``cogs`` is the rate a
+#: fresh gem falls in as a cog, per hundred, and ``boss`` names one of the four bosses and the
+#: colour it wears (``"warlord:r"``) - or is empty for a siege that sends none.
 #:
-#: **It was half this size and had to grow**, which is worth recording because the cause was not
-#: the hill. Fuel used to fade on a clock; taking that out (the owner's verdict) roughly doubled
-#: what a match delivers, and the level then finished with the ward line untouched - a fail state
-#: rejecting nothing, which is invariant 5d asked of a threat. The hill is the lever that fixes
-#: that, because difficulty is the boards' job.
-WAVES = [
-    "rgby",
-    "rgbyrgby",
-    "RGBYRGBY",
-]
+#: **Four bosses across ten rungs, and each of them takes a different thing.** The chapter shipped
+#: with two, told apart by their hue and nothing else, which read exactly as what it was. A
+#: blightcaller **douses** a ward (its fuel and its fire, no health); a warlord **smites** one
+#: (health, the classic duel); a warbringer **roars** (it charges the hill and walks to the line
+#: itself, the only boss here that arrives); an overlord **sunders** (health *and* a rank the
+#: player earned with a cog). Each has its own answer, and only two of the four are a mending.
+LEVELS = (
+    dict(id="s01_firstwatch", seed=413, swaps=10, stood=0,
+         wards="rgby", gems="rgby", cogs=0, boss="",
+         waves=["rgby", "rgbyrgby"]),
 
-#: The warlord that comes after them, as one colour letter.
-#:
-#: **Which wave it is in is not authored and cannot be**: `SiegeLayout` appends it, so the last
-#: wave *is* the boss wave by rule (invariant 37t). What a level decides is whether there is one
-#: and what colour it wears.
-#:
-#: **Red, and the choice is legibility rather than balance.** Any of the four would play the same -
-#: whichever it wears is the ward that answers it at double - so what decides it is that this is
-#: the largest thing on the board and the one object a player has to read at a glance from the
-#: moment it walks on. Red is the colour this game already spends on danger, and it is the one the
-#: alien's own art takes best: the body is coated 62% toward it, and a purple machine pulled toward
-#: `Pal.Poppy` comes out unmistakably red where the same coat over a blue one comes out muddy.
-BOSS = "r"
+    dict(id="s01_ironward", seed=159, swaps=10, stood=1,
+         wards="rgby", gems="rgby", cogs=4, boss="",
+         waves=["rgbyrg", "rgbyrgby", "rgByrgby"]),
+
+    dict(id="s01_stonewatch", seed=1338, swaps=10, stood=0,
+         wards="rgby", gems="rgby", cogs=3, boss="blightcaller:b",
+         waves=["rgbyRG", "rgbyRGby", "RGBYrgby"]),
+
+    dict(id="s01_thornhollow", seed=4176, swaps=9, stood=0,
+         wards="rgby", gems="rgby", cogs=3, boss="",
+         waves=["rrrgggbb", "YYYYrrrr", "GGBBYY"]),
+
+    dict(id="s01_warlordsgate", seed=4510, swaps=9, stood=0,
+         wards="rgby", gems="rgby", cogs=3, boss="warlord:r",
+         waves=["rgbyrg", "rgbyRGby", "RGby"]),
+
+    dict(id="s01_bramblerun", seed=3603, swaps=8, stood=0,
+         wards="rgby", gems="rgby", cogs=3, boss="",
+         waves=["RGbyRGby", "RGbyRGby", "RGBYRG"]),
+
+    dict(id="s01_ashenfield", seed=5206, swaps=8, stood=0,
+         wards="rgby", gems="rgby", cogs=3, boss="",
+         waves=["rgbyRGby", "RGBYRG", "RGBYRGby"]),
+
+    dict(id="s01_blackmarch", seed=1952, swaps=8, stood=0,
+         wards="rgby", gems="rgby", cogs=3, boss="warbringer:g",
+         # A longer last wave than the rung would otherwise want, and a *lighter* one, and the
+         # warbringer is the reason for both. Half its roar sets the hill charging, and a roar over
+         # an empty hill is a mechanic that rejects nothing (invariant 5d) - so it comes early on
+         # purpose (`SiegeTuning.WarbringerAfter`) and this wave is still walking when it arrives.
+         # Six all-brute raiders charging at 1.55x took the line apart with a raider left
+         # (`SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine`, which is the only thing that can see
+         # it); four brutes and two creepers is the same wave to rally and a rung that holds.
+         waves=["rgbyRGby", "RGBYRGby", "RGBYrg"]),
+
+    dict(id="s01_thornsiege", seed=7881, swaps=7, stood=0,
+         wards="rgby", gems="rgby", cogs=3, boss="",
+         waves=["rgbyRGby", "RGBYRGBY", "RGBYRGBY"]),
+
+    dict(id="s01_lastlight", seed=11445, swaps=7, stood=0,
+         wards="rgby", gems="rgby", cogs=3, boss="overlord:y",
+         # Two of the last wave's brutes became creepers when a bolt's damage halved and its
+         # cadence doubled (`SiegeTuning.FireEvery`). The totals are neutral by construction, but
+         # the *dynamics* are not - a line that kills faster empties the hill sooner, and an empty
+         # hill musters the next wave at once (37k), so the finale's waves stacked and it was lost
+         # with one raider left. The cliff is one brute wide: `RGBYRgby` still loses.
+         waves=["rgbyRGby", "RGBYRG", "RGBYrgby"]),
+)
 
 
-def level():
-    x, y = mapart.places(ORDINAL)[0]
+def rows_of(rung):
+    """This rung's field, re-derived from its seed rather than typed."""
+    cells = sweep.deal(rung["seed"], WIDE, TALL, rung["gems"], rung["stood"])
+    return sweep.rows_of(cells, WIDE, TALL)
+
+
+def level(index, rung):
+    x, y = mapart.places(ORDINAL)[index]
+
+    block = {
+        "width": WIDE,
+        "height": TALL,
+        "rows": rows_of(rung),
+        "gems": rung["gems"],
+        "wards": rung["wards"],
+        "waves": list(rung["waves"]),
+        "boss": rung["boss"],
+    }
+
+    # Absent rather than nought on a rung that deals none: `JsonUtility` reads a missing int as
+    # nought anyway, so writing it would be a field saying what its own absence already says.
+    if rung["cogs"] > 0:
+        block["cogs"] = rung["cogs"]
 
     return {
-        "id": "s01_firstwatch",
+        "id": rung["id"],
         "mapX": round(x, 3),
         "mapY": round(y, 3),
 
-        # No allowance. A siege is lost when the last ward falls (invariant 24, and the mode).
+        # No allowance, on every rung. A siege is lost when the last ward falls (invariant 24, and
+        # the mode) - and both gates *error* on a siege that authors one.
         "budgetFactor": -1.0,
-        "backdrop": mapart.sky(ORDINAL, 0, "siege"),
+        "backdrop": mapart.sky(ORDINAL, index, "siege"),
 
-        "siege": {
-            "width": len(FIELD[0]),
-            "height": len(FIELD),
-            "rows": list(FIELD),
-            "gems": GEMS,
-            "wards": WARDS,
-            "waves": list(WAVES),
-            "boss": BOSS,
-        },
+        "siege": block,
     }
 
 
@@ -148,36 +195,63 @@ def body():
         "slate": "#1A0F14",
         "backdrop": mapart.sky(ORDINAL, 0, "siege"),
         "mapStrips": mapart.strips(ORDINAL),
-        "levels": [level()],
+        "levels": [level(i, rung) for i, rung in enumerate(LEVELS)],
     }
 
 
 def prove(written):
     """Everything this chapter claims about itself, checked against the mirrored rules."""
-    block = written["levels"][0]["siege"]
+    for index, level_json in enumerate(written["levels"]):
+        rung = LEVELS[index]
+        block = level_json["siege"]
 
-    grid = proto.Grid(block["rows"], block["width"], block["height"], siege.LETTERS)
-    layout = siege.Layout(grid, block["gems"], block["wards"], block["waves"],
-                          block.get("boss"))
+        grid = proto.Grid(block["rows"], block["width"], block["height"], siege.CELLS)
+        layout = siege.Layout(grid, block["gems"], block["wards"], block["waves"],
+                              block.get("boss"), block.get("cogs", 0))
 
-    if layout.fault:
-        sys.exit("%s: %s" % (written["levels"][0]["id"], layout.fault))
+        if layout.fault:
+            sys.exit("%s: %s" % (level_json["id"], layout.fault))
 
-    par = siege.par(layout)
-    read = siege.readings(layout)
+        par = siege.par(layout)
+        read = siege.readings(layout)
 
-    print("%-18s par %-4d 3* %-4d 2* %-4d %d raider(s) in %d wave(s), %d brute(s), "
-          "%d colour(s) against %d ward(s)%s"
-          % (written["levels"][0]["id"], par,
-             proto.over(par, proto.GOLD_HUNDREDTHS), proto.over(par, proto.SILVER_HUNDREDTHS),
-             read["raiders"], read["waves"], read["brutes"], read["colours"], read["wards"],
-             (", a '%s' warlord last" % read["boss"]) if read["boss"] else ""))
+        # The seed is recorded with what it measured, so a re-sweep is checked rather than trusted.
+        made = sweep.swaps(list("".join(block["rows"])), block["width"], block["height"])
+        if made != rung["swaps"]:
+            sys.exit("%s: seed %d now deals %d opening swaps, not the %d recorded"
+                     % (level_json["id"], rung["seed"], made, rung["swaps"]))
 
-    if not read["threat"]:
-        sys.exit("this siege cannot be lost - no wave could bring a ward down")
+        print("%-18s par %-4d 3* %-4d 2* %-4d %2d raider(s) in %d wave(s), %2d brute(s), "
+              "%d colour(s) against %d ward(s), cogs %2d%%%s"
+              % (level_json["id"], par,
+                 proto.over(par, proto.GOLD_HUNDREDTHS), proto.over(par, proto.SILVER_HUNDREDTHS),
+                 read["raiders"], read["waves"], read["brutes"], read["colours"], read["wards"],
+                 read["cogs"],
+                 (", a '%s' %s (%s) last" % (read["boss"], read["kind"], read["spell"]))
+                 if read["boss"] else ""))
 
-    if not read["swap"]:
-        sys.exit("this field has no opening swap, so it deals itself again before anybody moves")
+        # **`threat` is reported here and never refused, which is a correction to how it reads.**
+        # It counts *one blow each* from the largest wave, so it names any hill with fewer than
+        # fourteen blows in a wave as one that cannot bring a ward down - and that is simply not
+        # true, because a raider that reaches the line goes on swinging every
+        # `SiegeTuning.BlowEvery` until something kills it. Eight creepers standing at the line for
+        # six seconds are worth three times what this counts.
+        #
+        # So it is a floor on a floor, useful for saying "this hill is obviously lethal" and no use
+        # at all for saying the opposite. What actually proves a rung is a siege is
+        # `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine`, which plays it and fails if the line
+        # finishes *untouched* - a measurement rather than a heuristic, and the only instrument a
+        # mode with no search has (invariant 37j).
+        if not read["threat"]:
+            print("      (no single wave carries fourteen blows; the hold simulation is what "
+                  "proves this one can be lost)")
+
+        if not read["swap"]:
+            sys.exit("%s: this field has no opening swap" % level_json["id"])
+
+    ids = [lv["id"] for lv in written["levels"]]
+    if len(set(ids)) != len(ids):
+        sys.exit("two levels of this chapter share an id")
 
 
 def main():

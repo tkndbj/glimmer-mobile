@@ -15,11 +15,6 @@ MonoBehaviour:
   m_GroupName: Glimmer Chapter p01_prismvale
   m_GUID: 1a1098a62db7ffc4bb744c5bfee02079
   m_SerializeEntries:
-  - m_GUID: 035eb1dbe717c9445bde8f5354510711
-    m_Address: Art/Prism/moss_lit
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0d8fc059ee2f8a44ba7733b940d77337
     m_Address: Art/Prism/mon2_jump
     m_ReadOnly: 0
@@ -30,33 +25,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 14bbc40aff5de70498b692c497824c02
-    m_Address: Art/Prism/gem_b
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 196a455da3ddb244c85d83ae23aec746
-    m_Address: Art/Prism/husk
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1d577d9d0376eba479621bdb5fbfc93e
-    m_Address: Art/Prism/lamp_dark
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 53a4b2b226fdc2f4c90f4d9e908505ce
-    m_Address: Art/Prism/moss
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5797c4cf5d433d04e837f9cdd55450d4
     m_Address: Art/Prism/mon1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 57f7056eaa431734fa50141e55d1bdc3
-    m_Address: Art/Prism/gem_y
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -70,33 +40,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 74b3c15436b0ff04187c69302df9b844
-    m_Address: Art/Prism/lamp
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8668ec06cb3b5894dba11552e9f9db08
     m_Address: Art/Prism/mon2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ab80ea590e98ff04ea5661689fc03e92
-    m_Address: Art/Prism/gem_r
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b8c6bb81a9dfbc64eb7f24ee25f7dacd
-    m_Address: Art/Bg/sky_01
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b9b9487fc98e1254d8fa7906f5333ed7
     m_Address: Art/Prism/mon3_jump
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e56b02f34caf44e4396fa6078d9eabe2
-    m_Address: Art/Prism/gem_g
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

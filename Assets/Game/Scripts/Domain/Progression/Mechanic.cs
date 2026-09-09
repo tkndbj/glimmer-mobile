@@ -314,6 +314,27 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static readonly Mechanic SiegeLine = new Mechanic("siege_line");
 
+        /// <summary>
+        /// The cog: that it is destroyed by the run <em>beside</em> it, and that the colour of
+        /// that run decides which turret goes up.
+        ///
+        /// <para>
+        /// Deliberately two halves of one sentence, exactly as <see cref="SiegeLine"/> is. A player
+        /// who does not know a cog is taken by an adjacent match will spend the run trying to line
+        /// three of them up; one who does not know the colour decides the turret will take whatever
+        /// match is nearest and upgrade a ward at random. Both halves are the same fact — a cog is
+        /// the mode's own question asked about the <em>line</em> instead of about the hill — and
+        /// only the second half can be wrong, which is what makes it a decision at all.
+        /// </para>
+        /// <para>
+        /// <b>Declared per board rather than per mode</b> (see <c>SiegeScreen.Lessons</c>): the
+        /// first rung of the chapter deals no cogs, so a lesson about them there would be a lesson
+        /// about something that is not on the screen — and a lesson shown once can never be shown
+        /// again.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic SiegeCog = new Mechanic("siege_cog");
+
         // **Two retired lesson ids that must never be reused: `kindle_join` and `kindle_cross`.**
         // Kindlewake was withdrawn by the owner after play and Prismvale took its slot. A lesson
         // id travels in the save (`tipsSeen`) exactly as a level id travels in the ledger, so
@@ -473,7 +494,7 @@ namespace GlimmerGrove.Progression
             BoundConduit,
             FallCook, FallSupply, FallBrim, FallLens, FallWhorl,
             ProtoMoves, PrismDrag, PrismVein,
-            SiegeFuel, SiegeLine,
+            SiegeFuel, SiegeLine, SiegeCog,
             ModeSwitch, LuckySpin, Grove,
             GroveShop,
         };

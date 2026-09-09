@@ -451,7 +451,7 @@
       {
         "id": "firepot",
         "kind": "blast",
-        "magnitude": 44,
+        "magnitude": 440,
         "gemPrice": 12,
         "maxHeld": 9,
         "order": 1
@@ -467,7 +467,7 @@
       {
         "id": "surge",
         "kind": "surge",
-        "magnitude": 90,
+        "magnitude": 180,
         "gemPrice": 10,
         "maxHeld": 9,
         "order": 3

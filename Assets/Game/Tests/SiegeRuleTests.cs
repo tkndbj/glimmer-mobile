@@ -25,7 +25,18 @@ namespace GlimmerGrove.Tests
     /// </summary>
     public sealed class SiegeRuleTests
     {
-        // ------------------------------------------------------------------ the shipped level
+        // ------------------------------------------------------------------ the fixture siege
+        /// <summary>
+        /// One siege built for the rule tests, and deliberately not one of the shipped rungs.
+        ///
+        /// <para>
+        /// <b>It was the shipped level, and then the chapter grew to ten.</b> What it is for now is
+        /// pinning the <em>arithmetic</em> — par over a known hill, a warlord appended as the last
+        /// wave, a bolt worth double against its own colour — which wants one board that never
+        /// moves when the content does. What the content is held to is <see cref="Chapter"/>, and
+        /// <see cref="EveryRungOfThisChapterCanBeHeld"/> plays every rung of it.
+        /// </para>
+        /// </summary>
         static readonly string[] Field =
         {
             "rgrgyrry",
@@ -40,23 +51,87 @@ namespace GlimmerGrove.Tests
 
         static readonly string[] Waves = { "rgby", "rgbyrgby", "RGBYRGBY" };
 
-        /// <summary>The warlord the shipped level ends on. See <see cref="SiegeLayout.Boss"/>.</summary>
-        const string Boss = "r";
+        /// <summary>The boss the fixture level ends on. See <see cref="SiegeLayout.Boss"/>.</summary>
+        const string Boss = "warlord:r";
 
         static SiegeLayout Shipped() => Layout(Field, Gems, Wards, Waves, Boss);
 
         static SiegeLayout Layout(string[] rows, string gems, string wards, string[] waves,
-                                  string boss = null)
+                                  string boss = null, int cogs = 0)
         {
             Assert.IsTrue(ProtoGrid.TryRead(rows, rows[0].Length, rows.Length,
-                                            SiegeLayout.Letters, out var grid, out string error),
+                                            SiegeLayout.Cells, out var grid, out string error),
                           error);
 
-            return new SiegeLayout(grid, gems, wards, waves, boss);
+            return new SiegeLayout(grid, gems, wards, waves, boss, cogs);
         }
 
+        // ------------------------------------------------------------------ the whole chapter
+        /// <summary>One rung of Thornwatch, exactly as `Tools/chapters/s01_thornwatch.py` writes it.</summary>
+        sealed class Rung
+        {
+            public readonly string Id, Gems, Wards, Boss;
+            public readonly string[] Rows, Waves;
+            public readonly int Cogs;
+
+            public Rung(string id, string[] rows, string gems, string wards, string[] waves,
+                        string boss, int cogs)
+            {
+                Id = id;
+                Rows = rows;
+                Gems = gems;
+                Wards = wards;
+                Waves = waves;
+                Boss = boss;
+                Cogs = cogs;
+            }
+
+            public SiegeLayout Built() => Layout(Rows, Gems, Wards, Waves, Boss, Cogs);
+        }
+
+        /// <summary>
+        /// Every rung of the shipped chapter, held inline.
+        ///
+        /// <para>
+        /// <b>Inline rather than read from the chapter body</b>, for the reason every
+        /// <c>*LadderTests</c> in this project is: a fixture that loads JSON goes through
+        /// <c>JsonUtility</c>, which is a native call, so the offline runner reports the whole file
+        /// as "needs the Editor" and it becomes the one gate nobody runs on the way past.
+        /// </para>
+        /// <para>
+        /// <b>And here it is doing a job nothing else can.</b> Every other mode proves a level by
+        /// searching it; a siege has no search (invariant 37a), so the only way to know a rung can
+        /// be held is to play one — which is what <see cref="EveryRungOfThisChapterCanBeHeld"/>
+        /// does with the real rules, over all ten.
+        /// </para>
+        /// </summary>
+        static readonly Rung[] Chapter =
+        {
+            new Rung("s01_firstwatch", new[] { "ryybgyyg", "bybgrgyy", "rbryyggr", "grgrgbbr", "yybgrrbg" }, "rgby", "rgby", new[] { "rgby", "rgbyrgby" }, "", 0),
+            new Rung("s01_ironward", new[] { "brbybgrg", "yggrbbry", "r*byybgr", "yygbbgby", "bbryygyg" }, "rgby", "rgby", new[] { "rgbyrg", "rgbyrgby", "rgByrgby" }, "", 4),
+            new Rung("s01_stonewatch", new[] { "gbrrgbgy", "rybbrbbr", "grgryyrr", "rbybybby", "ryybgrby" }, "rgby", "rgby", new[] { "rgbyRG", "rgbyRGby", "RGBYrgby" }, "blightcaller:b", 3),
+            new Rung("s01_thornhollow", new[] { "gbrryrbb", "rygbrrbr", "bbgybggy", "ybygyybb", "gyrbbggr" }, "rgby", "rgby", new[] { "rrrgggbb", "YYYYrrrr", "GGBBYY" }, "", 3),
+            new Rung("s01_warlordsgate", new[] { "ygrrbrgg", "ryyrgrrb", "bbggyyby", "brryrbyg", "ggrbggry" }, "rgby", "rgby", new[] { "rgbyrg", "rgbyRGby", "RGby" }, "warlord:r", 3),
+            new Rung("s01_bramblerun", new[] { "bbrgrbrg", "bggrbgyy", "rgyygrry", "brbybyyg", "yrbrgrrg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGbyRGby", "RGBYRG" }, "", 3),
+            new Rung("s01_ashenfield", new[] { "yrbyrgyy", "brggrbby", "gbrgbyrr", "byrbgybg", "yrbbrrbg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRG", "RGBYRGby" }, "", 3),
+            new Rung("s01_blackmarch", new[] { "bggbggyr", "rbybgrby", "ybyybryb", "brrgybgr", "bybggybr" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRGby", "RGBYrg" }, "warbringer:g", 3),
+            new Rung("s01_thornsiege", new[] { "gbyygryr", "rbgbrbry", "rgrbgybb", "yygryyrg", "bbrgyrgg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRGBY", "RGBYRGBY" }, "", 3),
+            new Rung("s01_lastlight", new[] { "bbrgbrry", "bbggbgyg", "ryybrgrr", "ryrgbyby", "ggyrgyry" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRG", "RGBYrgby" }, "overlord:y", 3),
+        };
+
+        /// <summary>
+        /// The first rungs, where a hill that never reaches the line is the design rather than a
+        /// fault.
+        ///
+        /// Invariant 24's argument in the unit this mode is graded in: the worst moment to take a
+        /// run away from somebody is while they are still working out what a match is <em>for</em>,
+        /// and the rung after that is teaching them what a cog does. From here on a line that
+        /// finishes untouched is a fail state that rejects nothing (invariant 5d asked of a threat).
+        /// </summary>
+        const int TeachingRungs = 4;
+
         [Test]
-        public void TheShippedLevelReads()
+        public void TheFixtureSiegeReads()
         {
             var layout = Shipped();
 
@@ -72,7 +147,7 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void TheShippedLevelIsParThirtySeven()
+        public void TheFixtureSiegeIsParThirtySeven()
         {
             // 12 creepers at 20, 8 brutes at 48 and one warlord at 180 is 804, over what a match
             // delivers (22). `Tools/verify/siege.py` prints the same number from the same
@@ -86,7 +161,7 @@ namespace GlimmerGrove.Tests
             // The rule this whole shape rests on. A level says *whether* there is a boss and what
             // colour it wears; where it comes is not an authoring decision, so a siege cannot ship
             // with its finale in the middle of it.
-            var layout = Layout(Field, Gems, Wards, new[] { "rr", "gg" }, "b");
+            var layout = Layout(Field, Gems, Wards, new[] { "rr", "gg" }, "warlord:b");
 
             Assert.AreEqual(3, layout.Waves.Length);
             Assert.AreEqual(2, layout.BossWave, "a warlord is always the last wave");
@@ -105,10 +180,22 @@ namespace GlimmerGrove.Tests
             // Invariant 5f read the other way round: a level naming a boss the mode does not know
             // would otherwise index, validate and ship as a siege with no finale in it, and the
             // only symptom would be a wave that never comes.
-            var bad = Layout(Field, Gems, Wards, new[] { "rr" }, "dragon");
+            var bad = Layout(Field, Gems, Wards, new[] { "rr" }, "dragon:r");
 
-            Assert.IsNotNull(bad.Fault, "an unknown warlord has to be refused");
+            Assert.IsNotNull(bad.Fault, "an unknown boss has to be refused");
             StringAssert.Contains("warlord", bad.Fault);
+
+            // **And so is the retired one-letter form**, which is the same rule pointed at content
+            // written for a build that no longer exists: salvaging a red warlord out of "r" would
+            // ship a fight nobody authored, and now that four bosses wear four verbs, which one it
+            // salvaged would be a coin toss.
+            var old = Layout(Field, Gems, Wards, new[] { "rr" }, "r");
+
+            Assert.IsNotNull(old.Fault, "the retired one-letter boss form has to be refused");
+
+            var upper = Layout(Field, Gems, Wards, new[] { "rr" }, "warlord:R");
+
+            Assert.IsNotNull(upper.Fault, "a boss colour is lower case; case means nothing now");
         }
 
         [Test]
@@ -116,7 +203,7 @@ namespace GlimmerGrove.Tests
         {
             // A warlord carries the health of four brutes, so answering it at half rate is a duel
             // nobody could finish - the arithmetic par assumes it is not so.
-            var bad = Layout(Field, Gems, "rg", new[] { "rr" }, "b");
+            var bad = Layout(Field, Gems, "rg", new[] { "rr" }, "warlord:b");
 
             Assert.IsNotNull(bad.Fault);
             StringAssert.Contains("warlord", bad.Fault);
@@ -129,21 +216,26 @@ namespace GlimmerGrove.Tests
             // gems once cascades are counted, each spent as a bolt into the ward its target is
             // weak to. **Measured rather than reasoned about** - see SiegeTuning.MatchGemsTenths
             // for the version that was reasoned about and was nearly twice too generous.
-            Assert.AreEqual(22, SiegeTuning.PerfectMatch);
+            //
+            // **Both sides of the division scaled by ten when ward ranks arrived, so nothing
+            // graded moved.** `ShotDamage` is 20 rather than 2 and every raider's health went up
+            // by the same ten, which is what makes a *ten per cent* rank step exact in integers -
+            // see `SiegeTuning.ShotDamage`. Par is unchanged on every board.
+            Assert.AreEqual(220, SiegeTuning.PerfectMatch);
 
             var layout = Layout(Field, Gems, Wards, new[] { "r" });
             Assert.AreEqual(1, SiegeTuning.Par(layout), "one creeper is under one match");
 
             layout = Layout(Field, Gems, Wards, new[] { "rrr" });
-            Assert.AreEqual(3, SiegeTuning.Par(layout), "three creepers is sixty over twenty-two");
+            Assert.AreEqual(3, SiegeTuning.Par(layout), "three creepers is 600 over 220");
 
             layout = Layout(Field, Gems, Wards, new[] { "R" });
-            Assert.AreEqual(3, SiegeTuning.Par(layout), "a brute is 48, which is three matches");
+            Assert.AreEqual(3, SiegeTuning.Par(layout), "a brute is 480, which is three matches");
         }
 
         // ------------------------------------------------------------------ the field
         [Test]
-        public void TheShippedFieldIsAuthoredSettled()
+        public void TheFixtureFieldIsAuthoredSettled()
         {
             // A field that goes off before anybody has touched it is a board whose opening move
             // its author played, and the count the run is graded against would have moved with it.
@@ -156,7 +248,7 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void TheShippedFieldHasSomethingToDoOnIt()
+        public void TheFixtureFieldHasSomethingToDoOnIt()
         {
             var board = SiegeBoard.Build(Shipped());
             Assert.IsTrue(board.AnySwap(), "no swap on this field lines anything up");
@@ -395,11 +487,26 @@ namespace GlimmerGrove.Tests
             // Written as the arithmetic rather than played out, because what this is about is the
             // rule the par calculation assumes - and a par that assumes a rule the board does not
             // have is a level nobody can three-star.
-            Assert.AreEqual(2, SiegeTuning.ShotDamage);
+            Assert.AreEqual(10, SiegeTuning.ShotDamage);
             Assert.AreEqual(2, SiegeTuning.WeakMultiplier);
-            Assert.AreEqual(SiegeTuning.MatchGemsTenths * SiegeTuning.ShotDamage
-                            * SiegeTuning.WeakMultiplier / 10,
+
+            // And a rank is a tenth on top of it, which is only exact because of the scale above.
+            Assert.AreEqual(SiegeTuning.ShotDamage, SiegeTuning.DamageAt(0));
+
+            // **What a match delivers is counted in bolts, not gems**, and the two stopped being
+            // the same thing when a gem started buying two bolts (`SiegeTuning.FuelPerGemTenths`).
+            // Written out here as the arithmetic it has to be, because the old form — gems times
+            // damage — would still have compiled, still have looked plausible, and would have
+            // doubled every par in the chapter.
+            Assert.AreEqual(SiegeTuning.MatchGemsTenths * SiegeTuning.FuelPerGemTenths
+                            * SiegeTuning.ShotDamage * SiegeTuning.WeakMultiplier
+                            / (SiegeTuning.FuelPerShotTenths * 10),
                             SiegeTuning.PerfectMatch);
+
+            // And the whole point of the change: it is the number it always was. A gem worth twice
+            // the fuel and a bolt worth half the damage is the same match delivering the same
+            // damage over twice as many bolts, so no par, no star line and no utility charge moves.
+            Assert.AreEqual(220, SiegeTuning.PerfectMatch);
         }
 
         [Test]
@@ -458,7 +565,7 @@ namespace GlimmerGrove.Tests
         /// shape is warned about (one wave, and it never lets up), which is the right answer for a
         /// level and no answer at all for a fixture.
         /// </summary>
-        static SiegeLayout Duel() => Layout(Field, Gems, Wards, new string[0], "r");
+        static SiegeLayout Duel() => Layout(Field, Gems, Wards, new string[0], "warlord:r");
 
         /// <summary>Walks the clock until the warlord is standing on its ground.</summary>
         static SiegeRaider Warlord(SiegeBoard board)
@@ -609,6 +716,216 @@ namespace GlimmerGrove.Tests
             Assert.Fail("the warlord never brought the line down on its own");
         }
 
+        /// <summary>A duel against whichever of the four is asked for.</summary>
+        static SiegeLayout Duel(string boss)
+            => Layout(Field, Gems, Wards, new string[0], boss);
+
+        /// <summary>Walks the clock until this board's boss is standing on its ground.</summary>
+        static SiegeRaider Standing(SiegeBoard board)
+        {
+            for (int i = 0; i < 60 * 180; i++)
+            {
+                board.Advance(1f / 60f);
+
+                var boss = board.Warlord;
+                if (boss != null && boss.InPlace) return boss;
+            }
+
+            Assert.Fail("the boss never reached its ground");
+            return null;
+        }
+
+        /// <summary>
+        /// The four bosses take four different things, and no two of them take the same one.
+        ///
+        /// <b>This is the whole claim four bosses are for.</b> A chapter shipped two told apart by
+        /// their health, their cadence and their hue — every reading green, every gate green, and
+        /// a player's verdict was that they looked and played exactly the same. What separates a
+        /// kind from a number is that each one has a <em>different answer</em>, so what is pinned
+        /// here is that the four spells are four verbs rather than one verb at four strengths.
+        /// </summary>
+        [Test]
+        public void EachOfTheFourBossesTakesADifferentThing()
+        {
+            Assert.AreEqual(SiegeSpell.Douse, SiegeTuning.SpellOf(SiegeKind.Blightcaller));
+            Assert.AreEqual(SiegeSpell.Smite, SiegeTuning.SpellOf(SiegeKind.Boss));
+            Assert.AreEqual(SiegeSpell.Rally, SiegeTuning.SpellOf(SiegeKind.Warbringer));
+            Assert.AreEqual(SiegeSpell.Sunder, SiegeTuning.SpellOf(SiegeKind.Overlord));
+
+            // Only two of them take health at all, which is what stopped "there is a boss" being
+            // a fact the build gate could act on (`ModeValidator.Threatens`).
+            Assert.AreEqual(0, SiegeTuning.CastOf(SiegeKind.Blightcaller));
+            Assert.AreEqual(0, SiegeTuning.CastOf(SiegeKind.Warbringer));
+            Assert.Greater(SiegeTuning.CastOf(SiegeKind.Overlord), SiegeTuning.CastOf(SiegeKind.Boss));
+
+            // And only three of the four aim at a ward. A roar is thrown at the ground.
+            Assert.IsFalse(SiegeTuning.AimsAtAWard(SiegeKind.Warbringer));
+            Assert.IsTrue(SiegeTuning.AimsAtAWard(SiegeKind.Blightcaller));
+
+            // A blightcaller cannot bring a ward down however long it stands there, so a level
+            // whose only threat were one could not be lost - which the gate now says out loud.
+            Assert.IsFalse(SiegeTuning.EndangersTheLine(SiegeKind.Blightcaller));
+            Assert.IsTrue(SiegeTuning.EndangersTheLine(SiegeKind.Warbringer),
+                          "a warbringer walks to the line and swings there");
+        }
+
+        [Test]
+        public void ABlightcallerPutsAWardOutAndTakesNoHealth()
+        {
+            var board = SiegeBoard.Build(Duel("blightcaller:g"));
+            Standing(board);
+
+            // Fuel in every tube, so the douse has something to take and the pick is not decided
+            // by an empty line.
+            for (int w = 0; w < board.Wards.Count; w++) board.Surge(w, 20);
+
+            int whole = 0;
+            for (int w = 0; w < board.Wards.Count; w++) whole += board.Wards[w].Health;
+
+            bool doused = false;
+
+            for (int i = 0; i < 60 * 120 && !doused; i++)
+            {
+                var report = board.Advance(1f / 60f);
+
+                for (int s = 0; s < report.Spells.Count; s++)
+                {
+                    var spell = report.Spells[s];
+                    Assert.AreEqual(SiegeSpell.Douse, spell.Craft);
+                    Assert.AreEqual(0, spell.Damage, "a douse takes no health");
+
+                    var ward = board.Wards[spell.Ward];
+                    Assert.IsTrue(ward.Doused, "the ward it landed on is out");
+                    Assert.AreEqual(0f, ward.Fuel, 1e-4f, "and its fuel went with its fire");
+                    Assert.IsFalse(ward.Fuelled, "a doused ward cannot fire whatever is in it");
+
+                    doused = true;
+                }
+            }
+
+            Assert.IsTrue(doused, "the blightcaller never cast");
+
+            int left = 0;
+            for (int w = 0; w < board.Wards.Count; w++) left += board.Wards[w].Health;
+
+            Assert.AreEqual(whole, left, "no health may leave the line to a blightcaller");
+        }
+
+        [Test]
+        public void ASurgeLiftsADouseBecauseThatIsWhatMakesItTheAnswer()
+        {
+            // Invariant 39's rule about what a utility may sell, asked of the one boss a mending
+            // cannot answer: fuel poured into a ward that cannot fire is fuel spent on nothing
+            // until the dark runs out on its own, which would be an item charged for a delay.
+            var board = SiegeBoard.Build(Duel("blightcaller:g"));
+            Standing(board);
+
+            for (int w = 0; w < board.Wards.Count; w++) board.Surge(w, 20);
+
+            int hit = -1;
+
+            for (int i = 0; i < 60 * 120 && hit < 0; i++)
+            {
+                var report = board.Advance(1f / 60f);
+                for (int s = 0; s < report.Spells.Count; s++) hit = report.Spells[s].Ward;
+            }
+
+            Assert.GreaterOrEqual(hit, 0, "the blightcaller never cast");
+            Assert.IsTrue(board.Doused(hit));
+
+            board.Surge(hit, 20);
+
+            Assert.IsFalse(board.Wards[hit].Doused, "a surge re-lights a doused ward");
+            Assert.IsTrue(board.Wards[hit].Fuelled);
+        }
+
+        [Test]
+        public void AWarbringerTakesGroundRatherThanThrowingAnything()
+        {
+            // The only boss in this mode that arrives, and the only one whose spell aims at no
+            // ward. What makes it a different fight rather than a warlord with a bigger number is
+            // that it is a countdown: it is coming, it will get there, and then it swings.
+            var board = SiegeBoard.Build(Duel("warbringer:y"));
+            var boss = Standing(board);
+
+            float ground = boss.Hold;
+
+            Assert.Less(ground, 1f, "it does not start at the line");
+            Assert.Greater(SiegeTuning.BlowOf(SiegeKind.Warbringer), 0,
+                           "and unlike the other three it really does swing when it gets there");
+
+            int whole = 0;
+            for (int w = 0; w < board.Wards.Count; w++) whole += board.Wards[w].Health;
+
+            bool roared = false;
+
+            for (int i = 0; i < 60 * 60 && !roared; i++)
+            {
+                var report = board.Advance(1f / 60f);
+
+                for (int s = 0; s < report.Spells.Count; s++)
+                {
+                    Assert.AreEqual(SiegeSpell.Rally, report.Spells[s].Craft);
+                    Assert.AreEqual(-1, report.Spells[s].Ward, "a roar reaches no ward");
+                    roared = true;
+                }
+            }
+
+            Assert.IsTrue(roared, "the warbringer never roared");
+            Assert.Greater(boss.Hold, ground, "a roar carries it further down the hill");
+            Assert.Greater(board.Roaring, 0f, "and sets the hill charging");
+
+            int left = 0;
+            for (int w = 0; w < board.Wards.Count; w++) left += board.Wards[w].Health;
+
+            Assert.AreEqual(whole, left, "a roar itself takes nothing off the line");
+
+            // And it does arrive: given long enough it walks all the way in and takes the line
+            // apart with its hands, which is what makes it a threat the build gate can count.
+            for (int i = 0; i < 60 * 300 && board.WardsStanding > 0; i++) board.Advance(1f / 60f);
+
+            Assert.AreEqual(0, board.WardsStanding,
+                            "a warbringer left alone brings the line down by reaching it");
+        }
+
+        [Test]
+        public void AnOverlordTakesTheRankAPlayerEarned()
+        {
+            // The finale attacks the one thing in this chapter a player *earned* (invariant 37w),
+            // which is what makes where the cogs went a question the last rung asks.
+            var board = SiegeBoard.Build(Duel("overlord:b"));
+            Standing(board);
+
+            // A line with one turret plainly the best on it, so the pick is not a tie.
+            board.Wards[1].Rank = SiegeTuning.MaxRank;
+
+            bool sundered = false;
+
+            for (int i = 0; i < 60 * 120 && !sundered; i++)
+            {
+                var report = board.Advance(1f / 60f);
+
+                for (int s = 0; s < report.Spells.Count; s++)
+                {
+                    var spell = report.Spells[s];
+                    Assert.AreEqual(SiegeSpell.Sunder, spell.Craft);
+                    Assert.AreEqual(1, spell.Ward, "it hunts the best turret on the line");
+                    Assert.IsTrue(spell.Sundered);
+                    Assert.Greater(spell.Damage, 0, "and takes health as well");
+
+                    sundered = true;
+                }
+            }
+
+            Assert.IsTrue(sundered, "the overlord never cast");
+            Assert.AreEqual(SiegeTuning.MaxRank - SiegeTuning.OverlordSunder, board.Wards[1].Rank);
+
+            // Never below nought, and it says so rather than reporting a rank it did not take.
+            board.Wards[1].Rank = 0;
+            Assert.IsFalse(board.Wards[1].Sunder());
+            Assert.AreEqual(0, board.Wards[1].Rank);
+        }
+
         [Test]
         public void ASpellWhoseCasterIsGoneFizzles()
         {
@@ -663,7 +980,7 @@ namespace GlimmerGrove.Tests
         const float Unhurried = 2.4f;
 
         [Test]
-        public void AnUnhurriedPlayerHoldsThisLine()
+        public void AnUnhurriedPlayerHoldsTheFixtureLine()
         {
             // **The reading this mode needed and no other one does.** Everywhere else a board is
             // proved by searching it: par is the depth of the first winning layer, so "can this be
@@ -719,6 +1036,229 @@ namespace GlimmerGrove.Tests
                                   $"an unhurried player finished in {matches} against par {par}, "
                                   + "so par is more than twice what the level really costs and "
                                   + "every band under it is unreachable");
+        }
+
+        [Test]
+        public void EveryRungOfThisChapterReads()
+        {
+            Assert.AreEqual(10, Chapter.Length, "Thornwatch ships ten rungs");
+
+            var seen = new System.Collections.Generic.HashSet<string>();
+
+            foreach (var rung in Chapter)
+            {
+                Assert.IsTrue(seen.Add(rung.Id), rung.Id + " is in this chapter twice");
+
+                var layout = rung.Built();
+                Assert.IsNull(layout.Fault, rung.Id + ": " + layout.Fault);
+
+                Assert.LessOrEqual(rung.Cogs, SiegeLayout.MaxCogRate, rung.Id);
+
+                Assert.GreaterOrEqual(SiegeTuning.Par(layout), 6,
+                                      rung.Id + " is over before anything this mode is built on "
+                                      + "gets to bite");
+            }
+        }
+
+        /// <summary>
+        /// <b>The one thing about this mode that no gate can answer and only a played run can.</b>
+        ///
+        /// <para>
+        /// Everywhere else par is the depth of a breadth-first walk, so "can this be finished" is
+        /// answered on the way to "in how few". A siege has no such walk (invariant 37a), so the
+        /// question has to be asked by playing one - and the failure it catches is the worst a mode
+        /// can have, which is a level that cannot be held at all and validates perfectly. It caught
+        /// exactly that on this mode's first level, and it caught two rungs of this chapter while
+        /// the cogs were being tuned.
+        /// </para>
+        /// <para>
+        /// The player modelled is deliberately ordinary rather than good: a match every 2.4
+        /// seconds, always aimed at the colour of whatever is furthest down the hill, never looking
+        /// for a bigger one and never planning a cascade. If <em>that</em> clears a rung with the
+        /// line standing, the rung is winnable by somebody who is enjoying it.
+        /// </para>
+        /// </summary>
+
+
+        [Test]
+        public void AnUnhurriedPlayerHoldsThisLine()
+        {
+            for (int i = 0; i < Chapter.Length; i++)
+            {
+                var rung = Chapter[i];
+                var layout = rung.Built();
+                var board = SiegeBoard.Build(layout);
+
+                int matches = Hold(board, out int seconds);
+
+                Assert.IsTrue(board.IsFinished,
+                              $"{rung.Id}: the hill was not cleared - {board.GoalsLeft} raider(s) "
+                              + $"left and {board.WardsStanding} ward(s) standing after {seconds}s");
+
+                Assert.GreaterOrEqual(board.WardsStanding, 2,
+                                      $"{rung.Id}: an unhurried player finished with "
+                                      + $"{board.WardsStanding} ward(s) standing");
+
+                int par = SiegeTuning.Par(layout);
+                int gold = (par * 120 + 99) / 100;
+
+                Assert.LessOrEqual(matches, gold,
+                                   $"{rung.Id}: an unhurried player needed {matches} against a "
+                                   + $"three-star line of {gold}, so nobody playing this way ever "
+                                   + "sees three stars");
+
+                Assert.GreaterOrEqual(matches * 2, par,
+                                      $"{rung.Id}: an unhurried player finished in {matches} "
+                                      + $"against par {par}, so par is more than twice what the "
+                                      + "rung really costs and every band under it is unreachable");
+
+                // **And the half that says this is a siege at all.** A line nothing ever reaches is
+                // a fail state that rejects nothing, which is invariant 5d asked of a threat rather
+                // than of a mechanic - the rung would play as a jewel board with scenery over it.
+                // The teaching rungs are the deliberate exception (see `TeachingRungs`).
+                if (i < TeachingRungs) continue;
+
+                int whole = board.Wards.Count * SiegeTuning.WardHealth;
+
+                Assert.Less(Health(board), whole,
+                            $"{rung.Id}: the line finished untouched at {whole}, so nothing on "
+                            + "this hill ever reached it");
+            }
+        }
+
+        /// <summary>
+        /// Every rung after the first deals cogs, and the first deals none.
+        ///
+        /// <b>A fact about the ramp rather than about the rules</b>, and it is here because it is
+        /// the one thing a content edit could quietly undo: a cog on the opening rung would put a
+        /// second object on the field while somebody is still working out what a match is for, and
+        /// no cog anywhere after it would leave a mechanic, its art, its lesson and its badge
+        /// shipped and unreachable.
+        /// </summary>
+        [Test]
+        public void TheOpeningRungDealsNoCogsAndEveryRungAfterItDoes()
+        {
+            Assert.AreEqual(0, Chapter[0].Cogs, "the opening rung teaches the verb and nothing else");
+
+            for (int i = 1; i < Chapter.Length; i++)
+                Assert.Greater(Chapter[i].Cogs, 0, Chapter[i].Id + " deals no cogs");
+        }
+
+        /// <summary>
+        /// A cog is taken by a run of gems beside it, and the colour of that run decides the ward.
+        ///
+        /// The mechanic's whole decision, pinned on a board built for it: a cog with one colour
+        /// beside it goes to that colour's ward and to no other.
+        /// </summary>
+        [Test]
+        public void ACogIsTakenByTheColourThatMatchesBesideIt()
+        {
+            // A checkerboard - so nothing lines up by accident - with three reds arranged so
+            // that one vertical swap closes a run directly under the cog, and nothing else.
+            var layout = Layout(new[]
+            {
+                "by*ybyby",
+                "yrbrybyb",
+                "byrybyby",
+                "ybybybyb",
+            }, "rgby", "rgby", new[] { "rgby" }, null, 0);
+
+            Assert.IsNull(layout.Fault, layout.Fault);
+
+            var board = SiegeBoard.Build(layout);
+
+            int red = layout.WardOf('r');
+            Assert.AreEqual(0, board.Wards[red].Rank);
+
+            int a = board.IndexOf(2, 1), b = board.IndexOf(2, 2);
+            Assert.IsTrue(board.Lines(a, b), "the fixture no longer lines a red run up");
+
+            var turn = board.Swap(a, b);
+            Assert.IsNotNull(turn);
+
+            int rises = 0;
+            foreach (var beat in turn.Beats)
+                foreach (var rise in beat.Rises)
+                {
+                    rises++;
+                    Assert.AreEqual(red, rise.Ward, "a red run gave its cog to another ward");
+                    Assert.IsTrue(rise.Rose);
+                }
+
+            Assert.AreEqual(1, rises, "the cog beside the run was not taken");
+            Assert.AreEqual(1, board.Wards[red].Rank);
+            Assert.AreEqual(2, board.Wards[red].Level, "the badge and the rank disagree");
+        }
+
+        /// <summary>
+        /// What a rank is worth: ten per cent more damage and ten per cent less fuel a bolt, both
+        /// of them exact in integers.
+        /// </summary>
+        [Test]
+        public void ARankIsWorthATenthOfADamageAndATenthOfAFuel()
+        {
+            Assert.AreEqual(10, SiegeTuning.DamageAt(0));
+            Assert.AreEqual(11, SiegeTuning.DamageAt(1));
+            Assert.AreEqual(12, SiegeTuning.DamageAt(2));
+            Assert.AreEqual(13, SiegeTuning.DamageAt(3));
+            Assert.AreEqual(14, SiegeTuning.DamageAt(4));
+
+            // **The fuel half of a rank did not move when the fuel unit was subdivided**, which is
+            // the whole reason it was done that way round: halving the *bolt* instead would have
+            // made this ladder 5, 4, 4, 3, 3 after truncation, so two of the four cogs a player
+            // spends would have bought nothing at all.
+            Assert.AreEqual(10, SiegeTuning.FuelShotTenths(0));
+            Assert.AreEqual(6, SiegeTuning.FuelShotTenths(SiegeTuning.MaxRank));
+
+            Assert.AreEqual(SiegeTuning.DamageAt(SiegeTuning.MaxRank), SiegeTuning.DamageAt(99));
+            Assert.AreEqual(SiegeTuning.FuelShotTenths(0), SiegeTuning.FuelShotTenths(-1));
+        }
+
+        /// <summary>
+        /// A cog never lines up with the cog beside it.
+        ///
+        /// The failure this refuses is the one every mirror of a match-three in this project has
+        /// met: a cell that is not a colour compared to another cell that is not a colour.
+        /// </summary>
+        [Test]
+        public void ThreeCogsInARowAreNotAMatch()
+        {
+            var layout = Layout(new[]
+            {
+                "***ybyby",
+                "yrbrybyb",
+                "byrybyby",
+                "ybybybyb",
+            }, "rgby", "rgby", new[] { "rgby" }, null, 0);
+
+            Assert.IsNull(layout.Fault, layout.Fault);
+        }
+
+        /// <summary>An overlord is the greater warlord, and a level names it by kind.</summary>
+        [Test]
+        public void AnOverlordIsAWarlordInUpperCase()
+        {
+            var lesser = Layout(Field, Gems, Wards, new string[0], "warlord:r");
+            var greater = Layout(Field, Gems, Wards, new string[0], "overlord:r");
+
+            Assert.IsNull(lesser.Fault, lesser.Fault);
+            Assert.IsNull(greater.Fault, greater.Fault);
+
+            Assert.AreEqual(SiegeKind.Boss, lesser.BossKind);
+            Assert.AreEqual(SiegeKind.Overlord, greater.BossKind);
+
+            Assert.AreEqual(SiegeTuning.BossHealth, SiegeTuning.HealthOf(SiegeKind.Boss));
+            Assert.AreEqual(SiegeTuning.OverlordHealth, SiegeTuning.HealthOf(SiegeKind.Overlord));
+
+            Assert.Greater(SiegeTuning.OverlordHealth, SiegeTuning.BossHealth);
+            Assert.Greater(SiegeTuning.OverlordCast, SiegeTuning.BossCast);
+            Assert.Less(SiegeTuning.OverlordCastEvery, SiegeTuning.BossCastEvery);
+
+            // It stops further up the hill, which is the compensation for all three.
+            Assert.Less(SiegeTuning.OverlordHold, SiegeTuning.BossHold);
+
+            // And par takes it with no special case at all: a boss is a wave (invariant 37t).
+            Assert.Greater(SiegeTuning.Par(greater), SiegeTuning.Par(lesser));
         }
 
         /// <summary>

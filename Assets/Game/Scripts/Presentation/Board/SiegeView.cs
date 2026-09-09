@@ -94,6 +94,21 @@ namespace GlimmerGrove
             /// <summary>The warlord's, and null for everything else.</summary>
             public bool Boss;
 
+            /// <summary>
+            /// Which of the four this is, and so what it throws and how it is drawn.
+            ///
+            /// <b>It was <c>bool Greater</c>, which was the right shape for exactly two bosses.</b>
+            /// A chapter shipped two warlords told apart by their hue and nothing else, and this is
+            /// the field that made that inevitable: a bool can only ever answer "the other one",
+            /// so every drawing decision downstream was a choice between two. Every one of them is
+            /// now a question about a <see cref="SiegeKind"/>, and adding a fifth boss is adding a
+            /// branch rather than replacing a flag.
+            /// </summary>
+            public SiegeKind Kind;
+
+            /// <summary>Whether it is the greatest of the four. Kept for the readouts that scale.</summary>
+            public bool Greater => Kind == SiegeKind.Overlord;
+
             /// <summary>What it stands in, what it comes on in, and what it throws with.</summary>
             public Sprite[] Idle, Walking, Casting;
 
@@ -127,6 +142,23 @@ namespace GlimmerGrove
             public float Recoil;
             public bool Down;
             public float Lit;
+
+            /// <summary>Which of <see cref="SiegeLayout.Letters"/> it burns. Its art is keyed on it.</summary>
+            public int Colour;
+
+            /// <summary>
+            /// The rank its picture is currently drawn at, which is not always the ward's.
+            ///
+            /// <b>Remembered rather than compared against the sprite</b>, so the one frame a rank
+            /// changes on is a frame something can be made to happen on — see
+            /// <see cref="SiegeView.Rose"/>. Asking "is the sprite the right one" every frame would
+            /// answer the same question and lose the *edge*, which is the only interesting part.
+            /// </summary>
+            public int Rank = -1;
+
+            /// <summary>The shield on its shoulder, and the number written on it.</summary>
+            public RectTransform Crest;
+            public Text Tier;
         }
 
         SiegeLayout _layout;
@@ -140,7 +172,7 @@ namespace GlimmerGrove
         /// </summary>
         public SiegeBoard Siege => _board;
 
-        RectTransform _hill, _mobs, _wall, _field, _fx;
+        RectTransform _hill, _mobs, _wall, _field, _meters, _fx;
 
         readonly List<Gem> _gems = new List<Gem>(48);
         readonly List<Mob> _mob = new List<Mob>(24);
@@ -264,9 +296,18 @@ namespace GlimmerGrove
                 case 0: return Piece("gem_r");
                 case 1: return Piece("gem_g");
                 case 2: return Piece("gem_b");
-                default: return Piece("gem_y");
+                case 3: return Piece("gem_y");
+
+                // A cog, which is what `SiegeBoard.ColourAt` answers -1 for. It is the one cell of
+                // this field that is not a colour, so it is the one that falls off the end of a
+                // table keyed on colour - and that is the right shape rather than a gap in one
+                // (`SiegeLayout.Cells`).
+                default: return Piece("gem_cog");
             }
         }
+
+        /// <summary>What a cell holding a cog answers when it is asked its colour.</summary>
+        const int CogColour = -1;
 
         /// <summary>
         /// A ward's body. Four models rather than four paint jobs.
@@ -284,28 +325,67 @@ namespace GlimmerGrove
         /// told apart only by hue is exactly that.
         /// </para>
         /// </summary>
-        static Sprite WardArt(int colour)
+        static Sprite WardArt(int colour, int rank)
         {
-            switch (colour)
+            switch (Tier(rank) * 4 + Hue(colour))
             {
-                case 0: return Piece("ward1");
-                case 1: return Piece("ward2");
-                case 2: return Piece("ward3");
-                default: return Piece("ward4");
+                case  0: return Piece("ward1_r");
+                case  1: return Piece("ward1_g");
+                case  2: return Piece("ward1_b");
+                case  3: return Piece("ward1_y");
+                case  4: return Piece("ward2_r");
+                case  5: return Piece("ward2_g");
+                case  6: return Piece("ward2_b");
+                case  7: return Piece("ward2_y");
+                case  8: return Piece("ward3_r");
+                case  9: return Piece("ward3_g");
+                case 10: return Piece("ward3_b");
+                case 11: return Piece("ward3_y");
+                case 12: return Piece("ward4_r");
+                case 13: return Piece("ward4_g");
+                case 14: return Piece("ward4_b");
+                case 15: return Piece("ward4_y");
+                case 16: return Piece("ward5_r");
+                case 17: return Piece("ward5_g");
+                case 18: return Piece("ward5_b");
+                default: return Piece("ward5_y");
             }
         }
 
         /// <summary>A ward's recoil, as frames. See <see cref="WardArt"/>.</summary>
-        static Sprite[] FireArt(int colour)
+        static Sprite[] FireArt(int colour, int rank)
         {
-            switch (colour)
+            switch (Tier(rank) * 4 + Hue(colour))
             {
-                case 0: return Reel("fire1");
-                case 1: return Reel("fire2");
-                case 2: return Reel("fire3");
-                default: return Reel("fire4");
+                case  0: return Reel("fire1_r");
+                case  1: return Reel("fire1_g");
+                case  2: return Reel("fire1_b");
+                case  3: return Reel("fire1_y");
+                case  4: return Reel("fire2_r");
+                case  5: return Reel("fire2_g");
+                case  6: return Reel("fire2_b");
+                case  7: return Reel("fire2_y");
+                case  8: return Reel("fire3_r");
+                case  9: return Reel("fire3_g");
+                case 10: return Reel("fire3_b");
+                case 11: return Reel("fire3_y");
+                case 12: return Reel("fire4_r");
+                case 13: return Reel("fire4_g");
+                case 14: return Reel("fire4_b");
+                case 15: return Reel("fire4_y");
+                case 16: return Reel("fire5_r");
+                case 17: return Reel("fire5_g");
+                case 18: return Reel("fire5_b");
+                default: return Reel("fire5_y");
             }
         }
+
+        /// <summary>Which of the five turrets a rank is drawn as, clamped.</summary>
+        static int Tier(int rank)
+            => rank < 0 ? 0 : rank > SiegeTuning.MaxRank ? SiegeTuning.MaxRank : rank;
+
+        /// <summary>Which of the four hues a colour is drawn in, clamped.</summary>
+        static int Hue(int colour) => colour < 0 || colour > 3 ? 3 : colour;
 
         /// <summary>
         /// What a ward <em>fires</em>, as frames.
@@ -407,7 +487,19 @@ namespace GlimmerGrove
         /// <summary>Which of the cast a raider is drawn as, as frames. See <see cref="GemArt"/>.</summary>
         static Sprite[] Skin(SiegeRaider raider)
         {
-            if (raider.Boss) return Reel("boss");
+            // **Four bosses, four bodies, four packs.** Every name here is written out at the
+            // lookup rather than built from the kind, which is what keeps
+            // `Tools/verify/artnames.py` able to hold all twelve reels to what is on disk — a
+            // table of strings would be twelve names nothing checks (invariant 7's rule read into
+            // the gate that enforces it).
+            switch (raider.Kind)
+            {
+                case SiegeKind.Overlord: return Reel("over");
+                case SiegeKind.Warbringer: return Reel("bringer");
+                case SiegeKind.Boss: return Reel("boss");
+                case SiegeKind.Blightcaller: return Reel("blight");
+            }
+
             if (raider.Brute) return Reel("brute");
 
 
@@ -432,7 +524,18 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         static float TallOf(SiegeRaider raider)
-            => raider.Boss ? 3.1f : raider.Brute ? 1.55f : 1.15f;
+            => raider.Kind == SiegeKind.Overlord ? 3.5f
+             : raider.Kind == SiegeKind.Warbringer ? 3.3f
+             : raider.Kind == SiegeKind.Boss ? 3.1f
+             // **The blightcaller is the smallest of the four, and 2.6 was too small.** It is the
+             // first boss a chapter shows and the only one that takes no health, so it should not
+             // arrive with the finale's silhouette — but a render put it beside a creeper and it
+             // read as one: its frame is a floating eye with a long tail under it, so a third of
+             // its height is not body at all, where every other boss here fills its own frame.
+             // Three cells of frame is about one and three quarters of eye, which is the size a
+             // brute is and the smallest thing that reads as more than a raider (invariant 32b).
+             : raider.Kind == SiegeKind.Blightcaller ? 3.0f
+             : raider.Brute ? 1.55f : 1.15f;
 
         /// <summary>
         /// Where a raider carries its health bar and its colour, as a fraction of its own height.
@@ -479,19 +582,77 @@ namespace GlimmerGrove
         /// rules do not mean — a player would reasonably read it as "this hurts the blue ward
         /// more". See <c>SiegeShotBake</c>.
         /// </summary>
-        static Sprite[] SpellArt() => Blast("spell");
+        /// <summary>
+        /// What crosses the hill, and <b>null for a warbringer, which throws nothing</b>.
+        ///
+        /// The one place the four are not four: a roar is aimed at no ward, so it has no flight
+        /// and its flight reel is never loaded (<c>SiegeMode.Bosses</c>). Answering null rather
+        /// than a reel nothing scoped in is what keeps a missing address from ever being asked
+        /// for — an <c>Image</c> with no sprite is a white rectangle (invariant 7b).
+        /// </summary>
+        static Sprite[] SpellArt(SiegeKind kind)
+        {
+            switch (kind)
+            {
+                case SiegeKind.Overlord: return Blast("omen");
+                case SiegeKind.Blightcaller: return Blast("hex");
+                case SiegeKind.Warbringer: return null;
+                default: return Blast("spell");
+            }
+        }
 
-        static Sprite[] SpellMuzzleArt() => Blast("spell_muzzle");
+        static Sprite[] SpellMuzzleArt(SiegeKind kind)
+        {
+            switch (kind)
+            {
+                case SiegeKind.Overlord: return Blast("omen_muzzle");
+                case SiegeKind.Blightcaller: return Blast("hex_muzzle");
+                case SiegeKind.Warbringer: return Blast("roar_muzzle");
+                default: return Blast("spell_muzzle");
+            }
+        }
 
-        static Sprite[] SpellHitArt() => Blast("spell_hit");
+        static Sprite[] SpellHitArt(SiegeKind kind)
+        {
+            switch (kind)
+            {
+                case SiegeKind.Overlord: return Blast("omen_hit");
+                case SiegeKind.Blightcaller: return Blast("hex_hit");
+                case SiegeKind.Warbringer: return Blast("roar_hit");
+                default: return Blast("spell_hit");
+            }
+        }
 
         /// <summary>
-        /// The colour the warlord's magic is drawn in.
+        /// The colour each boss's magic is drawn in, and none of the four is a colour a gem wears.
         ///
-        /// Violet, which is the one entry in <c>Pal</c>'s board set that is not one of this mode's
-        /// four gems — so nothing it lights can be mistaken for a colour rule.
+        /// <para>
+        /// <b>The elemental double is a rule about bolts going <em>into</em> a raider</b>, so a
+        /// spell coming <em>out</em> of one in one of the board's four colours would be saying
+        /// something the rules do not mean — a player would reasonably read it as "this hurts the
+        /// blue ward more". <c>Pal</c>'s board set has exactly four entries that are none of
+        /// <c>Poppy</c>, <c>Mint</c>, <c>Azure</c> or <c>Sun</c>, and the four bosses take one
+        /// each.
+        /// </para>
+        /// <para>
+        /// <b>Colour is the weakest of the three things that tell them apart, and it is here for
+        /// completeness rather than as the answer.</b> A hex is a teal wisp, a smite a violet orb,
+        /// a roar a white ring and an omen a magenta sun — different shapes, different sizes and
+        /// different <em>effects on the line</em>, which is what a player actually reads. Teal
+        /// against the blue gem is the closest pair of hues in the mode, which is exactly why the
+        /// hex is the one drawn as a trailing wisp rather than as anything round.
+        /// </para>
         /// </summary>
-        static readonly Color Spellfire = Pal.Foxglove;
+        static Color Casting(SiegeKind kind)
+        {
+            switch (kind)
+            {
+                case SiegeKind.Overlord: return Pal.Bloom;
+                case SiegeKind.Blightcaller: return Pal.Aqua;
+                case SiegeKind.Warbringer: return Pal.Radiance;
+                default: return Pal.Foxglove;
+            }
+        }
 
         /// <summary>
         /// Rounded at the top and square at the foot, because the action bar is stacked directly
@@ -550,6 +711,33 @@ namespace GlimmerGrove
         /// <summary>How far down the hill a raider has come.</summary>
         float MarchY(float march) => Mathf.Lerp(_hillTop, _hillFoot, Mathf.Clamp01(march));
 
+        /// <summary>
+        /// Where a ward's fuel tube sits, as a board coordinate rather than a ward's own.
+        ///
+        /// <para>
+        /// <b>Sitting on the top edge of the field's plate, in the strip under the plinths.</b>
+        /// Worked out from the plate rather than typed as an offset from the turret, because that
+        /// edge is what a player reads it against — and because both the cell and the way the bands
+        /// divide move with the screen (see <c>Compose</c>), so a typed number is right on one
+        /// phone and wrong on the next.
+        /// </para>
+        /// <para>
+        /// <b>The plinths and the plate overlap</b>, which is why this cannot be the middle of a
+        /// gap: on every screen this mode has been drawn at, the foot of a turret is already behind
+        /// the field. What there is instead is the band immediately above the plate's edge, which
+        /// is empty on every board and is directly over the gems whose colour fills it — the two
+        /// halves of the decision this mode asks, one above the other.
+        /// </para>
+        /// </summary>
+        float TubeY
+        {
+            get
+            {
+                float plate = _gemCentre + (Cell * Height + Cell * .34f) * .5f;
+                return plate + Cell * .22f;
+            }
+        }
+
         // ------------------------------------------------------------------ building
         protected override void Compose()
         {
@@ -581,6 +769,11 @@ namespace GlimmerGrove
             _aim = null;
             _marker = null;
 
+            // Hangs off `_wall`, which this rebuild is about to replace - a kept one would be a
+            // destroyed node handed to a lesson as a live one.
+            _wardAnchor = null;
+            _meters = null;
+
             // **The bands are derived from the cell, not the other way round.** The field is
             // laid out to fill the width (see `Fit`), so how much height its rows need is a fact
             // rather than a share — and the hill and the line then take what is left in the
@@ -604,6 +797,14 @@ namespace GlimmerGrove
             _mobs = Layer("Raiders");
             _wall = Layer("Line");
             _field = Layer("Field");
+
+            // **The fuel tubes have a layer of their own, and it is above the field.** They sit in
+            // the strip between the plinths and the gems, which is where a device said they belong
+            // - and that strip is exactly where the field's plate begins, so a tube carried by its
+            // own turret would be drawn behind it. That is the fault invariant 37g records, met
+            // from the other end: the first fix moved the tube *up* onto the chassis to escape the
+            // plate, and what it really needed was to stop being underneath it.
+            _meters = Layer("Meters");
             _fx = Layer("Fx");
 
             Ground();
@@ -684,25 +885,40 @@ namespace GlimmerGrove
 
                 // White: a ward's colour is in its sprite, not on top of it.
                 post.Coat = Color.white;
+                post.Colour = ward.Colour;
+                post.Rank = ward.Rank;
 
-                post.Body = UIKit.Img("Post", post.Node, WardArt(ward.Colour), post.Coat,
-                                      new Vector2(Cell * 1.72f, Cell * 2.15f));
+                post.Body = UIKit.Img("Post", post.Node, WardArt(ward.Colour, ward.Rank),
+                                      post.Coat, new Vector2(Cell * 1.72f, Cell * 2.15f));
                 post.Body.raycastTarget = false;
                 post.Body.preserveAspect = true;
                 post.Body.rectTransform.anchoredPosition = new Vector2(0f, Cell * .06f);
 
-                post.Fire = FireArt(ward.Colour);
+                post.Fire = FireArt(ward.Colour, ward.Rank);
 
                 // The fuel tube: the one readout in this mode that is on the board rather than in
                 // the header, because it is the thing a player is deciding about on every match.
-                post.Tube = UIKit.Node("Tube", post.Node);
+                //
+                // **Hung off the meters layer rather than off the turret**, so it is drawn over the
+                // field's plate rather than under it - see `Compose`. Its x is the turret's, so it
+                // still reads as belonging to one, and it is the only part of a ward that is not
+                // its child.
+                post.Tube = UIKit.Node("Tube", _meters);
                 post.Tube.anchorMin = post.Tube.anchorMax = new Vector2(.5f, .5f);
                 post.Tube.sizeDelta = new Vector2(Cell * 1.06f, Cell * .23f);
 
-                // **Over the pillar rather than under the plinth**, which is where a render put
-                // it: below the plinth it fell behind the field's own plate and the one number
-                // every decision in this mode rests on could not be seen at all.
-                post.Tube.anchoredPosition = new Vector2(0f, -Cell * .62f);
+                // **In the gap between the plinths and the field**, which is where it belongs and
+                // where a device said so. It was over the pillar - a render had put it there,
+                // because at the time it was the only place it did not fall behind the field's own
+                // plate - and on the pillar it reads as part of the turret's chassis rather than as
+                // a meter. The strip of rampart under the line is empty, it is exactly the height
+                // of a bar, and it is directly above the gems whose colour fills it: the two halves
+                // of every decision this mode asks, one above the other.
+                //
+                // Derived rather than typed, because the bands are derived (see `Compose`): the top
+                // of the field's plate and the foot of a plinth are both known here, and a typed
+                // offset would be right on one phone.
+                post.Tube.anchoredPosition = new Vector2(PostX(i), TubeY);
 
                 var trough = UIKit.Img("Trough", post.Tube, Art.Round(12),
                                        new Color(0f, 0f, 0f, .62f), post.Tube.sizeDelta);
@@ -740,8 +956,48 @@ namespace GlimmerGrove
                 post.Fill.rectTransform.anchorMax = new Vector2(0f, .5f);
                 post.Fill.rectTransform.anchoredPosition = new Vector2(2f, 0f);
 
+                Badge(post, ward);
+
                 _posts[i] = post;
             }
+        }
+
+        /// <summary>
+        /// The rank badge on a ward's shoulder: the kit's own shield, with a number on it.
+        ///
+        /// <para>
+        /// <b>Always drawn, and it says one before anybody has spent a cog.</b> A badge that only
+        /// appeared once a ward had been upgraded would be a reward for knowing about a mechanic
+        /// nobody had met — this way the ladder is on the board from the first frame, and what a
+        /// cog does is legible the moment it happens rather than the moment it is explained.
+        /// </para>
+        /// <para>
+        /// <b>The number is drawn rather than baked</b>, which is five textures a colour saved and
+        /// one place the tier is written down. It sits on the turret's upper-left shoulder, which
+        /// is the one corner of a turret nothing else on this board uses: the health bar is above
+        /// it, the fuel tube below it, and its own bolts leave from the middle.
+        /// </para>
+        /// </summary>
+        void Badge(Post post, SiegeWard ward)
+        {
+            post.Crest = UIKit.Node("Crest", post.Node);
+            post.Crest.anchorMin = post.Crest.anchorMax = new Vector2(.5f, .5f);
+            post.Crest.sizeDelta = new Vector2(Cell * .62f, Cell * .62f);
+            post.Crest.anchoredPosition = new Vector2(-Cell * .74f, Cell * .34f);
+
+            var shield = UIKit.Img("Shield", post.Crest, Piece("crest"), Color.white,
+                                   post.Crest.sizeDelta);
+            shield.raycastTarget = false;
+            shield.preserveAspect = true;
+
+            post.Tier = UIKit.Titled("Tier", post.Crest, ward.Level.ToString(),
+                                     Mathf.RoundToInt(Cell * .34f), Pal.Cream,
+                                     TextAnchor.MiddleCenter, post.Crest.sizeDelta,
+                                     default, default, Cell * .035f, Cell * .02f);
+
+            // The shield's own art hangs its point below its middle, so the number is lifted to sit
+            // in the face of it rather than over the tip.
+            post.Tier.rectTransform.anchoredPosition = new Vector2(0f, Cell * .06f);
         }
 
         /// <summary>The dark sockets a gem stands in, drawn once and never taken away.</summary>
@@ -1136,6 +1392,40 @@ namespace GlimmerGrove
         /// </summary>
         public override int FriendCell => Width / 2;
 
+        RectTransform _wardAnchor;
+
+        /// <summary>
+        /// Something for the cog lesson to ring, and it is the <em>line</em> rather than a cell.
+        ///
+        /// <para>
+        /// A cog is a thing on the field, so the obvious anchor is the cog — and it is wrong,
+        /// because a cog is dealt and may not be standing anywhere when the lesson goes up. What
+        /// the lesson is about is which turret an upgrade goes to, so the honest thing to point at
+        /// is the turret it would go to, and the middle of the line is the one place on it that is
+        /// on every board however many wards it holds.
+        /// </para>
+        /// <para>
+        /// Made once and kept, for <c>ProtoView.AnchorAt</c>'s reason: the lessons are asked again
+        /// on every readout change, and the node handed back is the one the tip is already ringing.
+        /// </para>
+        /// </summary>
+        public RectTransform WardAnchor
+        {
+            get
+            {
+                if (_wardAnchor != null) return _wardAnchor;
+                if (_wall == null || _posts == null || _posts.Length == 0) return null;
+
+                _wardAnchor = UIKit.Node("WardAnchor", _wall);
+                _wardAnchor.anchorMin = _wardAnchor.anchorMax = new Vector2(.5f, .5f);
+                _wardAnchor.sizeDelta = new Vector2(Cell * 1.8f, Cell * 2.3f);
+                _wardAnchor.anchoredPosition =
+                    new Vector2(PostX(_posts.Length / 2), _lineY);
+
+                return _wardAnchor;
+            }
+        }
+
         // ------------------------------------------------------------------ the clock
         /// <summary>
         /// Whether this run is under way at all, ignoring whether an animation is playing.
@@ -1274,6 +1564,24 @@ namespace GlimmerGrove
                 var post = _posts[i];
                 var ward = _board.Wards[i];
 
+                // **The rank is repainted from the model, and the *edge* is what raises the
+                // fanfare.** A ward may go up while a cascade is still resolving and while this
+                // view is mid-animation, so what a ward is drawn as has to be a fact read off the
+                // board rather than a thing switched by whoever happened to see the event — and
+                // `Post.Rank` is what turns that read into an edge exactly once.
+                if (post.Rank != ward.Rank)
+                {
+                    post.Rank = ward.Rank;
+                    post.Fire = FireArt(post.Colour, ward.Rank);
+
+                    if (!post.Down && post.Body != null)
+                        post.Body.sprite = WardArt(post.Colour, ward.Rank);
+
+                    if (post.Tier != null) post.Tier.text = ward.Level.ToString();
+
+                    Rose(post);
+                }
+
                 float wide = post.Tube.sizeDelta.x - 4f;
                 post.Juice.rectTransform.sizeDelta =
                     new Vector2(Mathf.Max(0f, wide * ward.Charge), post.Tube.sizeDelta.y - 4f);
@@ -1304,7 +1612,7 @@ namespace GlimmerGrove
                 }
                 else if (post.Body != null && !post.Down)
                 {
-                    post.Body.sprite = WardArt(ward.Colour);
+                    post.Body.sprite = WardArt(post.Colour, ward.Rank);
                 }
 
                 // **A ward is never drawn darker than its own colour.** It used to fade toward
@@ -1312,8 +1620,28 @@ namespace GlimmerGrove
                 // the run and stayed dim - reported from play as "they are bright when the match
                 // starts and immediately dim down". Fuel now reads as a ward getting *brighter*,
                 // which is the direction a light should move in.
+                //
+                // **A doused ward is the one exception, and it is an exception to the rule rather
+                // than a hole in it** (invariant 37m): the reason that rule exists is that dim
+                // must never be the resting state, and a blightcaller's dark is a thing that has
+                // *happened* and is running out. It is drawn from the model every frame rather
+                // than latched when the hex lands, so a surge that lifts it (`SiegeBoard.Surge`)
+                // is a ward relighting on the frame the item is spent.
                 if (post.Body != null && !post.Down)
-                    post.Body.color = Color.Lerp(post.Coat, Color.white, post.Lit * .30f);
+                    post.Body.color = ward.Doused
+                                    ? Color.Lerp(DarkCoat, post.Coat,
+                                                 Mathf.PingPong(Time.unscaledTime * 2.2f, 1f) * .22f)
+                                    : Color.Lerp(post.Coat, Color.white, post.Lit * .30f);
+
+                // The pall over it: a cold veil that thins as the seconds run out, so how long is
+                // left is on the board rather than in the player's head. It is the ward's own glow
+                // widget re-tinted, which is what keeps it behind the turret rather than over it.
+                if (ward.Doused)
+                {
+                    float left = Mathf.Clamp01(ward.Dark / SiegeTuning.Douse);
+                    post.Glow.color = Pal.A(Casting(SiegeKind.Blightcaller), .18f + left * .44f);
+                    post.Glow.rectTransform.localScale = Vector3.one * (1.05f + left * .3f);
+                }
 
                 // Cream, then gold, then ember: the line says how close it is to going in the
                 // one place a player is already looking.
@@ -1329,6 +1657,59 @@ namespace GlimmerGrove
                 post.Down = true;
                 Fell(post);
             }
+        }
+
+        /// <summary>
+        /// A ward going up a rank: the one moment in this mode the player <em>made</em>.
+        ///
+        /// <para>
+        /// <b>Drawn as an arrival rather than as a change.</b> The turret's picture has already
+        /// swapped by the time this runs, so what is left to say is that it was earned — a ring
+        /// out of the plinth, the badge punched, light gathered on the body, and the one sound in
+        /// the set that means <em>you have got something</em>. Invariant 20m's rule: the event a
+        /// player caused is the one that gets the biggest drawing in the mode.
+        /// </para>
+        /// <para>
+        /// Nothing here reads the board, so it is safe to raise from <see cref="Charge"/> on the
+        /// frame a rank changes, whatever else is mid-animation.
+        /// </para>
+        /// </summary>
+        void Rose(Post post)
+        {
+            if (post == null || post.Node == null) return;
+
+            // Nought is where every ward starts, so a "rank up" to it is the board being built.
+            if (post.Rank <= 0) return;
+
+            var tint = TintOf(post.Colour);
+            var at = new Vector2(PostX(System.Array.IndexOf(_posts, post)), _lineY);
+
+            Shockwave(at, Pal.Lift(tint, .45f), 3.2f, .42f);
+            Pop(at, Pal.Lift(tint, .3f), 2.4f, .3f);
+            Burst.Sparks(_fx, at + new Vector2(0f, Cell * .4f), tint, 16, Cell * 3.4f,
+                         Cell * .26f, .55f);
+
+            Tween.Punch(post.Node, .18f, .34f);
+
+            if (post.Crest != null)
+            {
+                Tween.KillAll(post.Crest);
+                post.Crest.localScale = Vector3.one * 1.9f;
+                Tween.Scale(post.Crest, 1f, .4f, Ease.OutBack);
+            }
+
+            if (post.Body != null)
+            {
+                var body = post.Body;
+                Tween.Run(.5f, Ease.OutQuad, t =>
+                {
+                    if (!body) return;
+                    body.color = Color.Lerp(Color.white, post.Coat, t);
+                }, body, "rose");
+            }
+
+            Audio.Sfx("reward", .55f, 1f);
+            ShakeBoard(7f);
         }
 
         // ------------------------------------------------------------------ raiders
@@ -1352,6 +1733,7 @@ namespace GlimmerGrove
             float tall = Cell * TallOf(raider);
             mob.Height = tall;
             mob.Boss = raider.Boss;
+            mob.Kind = raider.Kind;
 
             mob.Shadow = UIKit.Img("Shadow", mob.Node, Art.Glow(64, 3f),
                                    new Color(0f, 0f, 0f, .42f),
@@ -1380,14 +1762,17 @@ namespace GlimmerGrove
             if (raider.Boss)
             {
                 mob.Charge = UIKit.Img("Charge", mob.Node, Art.Glow(128, 2.0f),
-                                       Pal.A(Spellfire, 0f),
+                                       Pal.A(Casting(raider.Kind), 0f),
                                        new Vector2(tall * 1.5f, tall * 1.5f));
                 mob.Charge.raycastTarget = false;
             }
 
             mob.Idle = Skin(raider);
-            mob.Walking = raider.Boss ? Reel("boss_walk") : null;
-            mob.Casting = raider.Boss ? Reel("boss_cast") : null;
+
+            // Written out per kind rather than built from a name, for `GemArt`'s reason: a reel
+            // whose key is assembled is a reel `Tools/verify/artnames.py` cannot hold to disk.
+            mob.Walking = WalkReel(raider.Kind);
+            mob.Casting = CastReel(raider.Kind);
 
             // A warlord comes on *walking* and stands still once it is in place; everything else
             // is walking for its whole life, so its one reel is both.
@@ -1478,6 +1863,38 @@ namespace GlimmerGrove
 
             _mob.Add(mob);
             return mob;
+        }
+
+        /// <summary>
+        /// The reel a boss crosses ground in, and null for everything that has only one reel.
+        ///
+        /// Written out per kind rather than built from a name, for <see cref="GemArt"/>'s reason:
+        /// a reel whose key is assembled is a reel <c>Tools/verify/artnames.py</c> cannot hold to
+        /// disk, and twelve of the mode's art names are these.
+        /// </summary>
+        static Sprite[] WalkReel(SiegeKind kind)
+        {
+            switch (kind)
+            {
+                case SiegeKind.Overlord: return Reel("over_walk");
+                case SiegeKind.Warbringer: return Reel("bringer_walk");
+                case SiegeKind.Boss: return Reel("boss_walk");
+                case SiegeKind.Blightcaller: return Reel("blight_walk");
+                default: return null;
+            }
+        }
+
+        /// <summary>The reel a boss throws in, and null for everything that never throws.</summary>
+        static Sprite[] CastReel(SiegeKind kind)
+        {
+            switch (kind)
+            {
+                case SiegeKind.Overlord: return Reel("over_cast");
+                case SiegeKind.Warbringer: return Reel("bringer_cast");
+                case SiegeKind.Boss: return Reel("boss_cast");
+                case SiegeKind.Blightcaller: return Reel("blight_cast");
+                default: return null;
+            }
         }
 
         /// <summary>How fast a warlord's own frames run. Slow, because it is a heavy thing.</summary>
@@ -1993,7 +2410,14 @@ namespace GlimmerGrove
             if (mob == null || mob.Node == null) return;
 
             Vector2 from = mob.Node.anchoredPosition + new Vector2(0f, mob.Height * .10f);
-            Vector2 to = new Vector2(PostX(cast.Ward), _lineY + Cell * .3f);
+
+            // **A roar is thrown at the ground it is standing on**, so it has no ward and its
+            // "flight" is an expanding ring rather than something crossing the hill. Everything
+            // below asks the craft rather than testing the ward index, which is the rule the board
+            // keeps too (`SiegeTuning.AimsAtAWard`).
+            bool aimed = cast.Craft != SiegeSpell.Rally && cast.Ward >= 0;
+
+            Vector2 to = aimed ? new Vector2(PostX(cast.Ward), _lineY + Cell * .3f) : from;
 
             // The alien's own attack frames, once, and back to standing. A warlord that only ever
             // cycled its idle would have no way to say it had done anything, which is the fault
@@ -2014,9 +2438,14 @@ namespace GlimmerGrove
             }
 
             Gather(mob);
-            Sigil(cast.Ward);
 
-            Audio.Sfx("whoosh", .5f, .74f);
+            // The tell. A ward that is about to be hit gets a ring closing on it; a roar has no
+            // target, so what closes is a ring on the warbringer itself — the same grammar saying
+            // "something is about to happen *here*" rather than "*to that*".
+            if (aimed) Sigil(cast.Ward, mob.Kind);
+            else Brace(mob, from);
+
+            Audio.Sfx("whoosh", .5f, Pitch(mob.Kind));
 
             // The bolt itself leaves when the wind-up ends, and crosses in `BossFlight` — but only
             // if the warlord is still standing when it does. The board already fizzles a spell
@@ -2025,11 +2454,22 @@ namespace GlimmerGrove
             // hit having been missed rather than as the cast having been interrupted.
             int caster = cast.Raider;
 
+            var kind = mob.Kind;
+
             Tween.After(SiegeTuning.BossTell, () =>
             {
-                if (_board != null && _board.Find(caster) != null) Hurl(from, to);
+                if (_board == null || _board.Find(caster) == null) return;
+
+                if (aimed) Hurl(from, to, kind);
+                else Roar(from, kind);
             }, mob.Node);
         }
+
+        /// <summary>How low a boss's magic sounds. Bigger things speak lower.</summary>
+        static float Pitch(SiegeKind kind)
+            => kind == SiegeKind.Overlord ? .50f
+             : kind == SiegeKind.Warbringer ? .55f
+             : kind == SiegeKind.Blightcaller ? .92f : .74f;
 
         /// <summary>The light a warlord gathers before a spell leaves it.</summary>
         void Gather(Mob mob)
@@ -2037,12 +2477,14 @@ namespace GlimmerGrove
             var glow = mob.Charge;
             if (glow == null) return;
 
+            var fire = Casting(mob.Kind);
+
             Tween.KillChannel(glow, "gather");
 
             Tween.Run(SiegeTuning.BossTell, Ease.InQuad, t =>
             {
                 if (!glow) return;
-                glow.color = Pal.A(Spellfire, t * .95f);
+                glow.color = Pal.A(fire, t * .95f);
                 glow.rectTransform.localScale = Vector3.one * Mathf.Lerp(.35f, 1.15f, t);
             }, glow, "gather").OnDone(() =>
             {
@@ -2050,7 +2492,7 @@ namespace GlimmerGrove
                 Tween.Run(.22f, Ease.OutQuad, t =>
                 {
                     if (!glow) return;
-                    glow.color = Pal.A(Spellfire, (1f - t) * .95f);
+                    glow.color = Pal.A(fire, (1f - t) * .95f);
                 }, glow, "gather");
             });
         }
@@ -2063,22 +2505,30 @@ namespace GlimmerGrove
         /// happened here</em>, and this means <em>something is about to</em>. A countdown that
         /// looks like an explosion is a warning nobody reads as one.
         /// </summary>
-        void Sigil(int ward)
+        void Sigil(int ward, SiegeKind kind)
         {
             var at = new Vector2(PostX(ward), _lineY + Cell * .3f);
+            bool greater = kind == SiegeKind.Overlord;
 
-            var ring = UIKit.Img("Sigil", _fx, Art.Ring(128, 10f), Pal.A(Spellfire, .95f),
-                                 new Vector2(Cell, Cell));
+            var ring = UIKit.Img("Sigil", _fx, Art.Ring(128, greater ? 13f : 10f),
+                                 Pal.A(Casting(kind), .95f),
+                                 new Vector2(Cell * (greater ? 1.25f : 1f), Cell));
             ring.raycastTarget = false;
             ring.rectTransform.anchoredPosition = at;
 
             var rt = ring.rectTransform;
 
+            // **A hex turns the other way.** The two spells that take a ward's *health* close a
+            // ring clockwise; the one that takes its *fire* closes anticlockwise, so the two
+            // warnings are told apart at a glance by a player who has met both — which is the
+            // whole of what a tell is for, and the cheapest possible way to say it.
+            float spin = SiegeTuning.SpellOf(kind) == SiegeSpell.Douse ? -260f : 220f;
+
             Tween.Run(SiegeTuning.BossTell, Ease.Linear, t =>
             {
                 if (!rt) return;
                 rt.localScale = Vector3.one * Mathf.Lerp(4.4f, 1.5f, t);
-                rt.localRotation = Quaternion.Euler(0f, 0f, t * 220f);
+                rt.localRotation = Quaternion.Euler(0f, 0f, t * spin);
             }, ring).OnDone(() =>
             {
                 if (!ring) return;
@@ -2087,45 +2537,158 @@ namespace GlimmerGrove
             });
         }
 
-        /// <summary>The spell crossing the hill, and the flash it leaves the warlord with.</summary>
-        void Hurl(Vector2 from, Vector2 to)
+        /// <summary>
+        /// The tell a warbringer wears, which is a ring closing on <em>itself</em>.
+        ///
+        /// A roar has no target, so the thing a player has to read is not "which ward" but "how
+        /// long" — and the answer to it is not a mending, it is a firepot into whatever the roar
+        /// is about to set running. Same grammar as <see cref="Sigil"/> (a ring that closes means
+        /// something is about to happen), aimed at the boss rather than at the line.
+        /// </summary>
+        void Brace(Mob mob, Vector2 at)
+        {
+            var ring = UIKit.Img("Brace", _fx, Art.Ring(128, 12f),
+                                 Pal.A(Casting(SiegeKind.Warbringer), .9f),
+                                 new Vector2(Cell * 1.4f, Cell * 1.4f));
+            ring.raycastTarget = false;
+            ring.rectTransform.anchoredPosition = at;
+
+            var rt = ring.rectTransform;
+
+            Tween.Run(SiegeTuning.BossTell, Ease.Linear, t =>
+            {
+                if (!rt) return;
+                rt.localScale = Vector3.one * Mathf.Lerp(5.2f, 1.8f, t);
+                rt.localRotation = Quaternion.Euler(0f, 0f, t * 160f);
+            }, ring).OnDone(() =>
+            {
+                if (!ring) return;
+                Tween.Fade(ring, 0f, SiegeTuning.BossFlight)
+                     .OnDone(() => { if (ring) Destroy(ring.gameObject); });
+            });
+
+            // It braces itself before it goes: the body squashes down into the roar, which is the
+            // one bit of anticipation a boss that never throws anything has to work with.
+            if (mob.Body != null)
+                Tween.Punch(mob.Body.transform, .09f, SiegeTuning.BossTell * .6f);
+        }
+
+        /// <summary>
+        /// How big each boss's thrown thing is drawn, in cells: the object, its muzzle and its
+        /// impact.
+        ///
+        /// <b>Size is the second of the three things that tell the four apart</b>, after what they
+        /// do to the line and before their colour. An omen is the largest thing this mode ever
+        /// draws; a hex is the smallest, because it takes no health and reading as heavy would be
+        /// the drawing telling a lie about the rule.
+        /// </summary>
+        static float ThrownAt(SiegeKind kind)
+            => kind == SiegeKind.Overlord ? 2.1f
+             : kind == SiegeKind.Blightcaller ? 1.35f : 1.6f;
+
+        static float BurstAt(SiegeKind kind)
+            => kind == SiegeKind.Overlord ? 1.2f
+             : kind == SiegeKind.Blightcaller ? .85f : 1f;
+
+        /// <summary>The spell crossing the hill, and the flash it leaves the boss with.</summary>
+        void Hurl(Vector2 from, Vector2 to, SiegeKind kind)
         {
             var dir = to - from;
             float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
 
-            var muzzle = SpellMuzzleArt();
+            var fire = Casting(kind);
+            float scale = BurstAt(kind);
+
+            var muzzle = SpellMuzzleArt(kind);
             if (muzzle != null && muzzle.Length > 0)
-                Ends(Lend(muzzle, Color.white, Cell * 4.2f, from, angle, 30f, false, MuzzleAt),
-                     .38f);
+                Ends(Lend(muzzle, Color.white, Cell * 4.2f * scale, from, angle, 30f,
+                          false, MuzzleAt), .38f);
 
             // The pack's own flash for this one is faint - a thin ring and a few sparks - so the
             // moment the spell *leaves* is carried by these two rather than by it. Cheaper than
             // swapping a whole three-part set for its weakest part, which is what the alternative
             // was: its orb and its impact are the best in the pack.
-            Shockwave(from, Pal.Lift(Spellfire, .5f), 3.4f, .3f);
-            Pop(from, Spellfire, 2.6f, .26f);
+            Shockwave(from, Pal.Lift(fire, .5f), 3.4f * scale, .3f);
+            Pop(from, fire, 2.6f * scale, .26f);
 
-            Audio.Sfx("poke", .5f, .62f);
+            Audio.Sfx("poke", .5f, Pitch(kind) - .12f);
 
-            var frames = SpellArt();
+            var frames = SpellArt(kind);
 
             if (frames == null || frames.Length == 0)
                 frames = new[] { Art.Glow(96, 2.0f) };
 
             // **Half again the width of a ward's bolt, and anchored at its middle rather than at
-            // `HeadAt`.** A warlord's spell is an orb rather than a comet — it is baked square
+            // `HeadAt`.** A boss's spell is an orb rather than a comet — it is baked square
             // (`SiegeShotBake.BakeSpell`), so there is no head leading a trail to step back from.
-            var puff = Lend(frames, Color.white, Cell * 1.6f, from, angle, 30f, true, .5f);
-            Glow(puff, Spellfire, Cell * 3f);
+            var puff = Lend(frames, Color.white, Cell * ThrownAt(kind), from, angle, 30f,
+                            true, .5f);
+            Glow(puff, fire, Cell * 3f * scale);
 
             var node = puff.Node;
+
+            // **A hex drifts rather than flies**, which is the one thing about its motion a player
+            // can read before it lands: it wobbles across the hill and swells, where a smite and
+            // an omen go straight. The arrival is on the rules' clock either way (invariant 37s) —
+            // what changes is the path, never the time.
+            bool wafts = SiegeTuning.SpellOf(kind) == SiegeSpell.Douse;
+            var side = new Vector2(-dir.y, dir.x).normalized * Cell * .55f;
 
             Tween.Run(SiegeTuning.BossFlight, Ease.Linear, t =>
             {
                 if (!node) return;
-                node.anchoredPosition = Vector2.Lerp(from, to, t);
+
+                var at = Vector2.Lerp(from, to, t);
+                if (wafts) at += side * Mathf.Sin(t * Mathf.PI * 2f) * (1f - t);
+
+                node.anchoredPosition = at;
                 node.localScale = Vector3.one * Mathf.Lerp(.8f, 1.25f, t);
             }, node).OnDone(() => Give(puff));
+        }
+
+        /// <summary>
+        /// A warbringer's roar leaving it: a white ring over the whole hill, and nothing crossing
+        /// it.
+        ///
+        /// <b>The one boss effect in this mode that is not aimed</b>, so it is drawn as the thing
+        /// a roar is — pressure going outward from a point — rather than as something travelling
+        /// to a place. It is the loudest single drawing on the board and it is meant to be: what
+        /// it announces is every raider on the hill breaking into a run, which a player has about
+        /// five seconds to do something about.
+        /// </summary>
+        void Roar(Vector2 at, SiegeKind kind)
+        {
+            var fire = Casting(kind);
+
+            // **Two reels, one upright and one flat, and that pair is the whole drawing.** The
+            // pack's impact for this is a ring opening outward with shards in it, which is what a
+            // roar looks like head on; its muzzle is a flat ellipse spreading, which over a hill
+            // drawn in perspective is the same pressure crossing the ground. Neither alone reads
+            // as more than an effect; together they read as something going *out over the hill*.
+            var ring = SpellHitArt(kind);
+            if (ring != null && ring.Length > 0)
+                Ends(Lend(ring, Color.white, Cell * 7f, at, 0f, 34f, false, .5f), .5f);
+
+            var ground = SpellMuzzleArt(kind);
+            if (ground != null && ground.Length > 0)
+                Ends(Lend(ground, Pal.A(fire, .8f), Cell * 9f, at + new Vector2(0f, Cell * .3f),
+                          0f, 30f, false, .5f), .55f);
+
+            // Three rings rather than one, a beat apart, so it reads as a shout rather than as a
+            // single burst - and each is wider than the last, which is the shape of something
+            // spreading over ground rather than exploding on it.
+            for (int i = 0; i < 3; i++)
+            {
+                float wait = i * .11f;
+                float size = 5.4f + i * 2.6f;
+
+                Tween.After(wait, () => Shockwave(at, Pal.Lift(fire, .35f), size, .46f), _fx);
+            }
+
+            Burst.Sparks(_fx, at, fire, 18, Cell * 3.4f, Cell * .26f, .55f);
+
+            ShakeBoard(24f);
+            Audio.Sfx("boom", .75f, .52f);
         }
 
         /// <summary>
@@ -2136,25 +2699,156 @@ namespace GlimmerGrove
         /// the hill. It is also the heaviest single hit in the mode, so it takes the shake a felled
         /// ward used to have to itself.
         /// </summary>
-        void Smite(SiegeSpell spell)
+        void Smite(SiegeSpellLanded spell)
         {
-            var at = new Vector2(PostX(spell.Ward), _lineY + Cell * .3f);
+            // Read off the widget rather than off the board: a spell that landed on the frame its
+            // caster was destroyed still has to be drawn in the colour it was thrown in, and by
+            // then `SiegeBoard.Find` may already have answered null.
+            // Read off the widget where there is one, and off the layout where there is not: a
+            // spell that landed on the frame its caster was destroyed still has to be drawn in the
+            // colour it was thrown in, and a siege sends exactly one boss (invariant 37t), so the
+            // level itself is the honest fallback rather than a guess at the commonest kind.
+            var caster = MobOf(spell.Raider);
+            var kind = caster != null ? caster.Kind : _layout.BossKind;
+            var fire = Casting(kind);
 
-            var frames = SpellHitArt();
+            // A roar reaches no ward, so it is settled before anything indexes the line. Its
+            // *arrival* is the hill breaking into a run, which `Charge` draws every frame — what
+            // happens here is the one flash that says the moment it started.
+            if (spell.Craft == SiegeSpell.Rally || spell.Ward < 0)
+            {
+                Stampede(fire);
+                return;
+            }
+
+            var at = new Vector2(PostX(spell.Ward), _lineY + Cell * .3f);
+            bool greater = kind == SiegeKind.Overlord;
+
+            var frames = SpellHitArt(kind);
             if (frames != null && frames.Length > 0)
-                Ends(Lend(frames, Color.white, Cell * (spell.Felled ? 5.2f : 4.2f), at, 0f, 32f,
+                Ends(Lend(frames, Color.white,
+                          Cell * (spell.Felled ? 5.2f : 4.2f) * BurstAt(kind), at, 0f, 32f,
                           false, .5f), .4f);
 
-            Pop(at, Spellfire, 2.6f, .3f);
-            Shockwave(at, Spellfire, 3.6f, .34f);
-            Burst.Sparks(_fx, at, Spellfire, 14, Cell * 3f, Cell * .24f, .5f);
+            Pop(at, fire, 2.6f * BurstAt(kind), .3f);
+            Shockwave(at, fire, 3.6f * BurstAt(kind), .34f);
+            Burst.Sparks(_fx, at, fire, greater ? 20 : 14, Cell * 3f, Cell * .24f, .5f);
+
+            // **A douse is drawn as a light going out, and everything about it is quieter.** It
+            // takes no health, so a hit that shook the board and flashed the screen would be the
+            // drawing overstating the rule — and the thing a player has to notice is the ward
+            // itself going dark, which `Post` keeps drawn for as long as it lasts.
+            if (spell.Craft == SiegeSpell.Douse)
+            {
+                Snuffed(spell.Ward, fire);
+                return;
+            }
+
+            // A rank coming off is its own piece of news and gets its own drawing, because it is
+            // the only damage in this mode that cannot be mended back.
+            if (spell.Sundered) Sundered(spell.Ward, fire);
 
             Tween.Shake(_posts[spell.Ward].Node, Cell * .26f, .38f);
-            ShakeBoard(spell.Felled ? 26f : 15f);
+            ShakeBoard(spell.Felled ? 26f : greater ? 20f : 15f);
 
-            Audio.Sfx("boom", spell.Felled ? .8f : .5f, spell.Felled ? .8f : 1f);
+            Audio.Sfx("boom", spell.Felled ? .8f : .6f, spell.Felled ? .8f : greater ? .82f : 1f);
 
             if (spell.Felled) Flow.Flash(new Color(1f, .32f, .30f), .34f, .3f);
+        }
+
+        /// <summary>
+        /// A ward going out under a hex.
+        ///
+        /// <b>The fuel tube empties in front of the player rather than simply being empty next
+        /// frame</b>, because the tube is the one readout every decision in this mode rests on
+        /// (invariant 37y) and what has been taken is exactly what was in it. The pall over the
+        /// post is drawn by <see cref="Charge"/> for as long as the dark lasts, so this is the
+        /// moment and that is the state.
+        /// </summary>
+        void Snuffed(int ward, Color fire)
+        {
+            var post = _posts[ward];
+            var at = new Vector2(PostX(ward), _lineY + Cell * .3f);
+
+            Burst.Sparks(_fx, at, fire, 10, Cell * 2.2f, Cell * .18f, .6f);
+            Tween.Shake(post.Node, Cell * .1f, .26f);
+
+            // A second scatter down at the tube, because what a douse really took is what was in
+            // it — the fuel readout is where every decision in this mode is read (invariant 37y),
+            // so that is where the loss has to be seen happening.
+            Burst.Sparks(_fx, new Vector2(PostX(ward), _lineY - Cell * .1f), fire, 8,
+                         Cell * 1.4f, Cell * .12f, .45f);
+
+            Audio.Sfx("whoosh", .55f, 1.25f);
+        }
+
+        /// <summary>
+        /// What a doused ward is drawn in: standing, cold, and unmistakably not firing.
+        ///
+        /// <b>Slate rather than dark</b>, so it cannot be read as the <c>ward_dead</c> a fallen
+        /// one wears — one of these is over in five seconds and the other is over for the run,
+        /// and a player who confuses them stops feeding a colour that is coming back.
+        /// </summary>
+        static readonly Color DarkCoat = new Color(.46f, .53f, .60f, 1f);
+
+        /// <summary>
+        /// A rank coming off a ward under an omen.
+        ///
+        /// <b>The badge falls, which is the only place in this mode a tier goes down.</b> A cog
+        /// climbing the ladder is drawn as an arrival (invariant 20m's rule about the event being
+        /// the reward); this is that run backwards, so a player who spent four cogs on one turret
+        /// sees the thing they spent them on come apart rather than simply finding a smaller
+        /// number there later.
+        /// </summary>
+        void Sundered(int ward, Color fire)
+        {
+            var post = _posts[ward];
+            var rt = post.Crest;
+            if (rt == null) return;
+
+            var home = rt.anchoredPosition;
+
+            Tween.KillChannel(rt, "sunder");
+            Tween.Run(.42f, Ease.InQuad, t =>
+            {
+                if (!rt) return;
+                rt.anchoredPosition = home + new Vector2(0f, -Cell * .5f * t);
+                rt.localRotation = Quaternion.Euler(0f, 0f, -70f * t);
+                rt.localScale = Vector3.one * Mathf.Lerp(1.35f, .7f, t);
+            }, rt, "sunder").OnDone(() =>
+            {
+                if (!rt) return;
+                rt.anchoredPosition = home;
+                rt.localRotation = Quaternion.identity;
+                rt.localScale = Vector3.one;
+            });
+
+            Burst.Sparks(_fx, new Vector2(PostX(ward), _lineY + Cell * .55f), fire, 12,
+                         Cell * 1.8f, Cell * .16f, .5f);
+
+            Audio.Sfx("shatter", .5f, 1.15f);
+        }
+
+        /// <summary>
+        /// The hill breaking into a run.
+        ///
+        /// One flash across every raider standing on it, so the moment a roar takes hold is
+        /// something the player <em>sees on the raiders</em> rather than something they have to
+        /// infer from them arriving sooner than expected.
+        /// </summary>
+        void Stampede(Color fire)
+        {
+            for (int i = 0; i < _mob.Count; i++)
+            {
+                var mob = _mob[i];
+                if (mob.Boss || mob.Body == null) continue;
+
+                Tween.Punch(mob.Body.transform, .16f, .3f);
+                Burst.Sparks(_fx, mob.Node.anchoredPosition, fire, 5, Cell * 1.1f, Cell * .12f,
+                             .35f);
+            }
+
+            Flow.Flash(Pal.A(fire, .5f), .22f, .22f);
         }
 
         void Blow(SiegeBlow hit)
@@ -2202,11 +2896,26 @@ namespace GlimmerGrove
             // — the header carries the count for anybody who wants it (`SiegeScreen.Readouts`), and
             // what the board owes this moment is the news.
             bool boss = _board.BossWave;
+            var kind = _layout.BossKind;
 
-            _waveLabel.text = boss ? Loc.Get("mode.siege.boss")
+            // **Each boss is announced as itself.** Two of them shared one banner while the mode
+            // had two, which is the same fault as sharing a body: the one moment the game has to
+            // say "this is not the thing you fought last time" was spent saying "a boss".
+            // Written out rather than keyed off the kind's name, for invariant 6's reason — a loc
+            // key built by concatenation is a key the build gate cannot see.
+            string banner;
+            switch (kind)
+            {
+                case SiegeKind.Overlord: banner = "mode.siege.overlord"; break;
+                case SiegeKind.Warbringer: banner = "mode.siege.warbringer"; break;
+                case SiegeKind.Blightcaller: banner = "mode.siege.blightcaller"; break;
+                default: banner = "mode.siege.boss"; break;
+            }
+
+            _waveLabel.text = boss ? Loc.Get(banner)
                                    : Loc.Format("mode.siege.wave", _wave, _board.Waves);
 
-            _waveLabel.color = boss ? Pal.Foxglove : Pal.Cream;
+            _waveLabel.color = boss ? Casting(kind) : Pal.Cream;
             _waveLabel.fontSize = Mathf.RoundToInt(Cell * (boss ? .78f : .46f));
 
             var group = UIKit.Group(_waveLabel.rectTransform);
@@ -2230,9 +2939,16 @@ namespace GlimmerGrove
             // is the one arrival that can be heard as well as seen.
             if (boss)
             {
-                Audio.Sfx("boom", .85f, .62f);
-                ShakeBoard(20f);
-                Flow.Flash(Pal.A(Spellfire, 1f), .5f, .45f);
+                // How hard each one lands is how big it is, which is the same ladder its
+                // silhouette, its health bar and its spell are drawn on — the blightcaller arrives
+                // as the lightest of the four because it is the first one a chapter shows.
+                float weight = kind == SiegeKind.Overlord ? 1f
+                             : kind == SiegeKind.Warbringer ? .88f
+                             : kind == SiegeKind.Blightcaller ? .62f : .78f;
+
+                Audio.Sfx("boom", .6f + weight * .35f, Pitch(kind) - .1f);
+                ShakeBoard(14f + weight * 14f);
+                Flow.Flash(Pal.A(Casting(kind), 1f), .34f + weight * .28f, .45f);
             }
             else
             {
@@ -2555,6 +3271,11 @@ namespace GlimmerGrove
                 Tween.After(.23f, () => { if (img) Destroy(img.gameObject); });
             }
 
+            // The cogs this beat took, drawn as a journey rather than as a disappearance: what
+            // the player decided was *which colour to line up beside that cog*, and it is paid on
+            // the line, so the drawing has to say those are one thing.
+            for (int i = 0; i < beat.Rises.Count; i++) Forge(beat.Rises[i]);
+
             Audio.SfxVaried("pop", .42f + Mathf.Min(.3f, beat.Depth * .08f));
 
             if (beat.Depth > 1) Chain(beat.Depth);
@@ -2631,10 +3352,86 @@ namespace GlimmerGrove
             Burst.Sparks(_fx, at, tint, 8, Cell * 3.2f, Cell * .22f, .42f);
         }
 
+        /// <summary>
+        /// A cog going: it comes apart where it stood and its light crosses to the ward that took
+        /// it.
+        ///
+        /// <para>
+        /// <b>A cog that bought nothing goes nowhere</b>, and that is the whole reason this is
+        /// drawn rather than folded into the ordinary burst. A cog taken by a colour whose ward has
+        /// fallen — or is already at the top of the ladder — is spent for nothing, and the player
+        /// has to be able to see that it was: something coming apart and *not* travelling is the
+        /// only way a wrong answer here reads as a wrong answer (invariant 26h).
+        /// </para>
+        /// </summary>
+        void Forge(SiegeRise rise)
+        {
+            var gem = rise.Cell >= 0 && rise.Cell < _gems.Count ? _gems[rise.Cell] : null;
+            var at = CentreOf(rise.Cell);
+            var tint = rise.Colour >= 0 ? TintOf(rise.Colour) : Pal.Cream;
+
+            if (gem != null && gem.Img != null)
+            {
+                var img = gem.Img;
+                _gems[rise.Cell] = null;
+
+                Tween.RotateBy(img.rectTransform, 260f, .26f, Ease.OutQuad);
+                Tween.Scale(img.transform, 1.5f, .1f, Ease.OutQuad).OnDone(() =>
+                {
+                    if (img) Tween.Scale(img.transform, 0f, .14f, Ease.InBack);
+                });
+                Tween.After(.3f, () => { if (img) Destroy(img.gameObject); });
+            }
+
+            Shatter(at, Pal.Cream, 0f);
+            Burst.Sparks(_fx, at, tint, 12, Cell * 3.6f, Cell * .26f, .5f);
+
+            if (!rise.Rose)
+            {
+                // Nothing to send it to. It still came apart, which is the news.
+                Audio.Sfx("blocked", .34f, 1.15f);
+                return;
+            }
+
+            Audio.Sfx("collect", .5f, 1.1f);
+
+            // A bigger, slower mote than a gem's, so a cog crossing the field is visibly not one
+            // more unit of fuel. What it *does* when it lands is `Rose`, raised off the model.
+            var to = new Vector2(PostX(rise.Ward), _lineY + Cell * .5f);
+
+            var spark = UIKit.Img("Cog", _fx, Piece("gem_cog"), Color.white,
+                                  new Vector2(Cell * .6f, Cell * .6f));
+            spark.raycastTarget = false;
+            spark.preserveAspect = true;
+
+            var rt = spark.rectTransform;
+            rt.anchoredPosition = at;
+
+            float bow = Cell * 1.6f * (rise.Ward < _posts.Length / 2 ? -1f : 1f);
+
+            Tween.Run(SiegeTuning.FuelFlight * 1.15f, Ease.InOutSine, t =>
+            {
+                if (!rt) return;
+                var q = Vector2.Lerp(at, to, t);
+                q.x += Mathf.Sin(t * Mathf.PI) * bow;
+                rt.anchoredPosition = q;
+                rt.localRotation = Quaternion.Euler(0f, 0f, t * 420f);
+                rt.localScale = Vector3.one * Mathf.Lerp(.8f, 1.4f, t);
+            }, spark).OnDone(() =>
+            {
+                if (spark) Destroy(spark.gameObject);
+                Pop(to, Pal.Cream, 1.6f, .3f);
+            });
+        }
+
         /// <summary>A gem's worth of fuel, flying from the field to the ward it feeds.</summary>
         void Mote(Vector2 from, int ward, Color tint, float delay)
         {
-            var to = new Vector2(PostX(ward), _lineY - Cell * .62f);
+            // **The tube, wherever the tube is** - see `TubeY`. It was a typed offset from the
+            // ward, and the day the tube moved that would have left every mote in this mode flying
+            // to a point with nothing at it. A mote that lands somewhere other than the meter it is
+            // filling is the same class of fault as one that lands out of step with its own fuel.
+            var to = new Vector2(PostX(ward), TubeY);
 
             var img = UIKit.Img("Mote", _fx, Art.Spark(64), Pal.A(Pal.Lift(tint, .4f), 1f),
                                 new Vector2(Cell * .3f, Cell * .3f));
@@ -2666,7 +3463,7 @@ namespace GlimmerGrove
             var post = _posts[ward];
             if (post == null || post.Node == null) return;
 
-            Pop(new Vector2(PostX(ward), _lineY - Cell * .62f), tint, .7f, .2f);
+            Pop(new Vector2(PostX(ward), TubeY), tint, .7f, .2f);
             Tween.Punch(post.Node, .1f, .2f);
             Audio.SfxVaried("lit", .18f);
         }
@@ -2787,8 +3584,13 @@ namespace GlimmerGrove
 
         Gem Mint(int colour)
         {
+            // A cog is drawn a shade smaller than a jewel, so the socket shows around it: it is
+            // the one thing on this field that is not a gem, and the gap is the cheapest way of
+            // saying so that survives being forty pixels wide.
+            float side = Cell * (colour == CogColour ? GemInset * .88f : GemInset);
+
             var img = UIKit.Img("Gem", _field, GemArt(colour), Color.white,
-                                new Vector2(Cell * GemInset, Cell * GemInset));
+                                new Vector2(side, side));
             img.preserveAspect = true;
 
             return new Gem { Img = img, Colour = colour };
@@ -2824,6 +3626,9 @@ namespace GlimmerGrove
                 {
                     gem.Colour = colour;
                     gem.Img.sprite = GemArt(colour);
+
+                    float side = Cell * (colour == CogColour ? GemInset * .88f : GemInset);
+                    gem.Img.rectTransform.sizeDelta = new Vector2(side, side);
                 }
 
                 Place(i);

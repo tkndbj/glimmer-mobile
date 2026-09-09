@@ -100,19 +100,71 @@ namespace GlimmerGrove.Content
             AssetRequest.Sprite(AssetManifest.SiegeArt("gem_b")),
             AssetRequest.Sprite(AssetManifest.SiegeArt("gem_y")),
 
-            // The ward line: four turret models, each with its own recoil, and none of them
-            // carrying a colour - which one a ward burns is put on at run time, from the same
-            // `Pal` entry the gems and the raiders take theirs from (`SiegeView.Coat`).
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward1")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward2")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward3")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward4")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward_dead")),
+            // The cog: the one cell of the field that is not a jewel, and the only thing here a
+            // ward can be upgraded with (`SiegeLayout.Cog`).
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_cog")),
 
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire1")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire2")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire3")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire4")),
+            // **The ward line: five tiers times four colours, and the rank badge.** A ward carries
+            // its rank in its silhouette and its colour in its hue, so both are baked (see
+            // `Tools/make_siege_art.py`) and nothing here is tinted - which is the correction
+            // invariant 37l records: `Image.color` is a multiply, so it can only ever darken, and a
+            // turret is the one thing on this board that has to read as *lit*.
+            //
+            // Written out one literal at a time rather than built from a loop, which is invariant
+            // 6's rule for loc keys read across to art: `Tools/verify/artnames.py` reads the name
+            // that is actually passed, so a name assembled a call away from the lookup is a name
+            // nothing checks - and this mode has already paid for that once.
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward1_r")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward1_g")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward1_b")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward1_y")),
+
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward2_r")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward2_g")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward2_b")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward2_y")),
+
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward3_r")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward3_g")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward3_b")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward3_y")),
+
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward4_r")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward4_g")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward4_b")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward4_y")),
+
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward5_r")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward5_g")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward5_b")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward5_y")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("ward_dead")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("crest")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire1_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire1_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire1_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire1_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire2_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire2_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire2_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire2_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire3_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire3_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire3_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire3_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire4_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire4_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire4_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire4_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire5_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire5_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire5_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire5_y")),
 
             AssetRequest.Sprite(AssetManifest.SiegeArt("bullet")),
             AssetRequest.Sprite(AssetManifest.SiegeArt("socket")),
@@ -124,17 +176,6 @@ namespace GlimmerGrove.Content
             AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon2")),
             AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon3")),
             AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute")),
-
-            // The warlord: one alien from a pack none of the creepers came from, drawn several
-            // times their size. **Three reels**, which is the ward line's bargain read across - a
-            // turret that only ever cycled its idle would have no way to say it had fired, and
-            // neither would a boss that only ever hovered. The walk is the one that was missing
-            // and it was missed by *playing* it: a warlord wears its idle standing still and its
-            // walk for the six seconds it is actually crossing ground, and shipping only the idle
-            // read as floating.
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boss")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boss_walk")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boss_cast")),
 
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("boom_fire")),
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("boom_smoke")),
@@ -163,23 +204,100 @@ namespace GlimmerGrove.Content
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("hit_b")),
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("hit_y")),
 
-            // What the warlord throws, as the same three parts. **One set rather than four**, and
-            // graded to a colour no ward and no gem wears: the elemental double is a rule about
-            // bolts going *into* the boss, so a spell coming *out* of it that wore one of the
-            // board's four colours would be saying something the rules do not mean. Being one set
-            // is also what keeps a boss affordable - four would double this mode's whole effects
-            // budget for one wave of one level.
-            AssetRequest.SpriteSet(AssetManifest.SiegeFx("spell")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeFx("spell_muzzle")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeFx("spell_hit")),
-
             // Both white, both tinted where they are drawn: a muzzle flash takes the ward's
             // colour and a gem's burst takes the gem's, so one reel serves four.
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("flash")),
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("pop")),
         };
 
+        /// <summary>
+        /// One boss, as the three reels its body wears and the three its spell is drawn with.
+        ///
+        /// <para>
+        /// <b>Six flipbooks each, and this mode has four of them</b> — which is the whole reason
+        /// this is asked per chapter rather than listed with the rest of the cast. Every siege
+        /// level used to load every boss, so a chapter sending one paid for four; twelve body
+        /// reels at three hundred pixels and twelve effect reels is most of what this mode weighs.
+        /// Invariant 7b's rule is that memory is bounded by what is on the screen rather than by
+        /// how much content exists, and a boss is the first thing here where those two differ.
+        /// </para>
+        /// <para>
+        /// <b>Every name is a literal</b>, for invariant 7's reason and for the gate that enforces
+        /// it: <c>Tools/verify/artnames.py</c> reads literals off the call site, so a key built
+        /// from a kind would be twenty-four names nothing checks.
+        /// </para>
+        /// </summary>
+        static void Bosses(SiegeKind kind, List<AssetRequest> into)
+        {
+            switch (kind)
+            {
+                case SiegeKind.Blightcaller:
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("blight")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("blight_walk")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("blight_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("hex")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("hex_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("hex_hit")));
+                    break;
+
+                case SiegeKind.Boss:
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("boss")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("boss_walk")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("boss_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("spell")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("spell_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("spell_hit")));
+                    break;
+
+                case SiegeKind.Warbringer:
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("bringer")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("bringer_walk")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("bringer_cast")));
+                    // **Two of its three reels, because a roar is thrown at nothing.** It has no
+                    // flight, so `roar` is baked and never scoped in - see `SiegeView.Roar`, which
+                    // draws the impact upright at the boss and the muzzle flat over the ground.
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("roar_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("roar_hit")));
+                    break;
+
+                case SiegeKind.Overlord:
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("over")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("over_walk")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("over_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("omen")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("omen_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("omen_hit")));
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// The hill, the line, the field and the creepers — everything every siege draws.
+        ///
+        /// A chapter's bosses are added on top by <see cref="ArtFor"/>, because which of the four
+        /// a chapter sends is a fact about the chapter.
+        /// </summary>
         public override IReadOnlyList<AssetRequest> Art => Cast;
+
+        public override IReadOnlyList<AssetRequest> ArtFor(ChapterBody chapter)
+        {
+            var list = new List<AssetRequest>(Cast);
+            if (chapter == null) return list;
+
+            var seen = new HashSet<SiegeKind>();
+
+            for (int i = 0; i < chapter.Levels.Count; i++)
+            {
+                if (!(chapter.Levels[i].Rules is SiegeRules siege)) continue;
+
+                var sends = siege.Layout;
+                if (sends == null || !sends.HasBoss || !seen.Add(sends.BossKind)) continue;
+
+                Bosses(sends.BossKind, list);
+            }
+
+            return list;
+        }
 
         public override bool TryRead(LevelDto dto, LevelId id, ICollection<string> problems,
                                      out ILevelRules rules)
@@ -188,14 +306,17 @@ namespace GlimmerGrove.Content
 
             var block = dto.siege;
 
-            if (!ProtoGrid.TryRead(block.rows, block.width, block.height, SiegeLayout.Letters,
+            // `Cells` rather than `Letters`: a field may stand a cog on it, and a cog is not a
+            // colour (see `SiegeLayout.Cells`).
+            if (!ProtoGrid.TryRead(block.rows, block.width, block.height, SiegeLayout.Cells,
                                    out var grid, out string error))
             {
                 problems.Add($"{id}: {error}");
                 return false;
             }
 
-            var layout = new SiegeLayout(grid, block.gems, block.wards, block.waves, block.boss);
+            var layout = new SiegeLayout(grid, block.gems, block.wards, block.waves, block.boss,
+                                         block.cogs);
 
             if (layout.Fault != null)
             {

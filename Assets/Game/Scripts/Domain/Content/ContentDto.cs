@@ -581,6 +581,26 @@ namespace GlimmerGrove.Content
         public string boss;
 
         /// <summary>
+        /// How often a fresh gem falls in as a <b>cog</b>, per hundred. Absent or nought for a
+        /// level that deals none.
+        ///
+        /// <para>
+        /// A cog never matches and is never worth fuel. It is destroyed by a run of gems
+        /// <em>beside</em> it, and the colour of that run decides which ward goes up a rank — ten
+        /// per cent more damage and ten per cent less fuel a bolt, up to four ranks. So what it
+        /// asks the player is the mode's own question about the line instead of about the hill,
+        /// and answering carelessly upgrades the wrong turret.
+        /// </para>
+        /// <para>
+        /// <b>A rate rather than a count</b>, because the field refills — see
+        /// <c>SiegeLayout.Cogs</c>. A level may also stand cogs on its authored field by writing
+        /// <c>*</c> in <see cref="rows"/>, which is how the rung that teaches them puts one where
+        /// it will be met.
+        /// </para>
+        /// </summary>
+        public int cogs;
+
+        /// <summary>
         /// Whether this block was authored. <b>Never test the block itself for null</b> —
         /// JsonUtility instantiates a [Serializable] class field on every level in the game, so
         /// absence has to be a value a real block cannot hold.

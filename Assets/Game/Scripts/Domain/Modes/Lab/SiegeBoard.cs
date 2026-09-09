@@ -34,6 +34,36 @@ namespace GlimmerGrove.Modes
         /// <summary>Gems the field is drawn with. Four, so a ward line of four has one each.</summary>
         public const string Letters = "rgby";
 
+        /// <summary>
+        /// Everything a cell of the field may hold: the four gems, and the cog.
+        ///
+        /// <para>
+        /// <b>A second alphabet rather than a fifth letter in <see cref="Letters"/>, because a cog
+        /// is not a colour.</b> Every rule in this mode that reads a cell is asking one of two
+        /// questions — <em>what colour is this</em> (matching, fuelling, the deal) or <em>what is
+        /// standing here</em> (gravity, swapping, drawing) — and folding a cog into
+        /// <see cref="Letters"/> would answer the first with a thing that has no colour. It is the
+        /// same split <c>FallCell</c> was cut into for the same reason (invariant 26f): a
+        /// predicate about the <em>ground</em> must not answer a question about what is
+        /// <em>on</em> it.
+        /// </para>
+        /// </summary>
+        public const string Cells = "rgby*";
+
+        /// <summary>
+        /// A cog: the thing a ward is upgraded with.
+        ///
+        /// <para>
+        /// It never matches, never falls out of the field and is never worth fuel. What it is
+        /// worth is a <em>rank</em> on one ward, and which ward is decided entirely by the colour
+        /// of the run that destroys it — so a cog is the one object on this field that asks the
+        /// player which colour to spend next rather than which match is biggest, and the one they
+        /// can be wrong about (invariant 26h's test: what does the player decide, and can they be
+        /// wrong).
+        /// </para>
+        /// </summary>
+        public const char Cog = '*';
+
         /// <summary>What a ward may be. The same four, because a ward is fuelled by its own colour.</summary>
         public const string WardLetters = "rgby";
 
@@ -46,8 +76,41 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const string RaiderLetters = "rgbyRGBY";
 
-        /// <summary>What a warlord may be. The same four, because a boss is answered by a ward.</summary>
-        public const string BossLetters = "rgby";
+        /// <summary>
+        /// How a level names its boss: <c>"warlord:r"</c> — a <b>kind</b> and the colour it wears.
+        ///
+        /// <para>
+        /// <b>It was one letter whose case said which of two bosses this was, and that stopped
+        /// working the moment there were four.</b> The creeper/brute idiom — capitalise the letter
+        /// for the bigger one — is exactly right for two kinds and has nowhere to go for a third:
+        /// with four bosses a case bit cannot name one, and the two warlords a chapter shipped
+        /// were told apart by <em>nothing but hue</em>, which is what a player reported as "the
+        /// bosses look exactly the same". A boss is a way of fighting rather than a size, so the
+        /// level says which one out loud.
+        /// </para>
+        /// <para>
+        /// <b>Spelled rather than lettered, and that is the one place this mode's terseness is
+        /// wrong.</b> Everything else a siege authors is a grid or a wave — a shape whose meaning
+        /// is that it is read at a glance — and this is a single scalar naming a thing. A reader
+        /// of the chapter body sees <c>"warbringer:y"</c> and knows what ships; they would not
+        /// have known what <c>"Wy"</c> was.
+        /// </para>
+        /// <para>
+        /// <b>The old one-letter form is refused rather than reinterpreted</b> (invariant 5f's
+        /// rule): a file carrying <c>"boss": "r"</c> was written for a build that no longer
+        /// exists, and salvaging a red warlord out of it would ship a fight nobody authored.
+        /// </para>
+        /// </summary>
+        public static readonly (string Name, SiegeKind Kind)[] BossNames =
+        {
+            ("blightcaller", SiegeKind.Blightcaller),
+            ("warlord", SiegeKind.Boss),
+            ("warbringer", SiegeKind.Warbringer),
+            ("overlord", SiegeKind.Overlord),
+        };
+
+        /// <summary>The colour a boss may wear. Lower case only — case no longer means anything.</summary>
+        public const string BossColours = "rgby";
 
         /// <summary>How many wards a line may hold. Four colours, so four is the whole line.</summary>
         public const int MaxWards = 4;
@@ -102,11 +165,69 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly char Boss;
 
+        /// <summary>
+        /// Which of the four bosses this siege ends with, or <see cref="SiegeKind.Creeper"/> for
+        /// one that sends none.
+        ///
+        /// <b>Held here rather than read off the letter</b>, because the letter is a colour and a
+        /// colour cannot say what a thing does. Everything that used to ask <c>char.IsUpper</c>
+        /// asks <see cref="KindAt"/>, which is the one place that knows which wave is the boss's.
+        /// </summary>
+        public readonly SiegeKind BossKind = SiegeKind.Creeper;
+
         /// <summary>Which wave the warlord is, or -1. Always the last one when there is one.</summary>
         public readonly int BossWave = -1;
 
-        /// <summary>Whether this siege ends with a warlord.</summary>
+        /// <summary>Whether this siege ends with a boss of any of the four kinds.</summary>
         public bool HasBoss => Boss != '\0';
+
+        /// <summary>
+        /// What kind of raider stands at <paramref name="index"/> of wave <paramref name="wave"/>.
+        ///
+        /// <b>The wave decides, never the letter</b>, and the layout is the only thing that knows
+        /// which wave is the boss's — so this exists once and every caller (par, the muster, the
+        /// build gate's threat reading, the offline mirror) asks it rather than forming a second
+        /// opinion about a fact already written down.
+        /// </summary>
+        public SiegeKind KindAt(int wave, int index)
+        {
+            if (wave < 0 || wave >= Waves.Length) return SiegeKind.Creeper;
+            if (wave == BossWave) return BossKind;
+
+            string coming = Waves[wave];
+            if (index < 0 || index >= coming.Length) return SiegeKind.Creeper;
+
+            return char.IsUpper(coming[index]) ? SiegeKind.Brute : SiegeKind.Creeper;
+        }
+
+        /// <summary>
+        /// How often a fresh gem comes in as a cog, per hundred. Nought for a siege with none.
+        ///
+        /// <para>
+        /// <b>A rate rather than a count, because the field refills.</b> A level cannot author
+        /// "three cogs" the way it authors three brutes — a cog is destroyed and the column fills
+        /// in behind it, so what a level really decides is how often one turns up. It is bounded
+        /// at both ends: <see cref="MaxCogRate"/> stops a field that is mostly cogs, and
+        /// <see cref="SiegeTuning.MostCogs"/> stops however generous a rate from putting more than
+        /// a handful on the board at once.
+        /// </para>
+        /// <para>
+        /// <b>Nought is a real answer and is how the opening level says it.</b> The first rung of
+        /// this chapter teaches what a match is <em>for</em>; a second object on the field while
+        /// somebody is working that out is the mistake invariant 24 names about hearts, asked of
+        /// attention rather than of money.
+        /// </para>
+        /// </summary>
+        public readonly int Cogs;
+
+        /// <summary>
+        /// The most cogs a level may ask for, per hundred.
+        ///
+        /// A fifth of the deal is already a cog roughly every other column of a refill, which is
+        /// as far as a mechanic that upgrades the line can go before the line is upgraded whatever
+        /// the player does — and a mechanic that rejects no play is decoration (invariant 5d).
+        /// </summary>
+        public const int MaxCogRate = 20;
 
         /// <summary>
         /// Where the refill stream starts, derived from the authored field rather than typed.
@@ -120,20 +241,25 @@ namespace GlimmerGrove.Modes
         /// <summary>What is wrong with this level, or null.</summary>
         public readonly string Fault;
 
-        public SiegeLayout(ProtoGrid grid, string deal, string wards, string[] waves, string boss)
+        public SiegeLayout(ProtoGrid grid, string deal, string wards, string[] waves, string boss,
+                           int cogs = 0)
         {
             Grid = grid;
             Deal = Tidy(deal, Letters);
             Wards = Tidy(wards, WardLetters).ToCharArray();
+            Cogs = cogs < 0 ? 0 : cogs;
 
-            // **Exactly one legal letter, or nothing** — not `Tidy`, which keeps whatever it
-            // recognises and throws the rest away. "dragon" would salvage an 'r' out of itself and
-            // ship a red warlord nobody authored, which is the shape of accident invariant 5f
-            // exists to refuse: content written for a build that is not this one has to be said
-            // out loud rather than quietly interpreted.
-            string named = (boss ?? string.Empty).Trim();
-
-            Boss = named.Length == 1 && BossLetters.IndexOf(named[0]) >= 0 ? named[0] : '\0';
+            // **Exactly one legal name and one legal colour, or nothing** — not `Tidy`, which
+            // keeps whatever it recognises and throws the rest away. "dragon:r" would salvage an
+            // 'r' out of itself and ship a warlord nobody authored, which is the shape of accident
+            // invariant 5f exists to refuse: content written for a build that is not this one has
+            // to be said out loud rather than quietly interpreted. The same clause is what refuses
+            // the retired one-letter form.
+            if (Named((boss ?? string.Empty).Trim(), out var kind, out char colour))
+            {
+                BossKind = kind;
+                Boss = colour;
+            }
 
             var coming = new List<string>(Trim(waves));
 
@@ -146,6 +272,39 @@ namespace GlimmerGrove.Modes
             Waves = coming.ToArray();
             Seed = Hash(grid);
             Fault = Check(boss);
+        }
+
+        /// <summary>
+        /// Reads <c>"warlord:r"</c>, and answers false for anything at all that is not exactly
+        /// that shape.
+        ///
+        /// No trimming inside the halves and no case folding: a token is either what a build of
+        /// this game writes or it is content from somewhere else, and the second one is refused.
+        /// </summary>
+        static bool Named(string token, out SiegeKind kind, out char colour)
+        {
+            kind = SiegeKind.Creeper;
+            colour = '\0';
+
+            if (string.IsNullOrEmpty(token)) return false;
+
+            int split = token.IndexOf(':');
+            if (split <= 0 || split != token.Length - 2) return false;
+
+            char wears = token[token.Length - 1];
+            if (BossColours.IndexOf(wears) < 0) return false;
+
+            string name = token.Substring(0, split);
+            for (int i = 0; i < BossNames.Length; i++)
+            {
+                if (BossNames[i].Name != name) continue;
+
+                kind = BossNames[i].Kind;
+                colour = wears;
+                return true;
+            }
+
+            return false;
         }
 
         static string Tidy(string raw, string legal)
@@ -200,8 +359,15 @@ namespace GlimmerGrove.Modes
             // mode cannot draw would otherwise index, validate and ship as a siege with no boss in
             // it, and nothing anywhere would say so.
             if (!string.IsNullOrEmpty(boss) && boss.Trim().Length > 0 && !HasBoss)
-                return $"'{boss}' is not a warlord this mode knows; a boss is one of "
-                     + $"'{BossLetters}', and an empty field is how a siege says it sends none";
+            {
+                var known = new System.Text.StringBuilder();
+                for (int i = 0; i < BossNames.Length; i++)
+                    known.Append(i == 0 ? "" : ", ").Append(BossNames[i].Name).Append(":<colour>");
+
+                return $"'{boss}' is not a boss this mode knows; a boss is written as a kind and "
+                     + $"the colour it wears ({known}, colour one of '{BossColours}'), and an "
+                     + "empty field is how a siege says it sends none";
+            }
 
             if (Wards.Length < 2 || Wards.Length > MaxWards)
                 return $"a ward line holds 2 to {MaxWards} wards; this one names {Wards.Length}";
@@ -216,6 +382,19 @@ namespace GlimmerGrove.Modes
             if (Deal.Length < 2)
                 return "the field refills from fewer than two colours, so every arrangement is a "
                      + "match and nothing is ever decided";
+
+            if (Cogs > MaxCogRate)
+                return $"this field deals a cog {Cogs} times in a hundred; {MaxCogRate} is the "
+                     + "most a level may ask for, and past it the line is upgraded whatever the "
+                     + "player does";
+
+            int standing = 0;
+            for (int i = 0; i < Grid.Count; i++) if (Grid.At(i) == Cog) standing++;
+
+            if (standing > SiegeTuning.MostCogs)
+                return $"this field is authored with {standing} cogs standing on it; "
+                     + $"{SiegeTuning.MostCogs} is the most that may ever be on the board at once, "
+                     + "so the rest could never be dealt back in";
 
             // A ward nothing feeds is decoration standing where a ward should be (invariant 5d).
             for (int i = 0; i < Wards.Length; i++)
@@ -241,9 +420,9 @@ namespace GlimmerGrove.Modes
                     char colour = char.ToLowerInvariant(Waves[w][i]);
                     if (Array.IndexOf(Wards, colour) >= 0) continue;
 
-                    // The warlord is the one this really matters for: it has the health of a whole
+                    // The boss is the one this really matters for: it has the health of a whole
                     // wave, so answering it at half rate is a duel nobody can finish.
-                    string what = w == BossWave ? "a '" + colour + "' warlord"
+                    string what = w == BossWave ? $"a '{colour}' {SiegeTuning.NameOf(BossKind)}"
                                                 : "a '" + colour + "' raider";
 
                     return $"wave {w + 1} sends {what} and no ward on this line carries "
@@ -261,6 +440,16 @@ namespace GlimmerGrove.Modes
             return null;
         }
 
+        /// <summary>
+        /// Whether this cell is a gem — something that can line up and is worth fuel.
+        ///
+        /// <b>Neither a hole nor a cog</b>, and it is one predicate rather than two tests written
+        /// out at each of the four places that ask, because those four are exactly where a mode
+        /// with a second kind of cell goes quietly wrong (invariant 26f).
+        /// </summary>
+        internal static bool IsGem(char cell)
+            => cell != SiegeBoard.Hole && cell != Cog && Letters.IndexOf(cell) >= 0;
+
         /// <summary>Every cell standing in a run of three or more, as one set.</summary>
         internal static HashSet<int> Runs(char[] cells, int width, int height)
         {
@@ -271,7 +460,7 @@ namespace GlimmerGrove.Modes
                 int run = 1;
                 for (int x = 1; x <= width; x++)
                 {
-                    bool same = x < width && cells[y * width + x] != SiegeBoard.Hole
+                    bool same = x < width && IsGem(cells[y * width + x])
                              && cells[y * width + x] == cells[y * width + x - 1];
 
                     if (same) { run++; continue; }
@@ -288,7 +477,7 @@ namespace GlimmerGrove.Modes
                 int run = 1;
                 for (int y = 1; y <= height; y++)
                 {
-                    bool same = y < height && cells[y * width + x] != SiegeBoard.Hole
+                    bool same = y < height && IsGem(cells[y * width + x])
                              && cells[y * width + x] == cells[(y - 1) * width + x];
 
                     if (same) { run++; continue; }
@@ -335,11 +524,40 @@ namespace GlimmerGrove.Modes
         /// <summary>Gems that have to line up. Three, as every game of this shape.</summary>
         public const int MinRun = 3;
 
-        /// <summary>Fuel a matched gem is worth. One each, so a match is worth what it looks like.</summary>
-        public const float FuelPerGem = 1f;
+        /// <summary>
+        /// Fuel a matched gem is worth, in tenths.
+        ///
+        /// <para>
+        /// <b>Two fuel a gem against a bolt's one, which is the whole of "the wards should shoot
+        /// more".</b> It was one each and a bolt cost one, so a gem was exactly a bolt — an
+        /// identity nothing said out loud and that <see cref="PerfectMatch"/> quietly depended on.
+        /// Doubling it and halving <see cref="ShotDamage"/> is the same match delivering the same
+        /// damage as <em>twice as many, half as heavy</em> bolts: a fed ward stays alight for
+        /// twice as long, which is what a player watches, and not one graded number moves.
+        /// </para>
+        /// <para>
+        /// <b>Subdividing the fuel unit rather than making a bolt cost half is what keeps the rank
+        /// ladder exact.</b> A rank is ten per cent less fuel a bolt
+        /// (<see cref="FuelShotTenths"/>), which at a base of ten tenths is 10, 9, 8, 7, 6 — five
+        /// exact integers. Halving the bolt to five tenths would make the same ladder 5, 4, 4, 3, 3
+        /// after truncation, so two pairs of ranks would buy nothing and the 2.33× a rank-four ward
+        /// is worth would quietly stop being true. Everything measured in <em>fuel</em> doubles
+        /// (this, <see cref="WardCapacity"/>, the surge's authored magnitude); everything measured
+        /// <em>per bolt</em> is untouched.
+        /// </para>
+        /// </summary>
+        public const int FuelPerGemTenths = 20;
 
-        /// <summary>The most fuel a ward holds. A big match tops it up rather than banking.</summary>
-        public const float WardCapacity = 14f;
+        /// <summary>Fuel a matched gem is worth. See <see cref="FuelPerGemTenths"/>.</summary>
+        public const float FuelPerGem = FuelPerGemTenths / 10f;
+
+        /// <summary>
+        /// The most fuel a ward holds. A big match tops it up rather than banking.
+        ///
+        /// <b>In fuel, so it doubled with the unit</b> — it is fourteen <em>gems</em>' worth
+        /// before and after, which is what it was chosen as and what a player experiences.
+        /// </summary>
+        public const float WardCapacity = 28f;
 
         // **Fuel used to fade on a clock and no longer does.** The rule was that a standing
         // ward lost fuel every second whether or not it was shooting, so a colour matched early
@@ -376,30 +594,140 @@ namespace GlimmerGrove.Modes
         /// still buys the same damage, but it arrives later - and the raiders do not wait, so a
         /// slower line lets them further down the hill and takes more blows. See
         /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, which is this mode's only
-        /// instrument (invariant 37j). It is also what picked this number: .20 and .22 hold the
+        /// instrument (invariant 37j). It is also what picked that number: .20 and .22 hold the
         /// line, and <b>.26 loses it outright</b> - the hill unclear and every ward down. So the
         /// band between "too fast to watch" and "too slow to hold" is narrow, and anything slower
         /// than this has to buy the time back somewhere else.
         /// </para>
+        /// <para>
+        /// <b>Then it halved, and that reverses the verdict above rather than refining it.</b> The
+        /// owner asked to <em>see the wards shoot more</em>: a gem now buys two bolts and each is
+        /// worth half (<see cref="FuelPerGemTenths"/>, <see cref="ShotDamage"/>), so a match
+        /// delivers exactly what it always did over twice as many of them. <b>That leaves one
+        /// choice about this number and it is arithmetic rather than taste</b> - bolts a second
+        /// times damage a bolt is the line's whole output, so half-weight bolts at an unchanged
+        /// cadence is <em>half the peak damage</em> whatever the totals say. Measured: at .22 the
+        /// chapter still clears, but a duel costs an unhurried player eight extra matches
+        /// (<c>s01_warlordsgate</c> 29 → 37, past its own three-star line) and the fixture line
+        /// falls outright; at .11 every rung comes back to the count it had before the change.
+        /// <b>"More bolts, same balance" has one solution and this is it.</b>
+        /// </para>
+        /// <para>
+        /// <b>What it costs is the thing the .22 verdict bought, so it is worth being plain: a lit
+        /// ward now looses nine bolts a second rather than four and a half.</b> The complaint at
+        /// .14 was that "a bolt is not an event - it is a hose", and this is faster still. What is
+        /// different is that a bolt is now worth half as much, which is what makes a stream legible
+        /// <em>as a stream</em> rather than as a queue of events that individually matter - and the
+        /// damage numbers say so, tallying per raider rather than one figure per hit (37k).
+        /// <b>This is the one dial to move if it reads as too dense</b>, and it is not free: every
+        /// tenth slower is peak damage the levels have to give back.
+        /// </para>
         /// </summary>
-        public const float FireEvery = .22f;
+        public const float FireEvery = .11f;
 
-        /// <summary>Fuel one bolt spends.</summary>
-        public const float FuelPerShot = 1f;
+        /// <summary>
+        /// Fuel one bolt spends at rank nought, in tenths.
+        ///
+        /// <b>Unchanged when the fuel unit was subdivided</b>, which is the point of having done it
+        /// that way: every number in <see cref="FuelShotTenths"/> and every rank the cogs pay for
+        /// is bit-identical to what shipped, and what moved is how much fuel a <em>gem</em> is
+        /// worth.
+        /// </summary>
+        public const int FuelPerShotTenths = 10;
 
-        /// <summary>What one bolt takes off a raider it is not strong against.</summary>
-        public const int ShotDamage = 2;
+        /// <summary>Fuel one bolt spends at rank nought. See <see cref="FuelShotTenths"/>.</summary>
+        public const float FuelPerShot = FuelPerShotTenths / 10f;
+
+        /// <summary>
+        /// What one bolt takes off a raider it is not strong against, at rank nought.
+        ///
+        /// <para>
+        /// <b>Twenty rather than two, and every raider's health went up by the same ten, so not
+        /// one graded number moved.</b> Par is <see cref="Par"/> — health over
+        /// <see cref="PerfectMatch"/> — and both sides of that division scaled together, so every
+        /// shipped level's par, both its star lines and every utility's charge came out
+        /// identical. What the scale buys is the one thing the old numbers could not represent: a
+        /// <b>ten per cent</b> step. A ward that gains a rank fires for <c>ShotDamage * 11 / 10</c>,
+        /// which at two is two and at twenty is twenty-two — so the upgrade the cogs pay for is
+        /// exact integer arithmetic rather than a float three code generators round three ways
+        /// (see <c>LevelTuning</c>, and this project's own hard-won note about
+        /// <c>Mathf.CeilToInt(45 * 1.20f)</c>).
+        /// </para>
+        /// <para>
+        /// <b>Then ten, because the owner asked to see the wards shoot more.</b> A gem now buys two
+        /// bolts rather than one (<see cref="FuelPerGemTenths"/>) and each is worth half, so the
+        /// same match delivers the same damage over twice as many bolts and a fed ward stays alight
+        /// for twice as long. <see cref="PerfectMatch"/> is unmoved, so par, both star lines and
+        /// every utility's charge are unmoved with it. <b>Ten is the floor for the ten per cent
+        /// step</b> — at ten the ladder is 10, 11, 12, 13, 14, which is still exact and has no room
+        /// under it, so anything that halves this again has to give the rank ladder a finer unit
+        /// first.
+        /// </para>
+        /// </summary>
+        public const int ShotDamage = 10;
 
         /// <summary>What a bolt is worth against a raider of its own colour.</summary>
         public const int WeakMultiplier = 2;
 
+        // ------------------------------------------------------------------ ward ranks
+        /// <summary>
+        /// How many times a ward may be upgraded. Five tiers, so four ranks above the one it
+        /// stands up in.
+        /// </summary>
+        public const int MaxRank = 4;
+
+        /// <summary>
+        /// What each rank is worth, in tenths: ten per cent more damage and ten per cent less fuel
+        /// a bolt.
+        ///
+        /// <para>
+        /// <b>Both halves of one upgrade, and they multiply rather than add.</b> A rank-four ward
+        /// hits for forty per cent more and gets a bolt out of six tenths rather than ten, so the
+        /// same match is worth <em>2.33 times</em> as much damage through it — which is why a
+        /// level built around cogs has to send considerably more hill than one that is not, and
+        /// why <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> is run over every rung of the
+        /// chapter rather than over the first.
+        /// </para>
+        /// </summary>
+        public const int RankDamageTenths = 1, RankFuelTenths = 1;
+
+        /// <summary>How much a bolt from a ward of this rank takes off, before the weak double.</summary>
+        public static int DamageAt(int rank)
+        {
+            if (rank < 0) rank = 0;
+            if (rank > MaxRank) rank = MaxRank;
+
+            return ShotDamage * (10 + rank * RankDamageTenths) / 10;
+        }
+
+        /// <summary>What one bolt from a ward of this rank costs it, in tenths of fuel.</summary>
+        public static int FuelShotTenths(int rank)
+        {
+            if (rank < 0) rank = 0;
+            if (rank > MaxRank) rank = MaxRank;
+
+            return FuelPerShotTenths - rank * RankFuelTenths;
+        }
+
+        /// <summary>What one bolt from a ward of this rank costs it.</summary>
+        public static float FuelShot(int rank) => FuelShotTenths(rank) / 10f;
+
+        /// <summary>
+        /// The most cogs that may stand on a field at once.
+        ///
+        /// <b>A cap on the board rather than on the deal</b>, because the deal is a rate and a
+        /// rate has no upper bound over a long run. Three is enough for the player to have a
+        /// choice about which one to take next and few enough that the field is still a field.
+        /// </summary>
+        public const int MostCogs = 3;
+
         /// <summary>A creeper: the ordinary raider, and what most of a wave is.</summary>
-        public const int CreeperHealth = 20;
+        public const int CreeperHealth = 200;
         public const float CreeperMarch = 15f;
         public const int CreeperBlow = 1;
 
         /// <summary>A brute: slower, far tougher, and twice as expensive to let through.</summary>
-        public const int BruteHealth = 48;
+        public const int BruteHealth = 480;
         public const float BruteMarch = 26f;
         public const int BruteBlow = 2;
 
@@ -429,7 +757,165 @@ namespace GlimmerGrove.Modes
         /// from the hill to the warlord makes three stars harder without par saying so.</b>
         /// </para>
         /// </summary>
-        public const int BossHealth = 180;
+        public const int BossHealth = 1800;
+
+        /// <summary>
+        /// The overlord: the thing the last rung of a chapter ends on.
+        ///
+        /// <para>
+        /// <b>A kind rather than a bigger number, and what makes it one is that all three of these
+        /// move together.</b> It carries a little under twice a warlord's health, it throws half as
+        /// often again, and each spell takes nearly twice as much off a ward — so it is not
+        /// answered by doing what beat a warlord for longer. It stops <em>further up</em> the
+        /// hill, which is the half a player feels first: there is more ground between it and the
+        /// line, so the wards have longer to work on it, and that is the compensation for
+        /// everything above.
+        /// </para>
+        /// <para>
+        /// Its ceiling is <see cref="BossHealth"/>'s ceiling, and the same arithmetic: a duel is
+        /// fought against <em>one</em> colour, so one ward doubles and three do not and a match
+        /// really delivers about 62% of <see cref="PerfectMatch"/>. Every point of overlord
+        /// therefore pushes the three-star line further from real play without par saying so, and
+        /// the only instrument that can see it is
+        /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>.
+        /// </para>
+        /// </summary>
+        public const int OverlordHealth = 3200;
+
+        public const float OverlordHold = .38f;
+        public const float OverlordMarch = 15f;
+
+        /// <summary>
+        /// Seconds between one omen and the next, and the cliff either side of it is sharp.
+        ///
+        /// <b>It was 3.4 while an omen only took health, and a sunder is a second cost on the same
+        /// spell</b> — every rank it knocks off the line is ten per cent of a turret's damage and
+        /// ten per cent of its fuel, compounding for the rest of the duel, and none of that is
+        /// visible to par (invariant 37w). Measured on the shipped finale through
+        /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, which is the only instrument that
+        /// can see it: at 3.4 the line falls with a raider left, at 3.8 it still falls, at 4.0 an
+        /// unhurried player finishes on 16 of 56, and at 4.1 on 20. Two tenths of a second is the
+        /// difference between a lost run and a comfortable one, which is itself the argument for
+        /// measuring this rather than arguing about it.
+        /// </summary>
+        public const float OverlordCastEvery = 4.0f;
+
+        public const int OverlordCast = 5;
+
+        /// <summary>
+        /// What an overlord's spell also does: knocks the ward it lands on down a rank.
+        ///
+        /// <b>It attacks the thing the chapter taught rather than the thing every boss attacks.</b>
+        /// A cog is the one upgrade a player <em>earns</em> in this mode (invariant 37w), so the
+        /// finale is the one fight where where those cogs went is a question with a wrong answer —
+        /// pour every one into a single turret and the overlord can take the whole investment off
+        /// it, and a mending cannot put a rank back. It is bounded at nought by
+        /// <see cref="SiegeWard.Sunder"/> and never touches health beyond
+        /// <see cref="OverlordCast"/>, so it can neither fell a ward on its own nor make
+        /// <c>Stranded</c> anything but the certainty invariant 28f needs.
+        /// </summary>
+        public const int OverlordSunder = 1;
+
+        // ------------------------------------------------------------------ the blightcaller
+        /// <summary>
+        /// The blightcaller: the first boss a chapter shows, and the only one that takes no health.
+        ///
+        /// <para>
+        /// <b>It puts a ward <em>out</em>.</b> Its spell empties the fuel a ward is holding and
+        /// smothers it for <see cref="Douse"/> seconds, in which it cannot fire at all — so what
+        /// it costs is not the line's health but the player's <em>work</em>, and it is the one
+        /// boss whose answer is not a mending. The decision it asks is the mode's own decision
+        /// (which colour is worth feeding next) under a constraint that moves every few seconds,
+        /// and the way to be wrong about it is to keep pouring into the ward that has just gone
+        /// dark. A <c>surge</c> re-lights one, which is the first time in this chapter a utility
+        /// answers a boss rather than a wave.
+        /// </para>
+        /// <para>
+        /// <b>Taking no health is what makes it the boss a chapter opens with.</b> It teaches the
+        /// tell — the ring closing over a ward, the second and a bit to react in — without the
+        /// punishment a warlord's version carries, so a player meets the shape of a boss fight
+        /// before they meet its cost. It is also why <c>ModeValidator.Threatens</c> stopped
+        /// counting "there is a boss" as a threat: a level whose only threat were this could not
+        /// be lost, which is invariant 5d asked of a fail state.
+        /// </para>
+        /// </summary>
+        public const int BlightHealth = 1100;
+
+        public const float BlightHold = .58f;
+        public const float BlightMarch = 14f;
+        public const float BlightCastEvery = 4.5f;
+
+        /// <summary>Seconds a doused ward stands dark. Long enough to notice, short enough to wait out.</summary>
+        public const float Douse = 5f;
+
+        // ------------------------------------------------------------------ the warbringer
+        /// <summary>
+        /// The warbringer: the boss that throws nothing, and the only one that <em>arrives</em>.
+        ///
+        /// <para>
+        /// <b>It takes ground.</b> Every <see cref="WarbringerCastEvery"/> seconds it roars, and
+        /// the roar does two things at once: it lunges the warbringer itself
+        /// <see cref="WarbringerLunge"/> further down the hill, and it sets every raider still on
+        /// the ground charging at <see cref="Rally"/> times its own pace for
+        /// <see cref="RallyFor"/> seconds. One idea with two effects, and both of them are the
+        /// same sentence — a warbringer takes ground, from wherever the ground is.
+        /// </para>
+        /// <para>
+        /// <b>It is the only boss in this mode that reaches the line</b>, and that is what makes
+        /// it a different fight rather than the warlord with a different number. Every other one
+        /// stands out of reach and shells the line for as long as it lives, so the fight is
+        /// arithmetic: out-damage it. This one is a <em>countdown</em> — it is coming, it will
+        /// arrive, and when it does it swings <see cref="WarbringerBlow"/> at whatever is in front
+        /// of it. The decision is priority (everything else on the hill can wait) and the answer
+        /// is a firepot, which is the first time in this chapter that utility is the right one.
+        /// </para>
+        /// <para>
+        /// <b>The rally half is why it comes early</b> — see <see cref="RestBefore"/>. A roar over
+        /// an empty hill would be half a mechanic doing nothing, which is invariant 5d: the whole
+        /// point of a rally is that there is something to rally.
+        /// </para>
+        /// <para>
+        /// <b>It adds no health to the hill, so par does not move</b> — which is exactly why the
+        /// only instrument that can say whether it is tuned is
+        /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> (invariant 37j). A warbringer that
+        /// is too strong shows up there as a line that falls and nowhere else at all.
+        /// </para>
+        /// </summary>
+        public const int WarbringerHealth = 2400;
+
+        /// <summary>Where it first stops. It does not stay there — see <see cref="WarbringerLunge"/>.</summary>
+        public const float WarbringerHold = .34f;
+
+        public const float WarbringerMarch = 15f;
+        public const float WarbringerCastEvery = 6f;
+
+        /// <summary>
+        /// How much further down the hill one roar carries it, as a march reading.
+        ///
+        /// Four roars and it is at the line, which against
+        /// <see cref="WarbringerCastEvery"/> is about twenty-four seconds from its first roar —
+        /// long enough that a player who prioritises it never meets it, short enough that one who
+        /// ignores it does.
+        /// </summary>
+        public const float WarbringerLunge = .16f;
+
+        /// <summary>What it swings once it arrives. Half again a brute's, because it took a minute.</summary>
+        public const int WarbringerBlow = 3;
+
+        /// <summary>
+        /// How much faster the hill walks while a warbringer's roar is on it.
+        ///
+        /// <b>It was 1.9 and that took the line apart.</b> Measured on the shipped rung through
+        /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>: at 1.9 an unhurried player
+        /// finished with one ward standing out of four, which is a rung that is lost by anybody
+        /// having a worse afternoon. At 1.55, with a longer quiet in front of it
+        /// (<see cref="WarbringerAfter"/>), the same player finishes with three and the line down
+        /// to 38 of 56 — bled hard, which is what a penultimate rung should feel like.
+        /// </summary>
+        public const float Rally = 1.55f;
+
+        /// <summary>Seconds a roar lasts. Two roars never stack — the later one restarts it.</summary>
+        public const float RallyFor = 5f;
 
         /// <summary>
         /// Where the warlord stops, as a march reading.
@@ -614,39 +1100,151 @@ namespace GlimmerGrove.Modes
         /// <summary>When a cascade's <paramref name="beat"/>th wave of fuel reaches the line.</summary>
         public static float FuelLands(int beat) => SwapFor + beat * BeatFor + FuelFlight;
 
+        /// <summary>Whether this kind is one of the four bosses — the things that stand and cast.</summary>
+        public static bool IsBoss(SiegeKind kind)
+            => kind == SiegeKind.Boss || kind == SiegeKind.Overlord
+            || kind == SiegeKind.Blightcaller || kind == SiegeKind.Warbringer;
+
         /// <summary>
-        /// Which of the three a wave's token is.
+        /// What each of the four bosses does when its spell lands.
         ///
-        /// <b>The wave decides, never the letter.</b> A warlord is written as its colour — the
-        /// same character a creeper is — because what makes it a warlord is standing alone in the
-        /// last wave (<see cref="SiegeLayout.Boss"/>). Asking the letter would be a second opinion
-        /// about a fact the layout already holds.
+        /// <para>
+        /// <b>Four verbs rather than four numbers, and that is the whole of what makes them four
+        /// bosses.</b> A chapter shipped two of these told apart by their health, their cadence
+        /// and their hue, and it read — correctly — as one fight with the dial moved. So each one
+        /// takes a different thing: <see cref="SiegeSpell.Smite"/> takes a ward's <em>health</em>,
+        /// <see cref="SiegeSpell.Douse"/> takes its <em>fire</em>,
+        /// <see cref="SiegeSpell.Rally"/> takes the player's <em>clock</em>, and
+        /// <see cref="SiegeSpell.Sunder"/> takes the <em>rank</em> they earned. Each has a
+        /// different answer, and only two of the four are answered by a mending.
+        /// </para>
+        /// <para>
+        /// This is invariant 26h's test asked of a boss: what does the player decide about it, and
+        /// can they be wrong. A boss that only ever did what the boss before it did, harder, is
+        /// the mirror and the wick a sister mode withdrew twice for competing on degree rather
+        /// than on kind (26g).
+        /// </para>
         /// </summary>
-        public static SiegeKind KindOf(char token, bool boss)
-            => boss ? SiegeKind.Boss
-             : char.IsUpper(token) ? SiegeKind.Brute
-             : SiegeKind.Creeper;
+        public static SiegeSpell SpellOf(SiegeKind kind)
+            => kind == SiegeKind.Overlord ? SiegeSpell.Sunder
+             : kind == SiegeKind.Blightcaller ? SiegeSpell.Douse
+             : kind == SiegeKind.Warbringer ? SiegeSpell.Rally
+             : SiegeSpell.Smite;
+
+        /// <summary>
+        /// Whether this boss's spell is aimed at a ward at all.
+        ///
+        /// <b>A warbringer's is not</b>, and that is the one clause the cast/flight/land spine
+        /// needed for a fourth boss: a roar is thrown at the hill, so its flight carries no ward
+        /// and everything downstream — the tell, <c>Arrive</c>, the view's ring — asks this rather
+        /// than testing an index nobody set.
+        /// </summary>
+        public static bool AimsAtAWard(SiegeKind kind) => SpellOf(kind) != SiegeSpell.Rally;
+
+        /// <summary>What a boss is called, for a message. Never shown to a player.</summary>
+        public static string NameOf(SiegeKind kind)
+        {
+            for (int i = 0; i < SiegeLayout.BossNames.Length; i++)
+                if (SiegeLayout.BossNames[i].Kind == kind) return SiegeLayout.BossNames[i].Name;
+
+            return kind == SiegeKind.Brute ? "brute" : "creeper";
+        }
 
         public static int HealthOf(SiegeKind kind)
-            => kind == SiegeKind.Boss ? BossHealth
+            => kind == SiegeKind.Overlord ? OverlordHealth
+             : kind == SiegeKind.Warbringer ? WarbringerHealth
+             : kind == SiegeKind.Boss ? BossHealth
+             : kind == SiegeKind.Blightcaller ? BlightHealth
              : kind == SiegeKind.Brute ? BruteHealth : CreeperHealth;
 
         public static float MarchOf(SiegeKind kind)
-            => kind == SiegeKind.Boss ? BossMarch
+            => kind == SiegeKind.Overlord ? OverlordMarch
+             : kind == SiegeKind.Warbringer ? WarbringerMarch
+             : kind == SiegeKind.Boss ? BossMarch
+             : kind == SiegeKind.Blightcaller ? BlightMarch
              : kind == SiegeKind.Brute ? BruteMarch : CreeperMarch;
+
+        /// <summary>Seconds between one spell and the next, for whichever boss this is.</summary>
+        public static float CastEveryFor(SiegeKind kind)
+            => kind == SiegeKind.Overlord ? OverlordCastEvery
+             : kind == SiegeKind.Warbringer ? WarbringerCastEvery
+             : kind == SiegeKind.Blightcaller ? BlightCastEvery : BossCastEvery;
+
+        /// <summary>
+        /// What one of this boss's spells takes off a ward's health.
+        ///
+        /// <b>Nought for two of the four, and that is not an omission.</b> A blightcaller takes
+        /// fire and a warbringer takes time; asking either for a damage number would be asking
+        /// what a mending is worth against it, and the answer is nothing.
+        /// </summary>
+        public static int CastOf(SiegeKind kind)
+            => kind == SiegeKind.Overlord ? OverlordCast
+             : kind == SiegeKind.Boss ? BossCast : 0;
 
         /// <summary>
         /// What one swing at the line costs a ward.
         ///
-        /// <b>A warlord swings at nothing</b>, because it never reaches the line — what it costs
-        /// the line is <see cref="BossCast"/>, from where it stands.
+        /// <b>Three of the four bosses swing at nothing</b>, because they never reach the line —
+        /// what they cost the line is their spell, from where they stand. The warbringer is the
+        /// exception and is the whole of what makes it a different fight (see
+        /// <see cref="WarbringerLunge"/>).
         /// </summary>
         public static int BlowOf(SiegeKind kind)
-            => kind == SiegeKind.Boss ? 0
+            => kind == SiegeKind.Warbringer ? WarbringerBlow
+             : IsBoss(kind) ? 0
              : kind == SiegeKind.Brute ? BruteBlow : CreeperBlow;
 
-        /// <summary>How far down the hill this kind comes before it stops. A warlord stops early.</summary>
-        public static float HoldOf(SiegeKind kind) => kind == SiegeKind.Boss ? BossHold : 1f;
+        /// <summary>How far down the hill this kind comes before it stops. A boss stops early.</summary>
+        public static float HoldOf(SiegeKind kind)
+            => kind == SiegeKind.Overlord ? OverlordHold
+             : kind == SiegeKind.Warbringer ? WarbringerHold
+             : kind == SiegeKind.Boss ? BossHold
+             : kind == SiegeKind.Blightcaller ? BlightHold : 1f;
+
+        /// <summary>
+        /// Whether this boss can bring a ward down at all, given long enough.
+        ///
+        /// <b>Two of the four cannot</b>, and only one of the two is obvious. A blightcaller takes
+        /// fuel and never health, so a level whose only threat were one could not be lost — which
+        /// is what <c>ModeValidator.Threatens</c> now asks rather than assuming that a boss is by
+        /// definition dangerous. A warbringer takes no health either and still counts, because it
+        /// walks all the way to the line and swings there for the rest of the run.
+        /// </summary>
+        public static bool EndangersTheLine(SiegeKind kind)
+            => CastOf(kind) > 0 || SpellOf(kind) == SiegeSpell.Rally;
+
+        /// <summary>
+        /// The quiet before a wave, which is longer before a boss and shortest before a
+        /// warbringer.
+        ///
+        /// <para>
+        /// <b>Per kind, and the two exceptions point opposite ways for the same reason.</b>
+        /// Invariant 37t made the quiet before a <em>warlord</em> longer than any other so that a
+        /// duel is never stacked on a wave still swinging at the line — two fail states arriving
+        /// together read as being cheated. A warbringer wants precisely the opposite: half its
+        /// spell is a rally, and a rally over an empty hill is a mechanic that rejects nothing
+        /// (invariant 5d), so it comes while the last wave is still walking and the two are the
+        /// fight.
+        /// </para>
+        /// <para>
+        /// Both numbers are pinned by <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> rather
+        /// than argued about, because a pacing change is a difficulty change (37s).
+        /// </para>
+        /// </summary>
+        public static float RestBefore(SiegeKind kind)
+            => kind == SiegeKind.Warbringer ? WarbringerAfter
+             : IsBoss(kind) ? BossAfter : BetweenWaves;
+
+        /// <summary>
+        /// The quiet before a warbringer: short, so it arrives into a hill worth rallying.
+        ///
+        /// <b>Shorter than <see cref="BetweenWaves"/> and much shorter than
+        /// <see cref="BossAfter"/></b>, which is the whole of why it is a number of its own — see
+        /// <see cref="RestBefore"/>. It was 14, which with a rally of 1.9 cost an unhurried player
+        /// three of four wards; 17 with a rally of 1.55 leaves three standing on a line bled to 38
+        /// of 56. Neither number was reasoned about.
+        /// </summary>
+        public const float WarbringerAfter = 17f;
 
         /// <summary>
         /// Gems an ordinary match clears, cascades included, in tenths.
@@ -671,14 +1269,27 @@ namespace GlimmerGrove.Modes
         public const int MatchGemsTenths = 55;
 
         /// <summary>
-        /// What one match delivers: the gems it clears, each spent as a bolt into the ward the
-        /// raider in front of it is weak to.
+        /// What one match delivers: the gems it clears, turned into bolts and every one of them
+        /// landing on the raider that ward is strong against.
         ///
+        /// <para>
+        /// <b>Bolts, not gems, and that was an identity rather than a rule.</b> It read
+        /// <c>gems x damage x 2</c>, which is only the same thing while a gem buys exactly one
+        /// bolt — true for as long as a gem was worth one fuel and a bolt cost one, and silently
+        /// load-bearing under every par, every star line and every utility charge in the mode. The
+        /// moment a gem was worth two (<see cref="FuelPerGemTenths"/>) that formula would have
+        /// halved what a match delivers and doubled every par in the chapter, with each number
+        /// still looking perfectly plausible. It says <c>bolts</c> out loud now.
+        /// </para>
+        /// <para>
         /// Integer arithmetic throughout, for <c>LevelTuning</c>'s reason: a graded number decided
-        /// by a float is a number three code generators round three ways.
+        /// by a float is a number three code generators round three ways. One division, at the
+        /// end, so nothing truncates on the way.
+        /// </para>
         /// </summary>
         public const int PerfectMatch =
-            MatchGemsTenths * ShotDamage * WeakMultiplier / 10;
+            MatchGemsTenths * FuelPerGemTenths * ShotDamage * WeakMultiplier
+            / (FuelPerShotTenths * 10);
 
         /// <summary>
         /// The fewest matches that could hold this level, and so what a run is graded against.
@@ -697,6 +1308,16 @@ namespace GlimmerGrove.Modes
         /// It is <em>not</em> a proof the way every other mode's par is, and that is the honest
         /// summary of what a clock costs. See <see cref="SiegeLayout"/>.
         /// </para>
+        /// <para>
+        /// <b>And a level that deals cogs loosens it further, deliberately.</b> A rank-four ward
+        /// turns a match into 2.33 times what <see cref="PerfectMatch"/> assumes, so on such a
+        /// level this is not even the floor it is elsewhere — it over-states the matches a good
+        /// run needs, which keeps three stars reachable and is the direction invariant 22 says to
+        /// err in. Modelling ranks here was the alternative and is worse: it would have to guess
+        /// how many cogs a player takes and which turret they spend them on, and a par built on a
+        /// guess about play is a par nobody can check. What checks it instead is somebody playing
+        /// it — <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, run over every rung.
+        /// </para>
         /// </summary>
         public static int Par(SiegeLayout layout)
         {
@@ -705,7 +1326,7 @@ namespace GlimmerGrove.Modes
             int health = 0;
             for (int w = 0; w < layout.Waves.Length; w++)
                 for (int i = 0; i < layout.Waves[w].Length; i++)
-                    health += HealthOf(KindOf(layout.Waves[w][i], w == layout.BossWave));
+                    health += HealthOf(layout.KindAt(w, i));
 
             int par = (health + PerfectMatch - 1) / PerfectMatch;
             return par < 1 ? 1 : par;
@@ -727,6 +1348,50 @@ namespace GlimmerGrove.Modes
 
         /// <summary>The warlord: it holds the middle of the hill and hits the line from there.</summary>
         Boss,
+
+        /// <summary>
+        /// The overlord: what the last rung of a chapter ends on.
+        ///
+        /// <b>Appended rather than inserted</b>, because these ordinals reach analytics on every
+        /// run this mode has ever recorded — the same rule <c>DefeatReason</c> keeps its retired
+        /// members for.
+        /// </summary>
+        Overlord,
+
+        /// <summary>The blightcaller: it puts a ward out rather than taking it down.</summary>
+        Blightcaller,
+
+        /// <summary>The warbringer: it roars, and the hill charges.</summary>
+        Warbringer,
+    }
+
+    /// <summary>
+    /// What a boss's spell does when it lands.
+    ///
+    /// <para>
+    /// <b>Its own vocabulary rather than a flag on the kind, because the view reads it too.</b>
+    /// Every one of the four is drawn differently, aimed differently and answered differently, and
+    /// a rule that only <c>SiegeTuning</c> knew would leave the drawing to guess from health
+    /// numbers — which is how a mode ends up with two bosses that look the same.
+    /// </para>
+    /// <para>
+    /// <b>Appended, like <see cref="SiegeKind"/></b>: these reach analytics through
+    /// <c>SiegeSpellLanded</c> and an ordinal that moves rewrites history.
+    /// </para>
+    /// </summary>
+    public enum SiegeSpell
+    {
+        /// <summary>Takes a ward's health. The warlord's, and the one a mending answers.</summary>
+        Smite,
+
+        /// <summary>Empties a ward's fuel and smothers it. The blightcaller's.</summary>
+        Douse,
+
+        /// <summary>Sets the whole hill charging. The warbringer's, and aimed at no ward.</summary>
+        Rally,
+
+        /// <summary>Takes health <em>and</em> a rank the player earned. The overlord's.</summary>
+        Sunder,
     }
 
     /// <summary>One raider on the hill.</summary>
@@ -748,8 +1413,15 @@ namespace GlimmerGrove.Modes
         /// <summary>How far down the hill it is: 0 at the top, 1 at the ward line.</summary>
         public float March;
 
-        /// <summary>How far down it comes before it stops. One for everything but a warlord.</summary>
-        public readonly float Hold;
+        /// <summary>
+        /// How far down it comes before it stops. One for everything but a boss.
+        ///
+        /// <b>Not readonly, and exactly one thing writes it</b>: a warbringer's roar lunges it
+        /// further down the hill (<see cref="SiegeTuning.WarbringerLunge"/>). Everything else is
+        /// minted with its kind's ground and never moves it, so <see cref="AtTheLine"/> stays the
+        /// one question anything asks about where a raider is.
+        /// </summary>
+        public float Hold;
 
         public int Health;
         public readonly int MaxHealth;
@@ -781,7 +1453,14 @@ namespace GlimmerGrove.Modes
 
         public bool Brute => Kind == SiegeKind.Brute;
 
-        public bool Boss => Kind == SiegeKind.Boss;
+        /// <summary>Whether this is a boss of any of the four — the thing that stands and casts.</summary>
+        public bool Boss => SiegeTuning.IsBoss(Kind);
+
+        /// <summary>Whether this is the greatest of the four.</summary>
+        public bool Overlord => Kind == SiegeKind.Overlord;
+
+        /// <summary>What this one's spell does. <see cref="SiegeSpell.Smite"/> for anything that has none.</summary>
+        public SiegeSpell Spellcraft => SiegeTuning.SpellOf(Kind);
 
         public bool OnTheHill => Wait <= 0f;
 
@@ -810,11 +1489,69 @@ namespace GlimmerGrove.Modes
         /// <summary>Seconds until its next bolt.</summary>
         public float Cool;
 
+        /// <summary>
+        /// How many cogs have been spent on this ward, nought to <see cref="SiegeTuning.MaxRank"/>.
+        ///
+        /// <b>Rank rather than level, so the arithmetic has no off-by-one in it.</b> Every table
+        /// that reads it is a multiplier on nought (<see cref="SiegeTuning.DamageAt"/>,
+        /// <see cref="SiegeTuning.FuelShotTenths"/>); the number a <em>player</em> is shown is
+        /// <see cref="Level"/>, which is this plus one, and it exists exactly once so a badge and
+        /// a bolt can never disagree about what tier a turret is.
+        /// </summary>
+        public int Rank;
+
+        /// <summary>What the badge on this ward says: one to five.</summary>
+        public int Level => Rank + 1;
+
+        /// <summary>
+        /// Seconds this ward stands dark, having been doused by a blightcaller.
+        ///
+        /// <b>A countdown rather than a flag</b>, because what a player has to read off it is
+        /// <em>how long</em>: the decision the blightcaller asks is which colour to feed next, and
+        /// that is only a decision if the answer changes as the seconds run out.
+        /// </summary>
+        public float Dark;
+
         public SiegeWard(int colour) => Colour = colour;
 
-        public bool Fuelled => Alive && Fuel >= SiegeTuning.FuelPerShot;
+        /// <summary>Whether it is standing but smothered. Fuel poured in is still fuel.</summary>
+        public bool Doused => Alive && Dark > 0f;
+
+        /// <summary>Whether it can get a bolt away. An upgraded ward needs less to do it.</summary>
+        public bool Fuelled => Alive && !Doused && Fuel >= SiegeTuning.FuelShot(Rank);
 
         public float Charge => Fuel / SiegeTuning.WardCapacity;
+
+        /// <summary>Whether another cog would be worth anything to this ward.</summary>
+        public bool Upgradable => Alive && Rank < SiegeTuning.MaxRank;
+
+        /// <summary>
+        /// Puts this ward out: what a blightcaller's spell does when it lands.
+        ///
+        /// It takes the fuel <em>and</em> the seconds, because taking only one of the two is not
+        /// a mechanic — emptying a full ward it is about to fire from costs nothing a moment
+        /// later, and smothering a ward with nothing in it costs nothing at all.
+        /// </summary>
+        public void Snuff()
+        {
+            Fuel = 0f;
+            Dark = SiegeTuning.Douse;
+        }
+
+        /// <summary>
+        /// Knocks a rank off: what an overlord's spell does on top of its damage.
+        ///
+        /// Clamped at nought and answering whether it really took one, so a view can draw the
+        /// badge falling and say nothing when there was nothing to take.
+        /// </summary>
+        public bool Sunder()
+        {
+            if (Rank <= 0) return false;
+
+            Rank -= SiegeTuning.OverlordSunder;
+            if (Rank < 0) Rank = 0;
+            return true;
+        }
     }
 
     /// <summary>A bolt that left a ward, for the view to draw.</summary>
@@ -855,6 +1592,43 @@ namespace GlimmerGrove.Modes
         }
     }
 
+    /// <summary>
+    /// A cog going, and what it was worth.
+    ///
+    /// <para>
+    /// <b>Its own record on the beat rather than a flag on the ward, because the view has to draw
+    /// a journey.</b> The player's decision was made on the field — <em>which colour do I line up
+    /// beside that cog</em> — and it is paid on the line, so what the drawing has to say is that
+    /// those two things are one thing. <see cref="Cell"/> is where it stood and
+    /// <see cref="Ward"/> is where it went.
+    /// </para>
+    /// <para>
+    /// <see cref="Rank"/> is what the ward came out at, and it is <b>nought when nothing
+    /// happened</b> — a cog taken by a colour whose ward has fallen, or is already at the top of
+    /// the ladder, is a cog spent for nothing. That is a real mistake with a real cost, which is
+    /// what makes choosing the colour a decision (invariant 26h) rather than a formality, and the
+    /// view says so by drawing the cog coming apart where it stood and going nowhere.
+    /// </para>
+    /// </summary>
+    public readonly struct SiegeRise
+    {
+        public readonly int Cell, Ward, Rank;
+
+        /// <summary>Which of <see cref="SiegeLayout.Letters"/> took it, as an index.</summary>
+        public readonly int Colour;
+
+        public SiegeRise(int cell, int ward, int rank, int colour)
+        {
+            Cell = cell;
+            Ward = ward;
+            Rank = rank;
+            Colour = colour;
+        }
+
+        /// <summary>Whether a ward really went up. False for a cog that bought nothing.</summary>
+        public bool Rose => Ward >= 0 && Rank > 0;
+    }
+
     public readonly struct SiegeBlow
     {
         public readonly int Ward, Raider, Damage;
@@ -880,15 +1654,22 @@ namespace GlimmerGrove.Modes
     /// </summary>
     public readonly struct SiegeCast
     {
-        public readonly int Raider, Ward;
+        public readonly int Raider;
+
+        /// <summary>Which ward it is aimed at, or <b>-1</b> for a warbringer's roar at the hill.</summary>
+        public readonly int Ward;
+
+        /// <summary>Which of the four it is. The tell is drawn differently for each.</summary>
+        public readonly SiegeSpell Craft;
 
         /// <summary>Seconds from now until it lands. <see cref="SiegeTuning.BossTell"/> of that is the tell.</summary>
         public readonly float In;
 
-        public SiegeCast(int raider, int ward, float @in)
+        public SiegeCast(int raider, int ward, SiegeSpell craft, float @in)
         {
             Raider = raider;
             Ward = ward;
+            Craft = craft;
             In = @in;
         }
     }
@@ -900,17 +1681,26 @@ namespace GlimmerGrove.Modes
     /// a blow is swung at the line by something standing at it, a spell is thrown from the middle
     /// of the hill, and the view draws the two nothing alike.
     /// </summary>
-    public readonly struct SiegeSpell
+    public readonly struct SiegeSpellLanded
     {
         public readonly int Raider, Ward, Damage;
         public readonly bool Felled;
 
-        public SiegeSpell(int raider, int ward, int damage, bool felled)
+        /// <summary>Which of the four it was. The view draws each of them nothing alike.</summary>
+        public readonly SiegeSpell Craft;
+
+        /// <summary>Whether a rank really came off. Only ever true of a <see cref="SiegeSpell.Sunder"/>.</summary>
+        public readonly bool Sundered;
+
+        public SiegeSpellLanded(int raider, int ward, SiegeSpell craft, int damage, bool felled,
+                                bool sundered = false)
         {
             Raider = raider;
             Ward = ward;
+            Craft = craft;
             Damage = damage;
             Felled = felled;
+            Sundered = sundered;
         }
     }
 
@@ -920,7 +1710,7 @@ namespace GlimmerGrove.Modes
         public readonly List<SiegeBolt> Bolts = new List<SiegeBolt>(16);
         public readonly List<SiegeBlow> Blows = new List<SiegeBlow>(4);
         public readonly List<SiegeCast> Casts = new List<SiegeCast>(2);
-        public readonly List<SiegeSpell> Spells = new List<SiegeSpell>(2);
+        public readonly List<SiegeSpellLanded> Spells = new List<SiegeSpellLanded>(2);
         public readonly List<int> Arrived = new List<int>(8);
 
         /// <summary>The wave that has just stepped out, or -1.</summary>
@@ -970,6 +1760,9 @@ namespace GlimmerGrove.Modes
         public readonly List<int> Cleared = new List<int>(12);
         public readonly List<SiegeDrop> Drops = new List<SiegeDrop>(24);
 
+        /// <summary>Every cog this beat took, and what each was worth.</summary>
+        public readonly List<SiegeRise> Rises = new List<SiegeRise>(2);
+
         /// <summary>Fuel this beat put into each ward, in ward order.</summary>
         public float[] Fuel;
 
@@ -1014,10 +1807,21 @@ namespace GlimmerGrove.Modes
         struct Flight
         {
             public int Raider, Ward;
+            public SiegeSpell Craft;
             public float In;
         }
 
         readonly List<Flight> _spells = new List<Flight>(4);
+
+        /// <summary>
+        /// Seconds left on a warbringer's roar, or nought.
+        ///
+        /// <b>One number for the whole hill rather than one per raider</b>, because a roar is a
+        /// fact about the ground and not about who is standing on it — a raider that steps out
+        /// mid-roar charges with the rest, which is what a player watching the hill expects and
+        /// what a per-raider timer would quietly get wrong.
+        /// </summary>
+        float _roar;
 
         uint _rng;
         int _wave;
@@ -1025,11 +1829,17 @@ namespace GlimmerGrove.Modes
         int _felled;
         float _rest;
 
+        /// <summary>Whether the authored field stood a cog on it. See <see cref="Upgrades"/>.</summary>
+        readonly bool _seeded;
+
         SiegeBoard(SiegeLayout layout)
         {
             Layout = layout;
             _cells = layout.Grid.Copy();
             _rng = layout.Seed;
+
+            for (int i = 0; i < _cells.Length; i++)
+                if (_cells[i] == SiegeLayout.Cog) { _seeded = true; break; }
 
             _wards = new SiegeWard[layout.Wards.Length];
             for (int i = 0; i < _wards.Length; i++)
@@ -1181,9 +1991,19 @@ namespace GlimmerGrove.Modes
                 depth++;
                 var beat = new SiegeBeat { Depth = depth, Fuel = new float[_wards.Length] };
 
-                foreach (int cell in hit)
+                foreach (int cell in hit) beat.Cleared.Add(cell);
+                beat.Cleared.Sort();
+
+                // **Cogs are claimed before anything comes off the field, and in cell order.**
+                // Both halves matter: the colour that takes a cog has to be read off the board as
+                // it stands, and the order has to be an ordering rather than whichever way a hash
+                // set happened to enumerate — a `HashSet<int>` walk is not promised to be the same
+                // on two runtimes, and this decides which turret a player's upgrade went to.
+                Claim(beat);
+
+                for (int i = 0; i < beat.Cleared.Count; i++)
                 {
-                    beat.Cleared.Add(cell);
+                    int cell = beat.Cleared[i];
 
                     int ward = Layout.WardOf(_cells[cell]);
                     if (ward >= 0) beat.Fuel[ward] += SiegeTuning.FuelPerGem;
@@ -1191,7 +2011,6 @@ namespace GlimmerGrove.Modes
                     _cells[cell] = Hole;
                 }
 
-                beat.Cleared.Sort();
                 turn.Worth += beat.Cleared.Count;
 
                 for (int w = 0; w < _wards.Length; w++)
@@ -1217,6 +2036,93 @@ namespace GlimmerGrove.Modes
             Settle();
             return turn;
         }
+
+        /// <summary>
+        /// Takes every cog standing beside something this beat cleared, and spends it on the ward
+        /// of the colour that took it.
+        ///
+        /// <para>
+        /// <b>The colour of the run decides the ward, which is the whole mechanic.</b> A cog is
+        /// not a colour and can never be lined up; what it is worth is a rank, and which turret
+        /// gets it is settled by what the player chose to match beside it. So the question a cog
+        /// asks is the mode's own question — <em>which colour is wanted</em> — asked about the
+        /// line rather than about the hill, and a player who answers it carelessly upgrades the
+        /// wrong turret and cannot take it back.
+        /// </para>
+        /// <para>
+        /// <b>First neighbour in cell order wins a cog with two colours beside it</b>, and that is
+        /// a rule rather than a tie-break: it is deterministic, it is the same on both runtimes,
+        /// and it is *stated* rather than emergent. A player who wants a particular colour to take
+        /// a cog can always arrange for that colour to be the only one touching it.
+        /// </para>
+        /// <para>
+        /// <b>The rank lands here rather than with the fuel</b>, unlike everything else this turn
+        /// books (invariant 37s). A rank is a property and not a hit: nothing about it is visible
+        /// until a bolt leaves, and a bolt costs fuel, which is still crossing the field — so
+        /// there is no moment where the player sees an effect arrive before its cause. Keeping it
+        /// here is what keeps <see cref="SiegeWard.Rank"/> a single source of truth for the badge,
+        /// the damage and the fuel cost at once.
+        /// </para>
+        /// </summary>
+        void Claim(SiegeBeat beat)
+        {
+            for (int i = 0; i < beat.Cleared.Count; i++)
+            {
+                int cell = beat.Cleared[i];
+                char colour = _cells[cell];
+
+                int x = cell % Width, y = cell / Width;
+
+                Take(x - 1, y, colour, beat);
+                Take(x + 1, y, colour, beat);
+                Take(x, y - 1, colour, beat);
+                Take(x, y + 1, colour, beat);
+            }
+        }
+
+        /// <summary>Takes the cog at this cell, if there is one, for this colour.</summary>
+        void Take(int x, int y, char colour, SiegeBeat beat)
+        {
+            if (x < 0 || y < 0 || x >= Width || y >= Height) return;
+
+            int cell = IndexOf(x, y);
+            if (_cells[cell] != SiegeLayout.Cog) return;
+
+            // Emptied here rather than left for the sweep below, so a cog with three cleared gems
+            // around it is taken once and by the first of them.
+            _cells[cell] = Hole;
+
+            int ward = Layout.WardOf(colour);
+
+            // A cog taken by a colour whose ward has fallen — or is already at the top of the
+            // ladder — is spent for nothing, and that is reported rather than hidden. It is the
+            // cost of the decision, and a mechanic whose wrong answer costs nothing is a mechanic
+            // with no decision in it (invariant 5d).
+            if (ward >= 0 && _wards[ward].Upgradable)
+            {
+                _wards[ward].Rank++;
+                beat.Rises.Add(new SiegeRise(cell, ward, _wards[ward].Rank,
+                                             SiegeLayout.Letters.IndexOf(colour)));
+                return;
+            }
+
+            beat.Rises.Add(new SiegeRise(cell, ward, 0, SiegeLayout.Letters.IndexOf(colour)));
+        }
+
+        /// <summary>How many cogs are standing on the field. Bounded by <c>MostCogs</c>.</summary>
+        public int CogsStanding()
+        {
+            int n = 0;
+            for (int i = 0; i < _cells.Length; i++) if (_cells[i] == SiegeLayout.Cog) n++;
+            return n;
+        }
+
+        /// <summary>Whether this cell is holding a cog rather than a gem.</summary>
+        public bool IsCog(int index)
+            => index >= 0 && index < _cells.Length && _cells[index] == SiegeLayout.Cog;
+
+        /// <summary>Whether this level ever deals a cog, authored or refilled.</summary>
+        public bool Upgrades => Layout.Cogs > 0 || _seeded;
 
         /// <summary>Gravity, then a refill, both written into the beat for the view to animate.</summary>
         void Collapse(SiegeBeat beat)
@@ -1277,7 +2183,24 @@ namespace GlimmerGrove.Modes
             }
         }
 
-        char Deal() => Layout.Deal[(int)(Next() % (uint)Layout.Deal.Length)];
+        /// <summary>
+        /// One fresh cell falling into the top of a column: usually a gem, occasionally a cog.
+        ///
+        /// <para>
+        /// <b>The cog roll is only taken when there is room for one</b>, and that keeps the stream
+        /// deterministic rather than breaking it: how many cogs are standing is a fact about the
+        /// board, and two devices playing the same swaps hold the same board — so both take the
+        /// roll or neither does, and the gems that follow line up exactly.
+        /// </para>
+        /// </summary>
+        char Deal()
+        {
+            if (Layout.Cogs > 0 && CogsStanding() < SiegeTuning.MostCogs
+                && Next() % 100u < (uint)Layout.Cogs)
+                return SiegeLayout.Cog;
+
+            return Layout.Deal[(int)(Next() % (uint)Layout.Deal.Length)];
+        }
 
         /// <summary>xorshift32. Thirty-two bit throughout so the Python mirror reaches the same field.</summary>
         uint Next()
@@ -1383,10 +2306,44 @@ namespace GlimmerGrove.Modes
                 var caster = Find(spell.Raider);
                 if (caster == null || !caster.Alive) continue;
 
+                // A roar reaches no ward, so it is settled before anything asks for one. It
+                // *restarts* rather than stacks: two warbringers on one hill would otherwise
+                // multiply into a charge no level was tuned against.
+                if (spell.Craft == SiegeSpell.Rally)
+                {
+                    _roar = SiegeTuning.RallyFor;
+
+                    // **And it takes ground itself**, which is the half that matters in the duel:
+                    // by the time a warbringer is the only thing left there is nothing to rally,
+                    // and what is left is a boss walking toward the line one roar at a time.
+                    // Clamped at the line, where `AtTheLine` takes over and it starts swinging.
+                    caster.Hold = Math.Min(1f, caster.Hold + SiegeTuning.WarbringerLunge);
+
+                    _report.Spells.Add(
+                        new SiegeSpellLanded(spell.Raider, -1, SiegeSpell.Rally, 0, false));
+                    continue;
+                }
+
                 var ward = _wards[spell.Ward];
                 if (!ward.Alive) continue;
 
-                ward.Health -= SiegeTuning.BossCast;
+                // Douse takes no health at all, which is why `CastOf` answers nought for it rather
+                // than the rules carrying a second damage table nobody would keep in step.
+                if (spell.Craft == SiegeSpell.Douse)
+                {
+                    ward.Snuff();
+                    _report.Spells.Add(
+                        new SiegeSpellLanded(spell.Raider, spell.Ward, SiegeSpell.Douse, 0, false));
+                    continue;
+                }
+
+                // A rank is taken *before* the health, so a spell that fells a ward has still
+                // taken the rank it came for — and the view is told both in one record rather than
+                // having to work out which order they happened in.
+                bool sundered = spell.Craft == SiegeSpell.Sunder && ward.Sunder();
+
+                int cast = SiegeTuning.CastOf(caster.Kind);
+                ward.Health -= cast;
 
                 bool felled = ward.Health <= 0;
                 if (felled)
@@ -1396,8 +2353,8 @@ namespace GlimmerGrove.Modes
                     ward.Fuel = 0f;
                 }
 
-                _report.Spells.Add(new SiegeSpell(spell.Raider, spell.Ward,
-                                                  SiegeTuning.BossCast, felled));
+                _report.Spells.Add(new SiegeSpellLanded(spell.Raider, spell.Ward, spell.Craft,
+                                                        cast, felled, sundered));
             }
         }
 
@@ -1429,7 +2386,7 @@ namespace GlimmerGrove.Modes
             for (int i = 0; i < wave.Length; i++)
             {
                 char token = wave[i];
-                var kind = SiegeTuning.KindOf(token, boss);
+                var kind = Layout.KindAt(_wave, i);
                 int colour = SiegeLayout.Letters.IndexOf(char.ToLowerInvariant(token));
 
                 // Lanes are dealt from the same stream the field is, so a wave arrives spread out
@@ -1448,14 +2405,25 @@ namespace GlimmerGrove.Modes
             _report.Wave = _wave;
             _wave++;
 
-            // The warlord gets a longer quiet in front of him than any other wave - see
-            // `SiegeTuning.BossAfter`. The shortcut above is unaffected, so a player who has
-            // cleared the hill still gets him at once.
-            _rest = _wave == Layout.BossWave ? SiegeTuning.BossAfter : SiegeTuning.BetweenWaves;
+            // A boss gets its own quiet in front of it - long for a warlord, short for a
+            // warbringer, and `SiegeTuning.RestBefore` says why each. The shortcut above is
+            // unaffected, so a player who has cleared the hill still gets the boss at once.
+            _rest = _wave == Layout.BossWave
+                  ? SiegeTuning.RestBefore(Layout.BossKind)
+                  : SiegeTuning.BetweenWaves;
         }
 
         void Walk(float dt)
         {
+            // **The roar runs down on the board's own clock and lifts by itself.** A raider never
+            // holds a copy of it, so nothing can be left charging after the warbringer that
+            // started it is dead — which is the same rule `Arrive` keeps for a spell whose caster
+            // has fallen, and for the same reason: a boss that goes on affecting the hill after it
+            // is destroyed reads as the game getting the last word.
+            if (_roar > 0f) _roar = Math.Max(0f, _roar - dt);
+
+            float charge = _roar > 0f ? SiegeTuning.Rally : 1f;
+
             for (int i = 0; i < _raiders.Count; i++)
             {
                 var raider = _raiders[i];
@@ -1471,7 +2439,11 @@ namespace GlimmerGrove.Modes
 
                 if (raider.March >= raider.Hold) continue;
 
-                raider.March += dt / SiegeTuning.MarchOf(raider.Kind);
+                // **A boss does not answer its own roar.** A warbringer that hurried itself into
+                // place would shorten the entrance the roar exists to make frightening, and a
+                // warlord hastened by somebody else's roar could reach its ground before the level
+                // meant it to — so the charge is the hill's, and the hill is what walks.
+                raider.March += dt * (raider.Boss ? 1f : charge) / SiegeTuning.MarchOf(raider.Kind);
 
                 if (raider.March < raider.Hold) continue;
 
@@ -1494,6 +2466,12 @@ namespace GlimmerGrove.Modes
                 var ward = _wards[w];
                 if (!ward.Alive) continue;
 
+                // **A doused ward burns its seconds down here rather than in a step of its own**,
+                // because the one thing that must never happen is a ward whose dark has expired
+                // waiting a frame to notice: `Fuelled` is false while it is dark, so the frame
+                // that clears it is the frame it may fire again.
+                if (ward.Dark > 0f) ward.Dark = Math.Max(0f, ward.Dark - dt);
+
                 if (!ward.Fuelled) { ward.Cool = 0f; continue; }
 
                 ward.Cool -= dt;
@@ -1503,10 +2481,15 @@ namespace GlimmerGrove.Modes
                 if (target == null) { ward.Cool = 0f; continue; }
 
                 ward.Cool = SiegeTuning.FireEvery;
-                ward.Fuel = Math.Max(0f, ward.Fuel - SiegeTuning.FuelPerShot);
+
+                // **Both halves of a rank are spent here**, and they are the reason a cog is worth
+                // more than the sum of its parts: an upgraded ward hits harder *and* gets more
+                // bolts out of the same match, so a rank-four turret turns one match into 2.33
+                // times the damage a fresh one would.
+                ward.Fuel = Math.Max(0f, ward.Fuel - SiegeTuning.FuelShot(ward.Rank));
 
                 bool weak = target.Colour == ward.Colour;
-                int damage = SiegeTuning.ShotDamage * (weak ? SiegeTuning.WeakMultiplier : 1);
+                int damage = SiegeTuning.DamageAt(ward.Rank) * (weak ? SiegeTuning.WeakMultiplier : 1);
 
                 target.Health -= damage;
                 target.Flash = .18f;
@@ -1570,43 +2553,85 @@ namespace GlimmerGrove.Modes
                 boss.Spell -= dt;
                 if (boss.Spell > 0f) continue;
 
-                boss.Spell = SiegeTuning.BossCastEvery;
+                boss.Spell = SiegeTuning.CastEveryFor(boss.Kind);
 
-                int ward = Wanted();
-                if (ward < 0) continue;
+                var craft = boss.Spellcraft;
+
+                // **A roar is thrown at the hill, so it carries no ward.** Three of the four aim
+                // at the line and one does not, and the difference is asked once here rather than
+                // by every reader of a ward index nobody set.
+                int ward = SiegeTuning.AimsAtAWard(boss.Kind) ? Wanted(craft) : -1;
+                if (ward < 0 && craft != SiegeSpell.Rally) continue;
 
                 float lands = SiegeTuning.BossTell + SiegeTuning.BossFlight;
 
-                _spells.Add(new Flight { Raider = boss.Id, Ward = ward, In = lands });
-                _report.Casts.Add(new SiegeCast(boss.Id, ward, lands));
+                _spells.Add(new Flight { Raider = boss.Id, Ward = ward, Craft = craft, In = lands });
+                _report.Casts.Add(new SiegeCast(boss.Id, ward, craft, lands));
             }
         }
 
         /// <summary>
-        /// Which ward a warlord throws at: the standing one with the most health left.
+        /// Which ward a boss throws at, and each of the three that aim asks a different question.
         ///
         /// <para>
-        /// <b>The freshest rather than the weakest, and that is what keeps the fight winnable.</b>
-        /// A warlord that finished off whatever was nearly down would take the line apart one ward
-        /// at a time — and the ward it would reach first is the one whose colour the player has to
-        /// feed to answer it, so the mode's own answer would be the thing it destroyed. Picking the
-        /// freshest spreads the damage instead: the line comes down evenly, no colour is ever
-        /// locked out, and a run that is losing is losing to arithmetic rather than to a trap.
+        /// <b>The freshest rather than the weakest, for a smite, and that is what keeps the fight
+        /// winnable.</b> A warlord that finished off whatever was nearly down would take the line
+        /// apart one ward at a time — and the ward it would reach first is the one whose colour the
+        /// player has to feed to answer it, so the mode's own answer would be the thing it
+        /// destroyed. Picking the freshest spreads the damage instead: the line comes down evenly,
+        /// no colour is ever locked out, and a run that is losing is losing to arithmetic rather
+        /// than to a trap. It is also what keeps <see cref="Stranded"/> an honest certainty
+        /// (invariant 28f).
         /// </para>
         /// <para>
-        /// It is also what keeps <see cref="Stranded"/> an honest certainty (invariant 28f): the
-        /// warlord can never leave a player alive with no way to hurt it.
+        /// <b>A douse wants the ward the player is filling</b>, because that is what makes it a
+        /// decision rather than a tax: the fuel it takes is fuel somebody just earned, and the
+        /// answer — feed a different colour, or spend a surge — is one they choose every few
+        /// seconds. An already-dark ward is never chosen twice; there is nothing left to take and
+        /// a second one would read as the boss doing nothing.
+        /// </para>
+        /// <para>
+        /// <b>A sunder wants the best turret on the line</b>, which is the one thing in this
+        /// chapter a player <em>earned</em> (invariant 37w). That makes where the cogs went a
+        /// question the finale asks and a player can get wrong in both directions — pile them into
+        /// one ward and the overlord can take the pile; spread them and nothing on the line is
+        /// strong. Ties go to the freshest, so once the ranks are level it spreads exactly as a
+        /// smite does and cannot dismantle the line one ward at a time.
         /// </para>
         /// </summary>
-        int Wanted()
+        int Wanted(SiegeSpell craft)
         {
-            int best = -1, most = -1;
+            int best = -1;
+            long most = -1;
 
             for (int w = 0; w < _wards.Length; w++)
             {
-                if (!_wards[w].Alive || _wards[w].Health <= most) continue;
+                var ward = _wards[w];
+                if (!ward.Alive) continue;
 
-                most = _wards[w].Health;
+                // Ranked so a single comparison decides, with health as the low half of the key —
+                // written this way rather than as three loops because three loops is three places
+                // that can come to disagree about what "standing" means.
+                long rank;
+                switch (craft)
+                {
+                    case SiegeSpell.Douse:
+                        if (ward.Doused) continue;
+                        rank = (long)(ward.Fuel * 1000f) * 64L + ward.Health;
+                        break;
+
+                    case SiegeSpell.Sunder:
+                        rank = (long)ward.Rank * 64L + ward.Health;
+                        break;
+
+                    default:
+                        rank = ward.Health;
+                        break;
+                }
+
+                if (rank <= most) continue;
+
+                most = rank;
                 best = w;
             }
 
@@ -1792,6 +2817,13 @@ namespace GlimmerGrove.Modes
             int room = RoomForFuel(ward);
             if (room <= 0) return 0;
 
+            // **A surge lifts a douse, and that is what makes it the blightcaller's answer.**
+            // Fuel poured into a ward that cannot fire is fuel spent on nothing until the dark
+            // runs out on its own, which is a utility charged for a delay — so pouring re-lights
+            // it. The player is buying the seconds rather than the fuel, which is exactly what
+            // invariant 39 says a utility may sell: a finish, never a grade.
+            post.Dark = 0f;
+
             int given = tenths < room ? tenths : room;
             post.Fuel += given / 10f;
 
@@ -1799,6 +2831,15 @@ namespace GlimmerGrove.Modes
 
             return given;
         }
+
+        /// <summary>Whether this ward is standing but smothered. Asked by a surge's offer.</summary>
+        public bool Doused(int ward)
+            => ward >= 0 && ward < _wards.Length && _wards[ward].Doused;
+
+        /// <summary>
+        /// Seconds left on a warbringer's roar, or nought. The view draws the hill charging.
+        /// </summary>
+        public float Roaring => _roar;
 
         /// <summary>
         /// How much more fuel a ward could take, in whole tenths. Nought for a fallen one.

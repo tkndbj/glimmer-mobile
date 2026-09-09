@@ -455,6 +455,24 @@ namespace GlimmerGrove.Content
                     + "not a question - the whole decision in this mode is which colour is wanted "
                     + "next"));
 
+            // Invariant 5d asked of the cogs, and it is a *certainty* rather than a reading: a
+            // level that deals a cog on a line where every ward is already at the top of the
+            // ladder would be dealing an object that rejects nothing. It cannot happen today
+            // (a ward starts at rank nought), so what this really catches is the reverse — a
+            // level that never deals one and stands one on its opening field is fine, and a level
+            // that deals them onto a two-ward line is worth saying out loud.
+            if (layout.Cogs > 0 && layout.Wards.Length < 3)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"this siege deals cogs onto a line of {layout.Wards.Length} wards, so which "
+                    + "one an upgrade goes to is very nearly a coin toss - a cog asks the player "
+                    + "which colour to spend, and a short line is a short question"));
+
+            // Invariant 5d asked of each boss's own spell, which is the reading four bosses
+            // needed and two would never have: each of the four takes a *different* thing, so
+            // "there is a boss" stopped being a fact anything could act on and each one has to be
+            // asked whether the thing it takes is there to take.
+            if (layout.HasBoss) Bossed(layout, issues);
+
             // Certain: a run that cannot be lost. A level whose raiders could never break a ward
             // is one where the line is a picture of a threat rather than a threat (invariant 24
             // read one step further in - an opening level may want exactly that, and should say
@@ -463,6 +481,80 @@ namespace GlimmerGrove.Content
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
                     "no wave here holds enough raiders to bring a ward down even if every one of "
                     + "them reached the line, so this siege cannot be lost"));
+        }
+
+        /// <summary>
+        /// Whether this level's boss has anything to take.
+        ///
+        /// <para>
+        /// <b>One question per spell, because the four take four different things.</b> Invariant
+        /// 5d is usually asked of a board — does this mechanic reject any arrangement — and a boss
+        /// is the one object here placed by the *level* rather than dealt, so the same question is
+        /// asked of what the level surrounds it with. Every one of these is a warning: a chapter's
+        /// first rung may legitimately carry a boss as the thing being taught rather than the
+        /// thing being answered.
+        /// </para>
+        /// </summary>
+        static void Bossed(SiegeLayout layout, ICollection<LevelIssue> issues)
+        {
+            string who = SiegeTuning.NameOf(layout.BossKind);
+
+            switch (SiegeTuning.SpellOf(layout.BossKind))
+            {
+                // A douse takes one ward out of a line for five seconds. On a line of two that is
+                // half the player's answer gone every few seconds, which is not a decision about
+                // which colour to feed - it is a coin toss between the one that is left and
+                // nothing.
+                case SiegeSpell.Douse when layout.Wards.Length < 3:
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                        $"this siege ends with a {who}, which puts a ward out every few seconds, "
+                        + $"onto a line of {layout.Wards.Length} - a douse asks which colour is "
+                        + "worth feeding next, and with one ward left standing there is no next"));
+                    break;
+
+                // A sunder takes a rank the player earned. A level that never deals a cog has no
+                // ranks on it, so the overlord's own half of its spell is decoration and what is
+                // left is a warlord with a bigger number - which is exactly the fault four bosses
+                // exist to fix.
+                case SiegeSpell.Sunder when layout.Cogs <= 0 && !Standing(layout):
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                        $"this siege ends with an {who}, whose spell knocks a rank off the ward it "
+                        + "hits, but nothing here ever deals a cog - so there is never a rank to "
+                        + "take and half of what makes it an overlord rejects nothing"));
+                    break;
+
+                // Half a warbringer's roar is a rally, and a rally needs something to rally. It
+                // comes early on purpose (`SiegeTuning.RestBefore`), so what this really catches
+                // is a level that sends it after a wave too small to still be walking.
+                case SiegeSpell.Rally when Coming(layout) < 4:
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                        $"this siege ends with a {who}, half of whose roar sets the hill charging, "
+                        + $"and only {Coming(layout)} raiders come before it - it will arrive onto "
+                        + "an empty hill and rally nothing"));
+                    break;
+            }
+        }
+
+        /// <summary>Whether a cog is standing on the authored field.</summary>
+        static bool Standing(SiegeLayout layout)
+        {
+            for (int i = 0; layout.Grid != null && i < layout.Grid.Count; i++)
+                if (layout.Grid.At(i) == SiegeLayout.Cog) return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// How many raiders are in the last wave before the boss.
+        ///
+        /// The last one rather than all of them, because a warbringer's quiet
+        /// (<c>SiegeTuning.WarbringerAfter</c>) is shorter than <c>BetweenWaves</c> - so the only
+        /// wave that can still be walking when it arrives is the one immediately in front of it.
+        /// </summary>
+        static int Coming(SiegeLayout layout)
+        {
+            int last = layout.BossWave >= 0 ? layout.BossWave - 1 : layout.Waves.Length - 1;
+            return last < 0 || last >= layout.Waves.Length ? 0 : layout.Waves[last].Length;
         }
 
         /// <summary>Whether anything on the hill wears this colour.</summary>
@@ -490,25 +582,44 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// Whether one wave could ever fell a ward.
         ///
-        /// Deliberately generous - it assumes every raider of a wave arrives and swings at the
-        /// same ward, which is the best case for the raiders and so under-reports. A level this
-        /// names really cannot be lost; one it does not name may still be easy.
+        /// <para>
+        /// <b>Two blows a raider, and the one it used to count was wrong.</b> The first version
+        /// counted a single blow each and called itself conservative — "a level this names really
+        /// cannot be lost". It is not: a raider that reaches the line goes on swinging every
+        /// <see cref="SiegeTuning.BlowEvery"/> until something kills it, so eight creepers standing
+        /// at an unfed line are worth several times what one blow each counts. The old bar named
+        /// half a shipped chapter as unlosable and every one of those rungs bleeds the line when it
+        /// is played.
+        /// </para>
+        /// <para>
+        /// Two is a floor that is actually a floor — a raider that arrives at all gets a second
+        /// swing in unless the ward it walked to is already firing at it — and what genuinely
+        /// measures the threat is <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, which plays
+        /// every rung and fails on a line that finishes untouched (invariant 37j).
+        /// </para>
         /// </summary>
+        const int SwingsBeforeAnswered = 2;
+
         static bool Threatens(SiegeLayout layout)
         {
-            // A warlord holds the middle of the hill and throws at the line for as long as it is
-            // alive, so it is a threat by construction - there is no arrangement of a siege that
-            // sends one in which the line is safe.
-            if (layout.HasBoss) return true;
+            // A warlord or an overlord holds the middle of the hill and throws *health* off the
+            // line for as long as it is alive, so it is a threat by construction - there is no
+            // arrangement of a siege that sends one in which the line is safe.
+            //
+            // **Two of the four bosses are not**, and that is the clause a fourth boss bought. A
+            // blightcaller takes fuel and a warbringer takes time; neither can bring a ward down,
+            // so a level whose only threat were one of them could not be lost at all — which is
+            // invariant 5d asked of a fail state, and exactly the reading "there is a boss, so the
+            // line is in danger" would have got wrong in silence.
+            if (layout.HasBoss && SiegeTuning.EndangersTheLine(layout.BossKind)) return true;
 
             for (int w = 0; w < layout.Waves.Length; w++)
             {
                 int blow = 0;
                 for (int i = 0; i < layout.Waves[w].Length; i++)
-                    blow += SiegeTuning.BlowOf(
-                        SiegeTuning.KindOf(layout.Waves[w][i], w == layout.BossWave));
+                    blow += SiegeTuning.BlowOf(layout.KindAt(w, i));
 
-                if (blow >= SiegeTuning.WardHealth) return true;
+                if (blow * SwingsBeforeAnswered >= SiegeTuning.WardHealth) return true;
             }
 
             return false;

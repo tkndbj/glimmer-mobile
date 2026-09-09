@@ -558,7 +558,7 @@ namespace GlimmerGrove.AssetPipeline
             {
                 var mode = Content.LevelModes.Find(chapter.Levels[0].Mode);
                 if (mode != null)
-                    foreach (var request in mode.Art)
+                    foreach (var request in mode.ArtFor(chapter))
                         if (seen.Add(request.Address)) list.Add(request);
             }
 

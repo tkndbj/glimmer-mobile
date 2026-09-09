@@ -29,11 +29,19 @@ decision no gate can look at. Five questions to ask of what comes out, in order:
      is playing a different game.
   5. **Is the field big enough to play on?** It is forty per cent of the height and it is where
      the finger goes.
-  6. **Does the warlord read as the boss?** It is three cells tall against a creeper's one, it
+  6. **Does the boss read as the boss?** It is three cells tall against a creeper's one, it
      stands still in the middle of the hill, its health is a bar pinned across the top of the
-     board, and while it is winding up a violet ring closes over the ward it has chosen. Three of
+     board, and while it is winding up a ring closes over the ward it has chosen. Three of
      those four are placements, and a placement is exactly what no gate in this project can look
      at - two of them were already moved twice by this picture (`SiegeView.Crown`).
+  7. **Are the four bosses four different things?** Render `s01_stonewatch`, `s01_warlordsgate`,
+     `s01_blackmarch` and `s01_lastlight` side by side and the question answers itself - a
+     floating eye, an armoured walker, a walking slab and a gold overlord, at four sizes, each
+     casting in a colour no gem wears. **This picture is what said they were not.** The chapter
+     shipped two bosses drawn from one reel and separated by a run-time hue, every gate green, and
+     a player's verdict was that they looked exactly the same. It then caught the first repair too:
+     the blightcaller cut at 2.6 cells stood beside a creeper and read as one, and a green coat put
+     it in the same family as the green raiders around it.
 """
 from __future__ import annotations
 
@@ -96,11 +104,14 @@ BACK = (9, 14, 20)
 #: `SiegeView.Tints` - Pal.Poppy, Pal.Mint, Pal.Azure, Pal.Sun.
 TINTS = [(242, 64, 79), (123, 216, 106), (79, 193, 255), (255, 201, 60)]
 
-GEM_ART = {"r": "gem_r", "g": "gem_g", "b": "gem_b", "y": "gem_y"}
+GEM_ART = {"r": "gem_r", "g": "gem_g", "b": "gem_b", "y": "gem_y", "*": "gem_cog"}
 
-#: `SiegeView.WardArt` - four turret models, none of them carrying a colour. The colour is `coat`,
-#: applied here exactly as the view applies it.
-WARD_ART = {"r": "ward1", "g": "ward2", "b": "ward3", "y": "ward4"}
+#: `SiegeView.WardArt` - five tiers times four colours, both baked. A ward carries its **rank** in
+#: its silhouette and its colour in its hue, so nothing here is tinted (invariant 37l).
+def ward_art(colour, rank):
+    return "ward%d_%s" % (min(max(rank, 0), 4) + 1, colour)
+
+
 SKINS = ["mon1", "mon2", "mon3"]
 
 
@@ -259,13 +270,20 @@ def banner(sheet, cx, cy, depth, cell, span):
     sheet.alpha_composite(layer)
 
 
-#: `SiegeTuning.BossHold` and `SiegeView.TallOf` - where the warlord stops, and how big it is.
-BOSS_HOLD = 0.46
-BOSS_TALL = 3.1
-
-#: `SiegeView.Spellfire` - Pal.Foxglove, the one colour on this board that is not one of the
-#: four gems, so nothing it lights can be read as a colour rule.
-SPELLFIRE = (180, 120, 255)
+#: The four bosses, as everything a picture of one needs: where it stops
+#: (`SiegeTuning.HoldOf`), how tall it is drawn (`SiegeView.TallOf`), which reels its body wears,
+#: which effect its spell is drawn with, and what colour that is (`SiegeView.Casting`).
+#:
+#: **Four rows rather than a pair of "greater or not" ternaries**, which is the same correction the
+#: view itself needed: a bool can only ever answer "the other one", and a chapter shipped two
+#: bosses separated by nothing but a hue because of it. None of the four spell colours is one of
+#: the board's four gems, so nothing any of them lights can be read as a colour rule.
+BOSSES = {
+    "blightcaller": dict(hold=0.58, tall=3.0, stem="blight", fx="hex", fire=(59, 233, 216)),
+    "warlord": dict(hold=0.46, tall=3.1, stem="boss", fx="spell", fire=(180, 120, 255)),
+    "warbringer": dict(hold=0.34, tall=3.3, stem="bringer", fx="roar", fire=(255, 244, 206)),
+    "overlord": dict(hold=0.38, tall=3.5, stem="over", fx="omen", fire=(255, 116, 212)),
+}
 
 
 def warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, casting):
@@ -286,17 +304,26 @@ def warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, ca
     if not lay.boss:
         return
 
+    # A level names its boss by kind (`SiegeLayout.BossNames`), so which of the four this is comes
+    # out of the file rather than out of a case bit.
+    look = BOSSES.get(lay.boss_kind)
+    if look is None:
+        return
+
+    greater = lay.boss_kind == "overlord"
     colour = siege.LETTERS.index(lay.boss)
     tint = TINTS[colour]
+    fire = look["fire"]
 
-    tall = cell * BOSS_TALL
-    ly = hill_top + (hill_foot - hill_top) * BOSS_HOLD
+    tall = cell * look["tall"]
+    ly = hill_top + (hill_foot - hill_top) * look["hold"]
     cx, cy = at(0.0, ly)
 
     # `SiegeView.Follow` - the walk while it is crossing ground, the idle once it is standing.
-    # This picture is of a warlord in place, so the idle is the honest one to draw; `--warlord-walk`
+    # This picture is of a boss in place, so the idle is the honest one to draw; `--warlord walk`
     # is what looks at the reel that was missing for a whole session.
-    body = reel("boss_cast" if casting == "cast" else "boss_walk" if casting == "walk" else "boss")
+    stem = look["stem"]
+    body = reel(stem + ("_cast" if casting == "cast" else "_walk" if casting == "walk" else ""))
     if body is None:
         return
 
@@ -315,7 +342,7 @@ def warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, ca
         spark = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
         pen = ImageDraw.Draw(spark)
         pen.ellipse([cx - tall * 0.5, cy - tall * 0.5, cx + tall * 0.5, cy + tall * 0.5],
-                    fill=SPELLFIRE + (150,))
+                    fill=fire + (150,))
         spark = spark.filter(ImageFilter.GaussianBlur(cell * 0.42))
         sheet.alpha_composite(spark)
 
@@ -338,6 +365,16 @@ def warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, ca
     if casting != "cast":
         return
 
+    # **A roar is thrown at nothing**, so what is drawn for a warbringer is its ring going out over
+    # the hill rather than a ring closing on a ward - which is the one thing a picture of this mode
+    # can say about a boss that takes ground instead of health.
+    if look["fx"] == "roar":
+        for name, size in (("roar_hit", 7.0), ("roar_muzzle", 9.0)):
+            ring = loudest(name)
+            if ring is not None:
+                put(sheet, ring, cx, cy + tall * 0.1, cell * size, cell * size)
+        return
+
     # The spell in the air, and the ring closing over the ward it is coming for.
     ward = 1
     wx, wy = at(post_x(span, ward, len(lay.wards)), line_y + cell * 0.3)
@@ -345,16 +382,16 @@ def warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, ca
     layer = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
     pen = ImageDraw.Draw(layer)
     r = cell * 1.5
-    pen.ellipse([wx - r, wy - r, wx + r, wy + r], outline=SPELLFIRE + (240,),
+    pen.ellipse([wx - r, wy - r, wx + r, wy + r], outline=fire + (240,),
                 width=max(4, int(cell * 0.09)))
     sheet.alpha_composite(layer)
 
-    orb = blast("spell", 9)
+    orb = blast(look["fx"], 9)
     if orb is not None:
         mx, my = cx, cy + tall * 0.1
         put(sheet, orb, mx + (wx - mx) * 0.55, my + (wy - my) * 0.55, cell * 1.6, cell * 1.6)
 
-    flare = loudest("spell_muzzle")
+    flare = loudest(look["fx"] + "_muzzle")
     if flare is not None:
         put(sheet, flare, cx, cy + tall * 0.1, cell * 4.2, cell * 4.2)
 
@@ -413,9 +450,9 @@ def coat(im, tint):
 
 def layout_of(level):
     block = level["siege"]
-    grid = proto.Grid(block["rows"], block["width"], block["height"], siege.LETTERS)
+    grid = proto.Grid(block["rows"], block["width"], block["height"], siege.CELLS)
     return siege.Layout(grid, block["gems"], block["wards"], block["waves"],
-                        block.get("boss"))
+                        block.get("boss"), block.get("cogs", 0))
 
 
 def draw(level, raiders, bolts=True, aim=False, boss="cast"):
@@ -509,19 +546,21 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast"):
 
         tint = TINTS[siege.LETTERS.index(ward)]
 
-        # No tint: a ward's colour is baked into its sprite (see make_siege_art.hued).
+        # No tint: a ward's colour is baked into its sprite (see make_siege_art.hued), and so is
+        # its rank. Drawn one rank apart across the line, so one picture shows the whole ladder -
+        # a still that drew four rank-one turrets could not say whether the tiers read as tiers.
+        rank = i % 5
         cx, cy = at(wx, line_y + cell * 0.06)
-        put(sheet, sprite(WARD_ART[ward]), cx, cy, cell * 1.72, cell * 2.15)
+        put(sheet, sprite(ward_art(ward, rank)), cx, cy, cell * 1.72, cell * 2.15)
 
-        # The fuel tube, drawn a third full so it reads as a meter rather than as a plinth.
-        cx, cy = at(wx, line_y - cell * 0.62)
-        draw_on.rounded_rectangle([cx - cell * 0.53, cy - cell * 0.115,
-                                   cx + cell * 0.53, cy + cell * 0.115],
-                                  radius=9, fill=(0, 0, 0, 158))
-        draw_on.rounded_rectangle([cx - cell * 0.53 + 2, cy - cell * 0.115 + 2,
-                                   cx - cell * 0.53 + 2 + cell * 1.02 * 0.55,
-                                   cy + cell * 0.115 - 2],
-                                  radius=9, fill=tint + (255,))
+        # The rank badge on its shoulder - `SiegeView.Badge`. Always drawn, and it says one before
+        # a cog has been spent: the ladder is on the board from the first frame.
+        cx, cy = at(wx - cell * 0.74, line_y + cell * 0.34)
+        crest = ART / "crest.png"
+        if crest.exists():
+            put(sheet, Image.open(crest).convert("RGBA"), cx, cy, cell * 0.62, cell * 0.62)
+        draw_on.text((cx - cell * 0.07, cy - cell * 0.17), str(rank + 1),
+                     fill=(255, 243, 220, 255), font=face(int(cell * 0.34)))
 
         # The ward's own health, as a bar. Drawn three-quarters full, which is what a line that
         # has taken a leak looks like - the state worth checking is legible, not the fresh one.
@@ -593,7 +632,33 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast"):
         draw_on.rounded_rectangle([cx - cell * 0.46, cy - cell * 0.46,
                                    cx + cell * 0.46, cy + cell * 0.46],
                                   radius=16, fill=(255, 255, 255, 12))
-        put(sheet, sprite(GEM_ART[c]), cx, cy, cell * GEM_INSET, cell * GEM_INSET)
+        # A cog is drawn a shade smaller than a jewel, so the socket shows around it - it is the
+        # one thing on this field that is not a gem, and the gap is the cheapest way of saying so
+        # that survives being forty pixels wide (`SiegeView.Mint`).
+        side = cell * (GEM_INSET * 0.88 if c == "*" else GEM_INSET)
+        put(sheet, sprite(GEM_ART[c]), cx, cy, side, side)
+
+    # ------------------------------------------------------------------ the fuel tubes
+    # **Drawn after the field, because the view draws them after the field** (`SiegeView.Compose`
+    # gives them a layer of their own above it). They sit on the plate's own top edge, in the strip
+    # under the plinths - and every one of them would be hidden behind the plate if it were carried
+    # by its turret, which is exactly what used to happen (invariant 37g).
+    plate_top = gem_centre + (cell * grid.h + cell * 0.34) / 2
+    tube_y = plate_top + cell * 0.22
+
+    for i, ward in enumerate(lay.wards):
+        wide = span[0] / (n + 0.6)
+        wx = (i - (n - 1) / 2) * wide
+        tint = TINTS[siege.LETTERS.index(ward)]
+
+        cx, cy = at(wx, tube_y)
+        draw_on.rounded_rectangle([cx - cell * 0.53, cy - cell * 0.115,
+                                   cx + cell * 0.53, cy + cell * 0.115],
+                                  radius=9, fill=(0, 0, 0, 178))
+        draw_on.rounded_rectangle([cx - cell * 0.53 + 2, cy - cell * 0.115 + 2,
+                                   cx - cell * 0.53 + 2 + cell * 1.02 * 0.55,
+                                   cy + cell * 0.115 - 2],
+                                  radius=9, fill=tint + (255,))
 
     if aim == "hill":
         hill_grid(sheet, span, cell, hill_top, hill_foot, at)

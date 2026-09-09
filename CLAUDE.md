@@ -1993,12 +1993,192 @@ In practice:
     its board cannot say.** The last wave is drawn gold, because "this is the last one" is what the
     number is really for — and on a siege that ends in a warlord it is also the warning that the
     last one is not like the others. `mode.cap.wards` is a retired loc key.
-37i. **One level is a test, not a chapter.** What is owed is somebody playing it - see the owed
-    list. The questions in order: does **fuelling a colour** read as the verb, or do players hunt
-    for the biggest match; is **par 37 a line a good run can get under**, which is the one number
-    in this mode nothing offline can answer; and does the **warlord** read as a boss rather than as
-    a big raider - which is 20m's test asked of the finale, and the one thing about this level that
-    was designed against a picture rather than against a number (37u).
+37w. **A ward can be upgraded, and the whole mechanic is one question asked about the *line*
+    instead of about the hill.** A **cog** falls into the field like a gem, never lines up with
+    anything, and is destroyed by a run of gems made **beside** it — and the colour of that run
+    decides which turret goes up a rank. Five tiers, four ranks above the one a ward stands up in;
+    each is ten per cent more damage and ten per cent less fuel a bolt, which **multiply**, so a
+    rank-four ward turns one match into 2.33 times what a fresh one does.
+    <br>**It passes 26h's test, which is the only reason it exists.** A mirror and a wick were both
+    withdrawn from another mode for being the thing before them wearing a different colour; the test
+    that survived is *what does the player decide about it, and can they be wrong*. Here they decide
+    which colour to spend next to it — and they can be wrong in a way that costs: a cog taken by a
+    colour whose ward has fallen, or is already at the top of the ladder, is a cog spent for nothing,
+    and the view draws that by having it come apart and go **nowhere**. Which is also why the first
+    neighbour in cell order wins a contested cog and it is *stated* rather than emergent: a player
+    who wants a particular colour to take one can always arrange for it to be the only one touching
+    it, and a `HashSet<int>` walk is not promised to enumerate the same way on two runtimes.
+    <br>**Ten per cent is only exact because every damage number in this mode was multiplied by
+    ten**, and that cost nothing: par is health over `PerfectMatch` and *both sides* scaled
+    together, so every shipped par, both star lines and every utility's charge came out identical
+    (a firepot still costs two matches and still kills two creepers). At the old scale
+    `ShotDamage * 11 / 10` was two, so four of the five ranks bought nothing — the alternative was a
+    float, which is what this project's own hard-won note about `Mathf.CeilToInt(45 * 1.20f)` is
+    about.
+    <br>**What it costs is that par stops being even the loose floor it was.** A cog level's match
+    can deliver more than `PerfectMatch`, so par over-states what a good run needs — which keeps
+    three stars reachable, the direction invariant 22 says to err in, and is the reason
+    `AnUnhurriedPlayerHoldsThisLine` now plays **every rung of the chapter** rather than one level.
+    Modelling ranks inside par was tried on paper and abandoned: it would have to guess how many
+    cogs a player takes and where they spend them, and a par built on a guess about play is a par
+    nothing can check. **A cog rate above about four per hundred maxes the whole line and the hill
+    stops mattering** — measured, at 8% every ward reached tier five inside a minute and the line
+    finished untouched on eight rungs of ten; the shipped chapter deals 3–4%.
+    <br>Two smaller rules. **A cog is a second alphabet rather than a fifth letter**
+    (`SiegeLayout.Cells` against `.Letters`), because every rule that reads a cell is asking either
+    *what colour is this* or *what is standing here*, and one alphabet answers the first with a
+    thing that has none — `IsGem` is that split said once, and without it three cogs in a row are a
+    match. And **the rank lands at the moment the cog is taken** rather than with the fuel, which is
+    the one place invariant 37s is deliberately not followed: a rank is a property and not a hit,
+    nothing about it is visible until a bolt leaves, and a bolt costs fuel that is still crossing
+    the field — so there is no frame on which an effect arrives before its cause, and
+    `SiegeWard.Rank` stays a single source of truth for the badge, the damage and the fuel at once.
+37x. **An overlord is a warlord in upper case, and that is the whole of what a second boss cost.**
+    A wave already says "a bigger one of these" by capitalising a letter, so the finale says it the
+    same way: `"boss": "G"` is a greater warlord — nearly twice the health, half again the casting
+    rate, and a spell that takes five off a ward rather than three. It stops **further up the
+    hill**, which is the compensation and the half a player feels first, because there is more
+    ground between it and the line for the wards to work in.
+    <br>It cost one enum member, four constants and three art reels. Every table keyed on
+    `SiegeKind` answers for it without being asked twice, the wave count, the muster, the banner,
+    `RaiderCount` and `SiegeTuning.Par` all take it with no special case, and it cost the save file
+    **no schema version, no merge rule, no `firestore.rules` change and no server work** (20a). The
+    ordinal is **appended**, because these reach analytics on every run this mode has recorded.
+    <br>**Its spell is a sun rather than the two things tried first, and both failures are 37k's.**
+    A spiral came out as the sliver that invariant names — a thin ribbon framed square, eighty per
+    cent of the frame empty, drawn on the board as a magenta thread — and a spinning disc is drawn
+    nearly black by the pack, so a hue rotation toward magenta had nothing to work on and it baked
+    as a dot. What frames well is what already framed well for the warlord: a round, bright,
+    self-lit thing. The two are told apart by **colour** (Bloom against Foxglove, neither of them a
+    gem's), by the size the view draws them at, and by the impact — which is where a player is
+    looking when it lands. **Bake an effect and look at it beside the one it has to differ from.**
+37y. **A readout belongs where the thing it is about is, and the fuel tube was in the one place it
+    could not be.** It sat on the turret's chassis, which is where a render had put it — at the time
+    that was the only place it did *not* fall behind the field's plate (37g) — and on the chassis it
+    reads as part of the machine rather than as a meter. Reported from a device with the answer
+    circled: the strip between the plinths and the gems.
+    <br>**And the reason it could not simply be moved there is the layer, not the number.** On every
+    screen this mode has been drawn at, the foot of a turret is *already behind* the field's plate:
+    there is no gap in the ward line's own coordinates, only a band immediately above the plate's
+    top edge. So the tubes have a layer of their own (`_meters`), created after the field and before
+    the effects, and their x is the turret's while their y comes off the plate. **Before moving a
+    widget into a gap, check the gap exists in the layer that would draw it.**
+    <br>The rank badge went the other way and stayed on the turret: `SiegeView.Badge` pins the kit's
+    own shield to the shoulder, the one corner of a turret nothing else uses — the health bar is
+    above, the tube below, and the bolts leave from the middle. It is **always drawn and says one
+    before a cog has been spent**, because a badge that only appeared after an upgrade would be a
+    reward for already knowing the mechanic; this way the ladder is on the board from the first
+    frame. The number is drawn rather than baked, which is five textures a colour saved and one
+    place the tier is written down.
+
+37aa. **The wards fire twice as often for half as much, and the whole of that change is one
+    identity nobody had written down.** Asked for as *see them shoot more without breaking the
+    balance*: a gem is now worth two fuel rather than one and a bolt is worth ten damage rather
+    than twenty, so a match delivers exactly what it always did over twice as many bolts. Par,
+    both star lines and every utility's charge are **unmoved** — `PerfectMatch` is still 220.
+    <br>**What made it dangerous is that `PerfectMatch` read `gems × damage × 2`, which is only
+    the same thing while a gem buys exactly one bolt.** That was true for as long as a gem was one
+    fuel and a bolt cost one, it was never said out loud, and every par in the mode rested on it.
+    Left alone, the formula would have halved what a match delivers and **doubled every par in the
+    chapter**, with each number still individually plausible and every gate still green. It counts
+    **bolts** now. **Before changing a unit, grep for the arithmetic that assumed two units were
+    the same one.**
+    <br>**The fuel unit is subdivided rather than the bolt halved, and that is what keeps the rank
+    ladder exact.** A cog buys ten per cent less fuel a bolt (`FuelShotTenths`), which at a base of
+    ten tenths is 10, 9, 8, 7, 6 — five exact integers. Halving the *bolt* to five tenths makes the
+    same ladder 5, 4, 4, 3, 3 after truncation, so **two of the four cogs a player spends would
+    have bought nothing**. Everything measured in fuel doubled with the unit (`FuelPerGemTenths`,
+    `WardCapacity`, the surge's authored magnitude, which still fills the same fraction of the same
+    tube and still costs the same two matches); everything measured per bolt is untouched.
+    `ShotDamage` 10 is now the **floor** for the ten per cent step, so anything that halves it
+    again has to give the rank ladder a finer unit first.
+    <br>**And the cadence had to halve with it, which reverses a verdict rather than refining
+    one.** Bolts a second times damage a bolt is the line's whole output, so half-weight bolts at
+    an unchanged cadence is *half the peak damage* whatever the totals say — and peak is what
+    matters when a duel puts one ward on the whole fight. Measured at .22: the chapter still
+    clears, but `s01_warlordsgate` costs an unhurried player 29 → **37** matches (past its own
+    three-star line) and the fixture line falls outright; at .11 every rung returns to the count it
+    had before. **"More bolts, same balance" has exactly one solution.** The cost is that a lit
+    ward now looses nine bolts a second where the owner once called seven "a hose" — worth being
+    plain about, and `FireEvery` is the one dial to move back, at the price of peak damage the
+    levels would have to give back.
+    <br>**Totals being neutral does not make the dynamics neutral, and that is the half worth
+    remembering.** A line that kills faster empties the hill sooner, and an empty hill musters the
+    next wave at once (37k), so the finale's waves stacked and it was lost with one raider left —
+    fixed by turning two brutes of its last wave into creepers, and the cliff is **one brute wide**.
+    Every one of these readings came from `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine` and from
+    nothing else; the search-free mode has one instrument and every change to its arithmetic goes
+    back through it (37j).
+
+37z. **A boss is a way of fighting, and telling two of them apart by a hue is not telling them
+    apart at all.** The chapter shipped four boss encounters built from **two** kinds: rungs 5 and 8
+    were the same warlord — one reel, one spell, one behaviour — separated by a run-time tint, and
+    the finale differed from them in its health, its cadence and where it stopped. Every reading was
+    green, every gate was green, and the verdict from a device was one sentence: *the bosses look
+    exactly the same and have the same VFX*. It is exactly 26h's complaint about the mirror and the
+    wick asked of the thing at the end of a chapter rather than of an object on a board — a boss
+    that only does what the boss before it did, harder, is competing on **degree**, and degree is
+    not a difference a player experiences as a second fight.
+    <br>**So there are four kinds, and what separates them is what each one <em>takes</em>.** A
+    **blightcaller** takes a ward's *fire* (`SiegeSpell.Douse`: fuel to nought and five seconds
+    dark, no health at all); a **warlord** takes its *health* (`Smite`, the classic duel); a
+    **warbringer** takes the player's *ground* (`Rally`: it roars, the hill charges, and it lunges
+    itself further down — the only boss in this mode that reaches the line and swings); an
+    **overlord** takes the *rank they earned* (`Sunder`: health **and** a cog off the best turret on
+    the line, which is the one thing in this chapter a player earns, 37w). Four different answers
+    follow from that and only two of them are a mending: a douse is answered by feeding a different
+    colour or by a **surge**, a rally by a **firepot** into the hill *before* it comes, and a
+    sunder by having spread the cogs. **Ask of a second boss what it takes, not how much.**
+    <br>**A level names its boss by kind** (`"warlord:r"`, `SiegeLayout.BossNames`), which is the
+    field the old one-letter form had nowhere to go: case said which of *two* this was, so a third
+    could not be authored and a fourth could not be imagined. The retired one-letter form is
+    **refused rather than reinterpreted** (5f) — with four verbs, salvaging a boss out of `"r"`
+    would be a coin toss between four fights. `SiegeLayout.KindAt` is the one place that answers
+    what a wave's token is, so par, the muster and the build gate cannot form second opinions.
+    <br>**Two of the four take no health, and that broke a check that had always been right.**
+    `ModeValidator.Threatens` answered *true* for any siege that sends a boss, on the sound
+    reasoning that a warlord shells the line for as long as it lives. A blightcaller cannot bring a
+    ward down however long it stands there, so a level whose only threat were one **could not be
+    lost** — invariant 5d asked of a fail state, arriving through a door that had been safe for two
+    bosses. `SiegeTuning.EndangersTheLine` is the narrowed question, and a warbringer passes it for
+    a different reason from the warlord: it walks all the way in.
+    <br>**Every one of the three new numbers was measured, and two of them were wrong first.**
+    Nothing about a douse, a rally or a sunder reaches par — a rally adds no health and a sunder
+    takes a rank par never modelled — so `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine` is again
+    the only instrument that can see any of it (37j). It caught the finale being **lost outright**
+    (the sunder is a second cost on the same spell: `OverlordCastEvery` 3.4 → 4.0, and the cliff is
+    two tenths of a second wide) and the warbringer's rung finishing with one ward of four
+    (`Rally` 1.9 → 1.55, `WarbringerAfter` 14 → 17, and its last wave lightened). **A boss's ability
+    is a difficulty change nothing offline can price.**
+    <br>**And the drawing had to be four things too, which is where the render earned its place
+    twice.** Four bodies from four packs at four sizes (a floating eye, an armoured walker, a
+    walking slab, a gold overlord), four spells baked from four prefabs in the four `Pal` entries
+    that are none of the board's gems (teal, violet, white, magenta), four banners, four tells — a
+    ring that closes *anticlockwise* for a douse and on the boss *itself* for a roar. The first cut
+    of the blightcaller was 2.6 cells and green: `Tools/render_siege.py` put it beside a creeper and
+    it **was** one. And the hex was first baked as a ghostly wisp, which came out of
+    `SiegeShotBake` as invariant 37k's sliver for the third time — six candidates were baked and
+    looked at before one was kept. **No numeric gate in this project can see any of that.**
+    <br>**What it cost the save file, the wire and the server: nothing** (20a). Two `SiegeKind`
+    members and a `SiegeSpell` enum, both **appended**, because these ordinals reach analytics on
+    every run this mode has recorded. What it did cost is memory, and that bought a rule:
+    `LevelMode.ArtFor(chapter)` narrows a mode's art to what a *chapter* actually sends, because
+    four bosses are twenty-four flipbooks and every siege level was loading all of them (7b's rule
+    stopping one step short of the screen).
+
+37i. **The chapter is ten rungs now, and what a played run has to answer has grown with it.**
+    It shipped as one level to be judged (invariant 29's bargain); the questions that judged it are
+    still open and four more are open beside them - see the owed list. In order: does **fuelling a
+    colour** read as the verb, or do players hunt for the biggest match; is **par a line a good run
+    can get under**, which is the one number in this mode nothing offline can answer; does a
+    **cog** read as an upgrade rather than as a blocker to be cleared (37w); and — the question the
+    last verdict on this mode was about — do the **four bosses** read as four different fights
+    rather than as one boss at four strengths (37z)? Each of the four takes a different thing, so
+    the answer is really four questions: is a **douse** understood as "stop feeding that colour"
+    rather than as the game breaking a turret; does a **roar** read as a warning to burn the hill
+    down; does a **sunder** land as the finale taking the cogs the player spent; and is the
+    **warlord** still the clean introduction to all of it (20m's test asked of the finale, and the
+    one thing here designed against a picture rather than a number, 37u).
 37k. **A bought 3D VFX pack reaches a board here as a *bake*, and every one of the six ways that
     went wrong was silent.** Each ward now fires its own projectile - a fireball, a venom dart, an
     icicle and a lightning bolt, with the muzzle flash and the impact the pack draws for each -
@@ -2031,7 +2211,7 @@ In practice:
     small** at 48 wide for something drawn at 70 points and followed by the eye.
     <br>**The same session's other verdict was that the wards fire too fast**, and that is a rule
     rather than a drawing: `SiegeTuning.FireEvery` was .14, which is seven bolts a second per ward
-    and twenty-eight across a lit line, at which rate a bolt is not an event. It is .22 now — and
+    and twenty-eight across a lit line, at which rate a bolt is not an event. It went to .22 — and
     the band is narrow, because .26 loses the line outright (invariant 37j's simulation, which is
     where every change to this mode's arithmetic has to go).
     <br>**Played again it came back as three more fine tunes, and two of them are one rule.**
@@ -2384,20 +2564,25 @@ compile. Do not guess — verify offline:
 - **Content check:** `Tools/verify/content.py` — parse the StreamingAssets JSON, prove every level
   solvable, derive par, confirm every loc key resolves, and run `board-vectors.json` through both Python
   copies of the four-armed-tile rule (`BoardVectorTests` runs the C# one). It reads the manifest, so a
-  chapter carrying `"disabled": true` is skipped whole and the hidden glade and Lightfall chapters are
-  not proved on a run (invariant 38) — re-enable one and it is checked again with no other change. The
+  chapter carrying `"disabled": true` is skipped whole and the hidden glade, Lightfall and Prismvale
+  chapters are not proved on a run (invariant 38) — re-enable one and it is checked again with no other change. The
   per-mode checks are rolled into it: the **prototype modes** (one check for all of them - par
   searched, not finished on arrival, a legal move to make, plus the handful of questions only each
-  mode's own rules can ask; `ways`, `careless`, `nodes`) - which today carries only **Prismvale**
-  (par searched, the field authored **dark**, nothing dealt into it, no critter standing where no
-  lantern could ever reach it; `ways`, `careless`, `dealt`, `used`, `paired`, `idle`) -
+  mode's own rules can ask; `ways`, `careless`, `nodes`) - which today proves nothing, **Prismvale**
+  being hidden with the rest (par searched, the field authored **dark**, nothing dealt into it, no
+  critter standing where no lantern could ever reach it; `ways`, `careless`, `dealt`, `used`,
+  `paired`, `idle` — all of it checked again the moment the chapter is re-enabled) -
   **Lightfall** (par searched, brim row empty, nothing floating, procession carrying all three
   channels; `motes`, `headroom`, `ways`, `greedy`, and from the second chapter `lenses`, `whorls`,
   `fused`, `kindled`, `aim`, `reach`), and **Thornwatch**, which is the one mode it does *not*
   search, because there is nothing to search (invariant 37a): what is proved is the layout's own
   refusals, the arithmetic par held to `SiegeTuning.Par` by being the same three lines, and the
   readings a validator can act on (`waves`, `raiders`, `brutes`, `colours`, `wards`, `boss`,
-  `threat`, `swap`). `fall-vectors.json` is the contract with the shipping C# rules; the prototype modes have
+  `kind`, `spell`, `cogs`, `stood`, `threat`, `swap`). **`threat` counts two blows a raider, not one**, and the
+  correction is worth knowing: a raider that reaches the line goes on swinging until something kills
+  it, so the single blow the first version counted named half a shipped chapter as unlosable when
+  every one of those rungs bleeds the line in play. It is a floor on a floor; what measures the
+  threat is `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine`. `fall-vectors.json` is the contract with the shipping C# rules; the prototype modes have
   no vector file and are pinned **inline** by `ProtoLadderTests` instead, for the reason invariant
   29e gives. `bud-vectors.json` went with Budburst.
 - **Difficulty check:** `python Tools/verify/difficulty.py` — what each glade actually asks of a player,
@@ -2414,9 +2599,16 @@ compile. Do not guess — verify offline:
   absent, so a checkout without them still runs the gate, and `--contact` lays it out to be
   looked at. Gems, cast, turrets and the mine floor are **cut**; only the rampart, the field's
   plate and the plinth are drawn.
-  <br>**The per-colour shot, muzzle and hit reels under `Art/Fx/Siege/` are not its work and
-  nothing re-derives them** - they were added by hand. That is owed item 18's shape again: art
-  nobody can re-cut is art that quietly drifts from whatever produced it.
+  <br>The **ward line** is twenty turrets and twenty recoils - five tiers of the merge kit's own
+  upgrade ladder, each hue-rotated to one of the four colours - because a ward now carries its
+  **rank** in its silhouette and its colour in its hue (37w). Every tier is fitted to one box and
+  pinned by its *foot*, so a turret does not change size or rise off its plinth when it goes up.
+  <br>The **four bosses** are `BOSS_SET`: four bodies from four packs at four heights, three reels
+  each off one canvas so none of them changes size when it throws (37z). One loop rather than a
+  block per boss, which is both what made a third and a fourth cheap and what makes the *set*
+  something a reader can see at once.
+  <br>**The per-colour shot, muzzle and hit reels under `Art/Fx/Siege/` are not its work** - they
+  come out of `Bake Siege Projectiles` below.
 - **Thornwatch's projectiles:** `Glimmer Grove ▸ Art ▸ Bake Siege Projectiles` renders the four
   ward projectiles, their muzzle flashes and their impacts out of the bought pack's own prefabs
   into sprite reels under `Art/Fx/Siege` (invariant 37k); `▸ Verify Siege Projectiles` re-bakes and
@@ -2425,12 +2617,22 @@ compile. Do not guess — verify offline:
   Python script can rasterise a particle system — and it needs the pack, which is gitignored, so it
   is silent on a checkout without it. Re-run `▸ Addressables ▸ Sync All Assets` after a bake: the
   importer hook does not fire on files a tool wrote while the Editor was busy.
-- **Thornwatch legibility:** `python Tools/render_siege.py` draws the shipped level at the size a
+- **Thornwatch's boards:** `python Tools/siege_sweep.py --want N` deals fields from seeds and
+  keeps the ones worth keeping - an even spread of the colours, no three alike already touching, and
+  a chosen number of opening swaps; `--cogs N` stands cogs on them and `--gems` narrows the deal.
+  **It deliberately does not play the level**: a siege has no search (37a), so whether a rung can be
+  *held* is answered by `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine`, which plays the real rules
+  over all ten. Every field in `Tools/chapters/s01_thornwatch.py` is a recorded seed and the rows
+  are re-derived from it rather than typed, so a board can never drift from the thing that made it.
+- **Thornwatch legibility:** `python Tools/render_siege.py` draws every shipped level at the size a
   phone draws it, with the real sprites, using `SiegeScreen.HostInset` and `SiegeView`'s own
-  arithmetic; `--raiders N` stands that many of the first wave on the hill, `--no-bolts` takes
-  the exchange off it, `--no-bar` takes the action bar off, `--warlord cast|idle|walk`
-  picks which of the boss's three reels it is wearing, and `--aim hill` / `--aim wards` draw a
-  utility's targeting. **Its insets are in the screen's
+  arithmetic; `--level ID` picks one, `--raiders N` stands that many of the first wave on the hill,
+  `--no-bolts` takes the exchange off it, `--no-bar` takes the action bar off, `--warlord
+  cast|idle|walk` picks which of the boss's three reels it is wearing, and `--aim hill` / `--aim
+  wards` draw a utility's targeting. Render the four boss rungs side by side and whether the four
+  are four different fights answers itself — which is the picture that said they were not (37z),
+  and that then caught the first repair reading as a creeper. It draws the ward line **one rank apart across the four
+  turrets**, so one picture says whether the five tiers read as tiers. **Its insets are in the screen's
   own order — (left, bottom, right, top)** — and were written as (left, top, right, bottom) for
   a long time, which drew the board 55 points high: a diagnostic that is the only thing able to
   see a band in the wrong place must not itself put one there. **Look at it.** It is the only check that can see a fuel tube hidden behind
@@ -2780,18 +2982,28 @@ live in **Hard-won facts**.
   server-side filtering and reporting. A card is rebuilt about fifteen seconds after its owner changes
   the grove while online (a three-second sync debounce, then a ten-second publish debounce), or on
   their next launch; the cost grows with decorating, never with playing (19j).
-- **The two live modes, and the two hidden ones** (invariant 38) — the game a player opens today is
-  **Thornwatch** (`s01_thornwatch`, one level, invariant 37) and **Prismvale** (`p01_prismvale`,
-  two levels, invariant 36), and nothing else. **Thornwatch is the front door** — first row of the
-  switcher and what a map with nothing remembered opens on (38a) — and it is the first mode here
-  that runs on a **clock**: raiders walk down a hill at a line of coloured wards, and a match is
-  worth only the colour it was. Prismvale is the classic glade's goal reached by the jewel board's
-  own verb, drag-to-swap, with the match-three taken out of it.
-  <br>**The classic glade (`c01_shallows` … `c04_nightbriar`) and Lightfall (`f01_lightfall`,
-  `f02_glasswater`, `f03_whorlwater`) are *hidden*, not deleted** — `"disabled": true` in the
-  manifest and nothing else, so every board, screen and mode class still stands and seven booleans
-  put them back. A disabled chapter is skipped in silence by `CatalogIndexBuilder.Add`, and a mode
-  with no chapters is left off the switcher by `CatalogIndex`, so hiding costs no code at all.
+- **The one live mode, and the three hidden ones** (invariant 38) — the game a player opens today is
+  **Thornwatch** (`s01_thornwatch`, ten levels, invariant 37) and nothing else. It is the front
+  door by construction as well as by decision (38a): it is the only row `CatalogIndex.Modes`
+  has, so it is what a map with nothing remembered opens on. It is the first mode here that runs
+  on a **clock**: raiders walk down a hill at a line of coloured wards, and a match is worth only
+  the colour it was.
+  <br>**The classic glade (`c01_shallows` … `c04_nightbriar`), Lightfall (`f01_lightfall`,
+  `f02_glasswater`, `f03_whorlwater`) and Prismvale (`p01_prismvale`) are *hidden*, not deleted**
+  — `"disabled": true` in the manifest and nothing else, so every board, screen and mode class
+  still stands and eight booleans put them back. A disabled chapter is skipped in silence by
+  `CatalogIndexBuilder.Add`, and a mode with no chapters is left off the switcher by
+  `CatalogIndex`, so hiding costs no code at all.
+  <br>**The map's mode switcher is therefore not drawn, and that took no code either.**
+  `ModeSwitch.Build` returns null when the catalog holds one mode — the case it was written
+  around — so the pill, its menu and the first-run lesson pointing at it all fold away together,
+  and `Mechanic.ModeSwitch` is deliberately *not* marked seen while the control is absent, which
+  is what keeps the lesson spendable the day a second mode is turned back on. **Removing the
+  control by disabling the second mode rather than by deleting the call is what keeps two other
+  things working**: a device that remembers `prism` self-repairs, because `ModeChoice.Read`
+  refuses a mode this catalog has no chapters for and falls back to `DefaultMode`; and the
+  `GLIMMER_BENCH` row that reaches `Dev.VfxDemoScreen` is still reachable, since it is the one
+  row that draws with a single mode.
   <br>**Budburst, Hollowmarch and Emberforge are deleted** (38), and their mode, chapter, level and
   lesson ids are all spent. So are **Deep Orbit and Moonwake** (30), **Nova Raid and Toppleglen**
   (31), **the Iron Quarry** (32), **Kindlewake** (35), **Groovekeeper** (28) and four of the five
@@ -2806,10 +3018,10 @@ live in **Hard-won facts**.
   <br>**Read the manifest, never this table, when a number reaches a customer.** That rule was
   bought on 2026-09-02 by a store draft claiming five modes and a hundred levels "across eleven
   chapters" when the truth was four modes and ten chapters. What the manifest says today is **four
-  modes and nine chapters, of which two modes and two chapters are enabled** — three levels a
+  modes and nine chapters, of which one mode and one chapter are enabled** — ten levels a
   player can reach. Everything else is on disk behind a boolean.
   <br>**Prismvale is the twelfth mode the prototype level shape has carried and the only one still
-  on it**: a grid of letters, a deal, a searched par and a slack, so `ProtoGrid`, `ProtoSearch`,
+  on it** (hidden, not deleted): a grid of letters, a deal, a searched par and a slack, so `ProtoGrid`, `ProtoSearch`,
   `ProtoRun`, `ProtoVerdict`, `ProtoView` and `ProtoScreen` are all inherited and the mode supplies
   a board (`PrismBoard`), a look, a validator and a view. `ProtoDto.cores` — the **deal** — is
   wanted by none of them now and stays, because the block has always described itself as carrying
@@ -2847,8 +3059,8 @@ live in **Hard-won facts**.
 | ~~`m01_hollowmarch`~~ | ~~march~~ | — | — | — | **deleted** (38) — Hollowmarch withdrawn; its ids are spent |
 | ~~`b02_tanglewood`~~ | ~~bud~~ | — | — | — | **deleted** (38) — Budburst's second chapter; its ids are spent |
 | ~~`k01_kindlewake`~~ | ~~kindle~~ | — | — | — | **retired** (35) — withdrawn after play: the verb was not the one commissioned and the animation followed from that. Its ids are spent |
-| `s01_thornwatch` | siege | 1 | 37 matches | none — the ward line is the fail state | raiders come down the hill at four coloured wards; match a colour and that ward fuels up and opens fire, and a bolt is worth double against a raider of its own colour. Fuel leaves a ward as a bolt and no other way (37c). 8x5 field, 21 raiders in 4 waves — four, then eight, then eight **brutes**, then the warlord — all four colours against all four wards. Waves come on a clock, or early if the hill is cleared (37k). An unhurried player holds it in about 44 matches with 73% of the line's health gone (37j). The **last wave is a warlord** (37t): an alien three cells tall that walks to the middle of the hill in six seconds, stops, and throws telegraphed spells at the freshest ward standing until it is killed. The one level of the mode, and it cannot be lost on moves (24) |
-| `p01_prismvale` | prism | 2 | 3–4 swaps | none, then par + 3 | drag a gem onto its neighbour and the two change places; a lantern feeds the gems of its own colour touching it, that colour runs on through every matching gem beside them, and a critter standing against the vein wakes. Nothing is ever spent, so a vein can be **broken**. 6x6, critters 2 → 3, lanterns 2 → 3, `ways` 10 → 120, `dealt` 2 → 3 of 25, `used` 2 → 3, greed beaten on the second. The first rung cannot be lost (24) |
+| `s01_thornwatch` | siege | 10 | 11–50 matches | none — the ward line is the fail state | raiders come down the hill at four coloured wards; match a colour and that ward fuels up and opens fire, and a bolt is worth double against a raider of its own colour. Fuel leaves a ward as a bolt and no other way (37c). Every rung is an 8x5 field with no move allowance (24); waves come on a clock, or early if the hill is cleared (37k). **The ramp is what is coming**: rung 1 is twelve creepers and nothing else, rung 2 brings the **cog** (37w), rung 3 the **blightcaller** (37z), rung 4 sends waves of one colour at a time, rung 5 the **warlord** (37t), rungs 6–9 turn the hill from creepers to brutes (0 → 18), rung 8 the **warbringer**, and rung 10 ends on the **overlord** (37x). **Four bosses and four different fights** — a douse, a smite, a rally and a sunder, in four colours, from four packs, at four sizes. Cogs 3–4% from rung 2, which is where they stop maxing the line. Par is not monotonic — it dips at rung 5 — and an unhurried player clears every rung inside the three-star line with four wards standing on every one of them, the most-bled line being the finale's at 34 of 56 (37j) |
+| `p01_prismvale` | prism *(hidden)* | 2 | 3–4 swaps | none, then par + 3 | drag a gem onto its neighbour and the two change places; a lantern feeds the gems of its own colour touching it, that colour runs on through every matching gem beside them, and a critter standing against the vein wakes. Nothing is ever spent, so a vein can be **broken**. 6x6, critters 2 → 3, lanterns 2 → 3, `ways` 10 → 120, `dealt` 2 → 3 of 25, `used` 2 → 3, greed beaten on the second. The first rung cannot be lost (24) |
 | ~~`e01_emberforge`~~ | ~~ember~~ | — | — | — | **deleted** (38) — Emberforge withdrawn; its ids are spent |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock**
@@ -2929,8 +3141,8 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   *marks a flower* and shows the cascade tapping it would set off (`BudHint`, `BudView.Hint`).
   Neither costs the save file, the wire or the server anything.
 - **Utilities** — three, held up to 9 each, account-wide and shared by every Thornwatch
-  level. **Firepot** 12 gems (44 damage over 22% of the hill, charged 2 matches),
-  **mending** 8 gems (6 ward health, charged nothing), **surge** 10 gems (9 shots' fuel,
+  level. **Firepot** 12 gems (440 damage in one box of the hill, charged 2 matches),
+  **mending** 8 gems (6 ward health, charged nothing), **surge** 10 gems (18 shots' fuel,
   charged 2 matches). Each is a weighted option in one daily chest — mending in the first
   (12 of 100), surge in the second (13 of 100), firepot in the day's prize (12 of 100) — so a
   chest is the ordinary way to hold one and gems are the answer on the evening somebody is
@@ -3106,7 +3318,10 @@ changes nothing until that function is redeployed.
     <br>**The one number to watch is how often a whorl is opened early**, which is the mistake the mechanic
     is made of and the only one it can punish. There is deliberately no event for it yet; if the funnel needs
     a denominator, that is the one to add.
-19. **Judge Prismvale by playing it, which is what its two levels are for.** Built the way
+19. **Judge Prismvale by playing it, which is what its two levels are for.** *(Hidden as of
+    2026-09-09 — `p01_prismvale` carries `"disabled": true` so that Thornwatch is the only mode
+    a player can reach and the map's switcher draws nothing. This is owed the day it is turned
+    back on rather than now, exactly as Lightfall's item 15 is.)* Built the way
     every mode since the five prototypes has been (invariant 29), so it can be taken back out for
     the price of a chapter body and six files, exactly as Kindlewake just was. Three questions in
     order.
@@ -3135,41 +3350,53 @@ changes nothing until that function is redeployed.
     build of the view over the two boards are all owed, and the art folder wants
     `Addressables ▸ Sync All Assets` because it was written while the Editor was closed (see
     *Hard-won facts*).
-20. **Judge Thornwatch by playing it, which is what its one level is for.** Built the way every
-    mode since the five prototypes has been (invariant 29), so it can be taken back out for the
-    price of a chapter body and six files. Three questions in order.
+20. **Judge Thornwatch by playing it, which is what its ten levels are for.** Built the way
+    every mode since the five prototypes has been (invariant 29), so it can be taken back out for
+    the price of a chapter body and six files. Five questions, in the order a player meets them.
     <br>**Does fuelling a colour read as the verb?** Nothing on the jewel board is a goal, which
-    is the one thing a player arriving from Emberforge or Prismvale will get wrong: they will hunt
-    for the biggest match, and what matters is which ward it feeds. If they never look up at the
-    hill, the tip is wrong rather than the rule.
-    <br>**Does the last wave feel like a siege?** Eight brutes arrive together and an unhurried
-    player holds them with about half the line's health gone (37j). If the line never gets touched
-    the fail state is decoration; if it falls every time the opening level is doing a later
-    level's job. Both are fixed in the hill, which is a content edit.
-    <br>**Does the warlord read as a boss?** It is the newest thing on this level and the one
-    designed against a picture rather than against a number (invariants 37t, 37u). Three things to
-    watch, in order: whether it reads as *the* thing on the hill rather than as a big raider;
-    whether the ring closing over a ward is understood as a warning in time to do anything about
-    it — the only thing to do is a **mending**, so the funnel worth reading is whether one is spent
-    inside that window; and whether killing it *feels* like the end of the level. If the second
-    fails the fix is a longer `BossTell`, not a bigger ring.
-    <br>**And the number: is par 37 a line a good run can get under?** This is the only mode in
-    the game whose par is arithmetic rather than a proof (invariant 37a), so it is the only one
-    where three stars might be unreachable or free and nothing offline can say which. Watch the
-    star a real run scores. If three is free, the honest fix is a longer hill rather than a
-    tighter factor; if it is unreachable, look at `BossHealth` **before** `MatchGemsTenths`: a duel
-    delivers about 13.75 a match against par's 22, so the warlord is the part of this level where
-    par is least like real play (37t).
-    <br>**A fourth question was added with the projectiles** (invariant 37k): does a bolt read as
-    *that ward's*? Each of the four now fires its own thing — a fireball, a venom dart, an icicle
-    and a lightning bolt — so the answer should be yes by silhouette before it is yes by hue, and
-    the icicle is the one to watch, because it is the palest of the four and the only one whose
-    colour had to be forced rather than agreed with.
-    <br>Nothing about this level was watched on a device before this was written: every offline
-    gate is green, the whole suite passes, and the board has been rendered and looked at. There is
-    deliberately no analytics event yet; the first worth adding is how often a run ends with the
-    line *down* rather than with the hill cleared, because those are two different failures and
-    only one of them is about the puzzle.
+    is the one thing a player arriving from Prismvale will get wrong: they will hunt for the
+    biggest match, and what matters is which ward it feeds. If they never look up at the hill, the
+    tip is wrong rather than the rule. Rung 1 is twelve creepers, two waves and nothing else on the
+    field, so it is the cleanest possible test of exactly this.
+    <br>**Does a cog read as an upgrade rather than as a blocker?** (37w.) Rung 2 stands one on the
+    opening field where it will be met. The mistake to watch for is a player trying to *line three
+    cogs up* — that is the failure the lesson is written against — and the mistake that costs is
+    matching a careless colour beside one and upgrading a turret they did not want. **The one number
+    worth adding an event for is how often a cog goes to a ward already at tier five**, because that
+    is the wrong answer this mechanic is made of. There is deliberately none yet.
+    <br>**Is par a line a good run can get under?** This is the only mode whose par is arithmetic
+    rather than a proof (37a), and on a cog rung it is looser still, so it is the one place three
+    stars might be free. `AnUnhurriedPlayerHoldsThisLine` says an ordinary player lands inside the
+    three-star line on all ten with two to four wards standing; what it cannot say is whether a
+    *bad* player ever drops to one star. If three is free the honest fix is a longer hill, not a
+    tighter factor.
+    <br>**Do the four bosses read as four different fights?** This is the one the last verdict on
+    this mode was about: it shipped four boss encounters built from two kinds, and the report was
+    that they looked and played exactly the same (37z). Rungs 3, 5, 8 and 10 now send a
+    blightcaller, a warlord, a warbringer and an overlord, and each takes a different thing. Four
+    things to watch, in order. Is the **tell** understood as a warning in time to act — the answer
+    differs per boss, so the funnels worth reading are whether a **mending** is spent inside a
+    warlord's or an overlord's window and whether a **surge** or a **firepot** is spent inside a
+    blightcaller's or a warbringer's. Does a **douse** read as "stop feeding that colour" rather
+    than as the game breaking a turret — a player who keeps pouring into a dark ward has not met
+    it. Does a **roar** read as a reason to burn the hill down *now*; the warbringer is the only
+    one that arrives, so if players are surprised when it reaches the line its entrance is too
+    quiet. And does a **sunder** land as the finale taking the cogs they spent — if the badge
+    falling is not noticed, the fix is that drawing rather than the number. **The one figure worth
+    adding an event for is how often a run ends with the line down on a boss rung**, because a boss
+    that has to be answered a particular way is the one place this mode can be lost for a reason
+    the player never worked out.
+    <br>**And does the last wave feel like a siege?** Rungs 6 to 9 turn the hill from creepers to
+    brutes. If the line never gets touched the fail state is decoration; if it falls every time, a
+    later rung's hill is doing an earlier one's job. Both are fixed in the waves, which is a content
+    edit and no store review.
+    <br>Nothing about these ten levels was watched on a device before this was written: every
+    offline gate is green, the whole suite passes, the Editor's `Validate Content` and `Validate
+    Art` are clean, and every board has been rendered and looked at. There is deliberately no
+    analytics event for any of the above yet; the first worth adding is how often a run ends with
+    the **line down** rather than with the hill cleared, because those are two different failures
+    and only one of them is about the puzzle.
+
 16. **Measure the continue.** 20 gems for +15 turns was reasoned about, never played against, and it is the
     second number after the move budget most likely to be wrong: too dear and a defeat is a dead end, too
     cheap and the fail state stops meaning anything. `continue_offered` / `continue_bought` are the funnel,

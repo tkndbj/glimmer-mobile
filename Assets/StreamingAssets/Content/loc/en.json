@@ -4202,6 +4202,14 @@
    "text": "THE WARLORD"
   },
   {
+   "key": "mode.siege.blightcaller",
+   "text": "THE BLIGHTCALLER"
+  },
+  {
+   "key": "mode.siege.warbringer",
+   "text": "THE WARBRINGER"
+  },
+  {
    "key": "mode.cap.wave",
    "text": "wave"
   },
@@ -4312,6 +4320,90 @@
   {
    "key": "ui.utility.no_target",
    "text": "Nothing there to use it on."
+  },
+  {
+   "key": "level.s01_ironward.name",
+   "text": "The Ironward"
+  },
+  {
+   "key": "level.s01_ironward.tagline",
+   "text": "Match beside the cog to upgrade that turret"
+  },
+  {
+   "key": "level.s01_stonewatch.name",
+   "text": "Stonewatch"
+  },
+  {
+   "key": "level.s01_stonewatch.tagline",
+   "text": "Brutes take twice the killing"
+  },
+  {
+   "key": "level.s01_thornhollow.name",
+   "text": "Thornhollow"
+  },
+  {
+   "key": "level.s01_thornhollow.tagline",
+   "text": "One colour at a time, and the rest is waiting"
+  },
+  {
+   "key": "level.s01_warlordsgate.name",
+   "text": "The Warlord's Gate"
+  },
+  {
+   "key": "level.s01_warlordsgate.tagline",
+   "text": "It stops halfway and throws from there"
+  },
+  {
+   "key": "level.s01_bramblerun.name",
+   "text": "Bramble Run"
+  },
+  {
+   "key": "level.s01_bramblerun.tagline",
+   "text": "Every wave is armour now"
+  },
+  {
+   "key": "level.s01_ashenfield.name",
+   "text": "Ashenfield"
+  },
+  {
+   "key": "level.s01_ashenfield.tagline",
+   "text": "Spend the cogs where the hill hurts"
+  },
+  {
+   "key": "level.s01_blackmarch.name",
+   "text": "Black March"
+  },
+  {
+   "key": "level.s01_blackmarch.tagline",
+   "text": "A warlord behind a bled line"
+  },
+  {
+   "key": "level.s01_thornsiege.name",
+   "text": "The Long Siege"
+  },
+  {
+   "key": "level.s01_thornsiege.tagline",
+   "text": "Sixteen brutes and no quiet"
+  },
+  {
+   "key": "level.s01_lastlight.name",
+   "text": "Last Light"
+  },
+  {
+   "key": "level.s01_lastlight.tagline",
+   "text": "The overlord comes for the grove"
+  },
+  {
+   "key": "mode.siege.overlord",
+   "text": "THE OVERLORD"
+  },
+  {
+   "key": "ui.tip.siege_cog.title",
+   "text": "A COG UPGRADES A TURRET"
+  },
+  {
+   "key": "ui.tip.siege_cog.body",
+   "text": "A <b>cog</b> never lines up with anything. It is destroyed by a match made <b>beside</b> it - and the colour of that match decides which turret goes up a rank.\n\nEach rank is a tenth more damage and a tenth less fuel a shot, up to five. Match the wrong colour beside a cog and the wrong turret gets it."
   }
  ]
 }

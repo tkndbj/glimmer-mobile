@@ -132,9 +132,15 @@ namespace GlimmerGrove.Modes
         /// which is the safe direction — under-stating it would let a player buy a star.
         /// </para>
         /// </summary>
-        public static int DamageOfFuel(int tenths)
+        /// <param name="rank">
+        /// The rank of the ward it is being poured into. An upgraded ward gets more damage out of
+        /// the same fuel, so it is charged for more — read live rather than assumed at nought,
+        /// which would under-charge exactly the ward a player has spent cogs on.
+        /// </param>
+        public static int DamageOfFuel(int tenths, int rank = 0)
             => tenths <= 0 ? 0
-             : tenths * SiegeTuning.ShotDamage * SiegeTuning.WeakMultiplier / 10;
+             : tenths * SiegeTuning.DamageAt(rank) * SiegeTuning.WeakMultiplier
+               / SiegeTuning.FuelShotTenths(rank);
 
         /// <summary>
         /// Whether this utility would do anything at all on this board, aimed here.
@@ -166,6 +172,12 @@ namespace GlimmerGrove.Modes
                     return board.RoomForHealth(aim.Ward) > 0;
 
                 case UtilityKind.Surge:
+                    // **A doused ward always takes one**, whatever is in its tube: what a surge
+                    // buys there is the seconds rather than the fuel (see `SiegeBoard.Surge`), and
+                    // refusing it on a full tube would refuse the item on exactly the ward a
+                    // blightcaller has just put out — which is the one moment it is worth most.
+                    if (board.Doused(aim.Ward)) return true;
+
                     // Half, rather than all of it. Refusing a ward that cannot take the whole
                     // pour would make a surge unusable on exactly the ward that is firing, and
                     // accepting one with a tenth of room would spend an item for nothing.
@@ -224,7 +236,10 @@ namespace GlimmerGrove.Modes
                     // charge is a constant a player can learn and never a number that depends on
                     // how full the ward happened to be. Over-charging is the safe direction; the
                     // ward that could take less than half of it was refused by Would.
-                    int matches = MatchesFor(DamageOfFuel(item.Magnitude));
+                    int rank = aim.Ward >= 0 && aim.Ward < board.Wards.Count
+                             ? board.Wards[aim.Ward].Rank : 0;
+
+                    int matches = MatchesFor(DamageOfFuel(item.Magnitude, rank));
 
                     return new SiegeUse(true, matches, poured, aim.Ward);
                 }

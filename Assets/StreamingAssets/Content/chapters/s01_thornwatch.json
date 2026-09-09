@@ -23,20 +23,262 @@
     "width": 8,
     "height": 5,
     "rows": [
-     "rgrgyrry",
-     "bgygybbg",
-     "grrbbgyr",
-     "bybbgryg",
-     "ryygybrb"
+     "ryybgyyg",
+     "bybgrgyy",
+     "rbryyggr",
+     "grgrgbbr",
+     "yybgrrbg"
     ],
     "gems": "rgby",
     "wards": "rgby",
     "waves": [
      "rgby",
+     "rgbyrgby"
+    ],
+    "boss": ""
+   }
+  },
+  {
+   "id": "s01_ironward",
+   "mapX": 0.28,
+   "mapY": 0.14,
+   "budgetFactor": -1.0,
+   "backdrop": "sky_01",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "brbybgrg",
+     "yggrbbry",
+     "r*byybgr",
+     "yygbbgby",
+     "bbryygyg"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "rgbyrg",
      "rgbyrgby",
+     "rgByrgby"
+    ],
+    "boss": "",
+    "cogs": 4
+   }
+  },
+  {
+   "id": "s01_stonewatch",
+   "mapX": 0.74,
+   "mapY": 0.225,
+   "budgetFactor": -1.0,
+   "backdrop": "sky_02",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "gbrrgbgy",
+     "rybbrbbr",
+     "grgryyrr",
+     "rbybybby",
+     "ryybgrby"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "rgbyRG",
+     "rgbyRGby",
+     "RGBYrgby"
+    ],
+    "boss": "blightcaller:b",
+    "cogs": 3
+   }
+  },
+  {
+   "id": "s01_thornhollow",
+   "mapX": 0.3,
+   "mapY": 0.31,
+   "budgetFactor": -1.0,
+   "backdrop": "sky_03",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "gbrryrbb",
+     "rygbrrbr",
+     "bbgybggy",
+     "ybygyybb",
+     "gyrbbggr"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "rrrgggbb",
+     "YYYYrrrr",
+     "GGBBYY"
+    ],
+    "boss": "",
+    "cogs": 3
+   }
+  },
+  {
+   "id": "s01_warlordsgate",
+   "mapX": 0.72,
+   "mapY": 0.395,
+   "budgetFactor": -1.0,
+   "backdrop": "sky_04",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "ygrrbrgg",
+     "ryyrgrrb",
+     "bbggyyby",
+     "brryrbyg",
+     "ggrbggry"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "rgbyrg",
+     "rgbyRGby",
+     "RGby"
+    ],
+    "boss": "warlord:r",
+    "cogs": 3
+   }
+  },
+  {
+   "id": "s01_bramblerun",
+   "mapX": 0.26,
+   "mapY": 0.48,
+   "budgetFactor": -1.0,
+   "backdrop": "sky_05",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "bbrgrbrg",
+     "bggrbgyy",
+     "rgyygrry",
+     "brbybyyg",
+     "yrbrgrrg"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "RGbyRGby",
+     "RGbyRGby",
+     "RGBYRG"
+    ],
+    "boss": "",
+    "cogs": 3
+   }
+  },
+  {
+   "id": "s01_ashenfield",
+   "mapX": 0.7,
+   "mapY": 0.56,
+   "budgetFactor": -1.0,
+   "backdrop": "sky_06",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "yrbyrgyy",
+     "brggrbby",
+     "gbrgbyrr",
+     "byrbgybg",
+     "yrbbrrbg"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "rgbyRGby",
+     "RGBYRG",
+     "RGBYRGby"
+    ],
+    "boss": "",
+    "cogs": 3
+   }
+  },
+  {
+   "id": "s01_blackmarch",
+   "mapX": 0.32,
+   "mapY": 0.645,
+   "budgetFactor": -1.0,
+   "backdrop": "sky_07",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "bggbggyr",
+     "rbybgrby",
+     "ybyybryb",
+     "brrgybgr",
+     "bybggybr"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "rgbyRGby",
+     "RGBYRGby",
+     "RGBYrg"
+    ],
+    "boss": "warbringer:g",
+    "cogs": 3
+   }
+  },
+  {
+   "id": "s01_thornsiege",
+   "mapX": 0.74,
+   "mapY": 0.73,
+   "budgetFactor": -1.0,
+   "backdrop": "sky_08",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "gbyygryr",
+     "rbgbrbry",
+     "rgrbgybb",
+     "yygryyrg",
+     "bbrgyrgg"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "rgbyRGby",
+     "RGBYRGBY",
      "RGBYRGBY"
     ],
-    "boss": "r"
+    "boss": "",
+    "cogs": 3
+   }
+  },
+  {
+   "id": "s01_lastlight",
+   "mapX": 0.28,
+   "mapY": 0.815,
+   "budgetFactor": -1.0,
+   "backdrop": "sky_09",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "bbrgbrry",
+     "bbggbgyg",
+     "ryybrgrr",
+     "ryrgbyby",
+     "ggyrgyry"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "rgbyRGby",
+     "RGBYRG",
+     "RGBYrgby"
+    ],
+    "boss": "overlord:y",
+    "cogs": 3
    }
   }
  ]
