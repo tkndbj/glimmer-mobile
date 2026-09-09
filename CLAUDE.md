@@ -499,6 +499,23 @@ In practice:
     grow and are joined by union. Also: a container **at or below the free refill cap is an error, not a
     warning**, because raising `hearts.refillCap` past a shipped vessel would take real money and change
     nothing the player can see.
+18e. **A shelf's picture ladder is exactly as long as the shelf, and it was two longer for months.**
+    `ShopLadder.Rung` maps a product's tier onto a fixed-length ladder, so a shelf of four and a shelf
+    of six both read as full — which is right, and hides the fact that the *length* is a decision. The
+    coin ladder had six rungs because the sheet it was cut from happened to carry six coin tiles, and
+    against four products the arithmetic picked rungs 0, 2, 3 and 5: **two of the four painted coin
+    quantities were shipped, addressed, always-resident and drawn by nothing.** The mirror fault is a
+    ladder shorter than its shelf, which draws two adjacent cards identically — the "one product listed
+    six times" reading these pictures exist to fix. Neither is visible in a compile, a validator, an
+    audit or a screenshot, because both ship a shelf that is individually correct on every card. The
+    one shelf allowed to be longer than what is drawn is **bundles**, and only because a one-time
+    product takes the top rung whatever it costs (`Rung`), so with three products the bottom rung is
+    unreachable until a fourth is authored.
+    <br>**And a ladder has to grow.** The pictures now come from a pack that paints the amount, so
+    `make_shop_art.py` scales each rung by its own source against the largest in its ladder and
+    **refuses a rung no bigger than the one below it** by name. Squaring each picture to its own
+    silhouette — which the sheet-cutting tool it replaced had to do — would draw a single coin as large
+    as a vault, which is the ladder thrown away with every gate still green.
 19. **Anything a stranger can see is a separate, server-written document.** The save is `isOwner(uid)` for
     ever; a leaderboard row gets `groves/{uid}`, built by `publishGrove` with its own credentials and never
     writable by a client. Widening the save's read rule would publish everything else with it and freeze the
@@ -1821,6 +1838,10 @@ In practice:
     of it. Both were caught by `Tools/render_siege.py` and by nothing else, with every numeric
     gate green - which is the Iron Quarry's cage, Hollowmarch's road, Emberforge's cage and
     Kindlewake's husk for the fifth time (32b, 33h, 34e, 35h).
+    <br>**It draws the line the player would actually stand**, four different models side by side
+    (`--line`), because the one thing this picture is for that no number can answer is whether four
+    *chosen* turrets read as four turrets. It is also what killed the rank plinth: built, baked and
+    validated, it sat behind the field's plate where nothing could see it (invariant 42).
     <br>**It then earned its place twice more on the same board.** After the wards were re-cut it
     caught them sitting so low that the field's plate covered their feet and they read as small,
     and it caught pale paving tiles surviving the grass filter and littering the hill. Neither is a
@@ -2641,6 +2662,156 @@ In practice:
     on a stick and its flask had a notch where two nearly-agreeing shapes met, both invisible in
     the source and both green on every gate.
 
+40. **Two raiders now attack the *field*, and that is the hole the mode had.** Everything on this
+    hill could only ever hurt the wards, so the field was a fuel tap a player operated while
+    looking somewhere else — one arrow, upward, and nothing coming back. A **weaver** stops
+    two-thirds of the way down and locks cells (the gem stays that colour and can neither be moved
+    nor lined up); a **thief** hovers nearer and takes gems away altogether, leaving a sack that is
+    not a colour at all. Both are undone the moment the **last** of their kind is dead, which is
+    what makes killing one a payoff rather than a relief (20m).
+    <br>**Neither takes a ward's health, ever**, which makes them a *pressure* rather than a
+    threat: a wave holding nothing else can be ignored outright, so `ModeValidator` warns on one
+    and `SiegeTuning.EndangersTheLine` already answered the question `Threatens` needed (37z).
+    What stops ignoring them being correct is that the cost compounds — a web stays until the
+    weaver is dead, so the field a player is left matching on gets worse every second.
+    <br>**A web is a flag beside the cell and a sack is a glyph in it**, and the asymmetry is the
+    design: a webbed gem is still that colour, so it has to sit *beside* the cell and travel with
+    it through `Collapse`; a sack is not a colour, so it is `SiegeLayout.Sack` and every rule that
+    walks the field is correct about it unchanged — which is exactly what makes a cog cheap. **One
+    parallel array and not two**: anything beside the field has to be carried through `Collapse`
+    *and* `Settle` in lockstep, so a sack deliberately carries no memory of the colour it took and
+    bursts into a freshly dealt gem instead.
+    <br>**The field is never allowed to lock**, because this mode's clock does not stop: the board
+    refuses a mark that would leave no legal swap, `Settle` shuffles only what may move, and both
+    are capped at six (`MostWebs`, `MostSacks`). And a modifier is a **table** now
+    (`SiegeLayout.Modifiers`) rather than three branches — the shield shipped as a special case in
+    four places, and every one of them would have had to be extended twice more, in step, by hand.
+
+41. **A random stream is part of a level's content, and anything that changes how often it is drawn
+    from is a content change.** The hill's lanes were drawn from the *field's* stream, which reads
+    like an accident and is load-bearing: every gem dealt after the first wave depends on how many
+    times the muster has drawn. Moving the lanes to a stream of their own — which is *correct*, and
+    which the weaver needed — re-rolled all ten shipped rungs: three became unholdable, two became
+    trivial, and nothing in any file was wrong. `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine` was
+    the only thing that could see it, and only after it was changed to report the **whole chapter**
+    rather than stopping at the first rung that missed.
+    <br>So `SiegeBoard._hill` exists and is **narrow on purpose**: it carries only the draws a
+    player's taps do not order, which is a weaver reaching for a cell on a timer. A lane is drawn
+    once per raider in a sequence fixed by play rather than by frame rate, so it stays where it
+    was. What did change is `Nearest`: **a tie goes to the healthier ward**, because five lanes over
+    four wards puts lane two exactly between the middle pair and a first-wins tie-break sent two
+    lanes' worth of blows at one turret for a whole run (37t's argument about `Wanted`, said about
+    a swing).
+
+42. **A player chooses the line, and the load-bearing rule is that no turret may make a bolt
+    weaker.** Twenty turrets, one per silhouette, each standing on a colour the player picks
+    (`WardLoadout`, set once and carried into every rung). A siege's par is the hill's health over
+    the **baseline** bolt (37a), so a turret that hit softer would push three stars out of reach of
+    whoever chose it — a grade decided by a purchase, which is precisely what invariant 39 refuses
+    a utility. `WardCatalog` therefore has **no field that could express one**: an ability carries
+    a bonus and never a multiplier below one, so the rule is enforced by the shape of the data
+    rather than by a check somebody has to remember, and `WardLoadoutTests` sweeps every model,
+    every rank and both halves of the shield rule anyway.
+    <br>**What makes choosing one a decision rather than an upgrade** (26h's test) is that a line
+    holds four and a colour is what a level's hill decides: rend on red is worth a doubling on a
+    rung sending red bulwarks and worth nothing on one that sends none. Only one ability reaches
+    the primary hit (**rend**, which a shield does not blunt) and only one changes what a ward
+    *holds* (**beacon**) — and that second one was half-built at first, because three places
+    clamped fuel to the mode's constant rather than to the ward's own capacity: a turret that costs
+    credits, says it banks a cascade, and does not.
+    <br>**Two prices, one gate**, which is 16j's ladder and 15a's ordering: credits are what play
+    pays out, so a credit price carries a keeper level; gems are the shortcut and ask nothing. Ten
+    abilities times two rungs, so the shelf reads as ten families rather than twenty strangers.
+    <br>**Owning is an entitlement and standing is an instruction**, which is invariant 16's split
+    asked of one feature: `wardsOwned` is a union-joined id set with the starter never written down
+    (16e, 16f), and `wardLoadout` is merged by recency against its own stamp (11c) with a colour
+    nobody chose for writing no row. A stored id is a **hint** — ownership is re-checked at resolve
+    time, so a device that lost a purchase to a failed sync falls back rather than playing a turret
+    it cannot account for (8b's rule).
+    <br>**The rank moved to the badge, and a render is what said so.** A ward's rank used to be its
+    silhouette (37w) and cannot be now that the silhouette is the player's. A plinth under the
+    turret was built, baked, validated and **invisible** — invariant 37y already records that a
+    ward's foot sits behind the field's plate on every screen this mode is drawn at. It is the
+    badge's own colour instead (steel, bronze, silver, gold, white-hot, climbing in *value* as well
+    as hue), which costs no art and is read at a glance where a number has to be read.
+    <br>**And the art is scoped rather than resident** (7b): twenty models in four colours is eighty
+    turrets and eighty recoil reels, of which a run draws **four** (`AssetLibrary.LineScope`) and
+    the shelf draws twenty uncoloured thumbnails (`WardShelfScope`, 16c's rule). Their addresses
+    are the one place in this project a lookup is allowed to *build* a name, so `artnames.py`
+    cannot check them — what replaces the literal is stronger rather than weaker: the roster is
+    content, so `ContentValidation` and `content.py` walk it and error on a model whose pictures
+    are not on disk, which catches a missing file and a misspelled id at once.
+
+43. **A mode may have a second ladder, and it is a *track* rather than a mode or a chapter.**
+    Thornwatch's **Infinite** is the same board, the same wards, the same raiders and the same
+    verb; what differs is that its waves never stop. Filing it as a mode would give it its own
+    switcher row, its own art, its own validator and its own chapter ladder; filing it as an
+    ordinary chapter is worse, because `LevelUnlock.GateFor` looks for the chapter *before this one
+    in the same mode* and would gate a real chapter on stars nobody can earn. So `GameTrack` is one
+    level finer than `GameMode`, `CatalogIndex` lanes on the **pair**, and `ChaptersIn(mode)` /
+    `LevelsIn(mode)` answer the **main** track alone — which is what keeps `Next`, `Previous`,
+    `OrderOf`, `IsLast`, `GateFor` and `NextToPlay` correct with no change at all.
+    <br>**It cost the save file one field and the wire nothing else** (20a, once more): an endless
+    level is an ordinary level with a permanent id, so its record, its stars, its rewards and its
+    merge are the ones every glade has. What it added is `endlessBest` — one monotonic integer per
+    level id joined by `max`, which is 14a's floor exactly, pays nothing (credits and XP derive
+    from the star ledger alone, invariant 9) and therefore needs no server work.
+    <br>**It is graded on a count that climbs, and that is the one place in this game the ordering
+    inverts.** Everything else is graded on something the player *spends*, so fewer is better and
+    par is a floor; a run that can never be won has nothing to spend against, so what it is graded
+    on is how far it got (`LevelTuning.Climbs`). Three consequences, and the third is a rule:
+    `LevelRecord` keeps the **larger** count; the standing is not taken, because
+    `LevelStats.PercentSlower` ranks a count where fewer is better and would publish a percentile
+    meaning the opposite; and `LevelValidator.CheckStarBands` **grows a branch** rather than an
+    exception (26e), because a check that disagrees with the thing it checks is worse than no
+    check.
+    <br>**An endless run is *finished* when the line falls, and that is not a euphemism.** A run
+    that can never be won still has to end, and that is the only ending it has — routing it through
+    `IsFinished` rather than through the defeat path is what makes it an ordinary run in every way
+    that matters, including promoting stars and paying the credits they derive.
+    <br>**The muster is a rule, not a list.** `SiegeEndless.WaveAt` is a pure function of the wave
+    number and the level's own seed — a **hash** rather than a stream, so wave forty does not
+    depend on how many rolls waves one to thirty-nine took and a rule change cannot move a hill
+    somebody had learned. A boss every fourth wave to sixteen, then every unordered **pair** of the
+    four every fifth wave: thirty waves before anything repeats, and every boss met alone before
+    any pair (37z's argument, since each of the four takes a different thing). **The ramp is in the
+    raiders and never in the rules** — a bolt is worth what it is worth on wave one and on wave
+    ninety, and what climbs is health, blows and how many of them — which is the only shape that
+    can climb for ever without contradicting a number some other level depends on, and it is why a
+    run always ends: the line's output is bounded and the hill's is not.
+    <br>**A boss that takes no health has to arrive with an escort, and that is invariant 5d
+    meeting a rule that had always been safe.** Everywhere else a boss wave sends its boss and
+    nothing else, deliberately: a warlord, a warbringer and an overlord all shell the line for as
+    long as they live, so an empty hill is the *point* and stacking a duel on a wave still
+    swinging is two fail states arriving together (37t). A **blightcaller** takes a ward's *fire*
+    (37z) — and fire is worth exactly nothing with nothing on the hill to burn. Wave four is a
+    lone blightcaller, and it was reported from play in one sentence: *the first boss does not do
+    any damage.* It was true. Five seconds of dark over an empty hill costs the player nothing, so
+    a quarter of the lane's first sixteen waves rejected no play at all, with every gate green —
+    and it repeats, which is what makes it worse here than on the authored ladder where the run
+    ends when the boss dies.
+    <br>So a boss wave asks `SiegeTuning.EndangersTheLine` — the predicate 37z already added for
+    this exact question one level up — and escorts its bosses with the raiders that wave would
+    otherwise have sent when none of them can take a ward down. It is asked of the *predicate*
+    rather than of the blightcaller by name, so a fifth boss taking something other than health
+    inherits the answer. **The authored ladder answers the same question with a short quiet
+    (`RestBefore`) and an endless lane cannot**: its muster fires the moment the hill is clear, so
+    a player who is ahead of the clock meets the boss alone however long the quiet is (37k).
+    **Before giving a boss a spell that takes something other than health, ask what that thing is
+    worth when the hill is empty.**
+    <br>**A pair is the first thing in this mode that is two of something, and both halves of
+    "two" had to be said.** Where they *stand* is `SiegeTuning.BossLane` — the middle alone,
+    either side of it as a pair — which is a rule rather than a conditional inside `Muster` so
+    that `SiegeView` and `Tools/render_siege.py` draw the hill the board is playing (33g). Where
+    their health *hangs* is `SiegeView.FreeCrown`: a boss's bar is anchored across the top of the
+    board rather than carried (37u), so two of them drew at one y and read as one bar at a
+    strength nobody could account for — two readouts overlapping is two readouts nobody can read,
+    which is 37u's own finding arriving through a door that had been safe for as long as a level
+    could only ever send one boss. A crown takes the lowest rung nothing is hanging from, asked of
+    the crowns that are actually *up* rather than counted off the wave, because a bar outlives its
+    body by half a second and a survivor must not jump. **No numeric gate can see either of
+    them**: `render_siege.py --wave 21` is what did, and it is why that flag exists.
+
 
 ## Layout
 
@@ -2715,6 +2886,13 @@ compile. Do not guess — verify offline:
   the one loc key in this game that is *authored* rather than derived from an id (invariant 30d), so
   `loc.py` cannot see it — both gates resolve every key a chapter actually writes and error on a missing
   one, which is stricter than the naming convention it replaces.
+- **The turret roster:** twenty turrets, four colours each, cut from the idle-defence kit by
+  `Tools/make_siege_art.py` and proved by `--check` with the rest of the mode's art. Their
+  addresses are **built** from an id (`WardModel.ArtFor`), which `Tools/verify/artnames.py` cannot
+  see - so the roster is walked by `content.py`'s `check_wards` and by
+  `ContentValidation.ValidateWards`, both of which error on a model whose pictures are not on disk
+  or whose two derived loc keys do not resolve. That is stronger than a literal rather than weaker:
+  it catches a missing file and a misspelled id at once (invariant 42).
 - **Thornwatch's art:** `Tools/make_siege_art.py --check` proves every sprite, cast flipbook
   and explosion is what the tool writes. It reads **three** source folders - the CraftPix packs,
   the turret/top-down packs in `to-assets`, and the mine tileset - passes when any of them is
@@ -2744,6 +2922,13 @@ compile. Do not guess — verify offline:
   Python script can rasterise a particle system — and it needs the pack, which is gitignored, so it
   is silent on a checkout without it. Re-run `▸ Addressables ▸ Sync All Assets` after a bake: the
   importer hook does not fire on files a tool wrote while the Editor was busy.
+- **The Infinite lane:** `python Tools/chapters/s02_endlesswatch.py` re-derives the body from its
+  seed and walks the ramp as far as the second time every boss has been met, which is where the
+  schedule starts repeating. There is nothing to search (invariant 37a) and nothing to author but
+  a field, a line and two numbers, so what is proved is that the field is playable, the line is
+  legal, the two star waves are the right way round and the ramp sends nothing the line has no
+  answer to. `SiegeEndlessTests` pins the schedule itself, written out rather than re-derived - a
+  test that re-derived the rule would agree with a wrong rule.
 - **Thornwatch's boards:** `python Tools/siege_sweep.py --want N` deals fields from seeds and
   keeps the ones worth keeping - an even spread of the colours, no three alike already touching, and
   a chosen number of opening swaps; `--cogs N` stands cogs on them and `--gems` narrows the deal.
@@ -2755,9 +2940,10 @@ compile. Do not guess — verify offline:
   phone draws it, with the real sprites, using `SiegeScreen.HostInset` and `SiegeView`'s own
   arithmetic; `--level ID` picks one, `--raiders N` stands that many of the first wave on the hill,
   `--no-bolts` takes the exchange off it, `--no-bar` takes the action bar off, `--warlord
-  cast|idle|walk` picks which of the boss's three reels it is wearing, and `--aim hill` / `--aim
-  wards` draw a utility's targeting. With no `--level` it draws all ten, each on **its own
-  ground** (37ab), which is the only picture that says whether the ten read as ten places and
+  cast|idle|walk` picks which of the boss's three reels it is wearing, `--line a,b,c,d` stands a
+  chosen loadout (42), `--wave N` reads the **Infinite** lane's hill at a wave number, and
+  `--aim hill` / `--aim wards` draw a utility's targeting. With no `--level` it draws all ten
+  rungs and the endless one, each on **its own ground** (37ab), which is the only picture that says whether the ten read as ten places and
   whether any of them competes with the cast standing on it. Render the four boss rungs side by
   side and whether the four are four different fights answers itself — which is the picture that said they were not (37z),
   and that then caught the first repair reading as a creeper. It draws the ward line **one rank apart across the four
@@ -2769,8 +2955,35 @@ compile. Do not guess — verify offline:
   crosses the hill as a sliver — every one of those a fault it caught, all past a green gate
   (invariants 37g, 37k). It caught three more putting the warlord on the hill, and all three were
   *placements* (37u): a boss health bar outside the plate, then one on top of the ward line's own
-  bars, then a boss shrunk twice to make room for a bar that should never have been carried. It draws each reel at its **loudest** frame, because these effects dip:
+  bars, then a boss shrunk twice to make room for a bar that should never have been carried.
+  **And a fourth, on the lane that authors nothing**: `--wave 21` is the first hill in this game
+  holding **two** bosses, and it drew their two health bars exactly on top of each other — the
+  same fault as the second of those three, arriving through a door that had been safe for as long
+  as a level could only ever send one (43). It draws each reel at its **loudest** frame, because these effects dip:
   drawn at a fixed index it caught two muzzles mid-dip and reported a bake that was fine as broken.
+- **The shop's furniture:** `python Tools/make_ui_kit_art.py --check` proves the sixteen kit
+  sprites under `Art/Ui/Kit/` are what the tool cuts, and `--contact` lays them out. It also
+  **thins the keyline the kit bakes in**, which is a cost of upscaling rather than a taste:
+  the outline is paint at a fixed source width, so cutting a card frame at three times ships a
+  twelve-unit black rim, and the owner's first look at it on a device was "the outlines are too
+  thick". `thinner` erodes the outermost band — which works because the keyline *is* the outside
+  of the shape — taking a frame to five units, a button to four and a tab to six. **It must pad
+  before the distance transform**: several of these sprites are opaque to their own canvas edge,
+  and without a transparent margin `distance_transform_edt` finds no outside there and the
+  erosion is a silent no-op that measures identical before and after. It writes each sprite's
+  **`.meta` as well as its PNG**, which is the other point of it: a nine-sliced border
+  lives in the importer rather than in the image, `UIKit.Img` turns on `Image.Type.Sliced` only
+  for a sprite that has one, and a PNG dropped in without one stretches its corners with nothing
+  anywhere able to notice. The border is **measured** off the alpha (a rounded rectangle's corner
+  is the first row whose opaque span reaches full width), so a source that is not a rounded
+  rectangle fails the run by name instead of shipping a smeared frame.
+- **The shop's look:** `python Tools/render_shop.py [--shelf coins|--all]` draws the storefront at
+  the size a phone draws it, with the real sprites and `ShopScreen`'s own arithmetic. **Look at
+  it.** It is the only thing here that can see a nine-slice that smears, a badge that lands off
+  its plate, or the fault it was written for: a **yellow price bar on the yellow coin frame**,
+  which is the one control on a card that may never be hard to find. Every numeric gate was green
+  over that, because no gate in this project opens a PNG — 32b for the seventh time, met on a
+  storefront rather than on a board.
 - **The action bar's art:** `python Tools/make_utility_art.py --check` proves the five shipped
   PNGs — three icons, the shelf and one cell — are what the tool draws, and `--contact` shows the
   bar **assembled** plus the icons alone at both sizes they are drawn at. **Look at it.**
@@ -2812,13 +3025,28 @@ compile. Do not guess — verify offline:
   a healthy one**, because a bite out of one side is not distinguishable by any global statistic from a thin
   part that belongs there. So `--contact` is the gate: a sheet laid out at the size a card really draws, and
   a page that *plays* the sounds at the pitches and repeat rates the game uses. Look and listen.
-  <br>**All four were one fault, and the repair is a different question rather than a better threshold.** The
-  cut was a *colour* test, which needs to be right about every pixel on sheets where the glow behind an object
-  covers the object's own brightness and hue; it is now a flood inward from the tile's border that stops at
-  edges, which has to be right about one closed curve, and it floods over the residual *across* the glow's
-  axis so the halo, its rays and the drop shadow are flat and can neither wall it off nor be admitted. **A
-  keyed sparkle is a real closed shape**, so speckle is judged by size against the body and distance against
-  its own width — never by a fraction of the tile, which is a different bar for every rung.
+  <br>**All four were one fault, and it went away with the sheets.** The cut was a *colour* test on a
+  painted sheet whose glow covered its objects in brightness *and* hue, so no threshold separated them;
+  a flood inward from the tile's border that stops at painted edges fixed it, by having to be right
+  about one closed curve rather than about every pixel. Both are now history: the shop's money is cut
+  from a pack that ships its pictures already on transparency, so `make_shop_art.py` keys nothing at
+  all. **The transferable half is that a keyer is a question about an edge, not about a colour** — and
+  the reason `--contact` survived the tool it was written for is that neither cut nor pack can be
+  judged by any number.
+  <br>What the new source moved the risk to is **size**, and that is now the thing the tool proves: a
+  rung is scaled by its own picture against the largest in its ladder, and a ladder whose sources do
+  not ascend is refused by name (see 18e).
+- **Store images for the consoles:** `python Tools/make_iap_art.py` draws one 1024x1024 PNG per
+  in-app product into `GG-STORE-ASSETS/IAP - NEW`, named for the product id, **RGB with no alpha**
+  and carrying no text, price or badge — the three things App Store Connect refuses on a
+  promotional image. It is a tool rather than seventeen exported files because **a store image has
+  to be the picture the card draws**: which one that is comes from tier through `ShopLadder`, so a
+  typed list here would be a second copy of that arithmetic kept by hand, and its failure is a
+  customer buying the pack above the one whose picture they tapped. It mirrors
+  `StoreCatalog.RankShelves`, `ShopLadder.Rung` and `TokenPile.Of`, reads the products out of
+  `progression.json`, and re-cuts from the pack rather than upscaling the shipped 512s. `--check`
+  proves reproducibility and `--contact` is the gate that matters. **Nothing outside the repo is
+  gated by a build**, so re-run it after any change to the store block or to `make_shop_art.py`.
 - **Sprite name check:** `Tools/verify/artnames.py` proves every sprite and flipbook a *call site*
   asks for exists on disk. **It was written the day the gap cost something**: `MarchView.Boom` spelt
   its own folder out and asked for `Art/March/boom_fire` when the explosions live under
@@ -2935,16 +3163,29 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   floats are what an author writes, and nothing that produces a graded number reads them. `CheckStarBands`
   compares the hundredths for the same reason. Survivable only because stars are stored and only promoted.
 - **A flood keyer is the wrong tool for an object whose *edge is a glow*, and it fails by keeping
-  almost nothing.** `make_shop_art.keyed` walks inward from a tile's border and stops at painted
-  outlines, which is exactly right for a bomb with an ink outline and exactly wrong for a crackling
+  almost nothing.** The shop's old sheet keyer walked inward from a tile's border and stopped at
+  painted outlines, which is exactly right for a bomb with an ink outline and exactly wrong for a crackling
   energy orb: the flood walks straight through the soft edge and takes all but the fuse. Measured on
   the same sheet, one bomb kept 852,000 pixels and the orb beside it kept **29,000** — a difference
   so large it reads as a missing file rather than as a bad cut, which is the only reason it was
   noticed at all. The repair is a *different question*, not a better threshold: distance from the
   plate, keeping the halo, because the thing being cut out **is** a glow and a prism with a hard
   edge is a marble. Both lived in `make_quarry_floor.py`, one line apart, chosen per object;
-  that file went with the Iron Quarry, and the lesson is half of why Hollowmarch's board
-  sprites are *drawn* rather than keyed out of a sheet at all.
+  that file went with the Iron Quarry and the shop's keyer went with its sheets, and the lesson is
+  half of why Hollowmarch's board sprites were *drawn* rather than keyed out of a sheet at all —
+  and the whole of why the pack that replaced those sheets was chosen for shipping its pictures
+  already cut.
+- **A constant is invisible to `artnames.py`, so replacing a literal with one silently gives up
+  the gate.** That check reads *literals* at a call site — `Art.S("Ui/ic_gem")` — which is exactly
+  what a named skin is not. Routing the storefront's sprites through `ShopSkins` took thirteen
+  names out of its sight in one change, and it says so: the count it prints of names that are
+  **built rather than written** went from 48 to 65, which is the number that noticed. The fix is
+  not to stop naming things — a table of skins is right, and `Skins` has been one for a year — it
+  is to close the chain somewhere else. `ShopSkinsTests` holds every address the skin table can
+  return to what `AssetManifest` actually loads, and the manifest's own entries are literals, so
+  they are already held to disk. **Whenever a name stops being a literal, read that count**: it
+  is the only thing that reports the loss, and the loss is a white rectangle on a player's phone
+  (invariant 7b).
 - **A licensed pack's preview sheets carry the vendor's own dummy lettering, and grading it makes it *less*
   obvious rather than more.** One backdrop was cut from a flat panel with two blocks of placeholder text on
   it; reduced to luminance, blurred and graded, the words came through as two dark smudges that read as
@@ -3090,7 +3331,7 @@ live in **Hard-won facts**.
 - **Content pipeline** — levels as data in `StreamingAssets/Content/`, stable `LevelId`s, manifest-built
   `CatalogIndex`, lazy chapter bodies, `Content ▸ Sync Manifest`, build gate.
 - **Save** — versioned atomic file with checksum, backup rotation, corrupt-file recovery, tested
-  migrations, monotonic merge. **Save schema v22.** Content schema: manifest and chapter bodies **v2**,
+  migrations, monotonic merge. **Save schema v23.** Content schema: manifest and chapter bodies **v2**,
   grove body **v3**.
 - **Cloud** — Firebase (Firestore + Auth + Functions), anonymous by default, Apple/Google linking,
   per-account local archive for switching, `SyncScheduler` debounce/backoff.
@@ -3112,7 +3353,10 @@ live in **Hard-won facts**.
   the grove while online (a three-second sync debounce, then a ten-second publish debounce), or on
   their next launch; the cost grows with decorating, never with playing (19j).
 - **The one live mode, and the three hidden ones** (invariant 38) — the game a player opens today is
-  **Thornwatch** (`s01_thornwatch`, ten levels, invariant 37) and nothing else. It is the front
+  **Thornwatch** and nothing else: `s01_thornwatch` (ten rungs, invariant 37) on the ordinary
+  ladder, and `s02_endlesswatch` on an **Infinite** track beside it (invariant 43), reached
+  through a second pill under the chapter plaque. The map draws no *mode* switcher, because there
+  is one mode; it draws the **track** switcher, because there are two ladders. It is the front
   door by construction as well as by decision (38a): it is the only row `CatalogIndex.Modes`
   has, so it is what a map with nothing remembered opens on. It is the first mode here that runs
   on a **clock**: raiders walk down a hill at a line of coloured wards, and a match is worth only
@@ -3162,6 +3406,44 @@ live in **Hard-won facts**.
   can never buy a star (39). A firepot is aimed at one box of the hill's own grid (39f). Two
   monotonic counters per id in the save (v22), catalogued in `progression.json`, shelf, cells
   and icons all drawn by `Tools/make_utility_art.py`.
+- **The storefront** — restyled 2026-09-09 onto a bought interface kit (`ShopSkins`,
+  `Art/Ui/Kit/`), cut from the **same pack** as the coin and gem pictures on its cards, which is
+  the whole argument for it: furniture and merchandise drawn by different hands is what a player
+  reads as unfinished on the one screen that takes money. Nine-sliced card frames coloured by
+  shelf, a price bar coloured to contrast with its frame, the kit's badge starburst, tab chips and
+  currency troughs, on a flat deep blue rather than the forest every other screen stands in.
+  <br>**No light behind anything, and that was the first verdict from a device.** Every card
+  carried a coloured seat behind its plate and a slow fan of rays across it, climbing through a
+  six-rung rarity ramp so a shelf read as a ladder from across the room; every heart, container
+  and utility picture stood on a halo of its own. Played, all of it came back circled in red as
+  *weird*, and the reading is that an opaque frame changes what a wash behind an object means —
+  under a dark translucent plate it is light, on a bright frame it is a smudge — while the thing
+  the ramp was saying (*how much*) was already being said, more clearly, by the picture growing
+  with the rung. **The kit's own baked highlight band went with it**, on the second pass and for
+  the same reason: it is good design on a card whose plate is the subject, and on a card whose
+  subject is a bright object floating in the middle of that plate it reads as decoration behind
+  the item. `make_ui_kit_art.flatten` repaints a frame's interior one colour and keeps only its
+  keyline. **What came back is a spotlight**, and the line between it and what was removed is
+  worth keeping: a fan of rays and a lighter band across the top of a frame are *patterns on the
+  card*, so on an opaque frame they read as decoration behind the object — a soft round light
+  centred on the object reads as light on it. One colour, one strength, no rung and no rotation,
+  because nothing there is saying *how much*; the picture already does. It is gone, `ShopRarity` collapsed to the one colour that was saying something
+  else (a utility's name), and `ProductCard.Draw` lost its `featured` flag, which by then reached
+  nothing. **A decoration that has to compete with an opaque frame is not a decoration.**
+  <br>**A ribbon is sized to its flag, not to its sprite, and it took three goes.** The kit's
+  ribbon is a banner with two tails, so the flat panel words sit on is only **69% of its height
+  and, where the tails cut in, 84% of its width** — both bounds bind. At 230x62, the size cut for
+  the thin ribbon this project drew itself, the panel was forty units tall and the bonus text ran
+  off it onto the tails; at 300x112 the text fitted and the thing was a slab. 240x82 is the
+  smallest where the widest string a shelf can produce still sits inside the panel. Nothing
+  downstream needed touching either way, which is what `ProductCardBadges`' derived numbers are
+  for: `RibbonReach` moves with the width, so `SealInset` walks the badge in or out by itself to
+  clear the next column's ribbon. **Every one of the three was reported from a device**, which is
+  why `render_shop.py` draws ribbons now — a mirror is silent about what it does not draw.
+  <br>**Deliberately confined to the shop.** `Skins` — the back keys, the affirmative pills, the
+  plates every screen shares — is untouched, so nothing else moved. Rolling the kit out is then
+  moving names from `ShopSkins` into `Skins`, rather than rebuilding anything; what it costs is
+  that the shop does not match its neighbours until that happens.
 - **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (placeholders).
 
 ### Content shipped
@@ -3189,6 +3471,7 @@ live in **Hard-won facts**.
 | ~~`b02_tanglewood`~~ | ~~bud~~ | — | — | — | **deleted** (38) — Budburst's second chapter; its ids are spent |
 | ~~`k01_kindlewake`~~ | ~~kindle~~ | — | — | — | **retired** (35) — withdrawn after play: the verb was not the one commissioned and the animation followed from that. Its ids are spent |
 | `s01_thornwatch` | siege | 10 | 11–53 matches | none — the ward line is the fail state | raiders come down the hill at four coloured wards; match a colour and that ward fuels up and opens fire, and a bolt is worth double against a raider of its own colour. Fuel leaves a ward as a bolt and no other way (37c). Every rung is an 8x5 field with no move allowance (24); waves come on a clock, or early if the hill is cleared (37k). **The ramp is what is coming**: rung 1 is twelve creepers and nothing else, rung 2 brings the **cog** (37w), rung 3 the **blightcaller** (37z), rung 4 sends waves of one colour at a time, rung 5 the **warlord** (37t), rungs 6–9 turn the hill from creepers to brutes (0 → 18), rung 8 the **warbringer**, and rung 10 ends on the **overlord** (37x). **Four bosses and four different fights** — a douse, a smite, a rally and a sunder, in four colours, from four packs, at four sizes. All four hold the middle of the hill and walk on in 2.7–4.1 seconds. Cogs 3–4% from rung 2, which is where they stop maxing the line. Par is not monotonic — it dips at rung 5 — and an unhurried player clears every rung inside the three-star line with all four wards standing, the most-bled lines being the warlord's rung and the finale's at 46–47 of 56 (37j) |
+| `s02_endlesswatch` | siege *(infinite track)* | 1 | 3★ at wave 20 | none — the ward line is the fail state | **the Infinite Watch.** The same hill, the same wards, the same verb, and waves that never stop. What comes at wave *n* is a rule rather than a list (`SiegeEndless`): a boss every fourth wave to sixteen — blightcaller, warlord, warbringer, overlord — then every unordered **pair** of the four every fifth wave, which is thirty waves before anything repeats. Brutes from wave 3, bulwarks from 6, a weaver from 9, a thief from 13; health climbs 12 tenths a wave and a blow 4. Graded on how far it got rather than on what was spent (`LevelTuning.Climbs`), so three stars is wave 20 and two is wave 11 — **both guesses until somebody plays it** |
 | `p01_prismvale` | prism *(hidden)* | 2 | 3–4 swaps | none, then par + 3 | drag a gem onto its neighbour and the two change places; a lantern feeds the gems of its own colour touching it, that colour runs on through every matching gem beside them, and a critter standing against the vein wakes. Nothing is ever spent, so a vein can be **broken**. 6x6, critters 2 → 3, lanterns 2 → 3, `ways` 10 → 120, `dealt` 2 → 3 of 25, `used` 2 → 3, greed beaten on the second. The first rung cannot be lost (24) |
 | ~~`e01_emberforge`~~ | ~~ember~~ | — | — | — | **deleted** (38) — Emberforge withdrawn; its ids are spent |
 
@@ -3269,8 +3552,18 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   and they buy different things: a glade's turns the conduit (`BoardView.Hint`), a grove's
   *marks a flower* and shows the cascade tapping it would set off (`BudHint`, `BudView.Hint`).
   Neither costs the save file, the wire or the server anything.
+- **Turrets** — 20, one free (`bolt`), 10 priced 1,200 → 9,000 **credits** behind keeper
+  levels 2 → 14, and 10 priced 600 → 2,000 **gems** with no gate. Ten abilities, two rungs
+  each. The player stands four of them, one per colour, and carries that line into every
+  siege (invariant 42). None of them makes a bolt weaker than the free one, ever.
 - **Utilities** — four, held up to **100** each, account-wide and shared by every Thornwatch
-  level. **Firepot** 12 gems (440 damage in one box of the hill, charged 2 matches),
+  level, and **none of them carries a keeper gate**. Surge was at level 4 and stormcall at
+  level 9, which contradicted the rule the loadout was commissioned under — *a credit price
+  carries a level and a gem price never does* (invariant 42) — and every utility is gem-priced,
+  so the two gates could never have been right. It was met exactly as that rule predicts:
+  nine thousand gems in hand and a forty-gem button that would not press. `UtilityItem.MinLevel`
+  and `UtilityRefusal.Locked` stay, because they are content and a coin-priced utility would
+  want them; nothing authors one. **Firepot** 12 gems (440 damage in one box of the hill, charged 2 matches),
   **mending** 8 gems (6 ward health, charged nothing), **surge** 10 gems (18 shots' fuel,
   charged 2 matches), **stormcall** 40 gems (700 to every raider on the hill, charged by the
   same arithmetic and so dozens of matches on a full one). Three of the four are a weighted
@@ -3304,12 +3597,15 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   300 / **1,000** and every slice is a 1-in-8 chance. Mean 218.75%, so a view really pays about
   **438** and a capped day about **2,628** — against 2,400 under the old flat 200 at a cap of
   twelve. Content (`ads.wheel`), and removing the block puts the flat offer back. Invariant 25.
-- **Shop** — 16 products. Gems 100 → 8,500 for $0.99 → $49.99; coins 2,500 → 75,000 for
-  $1.99 → $39.99; starter bundle a $2.99 non-consumable; 5-heart refill 50 gems, a day of
-  fast hearts 30 gems. **Heart containers** `gg_heart_vessel_1/2/3` — non-consumables at
-  $19.99 / $29.99 / $39.99 raising the refill cap to 10 / 20 / 50, on the supplies shelf
-  under the gem-priced hearts, and the only real-money products that grant something other
-  than currency (invariant 18d). The whole catalog is ~$236.
+- **Shop** — 17 products. Gems 100 → 8,500 for $0.99 → $49.99; coins 2,500 → 75,000 for
+  $1.99 → $39.99; three bundles $2.99 → $29.99, of which the starter is a non-consumable;
+  the Bloom Pass $4.99; 5-heart refill 50 gems, a day of fast hearts 30 gems. **Heart
+  containers** `gg_heart_vessel_1/2/3` — non-consumables at $19.99 / $29.99 / $39.99 raising
+  the refill cap to 10 / 20 / 50, on the supplies shelf under the gem-priced hearts, and the
+  only real-money products that grant something other than currency (invariant 18d). The
+  whole catalog is **$298.83**, summed from `referenceUsdCents`; it read "16 products" and
+  "~$236" for as long as the pass and the third bundle had been shipping, which is this
+  table's own rule about never quoting it at a customer (2026-09-02).
 - **Stars** — turns and nothing else (invariant 22). Gold is `par × 1.20`, silver `par × 1.40`
   and the run ends at `par × 1.60`: even thirds of the slack between a perfect run and death,
   so all three bands are landable. Held against **par**, never against the budget. Move one and
@@ -3555,6 +3851,29 @@ changes nothing until that function is redeployed.
     loses **every** save write rather than that key (12a).
     <br>Pre-launch this is all academic — there are no real players and the only accounts are the
     ~210 synthetic saves — but the ordering is what it is the day there are.
+22a. **Judge the loadout, the two field raiders and the Infinite lane by playing them.** Three
+    features shipped together and each has one question nothing offline can answer.
+    <br>**The turrets** (invariant 42): does a player understand that the line is *theirs* and
+    carried into every rung, rather than something the level handed them? The shelf is reached from
+    the map and nowhere else, which is the moment before choosing a level and therefore the moment
+    they would want it — but if they never open it, the free bolt is the whole game and twenty
+    turrets are decoration. **The one figure worth an event is how many players ever stand
+    something other than the starter**; there is deliberately none yet.
+    <br>**The weaver and the thief** (invariant 40): does a web read as *that beetle did this to
+    that gem*, or as the board misbehaving? The whole drawing is built around saying it — a ring
+    closes on the cell, a mote crosses the hill, and the mark lands when it arrives — and if it
+    still reads as the field breaking, the fix is the drawing rather than the rule. The second
+    question is whether killing one lands as a **payoff**: six webs burning off at once is the
+    biggest thing either of them ever does.
+    <br>**The Infinite lane** (invariant 43): is wave 20 the right place for three stars, and is
+    wave 11 the right place for two? Both are guesses — nothing can derive them, because par
+    everywhere else is a search or a floor over what a level *sends* and this one sends everything.
+    The second question is the pairs: from wave 21 two bosses arrive together, and whether that
+    reads as the ramp's climax or as a pile-up is a thing only a played run can say.
+    <br>Nothing about any of it was watched on a device before this was written: every offline gate
+    is green, the whole suite passes, the Editor's `Validate Content` and the addressable audit are
+    clean, and the board has been rendered and looked at.
+
 22. **Judge the action bar by playing Thornwatch, which is what the three utilities are for.**
     Built the way every feature since the five prototypes has been, so it can be taken back out
     for the price of one save field and a folder. Three questions in order.

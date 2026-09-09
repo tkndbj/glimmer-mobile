@@ -68,14 +68,14 @@ MonoBehaviour:
   m_BuildAddressablesWithPlayerBuild: 1
   m_overridePlayerVersion: '[UnityEditor.PlayerSettings.bundleVersion]'
   m_GroupAssets:
-  - {fileID: 11400000, guid: 9cc25d4702763464993f52cb3d98129b, type: 2}
   - {fileID: 11400000, guid: 47c46bda514740a4dbc05a44d4a23ac8, type: 2}
   - {fileID: 11400000, guid: 4d5a579f47b771f40be12597dc3a83b4, type: 2}
+  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
   - {fileID: 11400000, guid: 984a834b48cbf384482d9e2e9aebfe5d, type: 2}
   - {fileID: 11400000, guid: 82cde781aeb2b8c47a1f377b73392623, type: 2}
+  - {fileID: 11400000, guid: 5e8a41f35fab60c4ab9e941e3a2c58f5, type: 2}
   - {fileID: 11400000, guid: eb66a2de3aecee54b8958759c2eff7bc, type: 2}
   - {fileID: 11400000, guid: d66337f20f2bdd44d867926ead515cc3, type: 2}
-  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
   m_BuildSettings:
     m_LogResourceManagerExceptions: 1
     m_BundleBuildPath: Temp/com.unity.addressables/AssetBundles
@@ -308,6 +308,106 @@ MonoBehaviour:
     - Art/Siege/brute_b
     - Art/Fx/Siege/storm
     - Art/Fx/Siege/storm_hit
+    - Art/Siege/bruteB_b
+    - Art/Siege/bruteB_g
+    - Art/Siege/bruteB_r
+    - Art/Siege/bruteB_y
+    - Art/Siege/bulwarkB_b
+    - Art/Siege/bulwarkB_g
+    - Art/Siege/bulwarkB_r
+    - Art/Siege/bulwarkB_y
+    - Art/Siege/monB_b
+    - Art/Siege/monB_g
+    - Art/Siege/monB_r
+    - Art/Siege/monB_y
+    - Art/Siege/thief_b
+    - Art/Siege/thief_g
+    - Art/Siege/thief_r
+    - Art/Siege/thief_y
+    - Art/Siege/Wards/bolt_b_fire
+    - Art/Siege/Wards/bolt_g_fire
+    - Art/Siege/Wards/bolt_r_fire
+    - Art/Siege/Wards/bolt_y_fire
+    - Art/Siege/weaver_b
+    - Art/Siege/weaver_g
+    - Art/Siege/weaver_r
+    - Art/Siege/weaver_y
+    - Art/Siege/Wards/apex_b_fire
+    - Art/Siege/Wards/apex_g_fire
+    - Art/Siege/Wards/apex_r_fire
+    - Art/Siege/Wards/apex_y_fire
+    - Art/Siege/Wards/arcstorm_b_fire
+    - Art/Siege/Wards/arcstorm_g_fire
+    - Art/Siege/Wards/arcstorm_r_fire
+    - Art/Siege/Wards/arcstorm_y_fire
+    - Art/Siege/Wards/beacon_b_fire
+    - Art/Siege/Wards/beacon_g_fire
+    - Art/Siege/Wards/beacon_r_fire
+    - Art/Siege/Wards/beacon_y_fire
+    - Art/Siege/Wards/breaker_b_fire
+    - Art/Siege/Wards/breaker_g_fire
+    - Art/Siege/Wards/breaker_r_fire
+    - Art/Siege/Wards/breaker_y_fire
+    - Art/Siege/Wards/cleaver_b_fire
+    - Art/Siege/Wards/cleaver_g_fire
+    - Art/Siege/Wards/cleaver_r_fire
+    - Art/Siege/Wards/cleaver_y_fire
+    - Art/Siege/Wards/ember_b_fire
+    - Art/Siege/Wards/ember_g_fire
+    - Art/Siege/Wards/ember_r_fire
+    - Art/Siege/Wards/ember_y_fire
+    - Art/Siege/Wards/glacier_b_fire
+    - Art/Siege/Wards/glacier_g_fire
+    - Art/Siege/Wards/glacier_r_fire
+    - Art/Siege/Wards/glacier_y_fire
+    - Art/Siege/Wards/harpoon_b_fire
+    - Art/Siege/Wards/harpoon_g_fire
+    - Art/Siege/Wards/harpoon_r_fire
+    - Art/Siege/Wards/harpoon_y_fire
+    - Art/Siege/Wards/howitzer_b_fire
+    - Art/Siege/Wards/howitzer_g_fire
+    - Art/Siege/Wards/howitzer_r_fire
+    - Art/Siege/Wards/howitzer_y_fire
+    - Art/Siege/Wards/lance_b_fire
+    - Art/Siege/Wards/lance_g_fire
+    - Art/Siege/Wards/lance_r_fire
+    - Art/Siege/Wards/lance_y_fire
+    - Art/Siege/Wards/leech_b_fire
+    - Art/Siege/Wards/leech_g_fire
+    - Art/Siege/Wards/leech_r_fire
+    - Art/Siege/Wards/leech_y_fire
+    - Art/Siege/Wards/lighthouse_b_fire
+    - Art/Siege/Wards/lighthouse_g_fire
+    - Art/Siege/Wards/lighthouse_r_fire
+    - Art/Siege/Wards/lighthouse_y_fire
+    - Art/Siege/Wards/mortar_b_fire
+    - Art/Siege/Wards/mortar_g_fire
+    - Art/Siege/Wards/mortar_r_fire
+    - Art/Siege/Wards/mortar_y_fire
+    - Art/Siege/Wards/prism_b_fire
+    - Art/Siege/Wards/prism_g_fire
+    - Art/Siege/Wards/prism_r_fire
+    - Art/Siege/Wards/prism_y_fire
+    - Art/Siege/Wards/pyre_b_fire
+    - Art/Siege/Wards/pyre_g_fire
+    - Art/Siege/Wards/pyre_r_fire
+    - Art/Siege/Wards/pyre_y_fire
+    - Art/Siege/Wards/rime_b_fire
+    - Art/Siege/Wards/rime_g_fire
+    - Art/Siege/Wards/rime_r_fire
+    - Art/Siege/Wards/rime_y_fire
+    - Art/Siege/Wards/siphon_b_fire
+    - Art/Siege/Wards/siphon_g_fire
+    - Art/Siege/Wards/siphon_r_fire
+    - Art/Siege/Wards/siphon_y_fire
+    - Art/Siege/Wards/spark_b_fire
+    - Art/Siege/Wards/spark_g_fire
+    - Art/Siege/Wards/spark_r_fire
+    - Art/Siege/Wards/spark_y_fire
+    - Art/Siege/Wards/spectrum_b_fire
+    - Art/Siege/Wards/spectrum_g_fire
+    - Art/Siege/Wards/spectrum_r_fire
+    - Art/Siege/Wards/spectrum_y_fire
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1c550e3b8c7244948b0ae7d2fbce14c6, type: 2}

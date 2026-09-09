@@ -199,7 +199,8 @@ namespace GlimmerGrove.Utilities
                 }
 
                 items.Add(new UtilityItem(entry.id, kind, entry.magnitude,
-                                          entry.gemPrice, entry.maxHeld, entry.order));
+                                          entry.gemPrice, entry.maxHeld, entry.order,
+                                          entry.minLevel));
             }
 
             if (items.Count == 0)

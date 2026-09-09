@@ -60,6 +60,11 @@ namespace GlimmerGrove.Content
             // which is strictly worse than a chapter that is simply not there yet.
             if (!mode.IsPlayable) return false;
 
+            // A track this build has never heard of is content from the future, and is dropped
+            // in silence for exactly the reason an unknown mode is: filing it on the ordinary
+            // ladder would let it gate a real chapter on stars nobody can earn.
+            if (!GameTrack.TryParse(entry.track, out var track, out _)) return false;
+
             if (!_chapterIds.Add(chapterId))
             {
                 _problems.Add($"manifest lists chapter '{chapterId}' twice; the later entry is ignored");
@@ -70,7 +75,8 @@ namespace GlimmerGrove.Content
             if (levelIds.Count == 0)
                 _problems.Add($"chapter '{chapterId}' lists no levels and will show as empty");
 
-            _chapters.Add(new ChapterIndexEntry(chapterId, entry.order, entry.version, levelIds, mode));
+            _chapters.Add(new ChapterIndexEntry(chapterId, entry.order, entry.version, levelIds,
+                                                mode, track));
             return true;
         }
 
@@ -350,18 +356,25 @@ namespace GlimmerGrove.Content
             var levelIds = new List<LevelId>();
             var levelOrder = new Dictionary<LevelId, int>();
             var levelMode = new Dictionary<LevelId, GameMode>();
-            var byMode = new Dictionary<GameMode, List<LevelId>>();
-            var chaptersByMode = new Dictionary<GameMode, List<ChapterIndexEntry>>();
+            // **Laned on the mode *and* the track**, which is the third ordering and the one a
+            // second ladder inside one mode needed. Everything that means "what comes next" walks
+            // a lane, so an endless chapter cannot gate an ordinary one and an ordinary one
+            // cannot chain into it - the same argument the per-mode split already makes about
+            // chaining two modes end to end, one level finer.
+            var byLane = new Dictionary<ModeLane, List<LevelId>>();
+            var chaptersByLane = new Dictionary<ModeLane, List<ChapterIndexEntry>>();
 
             foreach (var chapter in _chapters)
             {
-                if (!byMode.TryGetValue(chapter.Mode, out var lane))
+                var key = chapter.Lane;
+
+                if (!byLane.TryGetValue(key, out var lane))
                 {
-                    byMode[chapter.Mode] = lane = new List<LevelId>();
-                    chaptersByMode[chapter.Mode] = new List<ChapterIndexEntry>();
+                    byLane[key] = lane = new List<LevelId>();
+                    chaptersByLane[key] = new List<ChapterIndexEntry>();
                 }
 
-                chaptersByMode[chapter.Mode].Add(chapter);
+                chaptersByLane[key].Add(chapter);
 
                 foreach (var levelId in chapter.LevelIds)
                 {
@@ -373,7 +386,8 @@ namespace GlimmerGrove.Content
             }
 
             return new CatalogIndex(_chapters.ToArray(), levelIds.ToArray(), levelOrder, _levelChapter,
-                                    SortedCompanions(), UsableEvents(), levelMode, byMode, chaptersByMode);
+                                    SortedCompanions(), UsableEvents(), levelMode, byLane,
+                                    chaptersByLane);
         }
 
         /// <summary>

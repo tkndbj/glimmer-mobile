@@ -42,6 +42,16 @@ namespace GlimmerGrove
         /// </summary>
         public GameMode Mode;
 
+        /// <summary>
+        /// Which ladder of that mode this map is showing.
+        ///
+        /// <b><see cref="Mode"/> one level finer, and it obeys the same rule</b>: a chapter's own
+        /// lane always wins, because a chapter belongs to exactly one — so opening one is choosing
+        /// a lane whether or not anybody said so. Unset falls back to what the player last looked
+        /// at in this mode.
+        /// </summary>
+        public GameTrack Lane = GameTrack.Main;
+
         public override string Track => "mus_map";
 
         ScrollRect _scroll;
@@ -157,6 +167,7 @@ namespace GlimmerGrove
             else
             {
                 var mode = Mode.IsPlayable ? Mode : ModeChoice.Read(_index);
+                var lane = Lane.IsMain ? TrackChoice.Read(_index, mode) : Lane;
 
                 // The chapter the player was last looking at in this mode, and only then
                 // wherever they are up to in it. Every way back to the map except the chapter
@@ -166,15 +177,23 @@ namespace GlimmerGrove
                 // it after every level. ChapterChoice.Read answers null the moment the
                 // remembered chapter is not a chapter of this mode in this catalog, which is
                 // what keeps a rollback or an undownloaded drop from opening onto nothing.
-                _entry = ChapterChoice.Read(_index, mode) ?? LevelUnlock.CurrentChapter(_index, mode);
+                // The lane is asked first and the ladder second: a player who was last running
+                // the endless lane comes back to it, and one who was on the ordinary ladder comes
+                // back to whichever chapter they were looking at. `LevelUnlock.CurrentChapter`
+                // only ever walks the ordinary ladder, so a lane with nothing remembered falls
+                // back to its own first chapter rather than to the main track's.
+                _entry = ChapterChoice.Read(_index, mode, lane)
+                      ?? (lane.IsMain ? LevelUnlock.CurrentChapter(_index, mode)
+                                      : FirstOf(mode, lane));
             }
 
-            if (_entry != null) Mode = _entry.Mode;
+            if (_entry != null) { Mode = _entry.Mode; Lane = _entry.Track; }
             else if (!Mode.IsPlayable) Mode = ModeChoice.Read(_index);
 
             // Remembered on arrival rather than on the tap, so the map a player is returned to
             // after a run is the one they left - the tap is only one of the ways to get here.
             ModeChoice.Write(Mode);
+            TrackChoice.Write(Mode, Lane);
             ChapterChoice.Write(_entry);
 
             // The header is index knowledge - chapter name, total stars - so it draws
@@ -921,6 +940,38 @@ namespace GlimmerGrove
             // would stop agreeing with the plaque the first time it was resized.
             _modes = ModeSwitch.Build(Safe, _index, Mode, SwitchTo, ModesY);
 
+            // **Under the mode switcher, and it takes that slot when the switcher drew nothing.**
+            // Both controls fold away when their own question has one answer
+            // (`HeaderMenu.Build`), so the header never carries a dead pill and never leaves a
+            // gap where one would have been - which is why the offset is asked of what was
+            // actually drawn rather than assumed.
+            float laneY = _modes != null ? ModesY - ModeSwitch.PillHeight - ModesGap : ModesY;
+
+            _tracks = TrackSwitch.Build(Safe, _index, Mode, Lane, SwitchLane, laneY);
+
+            // **The line, reachable from the map and from nowhere else.** It is set once and used
+            // by every rung (`WardLoadout`), so it does not belong on a board — and the map is
+            // where somebody is about to choose a level, which is the moment they would want to
+            // change what they are taking into it. Drawn only for a mode that has a line at all,
+            // so a mode without one never carries a control that does nothing.
+            if (Mode == GameMode.Siege)
+            {
+                var kit = UIKit.Button("Loadout", Safe, Art.S("Ui/btn_blue"),
+                                       new Vector2(300f, 92f), new Vector2(0f, 0f),
+                                       new Vector2(180f, 132f), () => Flow.Go<LoadoutScreen>());
+
+                float kitLift = 92f * UIKit.PillFaceLift;
+
+                UIKit.Shrinkable(
+                    UIKit.Titled("T", kit.transform, Loc.Get("ui.loadout.title").ToUpperInvariant(),
+                                 28, Pal.Cream, TextAnchor.MiddleCenter, new Vector2(212f, 44f),
+                                 new Vector2(.5f, .5f), new Vector2(18f, kitLift), 0f, 2f), 18);
+
+                UIKit.Img("Icon", kit.transform, Art.S("Ui/ic_gear"), Pal.Cream,
+                          new Vector2(40f, 40f), new Vector2(.5f, .5f),
+                          new Vector2(-98f, kitLift));
+            }
+
             var swipe = UIKit.Titled("Swipe", Safe, Loc.Get("ui.levels.swipe"), 26,
                                      new Color(1f, .96f, .88f, .5f), TextAnchor.MiddleCenter,
                                      new Vector2(700f, 36f), new Vector2(.5f, 0f),
@@ -1058,6 +1109,9 @@ namespace GlimmerGrove
         /// <summary>The plaque, kept so the chevrons can be carved into it.</summary>
         Image _banner;
 
+        /// <summary>The track switcher, or null when this mode has one ladder.</summary>
+        RectTransform _tracks;
+
         /// <summary>The name, kept so the chevrons can be set level with its lettering.</summary>
         Text _name;
 
@@ -1157,6 +1211,36 @@ namespace GlimmerGrove
         /// the change the transition every other navigation here gets, so a mode swap reads as
         /// going somewhere rather than as the screen glitching.
         /// </summary>
+        /// <summary>
+        /// The first chapter of a lane, for a lane with nothing remembered.
+        ///
+        /// <c>LevelUnlock.CurrentChapter</c> walks the ordinary ladder alone — it is about where a
+        /// player is <em>up to</em>, and a lane whose waves never stop has no such place — so a
+        /// second lane falls back to its own first chapter instead of to the main track's.
+        /// </summary>
+        ChapterIndexEntry FirstOf(GameMode mode, GameTrack lane)
+        {
+            var chapters = _index.ChaptersIn(mode, lane);
+            return chapters.Count > 0 ? chapters[0] : null;
+        }
+
+        /// <summary>
+        /// Steps to another ladder of the same mode.
+        ///
+        /// Through <c>Flow</c> like every other navigation here, for <see cref="SwitchTo"/>'s
+        /// reason: rebuilding the map in place is the same work as arriving plus the risk of
+        /// leaving half the old one behind, and going somewhere should read as going somewhere.
+        /// </summary>
+        void SwitchLane(GameTrack lane)
+        {
+            if (lane == Lane) return;
+
+            TrackChoice.Write(Mode, lane);
+
+            var mode = Mode;
+            Flow.Go<LevelsScreen>(v => { v.Mode = mode; v.Lane = lane; });
+        }
+
         void SwitchTo(GameMode mode)
         {
             if (!mode.IsValid || mode == Mode) return;

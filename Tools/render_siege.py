@@ -58,7 +58,7 @@ import sys
 from pathlib import Path
 
 try:
-    from PIL import Image, ImageDraw, ImageFilter
+    from PIL import Image, ImageChops, ImageDraw, ImageFilter
 except ImportError:                                        # pragma: no cover
     sys.exit("This needs Pillow:  python -m pip install pillow")
 
@@ -113,10 +113,27 @@ TINTS = [(242, 64, 79), (123, 216, 106), (79, 193, 255), (255, 201, 60)]
 
 GEM_ART = {"r": "gem_r", "g": "gem_g", "b": "gem_b", "y": "gem_y", "*": "gem_cog"}
 
-#: `SiegeView.WardArt` - five tiers times four colours, both baked. A ward carries its **rank** in
-#: its silhouette and its colour in its hue, so nothing here is tinted (invariant 37l).
-def ward_art(colour, rank):
-    return "ward%d_%s" % (min(max(rank, 0), 4) + 1, colour)
+#: Which four turrets the render stands on the line.
+#:
+#: **Four different models rather than four of the starter**, because the one thing this picture
+#: is for that no number can answer is whether a line of four *chosen* turrets reads as a line -
+#: four silhouettes side by side at the size a phone draws them, each in its own colour, each on
+#: its own rank. `--line` swaps them.
+LINE = ["bolt", "mortar", "lance", "beacon"]
+
+#: `SiegeView.WardArt` - the turret the player stood on this colour, baked in that colour.
+#:
+#: **A model rather than a tier**, which is what twenty player-chosen turrets cost the picture: the
+#: silhouette belongs to the *choice* now, so the rank is carried by the plinth under it
+#: (`rank_art`) and by the badge at its shoulder. Nothing here is tinted, for invariant 37l's
+#: reason - `Image.color` is a multiply and a turret has to read as lit.
+def ward_art(model, colour):
+    return "Wards/%s_%s" % (model, colour)
+
+
+#: `SiegeView.RankTint` - what colour a ward's badge is at this rank. Steel, bronze, silver, gold,
+#: white-hot, climbing in value as well as in hue.
+RANK_TINTS = [(158, 173, 189), (217, 140, 82), (219, 227, 240), (255, 204, 77), (255, 250, 230)]
 
 
 #: `SiegeView.Skin` - one body per colour, per kind. **Twelve reels rather than four, and none of
@@ -126,6 +143,12 @@ def ward_art(colour, rank):
 #: render able to say whether the bake is any good.
 def skin(kind, colour):
     return "%s_%s" % (kind, siege.LETTERS[colour])
+
+
+#: What a weaver and a thief leave on the field. Drawn rather than cut (invariant 32b, from the
+#: other side): a web has to let the gem's colour read through it and a sack has to be the dullest
+#: thing on a field of four saturated jewels.
+FIELD_MARKS = ("web", "sack")
 
 
 def sprite(name):
@@ -299,8 +322,15 @@ BOSSES = {
 }
 
 
-def warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, casting):
-    """The warlord holding the middle of the hill, and the spell it is winding up.
+def warlord(sheet, draw_on, kind, colour, wards, span, cell, hill_top, hill_foot, line_y, at,
+            casting, lane=None, slot=0):
+    """A boss holding its place on the hill, and the spell it is winding up.
+
+    **Told what it is rather than asked a layout**, because the Infinite lane authors no boss at
+    all - what stands there is a rule read at a wave number (`SiegeEndless.BossesAt`) - and from
+    wave 21 it sends **two**. `slot` is which rung of the top of the board its health hangs from,
+    which is `SiegeView.FreeCrown`: a crown is anchored rather than carried, so a second one drawn
+    at the first one's y is two readouts nobody can read (invariant 37u).
 
     <p><b>Drawn here because it is the one thing on this board no number can judge.</b> Whether a
     boss reads as a boss is a question about size against the band it stands in, about its
@@ -314,23 +344,29 @@ def warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, ca
     an aura and a gem over its head, and the coat is the one that struggles at this size? And can
     you see, without being told, which ward the closing ring is over?</p>
     """
-    if not lay.boss:
+    if not kind or not colour:
         return
 
     # A level names its boss by kind (`SiegeLayout.BossNames`), so which of the four this is comes
-    # out of the file rather than out of a case bit.
-    look = BOSSES.get(lay.boss_kind)
+    # out of the file rather than out of a case bit; an endless wave names it the same way, out of
+    # the ramp instead of out of a body.
+    look = BOSSES.get(kind)
     if look is None:
         return
 
-    greater = lay.boss_kind == "overlord"
-    colour = siege.LETTERS.index(lay.boss)
+    greater = kind == "overlord"
+    letter = colour
+    colour = siege.LETTERS.index(letter)
     tint = TINTS[colour]
     fire = look["fire"]
 
     tall = cell * look["tall"]
     ly = hill_top + (hill_foot - hill_top) * look["hold"]
-    cx, cy = at(0.0, ly)
+
+    # **A lone boss walks down the middle and a pair stands either side of it**, which is
+    # `SiegeBoard.Muster`'s own rule rather than this picture's - the middle lane is where a
+    # player looks for one, so a second arriving there would be two enormous bodies in one column.
+    cx, cy = at(0.0 if lane is None else lane_x(span, lane), ly)
 
     # `SiegeView.Follow` - the walk while it is crossing ground, the idle once it is standing.
     # This picture is of a boss in place, so the idle is the honest one to draw; `--warlord walk`
@@ -360,7 +396,7 @@ def warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, ca
     # `SiegeView.Crown` - a warlord's health is pinned across the top of the board rather than
     # carried, which is what lets it be three cells tall on a hill four cells deep.
     wide = span[0] * 0.60
-    bx, by = at(cell * 0.34, hill_top + cell * 0.12)
+    bx, by = at(cell * 0.34, hill_top + cell * 0.12 - slot * cell * 0.42)
 
     draw_on.rounded_rectangle([bx - wide / 2, by - cell * 0.13, bx + wide / 2, by + cell * 0.13],
                               radius=11, fill=(0, 0, 0, 178))
@@ -369,7 +405,7 @@ def warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, ca
                               radius=11, fill=(255, 107, 87, 255))
 
     gx = bx - wide / 2 - cell * 0.45
-    put(sheet, sprite(GEM_ART[lay.boss]), gx, by, cell * 0.62, cell * 0.62)
+    put(sheet, sprite(GEM_ART[letter]), gx, by, cell * 0.62, cell * 0.62)
 
     if casting != "cast":
         return
@@ -384,9 +420,10 @@ def warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, ca
                 put(sheet, ring, cx, cy + tall * 0.1, cell * size, cell * size)
         return
 
-    # The spell in the air, and the ring closing over the ward it is coming for.
-    ward = 1
-    wx, wy = at(post_x(span, ward, len(lay.wards)), line_y + cell * 0.3)
+    # The spell in the air, and the ring closing over the ward it is coming for. A pair aims at
+    # two different turrets, or the second ring is drawn inside the first.
+    ward = 1 if slot == 0 else 2
+    wx, wy = at(post_x(span, ward, wards), line_y + cell * 0.3)
 
     layer = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
     pen = ImageDraw.Draw(layer)
@@ -416,6 +453,15 @@ def lane_x(span, lane):
     return (lane - (LANES - 1) * 0.5) * (span[0] / LANES)
 
 
+def boss_lane(index, bosses):
+    """`SiegeTuning.BossLane` - the middle alone, either side of it as a pair.
+
+    Mirrored rather than approximated, because the whole use of this picture is answering whether
+    a pair reads as a climax or as a pile-up, and a render that stood them somewhere the board
+    does not would be answering about a hill nobody plays."""
+    return LANES // 2 if bosses < 2 else (1 if index == 0 else LANES - 2)
+
+
 def put(sheet, im, cx, cy, w, h):
     """Draws a sprite centred on (cx, cy), fitted into w x h without changing its aspect."""
     if im is None:
@@ -433,10 +479,31 @@ def stretch(sheet, im, cx, cy, w, h):
 
 
 def layout_of(level):
+    """The level's layout, told which ladder it is on.
+
+    An endless lane authors no waves and no boss, so a `Layout` that did not know it was one
+    would report the level as unreadable - which is the check doing its job and the wrong
+    question here (`SiegeLayout.Endless`)."""
     block = level["siege"]
     grid = proto.Grid(block["rows"], block["width"], block["height"], siege.CELLS)
     return siege.Layout(grid, block["gems"], block["wards"], block["waves"],
-                        block.get("boss"), block.get("cogs", 0))
+                        block.get("boss"), block.get("cogs", 0),
+                        endless=bool(block.get("endless")))
+
+
+def coming(lay, wave):
+    """What is standing on the hill, as (colour, kind) pairs, on either ladder.
+
+    On the ordinary ladder it is the last **authored** wave, because the one after it is the boss
+    and that is drawn on its own (`SiegeLayout` appends a one-raider wave for it, 37t). On the
+    Infinite lane there is nothing authored at all: the muster is a rule, so the picture reads it
+    at a wave number exactly as the board does (`SiegeEndless.WaveAt`, invariant 43) - which is
+    what lets one picture say whether wave forty is a hill anybody could hold."""
+    if lay.endless:
+        return siege.endless_wave(list(lay.deal), lay.seed, wave)
+
+    body = [w for i, w in enumerate(lay.waves) if i != lay.boss_wave]
+    return siege.read_wave(body[-1] if body else "", lay.boss_kind, False)
 
 
 def ground(rung):
@@ -447,7 +514,7 @@ def ground(rung):
     return "hill%d" % (rung % GROUNDS + 1)
 
 
-def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0):
+def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, line=None):
     lay = layout_of(level)
     grid = lay.grid
 
@@ -490,13 +557,13 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0):
     stretch(sheet, sprite(ground(rung)), cx, cy, span[0], h + cell * 0.5)
 
     # ------------------------------------------------------------------ the raiders
-    # The last *authored* wave, because the one after it is the warlord and it is drawn on its
-    # own below - `SiegeLayout` appends a one-raider wave for the boss (invariant 37t).
-    body = [w for i, w in enumerate(lay.waves) if i != lay.boss_wave]
-    wave = body[-1] if body else ""
+    # A boss is drawn on its own below, at its own size and in its own place, so what walks the
+    # hill here is everything else the wave sends.
+    sent = coming(lay, wave)
+    bosses = [(x, k) for x, k in sent if k in BOSSES]
     mob = []
-    line = siege.read_wave(wave, lay.boss_kind, False)
-    for i, (letter, kind) in enumerate(line[:raiders]):
+
+    for i, (letter, kind) in enumerate([x for x in sent if x[1] not in BOSSES][:raiders]):
         colour = siege.LETTERS.index(letter)
         brute = kind == "brute"
         bulwark = kind == "bulwark"
@@ -549,19 +616,27 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0):
 
         tint = TINTS[siege.LETTERS.index(ward)]
 
-        # No tint: a ward's colour is baked into its sprite (see make_siege_art.hued), and so is
-        # its rank. Drawn one rank apart across the line, so one picture shows the whole ladder -
-        # a still that drew four rank-one turrets could not say whether the tiers read as tiers.
+        # No tint: a ward's colour is baked into its sprite (see make_siege_art.hued). Drawn one
+        # rank apart across the line, so one picture shows the whole ladder - a still that drew
+        # four rank-one plinths could not say whether the pips read as ranks.
         rank = i % 5
+
         cx, cy = at(wx, line_y + cell * 0.06)
-        put(sheet, sprite(ward_art(ward, rank)), cx, cy, cell * 1.72, cell * 2.15)
+        stood = line or LINE
+        put(sheet, sprite(ward_art(stood[i % len(stood)], ward)), cx, cy, cell * 1.72, cell * 2.15)
 
         # The rank badge on its shoulder - `SiegeView.Badge`. Always drawn, and it says one before
         # a cog has been spent: the ladder is on the board from the first frame.
         cx, cy = at(wx - cell * 0.74, line_y + cell * 0.34)
         crest = ART / "crest.png"
         if crest.exists():
-            put(sheet, Image.open(crest).convert("RGBA"), cx, cy, cell * 0.62, cell * 0.62)
+            # Tinted by rank, which is the whole of how a rank is said now: a plinth under the
+            # turret was tried and is invisible, because a ward's foot is behind the field's plate
+            # on every screen this mode is drawn at (invariant 37y). This picture is what said so.
+            badge = Image.open(crest).convert("RGBA")
+            wash = Image.new("RGBA", badge.size, RANK_TINTS[rank] + (255,))
+            badge = ImageChops.multiply(badge, wash)
+            put(sheet, badge, cx, cy, cell * 0.62, cell * 0.62)
         draw_on.text((cx - cell * 0.07, cy - cell * 0.17), str(rank + 1),
                      fill=(255, 243, 220, 255), font=face(int(cell * 0.34)))
 
@@ -576,9 +651,17 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0):
                                    cy + cell * 0.085 - 2],
                                   radius=8, fill=(255, 194, 60, 255))
 
-    # The warlord, over the ward line so its ring reads on top of the turrets, and under the
-    # exchange so a bolt crossing the hill still passes in front of it.
-    warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, casting=boss)
+    # The bosses, over the ward line so a ring reads on top of the turrets, and under the exchange
+    # so a bolt crossing the hill still passes in front of one. An authored rung sends at most one;
+    # the Infinite lane sends two from wave 21, and drawing both is the only way this picture can
+    # say whether a pair reads as a climax or as a pile-up (invariant 43).
+    if lay.boss:
+        bosses = [(lay.boss, lay.boss_kind)]
+
+    for slot, (letter, kind) in enumerate(bosses[:2]):
+        warlord(sheet, draw_on, kind, letter, len(lay.wards), span, cell, hill_top, hill_foot,
+                line_y, at, casting=boss, slot=slot,
+                lane=boss_lane(slot, len(bosses)))
 
     # ------------------------------------------------------------------ the exchange
     # Every ward firing at once, each shot caught at a different point of its flight: the flash
@@ -677,8 +760,25 @@ GROUNDS = 10
 
 
 def levels():
-    body = json.loads((CHAPTERS / "s01_thornwatch.json").read_text(encoding="utf-8"))
-    return body["levels"]
+    """Every siege rung this project ships, ordinary ladder first.
+
+    **Both chapters rather than one**, because the endless lane is drawn on the same board with
+    the same wards and the same cast - and a picture that could not show it would be a picture of
+    half the mode (invariant 43). It authors no waves at all, so what stands on its hill is the
+    ramp read at `--wave` (`siege.endless_wave`, wave one by default) - which is the only way to
+    look at a wave nobody has typed anywhere: wave 21 sends **two bosses**, and whether that reads
+    as the ramp's climax or as a pile-up is a question no number can answer.
+    """
+    made = []
+
+    for name in ("s01_thornwatch", "s02_endlesswatch"):
+        path = CHAPTERS / (name + ".json")
+        if not path.exists():
+            continue
+
+        made.extend(json.loads(path.read_text(encoding="utf-8"))["levels"])
+
+    return made
 
 
 def load(path):
@@ -801,6 +901,12 @@ def main():
                     help="draw the warlord mid-cast, standing, or walking on")
     ap.add_argument("--no-bar", action="store_true",
                     help="draw the board without the utility bar under it")
+    ap.add_argument("--wave", type=int, default=1,
+                    help="which Infinite wave to stand on the hill; ignored on the authored "
+                         "ladder, whose hill is its last authored wave")
+    ap.add_argument("--line",
+                    help="the turrets to stand, comma separated (%s, ...); the loadout is the "
+                         "player's, so this is the only way to look at one" % ", ".join(LINE))
     ap.add_argument("--aim", choices=("hill", "wards"),
                     help="draw a utility's targeting: the firepot's grid, or the ward rings")
     ap.add_argument("--out", default=str(REPO / "Tools" / "siege_boards.png"))
@@ -810,12 +916,20 @@ def main():
     if not picked:
         sys.exit("no level called %s" % args.level)
 
+    # **Named rather than indexed**, because what this flag is for is looking at a line somebody
+    # chose - and a turret whose pictures are not on disk draws as a white rectangle rather than
+    # as a missing one (invariant 7b), so it is refused here instead.
+    stood = [s.strip() for s in args.line.split(",")] if args.line else None
+    for model in stood or ():
+        if not (ART / "Wards" / ("%s_r.png" % model)).exists():
+            sys.exit("no turret called %s" % model)
+
     held = {"firepot": 2, "mending": 0, "surge": 5}
 
     shots = []
     for rung, lv in picked:
         shot = draw(lv, args.raiders, not args.no_bolts, aim=args.aim,
-                    boss=args.warlord, rung=rung)
+                    boss=args.warlord, rung=rung, wave=args.wave, line=stood)
         if not args.no_bar:
             bar(shot, held)
         shots.append((lv["id"], shot))

@@ -175,17 +175,29 @@ namespace GlimmerGrove.Persistence
         // ------------------------------------------------------------- writing
         /// <summary>Folds a finished run in. Returns true when it beat the old record.</summary>
         public static bool RecordRun(LevelId id, int stars, int moves)
+            => RecordRun(id, stars, moves, false);
+
+        /// <summary>
+        /// The same fold, told whether this level is graded on a count that climbs.
+        ///
+        /// <b>Passed in rather than looked up</b>, because the direction is a fact about the
+        /// level's tuning and this class deliberately knows nothing about the catalog - the same
+        /// separation that lets a save be read and merged with no content loaded at all.
+        /// </b>
+        /// </summary>
+        public static bool RecordRun(LevelId id, int stars, int moves, bool climbs)
         {
             if (!id.IsValid) return false;
 
             var before = Record(id);
-            bool improved = before.Improves(stars, moves);
+            bool improved = before.Improves(stars, moves, climbs);
 
             // Ranked here because this is where the new best is decided. If the table has
             // not arrived — no backend, offline, a launch that has not reached the fetch yet
             // — nothing is captured and nothing is lost: the move count is stored either
             // way, and RefreshRanks works the standing out from it later.
-            var after = before.WithRun(stars, moves, SaveSchema.NowUnix(), Social.GroveStats.For(id));
+            var after = before.WithRun(stars, moves, SaveSchema.NowUnix(),
+                                       Social.GroveStats.For(id), climbs);
 
             _records[id] = after;
             LastPlayed = id;

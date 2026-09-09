@@ -1,0 +1,42 @@
+{
+ "schemaVersion": 2,
+ "id": "s02_endlesswatch",
+ "accent": "#E8615A",
+ "slate": "#1A0F14",
+ "backdrop": "sky_10",
+ "mapStrips": [
+  "map2_strip0",
+  "map2_strip1",
+  "map2_strip2",
+  "map2_strip3"
+ ],
+ "levels": [
+  {
+   "id": "s02_endless",
+   "mapX": 0.7,
+   "mapY": 0.065,
+   "budgetFactor": -1.0,
+   "backdrop": "sky_10",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "ryybbryy",
+     "grgygrgr",
+     "byrygbgg",
+     "grybryrr",
+     "gbrbybrb"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [],
+    "boss": "",
+    "cogs": 4,
+    "endless": {
+     "goldWave": 20,
+     "silverFactor": 0.55
+    }
+   }
+  }
+ ]
+}

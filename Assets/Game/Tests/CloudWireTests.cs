@@ -119,6 +119,23 @@ namespace GlimmerGrove.Tests
                     new UtilityStockDto { id = "firepot", earned = 4, spent = 1 },
                     new UtilityStockDto { id = "mending", earned = 2, spent = 2 },
                 },
+
+                // The line: what was bought, what stands on each colour, and when that was
+                // arranged. The stamp is here because it *is* the merge rule for the rows beside
+                // it — a fixture carrying the arrangement and not its date would prove the wire
+                // and leave out the one field that decides which of two devices' lines survives.
+                wardsOwned = new[] { "mortar", "rime" },
+                wardLoadout = new[]
+                {
+                    new WardSlotDto { colour = "r", ward = "mortar" },
+                    new WardSlotDto { colour = "b", ward = "rime" },
+                },
+                wardLoadoutSetUnix = 1_699_001_000,
+
+                endlessBest = new[]
+                {
+                    new EndlessBestDto { level = "s02_endless", wave = 23 },
+                },
             };
         }
 

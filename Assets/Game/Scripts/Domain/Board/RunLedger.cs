@@ -165,7 +165,7 @@ namespace GlimmerGrove
                                      before.BestMoves, !before.IsCleared, before.Clears + 1,
                                      lit, wanted, hintsUsed, seconds, route);
 
-            PlayerProgress.RecordRun(level.Id, stars, moves);
+            PlayerProgress.RecordRun(level.Id, stars, moves, tuning.Climbs);
 
             // Counted here and in the loss, which are the two places a run actually ends.
             // PlayerProgress hears about wins only — a defeat is not a worse clear, it simply

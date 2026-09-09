@@ -134,6 +134,27 @@ namespace GlimmerGrove.Content
         {
             var tuning = level.Tuning;
 
+            // **A level graded on a count that *climbs* inverts the ordering, and this grows a
+            // branch rather than an exception** - invariant 26e's rule, and for its reason: a
+            // check that disagrees with the thing it checks is worse than no check. On an endless
+            // lane three stars asks for a *bigger* wave than two, and it has no allowance at all
+            // (a run graded on how far it got has nothing to run out of but the board), so the
+            // whole of what is provable is the one comparison below.
+            if (tuning.Climbs)
+            {
+                if (tuning.GoldHundredths <= tuning.SilverHundredths)
+                    Error(issues, $"three stars is reached at wave {tuning.GoldThreshold} and two "
+                                + $"at {tuning.SilverThreshold}, so the two-star band is empty - "
+                                + "on a level graded on how far it got, three stars must ask for "
+                                + "more than two");
+
+                if (tuning.HasBudget)
+                    Error(issues, "a level graded on how far it got has no allowance to run out "
+                                + "of; its meter would count down to an ending that never happens");
+
+                return;
+            }
+
             // Compared as hundredths, which is what the thresholds are actually derived from
             // (LevelTuning.GoldHundredths). Comparing the floats would let this pass a pair
             // the grading then treats as equal, or fail one it treats as ordered — a check

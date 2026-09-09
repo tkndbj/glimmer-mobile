@@ -141,6 +141,18 @@ namespace GlimmerGrove.Cloud
                 // and never a better one.
                 { "utilityStock", Utilities(dto.utilityStock) },
 
+                // The line: what was bought, what stands on each colour, and when that was
+                // arranged. All three travel, and the stamp has to travel with the rows or the
+                // recency join on the other device compares an arrangement against a date that
+                // belongs to a different one.
+                { "wardsOwned", new List<object>(dto.wardsOwned ?? new string[0]) },
+                { "wardLoadout", Loadout(dto.wardLoadout) },
+                { "wardLoadoutSetUnix", dto.wardLoadoutSetUnix },
+
+                // How deep an endless run has ever got. A floor, adjudicated by nobody, because
+                // it pays nothing: credits and XP derive from the star ledger alone (invariant 9).
+                { "endlessBest", Endless(dto.endlessBest) },
+
                 // The v19 mirror, derived by HomesteadLedger and carried so a rolled-back
                 // client and a not-yet-redeployed groveWorth both keep working.
                 { "homesteadOwned", new List<object>(dto.homesteadOwned ?? new string[0]) },
@@ -380,6 +392,47 @@ namespace GlimmerGrove.Cloud
         /// <see cref="SaveDelta"/> would then read as a change on every launch, for ever. The
         /// rule <see cref="Stock"/> already follows.
         /// </summary>
+        /// <summary>The ward line's rows, dropping anything unreadable.</summary>
+        static List<object> Loadout(WardSlotDto[] rows)
+        {
+            var list = new List<object>();
+            if (rows == null) return list;
+
+            foreach (var row in rows)
+            {
+                if (row == null || string.IsNullOrEmpty(row.colour)
+                    || string.IsNullOrEmpty(row.ward)) continue;
+
+                list.Add(new Dictionary<string, object>
+                {
+                    { "colour", row.colour },
+                    { "ward", row.ward },
+                });
+            }
+
+            return list;
+        }
+
+        /// <summary>The endless high-water rows, dropping anything unreadable.</summary>
+        static List<object> Endless(EndlessBestDto[] rows)
+        {
+            var list = new List<object>();
+            if (rows == null) return list;
+
+            foreach (var row in rows)
+            {
+                if (row == null || string.IsNullOrEmpty(row.level) || row.wave <= 0) continue;
+
+                list.Add(new Dictionary<string, object>
+                {
+                    { "level", row.level },
+                    { "wave", (long)row.wave },
+                });
+            }
+
+            return list;
+        }
+
         static List<object> Utilities(UtilityStockDto[] rows)
         {
             var list = new List<object>();
@@ -543,6 +596,14 @@ namespace GlimmerGrove.Cloud
             // and nothing has to detect the upgrade.
             dto.utilityStock = ReadUtilities(doc);
 
+            // Absent on a document written before the line existed, which reads back as nothing
+            // bought and nothing arranged — the same fact as a fresh account, so the join takes
+            // the local side whole and nothing has to detect the upgrade.
+            dto.wardsOwned = StrList(doc, "wardsOwned");
+            dto.wardLoadout = ReadLoadout(doc);
+            dto.wardLoadoutSetUnix = Long(doc, "wardLoadoutSetUnix", 0L);
+            dto.endlessBest = ReadEndless(doc);
+
             if (Map(doc, "progression") is IDictionary<string, object> progression)
             {
                 dto.progression.xpHighWater = Long(progression, "xpHighWater", -1);
@@ -657,6 +718,54 @@ namespace GlimmerGrove.Cloud
         /// anyway, and letting it through would make the round trip write back a row it did not
         /// receive.
         /// </summary>
+        /// <summary>The ward line out of a cloud document, dropping anything malformed.</summary>
+        static WardSlotDto[] ReadLoadout(IDictionary<string, object> doc)
+        {
+            if (!doc.TryGetValue("wardLoadout", out object raw) || !(raw is IEnumerable<object> items))
+                return new WardSlotDto[0];
+
+            var rows = new List<WardSlotDto>();
+
+            foreach (object item in items)
+            {
+                if (!(item is IDictionary<string, object> map)) continue;
+
+                string colour = Str(map, "colour");
+                string ward = Str(map, "ward");
+                if (string.IsNullOrEmpty(colour) || string.IsNullOrEmpty(ward)) continue;
+
+                rows.Add(new WardSlotDto { colour = colour, ward = ward });
+            }
+
+            return rows.ToArray();
+        }
+
+        /// <summary>The endless bests out of a cloud document, dropping anything malformed.</summary>
+        static EndlessBestDto[] ReadEndless(IDictionary<string, object> doc)
+        {
+            if (!doc.TryGetValue("endlessBest", out object raw) || !(raw is IEnumerable<object> items))
+                return new EndlessBestDto[0];
+
+            var rows = new List<EndlessBestDto>();
+
+            foreach (object item in items)
+            {
+                if (!(item is IDictionary<string, object> map)) continue;
+
+                string level = Str(map, "level");
+                long wave = Long(map, "wave", 0L);
+                if (string.IsNullOrEmpty(level) || wave <= 0L) continue;
+
+                rows.Add(new EndlessBestDto
+                {
+                    level = level,
+                    wave = wave > int.MaxValue ? int.MaxValue : (int)wave,
+                });
+            }
+
+            return rows.ToArray();
+        }
+
         static UtilityStockDto[] ReadUtilities(IDictionary<string, object> doc)
         {
             if (!doc.TryGetValue("utilityStock", out object raw) || !(raw is IEnumerable<object> items))

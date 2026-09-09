@@ -60,6 +60,8 @@ service cloud.firestore {
                  'homesteadPlaced', 'groveLandOwned',
                  'heartContainersOwned', 'heartContainersRevoked',
                  'utilityStock',
+                 'wardsOwned', 'wardLoadout', 'wardLoadoutSetUnix',
+                 'endlessBest',
                  'checksum'
                ])
                && d.schemaVersion is int
@@ -172,7 +174,29 @@ service cloud.firestore {
                // allow-list over the whole document, so a save the client will write and these
                // rules refuse loses *every* save write rather than the extra rows (12a).
                && (!('utilityStock' in d) || (d.utilityStock is list
-                                              && d.utilityStock.size() <= 64));
+                                              && d.utilityStock.size() <= 64))
+
+               // The turrets the player bought and the line they stand in. Client-owned and
+               // forgeable, and accounted for the way the companion set is: a forged turret buys
+               // a silhouette and an addition to a bolt - no currency, no progression, and
+               // nothing that reaches a public card, because `publishGrove` derives a grove's
+               // worth from what is standing in the grove and never from the line. The money half
+               // is defended where money always is, by `submitSpends` refusing a debit the
+               // server-derived balance cannot cover. Bounded because the client controls the
+               // length, generously against `WardCatalog.MaxModels` so a content drop that adds a
+               // turret never needs a rules deploy to land.
+               && (!('wardsOwned' in d) || (d.wardsOwned is list && d.wardsOwned.size() <= 64))
+               && (!('wardLoadout' in d) || (d.wardLoadout is list && d.wardLoadout.size() <= 8))
+               && (!('wardLoadoutSetUnix' in d) || d.wardLoadoutSetUnix is int)
+
+               // How deep an endless run has ever got, per level. It pays nothing - credits and
+               // XP derive from the star ledger alone (invariant 9) - so a forged wave moves a
+               // reading and never a balance, and the public half is clamped by `publishGrove`
+               // like every other public number here. The bound matches `EndlessLedger.MaxRows`,
+               // and it has to: `hasOnly` is an allow-list over the whole document, so a save the
+               // client writes and these rules refuse loses *every* save write (invariant 12a).
+               && (!('endlessBest' in d) || (d.endlessBest is list
+                                             && d.endlessBest.size() <= 64));
       }
 
       // The revision only ever moves forward, which gives the sync optimistic

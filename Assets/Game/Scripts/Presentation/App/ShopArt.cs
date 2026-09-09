@@ -18,18 +18,18 @@ namespace GlimmerGrove
     /// product listed six times, which is the single thing a storefront must not read as.
     /// </para>
     /// <para>
-    /// <b>What replaced it keeps the half that was right.</b> Which of the six pictures a card
-    /// draws is still a pure function of <see cref="StoreProduct.Tier"/> and its shelf's size
-    /// (<see cref="ShopLadder"/>), so a rung inserted in the middle of a shelf still re-draws
+    /// <b>What replaced it keeps the half that was right.</b> Which picture a card draws is
+    /// still a pure function of <see cref="StoreProduct.Tier"/> and its shelf's size (<see
+    /// cref="ShopLadder"/>), so a rung inserted in the middle of a shelf still re-draws
     /// everything above it with no art order and no edit anywhere else, and a shelf of four and
     /// a shelf of six both still read as a full ladder. The pictures themselves are cut offline
     /// by <c>Tools/make_shop_art.py</c>, which <c>--check</c>s itself against what is shipped.
     /// </para>
     /// <para>
-    /// <b>A bundle borrows the coin ladder rather than owning art of its own.</b> Three of the
-    /// six coin pictures are painted with gems in among the coins, which is exactly what a
-    /// bundle sells; cutting those a second time under a bundle name would put identical pixels
-    /// at two addresses in one bundle, which is memory spent to avoid sharing a string.
+    /// <b>A ladder is as long as its shelf, and that is a rule rather than a coincidence.</b>
+    /// Longer, and <see cref="ShopLadder"/> skips rungs, so painted quantities are shipped that
+    /// no card ever draws; shorter, and two adjacent cards draw the same picture. Neither shows
+    /// up anywhere, because both ship a shelf that is individually correct on every card.
     /// </para>
     /// <para>
     /// <b>Hearts are still composed, and that is not an inconsistency.</b> A heart pack sells a
@@ -42,15 +42,29 @@ namespace GlimmerGrove
     public static class ShopArt
     {
         /// <summary>
-        /// The coin shelf, smallest first: a stack, a pile, a sack, then three chests.
+        /// The coin shelf, smallest first: a spilled pile, a basket, a chest, then a vault.
+        ///
+        /// <para>
+        /// <b>Four rungs because the shelf sells four products.</b> It was six for as long as
+        /// the pictures came off a sheet that happened to carry six coin tiles, and with four
+        /// products <see cref="ShopLadder"/> then picked rungs 0, 2, 3 and 5 — so two of the
+        /// four painted quantities were never drawn in the shop at all. A ladder longer than
+        /// its shelf hides art and a ladder shorter than its shelf repeats it, and neither is
+        /// visible anywhere, because both ship a shelf that is correct on every card.
+        /// </para>
         /// </summary>
         static readonly string[] Coins =
         {
-            "Shop/coins_1", "Shop/coins_2", "Shop/coins_3",
-            "Shop/coins_4", "Shop/coins_5", "Shop/coins_6",
+            "Shop/coins_1", "Shop/coins_2", "Shop/coins_3", "Shop/coins_4",
         };
 
-        /// <summary>The gem shelf: three loose piles, a sack, and two chests.</summary>
+        /// <summary>
+        /// The gem shelf: one cut stone, then a heap, a sack, a basket, a chest and a vault.
+        ///
+        /// It opens on a single stone rather than on the smallest heap because the pack
+        /// paints five gem quantities against a shelf of six, and a shelf of six over a
+        /// ladder of five draws two adjacent cards identically.
+        /// </summary>
         static readonly string[] Gems =
         {
             "Shop/gems_1", "Shop/gems_2", "Shop/gems_3",
@@ -58,11 +72,26 @@ namespace GlimmerGrove
         };
 
         /// <summary>
-        /// The bundle shelf, which is the three coin pictures painted with gems in among the
-        /// coins. Deliberately the same three addresses rather than three more files — see
-        /// the class summary.
+        /// The bundle shelf: a gold chest, a gem chest, then the one wearing both.
+        ///
+        /// <para>
+        /// <b>Its own pictures rather than three borrowed from the coin ladder.</b> Borrowing
+        /// was right while three of the coin pictures were painted with gems in among the
+        /// coins, which is exactly what a bundle sells; the pack that replaced them paints no
+        /// mixed pile, so a borrowed picture would say only half of what a bundle grants. The
+        /// shelf is therefore told apart by what a chest is made of rather than by how full
+        /// it is — there is no quantity to draw when two currencies arrive at once.
+        /// </para>
+        /// <para>
+        /// <b>Three rungs against three products, of which the first is drawn by nothing today</b>,
+        /// and that is the one place a ladder is deliberately longer than what it draws: the
+        /// starter bundle is one-time, so <see cref="ShopLadder"/> puts it on the top rung whatever
+        /// it costs, leaving the bottom one for a cheaper bundle nobody has authored yet.
+        /// Everywhere else a ladder is exactly as long as its shelf — invariant 18e.
+        /// </para>
         /// </summary>
-        static readonly string[] Bundles = { "Shop/coins_2", "Shop/coins_5", "Shop/coins_6" };
+        static readonly string[] Bundles =
+            { "Shop/bundles_1", "Shop/bundles_2", "Shop/bundles_3" };
 
         /// <summary>
         /// Which ladder a product's picture comes from, by what it grants rather than by what
@@ -97,7 +126,10 @@ namespace GlimmerGrove
             if (product.IsContainer) { PaintContainer(box, product); return; }
             if (product.IsEventPass)
             {
-                UIKit.Img("BloomPass", box, Art.S("Ui/Shop/coins_5"), Color.white,
+                // The top bundle chest, shared rather than cut again: a pass is the same
+                // kind of purchase, and identical pixels at a second address is memory
+                // spent to avoid sharing a string.
+                UIKit.Img("BloomPass", box, Art.S("Ui/Shop/bundles_3"), Color.white,
                           Vector2.one * Mathf.Max(200f, box.rect.width), new Vector2(.5f, .5f), Vector2.zero).preserveAspect = true;
                 return;
             }
@@ -140,7 +172,6 @@ namespace GlimmerGrove
                                       Vector2.one * (size * .74f), new Vector2(.5f, .5f), Vector2.zero);
                 boost.preserveAspect = true;
 
-                UIKit.Halo(box, Pal.Sun, size * 1.05f, .34f);
                 Tween.Breathe(boost.transform, .035f, 2.6f);
                 return;
             }
@@ -154,7 +185,6 @@ namespace GlimmerGrove
 
             Heap(box, "H", "Ui/ic_heart", shown, heart, 0f);
 
-            UIKit.Halo(box, Pal.Rose, size * .96f, .30f);
         }
 
         /// <summary>
@@ -168,9 +198,12 @@ namespace GlimmerGrove
         /// same thing — the tab-glyph rule, one card down.
         /// </para>
         /// <para>
-        /// The halo takes the kind's own colour from <see cref="ShopRarity"/> rather than a
-        /// second table here, so the light behind the card, the wash under the picture and the
-        /// icon's own paint cannot come to disagree about what a firepot is.
+        /// <b>Nothing behind it.</b> Every picture on this screen used to stand on a coloured
+        /// halo, and the owner had them taken off after playing the restyled shop: against an
+        /// opaque kit frame a wash behind an object reads as a smudge on the card rather than
+        /// as light under the object. The kind's colour survives on the name above the price
+        /// (<see cref="ShopRarity"/>), which is the one place it was saying something the
+        /// picture was not.
         /// </para>
         /// </summary>
         public static void PaintUtility(RectTransform box, UtilityItem item)
@@ -187,7 +220,6 @@ namespace GlimmerGrove
                                  Vector2.one * (size * .78f), new Vector2(.5f, .5f), Vector2.zero);
             icon.preserveAspect = true;
 
-            UIKit.Halo(box, ShopRarity.Of(item).Colour, size * 1.02f, .30f);
             Tween.Breathe(icon.transform, .03f, 2.8f);
         }
 
@@ -219,7 +251,15 @@ namespace GlimmerGrove
             float size = box.rect.width;
             if (size <= 1f) size = 200f;
 
-            int rung = ShopLadder.Rung(product, Vessels.Length);
+            // Ranked, rather than the `ShopLadder.Rung(product, ...)` overload every other
+            // shelf uses. That one puts a **one-time** product on the top rung whatever it
+            // costs, which is right for the starter bundle — a single offer with nothing to
+            // be compared against — and wrong here, because all three vessels are
+            // non-consumables and the three of them *are* a ladder. Under it every cap drew
+            // the largest bottle with five hearts, so the shelf that sells 10, 20 and 50
+            // hearts showed one picture three times: invariant 18e's fault reached through
+            // the arithmetic rather than through the length of a list.
+            int rung = ShopLadder.Rung(product.Tier, product.ShelfSize, Vessels.Length);
 
             // Bigger vessels for bigger caps, and the step is small on purpose: the ladder is
             // carried by the hearts over the lip, and three bottles at wildly different sizes
@@ -235,7 +275,6 @@ namespace GlimmerGrove
             // on the same shelf read as the same currency in different quantities.
             Heap(box, "H", "Ui/ic_heart", 3 + rung, size * .26f, size * .20f);
 
-            UIKit.Halo(box, Pal.Rose, size * 1.02f, .32f);
         }
 
         /// <summary>

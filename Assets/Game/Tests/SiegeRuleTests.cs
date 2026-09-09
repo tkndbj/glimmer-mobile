@@ -1347,9 +1347,19 @@ namespace GlimmerGrove.Tests
             }
         }
 
+        /// <summary>
+        /// **The whole chapter is measured and reported together, rather than stopping at the
+        /// first rung that misses.** This is the only instrument a mode with no search has
+        /// (invariant 37j), and every change to this mode's arithmetic has to be put back through
+        /// it — so a failure that named one rung and hid the other nine made every re-tune a
+        /// sequence of nine more runs. The table below is what a re-tune is read off.
+        /// </summary>
         [Test]
         public void AnUnhurriedPlayerHoldsThisLine()
         {
+            var table = new System.Text.StringBuilder();
+            var faults = new System.Collections.Generic.List<string>();
+
             for (int i = 0; i < Chapter.Length; i++)
             {
                 var rung = Chapter[i];
@@ -1358,39 +1368,42 @@ namespace GlimmerGrove.Tests
 
                 int matches = Hold(board, out int seconds);
 
-                Assert.IsTrue(board.IsFinished,
-                              $"{rung.Id}: the hill was not cleared - {board.GoalsLeft} raider(s) "
-                              + $"left and {board.WardsStanding} ward(s) standing after {seconds}s");
-
-                Assert.GreaterOrEqual(board.WardsStanding, 2,
-                                      $"{rung.Id}: an unhurried player finished with "
-                                      + $"{board.WardsStanding} ward(s) standing");
-
                 int par = SiegeTuning.Par(layout);
                 int gold = (par * 120 + 99) / 100;
+                int whole = board.Wards.Count * SiegeTuning.WardHealth;
 
-                Assert.LessOrEqual(matches, gold,
-                                   $"{rung.Id}: an unhurried player needed {matches} against a "
-                                   + $"three-star line of {gold}, so nobody playing this way ever "
-                                   + "sees three stars");
+                table.AppendLine($"  {rung.Id,-18} par {par,3}  3* {gold,3}  played {matches,3}  "
+                                 + $"{seconds,3}s  line {Health(board),3}/{whole,3}  "
+                                 + $"{board.WardsStanding} ward(s), {board.GoalsLeft} left");
 
-                Assert.GreaterOrEqual(matches * 2, par,
-                                      $"{rung.Id}: an unhurried player finished in {matches} "
-                                      + $"against par {par}, so par is more than twice what the "
-                                      + "rung really costs and every band under it is unreachable");
+                if (!board.IsFinished)
+                    faults.Add($"{rung.Id}: the hill was not cleared - {board.GoalsLeft} raider(s) "
+                               + $"left and {board.WardsStanding} ward(s) standing after {seconds}s");
+
+                if (board.WardsStanding < 2)
+                    faults.Add($"{rung.Id}: an unhurried player finished with "
+                               + $"{board.WardsStanding} ward(s) standing");
+
+                if (matches > gold)
+                    faults.Add($"{rung.Id}: an unhurried player needed {matches} against a "
+                               + $"three-star line of {gold}, so nobody playing this way ever sees "
+                               + "three stars");
+
+                if (matches * 2 < par)
+                    faults.Add($"{rung.Id}: an unhurried player finished in {matches} against par "
+                               + $"{par}, so par is more than twice what the rung really costs and "
+                               + "every band under it is unreachable");
 
                 // **And the half that says this is a siege at all.** A line nothing ever reaches is
                 // a fail state that rejects nothing, which is invariant 5d asked of a threat rather
                 // than of a mechanic - the rung would play as a jewel board with scenery over it.
                 // The teaching rungs are the deliberate exception (see `TeachingRungs`).
-                if (i < TeachingRungs) continue;
-
-                int whole = board.Wards.Count * SiegeTuning.WardHealth;
-
-                Assert.Less(Health(board), whole,
-                            $"{rung.Id}: the line finished untouched at {whole}, so nothing on "
-                            + "this hill ever reached it");
+                if (i >= TeachingRungs && Health(board) >= whole)
+                    faults.Add($"{rung.Id}: the line finished untouched at {whole}, so nothing on "
+                               + "this hill ever reached it");
             }
+
+            Assert.IsEmpty(faults, string.Join("\n", faults) + "\n\nthe chapter reads:\n" + table);
         }
 
         /// <summary>

@@ -127,6 +127,26 @@ FIELD = "craftpix-net-869102-tower-defense-neighborhood-top-down-2d-asset-pack.z
 #: what a matched gem comes apart into.
 KIT = "craftpix-net-239749-merge-shooter-cartoon-asset-kit.zip"
 
+#: The idle-defence kit, which is where the twenty turrets a player chooses between come from, and
+#: where both insects come from.
+#:
+#: **One pack for the whole roster, and that is the point rather than a convenience.** A line holds
+#: four turrets side by side and the player is choosing between twenty of them on one shelf, so the
+#: set has to read as a set: twenty machines drawn by one hand, all facing up the way this board's
+#: hill runs, with a silhouette ladder built into them (one barrel, then two, then four, then a
+#: heavy mount). Twenty turrets assembled from four packs would be four games on one plinth.
+MERGE = "craftpix-net-206389-free-idle-turret-defense-asset-kit.zip"
+
+#: Where the number plate hangs, measured.
+#:
+#: **Every turret in the pack carries a baked level number on a plate under its feet**, which is
+#: what the kit was drawn for and is exactly wrong here: a ward's number is its *rank*, drawn at run
+#: time on the crest at its shoulder, and two numbers on one turret is two readouts nobody can read
+#: (invariant 37y, said about a badge). The plate is at the same place on all twenty - the sprites
+#: are one 500x500 layout - so it is a straight crop rather than a detection, and the cut edge is
+#: hidden by the plinth the view already draws under every ward.
+WARD_PLATE = 372
+
 #: The mine tileset the hill is floored with. Its own download rather than one of the folders
 #: above, so `--mine` points at it.
 MINE = Path(r"C:\Users\Digikey\Downloads\graphicriver-95eo2prH-topdown-tiles-mine.zip")
@@ -235,6 +255,12 @@ BULWARKS_C = "craftpix-net-259073-alien-v2-enemy-sprite-set.zip"
 #: as a set; the brutes are another, so the one thing a player must see at a glance is that a brute
 #: is not one of those; and the bulwarks are aliens that are literally carrying a shield - which is
 #: the only honest way to draw a unit holding one, and it cost a folder name rather than a drawing.
+#: The packs the second cast set comes from. Opened for nothing else.
+CREEPERS_B = "craftpix-net-167954-monster-v1-character-sprites.zip"
+BRUTES_B = "craftpix-net-925935-monster-v7-sprite-pack.zip"
+BULWARKS_D = "craftpix-net-534332-monster-v6-sprite-set.zip"
+BULWARKS_E = "craftpix-net-154190-monster-v2-character-sprites.zip"
+
 RAIDER_SET = {
     # creepers - one pack, four bodies
     "mon_r":     (MONSTERS, "PNG/Monster 1/Walk"),
@@ -253,6 +279,27 @@ RAIDER_SET = {
     "bulwark_g": (BULWARKS_B, "PNG/Alien01/Walk"),
     "bulwark_b": (WARLORDS, "PNG/Alien01/Walk"),
     "bulwark_y": (BULWARKS_C, "PNG/Alien2/Walk"),
+
+    # ---- the second set -----------------------------------------------------------------
+    # **A chapter draws one set of twelve, chosen by its ordinal inside its own mode**, which is
+    # invariant 7c's rule and the backdrop's shape exactly: two sets serve every siege chapter that
+    # ever ships, a third costs one row here and no code, and a chapter never pays for a body it is
+    # not drawing. What it buys is the thing ten rungs of one cast cannot: the second chapter is
+    # visibly somewhere else, with something else coming down the hill.
+    "monB_r":     (CREEPERS_B, "PNG/MonsterV2/Walk"),
+    "monB_g":     (CREEPERS_B, "PNG/MonsterV4/Walk"),
+    "monB_b":     (CREEPERS_B, "PNG/MonsterV5/Walk"),
+    "monB_y":     (CREEPERS_B, "PNG/MonsterV1/Walk"),
+
+    "bruteB_r":   (BRUTES_B, "Png/Mons 3/Walk"),
+    "bruteB_g":   (BRUTES_B, "Png/Mons 1/Walk"),
+    "bruteB_b":   (BRUTES_B, "Png/Mons 4/Walk"),
+    "bruteB_y":   (BRUTES_B, "Png/Mons 5/Walk"),
+
+    "bulwarkB_r": (BULWARKS_D, "Png/Mons 2/Walk"),
+    "bulwarkB_g": (BULWARKS_E, "PNG/Monster 3/Walk"),
+    "bulwarkB_b": (BULWARKS_D, "Png/Mons 5/Walk"),
+    "bulwarkB_y": (BULWARKS_E, "PNG/Monster 1/Walk"),
 }
 
 #: The warlord's three animations, cut together by `paired`.
@@ -301,6 +348,69 @@ BOSS_ATTACK = "PNG/Alien05/Attack"
 #: same ladder's bottom half and are deliberately unused; at the size this board draws a turret they
 #: are a plain box with a barrel, which is not a turret anybody wants to be given five of.
 WARD_TIERS = ("Gun06", "Gun07", "Gun08", "Gun09", "Gun10")
+
+#: The twenty turrets a player chooses between, in `WardCatalog.Default` order.
+#:
+#: **The id is the contract and the model is the picture.** The id is what the save keys on and what
+#: `WardModel.ArtFor` builds an address from, so this table and `WardCatalog.Default` have to name
+#: the same twenty things - which `Tools/verify/content.py` proves rather than trusting, because a
+#: turret whose picture is missing draws as a white rectangle two cells tall (invariant 7b) on the
+#: one object a player is looking at for a whole run.
+#:
+#: **Ordered as a ladder, because the pack drew one.** T1 is a single barrel on a plain hull and T20
+#: is a four-barrel heavy mount, so the shelf climbs visibly from the free turret to the dearest -
+#: and the ten earned rungs and the ten bought ones interleave, so a player who has not spent a gem
+#: still sees their shelf getting bigger.
+WARD_MODELS = (
+    ("bolt",       "T1"),
+    ("spark",      "T3"),
+    ("mortar",     "T5"),
+    ("rime",       "T7"),
+    ("lance",      "T9"),
+    ("cleaver",    "T11"),
+    ("siphon",     "T13"),
+    ("ember",      "T15"),
+    ("beacon",     "T17"),
+    ("prism",      "T19"),
+    ("arcstorm",   "T4"),
+    ("howitzer",   "T6"),
+    ("glacier",    "T8"),
+    ("harpoon",    "T10"),
+    ("breaker",    "T12"),
+    ("leech",      "T14"),
+    ("pyre",       "T16"),
+    ("lighthouse", "T18"),
+    ("spectrum",   "T20"),
+    ("apex",       "T2"),
+)
+
+#: How tall a turret's thumbnail is cut for the loadout shelf.
+#:
+#: **A grid cell draws one at about 150 points against art cut at 500**, so browsing the roster
+#: reads thumbnails rather than the real turrets - invariant 16c's rule, which is also what keeps
+#: the shelf's memory bounded by the shelf rather than by the roster. One picture per model rather
+#: than one per model per colour, because on the shelf the *colour* is the slot the player is
+#: filling and the model is what they are choosing.
+THUMB = 176
+
+#: The two insects, and the two things that separate them.
+#:
+#: **A weaver crawls and a thief flies**, which is the only thing a player has to read about them
+#: from across the board: one of them is on the ground taking the field away a cell at a time and
+#: the other is hovering over it stealing whole gems. The pack draws both, so it costs a folder
+#: name rather than a decision.
+#:
+#: **Beetles for the weaver**, because a thing that spins webs over a board should look like it
+#: could - and because eight of them ship, which is two colours more than this needs and room for a
+#: second set later. **Hybrids for the thief**, whose `Flying` reel is a hover rather than a walk:
+#: it is the one raider in this mode that stops and stays put over the hill, and a walk cycle
+#: looping under something standing still is the fault invariant 37u names in one word (floating).
+WEAVER_SET = ("RedBeetle", "GreenBeetle", "BlueBeetle", "OrangeBeetle")
+THIEF_SET = ("HybridRed", "HybridGreen", "HybridBlue", "HybridPur")
+
+#: How tall the two insects are cut. Between a creeper and a boss: they hold the middle of the hill
+#: and have to be seen to be answered, and they are not the fight.
+INSECT = 210
 
 #: Which colour each ward is painted, as a hue angle. `Pal.Poppy`, `Pal.Mint`, `Pal.Azure` and
 #: `Pal.Sun`, measured - so the line still agrees with the gems that feed it.
@@ -750,6 +860,134 @@ def turret(z, model, frame=None):
     return out
 
 
+def web():
+    """A weaver's lock, drawn over a gem.
+
+    <b>Drawn rather than cut, and translucent rather than opaque.</b> What a web has to say is
+    "this gem is still that colour and you cannot move it" - so the colour underneath has to read
+    through it, which rules out anything the packs draw as an object. It is threads and rings in
+    the board's own bone white, at a third alpha, with the anchors bright enough to survive being
+    forty pixels wide.
+    """
+    size = TILE
+    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(out)
+
+    mid = size / 2.0
+    ink = (238, 240, 232)
+    spokes = 8
+
+    for i in range(spokes):
+        a = math.tau * i / spokes
+        draw.line((mid, mid, mid + math.cos(a) * mid * .96, mid + math.sin(a) * mid * .96),
+                  fill=ink + (150,), width=max(2, size // 64))
+
+    for ring in (0.34, 0.58, 0.82, 0.98):
+        pts = []
+        for i in range(spokes + 1):
+            a = math.tau * (i % spokes) / spokes
+            # Sagging between the spokes, which is what makes it read as a web and not a dartboard.
+            sag = ring * (0.90 if i % 2 else 1.0)
+            pts.append((mid + math.cos(a) * mid * sag, mid + math.sin(a) * mid * sag))
+
+        draw.line(pts, fill=ink + (120,), width=max(2, size // 80), joint="curve")
+
+    # The anchors: eight bright knots at the rim, which is the part that survives at cell size.
+    for i in range(spokes):
+        a = math.tau * i / spokes
+        x, y = mid + math.cos(a) * mid * .94, mid + math.sin(a) * mid * .94
+        r = size // 34
+        draw.ellipse((x - r, y - r, x + r, y + r), fill=ink + (225,))
+
+    return out
+
+
+def sack():
+    """What a thief leaves where a gem was.
+
+    <b>Deliberately the dullest thing on the field.</b> A sack is not a colour and can never line
+    up with anything, so it has to read as dead weight against four saturated jewels - which is a
+    job for value and saturation rather than for shape. Dark canvas, one cinch, one highlight.
+    """
+    size = TILE
+    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(out)
+
+    body = (86, 74, 62)
+    dark = (54, 46, 38)
+    tie = (150, 128, 96)
+
+    mid = size / 2.0
+    draw.ellipse((size * .12, size * .30, size * .88, size * .95), fill=body)
+    draw.ellipse((size * .12, size * .30, size * .88, size * .95), outline=dark,
+                 width=max(2, size // 40))
+
+    # The neck, gathered.
+    draw.polygon([(size * .34, size * .40), (size * .66, size * .40),
+                  (size * .60, size * .14), (size * .40, size * .14)], fill=body)
+    draw.polygon([(size * .34, size * .40), (size * .66, size * .40),
+                  (size * .60, size * .14), (size * .40, size * .14)], outline=dark,
+                 width=max(2, size // 48))
+
+    draw.rounded_rectangle((size * .30, size * .34, size * .70, size * .46),
+                           radius=int(size * .05), fill=tie)
+
+    # One highlight, so it is an object rather than a hole.
+    draw.ellipse((size * .26, size * .48, size * .48, size * .66), fill=(112, 98, 82))
+
+    return out
+
+
+def pngs(z, prefix):
+    """Every real PNG under a prefix.
+
+    <b>`__MACOSX` is the trap</b>: a zip made on a Mac carries a shadow `._name.png` beside every
+    file, which passes an `endswith(".png")` filter and is not an image - so a folder listing that
+    forgets it fails on the first frame with a decode error that names nothing useful.
+    """
+    return [n for n in z.namelist()
+            if n.startswith(prefix) and n.lower().endswith(".png")
+            and not n.startswith("__MACOSX") and "/._" not in n]
+
+
+def ward_model(z, model, frame=0):
+    """One of the roster's twenty turrets, cut clean of its number plate and fitted to the ward box.
+
+    <b>The plate is cropped rather than detected</b> - see `WARD_PLATE`. Every sprite in the pack is
+    one 500x500 layout, so the cut is the same on all twenty, and the edge it leaves sits behind the
+    plinth the view already draws.
+
+    **Fitted to one box, pinned by its foot**, which is `turret`'s rule for the same reason: the
+    twenty differ mostly at the top - a taller barrel, a second mount - and a turret that rose off
+    its plinth when the player swapped it would read as the plinth having sunk.
+    """
+    im = read(z, "Merge Turrets/Png/Turrets/%s/%s-Shoot_%02d.png" % (model, model, frame))
+    im = im.crop((0, 0, im.width, min(im.height, WARD_PLATE)))
+
+    box = im.getbbox()
+    if box is not None:
+        im = im.crop(box)
+
+    out = Image.new("RGBA", (WARD_W, WARD_H), (0, 0, 0, 0))
+    ratio = min(WARD_W / max(1, im.width), WARD_H / max(1, im.height)) * 0.94
+    im = im.resize((max(1, int(im.width * ratio)), max(1, int(im.height * ratio))), Image.LANCZOS)
+
+    out.alpha_composite(im, ((WARD_W - im.width) // 2, WARD_H - im.height))
+    return out
+
+
+def ward_thumb(z, model):
+    """The one uncoloured picture the loadout shelf browses a turret with."""
+    im = read(z, "Merge Turrets/Png/Turrets/%s/%s-Shoot_00.png" % (model, model))
+    im = im.crop((0, 0, im.width, min(im.height, WARD_PLATE)))
+
+    box = im.getbbox()
+    if box is not None:
+        im = im.crop(box)
+
+    return fit(im, THUMB, 0.94)
+
+
 def cog():
     """The upgrade gem: a machine part standing in a field of jewels.
 
@@ -1099,6 +1337,62 @@ def build():
 
             for f, frame in enumerate(recoil):
                 made["Siege/fire%d_%s/f%02d.png" % (tier, letter, f)] = hued(frame, hue)
+
+    # **The roster: twenty turrets times four colours, plus one thumbnail each.**
+    #
+    # A run loads the four its player chose (`WardLine.Art`, scoped by the screen); the shelf
+    # browses the thumbnails. Nothing ever loads eighty turrets, which is invariant 7b's whole
+    # bargain - memory bounded by what is on the screen rather than by how much content exists.
+    merge = zipped(MERGE)
+    if merge is None:
+        return None
+
+    for model_id, model in WARD_MODELS:
+        stand = ward_model(merge, model, 0)
+
+        shots = sorted(pngs(merge, "Merge Turrets/Png/Turrets/%s/" % model))
+
+        step = max(1, len(shots) // FIRE_FRAMES)
+        recoil = [ward_model(merge, model, min(len(shots) - 1, f * step))
+                  for f in range(FIRE_FRAMES)]
+
+        # **Under `Ui/` rather than `Siege/`, because a thumbnail is a shelf's picture and never
+        # the board's.** The four turrets a run stands come out of `AssetLibrary.LineScope`; these
+        # twenty come out of the loadout screen's own scope and are released when it closes, which
+        # is invariant 16c's rule - a shelf costs the shelf rather than the catalog.
+        made["Ui/Wards/%s.png" % model_id] = ward_thumb(merge, model)
+
+        for letter, hue in WARD_HUES:
+            made["Siege/Wards/%s_%s.png" % (model_id, letter)] = hued(stand, hue)
+
+            for f, frame in enumerate(recoil):
+                made["Siege/Wards/%s_%s_fire/f%02d.png" % (model_id, letter, f)] = hued(frame, hue)
+
+    # **The two insects.** A weaver crawls and a thief hovers; both hold the middle of the hill and
+    # work on the field rather than on the line, so what they have to say from across the board is
+    # which of the two they are - which is why one of them walks and one of them does not.
+    for i, (letter, hue) in enumerate(WARD_HUES):
+        beetle = WEAVER_SET[i]
+        crawl = sorted(pngs(merge, "Merge Turrets/Png/Enemies/Grounds Enemy/%s/" % beetle))
+
+        for f, name in enumerate(spaced(crawl, FRAMES)):
+            made["Siege/weaver_%s/f%02d.png" % (letter, f)] = hued(
+                fit(read(merge, name), INSECT, 0.94), hue, CAST_PULL, CAST_SAT_GAIN,
+                CAST_SAT_FLOOR, CAST_VAL_GAIN, CAST_VAL_LIFT)
+
+        hybrid = THIEF_SET[i]
+        hover = sorted(pngs(merge, "Merge Turrets/Png/Enemies/Hybrid Enemy/%s/Flying/" % hybrid))
+
+        for f, name in enumerate(spaced(hover, FRAMES)):
+            made["Siege/thief_%s/f%02d.png" % (letter, f)] = hued(
+                fit(read(merge, name), INSECT, 0.94), hue, CAST_PULL, CAST_SAT_GAIN,
+                CAST_SAT_FLOOR, CAST_VAL_GAIN, CAST_VAL_LIFT)
+
+    # What a weaver leaves, and what a thief leaves. Both drawn: a web has to let the gem's colour
+    # read through it and a sack has to be the dullest thing on a field of four saturated jewels,
+    # and neither is a job a licensed object sheet does (invariant 32b, from the other side).
+    made["Siege/web.png"] = web()
+    made["Siege/sack.png"] = sack()
 
     # A fallen ward is the tier it stood up in, whatever rank it had reached: what the gap in the
     # line has to say is "this one is gone", and five wrecks would say "this one is gone and it was

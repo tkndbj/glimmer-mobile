@@ -75,12 +75,17 @@ namespace GlimmerGrove.Tests
         [Test]
         public void EveryShippedShelfClimbsWithoutRepeatingARung()
         {
-            // Six rungs of art and four coin products: the ladder has to spread them, not
-            // bunch them at the bottom, or the shelf reads as three sizes and a gap.
-            CollectionAssert.AreEqual(new[] { 0, 2, 3, 5 }, Rungs(shelf: 4, rungs: 6));
+            // The three shipped shelves, each with a ladder as long as itself: coins 4, gems 6,
+            // bundles 3. `Tools/make_shop_art.py` is what holds the art to those counts — see
+            // invariant 18e — and these are what "as long as itself" buys, one picture a card.
+            CollectionAssert.AreEqual(new[] { 0, 1, 2, 3 }, Rungs(shelf: 4, rungs: 4));
             CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4, 5 }, Rungs(shelf: 6, rungs: 6));
             CollectionAssert.AreEqual(new[] { 0, 1, 2 }, Rungs(shelf: 3, rungs: 3));
-            CollectionAssert.AreEqual(new[] { 0, 1, 2 }, Rungs(shelf: 3, rungs: 3));
+
+            // And what a ladder longer than its shelf does, which is what the coin shelf did
+            // for months: four products over six rungs take 0, 2, 3 and 5, so two painted
+            // quantities are shipped, addressed, always-resident and drawn by nothing.
+            CollectionAssert.AreEqual(new[] { 0, 2, 3, 5 }, Rungs(shelf: 4, rungs: 6));
         }
 
         [Test]
@@ -112,6 +117,26 @@ namespace GlimmerGrove.Tests
             for (int rungs = 2; rungs <= 8; rungs++)
                 CollectionAssert.AreEquivalent(Sequence(rungs), Rungs(rungs, rungs),
                                                $"{rungs} products over {rungs} rungs");
+        }
+
+        [Test]
+        public void AShelfOfOneTimeProductsStillClimbsWhenItIsRankedRatherThanShortcut()
+        {
+            // The heart containers. All three are non-consumables, so the `Rung(product, n)`
+            // overload puts every one of them on the top rung — right for the starter bundle,
+            // which is a single offer with nothing to be compared against, and wrong for three
+            // products that *are* a ladder. `ShopArt.PaintContainer` shipped calling it that
+            // way, so the shelf selling 10, 20 and 50 hearts drew the largest bottle with five
+            // hearts three times over.
+            for (int tier = 1; tier <= 3; tier++)
+                Assert.AreEqual(2, ShopLadder.Rung(Ranked(tier, 3, oneTime: true), 3),
+                                "the one-time overload tops out, by design");
+
+            CollectionAssert.AreEqual(new[] { 0, 1, 2 },
+                                      new[] { ShopLadder.Rung(1, 3, 3),
+                                              ShopLadder.Rung(2, 3, 3),
+                                              ShopLadder.Rung(3, 3, 3) },
+                                      "ranked, the three vessels are three rungs");
         }
 
         static IEnumerable<int> Sequence(int n)

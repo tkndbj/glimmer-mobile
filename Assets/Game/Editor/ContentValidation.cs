@@ -14,6 +14,7 @@ using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using GlimmerGrove.Store;
 using GlimmerGrove.Utilities;
+using GlimmerGrove.Wards;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -265,6 +266,7 @@ namespace GlimmerGrove.EditorTools
             ValidateContinue(table.Continue, table.Store, result, verbose);
             ValidateDailyChests(table.Daily, table.Hearts, result, verbose);
             ValidateUtilities(table.Utilities, table.Daily, result, verbose);
+            ValidateWards(table.Wards, result, verbose);
             ValidateStreak(table.Streak, result, verbose);
             ValidateGolden(table.Golden, table, index, result, verbose);
             ValidateWheel(table.Ads, result, verbose);
@@ -822,6 +824,117 @@ namespace GlimmerGrove.EditorTools
                 Debug.Log($"[Glimmer] utility '{item.Id}': {UtilityKinds.Id(item.Kind)} " +
                           $"{item.Magnitude}, hold up to {item.MaxHeld}, " +
                           (item.ForSale ? $"{item.GemPrice} gem(s)" : "chests only"));
+        }
+
+        /// <summary>
+        /// The turret roster: its pictures, its keys, its ladder and its prices.
+        ///
+        /// <para>
+        /// <b>The art check is the one only this gate can make.</b> A turret's addresses are
+        /// <em>built</em> from its id (<c>WardModel.ArtFor</c>) — twenty models times four colours
+        /// is eighty names nobody would keep in step with a roster that is content — so
+        /// <c>Tools/verify/artnames.py</c>, which reads literals off a call site, cannot see any of
+        /// them. What replaces the literal is this: the roster is walked and every address it
+        /// implies is held to what is addressable, which catches a missing picture and a
+        /// misspelled id at once where a literal only ever catches the second. A missing one draws
+        /// a white rectangle two cells tall on the object a player looks at for a whole run
+        /// (invariant 7b).
+        /// </para>
+        /// <para>
+        /// <b>Errors rather than warnings</b>, because every one of these is a turret that cannot
+        /// be drawn, cannot be named, or cannot be bought — and all three look like a perfectly
+        /// authored file.
+        /// </para>
+        /// </summary>
+        static void ValidateWards(WardCatalog wards, ContentValidationResult result, bool verbose)
+        {
+            if (wards == null)
+            {
+                result.Errors.Add("progression.json produced no turret roster");
+                return;
+            }
+
+            bool starter = false;
+            var orders = new List<int>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+
+            foreach (var model in wards.Models)
+            {
+                if (!seen.Add(model.Id))
+                    result.Errors.Add($"wards names '{model.Id}' twice; an id is permanent and " +
+                                      "two entries under one would be two turrets in one save row");
+
+                starter |= model.IsStarter;
+                orders.Add(model.Order);
+
+                if (model.ForGems && model.ForCoins)
+                    result.Errors.Add($"turret '{model.Id}' is priced in both gems and credits; " +
+                                      "it carries one price or the other");
+
+                if (model.MinLevel > 0 && !model.ForCoins)
+                    result.Errors.Add($"turret '{model.Id}' asks for keeper level " +
+                                      $"{model.MinLevel} but is not priced in credits; the gate " +
+                                      "is permission to spend credits and means nothing beside " +
+                                      "gems");
+
+                if (!Addressed(AssetManifest.WardThumb(model.Id)))
+                    result.Errors.Add($"turret '{model.Id}' has no shelf thumbnail at " +
+                                      $"'{AssetManifest.WardThumb(model.Id)}'");
+
+                for (int i = 0; i < WardLine.Colours.Length; i++)
+                {
+                    char colour = WardLine.Colours[i];
+
+                    string body = AssetManifest.SiegeArt(model.ArtFor(colour));
+                    string fire = AssetManifest.SiegeArt(model.FireFor(colour));
+
+                    if (!Addressed(body))
+                        result.Errors.Add($"turret '{model.Id}' has no art at '{body}'; a picture " +
+                                          "is not content, so adding a turret is a build");
+
+                    if (!Addressed(fire))
+                        result.Errors.Add($"turret '{model.Id}' has no recoil reel at '{fire}'");
+                }
+
+            }
+
+            orders.Sort();
+            for (int i = 0; i < orders.Count; i++)
+                if (orders[i] != i + 1)
+                {
+                    result.Errors.Add("wards orders are not 1..N with no gaps and no ties; the " +
+                                      "shelf would reshuffle itself under a player on a retune");
+                    break;
+                }
+
+            if (!starter)
+                result.Errors.Add("wards lists no free turret; a player who has bought nothing " +
+                                  "would stand an empty line, and a siege with no line cannot be " +
+                                  "played");
+
+            if (!verbose) return;
+
+            Debug.Log($"[Glimmer] turrets: {wards.Count} on the shelf, four colours each - a run " +
+                      "loads the four a player stood on the line");
+        }
+
+        /// <summary>
+        /// Whether an address resolves to something in this project.
+        ///
+        /// <b>The file rather than the Addressables entry</b>, deliberately: registration is an
+        /// importer hook (invariant 7a) and can lag a freshly written folder by a domain reload,
+        /// where the picture either exists or does not. <c>AddressableAudit</c> is what proves the
+        /// registration, and it is a separate gate for exactly that reason.
+        /// </summary>
+        static bool Addressed(string address)
+        {
+            if (string.IsNullOrEmpty(address)) return false;
+
+            string root = "Assets/Game/" + address;
+
+            // A reel is a folder of numbered frames and answers under the folder's own name, which
+            // is how `AssetLibrary.Frames` reads one.
+            return File.Exists(root + ".png") || Directory.Exists(root);
         }
 
         static void CheckUtilityBand(ChestBand band, int chest, HashSet<string> known,
@@ -2597,6 +2710,15 @@ namespace GlimmerGrove.EditorTools
             {
                 Require(table, LevelDefinition.DefaultNameKey(id), $"level '{id}'", result);
                 Require(table, LevelDefinition.DefaultTaglineKey(id), $"level '{id}'", result);
+            }
+
+            // A turret's name and its one line are derived from its id like a companion's, so the
+            // source scan below cannot see them either - and unlike a companion's they are the
+            // only words the game ever says about what a turret does.
+            foreach (var model in ProgressionRules.Table.Wards.Models)
+            {
+                Require(table, model.NameKey, $"turret '{model.Id}'", result);
+                Require(table, model.NoteKey, $"turret '{model.Id}'", result);
             }
 
             // Companion names are derived from the id like a level's, so the source scan

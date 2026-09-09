@@ -4432,6 +4432,278 @@
   {
    "key": "ui.tip.siege_cog.body",
    "text": "A cog never lines up with anything.\n\nMatch a colour beside it and that colour's turret goes up a rank."
+  },
+  {
+   "key": "chapter.s02_endlesswatch.name",
+   "text": "The Endless Watch"
+  },
+  {
+   "key": "lesson.siege_thief.body",
+   "text": "It hovers over the field and takes gems away, leaving a sack that is no colour at all. Kill it and the whole field comes back."
+  },
+  {
+   "key": "lesson.siege_thief.title",
+   "text": "The thief"
+  },
+  {
+   "key": "lesson.siege_weaver.body",
+   "text": "It stops on the hill and locks your gems. A locked gem cannot be moved and cannot line up — kill the weaver and every web burns off."
+  },
+  {
+   "key": "lesson.siege_weaver.title",
+   "text": "The weaver"
+  },
+  {
+   "key": "level.s02_endless.name",
+   "text": "The Endless Watch"
+  },
+  {
+   "key": "level.s02_endless.tagline",
+   "text": "The waves never stop. Hold as long as you can."
+  },
+  {
+   "key": "track.infinite.name",
+   "text": "Infinite"
+  },
+  {
+   "key": "track.infinite.tagline",
+   "text": "the waves never stop — how far can you hold?"
+  },
+  {
+   "key": "track.main.name",
+   "text": "Normal"
+  },
+  {
+   "key": "track.main.tagline",
+   "text": "the chapters, one glade at a time"
+  },
+  {
+   "key": "ui.endless.best",
+   "text": "Best wave {0}"
+  },
+  {
+   "key": "ui.endless.reached",
+   "text": "You held to wave {0}."
+  },
+  {
+   "key": "ui.endless.wave",
+   "text": "Wave {0}"
+  },
+  {
+   "key": "ui.loadout.chest_only",
+   "text": "From chests"
+  },
+  {
+   "key": "ui.loadout.held",
+   "text": "{0} of {1} turrets"
+  },
+  {
+   "key": "ui.loadout.held_one",
+   "text": "You already have this one."
+  },
+  {
+   "key": "ui.loadout.items",
+   "text": "Kit"
+  },
+  {
+   "key": "ui.loadout.items_note",
+   "text": "Carried into every siege. Chests drop them; gems buy them."
+  },
+  {
+   "key": "ui.loadout.level",
+   "text": "Level {0}"
+  },
+  {
+   "key": "ui.loadout.level_note",
+   "text": "Reach keeper level {0} to buy this with credits."
+  },
+  {
+   "key": "ui.loadout.locked",
+   "text": "Not for sale"
+  },
+  {
+   "key": "ui.loadout.stand",
+   "text": "Stand here"
+  },
+  {
+   "key": "ui.loadout.standing",
+   "text": "On the line"
+  },
+  {
+   "key": "ui.loadout.title",
+   "text": "Loadout"
+  },
+  {
+   "key": "ui.loadout.wards",
+   "text": "Turrets"
+  },
+  {
+   "key": "ui.shop.short_coins",
+   "text": "{0} more credits needed"
+  },
+  {
+   "key": "ui.shop.short_gems",
+   "text": "{0} more gems needed"
+  },
+  {
+   "key": "ward.apex.name",
+   "text": "Apex"
+  },
+  {
+   "key": "ward.apex.note",
+   "text": "Its bolt arcs to three more at full weight."
+  },
+  {
+   "key": "ward.arcstorm.name",
+   "text": "Arcstorm"
+  },
+  {
+   "key": "ward.arcstorm.note",
+   "text": "Its bolt arcs on to two more, and harder."
+  },
+  {
+   "key": "ward.beacon.name",
+   "text": "Beacon"
+  },
+  {
+   "key": "ward.beacon.note",
+   "text": "Holds half again as much fuel, so a cascade banks."
+  },
+  {
+   "key": "ward.bolt.name",
+   "text": "Bolt"
+  },
+  {
+   "key": "ward.bolt.note",
+   "text": "The plain turret. Nothing extra, and never a weak shot."
+  },
+  {
+   "key": "ward.breaker.name",
+   "text": "Breaker"
+  },
+  {
+   "key": "ward.breaker.note",
+   "text": "Ignores shields, and bites through armour."
+  },
+  {
+   "key": "ward.cleaver.name",
+   "text": "Cleaver"
+  },
+  {
+   "key": "ward.cleaver.note",
+   "text": "Shields do not blunt it."
+  },
+  {
+   "key": "ward.ember.name",
+   "text": "Ember"
+  },
+  {
+   "key": "ward.ember.note",
+   "text": "What it hits goes on burning."
+  },
+  {
+   "key": "ward.glacier.name",
+   "text": "Glacier"
+  },
+  {
+   "key": "ward.glacier.note",
+   "text": "A deeper freeze, and it lasts."
+  },
+  {
+   "key": "ward.harpoon.name",
+   "text": "Harpoon"
+  },
+  {
+   "key": "ward.harpoon.note",
+   "text": "Runs the lane every fourth bolt, at full weight."
+  },
+  {
+   "key": "ward.howitzer.name",
+   "text": "Howitzer"
+  },
+  {
+   "key": "ward.howitzer.note",
+   "text": "A heavier splash across the whole box."
+  },
+  {
+   "key": "ward.lance.name",
+   "text": "Lance"
+  },
+  {
+   "key": "ward.lance.note",
+   "text": "Every fifth bolt runs the whole lane."
+  },
+  {
+   "key": "ward.leech.name",
+   "text": "Leech"
+  },
+  {
+   "key": "ward.leech.note",
+   "text": "Takes back most of a bolt's fuel on a kill."
+  },
+  {
+   "key": "ward.lighthouse.name",
+   "text": "Lighthouse"
+  },
+  {
+   "key": "ward.lighthouse.note",
+   "text": "Twice the fuel, so nothing spills."
+  },
+  {
+   "key": "ward.mortar.name",
+   "text": "Mortar"
+  },
+  {
+   "key": "ward.mortar.note",
+   "text": "Splashes everything standing beside what it hit."
+  },
+  {
+   "key": "ward.prism.name",
+   "text": "Prism"
+  },
+  {
+   "key": "ward.prism.note",
+   "text": "Strong against two colours instead of one."
+  },
+  {
+   "key": "ward.pyre.name",
+   "text": "Pyre"
+  },
+  {
+   "key": "ward.pyre.note",
+   "text": "Sets the hill alight and keeps it burning."
+  },
+  {
+   "key": "ward.rime.name",
+   "text": "Rime"
+  },
+  {
+   "key": "ward.rime.note",
+   "text": "What it hits walks slower for a moment."
+  },
+  {
+   "key": "ward.siphon.name",
+   "text": "Siphon"
+  },
+  {
+   "key": "ward.siphon.note",
+   "text": "A kill hands some fuel back."
+  },
+  {
+   "key": "ward.spark.name",
+   "text": "Spark"
+  },
+  {
+   "key": "ward.spark.note",
+   "text": "Its bolt arcs on to one more raider."
+  },
+  {
+   "key": "ward.spectrum.name",
+   "text": "Spectrum"
+  },
+  {
+   "key": "ward.spectrum.note",
+   "text": "Strong against two colours, and never runs dry of targets."
   }
  ]
 }

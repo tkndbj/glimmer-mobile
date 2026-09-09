@@ -101,7 +101,28 @@ WARD_HEALTH = 14
 #: costs is that a wave string's *length* is no longer its raider count, which is why `Layout`
 #: parses each wave once into `coming` and nothing here counts characters any more.
 SHIELD = "#"
-WAVE_LETTERS = RAIDER_LETTERS + SHIELD
+
+#: `SiegeLayout.Web` / `Loot` - the two raiders that stop on the hill and work on the *field*.
+#:
+#: A weaver locks cells (a locked gem cannot be swapped and cannot line up); a thief takes gems away
+#: altogether, leaving a sack that is no colour at all. Both are undone when the last of their kind
+#: is dead, and neither takes any ward health - which is why `threatens` has to be asked rather
+#: than assumed for a level that sends them.
+WEB = "~"
+LOOT = "$"
+
+#: Every prefix a wave may carry, and the kind each one names - `SiegeLayout.Modifiers`.
+#:
+#: A table rather than three branches, which is what the third modifier bought: the shield shipped
+#: as a special case in four places and every one of them would have had to be extended twice more,
+#: in step, by hand.
+MODIFIERS = {SHIELD: "bulwark", WEB: "weaver", LOOT: "thief"}
+
+WAVE_LETTERS = RAIDER_LETTERS + "".join(MODIFIERS)
+
+#: `SiegeLayout.Sack` - a cell holding a gem a thief has taken. Never authored, so it is not in
+#: `CELLS`: a file carrying one is a file written against rules this build does not have.
+SACK = "%"
 
 #: `SiegeTuning.BulwarkHealth` / `BulwarkMarch` / `BulwarkBlow`, and what a shield soaks.
 #:
@@ -111,6 +132,12 @@ WAVE_LETTERS = RAIDER_LETTERS + SHIELD
 BULWARK_HEALTH = 700
 BULWARK_BLOW = 2
 SHIELD_SOAK_TENTHS = 5
+
+#: `SiegeTuning.WeaverHealth` / `ThiefHealth`. Between a creeper and a bulwark: every bolt spent on
+#: one is a bolt not spent on something that can bring a ward down, so their health *is* the price
+#: of answering them.
+WEAVER_HEALTH = 620
+THIEF_HEALTH = 540
 
 #: `SiegeTuning`, one row per boss: health, what a spell takes off a ward, and what its spell
 #: *does*.
@@ -196,8 +223,9 @@ def runs(cells, width, height):
 class Layout(object):
     """`SiegeLayout`. `fault` is None when the level is readable, and the sentence when it is not."""
 
-    def __init__(self, grid, deal, wards, waves, boss=None, cogs=0):
+    def __init__(self, grid, deal, wards, waves, boss=None, cogs=0, endless=False):
         self.grid = grid
+        self.endless = bool(endless)
         self.deal = tidy(deal, LETTERS)
         self.cogs = max(0, int(cogs or 0))
         self.wards = list(tidy(wards, WARD_LETTERS))
@@ -220,6 +248,13 @@ class Layout(object):
         # how many raiders it holds - see `SHIELD`.
         self.coming = [read_wave(w, self.boss_kind, i == self.boss_wave)
                        for i, w in enumerate(self.waves)]
+
+        # `SiegeLayout.Hash` - FNV-1a over the authored field, 32-bit throughout. Where the
+        # refill stream starts, and (on an endless lane) what deals every wave.
+        h = 2166136261
+        for c in (grid.cells if grid is not None else ()):
+            h = ((h ^ ord(c)) * 16777619) & 0xFFFFFFFF
+        self.seed = h or 1
 
         self.fault = self._check(boss)
 
@@ -264,6 +299,12 @@ class Layout(object):
                 return ("the '%s' ward stands on a field that never deals a '%s' gem, so nothing "
                         "the player does could ever fuel it" % (ward, ward))
 
+        # An endless lane authors no waves - the muster is a rule (`endless_wave`) - so the two
+        # clauses that walk the authored list have nothing to walk. The field is still proved
+        # settled below, which is the one thing that matters either way.
+        if self.endless:
+            return self._settled()
+
         if not self.waves:
             return "nothing is coming, so there is nothing to hold"
 
@@ -280,6 +321,9 @@ class Layout(object):
                 return ("wave %d sends a '%s' %s and no ward on this line carries '%s', "
                         "so nothing here is strong against it" % (w + 1, colour, what, colour))
 
+        return self._settled()
+
+    def _settled(self):
         if runs(self.grid.cells, self.grid.w, self.grid.h):
             return ("three alike are already touching on this field, so it would go off before "
                     "anybody had moved a gem - a field is authored settled")
@@ -292,10 +336,10 @@ class Layout(object):
 
 
 def sweep(wave):
-    """Drops any `SHIELD` that has no colour letter after it - `SiegeLayout.Sweep`."""
+    """Drops any modifier that has no colour letter after it - `SiegeLayout.Sweep`."""
     kept = []
     for i, ch in enumerate(wave):
-        if ch == SHIELD and (i + 1 >= len(wave) or wave[i + 1] == SHIELD):
+        if ch in MODIFIERS and (i + 1 >= len(wave) or wave[i + 1] in MODIFIERS):
             continue
         kept.append(ch)
     return "".join(kept)
@@ -306,15 +350,15 @@ def read_wave(wave, boss_kind, boss):
     made = []
     i = 0
     while i < len(wave):
-        shielded = wave[i] == SHIELD
-        if shielded:
+        mark = wave[i] if wave[i] in MODIFIERS else None
+        if mark is not None:
             i += 1
             if i >= len(wave):
                 break
 
         letter = wave[i]
         kind = (boss_kind if boss
-                else "bulwark" if shielded
+                else MODIFIERS[mark] if mark is not None
                 else "brute" if letter.isupper() else "creeper")
         made.append((letter.lower(), kind))
         i += 1
@@ -345,6 +389,10 @@ def health_of(kind):
         return BOSSES[kind]["health"]
     if kind == "bulwark":
         return BULWARK_HEALTH
+    if kind == "weaver":
+        return WEAVER_HEALTH
+    if kind == "thief":
+        return THIEF_HEALTH
     return BRUTE_HEALTH if kind == "brute" else CREEPER_HEALTH
 
 
@@ -400,7 +448,14 @@ def threatens(layout):
 
 
 def blow_of(kind):
-    """`SiegeTuning.BlowOf` for the three things that reach the line."""
+    """`SiegeTuning.BlowOf`. Nought for anything that never reaches the line.
+
+    A boss holds the middle of the hill and casts from there; a weaver and a thief hold it and work
+    on the *field*. Neither swings, which is why `threatens` cannot assume a hill full of raiders is
+    a hill that can bring a ward down.
+    """
+    if kind in BOSSES or kind in ("weaver", "thief"):
+        return 0
     if kind == "bulwark":
         return BULWARK_BLOW
     return BRUTE_BLOW if kind == "brute" else CREEPER_BLOW
@@ -452,8 +507,11 @@ def readings(layout):
 
     standing = sum(1 for c in layout.grid.cells if c == COG)
 
+    weavers = sum(1 for line in layout.coming for _, k in line if k == "weaver")
+    thieves = sum(1 for line in layout.coming for _, k in line if k == "thief")
+
     return dict(waves=len(layout.waves), raiders=layout.raiders, brutes=brutes,
-                bulwarks=bulwarks,
+                bulwarks=bulwarks, weavers=weavers, thieves=thieves,
                 colours=len(colours), wards=len(layout.wards),
                 boss=layout.boss or "",
                 kind=layout.boss_kind or "",
@@ -461,3 +519,126 @@ def readings(layout):
                 cogs=layout.cogs, stood=standing,
                 threat=1 if threatens(layout) else 0,
                 swap=1 if any_swap(layout) else 0)
+
+
+# --------------------------------------------------------------------------- the endless lane
+#: `SiegeEndless` - a siege whose waves never stop, as a pure function of the wave number.
+#:
+#: **Mirrored here for the reason every rule in this project that exists twice is**: the offline
+#: gate has to be able to say what wave forty sends without running Unity, and a ramp that only
+#: existed in C# would be a ramp nothing checked. What is *not* mirrored is the run itself - an
+#: endless lane has no search and no par to derive (invariant 37a), so what a gate can prove about
+#: one is that its field is playable, its line is legal and its ramp sends nothing the line cannot
+#: answer.
+BOSS_EVERY = 4
+PAIRS_AFTER = 16
+PAIR_EVERY = 5
+
+ENDLESS_BOSSES = ("blightcaller", "warlord", "warbringer", "overlord")
+
+ENDLESS_PAIRS = ((0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3))
+
+HEALTH_STEP_TENTHS = 12
+BLOW_STEP_TENTHS = 4
+
+FIRST_WAVE, MOST_RAIDERS = 5, 22
+
+BRUTES_FROM, BULWARKS_FROM, WEAVERS_FROM, THIEVES_FROM = 3, 6, 9, 13
+
+
+def is_boss_wave(wave):
+    """`SiegeEndless.IsBossWave` - `wave` is 1-based."""
+    if wave < 1:
+        return False
+    if wave <= PAIRS_AFTER:
+        return wave % BOSS_EVERY == 0
+    return (wave - PAIRS_AFTER) % PAIR_EVERY == 0
+
+
+def bosses_at(wave):
+    """`SiegeEndless.BossesAt` - none, one, or two."""
+    if not is_boss_wave(wave):
+        return []
+
+    if wave <= PAIRS_AFTER:
+        return [ENDLESS_BOSSES[(wave // BOSS_EVERY - 1) % len(ENDLESS_BOSSES)]]
+
+    step = (wave - PAIRS_AFTER) // PAIR_EVERY - 1
+    a, b = ENDLESS_PAIRS[step % len(ENDLESS_PAIRS)]
+    return [ENDLESS_BOSSES[a], ENDLESS_BOSSES[b]]
+
+
+def surge_at(wave):
+    """`SiegeEndless.SurgeAt` - (health tenths, blow tenths)."""
+    wave = max(1, wave)
+    return (10 + (wave - 1) * HEALTH_STEP_TENTHS, 10 + (wave - 1) * BLOW_STEP_TENTHS)
+
+
+def _roll(seed, at):
+    """`SiegeEndless.Roll` - a hash rather than a stream, so each wave is dealt on its own."""
+    h = (seed ^ 2166136261) & 0xFFFFFFFF
+    h = (h ^ (at & 0xFFFFFFFF)) & 0xFFFFFFFF
+    h = (h * 16777619) & 0xFFFFFFFF
+    h ^= h >> 15
+    h = (h * 2246822519) & 0xFFFFFFFF
+    h ^= h >> 13
+    return h & 0xFFFFFFFF
+
+
+def _share(wave, frm, ceiling):
+    grown = (wave - frm) * 4
+    return ceiling if grown > ceiling else grown
+
+
+def _colour(colours, seed, wave, i):
+    return colours[_roll(seed, (wave * 977 + i * 61) & 0xFFFFFFFF) % len(colours)]
+
+
+#: The three that can bring a ward down - `SiegeTuning.EndangersTheLine`. A blightcaller takes a
+#: ward's *fire* and never its health, so it is the one boss an empty hill makes harmless.
+BITES = ("warlord", "warbringer", "overlord")
+
+
+def endless_wave(colours, seed, wave):
+    """`SiegeEndless.WaveAt` - what wave `wave` (1-based) sends, as (colour, kind) pairs."""
+    wave = max(1, wave)
+    bosses = bosses_at(wave)
+
+    size = min(MOST_RAIDERS, MAX_RAIDERS, FIRST_WAVE + (wave - 1) // 2)
+
+    if bosses:
+        made = [(_colour(colours, seed, wave, i), kind) for i, kind in enumerate(bosses)]
+
+        # A boss that takes no health arrives with an escort, or it is a wave nothing can go
+        # wrong on - see `SiegeEndless.WaveAt`.
+        if any(kind in BITES for kind in bosses):
+            return made
+
+        escort = max(0, min(size, MAX_RAIDERS - len(bosses)))
+
+        for i in range(len(bosses), len(bosses) + escort):
+            made.append((_colour(colours, seed, wave, i), _kind_at(wave, i, seed)))
+
+        return made
+
+    made = []
+
+    for i in range(size):
+        made.append((_colour(colours, seed, wave, i), _kind_at(wave, i, seed)))
+
+    return made
+
+
+def _kind_at(wave, i, seed):
+    """`SiegeEndless.KindAt`."""
+    roll = _roll(seed, (wave * 131 + i * 17) & 0xFFFFFFFF)
+
+    if wave >= THIEVES_FROM and i == 0:
+        return "thief"
+    if wave >= WEAVERS_FROM and i == 1:
+        return "weaver"
+    if wave >= BULWARKS_FROM and roll % 100 < _share(wave, BULWARKS_FROM, 30):
+        return "bulwark"
+    if wave >= BRUTES_FROM and roll % 100 < _share(wave, BRUTES_FROM, 55):
+        return "brute"
+    return "creeper"

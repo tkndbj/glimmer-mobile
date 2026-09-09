@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
+using GlimmerGrove.Progression;
 using GlimmerGrove.Homestead;
 
 namespace GlimmerGrove.EditorTools
@@ -115,6 +116,14 @@ namespace GlimmerGrove.EditorTools
             // when to add it, because the first animated decor piece would otherwise import
             // as loose sprites with no label and be unloadable with no error anywhere.
             foreach (var request in AssetManifest.AllGroveAssets(homestead))
+                if (request.Kind == AssetKind.SpriteSet) folders.Add(request.Address);
+
+            // The turret roster, for the grove's reason with a sharper edge. A run asks for the
+            // four reels a player stood on the line (`WardLine.Art`), and no chapter asks for the
+            // other seventy-six - so a set built from the chapters alone leaves nineteen turrets'
+            // recoil frames importing as loose sprites with no label, unloadable, with the audit
+            // as the only thing that says so.
+            foreach (var request in AssetManifest.AllWardAssets(ProgressionRules.Table.Wards))
                 if (request.Kind == AssetKind.SpriteSet) folders.Add(request.Address);
 
             return folders;

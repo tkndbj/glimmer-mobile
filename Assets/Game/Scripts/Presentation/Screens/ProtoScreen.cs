@@ -287,6 +287,31 @@ namespace GlimmerGrove
         protected internal override ContinueUnit MeasuredIn => ContinueUnit.Moves;
 
         /// <summary>
+        /// The count this run is graded on.
+        ///
+        /// <para>
+        /// <b>Moves, everywhere but one lane.</b> Every board on this shape is graded on something
+        /// the player <em>spends</em>, so fewer is better and par is a floor. A run that can never
+        /// be won has nothing to spend against — what it is graded on is how far it got — so a
+        /// mode with such a lane answers with that instead, and the direction inverts with it
+        /// (<c>LevelTuning.Climbs</c>).
+        /// </para>
+        /// <para>
+        /// A hook rather than a branch here, because which count a mode is graded on is the mode's
+        /// business and this class deliberately knows nothing about any of them.
+        /// </para>
+        /// </summary>
+        protected virtual int Scored(ProtoRun run) => run.Spent;
+
+        /// <summary>
+        /// Called once with the graded count, before anything is recorded.
+        ///
+        /// The hook a mode uses to keep a reading of its own — an endless lane's high-water wave,
+        /// which is a floor rather than a grade and so has nowhere else to live.
+        /// </summary>
+        protected virtual void Finished(int count) { }
+
+        /// <summary>
         /// How much allowance has to be restored before a bought move is a usable move.
         ///
         /// Nought whenever an offer is honest at all, and that is not the same as "always nought".
@@ -332,8 +357,10 @@ namespace GlimmerGrove
 
             var run = _view.Run;
 
-            int moves = Math.Max(1, run.Spent);
+            int moves = Math.Max(1, Scored(run));
             int stars = Level.Tuning.StarsFor(moves);
+
+            Finished(moves);
 
             // No route, deliberately, and it is the weave's argument: the victory panel's route
             // bar compares a run against the board's own carved solution, and these boards have

@@ -94,7 +94,7 @@ namespace GlimmerGrove.Persistence
         /// star rating on one run and their move count on another.
         /// </summary>
         public LevelRecord WithRun(int stars, int moves, long nowUnix)
-            => WithRun(stars, moves, nowUnix, Social.LevelStats.None);
+            => WithRun(stars, moves, nowUnix, Social.LevelStats.None, false);
 
         /// <summary>
         /// The same fold, also ranking the result against the published population.
@@ -116,9 +116,34 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// </summary>
         public LevelRecord WithRun(int stars, int moves, long nowUnix, Social.LevelStats population)
+            => WithRun(stars, moves, nowUnix, population, false);
+
+        /// <summary>
+        /// The same fold on a level graded on a count that <em>climbs</em> rather than falls.
+        ///
+        /// <para>
+        /// <b>An endless run is the only thing in this game where a bigger count is a better
+        /// one</b>, so <c>bestMoves</c> keeps the larger rather than the smaller. Everything else
+        /// about the fold is unchanged, which is the point: an endless level's record is an
+        /// ordinary record, so its stars, its clears, its merge and its rewards are the ones every
+        /// glade already has (invariant 20a).
+        /// </para>
+        /// <para>
+        /// <b>The standing is not taken on a climbing level</b>, and that is a decision rather
+        /// than an omission: <c>Social.LevelStats.PercentSlower</c> ranks a move count where fewer
+        /// is better, so feeding it a wave count would publish a percentile that means the
+        /// opposite of what it says. An endless run's standing belongs on a board of its own.
+        /// </para>
+        /// </summary>
+        public LevelRecord WithRun(int stars, int moves, long nowUnix,
+                                   Social.LevelStats population, bool climbs)
         {
             int bestStars = stars > Stars ? stars : Stars;
-            int bestMoves = BestMoves == 0 || (moves > 0 && moves < BestMoves) ? moves : BestMoves;
+            int bestMoves = climbs
+                ? (moves > BestMoves ? moves : BestMoves)
+                : (BestMoves == 0 || (moves > 0 && moves < BestMoves) ? moves : BestMoves);
+
+            if (climbs) population = Social.LevelStats.None;
             long firstCleared = FirstClearedUnix == 0 && stars > 0 ? nowUnix : FirstClearedUnix;
 
             return new LevelRecord(Id, bestStars, bestMoves, Clears + 1, firstCleared, nowUnix,
@@ -165,8 +190,13 @@ namespace GlimmerGrove.Persistence
             return now > held ? now : held;
         }
 
-        public bool Improves(int stars, int moves)
-            => stars > Stars || BestMoves == 0 || (moves > 0 && moves < BestMoves);
+        public bool Improves(int stars, int moves) => Improves(stars, moves, false);
+
+        /// <summary>Whether this run beat what is stored, under this level's own direction.</summary>
+        public bool Improves(int stars, int moves, bool climbs)
+            => climbs
+             ? stars > Stars || moves > BestMoves
+             : stars > Stars || BestMoves == 0 || (moves > 0 && moves < BestMoves);
 
         public LevelRecordDto ToDto() => new LevelRecordDto
         {

@@ -57,10 +57,25 @@ namespace GlimmerGrove.Layout
 
         // ------------------------------------------------------------------ the ribbon
         /// <summary>The bonus ribbon's cloth, and the angle it is pinned at.</summary>
-        public const float RibbonWidth = 230f, RibbonHeight = 62f, RibbonTilt = -8f;
+        // The kit's ribbon is a banner with two tails, so the flat flag words sit on is only
+        // part of it: the panel is about 69% of the height and, where the tails cut in, 84% of
+        // the width. Both bounds bind. At 230x62, the size cut for the thin ribbon this project
+        // drew itself, the panel was ~40 units tall and "+23% EXTRA" ran off it onto the tails;
+        // at 300x112 the text fitted and the thing was a slab. 240x82 is where the widest string
+        // a shelf can produce ("+68% EXTRA", 153 units at 25pt) sits inside the panel with room,
+        // and it is the smallest that does. Both faults came from a device and neither is
+        // visible to any gate here — `render_shop.py` draws ribbons now for that reason.
+        //
+        // Nothing downstream needed touching, which is what these derived numbers are for:
+        // `RibbonReach` grows with the width, so `SealInset` walks the badge further in by
+        // itself to keep clear of the next column's now-wider ribbon.
+        public const float RibbonWidth = 240f, RibbonHeight = 82f, RibbonTilt = -8f;
 
         /// <summary>Its centre, in from the plate's left edge and down from the plate's top.</summary>
-        public const float RibbonInset = 96f, RibbonDrop = 26f;
+        // A ribbon is centred `RibbonDrop` below the plate's top edge, so half its height
+        // hangs above the card. Roughly two fifths of the height is what keeps that overhang
+        // looking deliberate rather than like a ribbon that has come loose.
+        public const float RibbonInset = 96f, RibbonDrop = 34f;
 
         /// <summary>
         /// How far the pinned ribbon reaches either side of its own centre.

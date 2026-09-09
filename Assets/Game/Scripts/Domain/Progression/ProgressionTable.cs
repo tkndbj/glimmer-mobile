@@ -6,6 +6,7 @@ using GlimmerGrove.Daily;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Store;
 using GlimmerGrove.Utilities;
+using GlimmerGrove.Wards;
 using UnityEngine;
 
 namespace GlimmerGrove.Progression
@@ -86,7 +87,8 @@ namespace GlimmerGrove.Progression
                          GoldenTable golden, HeartRuleTable hearts, HintRuleTable hints,
                          StoreCatalog store,
                          AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
-                         ContinueTable carryOn, UtilityCatalog utilities)
+                         ContinueTable carryOn, UtilityCatalog utilities,
+                         WardCatalog wards)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -102,6 +104,7 @@ namespace GlimmerGrove.Progression
             ChapterGate = chapterGate ?? ChapterGateTable.Default;
             Continue = carryOn ?? ContinueTable.Default;
             Utilities = utilities ?? UtilityCatalog.Default;
+            Wards = wards ?? WardCatalog.Default;
         }
 
         /// <summary>
@@ -123,6 +126,16 @@ namespace GlimmerGrove.Progression
         /// See <see cref="UtilityCatalog"/>.
         /// </summary>
         public UtilityCatalog Utilities { get; }
+
+        /// <summary>
+        /// The turret roster, published with the curve for the utilities' reason and one more.
+        ///
+        /// A turret is bought with credits or gems, and a credit price is gated on a keeper level
+        /// that this same table decides — so a client holding a retuned price against an untuned
+        /// XP curve would have a shelf whose gates do not line up with the ladder they are
+        /// measured against. See <see cref="WardCatalog"/>.
+        /// </summary>
+        public WardCatalog Wards { get; }
 
         /// <summary>
         /// What rewarded ads pay, published with the curve for the same reason the chest
@@ -247,7 +260,8 @@ namespace GlimmerGrove.Progression
             prompts: AccountPromptRuleTable.Default,
             chapterGate: ChapterGateTable.Default,
             carryOn: ContinueTable.Default,
-            utilities: UtilityCatalog.Default);
+            utilities: UtilityCatalog.Default,
+            wards: WardCatalog.Default);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -461,9 +475,15 @@ namespace GlimmerGrove.Progression
             // catalog is a working bar.
             var utilities = UtilityCatalog.Resolve(dto.utilities, problems);
 
+            // And the roster the player's line is drawn from. Read here rather than beside the
+            // shop because a turret is not a product: it is bought out of the derived balances
+            // this table already governs, and its credit price is gated on a keeper level this
+            // table's own curve decides.
+            var wards = WardCatalog.Resolve(dto.wards, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
-                          store, prompts, chapterGate, carryOn, utilities);
+                          store, prompts, chapterGate, carryOn, utilities, wards);
             return true;
         }
 
@@ -475,7 +495,8 @@ namespace GlimmerGrove.Progression
                                       HeartRuleTable hearts, HintRuleTable hints,
                                       StoreCatalog store,
                                       AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
-                                      ContinueTable carryOn, UtilityCatalog utilities)
+                                      ContinueTable carryOn, UtilityCatalog utilities,
+                                      WardCatalog wards)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -494,7 +515,7 @@ namespace GlimmerGrove.Progression
 
             return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
                                         golden, hearts, hints, store, prompts,
-                                        chapterGate, carryOn, utilities);
+                                        chapterGate, carryOn, utilities, wards);
         }
     }
 }

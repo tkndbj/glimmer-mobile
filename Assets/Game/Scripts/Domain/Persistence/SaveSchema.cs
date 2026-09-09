@@ -302,8 +302,40 @@ namespace GlimmerGrove.Persistence
         ///      no sentinel — the property that makes every other id-keyed section here
         ///      mergeable. See <see cref="Utilities.UtilityStock"/>.
         ///      </para>
+        /// v23 - the ward roster and the line it stands in
+        ///      (<see cref="SaveFileDto.wardsOwned"/>, <see cref="SaveFileDto.wardLoadout"/>),
+        ///      and how far an endless run has ever reached
+        ///      (<see cref="SaveFileDto.endlessBest"/>).
+        ///      <para>
+        ///      <b>Three fields and three different shapes, which is invariant 16's split asked
+        ///      of one feature.</b> A turret <em>bought</em> is an entitlement, so
+        ///      <c>wardsOwned</c> is a union-joined set of permanent ids and a starter is never
+        ///      written down (16e's rule about starter land, and 16f's about the starter
+        ///      companion). Which turret stands on which colour is an <em>instruction</em>, so
+        ///      <c>wardLoadout</c> is merged by recency and carries its own stamp - invariant
+        ///      11c to the letter, since the choice's date and never the file's is what makes
+        ///      the comparison mean what it says, and a player who has never arranged the line
+        ///      stores nothing rather than storing the default. And how deep an endless run got
+        ///      is an <em>achievement</em>, so <c>endlessBest</c> is one monotonic integer per
+        ///      level id joined by <c>max</c>, which is 14a's floor exactly.
+        ///      </para>
+        ///      <para>
+        ///      <b>Nothing here is adjudicated, and the reason is the same one invariant 39
+        ///      gives for the utilities.</b> A forged turret buys a silhouette and an addition
+        ///      to a bolt; it can never reach a public number, because a grove's worth is
+        ///      derived from what is <em>held</em> in the grove (19a) and the line is not part
+        ///      of it. The money half is defended where money always is - <c>submitSpends</c>
+        ///      refuses a debit the server-derived balance cannot cover - so there is nothing
+        ///      here for the server to recompute. An endless best is likewise a reading rather
+        ///      than a payment: it pays no credits and no XP, because those derive from the star
+        ///      ledger and nothing else (invariant 9).
+        ///      </para>
+        ///      <para>
+        ///      Absent is the same fact as "bought nothing, chose nothing, never played one", so
+        ///      a v22 file needs no migration and no sentinel.
+        ///      </para>
         /// </summary>
-        public const int Version = 22;
+        public const int Version = 23;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -604,6 +636,74 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// </summary>
         public UtilityStockDto[] utilityStock;
+
+        /// <summary>
+        /// The turrets this player has bought, sorted by id.
+        ///
+        /// <para>
+        /// <b>A union-joined set of permanent ids</b>, which is invariant 15's shape and its
+        /// reason: buying is irreversible, so between two devices the player owns whatever either
+        /// bought. A count could not be merged at all (11b) and a per-turret flag could not tell
+        /// "not bought" from "written before this turret existed".
+        /// </para>
+        /// <para>
+        /// <b>A free turret is never written here.</b> "Absent" and "owns nothing but the one
+        /// everybody starts with" stay one fact, which is what stops a later drop that puts a
+        /// price on something confiscating it from whoever was only ever holding the default -
+        /// starter land's rule (16e) and the starter companion's (16f).
+        /// </para>
+        /// <para>
+        /// Unknown ids are carried through untouched, for <see cref="tipsSeen"/>'s reason: a
+        /// turret bought on a newer build must not be confiscated by a trip through an older one,
+        /// and here that could be taking back something bought with gems.
+        /// </para>
+        /// </summary>
+        public string[] wardsOwned;
+
+        /// <summary>
+        /// Which turret the player has stood on each colour. Never longer than four rows.
+        ///
+        /// <para>
+        /// <b>The one part of this feature a merge can lose something from</b>, because it is an
+        /// instruction rather than an achievement (invariant 16's split). It is joined by recency
+        /// against <see cref="wardLoadoutSetUnix"/> - the choice's own stamp and never the file's
+        /// <c>updatedUnix</c>, which <c>SaveService.Snapshot</c> sets to now and which therefore
+        /// made the local side newer in every comparison it ever took part in (11c).
+        /// </para>
+        /// <para>
+        /// <b>A colour the player has never chosen for writes no row</b>, so a device with no
+        /// opinion is distinguishable from one that has made a choice - which is the other half of
+        /// 11c, and the half that lost a keeper's name on every device for a year.
+        /// </para>
+        /// </summary>
+        public WardSlotDto[] wardLoadout;
+
+        /// <summary>
+        /// When the line was last arranged, or nought for a player who never has.
+        ///
+        /// Its own stamp rather than the file's, for <see cref="WalletDto.displayNameSetUnix"/>'s
+        /// reason (invariant 11c).
+        /// </summary>
+        public long wardLoadoutSetUnix;
+
+        /// <summary>
+        /// The furthest wave an endless run has ever reached, per level.
+        ///
+        /// <para>
+        /// <b>One monotonic integer per key, joined by <c>max</c></b>, which is invariant 14a's
+        /// floor exactly - the shape an event track's collection already uses, and the only shape
+        /// invariant 11b permits for a number two devices both write. A best only ever rises, so
+        /// the merge has nothing to decide.
+        /// </para>
+        /// <para>
+        /// <b>It is not a reward and pays nothing.</b> Credits and XP derive from the star ledger
+        /// and from nothing else (invariant 9), so an endless run's depth buys a place on a board
+        /// and a number on a map node. That is what keeps it safe to let the client write: a
+        /// forged wave count moves a reading, never a balance - and the board that reads it is
+        /// clamped by <c>publishGrove</c> the way every public number here is (19a).
+        /// </para>
+        /// </summary>
+        public EndlessBestDto[] endlessBest;
 
         /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before
@@ -1143,6 +1243,40 @@ namespace GlimmerGrove.Persistence
     /// See <see cref="Utilities.UtilityStock"/>.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// One colour of the ward line, and the turret standing on it.
+    ///
+    /// <b>A pair rather than a positional array</b>, because a positional array cannot tell "the
+    /// player chose nothing for blue" from "blue is the third element and this file was written by
+    /// a build with three colours". A row that is absent is a colour that falls back to the
+    /// starter, which is exactly the state a fresh account is in.
+    /// </summary>
+    [Serializable]
+    public sealed class WardSlotDto
+    {
+        /// <summary>One character: <c>r</c>, <c>g</c>, <c>b</c> or <c>y</c>.</summary>
+        public string colour;
+
+        /// <summary>The turret's permanent id, as authored in <c>progression.json</c>.</summary>
+        public string ward;
+    }
+
+    /// <summary>
+    /// The furthest wave one endless level has ever reached.
+    ///
+    /// Monotonic, so the merge is a per-id <c>max</c> and nothing about it has to be adjudicated
+    /// (invariant 14a).
+    /// </summary>
+    [Serializable]
+    public sealed class EndlessBestDto
+    {
+        /// <summary>The level's permanent id. Invariant 1 reaches it.</summary>
+        public string level;
+
+        /// <summary>Waves cleared. Only ever rises.</summary>
+        public int wave;
+    }
+
     [Serializable]
     public sealed class UtilityStockDto
     {

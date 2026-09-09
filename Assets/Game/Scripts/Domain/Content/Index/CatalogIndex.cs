@@ -41,8 +41,8 @@ namespace GlimmerGrove.Content
         readonly Events.GroveEvent[] _events;
 
         readonly Dictionary<LevelId, GameMode> _levelMode;
-        readonly Dictionary<GameMode, LevelId[]> _byMode;
-        readonly Dictionary<GameMode, ChapterIndexEntry[]> _chaptersByMode;
+        readonly Dictionary<ModeLane, LevelId[]> _byLane;
+        readonly Dictionary<ModeLane, ChapterIndexEntry[]> _chaptersByLane;
         readonly GameMode[] _modes;
 
         internal CatalogIndex(ChapterIndexEntry[] chapters, LevelId[] levelIds,
@@ -51,8 +51,8 @@ namespace GlimmerGrove.Content
                               AvatarDefinition[] companions,
                               Events.GroveEvent[] events,
                               Dictionary<LevelId, GameMode> levelMode,
-                              Dictionary<GameMode, List<LevelId>> byMode,
-                              Dictionary<GameMode, List<ChapterIndexEntry>> chaptersByMode)
+                              Dictionary<ModeLane, List<LevelId>> byLane,
+                              Dictionary<ModeLane, List<ChapterIndexEntry>> chaptersByLane)
         {
             _chapters = chapters;
             _levelIds = levelIds;
@@ -65,22 +65,32 @@ namespace GlimmerGrove.Content
             _chapterById = new Dictionary<ChapterId, ChapterIndexEntry>(chapters.Length);
             foreach (var c in chapters) _chapterById[c.Id] = c;
 
-            _byMode = Freeze(byMode);
-            _chaptersByMode = Freeze(chaptersByMode);
+            _byLane = Freeze(byLane);
+            _chaptersByLane = Freeze(chaptersByLane);
 
             // Offered in the order the modes shipped rather than in the order chapters happen
             // to appear, so the switcher never reorders itself under a thumb reaching for the
             // entry that was there yesterday. A mode with no chapters in this catalog is not
             // on the list at all - an empty tab is a promise the content did not keep.
+            // A mode is on the switcher when it has a chapter on <em>any</em> track, so a mode
+            // that shipped nothing but an endless lane would still be offered. Nothing does that
+            // today, and the alternative - listing a mode only for its main ladder - would be a
+            // rule that silently decides a content question.
             var modes = new List<GameMode>();
             foreach (var mode in GameMode.Shipped)
-                if (_chaptersByMode.ContainsKey(mode)) modes.Add(mode);
+                foreach (var track in GameTrack.Shipped)
+                    if (_chaptersByLane.ContainsKey(new ModeLane(mode, track)))
+                    {
+                        modes.Add(mode);
+                        break;
+                    }
+
             _modes = modes.ToArray();
         }
 
-        static Dictionary<GameMode, T[]> Freeze<T>(Dictionary<GameMode, List<T>> source)
+        static Dictionary<ModeLane, T[]> Freeze<T>(Dictionary<ModeLane, List<T>> source)
         {
-            var frozen = new Dictionary<GameMode, T[]>();
+            var frozen = new Dictionary<ModeLane, T[]>();
             if (source == null) return frozen;
 
             foreach (var pair in source) frozen[pair.Key] = pair.Value.ToArray();
@@ -133,13 +143,53 @@ namespace GlimmerGrove.Content
         public GameMode ModeOf(LevelId level)
             => _levelMode.TryGetValue(level, out var mode) ? mode : GameMode.Default;
 
-        /// <summary>One mode's chapters, in play order.</summary>
+        /// <summary>
+        /// One mode's chapters on the <b>ordinary</b> ladder, in play order.
+        ///
+        /// <b>The main track and nothing else, deliberately.</b> Everything that means "what comes
+        /// next" walks this - the map's arrows, the chapter gate, where the player is up to - so
+        /// answering with an endless chapter too would let a lane whose waves never stop gate a
+        /// real chapter on stars nobody can earn. A caller that wants another lane asks for it by
+        /// name (<see cref="ChaptersIn(GameMode, GameTrack)"/>).
+        /// </summary>
         public IReadOnlyList<ChapterIndexEntry> ChaptersIn(GameMode mode)
-            => _chaptersByMode.TryGetValue(mode, out var list) ? list : NoChapters;
+            => ChaptersIn(mode, GameTrack.Main);
 
-        /// <summary>One mode's glades, flattened into play order across its chapters.</summary>
-        public IReadOnlyList<LevelId> LevelsIn(GameMode mode)
-            => _byMode.TryGetValue(mode, out var list) ? list : NoLevels;
+        /// <summary>One lane's chapters, in play order.</summary>
+        public IReadOnlyList<ChapterIndexEntry> ChaptersIn(GameMode mode, GameTrack track)
+            => _chaptersByLane.TryGetValue(new ModeLane(mode, track), out var list)
+             ? list : NoChapters;
+
+        /// <summary>One mode's glades on the ordinary ladder, flattened into play order.</summary>
+        public IReadOnlyList<LevelId> LevelsIn(GameMode mode) => LevelsIn(mode, GameTrack.Main);
+
+        /// <summary>One lane's glades, flattened into play order across its chapters.</summary>
+        public IReadOnlyList<LevelId> LevelsIn(GameMode mode, GameTrack track)
+            => _byLane.TryGetValue(new ModeLane(mode, track), out var list) ? list : NoLevels;
+
+        /// <summary>
+        /// Which ladders this mode has chapters on, in the order a switcher offers them.
+        ///
+        /// <b>A written order rather than whatever the dictionary walks</b>, which is invariant
+        /// 38a's rule for the mode switcher: a control that reorders itself moves the entry
+        /// somebody reaches for without looking.
+        /// </summary>
+        public IReadOnlyList<GameTrack> TracksIn(GameMode mode)
+        {
+            var found = new List<GameTrack>(GameTrack.Shipped.Length);
+
+            foreach (var track in GameTrack.Shipped)
+                if (_chaptersByLane.ContainsKey(new ModeLane(mode, track))) found.Add(track);
+
+            return found;
+        }
+
+        /// <summary>Which ladder this chapter is on. The main one for a chapter we do not know.</summary>
+        public GameTrack TrackOf(ChapterId chapter)
+            => FindChapter(chapter)?.Track ?? GameTrack.Main;
+
+        /// <summary>Which ladder this level's chapter is on.</summary>
+        public GameTrack TrackOf(LevelId level) => TrackOf(ChapterOf(level));
 
         /// <summary>The chapter a mode's map opens on when nothing else says otherwise.</summary>
         public ChapterIndexEntry FirstChapterIn(GameMode mode)
@@ -149,7 +199,8 @@ namespace GlimmerGrove.Content
         }
 
         LevelId[] Lane(LevelId id)
-            => _byMode.TryGetValue(ModeOf(id), out var lane) ? lane : NoLevels;
+            => _byLane.TryGetValue(new ModeLane(ModeOf(id), TrackOf(id)), out var lane)
+             ? lane : NoLevels;
 
         /// <summary>
         /// The companion roster, in display order.
@@ -206,7 +257,7 @@ namespace GlimmerGrove.Content
             var entry = FindChapter(id);
             if (entry == null) return -1;
 
-            var lane = ChaptersIn(entry.Mode);
+            var lane = ChaptersIn(entry.Mode, entry.Track);
             for (int i = 0; i < lane.Count; i++)
                 if (lane[i].Id == id) return i;
             return -1;
@@ -222,7 +273,7 @@ namespace GlimmerGrove.Content
             var entry = FindChapter(id);
             if (entry == null) return null;
 
-            var lane = ChaptersIn(entry.Mode);
+            var lane = ChaptersIn(entry.Mode, entry.Track);
             int i = ChapterOrderOf(id);
             if (i < 0) return null;
 

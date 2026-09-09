@@ -335,6 +335,15 @@ namespace GlimmerGrove.EditorTools
                 if (!string.IsNullOrEmpty(entry.mode))
                     sb.AppendLine($"      \"mode\": \"{entry.mode}\",");
 
+                // Written only when it says something, for `mode`'s reason: an omitted track reads
+                // as the main ladder, so every chapter authored before tracks existed round-trips
+                // byte for byte. **It is authored rather than derived**, unlike `mode` — which
+                // ladder a chapter sits on is not a fact about its levels (an endless siege and an
+                // ordinary one are the same block), so there is nothing to derive it from and the
+                // round trip is what stands in front of losing it.
+                if (!string.IsNullOrEmpty(entry.track))
+                    sb.AppendLine($"      \"track\": \"{entry.track}\",");
+
                 sb.AppendLine("      \"levels\": [");
 
                 var levels = entry.levels ?? new string[0];

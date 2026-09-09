@@ -482,5 +482,165 @@
         "order": 4
       }
     ]
+  },
+  "wards": {
+    "models": [
+      {
+        "id": "bolt",
+        "ability": "none",
+        "order": 1
+      },
+      {
+        "id": "spark",
+        "ability": "chain",
+        "magnitude": 5,
+        "extent": 1,
+        "coinPrice": 1200,
+        "minLevel": 2,
+        "order": 2
+      },
+      {
+        "id": "mortar",
+        "ability": "splash",
+        "magnitude": 5,
+        "extent": 1,
+        "coinPrice": 1800,
+        "minLevel": 3,
+        "order": 3
+      },
+      {
+        "id": "rime",
+        "ability": "frost",
+        "magnitude": 4,
+        "extent": 15,
+        "coinPrice": 2400,
+        "minLevel": 4,
+        "order": 4
+      },
+      {
+        "id": "lance",
+        "ability": "pierce",
+        "magnitude": 8,
+        "extent": 5,
+        "coinPrice": 3200,
+        "minLevel": 5,
+        "order": 5
+      },
+      {
+        "id": "cleaver",
+        "ability": "rend",
+        "magnitude": 5,
+        "coinPrice": 4000,
+        "minLevel": 6,
+        "order": 6
+      },
+      {
+        "id": "siphon",
+        "ability": "siphon",
+        "magnitude": 4,
+        "coinPrice": 5000,
+        "minLevel": 8,
+        "order": 7
+      },
+      {
+        "id": "ember",
+        "ability": "ember",
+        "magnitude": 3,
+        "extent": 30,
+        "coinPrice": 6000,
+        "minLevel": 10,
+        "order": 8
+      },
+      {
+        "id": "beacon",
+        "ability": "beacon",
+        "magnitude": 5,
+        "coinPrice": 7500,
+        "minLevel": 12,
+        "order": 9
+      },
+      {
+        "id": "prism",
+        "ability": "prism",
+        "coinPrice": 9000,
+        "minLevel": 14,
+        "order": 10
+      },
+      {
+        "id": "arcstorm",
+        "ability": "chain",
+        "magnitude": 7,
+        "extent": 2,
+        "gemPrice": 600,
+        "order": 11
+      },
+      {
+        "id": "howitzer",
+        "ability": "splash",
+        "magnitude": 7,
+        "extent": 1,
+        "gemPrice": 700,
+        "order": 12
+      },
+      {
+        "id": "glacier",
+        "ability": "frost",
+        "magnitude": 6,
+        "extent": 25,
+        "gemPrice": 800,
+        "order": 13
+      },
+      {
+        "id": "harpoon",
+        "ability": "pierce",
+        "magnitude": 10,
+        "extent": 4,
+        "gemPrice": 900,
+        "order": 14
+      },
+      {
+        "id": "breaker",
+        "ability": "rend",
+        "magnitude": 10,
+        "gemPrice": 1000,
+        "order": 15
+      },
+      {
+        "id": "leech",
+        "ability": "siphon",
+        "magnitude": 8,
+        "gemPrice": 1100,
+        "order": 16
+      },
+      {
+        "id": "pyre",
+        "ability": "ember",
+        "magnitude": 6,
+        "extent": 40,
+        "gemPrice": 1200,
+        "order": 17
+      },
+      {
+        "id": "lighthouse",
+        "ability": "beacon",
+        "magnitude": 10,
+        "gemPrice": 1400,
+        "order": 18
+      },
+      {
+        "id": "spectrum",
+        "ability": "prism",
+        "gemPrice": 1600,
+        "order": 19
+      },
+      {
+        "id": "apex",
+        "ability": "chain",
+        "magnitude": 10,
+        "extent": 3,
+        "gemPrice": 2000,
+        "order": 20
+      }
+    ]
   }
 }

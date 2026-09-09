@@ -33,7 +33,17 @@ namespace GlimmerGrove
     {
         const string Prefix = "glimmer_map_chapter_";
 
-        static string KeyFor(GameMode mode) => Prefix + mode.Value;
+        /// <summary>
+        /// One slot per <em>lane</em> rather than per mode.
+        ///
+        /// <b>The track is part of the key, and it has to be.</b> A mode's ordinary ladder and its
+        /// endless lane are two different maps of the same place; one shared slot would make
+        /// stepping across the track switcher and back land on the other lane's chapter, which is
+        /// exactly the fault this class exists to fix, one level finer. The main track keeps the
+        /// bare key it always had, so nothing anybody has already remembered is lost.
+        /// </summary>
+        static string KeyFor(GameMode mode, GameTrack track)
+            => track.IsMain ? Prefix + mode.Value : Prefix + mode.Value + "_" + track.Value;
 
         /// <summary>
         /// The remembered chapter of one mode, or null when there is nothing usable to
@@ -48,14 +58,18 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         public static ChapterIndexEntry Read(CatalogIndex index, GameMode mode)
+            => Read(index, mode, GameTrack.Main);
+
+        /// <summary>The remembered chapter of one lane, or null. See the overload above.</summary>
+        public static ChapterIndexEntry Read(CatalogIndex index, GameMode mode, GameTrack track)
         {
             if (index == null || !mode.IsValid) return null;
 
-            string raw = PlayerPrefs.GetString(KeyFor(mode), string.Empty);
+            string raw = PlayerPrefs.GetString(KeyFor(mode, track), string.Empty);
             if (!ChapterId.TryParse(raw, out var id, out _)) return null;
 
             var entry = index.FindChapter(id);
-            return entry != null && entry.Mode == mode ? entry : null;
+            return entry != null && entry.Mode == mode && entry.Track == track ? entry : null;
         }
 
         /// <summary>
@@ -75,7 +89,7 @@ namespace GlimmerGrove
         {
             if (chapter == null || !chapter.Id.IsValid || !chapter.Mode.IsValid) return;
 
-            DevicePrefs.WriteString(KeyFor(chapter.Mode), chapter.Id.Value);
+            DevicePrefs.WriteString(KeyFor(chapter.Mode, chapter.Track), chapter.Id.Value);
         }
     }
 }

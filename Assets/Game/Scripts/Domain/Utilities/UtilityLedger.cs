@@ -24,6 +24,15 @@ namespace GlimmerGrove.Utilities
 
         /// <summary>Short of gems.</summary>
         Poor = 5,
+
+        /// <summary>
+        /// The keeper gate is not reached. Carried by <c>UtilityItem.MinLevel</c>.
+        ///
+        /// <b>Appended</b>, for this project's usual reason: these ordinals reach analytics. And
+        /// it gates <em>buying</em> only — a utility already in hand is spendable whatever the
+        /// gate says, or a retune would confiscate something bought with gems.
+        /// </summary>
+        Locked = 6,
     }
 
     /// <summary>
@@ -171,6 +180,13 @@ namespace GlimmerGrove.Utilities
         {
             if (item == null) return UtilityRefusal.Unknown;
             if (!item.ForSale) return UtilityRefusal.NotForSale;
+
+            // **The gate before the ceiling before the price**, which is invariant 15a's ordering
+            // taken one step further: a player who is locked out, full *and* short should be told
+            // about the wall that money cannot climb, because it is the only one of the three
+            // nothing they do tonight can answer.
+            if (!item.ReachedBy(PlayerProgression.Level.Level)) return UtilityRefusal.Locked;
+
             if (count <= 0 || RoomFor(item) < count) return UtilityRefusal.Full;
             if (!PlayerProgression.CanAfford(Currency.Gems, Quote(item, count))) return UtilityRefusal.Poor;
 

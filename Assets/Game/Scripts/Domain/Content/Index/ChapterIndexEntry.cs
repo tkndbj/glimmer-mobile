@@ -33,6 +33,19 @@ namespace GlimmerGrove.Content
         public readonly GameMode Mode;
 
         /// <summary>
+        /// Which ladder inside that mode this chapter belongs to.
+        ///
+        /// <b>Index knowledge for <see cref="Mode"/>'s reason and one more</b>: the ladder a
+        /// chapter sits on decides what gates it and what it gates, and <c>LevelUnlock</c> has to
+        /// answer that before any body is read. See <see cref="GameTrack"/> for why an endless
+        /// lane is a track rather than a mode or an ordinary chapter.
+        /// </summary>
+        public readonly GameTrack Track;
+
+        /// <summary>This chapter's lane: its mode and its track together.</summary>
+        public ModeLane Lane => new ModeLane(Mode, Track);
+
+        /// <summary>
         /// Derived from the id by convention, so a chapter names itself once. The body
         /// may still override it, but the index needs a name before the body is read —
         /// a chapter carousel must be able to label a chapter it has never opened.
@@ -40,10 +53,14 @@ namespace GlimmerGrove.Content
         public string NameKey => ChapterDefinition.DefaultNameKey(Id);
 
         public ChapterIndexEntry(ChapterId id, int order, int version, IReadOnlyList<LevelId> levelIds)
-            : this(id, order, version, levelIds, GameMode.Default) { }
+            : this(id, order, version, levelIds, GameMode.Default, GameTrack.Main) { }
 
         public ChapterIndexEntry(ChapterId id, int order, int version,
                                  IReadOnlyList<LevelId> levelIds, GameMode mode)
+            : this(id, order, version, levelIds, mode, GameTrack.Main) { }
+
+        public ChapterIndexEntry(ChapterId id, int order, int version,
+                                 IReadOnlyList<LevelId> levelIds, GameMode mode, GameTrack track)
         {
             if (!id.IsValid) throw new ArgumentException("chapter needs a valid id", nameof(id));
 
@@ -52,6 +69,7 @@ namespace GlimmerGrove.Content
             Version = version;
             LevelIds = levelIds ?? Array.Empty<LevelId>();
             Mode = mode.IsValid ? mode : GameMode.Default;
+            Track = track;
         }
 
         public int LevelCount => LevelIds.Count;

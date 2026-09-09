@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Modes;
+using GlimmerGrove.Progression;
 
 namespace GlimmerGrove.Content
 {
@@ -25,7 +26,18 @@ namespace GlimmerGrove.Content
 
         public override GameMode Mode => GameMode.Siege;
         public override ProtoGrid Grid => Layout.Grid;
-        public override IProtoBoard Fresh() => SiegeBoard.Build(Layout);
+        /// <summary>
+        /// A board for a run, with the turrets the player has stood on the line.
+        ///
+        /// <para>
+        /// <b>The loadout is read here and nowhere else.</b> Every content gate, every offline
+        /// mirror and <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> build a board directly
+        /// (<c>SiegeBoard.Build(layout)</c>), which stands the <em>starter</em> line — so a level
+        /// is proved holdable with the weakest line a player could bring, and a validator can
+        /// never come to depend on whatever loadout the developer running it happens to have.
+        /// </para>
+        /// </summary>
+        public override IProtoBoard Fresh() => SiegeBoard.Build(Layout, Wards.WardLoadout.Line);
 
         /// <summary>
         /// Nothing to search.
@@ -114,57 +126,15 @@ namespace GlimmerGrove.Content
             // 6's rule for loc keys read across to art: `Tools/verify/artnames.py` reads the name
             // that is actually passed, so a name assembled a call away from the lookup is a name
             // nothing checks - and this mode has already paid for that once.
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward1_r")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward1_g")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward1_b")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward1_y")),
-
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward2_r")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward2_g")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward2_b")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward2_y")),
-
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward3_r")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward3_g")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward3_b")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward3_y")),
-
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward4_r")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward4_g")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward4_b")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward4_y")),
-
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward5_r")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward5_g")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward5_b")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("ward5_y")),
+            // **The line is no longer a ladder of five turrets, it is whichever four the player
+            // chose** - so what is resident here is the wreck and the badge, and nothing else.
+            // The turrets themselves arrive in a scope of four (`AssetLibrary.LineScope`,
+            // invariant 7b), because the roster is twenty models in four colours and a run draws
+            // four of them; the *rank* is the badge's own colour (`SiegeView.RankTint`), which
+            // costs no art at all and is the one corner of a ward the field's plate does not
+            // cover (invariant 37y).
             AssetRequest.Sprite(AssetManifest.SiegeArt("ward_dead")),
             AssetRequest.Sprite(AssetManifest.SiegeArt("crest")),
-
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire1_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire1_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire1_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire1_y")),
-
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire2_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire2_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire2_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire2_y")),
-
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire3_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire3_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire3_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire3_y")),
-
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire4_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire4_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire4_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire4_y")),
-
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire5_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire5_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire5_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("fire5_y")),
 
             AssetRequest.Sprite(AssetManifest.SiegeArt("bullet")),
             AssetRequest.Sprite(AssetManifest.SiegeArt("socket")),
@@ -197,6 +167,24 @@ namespace GlimmerGrove.Content
             AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_g")),
             AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_b")),
             AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_y")),
+
+            // **The two that work on the field, and they are one set whatever the chapter.** A
+            // creeper is scenery and is re-cast per chapter; a weaver and a thief are rules, and a
+            // player who has learned that the crawling beetle locks cells must not have to learn
+            // it again next chapter because the beetle has become something else.
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("weaver_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("weaver_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("weaver_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("weaver_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("thief_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("thief_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("thief_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("thief_y")),
+
+            // What a weaver leaves on the field, and what a thief leaves in place of a gem.
+            AssetRequest.Sprite(AssetManifest.SiegeArt("web")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("sack")),
 
             // **The storm, which every siege loads whether or not the player holds one.** A
             // utility is account-wide and can be used on any rung, so it is not a fact about a
@@ -345,12 +333,85 @@ namespace GlimmerGrove.Content
         /// which of the four bosses a chapter sends, and how many rungs it has, are both facts
         /// about the chapter.
         /// </summary>
-        public override IReadOnlyList<AssetRequest> Art => Cast;
+        /// <summary>
+        /// The second cast: the twelve bodies a chapter draws instead of the first twelve.
+        ///
+        /// <b>One set per chapter, by the chapter's ordinal inside its own mode</b> — invariant
+        /// 7c's rule and the ground's shape exactly. Two sets serve every siege chapter that ever
+        /// ships, a third costs one table here and no code, and no chapter pays for a body it is
+        /// not drawing.
+        /// </summary>
+        static readonly AssetRequest[] SecondCast =
+        {
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("monB_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("monB_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("monB_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("monB_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bruteB_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bruteB_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bruteB_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bruteB_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwarkB_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwarkB_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwarkB_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwarkB_y")),
+        };
+
+        /// <summary>How many casts this mode ships, and therefore how far that ladder goes.</summary>
+        public const int CastSets = 2;
+
+        /// <summary>
+        /// The turrets a run is guaranteed to be able to draw: the roster's starter, in four
+        /// colours.
+        ///
+        /// <b>Resident rather than scoped, and it is the safety net rather than the feature.</b>
+        /// The player's own four arrive in <c>AssetLibrary.LineScope</c>, which is asynchronous —
+        /// and an <c>Image</c> with a null sprite is a white rectangle rather than a blank
+        /// (invariant 7b). So the fallback the line resolves to when anything at all is wrong is
+        /// the one thing that can never be missing.
+        /// </summary>
+        static IEnumerable<AssetRequest> StarterLine()
+        {
+            var starter = ProgressionRules.Table.Wards.Starter;
+            if (starter == null) yield break;
+
+            for (int i = 0; i < Wards.WardLine.Colours.Length; i++)
+            {
+                char colour = Wards.WardLine.Colours[i];
+                yield return AssetRequest.Sprite(AssetManifest.SiegeArt(starter.ArtFor(colour)));
+                yield return AssetRequest.SpriteSet(AssetManifest.SiegeArt(starter.FireFor(colour)));
+            }
+        }
+
+        public override IReadOnlyList<AssetRequest> Art
+        {
+            get
+            {
+                var list = new List<AssetRequest>(Cast);
+                list.AddRange(StarterLine());
+                list.AddRange(SecondCast);
+                return list;
+            }
+        }
 
         public override IReadOnlyList<AssetRequest> ArtFor(ChapterBody chapter)
         {
             var list = new List<AssetRequest>(Cast);
-            if (chapter == null) return list;
+            list.AddRange(StarterLine());
+
+            if (chapter == null)
+            {
+                list.AddRange(SecondCast);
+                return list;
+            }
+
+            // Which of the two casts this chapter draws. Arithmetic on its ordinal inside its own
+            // mode, which is invariant 7c's rule — so a chapter published next year costs no cast
+            // art at all, and no chapter can be published drawing one nobody decided on.
+            int ordinal = GameContent.Index.ChapterOrderOf(chapter.Id);
+            if (((ordinal % CastSets) + CastSets) % CastSets == 1) list.AddRange(SecondCast);
 
             var seen = new HashSet<SiegeKind>();
 
@@ -388,8 +449,30 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
+            // **The ramp, for a lane whose waves never stop.** A level authors one or the other:
+            // an endless lane's muster is a rule (`SiegeEndless`) rather than a list, so a file
+            // carrying both would have two answers to what its second wave is.
+            SiegeEndless endless = null;
+
+            if (block.endless != null && block.endless.IsAuthored)
+            {
+                bool authored = (block.waves != null && block.waves.Length > 0)
+                             || !string.IsNullOrEmpty(block.boss);
+
+                if (authored)
+                {
+                    problems.Add($"{id}: this siege authors both an endless ramp and its own "
+                               + "waves. A lane whose waves never stop has no list of them - "
+                               + "drop the 'waves' and 'boss' fields, or drop 'endless'");
+                    return false;
+                }
+
+                endless = new SiegeEndless(block.gems, block.cogs,
+                                           block.endless.goldWave, block.endless.silverFactor);
+            }
+
             var layout = new SiegeLayout(grid, block.gems, block.wards, block.waves, block.boss,
-                                         block.cogs);
+                                         block.cogs, endless);
 
             if (layout.Fault != null)
             {
@@ -423,7 +506,21 @@ namespace GlimmerGrove.Content
         {
             var siege = (SiegeRules)rules;
 
-            return new LevelTuning(SiegeTuning.Par(siege.Layout),
+            // **An endless lane is graded on a count that climbs**, which is the one place in this
+            // game where a bigger number is a better run. Par is the wave a three-star run
+            // reaches - authored, because nothing can derive it: par everywhere else is a search
+            // or an arithmetic floor over what a level *sends*, and an endless lane sends
+            // everything.
+            // Bound to a local rather than reached through twice, which `compile.py`'s coarse
+            // `.Layout.` guard also happens to want: it cannot tell a siege's own layout from a
+            // glade's board, and the guard is deliberately coarse (a false positive costs one
+            // line, a missing null check costs a crash).
+            var sends = siege.Layout;
+
+            if (sends.IsEndless)
+                return LevelTuning.Climbing(sends.Endless.GoldWave, sends.Endless.SilverFactor);
+
+            return new LevelTuning(SiegeTuning.Par(sends),
                                    dto.goldFactor, dto.silverFactor,
                                    LevelTuning.Unlimited);
         }

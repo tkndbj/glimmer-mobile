@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
+using GlimmerGrove.Wards;
+using GlimmerGrove.AssetPipeline;
+using System;
 using GlimmerGrove.Modes;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.Progression;
@@ -225,7 +228,102 @@ namespace GlimmerGrove
         {
             _siege = host.AddComponent<SiegeView>();
             _siege.Rung = Rung();
+            _siege.CastSet = CastFor();
+
+            // The four turrets this player put on the line, and only those four (invariant 7b).
+            // Asked for here rather than awaited: the board is built on the starter's art, which
+            // is resident in the mode's own cast, and repaints itself when the scope lands - an
+            // Image with a null sprite is a white rectangle rather than a blank, so a board that
+            // waited would be a board that showed nothing at all on a slow load.
+            Line();
             return _siege;
+        }
+
+        /// <summary>
+        /// Which cast this chapter draws, by its ordinal inside its own mode.
+        ///
+        /// Invariant 7c's rule, the ground's shape exactly: arithmetic rather than a choice, so
+        /// two sets serve every siege chapter that ships and a chapter published next year costs
+        /// no cast art at all.
+        /// </summary>
+        int CastFor()
+        {
+            if (Level == null) return 0;
+
+            int at = GameContent.Index.ChapterOrderOf(Level.Chapter);
+            if (at < 0) return 0;
+
+            return ((at % SiegeView.CastSets) + SiegeView.CastSets) % SiegeView.CastSets;
+        }
+
+        /// <summary>
+        /// Loads the player's four turrets, and repaints the line when they arrive.
+        ///
+        /// <b>`async void` with the exception caught</b>, which is <c>CompanionArt.Load</c>'s
+        /// shape and for its reason: a scope that failed to load must not vanish silently, and
+        /// the board behind it is already drawing a working line.
+        /// </summary>
+        async void Line()
+        {
+            var line = WardLoadout.Line;
+
+            try
+            {
+                await AssetLibrary.EnsureScopeAsync(AssetLibrary.LineScope,
+                                                    line.Art());
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                return;
+            }
+
+            if (_siege != null) _siege.Redress();
+        }
+
+        /// <summary>Whether this rung's waves never stop.</summary>
+        bool Endless
+        {
+            get
+            {
+                var board = _siege != null ? _siege.Siege : null;
+                if (board == null) return false;
+
+                // Bound to a local rather than reached through, which `compile.py`'s coarse
+                // `.Layout.` guard also wants: it cannot tell a siege's own layout from a glade's
+                // board, and the guard is deliberately coarse.
+                var sends = board.Layout;
+                return sends != null && sends.IsEndless;
+            }
+        }
+
+        /// <summary>
+        /// What an endless run is graded on: waves seen off, not matches spent.
+        ///
+        /// <b>The one lane in this game where a bigger count is a better run</b> — see
+        /// <c>LevelTuning.Climbs</c> for why the direction is a property of the level rather than
+        /// a special case at a call site.
+        /// </summary>
+        protected override int Scored(ProtoRun run)
+        {
+            if (!Endless) return base.Scored(run);
+
+            var board = _siege.Siege;
+            return board.WavesCleared;
+        }
+
+        /// <summary>
+        /// Keeps how far this run got.
+        ///
+        /// <b>A floor rather than a grade</b> (invariant 14a): the stars are already recorded by
+        /// the ordinary run ledger, and this is the number a board reads — one monotonic integer
+        /// per level, joined by <c>max</c>, paying nothing.
+        /// </summary>
+        protected override void Finished(int count)
+        {
+            if (!Endless || Level == null) return;
+
+            EndlessLedger.Record(Level.Id, count);
         }
 
         /// <summary>

@@ -39,6 +39,9 @@ namespace GlimmerGrove.Persistence
             bool otherIsNewer = other.updatedUnix > mine.updatedUnix;
             var newer = otherIsNewer ? other : mine;
 
+            var line = Wards.WardLoadout.Join(mine.wardLoadout, mine.wardLoadoutSetUnix,
+                                              other.wardLoadout, other.wardLoadoutSetUnix);
+
             var merged = new SaveFileDto
             {
                 schemaVersion = Math.Max(mine.schemaVersion, other.schemaVersion),
@@ -133,6 +136,20 @@ namespace GlimmerGrove.Persistence
                 // earned is a chest the other device missed, more spent is a siege it missed,
                 // and there is nothing here for a stale snapshot to overwrite.
                 utilityStock = Utilities.UtilityStock.Join(mine.utilityStock, other.utilityStock),
+
+                // The turrets bought, as a union: buying is irreversible, so between them the
+                // player owns whatever either device bought. Exactly the companions' rule.
+                wardsOwned = Wards.WardLedger.Join(mine.wardsOwned, other.wardsOwned),
+
+                // The line they stand in, by recency, against the arrangement's own stamp. The
+                // one thing in this whole merge that can lose something, which is why it is the
+                // one thing that carries a date of its own (invariant 11c).
+                wardLoadout = line.Rows,
+                wardLoadoutSetUnix = line.At,
+
+                // How deep an endless run got, as a per-level max. A best only ever rises, so
+                // there is nothing here to decide (invariant 14a).
+                endlessBest = Progression.EndlessLedger.Join(mine.endlessBest, other.endlessBest),
             };
 
             return merged;

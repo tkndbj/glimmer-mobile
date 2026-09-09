@@ -15,11 +15,6 @@ MonoBehaviour:
   m_GroupName: Glimmer Companions
   m_GUID: f4eb7df85616e954483c09e9f697d7dd
   m_SerializeEntries:
-  - m_GUID: 08bd93765b5343b46a16d8b54a76c753
-    m_Address: Art/Companions/Large
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0fec594d953d4d60ae61beb585c4cfe5
     m_Address: Art/Companions/marrow
     m_ReadOnly: 0

@@ -185,9 +185,49 @@ namespace GlimmerGrove.Content
         /// </summary>
         public readonly int GoldHundredths, SilverHundredths, BudgetHundredths;
 
+        /// <summary>
+        /// Whether a <em>bigger</em> count is a better run.
+        ///
+        /// <para>
+        /// <b>False everywhere but an endless level, and that is the whole of what it is
+        /// for.</b> Every level in this game is graded on something the player <em>spends</em> -
+        /// turns, drops, taps, matches - so fewer is better and par is a floor. A run that can
+        /// never be won has nothing to spend against: what it is graded on is how far it got, and
+        /// far is up. One flag rather than a second tuning type, because everything else about
+        /// the three lines is unchanged - the thresholds are still <see cref="Par"/> times exact
+        /// hundredths, still never a float, and still ordered by <c>LevelValidator</c>.
+        /// </para>
+        /// <para>
+        /// <b>The ordering inverts with it and every check has to know</b>, which is invariant
+        /// 26e's rule about a gate that disagrees with the thing it gates: on a climbing level
+        /// three stars asks for <em>more</em> than two, so <see cref="GoldHundredths"/> is the
+        /// larger of the pair and a check reading it the other way would fail every endless level
+        /// ever authored.
+        /// </para>
+        /// <para>
+        /// <b>And there is no budget on a climbing level, ever.</b> An allowance is a count of
+        /// things spent, and a run graded on how far it got has nothing to run out of but the
+        /// board itself.
+        /// </para>
+        /// </summary>
+        public readonly bool Climbs;
+
         public LevelTuning(int par, float goldFactor, float silverFactor,
                            float budgetFactor = 0f)
-            : this(null, Mathf.Max(1, par), goldFactor, silverFactor, budgetFactor, 0) { }
+            : this(null, Mathf.Max(1, par), goldFactor, silverFactor, budgetFactor, 0, false) { }
+
+        /// <summary>
+        /// Tuning for a level graded on a count that <em>climbs</em>: three stars at
+        /// <paramref name="par"/> and two at <paramref name="silverFactor"/> of it.
+        ///
+        /// <b>A named builder rather than a fifth constructor argument</b>, because the ordering
+        /// of the two factors inverts and a call site that got them the wrong way round would
+        /// author a level whose two-star line is above its three-star one - individually
+        /// plausible, and a whole band of the ladder silently gone (invariant 22's own lesson).
+        /// Here the names say which is which and the check downstream proves it.
+        /// </summary>
+        public static LevelTuning Climbing(int par, float silverFactor)
+            => new LevelTuning(null, Mathf.Max(1, par), 1f, silverFactor, Unlimited, 0, true);
 
         /// <summary>
         /// Tuning whose par is worked out the first time it is asked for. See <see cref="Par"/>.
@@ -199,11 +239,12 @@ namespace GlimmerGrove.Content
         public LevelTuning(Func<int> findPar, float goldFactor, float silverFactor,
                            float budgetFactor = 0f, int slack = 0)
             : this(findPar ?? throw new ArgumentNullException(nameof(findPar)),
-                   0, goldFactor, silverFactor, budgetFactor, slack) { }
+                   0, goldFactor, silverFactor, budgetFactor, slack, false) { }
 
         LevelTuning(Func<int> findPar, int par, float goldFactor, float silverFactor,
-                    float budgetFactor, int slack)
+                    float budgetFactor, int slack, bool climbs)
         {
+            Climbs = climbs;
             _findPar = findPar;
             _par = par;
             Slack = slack > 0 ? slack : 0;
@@ -311,6 +352,13 @@ namespace GlimmerGrove.Content
         /// </summary>
         public int StarsFor(int moves)
         {
+            if (Climbs)
+            {
+                if (moves >= GoldThreshold) return 3;
+                if (moves >= SilverThreshold) return 2;
+                return moves > 0 ? 1 : 0;
+            }
+
             if (moves <= GoldThreshold) return 3;
             if (moves <= SilverThreshold) return 2;
             return 1;

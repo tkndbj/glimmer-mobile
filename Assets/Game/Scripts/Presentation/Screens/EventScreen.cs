@@ -337,7 +337,7 @@ namespace GlimmerGrove
                                  new Vector2(300f, 300f), Right, new Vector2(artX + 6f, 0f));
             Spin(rays.rectTransform, 26f);
 
-            var chest = UIKit.Img("Treasure", hero.transform, Art.S("Ui/Shop/coins_5"), Color.white,
+            var chest = UIKit.Img("Treasure", hero.transform, Art.S("Ui/Shop/coins_4"), Color.white,
                                   new Vector2(214f, h * .84f), Right, new Vector2(artX, -6f));
             chest.preserveAspect = true;
             Tween.Bob(chest.rectTransform, 7f, 2.9f);
@@ -804,7 +804,7 @@ namespace GlimmerGrove
 
             card.Art.sprite = Art.S(gems > 0
                 ? (hoard ? "Ui/Shop/gems_5" : cache ? "Ui/Shop/gems_4" : "Ui/Shop/gems_2")
-                : (hoard ? "Ui/Shop/coins_5" : cache ? "Ui/Shop/coins_4" : "Ui/Shop/coins_2"));
+                : (hoard ? "Ui/Shop/coins_4" : cache ? "Ui/Shop/coins_3" : "Ui/Shop/coins_1"));
             card.Art.color = Pal.A(Color.white, taken ? .45f : 1f);
 
             card.Title.text = Loc.Get(cache ? "ui.pass.cache" : gems > 0 ? "ui.pass.gems" : "ui.pass.coins");
@@ -1133,7 +1133,7 @@ namespace GlimmerGrove
             bool paired = coins > 0 && gems > 0;
             if (coins > 0)
                 any |= flight.Add(new ChestDrop(ChestDropKind.Credits, (int)Mathf.Min(coins, int.MaxValue)),
-                                  Decoy(from, art ?? Art.S("Ui/Shop/coins_2"), -1f, paired));
+                                  Decoy(from, art ?? Art.S("Ui/Shop/coins_1"), -1f, paired));
             if (gems > 0)
                 any |= flight.Add(new ChestDrop(ChestDropKind.Gems, (int)Mathf.Min(gems, int.MaxValue)),
                                   Decoy(from, Art.S("Ui/Shop/gems_3"), 1f, paired));

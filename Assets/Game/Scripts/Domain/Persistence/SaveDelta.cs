@@ -146,6 +146,19 @@ namespace GlimmerGrove.Persistence
             // the player made and cannot see on their other device — and *spent* has to travel
             // with *earned*, or the two devices would each hand back what the other used.
             if (!SameUtilities(remote.utilityStock, merged.utilityStock)) return true;
+
+            // The line. Its purchases travel for the companions' reason; its arrangement travels
+            // because it is the one thing here a player can see is wrong on another device — a
+            // loadout that stayed on one phone is an evening's decisions lost on reinstall. The
+            // stamp travels with the rows, or a device would push an arrangement whose date said
+            // it was older than the one it just replaced.
+            if (!SameSet(remote.wardsOwned, merged.wardsOwned)) return true;
+            if (!SameLoadout(remote.wardLoadout, merged.wardLoadout)) return true;
+            if (remote.wardLoadoutSetUnix != merged.wardLoadoutSetUnix) return true;
+
+            // How deep an endless run got. A floor, so a device that has just beaten its best has
+            // something the server does not.
+            if (!SameEndless(remote.endlessBest, merged.endlessBest)) return true;
             if (!Same(remote.lastPlayedLevelId, merged.lastPlayedLevelId)) return true;
 
             var a = remote.settings ?? new SettingsDto();
@@ -291,6 +304,44 @@ namespace GlimmerGrove.Persistence
         /// <c>UtilityStock.Write</c>, so order is part of the comparison rather than something
         /// this has to normalise — the rule <see cref="SameStock"/> already follows.
         /// </summary>
+        /// <summary>
+        /// Whether two ward lines are the same arrangement.
+        ///
+        /// An ordered walk, because <c>WardLoadout</c> writes its rows in colour order — the
+        /// property that stops an unstable order reading as changed on every launch and pushing a
+        /// write for nothing, for ever.
+        /// </summary>
+        static bool SameLoadout(WardSlotDto[] a, WardSlotDto[] b)
+        {
+            int an = a?.Length ?? 0, bn = b?.Length ?? 0;
+            if (an != bn) return false;
+
+            for (int i = 0; i < an; i++)
+            {
+                var x = a[i]; var y = b[i];
+                if (x == null || y == null) return x == y;
+                if (!Same(x.colour, y.colour) || !Same(x.ward, y.ward)) return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>Whether two endless high-water lists agree. Ordered, for the reason above.</summary>
+        static bool SameEndless(EndlessBestDto[] a, EndlessBestDto[] b)
+        {
+            int an = a?.Length ?? 0, bn = b?.Length ?? 0;
+            if (an != bn) return false;
+
+            for (int i = 0; i < an; i++)
+            {
+                var x = a[i]; var y = b[i];
+                if (x == null || y == null) return x == y;
+                if (!Same(x.level, y.level) || x.wave != y.wave) return false;
+            }
+
+            return true;
+        }
+
         static bool SameUtilities(UtilityStockDto[] a, UtilityStockDto[] b)
         {
             int an = a?.Length ?? 0;

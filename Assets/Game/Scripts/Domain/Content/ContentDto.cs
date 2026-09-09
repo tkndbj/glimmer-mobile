@@ -269,6 +269,19 @@ namespace GlimmerGrove.Content
         /// </para>
         /// </summary>
         public string mode;
+
+        /// <summary>
+        /// Which ladder inside that mode this chapter is on: absent or <c>main</c> for the
+        /// ordinary run of chapters, <c>infinite</c> for a lane whose waves never stop.
+        ///
+        /// <para>
+        /// Absent is the main track and is never an error, which is what lets every chapter
+        /// authored before tracks existed keep working with its file untouched. A track this
+        /// build has never heard of is skipped whole, exactly as an unknown mode is (invariant
+        /// 20) — see <c>GameTrack</c>.
+        /// </para>
+        /// </summary>
+        public string track;
     }
 
     [Serializable]
@@ -601,11 +614,62 @@ namespace GlimmerGrove.Content
         public int cogs;
 
         /// <summary>
+        /// The ramp, for a lane whose waves never stop, or absent for an ordinary siege.
+        ///
+        /// <para>
+        /// <b>A level on an endless track authors no waves and no boss at all.</b> What is coming
+        /// at wave <em>n</em> is a rule (<c>SiegeEndless</c>) rather than a list, so the two ways
+        /// of saying it are mutually exclusive — a file carrying both would be a file with two
+        /// answers to what the second wave is, and the reader refuses it rather than picking one.
+        /// </para>
+        /// </summary>
+        public SiegeEndlessDto endless;
+
+        /// <summary>
         /// Whether this block was authored. <b>Never test the block itself for null</b> —
         /// JsonUtility instantiates a [Serializable] class field on every level in the game, so
         /// absence has to be a value a real block cannot hold.
         /// </summary>
         public bool IsAuthored => width > 0 || height > 0;
+    }
+
+    /// <summary>
+    /// The ramp of a siege whose waves never stop.
+    ///
+    /// <b>Four numbers and nothing else.</b> Everything about <em>what</em> arrives — how often a
+    /// boss comes, which one, how many raiders, how much tougher each wave is — is a rule in
+    /// <c>SiegeEndless</c>, for invariant 20d's reason: a lane that authored its own ramp would be
+    /// a second place this mode's difficulty is decided, and the two would drift the first time
+    /// either was retuned.
+    /// </summary>
+    [Serializable]
+    public sealed class SiegeEndlessDto
+    {
+        /// <summary>
+        /// The wave a three-star run reaches.
+        ///
+        /// <b>Authored, because nothing can derive it.</b> Par everywhere else in this game is a
+        /// search or an arithmetic floor over what a level sends; an endless lane sends
+        /// everything, so how far is far is the one number a designer has to decide — and it is
+        /// decided by playing.
+        /// </summary>
+        public int goldWave;
+
+        /// <summary>
+        /// The fraction of <see cref="goldWave"/> a two-star run reaches. Between 0 and 1.
+        ///
+        /// <b>Below one, and the ordering inverts with it</b> — on a climbing level three stars
+        /// asks for <em>more</em> than two (<c>LevelTuning.Climbs</c>). Absent takes the built-in
+        /// fraction rather than nought, which would make two stars free.
+        /// </summary>
+        public float silverFactor;
+
+        /// <summary>
+        /// Whether this block was authored. <b>Never test the block itself for null</b> —
+        /// JsonUtility instantiates it on every siege in the game (this project's own hard-won
+        /// note), so absence has to be a value a real block cannot hold.
+        /// </summary>
+        public bool IsAuthored => goldWave > 0;
     }
 
     [Serializable]
@@ -814,6 +878,25 @@ namespace GlimmerGrove.Content
         /// </para>
         /// </summary>
         public UtilitiesDto utilities;
+
+        /// <summary>
+        /// The turret roster: which ones exist, what each does beyond firing, and what it costs.
+        ///
+        /// <para>
+        /// Optional, and absent is not an error — a client that predates it keeps its built-in
+        /// roster, and a client that has it reads a file written before it existed and does the
+        /// same (invariant 9b).
+        /// </para>
+        /// <para>
+        /// What it may <em>not</em> do is invent an <c>ability</c>: an ability is a rule the board
+        /// runs, so an entry naming one this build has never heard of still stands and simply
+        /// fires a plain bolt (invariant 20, one level down). And no entry may make a bolt
+        /// <em>weaker</em> — there is no field that could, deliberately, because par is computed
+        /// against the baseline bolt and a turret that hit softer would put three stars out of
+        /// reach of whoever chose it. See <c>WardCatalog</c>.
+        /// </para>
+        /// </summary>
+        public WardsDto wards;
     }
 
     /// <summary>
@@ -853,6 +936,52 @@ namespace GlimmerGrove.Content
         public int maxHeld;
 
         /// <summary>Where it sits on the bar: 1 up, no gaps and no ties.</summary>
+        public int order;
+
+        /// <summary>
+        /// The keeper level before this one may be bought. Absent or nought asks nothing.
+        ///
+        /// It gates buying and never spending: a utility already in hand is spendable whatever
+        /// this says, or a retune would confiscate something bought with gems.
+        /// </summary>
+        public int minLevel;
+    }
+
+    /// <summary>The turret roster. In shelf order, which is authored on each entry.</summary>
+    [Serializable]
+    public sealed class WardsDto
+    {
+        public WardModelDto[] models;
+    }
+
+    /// <summary>
+    /// One turret. <c>ability</c> is a permanent id - <c>splash</c>, <c>chain</c>, <c>frost</c> -
+    /// and what <c>magnitude</c> and <c>extent</c> measure depends on it; see <c>WardAbility</c>.
+    /// </summary>
+    [Serializable]
+    public sealed class WardModelDto
+    {
+        /// <summary>Permanent. The save keys both what is owned and what is chosen on it.</summary>
+        public string id;
+
+        public string ability;
+
+        /// <summary>How strong the ability is, in tenths of whatever it measures.</summary>
+        public int magnitude;
+
+        /// <summary>The ability's second number: a reach, a duration in tenths, a period.</summary>
+        public int extent;
+
+        /// <summary>Gems for one. Asks for no keeper level. Nought means it is not sold for gems.</summary>
+        public int gemPrice;
+
+        /// <summary>Credits for one. Gated on <see cref="minLevel"/>. Nought means not sold.</summary>
+        public int coinPrice;
+
+        /// <summary>The keeper level a credit purchase asks for. Meaningless beside a gem price.</summary>
+        public int minLevel;
+
+        /// <summary>Where it sits on the shelf: 1 up, no gaps and no ties.</summary>
         public int order;
     }
 

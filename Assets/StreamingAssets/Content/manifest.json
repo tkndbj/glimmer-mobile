@@ -170,6 +170,18 @@
         "s01_thornsiege",
         "s01_lastlight"
       ]
+    },
+    {
+      "id": "s02_endlesswatch",
+      "version": 1,
+      "order": 150,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "track": "infinite",
+      "levels": [
+        "s02_endless"
+      ]
     }
   ],
   "events": [

@@ -705,12 +705,28 @@ def check_siege(lid, chapter_id, level, block):
         errors.append("%s: %s" % (lid, bad))
         return empty
 
+    endless_block = block.get('endless') or {}
+
     layout = rules.Layout(grid, block.get('gems'), block.get('wards'), block.get('waves'),
-                          block.get('boss'), block.get('cogs') or 0)
+                          block.get('boss'), block.get('cogs') or 0,
+                          endless=bool(endless_block.get('goldWave')))
 
     if layout.fault:
         errors.append("%s: %s" % (lid, layout.fault))
         return empty
+
+    # **A lane whose waves never stop is a different level in three ways and the same in every
+    # other**, which is what makes it worth checking here rather than somewhere of its own: the
+    # field, the deal and the line are proved by exactly the code above, and what is left is the
+    # ramp. See `check_endless`.
+    endless = endless_block
+    if endless.get('goldWave'):
+        return check_endless(lid, chapter_id, level, block, grid, layout, endless)
+
+    if block.get('endless'):
+        errors.append("%s: this siege authors an 'endless' block with no goldWave; a lane whose "
+                      "waves never stop still has to say how far a three-star run reaches, "
+                      "because nothing can derive it" % lid)
 
     par = rules.par(layout)
     read = rules.readings(layout)
@@ -778,6 +794,95 @@ def check_siege(lid, chapter_id, level, block):
                 ways=0, greedy=-1, nodes=0, goals=layout.raiders,
                 cogs=layout.cogs,
                 deal=layout.deal, siege=read)
+
+
+def check_endless(lid, chapter_id, level, block, grid, layout, endless):
+    """A siege whose waves never stop.
+
+    **Three things differ and everything else is the ordinary siege check above.** It authors no
+    waves and no boss (the muster is a rule, `SiegeEndless`); it is graded on a count that
+    *climbs*, so par is the wave a three-star run reaches and the two-star line is below it rather
+    than above; and it can never be won, so there is nothing to search and nothing to prove about a
+    solution. What is provable is that the field is playable, the line is legal, the ramp sends
+    nothing the line cannot answer, and the two star lines are the right way round.
+    """
+    import siege as rules
+
+    empty = dict(id=lid, chapter=chapter_id, w=grid.w, h=grid.h, par=0, budget=0,
+                 gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
+                 crossings=0, briars=0, mode='siege',
+                 ways=0, greedy=-1, nodes=0, goals=0, cogs=0, deal='')
+
+    if block.get('waves') or block.get('boss'):
+        errors.append("%s: this siege authors both an endless ramp and its own waves. A lane whose "
+                      "waves never stop has no list of them - drop 'waves' and 'boss', or drop "
+                      "'endless'" % lid)
+        return empty
+
+    if factor_of(level, 'budgetFactor', 160) > 0:
+        errors.append("%s: this siege authors a move budget. A siege is lost when the last ward "
+                      "falls - author budgetFactor -1" % lid)
+        return empty
+
+    gold = int(endless.get('goldWave') or 0)
+    silver_factor = float(endless.get('silverFactor') or 0.0)
+
+    if gold < 1:
+        errors.append("%s: an endless lane needs a goldWave of at least 1" % lid)
+        return empty
+
+    if not (0.0 < silver_factor < 1.0):
+        errors.append("%s: this endless lane's silverFactor is %.2f; it is the fraction of the "
+                      "three-star wave a two-star run reaches, so it lies between 0 and 1 - and "
+                      "on a climbing level three stars asks for *more* than two, which is the one "
+                      "place in this game the ordering inverts"
+                      % (lid, silver_factor))
+        return empty
+
+    silver = max(1, -(-int(round(gold * silver_factor * 100)) // 100))
+
+    if silver >= gold:
+        errors.append("%s: this endless lane's two-star wave (%d) is not below its three-star "
+                      "wave (%d), so a whole band of the ladder is unreachable"
+                      % (lid, silver, gold))
+        return empty
+
+    # **The ramp is walked rather than trusted**, as far as the second time every boss has been
+    # met - which is the point the schedule starts repeating (`SiegeEndless.PairsAfter`). What is
+    # being asked is invariant 5d's question of a hill nobody authored: does the line have an
+    # answer to everything that walks down it.
+    colours = list(layout.deal)
+    seen = set()
+
+    for wave in range(1, rules.PAIRS_AFTER * 3 + 1):
+        for colour, kind in rules.endless_wave(colours, layout.seed, wave):
+            seen.add(colour)
+
+            if colour in layout.wards:
+                continue
+
+            errors.append("%s: wave %d of this endless lane sends a '%s' %s and no ward on the "
+                          "line carries '%s'" % (lid, wave, colour, kind, colour))
+            return empty
+
+    if len(seen) < 2:
+        warnings.append("%s: everything this endless lane sends wears one colour, so which ward "
+                        "to feed is not a question" % lid)
+
+    read = rules.readings(layout)
+    read['endless'] = gold
+    read['waves'] = 0
+    read['raiders'] = 0
+
+    if not read['swap']:
+        warnings.append("%s: no swap on this field lines anything up as it is dealt, so the board "
+                        "deals itself again before the player has moved" % lid)
+
+    return dict(id=lid, chapter=chapter_id, w=grid.w, h=grid.h, par=gold,
+                budget=0, gold=gold, silver=silver, lamps=0, sources=0, fragile=0,
+                bound=0, crossings=0, briars=0, mode='siege',
+                ways=0, greedy=-1, nodes=0, goals=0,
+                cogs=layout.cogs, deal=layout.deal, siege=read)
 
 
 def check_level(level, chapter_id):
@@ -2071,6 +2176,140 @@ def check_utilities(progression, keys, warnings):
     return errors, known
 
 
+#: The abilities a turret may name. Mirrors `WardAbilities`.
+#:
+#: An ability is a rule the board runs, so an entry naming one this build has never heard of still
+#: stands and simply fires a plain bolt (invariant 20, one level down) - which is a warning here
+#: rather than an error, exactly as an unknown chest kind is.
+WARD_ABILITIES = {"none", "splash", "chain", "frost", "pierce", "rend", "siphon", "ember",
+                  "prism", "beacon"}
+
+#: The four colours a turret is cut in. `WardLine.Colours`.
+WARD_COLOURS = "rgby"
+
+
+def check_wards(progression, keys, warnings, art):
+    """The turret roster. `ContentValidation.ValidateWards`, offline.
+
+    Five things, and the first two are the ones only this gate can see.
+
+    * **Every model has a picture in every colour, and a reel to fire with.** A price is content;
+      a PNG is not. The addresses are *built* from the id (`WardModel.ArtFor`), which is the one
+      place in this project a lookup is allowed to build a name - so `artnames.py` cannot check
+      them and this is where they are checked instead. A missing one draws a white rectangle two
+      cells tall on the object a player looks at for a whole run (invariant 7b).
+    * **Every id resolves its two loc keys**, which are derived from the id and therefore
+      invisible to `loc.py` (invariant 30d's situation, and the utilities' own).
+    * **One price or the other.** Two prices for one turret is two answers to what it costs, and
+      the shelf can only draw one of them (`HomesteadRegion`'s rule, invariant 16j).
+    * **A keeper gate belongs to a credit price**, because gems ask for none - a gate beside a gem
+      price is a gate that never fires, which is the decoration invariant 5d names.
+    * **At least one turret is free**, or a player who has bought nothing stands an empty line and
+      a siege with no line cannot be played.
+    """
+    errors = []
+    block = progression.get("wards")
+
+    if block is None:
+        warnings.append("progression.json has no 'wards' block, so the built-in roster stands - "
+                        "which works, and cannot be retuned without a store review")
+        return errors, set()
+
+    models = block.get("models") or []
+    if not models:
+        errors.append("wards block lists no models")
+        return errors, set()
+
+    known, orders = set(), []
+    starter = False
+
+    for entry in models:
+        wid = entry.get("id") or ""
+
+        if not wid:
+            errors.append("a wards entry has no id; an id is what the save keys on")
+            continue
+
+        if wid in known:
+            errors.append(f"wards names '{wid}' twice; an id is permanent and two entries under "
+                          "one would be two turrets in one save row")
+            continue
+
+        known.add(wid)
+
+        ability = entry.get("ability") or "none"
+        if ability not in WARD_ABILITIES:
+            warnings.append(f"wards entry '{wid}' names unknown ability '{ability}'; it fires a "
+                            "plain bolt")
+
+        gem = int(entry.get("gemPrice") or 0)
+        coin = int(entry.get("coinPrice") or 0)
+        level = int(entry.get("minLevel") or 0)
+
+        if gem < 0 or coin < 0:
+            errors.append(f"wards entry '{wid}' has a negative price; nought is how a turret says "
+                          "it cannot be bought that way")
+
+        if gem > 0 and coin > 0:
+            errors.append(f"wards entry '{wid}' is priced in both gems and credits; a turret "
+                          "carries one price or the other")
+
+        if level > 0 and coin <= 0:
+            errors.append(f"wards entry '{wid}' asks for keeper level {level} but is not priced "
+                          "in credits; the level gate is permission to spend credits and means "
+                          "nothing beside gems")
+
+        starter = starter or (gem <= 0 and coin <= 0)
+
+        for colour in WARD_COLOURS:
+            for address in (f"Siege/Wards/{wid}_{colour}", f"Siege/Wards/{wid}_{colour}_fire"):
+                if address not in art:
+                    errors.append(f"wards entry '{wid}' has no art at '{address}' - a picture is "
+                                  "not content, so adding a turret is a build")
+
+        if f"Ui/Wards/{wid}" not in art:
+            errors.append(f"wards entry '{wid}' has no shelf thumbnail at 'Ui/Wards/{wid}'")
+
+        for key in (f"ward.{wid}.name", f"ward.{wid}.note"):
+            if key not in keys:
+                errors.append(f"wards entry '{wid}' needs loc key '{key}'")
+
+        orders.append(int(entry.get("order") or 0))
+
+    if orders and sorted(orders) != list(range(1, len(orders) + 1)):
+        errors.append(f"wards orders are {sorted(orders)}; every entry needs its own rung from 1 "
+                      "up, or the shelf reshuffles itself under a player on a retune")
+
+    if not starter:
+        errors.append("wards lists no free turret; a player who has bought nothing would stand an "
+                      "empty line, and a siege with no line cannot be played")
+
+    return errors, known
+
+
+def art_on_disk():
+    """Every sprite and reel this build carries, as addresses.
+
+    A folder of numbered PNGs is a reel and answers under the folder's own name, which is how
+    `AssetLibrary.Frames` reads one - so `Siege/Wards/bolt_r_fire` is a reel and
+    `Siege/Wards/bolt_r` is a sprite, and both are addresses.
+    """
+    import pathlib
+
+    root = pathlib.Path(ROOT).parent.parent.parent / "Assets" / "Game" / "Art"
+    found = set()
+
+    if not root.is_dir():
+        return found
+
+    for path in root.rglob("*.png"):
+        rel = path.relative_to(root).with_suffix("")
+        found.add(rel.as_posix())
+        found.add(rel.parent.as_posix())
+
+    return found
+
+
 GOOD_KINDS = {"hearts", "heart_boost"}
 
 
@@ -2749,6 +2988,17 @@ def main():
     utility_errors, utilities = check_utilities(progression, keys, warnings)
     errors.extend(utility_errors)
 
+    # The turret roster. Checked here rather than nowhere: its art addresses are *built* from an
+    # id (`WardModel.ArtFor`), so `artnames.py` cannot see them, and its loc keys are derived from
+    # one, so `loc.py` cannot either.
+    ward_errors, wards = check_wards(progression, keys, warnings, art_on_disk())
+    errors.extend(ward_errors)
+
+    if wards:
+        print("")
+        print(f"turrets: {len(wards)} on the shelf, four colours each - "
+              "a run loads the four a player stood on the line")
+
     if shop:
         shelves = ", ".join(f"{n} {shelf}" for shelf, n in sorted(shop["shelves"].items()))
         print(f"\nshop: {shop['products']} product(s) ({shelves}), {shop['goods']} good(s) "
@@ -2804,12 +3054,15 @@ def main():
     else:
         print(f"chapter gate: {stars_per_level} star(s) a level of the chapter behind it")
 
-        # Per mode, because a gate counts the chapter before this one *in the same mode* -
-        # the ladders never chain (invariant 20a), so the last chapter of a mode gates
-        # nothing and the first of one is always open.
+        # Per **lane** - a mode and a track together - because a gate counts the chapter before
+        # this one on the same ladder. The ladders never chain (invariant 20a), so the last
+        # chapter of a lane gates nothing and the first of one is always open; and an endless
+        # lane, whose waves never stop, must never gate an ordinary chapter on stars nobody can
+        # earn, which is `CatalogIndex.ChaptersIn` answering the main track alone.
         lanes = {}
         for chapter in sorted(manifest.get("chapters", []), key=lambda c: c.get("order", 0)):
-            lanes.setdefault(chapter.get("mode") or "glade", []).append(chapter)
+            key = (chapter.get("mode") or "glade", chapter.get("track") or "main")
+            lanes.setdefault(key, []).append(chapter)
 
         for mode, lane in sorted(lanes.items()):
             for i, chapter in enumerate(lane[:-1]):

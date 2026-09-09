@@ -409,6 +409,12 @@ namespace GlimmerGrove.Content
             // three stars still asks for fewer matches than two.
             LevelValidator.CheckStarBands(level, issues);
 
+            // **A lane whose waves never stop is a different level in three ways and the same in
+            // every other**, so it is answered here and the rest of this method is left alone: it
+            // authors no waves and no boss (the muster is a rule), it is graded on a count that
+            // climbs, and it can never be won. See <see cref="Endless"/>.
+            if (layout.IsEndless) { Endless(level, layout, issues); return; }
+
             // Certain, and the one thing that could make a siege unlosable by accident: with a
             // budget turned off, the ward line is the only fail state there is.
             if (level.Tuning.HasBudget)
@@ -481,6 +487,121 @@ namespace GlimmerGrove.Content
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
                     "no wave here holds enough raiders to bring a ward down even if every one of "
                     + "them reached the line, so this siege cannot be lost"));
+
+            // Invariant 5d asked of the two raiders that work on the field. Neither takes a ward's
+            // health, so a wave holding nothing else is a wave the player can simply ignore: the
+            // webs and the sacks stay, but nothing about the run gets worse for leaving them
+            // standing, and a mechanic whose wrong answer costs nothing has no decision in it.
+            Meddlers(layout, issues);
+        }
+
+        /// <summary>
+        /// A lane whose waves never stop.
+        ///
+        /// <para>
+        /// <b>What is provable about one is not what is provable about a siege.</b> There is no
+        /// muster to walk and no par to derive - what comes at wave <em>n</em> is a rule
+        /// (<c>SiegeEndless</c>) and how far is far is authored, because nothing can derive it. So
+        /// what is checked is the field, the line, the two star waves being the right way round,
+        /// and the ramp sending nothing the line has no answer to.
+        /// </para>
+        /// <para>
+        /// <b>The ramp is walked as far as the second time every boss has been met</b>, which is
+        /// where the schedule starts repeating - the same distance <c>content.py</c> walks, so the
+        /// two gates cannot come to disagree about how much of a lane they have seen.
+        /// </para>
+        /// </summary>
+        static void Endless(LevelDefinition level, SiegeLayout layout, List<LevelIssue> issues)
+        {
+            var ramp = layout.Endless;
+
+            if (level.Tuning.HasBudget)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    "this siege authors a move budget. A siege is lost when the last ward falls, "
+                    + "so an allowance would be a second fail state - author budgetFactor -1"));
+
+            if (!level.Tuning.Climbs)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    "this endless lane is not graded on a count that climbs, so its two star "
+                    + "lines are the wrong way round - see LevelTuning.Climbing"));
+
+            int gold = level.Tuning.GoldThreshold;
+            int silver = level.Tuning.SilverThreshold;
+
+            if (silver >= gold || silver < 1)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    $"this endless lane reaches three stars at wave {gold} and two at {silver}; "
+                    + "on a climbing level three stars asks for more than two, so a whole band of "
+                    + "the ladder is unreachable"));
+
+            var wards = new HashSet<char>();
+            for (int i = 0; i < layout.Wards.Length; i++) wards.Add(layout.Wards[i]);
+
+            var kinds = new HashSet<SiegeKind>();
+
+            for (int wave = 1; wave <= SiegeEndless.PairsAfter * 3; wave++)
+            {
+                var coming = ramp.WaveAt(wave, layout.Seed);
+
+                for (int i = 0; i < coming.Length; i++)
+                {
+                    kinds.Add(coming[i].Kind);
+                    if (wards.Contains(coming[i].Colour)) continue;
+
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                        $"wave {wave} of this endless lane sends a '{coming[i].Colour}' "
+                        + $"{SiegeTuning.NameOf(coming[i].Kind)} and no ward on the line carries "
+                        + $"'{coming[i].Colour}', so nothing here is strong against it"));
+
+                    return;
+                }
+            }
+
+            // The one reading a lane has that a rung does not: whether the ramp ever sends
+            // anything that can bring a ward down. It always does today (a creeper swings), and
+            // saying so out loud is what stops a future ramp being edited into a lane that cannot
+            // be lost - which on a board with no ending is a run that never stops.
+            bool lethal = false;
+            foreach (var kind in kinds)
+                if (SiegeTuning.BlowOf(kind) > 0 || SiegeTuning.EndangersTheLine(kind))
+                    { lethal = true; break; }
+
+            if (!lethal)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    "nothing this endless lane ever sends can bring a ward down, so the run has "
+                    + "no ending at all"));
+        }
+
+        /// <summary>
+        /// The two raiders that hold the hill and work on the field.
+        ///
+        /// <b>Invariant 5d asked of a wave rather than of a board.</b> Neither takes a ward's
+        /// health, so a wave holding nothing else costs a player nothing to ignore - the webs and
+        /// the sacks stay, and the run is no closer to being lost for having left them standing.
+        /// A warning rather than an error, because a chapter's first meeting with one may
+        /// legitimately be a wave that is only that.
+        /// </summary>
+        static void Meddlers(SiegeLayout layout, ICollection<LevelIssue> issues)
+        {
+            for (int w = 0; w < layout.Coming.Length; w++)
+            {
+                bool meddles = false, threatens = false;
+
+                for (int i = 0; i < layout.Coming[w].Length; i++)
+                {
+                    var kind = layout.KindAt(w, i);
+
+                    if (SiegeTuning.HoldsTheField(kind)) meddles = true;
+                    else threatens = true;
+                }
+
+                if (!meddles || threatens) continue;
+
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"wave {w + 1} holds nothing but raiders that work on the field. Neither a "
+                    + "weaver nor a thief takes a ward's health, so a player can ignore this wave "
+                    + "outright and lose nothing by it - send something with it"));
+            }
         }
 
         /// <summary>

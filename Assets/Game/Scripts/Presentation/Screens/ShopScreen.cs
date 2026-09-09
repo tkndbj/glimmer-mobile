@@ -64,9 +64,6 @@ namespace GlimmerGrove
         const int Columns = 2;
         const float CellW = 508f;
         const float CellH = 560f;
-        // An int, because Art.Round takes one — the generated corner is rasterised at a
-        // pixel radius and there is no such thing as half a pixel of corner.
-        const int CellRadius = 30;
 
         /// <summary>
         /// The standing "not signed in" bar, and the gap under it. Reserved out of the grid's
@@ -122,8 +119,13 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            Scenery.Layered(Content, "home", .30f);
-            Fireflies.Spawn(Content, 12, new Color(1f, .93f, .70f), 6f, 20f);
+            // A flat blue page rather than the forest every other screen stands in, and the
+            // fireflies with it. Every card here is a saturated block with a painted pile on
+            // it, so the ground's only job is not to compete — CRAFT.md's plate rule asked of
+            // a storefront. It is `ShopSkins.Ground`, the kit's own blue two steps down, so
+            // the furniture stands on a darker shade of itself.
+            UIKit.StretchTo((RectTransform)UIKit.Img("Ground", Content, Art.Pixel,
+                                                     ShopSkins.Ground).transform, 0, 0, 0, 0);
 
             BuildGrid();
             BuildHeader();
@@ -250,13 +252,18 @@ namespace GlimmerGrove
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, 1f), new Vector2(96f, -120f), () => Flow.Go<HomeScreen>());
 
-            var banner = UIKit.Img("Banner", Safe, Art.S("Ui/banner"), Color.white,
-                                   new Vector2(520f, 140f), new Vector2(.5f, 1f), new Vector2(0f, -116f));
+            // The kit's own tab chip, stretched into a title bar, rather than the cream
+            // banner every other screen wears. That banner is a woodland sign — it is right
+            // above a forest and wrong above this, and a storefront whose header belongs to a
+            // different game is the seam a player notices first. The lettering is cream on
+            // blue rather than brown on cream for the same reason.
+            var banner = UIKit.Img("Banner", Safe, Art.S(ShopSkins.TabOn), ShopSkins.Band,
+                                   new Vector2(480f, 116f), new Vector2(.5f, 1f), new Vector2(0f, -108f));
             UIKit.Shrinkable(
-                UIKit.Titled("Title", banner.transform, Loc.Get("ui.nav.shop").ToUpperInvariant(), 40,
-                             new Color(.36f, .24f, .16f), TextAnchor.MiddleCenter,
-                             new Vector2(360f, 58f), new Vector2(.5f, .5f),
-                             new Vector2(0f, 140f * UIKit.PillFaceLift), 0f, 2f), 24);
+                UIKit.Titled("Title", banner.transform, Loc.Get("ui.nav.shop").ToUpperInvariant(), 42,
+                             Pal.Cream, TextAnchor.MiddleCenter,
+                             new Vector2(400f, 60f), new Vector2(.5f, .5f),
+                             Vector2.zero, 3f, 3f), 24);
 
             BuildBalances();
             BuildTabs();
@@ -435,11 +442,18 @@ namespace GlimmerGrove
         static void BalancePill(Transform row, Color tint, string icon, string value,
                                 ResourceSlots.Kind kind, Func<long, string> format)
         {
-            var pill = UIKit.Img("Pill", row, Art.Round(20), new Color(.04f, .09f, .12f, .82f),
-                                 new Vector2(206f, 68f), new Vector2(.5f, .5f), Vector2.zero);
+            // The kit's trough, nine-sliced, with no drawn outline: it has its own, and a
+            // second one traced at a radius the sprite no longer has is a halo a hair off the
+            // shape it is following. The "+" on the end is what makes it read as a control
+            // rather than as a label — it is the reference this screen was restyled against,
+            // and it is honest here because tapping the row does open the shop.
+            var pill = UIKit.Img("Pill", row, Art.S(ShopSkins.Pill), ShopSkins.Trough,
+                                 new Vector2(228f, 74f), new Vector2(.5f, .5f), Vector2.zero);
 
-            var edge = UIKit.Img("Edge", pill.transform, Art.RoundOutline(20, 2.5f), Pal.A(tint, .45f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
+            var plus = UIKit.Img("Add", pill.transform, Art.S(ShopSkins.Add), Color.white,
+                                 new Vector2(46f, 46f), new Vector2(1f, .5f), new Vector2(-6f, 0f));
+            plus.preserveAspect = true;
+            plus.raycastTarget = false;
 
             var glow = UIKit.Img("Glow", pill.transform, Art.Glow(96, 2f), Pal.A(tint, .22f),
                                  new Vector2(96f, 96f), new Vector2(0f, .5f), new Vector2(38f, 0f));
@@ -456,7 +470,7 @@ namespace GlimmerGrove
 
             var text = UIKit.Shrinkable(
                 UIKit.Titled("V", pill.transform, value, 30, Pal.Cream, TextAnchor.MiddleCenter,
-                             new Vector2(112f, 44f), new Vector2(.5f, .5f), new Vector2(16f, 0f), 3f, 3f), 18);
+                             new Vector2(104f, 44f), new Vector2(.5f, .5f), new Vector2(4f, 0f), 3f, 3f), 18);
 
             ResourceSlots.Register(kind, (RectTransform)glyph.transform, text, glow, tint, format);
         }
@@ -869,7 +883,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ tab
         sealed class ShelfTab
         {
-            readonly Image _plate, _edge, _mark;
+            readonly Image _plate, _mark;
             readonly StoreShelf _shelf;
 
             public ShelfTab(RectTransform row, StoreShelf shelf, float step, float x, Action onTap)
@@ -880,13 +894,13 @@ namespace GlimmerGrove
                                         new Vector2(.5f, .5f), new Vector2(x, 0f), onTap);
                 cell.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
 
-                _plate = UIKit.Img("P", cell.transform, Art.Round(22), new Color(.06f, .12f, .16f, .72f),
+                // Two sprites out of the kit rather than one plate recoloured, because the
+                // kit draws a lit tab and an unlit one as different *shapes* — the lit one is
+                // taller and carries a rim. Restyle swaps the sprite; nothing is tinted, so a
+                // tab cannot end up a colour the kit never drew.
+                _plate = UIKit.Img("P", cell.transform, Art.S(ShopSkins.TabOff), Color.white,
                                    new Vector2(step - 24f, TabRow - 22f), new Vector2(.5f, .5f),
                                    Vector2.zero);
-
-                _edge = UIKit.Img("E", _plate.transform, Art.RoundOutline(22, 2f),
-                                  new Color(1f, .97f, .90f, .12f));
-                UIKit.StretchTo((RectTransform)_edge.transform, 0, 0, 0, 0);
 
                 _mark = UIKit.Img("A", _plate.transform, Mark(shelf), Color.white,
                                   new Vector2(TabRow - 58f, TabRow - 58f), new Vector2(.5f, .5f),
@@ -915,29 +929,11 @@ namespace GlimmerGrove
                 }
             }
 
-            static Color Tint(StoreShelf shelf)
-            {
-                switch (shelf)
-                {
-                    case StoreShelf.Gems: return Pal.Bloom;
-                    case StoreShelf.Coins: return Pal.Gold;
-                    case StoreShelf.Bundles: return Pal.Aqua;
-                    case StoreShelf.Utilities: return Pal.Ember;
-                    default: return Pal.Rose;
-                }
-            }
-
             public void Restyle(bool live)
             {
                 if (!_plate) return;
 
-                var tint = Tint(_shelf);
-
-                _plate.color = live ? new Color(.10f, .26f, .27f, .96f)
-                                    : new Color(.06f, .12f, .16f, .72f);
-
-                _edge.sprite = Art.RoundOutline(22, live ? 3f : 2f);
-                _edge.color = live ? Pal.A(tint, .78f) : new Color(1f, .97f, .90f, .12f);
+                _plate.sprite = Art.S(live ? ShopSkins.TabOn : ShopSkins.TabOff);
 
                 _mark.color = live ? Color.white : new Color(1f, 1f, 1f, .55f);
 
@@ -976,7 +972,7 @@ namespace GlimmerGrove
             {
                 _screen = screen;
                 _card = new ProductCard(parent,
-                                        new ProductCard.Look(CellW, CellH, CellRadius, decorated: true),
+                                        new ProductCard.Look(CellW, CellH, decorated: true),
                                         () => { if (_kit != null) _screen.TapUtility(_kit);
                                                 else if (_good != null) _screen.TapGood(_good);
                                                 else _screen.Tap(_product); });
@@ -1035,10 +1031,7 @@ namespace GlimmerGrove
                 // sale in this storefront, and there is nothing a player can do about either.
                 if (offer.State == StoreOfferState.Missing) { _card.Hide(); return; }
 
-                bool best = _product.Badge == StoreBadge.BestValue
-                            || _product.Badge == StoreBadge.Starter;
-
-                _card.Draw(_product, offer, best);
+                _card.Draw(_product, offer);
             }
         }
     }

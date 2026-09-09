@@ -208,8 +208,29 @@ namespace GlimmerGrove.Utilities
         /// <summary>Where it sits on the bar. Authored, for <c>HomesteadRegion.Order</c>'s reason.</summary>
         public readonly int Order;
 
+        /// <summary>
+        /// The keeper level before this one may be bought or carried at all. Nought for one that
+        /// asks nothing.
+        ///
+        /// <para>
+        /// <b>A gate on the <em>shelf</em> rather than on the bar, and it costs the save
+        /// nothing.</b> Whether a player may buy one is derived from a keeper level that is itself
+        /// derived from the star ledger (invariant 9), so a locked utility needs no field, no
+        /// merge rule and nothing for the server to adjudicate — which is the same bargain the
+        /// companion gate makes (invariant 15a) and the reason a ward's credit price carries one
+        /// too.
+        /// </para>
+        /// <para>
+        /// <b>What it may never do is confiscate.</b> A utility already granted is spendable
+        /// whatever the gate says: <c>UtilityLedger</c> reads stock and never re-checks this, for
+        /// the reason <c>CompanionLedger.IsHeld</c> does not re-check its gate — a retune must not
+        /// take back something a player paid gems for.
+        /// </para>
+        /// </summary>
+        public readonly int MinLevel;
+
         public UtilityItem(string id, UtilityKind kind, int magnitude,
-                           int gemPrice, int maxHeld, int order)
+                           int gemPrice, int maxHeld, int order, int minLevel = 0)
         {
             Id = id ?? string.Empty;
             Kind = kind;
@@ -217,9 +238,13 @@ namespace GlimmerGrove.Utilities
             GemPrice = gemPrice < 0 ? 0 : gemPrice;
             MaxHeld = maxHeld < 1 ? 1 : maxHeld > UtilityStock.MaxHeld ? UtilityStock.MaxHeld : maxHeld;
             Order = order;
+            MinLevel = minLevel < 0 ? 0 : minLevel;
         }
 
         public UtilityTarget Target => UtilityKinds.TargetOf(Kind);
+
+        /// <summary>Whether this keeper level may buy one. Never asked about spending one.</summary>
+        public bool ReachedBy(int keeperLevel) => keeperLevel >= MinLevel;
 
         /// <summary>Whether gems can buy one. A chest-only utility answers false.</summary>
         public bool ForSale => GemPrice > 0;

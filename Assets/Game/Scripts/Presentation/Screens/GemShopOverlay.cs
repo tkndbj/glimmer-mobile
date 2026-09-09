@@ -73,8 +73,6 @@ namespace GlimmerGrove
 
         const float CellW = 400f, CellH = 384f;
 
-        /// <summary>Corner radius of a card's plate, in the pixels Art.Round is cut at.</summary>
-        const int CellRadius = 26;
         const int Columns = 2;
 
         readonly List<StoreProduct> _products = new List<StoreProduct>();
@@ -353,8 +351,7 @@ namespace GlimmerGrove
             {
                 _panel = panel;
                 _card = new ProductCard(parent,
-                                        new ProductCard.Look(CellW, CellH, CellRadius,
-                                                             decorated: false),
+                                        new ProductCard.Look(CellW, CellH, decorated: false),
                                         () => _panel.Tap(_product));
             }
 
@@ -365,8 +362,7 @@ namespace GlimmerGrove
 
                 if (_product == null) { _card.Hide(); return; }
 
-                // Never featured: nothing on this list is being pointed at. See the remarks.
-                _card.Draw(_product, StoreService.OfferFor(_product), featured: false);
+                _card.Draw(_product, StoreService.OfferFor(_product));
             }
         }
     }

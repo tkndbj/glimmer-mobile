@@ -61,6 +61,27 @@ namespace GlimmerGrove.AssetPipeline
         /// The grove screen's art: the islands, the home ladder and whatever is placed.
         /// Bounded by the size of the player's grove, never by the size of the shop.
         /// </summary>
+        /// <summary>
+        /// The four turrets a siege draws, and only those four.
+        ///
+        /// <b>A scope rather than part of the mode's cast, which is invariant 7b's whole
+        /// bargain.</b> The roster holds twenty models in four colours each; a run puts four of
+        /// them on the board. Loading eighty would be memory bounded by how much content exists
+        /// rather than by what is on the screen — and the shelf that browses them reads
+        /// thumbnails instead (invariant 16c), so nothing anywhere ever loads the roster.
+        /// </summary>
+        public const string LineScope = "siege_line";
+
+        /// <summary>
+        /// The turret roster's shelf thumbnails: one uncoloured picture per model.
+        ///
+        /// <b>Its own scope rather than part of the global UI set</b>, which is invariant 16c's
+        /// rule: browsing a shelf costs the shelf and never the catalog, and twenty pictures
+        /// resident for the life of every session to draw one screen is memory bounded by how much
+        /// content exists. Released when the loadout closes.
+        /// </summary>
+        public const string WardShelfScope = "ward_shelf";
+
         public const string HomesteadScope = "grove";
 
         /// <summary>

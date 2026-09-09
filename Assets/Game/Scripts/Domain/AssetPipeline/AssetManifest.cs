@@ -62,6 +62,62 @@ namespace GlimmerGrove.AssetPipeline
         /// </summary>
         public static string SiegeArt(string key) => ArtRoot + "Siege/" + key;
 
+        /// <summary>
+        /// One turret's shelf thumbnail. <c>Ui/Wards/{id}</c>.
+        ///
+        /// <b>Under the UI root rather than the mode's</b>, because a thumbnail is what a shelf
+        /// browses with and never what a board draws - the four a run stands come out of
+        /// <see cref="AssetLibrary.LineScope"/> in the mode's own colours.
+        /// </summary>
+        public static string WardThumb(string id) => UiRoot + "Wards/" + id;
+
+        /// <summary>
+        /// Every address the turret roster could ever ask for: twenty models in four colours,
+        /// their recoil reels, and their shelf thumbnails.
+        ///
+        /// <b>For the Editor only.</b> The audit has to know these exist or it calls eighty
+        /// sprites unused and then says nothing when one goes missing — which is the grove
+        /// catalog's own argument (<see cref="AllGroveAssets"/>), and it has a sharper edge here:
+        /// a missing turret draws a white rectangle two cells tall on the object a player looks at
+        /// for a whole run. Nothing at runtime should call this — a run loads four turrets
+        /// (<c>WardLine.Art</c>) and the shelf loads twenty thumbnails.
+        /// </summary>
+        public static List<AssetRequest> AllWardAssets(Wards.WardCatalog catalog)
+        {
+            var list = new List<AssetRequest>(128);
+            if (catalog == null) return list;
+
+            foreach (var model in catalog.Models)
+            {
+                if (model == null || string.IsNullOrEmpty(model.Id)) continue;
+
+                list.Add(AssetRequest.Sprite(WardThumb(model.Id)));
+
+                for (int i = 0; i < Wards.WardLine.Colours.Length; i++)
+                {
+                    char colour = Wards.WardLine.Colours[i];
+                    list.Add(AssetRequest.Sprite(SiegeArt(model.ArtFor(colour))));
+                    list.Add(AssetRequest.SpriteSet(SiegeArt(model.FireFor(colour))));
+                }
+            }
+
+            return list;
+        }
+
+        /// <summary>Every turret's thumbnail, for the loadout's own scope.</summary>
+        public static List<AssetRequest> WardShelfAssets(
+            IEnumerable<Wards.WardModel> models)
+        {
+            var list = new List<AssetRequest>(32);
+            if (models == null) return list;
+
+            foreach (var model in models)
+                if (model != null && !string.IsNullOrEmpty(model.Id))
+                    list.Add(AssetRequest.Sprite(WardThumb(model.Id)));
+
+            return list;
+        }
+
         /// <summary>Thornwatch's explosions, which live under Fx rather than beside the board.</summary>
         public static string SiegeFx(string key) => ArtRoot + "Fx/Siege/" + key;
         public static string MapArt(string key) => MapRoot + key;
@@ -148,18 +204,28 @@ namespace GlimmerGrove.AssetPipeline
             // pouch, which is only the coins tab's glyph. Every other card is still composed
             // from art already on this list: a heart pack and a heart container out of the
             // game's own heart and three of the potion bottles, so the shop's whole art order
-            // is these twelve. See `ShopArt` for why the ladders stopped being composed and
-            // why hearts did not.
+            // is these fourteen. See `ShopArt` for why the ladders stopped being composed,
+            // why hearts did not, and why each ladder is exactly as long as its shelf.
             //
             // Global rather than a named scope, which is the same judgement `Win/*` above
             // asked for and is deliberate here rather than lazy. The shop is one tap from
             // every screen in the game, and it is the one screen where a frame of white
             // rectangles while a scope loads (invariant 7b) costs actual money.
             "Shop/pouch",
-            "Shop/coins_1", "Shop/coins_2", "Shop/coins_3",
-            "Shop/coins_4", "Shop/coins_5", "Shop/coins_6",
+            "Shop/coins_1", "Shop/coins_2", "Shop/coins_3", "Shop/coins_4",
             "Shop/gems_1", "Shop/gems_2", "Shop/gems_3",
             "Shop/gems_4", "Shop/gems_5", "Shop/gems_6",
+            "Shop/bundles_1", "Shop/bundles_2", "Shop/bundles_3",
+
+            // The storefront's own furniture, cut from the same pack as the pictures above
+            // by `Tools/make_ui_kit_art.py`. Global for the reason the pictures are: the
+            // shop is one tap from every screen, and a frame of white rectangles while a
+            // scope loads (invariant 7b) costs money here rather than goodwill.
+            "Kit/frame_green", "Kit/frame_purple", "Kit/frame_yellow",
+            "Kit/btn_blue", "Kit/btn_purple", "Kit/btn_yellow",
+            "Kit/pill", "Kit/add_blue", "Kit/add_purple", "Kit/add_yellow",
+            "Kit/tab_on", "Kit/tab_off",
+            "Kit/badge_red", "Kit/badge_purple", "Kit/ribbon", "Kit/glow",
         };
 
         /// <summary>Map furniture used by every chapter, unlike the strips themselves.</summary>
@@ -197,7 +263,7 @@ namespace GlimmerGrove.AssetPipeline
             "click", "back", "menu", "tip", "enter", "poke", "wheel", "collect", "reward", "coin", "rotate_a", "rotate_b", "blocked",
             "unlock", "shatter", "burst", "free", "pop", "pop2", "whoosh", "chest", "win", "star",
             "tick", "tock", "bell", "lit", "chime", "chime2",
-            "boom", "mend",
+            "boom", "mend", "snare", "pilfer",
         };
 
         /// <summary>Everything the game needs before the menu appears.</summary>

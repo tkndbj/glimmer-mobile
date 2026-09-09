@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter s02_endlesswatch
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter s02_endlesswatch
+  m_GUID: 88154031a1f2efe4abc1221b1d6fcd51
+  m_SerializeEntries:
+  - m_GUID: 01d5884ebe4c29945ab61f446e7b2c99
+    m_Address: Art/Map/map2_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 083fa1cc627f01041823cba4dcdaa8a1
+    m_Address: Art/Bg/sky_10
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 10ba9f8dc7d040c45bed3518436156b7
+    m_Address: Art/Map/map2_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47efd1c6246899d4795d57bc21113148
+    m_Address: Art/Map/map2_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eefd9664b12cf294682f2fb61350aa9f
+    m_Address: Art/Map/map2_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 23b25e3bd3ef1574d9866ac0e0e496be, type: 2}
+    - {fileID: 11400000, guid: 86cb2927f3dd4ce448e25bb820e5087c, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter s02_endlesswatch_BundledAssetGroupSchema
+    - Glimmer Chapter s02_endlesswatch_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

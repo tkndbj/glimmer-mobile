@@ -231,8 +231,23 @@ namespace GlimmerGrove
         // The *total*, never the unit price. A control labelled with a price has to charge
         // that price — HomesteadBuyOverlay's rule, and the one complaint every shop with a
         // stepper gets is from somebody who did not know what they were agreeing to.
+        /// <summary>
+        /// What the paying button says.
+        ///
+        /// <b>A control that cannot be pressed has to say why on itself.</b> It read the price
+        /// whatever the answer was, so a locked item was a live-looking button carrying a number
+        /// the player could plainly afford - met from a device as nine thousand gems and a
+        /// forty-gem button that would not press, with the reason in a status line under it that
+        /// nobody reads when the thing they tapped is the thing that failed. A wall money cannot
+        /// climb is named on the button (invariant 15a's ordering, said in the one place the
+        /// player is actually looking); every other refusal is a price they can still act on, so
+        /// those keep the number.
+        /// </summary>
         string BuyLabel()
-            => Loc.Format("ui.utility.buy", Compact.Number(UtilityLedger.Quote(Item, _quantity)));
+            => UtilityLedger.WhyNotBuy(Item, _quantity) == UtilityRefusal.Locked
+             ? Loc.Format("ui.loadout.level_note", Item.MinLevel)
+             : Loc.Format("ui.utility.buy",
+                          Compact.Number(UtilityLedger.Quote(Item, _quantity)));
 
         void Repaint()
         {
@@ -267,6 +282,12 @@ namespace GlimmerGrove
                 case UtilityRefusal.NotForSale:
                     _status.text = Loc.Get("ui.utility.chest_only");
                     _status.color = Held;
+                    break;
+
+                // The wall money cannot climb, said before the price for invariant 15a's reason.
+                case UtilityRefusal.Locked:
+                    _status.text = Loc.Format("ui.loadout.level_note", Item.MinLevel);
+                    _status.color = Short;
                     break;
 
                 default:

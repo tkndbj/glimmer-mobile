@@ -107,6 +107,23 @@ namespace GlimmerGrove.EditorTools
                     if (entry == null) continue;
 
                     string path = AssetDatabase.GUIDToAssetPath(entry.guid);
+
+                    // **A folder entry is dropped even though the folder is still there**, and it
+                    // is the one case this sweep could not repair any other way. A frame folder is
+                    // addressed by a *label* on its frames (`AddressableAddresses.FrameFolders`),
+                    // so a folder entry carrying the same address is redundant - and worse than
+                    // redundant: `EnumerateManagedAssets` walks textures rather than folders, so
+                    // `Register` never sees one, and a stale folder entry can therefore sit in a
+                    // chapter group for ever while the audit reports it belongs somewhere else,
+                    // with no run of this tool able to move it. It also pulls every frame under it
+                    // into that bundle a second time.
+                    if (!string.IsNullOrEmpty(path) && AssetDatabase.IsValidFolder(path)
+                        && AddressableAddresses.IsManaged(path))
+                    {
+                        doomed.Add(entry.guid);
+                        continue;
+                    }
+
                     if (!string.IsNullOrEmpty(path)
                         && AddressableAddresses.IsManaged(path)
                         && AddressableRegistry.StillThere(path)) continue;
