@@ -140,7 +140,7 @@
     "waves": [
      "rgbyrg",
      "rgbyRGby",
-     "RGby"
+     "RGbyRG"
     ],
     "boss": "warlord:r",
     "cogs": 3
@@ -165,9 +165,9 @@
     "gems": "rgby",
     "wards": "rgby",
     "waves": [
+     "RGby#rby",
      "RGbyRGby",
-     "RGbyRGby",
-     "RGBYRG"
+     "RGBYRG#gRG"
     ],
     "boss": "",
     "cogs": 3
@@ -192,9 +192,9 @@
     "gems": "rgby",
     "wards": "rgby",
     "waves": [
-     "rgbyRGby",
-     "RGBYRG",
-     "RGBYRGby"
+     "#bgyRGby",
+     "RGBY#rG",
+     "RGBYRG#y"
     ],
     "boss": "",
     "cogs": 3
@@ -247,8 +247,8 @@
     "wards": "rgby",
     "waves": [
      "rgbyRGby",
-     "RGBYRGBY",
-     "RGBYRGBY"
+     "RGBY#rGBY",
+     "RGBY#gRGB#b"
     ],
     "boss": "",
     "cogs": 3
@@ -274,8 +274,8 @@
     "wards": "rgby",
     "waves": [
      "rgbyRGby",
-     "RGBYRG",
-     "RGBYrgby"
+     "RGB#rY#gG",
+     "RGBYRGby"
     ],
     "boss": "overlord:y",
     "cogs": 3

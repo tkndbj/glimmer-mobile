@@ -216,7 +216,8 @@
     "gemsStep": 0,
     "turns": 15,
     "taps": 4,
-    "moves": 4
+    "moves": 4,
+    "wards": 4
   },
   "prompts": {
     "chapterBudget": 2,
@@ -453,7 +454,7 @@
         "kind": "blast",
         "magnitude": 440,
         "gemPrice": 12,
-        "maxHeld": 9,
+        "maxHeld": 100,
         "order": 1
       },
       {
@@ -461,7 +462,7 @@
         "kind": "mend",
         "magnitude": 6,
         "gemPrice": 8,
-        "maxHeld": 9,
+        "maxHeld": 100,
         "order": 2
       },
       {
@@ -469,8 +470,16 @@
         "kind": "surge",
         "magnitude": 180,
         "gemPrice": 10,
-        "maxHeld": 9,
+        "maxHeld": 100,
         "order": 3
+      },
+      {
+        "id": "stormcall",
+        "kind": "storm",
+        "magnitude": 700,
+        "gemPrice": 40,
+        "maxHeld": 100,
+        "order": 4
       }
     ]
   }

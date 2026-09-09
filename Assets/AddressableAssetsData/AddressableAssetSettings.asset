@@ -71,11 +71,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9cc25d4702763464993f52cb3d98129b, type: 2}
   - {fileID: 11400000, guid: 47c46bda514740a4dbc05a44d4a23ac8, type: 2}
   - {fileID: 11400000, guid: 4d5a579f47b771f40be12597dc3a83b4, type: 2}
-  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
   - {fileID: 11400000, guid: 984a834b48cbf384482d9e2e9aebfe5d, type: 2}
   - {fileID: 11400000, guid: 82cde781aeb2b8c47a1f377b73392623, type: 2}
   - {fileID: 11400000, guid: eb66a2de3aecee54b8958759c2eff7bc, type: 2}
   - {fileID: 11400000, guid: d66337f20f2bdd44d867926ead515cc3, type: 2}
+  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
   m_BuildSettings:
     m_LogResourceManagerExceptions: 1
     m_BundleBuildPath: Temp/com.unity.addressables/AssetBundles
@@ -294,6 +294,20 @@ MonoBehaviour:
     - Art/Siege/bringer
     - Art/Siege/bringer_cast
     - Art/Siege/bringer_walk
+    - Art/Siege/brute_y
+    - Art/Siege/bulwark_g
+    - Art/Siege/brute_g
+    - Art/Siege/mon_b
+    - Art/Siege/bulwark_r
+    - Art/Siege/bulwark_y
+    - Art/Siege/brute_r
+    - Art/Siege/mon_y
+    - Art/Siege/bulwark_b
+    - Art/Siege/mon_r
+    - Art/Siege/mon_g
+    - Art/Siege/brute_b
+    - Art/Fx/Siege/storm
+    - Art/Fx/Siege/storm_hit
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1c550e3b8c7244948b0ae7d2fbce14c6, type: 2}

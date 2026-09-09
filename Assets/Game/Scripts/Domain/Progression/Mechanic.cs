@@ -312,6 +312,16 @@ namespace GlimmerGrove.Progression
         /// makes an unhurried match cost anything, so both have to arrive at once.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// <b>Retired: no screen raises this and its id must never be reused.</b>
+        ///
+        /// It taught that the ward line is the fail state, and was withdrawn after play as saying
+        /// what the board says by itself — four turrets with health bars, in the middle of the
+        /// screen, for the whole run. Kept as a member rather than deleted because a lesson id
+        /// travels in the save (<c>tipsSeen</c>) exactly as a level id travels in the ledger, and
+        /// re-pointing one at a rule it never described would tell a player they have already been
+        /// shown something they never saw.
+        /// </summary>
         public static readonly Mechanic SiegeLine = new Mechanic("siege_line");
 
         /// <summary>
@@ -334,6 +344,24 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public static readonly Mechanic SiegeCog = new Mechanic("siege_cog");
+
+        /// <summary>
+        /// The bulwark: a raider carrying a shield, which halves everything that is not its own
+        /// colour and takes its own in full.
+        ///
+        /// <para>
+        /// <b>The one raider whose answer is a colour rather than a quantity</b>, which is why it
+        /// is taught at all — a creeper and a brute differ only in how much of the same thing they
+        /// need, so nothing about either has to be said. A player who does not know this one will
+        /// keep taking the biggest match on the field, watch the bolts bounce and read it as the
+        /// game being broken (invariant 20g's state, arrived at by a rule nobody explained).
+        /// </para>
+        /// <para>
+        /// <b>Declared per board</b>, exactly as <see cref="SiegeCog"/> is and for the same
+        /// reason: the first five rungs of the chapter send none.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic SiegeShield = new Mechanic("siege_shield");
 
         // **Two retired lesson ids that must never be reused: `kindle_join` and `kindle_cross`.**
         // Kindlewake was withdrawn by the owner after play and Prismvale took its slot. A lesson
@@ -487,6 +515,25 @@ namespace GlimmerGrove.Progression
         /// bring — after which the order would have quietly stopped being the set of
         /// everything, and the check with it.
         /// </para>
+        /// <para>
+        /// <b>A retired lesson is not a lesson that exists, so it comes off this list while
+        /// its member stays</b> - and the two halves are different questions. A
+        /// <c>Mechanic</c> is kept for ever because its id travels in the save
+        /// (<c>tipsSeen</c>); this list is the set of panels a player can still be shown. So
+        /// a withdrawn one left here makes the gate demand two strings for something nothing
+        /// can raise, which is what <see cref="SiegeLine"/> shipped: the lesson was withdrawn
+        /// and its strings deleted in one edit, this list was not touched, and
+        /// <c>Validate Content</c> then failed the build over two keys nobody wanted.
+        /// </para>
+        /// <para>
+        /// <b>The same edit found the mirror fault, which is the one this list is actually
+        /// for.</b> <see cref="SiegeShield"/> was raised by <c>SiegeScreen.Lessons</c>, had
+        /// its two strings written, and was never added here - so nothing proved it had
+        /// them, and it read as fine only because somebody happened to write them. That is
+        /// the failure described above, and it is invisible until a player reaches the
+        /// lesson and is shown <c>ui.tip.siege_shield.title</c>. **A lesson is added to this
+        /// list in the edit that adds it, and removed in the edit that retires it.**
+        /// </para>
         /// </summary>
         public static readonly Mechanic[] All =
         {
@@ -494,9 +541,33 @@ namespace GlimmerGrove.Progression
             BoundConduit,
             FallCook, FallSupply, FallBrim, FallLens, FallWhorl,
             ProtoMoves, PrismDrag, PrismVein,
-            SiegeFuel, SiegeLine, SiegeCog,
+            // SiegeLine is retired and deliberately absent. See the remarks above.
+            SiegeFuel, SiegeCog, SiegeShield,
             ModeSwitch, LuckySpin, Grove,
             GroveShop,
+        };
+
+        /// <summary>
+        /// Every lesson that has been withdrawn: kept as a member, never shown, never given
+        /// strings.
+        ///
+        /// <para>
+        /// <b>Written down rather than left implicit, because "retired" is the one state nothing
+        /// could see.</b> A <c>Mechanic</c> lives here for ever once its id has travelled in a save
+        /// (<c>tipsSeen</c>), so the only thing that separates a withdrawn lesson from one somebody
+        /// forgot to register is a sentence in a doc comment — which is why <see cref="SiegeLine"/>
+        /// sat in <see cref="All"/> failing the build over deleted strings while
+        /// <see cref="SiegeShield"/> sat outside it with nothing proving it had any. Two opposite
+        /// mistakes, one missing list.
+        /// </para>
+        /// <para>
+        /// <c>TipTests.EveryMechanicIsEitherLiveOrRetired</c> holds the two together, so a lesson
+        /// added or withdrawn without touching them fails offline instead of in the Editor.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic[] Retired =
+        {
+            SiegeLine,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);

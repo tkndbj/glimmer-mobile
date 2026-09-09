@@ -29,6 +29,29 @@ namespace GlimmerGrove.Modes
     /// were.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// One raider a wave names: what colour it wears and what kind it is.
+    ///
+    /// <b>A pair rather than a character</b>, because a wave's text stopped being one character
+    /// per raider the moment a third kind arrived (<see cref="SiegeLayout.Shield"/>). Everything
+    /// that used to index into the string indexes into these instead, so a modifier can never be
+    /// counted as a raider.
+    /// </summary>
+    public readonly struct SiegeSpec
+    {
+        /// <summary>The colour it wears, lower case, or <c>'\0'</c> for nothing at all.</summary>
+        public readonly char Colour;
+
+        /// <summary>What it is.</summary>
+        public readonly SiegeKind Kind;
+
+        public SiegeSpec(char colour, SiegeKind kind)
+        {
+            Colour = colour;
+            Kind = kind;
+        }
+    }
+
     public sealed class SiegeLayout
     {
         /// <summary>Gems the field is drawn with. Four, so a ward line of four has one each.</summary>
@@ -75,6 +98,32 @@ namespace GlimmerGrove.Modes
         /// and its shape is visible in the file.
         /// </summary>
         public const string RaiderLetters = "rgbyRGBY";
+
+        /// <summary>
+        /// Written before a colour letter, it makes that raider a <see cref="SiegeKind.Bulwark"/>:
+        /// <c>"rg#by"</c> is a red creeper, a green creeper, a shielded blue one and a yellow
+        /// creeper.
+        ///
+        /// <para>
+        /// <b>A modifier rather than four more letters, and that is what made the parse change
+        /// worth doing.</b> Case already carries one axis (a brute is a capital), so a third kind
+        /// has nowhere to go in a one-character-per-raider alphabet — and the obvious repair, four
+        /// new letters, spends the alphabet on a kind and leaves the next one with the same
+        /// problem. A prefix costs one rule and any number of future kinds.
+        /// </para>
+        /// <para>
+        /// <b>What it cost is the assumption that a wave string's length is its raider count</b>,
+        /// which six places made — <see cref="RaiderCount"/>, two clauses of <see cref="Check"/>,
+        /// the spawn loop and two readings in <c>ModeValidator</c>. Every one of them would have
+        /// gone on compiling and quietly counted a shielded raider twice, so the string is now
+        /// parsed exactly once into <see cref="Coming"/> and nothing asks the raw text how many
+        /// raiders it holds.
+        /// </para>
+        /// </summary>
+        public const char Shield = '#';
+
+        /// <summary>Everything a wave may be written with: the raiders, and the shield modifier.</summary>
+        public const string WaveLetters = RaiderLetters + "#";
 
         /// <summary>
         /// How a level names its boss: <c>"warlord:r"</c> — a <b>kind</b> and the colour it wears.
@@ -191,13 +240,62 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public SiegeKind KindAt(int wave, int index)
         {
-            if (wave < 0 || wave >= Waves.Length) return SiegeKind.Creeper;
-            if (wave == BossWave) return BossKind;
+            if (wave == BossWave && wave >= 0 && wave < Coming.Length) return BossKind;
 
-            string coming = Waves[wave];
-            if (index < 0 || index >= coming.Length) return SiegeKind.Creeper;
+            var spec = At(wave, index);
+            return spec.Kind;
+        }
 
-            return char.IsUpper(coming[index]) ? SiegeKind.Brute : SiegeKind.Creeper;
+        /// <summary>
+        /// Which colour the raider at <paramref name="index"/> of <paramref name="wave"/> wears,
+        /// as an index into <see cref="Letters"/>, or -1.
+        /// </summary>
+        public int ColourAt(int wave, int index) => Letters.IndexOf(At(wave, index).Colour);
+
+        /// <summary>How many raiders wave <paramref name="wave"/> holds.</summary>
+        public int SizeOf(int wave)
+            => wave < 0 || wave >= Coming.Length ? 0 : Coming[wave].Length;
+
+        /// <summary>The raider at <paramref name="index"/> of <paramref name="wave"/>.</summary>
+        public SiegeSpec At(int wave, int index)
+        {
+            if (wave < 0 || wave >= Coming.Length) return default;
+
+            var line = Coming[wave];
+            return index < 0 || index >= line.Length ? default : line[index];
+        }
+
+        /// <summary>
+        /// Every wave parsed into raiders, which is the one place that knows what a wave's text
+        /// means.
+        ///
+        /// <b>Parallel to <see cref="Waves"/> and always the same length</b>, because the strings
+        /// are what a level authored and this is what it said. Nothing outside this class reads
+        /// the strings for anything but a message.
+        /// </summary>
+        public readonly SiegeSpec[][] Coming = Array.Empty<SiegeSpec[]>();
+
+        /// <summary>Parses one authored wave into the raiders it names.</summary>
+        static SiegeSpec[] Read(string wave, SiegeKind bossKind, bool boss)
+        {
+            if (string.IsNullOrEmpty(wave)) return Array.Empty<SiegeSpec>();
+
+            var made = new List<SiegeSpec>(wave.Length);
+
+            for (int i = 0; i < wave.Length; i++)
+            {
+                bool shielded = wave[i] == Shield;
+                if (shielded && ++i >= wave.Length) break;
+
+                char letter = wave[i];
+                var kind = boss ? bossKind
+                         : shielded ? SiegeKind.Bulwark
+                         : char.IsUpper(letter) ? SiegeKind.Brute : SiegeKind.Creeper;
+
+                made.Add(new SiegeSpec(char.ToLowerInvariant(letter), kind));
+            }
+
+            return made.ToArray();
         }
 
         /// <summary>
@@ -270,6 +368,11 @@ namespace GlimmerGrove.Modes
             }
 
             Waves = coming.ToArray();
+
+            Coming = new SiegeSpec[Waves.Length][];
+            for (int i = 0; i < Waves.Length; i++)
+                Coming[i] = Read(Waves[i], BossKind, i == BossWave);
+
             Seed = Hash(grid);
             Fault = Check(boss);
         }
@@ -318,6 +421,21 @@ namespace GlimmerGrove.Modes
             return kept.ToString();
         }
 
+        /// <summary>Drops any <see cref="Shield"/> that has no colour letter after it.</summary>
+        static string Sweep(string wave)
+        {
+            if (string.IsNullOrEmpty(wave)) return string.Empty;
+
+            var kept = new System.Text.StringBuilder(wave.Length);
+            for (int i = 0; i < wave.Length; i++)
+            {
+                if (wave[i] == Shield && (i + 1 >= wave.Length || wave[i + 1] == Shield)) continue;
+                kept.Append(wave[i]);
+            }
+
+            return kept.ToString();
+        }
+
         static string[] Trim(string[] waves)
         {
             if (waves == null) return Array.Empty<string>();
@@ -325,7 +443,11 @@ namespace GlimmerGrove.Modes
             var kept = new List<string>(waves.Length);
             for (int i = 0; i < waves.Length; i++)
             {
-                string wave = Tidy(waves[i], RaiderLetters);
+                // **Tidied against the wider alphabet and then swept of a trailing modifier.** A
+                // '#' with no letter after it is not a raider, and left in place it would be a
+                // wave whose text and whose muster disagree about its own length - which is the
+                // whole class of fault the muster exists to remove.
+                string wave = Sweep(Tidy(waves[i], WaveLetters));
                 if (wave.Length > 0) kept.Add(wave);
             }
 
@@ -405,7 +527,7 @@ namespace GlimmerGrove.Modes
             if (Waves.Length == 0) return "nothing is coming, so there is nothing to hold";
 
             int raiders = 0;
-            for (int i = 0; i < Waves.Length; i++) raiders += Waves[i].Length;
+            for (int i = 0; i < Coming.Length; i++) raiders += Coming[i].Length;
 
             if (raiders > MaxRaiders)
                 return $"this level sends {raiders} raiders; {MaxRaiders} is the most a run may "
@@ -415,9 +537,9 @@ namespace GlimmerGrove.Modes
             // properly - it is still killable, at half rate, which is a level asking for
             // something it never taught. Certain, and the arithmetic par assumes it is not so.
             for (int w = 0; w < Waves.Length; w++)
-                for (int i = 0; i < Waves[w].Length; i++)
+                for (int i = 0; i < Coming[w].Length; i++)
                 {
-                    char colour = char.ToLowerInvariant(Waves[w][i]);
+                    char colour = Coming[w][i].Colour;
                     if (Array.IndexOf(Wards, colour) >= 0) continue;
 
                     // The boss is the one this really matters for: it has the health of a whole
@@ -501,7 +623,7 @@ namespace GlimmerGrove.Modes
             get
             {
                 int n = 0;
-                for (int i = 0; i < Waves.Length; i++) n += Waves[i].Length;
+                for (int i = 0; i < Coming.Length; i++) n += Coming[i].Length;
                 return n;
             }
         }
@@ -600,30 +722,30 @@ namespace GlimmerGrove.Modes
         /// than this has to buy the time back somewhere else.
         /// </para>
         /// <para>
-        /// <b>Then it halved, and that reverses the verdict above rather than refining it.</b> The
-        /// owner asked to <em>see the wards shoot more</em>: a gem now buys two bolts and each is
-        /// worth half (<see cref="FuelPerGemTenths"/>, <see cref="ShotDamage"/>), so a match
-        /// delivers exactly what it always did over twice as many of them. <b>That leaves one
-        /// choice about this number and it is arithmetic rather than taste</b> - bolts a second
-        /// times damage a bolt is the line's whole output, so half-weight bolts at an unchanged
-        /// cadence is <em>half the peak damage</em> whatever the totals say. Measured: at .22 the
-        /// chapter still clears, but a duel costs an unhurried player eight extra matches
-        /// (<c>s01_warlordsgate</c> 29 → 37, past its own three-star line) and the fixture line
-        /// falls outright; at .11 every rung comes back to the count it had before the change.
-        /// <b>"More bolts, same balance" has one solution and this is it.</b>
+        /// <b>And it stayed at .22 when a bolt's damage halved, which is the whole of what that
+        /// change was for.</b> A gem now buys two bolts (<see cref="FuelPerGemTenths"/>) and each
+        /// is worth half (<see cref="ShotDamage"/>), so at an unchanged cadence a fed ward
+        /// <em>keeps firing for twice as long</em> — which is what "see them shoot more" means.
+        /// Halving this as well was tried and undoes exactly that: the same bolts go through the
+        /// same window twice as densely and a ward stops firing when it always did, so there is
+        /// nothing more to watch. <b>The rate is what makes a ward's fire last; the fuel is what
+        /// makes it long.</b>
         /// </para>
         /// <para>
-        /// <b>What it costs is the thing the .22 verdict bought, so it is worth being plain: a lit
-        /// ward now looses nine bolts a second rather than four and a half.</b> The complaint at
-        /// .14 was that "a bolt is not an event - it is a hose", and this is faster still. What is
-        /// different is that a bolt is now worth half as much, which is what makes a stream legible
-        /// <em>as a stream</em> rather than as a queue of events that individually matter - and the
-        /// damage numbers say so, tallying per raider rather than one figure per hit (37k).
-        /// <b>This is the one dial to move if it reads as too dense</b>, and it is not free: every
-        /// tenth slower is peak damage the levels have to give back.
+        /// <b>What that costs is peak damage, and the levels pay it rather than this number.</b>
+        /// Bolts a second times damage a bolt is the line's output, so half-weight bolts at this
+        /// cadence is half the <em>peak</em> — which barely touches attrition (a ward lit twice as
+        /// long kills a marching column better, because less of each burst is spent as overkill)
+        /// and bites hard on an emergency, where one big health pool has to be answered at once.
+        /// Measured through <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, and it moved
+        /// three things in three different directions: a duel got dearer
+        /// (<c>s01_warlordsgate</c> wanted more hill and got it), a long attrition rung got
+        /// <em>safer</em> until nothing reached its line at all (<c>s01_thornsiege</c>, two more
+        /// brutes), and the rule-test fixture — the one siege in this project that sent a boss and
+        /// dealt no cogs — stopped being holdable, and now deals them like every shipped rung.
         /// </para>
         /// </summary>
-        public const float FireEvery = .11f;
+        public const float FireEvery = .22f;
 
         /// <summary>
         /// Fuel one bolt spends at rank nought, in tenths.
@@ -668,6 +790,66 @@ namespace GlimmerGrove.Modes
 
         /// <summary>What a bolt is worth against a raider of its own colour.</summary>
         public const int WeakMultiplier = 2;
+
+        // ------------------------------------------------------------------ the bulwark
+        /// <summary>
+        /// What a bolt of the <em>wrong</em> colour is worth against a shield, in tenths.
+        ///
+        /// <para>
+        /// <b>Halved, and its own colour is not reduced at all</b> — which is what makes this the
+        /// only raider on the hill whose answer is a colour rather than a quantity. Against a
+        /// creeper the difference between the right ward and any other is
+        /// <see cref="WeakMultiplier"/>: two to one. Against a bulwark it is <b>four</b> to one,
+        /// because the wrong answer is also halved. That is a big enough spread that a player who
+        /// keeps taking the biggest match on the field loses ground while one who reads the hill
+        /// gains it, and it needs no explaining: the bolts visibly bounce.
+        /// </para>
+        /// <para>
+        /// <b>The shield is pierced rather than worn down</b>, deliberately. A shield with its own
+        /// health would be a second bar on a raider that already has one, and the player's answer
+        /// to it would be "shoot it more" — which is what every other raider already asks for.
+        /// Piercing keeps the whole mechanic in the one decision this mode is about.
+        /// </para>
+        /// </summary>
+        public const int ShieldSoakTenths = 5;
+
+        /// <summary>
+        /// What a bolt from a ward of <paramref name="rank"/> takes off <paramref name="kind"/>,
+        /// given whether it is the raider's own colour.
+        ///
+        /// <b>One place, because a second copy is a second opinion about what a shield is worth.</b>
+        /// The soak is applied after the double, so a bulwark's own colour reaches it in full.
+        /// </summary>
+        public static int DamageTo(SiegeKind kind, int rank, bool weak)
+        {
+            int hit = DamageAt(rank) * (weak ? WeakMultiplier : 1);
+            if (kind != SiegeKind.Bulwark || weak) return hit;
+
+            int soaked = hit * ShieldSoakTenths / 10;
+
+            // Never nought: a bolt that reads as landing and takes nothing is a turret the player
+            // will believe is broken, and at rank nought against a low `ShotDamage` the division
+            // can get there.
+            return soaked < 1 ? 1 : soaked;
+        }
+
+        /// <summary>
+        /// A bulwark: slower than a creeper and much slower than a brute, so the shield is paid
+        /// for in the one currency this mode measures in — time on the hill.
+        ///
+        /// <b>Slower is the whole price, and it is a real one.</b> A raider that is hard to kill
+        /// and quick would be a wave the player simply cannot answer; one that is hard to kill and
+        /// slow is a wave they may choose to <em>ignore</em> for a while, which is a decision.
+        /// Its health sits between a creeper's and a brute's, because the shield is already doing
+        /// the work and stacking both would make it a boss.
+        /// </summary>
+        public const int BulwarkHealth = 700;
+
+        /// <summary>Seconds a bulwark takes to cross the hill. The slowest thing that is not a boss.</summary>
+        public const float BulwarkMarch = 34f;
+
+        /// <summary>What one bulwark swing costs a ward. A brute's, because it arrives armoured.</summary>
+        public const int BulwarkBlow = 2;
 
         // ------------------------------------------------------------------ ward ranks
         /// <summary>
@@ -783,7 +965,7 @@ namespace GlimmerGrove.Modes
         public const int OverlordHealth = 3200;
 
         public const float OverlordHold = .38f;
-        public const float OverlordMarch = 15f;
+        public const float OverlordMarch = 8f;
 
         /// <summary>
         /// Seconds between one omen and the next, and the cliff either side of it is sharp.
@@ -842,7 +1024,7 @@ namespace GlimmerGrove.Modes
         public const int BlightHealth = 1100;
 
         public const float BlightHold = .58f;
-        public const float BlightMarch = 14f;
+        public const float BlightMarch = 7f;
         public const float BlightCastEvery = 4.5f;
 
         /// <summary>Seconds a doused ward stands dark. Long enough to notice, short enough to wait out.</summary>
@@ -850,29 +1032,33 @@ namespace GlimmerGrove.Modes
 
         // ------------------------------------------------------------------ the warbringer
         /// <summary>
-        /// The warbringer: the boss that throws nothing, and the only one that <em>arrives</em>.
+        /// The warbringer: the boss that hits the <em>whole line</em> at once.
         ///
         /// <para>
-        /// <b>It takes ground.</b> Every <see cref="WarbringerCastEvery"/> seconds it roars, and
-        /// the roar does two things at once: it lunges the warbringer itself
-        /// <see cref="WarbringerLunge"/> further down the hill, and it sets every raider still on
-        /// the ground charging at <see cref="Rally"/> times its own pace for
-        /// <see cref="RallyFor"/> seconds. One idea with two effects, and both of them are the
-        /// same sentence — a warbringer takes ground, from wherever the ground is.
+        /// <b>It roars, and the roar does two things.</b> It takes <see cref="WarbringerCast"/>
+        /// off every ward still standing — not one ward, all of them — and it sets every raider on
+        /// the hill charging at <see cref="Rally"/> times its own pace for
+        /// <see cref="RallyFor"/> seconds. That is a different verb from the other three: a warlord
+        /// and an overlord pick one ward and hit it hard, so the line comes down unevenly and the
+        /// player chooses what to save; a warbringer shakes the entire line, so nothing it does can
+        /// be answered by protecting one turret and the only answer is to kill it faster.
         /// </para>
         /// <para>
-        /// <b>It is the only boss in this mode that reaches the line</b>, and that is what makes
-        /// it a different fight rather than the warlord with a different number. Every other one
-        /// stands out of reach and shells the line for as long as it lives, so the fight is
-        /// arithmetic: out-damage it. This one is a <em>countdown</em> — it is coming, it will
-        /// arrive, and when it does it swings <see cref="WarbringerBlow"/> at whatever is in front
-        /// of it. The decision is priority (everything else on the hill can wait) and the answer
-        /// is a firepot, which is the first time in this chapter that utility is the right one.
+        /// <b>It used to walk to the line, and that was withdrawn after play.</b> The design was
+        /// that it took <em>ground</em>: each roar lunged it further down the hill until it arrived
+        /// and swung with its hands, which made the fight a countdown rather than a duel. What it
+        /// actually produced was a boss that spent most of the level walking — reported as "it
+        /// takes forever to move down and start doing its damage, because it keeps moving
+        /// downwards". <b>A boss standing still is not a limitation of this mode, it is the shape
+        /// of the fight</b>: every one of them holds the middle of the hill where nothing can reach
+        /// it and the player answers it with the board, and a boss that walks spends the fight
+        /// being somewhere else. So it holds like the rest and the ground it used to take is gone.
         /// </para>
         /// <para>
-        /// <b>The rally half is why it comes early</b> — see <see cref="RestBefore"/>. A roar over
-        /// an empty hill would be half a mechanic doing nothing, which is invariant 5d: the whole
-        /// point of a rally is that there is something to rally.
+        /// <b>The rally half survives and is why it still comes early</b> — see
+        /// <see cref="RestBefore"/>. A roar over an empty hill would be half a mechanic doing
+        /// nothing, which is invariant 5d: the whole point of a rally is that there is something to
+        /// rally.
         /// </para>
         /// <para>
         /// <b>It adds no health to the hill, so par does not move</b> — which is exactly why the
@@ -883,24 +1069,40 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const int WarbringerHealth = 2400;
 
-        /// <summary>Where it first stops. It does not stay there — see <see cref="WarbringerLunge"/>.</summary>
-        public const float WarbringerHold = .34f;
+        /// <summary>
+        /// Where it stops, and it stays there.
+        ///
+        /// The warlord's ground, because it is the warlord's kind of fight: stand out of reach and
+        /// work on the line. It was .34 and moving while it had a lunge.
+        /// </summary>
+        public const float WarbringerHold = .46f;
 
-        public const float WarbringerMarch = 15f;
-        public const float WarbringerCastEvery = 6f;
+        public const float WarbringerMarch = 8f;
 
         /// <summary>
-        /// How much further down the hill one roar carries it, as a march reading.
+        /// Seconds between one roar and the next, and it is the slowest cadence of the four.
         ///
-        /// Four roars and it is at the line, which against
-        /// <see cref="WarbringerCastEvery"/> is about twenty-four seconds from its first roar —
-        /// long enough that a player who prioritises it never meets it, short enough that one who
-        /// ignores it does.
+        /// <b>Because a roar lands four times, the cadence is what prices it.</b> Four wards at
+        /// <see cref="WarbringerCast"/> every nine seconds is 0.89 health a second off the line,
+        /// which sits where the rung does: a warlord takes 0.60 and an overlord 1.25, so rungs 5,
+        /// 8 and 10 climb. It was 6, which is 1.33 — <em>more</em> than the finale, and measured
+        /// on the shipped rung it left an unhurried player on 6 of 56 (the chapter's bloodiest
+        /// line, one rung before its climax, which is the ramp inverted).
+        /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> is the only thing that can see any
+        /// of that.
         /// </summary>
-        public const float WarbringerLunge = .16f;
+        public const float WarbringerCastEvery = 9f;
 
-        /// <summary>What it swings once it arrives. Half again a brute's, because it took a minute.</summary>
-        public const int WarbringerBlow = 3;
+        /// <summary>
+        /// What one roar takes off <em>every</em> standing ward.
+        ///
+        /// <b>Small, because it lands four times.</b> Two off a four-ward line is eight health a
+        /// roar against a warlord's three, which is more in total and much less per ward — so the
+        /// line comes down flat rather than one turret at a time, and no single mending answers it.
+        /// Spread damage is the weaker shape for the same total, which is the right side to err on
+        /// for the rung before the finale.
+        /// </summary>
+        public const int WarbringerCast = 2;
 
         /// <summary>
         /// How much faster the hill walks while a warbringer's roar is on it.
@@ -932,15 +1134,24 @@ namespace GlimmerGrove.Modes
         /// Seconds it would take to cross the whole hill. It only walks <see cref="BossHold"/> of
         /// it, so the entrance a player actually watches is a little under six seconds.
         ///
-        /// <b>It was 22, which is ten seconds of entrance, and the owner asked for it faster after
-        /// playing.</b> A creeper crosses the whole hill in fifteen; there was no reason for the
-        /// warlord to be slower per unit of ground than the smallest thing on the board except that
-        /// slow reads as heavy — and past a few seconds it stops reading as heavy and starts reading
-        /// as a wait. What carries the weight instead is its size, its own frames and the shake it
-        /// arrives with. <c>SiegeRuleTests.AWarlordWalksOnBeforeItStands</c> holds the entrance
-        /// under eight seconds so the number cannot drift back.
+        /// <b>It was 22, then 13, and it is 7 — the owner has now asked for it faster twice.</b> A
+        /// creeper crosses the whole hill in fifteen; there was no reason for a boss to be slower
+        /// per unit of ground than the smallest thing on the board except that slow reads as heavy
+        /// — and past a few seconds it stops reading as heavy and starts reading as a wait. What
+        /// carries the weight instead is its size, its own frames and the shake it arrives with.
+        /// <c>SiegeRuleTests.AWarlordWalksOnBeforeItStands</c> holds the entrance under
+        /// <b>four</b> seconds now, so the number cannot drift back.
+        /// <para>
+        /// <b>All four bosses moved together and the entrances stay in the order the sizes are
+        /// in</b>, because the ladder a player reads is size-then-weight: the blightcaller walks on
+        /// in about 4.1 seconds, the warlord in 3.2, the overlord in 3.0 and the warbringer in 2.7.
+        /// Halving these is not free — a boss on its ground is a boss casting, so every one of them
+        /// now opens fire three to four seconds earlier, which is why this went back through
+        /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> like every other pacing change
+        /// (37s).
+        /// </para>
         /// </summary>
-        public const float BossMarch = 13f;
+        public const float BossMarch = 7f;
 
         /// <summary>
         /// The quiet before the warlord, which is longer than the quiet before any other wave.
@@ -1075,6 +1286,48 @@ namespace GlimmerGrove.Modes
             return row < 0 ? 0 : row >= BlastRows ? BlastRows - 1 : row;
         }
 
+        /// <summary>
+        /// How many of the hill's rows this kind's <em>body</em> covers, counting up from its feet.
+        ///
+        /// <para>
+        /// <b>A firepot hits what a player can see, and for a boss those were two different
+        /// things.</b> A raider stands at one point on the hill and a blast takes the box that
+        /// point is in (<see cref="RowOf"/>), which is exactly right while a raider is about a cell
+        /// tall and its body and its feet are in the same box. A boss is drawn three cells and more
+        /// on a hill four rows deep, so most of what a player is aiming at is in the box *above*
+        /// the one it occupies — tap the thing and nothing happens, which came back from play as
+        /// "the bombs don't hit bosses". They did; they hit its feet.
+        /// </para>
+        /// <para>
+        /// <b>A drawing number living in the rules</b>, exactly as <see cref="BossTell"/> and
+        /// <see cref="SwapFor"/> are and for the same reason: what a blast hits and what the board
+        /// draws have to be one fact, and the cheapest way to guarantee that is for there to be
+        /// only one. <c>SiegeView.TallOf</c> is the height this is the row count of, and
+        /// <c>SiegeRuleTests</c> holds the two in step.
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// <b>Three, and it is measured rather than picked.</b> The hill is 4.34 cells deep across
+        /// <see cref="BlastRows"/> rows, so a row is about 1.09 cells; a boss is drawn 3.0 to 3.5
+        /// cells tall (<c>SiegeView.TallOf</c>), which is 2.8 to 3.2 rows of body. Ordinary raiders
+        /// are one and a bit cells and stay at one.
+        /// </remarks>
+        public static int RowsOf(SiegeKind kind) => IsBoss(kind) ? 3 : 1;
+
+        /// <summary>
+        /// Whether a raider standing at <paramref name="march"/> is caught by a blast on
+        /// <paramref name="row"/>.
+        ///
+        /// Its feet are in <see cref="RowOf"/> and its body reaches <em>up</em> the hill from
+        /// there — up the screen is toward the top, which is the lower row index, because row
+        /// nought is where a wave steps out and the last row is the ward line.
+        /// </summary>
+        public static bool Caught(SiegeKind kind, float march, int row)
+        {
+            int feet = RowOf(march);
+            return row <= feet && row > feet - RowsOf(kind);
+        }
+
         // ------------------------------------------------------------------ fuel in flight
         /// <summary>
         /// How long a match takes to reach the wards it feeds, and the three numbers it is made
@@ -1147,7 +1400,8 @@ namespace GlimmerGrove.Modes
             for (int i = 0; i < SiegeLayout.BossNames.Length; i++)
                 if (SiegeLayout.BossNames[i].Kind == kind) return SiegeLayout.BossNames[i].Name;
 
-            return kind == SiegeKind.Brute ? "brute" : "creeper";
+            return kind == SiegeKind.Bulwark ? "bulwark"
+                 : kind == SiegeKind.Brute ? "brute" : "creeper";
         }
 
         public static int HealthOf(SiegeKind kind)
@@ -1155,6 +1409,7 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Warbringer ? WarbringerHealth
              : kind == SiegeKind.Boss ? BossHealth
              : kind == SiegeKind.Blightcaller ? BlightHealth
+             : kind == SiegeKind.Bulwark ? BulwarkHealth
              : kind == SiegeKind.Brute ? BruteHealth : CreeperHealth;
 
         public static float MarchOf(SiegeKind kind)
@@ -1162,6 +1417,7 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Warbringer ? WarbringerMarch
              : kind == SiegeKind.Boss ? BossMarch
              : kind == SiegeKind.Blightcaller ? BlightMarch
+             : kind == SiegeKind.Bulwark ? BulwarkMarch
              : kind == SiegeKind.Brute ? BruteMarch : CreeperMarch;
 
         /// <summary>Seconds between one spell and the next, for whichever boss this is.</summary>
@@ -1173,25 +1429,26 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// What one of this boss's spells takes off a ward's health.
         ///
-        /// <b>Nought for two of the four, and that is not an omission.</b> A blightcaller takes
-        /// fire and a warbringer takes time; asking either for a damage number would be asking
-        /// what a mending is worth against it, and the answer is nothing.
+        /// <b>Nought for the blightcaller, and that is not an omission</b> — it takes a ward's
+        /// fire rather than its health, so asking what a mending is worth against it has the answer
+        /// "nothing". The warbringer's number is per ward and lands on <em>all</em> of them
+        /// (<see cref="WarbringerCast"/>), which is why it is the smallest of the three.
         /// </summary>
         public static int CastOf(SiegeKind kind)
             => kind == SiegeKind.Overlord ? OverlordCast
+             : kind == SiegeKind.Warbringer ? WarbringerCast
              : kind == SiegeKind.Boss ? BossCast : 0;
 
         /// <summary>
         /// What one swing at the line costs a ward.
         ///
-        /// <b>Three of the four bosses swing at nothing</b>, because they never reach the line —
-        /// what they cost the line is their spell, from where they stand. The warbringer is the
-        /// exception and is the whole of what makes it a different fight (see
-        /// <see cref="WarbringerLunge"/>).
+        /// <b>A boss swings at nothing</b>, because none of the four reaches the line — what they
+        /// cost the line is their spell, from where they stand. The warbringer briefly was the
+        /// exception, and holding the middle is what it was changed back to.
         /// </summary>
         public static int BlowOf(SiegeKind kind)
-            => kind == SiegeKind.Warbringer ? WarbringerBlow
-             : IsBoss(kind) ? 0
+            => IsBoss(kind) ? 0
+             : kind == SiegeKind.Bulwark ? BulwarkBlow
              : kind == SiegeKind.Brute ? BruteBlow : CreeperBlow;
 
         /// <summary>How far down the hill this kind comes before it stops. A boss stops early.</summary>
@@ -1204,14 +1461,12 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// Whether this boss can bring a ward down at all, given long enough.
         ///
-        /// <b>Two of the four cannot</b>, and only one of the two is obvious. A blightcaller takes
-        /// fuel and never health, so a level whose only threat were one could not be lost — which
-        /// is what <c>ModeValidator.Threatens</c> now asks rather than assuming that a boss is by
-        /// definition dangerous. A warbringer takes no health either and still counts, because it
-        /// walks all the way to the line and swings there for the rest of the run.
+        /// <b>One of the four cannot.</b> A blightcaller takes fuel and never health, so a level
+        /// whose only threat were one could not be lost — which is what
+        /// <c>ModeValidator.Threatens</c> asks rather than assuming that a boss is by definition
+        /// dangerous. It was two while the warbringer took ground instead of health.
         /// </summary>
-        public static bool EndangersTheLine(SiegeKind kind)
-            => CastOf(kind) > 0 || SpellOf(kind) == SiegeSpell.Rally;
+        public static bool EndangersTheLine(SiegeKind kind) => CastOf(kind) > 0;
 
         /// <summary>
         /// The quiet before a wave, which is longer before a boss and shortest before a
@@ -1324,8 +1579,8 @@ namespace GlimmerGrove.Modes
             if (layout == null) return 1;
 
             int health = 0;
-            for (int w = 0; w < layout.Waves.Length; w++)
-                for (int i = 0; i < layout.Waves[w].Length; i++)
+            for (int w = 0; w < layout.Coming.Length; w++)
+                for (int i = 0; i < layout.Coming[w].Length; i++)
                     health += HealthOf(layout.KindAt(w, i));
 
             int par = (health + PerfectMatch - 1) / PerfectMatch;
@@ -1363,6 +1618,28 @@ namespace GlimmerGrove.Modes
 
         /// <summary>The warbringer: it roars, and the hill charges.</summary>
         Warbringer,
+
+        /// <summary>
+        /// The bulwark: it carries a shield, so it walks slowly and shrugs off anything that is
+        /// not its own colour.
+        ///
+        /// <para>
+        /// <b>Appended</b>, for the reason every member of this enum is: the ordinals reach
+        /// analytics on every run this mode has recorded.
+        /// </para>
+        /// <para>
+        /// <b>It is the first raider whose answer is a colour rather than a quantity.</b> A
+        /// creeper and a brute differ only in how much of the same thing they need — health,
+        /// speed, blow — so a player beats both by matching more. A bulwark halves every bolt
+        /// that is not its own colour and takes its own colour in full (<see
+        /// cref="SiegeTuning.ShieldSoakTenths"/>), which puts a <b>fourfold</b> spread between
+        /// feeding the right ward and feeding any other: the elemental double is already 2x, and
+        /// the shield makes the wrong answer 0.5x. That is the one raider on this hill that
+        /// punishes taking the biggest match on the field, which is the mistake this mode is
+        /// about.
+        /// </para>
+        /// </summary>
+        Bulwark,
     }
 
     /// <summary>
@@ -1416,12 +1693,12 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// How far down it comes before it stops. One for everything but a boss.
         ///
-        /// <b>Not readonly, and exactly one thing writes it</b>: a warbringer's roar lunges it
-        /// further down the hill (<see cref="SiegeTuning.WarbringerLunge"/>). Everything else is
-        /// minted with its kind's ground and never moves it, so <see cref="AtTheLine"/> stays the
-        /// one question anything asks about where a raider is.
+        /// <b>Readonly again.</b> It was briefly written by a warbringer's roar, which lunged it
+        /// further down the hill each time; that was withdrawn after play (a boss that walks spends
+        /// the fight being somewhere else), and with it went the only thing that ever moved a
+        /// raider's ground after it was minted.
         /// </summary>
-        public float Hold;
+        public readonly float Hold;
 
         public int Health;
         public readonly int MaxHealth;
@@ -1906,6 +2183,25 @@ namespace GlimmerGrove.Modes
         public int GoalsLeft => Goals - _felled;
 
         /// <summary>
+        /// How many raiders are standing on the hill right now.
+        ///
+        /// <b>Not <see cref="GoalsLeft"/>, which counts everything the level has left to send.</b>
+        /// A utility that lands on the hill can only reach what is already walking, so this is what
+        /// decides whether one would do anything at all.
+        /// </summary>
+        public int OnTheHill
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 0; i < _raiders.Count; i++)
+                    if (_raiders[i].Alive && _raiders[i].OnTheHill) n++;
+
+                return n;
+            }
+        }
+
+        /// <summary>
         /// Whether a move on this board could still mean anything.
         ///
         /// <b>A line with nothing standing on it is where a run of this mode ends</b>, and it is
@@ -1917,13 +2213,27 @@ namespace GlimmerGrove.Modes
         public bool AnyMove => WardsStanding > 0;
 
         /// <summary>
-        /// <b>Never rescued, and that is the arithmetic rather than a policy.</b> A run here ends
-        /// when the last ward falls, and no purchase puts one back up — so this is invariant 28f's
-        /// certainty, and <c>ProtoVerdict</c> answers <c>NoContinue</c> rather than selling a
-        /// finish that could not happen. The mistake money cannot fix is the one the mode is
-        /// about.
+        /// <b>Never stranded, and that is arithmetic rather than generosity.</b> A run here ends
+        /// when the last ward falls — <see cref="AnyMove"/> — and what a continue sells is the
+        /// line itself: <see cref="Rally"/> puts every turret back up at full health with the
+        /// hill exactly where it stood. So a fallen line is a shortage that a purchase really
+        /// does fix, which is the only thing this predicate is asked (invariant 28f), and
+        /// answering <c>true</c> would refuse a rescue to somebody who could still win.
+        ///
+        /// <para>
+        /// <b>Note what does not make it true either.</b> A pod carrying a cage jams the line
+        /// rather than passing through it (invariant 33b), so every goal a board opened with is
+        /// still standing on it however long the run goes on — more cores always help. And the
+        /// gem field is dealt again rather than allowed to lock (invariant 20j), so there is
+        /// always a swap. There is no siege state no purchase rescues.
+        /// </para>
+        /// <para>
+        /// It is <em>this</em> rather than the run's own gate that decides whether an offer is
+        /// honest. Whether one is actually made is <c>RunContinueFlow</c>'s — a run nobody is
+        /// charged for is a run nobody is sold, so the opening rungs of the chapter never see it.
+        /// </para>
         /// </summary>
-        public bool Stranded => WardsStanding == 0;
+        public bool Stranded => false;
 
         // ------------------------------------------------------------------ swapping
         public bool Adjacent(int a, int b)
@@ -2124,6 +2434,26 @@ namespace GlimmerGrove.Modes
         /// <summary>Whether this level ever deals a cog, authored or refilled.</summary>
         public bool Upgrades => Layout.Cogs > 0 || _seeded;
 
+        /// <summary>
+        /// Whether anything walking down this hill carries a shield.
+        ///
+        /// <b>Read off the muster rather than off the raiders standing now</b>, because a lesson
+        /// has to go up when the board opens and the first bulwark may be two waves away — and a
+        /// lesson is shown once in a player's life, so raising it on a rung that sends none would
+        /// spend it on something never on the screen.
+        /// </summary>
+        public bool Shielded
+        {
+            get
+            {
+                for (int w = 0; w < Layout.Coming.Length; w++)
+                    for (int i = 0; i < Layout.Coming[w].Length; i++)
+                        if (Layout.KindAt(w, i) == SiegeKind.Bulwark) return true;
+
+                return false;
+            }
+        }
+
         /// <summary>Gravity, then a refill, both written into the beat for the view to animate.</summary>
         void Collapse(SiegeBeat beat)
         {
@@ -2306,21 +2636,39 @@ namespace GlimmerGrove.Modes
                 var caster = Find(spell.Raider);
                 if (caster == null || !caster.Alive) continue;
 
-                // A roar reaches no ward, so it is settled before anything asks for one. It
-                // *restarts* rather than stacks: two warbringers on one hill would otherwise
-                // multiply into a charge no level was tuned against.
+                // **A roar is aimed at no ward and lands on every one of them.** It is settled
+                // here rather than falling through to the single-target path below, because that
+                // path indexes `spell.Ward` and a roar carries -1. It *restarts* rather than
+                // stacks: two warbringers on one hill would otherwise multiply the charge into
+                // something no level was tuned against.
                 if (spell.Craft == SiegeSpell.Rally)
                 {
                     _roar = SiegeTuning.RallyFor;
 
-                    // **And it takes ground itself**, which is the half that matters in the duel:
-                    // by the time a warbringer is the only thing left there is nothing to rally,
-                    // and what is left is a boss walking toward the line one roar at a time.
-                    // Clamped at the line, where `AtTheLine` takes over and it starts swinging.
-                    caster.Hold = Math.Min(1f, caster.Hold + SiegeTuning.WarbringerLunge);
+                    int shook = SiegeTuning.CastOf(caster.Kind);
 
-                    _report.Spells.Add(
-                        new SiegeSpellLanded(spell.Raider, -1, SiegeSpell.Rally, 0, false));
+                    for (int w = 0; w < _wards.Length; w++)
+                    {
+                        var shaken = _wards[w];
+                        if (!shaken.Alive) continue;
+
+                        shaken.Health -= shook;
+
+                        bool down = shaken.Health <= 0;
+                        if (down)
+                        {
+                            shaken.Health = 0;
+                            shaken.Alive = false;
+                            shaken.Fuel = 0f;
+                        }
+
+                        // One record per ward, so the view draws a hit on each of them from the
+                        // same list every other spell arrives on. The roar itself is drawn off the
+                        // *cast* (`SiegeView.Roar`), which is where its ring already comes from.
+                        _report.Spells.Add(
+                            new SiegeSpellLanded(spell.Raider, w, SiegeSpell.Rally, shook, down));
+                    }
+
                     continue;
                 }
 
@@ -2380,14 +2728,13 @@ namespace GlimmerGrove.Modes
                     if (_raiders[i].Alive) return;
             }
 
-            string wave = Layout.Waves[_wave];
             bool boss = _wave == Layout.BossWave;
+            int size = Layout.SizeOf(_wave);
 
-            for (int i = 0; i < wave.Length; i++)
+            for (int i = 0; i < size; i++)
             {
-                char token = wave[i];
                 var kind = Layout.KindAt(_wave, i);
-                int colour = SiegeLayout.Letters.IndexOf(char.ToLowerInvariant(token));
+                int colour = Layout.ColourAt(_wave, i);
 
                 // Lanes are dealt from the same stream the field is, so a wave arrives spread out
                 // rather than in a column - and spread the same way on every device.
@@ -2489,7 +2836,7 @@ namespace GlimmerGrove.Modes
                 ward.Fuel = Math.Max(0f, ward.Fuel - SiegeTuning.FuelShot(ward.Rank));
 
                 bool weak = target.Colour == ward.Colour;
-                int damage = SiegeTuning.DamageAt(ward.Rank) * (weak ? SiegeTuning.WeakMultiplier : 1);
+                int damage = SiegeTuning.DamageTo(target.Kind, ward.Rank, weak);
 
                 target.Health -= damage;
                 target.Flash = .18f;
@@ -2740,7 +3087,11 @@ namespace GlimmerGrove.Modes
                 if (!raider.Alive || !raider.OnTheHill) continue;
 
                 if (raider.Lane != lane) continue;
-                if (SiegeTuning.RowOf(raider.March) != row) continue;
+
+                // **What its body covers, not the box its feet are in.** A boss is three cells of
+                // silhouette on a four-row hill, so aiming at the thing you can see and missing is
+                // the whole of the "bombs don't hit bosses" report.
+                if (!SiegeTuning.Caught(raider.Kind, raider.March, row)) continue;
 
                 int took = damage < raider.Health ? damage : raider.Health;
                 absorbed += took;
@@ -2764,15 +3115,82 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
+        /// Strikes <b>everything on the hill</b> for the same damage, and answers how much was
+        /// absorbed.
+        ///
+        /// <para>
+        /// <b>The strikes are shuffled, and they are shuffled off the board's own stream.</b> The
+        /// view draws them one at a time down the list, so the order is what a player sees — bolts
+        /// falling here and there across the hill rather than a tidy sweep left to right, which
+        /// reads as a list being processed. It comes from <see cref="Next"/> rather than from
+        /// <c>Random</c> because everything else this mode deals does (invariant 37e): two devices
+        /// on the same board see the same storm, so a report about one is a report somebody else
+        /// can meet.
+        /// </para>
+        /// <para>
+        /// <b>A shield is not read here</b>, and that is the rule rather than an omission. A
+        /// bulwark halves what a <em>ward's bolt</em> does to it because the shield is answered by
+        /// <em>colour</em>; a storm has no colour, so there is nothing for the soak to be measured
+        /// against. See <see cref="SiegeKind.Bulwark"/>.
+        /// </para>
+        /// </summary>
+        public int Storm(int damage, List<SiegeStrike> into)
+        {
+            if (damage <= 0) return 0;
+
+            int first = into != null ? into.Count : 0;
+            int absorbed = 0;
+
+            for (int i = 0; i < _raiders.Count; i++)
+            {
+                var raider = _raiders[i];
+                if (!raider.Alive || !raider.OnTheHill) continue;
+
+                int took = damage < raider.Health ? damage : raider.Health;
+                absorbed += took;
+
+                raider.Health -= took;
+                raider.Flash = .18f;
+
+                bool killed = raider.Health <= 0;
+                if (killed)
+                {
+                    raider.Alive = false;
+                    _felled++;
+                }
+
+                into?.Add(new SiegeStrike(raider.Id, took, killed));
+            }
+
+            // Fisher-Yates over what this call added, so a storm on a board that already had
+            // strikes pending cannot reorder somebody else's.
+            if (into != null)
+            {
+                for (int i = into.Count - 1; i > first; i--)
+                {
+                    int j = first + (int)(Next() % (uint)(i - first + 1));
+                    var held = into[i];
+                    into[i] = into[j];
+                    into[j] = held;
+                }
+            }
+
+            return absorbed;
+        }
+
+        /// <summary>
         /// Mends a ward, and answers how much health it actually took.
         ///
         /// <para>
         /// <b>It mends a standing ward and can never raise a fallen one.</b> That is not a
-        /// kindness withheld: <see cref="Stranded"/> is a <em>certainty</em> that decides
-        /// whether money changes hands (invariant 28f), and it is only allowed to say "no
-        /// purchase rescues this" because nothing can put a ward back up. A mending that
-        /// revived one would make that claim false and leave <c>ProtoVerdict</c> refusing
-        /// continues it should have sold.
+        /// kindness withheld, and the reason moved once without the rule moving with it. It used
+        /// to be that nothing at all could put a ward back up, so <see cref="Stranded"/> could
+        /// honestly say a fallen line was beyond rescue. <see cref="Rally"/> now can — but only
+        /// as a <em>continue</em>, which is a purchase made after the run is over, offered before
+        /// any of the accounting happens and priced against the grade (invariant 23). A mending
+        /// that raised a ward would be that same purchase sold for eight gems in the middle of a
+        /// run, outside the ordering the continue exists to keep and outside the toll that stops
+        /// it buying a star. What a utility may sell is survival, never resurrection.
         /// </para>
         /// </summary>
         public int Mend(int ward, int health)
@@ -2830,6 +3248,59 @@ namespace GlimmerGrove.Modes
             if (post.Fuel > SiegeTuning.WardCapacity) post.Fuel = SiegeTuning.WardCapacity;
 
             return given;
+        }
+
+        /// <summary>
+        /// Puts the ward line back up, because a continue was paid for. Answers how many turrets
+        /// really stood again.
+        ///
+        /// <para>
+        /// <b>The one thing in this mode that raises a fallen ward, and it is a continue rather
+        /// than a utility</b> — see <see cref="Mend"/> for the difference and why it matters.
+        /// The hill is not touched: every raider stands where it stood, mid-march or mid-swing,
+        /// with the wave clock where it was, which is what "carry on from where you left off"
+        /// has to mean when the thing that ended the run was the line and not the board.
+        /// </para>
+        /// <para>
+        /// <b>Full health, and the rank the cogs bought.</b> Health, because a line raised at
+        /// anything less is a line that falls again in a breath and a continue that does not
+        /// continue is a charge (invariant 23). Rank, because it is the one thing in this mode a
+        /// player earns (invariant 37w) and nothing has taken it away — a continue that
+        /// confiscated it would be selling back less than was lost.
+        /// </para>
+        /// <para>
+        /// <b>No fuel, deliberately.</b> Fuel is damage, and damage is progress the run was
+        /// graded against; a continue may buy a finish and never a grade, so the wards come back
+        /// standing and empty and the player matches to light them. The dark a blightcaller left
+        /// is cleared for the opposite reason — it is seconds the player would be paying for and
+        /// not receiving.
+        /// </para>
+        /// <para>
+        /// Raised left to right so that a published figure smaller than the line is at least
+        /// deterministic. It ships as the whole line, so in practice the order decides nothing.
+        /// </para>
+        /// </summary>
+        public int Rally(int wards)
+        {
+            if (wards <= 0) return 0;
+
+            int raised = 0;
+
+            for (int i = 0; i < _wards.Length && raised < wards; i++)
+            {
+                var post = _wards[i];
+                if (post.Alive) continue;
+
+                post.Alive = true;
+                post.Health = SiegeTuning.WardHealth;
+                post.Fuel = 0f;
+                post.Dark = 0f;
+                post.Cool = 0f;
+
+                raised++;
+            }
+
+            return raised;
         }
 
         /// <summary>Whether this ward is standing but smothered. Asked by a surge's offer.</summary>

@@ -83,11 +83,9 @@ namespace GlimmerGrove
             public RectTransform Node;
             public Image Body;
             public Image Shadow;
-            public Image Aura;
             public Image Pip;
             public RectTransform Bar;
             public Image Fill;
-            public Color Coat;
             public float Height;
             public bool Falling;
 
@@ -248,6 +246,52 @@ namespace GlimmerGrove
         /// have the gate checking the wrong string and saying so confidently.
         /// </summary>
         static Sprite Piece(string key) => AssetLibrary.Sprite(AssetManifest.SiegeArt(key));
+
+        /// <summary>
+        /// Which rung of its chapter this level is, which is the only thing that decides its
+        /// ground.
+        ///
+        /// Set by <c>SiegeScreen</c> before the board is built. Nought when nothing has said
+        /// otherwise, so a siege opened outside a chapter draws the first rung's floor rather than
+        /// a white rectangle (invariant 7b).
+        /// </summary>
+        public int Rung { get; set; }
+
+        /// <summary>
+        /// The address of the ground a rung is fought over — the same answer
+        /// <see cref="SiegeMode.Ground"/> gives, said in the assembly that draws it.
+        ///
+        /// <para>
+        /// <b>Ten literal cases</b>, for the reason that method gives: <c>artnames.py</c> reads the
+        /// literal at a lookup's call site, so a key built from <see cref="Rung"/> would be ten
+        /// names nothing checks.
+        /// </para>
+        /// <para>
+        /// <b>It answers an address rather than a sprite so that it can be compared.</b> The two
+        /// switches have to agree or a chapter loads one floor while the board asks for another,
+        /// which draws a white rectangle over the whole hill on one rung with every gate green
+        /// (invariant 7b) — <c>SiegeGroundTests</c> is what stops that, and it can only make the
+        /// comparison if the answer is a string rather than something needing a loaded scope.
+        /// </para>
+        /// </summary>
+        public static string GroundAddress(int place)
+        {
+            switch (((place % SiegeMode.Grounds) + SiegeMode.Grounds) % SiegeMode.Grounds)
+            {
+                case 1:  return AssetManifest.SiegeArt("hill2");
+                case 2:  return AssetManifest.SiegeArt("hill3");
+                case 3:  return AssetManifest.SiegeArt("hill4");
+                case 4:  return AssetManifest.SiegeArt("hill5");
+                case 5:  return AssetManifest.SiegeArt("hill6");
+                case 6:  return AssetManifest.SiegeArt("hill7");
+                case 7:  return AssetManifest.SiegeArt("hill8");
+                case 8:  return AssetManifest.SiegeArt("hill9");
+                case 9:  return AssetManifest.SiegeArt("hill10");
+                default: return AssetManifest.SiegeArt("hill1");
+            }
+        }
+
+        static Sprite Hill(int place) => AssetLibrary.Sprite(GroundAddress(place));
 
         static Sprite[] Reel(string key) => AssetLibrary.Frames(AssetManifest.SiegeArt(key));
 
@@ -500,14 +544,39 @@ namespace GlimmerGrove
                 case SiegeKind.Blightcaller: return Reel("blight");
             }
 
-            if (raider.Brute) return Reel("brute");
-
-
-            switch (raider.Colour % 3)
+            // **A body per colour, which is what removing the tint bought.** It used to be
+            // three creeper models handed out on `Colour % 3`, so two of the four colours shared a
+            // body and the only thing separating them was a wash that has now gone. Four bodies
+            // means the silhouette says the colour on its own — which is the half of the rule a
+            // player who cannot separate red from green depends on — and it costs nothing but
+            // folder names, out of eighty-three characters these packs hold.
+            switch (raider.Kind)
             {
-                case 0: return Reel("mon1");
-                case 1: return Reel("mon2");
-                default: return Reel("mon3");
+                case SiegeKind.Bulwark:
+                    switch (raider.Colour)
+                    {
+                        case 0: return Reel("bulwark_r");
+                        case 1: return Reel("bulwark_g");
+                        case 2: return Reel("bulwark_b");
+                        default: return Reel("bulwark_y");
+                    }
+
+                case SiegeKind.Brute:
+                    switch (raider.Colour)
+                    {
+                        case 0: return Reel("brute_r");
+                        case 1: return Reel("brute_g");
+                        case 2: return Reel("brute_b");
+                        default: return Reel("brute_y");
+                    }
+            }
+
+            switch (raider.Colour)
+            {
+                case 0: return Reel("mon_r");
+                case 1: return Reel("mon_g");
+                case 2: return Reel("mon_b");
+                default: return Reel("mon_y");
             }
         }
 
@@ -535,6 +604,11 @@ namespace GlimmerGrove
              // Three cells of frame is about one and three quarters of eye, which is the size a
              // brute is and the smallest thing that reads as more than a raider (invariant 32b).
              : raider.Kind == SiegeKind.Blightcaller ? 3.0f
+             // **A bulwark is drawn bigger than a brute**, because the one thing a player has to
+             // read about it before it is in range is that it is carrying something. Its shield is
+             // a third of its own frame, so at a brute's height the shield is the size of a gem
+             // and the whole mechanic is invisible until the bolts start bouncing.
+             : raider.Kind == SiegeKind.Bulwark ? 1.85f
              : raider.Brute ? 1.55f : 1.15f;
 
         /// <summary>
@@ -696,7 +770,15 @@ namespace GlimmerGrove
         /// <summary>Where a lane sits across the hill.</summary>
         float LaneX(int lane)
         {
-            float wide = Span.x / SiegeTuning.Lanes;
+            // **Inset the way `PostX` already insets the ward line, and a render is what said so.**
+            // Divided by the lane count flat, the outer lanes put a raider's *centre* four tenths
+            // of the board from the middle - which is fine for a body drawn in a square and is not
+            // what this hill carries: the reels are cut to a fixed height and whatever width the
+            // animation's box came out as, so the widest of them is two thirds wider than it is
+            // tall. Drawn in lane nought or lane four it hangs over the plate, and the thing that
+            // goes over the edge is whatever the pack drew furthest from the body - which on a
+            // bulwark is the shield, the one part of it the mechanic is about.
+            float wide = Span.x / (SiegeTuning.Lanes + .6f);
             return (lane - (SiegeTuning.Lanes - 1) * .5f) * wide;
         }
 
@@ -831,7 +913,7 @@ namespace GlimmerGrove
         {
             float h = _hillTop - _hillFoot + Cell * .35f;
 
-            var ground = UIKit.Img("Ground", _hill, Piece("hill"), Color.white,
+            var ground = UIKit.Img("Ground", _hill, Hill(Rung), Color.white,
                                    new Vector2(Span.x, h + Cell * .5f));
             ground.raycastTarget = false;
             ground.rectTransform.anchoredPosition = new Vector2(0f, (_hillTop + _hillFoot) * .5f);
@@ -1134,6 +1216,14 @@ namespace GlimmerGrove
             _aim = Layer("Aim");
             _aim.SetAsLastSibling();
 
+            // **An `Everywhere` utility is never aimed and never gets a layer.** It lands on
+            // the whole hill, so there is nothing to point at - and a targeting mode that accepts
+            // any tap and ignores where it was is a control that rejects nothing (invariant 5d).
+            // `SiegeScreen` fires one on the tap that arms it, so this is only ever reached if
+            // something armed it another way; tearing the layer down and standing there is the
+            // safe answer.
+            if (_arming.Target == UtilityTarget.Everywhere) return;
+
             if (_arming.Target == UtilityTarget.Ward) AimWards();
             else AimHill();
         }
@@ -1239,9 +1329,19 @@ namespace GlimmerGrove
         /// the player back in a targeting mode they had just been told they could not use, and a
         /// success that left it up would arm a second use of an item they may no longer hold.
         /// </summary>
-        void Loose(SiegeAim aim)
+        /// <summary>
+        /// Uses a utility that is aimed at nothing, from outside.
+        ///
+        /// <b>It never goes through <see cref="Arming"/></b>, because there is nothing to aim: the
+        /// screen calls this on the tap that would have armed it, so the item is used at once and
+        /// the board is never left in a targeting mode with no target.
+        /// </summary>
+        public void Loose(UtilityItem item) => Spend(item, default);
+
+        void Loose(SiegeAim aim) => Spend(_arming, aim);
+
+        void Spend(UtilityItem item, SiegeAim aim)
         {
-            var item = _arming;
             if (item == null || Fire == null) { Arming = null; return; }
 
             _strikes.Clear();
@@ -1257,12 +1357,19 @@ namespace GlimmerGrove
             }
 
             Charged(use.Matches);
-            Struck(item, aim, use);
-            Judge();
+
+            // **A storm judges itself when it has finished falling.** Everything else here
+            // resolves in one frame, so asking whether the run is over immediately after is
+            // right; a storm is drawn over a second or more, and judging it at once would put
+            // the victory panel up while bolts were still landing on raiders the player can
+            // still see.
+            if (Struck(item, aim, use)) Judge();
         }
 
-        /// <summary>What a landed utility looks like.</summary>
-        void Struck(UtilityItem item, SiegeAim aim, SiegeUse use)
+        /// <summary>
+        /// What a landed utility looks like. Answers false when it will judge the run itself.
+        /// </summary>
+        bool Struck(UtilityItem item, SiegeAim aim, SiegeUse use)
         {
             switch (item.Kind)
             {
@@ -1277,12 +1384,21 @@ namespace GlimmerGrove
                 case UtilityKind.Surge:
                     Surged(use.Ward);
                     break;
+
+                case UtilityKind.Storm:
+                    // **The one utility whose strikes are not drawn here**, because they are not
+                    // drawn all at once: a storm is a run of bolts falling one after another
+                    // across the hill, so the list is walked by a coroutine which fells each
+                    // raider as its own bolt lands and judges the run at the end.
+                    Stormcall(_strikes);
+                    return false;
             }
 
             for (int i = 0; i < _strikes.Count; i++) Hurt(_strikes[i]);
 
             Reap();
             Changed?.Invoke();
+            return true;
         }
 
         void Firepot(SiegeAim aim)
@@ -1336,6 +1452,186 @@ namespace GlimmerGrove
         }
 
         /// <summary>One raider taking a hit from the player's own hand.</summary>
+        /// <summary>
+        /// A storm: the sky goes white and bolts come down one at a time, wherever the board put
+        /// them.
+        ///
+        /// <para>
+        /// <b>Staggered rather than simultaneous, and that is the whole drawing.</b> Every strike
+        /// lands in the rules the instant the item is used - the board is already resolved before
+        /// a single pixel moves - so what this decides is only what the player watches. All of it
+        /// at once is one white frame and a hill that is suddenly empty, which reads as the game
+        /// skipping something; one bolt every <see cref="StormStep"/> is a thing happening, and it
+        /// is what the item is being paid for.
+        /// </para>
+        /// <para>
+        /// <b>The order is the board's, not the view's</b> - <c>SiegeBoard.Storm</c> shuffles the
+        /// strikes off the same stream that deals the field, so the bolts fall here and there
+        /// rather than down the list, and they fall the same way on two devices (invariant 37e).
+        /// </para>
+        /// <para>
+        /// <b>It waits in real seconds</b>, because every wait in a screen coroutine here has to:
+        /// a modal sets <c>Time.timeScale</c> to nought, and a scaled wait behind one never
+        /// finishes.
+        /// </para>
+        /// </summary>
+        void Stormcall(List<SiegeStrike> hits)
+        {
+            Sky();
+            ShakeBoard(22f);
+
+            // Not `boom`, which is the firepot's. That one is an explosion and this is not.
+            Audio.Sfx("shatter", .9f, .72f);
+
+            // Copied, because `_strikes` is cleared by the next use and this outlives the call.
+            StartCoroutine(Storming(new List<SiegeStrike>(hits)));
+        }
+
+        /// <summary>
+        /// Seconds between one bolt of a storm and the next.
+        ///
+        /// <b>Long enough that they are separate events.</b> It was .085, which over a full hill
+        /// is eight bolts inside a second - fast enough that what a player sees is one flash and
+        /// an empty hill, which is the thing drawing them one at a time exists to avoid.
+        /// </summary>
+        const float StormStep = .30f;
+
+        IEnumerator Storming(List<SiegeStrike> hits)
+        {
+            for (int i = 0; i < hits.Count; i++)
+            {
+                Bolt(hits[i]);
+                Hurt(hits[i]);
+
+                // **Each raider dies to its own bolt.** The rules resolve the whole storm in one
+                // instant - they have to, or a run could be won half way through one - so if the
+                // widgets were all cleared at the end the hill would empty in a single frame
+                // after a second of bolts, which is exactly what "it kills them all at once"
+                // describes. Felling the one just struck is what makes the drawing match the item.
+                if (hits[i].Killed) Fell(hits[i].Raider);
+
+                yield return new WaitForSecondsRealtime(StormStep);
+            }
+
+            // Anything the strikes did not account for, then the verdict - held to here so a
+            // victory panel cannot arrive over a hill that is still being struck.
+            Reap();
+            Changed?.Invoke();
+            Judge();
+        }
+
+        /// <summary>Kills one raider's widget now, rather than waiting for <see cref="Reap"/>.</summary>
+        void Fell(int raiderId)
+        {
+            for (int i = _mob.Count - 1; i >= 0; i--)
+            {
+                var mob = _mob[i];
+                if (mob.Id != raiderId || mob.Falling) continue;
+
+                mob.Falling = true;
+                Blasted(mob);
+                _mob.RemoveAt(i);
+                return;
+            }
+        }
+
+        /// <summary>
+        /// A raider killed by lightning, which is not a raider killed by a bomb.
+        ///
+        /// <b>No fireball.</b> <see cref="Die"/> draws <c>boom_fire</c> and throws ember sparks,
+        /// which is right for a bolt or a firepot and reads as an explosion - and an explosion is
+        /// the one thing a lightning strike is not. This one goes white, stiffens and drops.
+        /// </summary>
+        void Blasted(Mob mob)
+        {
+            if (mob.Boss) { Die(mob); return; }
+
+            Audio.SfxVaried("blocked", .30f);
+
+            var node = mob.Node;
+            var body = mob.Body;
+            var group = UIKit.Group(node);
+
+            Tween.Run(.40f, Ease.OutQuad, t =>
+            {
+                if (!node) return;
+                if (body) body.color = Color.Lerp(Color.white, Pal.Cream, 1f - t);
+                node.localScale = new Vector3(1f - t * .25f, 1f - t * .45f, 1f);
+                if (group) group.alpha = 1f - t;
+            }, node).OnDone(() => { if (node) Destroy(node.gameObject); });
+        }
+
+        /// <summary>One bolt of a storm, falling on one raider.</summary>
+        void Bolt(SiegeStrike hit)
+        {
+            var raider = _board.Find(hit.Raider);
+            var mob = raider == null ? MobOf(hit.Raider) : Widget(raider);
+            if (mob == null || mob.Node == null || _fx == null) return;
+
+            var at = mob.Node.anchoredPosition;
+            var frames = StormBolt;
+            if (frames == null || frames.Length == 0) return;
+
+            // **Drawn upside down, and that is a fact about the pack rather than a trick.** The
+            // bought effect is authored as a strike seen from the side: its flash is at the top
+            // of the frame with the bolt hanging below, which is a bolt *leaving* a cloud. This
+            // board needs the other end - the flash on the raider and the bolt trailing up out
+            // of shot - so the reel is flipped and anchored by its bright end.
+            //
+            // **And it is drawn much wider than its own frame.** The pack cuts a real bolt, which
+            // is a few pixels of core inside a tall picture; at its own aspect on a phone that is
+            // a bright thread nobody sees. Stretching it across is the one distortion lightning
+            // survives - a wide bolt still reads as a bolt, where a wide fireball would not.
+            float tall = Cell * StormTall;
+            float wide = tall * frames[0].rect.width / frames[0].rect.height * StormWiden;
+
+            var shaft = UIKit.Img("Bolt", _fx, frames[0], Color.white, new Vector2(wide, tall));
+            shaft.raycastTarget = false;
+            shaft.rectTransform.localScale = new Vector3(1f, -1f, 1f);
+            shaft.rectTransform.anchoredPosition = new Vector2(at.x, at.y + tall * .5f);
+
+            var group = UIKit.Group(shaft.rectTransform);
+            var book = Flipbook.Attach(shaft, frames, StormFps, false);
+
+            // Held after the reel has run out rather than cut at its last frame: the strike fades
+            // over about a fifth of a second, and what was reported is that it is gone before it
+            // has been seen.
+            if (book != null)
+                book.OnFinished = () => Tween.Fade(group, 0f, StormLinger)
+                                             .OnDone(() => { if (shaft) Destroy(shaft.gameObject); });
+            else
+                Tween.After(1.2f, () => { if (shaft) Destroy(shaft.gameObject); });
+        }
+
+        /// <summary>
+        /// How a storm's bolt is drawn: its height in cells, how far it is stretched across, how
+        /// fast the reel runs and how long it is held after it has run out.
+        ///
+        /// <b>All four exist because "I do not even see the lightning" was the verdict on the
+        /// first cut.</b> It was 4.6 cells tall at its own aspect, run at 30fps and destroyed on
+        /// its last frame - a thread on screen for six tenths of a second. Wider, taller, half the
+        /// frame rate and a held fade is the same bought asset made legible.
+        /// </summary>
+        const float StormTall = 5.4f, StormWiden = 2.8f, StormFps = 15f, StormLinger = .34f;
+
+        static Sprite[] StormBolt => Blast("storm") ?? Blast("shot_y");
+
+        /// <summary>The sky going white over the whole board for a beat.</summary>
+        void Sky()
+        {
+            if (_fx == null) return;
+
+            var flash = UIKit.Img("Sky", _fx, Art.Round(4), Pal.A(Pal.Cream, .42f),
+                                  new Vector2(Span.x, Span.y));
+            flash.raycastTarget = false;
+            flash.rectTransform.anchoredPosition = Vector2.zero;
+            flash.transform.SetAsLastSibling();
+
+            var group = UIKit.Group(flash.rectTransform);
+            Tween.Fade(group, 0f, .38f)
+                 .OnDone(() => { if (flash) Destroy(flash.gameObject); });
+        }
+
         void Hurt(SiegeStrike hit)
         {
             var raider = _board.Find(hit.Raider);
@@ -1393,6 +1689,24 @@ namespace GlimmerGrove
         public override int FriendCell => Width / 2;
 
         RectTransform _wardAnchor;
+
+        /// <summary>
+        /// The cog, as a picture for a lesson panel to draw.
+        ///
+        /// <para>
+        /// <b>A picture rather than a ring, and the ring was tried first.</b> Pointing at a cog on
+        /// the field is the obvious lesson and it cannot be relied on: a cog is dealt at a rate
+        /// rather than authored (<see cref="SiegeLayout.Cogs"/>), so a rung can legitimately open
+        /// with none standing - and a lesson is offered once in a player's life, so one that waits
+        /// for a board that may never come may never be given at all.
+        /// </para>
+        /// <para>
+        /// So the ring stays on a turret, which is always there and is what a cog is <em>for</em>,
+        /// and the thing a ring cannot say - what the object actually looks like - is said by
+        /// drawing it. See <c>Lesson.Icon</c>.
+        /// </para>
+        /// </summary>
+        public Sprite CogArt => Piece("gem_cog");
 
         /// <summary>
         /// Something for the cog lesson to ring, and it is the <em>line</em> rather than a cell.
@@ -1458,6 +1772,8 @@ namespace GlimmerGrove
             Depth();
             Charge();
 
+            _roared = false;
+
             if (report.Wave >= 0) Arrival(report.Wave);
             for (int i = 0; i < report.Bolts.Count; i++) Bolt(report.Bolts[i]);
             for (int i = 0; i < report.Casts.Count; i++) Cast(report.Casts[i]);
@@ -1494,10 +1810,12 @@ namespace GlimmerGrove
                         new Vector2(mob.Bar.sizeDelta.x * share - 4f, mob.Bar.sizeDelta.y - 4f);
                 }
 
+                // **White, not a coat** — the body carries its own colour now, so a hit is
+                // drawn by washing it out toward cream and letting it come back.
                 if (mob.Body != null)
                     mob.Body.color = raider.Flash > 0f
-                                   ? Color.Lerp(mob.Coat, Pal.Cream, raider.Flash * 5f)
-                                   : mob.Coat;
+                                   ? Color.Lerp(Color.white, Pal.Cream, raider.Flash * 5f)
+                                   : Color.white;
 
                 // **A warlord walks on and then stands, and which of the two it wears is read off
                 // the board rather than latched at spawn.** It was drawn in its idle for the whole
@@ -1741,19 +2059,21 @@ namespace GlimmerGrove
             mob.Shadow.raycastTarget = false;
             mob.Shadow.rectTransform.anchoredPosition = new Vector2(0f, -tall * .46f);
 
-            // The colour a raider wears is what decides which ward answers it, so it is said
-            // three times: a wash behind the body, the body's own coat, and a gem over its head.
-            // <b>Three rather than one, and none of them is enough on its own.</b> The packs draw
-            // four monsters in four colours of their own that have nothing to do with this
-            // board's four, so an untinted raider would wear a colour the player has to learn; a
-            // tint alone is a difference only some people can see (CRAFT.md's rule about the
-            // board's vocabulary); and an aura alone is lost the moment two raiders overlap.
-            mob.Aura = UIKit.Img("Aura", mob.Node, Art.Glow(96, 2.2f),
-                                 Pal.A(TintOf(raider.Colour), .40f),
-                                 new Vector2(tall * 1.25f, tall * 1.25f));
-            mob.Aura.raycastTarget = false;
-
-            mob.Coat = Color.Lerp(Color.white, TintOf(raider.Colour), .62f);
+            // **A raider is drawn in its own paint, and the wash and the coat that used to
+            // say its colour are gone.** They were a wash behind the body and a 62% multiply over
+            // it, on the argument that the packs draw monsters in colours that have nothing to do
+            // with this board's four — which was true and was fixed at the wrong end. `Image.color`
+            // is a multiply, so a coat can only ever *darken*: what it produced was four
+            // silhouettes of the same value with a hint of hue, and the drawing every one of these
+            // packs is actually good at — highlights, shading, a face — was thrown away to say one
+            // bit of information. Reported from play as exactly that, and it is the same finding
+            // the ward line already made one folder over.
+            //
+            // The colour is now said three ways that cost the picture nothing: the raider is
+            // **hue-rotated in the bake**, so it is genuinely that colour with all its shading
+            // intact; it has a **body of its own per colour**, so silhouette carries it for anybody
+            // who cannot separate two hues; and it still wears the **gem over its head**, which is
+            // the one readout that survives two raiders overlapping.
 
             // **The warlord gathers its spell in a light of its own, under everything else.**
             // Built here and left dark rather than made when a cast starts: a widget that appears
@@ -1784,7 +2104,7 @@ namespace GlimmerGrove
 
             if (mob.Body != null)
             {
-                mob.Body.color = mob.Coat;
+                mob.Body.color = Color.white;
 
                 // **Sized by its own height, with the width following the picture** — never fitted
                 // into a square. Every cast reel is cut to a fixed height and whatever width the
@@ -1982,8 +2302,31 @@ namespace GlimmerGrove
         /// asked of the one moment the player has been working toward for half a minute. Five
         /// explosions walking outward, then the shape going down.
         /// </summary>
+        /// <summary>
+        /// Whether this frame's report has already drawn a roar taking hold.
+        ///
+        /// A warbringer's spell lands on every standing ward and so arrives as one record per
+        /// ward; the hill charging is one event and is drawn once. Cleared per frame rather than
+        /// latched for the run, because a warbringer roars every few seconds for the whole fight.
+        /// </summary>
+        bool _roared;
+
+        /// <summary>
+        /// Seconds left of a boss coming apart, or nought.
+        ///
+        /// <b>The one thing in this mode allowed to hold the ending up</b> — see
+        /// <see cref="Judge"/>. Everything else a run ends on is already on the screen when the
+        /// verdict lands; a boss's death is a second of explosions that has only just started.
+        /// </summary>
+        float _felling;
+
+        /// <summary>How long <see cref="Fall"/> takes end to end. The ending waits this out.</summary>
+        const float FellingFor = 1.45f;
+
         void Fall(Mob mob, Vector2 at)
         {
+            _felling = FellingFor;
+
             var node = mob.Node;
             var group = UIKit.Group(node);
             var crown = mob.Crown;
@@ -2712,14 +3055,17 @@ namespace GlimmerGrove
             var kind = caster != null ? caster.Kind : _layout.BossKind;
             var fire = Casting(kind);
 
-            // A roar reaches no ward, so it is settled before anything indexes the line. Its
-            // *arrival* is the hill breaking into a run, which `Charge` draws every frame — what
-            // happens here is the one flash that says the moment it started.
-            if (spell.Craft == SiegeSpell.Rally || spell.Ward < 0)
+            // **A roar arrives on every ward at once, so it is four records and one stampede.**
+            // The hill breaking into a run is drawn once, on the first of them — `_roared` is
+            // cleared at the top of every frame's report, so "first" means first *this frame*
+            // rather than first ever.
+            if (spell.Craft == SiegeSpell.Rally && !_roared)
             {
+                _roared = true;
                 Stampede(fire);
-                return;
             }
+
+            if (spell.Ward < 0) return;
 
             var at = new Vector2(PostX(spell.Ward), _lineY + Cell * .3f);
             bool greater = kind == SiegeKind.Overlord;
@@ -2883,6 +3229,96 @@ namespace GlimmerGrove
             Tween.Rotate(post.Body.rectTransform, -16f, .5f, Ease.OutBounce);
             Tween.Fade(post.Glow, 0f, .3f);
             Tween.Fade(post.Juice, .25f, .3f);
+        }
+
+        /// <summary>
+        /// A ward standing up again, because a continue was paid for. <see cref="Fell"/> read
+        /// backwards, and it has to be written out rather than left to <see cref="Charge"/>.
+        ///
+        /// <para>
+        /// Three of the four things felling a ward does are outside anything the per-frame paint
+        /// touches — the wreck sprite, the sixteen degrees it topples through and the fuel tube
+        /// faded to a quarter — so a raised ward left to <see cref="Charge"/> would come back
+        /// upright in the model and lying on its side on the screen. Only the body's tint heals
+        /// itself, and that is the one that would have looked fine.
+        /// </para>
+        /// <para>
+        /// <b>No sound of its own.</b> Four turrets come back at once and four shatters played
+        /// backwards is a flam rather than a fanfare (invariant 37q); <see cref="Rally"/> sounds
+        /// the moment once, for the line.
+        /// </para>
+        /// </summary>
+        void Raise(Post post)
+        {
+            if (post == null || post.Body == null) return;
+
+            int i = System.Array.IndexOf(_posts, post);
+            if (i < 0) return;
+
+            var ward = _board.Wards[i];
+            var tint = TintOf(post.Colour);
+            var at = new Vector2(PostX(i), _lineY);
+
+            post.Down = false;
+
+            // The two fades are killed rather than overwritten, because setting a colour under a
+            // running fade is a value the next frame throws away. The topple needs no kill: a
+            // second `Tween.Rotate` on one transform takes the same channel and ends the first.
+            Tween.KillAll(post.Glow);
+            Tween.KillAll(post.Juice);
+
+            post.Body.sprite = WardArt(post.Colour, ward.Rank);
+            post.Body.color = post.Coat;
+
+            // The tube goes back to full opacity and stays empty, which is the honest picture: a
+            // raised ward has its health and none of its fuel (see `SiegeBoard.Rally`).
+            post.Juice.color = tint;
+            post.Glow.color = Pal.A(tint, 0f);
+
+            Tween.Rotate(post.Body.rectTransform, 0f, .34f, Ease.OutBack);
+
+            Shockwave(at, Pal.Lift(tint, .45f), 3.4f, .46f);
+            Pop(at, Pal.Lift(tint, .3f), 2.6f, .32f);
+            Burst.Sparks(_fx, at + new Vector2(0f, Cell * .4f), tint, 18, Cell * 3.2f,
+                         Cell * .26f, .6f);
+
+            Tween.Punch(post.Node, .2f, .36f);
+        }
+
+        /// <summary>
+        /// The whole line coming back, because a continue was paid for.
+        ///
+        /// <para>
+        /// <b>Staggered left to right and sounded once.</b> Four turrets standing up on the same
+        /// frame reads as a repaint; a fifteenth of a second between them reads as a line being
+        /// rallied, which is what was bought. The order is <c>SiegeBoard.Rally</c>'s own, so what
+        /// the board did and what the screen draws cannot come apart.
+        /// </para>
+        /// </summary>
+        void Rallied()
+        {
+            if (_posts == null) return;
+
+            int nth = 0;
+
+            for (int i = 0; i < _posts.Length; i++)
+            {
+                var post = _posts[i];
+                if (post == null || !post.Down || !_board.Wards[i].Alive) continue;
+
+                int at = nth++;
+                Tween.After(at * .07f, () => { if (this) Raise(post); }, this);
+            }
+
+            if (nth == 0) return;
+
+            // Cream and gentle, against the ember flash `Ruin` threw a moment ago: the same
+            // gesture in the opposite colour, at a third of the strength, because this is relief
+            // rather than another blow. The peak is the parameter, not the colour's own alpha —
+            // `Flow.Flash` zeroes that before it starts.
+            Audio.Sfx("mend", .85f, .92f);
+            Flow.Flash(Pal.Cream, .34f, .34f);
+            ShakeBoard(12f);
         }
 
         void Arrival(int wave)
@@ -3644,6 +4080,36 @@ namespace GlimmerGrove
         /// player who watches the wards fall without moving has genuinely lost — and a run that
         /// simply never ended would be worse than either.
         /// </summary>
+        /// <summary>
+        /// What a continue buys here, which is the ward line rather than an allowance.
+        ///
+        /// <para>
+        /// This mode has no move meter to top up (invariant 37b), so the base's <c>Run.Grant</c>
+        /// would be a no-op on an unbounded budget and the board would come back exactly as lost
+        /// as it went in — a charge for nothing. What is bought is
+        /// <c>SiegeBoard.Rally</c>: every fallen turret up at full health, keeping the rank its
+        /// cogs bought, with the hill standing exactly where it stood.
+        /// </para>
+        /// <para>
+        /// It does not touch the grade. What the purchase owes the graded count is charged by
+        /// <c>SiegeScreen.ContinueWith</c> before this runs, because that is a rule about money
+        /// rather than about the board.
+        /// </para>
+        /// </summary>
+        protected override void Granted(int wards)
+        {
+            if (_board == null || _board.Rally(wards) <= 0) return;
+
+            Rallied();
+        }
+
+        /// <summary>
+        /// A siege re-reads its own verdict after a continue, for the reason it reads its own
+        /// verdict at all: the shared one asks whether the first move has landed, and here the
+        /// hill walks whether or not anybody has touched a gem.
+        /// </summary>
+        protected override void Rejudge() => Judge();
+
         void Judge()
         {
             if (Over || Run == null) return;
@@ -3652,6 +4118,23 @@ namespace GlimmerGrove
 
             if (verdict.IsWon)
             {
+                // **A boss is watched dying before the run is allowed to end.** Reported from
+                // play: a cascade big enough to finish the hill killed the boss and the victory
+                // panel was up before anything came apart, so the player was told they had won
+                // and never saw the thing they beat. The win is already decided — this only
+                // holds the *telling* of it, and `Update` re-asks every frame, so nothing can be
+                // stranded by it.
+                //
+                // It is a countdown rather than a callback for the reason `Fall` is five
+                // staggered explosions rather than one: the death is a handful of tweens with no
+                // single end, and a latch that outlives the last of them is the only version that
+                // cannot end early.
+                if (_felling > 0f)
+                {
+                    _felling -= Time.unscaledDeltaTime;
+                    return;
+                }
+
                 Over = true;
                 Finishing?.Invoke();
                 StartCoroutine(Triumph());

@@ -122,10 +122,37 @@ namespace GlimmerGrove.Utilities
         }
 
         // ------------------------------------------------------------- buying
-        // No MaxQuantity. `HomesteadLedger` has one because grove decor is bought by the
-        // bundle and its panel carries a stepper; a utility is bought one at a time up to a
-        // ceiling of nine, so the only quantity anything asks about is one — and an unused bound
-        // is a bound nothing keeps honest.
+        /// <summary>
+        /// The most of this one an order could ask for right now: what there is room for, and
+        /// what the gems in hand will actually cover.
+        ///
+        /// <para>
+        /// <b>It exists because the ceiling moved.</b> There was deliberately no such thing while
+        /// a player could hold nine — the only quantity anything asked about was one, and an
+        /// unused bound is a bound nothing keeps honest. At a hundred that stops being true in
+        /// both directions: a stepper needs an upper stop, and a shop that sold a hundred one tap
+        /// at a time would be a hundred taps.
+        /// </para>
+        /// <para>
+        /// <b>Both stops, not just the ceiling</b> — <c>HomesteadLedger.MaxQuantity</c>'s rule.
+        /// A stepper that climbed to the room left would walk a player past what they can pay for
+        /// and hand the refusal to the button, which is the panel lying about the one thing it
+        /// exists to be exact about. Nought is a legal answer and means "not now": the caller
+        /// draws the shortfall rather than a stepper with no stops.
+        /// </para>
+        /// </summary>
+        public static int MaxQuantity(UtilityItem item)
+        {
+            if (item == null || !item.ForSale) return 0;
+
+            int room = RoomFor(item);
+            if (room <= 0) return 0;
+
+            long affordable = PlayerProgression.Gems / item.GemPrice;
+            if (affordable <= 0L) return 0;
+
+            return affordable < room ? (int)affordable : room;
+        }
 
         /// <summary>What an order of <paramref name="count"/> costs in gems.</summary>
         public static long Quote(UtilityItem item, int count)

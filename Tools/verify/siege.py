@@ -94,6 +94,24 @@ CREEPER_BLOW = 1
 BRUTE_BLOW = 2
 WARD_HEALTH = 14
 
+#: `SiegeLayout.Shield` - written before a colour letter, it makes that raider a **bulwark**.
+#:
+#: A modifier rather than four more letters, because case already carries one axis (a capital is a
+#: brute) and a one-character-per-raider alphabet has nowhere left to put a third kind. What it
+#: costs is that a wave string's *length* is no longer its raider count, which is why `Layout`
+#: parses each wave once into `coming` and nothing here counts characters any more.
+SHIELD = "#"
+WAVE_LETTERS = RAIDER_LETTERS + SHIELD
+
+#: `SiegeTuning.BulwarkHealth` / `BulwarkMarch` / `BulwarkBlow`, and what a shield soaks.
+#:
+#: A bulwark halves every bolt that is **not** its own colour and takes its own in full, so the
+#: spread between feeding the right ward and any other is fourfold rather than the usual double.
+#: It is slower than anything else that is not a boss, which is what it pays for the shield with.
+BULWARK_HEALTH = 700
+BULWARK_BLOW = 2
+SHIELD_SOAK_TENTHS = 5
+
 #: `SiegeTuning`, one row per boss: health, what a spell takes off a ward, and what its spell
 #: *does*.
 #:
@@ -104,7 +122,7 @@ WARD_HEALTH = 14
 BOSSES = {
     "blightcaller": {"health": 1100, "cast": 0, "spell": "douse"},
     "warlord": {"health": 1800, "cast": 3, "spell": "smite"},
-    "warbringer": {"health": 2400, "cast": 0, "spell": "rally"},
+    "warbringer": {"health": 2400, "cast": 2, "spell": "rally"},
     "overlord": {"health": 3200, "cast": 5, "spell": "sunder"},
 }
 
@@ -183,7 +201,7 @@ class Layout(object):
         self.deal = tidy(deal, LETTERS)
         self.cogs = max(0, int(cogs or 0))
         self.wards = list(tidy(wards, WARD_LETTERS))
-        self.waves = [w for w in (tidy(x, RAIDER_LETTERS) for x in (waves or [])) if w]
+        self.waves = [w for w in (sweep(tidy(x, WAVE_LETTERS)) for x in (waves or [])) if w]
 
         # Exactly one legal name and one legal colour, or nothing - never `tidy`, which would
         # salvage an 'r' out of "dragon:r" and ship a warlord nobody authored. See `SiegeLayout`'s
@@ -197,6 +215,11 @@ class Layout(object):
         if self.boss:
             self.boss_wave = len(self.waves)
             self.waves = self.waves + [self.boss]
+
+        # Every wave parsed once into (colour, kind) pairs. Nothing below asks a wave's text
+        # how many raiders it holds - see `SHIELD`.
+        self.coming = [read_wave(w, self.boss_kind, i == self.boss_wave)
+                       for i, w in enumerate(self.waves)]
 
         self.fault = self._check(boss)
 
@@ -244,19 +267,18 @@ class Layout(object):
         if not self.waves:
             return "nothing is coming, so there is nothing to hold"
 
-        raiders = sum(len(w) for w in self.waves)
+        raiders = self.raiders
         if raiders > MAX_RAIDERS:
             return ("this level sends %d raiders; %d is the most a run may hold"
                     % (raiders, MAX_RAIDERS))
 
-        for w, wave in enumerate(self.waves):
-            for token in wave:
-                if token.lower() in self.wards:
+        for w, line in enumerate(self.coming):
+            for colour, kind in line:
+                if colour in self.wards:
                     continue
-                what = self.boss_kind if w == self.boss_wave else "raider"
+                what = self.boss_kind if w == self.boss_wave else kind
                 return ("wave %d sends a '%s' %s and no ward on this line carries '%s', "
-                        "so nothing here is strong against it" % (w + 1, token.lower(), what,
-                                                                  token.lower()))
+                        "so nothing here is strong against it" % (w + 1, colour, what, colour))
 
         if runs(self.grid.cells, self.grid.w, self.grid.h):
             return ("three alike are already touching on this field, so it would go off before "
@@ -266,7 +288,38 @@ class Layout(object):
 
     @property
     def raiders(self):
-        return sum(len(w) for w in self.waves)
+        return sum(len(line) for line in self.coming)
+
+
+def sweep(wave):
+    """Drops any `SHIELD` that has no colour letter after it - `SiegeLayout.Sweep`."""
+    kept = []
+    for i, ch in enumerate(wave):
+        if ch == SHIELD and (i + 1 >= len(wave) or wave[i + 1] == SHIELD):
+            continue
+        kept.append(ch)
+    return "".join(kept)
+
+
+def read_wave(wave, boss_kind, boss):
+    """One authored wave, as (colour, kind) pairs - `SiegeLayout.Read`."""
+    made = []
+    i = 0
+    while i < len(wave):
+        shielded = wave[i] == SHIELD
+        if shielded:
+            i += 1
+            if i >= len(wave):
+                break
+
+        letter = wave[i]
+        kind = (boss_kind if boss
+                else "bulwark" if shielded
+                else "brute" if letter.isupper() else "creeper")
+        made.append((letter.lower(), kind))
+        i += 1
+
+    return made
 
 
 def named_boss(token):
@@ -290,6 +343,8 @@ def health_of(kind):
     """`SiegeTuning.HealthOf`. One table, keyed on what the layout says the raider is."""
     if kind in BOSSES:
         return BOSSES[kind]["health"]
+    if kind == "bulwark":
+        return BULWARK_HEALTH
     return BRUTE_HEALTH if kind == "brute" else CREEPER_HEALTH
 
 
@@ -298,15 +353,14 @@ def kind_at(layout, wave, index):
     if wave == layout.boss_wave:
         return layout.boss_kind
 
-    token = layout.waves[wave][index]
-    return "brute" if token.isupper() else "creeper"
+    return layout.coming[wave][index][1]
 
 
 def par(layout):
     """`SiegeTuning.Par` - what the level sends, over the most one match could ever be worth."""
     health = 0
-    for w, wave in enumerate(layout.waves):
-        for i in range(len(wave)):
+    for w, line in enumerate(layout.coming):
+        for i in range(len(line)):
             health += health_of(kind_at(layout, w, i))
 
     return max(1, -(-health // PERFECT_MATCH))
@@ -323,12 +377,12 @@ SWINGS_BEFORE_ANSWERED = 2
 def endangers(kind):
     """`SiegeTuning.EndangersTheLine` - whether this boss can bring a ward down, given long enough.
 
-    **Two of the four cannot**, and only one of the two is obvious. A blightcaller takes fuel and
-    never health; a warbringer takes no health either and still counts, because it is the one boss
-    that walks all the way to the line and swings there for the rest of the run.
+    **One of the four cannot.** A blightcaller takes a ward's fire rather than its health, so a
+    level whose only threat were one could not be lost. It was two while the warbringer took ground
+    instead of health, which was withdrawn after play.
     """
     row = BOSSES.get(kind)
-    return bool(row) and (row["cast"] > 0 or row["spell"] == "rally")
+    return bool(row) and row["cast"] > 0
 
 
 def threatens(layout):
@@ -336,13 +390,20 @@ def threatens(layout):
     if layout.boss and endangers(layout.boss_kind):
         return True
 
-    for w, wave in enumerate(layout.waves):
+    for w, line in enumerate(layout.coming):
         if w == layout.boss_wave:
             continue
-        blow = sum(BRUTE_BLOW if t.isupper() else CREEPER_BLOW for t in wave)
+        blow = sum(blow_of(kind) for _, kind in line)
         if blow * SWINGS_BEFORE_ANSWERED >= WARD_HEALTH:
             return True
     return False
+
+
+def blow_of(kind):
+    """`SiegeTuning.BlowOf` for the three things that reach the line."""
+    if kind == "bulwark":
+        return BULWARK_BLOW
+    return BRUTE_BLOW if kind == "brute" else CREEPER_BLOW
 
 
 def any_swap(layout):
@@ -378,16 +439,21 @@ def any_swap(layout):
 def readings(layout):
     """The handful of numbers only this mode's own rules can give."""
     colours = set()
-    brutes = 0
-    for w, wave in enumerate(layout.waves):
-        for token in wave:
-            colours.add(token.lower())
-            if w != layout.boss_wave and token.isupper():
+    brutes = bulwarks = 0
+    for w, line in enumerate(layout.coming):
+        for colour, kind in line:
+            colours.add(colour)
+            if w == layout.boss_wave:
+                continue
+            if kind == "brute":
                 brutes += 1
+            elif kind == "bulwark":
+                bulwarks += 1
 
     standing = sum(1 for c in layout.grid.cells if c == COG)
 
     return dict(waves=len(layout.waves), raiders=layout.raiders, brutes=brutes,
+                bulwarks=bulwarks,
                 colours=len(colours), wards=len(layout.wards),
                 boss=layout.boss or "",
                 kind=layout.boss_kind or "",

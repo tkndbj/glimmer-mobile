@@ -1044,6 +1044,45 @@ In practice:
     no longer gating, so nought gems is refused and named. **The free way back is always drawn above the paid
     one** — a price above a rewarded video at the moment somebody has been stopped from playing is the shape a
     store reviewer is right to call a dark pattern, which costs a submission rather than a metric.
+23b. **A mode whose fail state is not the counter it is graded on has to buy that promise back, and
+    Thornwatch is the first.** 23's "a bought run can only ever score one star" is *arithmetic* everywhere
+    else: a glade dies at `par x 1.60` having already spent past the two-star line at `par x 1.40`, so the
+    promise costs no code. A siege is graded in **matches** and lost when its **ward line** falls, and the two
+    are unrelated — a player outpaced on the fourth wave may have spent five matches against a three-star
+    line of fourteen, so twenty gems would have bought a top-rung clear. That is not a grading curiosity: stars
+    derive credits, credits are a grove's worth, and a grove's worth reaches a public board, so a continue that
+    moved the grade would let money move a leaderboard (19a). `RunContinue.Toll` charges the run up to
+    `SilverThreshold + 1` **against the graded count**, which is 39's own conversion asked of a continue, and
+    it is a charge rather than a cap on the star because a cap would be a second thing deciding a grade and
+    would leave the *record* — which feeds the published deciles — reading as an excellent run. Nought
+    once a run is already past the line, so a second continue is never charged twice. **Before selling a
+    continue in a new mode, ask whether its fail state and its grade are the same number.**
+    <br>**What it sells is the line** (`ContinueUnit.Wards`, `SiegeBoard.Rally`): every fallen turret back at
+    full health keeping the rank its cogs bought, with the hill standing exactly where it stood — no fuel,
+    because fuel is damage and damage is progress; the douse cleared, because that is seconds the player would
+    be paying for and not receiving. It is the one unit whose authored figure is the whole allowance rather
+    than room above a shortfall, since a siege is lost when the **last** ward falls and every ward is down by
+    the time the offer is made.
+    <br>**`Stranded` stopped meaning "no move left" and went back to meaning what it says.** It was
+    `WardsStanding == 0` — identical to `AnyMove` negated — and it is `false`, because the only question
+    it is ever asked is *would a purchase rescue this* (28f). Two call sites had been leaning on the accident:
+    `ProtoVerdict.Read` hard-coded `NoContinue` on the `Stuck` branch, which is right for a cairn with nothing
+    left to pull and wrong here, and `SiegeUtility.Would` used it to mean "the run is already over" and now
+    asks `AnyMove`. **A predicate that has been true for the same reason as another one for five modes is a
+    predicate nobody has had to read carefully.**
+    <br>**And a continue that does not continue is a charge, which here is a fact about the level rather than
+    about the offer**, because the hill is still walking and every raider that got through is at the line with
+    its hammer up. Measured with **nobody playing at all**, a rallied line stands **10.4–13.5 seconds** on
+    all ten rungs — four or five unhurried matches before a finger is lifted, and longer as it is used.
+    `SiegeRuleTests.ARalliedLineStandsLongEnoughToBeWorthBuying` is the bar at eight seconds, and it is the
+    only thing that could ever see a partial raise or a smaller `WardHealth` making the offer worthless.
+    <br>**A run nobody is charged for is a run nobody is sold**, and that lives in `RunContinueFlow` rather
+    than in a mode: 24 read from the other end. The worst moment to meet the gate that stops somebody playing
+    is while they are still working out what the verb is, and the worst moment to meet a *price* is the same
+    moment one step further in — so a mode's opening rungs and any level already finished lose without an
+    offer, which are exactly the runs the defeat panel already gives a free retry on. Nothing about this
+    reaches the save file, the wire, the server or `seed-config.mjs`: `continueRun` is deliberately unpublished
+    (nothing about a continue is adjudicated), so the retune is a build rather than a seed.
 24. **A run is free when it teaches nothing new, and the rule lives in one predicate** —
     `HeartStake.PriceOf`. **The opening**: the first `hearts.graceLevels` levels (3, content) of the **first
     chapter of each mode**, because the worst moment to meet the one gate that stops somebody playing is while
@@ -2092,23 +2131,29 @@ In practice:
     tube and still costs the same two matches); everything measured per bolt is untouched.
     `ShotDamage` 10 is now the **floor** for the ten per cent step, so anything that halves it
     again has to give the rank ladder a finer unit first.
-    <br>**And the cadence had to halve with it, which reverses a verdict rather than refining
-    one.** Bolts a second times damage a bolt is the line's whole output, so half-weight bolts at
-    an unchanged cadence is *half the peak damage* whatever the totals say — and peak is what
-    matters when a duel puts one ward on the whole fight. Measured at .22: the chapter still
-    clears, but `s01_warlordsgate` costs an unhurried player 29 → **37** matches (past its own
-    three-star line) and the fixture line falls outright; at .11 every rung returns to the count it
-    had before. **"More bolts, same balance" has exactly one solution.** The cost is that a lit
-    ward now looses nine bolts a second where the owner once called seven "a hose" — worth being
-    plain about, and `FireEvery` is the one dial to move back, at the price of peak damage the
-    levels would have to give back.
-    <br>**Totals being neutral does not make the dynamics neutral, and that is the half worth
-    remembering.** A line that kills faster empties the hill sooner, and an empty hill musters the
-    next wave at once (37k), so the finale's waves stacked and it was lost with one raider left —
-    fixed by turning two brutes of its last wave into creepers, and the cliff is **one brute wide**.
-    Every one of these readings came from `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine` and from
-    nothing else; the search-free mode has one instrument and every change to its arithmetic goes
-    back through it (37j).
+    <br>**The cadence did *not* move, and that is the point rather than an omission.** Halving
+    the bolt and halving the interval puts the same bolts through the same window twice as densely,
+    so a ward stops firing exactly when it always did — which undoes the thing the change was asked
+    for. It was built that way first, on the argument that bolts a second times damage a bolt is
+    the line's output and so the rate *had* to double to keep the balance; the owner's answer was
+    that this "made the turrets shoot faster so I cannot see them shooting more", and that is
+    correct. **The rate decides how long a ward's fire lasts; the fuel decides how long it goes
+    on.** Only the second one was asked for.
+    <br>**What the levels then had to absorb is the half of the output the rate would have paid
+    for, and it moved three rungs in three different directions.** Half-weight bolts at an
+    unchanged cadence is half the *peak* damage and the same *sustained* damage — so attrition got
+    **better** (a ward lit twice as long spends less of each burst on overkill) and emergencies got
+    **worse** (one big health pool still has to be answered at once). Measured: the duel rung cost
+    an unhurried player eight extra matches and wanted more hill; the longest attrition rung became
+    so safe that **nothing reached its line at all**, which is invariant 5d and needed two more
+    brutes; and the rule-test fixture stopped being holdable — because it was the one siege in the
+    project that sent a boss and dealt **no cogs**, a shape nothing shipped, so it now deals them
+    like every rung does. `RaiderSpacing` was tried as a single mode-wide answer and abandoned: it
+    resonates with the wave clock, so 1.35 → 1.28 loses one rung and → 1.20 loses three. **A dial
+    that flips whole levels on a hundredth is not a difficulty dial.**
+    <br>Every one of these readings came from `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine` and
+    from nothing else; the search-free mode has one instrument and every change to its arithmetic
+    goes back through it (37j).
 
 37z. **A boss is a way of fighting, and telling two of them apart by a hue is not telling them
     apart at all.** The chapter shipped four boss encounters built from **two** kinds: rungs 5 and 8
@@ -2122,13 +2167,31 @@ In practice:
     <br>**So there are four kinds, and what separates them is what each one <em>takes</em>.** A
     **blightcaller** takes a ward's *fire* (`SiegeSpell.Douse`: fuel to nought and five seconds
     dark, no health at all); a **warlord** takes its *health* (`Smite`, the classic duel); a
-    **warbringer** takes the player's *ground* (`Rally`: it roars, the hill charges, and it lunges
-    itself further down — the only boss in this mode that reaches the line and swings); an
+    **warbringer** shakes the *whole line* (`Rally`: it roars, every standing ward takes a little,
+    and the hill charges); an
     **overlord** takes the *rank they earned* (`Sunder`: health **and** a cog off the best turret on
     the line, which is the one thing in this chapter a player earns, 37w). Four different answers
     follow from that and only two of them are a mending: a douse is answered by feeding a different
     colour or by a **surge**, a rally by a **firepot** into the hill *before* it comes, and a
     sunder by having spread the cogs. **Ask of a second boss what it takes, not how much.**
+    <br>**A boss holds the middle of the hill, and the one that did not was withdrawn.** The
+    warbringer was built to take *ground*: each roar lunged it further down until it arrived and
+    swung with its hands, which made it a countdown rather than a duel and gave it the one verb
+    none of the others had. Played, it came back as "it takes forever to move down and start doing
+    its damage, because it keeps moving downwards" — and that is the shape of the mode rather than
+    a tuning miss. **Every fight here is a player answering a thing they cannot reach with the
+    board in front of them; a boss that walks spends the fight being somewhere else.** So it stands
+    where the warlord stands, and its roar takes a little off *every* ward at once — still a verb
+    none of the other three has, because a warlord and an overlord pick one ward and hit it hard,
+    so the player chooses what to save, and nothing about a roar can be answered by protecting one
+    turret. What went with the lunge: `SiegeRaider.Hold` is readonly again, no boss reaches the
+    line, and `EndangersTheLine` is back to "does it take health".
+    <br>**Because a roar lands four times, its cadence is what prices it — and the first number
+    inverted the chapter's ramp.** Four wards at 2 every 6 seconds is 1.33 health a second off the
+    line, *more* than the finale's overlord, and an unhurried player finished rung 8 on 6 of 56:
+    the bloodiest line in the chapter, one rung before its climax. At 9 seconds it is 0.89, against
+    a warlord's 0.60 and an overlord's 1.25, so rungs 5, 8 and 10 climb.
+    `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine` is the only thing that can see any of it.
     <br>**A level names its boss by kind** (`"warlord:r"`, `SiegeLayout.BossNames`), which is the
     field the old one-letter form had nowhere to go: case said which of *two* this was, so a third
     could not be authored and a fourth could not be imagined. The retired one-letter form is
@@ -2165,6 +2228,41 @@ In practice:
     `LevelMode.ArtFor(chapter)` narrows a mode's art to what a *chapter* actually sends, because
     four bosses are twenty-four flipbooks and every siege level was loading all of them (7b's rule
     stopping one step short of the screen).
+
+37ab. **A rung is fought over a ground of its own, and the thing that decided how is that
+    the only top-down terrain here is one tileset.** Ten levels shared one floor and the ask was
+    variety. The seventeen isometric terrain packs on this machine cannot supply it and the
+    reason is not a preference: their ground is drawn as **diamonds with the side faces baked
+    into the pixels**, so a tile cannot be un-skewed into a square — it comes back a rounded
+    block lit from a corner nothing else on the board agrees with — and laying them as a field
+    and cropping a rectangle out of it only hides the skirts, leaving a diagonal weave under a
+    board whose every other element is square. That was built, looked at, and thrown away. **An
+    isometric pack is not a top-down pack and no amount of transforming makes it one.**
+    <br>So ten places are made out of the mine set's own square slabs, three ways at once: a
+    **gradient map** (`toned`) reads each slab's luminance through a two-point ramp, which is
+    what a hue rotation cannot do — `hued` turns the wards because the kit *paints* them, and
+    rotating the hue of stone sitting at a chroma of two leaves it exactly as grey as it was, so
+    the colour has to be supplied; a different **mix** of the thirteen slabs; and a different
+    **seed** laying them, so two rungs never share a paving pattern. What that buys is real and
+    what it cannot buy should be said out loud: every rung is stone, cut the same way. Nine more
+    top-down tilesets would replace `TONES` with nine `zipped` calls and change nothing else.
+    <br>**Value is the one thing a second ground may not change**, and a gradient map picks its
+    own endpoints so nothing about it keeps a ground where the cast can be seen. Every rung is
+    normalised onto the mine floor's *measured* mean and spread — so re-cutting the mine moves
+    the other nine — and chroma has a ceiling (`GROUND_CHROMA_CAP`), because at their own
+    saturation the moss and the ember read as *brighter* than the rest with their value
+    identical, and a saturated floor is the one thing on this board competing with the cast
+    walking over it. That is CRAFT.md's plate rule and 37f's, said about the floor. It is also a
+    fault this hill has had twice already: its second ground was the grass pack "chosen for
+    brightness", and the owner's third call moved it to a mine.
+    <br>**Which ground is arithmetic on the level's place in its chapter** (7c), so ten serve
+    every siege chapter that ever ships and a second one costs no art. It is `SiegeMode.Ground`
+    and `SiegeView.GroundAddress`, **two switches of ten literals**, because `artnames.py` reads
+    the literal at a lookup's call site and a key built from an index is ten names nothing
+    checks — which buys the one fault worth a fixture: two switches disagreeing about a rung
+    load one floor and draw another, and an `Image` with a null sprite is a **white rectangle**
+    over the whole hill on one rung, with the address real, registered, audited and even loaded
+    by a different level. `SiegeGroundTests` is the comparison, and it was proved by breaking it.
 
 37i. **The chapter is ten rungs now, and what a played run has to answer has grown with it.**
     It shipped as one level to be judged (invariant 29's bargain); the questions that judged it are
@@ -2211,7 +2309,7 @@ In practice:
     small** at 48 wide for something drawn at 70 points and followed by the eye.
     <br>**The same session's other verdict was that the wards fire too fast**, and that is a rule
     rather than a drawing: `SiegeTuning.FireEvery` was .14, which is seven bolts a second per ward
-    and twenty-eight across a lit line, at which rate a bolt is not an event. It went to .22 — and
+    and twenty-eight across a lit line, at which rate a bolt is not an event. It is .22 now — and
     the band is narrow, because .26 loses the line outright (invariant 37j's simulation, which is
     where every change to this mode's arithmetic has to go).
     <br>**Played again it came back as three more fine tunes, and two of them are one rule.**
@@ -2506,6 +2604,30 @@ In practice:
     names no prefix still means the original pack, so nothing already in the table moved. Its
     WAVs rather than its OGGs, because the trim, the pitch and the loudness match should run on
     the original rather than on a decode of it.
+39h. **The kit is a shop shelf, and it lists no product and no good.** A player short of a
+    firepot met the shop only through the empty slot on the action bar, which is the wrong
+    way round twice over: it is reachable only mid-run, and it is the one screen in the game
+    where the answer to "I want more of these" is somewhere else. `StoreShelf.Utilities`
+    draws `UtilityCatalog` straight — the same roster the bar draws, the same prices, the
+    same ceiling and the same stock — which is invariant 16a's argument about the grove's
+    residents read across: authoring a second copy in the `store` block would be two records
+    of one thing for a merge, a retune and the seeder to disagree about. `TryReadShelf`
+    deliberately does not know the word, so a content push cannot file a **real-money**
+    product here even by accident; a utility is consumed, and a product granting one would be
+    the stored amount invariant 18d forbids.
+    <br>**And the ceiling moved from nine to a hundred, which is what made the panel grow a
+    stepper.** Nine read as a ration — a shop refusing a tenth is a shop saying you have
+    bought enough — and it is also why `UtilityLedger` had no `MaxQuantity`: every order was
+    for one, and an unused bound is a bound nothing keeps honest. At a hundred both halves
+    invert: a shelf selling one at a time would be a hundred taps, and a stepper is only
+    honest if **both** its stops are (the room left *and* the gems in hand), or the panel
+    walks a player up to an order the ledger will refuse. Raising a published ceiling is safe
+    in the direction that matters, because it is enforced at the moment of a grant and never
+    by re-reading a file — nothing anybody holds moves, and `UtilityStock`'s structural clamp
+    was 9,999 and was never this number. Two things it did cost: the bar's count badge is
+    **shrinkable** now, because three digits at a fixed 34pt overflow a 60-unit disc and a
+    `UIKit.Label` that overflows is not clipped (37n, on a badge); and one panel serves both
+    doors, because two would be two prices.
 39c. **An icon is not content, so adding a utility is a build.** Prices, strengths, ceilings,
     bar order and which chest drops what are all authored in `progression.json` and retunable
     from a config push; a picture is in the app. `ContentValidation` and `content.py` both
@@ -2599,6 +2721,11 @@ compile. Do not guess — verify offline:
   absent, so a checkout without them still runs the gate, and `--contact` lays it out to be
   looked at. Gems, cast, turrets and the mine floor are **cut**; only the rampart, the field's
   plate and the plinth are drawn.
+  <br>The **ten grounds** are `GROUNDS`, one per rung of a chapter (37ab): the mine tileset's own
+  square slabs, each rung a different gradient map over a different mix of them laid by a different
+  seed, all nine normalised onto the mine's own untouched floor at rung five. It is one tileset
+  because it is the only **top-down** terrain here; the isometric packs cannot floor this board at
+  all.
   <br>The **ward line** is twenty turrets and twenty recoils - five tiers of the merge kit's own
   upgrade ladder, each hue-rotated to one of the four colours - because a ward now carries its
   **rank** in its silhouette and its colour in its hue (37w). Every tier is fitted to one box and
@@ -2629,8 +2756,10 @@ compile. Do not guess — verify offline:
   arithmetic; `--level ID` picks one, `--raiders N` stands that many of the first wave on the hill,
   `--no-bolts` takes the exchange off it, `--no-bar` takes the action bar off, `--warlord
   cast|idle|walk` picks which of the boss's three reels it is wearing, and `--aim hill` / `--aim
-  wards` draw a utility's targeting. Render the four boss rungs side by side and whether the four
-  are four different fights answers itself — which is the picture that said they were not (37z),
+  wards` draw a utility's targeting. With no `--level` it draws all ten, each on **its own
+  ground** (37ab), which is the only picture that says whether the ten read as ten places and
+  whether any of them competes with the cast standing on it. Render the four boss rungs side by
+  side and whether the four are four different fights answers itself — which is the picture that said they were not (37z),
   and that then caught the first repair reading as a creeper. It draws the ward line **one rank apart across the four
   turrets**, so one picture says whether the five tiers read as tiers. **Its insets are in the screen's
   own order — (left, bottom, right, top)** — and were written as (left, top, right, bottom) for
@@ -3028,8 +3157,8 @@ live in **Hard-won facts**.
   one. `StoryScreen`, the **story** band (30d) and the **village world** of backdrops (30e) all
   survive with no mode using them, which is what a seam is for.
 - **Utilities** — an account-wide action bar filling the foot of Thornwatch's screen
-  (`UtilityBar`, a 228-point shelf of five cells, three of them filled), dropped by daily chests
-  and bought with gems, charged against the graded count at the mode's own exchange rate so one
+  (`UtilityBar`, a 228-point shelf of five cells, four of them filled), dropped by daily chests
+  and bought with gems on a shop shelf of their own (39h), charged against the graded count at the mode's own exchange rate so one
   can never buy a star (39). A firepot is aimed at one box of the hill's own grid (39f). Two
   monotonic counters per id in the save (v22), catalogued in `progression.json`, shelf, cells
   and icons all drawn by `Tools/make_utility_art.py`.
@@ -3059,7 +3188,7 @@ live in **Hard-won facts**.
 | ~~`m01_hollowmarch`~~ | ~~march~~ | — | — | — | **deleted** (38) — Hollowmarch withdrawn; its ids are spent |
 | ~~`b02_tanglewood`~~ | ~~bud~~ | — | — | — | **deleted** (38) — Budburst's second chapter; its ids are spent |
 | ~~`k01_kindlewake`~~ | ~~kindle~~ | — | — | — | **retired** (35) — withdrawn after play: the verb was not the one commissioned and the animation followed from that. Its ids are spent |
-| `s01_thornwatch` | siege | 10 | 11–50 matches | none — the ward line is the fail state | raiders come down the hill at four coloured wards; match a colour and that ward fuels up and opens fire, and a bolt is worth double against a raider of its own colour. Fuel leaves a ward as a bolt and no other way (37c). Every rung is an 8x5 field with no move allowance (24); waves come on a clock, or early if the hill is cleared (37k). **The ramp is what is coming**: rung 1 is twelve creepers and nothing else, rung 2 brings the **cog** (37w), rung 3 the **blightcaller** (37z), rung 4 sends waves of one colour at a time, rung 5 the **warlord** (37t), rungs 6–9 turn the hill from creepers to brutes (0 → 18), rung 8 the **warbringer**, and rung 10 ends on the **overlord** (37x). **Four bosses and four different fights** — a douse, a smite, a rally and a sunder, in four colours, from four packs, at four sizes. Cogs 3–4% from rung 2, which is where they stop maxing the line. Par is not monotonic — it dips at rung 5 — and an unhurried player clears every rung inside the three-star line with four wards standing on every one of them, the most-bled line being the finale's at 34 of 56 (37j) |
+| `s01_thornwatch` | siege | 10 | 11–53 matches | none — the ward line is the fail state | raiders come down the hill at four coloured wards; match a colour and that ward fuels up and opens fire, and a bolt is worth double against a raider of its own colour. Fuel leaves a ward as a bolt and no other way (37c). Every rung is an 8x5 field with no move allowance (24); waves come on a clock, or early if the hill is cleared (37k). **The ramp is what is coming**: rung 1 is twelve creepers and nothing else, rung 2 brings the **cog** (37w), rung 3 the **blightcaller** (37z), rung 4 sends waves of one colour at a time, rung 5 the **warlord** (37t), rungs 6–9 turn the hill from creepers to brutes (0 → 18), rung 8 the **warbringer**, and rung 10 ends on the **overlord** (37x). **Four bosses and four different fights** — a douse, a smite, a rally and a sunder, in four colours, from four packs, at four sizes. All four hold the middle of the hill and walk on in 2.7–4.1 seconds. Cogs 3–4% from rung 2, which is where they stop maxing the line. Par is not monotonic — it dips at rung 5 — and an unhurried player clears every rung inside the three-star line with all four wards standing, the most-bled lines being the warlord's rung and the finale's at 46–47 of 56 (37j) |
 | `p01_prismvale` | prism *(hidden)* | 2 | 3–4 swaps | none, then par + 3 | drag a gem onto its neighbour and the two change places; a lantern feeds the gems of its own colour touching it, that colour runs on through every matching gem beside them, and a critter standing against the vein wakes. Nothing is ever spent, so a vein can be **broken**. 6x6, critters 2 → 3, lanterns 2 → 3, `ways` 10 → 120, `dealt` 2 → 3 of 25, `used` 2 → 3, greed beaten on the second. The first rung cannot be lost (24) |
 | ~~`e01_emberforge`~~ | ~~ember~~ | — | — | — | **deleted** (38) — Emberforge withdrawn; its ids are spent |
 
@@ -3140,14 +3269,15 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   and they buy different things: a glade's turns the conduit (`BoardView.Hint`), a grove's
   *marks a flower* and shows the cascade tapping it would set off (`BudHint`, `BudView.Hint`).
   Neither costs the save file, the wire or the server anything.
-- **Utilities** — three, held up to 9 each, account-wide and shared by every Thornwatch
+- **Utilities** — four, held up to **100** each, account-wide and shared by every Thornwatch
   level. **Firepot** 12 gems (440 damage in one box of the hill, charged 2 matches),
   **mending** 8 gems (6 ward health, charged nothing), **surge** 10 gems (18 shots' fuel,
-  charged 2 matches). Each is a weighted option in one daily chest — mending in the first
-  (12 of 100), surge in the second (13 of 100), firepot in the day's prize (12 of 100) — so a
-  chest is the ordinary way to hold one and gems are the answer on the evening somebody is
-  stuck. Content (`utilities`), and the prices are the numbers most likely to be wrong first
-  guess.
+  charged 2 matches), **stormcall** 40 gems (700 to every raider on the hill, charged by the
+  same arithmetic and so dozens of matches on a full one). Three of the four are a weighted
+  option in one daily chest — mending in the first (12 of 100), surge in the second (13 of
+  100), firepot in the day's prize (12 of 100) — so a chest is the ordinary way to hold one;
+  the stormcall is gems only. They are also a **shop shelf** (39h). Content (`utilities`), and
+  the prices are the numbers most likely to be wrong first guess.
 - **Streak** — a 7-night lap that wraps: 500 credits, 1 heart, 5 gems, 2 hearts, a 12h boost,
   3 hearts, 10 gems.
 - **Ads** — four placements, all opt-in, no interstitials: `heart_refill` 2 hearts,
@@ -3195,11 +3325,15 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   attempt, graded like any other. Content (`hearts.rescueGems` / `hearts.rescueHearts`), and
   `"rescueHearts": 0` withdraws it.
 - **Continue** — **20 gems** for **+15 turns** on a glade, **+6 motes** on a well,
-  **+4 taps** on a grove or **+4 moves** on a prototype board, flat and
-  repeatable for as long as the
+  **+4 taps** on a grove, **+4 moves** on a prototype board or **the whole ward line
+  back at full health** on a siege (`wards: 4`), flat and repeatable for as long as the
   player can pay (invariant 23). About three days of free gems, or a fifth of the entry rung.
   The grant is *on top of* whatever it took to un-lose the board, and a bought run can only ever
-  score one star. Content (`continueRun`), and `"enabled": 0` withdraws it.
+  score one star — on a siege that is a **charge against the match count** rather than an
+  accident of the fail state (23b). **A run that costs no heart is never offered one**, so a
+  mode's free opening rungs and any level already finished lose without a price (24).
+  Content (`continueRun`), and `"enabled": 0` withdraws it; it is deliberately not seeded, so a
+  retune is a build rather than a config push.
 - **Account prompts** — 2 chapter asks, 3 purchase asks, one shared 48h quiet period.
 
 Everything in that list except the shop ladder is **content** in `progression.json` or

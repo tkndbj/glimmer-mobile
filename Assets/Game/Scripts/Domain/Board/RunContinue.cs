@@ -66,6 +66,25 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         Moves = 5,
+
+        /// <summary>
+        /// Wards standing on a Thornwatch line.
+        ///
+        /// <para>
+        /// <b>Its own unit even though the mode rides the prototype level shape</b>, which is
+        /// exactly the addition <see cref="Moves"/> says to make when one of these modes ships
+        /// for real and wants its own economy. A siege has no move allowance at all — its fail
+        /// state is the ward line (invariant 37b) — so a continue here does not hand over more
+        /// of the thing that ran out in the unit the run is <em>graded</em> in. It hands over
+        /// the line: every fallen turret back at full health, keeping the rank its cogs bought,
+        /// with the hill exactly where it stood.
+        /// </para>
+        /// <para>
+        /// The unit is what the panel speaks in, and "+4 moves" over a board with no move meter
+        /// on it would be a sentence about a number the player cannot see.
+        /// </para>
+        /// </summary>
+        Wards = 6,
     }
 
     /// <summary>
@@ -194,6 +213,55 @@ namespace GlimmerGrove
 
         /// <summary>What the debit is written down as, for a support case reading a ledger.</summary>
         public const string SpendReason = "continue:";
+
+        /// <summary>
+        /// What a bought run owes the grade, in the unit it is graded in, so that it can score
+        /// one star at most.
+        ///
+        /// <para>
+        /// <b>Invariant 23's arithmetic, said out loud for the one mode where it is not an
+        /// accident.</b> Everywhere else a run reaches its fail state by exhausting the very
+        /// counter it is graded on — a glade dies at <c>par x 1.60</c> having already spent past
+        /// the two-star line at <c>par x 1.40</c> — so "a continued run can only ever pay one
+        /// star" needs no code at all. A siege is graded in <em>matches</em> and lost when its
+        /// <em>ward line</em> falls, and the two have nothing to do with each other: a player
+        /// beaten on the fourth wave may have spent five matches against a three-star line of
+        /// fourteen, so twenty gems would buy a top-rung clear.
+        /// </para>
+        /// <para>
+        /// That is not a grading curiosity. Stars derive credits, credits are what a grove is
+        /// worth, and a grove's worth reaches a public board — so a continue that moved the
+        /// grade would let money move a leaderboard, which is the exact thing invariant 19a
+        /// exists to stop. The offer sells a finish, never a grade, in every mode.
+        /// </para>
+        /// <para>
+        /// <b>Charged against the graded count rather than clamped on the star.</b> A cap on the
+        /// star would be a second thing deciding a grade, and it would leave the <em>record</em>
+        /// — which feeds the published deciles — reading as an excellent run. Spending the
+        /// difference is the same conversion a utility already makes (invariant 39): what the
+        /// purchase saved you, priced in the unit the mode counts.
+        /// </para>
+        /// <para>
+        /// Nought once a run is already past the line, so a second continue on the same run is
+        /// free of it and nothing is ever charged twice.
+        /// </para>
+        /// </summary>
+        /// <param name="spent">What the run has been graded at so far.</param>
+        /// <param name="silverThreshold">
+        /// This level's two-star line, from <c>LevelTuning.SilverThreshold</c>. A run must end
+        /// strictly beyond it to be worth one star.
+        /// </param>
+        public static int Toll(int spent, int silverThreshold)
+        {
+            if (silverThreshold <= 0) return 0;
+
+            // Saturating rather than trusted: par is derived and the factors are content, so
+            // "in practice these are small integers" is exactly what a content push changes.
+            if (silverThreshold == int.MaxValue) return 0;
+
+            int want = silverThreshold + 1;
+            return spent >= want ? 0 : want - spent;
+        }
 
         /// <summary>
         /// Builds the offer for a run that has just been lost.

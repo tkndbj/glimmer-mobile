@@ -553,16 +553,16 @@ namespace GlimmerGrove.Content
         /// </summary>
         static int Coming(SiegeLayout layout)
         {
-            int last = layout.BossWave >= 0 ? layout.BossWave - 1 : layout.Waves.Length - 1;
-            return last < 0 || last >= layout.Waves.Length ? 0 : layout.Waves[last].Length;
+            int last = layout.BossWave >= 0 ? layout.BossWave - 1 : layout.Coming.Length - 1;
+            return layout.SizeOf(last);
         }
 
         /// <summary>Whether anything on the hill wears this colour.</summary>
         static bool Sends(SiegeLayout layout, char colour)
         {
-            for (int w = 0; w < layout.Waves.Length; w++)
-                for (int i = 0; i < layout.Waves[w].Length; i++)
-                    if (char.ToLowerInvariant(layout.Waves[w][i]) == colour) return true;
+            for (int w = 0; w < layout.Coming.Length; w++)
+                for (int i = 0; i < layout.Coming[w].Length; i++)
+                    if (layout.Coming[w][i].Colour == colour) return true;
 
             return false;
         }
@@ -572,9 +572,9 @@ namespace GlimmerGrove.Content
         {
             var seen = new HashSet<char>();
 
-            for (int w = 0; w < layout.Waves.Length; w++)
-                for (int i = 0; i < layout.Waves[w].Length; i++)
-                    seen.Add(char.ToLowerInvariant(layout.Waves[w][i]));
+            for (int w = 0; w < layout.Coming.Length; w++)
+                for (int i = 0; i < layout.Coming[w].Length; i++)
+                    seen.Add(layout.Coming[w][i].Colour);
 
             return seen.Count;
         }
@@ -613,10 +613,10 @@ namespace GlimmerGrove.Content
             // line is in danger" would have got wrong in silence.
             if (layout.HasBoss && SiegeTuning.EndangersTheLine(layout.BossKind)) return true;
 
-            for (int w = 0; w < layout.Waves.Length; w++)
+            for (int w = 0; w < layout.Coming.Length; w++)
             {
                 int blow = 0;
-                for (int i = 0; i < layout.Waves[w].Length; i++)
+                for (int i = 0; i < layout.Coming[w].Length; i++)
                     blow += SiegeTuning.BlowOf(layout.KindAt(w, i));
 
                 if (blow * SwingsBeforeAnswered >= SiegeTuning.WardHealth) return true;

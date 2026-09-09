@@ -108,6 +108,18 @@ namespace GlimmerGrove
             // and a panel raised twice charges two lots of gems for one continue.
             if (_deciding) return;
 
+            // **A run nobody is charged for is a run nobody is sold**, and it is one predicate
+            // rather than a rule each mode keeps, for this class's own reason.
+            //
+            // Invariant 24 read from the other end. A mode's opening levels are free because the
+            // worst moment to meet the gate that stops somebody playing is while they are still
+            // working out what the verb is — and the worst moment to meet a *price* is the same
+            // moment, one step further in. A glade already finished is the other free clause and
+            // falls out identically: losing it costs nothing, so an offer to save it is an offer
+            // to sell something that was never at stake. Both of those are exactly the runs the
+            // defeat panel already offers a free retry on.
+            if (!_run.Staked) { lose(); return; }
+
             var offer = RunContinue.Offer(_run.MeasuredIn, _run.ContinueDeficit, _taken,
                                           Profile.Gems, GemsForSale);
 

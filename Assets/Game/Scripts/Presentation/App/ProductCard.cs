@@ -2,6 +2,7 @@ using System;
 using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Store;
+using GlimmerGrove.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -397,6 +398,71 @@ namespace GlimmerGrove
             // rather than prices: a gem in front of "your hearts are full" prices the refusal.
             SetPrice(priced ? Loc.Format("ui.shop.gem_price", Compact.Number(good.Gems))
                             : Loc.Get(StoreWording.GoodRefusal(state)),
+                     gem: priced);
+
+            PaintRibbon(0);
+            PaintSeal(null);
+        }
+
+        /// <summary>
+        /// A utility: the picture the action bar draws, its name, how many are in the pack, and
+        /// what one more costs in gems.
+        ///
+        /// <para>
+        /// <b>The headline is the name rather than a figure, and that is the one place this card
+        /// breaks its own grammar on purpose.</b> Everywhere else the big line is <em>what
+        /// arrives</em> — 8,500 gems, 20 capacity, 5 hearts — because the amount is what
+        /// distinguishes one rung from the next. A utility shelf has no rungs: four different
+        /// objects, each bought one at a time, so the amount would read "1" on all four and the
+        /// only thing that tells them apart is which one it is.
+        /// </para>
+        /// <para>
+        /// <b>The count goes underneath because a ceiling of a hundred makes it a real
+        /// question.</b> At nine it was a ration and the shelf could have said nothing; at a
+        /// hundred what a player wants to know before paying is what they are already carrying,
+        /// and it is the same sentence the panel behind the empty slot says (invariant 5a's rule
+        /// about one thing being said in one place).
+        /// </para>
+        /// <para>
+        /// The gem price behaves exactly as a good's does: a short balance still shows it and
+        /// greys the face, because the amount is what turns "no" into a target and the tap is not
+        /// refused either — it opens the gem shelf. A full pack is the one state that trades the
+        /// price for a sentence, for the good's own reason: it is not a price problem, and
+        /// printing a cost beside something the shop is turning down invites the one purchase it
+        /// exists to prevent.
+        /// </para>
+        /// </summary>
+        public void Draw(UtilityItem item, UtilityRefusal refusal, int held)
+        {
+            if (item == null) { Hide(); return; }
+
+            _plate.gameObject.SetActive(true);
+
+            bool ready = refusal == UtilityRefusal.None;
+            bool priced = ready || refusal == UtilityRefusal.Poor;
+
+            _plate.color = new Color(.10f, .17f, .23f, .92f);
+            _edge.sprite = Art.RoundOutline(_radius, 2f);
+            _edge.color = new Color(1f, .97f, .90f, .16f);
+
+            var look = ShopRarity.Of(item);
+            Light(look, false);
+
+            ShopArt.PaintUtility(_art, item);
+
+            _amount.text = Loc.Get(item.NameKey);
+            _amount.color = Pal.A(look.Colour, 1f);
+
+            _sub.text = Loc.Format("ui.shop.utility_held", held, item.MaxHeld);
+            _sub.color = Unit;
+
+            _priceFace.sprite = Art.S("Ui/" + (ready ? "btn_violet" : "btn_gray"));
+            _price.color = ready ? Pal.Cream : Pal.A(Pal.Cream, .72f);
+
+            SetPrice(priced ? Loc.Format("ui.shop.gem_price", Compact.Number(item.GemPrice))
+                            : Loc.Get(refusal == UtilityRefusal.NotForSale
+                                      ? "ui.utility.chest_only"
+                                      : "ui.shop.utility_full"),
                      gem: priced);
 
             PaintRibbon(0);

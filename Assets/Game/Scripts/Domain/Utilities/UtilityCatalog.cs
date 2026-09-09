@@ -83,21 +83,32 @@ namespace GlimmerGrove.Utilities
         /// gem price is a real answer on the evening somebody is stuck. They are content, and
         /// they are the numbers most likely to be wrong first guess.
         /// </para>
+        /// <para>
+        /// <b>The ceiling is a hundred, and it is a bound on a pack rather than a rationing of
+        /// one.</b> It shipped at nine, which read as a ration — a shelf that refuses a tenth is
+        /// a shop telling somebody they have bought enough — and nine is also low enough that the
+        /// gem price could never be the answer to anything but tonight. What the ceiling is
+        /// actually for is keeping a grant bounded and a badge legible; a hundred does both and
+        /// asks nothing of the save, since <c>UtilityStock</c>'s structural clamp is 9,999 and
+        /// was never this number. Raising it is safe in the direction that matters: a published
+        /// ceiling is enforced at the moment of a grant and never by re-reading a file, so
+        /// nothing anybody is already holding moves.
+        /// </para>
         /// </summary>
         public static readonly UtilityCatalog Default = new UtilityCatalog(new[]
         {
             // Damage, into everything standing in the one box it is thrown at. Two creepers
             // die; a brute is left with four health for a ward to finish.
             new UtilityItem("firepot", UtilityKind.Blast, magnitude: 44,
-                            gemPrice: 12, maxHeld: 9, order: 1),
+                            gemPrice: 12, maxHeld: 100, order: 1),
 
             new UtilityItem("mending", UtilityKind.Mend, magnitude: 6,
-                            gemPrice: 8, maxHeld: 9, order: 2),
+                            gemPrice: 8, maxHeld: 100, order: 2),
 
             // Magnitude is fuel in tenths, so 90 is nine shots — a ward that had run dry firing
             // for about two seconds, which is most of a creeper.
             new UtilityItem("surge", UtilityKind.Surge, magnitude: 90,
-                            gemPrice: 10, maxHeld: 9, order: 3),
+                            gemPrice: 10, maxHeld: 100, order: 3),
         });
 
         // ------------------------------------------------------------- building

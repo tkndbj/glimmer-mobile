@@ -1964,12 +1964,12 @@ def check_hints(progression, warnings):
 #: The utility kinds this build knows. Content may not invent one: what a utility *does* is a
 #: rule with a fail state and a grade attached, so an entry naming an unknown kind is skipped
 #: exactly as a chapter naming an unknown mode is (invariant 20). Mirrors `UtilityKinds`.
-UTILITY_KINDS = {"blast", "mend", "surge"}
+UTILITY_KINDS = {"blast", "mend", "surge", "storm"}
 
 #: What the build actually carries a picture for. Which utilities exist is content and which
 #: pictures exist is not, so adding one is a build - and an entry with no icon would draw a white
 #: rectangle on the bar (invariant 7b). Mirrors the `Utility/` block in `AssetManifest.UiSprites`.
-UTILITY_ART = {"firepot", "mending", "surge"}
+UTILITY_ART = {"firepot", "mending", "surge", "stormcall"}
 
 
 def check_utilities(progression, keys, warnings):
@@ -2849,6 +2849,9 @@ def main():
         moves = carry.get("moves", 4)
         if moves < 0:
             moves = 4
+        wards = carry.get("wards", 4)
+        if wards < 0:
+            wards = 4
 
         # `ink`, `stones` and `tiles` are deliberately absent. They were Lightweave's,
         # Ripplewake's and Groovekeeper's units, all three modes are gone, and the fields are kept
@@ -2856,7 +2859,8 @@ def main():
         # printing one here would say a mode this build cannot play is still priced.
         print(f"continue: {gems} gem(s) for +{turns} turn(s) on a glade, "
               f"+{motes} mote(s) on a well, +{taps} tap(s) on a grove, "
-              f"+{moves} move(s) on a prototype board")
+              f"+{moves} move(s) on a prototype board, "
+              f"+{wards} ward(s) on a siege line")
 
         # What the price means, said in the two units a player actually earns gems in.
         # A price nobody can reach is the failure mode this whole block is content for.
@@ -2877,6 +2881,15 @@ def main():
 
         print("       a continued run is already past the two-star line, so it can only "
               "ever score one - the offer sells a finish, never a grade")
+
+        # Thornwatch is the one mode where that is not free. It is graded in matches and lost
+        # when its ward line falls, so a run can reach its fail state well *under* the three-star
+        # line - `RunContinue.Toll` charges the difference against the graded count, which is the
+        # only reason the sentence above stays true there. Nothing offline can check it (the toll
+        # is per level and per run); it is said here so that a retune of the star factors is read
+        # with it in mind.
+        print("       on a siege the line is the fail state and matches are the grade, so a "
+              "continued run is charged up to the two-star line rather than already past it")
 
     rescue_hearts = hearts_block.get("rescueHearts", 2)
     if rescue_hearts < 0:

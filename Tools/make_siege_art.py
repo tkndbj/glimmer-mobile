@@ -131,6 +131,48 @@ KIT = "craftpix-net-239749-merge-shooter-cartoon-asset-kit.zip"
 #: above, so `--mine` points at it.
 MINE = Path(r"C:\Users\Digikey\Downloads\graphicriver-95eo2prH-topdown-tiles-mine.zip")
 
+#: The ground each rung of a siege chapter is fought over: a **gradient map** over the mine
+#: tileset's own square slabs, the tiles it is laid from, and the seed that lays them.
+#:
+#: <b>Which ground is arithmetic on the level's place in its chapter</b> - invariant 7c's rule and
+#: the backdrop's shape exactly, so ten grounds serve every siege chapter that ever ships and a
+#: second one costs no art at all.
+#:
+#: <b>One tileset rather than ten, and that is a decision with a known cost.</b> The isometric
+#: terrain packs on this machine cannot floor this board at all: their ground is drawn as diamonds
+#: with the side faces baked into the pixels, so a tile cannot be un-skewed into a square, and
+#: laying them as a field and cropping a rectangle out of it only hides the skirts - what comes
+#: back is still diagonal. The mine set is the only **top-down** terrain here, so ten places are
+#: made out of one material. What that buys is real (a gradient map turns near-grey stone into
+#: moss, sandstone, clay, basalt and ice, and a different tile mix repaves it) and what it cannot
+#: buy is a different *surface*: every rung is stone, cut the same way. Nine more top-down
+#: tilesets would replace `TONES` with nine `zipped` calls and change nothing else.
+#:
+#: The **ramp is a place rather than a difficulty** - the raid reads as moving somewhere over ten
+#: rungs - and the mine's own untouched floor keeps rung five, where the first warlord stands.
+GROUNDS = [
+    ("hill1",  "moss",      (0x12, 0x1B, 0x0E), (0x86, 0x9A, 0x55), (5, 10, 8, 2, 7),      11),
+    ("hill2",  "steel",     (0x11, 0x13, 0x17), (0x84, 0x8E, 0x9C), (13, 5, 10, 2, 11),     5),
+    ("hill3",  "sandstone", (0x1F, 0x17, 0x0D), (0xAE, 0x8E, 0x5C), (5, 8, 2, 7, 1),       17),
+    ("hill4",  "bog",       (0x0D, 0x15, 0x12), (0x55, 0x7C, 0x6C), (14, 10, 8, 7, 11),     3),
+    ("hill5",  None,        None,               None,               (13, 14, 5, 10, 8, 2), 23),
+    ("hill6",  "clay",      (0x1E, 0x0F, 0x0B), (0xA0, 0x55, 0x3E), (5, 2, 7, 1, 11),      29),
+    ("hill7",  "khaki",     (0x1A, 0x18, 0x0E), (0xA4, 0x9C, 0x62), (10, 8, 2, 1),         31),
+    ("hill8",  "basalt",    (0x0C, 0x0C, 0x12), (0x66, 0x62, 0x80), (13, 14, 8, 7, 1, 11), 37),
+    ("hill9",  "ice",       (0x0E, 0x16, 0x1E), (0x74, 0x9C, 0xB8), (5, 10, 2, 11),        41),
+    ("hill10", "ember",     (0x1C, 0x0E, 0x07), (0xB0, 0x68, 0x34), (14, 5, 8, 7, 1),      43),
+]
+
+#: The most colour a ground may carry, as its mean distance from grey.
+#:
+#: <b>A gradient map has no natural ceiling, and the two ends of the ramp decide the saturation as
+#: much as the hue.</b> Left alone, the moss and the ember came out at twice everything else's
+#: chroma with their value identical to it, which reads as *brighter* - and a saturated ground is
+#: the one thing on this board competing with the cast walking over it, which is 37f's argument
+#: said about the floor instead. Twelve is unmistakably a colour and does not fight four
+#: cartoon-bright monsters for it.
+GROUND_CHROMA_CAP = 12.0
+
 #: One gem, in pixels. An import-cap decision rather than a drawing one - `ArtImportRules.Caps`
 #: gives this folder 512, and a texture costs its dimensions rather than its file size.
 TILE = 192
@@ -169,11 +211,48 @@ BLAST_SET = {
 #: The three creepers come from one pack on purpose (three creatures drawn by three hands read as
 #: three games) and the brute comes from another, because the one thing a player has to see about a
 #: brute at a glance is that it is not one of those.
-CAST_SET = {
-    "mon1": (MONSTERS, "PNG/Monster 1/Walk"),
-    "mon2": (MONSTERS, "PNG/Monster 2/Walk"),
-    "mon3": (MONSTERS, "PNG/Monster 4/Walk"),
-    "brute": (BRUTES, "PNG/Monster 5/Walk"),
+#: The packs the shielded raiders come from. Two of these are opened for nothing else.
+BULWARKS_A = "craftpix-net-603718-alien-v1-enemy-sprite-set.zip"
+BULWARKS_B = "craftpix-net-424965-alien-v3-enemy-character-sprites.zip"
+BULWARKS_C = "craftpix-net-259073-alien-v2-enemy-sprite-set.zip"
+
+#: Every raider that walks down the hill: one body per colour, per kind.
+#:
+#: **Four bodies a kind rather than three shared between four colours, and the tint is gone.** A
+#: raider used to be the pack's own art multiplied by 62% toward a `Pal` entry, with a coloured
+#: wash behind it. `Image.color` is a multiply, so that could only ever *darken*: what it drew was
+#: four silhouettes of the same value, and everything these packs are actually good at - the
+#: shading, the highlights, the face - was spent saying one bit. The wards learned this one folder
+#: over and the answer is the same: a real **hue rotation baked into the sprite**, which keeps every
+#: highlight and simply makes the body that colour.
+#:
+#: Once the colour is in the paint, the body is free to say it too - so each colour gets its own
+#: model and a player who cannot separate red from green can still separate a mushroom from a
+#: cyclops. That is eighty-three characters in these packs being asked to do the job four were
+#: doing.
+#:
+#: **Three families, told apart by where they come from.** The creepers are one pack so they read
+#: as a set; the brutes are another, so the one thing a player must see at a glance is that a brute
+#: is not one of those; and the bulwarks are aliens that are literally carrying a shield - which is
+#: the only honest way to draw a unit holding one, and it cost a folder name rather than a drawing.
+RAIDER_SET = {
+    # creepers - one pack, four bodies
+    "mon_r":     (MONSTERS, "PNG/Monster 1/Walk"),
+    "mon_g":     (MONSTERS, "PNG/Monster 2/Walk"),
+    "mon_b":     (MONSTERS, "PNG/Monster 5/Walk"),
+    "mon_y":     (MONSTERS, "PNG/Monster 4/Walk"),
+
+    # brutes - a second pack, so they are visibly not creepers
+    "brute_r":   (BRUTES, "PNG/Monster 4/Walk"),
+    "brute_g":   (BRUTES, "PNG/Monster 2/Walk"),
+    "brute_b":   (BRUTES, "PNG/Monster 1/Walk"),
+    "brute_y":   (BRUTES, "PNG/Monster 5/Walk"),
+
+    # bulwarks - the four characters in these packs that hold a shield through a whole walk cycle
+    "bulwark_r": (BULWARKS_A, "PNG/Alien2/Walk"),
+    "bulwark_g": (BULWARKS_B, "PNG/Alien01/Walk"),
+    "bulwark_b": (WARLORDS, "PNG/Alien01/Walk"),
+    "bulwark_y": (BULWARKS_C, "PNG/Alien2/Walk"),
 }
 
 #: The warlord's three animations, cut together by `paired`.
@@ -283,6 +362,32 @@ WARD_W, WARD_H = 192, 240
 #: orange trim to stay warm against a red body and for the dome to stay cool against a green one.
 HUE_PULL = 0.8
 
+#: How far a **raider** is pulled toward its colour, and how hard its saturation is pushed.
+#:
+#: **Gentler than a ward's on all three counts, and the reason is what each picture is for.** A
+#: turret has to read as *lit* against a bright green hill, so it is pulled 80% of the way, floored
+#: at half saturation and lifted in value. A monster has to keep being a monster: a face, an eye, a
+#: mouth and whatever the pack drew in a second colour are the things that tell four bodies apart,
+#: and pushing those as hard as a turret's collapses them into one flat shape - which is precisely
+#: the fault the run-time coat had and this exists to fix. Pulled 70% with a low floor, a red
+#: creeper is unmistakably red and still has its own shading.
+#:
+#: **The pull was 0.70 first and that was wrong, which only a sheet could say.** These packs paint a
+#: character in two or three colours of their own, so a partial pull lands each of them somewhere
+#: different: the blue creeper came out teal, the yellow one brown and the yellow bulwark
+#: red-and-green. At 0.92 every body reaches its colour and the internal contrast the models are
+#: told apart by survives - the skull is still lighter than the body it stands on, the armour still
+#: darker than the trim. Rendered side by side at 0.70, 0.92 and 1.0, and 1.0 is the flat one.
+CAST_PULL, CAST_SAT_GAIN, CAST_SAT_FLOOR = 0.92, 0.62, 0.30
+
+#: How much a raider's value is lifted. Small, and it is here for one colour.
+#:
+#: **Yellow only reads as yellow when it is bright**, so a body rotated onto the Sun hue off a dark
+#: source comes out *brown* - which was the yellow creeper, at every pull. A modest lift fixes it
+#: and costs the other three nothing; twice this much starts flattening the reds, which is the
+#: thing the low saturation floor is protecting. Rendered at 1.0, 1.08 and 1.15 to pick it.
+CAST_VAL_GAIN, CAST_VAL_LIFT = 1.08, 0.04
+
 STONE_DARK = (38, 46, 58)
 STONE_MID = (62, 74, 90)
 STONE_LIT = (108, 124, 146)
@@ -367,8 +472,28 @@ def ground(w, h, top, bottom, seed):
 # --------------------------------------------------------------------------- the board
 
 
-def hill():
-    """The ground the raiders walk over: the mine tileset's own floor, laid as a field.
+def slabs():
+    """The mine tileset's own square floor pieces, by number. None when the pack is absent."""
+    z = zipped(MINE.name, MINE.parent)
+    if z is None:
+        return None
+
+    art = {}
+    for name in z.namelist():
+        if not name.endswith(".png") or "__MACOSX" in name:
+            continue
+
+        stem = name.split("/")[-1].replace("Asset ", "").replace("xhdpi.png", "")
+        if stem.isdigit():
+            art[int(stem)] = read(z, name)
+
+    # The 265-square pieces are the floor; everything taller is a wall block or an ore cluster.
+    floor = {k: v for k, v in art.items() if v.size == (265, 265)}
+    return floor or None
+
+
+def floor(pieces, mix, seed, across=4, down=5):
+    """One ground, laid from a named mix of the mine's slabs.
 
     <b>Three grounds in three sittings, and the reason it moved twice is worth keeping.</b> The
     first was drawn - dark earth under a black wash - and read as a hole. The second was the
@@ -379,64 +504,95 @@ def hill():
     <b>The plate rule comes back with it</b> (CRAFT.md: a dark ground is what makes bright pieces
     read), so unlike the grass this needs no help - the raiders are saturated cartoon colours and
     every one of them now sits on something that is not competing with it. What it does need is to
-    not be *flat*, which is what the ore is for.
+    not be *flat*, which is what the mix is for: a different handful of slabs and a different seed
+    repave the same stone, so two rungs sharing a tileset do not share a paving pattern.
+
+    **No ore scattered over it.** The pack's ore clusters were laid across the floor to stop it
+    reading as flat, drained most of the way to grey so they would not compete with the four
+    colours this board spends on things the player has to tell apart. Played, they read as litter.
     """
-    z = zipped(MINE.name, MINE.parent)
-    if z is None:
-        return None
-
-    art = {}
-    for n in z.namelist():
-        if not n.endswith(".png") or "__MACOSX" in n:
-            continue
-        stem = n.split("/")[-1].replace("Asset ", "").replace("xhdpi.png", "")
-        if stem.isdigit():
-            art[int(stem)] = read(z, n)
-
-    if not art:
-        return None
-
-    # The 265-square pieces are the floor; everything taller is a wall block or an ore cluster.
-    floor = [im for im in art.values() if im.size == (265, 265)]
-    if not floor:
-        return None
-
-    # The plainest of them, by how little of the tile is edge shadow - a floor laid out of pieces
-    # that each carry a dark rim draws a grid across the whole hill, which is the fault the grass
-    # was re-filtered for.
-    floor.sort(key=flatness, reverse=True)
-    floor = floor[:6]
+    tiles = [pieces[k] for k in mix if k in pieces]
+    if len(tiles) < 2:
+        sys.exit("a ground needs at least two of the mine's slabs; got %r" % (mix,))
 
     side = 265
-    across, down = 4, 5
     im = Image.new("RGBA", (side * across, side * down), (26, 24, 26, 255))
 
-    rng = np.random.RandomState(23)
+    rng = np.random.RandomState(seed)
     for y in range(down):
         for x in range(across):
-            im.alpha_composite(floor[int(rng.rand() * len(floor))], (x * side, y * side))
-
-    # **No ore scattered over it.** The pack's ore clusters were laid across the floor to stop it
-    # reading as flat, drained most of the way to grey so they would not compete with the four
-    # colours this board spends on things the player has to tell apart. Played, they read as
-    # litter. What keeps the floor from being flat is the six different tiles it is laid from,
-    # which is the amount of variety a surface *under* the action should have.
-
-    # A little depth up the hill, so the far end reads as further away rather than as the same
-    # floor twice.
-    a = np.asarray(im).astype(np.float32)
-    ramp = np.linspace(0.80, 1.10, im.height, dtype=np.float32)[:, None, None]
-    a[..., :3] = np.clip(a[..., :3] * ramp + 16.0, 0, 255)
-    im = Image.fromarray(a.astype(np.uint8), "RGBA")
+            im.alpha_composite(tiles[int(rng.rand() * len(tiles))], (x * side, y * side))
 
     return im.resize((512, 640), Image.LANCZOS)
 
 
-def flatness(tile):
-    """How little of a tile is dark rim. Used to pick the plain floor pieces."""
-    a = np.asarray(tile).astype(np.float32)
+def toned(im, shadow, light):
+    """A gradient map: the slab's own luminance read through a two-point ramp.
+
+    <b>A hue rotation cannot do this and that is why it is not used.</b> `hued` turns the wards,
+    and it works because the kit paints them - rotating the hue of something that has none leaves
+    it exactly as grey as it was, and the mine's stone sits at a chroma of about two. So the colour
+    has to be *supplied*, and a ramp from a dark end to a light one is the way that keeps every
+    seam, chip and edge the tileset drew: what changes is the material, not the masonry.
+    """
+    a = np.asarray(im.convert("RGB")).astype(np.float32)
     lum = a[..., 0] * 0.30 + a[..., 1] * 0.59 + a[..., 2] * 0.11
-    return float((lum > lum.mean() * 0.82).mean())
+
+    low, high = float(lum.min()), float(lum.max())
+    t = ((lum - low) / max(high - low, 1.0))[..., None]
+
+    out = np.asarray(shadow, np.float32) + t * (np.asarray(light, np.float32) -
+                                                np.asarray(shadow, np.float32))
+    rgba = np.dstack([out, np.full(lum.shape, 255.0, np.float32)])
+    return Image.fromarray(np.clip(rgba, 0, 255).astype(np.uint8), "RGBA")
+
+
+def lit(im):
+    """A picture's luminance, which is the only thing about a ground that is not negotiable."""
+    a = np.asarray(im.convert("RGB")).astype(np.float32)
+    return a[..., 0] * 0.30 + a[..., 1] * 0.59 + a[..., 2] * 0.11
+
+
+def depth(im):
+    """A little further away at the far end, so the top of the hill reads as distance rather than
+    as the same floor twice. The same ramp on all ten, so they cannot disagree about which way the
+    hill runs."""
+    a = np.asarray(im).astype(np.float32)
+    ramp = np.linspace(0.80, 1.10, im.height, dtype=np.float32)[:, None, None]
+    a[..., :3] = np.clip(a[..., :3] * ramp + 16.0, 0, 255)
+    a[..., 3] = 255.0
+    return Image.fromarray(a.astype(np.uint8), "RGBA")
+
+
+def graded(im, mean, spread, chroma=1.0):
+    """Put a ground on the mine floor's own value ladder, and cap what colour it may carry.
+
+    <b>Value is the one thing a second ground may not change.</b> A gradient map picks its own two
+    endpoints, so nothing about it keeps a ground where the cast can be seen against it - and this
+    hill has already had that fault twice: the second ground it ever carried was the grass pack,
+    "chosen for brightness", and the owner's third call moved it to a mine. Every rung is therefore
+    normalised onto the mine's own <em>measured</em> mean and spread, so re-cutting the mine moves
+    the other nine with it, and the variety a chapter gets is <b>hue and material, never
+    brightness</b>.
+
+    The map is affine on luminance, so `depth`'s ramp survives it as a ramp - which is why the
+    grade runs last.
+    """
+    a = np.asarray(im.convert("RGB")).astype(np.float32)
+    here = a[..., 0] * 0.30 + a[..., 1] * 0.59 + a[..., 2] * 0.11
+
+    want = np.clip((here - here.mean()) / max(float(here.std()), 1.0) * spread + mean, 4.0, 255.0)
+    cast = a - here[..., None]
+
+    # The ceiling, measured rather than assumed: chroma scales with the factor, so one reading
+    # says exactly what factor lands on it. See GROUND_CHROMA_CAP.
+    carried = float(np.abs(cast * chroma).mean())
+    if carried > GROUND_CHROMA_CAP:
+        chroma *= GROUND_CHROMA_CAP / carried
+
+    out = cast * chroma + want[..., None]
+    rgba = np.dstack([np.clip(out, 0, 255), np.full(here.shape, 255.0, np.float32)])
+    return Image.fromarray(rgba.astype(np.uint8), "RGBA")
 
 
 def rampart():
@@ -506,7 +662,7 @@ def socket():
     return im
 
 
-def hued(im, hue):
+def hued(im, hue, pull=None, sat_gain=0.48, sat_floor=0.50, val_gain=1.10, val_lift=0.06):
     """Paints a picture one hue, keeping every highlight and every bit of shading it had.
 
     Saturation is pulled up rather than replaced, so the pack's near-white specular edges stay
@@ -524,8 +680,8 @@ def hued(im, hue):
 
     # Pulled up rather than set: a pixel that was grey metal stays greyish, a pixel that was
     # coloured becomes strongly coloured.
-    sat = np.clip(sat * 0.48 + 0.50, 0.0, 1.0)
-    val = np.clip(mx * 1.10 + 0.06, 0.0, 1.0)
+    sat = np.clip(sat * sat_gain + sat_floor, 0.0, 1.0)
+    val = np.clip(mx * val_gain + val_lift, 0.0, 1.0)
 
     # **Most of the way to the target rather than all of it.** Setting every pixel to one hue
     # gives a turret that is *entirely* one colour, which came back from play as flat - the pack
@@ -545,7 +701,7 @@ def hued(im, hue):
     was = was / 6.0
 
     step = ((hue - was + 0.5) % 1.0) - 0.5
-    h = (was + step * HUE_PULL) % 1.0
+    h = (was + step * (HUE_PULL if pull is None else pull)) % 1.0
     i = np.floor(h * 6.0)
     f = h * 6.0 - i
     p = val * (1.0 - sat)
@@ -829,19 +985,40 @@ def paired(z, folders, count, tall, overflow=()):
     if home is None or whole is None:
         return None
 
-    # **Wide as everything that stays in frame, and tall as everything full stop** - two decisions
-    # rather than one lazy union.
+    # **Nothing is cut off any more, and the frame is widened symmetrically to manage it.**
     #
-    # *Wide*: this alien's attack throws a fist a long way sideways, and framing that would put the
-    # body in 60% of a 522-pixel canvas - which the view then centres, so the boss would be drawn
-    # standing off to one side of the lane it is in and at two thirds the size it should be. With
-    # the attack named in `overflow` the fist simply leaves the frame, which is what "it threw
-    # something" looks like anyway, and the spell crossing the hill is the follow-through. The walk
-    # is *not* in `overflow` and must not be: its legs stride nine pixels wider than the stand, and
-    # a clipped foot is a boss walking on stumps.
+    # It used to be *wide as what stays in frame, tall as everything*: the attack was named in
+    # `overflow` and its thrown fist simply left the canvas, on the argument that "it threw
+    # something" looks like that anyway and that framing the fist would put the body in 60% of a
+    # 522-pixel canvas. Played, it came back as parts of a boss visibly cut off mid-animation, and
+    # the argument was half wrong: the *view sizes a body by its height* (`SiegeView.Frame`), so a
+    # wider canvas costs no size at all. What it really costs is **centring** - the canvas grows on
+    # whichever side the fist goes, and the view centres the canvas on the lane, so the body would
+    # stand off to one side.
+    #
+    # So the width is taken as far as the widest thing reaches on *either* side of the body's own
+    # centre, and mirrored. The body stays exactly where it was and exactly the size it was; what
+    # grows is transparent margin, which is what "expand the container" means.
+    #
+    # `overflow` therefore no longer decides what is *drawn* - it decides what defines the body's
+    # centre, which is still the standing and walking reels, because a fist is not a body.
     #
     # *Tall*: a clipped head is not a throw, it is a mistake. Nothing is ever cut off the top.
-    box = (home[0], whole[1], home[2], whole[3])
+    middle = (home[0] + home[2]) / 2.0
+    reach = max(middle - whole[0], whole[2] - middle, middle - home[0], home[2] - middle)
+
+    box = (int(math.floor(middle - reach)), whole[1], int(math.ceil(middle + reach)), whole[3])
+
+    # The claim above, asserted rather than believed. It is the one property of this frame that
+    # matters and the one nothing downstream could ever notice: a clipped fist imports, addresses,
+    # audits and draws, and the only symptom is a boss losing an arm for four frames of a throw
+    # that nobody is looking at closely (invariant 32b - no gate in this project opens a PNG).
+    # Measured when this replaced the old `overflow` rule: the four bosses were losing 162, 102,
+    # 106 and 6 pixels of their attacks.
+    if not (box[0] <= whole[0] and box[2] >= whole[2]
+            and box[1] <= whole[1] and box[3] >= whole[3]):
+        raise SystemExit("%s: the shared canvas does not contain every frame of every reel, so "
+                         "something is being cut off" % (folders,))
 
     wide, high = box[2] - box[0], box[3] - box[1]
     ratio = tall / float(high)
@@ -875,11 +1052,32 @@ def build():
     for key, (src, _) in GEMS.items():
         made["Siege/%s.png" % key] = fit(read(match3, src), TILE, 0.88)
 
-    field = hill()
-    if field is None:
+    # **Ten grounds, one per place in a chapter** (invariant 7c). The mine's own untouched floor
+    # is one of them and is measured first, because the other nine are normalised onto its value
+    # ladder rather than onto a pair of typed numbers - see `graded`.
+    pieces = slabs()
+    if pieces is None:
         return None
 
-    made["Siege/hill.png"] = field
+    plain = None
+    for key, tone, shadow, light, mix, seed in GROUNDS:
+        if tone is None:
+            plain = depth(floor(pieces, mix, seed))
+            break
+
+    if plain is None:
+        return None
+
+    light_of = lit(plain)
+    mean, spread = float(light_of.mean()), float(light_of.std())
+
+    for key, tone, shadow, light, mix, seed in GROUNDS:
+        if tone is None:
+            made["Siege/%s.png" % key] = plain
+            continue
+
+        made["Siege/%s.png" % key] = graded(
+            depth(toned(floor(pieces, mix, seed), shadow, light)), mean, spread)
     made["Siege/rampart.png"] = rampart()
     made["Siege/plate.png"] = plate()
     made["Siege/socket.png"] = socket()
@@ -938,14 +1136,26 @@ def build():
             made["Fx/Siege/%s/f%02d.png" % (key, i)] = im
 
     packs = {}
-    for key, (pack, folder) in CAST_SET.items():
+
+    # **Every raider, hue-rotated into its own colour.** `CAST_HUE` is a gentler grade than the
+    # wards get: a turret has to read as *lit* on a bright green field, where a monster has to keep
+    # its own face - so saturation is pushed less far and the value is not lifted at all. Both go
+    # through one function, because two copies of a hue rotation is two ways for a red raider and a
+    # red bolt to disagree about what red is.
+    hues = dict(WARD_HUES)
+
+    for key, (pack, folder) in RAIDER_SET.items():
         if pack not in packs:
             packs[pack] = zipped(pack)
         z = packs[pack]
         if z is None:
             continue
+
+        hue = hues.get(key[-1])
         for i, im in enumerate(cast_frames(z, folder)):
-            made["Siege/%s/f%02d.png" % (key, i)] = im
+            made["Siege/%s/f%02d.png" % (key, i)] = im if hue is None else hued(
+                im, hue, pull=CAST_PULL, sat_gain=CAST_SAT_GAIN, sat_floor=CAST_SAT_FLOOR,
+                val_gain=CAST_VAL_GAIN, val_lift=CAST_VAL_LIFT)
 
     # The four bosses: three reels each, all off one canvas so none of them jumps or changes size
     # when it throws. One loop rather than one block per boss, which is what stopped a third and a

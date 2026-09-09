@@ -1,5 +1,6 @@
 using GlimmerGrove.Content;
 using GlimmerGrove.Modes;
+using GlimmerGrove.Progression;
 using NUnit.Framework;
 
 namespace GlimmerGrove.Tests
@@ -54,7 +55,22 @@ namespace GlimmerGrove.Tests
         /// <summary>The boss the fixture level ends on. See <see cref="SiegeLayout.Boss"/>.</summary>
         const string Boss = "warlord:r";
 
-        static SiegeLayout Shipped() => Layout(Field, Gems, Wards, Waves, Boss);
+        /// <summary>
+        /// The fixture siege, dealing cogs like every shipped rung that sends a boss.
+        ///
+        /// <b>It dealt none, and that made it the one configuration this game never ships.</b>
+        /// Every rung from the second on deals them, and a boss rung leans on them hardest — a
+        /// ward that never ranks up gets a tenth less damage and a tenth more fuel out of every
+        /// bolt it fires. That was survivable while a bolt was worth twenty; once a bolt was worth
+        /// ten and a match bought twice as many (<see cref="SiegeTuning.FuelPerGemTenths"/>), a
+        /// cog-free duel stopped being winnable by an ordinary player and this fixture was the
+        /// only thing in the project that noticed — because it was the only thing shaped that way.
+        /// <b>A fixture that is harder than anything shipped is not a stricter test, it is a
+        /// different game.</b>
+        /// </summary>
+        const int Cogs = 3;
+
+        static SiegeLayout Shipped() => Layout(Field, Gems, Wards, Waves, Boss, Cogs);
 
         static SiegeLayout Layout(string[] rows, string gems, string wards, string[] waves,
                                   string boss = null, int cogs = 0)
@@ -111,12 +127,12 @@ namespace GlimmerGrove.Tests
             new Rung("s01_ironward", new[] { "brbybgrg", "yggrbbry", "r*byybgr", "yygbbgby", "bbryygyg" }, "rgby", "rgby", new[] { "rgbyrg", "rgbyrgby", "rgByrgby" }, "", 4),
             new Rung("s01_stonewatch", new[] { "gbrrgbgy", "rybbrbbr", "grgryyrr", "rbybybby", "ryybgrby" }, "rgby", "rgby", new[] { "rgbyRG", "rgbyRGby", "RGBYrgby" }, "blightcaller:b", 3),
             new Rung("s01_thornhollow", new[] { "gbrryrbb", "rygbrrbr", "bbgybggy", "ybygyybb", "gyrbbggr" }, "rgby", "rgby", new[] { "rrrgggbb", "YYYYrrrr", "GGBBYY" }, "", 3),
-            new Rung("s01_warlordsgate", new[] { "ygrrbrgg", "ryyrgrrb", "bbggyyby", "brryrbyg", "ggrbggry" }, "rgby", "rgby", new[] { "rgbyrg", "rgbyRGby", "RGby" }, "warlord:r", 3),
-            new Rung("s01_bramblerun", new[] { "bbrgrbrg", "bggrbgyy", "rgyygrry", "brbybyyg", "yrbrgrrg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGbyRGby", "RGBYRG" }, "", 3),
-            new Rung("s01_ashenfield", new[] { "yrbyrgyy", "brggrbby", "gbrgbyrr", "byrbgybg", "yrbbrrbg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRG", "RGBYRGby" }, "", 3),
+            new Rung("s01_warlordsgate", new[] { "ygrrbrgg", "ryyrgrrb", "bbggyyby", "brryrbyg", "ggrbggry" }, "rgby", "rgby", new[] { "rgbyrg", "rgbyRGby", "RGbyRG" }, "warlord:r", 3),
+            new Rung("s01_bramblerun", new[] { "bbrgrbrg", "bggrbgyy", "rgyygrry", "brbybyyg", "yrbrgrrg" }, "rgby", "rgby", new[] { "RGby#rby", "RGbyRGby", "RGBYRG#gRG" }, "", 3),
+            new Rung("s01_ashenfield", new[] { "yrbyrgyy", "brggrbby", "gbrgbyrr", "byrbgybg", "yrbbrrbg" }, "rgby", "rgby", new[] { "#bgyRGby", "RGBY#rG", "RGBYRG#y" }, "", 3),
             new Rung("s01_blackmarch", new[] { "bggbggyr", "rbybgrby", "ybyybryb", "brrgybgr", "bybggybr" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRGby", "RGBYrg" }, "warbringer:g", 3),
-            new Rung("s01_thornsiege", new[] { "gbyygryr", "rbgbrbry", "rgrbgybb", "yygryyrg", "bbrgyrgg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRGBY", "RGBYRGBY" }, "", 3),
-            new Rung("s01_lastlight", new[] { "bbrgbrry", "bbggbgyg", "ryybrgrr", "ryrgbyby", "ggyrgyry" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRG", "RGBYrgby" }, "overlord:y", 3),
+            new Rung("s01_thornsiege", new[] { "gbyygryr", "rbgbrbry", "rgrbgybb", "yygryyrg", "bbrgyrgg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBY#rGBY", "RGBY#gRGB#b" }, "", 3),
+            new Rung("s01_lastlight", new[] { "bbrgbrry", "bbggbgyg", "ryybrgrr", "ryrgbyby", "ggyrgyry" }, "rgby", "rgby", new[] { "rgbyRGby", "RGB#rY#gG", "RGBYRGby" }, "overlord:y", 3),
         };
 
         /// <summary>
@@ -149,8 +165,8 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheFixtureSiegeIsParThirtySeven()
         {
-            // 12 creepers at 20, 8 brutes at 48 and one warlord at 180 is 804, over what a match
-            // delivers (22). `Tools/verify/siege.py` prints the same number from the same
+            // 12 creepers at 200, 8 brutes at 480 and one warlord at 1800 is 8040, over what a
+            // match delivers (220). `Tools/verify/siege.py` prints the same number from the same
             // arithmetic; if these two ever disagree, one of the constants moved in one file only.
             Assert.AreEqual(37, SiegeTuning.Par(Shipped()));
         }
@@ -419,7 +435,7 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void TheRunIsLostWhenTheLastWardFallsAndNoPurchaseRescuesIt()
+        public void TheRunIsLostWhenTheLastWardFallsAndAContinueIsAnHonestSale()
         {
             var board = SiegeBoard.Build(Shipped());
 
@@ -429,13 +445,107 @@ namespace GlimmerGrove.Tests
             Fell(board);
 
             Assert.IsFalse(board.AnyMove, "a line with nothing on it has no legal move");
-            Assert.IsTrue(board.Stranded, "no purchase puts a ward back up");
+
+            // **Over, and not stranded.** The two are different questions and this mode is the
+            // first here to answer them differently: the run has ended, and a continue puts the
+            // line back up with the hill exactly where it stood, so refusing the offer would
+            // refuse a rescue to somebody who could still win (invariant 28f).
+            Assert.IsFalse(board.Stranded, "a continue puts the line back up");
 
             var verdict = ProtoVerdict.Read(board, new ProtoBudget(ProtoBudget.Unlimited));
 
             Assert.AreEqual(ProtoEnding.Stuck, verdict.Ending);
-            Assert.AreEqual(RunContinueDeficit.None, verdict.Deficit,
-                            "a fallen line must never be offered a continue");
+            Assert.AreNotEqual(RunContinueDeficit.None, verdict.Deficit,
+                               "a fallen line is a shortage a purchase really does fix");
+            Assert.AreEqual(0, verdict.Deficit,
+                            "there is no unusable allowance to clear first - the offer is the "
+                            + "whole line");
+        }
+
+        [Test]
+        public void AContinueRaisesEveryWardAtFullHealthAndLeavesTheHillWhereItStood()
+        {
+            var board = SiegeBoard.Build(Shipped());
+            int wards = board.Wards.Count;
+
+            Fell(board);
+
+            int onTheHill = board.OnTheHill;
+            int left = board.GoalsLeft;
+
+            Assert.AreEqual(wards, board.Rally(ContinueLimits.DefaultWards),
+                            "every fallen ward stands again");
+
+            Assert.AreEqual(wards, board.WardsStanding);
+            Assert.IsTrue(board.AnyMove, "the run carries on");
+
+            for (int i = 0; i < wards; i++)
+            {
+                var ward = board.Wards[i];
+
+                Assert.AreEqual(SiegeTuning.WardHealth, ward.Health,
+                                "a line raised at anything less falls again in a breath");
+                Assert.AreEqual(0f, ward.Fuel, .001f,
+                                "fuel is damage, and a continue may buy a finish and never a grade");
+                Assert.IsFalse(ward.Doused, "a raised ward is not still smothered");
+            }
+
+            // What "carry on from where you left off" has to mean when the thing that ended the
+            // run was the line rather than the board.
+            Assert.AreEqual(onTheHill, board.OnTheHill, "the hill did not move");
+            Assert.AreEqual(left, board.GoalsLeft, "nothing was cleared for free");
+        }
+
+        [Test]
+        public void ASecondRallyOnAStandingLineRaisesNothing()
+        {
+            var board = SiegeBoard.Build(Shipped());
+
+            Fell(board);
+
+            Assert.AreEqual(board.Wards.Count, board.Rally(ContinueLimits.DefaultWards));
+            Assert.AreEqual(0, board.Rally(ContinueLimits.DefaultWards),
+                            "a standing line has nothing to raise, so a second grant is silent");
+        }
+
+        [Test]
+        public void ARaisedWardKeepsTheRankItsCogsBought()
+        {
+            var board = SiegeBoard.Build(Shipped());
+
+            // Set by hand rather than played for, exactly as the overlord's sunder case does it:
+            // what is pinned here is that a rally does not touch the rank, and how a rank is
+            // earned is the cog cases' business.
+            board.Wards[0].Rank = SiegeTuning.MaxRank;
+            int rank = board.Wards[0].Rank;
+
+            Fell(board);
+            board.Rally(ContinueLimits.DefaultWards);
+
+            Assert.AreEqual(rank, board.Wards[0].Rank,
+                            "a rank is the one thing in this mode a player earns, and nothing "
+                            + "took it away");
+        }
+
+        [Test]
+        public void AContinuedSiegeIsChargedUpToTheTwoStarLineAndCanOnlyEverScoreOne()
+        {
+            // Invariant 23's promise, which every other mode gets for free because its fail state
+            // *is* its graded counter. A siege is graded in matches and lost when its line falls,
+            // so a run can arrive at the offer having spent almost nothing.
+            const int silver = 20;
+
+            Assert.AreEqual(16, RunContinue.Toll(5, silver),
+                            "five matches against a two-star line of twenty owes fifteen to reach "
+                            + "it and one more to be past it");
+
+            Assert.AreEqual(0, RunContinue.Toll(21, silver),
+                            "a run already past the line owes nothing");
+            Assert.AreEqual(0, RunContinue.Toll(40, silver),
+                            "and a second continue on the same run is never charged twice");
+
+            Assert.AreEqual(0, RunContinue.Toll(0, 0),
+                            "a level with no two-star line to be past owes nothing");
         }
 
         [Test]
@@ -639,9 +749,9 @@ namespace GlimmerGrove.Tests
                             + "the stretch a player spends watching the biggest thing in the mode "
                             + "cross the hill");
 
-            Assert.Less(walk, 8f,
+            Assert.Less(walk, 4.5f,
                         "a warlord that takes longer than this to get into place reads as slow - "
-                        + "it was 10.1s and the owner asked for it faster");
+                        + "it was 10.1s, then 6.0s, and the owner has asked for it faster twice");
         }
 
         [Test]
@@ -752,11 +862,14 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SiegeSpell.Rally, SiegeTuning.SpellOf(SiegeKind.Warbringer));
             Assert.AreEqual(SiegeSpell.Sunder, SiegeTuning.SpellOf(SiegeKind.Overlord));
 
-            // Only two of them take health at all, which is what stopped "there is a boss" being
-            // a fact the build gate could act on (`ModeValidator.Threatens`).
+            // Only the blightcaller takes no health at all, which is what stopped "there is a
+            // boss" being a fact the build gate could act on (`ModeValidator.Threatens`).
             Assert.AreEqual(0, SiegeTuning.CastOf(SiegeKind.Blightcaller));
-            Assert.AreEqual(0, SiegeTuning.CastOf(SiegeKind.Warbringer));
             Assert.Greater(SiegeTuning.CastOf(SiegeKind.Overlord), SiegeTuning.CastOf(SiegeKind.Boss));
+
+            // A warbringer's is the smallest of the three that do, because it lands on every ward
+            // rather than on one - the same total spread flat instead of concentrated.
+            Assert.Less(SiegeTuning.CastOf(SiegeKind.Warbringer), SiegeTuning.CastOf(SiegeKind.Boss));
 
             // And only three of the four aim at a ward. A roar is thrown at the ground.
             Assert.IsFalse(SiegeTuning.AimsAtAWard(SiegeKind.Warbringer));
@@ -840,52 +953,62 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void AWarbringerTakesGroundRatherThanThrowingAnything()
+        public void AWarbringerShakesTheWholeLineFromWhereItStands()
         {
-            // The only boss in this mode that arrives, and the only one whose spell aims at no
-            // ward. What makes it a different fight rather than a warlord with a bigger number is
-            // that it is a countdown: it is coming, it will get there, and then it swings.
+            // **It used to walk to the line, and that was withdrawn after play** — a boss that
+            // takes ground spends the fight being somewhere else, and the report was that it took
+            // forever to get anywhere and start doing damage. It holds the middle like the other
+            // three now, and what makes it a different fight is that its roar lands on *every*
+            // ward rather than picking one.
             var board = SiegeBoard.Build(Duel("warbringer:y"));
             var boss = Standing(board);
 
             float ground = boss.Hold;
 
-            Assert.Less(ground, 1f, "it does not start at the line");
-            Assert.Greater(SiegeTuning.BlowOf(SiegeKind.Warbringer), 0,
-                           "and unlike the other three it really does swing when it gets there");
+            Assert.Less(ground, 1f, "it stops short of the line");
+            Assert.AreEqual(0, SiegeTuning.BlowOf(SiegeKind.Warbringer),
+                            "no boss in this mode reaches the line, so none of them swings");
 
-            int whole = 0;
-            for (int w = 0; w < board.Wards.Count; w++) whole += board.Wards[w].Health;
+            var before = new int[board.Wards.Count];
+            for (int w = 0; w < board.Wards.Count; w++) before[w] = board.Wards[w].Health;
 
-            bool roared = false;
+            var hit = new System.Collections.Generic.HashSet<int>();
 
-            for (int i = 0; i < 60 * 60 && !roared; i++)
+            for (int i = 0; i < 60 * 60 && hit.Count == 0; i++)
             {
                 var report = board.Advance(1f / 60f);
 
-                for (int s = 0; s < report.Spells.Count; s++)
+                for (int s2 = 0; s2 < report.Spells.Count; s2++)
                 {
-                    Assert.AreEqual(SiegeSpell.Rally, report.Spells[s].Craft);
-                    Assert.AreEqual(-1, report.Spells[s].Ward, "a roar reaches no ward");
-                    roared = true;
+                    var spell = report.Spells[s2];
+                    Assert.AreEqual(SiegeSpell.Rally, spell.Craft);
+                    Assert.AreEqual(SiegeTuning.WarbringerCast, spell.Damage);
+                    hit.Add(spell.Ward);
                 }
             }
 
-            Assert.IsTrue(roared, "the warbringer never roared");
-            Assert.Greater(boss.Hold, ground, "a roar carries it further down the hill");
-            Assert.Greater(board.Roaring, 0f, "and sets the hill charging");
+            Assert.AreEqual(board.Wards.Count, hit.Count,
+                            "one roar lands on every standing ward, not on one of them");
 
-            int left = 0;
-            for (int w = 0; w < board.Wards.Count; w++) left += board.Wards[w].Health;
+            for (int w = 0; w < board.Wards.Count; w++)
+                Assert.AreEqual(before[w] - SiegeTuning.WarbringerCast, board.Wards[w].Health,
+                                "ward " + w + " felt the roar");
 
-            Assert.AreEqual(whole, left, "a roar itself takes nothing off the line");
+            Assert.Greater(board.Roaring, 0f, "and the hill is charging");
 
-            // And it does arrive: given long enough it walks all the way in and takes the line
-            // apart with its hands, which is what makes it a threat the build gate can count.
-            for (int i = 0; i < 60 * 300 && board.WardsStanding > 0; i++) board.Advance(1f / 60f);
+            // **And it does not move.** This is the whole of what was reported: it stayed put
+            // rather than closing on the line one roar at a time.
+            Assert.AreEqual(ground, boss.Hold, 1e-4f, "a boss holds its ground");
+            Assert.AreEqual(SiegeTuning.WarbringerHold, boss.Hold, 1e-4f);
+
+            // Left alone it still brings the line down - it just does it from where it stands,
+            // which is what keeps `ModeValidator.Threatens` able to count it.
+            Assert.IsTrue(SiegeTuning.EndangersTheLine(SiegeKind.Warbringer));
+
+            for (int i = 0; i < 60 * 400 && board.WardsStanding > 0; i++) board.Advance(1f / 60f);
 
             Assert.AreEqual(0, board.WardsStanding,
-                            "a warbringer left alone brings the line down by reaching it");
+                            "a warbringer left alone shakes the line apart from the middle");
         }
 
         [Test]
@@ -924,6 +1047,88 @@ namespace GlimmerGrove.Tests
             board.Wards[1].Rank = 0;
             Assert.IsFalse(board.Wards[1].Sunder());
             Assert.AreEqual(0, board.Wards[1].Rank);
+        }
+
+
+        /// <summary>
+        /// A firepot hits the body a player is aiming at, not the box its feet are in.
+        ///
+        /// <b>Reported from play as "the bombs don't hit bosses".</b> They did — they hit its feet.
+        /// A raider is about a cell tall, so where it stands and what it looks like are the same
+        /// box; a boss is three cells on a four-row hill, so most of the thing being aimed at is in
+        /// the box above the one it occupies, and a firepot dropped on its chest took nothing.
+        /// </summary>
+        [Test]
+        public void AFirepotHitsABosssBodyAndNotOnlyItsFeet()
+        {
+            var board = SiegeBoard.Build(Duel("warlord:r"));
+            var boss = Standing(board);
+
+            int feet = SiegeTuning.RowOf(boss.March);
+            int lane = boss.Lane;
+
+            Assert.Greater(feet, 0, "this test needs a boss with a row above its feet");
+            Assert.AreEqual(3, SiegeTuning.RowsOf(boss.Kind));
+            Assert.AreEqual(1, SiegeTuning.RowsOf(SiegeKind.Creeper),
+                            "an ordinary raider is where it stands and nowhere else");
+
+            // Its chest, one row up the hill from its feet: the box a player aiming at the thing
+            // they can see would actually tap.
+            int before = boss.Health;
+            int took = board.Blast(lane, feet - 1, 400, null);
+
+            Assert.Greater(took, 0, "a firepot on a boss's body has to hit it");
+            Assert.Less(boss.Health, before);
+
+            // And its feet, which always worked.
+            Assert.Greater(board.Blast(lane, feet, 400, null), 0);
+
+            // Not the whole lane, though: a blast is still aimed, and the ground below a boss is
+            // ground it is not standing on.
+            if (feet + 1 < SiegeTuning.BlastRows)
+                Assert.AreEqual(0, board.Blast(lane, feet + 1, 400, null),
+                                "the box below a boss's feet is not part of it");
+
+            // Nor the lane beside it.
+            int aside = lane > 0 ? lane - 1 : lane + 1;
+            Assert.AreEqual(0, board.Blast(aside, feet - 1, 400, null),
+                            "a blast is still aimed at one lane");
+        }
+
+        /// <summary>
+        /// Every boss reaches further than the box it stands in, and no ordinary raider does.
+        ///
+        /// <c>SiegeTuning.Caught</c> is asked by <c>SiegeBoard.Blast</c> and drawn by nothing, so
+        /// this is the only thing that holds it to what the board looks like.
+        /// </summary>
+        [Test]
+        public void ABossIsCaughtByABlastAnywhereItsBodyReaches()
+        {
+            foreach (var kind in new[] { SiegeKind.Blightcaller, SiegeKind.Boss,
+                                         SiegeKind.Warbringer, SiegeKind.Overlord })
+            {
+                float hold = SiegeTuning.HoldOf(kind);
+                int feet = SiegeTuning.RowOf(hold);
+
+                Assert.IsTrue(SiegeTuning.Caught(kind, hold, feet), kind + " at its own feet");
+
+                if (feet > 0)
+                    Assert.IsTrue(SiegeTuning.Caught(kind, hold, feet - 1),
+                                  kind + " one row up, which is its chest");
+
+                if (feet + 1 < SiegeTuning.BlastRows)
+                    Assert.IsFalse(SiegeTuning.Caught(kind, hold, feet + 1),
+                                   kind + " does not reach below its own feet");
+            }
+
+            // The shape that must not change: a creeper is one box, wherever it is standing.
+            for (int row = 0; row < SiegeTuning.BlastRows; row++)
+            {
+                float march = (row + .5f) / SiegeTuning.BlastRows;
+                for (int other = 0; other < SiegeTuning.BlastRows; other++)
+                    Assert.AreEqual(other == row,
+                                    SiegeTuning.Caught(SiegeKind.Creeper, march, other));
+            }
         }
 
         [Test]
@@ -1079,6 +1284,68 @@ namespace GlimmerGrove.Tests
         /// </para>
         /// </summary>
 
+
+
+        /// <summary>
+        /// <b>A continue that does not continue is a charge</b> (invariant 23), and this mode is
+        /// the one where that could not be reasoned about.
+        ///
+        /// <para>
+        /// Everywhere else a continue hands over allowance on a board that has stopped moving, so
+        /// "is it enough to be worth buying" is a question about the number. Here the hill is
+        /// still walking and every raider the run let through is standing at the line with its
+        /// hammer up — so the line is raised into whatever was killing it, and how long that
+        /// lasts is a fact about the level rather than about the offer.
+        /// </para>
+        /// <para>
+        /// Measured with <b>nobody playing at all</b>, which is the floor rather than the case: an
+        /// unhurried player makes a match every 2.4 seconds and a ward is firing about a second
+        /// after the first of them, so the real window is longer and gets longer as it is used.
+        /// Ten rungs come out between 10.4 and 13.5 seconds, which is four or five matches before
+        /// a finger is lifted. The bar is eight — well under what ships, and it fails the moment
+        /// anything makes a rallied line cheap: a partial raise, a smaller
+        /// <see cref="SiegeTuning.WardHealth"/>, or a rung whose hill piles up harder than any of
+        /// these.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ARalliedLineStandsLongEnoughToBeWorthBuying()
+        {
+            const float Least = 8f;
+
+            for (int i = 0; i < Chapter.Length; i++)
+            {
+                var rung = Chapter[i];
+                var board = SiegeBoard.Build(rung.Built());
+
+                Fell(board);
+
+                int hill = board.OnTheHill;
+                int left = board.GoalsLeft;
+
+                Assert.AreEqual(board.Wards.Count, board.Rally(ContinueLimits.DefaultWards),
+                                rung.Id + ": the whole line comes back");
+
+                // Nothing was handed over except the line: the hill stands where it stood, which
+                // is what makes this a continue rather than a fresh board.
+                Assert.AreEqual(hill, board.OnTheHill, rung.Id + ": the hill moved");
+                Assert.AreEqual(left, board.GoalsLeft, rung.Id + ": a raider was cleared for free");
+
+                int frames = 0;
+                while (frames < 60 * 120 && board.WardsStanding > 0)
+                {
+                    board.Advance(1f / 60f);
+                    frames++;
+                }
+
+                float stood = frames / 60f;
+
+                Assert.GreaterOrEqual(stood, Least,
+                                      $"{rung.Id}: a rallied line stood {stood:0.0}s against "
+                                      + $"{hill} raider(s) already at it, which is not long enough "
+                                      + "to be worth twenty gems");
+            }
+        }
 
         [Test]
         public void AnUnhurriedPlayerHoldsThisLine()

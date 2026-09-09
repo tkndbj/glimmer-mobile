@@ -20,10 +20,17 @@ decision no gate can look at. Five questions to ask of what comes out, in order:
      the line as something being defended, and the field as the thing you touch.
   2. **Can you tell a ward's colour at a glance, and whether it is standing?** That is the one
      thing every decision in this mode rests on.
-  3. **Can you tell a raider's colour at a glance?** The cast are painted in colours of their own
-     that have nothing to do with this board's four, so a raider says its colour three times - a
-     coat, an aura and a gem over its head - and if it still reads as "an orange monster" then one
-     of the three is not doing its job.
+  3. **Can you tell a raider's colour at a glance?** It says it three ways and none of them is an
+     overlay any more: the body is **hue-rotated in the bake**, it has a **body of its own per
+     colour** so the silhouette carries it too, and it wears a **gem over its head**, which is the
+     only one of the three that survives two raiders overlapping. The first two used to be a 62%
+     multiply and a coloured wash, which is what a `Image.color` tint can do and no more - four
+     silhouettes of one value, with everything the packs drew thrown away. If a raider now reads as
+     the wrong colour, the bake's pull is the number to move (`make_siege_art.CAST_PULL`).
+  3a. **And is a bulwark obviously carrying something?** It is the one raider whose answer is a
+     colour rather than a quantity, and the only thing that says so is the shield in its hand. This
+     picture is what caught it being drawn in a square box - fitted by width and served short, with
+     the shield off the side of the plate (`SiegeView.LaneX`).
   4. **Are the four gems told apart by shape as well as by colour?** A heart, a cabochon, a
      rhombus and an emerald cut. If two read as one silhouette at this size, a colour-blind player
      is playing a different game.
@@ -112,7 +119,13 @@ def ward_art(colour, rank):
     return "ward%d_%s" % (min(max(rank, 0), 4) + 1, colour)
 
 
-SKINS = ["mon1", "mon2", "mon3"]
+#: `SiegeView.Skin` - one body per colour, per kind. **Twelve reels rather than four, and none of
+#: them is tinted here**: a raider used to be one of three creeper models multiplied toward its
+#: colour at run time, which `Image.color` can only do by darkening. The colour is baked now
+#: (`make_siege_art.RAIDER_SET`), so this draws the sprite as it is - which is also what makes this
+#: render able to say whether the bake is any good.
+def skin(kind, colour):
+    return "%s_%s" % (kind, siege.LETTERS[colour])
 
 
 def sprite(name):
@@ -281,7 +294,7 @@ def banner(sheet, cx, cy, depth, cell, span):
 BOSSES = {
     "blightcaller": dict(hold=0.58, tall=3.0, stem="blight", fx="hex", fire=(59, 233, 216)),
     "warlord": dict(hold=0.46, tall=3.1, stem="boss", fx="spell", fire=(180, 120, 255)),
-    "warbringer": dict(hold=0.34, tall=3.3, stem="bringer", fx="roar", fire=(255, 244, 206)),
+    "warbringer": dict(hold=0.46, tall=3.3, stem="bringer", fx="roar", fire=(255, 244, 206)),
     "overlord": dict(hold=0.38, tall=3.5, stem="over", fx="omen", fire=(255, 116, 212)),
 }
 
@@ -329,15 +342,6 @@ def warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, ca
 
     wide = tall * body.width / body.height
 
-    # The aura, then the body: a wash behind it is the second of the three things that say its
-    # colour, and it is the one that survives being drawn over a lit hill.
-    glow = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
-    pen = ImageDraw.Draw(glow)
-    pen.ellipse([cx - tall * 0.62, cy - tall * 0.62, cx + tall * 0.62, cy + tall * 0.62],
-                fill=tint + (96,))
-    glow = glow.filter(ImageFilter.GaussianBlur(cell * 0.55))
-    sheet.alpha_composite(glow)
-
     if casting == "cast":
         spark = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
         pen = ImageDraw.Draw(spark)
@@ -346,7 +350,12 @@ def warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, ca
         spark = spark.filter(ImageFilter.GaussianBlur(cell * 0.42))
         sheet.alpha_composite(spark)
 
-    put(sheet, coat(body, tint), cx, cy, wide, tall)
+    # **No coat and no aura.** A boss used to be drawn through the same 62% multiply the raiders
+    # were, plus a coloured wash behind it - which on a body this large read as "a purple alien
+    # with a red light on it" rather than as red, and threw away everything the pack drew. There is
+    # only ever one boss on the hill, and its colour is carried by the gem beside its health bar,
+    # which is drawn at two thirds of a cell.
+    put(sheet, body, cx, cy, wide, tall)
 
     # `SiegeView.Crown` - a warlord's health is pinned across the top of the board rather than
     # carried, which is what lets it be three cells tall on a hill four cells deep.
@@ -423,31 +432,6 @@ def stretch(sheet, im, cx, cy, w, h):
                           (int(cx - w / 2), int(cy - h / 2)))
 
 
-def coat(im, tint):
-    """`SiegeView.Coat` - the cast's bodies, pulled 62% toward the colour they wear.
-
-    The packs draw four monsters in colours of their own that have nothing to do with this board's
-    four, so an untinted raider wears a colour the player has to learn. **The wards do not use
-    this** - a tint is a multiply and can only ever darken, which is fine for a raider and was not
-    fine for a turret, so those carry a real hue in the sprite (`make_siege_art.hued`).
-    """
-    if im is None:
-        return None
-
-    px = im.load()
-    out = im.copy()
-    op = out.load()
-    for y in range(im.height):
-        for x in range(im.width):
-            r, g, b, a = px[x, y]
-            if a == 0:
-                continue
-            op[x, y] = (int(r + (tint[0] - r) * 0.62),
-                        int(g + (tint[1] - g) * 0.62),
-                        int(b + (tint[2] - b) * 0.62), a)
-    return out
-
-
 def layout_of(level):
     block = level["siege"]
     grid = proto.Grid(block["rows"], block["width"], block["height"], siege.CELLS)
@@ -455,7 +439,15 @@ def layout_of(level):
                         block.get("boss"), block.get("cogs", 0))
 
 
-def draw(level, raiders, bolts=True, aim=False, boss="cast"):
+def ground(rung):
+    """The ground a rung is fought over, by its place in the chapter.
+
+    `SiegeMode.Ground` and `SiegeView.GroundAddress` in two switches of ten literals; here it can
+    be arithmetic, because a Python diagnostic is not what `artnames.py` reads."""
+    return "hill%d" % (rung % GROUNDS + 1)
+
+
+def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0):
     lay = layout_of(level)
     grid = lay.grid
 
@@ -495,7 +487,7 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast"):
     # ------------------------------------------------------------------ the hill
     h = hill_top - hill_foot + cell * 0.35
     cx, cy = at(0, (hill_top + hill_foot) / 2)
-    stretch(sheet, sprite("hill"), cx, cy, span[0], h + cell * 0.5)
+    stretch(sheet, sprite(ground(rung)), cx, cy, span[0], h + cell * 0.5)
 
     # ------------------------------------------------------------------ the raiders
     # The last *authored* wave, because the one after it is the warlord and it is drawn on its
@@ -503,20 +495,29 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast"):
     body = [w for i, w in enumerate(lay.waves) if i != lay.boss_wave]
     wave = body[-1] if body else ""
     mob = []
-    for i, token in enumerate(wave[:raiders]):
-        colour = siege.LETTERS.index(token.lower())
-        brute = token.isupper()
+    line = siege.read_wave(wave, lay.boss_kind, False)
+    for i, (letter, kind) in enumerate(line[:raiders]):
+        colour = siege.LETTERS.index(letter)
+        brute = kind == "brute"
+        bulwark = kind == "bulwark"
         lane = (i * 2 + 1) % LANES
         march = 0.18 + 0.16 * i
 
-        tall = cell * (1.55 if brute else 1.15)
-        lx = (lane - (LANES - 1) / 2) * (span[0] / LANES)
+        tall = cell * (1.85 if bulwark else 1.55 if brute else 1.15)
+        lx = (lane - (LANES - 1) / 2) * (span[0] / (LANES + 0.6))
         ly = hill_top + (hill_foot - hill_top) * march
 
         cx, cy = at(lx, ly)
         mob.append((cx, cy))
-        put(sheet, coat(reel("brute" if brute else SKINS[colour % 3]), TINTS[colour]),
-            cx, cy, tall, tall)
+        # **Sized by its own height with the width following the picture**, which is
+        # `SiegeView.Frame` and was not what this drew. A square box fits a *wide* reel by its
+        # width and draws it short - and a bulwark is the widest thing on this hill, because it is
+        # carrying a shield. Drawn square it came out two thirds of its height with the shield off
+        # the side of the board, which is the mechanic invisible in the one picture that exists to
+        # check it.
+        body = reel(skin("bulwark" if bulwark else "brute" if brute else "mon", colour))
+        wide = tall if body is None else tall * body.width / body.height
+        put(sheet, body, cx, cy, wide, tall)
 
         # The gem over its head, which is the third of the three things that say its colour.
         cx, cy = at(lx - tall * 0.46, ly + tall * 0.58)
@@ -529,7 +530,9 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast"):
                                   radius=6, fill=(0, 0, 0, 168))
         draw_on.rounded_rectangle([cx - tall * 0.36 + 2, cy - cell * 0.065 + 2,
                                    cx + tall * 0.36 - 2, cy + cell * 0.065 - 2],
-                                  radius=6, fill=(178, 120, 255, 255) if brute else (232, 97, 90, 255))
+                                  radius=6,
+                                  fill=(178, 120, 255, 255) if brute or bulwark
+                                  else (232, 97, 90, 255))
 
     # ------------------------------------------------------------------ the ward line
     band = span[1] * LINE_BAND
@@ -668,6 +671,11 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast"):
     return sheet
 
 
+#: How many grounds this mode ships, and therefore where the ladder starts again.
+#: `SiegeMode.Grounds`.
+GROUNDS = 10
+
+
 def levels():
     body = json.loads((CHAPTERS / "s01_thornwatch.json").read_text(encoding="utf-8"))
     return body["levels"]
@@ -798,16 +806,16 @@ def main():
     ap.add_argument("--out", default=str(REPO / "Tools" / "siege_boards.png"))
     args = ap.parse_args()
 
-    picked = [lv for lv in levels() if args.level in (None, lv["id"])]
+    picked = [(i, lv) for i, lv in enumerate(levels()) if args.level in (None, lv["id"])]
     if not picked:
         sys.exit("no level called %s" % args.level)
 
     held = {"firepot": 2, "mending": 0, "surge": 5}
 
     shots = []
-    for lv in picked:
+    for rung, lv in picked:
         shot = draw(lv, args.raiders, not args.no_bolts, aim=args.aim,
-                    boss=args.warlord)
+                    boss=args.warlord, rung=rung)
         if not args.no_bar:
             bar(shot, held)
         shots.append((lv["id"], shot))

@@ -124,8 +124,12 @@ namespace GlimmerGrove
         /// left to do" over a hill still full of raiders is a sentence that reads as a bug.
         /// </para>
         /// <para>
-        /// Money cannot fix it either, so it is answered <c>RunContinueDeficit.None</c> exactly as
-        /// <see cref="Stuck"/> is.
+        /// <b>And money <em>can</em> fix it, which is the other half of the same distinction.</b>
+        /// A prototype board that has run out of board is beyond rescue at any price; a fallen
+        /// line is put back up by a continue, with the hill exactly where it stood — so
+        /// <c>SiegeBoard.Stranded</c> answers false and <c>ProtoVerdict</c> sells the offer.
+        /// This panel is therefore reached only when the offer was declined, or never made
+        /// because the run was free.
         /// </para>
         /// </summary>
         WardsLost = 11,

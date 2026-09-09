@@ -41,6 +41,9 @@ namespace GlimmerGrove
         /// <summary>The tile to ring, in this canvas's space. Null to teach without pointing.</summary>
         public RectTransform Target;
 
+        /// <summary>One object drawn above the body, or null. See <c>Lesson.Icon</c>.</summary>
+        public Sprite Icon;
+
         /// <summary>
         /// Anything else the lesson names, ringed and lit exactly as <see cref="Target"/> is.
         ///
@@ -349,7 +352,13 @@ namespace GlimmerGrove
             const int BodyMin = 22, BodySize = 32;
             const float BodyWidth = Width - 120f;
 
-            const float Chrome = TitleTop + TitleHeight + Gap + BodyGap + ButtonHeight + ButtonBottom;
+            // An object drawn above the body, for a lesson whose subject cannot be ringed.
+            const float IconSide = 132f, IconGap = 20f;
+
+            float iconRow = Icon != null ? IconSide + IconGap : 0f;
+
+            float Chrome = TitleTop + TitleHeight + Gap + iconRow
+                         + BodyGap + ButtonHeight + ButtonBottom;
 
             // Near-black on white, not the warm brown the wooden panels use — on a plain
             // white bubble that brown reads as washed out rather than as ink.
@@ -449,6 +458,20 @@ namespace GlimmerGrove
             Squeeze(title, Width - 100f, 30);
 
             cursor += TitleHeight + Gap;
+
+            // The picture, between the title and the body. Above the words rather than beside
+            // them because the bubble is narrow and a translated title already wants its width;
+            // a picture in a column beside text is a picture nobody looks at.
+            if (Icon != null)
+            {
+                var shown = UIKit.Img("Icon", rt, Icon, Color.white,
+                                      new Vector2(IconSide, IconSide), new Vector2(.5f, 1f),
+                                      new Vector2(0f, -(cursor + IconSide * .5f)));
+                shown.preserveAspect = true;
+                shown.raycastTarget = false;
+
+                cursor += IconSide + IconGap;
+            }
 
             var brt = body.rectTransform;
             brt.SetParent(rt, false);

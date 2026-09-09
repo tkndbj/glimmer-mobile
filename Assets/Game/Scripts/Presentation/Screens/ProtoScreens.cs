@@ -224,7 +224,29 @@ namespace GlimmerGrove
         protected override ProtoView Attach(GameObject host)
         {
             _siege = host.AddComponent<SiegeView>();
+            _siege.Rung = Rung();
             return _siege;
+        }
+
+        /// <summary>
+        /// Which rung of its own chapter this level is, which is the only thing deciding its
+        /// ground (invariant 7c, and <see cref="SiegeMode.Ground"/>).
+        ///
+        /// Read off the catalog rather than carried on the level, because a level's place is a
+        /// fact about the chapter that holds it and nothing about the level itself — and because
+        /// a chapter body naming its own floors is exactly the per-chapter choice 7c refuses.
+        /// </summary>
+        int Rung()
+        {
+            if (Level == null) return 0;
+
+            var levels = GameContent.Index.LevelsOf(Level.Chapter);
+            if (levels == null) return 0;
+
+            for (int i = 0; i < levels.Count; i++)
+                if (levels[i].Equals(Level.Id)) return i;
+
+            return 0;
         }
 
         // ------------------------------------------------------------------ the action bar
@@ -279,6 +301,19 @@ namespace GlimmerGrove
         /// </summary>
         void Aim(UtilityItem item)
         {
+            // **An unaimed utility is used on the tap that arms it, and never armed.** There is
+            // nothing for it to be pointed at, so leaving it armed would put the player in a
+            // targeting mode with no target - a control that accepts any tap and ignores where it
+            // was. The bar is disarmed first, or a use that refuses would leave a slot ringing.
+            if (item != null && item.Target == UtilityTarget.Everywhere)
+            {
+                _bar?.Arm(null);
+                if (_siege != null) _siege.Arming = null;
+
+                _siege?.Loose(item);
+                return;
+            }
+
             if (_siege != null) _siege.Arming = item;
             if (item == null || _bar == null) return;
 
@@ -407,15 +442,22 @@ namespace GlimmerGrove
         /// </summary>
         protected internal override bool Runnable => _siege != null && _siege.Advancing;
 
-        /// <summary>
-        /// The one refusal the board cannot show for itself: a gem is <em>dragged</em>, and
-        /// nothing here is tapped at all. Everything else answers on the board - a swap that lines
-        /// nothing up leans and comes back, which is the genre's own answer and needs no sentence.
-        /// </summary>
-        protected override string RefusalKey => "mode.siege.nodrag";
+        // A siege says nothing when a gem is tapped, deliberately. It carried the drag notice
+        // Prismvale still carries and the owner withdrew it: a tap that lines nothing up is
+        // answered on the board already - the gem leans and comes back - and a sentence over the
+        // top of a run that is *still walking* is a panel explaining a gesture the player has
+        // already been shown. `RefusalKey` is null here, which is the base's own answer.
 
         protected override Mechanic Verb => Mechanic.SiegeFuel;
-        protected override Mechanic Friend => Mechanic.SiegeLine;
+        /// <summary>
+        /// None, and that is a withdrawal rather than an omission.
+        ///
+        /// <b>It was <c>SiegeLine</c> — "the line is your life" — and the board already says it.</b>
+        /// Four turrets carrying health bars fill the middle of the screen for the whole run and
+        /// visibly take hits; a panel explaining that they matter is a panel explaining a picture
+        /// the player is looking at. See <see cref="Mechanic.SiegeLine"/>, whose id is spent.
+        /// </summary>
+        protected override Mechanic Friend => default;
 
         /// <summary>
         /// The two the shared screen declares, plus the one only some boards hold.
@@ -438,10 +480,23 @@ namespace GlimmerGrove
             base.Lessons(into);
 
             var board = _siege != null ? _siege.Siege : null;
-            if (board == null || !board.Upgrades) return;
+            if (board == null) return;
 
             var anchor = _siege.WardAnchor;
-            if (anchor != null) into.Add(Lesson.At(Mechanic.SiegeCog, anchor));
+
+            // **The ring goes on a turret and the cog is drawn in the panel.** Ringing the cog
+            // itself was tried and taken back out: a cog is dealt at a rate rather than authored,
+            // so a rung can open with none standing - and a lesson is offered once in a player's
+            // life, so one that waits for a board that may never come may never be given. What a
+            // ring round a turret cannot say is what a cog *looks like*, so the panel says it.
+            if (board.Upgrades && anchor != null)
+                into.Add(Lesson.At(Mechanic.SiegeCog, anchor, icon: _siege.CogArt));
+
+            // The shield is pointed at the *line* rather than at the hill, because what it is
+            // really about is which ward to feed - and a bulwark is walking, so a ring drawn round
+            // where it happened to be would be round bare ground a second later.
+            if (board.Shielded && anchor != null)
+                into.Add(Lesson.At(Mechanic.SiegeShield, anchor));
         }
 
         /// <summary>
@@ -450,6 +505,55 @@ namespace GlimmerGrove
         /// <c>ProtoScreen.StuckReason</c>.
         /// </summary>
         protected override DefeatReason StuckReason => DefeatReason.WardsLost;
+
+        // ------------------------------------------------------------------ one more go
+        /// <summary>
+        /// A siege is lost when its ward line falls, so the line is what a continue puts back —
+        /// not moves, which this mode does not count.
+        ///
+        /// <para>
+        /// The shortfall the shared screen computes is nought here and honestly so: every ward is
+        /// down by the time the offer is made, so what is handed over is the whole allowance
+        /// rather than room above a deficit. See <c>ContinueUnit.Wards</c>.
+        /// </para>
+        /// </summary>
+        protected internal override ContinueUnit MeasuredIn => ContinueUnit.Wards;
+
+        /// <summary>
+        /// Puts the line back up, and charges the run for it in the unit the run is graded in.
+        ///
+        /// <para>
+        /// <b>The charge is the half no other mode needs, and leaving it out would have been a
+        /// silent economy hole.</b> Everywhere else a run reaches its fail state by exhausting
+        /// the very counter it is graded on, so invariant 23's promise — a bought run scores one
+        /// star at most — costs no code. A siege is graded in matches and lost when its ward line
+        /// falls, and the two are unrelated: a player outpaced on the fourth wave may have spent
+        /// five matches against a three-star line of fourteen, so twenty gems would buy a
+        /// top-rung clear, and stars are what a grove's public worth is derived from (19a).
+        /// <c>RunContinue.Toll</c> is that promise said out loud, and it is charged before the
+        /// board comes back so that nothing can win in between.
+        /// </para>
+        /// <para>
+        /// Not <c>base</c>, which sounds the shared whoosh: the line standing up has a sound of
+        /// its own and two of them a frame apart is a flam rather than a bigger moment
+        /// (invariant 37q).
+        /// </para>
+        /// </summary>
+        protected internal override void ContinueWith(int wards)
+        {
+            if (_siege == null || Level == null) return;
+
+            var run = _siege.Run;
+            if (run != null)
+                run.Charged(RunContinue.Toll(run.Spent, Level.Tuning.SilverThreshold));
+
+            _siege.Grant(wards);
+
+            // A board handed back is a board with nothing armed, exactly as a rewind and a retry
+            // leave it — the panel that was up cost the player a beat, and an item still ringed
+            // from before the line fell is one they did not choose to be holding.
+            if (_bar != null) _bar.Arm(null);
+        }
 
         /// <summary>
         /// Three numbers, and the middle one is not the one every other mode on this shape shows.

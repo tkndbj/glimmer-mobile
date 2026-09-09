@@ -359,6 +359,140 @@ namespace GlimmerGrove.Tests
             for (float t = 0f; t < seconds; t += .1f) board.Advance(.1f);
         }
 
+        // =================================================================== the storm
+        /// <summary>A hill with a bulwark and a boss on it, which is what a storm is judged on.</summary>
+        static SiegeBoard Stormy()
+        {
+            var rows = new[]
+            {
+                "rgbyrg",
+                "bygrby",
+                "grbygr",
+                "ybgrby",
+            };
+
+            var layout = new SiegeLayout(
+                ProtoGrid.TryRead(rows, 6, 4, SiegeLayout.Letters, out var grid, out _)
+                    ? grid : null,
+                "rgby", "rgby", new[] { "rg#bR" }, boss: "warlord:r");
+
+            Assert.IsNull(layout.Fault, layout.Fault);
+            return SiegeBoard.Build(layout);
+        }
+
+        [Test]
+        public void AStormStrikesEveryRaiderStandingOnTheHill()
+        {
+            var board = Stormy();
+            // A wave arrives spaced by `RaiderSpacing`, so the whole of it is only on the
+            // hill several seconds after the first of it is.
+            Settle(board, SiegeTuning.FirstWaveAfter
+                        + SiegeTuning.RaiderSpacing * 5f);
+
+            var standing = new HashSet<int>();
+            foreach (var raider in board.Raiders)
+                if (raider.Alive && raider.OnTheHill) standing.Add(raider.Id);
+
+            Assert.Greater(standing.Count, 1, "the fixture has to put a hill up first");
+
+            var strikes = new List<SiegeStrike>();
+            board.Storm(1, strikes);
+
+            var struck = new HashSet<int>();
+            foreach (var hit in strikes) struck.Add(hit.Raider);
+
+            CollectionAssert.AreEquivalent(standing, struck);
+        }
+
+        /// <summary>
+        /// The clause that keeps the finale a fight rather than a purchase. Every raider takes the
+        /// same magnitude, and a boss carries the health of several waves - so a storm hurts one
+        /// and can never end one.
+        /// </summary>
+        [Test]
+        public void AStormHurtsABossAndNeverFellsIt()
+        {
+            var board = Stormy();
+            Settle(board, SiegeTuning.FirstWaveAfter + 1f);
+
+            // Walk on until the boss wave has mustered.
+            Settle(board, SiegeTuning.BetweenWaves * 4f);
+
+            SiegeRaider boss = null;
+            foreach (var raider in board.Raiders)
+                if (raider.Alive && SiegeTuning.IsBoss(raider.Kind)) boss = raider;
+
+            Assert.IsNotNull(boss, "the fixture has to send a boss");
+
+            int was = boss.Health;
+            board.Storm(SiegeTuning.BulwarkHealth, null);
+
+            Assert.Less(boss.Health, was, "a storm has to hurt it");
+            Assert.IsTrue(boss.Alive, "and must never fell it");
+        }
+
+        /// <summary>
+        /// A shield is answered by <em>colour</em>, and a storm has none - so the soak a ward's
+        /// bolt pays is not a rule about this. It is also the item's reason to exist: a wave of
+        /// armour is the one thing a player cannot simply out-match.
+        /// </summary>
+        [Test]
+        public void AStormIsNotSoakedByAShield()
+        {
+            var board = Stormy();
+            // A wave arrives spaced by `RaiderSpacing`, so the whole of it is only on the
+            // hill several seconds after the first of it is.
+            Settle(board, SiegeTuning.FirstWaveAfter
+                        + SiegeTuning.RaiderSpacing * 5f);
+
+            SiegeRaider bulwark = null;
+            foreach (var raider in board.Raiders)
+                if (raider.Alive && raider.Kind == SiegeKind.Bulwark) bulwark = raider;
+
+            Assert.IsNotNull(bulwark, "the fixture has to send a bulwark");
+
+            var strikes = new List<SiegeStrike>();
+            board.Storm(100, strikes);
+
+            int took = 0;
+            foreach (var hit in strikes) if (hit.Raider == bulwark.Id) took = hit.Damage;
+
+            Assert.AreEqual(100, took, "a shield halves a bolt and never a storm");
+        }
+
+        /// <summary>
+        /// Invariant 39 asked of the biggest item on the bar: it is billed the fewest matches that
+        /// could have delivered the same damage, so clearing a hill with one can never come out
+        /// cheaper than clearing it by playing.
+        /// </summary>
+        [Test]
+        public void AStormIsChargedForEverythingItAbsorbed()
+        {
+            var board = Stormy();
+            Settle(board, SiegeTuning.FirstWaveAfter + 1f);
+
+            var item = new UtilityItem("stormcall", UtilityKind.Storm, 700, 40, 3, 4);
+            var strikes = new List<SiegeStrike>();
+
+            var use = SiegeUtility.Apply(board, item, default, strikes);
+
+            Assert.IsTrue(use.Landed);
+            Assert.Greater(use.Delivered, 0);
+            Assert.AreEqual(SiegeUtility.MatchesFor(use.Delivered), use.Matches);
+        }
+
+        /// <summary>A storm over an empty hill is refused rather than spent.</summary>
+        [Test]
+        public void AStormIsRefusedWhenNothingIsOnTheHill()
+        {
+            var board = Stormy();
+
+            var item = new UtilityItem("stormcall", UtilityKind.Storm, 700, 40, 3, 4);
+
+            Assert.AreEqual(0, board.OnTheHill, "no wave has mustered yet");
+            Assert.IsFalse(SiegeUtility.Would(board, item, default));
+        }
+
         [Test]
         public void ABlastBurnsTheBoxItIsThrownAtAndReportsWhatWasAbsorbed()
         {
@@ -574,7 +708,12 @@ namespace GlimmerGrove.Tests
             var board = Board();
             foreach (var ward in board.Wards) { ward.Health = 0; ward.Alive = false; }
 
-            Assert.IsTrue(board.Stranded);
+            // **Not `Stranded`, which this asked until a continue could raise a fallen line.**
+            // That predicate answers "would a purchase rescue this", and the answer is now yes —
+            // which is precisely why it is the wrong question here: what a utility must not land
+            // on is a run that has already ended, and that is `AnyMove`.
+            Assert.IsFalse(board.AnyMove);
+            Assert.IsFalse(board.Stranded, "a continue would still rescue it");
 
             foreach (var item in UtilityCatalog.Default.Items)
                 Assert.IsFalse(SiegeUtility.Would(board, item, SiegeAim.AtWard(0)),

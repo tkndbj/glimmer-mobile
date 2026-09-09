@@ -1,5 +1,6 @@
 using GlimmerGrove.Layout;
 using GlimmerGrove.Store;
+using GlimmerGrove.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -154,6 +155,40 @@ namespace GlimmerGrove
             Heap(box, "H", "Ui/ic_heart", shown, heart, 0f);
 
             UIKit.Halo(box, Pal.Rose, size * .96f, .30f);
+        }
+
+        /// <summary>
+        /// Draws one utility: the same icon the action bar draws, and nothing else.
+        ///
+        /// <para>
+        /// <b>Deliberately not composed and deliberately not a pile.</b> A heart pack is drawn as
+        /// a heap because the count is the offer; a utility is one object with one job, and what
+        /// a player has to recognise on this shelf is the picture they will be tapping on the bar
+        /// half a minute later. Drawing it twice two ways would be teaching a second name for the
+        /// same thing — the tab-glyph rule, one card down.
+        /// </para>
+        /// <para>
+        /// The halo takes the kind's own colour from <see cref="ShopRarity"/> rather than a
+        /// second table here, so the light behind the card, the wash under the picture and the
+        /// icon's own paint cannot come to disagree about what a firepot is.
+        /// </para>
+        /// </summary>
+        public static void PaintUtility(RectTransform box, UtilityItem item)
+        {
+            if (box == null) return;
+
+            Clear(box);
+            if (item == null) return;
+
+            float size = box.rect.width;
+            if (size <= 1f) size = 200f;
+
+            var icon = UIKit.Img("Utility", box, Art.S(item.Art), Color.white,
+                                 Vector2.one * (size * .78f), new Vector2(.5f, .5f), Vector2.zero);
+            icon.preserveAspect = true;
+
+            UIKit.Halo(box, ShopRarity.Of(item).Colour, size * 1.02f, .30f);
+            Tween.Breathe(icon.transform, .03f, 2.8f);
         }
 
         /// <summary>

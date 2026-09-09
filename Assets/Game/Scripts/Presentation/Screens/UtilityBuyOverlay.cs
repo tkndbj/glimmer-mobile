@@ -11,11 +11,21 @@ namespace GlimmerGrove
     /// it costs in gems, and the button that pays.
     ///
     /// <para>
-    /// <b>Deliberately smaller than <see cref="HomesteadBuyOverlay"/>, and the difference is the
-    /// stepper.</b> Grove decor is bought by the bundle and a player ordering three of something
-    /// sold in tens is agreeing to thirty, so that panel has to count out loud. A utility is
-    /// bought one at a time up to a ceiling of nine — the stepper would be a control with two
-    /// stops on a decision worth eight gems, which is a lot of panel for very little question.
+    /// <b>It carries a stepper now, and the reason it did not is the reason it does.</b> The
+    /// argument against one was that a utility was bought one at a time up to a ceiling of
+    /// <em>nine</em>, so the control would have had two stops on a decision worth eight gems.
+    /// The ceiling is a hundred (<c>UtilityCatalog.Default</c>), which makes that argument say
+    /// the opposite: a shelf that sold a hundred one tap at a time would be a hundred taps, and
+    /// a player stocking up before a chapter is doing exactly what the ceiling was raised for.
+    /// It counts out loud for <see cref="HomesteadBuyOverlay"/>'s reason — the total is what is
+    /// being agreed to, so the button says the total rather than the unit price.
+    /// </para>
+    /// <para>
+    /// <b>It opens from two places and is one panel on purpose.</b> The empty slot on the action
+    /// bar raises it over a live siege; the shop's kit shelf raises it over a page of cards. Two
+    /// panels would be two prices, two ceilings and two chances to disagree about what somebody
+    /// is carrying — <c>RunContinueFlow</c>'s argument, one screen along. The order starts at one,
+    /// so nothing about the in-run route costs a tap more than it did.
     /// </para>
     /// <para>
     /// <b>It opens over a live board and must not disturb it.</b> A siege's clock does not stop
@@ -45,7 +55,13 @@ namespace GlimmerGrove
         /// <summary>Raised after a purchase lands, so the bar behind can repaint.</summary>
         public System.Action Bought { get; set; }
 
-        const float PanelW = 780f, PanelH = 860f;
+        // The panel grew by the stepper's block rather than by squeezing what was there —
+        // HomesteadBuyOverlay's `StepperRoom`, and its lesson, which is that a control counting
+        // out loud has to be clear of both the sentence above it and the button below. Every
+        // measurement above the stepper is lifted by half the growth, so the picture, the note
+        // and the status line sit exactly where they did relative to the panel's own top.
+        const float PanelW = 780f, PanelH = 1000f;
+        const float StepperRoom = 140f, Lift = StepperRoom * .5f;
 
         // The panel is parchment, so it is written in ink rather than in the cream the board
         // uses — HomesteadBuyOverlay's note, and the same measured accents.
@@ -54,9 +70,17 @@ namespace GlimmerGrove
         static readonly Color Held = new Color(.18f, .42f, .21f);
 
         Image _art;
-        Text _note, _status;
-        Btn _action;
+        Text _note, _status, _count;
+        Btn _action, _less, _more;
         bool _paid, _buying;
+
+        /// <summary>
+        /// How many this order is for. Starts at one and is clamped to
+        /// <c>UtilityLedger.MaxQuantity</c> on every repaint, because the balance and the room
+        /// both move under an open panel — a stepper left reading twelve over a button that will
+        /// only sell two is the panel lying about the one thing it exists to be exact about.
+        /// </summary>
+        int _quantity = 1;
 
         protected override void Build()
         {
@@ -67,10 +91,10 @@ namespace GlimmerGrove
             UIKit.IconButton("Close", Panel, Skins.Nav, "ic_close", new Vector2(92f, 92f),
                              new Vector2(1f, 1f), new Vector2(-44f, -44f), () => Close());
 
-            UIKit.Halo(Panel, Pal.Sun, 380f, .16f, new Vector2(0f, 96f));
+            UIKit.Halo(Panel, Pal.Sun, 380f, .16f, new Vector2(0f, 96f + Lift));
 
             _art = UIKit.Img("A", Panel, Art.S(Item.Art), Color.white, new Vector2(250f, 250f),
-                             new Vector2(.5f, .5f), new Vector2(0f, 96f));
+                             new Vector2(.5f, .5f), new Vector2(0f, 96f + Lift));
             _art.preserveAspect = true;
             _art.raycastTarget = false;
 
@@ -80,14 +104,15 @@ namespace GlimmerGrove
             _note = UIKit.Shrinkable(
                 UIKit.Titled("Note", Panel, Loc.Get(Item.NoteKey), 27, Ink,
                              TextAnchor.MiddleCenter, new Vector2(620f, 96f),
-                             new Vector2(.5f, .5f), new Vector2(0f, -108f),
+                             new Vector2(.5f, .5f), new Vector2(0f, -108f + Lift),
                              outline: 0f, shadow: 0f, wrap: true), 19);
 
             _status = UIKit.Shrinkable(
                 UIKit.Titled("Status", Panel, string.Empty, 29, Ink, TextAnchor.MiddleCenter,
                              new Vector2(640f, 52f), new Vector2(.5f, .5f),
-                             new Vector2(0f, -206f), outline: 0f, shadow: 0f, wrap: true), 20);
+                             new Vector2(0f, -206f + Lift), outline: 0f, shadow: 0f, wrap: true), 20);
 
+            BuildStepper();
             BuildAction();
 
             // A balance can move under an open panel: the gem shelf stacked on this one, a sync
@@ -106,6 +131,82 @@ namespace GlimmerGrove
 
         public override bool OnBack() { Close(); return true; }
 
+        // -------------------------------------------------------------- the stepper
+        /// <summary>
+        /// Minus, the count, plus — and nothing else, because the total is on the button.
+        ///
+        /// <para>
+        /// Built even for a chest-only utility, greyed at both stops rather than absent: a
+        /// control that disappears takes the layout with it, and the panel would then be two
+        /// different heights for two utilities on one shelf.
+        /// </para>
+        /// </summary>
+        void BuildStepper()
+        {
+            // Centred in the room it actually has rather than at a typed offset: the status
+            // line's foot is at -162 and the buy button's head at -331, so a 96-tall control
+            // sits at -246 with about 36 units clear either side.
+            const float Y = -246f;
+
+            _less = Step("Less", "−", new Vector2(-214f, Y), -1);
+            _more = Step("More", "+", new Vector2(214f, Y), +1);
+
+            _count = UIKit.Titled("Count", Panel, string.Empty, 52, Ink,
+                                  TextAnchor.MiddleCenter, new Vector2(300f, 62f),
+                                  new Vector2(.5f, .5f), new Vector2(0f, Y),
+                                  outline: 0f, shadow: 2f);
+        }
+
+        Btn Step(string name, string glyph, Vector2 at, int delta)
+        {
+            var size = new Vector2(96f, 96f);
+            var b = UIKit.Button(name, Panel, Art.S("Ui/" + Skins.Nav), size,
+                                 new Vector2(.5f, .5f), at, () => Nudge(delta));
+
+            UIKit.Titled("G", b.transform, glyph, 54, Pal.Cream, TextAnchor.MiddleCenter,
+                         size, new Vector2(.5f, .5f),
+                         new Vector2(0f, size.y * UIKit.SquareFaceLift), 0f, 0f);
+
+            return b;
+        }
+
+        /// <summary>
+        /// Moves the order by one, clamped to what the ledger will actually sell.
+        ///
+        /// The upper stop is re-read on every tap rather than cached at build, because both
+        /// halves of it move under this panel — gems landing from the stacked shelf raise it, a
+        /// chest opened elsewhere lowers it. <c>HomesteadBuyOverlay.Nudge</c>'s rule.
+        /// </summary>
+        void Nudge(int delta)
+        {
+            if (_paid) return;
+
+            int most = UtilityLedger.MaxQuantity(Item);
+            int wanted = _quantity + delta;
+
+            if (wanted < 1) wanted = 1;
+            if (most >= 1 && wanted > most) wanted = most;
+            if (wanted == _quantity) return;
+
+            _quantity = wanted;
+            Audio.Sfx("click", .5f);
+            Repaint();
+        }
+
+        void PaintStepper()
+        {
+            if (_count == null || !_count) return;
+
+            int most = UtilityLedger.MaxQuantity(Item);
+
+            _count.text = "×" + _quantity;
+
+            // Greyed rather than hidden at the stops — a player who has just pressed + four
+            // times needs to see why the fifth did nothing.
+            if (_less) _less.Interactable = _quantity > 1;
+            if (_more) _more.Interactable = _quantity < most;
+        }
+
         // --------------------------------------------------------------- the button
         void BuildAction()
         {
@@ -113,7 +214,7 @@ namespace GlimmerGrove
             var anchor = new Vector2(.5f, 0f);
             var at = new Vector2(0f, 108f);
 
-            if (UtilityLedger.WhyNotBuy(Item, 1) == UtilityRefusal.Poor)
+            if (UtilityLedger.WhyNotBuy(Item, _quantity) == UtilityRefusal.Poor)
             {
                 _action = UIKit.TextButton("Gems", Panel, "btn_blue",
                                            Loc.Get("ui.utility.get_gems"), 40,
@@ -127,20 +228,32 @@ namespace GlimmerGrove
             UIKit.FitLabel(_action);
         }
 
+        // The *total*, never the unit price. A control labelled with a price has to charge
+        // that price — HomesteadBuyOverlay's rule, and the one complaint every shop with a
+        // stepper gets is from somebody who did not know what they were agreeing to.
         string BuyLabel()
-            => Loc.Format("ui.utility.buy", Compact.Number(UtilityLedger.Quote(Item, 1)));
+            => Loc.Format("ui.utility.buy", Compact.Number(UtilityLedger.Quote(Item, _quantity)));
 
         void Repaint()
         {
             if (_paid || Item == null || _status == null || !_status) return;
 
-            var refusal = UtilityLedger.WhyNotBuy(Item, 1);
+            // The order can stop being affordable, or stop fitting, while the panel is open.
+            // Clamped before anything is asked about it, so every line below is about the order
+            // the button would actually place.
+            int most = UtilityLedger.MaxQuantity(Item);
+            if (most >= 1 && _quantity > most) _quantity = most;
+            if (_quantity < 1) _quantity = 1;
+
+            var refusal = UtilityLedger.WhyNotBuy(Item, _quantity);
+
+            PaintStepper();
 
             switch (refusal)
             {
                 case UtilityRefusal.Poor:
                     _status.text = Loc.Format("ui.utility.short",
-                                              Compact.Number(UtilityLedger.Quote(Item, 1)
+                                              Compact.Number(UtilityLedger.Quote(Item, _quantity)
                                                              - PlayerProgression.Gems),
                                               Compact.Number(PlayerProgression.Gems));
                     _status.color = Short;
@@ -167,6 +280,7 @@ namespace GlimmerGrove
             // relabelled when the answer changes — HomesteadBuyOverlay's shape, minus the
             // stepper it has to keep in step.
             bool wantsGems = refusal == UtilityRefusal.Poor;
+
             bool showingGems = _action != null && _action && _action.name == "Gems";
 
             if (wantsGems == showingGems)
@@ -209,7 +323,7 @@ namespace GlimmerGrove
                 // Re-checked inside the ledger rather than trusted from the button: the balance
                 // can have moved since it was painted, and the ledger is the only thing that
                 // takes the gems and hands over the item in one step.
-                bought = UtilityLedger.TryBuy(Item, 1, out _);
+                bought = UtilityLedger.TryBuy(Item, _quantity, out _);
             }
             finally
             {

@@ -269,11 +269,16 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>A hook rather than a constant, because the sentence a player reads is on the other
-        /// end of it.</b> Every board on this shape reaches the same *reading* — no move left,
-        /// and no purchase that helps — but they reach it for reasons that want different words
-        /// and that analytics has to be able to tell apart. A prototype board ran out of *board*;
-        /// a Thornwatch line fell while the hill was still full, and "nothing left to do" over
-        /// that reads as a bug.
+        /// end of it.</b> Every board on this shape reaches the same *reading* — no move left —
+        /// but they reach it for reasons that want different words and that analytics has to be
+        /// able to tell apart. A prototype board ran out of *board*; a Thornwatch line fell while
+        /// the hill was still full, and "nothing left to do" over that reads as a bug.
+        /// </para>
+        /// <para>
+        /// The two also differ in whether a purchase helps, which is <c>IProtoBoard.Stranded</c>'s
+        /// answer and not this one's — a cairn with nothing left to pull is beyond rescue, and a
+        /// fallen line is put back up by a continue. So this panel is reached on a siege only when
+        /// that offer was declined, or never made because the run was free.
         /// </para>
         /// </summary>
         protected virtual DefeatReason StuckReason => DefeatReason.Stuck;
@@ -437,8 +442,13 @@ namespace GlimmerGrove
             if (_view.Run.Budget.Bounded)
                 into.Add(Lesson.At(Mechanic.ProtoMoves, ReadoutAt(MovesReadout)));
 
+            // **A mode may teach only its verb.** `Friend` used to be required, so a mode with
+            // nothing worth a second lesson had to invent one - and a lesson is shown once in a
+            // player's life, so an invented one is spent for ever. An empty id means there is no
+            // second lesson, which is what Thornwatch answers after its own was withdrawn.
             var friend = _view.FriendAnchor;
-            if (friend != null) into.Add(Lesson.At(Friend, friend));
+            if (friend != null && !string.IsNullOrEmpty(Friend.Id))
+                into.Add(Lesson.At(Friend, friend));
         }
 
         /// <summary>

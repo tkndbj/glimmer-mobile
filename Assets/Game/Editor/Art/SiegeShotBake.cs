@@ -76,6 +76,16 @@ namespace GlimmerGrove.EditorTools
             public string Key;      // r, g, b, y — the order SiegeView.Tints is in
             public string Prefab;   // under VfxBench.PackRoot/Projectiles
             public Color Hue;
+
+            /// <summary>
+            /// A full project path, for an effect that is not in the projectiles pack.
+            ///
+            /// <b>A second field rather than a second root</b>, because the packs are not laid out
+            /// alike: one files its prefabs under <c>Projectiles/</c> and the next one does not, so
+            /// a shared root would only move the guesswork. When this is set it is used verbatim
+            /// and <see cref="Prefab"/> is ignored.
+            /// </summary>
+            public string Path;
         }
 
         static readonly Shot[] Shots =
@@ -106,6 +116,30 @@ namespace GlimmerGrove.EditorTools
         /// </summary>
         static readonly Shot Spell =
             new Shot { Key = "spell", Prefab = "vfx_Projectile_Sun01", Hue = Pal.Foxglove };
+
+        /// <summary>
+        /// What a <b>stormcall</b> drops on the hill.
+        ///
+        /// <para>
+        /// <b>The pack's third lightning rather than the one the yellow ward fires</b>, and that
+        /// is the whole reason it is its own entry. A ward's bolt goes off four or five times a
+        /// second, so it is cut small and short; a storm happens once a run and costs forty gems,
+        /// so it is baked on the <em>spell</em> path — bigger, longer, framed square with its own
+        /// tail. Sharing <c>shot_y</c> would have meant tuning the biggest moment in the mode by
+        /// the smallest, which is the mistake the firepot's sound already made once.
+        /// </para>
+        /// <para>
+        /// Graded to <c>Pal.Sun</c> like the yellow ward, deliberately: this one is <em>meant</em>
+        /// to read as lightning rather than as a fifth element, and the storm is not a colour rule
+        /// — it hits every raider whatever it wears.
+        /// </para>
+        /// </summary>
+        static readonly Shot Storm = new Shot
+        {
+            Key = "storm",
+            Path = "Assets/Mirza Beig/Lightning VFX/Prefabs/Lightning.prefab",
+            Hue = Pal.Sun,
+        };
 
         /// <summary>
         /// What the <em>overlord</em> throws: the same class of magic, hotter and in a colour
@@ -201,6 +235,9 @@ namespace GlimmerGrove.EditorTools
 
         static string PrefabPath(string name)
             => VfxBench.PackRoot + "/Projectiles/" + name + ".prefab";
+
+        static string PathOf(Shot shot)
+            => string.IsNullOrEmpty(shot.Path) ? PrefabPath(shot.Prefab) : shot.Path;
 
         // ------------------------------------------------------------------ the reels
         /// <summary>
@@ -433,6 +470,20 @@ namespace GlimmerGrove.EditorTools
                         BakeSpell(stage.transform, cam, warlord, thrown, made);
                 }
 
+                // **The storm is baked on the *comet* path, not the spell one, and the first cut
+                // proved why.** `BakeSpell` frames square because the thing it was written for is
+                // an orb; a bolt of lightning is eight to one, so framed square it came out as a
+                // thread down the middle of a 384-square texture with ninety per cent of the frame
+                // empty — invariant 37k's sliver exactly, and the second time this pack has
+                // produced it. What a bolt wants is what a ward's bolt gets: a tall narrow frame
+                // measured off its own picture.
+                var storm = AssetDatabase.LoadAssetAtPath<GameObject>(PathOf(Storm));
+
+                if (storm == null)
+                    Debug.LogWarning($"[siege shots] {PathOf(Storm)} is not in this project — skipped.");
+                else
+                    BakeStorm(stage.transform, cam, storm, made);
+
                 if (made.Count == 0)
                 {
                     Debug.LogWarning("[siege shots] nothing baked — is the projectile pack imported?");
@@ -499,6 +550,45 @@ namespace GlimmerGrove.EditorTools
                     Capture(stage, cam, hit, shot.Hue, HitFrames, Burst(hit), 0f, 0f,
                             .5f, BurstSide, BurstSide, BurstSide, 1f, 1f, comet: false);
         }
+
+        /// <summary>
+        /// A stormcall's bolt and the burst it leaves, cut bigger than a ward's.
+        ///
+        /// <para>
+        /// <b>The comet path with a bigger frame</b> — a ward's bolt and this are the same shape
+        /// and differ only in how often they happen, so they want the same framing and a different
+        /// size. A ward fires four or five a second and is cut to read at that rate; this goes off
+        /// once a run and is what forty gems bought, so it is taller, kept longer and framed with
+        /// more of its own trail.
+        /// </para>
+        /// <para>
+        /// <b>It is not flown.</b> A ward's bolt crosses the hill, so its speed is bent until its
+        /// tail fits the frame; a storm falls straight down onto one raider and the view draws the
+        /// sprite stretched from the top of the board to whatever it hit, so what is wanted here is
+        /// the bolt standing still and fully drawn.
+        /// </para>
+        /// </summary>
+        static void BakeStorm(Transform stage, Camera cam, GameObject prefab,
+                              Dictionary<string, Book> made)
+        {
+            // **One reel, not three, because this pack draws the whole event.** A ward's bolt is
+            // three prefabs - a flash at the barrel, a thing that flies, a burst where it lands -
+            // because it is a projectile crossing the hill. This is a *strike*: the bolt, the
+            // ground crack and the shockwave rings are one effect that happens in one place, so
+            // there is nothing to fly and nothing to fire it. It is captured standing still.
+            made["storm"] =
+                Capture(stage, cam, prefab, Storm.Hue, StormFrames, StormSeconds, 0f, 0f,
+                        .5f, StormTall, NarrowestStorm, WidestStorm,
+                        LeanestStorm, LongestStorm, comet: false);
+        }
+
+        /// <summary>How a storm's bolt is cut: taller and wider than a ward's, and held longer.</summary>
+        const int StormFrames = 18, StormTall = 512;
+        const int NarrowestStorm = 128, WidestStorm = 448;
+        const float StormSeconds = .85f;
+
+        /// <summary>How far from square a storm's frame may go. Wider than a bolt: it has ground.</summary>
+        const float LeanestStorm = 0.5f, LongestStorm = 2.4f;
 
         /// <summary>
         /// The warlord's spell, as the same three parts a ward's bolt is.

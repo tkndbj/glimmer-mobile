@@ -3466,6 +3466,18 @@
    "text": "Gems buy hearts, boosts and time"
   },
   {
+   "key": "ui.shop.shelf_utilities",
+   "text": "Firepots, mendings and surges for the raid"
+  },
+  {
+   "key": "ui.shop.utility_held",
+   "text": "Carrying {0} of {1}"
+  },
+  {
+   "key": "ui.shop.utility_full",
+   "text": "PACK FULL"
+  },
+  {
    "key": "ui.shop.shelf_supplies",
    "text": "Hearts, faster hearts, and a bigger limit"
   },
@@ -4114,6 +4126,14 @@
    "text": "more moves"
   },
   {
+   "key": "ui.continue.wards_title",
+   "text": "The line has fallen"
+  },
+  {
+   "key": "ui.continue.wards_unit",
+   "text": "wards, back at full strength,"
+  },
+  {
    "key": "ui.defeat.stuck_title",
    "text": "NOTHING LEFT TO DO"
   },
@@ -4187,7 +4207,7 @@
   },
   {
    "key": "mode.siege.nodrag",
-   "text": "Gems are <b>dragged</b>, not tapped — pull one onto the gem beside it. Line three of a colour up and that ward opens fire."
+   "text": "Gems are dragged, not tapped — pull one onto the gem beside it. Line three of a colour up and that ward opens fire."
   },
   {
    "key": "mode.siege.wave",
@@ -4231,19 +4251,11 @@
   },
   {
    "key": "ui.tip.siege_fuel.title",
-   "text": "A MATCH IS A COLOUR"
+   "text": "MATCH THREE OF A COLOUR"
   },
   {
    "key": "ui.tip.siege_fuel.body",
-   "text": "Nothing on the field down here is worth points. Line three gems up and that colour's <b>ward</b> fills with fuel and starts firing.\n\nA ward's bolts hurt a raider of its <b>own colour</b> twice as hard - so the question is never which match is biggest, it is which colour is walking down the hill."
-  },
-  {
-   "key": "ui.tip.siege_line.title",
-   "text": "THE LINE IS YOUR LIFE"
-  },
-  {
-   "key": "ui.tip.siege_line.body",
-   "text": "There is no move limit here. Every raider that reaches the ward line swings at it, and when the last ward falls the grove is taken.\n\nWatch the bar over each ward - and watch the hill. The last wave brings a <b>warlord</b>: it stops halfway down and throws at the line from there."
+   "text": "Match three gems of a colour and that colour's turret opens fire.\n\nIts shots hurt raiders of its own colour twice as hard."
   },
   {
    "key": "mode.siege.go",
@@ -4399,11 +4411,27 @@
   },
   {
    "key": "ui.tip.siege_cog.title",
-   "text": "A COG UPGRADES A TURRET"
+   "text": "COGS UPGRADE A TURRET"
+  },
+  {
+   "key": "utility.stormcall.name",
+   "text": "Stormcall"
+  },
+  {
+   "key": "utility.stormcall.note",
+   "text": "Lightning strikes every raider on the hill. It will not fell a boss."
+  },
+  {
+   "key": "ui.tip.siege_shield.title",
+   "text": "SHIELDS ONLY BREAK TO THEIR OWN COLOUR"
+  },
+  {
+   "key": "ui.tip.siege_shield.body",
+   "text": "Shielded raiders shrug off every colour but their own.\n\nThey walk slowly, so feed their colour before they arrive."
   },
   {
    "key": "ui.tip.siege_cog.body",
-   "text": "A <b>cog</b> never lines up with anything. It is destroyed by a match made <b>beside</b> it - and the colour of that match decides which turret goes up a rank.\n\nEach rank is a tenth more damage and a tenth less fuel a shot, up to five. Match the wrong colour beside a cog and the wrong turret gets it."
+   "text": "A cog never lines up with anything.\n\nMatch a colour beside it and that colour's turret goes up a rank."
   }
  ]
 }

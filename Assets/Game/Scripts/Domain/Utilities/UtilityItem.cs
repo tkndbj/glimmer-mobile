@@ -46,6 +46,33 @@ namespace GlimmerGrove.Utilities
         /// <c>SiegeUtility.MatchesFor</c>.
         /// </summary>
         Surge = 3,
+
+        /// <summary>
+        /// Damage to <b>everything on the hill at once</b>, aimed at nothing.
+        ///
+        /// <para>
+        /// <b>It is charged like any other damage and that is what keeps it honest.</b> A storm
+        /// that empties a full hill delivers thousands, so <c>SiegeUtility.MatchesFor</c> bills it
+        /// dozens of matches against the grade — which is the same arithmetic a firepot pays and
+        /// the reason invariant 39 needs no special case for it. It buys a <em>finish</em>, never
+        /// a grade, and on a hill worth enough to be worth clearing it buys a finish that scores
+        /// one star at most.
+        /// </para>
+        /// <para>
+        /// <b>It does not kill a boss and must not.</b> Every raider takes the same magnitude, so
+        /// a warlord or an overlord — which carry the health of several waves — is hurt and
+        /// survives. A consumable that ended the finale would be the fight sold rather than
+        /// played, and the mode's one duel is the thing a chapter is built toward.
+        /// </para>
+        /// <para>
+        /// <b>And it ignores a shield.</b> A bulwark halves what a <em>ward's bolt</em> does to it
+        /// because the shield is answered by colour, and a storm has no colour to answer — so the
+        /// soak would be a rule about a bolt applied to something that is not one. It is also what
+        /// gives the item a reason to exist beyond "more damage": it is the answer to a wave of
+        /// armour, which is exactly the wave a player cannot out-match.
+        /// </para>
+        /// </summary>
+        Storm = 4,
     }
 
     /// <summary>
@@ -58,6 +85,18 @@ namespace GlimmerGrove.Utilities
 
         /// <summary>One ward on the line.</summary>
         Ward = 1,
+
+        /// <summary>
+        /// Nothing at all — it lands everywhere the moment it is used.
+        ///
+        /// <b>A third answer rather than a point nobody picks</b>, because "aimed at the whole
+        /// board" and "aimed at a place" are different interactions: there is no targeting layer,
+        /// no ring to move and nothing to cancel, so a slot carrying one fires on the tap that
+        /// arms it. Making it aim at a hill box the rule then ignored would be a control that
+        /// rejects nothing, which is invariant 5d asked of an input.
+        /// </b>
+        /// </summary>
+        Everywhere = 2,
     }
 
     /// <summary>
@@ -72,12 +111,14 @@ namespace GlimmerGrove.Utilities
         public const string Blast = "blast";
         public const string Mend = "mend";
         public const string Surge = "surge";
+        public const string Storm = "storm";
 
         public static UtilityKind Parse(string id)
         {
             if (string.Equals(id, Blast, StringComparison.Ordinal)) return UtilityKind.Blast;
             if (string.Equals(id, Mend, StringComparison.Ordinal)) return UtilityKind.Mend;
             if (string.Equals(id, Surge, StringComparison.Ordinal)) return UtilityKind.Surge;
+            if (string.Equals(id, Storm, StringComparison.Ordinal)) return UtilityKind.Storm;
             return UtilityKind.None;
         }
 
@@ -88,6 +129,7 @@ namespace GlimmerGrove.Utilities
                 case UtilityKind.Blast: return Blast;
                 case UtilityKind.Mend: return Mend;
                 case UtilityKind.Surge: return Surge;
+                case UtilityKind.Storm: return Storm;
                 default: return string.Empty;
             }
         }
@@ -100,7 +142,9 @@ namespace GlimmerGrove.Utilities
         /// otherwise would be a file able to author a utility no screen can point at.
         /// </summary>
         public static UtilityTarget TargetOf(UtilityKind kind)
-            => kind == UtilityKind.Blast ? UtilityTarget.Hill : UtilityTarget.Ward;
+            => kind == UtilityKind.Storm ? UtilityTarget.Everywhere
+             : kind == UtilityKind.Blast ? UtilityTarget.Hill
+             : UtilityTarget.Ward;
     }
 
     /// <summary>

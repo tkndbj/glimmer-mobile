@@ -41,6 +41,24 @@ namespace GlimmerGrove
         /// <summary>An ordered route for a coaching hand, or null for a lesson that is a sentence.</summary>
         public RectTransform[] Trace;
 
+        /// <summary>
+        /// One object drawn inside the panel, or null.
+        ///
+        /// <para>
+        /// <b>For the thing a ring cannot always be drawn round.</b> Every other lesson here points
+        /// at its subject on the real board, which is right whenever the subject is certain to be
+        /// standing there. A cog is not: it is dealt at a rate rather than authored, so a rung can
+        /// legitimately open with none on the field - and a lesson is offered once in a player's
+        /// life, so one that waits for a board that may not come is one that may never be given.
+        /// </para>
+        /// <para>
+        /// So the ring goes on the thing that is always there (the turret a cog upgrades) and the
+        /// panel carries the picture of the thing that is not. It is a <c>Sprite</c> rather than an
+        /// address because a lesson is raised by a mode, and a mode already holds its own art.
+        /// </para>
+        /// </summary>
+        public Sprite Icon;
+
         /// <summary>The colour a demonstration is drawn in.</summary>
         public Color Tint;
 
@@ -62,10 +80,11 @@ namespace GlimmerGrove
         public bool Deferred;
 
         /// <summary>A lesson that rings what it is about and says a sentence about it.</summary>
-        public static Lesson At(Mechanic mechanic, RectTransform target, RectTransform[] alongside = null)
+        public static Lesson At(Mechanic mechanic, RectTransform target,
+                               RectTransform[] alongside = null, Sprite icon = null)
             => new Lesson
             {
-                Mechanic = mechanic, Target = target, Alongside = alongside,
+                Mechanic = mechanic, Target = target, Alongside = alongside, Icon = icon,
                 Tint = Pal.Cream, Cells = 1
             };
 
@@ -384,6 +403,7 @@ namespace GlimmerGrove
                 v.Target = lesson.Target;
                 v.Alongside = lesson.Alongside;
                 v.Trace = lesson.Trace;
+                v.Icon = lesson.Icon;
                 v.TraceTint = lesson.Tint;
                 v.TraceCells = lesson.Cells;
                 v.Dismissed = () => Tween.After(BetweenLessons, ShowLesson, _run);

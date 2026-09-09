@@ -350,17 +350,17 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Deals more moves, because a continue was paid for.
+        /// Hands the board back, because a continue was paid for.
         ///
         /// The verdict is asked again rather than assumed: if a grant somehow left the run lost,
         /// the fail state fires again and the player is asked again rather than silently left on a
         /// dead board.
         /// </summary>
-        public void Grant(int moves)
+        public void Grant(int amount)
         {
             if (Run == null) return;
 
-            Run.Grant(moves);
+            Granted(amount);
             Over = false;
             Locked = false;
 
@@ -373,8 +373,31 @@ namespace GlimmerGrove
 
             Repaint();
             Changed?.Invoke();
-            Settle();
+            Rejudge();
         }
+
+        /// <summary>
+        /// What the amount just paid for actually buys, in the unit this mode measures.
+        ///
+        /// <para>
+        /// Moves by default, because that is what every board on this shape counts and it is the
+        /// only thing the allowance can be topped up with. A mode whose fail state is not its
+        /// allowance overrides it — Thornwatch's continue puts the ward line back up and the
+        /// allowance never moves, since it has none. Note what a subclass must <em>not</em> touch
+        /// either way: <c>ProtoBudget.Spent</c> is the grade (invariant 23).
+        /// </para>
+        /// </summary>
+        protected virtual void Granted(int amount) => Run.Grant(amount);
+
+        /// <summary>
+        /// Re-reads the verdict after a grant, so a board that is somehow still lost raises its
+        /// fail state again instead of stranding the player on a dead board.
+        ///
+        /// A hook only because a siege reads its verdict differently — see
+        /// <c>SiegeView.Judge</c>, which does not ask whether the first move has landed, because
+        /// there the hill walks whether or not anybody has touched a gem.
+        /// </summary>
+        protected virtual void Rejudge() => Settle();
 
         // ------------------------------------------------------------------ the endings
         /// <summary>

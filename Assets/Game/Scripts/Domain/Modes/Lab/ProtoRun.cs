@@ -131,7 +131,17 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// The board has no legal move left, or has reached a state it can be proved never to
-        /// finish from. The spatial ending, and the one money cannot fix.
+        /// finish from. The spatial ending.
+        ///
+        /// <para>
+        /// <b>Whether money can fix it is the board's answer, not this member's.</b> It was the
+        /// latter for as long as every mode on this shape ran out of <em>board</em> — no purchase
+        /// gives a cairn another stone to pull — and Thornwatch is the first that does not: a
+        /// siege has no legal move because its ward line has fallen, and a continue puts the line
+        /// back up. So the deficit is asked of <see cref="IProtoBoard.Stranded"/> on this branch
+        /// exactly as it is on <see cref="Spent"/>, and a board for which nothing helps says so
+        /// itself.
+        /// </para>
         /// </summary>
         Stuck = 2,
 
@@ -175,8 +185,14 @@ namespace GlimmerGrove.Modes
         /// That is invariant 28f, learned by Lightfall shipping the other reading and taking it
         /// back: a run that ends while the player still has moves in hand reads as the game
         /// deciding on their behalf, and a player who wants to spend their last three pulls on a
-        /// cairn that cannot be finished is entitled to. So this is asked at the moment the
-        /// allowance runs out and at no other.
+        /// cairn that cannot be finished is entitled to. So this is asked at the moment a run is
+        /// already over — the allowance gone, or no legal move left — and at no other.
+        /// </para>
+        /// <para>
+        /// <b>It is a question about purchases and not about the board's shape</b>, which is why
+        /// a mode may answer <c>false</c> with no move on the board at all. Thornwatch does: a
+        /// fallen ward line has no legal move and a continue puts the line back up, so it is over
+        /// and it is not stranded.
         /// </para>
         /// <para>
         /// Never a guess. It decides whether money changes hands, so it under-reports and never
@@ -197,12 +213,15 @@ namespace GlimmerGrove.Modes
     /// boolean is an edge where the run is decided and the screen has not caught up.
     /// </para>
     /// <para>
-    /// <b>Two fail states, and only one may be sold a continue.</b> Running out of moves is a
-    /// shortage and more moves fix it. Running out of <em>board</em> is not — no purchase gives a
-    /// cairn another stone to pull or a grove another ribbon to draw — so <see cref="Deficit"/>
-    /// answers <see cref="RunContinueDeficit.None"/> and the offer is never made. Which means the
-    /// mistake money cannot fix is the spatial one, which is the half these modes are actually
-    /// about.
+    /// <b>Two fail states, and whether either may be sold a continue is the board's answer.</b>
+    /// Running out of moves is a shortage and more moves fix it. Running out of <em>board</em>
+    /// usually is not — no purchase gives a cairn another stone to pull or a grove another ribbon
+    /// to draw — so <see cref="Deficit"/> answers <see cref="RunContinueDeficit.None"/> and the
+    /// offer is never made. <b>Usually, not always</b>, and that is the one thing here that
+    /// changed after five modes: Thornwatch has no legal move when its ward line has fallen, and
+    /// a continue puts the line back up. So both branches ask
+    /// <see cref="IProtoBoard.Stranded"/> — which was written as a certainty about
+    /// <em>purchases</em> from the start — instead of one of them assuming the answer.
     /// </para>
     /// </summary>
     public readonly struct ProtoVerdict
@@ -213,9 +232,12 @@ namespace GlimmerGrove.Modes
         /// Moves that would have to be restored before a bought one is a usable one, or
         /// <see cref="RunContinueDeficit.None"/> when nothing would help.
         ///
-        /// Nought whenever an offer is honest at all: a board that has run dry always has a legal
-        /// move — running out of board is checked first and is a different ending — so any move at
-        /// all is a playable move.
+        /// Nought whenever an offer is honest at all, and never a positive number on this shape:
+        /// a board that has run dry always has a legal move, so any move at all is a playable
+        /// move, and a board that has run out of moves to <em>make</em> is rescued by putting
+        /// back whatever went missing rather than by topping up an allowance. The shortfall case
+        /// the field exists for is Lightfall's, where the motes that come next may be the wrong
+        /// colours entirely.
         /// </summary>
         public readonly int Deficit;
 
@@ -254,7 +276,12 @@ namespace GlimmerGrove.Modes
 
             if (board.IsFinished) return new ProtoVerdict(ProtoEnding.Done, 0);
 
-            if (!board.AnyMove) return new ProtoVerdict(ProtoEnding.Stuck, RunContinueDeficit.None);
+            // The deficit is the *board's* answer on this branch as much as on the next one. A
+            // cairn with no stone to pull is stranded and says so; a fallen ward line is not, and
+            // a continue that raises it is an honest sale (invariant 28f, and 23's ordering).
+            if (!board.AnyMove)
+                return new ProtoVerdict(ProtoEnding.Stuck,
+                                        board.Stranded ? RunContinueDeficit.None : 0);
 
             if (!budget.Any)
                 return new ProtoVerdict(ProtoEnding.Spent,

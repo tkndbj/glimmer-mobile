@@ -1,4 +1,5 @@
 using GlimmerGrove.Store;
+using GlimmerGrove.Utilities;
 using UnityEngine;
 
 namespace GlimmerGrove
@@ -98,5 +99,34 @@ namespace GlimmerGrove
         public static Look Of(StoreGood good)
             => new Look(good != null && good.Kind == StoreGoodKind.HeartBoost ? Pal.Sun : Pal.Rose,
                         .26f, .12f, 72f);
+
+        /// <summary>
+        /// The look for a utility, which is its <em>kind's</em> own colour at the same fixed
+        /// middling strength a good takes.
+        ///
+        /// <para>
+        /// A good's argument, one shelf along and slightly stronger: four utilities are not four
+        /// sizes of one thing, they are four answers to four different moments on a hill, so a
+        /// rung would be inventing an order where the shelf deliberately has none (they are drawn
+        /// in <c>UtilityItem.Order</c>, which is authored and is about the action bar). The
+        /// colours are the ones the icons are actually painted in — see
+        /// <c>Tools/make_utility_art.py</c> — so the light behind a card and the picture on it
+        /// are one statement rather than two.
+        /// </para>
+        /// </summary>
+        public static Look Of(UtilityItem item)
+            => new Look(Colour(item == null ? UtilityKind.None : item.Kind), .26f, .12f, 72f);
+
+        static Color Colour(UtilityKind kind)
+        {
+            switch (kind)
+            {
+                case UtilityKind.Blast: return Pal.Ember;   // the firepot's flame
+                case UtilityKind.Mend:  return Pal.Mint;    // the mending's flask
+                case UtilityKind.Surge: return Pal.Azure;   // the surge's disc
+                case UtilityKind.Storm: return Pal.Sun;     // the stormcall's bolts
+                default: return Pal.Rope;
+            }
+        }
     }
 }

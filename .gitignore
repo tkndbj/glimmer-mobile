@@ -80,6 +80,11 @@ crashlytics-build.properties
 /[Aa]ssets/GabrielAguiarProductions/
 /[Aa]ssets/GabrielAguiarProductions.meta
 
+# Mirza Beig - Lightning VFX. A bought asset, like the pack above: what ships is the sprite reel
+# `SiegeShotBake` bakes out of it (Art/Fx/Siege/storm), never the particle system itself.
+/[Aa]ssets/Mirza?Beig/
+/[Aa]ssets/Mirza?Beig.meta
+
 # Firebase Unity SDK packages: build inputs with a canonical download URL, ~75 MB.
 # Committing them would add that to the history on every version bump.
 # Restore with: pwsh GooglePackages/fetch.ps1

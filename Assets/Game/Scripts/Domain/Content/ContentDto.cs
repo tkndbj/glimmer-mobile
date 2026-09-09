@@ -1189,6 +1189,13 @@ namespace GlimmerGrove.Content
 
         /// <summary>Moves a prototype board's continue hands over, on the same terms.</summary>
         public int moves = -1;
+
+        /// <summary>
+        /// Wards a siege's continue puts back up. <b>Not</b> on the same terms as the others:
+        /// this is the whole allowance rather than room above a shortfall, because a siege is
+        /// lost when the last ward falls. See <c>ContinueLimits.DefaultWards</c>.
+        /// </summary>
+        public int wards = -1;
     }
 
     /// <summary>

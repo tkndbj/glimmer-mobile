@@ -483,6 +483,64 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(ids.Contains(Mechanic.ModeSwitch.Id));
         }
 
+        /// <summary>
+        /// Every lesson that has ever been declared is either live or retired, and never both.
+        ///
+        /// <para>
+        /// <b>The guard that was missing, and it was missing in both directions at once.</b>
+        /// <c>Mechanic.SiegeLine</c> was withdrawn — its doc rewritten, its two strings deleted
+        /// from <c>en.json</c>, no screen raising it — and was left in <c>Mechanic.All</c>, which
+        /// is what the Editor's <c>Validate Content</c> walks to prove every lesson has strings; so
+        /// the build failed over two keys nobody wanted. In the same list <c>Mechanic.SiegeShield</c>
+        /// was live, shown by <c>SiegeScreen.Lessons</c>, and had never been added — so nothing
+        /// proved it had strings at all, which is the exact failure <c>All</c> exists to prevent and
+        /// which read as fine only because somebody happened to write them.
+        /// </para>
+        /// <para>
+        /// Reflection over the declared fields rather than a third hand-kept list, because a third
+        /// list is a third thing to forget. It reads types only and needs no Editor, so a lesson
+        /// added or withdrawn without touching either registry fails on the way past instead of
+        /// twenty minutes into a build.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryMechanicIsEitherLiveOrRetired()
+        {
+            var live = new HashSet<string>(System.StringComparer.Ordinal);
+            foreach (var m in Mechanic.All) live.Add(m.Id);
+
+            var gone = new HashSet<string>(System.StringComparer.Ordinal);
+            foreach (var m in Mechanic.Retired)
+            {
+                Assert.IsTrue(m.IsValid, "a retired mechanic with no id records nothing");
+                Assert.IsTrue(gone.Add(m.Id), $"'{m}' is listed in Retired twice");
+
+                Assert.IsFalse(live.Contains(m.Id),
+                               $"'{m}' is retired and still in All, so the build gate demands two "
+                               + "strings for a lesson nothing can raise");
+            }
+
+            var fields = typeof(Mechanic).GetFields(System.Reflection.BindingFlags.Public
+                                                    | System.Reflection.BindingFlags.Static);
+
+            int declared = 0;
+
+            foreach (var field in fields)
+            {
+                if (field.FieldType != typeof(Mechanic)) continue;
+
+                var m = (Mechanic)field.GetValue(null);
+                declared++;
+
+                Assert.IsTrue(live.Contains(m.Id) || gone.Contains(m.Id),
+                              $"'{field.Name}' is declared and is in neither All nor Retired, so "
+                              + "nothing proves it has strings and nothing says it was withdrawn");
+            }
+
+            Assert.AreEqual(declared, live.Count + gone.Count,
+                            "every declared lesson is live or retired, and none is both");
+        }
+
         // ------------------------------------------------------------ the ledger
         [Test]
         public void JoiningSeenTipsIsAUnion()

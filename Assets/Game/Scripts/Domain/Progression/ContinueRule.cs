@@ -115,6 +115,25 @@ namespace GlimmerGrove.Progression
         public const int DefaultMoves = 4;
 
         /// <summary>
+        /// Wards a Thornwatch continue puts back up.
+        ///
+        /// <para>
+        /// Four, which is the whole line — <c>SiegeTuning.MaxWards</c>, written here as a plain
+        /// number because a price table may not reach into a mode. This is the one unit whose
+        /// authored figure is not "working room on top of a shortfall": a siege is lost when the
+        /// <em>last</em> ward falls, so every ward is down when the offer is made and anything
+        /// short of the line would raise some arbitrary subset of it.
+        /// </para>
+        /// <para>
+        /// A published figure smaller than the line is legal and does what it says — the wards
+        /// nearest the left come back first, which is at least deterministic — and it is left
+        /// legal rather than refused because the honest use of it is a retune that makes the
+        /// offer meaner, not a mistake.
+        /// </para>
+        /// </summary>
+        public const int DefaultWards = 4;
+
+        /// <summary>
         /// Dearest a continue may be published at.
         ///
         /// A sanity bound rather than a design one, and it is deliberately far above anything
@@ -168,9 +187,10 @@ namespace GlimmerGrove.Progression
     public sealed class ContinueTable
     {
         ContinueTable(bool enabled, long gems, long gemsStep, int turns, int ink, int motes,
-                      int tiles, int taps, int moves)
+                      int tiles, int taps, int moves, int wards)
         {
             Moves = moves;
+            Wards = wards;
             Enabled = enabled;
             Gems = gems;
             GemsStep = gemsStep;
@@ -218,20 +238,29 @@ namespace GlimmerGrove.Progression
         /// <summary>Moves a prototype board's continue hands over, on the same terms.</summary>
         public int Moves { get; }
 
+        /// <summary>
+        /// Wards a siege's continue puts back up. Not "on the same terms" — see
+        /// <see cref="ContinueLimits.DefaultWards"/> for why this one is the whole allowance
+        /// rather than room above a shortfall.
+        /// </summary>
+        public int Wards { get; }
+
         /// <summary>The rule that ships inside the build, and the floor under any content mistake.</summary>
         public static readonly ContinueTable Default =
             new ContinueTable(true,
                               ContinueLimits.DefaultGems, ContinueLimits.DefaultGemsStep,
                               ContinueLimits.DefaultTurns, ContinueLimits.DefaultInk,
                               ContinueLimits.DefaultMotes, ContinueLimits.DefaultTiles,
-                              ContinueLimits.DefaultTaps, ContinueLimits.DefaultMoves);
+                              ContinueLimits.DefaultTaps, ContinueLimits.DefaultMoves,
+                              ContinueLimits.DefaultWards);
 
         /// <summary>A rule with the feature switched off, for a file that asks for that.</summary>
         public static readonly ContinueTable Off =
             new ContinueTable(false, ContinueLimits.DefaultGems, ContinueLimits.DefaultGemsStep,
                               ContinueLimits.DefaultTurns, ContinueLimits.DefaultInk,
                               ContinueLimits.DefaultMotes, ContinueLimits.DefaultTiles,
-                              ContinueLimits.DefaultTaps, ContinueLimits.DefaultMoves);
+                              ContinueLimits.DefaultTaps, ContinueLimits.DefaultMoves,
+                              ContinueLimits.DefaultWards);
 
         /// <summary>
         /// What the next continue costs, given how many this run has already had.
@@ -278,6 +307,7 @@ namespace GlimmerGrove.Progression
                 case ContinueUnit.Tiles: return Tiles;
                 case ContinueUnit.Taps: return Taps;
                 case ContinueUnit.Moves: return Moves;
+                case ContinueUnit.Wards: return Wards;
                 default: return Turns;
             }
         }
@@ -306,6 +336,7 @@ namespace GlimmerGrove.Progression
             int tiles = dto.tiles < 0 ? ContinueLimits.DefaultTiles : dto.tiles;
             int taps = dto.taps < 0 ? ContinueLimits.DefaultTaps : dto.taps;
             int moves = dto.moves < 0 ? ContinueLimits.DefaultMoves : dto.moves;
+            int wards = dto.wards < 0 ? ContinueLimits.DefaultWards : dto.wards;
 
             // Zero is refused rather than clamped, and it is the one refusal here worth
             // stating: a continue that costs nothing is not a cheap continue, it is a move
@@ -339,8 +370,10 @@ namespace GlimmerGrove.Progression
             tiles = Bound(tiles, "tiles", ContinueLimits.DefaultTiles, problems);
             taps = Bound(taps, "taps", ContinueLimits.DefaultTaps, problems);
             moves = Bound(moves, "moves", ContinueLimits.DefaultMoves, problems);
+            wards = Bound(wards, "wards", ContinueLimits.DefaultWards, problems);
 
-            return new ContinueTable(true, gems, step, turns, ink, motes, tiles, taps, moves);
+            return new ContinueTable(true, gems, step, turns, ink, motes, tiles, taps, moves,
+                                     wards);
         }
 
         /// <summary>

@@ -124,7 +124,7 @@ namespace GlimmerGrove.AssetPipeline
             // which chest drops what, but it cannot ship a picture. So adding a *new* utility is
             // a build, exactly as adding a mode is (invariant 20), and `ContentValidation` errors
             // on a catalog entry whose icon is not one of these rather than letting it draw blank.
-            "Utility/firepot", "Utility/mending", "Utility/surge",
+            "Utility/firepot", "Utility/mending", "Utility/surge", "Utility/stormcall",
 
             // The bar's own furniture: the shelf and one cell. Global with the icons,
             // because the bar is drawn on the board and in a shop panel that opens over it.

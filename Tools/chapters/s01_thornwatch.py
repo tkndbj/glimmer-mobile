@@ -22,10 +22,13 @@ constants in code, one place, retuned for every level at once.
      not difficulty), and what makes it hard is that a third of the line's answers are gone.
   5. *The Warlord's Gate* - the **warlord**: it walks to the middle of the hill, stops, and throws
      at the line from where nothing can reach it.
-  6. *Bramble Run* - the first hill that is mostly brutes.
-  7. *Ashenfield* - and the first that is more brute than creeper.
+  6. *Bramble Run* - the **bulwark**, written `#r`: it carries a shield, so it halves every bolt
+     that is not its own colour and takes its own in full, and it walks at half a creeper's pace.
+     It is the first raider whose answer is a *colour* rather than a quantity - a player taking the
+     biggest match on the field loses ground to one.
+  7. *Ashenfield* - bulwarks in numbers, one of them in the opening wave.
   8. *Black March* - a warlord *behind* a hill of brutes, so the duel is fought on a bled line.
-  9. *The Long Siege* - the longest hill in the chapter, and the most cogs.
+  9. *The Long Siege* - the longest hill in the chapter, and bulwarks in a group.
  10. *Last Light* - the **overlord**: a warlord of the greater kind, nearly twice the health, half
      again the casting rate, and a spell that takes five off a ward instead of three. It stops
      further up the hill than a warlord does, which is the compensation.
@@ -109,15 +112,22 @@ LEVELS = (
 
     dict(id="s01_warlordsgate", seed=4510, swaps=9, stood=0,
          wards="rgby", gems="rgby", cogs=3, boss="warlord:r",
-         waves=["rgbyrg", "rgbyRGby", "RGby"]),
+         waves=["rgbyrg", "rgbyRGby", "RGbyRG"]),
 
+    # **The bulwark, on the rung that used to be "more brutes".** It is written `#r`: a raider
+    # that halves every bolt of the wrong colour, takes its own in full, and walks at half a
+    # creeper's pace. Two of them and no boss, so the one thing to work out here is that the
+    # biggest match on the field is not the answer - which is the mistake this whole mode is about,
+    # and the first rung that punishes it.
     dict(id="s01_bramblerun", seed=3603, swaps=8, stood=0,
          wards="rgby", gems="rgby", cogs=3, boss="",
-         waves=["RGbyRGby", "RGbyRGby", "RGBYRG"]),
+         waves=["RGby#rby", "RGbyRGby", "RGBYRG#gRG"]),
 
+    # Three bulwarks, and one of them in the opening wave, so the rung starts on the question
+    # rather than working up to it.
     dict(id="s01_ashenfield", seed=5206, swaps=8, stood=0,
          wards="rgby", gems="rgby", cogs=3, boss="",
-         waves=["rgbyRGby", "RGBYRG", "RGBYRGby"]),
+         waves=["#bgyRGby", "RGBY#rG", "RGBYRG#y"]),
 
     dict(id="s01_blackmarch", seed=1952, swaps=8, stood=0,
          wards="rgby", gems="rgby", cogs=3, boss="warbringer:g",
@@ -130,9 +140,11 @@ LEVELS = (
          # it); four brutes and two creepers is the same wave to rally and a rung that holds.
          waves=["rgbyRGby", "RGBYRGby", "RGBYrg"]),
 
+    # The longest hill, and the one that sends bulwarks in a group - three of them across the
+    # last two waves, so the slow armour piles up while the brutes behind it are still coming.
     dict(id="s01_thornsiege", seed=7881, swaps=7, stood=0,
          wards="rgby", gems="rgby", cogs=3, boss="",
-         waves=["rgbyRGby", "RGBYRGBY", "RGBYRGBY"]),
+         waves=["rgbyRGby", "RGBY#rGBY", "RGBY#gRGB#b"]),
 
     dict(id="s01_lastlight", seed=11445, swaps=7, stood=0,
          wards="rgby", gems="rgby", cogs=3, boss="overlord:y",
@@ -141,7 +153,11 @@ LEVELS = (
          # the *dynamics* are not - a line that kills faster empties the hill sooner, and an empty
          # hill musters the next wave at once (37k), so the finale's waves stacked and it was lost
          # with one raider left. The cliff is one brute wide: `RGBYRgby` still loses.
-         waves=["rgbyRGby", "RGBYRG", "RGBYrgby"]),
+         #
+         # The middle wave's two bulwarks are the finale's own reason to keep reading the hill:
+         # they are still walking when the overlord lands, so the player is answering armour and a
+         # boss at the same time and neither is answered by the biggest match.
+         waves=["rgbyRGby", "RGB#rY#gG", "RGBYRGby"]),
 )
 
 
@@ -222,10 +238,11 @@ def prove(written):
                      % (level_json["id"], rung["seed"], made, rung["swaps"]))
 
         print("%-18s par %-4d 3* %-4d 2* %-4d %2d raider(s) in %d wave(s), %2d brute(s), "
-              "%d colour(s) against %d ward(s), cogs %2d%%%s"
+              "%d shielded, %d colour(s) against %d ward(s), cogs %2d%%%s"
               % (level_json["id"], par,
                  proto.over(par, proto.GOLD_HUNDREDTHS), proto.over(par, proto.SILVER_HUNDREDTHS),
-                 read["raiders"], read["waves"], read["brutes"], read["colours"], read["wards"],
+                 read["raiders"], read["waves"], read["brutes"], read["bulwarks"],
+                 read["colours"], read["wards"],
                  read["cogs"],
                  (", a '%s' %s (%s) last" % (read["boss"], read["kind"], read["spell"]))
                  if read["boss"] else ""))

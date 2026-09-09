@@ -416,6 +416,7 @@ namespace GlimmerGrove
                 // ContinueUnit.Tiles is retired with Groovekeeper, on Ink's terms.
                 case ContinueUnit.Taps: return "ui.continue.taps_title";
                 case ContinueUnit.Moves: return "ui.continue.moves_title";
+                case ContinueUnit.Wards: return "ui.continue.wards_title";
                 default: return "ui.continue.turns_title";
             }
         }
@@ -427,6 +428,7 @@ namespace GlimmerGrove
                 case ContinueUnit.Motes: return "ui.continue.motes_unit";
                 case ContinueUnit.Taps: return "ui.continue.taps_unit";
                 case ContinueUnit.Moves: return "ui.continue.moves_unit";
+                case ContinueUnit.Wards: return "ui.continue.wards_unit";
                 default: return "ui.continue.turns_unit";
             }
         }

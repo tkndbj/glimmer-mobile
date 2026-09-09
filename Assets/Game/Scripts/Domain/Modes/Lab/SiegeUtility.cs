@@ -158,15 +158,29 @@ namespace GlimmerGrove.Modes
         /// What stops a wasted one is that <see cref="Apply"/> charges nothing and spends nothing
         /// when it absorbs nothing.
         /// </para>
+        /// <para>
+        /// <b>The board is asked whether it has a legal move, not whether it is stranded.</b> It
+        /// asked the second for as long as the two meant the same thing here, and they stopped
+        /// meaning the same thing the day a continue could raise a fallen line: <c>Stranded</c> is
+        /// a question about <em>purchases</em> and now answers false on a line with nothing
+        /// standing on it, which would have let a mending land on a run that was already over.
+        /// </para>
         /// </summary>
         public static bool Would(SiegeBoard board, UtilityItem item, SiegeAim aim)
         {
-            if (board == null || item == null || board.Stranded) return false;
+            if (board == null || item == null || !board.AnyMove) return false;
 
             switch (item.Kind)
             {
                 case UtilityKind.Blast:
                     return true;
+
+                case UtilityKind.Storm:
+                    // **This one can be answered honestly in advance**, unlike a blast: it lands
+                    // everywhere, so "would it hit anything" is exactly "is anything on the hill".
+                    // A storm over an empty hill is an item spent for nothing, and refusing it
+                    // costs the player only a tap.
+                    return board.OnTheHill > 0;
 
                 case UtilityKind.Mend:
                     return board.RoomForHealth(aim.Ward) > 0;
@@ -214,6 +228,18 @@ namespace GlimmerGrove.Modes
                     // answer — see Would.
                     if (absorbed <= 0) return SiegeUse.Refused;
 
+                    return new SiegeUse(true, MatchesFor(absorbed), absorbed, -1);
+                }
+
+                case UtilityKind.Storm:
+                {
+                    int absorbed = board.Storm(item.Magnitude, strikes);
+                    if (absorbed <= 0) return SiegeUse.Refused;
+
+                    // Charged exactly as a firepot is, which is what stops it being a way to buy
+                    // a grade: a storm that clears a full hill delivers thousands and is billed
+                    // dozens of matches, so the run's spent count can never come out below a run
+                    // that did the same work by playing (invariant 39).
                     return new SiegeUse(true, MatchesFor(absorbed), absorbed, -1);
                 }
 

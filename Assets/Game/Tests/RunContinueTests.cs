@@ -139,11 +139,46 @@ namespace GlimmerGrove.Tests
         {
             // A block that resolves perfectly and is never wired into the table is a retune
             // that silently does nothing, which is how a published lever fails.
-            Publish(new ContinueDto { gems = 33, turns = 7, ink = 9 });
+            Publish(new ContinueDto { gems = 33, turns = 7, ink = 9, wards = 3 });
 
             Assert.AreEqual(33L, ContinueRules.Table.Gems);
             Assert.AreEqual(7, ContinueRules.Table.AmountFor(ContinueUnit.Turns));
             Assert.AreEqual(9, ContinueRules.Table.AmountFor(ContinueUnit.Ink));
+            Assert.AreEqual(3, ContinueRules.Table.AmountFor(ContinueUnit.Wards));
+        }
+
+        /// <summary>
+        /// A unit with no case in <c>AmountFor</c> falls through to the glade's figure, which is
+        /// the one way this table can go wrong silently: the offer exists, the price is right, and
+        /// a siege is sold fifteen wards.
+        /// </summary>
+        [Test]
+        public void EveryLiveUnitHasAnAmountOfItsOwn()
+        {
+            var table = Read(new ContinueDto
+            {
+                turns = 11, motes = 12, taps = 13, moves = 14, wards = 3,
+            });
+
+            Assert.AreEqual(11, table.AmountFor(ContinueUnit.Turns));
+            Assert.AreEqual(12, table.AmountFor(ContinueUnit.Motes));
+            Assert.AreEqual(13, table.AmountFor(ContinueUnit.Taps));
+            Assert.AreEqual(14, table.AmountFor(ContinueUnit.Moves));
+            Assert.AreEqual(3, table.AmountFor(ContinueUnit.Wards));
+        }
+
+        /// <summary>
+        /// The wards figure is bounded like every other, and nought is refused for the reason all
+        /// of them are: a continue that raises no ward charges for a run that is still lost.
+        /// </summary>
+        [Test]
+        public void AContinueThatRaisesNoWardIsRefused()
+        {
+            var problems = new List<string>();
+            var table = Read(new ContinueDto { wards = 0 }, problems);
+
+            Assert.AreEqual(ContinueLimits.DefaultWards, table.Wards);
+            Assert.AreEqual(1, problems.Count, string.Join("; ", problems));
         }
 
         // ================================================================ the price

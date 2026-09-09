@@ -38,6 +38,29 @@ namespace GlimmerGrove.Store
         /// </summary>
         Supplies,
         EventPass,
+
+        /// <summary>
+        /// The consumables a run is played with: the firepot, the mending, the surge and the
+        /// stormcall, bought with gems.
+        ///
+        /// <para>
+        /// <b>The one shelf that lists no <see cref="StoreProduct"/> and no
+        /// <c>StoreGood</c>.</b> It draws <c>UtilityCatalog</c> straight, which is invariant
+        /// 16a's rule about the grove's residents read across: the utilities were already a
+        /// roster with one price, one ceiling and one stock behind them, and authoring a second
+        /// copy of that in the store block would be two records of one thing for a merge, a
+        /// retune and a seeder to disagree about. A shelf is a browsing decision, so it costs
+        /// nothing to point one at a catalog that already exists.
+        /// </para>
+        /// <para>
+        /// <b>And <c>TryReadShelf</c> deliberately does not know the word.</b> Nothing here may
+        /// ever be bought with money: a utility is consumed, so a real-money product granting one
+        /// would be the stored amount invariant 18d forbids. Leaving the string unparseable means
+        /// a content push cannot file one here even by accident — it is named as an unknown
+        /// shelf and refused.
+        /// </para>
+        /// </summary>
+        Utilities,
     }
 
     /// <summary>

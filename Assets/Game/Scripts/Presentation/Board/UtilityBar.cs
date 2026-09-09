@@ -210,9 +210,14 @@ namespace GlimmerGrove
                                    Vector2.one * BadgeSize, new Vector2(1f, 1f),
                                    new Vector2(-4f, 4f));
 
-            slot.Count = UIKit.Label("Count", slot.Badge.transform, "0", 34, Pal.Cream,
-                                     TextAnchor.MiddleCenter, Vector2.one * BadgeSize,
-                                     new Vector2(.5f, .5f), Vector2.zero, FontStyle.Bold);
+            // Shrinkable, because the ceiling is a hundred. At nine this was one glyph in a
+            // 60-unit disc and a fixed 34 was right; three digits at 34 overflow a badge that
+            // small, and a `UIKit.Label` that overflows is not clipped — it simply keeps
+            // drawing, out over the cell beside it (the toast's lesson, on a badge).
+            slot.Count = UIKit.Shrinkable(
+                UIKit.Label("Count", slot.Badge.transform, "0", 34, Pal.Cream,
+                            TextAnchor.MiddleCenter, Vector2.one * (BadgeSize - 8f),
+                            new Vector2(.5f, .5f), Vector2.zero, FontStyle.Bold), 20);
 
             return slot;
         }

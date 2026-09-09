@@ -68,6 +68,7 @@ EMBER = (255, 107, 87, 255)      # Pal.Ember
 MINT = (123, 216, 106, 255)      # Pal.Mint
 AZURE = (79, 193, 255, 255)      # Pal.Azure
 IRON = (108, 130, 156, 255)       # the pot's body: cool, so the flame reads warm against it
+SLATE = (74, 92, 114, 255)       # the storm cloud: cool and unsaturated, so its bolts read hot
 ROPE = (217, 195, 154, 255)      # Pal.Rope, the fuse
 
 # ------------------------------------------------------------------------ the tray
@@ -286,6 +287,51 @@ def surge(p):
     p.poly([(0.552, 0.215), (0.408, 0.520), (0.455, 0.520), (0.582, 0.240)], CREAM)
 
 
+#: A bolt of lightning as a unit shape, y downward, taken off the surge's own bolt so the two are
+#: the same drawing at two sizes rather than two people's idea of a bolt.
+BOLT = ((0.712, 0.000), (0.000, 0.541), (0.430, 0.541), (0.267, 1.000),
+        (1.000, 0.439), (0.564, 0.439), (0.822, 0.000))
+
+
+def stormcall(p):
+    """A dark cloud throwing three bolts: the one that strikes the whole hill.
+
+    <p><b>Three bolts and a cloud, because the surge already owns "a bolt".</b> The two are the
+    only items on the bar about lightning, so a single bolt in a different colour would be the
+    mirror this project keeps withdrawing - the same picture asked to mean two things. A cloud is a
+    different silhouette at any size, and three of anything reads as *many* where one reads as *a*.
+    It is also the honest picture: a surge is one bolt into one ward, and this is weather over the
+    whole board.</p>
+
+    <p>The cloud is drawn in a cool unsaturated slate rather than in a colour, so the bolts are the
+    only bright thing on the icon - which is what the item does.</p>
+
+    <p><b>The bolts hang below the cloud, and the first cut had them above it.</b> This pen's y
+    runs downward, so a shape reasoned about in "higher is up" comes out mirrored - which drew
+    three bolts *rising out of* a puddle. A contact sheet is the only thing that says so; the
+    numbers were all in range.</p>
+    """
+    def bolt(x0, y0, w, h, fill):
+        p.poly([(x0 + u * w, y0 + v * h) for u, v in BOLT], fill)
+
+    # The cloud: three overlapping discs over a flat base, so it is a cloud rather than a blob.
+    p.ellipse(0.355, 0.310, 0.165, 0.140, SLATE)
+    p.ellipse(0.645, 0.310, 0.165, 0.140, SLATE)
+    p.ellipse(0.500, 0.245, 0.205, 0.175, SLATE)
+    p.round_rect(0.195, 0.300, 0.805, 0.430, 0.055, SLATE)
+
+    # Its lit crown, strictly inside the upper edge, so the cloud reads as lit from above.
+    p.ellipse(0.500, 0.190, 0.140, 0.075, CELL_RIM)
+
+    # Three bolts, the middle one longest and reaching furthest down - a storm is not a row.
+    bolt(0.150, 0.440, 0.215, 0.400, SUN)
+    bolt(0.405, 0.450, 0.235, 0.520, SUN)
+    bolt(0.665, 0.440, 0.205, 0.360, SUN)
+
+    # One lit edge, on the middle bolt only. Three would read as noise at 78 points.
+    p.poly([(0.575, 0.470), (0.455, 0.700), (0.505, 0.700), (0.600, 0.480)], CREAM)
+
+
 # --------------------------------------------------------------------------- the furniture
 def tray():
     """The bar's shelf: a square-cornered dark plate with a lit top edge.
@@ -338,6 +384,7 @@ ICONS = {
     "firepot": firepot,
     "mending": mending,
     "surge": surge,
+    "stormcall": stormcall,
 }
 
 

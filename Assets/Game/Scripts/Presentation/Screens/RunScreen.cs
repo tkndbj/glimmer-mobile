@@ -185,8 +185,14 @@ namespace GlimmerGrove
         /// <summary>
         /// Whether this screen's level is one somebody pays a heart for — the bool half of
         /// <see cref="Price"/>, and what every exit is priced from.
+        ///
+        /// <para>
+        /// Reachable by <see cref="RunContinueFlow"/> as well as by the modes, because the way
+        /// <em>in</em> and the way <em>out</em> of a run are priced from one answer: a run nobody
+        /// is charged for is a run nobody is sold a continue.
+        /// </para>
         /// </summary>
-        protected bool Staked => Price == HeartPrice.Charged;
+        protected internal bool Staked => Price == HeartPrice.Charged;
 
         /// <summary>The level this run is staked on, for <c>RunGuard</c>'s marker.</summary>
         protected internal abstract LevelId StakeLevel { get; }

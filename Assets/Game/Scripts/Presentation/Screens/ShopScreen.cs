@@ -6,6 +6,7 @@ using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using GlimmerGrove.Store;
+using GlimmerGrove.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,11 +26,20 @@ namespace GlimmerGrove
     /// the shop is broken and stops opening it.
     /// </para>
     /// <para>
-    /// <b>Four shelves, and the fourth is a different kind of thing.</b> Gems, coins and
+    /// <b>Five shelves, and the last two are a different kind of thing.</b> Gems, coins and
     /// bundles are bought with money and adjudicated by the server; supplies — hearts and
     /// boosts — are bought with gems and applied on the phone. They share a screen because
     /// they are one decision from the player's side, and they share nothing else: see
     /// <c>StoreProduct</c> for why a real-money product may only ever grant currency.
+    /// </para>
+    /// <para>
+    /// <b>The kit shelf lists neither a product nor a good.</b> It draws
+    /// <c>UtilityCatalog</c> — the same roster the action bar draws from, with the same
+    /// prices, the same ceiling and the same stock behind it — because the utilities were
+    /// already written down once and a second copy in the store block would be two records
+    /// of one thing (<c>StoreShelf.Utilities</c>). Nothing on it can be bought with money,
+    /// and nothing on it needs the store to have answered, so it is the one shelf that
+    /// works with the connection down.
     /// </para>
     /// <para>
     /// <b>It pages by shelf</b>, exactly as the Grovement's shop does, for the reason
@@ -73,6 +83,7 @@ namespace GlimmerGrove
 
         readonly List<StoreProduct> _products = new List<StoreProduct>();
         readonly List<StoreGood> _goods = new List<StoreGood>();
+        readonly List<UtilityItem> _kit = new List<UtilityItem>();
 
         readonly Dictionary<StoreShelf, ShelfTab> _tabViews = new Dictionary<StoreShelf, ShelfTab>();
 
@@ -88,9 +99,25 @@ namespace GlimmerGrove
 
         bool OnSupplies => _shelf == StoreShelf.Supplies;
 
+        /// <summary>
+        /// The kit shelf, which is drawn from the utility catalog rather than from the store.
+        ///
+        /// Asked in every place <see cref="OnSupplies"/> is, because it is the other shelf whose
+        /// rows are not <see cref="_products"/> — and it is asked <em>first</em> everywhere, since
+        /// a shelf carrying no products at all must never reach a path that measures itself
+        /// against the store's answer.
+        /// </summary>
+        bool OnUtilities => _shelf == StoreShelf.Utilities;
+
+        // Money first, then the two shelves priced in gems, and the kit last. That is the
+        // order somebody arrives in rather than a ranking: a player on this screen at all is
+        // usually there for gems, and the kit is what gems are *for* on the one mode that
+        // ships — so it sits at the far end of the row where a player who came looking for it
+        // will still find it, and where nobody is asked to step over it on the way to a price.
         static readonly StoreShelf[] Shelves =
         {
             StoreShelf.Gems, StoreShelf.Coins, StoreShelf.Bundles, StoreShelf.Supplies,
+            StoreShelf.Utilities,
         };
 
         protected override void Build()
@@ -125,8 +152,15 @@ namespace GlimmerGrove
             // one of them land. See the house rule about Show and Refresh.
             HeartContainerLedger.Changed += Repaint;
 
-            // A content push can retune the whole shop, including which products exist.
+            // A content push can retune the whole shop, including which products exist —
+            // and which utilities do, since the kit shelf is the catalog itself.
             ProgressionRules.Changed += Reload;
+
+            // What the player is carrying is on every kit card, and it moves from three places
+            // this screen cannot see: a chest opened on the hub, a run that spent one, and a
+            // sync landing another device's pack. A repaint rather than a reload — the same
+            // cards, redrawn (invariant 16d).
+            UtilityLedger.Changed += Repaint;
 
             // The notice is a claim about the account, so it has to follow the account. A
             // player taps it, links, and comes back to a shelf that would otherwise still be
@@ -145,6 +179,7 @@ namespace GlimmerGrove
             Wallet.HeartsChanged -= OnHeartsChanged;
             HeartContainerLedger.Changed -= Repaint;
             ProgressionRules.Changed -= Reload;
+            UtilityLedger.Changed -= Repaint;
             CloudSaveService.IdentityChanged -= Repaint;
         }
 
@@ -168,6 +203,11 @@ namespace GlimmerGrove
         /// </summary>
         void OnStoreChanged()
         {
+            // The kit shelf lists nothing the store has ever heard of, so a connection landing
+            // cannot change what is on it — and ShelfCount would answer nought against a page
+            // of cards and reload the shelf out from under a player mid-scroll.
+            if (OnUtilities) return;
+
             // Supplies is included now, and it has to be: since heart containers went on that
             // shelf it carries real-money products too, so its cards genuinely appear when the
             // store first answers — which is the exact case this comparison exists for. Its
@@ -324,7 +364,13 @@ namespace GlimmerGrove
             // changes hands. What makes it true rather than merely cautious: the receipt is
             // redeemed against *this* account, so a guest who reinstalls without linking gets
             // the container back from the store's own Restore and never gets the gems back.
-            bool show = AccountPrompts.ShouldWarn && (!OnSupplies || HasMoneyOnShelf());
+            // Never on the kit shelf, for the reason it used to be off the supplies shelf and
+            // still would be but for heart containers: everything here is priced in gems and
+            // lands in the save, which merges into whatever account this device eventually
+            // links, so nothing bought on it can be stranded. A warning that is sometimes false
+            // is the fastest way to teach somebody to read past it.
+            bool show = AccountPrompts.ShouldWarn && !OnUtilities
+                        && (!OnSupplies || HasMoneyOnShelf());
             if (_notice.gameObject.activeSelf != show) _notice.gameObject.SetActive(show);
 
             float top = -HeaderHeight - TabRow - 44f - (show ? NoticeH + NoticeGap : 0f);
@@ -521,8 +567,23 @@ namespace GlimmerGrove
 
             _products.Clear();
             _goods.Clear();
+            _kit.Clear();
 
-            if (OnSupplies)
+            if (OnUtilities)
+            {
+                // In the catalog's own authored order, which is the order the action bar draws
+                // them in (`UtilityItem.Order`) — so the shelf and the bar are one row of the
+                // same four things and nobody has to learn a second arrangement. Deliberately
+                // not sorted by price: the money shelves sort that way because a rung's picture
+                // is derived from its price, and these are four different objects rather than
+                // four sizes of one.
+                //
+                // A chest-only utility is *listed*, not hidden. It has a picture, a sentence and
+                // a stock, and the card says where it comes from — where leaving it out would be
+                // a player wondering why the thing in their pack is not in the shop.
+                foreach (var item in UtilityLedger.Catalog.Items) _kit.Add(item);
+            }
+            else if (OnSupplies)
             {
                 // Goods first, containers after, and that order is the merchandising
                 // decision on this tab. Somebody who opened the hearts shelf is almost
@@ -580,7 +641,9 @@ namespace GlimmerGrove
         /// How many cells this shelf shows. Every shelf but one is a single list; supplies is
         /// the goods followed by the heart containers, so its rows are the sum.
         /// </summary>
-        int ShelfRows() => OnSupplies ? _goods.Count + _products.Count : _products.Count;
+        int ShelfRows() => OnUtilities ? _kit.Count
+                         : OnSupplies ? _goods.Count + _products.Count
+                         : _products.Count;
 
         /// <summary>Redraws what is on screen: same cells, same place, no entrance.</summary>
         void Repaint()
@@ -628,6 +691,16 @@ namespace GlimmerGrove
             if (OnSupplies)
             {
                 _summary.text = Loc.Format("ui.shop.capacity_held", Wallet.MaxHearts);
+                _summary.color = new Color(1f, .96f, .88f, .74f);
+                return;
+            }
+
+            // The kit shelf never asks the store anything, so it must never be labelled with
+            // the store's state: "we cannot reach the shop" over a page of cards that work is
+            // the sentence that teaches somebody the screen is broken.
+            if (OnUtilities)
+            {
+                _summary.text = Loc.Get("ui.shop.shelf_utilities");
                 _summary.color = new Color(1f, .96f, .88f, .74f);
                 return;
             }
@@ -701,6 +774,7 @@ namespace GlimmerGrove
                 case StoreShelf.Gems: return "ui.shop.shelf_gems";
                 case StoreShelf.Coins: return "ui.shop.shelf_coins";
                 case StoreShelf.Bundles: return "ui.shop.shelf_bundles";
+                case StoreShelf.Utilities: return "ui.shop.shelf_utilities";
                 default: return "ui.shop.shelf_supplies";
             }
         }
@@ -768,6 +842,30 @@ namespace GlimmerGrove
             Flow.Modal<ShopSupplyOverlay>(v => v.Good = good);
         }
 
+        /// <summary>
+        /// Tapping a utility opens the same panel the empty slot on the action bar opens.
+        ///
+        /// <para>
+        /// <b>The same panel, deliberately.</b> Two would be two prices, two ceilings and two
+        /// chances to disagree about what a player is carrying — <c>RunContinueFlow</c>'s
+        /// argument, on the screen where the price is actually charged. It already knows how to
+        /// stack the gem shelf on a short balance and how to say the three refusals, so a shelf
+        /// that navigated to the gem tab instead would be the one route to buying gems behaving
+        /// differently in the shop from in a run.
+        /// </para>
+        /// <para>
+        /// A chest-only utility opens it too and is told so there rather than refused here: the
+        /// panel's own sentence is the answer, and a toast over a card that then does nothing is
+        /// how a shelf teaches somebody that tapping is pointless.
+        /// </para>
+        /// </summary>
+        void TapUtility(UtilityItem item)
+        {
+            if (item == null) return;
+
+            Flow.Modal<UtilityBuyOverlay>(v => { v.Item = item; v.Bought = Repaint; });
+        }
+
         // ------------------------------------------------------------------ tab
         sealed class ShelfTab
         {
@@ -809,6 +907,10 @@ namespace GlimmerGrove
                     case StoreShelf.Gems: return Art.S("Ui/ic_gem");
                     case StoreShelf.Coins: return Art.S("Ui/Shop/pouch");
                     case StoreShelf.Bundles: return Art.S("Ui/ic_gift");
+                    // The firepot, because a tab wears a glyph the game already draws
+                    // somewhere else and this is the one every player of the mode has
+                    // already tapped on the action bar.
+                    case StoreShelf.Utilities: return Art.S("Ui/Utility/firepot");
                     default: return Art.S("Ui/ic_heart");
                 }
             }
@@ -820,6 +922,7 @@ namespace GlimmerGrove
                     case StoreShelf.Gems: return Pal.Bloom;
                     case StoreShelf.Coins: return Pal.Gold;
                     case StoreShelf.Bundles: return Pal.Aqua;
+                    case StoreShelf.Utilities: return Pal.Ember;
                     default: return Pal.Rose;
                 }
             }
@@ -865,6 +968,7 @@ namespace GlimmerGrove
 
             StoreProduct _product;
             StoreGood _good;
+            UtilityItem _kit;
 
             public RectTransform Root => _card.Root;
 
@@ -873,7 +977,8 @@ namespace GlimmerGrove
                 _screen = screen;
                 _card = new ProductCard(parent,
                                         new ProductCard.Look(CellW, CellH, CellRadius, decorated: true),
-                                        () => { if (_good != null) _screen.TapGood(_good);
+                                        () => { if (_kit != null) _screen.TapUtility(_kit);
+                                                else if (_good != null) _screen.TapGood(_good);
                                                 else _screen.Tap(_product); });
             }
 
@@ -889,6 +994,20 @@ namespace GlimmerGrove
             /// </summary>
             public void Bind(int index)
             {
+                if (_screen.OnUtilities)
+                {
+                    _product = null;
+                    _good = null;
+                    _kit = index >= 0 && index < _screen._kit.Count ? _screen._kit[index] : null;
+
+                    if (_kit == null) { _card.Hide(); return; }
+
+                    _card.Draw(_kit, UtilityLedger.WhyNotBuy(_kit, 1), UtilityLedger.Held(_kit));
+                    return;
+                }
+
+                _kit = null;
+
                 if (_screen.OnSupplies && index < _screen._goods.Count)
                 {
                     _product = null;

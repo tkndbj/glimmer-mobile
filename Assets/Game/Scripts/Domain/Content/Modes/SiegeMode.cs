@@ -169,13 +169,41 @@ namespace GlimmerGrove.Content
             AssetRequest.Sprite(AssetManifest.SiegeArt("bullet")),
             AssetRequest.Sprite(AssetManifest.SiegeArt("socket")),
             AssetRequest.Sprite(AssetManifest.SiegeArt("rampart")),
-            AssetRequest.Sprite(AssetManifest.SiegeArt("hill")),
             AssetRequest.Sprite(AssetManifest.SiegeArt("plate")),
 
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon1")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon2")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon3")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute")),
+            // The first rung's ground. The other nine are added per chapter by <see cref="ArtFor"/>
+            // and this one is here so a siege asked for its art without a chapter still has a
+            // floor - an Image with a null sprite is a white rectangle rather than a blank (7b).
+            AssetRequest.Sprite(AssetManifest.SiegeArt("hill1")),
+
+            // **Twelve bodies rather than four, and none of them is tinted here.** A raider used
+            // to be one of three creeper models or the brute, multiplied at run time by 62% toward
+            // its colour — which `Image.color` can only do by *darkening*, so what four packs had
+            // drawn came out as four silhouettes of one value. The colour is baked now
+            // (`make_siege_art.RAIDER_SET`), which lets the body say it too: one model per colour
+            // per kind, so a player who cannot separate two hues can still separate a mushroom
+            // from a skull.
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_y")),
+
+            // **The storm, which every siege loads whether or not the player holds one.** A
+            // utility is account-wide and can be used on any rung, so it is not a fact about a
+            // chapter the way a boss is - there is no level it could be scoped to. **One reel
+            // rather than three**: the bought pack draws the whole strike - bolt, flash, ground
+            // crack - as a single effect, so there is nothing to fire and nothing to fly.
+            AssetRequest.SpriteSet(AssetManifest.SiegeFx("storm")),
 
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("boom_fire")),
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("boom_smoke")),
@@ -272,10 +300,50 @@ namespace GlimmerGrove.Content
         }
 
         /// <summary>
+        /// How many grounds this mode ships, and therefore how far the ladder goes before it
+        /// starts again. Ten, because a chapter is ten rungs.
+        /// </summary>
+        public const int Grounds = 10;
+
+        /// <summary>
+        /// The ground a siege is fought over, by the level's <b>place in its chapter</b>.
+        ///
+        /// <para>
+        /// <b>An ordinal rather than a choice</b>, which is invariant 7c's rule and the backdrop's
+        /// shape exactly: ten grounds serve every siege chapter that ever ships, so a second one
+        /// costs no art at all, and no chapter can be published drawing a floor nobody decided on.
+        /// A chapter longer than ten rungs wraps rather than drawing nothing.
+        /// </para>
+        /// <para>
+        /// <b>Ten literal cases rather than a name built from the number</b>, for
+        /// <c>Tools/verify/artnames.py</c>: it reads the literals at a lookup's call site, so a key
+        /// assembled from an index is ten names nothing checks. It is the shape <see cref="Bosses"/>
+        /// already uses for the same reason.
+        /// </para>
+        /// </summary>
+        public static AssetRequest Ground(int place)
+        {
+            switch (((place % Grounds) + Grounds) % Grounds)
+            {
+                case 1:  return AssetRequest.Sprite(AssetManifest.SiegeArt("hill2"));
+                case 2:  return AssetRequest.Sprite(AssetManifest.SiegeArt("hill3"));
+                case 3:  return AssetRequest.Sprite(AssetManifest.SiegeArt("hill4"));
+                case 4:  return AssetRequest.Sprite(AssetManifest.SiegeArt("hill5"));
+                case 5:  return AssetRequest.Sprite(AssetManifest.SiegeArt("hill6"));
+                case 6:  return AssetRequest.Sprite(AssetManifest.SiegeArt("hill7"));
+                case 7:  return AssetRequest.Sprite(AssetManifest.SiegeArt("hill8"));
+                case 8:  return AssetRequest.Sprite(AssetManifest.SiegeArt("hill9"));
+                case 9:  return AssetRequest.Sprite(AssetManifest.SiegeArt("hill10"));
+                default: return AssetRequest.Sprite(AssetManifest.SiegeArt("hill1"));
+            }
+        }
+
+        /// <summary>
         /// The hill, the line, the field and the creepers — everything every siege draws.
         ///
-        /// A chapter's bosses are added on top by <see cref="ArtFor"/>, because which of the four
-        /// a chapter sends is a fact about the chapter.
+        /// A chapter's bosses and its grounds are added on top by <see cref="ArtFor"/>, because
+        /// which of the four bosses a chapter sends, and how many rungs it has, are both facts
+        /// about the chapter.
         /// </summary>
         public override IReadOnlyList<AssetRequest> Art => Cast;
 
@@ -288,6 +356,11 @@ namespace GlimmerGrove.Content
 
             for (int i = 0; i < chapter.Levels.Count; i++)
             {
+                // One ground per rung (invariant 7c). Asked of every level rather than of the
+                // siege ones alone, because the place a level sits in its chapter is what decides
+                // this and `ChapterModeValidator` already proves a chapter is one mode.
+                list.Add(Ground(i));
+
                 if (!(chapter.Levels[i].Rules is SiegeRules siege)) continue;
 
                 var sends = siege.Layout;
