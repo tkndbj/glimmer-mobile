@@ -40,15 +40,19 @@ namespace GlimmerGrove.Tests
 
         static readonly string[] Waves = { "rgby", "rgbyrgby", "RGBYRGBY" };
 
-        static SiegeLayout Shipped() => Layout(Field, Gems, Wards, Waves);
+        /// <summary>The warlord the shipped level ends on. See <see cref="SiegeLayout.Boss"/>.</summary>
+        const string Boss = "r";
 
-        static SiegeLayout Layout(string[] rows, string gems, string wards, string[] waves)
+        static SiegeLayout Shipped() => Layout(Field, Gems, Wards, Waves, Boss);
+
+        static SiegeLayout Layout(string[] rows, string gems, string wards, string[] waves,
+                                  string boss = null)
         {
             Assert.IsTrue(ProtoGrid.TryRead(rows, rows[0].Length, rows.Length,
                                             SiegeLayout.Letters, out var grid, out string error),
                           error);
 
-            return new SiegeLayout(grid, gems, wards, waves);
+            return new SiegeLayout(grid, gems, wards, waves, boss);
         }
 
         [Test]
@@ -58,17 +62,64 @@ namespace GlimmerGrove.Tests
 
             Assert.IsNull(layout.Fault, layout.Fault);
             Assert.AreEqual(4, layout.Wards.Length);
-            Assert.AreEqual(3, layout.Waves.Length);
-            Assert.AreEqual(20, layout.RaiderCount);
+
+            // Four waves, and only three of them are authored: the warlord is appended, because
+            // the last wave *is* the boss wave by rule rather than by where somebody typed it.
+            Assert.AreEqual(4, layout.Waves.Length);
+            Assert.AreEqual(3, layout.BossWave);
+            Assert.AreEqual('r', layout.Boss);
+            Assert.AreEqual(21, layout.RaiderCount);
         }
 
         [Test]
-        public void TheShippedLevelIsParTwentyNine()
+        public void TheShippedLevelIsParThirtySeven()
         {
-            // 12 creepers at 20 and 8 brutes at 48 is 624, over what a match delivers (22).
-            // `Tools/verify/siege.py` prints the same number from the same arithmetic; if these
-            // two ever disagree, one of the constants moved in one file only.
-            Assert.AreEqual(29, SiegeTuning.Par(Shipped()));
+            // 12 creepers at 20, 8 brutes at 48 and one warlord at 180 is 804, over what a match
+            // delivers (22). `Tools/verify/siege.py` prints the same number from the same
+            // arithmetic; if these two ever disagree, one of the constants moved in one file only.
+            Assert.AreEqual(37, SiegeTuning.Par(Shipped()));
+        }
+
+        [Test]
+        public void AWarlordIsTheLastWaveAndCannotBeAuthoredIntoAnother()
+        {
+            // The rule this whole shape rests on. A level says *whether* there is a boss and what
+            // colour it wears; where it comes is not an authoring decision, so a siege cannot ship
+            // with its finale in the middle of it.
+            var layout = Layout(Field, Gems, Wards, new[] { "rr", "gg" }, "b");
+
+            Assert.AreEqual(3, layout.Waves.Length);
+            Assert.AreEqual(2, layout.BossWave, "a warlord is always the last wave");
+            Assert.AreEqual("b", layout.Waves[layout.BossWave]);
+
+            var none = Layout(Field, Gems, Wards, new[] { "rr" });
+
+            Assert.IsFalse(none.HasBoss);
+            Assert.AreEqual(-1, none.BossWave);
+            Assert.AreEqual(1, none.Waves.Length);
+        }
+
+        [Test]
+        public void AWarlordThisModeCannotDrawIsRefusedByNameRatherThanIgnored()
+        {
+            // Invariant 5f read the other way round: a level naming a boss the mode does not know
+            // would otherwise index, validate and ship as a siege with no finale in it, and the
+            // only symptom would be a wave that never comes.
+            var bad = Layout(Field, Gems, Wards, new[] { "rr" }, "dragon");
+
+            Assert.IsNotNull(bad.Fault, "an unknown warlord has to be refused");
+            StringAssert.Contains("warlord", bad.Fault);
+        }
+
+        [Test]
+        public void NoWardOnTheLineIsStrongAgainstThisWarlordIsRefused()
+        {
+            // A warlord carries the health of four brutes, so answering it at half rate is a duel
+            // nobody could finish - the arithmetic par assumes it is not so.
+            var bad = Layout(Field, Gems, "rg", new[] { "rr" }, "b");
+
+            Assert.IsNotNull(bad.Fault);
+            StringAssert.Contains("warlord", bad.Fault);
         }
 
         [Test]
@@ -300,8 +351,8 @@ namespace GlimmerGrove.Tests
         {
             var board = SiegeBoard.Build(Shipped());
 
-            Assert.AreEqual(20, board.Goals);
-            Assert.AreEqual(20, board.GoalsLeft);
+            Assert.AreEqual(21, board.Goals);
+            Assert.AreEqual(21, board.GoalsLeft);
             Assert.IsFalse(board.IsFinished);
         }
 
@@ -332,7 +383,10 @@ namespace GlimmerGrove.Tests
             // And every wave, once, in order - a clock that has run past the last one deals no
             // more.
             Frames(board, SiegeTuning.BetweenWaves * 6f);
-            Assert.AreEqual(Waves.Length, board.Wave);
+            // Four, not three: the warlord is a wave of its own, appended after the authored
+            // ones (see `SiegeLayout.Boss`).
+            Assert.AreEqual(Waves.Length + 1, board.Wave);
+            Assert.IsTrue(board.BossWave, "the last wave of this siege is the warlord's");
         }
 
         [Test]
@@ -393,6 +447,216 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(35, tuning.GoldThreshold);
             Assert.AreEqual(41, tuning.SilverThreshold);
         }
+
+        // ------------------------------------------------------------------ the warlord
+        /// <summary>
+        /// A siege that is nothing but the duel: no authored waves at all, so the warlord is the
+        /// whole hill.
+        ///
+        /// <b>Legal content, and used here because it is the only way to watch a warlord without
+        /// a hill full of raiders taking the line apart underneath it.</b> A level shipping this
+        /// shape is warned about (one wave, and it never lets up), which is the right answer for a
+        /// level and no answer at all for a fixture.
+        /// </summary>
+        static SiegeLayout Duel() => Layout(Field, Gems, Wards, new string[0], "r");
+
+        /// <summary>Walks the clock until the warlord is standing on its ground.</summary>
+        static SiegeRaider Warlord(SiegeBoard board)
+        {
+            for (int i = 0; i < 60 * 120; i++)
+            {
+                board.Advance(1f / 60f);
+
+                var boss = board.Warlord;
+                if (boss != null && boss.InPlace) return boss;
+            }
+
+            Assert.Fail("the warlord never reached its ground");
+            return null;
+        }
+
+        [Test]
+        public void AWarlordHoldsTheMiddleOfTheHillAndNeverReachesTheLine()
+        {
+            // **The whole shape of the fight.** Everything else on this hill is answered by
+            // killing it before it arrives; a warlord stops where nothing can stop it and hits the
+            // line from there, so the pressure it applies cannot be outrun - only out-damaged.
+            var board = SiegeBoard.Build(Duel());
+            var boss = Warlord(board);
+
+            Assert.AreEqual(SiegeTuning.BossHold, boss.March, .001f);
+            Assert.IsFalse(boss.AtTheLine, "a warlord must never stand at the line");
+            Assert.AreEqual(0, SiegeTuning.BlowOf(SiegeKind.Boss), "a warlord swings at nothing");
+
+            // And it stays there: a hundred more seconds of clock move it no further.
+            for (int i = 0; i < 60 * 100; i++) board.Advance(1f / 60f);
+
+            Assert.AreEqual(SiegeTuning.BossHold, board.Warlord.March, .001f);
+        }
+
+        [Test]
+        public void AWarlordWalksOnBeforeItStands()
+        {
+            // The view wears a *walk* until this is true and an idle after it (`SiegeView.Follow`),
+            // so the moment it changes is a drawing decision as much as a rules one — it shipped
+            // wearing the idle for the whole walk-in and came back from play as "it looks like it
+            // is floating". Pinned here because the walk-in is a *duration*, and a duration nobody
+            // asserts is one that drifts the next time the pacing is retuned.
+            var board = SiegeBoard.Build(Duel());
+
+            float clock = 0f;
+            SiegeRaider boss = null;
+
+            for (int i = 0; i < 60 * 120; i++)
+            {
+                board.Advance(1f / 60f);
+                clock += 1f / 60f;
+
+                boss = board.Warlord;
+                if (boss == null) continue;
+
+                if (boss.InPlace) break;
+
+                Assert.Less(boss.March, SiegeTuning.BossHold,
+                            "a warlord short of its ground is still walking");
+            }
+
+            Assert.IsNotNull(boss);
+            Assert.IsTrue(boss.InPlace, "the warlord never reached its ground");
+
+            // It steps out with the wave and walks `BossHold` of the hill at its own march.
+            float walk = SiegeTuning.BossHold * SiegeTuning.BossMarch;
+
+            Assert.AreEqual(SiegeTuning.FirstWaveAfter + walk, clock, .2f,
+                            $"the walk-in is {clock - SiegeTuning.FirstWaveAfter:0.0}s, and it is "
+                            + "the stretch a player spends watching the biggest thing in the mode "
+                            + "cross the hill");
+
+            Assert.Less(walk, 8f,
+                        "a warlord that takes longer than this to get into place reads as slow - "
+                        + "it was 10.1s and the owner asked for it faster");
+        }
+
+        [Test]
+        public void AWarlordsSpellIsTelegraphedBeforeItLands()
+        {
+            // Invariant 37s: a move's effect may not land before its animation does. The board
+            // reports the cast when it is *decided* and takes the ward's health a whole tell and
+            // flight later, which is the window a mending is worth spending in.
+            var board = SiegeBoard.Build(Duel());
+            Warlord(board);
+
+            float waited = 0f;
+            SiegeCast cast = default;
+
+            for (int i = 0; i < 60 * 60 && cast.In <= 0f; i++)
+            {
+                var report = board.Advance(1f / 60f);
+                if (report.Casts.Count > 0) cast = report.Casts[0];
+            }
+
+            Assert.Greater(cast.In, 0f, "the warlord never cast");
+            Assert.AreEqual(SiegeTuning.BossTell + SiegeTuning.BossFlight, cast.In, .001f);
+
+            int before = board.Wards[cast.Ward].Health;
+
+            // Nothing has landed yet, and the ward it named is untouched for the whole tell.
+            for (int i = 0; i < (int)(60 * SiegeTuning.BossTell); i++)
+            {
+                board.Advance(1f / 60f);
+                waited += 1f / 60f;
+                Assert.AreEqual(before, board.Wards[cast.Ward].Health,
+                                $"the spell landed {cast.In - waited:0.00}s early");
+            }
+
+            bool landed = false;
+            for (int i = 0; i < 60 && !landed; i++)
+                landed = board.Advance(1f / 60f).Spells.Count > 0;
+
+            Assert.IsTrue(landed, "the spell never arrived");
+            Assert.AreEqual(before - SiegeTuning.BossCast, board.Wards[cast.Ward].Health);
+        }
+
+        [Test]
+        public void AWarlordThrowsAtTheFreshestWardStanding()
+        {
+            // The rule that keeps the fight winnable: a warlord that finished off whatever was
+            // nearly down would take the line apart one ward at a time, and the ward it would
+            // reach first is the one whose colour answers it.
+            var board = SiegeBoard.Build(Duel());
+            Warlord(board);
+
+            for (int i = 0; i < 60 * 300; i++)
+            {
+                var report = board.Advance(1f / 60f);
+
+                for (int c = 0; c < report.Casts.Count; c++)
+                {
+                    int chosen = report.Casts[c].Ward;
+
+                    for (int w = 0; w < board.Wards.Count; w++)
+                    {
+                        if (!board.Wards[w].Alive) continue;
+
+                        Assert.LessOrEqual(board.Wards[w].Health, board.Wards[chosen].Health,
+                                           $"ward {w} was fresher than the one it threw at");
+                    }
+                }
+
+                if (board.WardsStanding == 0) return;
+            }
+
+            Assert.Fail("the warlord never brought the line down on its own");
+        }
+
+        [Test]
+        public void ASpellWhoseCasterIsGoneFizzles()
+        {
+            // A ward coming down to something thrown by a warlord the player had already beaten
+            // reads as the game getting the last word, and it is also what makes killing one
+            // mid-wind-up worth something.
+            var board = SiegeBoard.Build(Duel());
+            var boss = Warlord(board);
+
+            SiegeCast cast = default;
+            for (int i = 0; i < 60 * 60 && cast.In <= 0f; i++)
+            {
+                var report = board.Advance(1f / 60f);
+                if (report.Casts.Count > 0) cast = report.Casts[0];
+            }
+
+            Assert.Greater(cast.In, 0f, "the warlord never cast");
+
+            int before = board.Wards[cast.Ward].Health;
+            boss.Health = 0;
+            boss.Alive = false;
+
+            for (int i = 0; i < 60 * 3; i++)
+                Assert.AreEqual(0, board.Advance(1f / 60f).Spells.Count,
+                                "a spell landed after its caster had been destroyed");
+
+            Assert.AreEqual(before, board.Wards[cast.Ward].Health);
+        }
+
+        [Test]
+        public void AWarlordIsAnOrdinaryGoal()
+        {
+            // Which is what makes it cost the save file nothing (invariant 20a): its record, its
+            // stars, its rewards and its merge are the ones every other raider on this hill has,
+            // and a run is not won while it is standing because it is simply still on the count.
+            Assert.AreEqual(21, Shipped().RaiderCount, "the warlord is one of the goals");
+
+            var duel = SiegeBoard.Build(Duel());
+
+            Assert.AreEqual(1, duel.Goals);
+            Assert.AreEqual(1, duel.GoalsLeft);
+            Assert.IsFalse(duel.IsFinished);
+
+            Warlord(duel);
+            Assert.IsFalse(duel.IsFinished, "a warlord standing on the hill is a goal left");
+        }
+
+
 
         // ------------------------------------------------------------------ can it be held
         /// <summary>How often an unhurried player finds and makes a match, in seconds.</summary>
@@ -470,7 +734,9 @@ namespace GlimmerGrove.Tests
             float since = Unhurried;
             float clock = 0f;
 
-            for (int i = 0; i < 60 * 400; i++)
+            // Long enough for the whole level and then some: three waves on a 26-second clock, a
+            // warlord walking into place behind them, and the duel that follows.
+            for (int i = 0; i < 60 * 600; i++)
             {
                 board.Advance(Frame);
                 clock += Frame;

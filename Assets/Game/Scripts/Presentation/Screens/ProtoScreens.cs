@@ -428,15 +428,25 @@ namespace GlimmerGrove
         /// Three numbers, and the middle one is not the one every other mode on this shape shows.
         ///
         /// <para>
-        /// <b>The allowance is replaced by the ward line</b>, because this mode has no move
-        /// allowance and the shared readout would print "free" over the one screen where something
-        /// really is running out. What is running out is the line, and it is coloured for the same
-        /// reason the allowance is elsewhere: it is the only one of the three that can end the run.
+        /// <b>The allowance is replaced by how far through the raid this is</b>, because this mode
+        /// has no move allowance and the shared readout would print "free" over the one screen
+        /// where something really is running out.
         /// </para>
         /// <para>
-        /// The line is drawn on the board as well, with a health pip per blow, which is
-        /// Hollowmarch's rule kept (invariant 33a) - the number in the corner and the picture on
-        /// the board are the same number, so the two can never disagree.
+        /// <b>It used to be the ward line, and moving it is invariant 33a read the other way
+        /// round.</b> That rule says the number in the corner and the picture on the board have to
+        /// be the same number — and the line already <em>is</em> a picture: four turrets, each
+        /// carrying a health bar, filling the middle band of the board for the whole run. A corner
+        /// reading of it was a second copy of something a player was already looking at. How many
+        /// waves are left is the opposite: it existed nowhere but in a banner that fades after a
+        /// second and a half, so a player who looked away at the wrong moment had no way to find
+        /// out whether the worst was over. What a siege owes the corner is the thing the board
+        /// cannot say.
+        /// </para>
+        /// <para>
+        /// The last wave is gold, because "this is the last one" is the one thing this number is
+        /// really for — and on a level that ends with a warlord (<c>SiegeLayout.Boss</c>) it is
+        /// also the warning that the last one is not like the others.
         /// </para>
         /// </summary>
         protected override void Readouts(List<Readout> into)
@@ -448,18 +458,18 @@ namespace GlimmerGrove
 
             if (board == null)
             {
-                into.Add(new Readout(Loc.Get("mode.cap.wards"), "0"));
+                into.Add(new Readout(Loc.Get("mode.cap.wave"), "-"));
             }
             else
             {
-                int standing = board.WardsStanding;
+                // Nought before the first wave musters, and a run that says "wave 0" during its own
+                // countdown is reading as broken rather than as early: what is true in that moment
+                // is that wave one is coming.
+                int wave = board.Wave < 1 ? 1 : board.Wave;
+                int last = board.Waves;
 
-                var tint = standing <= 1 ? Pal.Ember
-                         : standing <= 2 ? Pal.Gold
-                         : Pal.Cream;
-
-                into.Add(new Readout(Loc.Get("mode.cap.wards"),
-                                     standing + "/" + board.Wards.Count, tint));
+                into.Add(new Readout(Loc.Get("mode.cap.wave"), wave + "/" + last,
+                                     wave >= last ? Pal.Gold : Pal.Cream));
             }
 
             into.Add(new Readout(Loc.Get("mode.cap.matches"),

@@ -556,10 +556,29 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// The waves, in the order they come. One letter per raider — lower case a creeper, upper
-        /// case a brute — so a wave's shape is visible in the file. A wave steps out when the one
-        /// before it has been destroyed.
+        /// case a brute — so a wave's shape is visible in the file. A wave steps out on a clock, or
+        /// the moment the hill is empty, whichever comes first.
         /// </summary>
         public string[] waves;
+
+        /// <summary>
+        /// The warlord that comes after them, as one colour letter, or empty for a siege that
+        /// sends none.
+        ///
+        /// <para>
+        /// <b>Which wave it is in is a rule and not an authoring decision.</b> A warlord is always
+        /// the <em>last</em> wave — <c>SiegeLayout</c> appends it — so this field says only whether
+        /// there is one and what colour it wears. Anything else would be two places that can
+        /// disagree about which wave is the finale, and the finale is the one wave a player
+        /// remembers.
+        /// </para>
+        /// <para>
+        /// Its health, how far down the hill it stops, how often it casts and what a spell costs a
+        /// ward are all <c>SiegeTuning</c>, exactly as a creeper's are: a level says what is
+        /// coming, the mode says what it does.
+        /// </para>
+        /// </summary>
+        public string boss;
 
         /// <summary>
         /// Whether this block was authored. <b>Never test the block itself for null</b> —

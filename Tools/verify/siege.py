@@ -22,6 +22,7 @@ Read `SiegeBoard.cs` first; the names match deliberately.
 LETTERS = "rgby"
 WARD_LETTERS = "rgby"
 RAIDER_LETTERS = "rgbyRGBY"
+BOSS_LETTERS = "rgby"
 
 #: `SiegeLayout.MaxWards` and `.MaxRaiders`.
 MAX_WARDS = 4
@@ -40,7 +41,13 @@ CREEPER_HEALTH = 20
 BRUTE_HEALTH = 48
 CREEPER_BLOW = 1
 BRUTE_BLOW = 2
-WARD_HEALTH = 10
+WARD_HEALTH = 14
+
+#: `SiegeTuning.BossHealth`. A warlord holds the middle of the hill and throws spells at the line
+#: from there, so it never swings - what it costs a ward is `BOSS_CAST`, and it is a threat by
+#: construction, which is why `threatens` answers True for any siege that sends one.
+BOSS_HEALTH = 180
+BOSS_CAST = 3
 
 #: `SiegeTuning.MatchGemsTenths` - gems an ordinary match clears, cascades included, in tenths.
 #: Measured over a played run rather than reasoned about; see the C# side for why the reasoned
@@ -89,16 +96,34 @@ def runs(cells, width, height):
 class Layout(object):
     """`SiegeLayout`. `fault` is None when the level is readable, and the sentence when it is not."""
 
-    def __init__(self, grid, deal, wards, waves):
+    def __init__(self, grid, deal, wards, waves, boss=None):
         self.grid = grid
         self.deal = tidy(deal, LETTERS)
         self.wards = list(tidy(wards, WARD_LETTERS))
         self.waves = [w for w in (tidy(x, RAIDER_LETTERS) for x in (waves or [])) if w]
-        self.fault = self._check()
 
-    def _check(self):
+        # Exactly one legal letter, or nothing - never `tidy`, which would salvage an 'r' out of
+        # "dragon" and ship a warlord nobody authored. See `SiegeLayout`'s constructor.
+        named = (boss or "").strip()
+        self.boss = named if len(named) == 1 and named in BOSS_LETTERS else None
+        self.boss_wave = -1
+
+        # The warlord is *appended* rather than authored into a wave - the last wave is the boss
+        # wave by rule, so it can neither be put in the middle of a siege nor left off the end of
+        # one. See `SiegeLayout.Boss`.
+        if self.boss:
+            self.boss_wave = len(self.waves)
+            self.waves = self.waves + [self.boss]
+
+        self.fault = self._check(boss)
+
+    def _check(self, boss):
         if self.grid is None:
             return "no field"
+
+        if boss and boss.strip() and not self.boss:
+            return ("'%s' is not a warlord this mode knows; a boss is one of '%s', and an empty "
+                    "field is how a siege says it sends none" % (boss, BOSS_LETTERS))
 
         if not (2 <= len(self.wards) <= MAX_WARDS):
             return ("a ward line holds 2 to %d wards; this one names %d"
@@ -130,10 +155,12 @@ class Layout(object):
 
         for w, wave in enumerate(self.waves):
             for token in wave:
-                if token.lower() not in self.wards:
-                    return ("wave %d sends a '%s' raider and no ward on this line carries '%s', "
-                            "so nothing here is strong against it" % (w + 1, token.lower(),
-                                                                      token.lower()))
+                if token.lower() in self.wards:
+                    continue
+                what = "warlord" if w == self.boss_wave else "raider"
+                return ("wave %d sends a '%s' %s and no ward on this line carries '%s', "
+                        "so nothing here is strong against it" % (w + 1, token.lower(), what,
+                                                                  token.lower()))
 
         if runs(self.grid.cells, self.grid.w, self.grid.h):
             return ("three alike are already touching on this field, so it would go off before "
@@ -146,19 +173,31 @@ class Layout(object):
         return sum(len(w) for w in self.waves)
 
 
+def health_of(token, boss):
+    """`SiegeTuning.HealthOf(KindOf(...))`. The wave decides what a token is, never the letter."""
+    if boss:
+        return BOSS_HEALTH
+    return BRUTE_HEALTH if token.isupper() else CREEPER_HEALTH
+
+
 def par(layout):
     """`SiegeTuning.Par` - what the level sends, over the most one match could ever be worth."""
     health = 0
-    for wave in layout.waves:
+    for w, wave in enumerate(layout.waves):
         for token in wave:
-            health += BRUTE_HEALTH if token.isupper() else CREEPER_HEALTH
+            health += health_of(token, w == layout.boss_wave)
 
     return max(1, -(-health // PERFECT_MATCH))
 
 
 def threatens(layout):
     """Whether one wave could ever fell a ward. Mirrors `SiegeValidator.Threatens`."""
-    for wave in layout.waves:
+    if layout.boss:
+        return True
+
+    for w, wave in enumerate(layout.waves):
+        if w == layout.boss_wave:
+            continue
         blow = sum(BRUTE_BLOW if t.isupper() else CREEPER_BLOW for t in wave)
         if blow >= WARD_HEALTH:
             return True
@@ -196,13 +235,14 @@ def readings(layout):
     """The handful of numbers only this mode's own rules can give."""
     colours = set()
     brutes = 0
-    for wave in layout.waves:
+    for w, wave in enumerate(layout.waves):
         for token in wave:
             colours.add(token.lower())
-            if token.isupper():
+            if w != layout.boss_wave and token.isupper():
                 brutes += 1
 
     return dict(waves=len(layout.waves), raiders=layout.raiders, brutes=brutes,
                 colours=len(colours), wards=len(layout.wards),
+                boss=layout.boss or "",
                 threat=1 if threatens(layout) else 0,
                 swap=1 if any_swap(layout) else 0)

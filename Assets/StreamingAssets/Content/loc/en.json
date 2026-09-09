@@ -4198,8 +4198,12 @@
    "text": "CHAIN x{0}"
   },
   {
-   "key": "mode.cap.wards",
-   "text": "wards left"
+   "key": "mode.siege.boss",
+   "text": "THE WARLORD"
+  },
+  {
+   "key": "mode.cap.wave",
+   "text": "wave"
   },
   {
    "key": "mode.cap.matches",
@@ -4227,11 +4231,11 @@
   },
   {
    "key": "ui.tip.siege_line.title",
-   "text": "FUEL FADES"
+   "text": "THE LINE IS YOUR LIFE"
   },
   {
    "key": "ui.tip.siege_line.body",
-   "text": "Fuel drains away on its own, so a colour you match early is a colour you have wasted. Feed the ward that is wanted <b>now</b>.\n\nAnd the ward line is your life. Every raider that reaches it swings, every ward has four blows in it, and when the last one falls the grove is taken."
+   "text": "There is no move limit here. Every raider that reaches the ward line swings at it, and when the last ward falls the grove is taken.\n\nWatch the bar over each ward - and watch the hill. The last wave brings a <b>warlord</b>: it stops halfway down and throws at the line from there."
   },
   {
    "key": "mode.siege.go",

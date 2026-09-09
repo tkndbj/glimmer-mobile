@@ -496,11 +496,17 @@ namespace GlimmerGrove.Content
         /// </summary>
         static bool Threatens(SiegeLayout layout)
         {
+            // A warlord holds the middle of the hill and throws at the line for as long as it is
+            // alive, so it is a threat by construction - there is no arrangement of a siege that
+            // sends one in which the line is safe.
+            if (layout.HasBoss) return true;
+
             for (int w = 0; w < layout.Waves.Length; w++)
             {
                 int blow = 0;
                 for (int i = 0; i < layout.Waves[w].Length; i++)
-                    blow += SiegeTuning.BlowOf(char.IsUpper(layout.Waves[w][i]));
+                    blow += SiegeTuning.BlowOf(
+                        SiegeTuning.KindOf(layout.Waves[w][i], w == layout.BossWave));
 
                 if (blow >= SiegeTuning.WardHealth) return true;
             }

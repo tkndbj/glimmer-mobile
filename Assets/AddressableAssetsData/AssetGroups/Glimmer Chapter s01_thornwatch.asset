@@ -20,16 +20,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0caa86214e6899346a445dd0d790071a
-    m_Address: Art/Fx/Siege/muzzle_y
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0ef98ff94f683e342b80312b062f145e
-    m_Address: Art/Fx/Siege/hit_r
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 102b87615dcd262489770b155881e44e
     m_Address: Art/Siege/ward3
     m_ReadOnly: 0
@@ -37,11 +27,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2532152f7140d7043a4039833fdac7ce
     m_Address: Art/Siege/fire2
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 253e9f0065e092f41ab7e3dd8fa1c9c5
-    m_Address: Art/Fx/Siege/shot_r
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -65,33 +50,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 51066e3ba15e3324ea7ebaec62783d93
-    m_Address: Art/Fx/Siege/muzzle_r
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5434f892485265e4e9c016bae90ad6ef
-    m_Address: Art/Fx/Siege/shot_b
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 56ae60dc0f0daa4429bfe71aec5342bb
     m_Address: Art/Siege/mon3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5ebc66f3fade48e4ba365160f3e5f600
-    m_Address: Art/Fx/Siege/muzzle_b
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 61e954ac05c544742a399f65507e35d2
     m_Address: Art/Siege/fire1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 67168e76460928c4b9aed7ba28802bc8
-    m_Address: Art/Fx/Siege/hit_b
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -120,16 +85,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8422b1e5f8244b146ac6b9b50cde77ec
-    m_Address: Art/Fx/Siege/shot_y
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 88b1b154b31285e49be681322d6e8e1c
-    m_Address: Art/Fx/Siege/hit_g
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 905e808dec538044fb306033edd05bae
     m_Address: Art/Siege/rampart
     m_ReadOnly: 0
@@ -155,13 +110,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c2a4d6f5a14c76e4ea00acb2845c25d1
-    m_Address: Art/Siege/socket
+  - m_GUID: c0728f3f7b8f4844daebc3121837d8d3
+    m_Address: Art/Siege/boss_walk
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c9f027c3049bb7c45a2d01c981dfe000
-    m_Address: Art/Fx/Siege/muzzle_g
+  - m_GUID: c2a4d6f5a14c76e4ea00acb2845c25d1
+    m_Address: Art/Siege/socket
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -180,11 +135,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: da51515115a9ecf4d87b0f3fcc53658f
-    m_Address: Art/Fx/Siege/hit_y
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: da5b6f1320dfeef409ad284243599e53
     m_Address: Art/Siege/ward1
     m_ReadOnly: 0
@@ -197,11 +147,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f2a955c306edb3144becfb7ba8f93aa4
     m_Address: Art/Siege/gem_r
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f8caf64579943d04f9746b8e8b43d618
-    m_Address: Art/Fx/Siege/shot_g
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

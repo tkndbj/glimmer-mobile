@@ -90,6 +90,26 @@ namespace GlimmerGrove
             public Color Coat;
             public float Height;
             public bool Falling;
+
+            /// <summary>The warlord's, and null for everything else.</summary>
+            public bool Boss;
+
+            /// <summary>What it stands in, what it comes on in, and what it throws with.</summary>
+            public Sprite[] Idle, Walking, Casting;
+
+            /// <summary>Which of the three its body is wearing now. See <see cref="SiegeView.Wear"/>.</summary>
+            public Sprite[] Playing;
+
+            /// <summary>The light it gathers before a spell leaves. Only a warlord has one.</summary>
+            public Image Charge;
+
+            /// <summary>
+            /// A warlord's health, pinned across the top of the board rather than carried.
+            ///
+            /// Its own node under the effects layer, so it is not moved by the raider and has to
+            /// be taken down by hand when one falls — see <see cref="SiegeView.Fall"/>.
+            /// </summary>
+            public RectTransform Crown;
         }
 
         sealed class Post
@@ -365,10 +385,31 @@ namespace GlimmerGrove
         /// </summary>
         static Color Coat(int colour) => Color.Lerp(Color.white, TintOf(colour), .62f);
 
+        /// <summary>
+        /// How wide a reel drawn <paramref name="tall"/> high comes out, read off its own art.
+        ///
+        /// <b>Read rather than assumed, and it is the only thing here that is.</b> Invariant 16i
+        /// says a piece's drawn <em>size</em> is authored and never measured off the loaded sprite,
+        /// so a tile laid out before its art arrives is not laid out around a placeholder — and
+        /// that is exactly what <paramref name="tall"/> is. What cannot be authored is the shape a
+        /// cutting tool happened to give an animation's bounding box, which is a fact about the
+        /// picture. Answers a square when the frames are not in hand, so a missing reel costs the
+        /// picture and never the layout.
+        /// </summary>
+        static float Frame(Sprite[] frames, float tall)
+        {
+            if (frames == null || frames.Length == 0 || frames[0] == null) return tall;
+
+            var rect = frames[0].rect;
+            return rect.height > 0f ? tall * rect.width / rect.height : tall;
+        }
+
         /// <summary>Which of the cast a raider is drawn as, as frames. See <see cref="GemArt"/>.</summary>
         static Sprite[] Skin(SiegeRaider raider)
         {
+            if (raider.Boss) return Reel("boss");
             if (raider.Brute) return Reel("brute");
+
 
             switch (raider.Colour % 3)
             {
@@ -377,6 +418,80 @@ namespace GlimmerGrove
                 default: return Reel("mon3");
             }
         }
+
+        /// <summary>
+        /// How tall a raider is drawn, in cells.
+        ///
+        /// <para>
+        /// <b>The warlord is nearly three times a creeper, and that is the whole of what makes it
+        /// read as a boss before anything about it has happened.</b> Its health bar, its damage
+        /// numbers and its silhouette all follow from this one number, and it is bounded by the
+        /// hill rather than by taste: the band a raider walks down is about four cells deep, so a
+        /// warlord at three fills three quarters of it and anything larger would stand in the
+        /// ward line's own space.
+        /// </para>
+        /// </summary>
+        static float TallOf(SiegeRaider raider)
+            => raider.Boss ? 3.1f : raider.Brute ? 1.55f : 1.15f;
+
+        /// <summary>
+        /// Where a raider carries its health bar and its colour, as a fraction of its own height.
+        ///
+        /// <b>Over the head for a raider, and nowhere near a warlord</b> — see
+        /// <see cref="Crown"/> for where a warlord's goes and why it had to leave its body.
+        /// </summary>
+        static float ReadoutAt(SiegeRaider raider) => .58f;
+
+        /// <summary>
+        /// A warlord's health bar, pinned across the top of the board.
+        ///
+        /// <para>
+        /// <b>Off its body, and that is what let the warlord be big.</b> A carried bar has to sit
+        /// somewhere, and on a hill four cells deep there is nowhere for one that belongs to
+        /// something three cells tall: three renders put it outside the board's top edge (two
+        /// widgets that had come loose), then on the ward line's own health bars (two readouts
+        /// overlapping, which is two readouts nobody can read), and each time the answer was to
+        /// make the warlord smaller — until it was barely taller than the turrets it was supposed
+        /// to be looming over.
+        /// </para>
+        /// <para>
+        /// A bar across the top is the genre's own answer and it is better for a second reason:
+        /// this is the one health bar in the mode a player watches for half a minute rather than
+        /// glances at, and it is the only one whose *place* can be learned. Nothing else on this
+        /// board lives up there.
+        /// </para>
+        /// </summary>
+        RectTransform Crown()
+        {
+            var node = UIKit.Node("Warlord", _fx);
+            node.anchorMin = node.anchorMax = new Vector2(.5f, .5f);
+            node.sizeDelta = new Vector2(Span.x, Cell * .5f);
+            node.anchoredPosition = new Vector2(0f, _hillTop + Cell * .12f);
+            return node;
+        }
+
+        /// <summary>
+        /// What a warlord throws, as frames.
+        ///
+        /// <b>One set rather than four, graded to a colour no ward and no gem wears.</b> The
+        /// elemental double is a rule about bolts going <em>into</em> a raider, so a spell coming
+        /// out of one that wore one of the board's four colours would be saying something the
+        /// rules do not mean — a player would reasonably read it as "this hurts the blue ward
+        /// more". See <c>SiegeShotBake</c>.
+        /// </summary>
+        static Sprite[] SpellArt() => Blast("spell");
+
+        static Sprite[] SpellMuzzleArt() => Blast("spell_muzzle");
+
+        static Sprite[] SpellHitArt() => Blast("spell_hit");
+
+        /// <summary>
+        /// The colour the warlord's magic is drawn in.
+        ///
+        /// Violet, which is the one entry in <c>Pal</c>'s board set that is not one of this mode's
+        /// four gems — so nothing it lights can be mistaken for a colour rule.
+        /// </summary>
+        static readonly Color Spellfire = Pal.Foxglove;
 
         /// <summary>
         /// Rounded at the top and square at the foot, because the action bar is stacked directly
@@ -1055,12 +1170,13 @@ namespace GlimmerGrove
 
             if (report.Wave >= 0) Arrival(report.Wave);
             for (int i = 0; i < report.Bolts.Count; i++) Bolt(report.Bolts[i]);
+            for (int i = 0; i < report.Casts.Count; i++) Cast(report.Casts[i]);
+            for (int i = 0; i < report.Spells.Count; i++) Smite(report.Spells[i]);
             for (int i = 0; i < report.Blows.Count; i++) Blow(report.Blows[i]);
 
             Reap();
 
-            if (report.Bolts.Count > 0 || report.Blows.Count > 0 || report.Wave >= 0)
-                Changed?.Invoke();
+            if (report.Any) Changed?.Invoke();
 
             Judge();
         }
@@ -1092,6 +1208,14 @@ namespace GlimmerGrove
                     mob.Body.color = raider.Flash > 0f
                                    ? Color.Lerp(mob.Coat, Pal.Cream, raider.Flash * 5f)
                                    : mob.Coat;
+
+                // **A warlord walks on and then stands, and which of the two it wears is read off
+                // the board rather than latched at spawn.** It was drawn in its idle for the whole
+                // walk-in, which came back from play in one word — *floating* — and is exactly the
+                // fault this mode's cast reels are walks to avoid (`make_siege_art.CAST_SET`). The
+                // question is asked every frame and `Wear` answers it once.
+                if (mob.Boss && !Throwing(mob))
+                    Wear(mob, raider.InPlace || mob.Walking == null ? mob.Idle : mob.Walking);
             }
         }
 
@@ -1225,8 +1349,9 @@ namespace GlimmerGrove
             mob.Node.sizeDelta = new Vector2(Cell, Cell);
             mob.Node.anchoredPosition = new Vector2(LaneX(raider.Lane), MarchY(raider.March));
 
-            float tall = Cell * (raider.Brute ? 1.55f : 1.15f);
+            float tall = Cell * TallOf(raider);
             mob.Height = tall;
+            mob.Boss = raider.Boss;
 
             mob.Shadow = UIKit.Img("Shadow", mob.Node, Art.Glow(64, 3f),
                                    new Color(0f, 0f, 0f, .42f),
@@ -1248,23 +1373,71 @@ namespace GlimmerGrove
 
             mob.Coat = Color.Lerp(Color.white, TintOf(raider.Colour), .62f);
 
-            mob.Body = Book(Skin(raider), "Body", mob.Node, new Vector2(tall, tall),
-                            raider.Brute ? 10f : 13f);
+            // **The warlord gathers its spell in a light of its own, under everything else.**
+            // Built here and left dark rather than made when a cast starts: a widget that appears
+            // at the moment something happens has to be faded in before it can be seen growing,
+            // and what this is for is the growing.
+            if (raider.Boss)
+            {
+                mob.Charge = UIKit.Img("Charge", mob.Node, Art.Glow(128, 2.0f),
+                                       Pal.A(Spellfire, 0f),
+                                       new Vector2(tall * 1.5f, tall * 1.5f));
+                mob.Charge.raycastTarget = false;
+            }
+
+            mob.Idle = Skin(raider);
+            mob.Walking = raider.Boss ? Reel("boss_walk") : null;
+            mob.Casting = raider.Boss ? Reel("boss_cast") : null;
+
+            // A warlord comes on *walking* and stands still once it is in place; everything else
+            // is walking for its whole life, so its one reel is both.
+            mob.Playing = raider.Boss && mob.Walking != null && !raider.InPlace
+                        ? mob.Walking : mob.Idle;
+
+            mob.Body = Book(mob.Playing, "Body", mob.Node, new Vector2(tall, tall),
+                            raider.Boss ? BossFps : raider.Brute ? 10f : 13f);
 
             if (mob.Body != null)
             {
                 mob.Body.color = mob.Coat;
+
+                // **Sized by its own height, with the width following the picture** — never fitted
+                // into a square. Every cast reel is cut to a fixed height and whatever width the
+                // animation's box came out as (`make_siege_art.cast_frames`), so a square box with
+                // `preserveAspect` fits the *wider* ones by width and draws them short: measured
+                // on the shipped art, `mon2` is 300 x 180 and was being drawn at 60% of the height
+                // `mon1` gets, which is why one of the three creepers has always looked squat. The
+                // warlord is the same fault at three times the size and would have been obvious,
+                // which is how this was found.
+                float wide = Frame(mob.Playing, tall);
+
+                mob.Body.rectTransform.sizeDelta = new Vector2(wide, tall);
+
                 // The packs draw them facing right; this hill runs top to bottom, so they are
                 // turned to face down the way a walk cycle reads best - across, and coming on.
                 mob.Body.rectTransform.anchoredPosition = new Vector2(0f, tall * .04f);
-                Tween.Bob(mob.Body.rectTransform, tall * .035f, raider.Brute ? 1.1f : .72f,
+                Tween.Bob(mob.Body.rectTransform, tall * .035f,
+                          raider.Boss ? 1.6f : raider.Brute ? 1.1f : .72f,
                           raider.Id * .37f);
             }
 
-            mob.Bar = UIKit.Node("Bar", mob.Node);
+            // A warlord's readouts hang off the top of the board rather than off its body.
+            if (raider.Boss) mob.Crown = Crown();
+
+            var perch = mob.Crown != null ? mob.Crown : mob.Node;
+
+            mob.Bar = UIKit.Node("Bar", perch);
             mob.Bar.anchorMin = mob.Bar.anchorMax = new Vector2(.5f, .5f);
-            mob.Bar.sizeDelta = new Vector2(tall * .72f, Cell * .13f);
-            mob.Bar.anchoredPosition = new Vector2(0f, tall * .58f);
+
+            // A warlord's bar is thicker as well as wider, because it is the one health bar in
+            // this mode a player watches for half a minute rather than glances at.
+            mob.Bar.sizeDelta = raider.Boss
+                ? new Vector2(Span.x * .60f, Cell * .26f)
+                : new Vector2(tall * .72f, Cell * .13f);
+
+            mob.Bar.anchoredPosition = raider.Boss
+                ? new Vector2(Cell * .34f, 0f)
+                : new Vector2(0f, tall * ReadoutAt(raider));
 
             var trough = UIKit.Img("Trough", mob.Bar, Art.Round(10), new Color(0f, 0f, 0f, .66f),
                                    mob.Bar.sizeDelta);
@@ -1272,7 +1445,7 @@ namespace GlimmerGrove
             trough.type = Image.Type.Sliced;
 
             mob.Fill = UIKit.Img("Fill", mob.Bar, Art.Round(10),
-                                 raider.Brute ? Pal.Foxglove : Pal.Rose,
+                                 raider.Boss ? Pal.Ember : raider.Brute ? Pal.Foxglove : Pal.Rose,
                                  new Vector2(mob.Bar.sizeDelta.x - 4f, mob.Bar.sizeDelta.y - 4f));
             mob.Fill.raycastTarget = false;
             mob.Fill.type = Image.Type.Sliced;
@@ -1281,14 +1454,23 @@ namespace GlimmerGrove
             mob.Fill.rectTransform.anchorMax = new Vector2(0f, .5f);
             mob.Fill.rectTransform.anchoredPosition = new Vector2(2f, 0f);
 
-            mob.Pip = UIKit.Img("Pip", mob.Node, GemArt(raider.Colour), Color.white,
-                                new Vector2(Cell * .34f, Cell * .34f));
+            // The gem over its head is the third thing that says its colour, and on the warlord
+            // it is the one that has to carry: the body is so large that a 62% coat reads as
+            // "purple alien with a red wash" rather than as red.
+            float pip = Cell * (raider.Boss ? .62f : .34f);
+
+            mob.Pip = UIKit.Img("Pip", perch, GemArt(raider.Colour), Color.white,
+                                new Vector2(pip, pip));
             mob.Pip.raycastTarget = false;
             mob.Pip.preserveAspect = true;
-            mob.Pip.rectTransform.anchoredPosition = new Vector2(-tall * .46f, tall * .58f);
+
+            // At the head of the bar for a warlord, over the shoulder for everything else.
+            mob.Pip.rectTransform.anchoredPosition = raider.Boss
+                ? new Vector2(Cell * .34f - Span.x * .30f - pip * .72f, 0f)
+                : new Vector2(-tall * .46f, tall * ReadoutAt(raider));
 
             mob.Node.localScale = Vector3.one * .5f;
-            Tween.Scale(mob.Node, 1f, .3f, Ease.OutBack);
+            Tween.Scale(mob.Node, 1f, raider.Boss ? .6f : .3f, Ease.OutBack);
 
             var group = UIKit.Group(mob.Node);
             group.alpha = 0f;
@@ -1297,6 +1479,46 @@ namespace GlimmerGrove
             _mob.Add(mob);
             return mob;
         }
+
+        /// <summary>How fast a warlord's own frames run. Slow, because it is a heavy thing.</summary>
+        const float BossFps = 11f;
+
+        /// <summary>
+        /// Puts one of a raider's reels on its body, and remembers which.
+        ///
+        /// <para>
+        /// <b>Remembering is the whole job.</b> <c>Flipbook.Attach</c> re-starts a reel from frame
+        /// nought, so a caller that attached the wanted reel every frame would draw frame nought
+        /// for ever — a walk cycle that never takes a step, which is the fault this method exists
+        /// to fix, arrived at from the other side. <see cref="Mob.Playing"/> is what lets
+        /// <see cref="Follow"/> ask the question sixty times a second and answer it once.
+        /// </para>
+        /// </summary>
+        void Wear(Mob mob, Sprite[] reel, bool loop = true)
+        {
+            if (mob == null || mob.Body == null || reel == null || reel.Length == 0) return;
+            if (mob.Playing == reel && loop) return;
+
+            mob.Playing = reel;
+            Flipbook.Attach(mob.Body, reel, BossFps, loop);
+
+            // The frame's shape is a fact about the picture (see `Frame`), and a warlord's three
+            // reels are cut onto one canvas so that this never actually changes - which is exactly
+            // why it is worth setting rather than assuming.
+            mob.Body.rectTransform.sizeDelta = new Vector2(Frame(reel, mob.Height), mob.Height);
+        }
+
+        /// <summary>
+        /// Whether a raider's body is showing something it must not be interrupted in.
+        ///
+        /// Only a warlord has one, and it is the cast: <see cref="Follow"/> runs every frame and
+        /// would otherwise put the idle back on the frame after a spell started.
+        ///
+        /// <b>Named away from <c>Busy</c> deliberately</b> — that is <c>ProtoView</c>'s latch for a
+        /// cascade still falling, and a second member of the same name in one hierarchy is what
+        /// <c>ModeScreen.Prepare</c> was renamed to avoid.
+        /// </summary>
+        static bool Throwing(Mob mob) => mob.Casting != null && mob.Playing == mob.Casting;
 
         /// <summary>Takes down the widgets of raiders the model has already forgotten.</summary>
         void Reap()
@@ -1317,6 +1539,8 @@ namespace GlimmerGrove
         {
             var at = mob.Node.anchoredPosition;
 
+            if (mob.Boss) { Fall(mob, at); return; }
+
             Boom(at, Blast("boom_fire"), mob.Height * 2f);
             Burst.Sparks(_fx, at, Pal.Ember, 14, mob.Height * 1.6f, mob.Height * .2f);
             Audio.SfxVaried("burst", .38f);
@@ -1330,6 +1554,66 @@ namespace GlimmerGrove
                 node.localScale = new Vector3(1f + t * .35f, 1f - t * .55f, 1f);
                 if (group) group.alpha = 1f - t;
             }, node).OnDone(() => { if (node) Destroy(node.gameObject); });
+        }
+
+        /// <summary>
+        /// The warlord coming apart.
+        ///
+        /// <b>The largest thing that happens in this mode, and it is drawn as a run rather than as
+        /// one bang.</b> A boss that vanished in the same puff a creeper does would be the whole
+        /// fight paying out in a tenth of a second — which is invariant 20m's rule about a payoff
+        /// asked of the one moment the player has been working toward for half a minute. Five
+        /// explosions walking outward, then the shape going down.
+        /// </summary>
+        void Fall(Mob mob, Vector2 at)
+        {
+            var node = mob.Node;
+            var group = UIKit.Group(node);
+            var crown = mob.Crown;
+
+            // The bar goes with it, and by hand: it hangs off the effects layer rather than off
+            // the body, so destroying the body would leave an empty warlord's health bar pinned
+            // across the top of a board with no warlord on it.
+            if (crown != null)
+            {
+                var over = UIKit.Group(crown);
+                Tween.Fade(over, 0f, .5f).Delay(.5f)
+                     .OnDone(() => { if (crown) Destroy(crown.gameObject); });
+            }
+
+            Audio.Sfx("boom", .9f, .72f);
+            Flow.Flash(new Color(1f, .82f, .55f), .55f, .5f);
+            ShakeBoard(30f);
+
+            for (int i = 0; i < 5; i++)
+            {
+                float wait = i * .11f;
+                var spot = at + new Vector2(Random.Range(-1f, 1f) * mob.Height * .34f,
+                                            Random.Range(-1f, 1f) * mob.Height * .30f);
+
+                Tween.After(wait, () =>
+                {
+                    Boom(spot, Blast("boom_fire"), mob.Height * 1.5f);
+                    Burst.Sparks(_fx, spot, Pal.Ember, 12, mob.Height * 1.2f, mob.Height * .16f);
+                    Audio.SfxVaried("burst", .42f);
+                });
+            }
+
+            Tween.Shake(node, Cell * .3f, .55f);
+
+            Tween.Run(.95f, Ease.InQuad, t =>
+            {
+                if (!node) return;
+                node.localScale = new Vector3(1f + t * .18f, 1f - t * .68f, 1f);
+                if (group) group.alpha = 1f - t * t;
+            }, node).Delay(.35f).OnDone(() =>
+            {
+                if (!node) return;
+
+                Boom(at, Blast("boom_smoke"), mob.Height * 2.6f);
+                Shockwave(at, Pal.Gold, 7f, .55f);
+                Destroy(node.gameObject);
+            });
         }
 
         // ------------------------------------------------------------------ the widget a shot is
@@ -1685,6 +1969,194 @@ namespace GlimmerGrove
                     Tween.Punch(_mob[i].Body.transform, .1f, .14f);
         }
 
+        // ------------------------------------------------------------------ the warlord's spells
+        /// <summary>
+        /// A spell, from the moment the warlord decides on it to the moment it leaves.
+        ///
+        /// <para>
+        /// <b>Four beats a player can read, and the first three are the point.</b> The warlord
+        /// swings into its own attack frames; a violet light gathers on it; and a ring closes over
+        /// the ward it has chosen — so what is about to happen, and to whom, is on the board for
+        /// <c>SiegeTuning.BossTell</c> before it happens. That window is not decoration: it is
+        /// long enough to pour a <c>mending</c> into the ward that is about to be hit, which is
+        /// the one thing on this board a player can do about a warlord other than shoot it.
+        /// </para>
+        /// <para>
+        /// <b>The schedule comes out of the rules and is never invented here</b> (invariant 37s).
+        /// The board takes the ward's health exactly <c>BossTell + BossFlight</c> after this, so a
+        /// bolt drawn on any other clock would arrive before or after the damage it is meant to be.
+        /// </para>
+        /// </summary>
+        void Cast(SiegeCast cast)
+        {
+            var mob = MobOf(cast.Raider);
+            if (mob == null || mob.Node == null) return;
+
+            Vector2 from = mob.Node.anchoredPosition + new Vector2(0f, mob.Height * .10f);
+            Vector2 to = new Vector2(PostX(cast.Ward), _lineY + Cell * .3f);
+
+            // The alien's own attack frames, once, and back to standing. A warlord that only ever
+            // cycled its idle would have no way to say it had done anything, which is the fault
+            // the ward line's recoil frames were added for.
+            if (mob.Body != null && mob.Casting != null && mob.Casting.Length > 0)
+            {
+                mob.Playing = mob.Casting;
+
+                var book = Flipbook.Attach(mob.Body, mob.Casting,
+                                           mob.Casting.Length / SiegeTuning.BossTell, false);
+
+                // Handed straight back to `Follow`, which is the only thing that decides what a
+                // warlord wears: clearing the latch is all that is needed, and a callback that
+                // put a *particular* reel back would be a second opinion about a question already
+                // answered above.
+                if (book != null) book.OnFinished = () => { if (mob.Body) mob.Playing = null; };
+                else mob.Playing = null;
+            }
+
+            Gather(mob);
+            Sigil(cast.Ward);
+
+            Audio.Sfx("whoosh", .5f, .74f);
+
+            // The bolt itself leaves when the wind-up ends, and crosses in `BossFlight` — but only
+            // if the warlord is still standing when it does. The board already fizzles a spell
+            // whose caster has been destroyed (`SiegeBoard.Arrive`), and a spell drawn crossing the
+            // hill that then does nothing is worse than one that was never thrown: it reads as the
+            // hit having been missed rather than as the cast having been interrupted.
+            int caster = cast.Raider;
+
+            Tween.After(SiegeTuning.BossTell, () =>
+            {
+                if (_board != null && _board.Find(caster) != null) Hurl(from, to);
+            }, mob.Node);
+        }
+
+        /// <summary>The light a warlord gathers before a spell leaves it.</summary>
+        void Gather(Mob mob)
+        {
+            var glow = mob.Charge;
+            if (glow == null) return;
+
+            Tween.KillChannel(glow, "gather");
+
+            Tween.Run(SiegeTuning.BossTell, Ease.InQuad, t =>
+            {
+                if (!glow) return;
+                glow.color = Pal.A(Spellfire, t * .95f);
+                glow.rectTransform.localScale = Vector3.one * Mathf.Lerp(.35f, 1.15f, t);
+            }, glow, "gather").OnDone(() =>
+            {
+                if (!glow) return;
+                Tween.Run(.22f, Ease.OutQuad, t =>
+                {
+                    if (!glow) return;
+                    glow.color = Pal.A(Spellfire, (1f - t) * .95f);
+                }, glow, "gather");
+            });
+        }
+
+        /// <summary>
+        /// The ring that closes over the ward a spell is coming for.
+        ///
+        /// <b>It closes rather than expanding</b>, which is the opposite of every other ring on
+        /// this board and is why: <c>Shockwave</c> grows outward and means <em>something has
+        /// happened here</em>, and this means <em>something is about to</em>. A countdown that
+        /// looks like an explosion is a warning nobody reads as one.
+        /// </summary>
+        void Sigil(int ward)
+        {
+            var at = new Vector2(PostX(ward), _lineY + Cell * .3f);
+
+            var ring = UIKit.Img("Sigil", _fx, Art.Ring(128, 10f), Pal.A(Spellfire, .95f),
+                                 new Vector2(Cell, Cell));
+            ring.raycastTarget = false;
+            ring.rectTransform.anchoredPosition = at;
+
+            var rt = ring.rectTransform;
+
+            Tween.Run(SiegeTuning.BossTell, Ease.Linear, t =>
+            {
+                if (!rt) return;
+                rt.localScale = Vector3.one * Mathf.Lerp(4.4f, 1.5f, t);
+                rt.localRotation = Quaternion.Euler(0f, 0f, t * 220f);
+            }, ring).OnDone(() =>
+            {
+                if (!ring) return;
+                Tween.Fade(ring, 0f, SiegeTuning.BossFlight)
+                     .OnDone(() => { if (ring) Destroy(ring.gameObject); });
+            });
+        }
+
+        /// <summary>The spell crossing the hill, and the flash it leaves the warlord with.</summary>
+        void Hurl(Vector2 from, Vector2 to)
+        {
+            var dir = to - from;
+            float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
+
+            var muzzle = SpellMuzzleArt();
+            if (muzzle != null && muzzle.Length > 0)
+                Ends(Lend(muzzle, Color.white, Cell * 4.2f, from, angle, 30f, false, MuzzleAt),
+                     .38f);
+
+            // The pack's own flash for this one is faint - a thin ring and a few sparks - so the
+            // moment the spell *leaves* is carried by these two rather than by it. Cheaper than
+            // swapping a whole three-part set for its weakest part, which is what the alternative
+            // was: its orb and its impact are the best in the pack.
+            Shockwave(from, Pal.Lift(Spellfire, .5f), 3.4f, .3f);
+            Pop(from, Spellfire, 2.6f, .26f);
+
+            Audio.Sfx("poke", .5f, .62f);
+
+            var frames = SpellArt();
+
+            if (frames == null || frames.Length == 0)
+                frames = new[] { Art.Glow(96, 2.0f) };
+
+            // **Half again the width of a ward's bolt, and anchored at its middle rather than at
+            // `HeadAt`.** A warlord's spell is an orb rather than a comet — it is baked square
+            // (`SiegeShotBake.BakeSpell`), so there is no head leading a trail to step back from.
+            var puff = Lend(frames, Color.white, Cell * 1.6f, from, angle, 30f, true, .5f);
+            Glow(puff, Spellfire, Cell * 3f);
+
+            var node = puff.Node;
+
+            Tween.Run(SiegeTuning.BossFlight, Ease.Linear, t =>
+            {
+                if (!node) return;
+                node.anchoredPosition = Vector2.Lerp(from, to, t);
+                node.localScale = Vector3.one * Mathf.Lerp(.8f, 1.25f, t);
+            }, node).OnDone(() => Give(puff));
+        }
+
+        /// <summary>
+        /// A spell arriving on the line.
+        ///
+        /// <b>Drawn nothing like a blow</b>, which is why it is its own record: a blow is
+        /// something swung by a raider standing at the line, and this comes out of the middle of
+        /// the hill. It is also the heaviest single hit in the mode, so it takes the shake a felled
+        /// ward used to have to itself.
+        /// </summary>
+        void Smite(SiegeSpell spell)
+        {
+            var at = new Vector2(PostX(spell.Ward), _lineY + Cell * .3f);
+
+            var frames = SpellHitArt();
+            if (frames != null && frames.Length > 0)
+                Ends(Lend(frames, Color.white, Cell * (spell.Felled ? 5.2f : 4.2f), at, 0f, 32f,
+                          false, .5f), .4f);
+
+            Pop(at, Spellfire, 2.6f, .3f);
+            Shockwave(at, Spellfire, 3.6f, .34f);
+            Burst.Sparks(_fx, at, Spellfire, 14, Cell * 3f, Cell * .24f, .5f);
+
+            Tween.Shake(_posts[spell.Ward].Node, Cell * .26f, .38f);
+            ShakeBoard(spell.Felled ? 26f : 15f);
+
+            Audio.Sfx("boom", spell.Felled ? .8f : .5f, spell.Felled ? .8f : 1f);
+
+            if (spell.Felled) Flow.Flash(new Color(1f, .32f, .30f), .34f, .3f);
+        }
+
         void Blow(SiegeBlow hit)
         {
             var post = _posts[hit.Ward];
@@ -1725,23 +2197,47 @@ namespace GlimmerGrove
 
             if (_waveLabel == null) return;
 
-            _waveLabel.text = Loc.Format("mode.siege.wave", _wave, _board.Waves);
+            // **The warlord's wave is announced as itself rather than as a number.** "WAVE 4 OF 4"
+            // is true and is the wrong thing to say about the one wave that is not like the others
+            // — the header carries the count for anybody who wants it (`SiegeScreen.Readouts`), and
+            // what the board owes this moment is the news.
+            bool boss = _board.BossWave;
+
+            _waveLabel.text = boss ? Loc.Get("mode.siege.boss")
+                                   : Loc.Format("mode.siege.wave", _wave, _board.Waves);
+
+            _waveLabel.color = boss ? Pal.Foxglove : Pal.Cream;
+            _waveLabel.fontSize = Mathf.RoundToInt(Cell * (boss ? .78f : .46f));
 
             var group = UIKit.Group(_waveLabel.rectTransform);
             var rt = _waveLabel.rectTransform;
 
             Tween.KillAll(_waveLabel);
             rt.anchoredPosition = new Vector2(0f, _hillFoot + Cell * 1.1f);
+            rt.localScale = Vector3.one * (boss ? 1.6f : 1f);
             group.alpha = 0f;
 
             Tween.Fade(group, 1f, .22f);
-            Tween.Move(rt, new Vector2(0f, _hillFoot + Cell * 1.9f), 1.5f, Ease.OutCubic)
+            if (boss) Tween.Scale(rt, 1f, .5f, Ease.OutBack);
+
+            Tween.Move(rt, new Vector2(0f, _hillFoot + Cell * 1.9f), boss ? 2.4f : 1.5f,
+                       Ease.OutCubic)
                  .OnDone(() => Tween.Fade(group, 0f, .4f));
 
-            // **No sound of its own.** The first wave steps out on the same frame the countdown
-            // says GO!, so a bell here was the same bell twice a frame apart - which is a flam
-            // rather than emphasis. What announces a wave is the banner and the raiders.
-            Flow.Flash(new Color(1f, .55f, .45f), .18f, .35f);
+            // **No sound of its own, except for the warlord.** The first wave steps out on the
+            // same frame the countdown says GO!, so a bell there was the same bell twice a frame
+            // apart - which is a flam rather than emphasis. Nothing lands with the warlord, so it
+            // is the one arrival that can be heard as well as seen.
+            if (boss)
+            {
+                Audio.Sfx("boom", .85f, .62f);
+                ShakeBoard(20f);
+                Flow.Flash(Pal.A(Spellfire, 1f), .5f, .45f);
+            }
+            else
+            {
+                Flow.Flash(new Color(1f, .55f, .45f), .18f, .35f);
+            }
         }
 
         void Boom(Vector2 at, Sprite[] frames, float size)

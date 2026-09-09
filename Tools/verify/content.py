@@ -703,7 +703,8 @@ def check_siege(lid, chapter_id, level, block):
         errors.append("%s: %s" % (lid, bad))
         return empty
 
-    layout = rules.Layout(grid, block.get('gems'), block.get('wards'), block.get('waves'))
+    layout = rules.Layout(grid, block.get('gems'), block.get('wards'), block.get('waves'),
+                          block.get('boss'))
 
     if layout.fault:
         errors.append("%s: %s" % (lid, layout.fault))
@@ -2681,8 +2682,9 @@ def main():
                 # A siege counts what is coming and what is holding it, because neither is a
                 # reading of a search - there is no search (see check_siege).
                 r = c['siege']
+                boss = f", a '{r['boss']}' warlord last" if r.get('boss') else ""
                 held = (f"{r['raiders']} raider(s) in {r['waves']} wave(s) "
-                        f"({r['brutes']} brute(s), {r['colours']} colour(s)) against "
+                        f"({r['brutes']} brute(s), {r['colours']} colour(s)){boss} against "
                         f"{r['wards']} ward(s), deals {c['deal']}")
             elif c['mode'] in MODE_RULES:
                 held = f"{c['goals']} to finish"

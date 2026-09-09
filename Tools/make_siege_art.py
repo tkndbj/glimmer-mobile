@@ -45,6 +45,7 @@ from __future__ import annotations
 import argparse
 import io
 import math
+import re
 import sys
 import zipfile
 from pathlib import Path
@@ -67,6 +68,15 @@ MATCH3 = "craftpix-net-298179-match-3-game-asset-set.zip"
 BLASTS = "craftpix-517297-explosions-sprite.zip"
 MONSTERS = "craftpix-net-205925-monster-v3-character-sprites.zip"
 BRUTES = "craftpix-net-894353-monster-v4-character-sprites.zip"
+
+#: The warlord, from a pack none of the creepers came from.
+#:
+#: **A different pack on purpose, and it is the same argument the brute already makes one step
+#: further.** Three creepers come from one pack so they read as three of a kind; the brute comes
+#: from another so that the one thing a player has to see at a glance is that it is not one of
+#: those. A boss has to clear that bar by more: it is an armoured alien in a machine, against four
+#: round soft monsters, at three times the size.
+WARLORDS = "craftpix-net-515480-alien-v4-character-sprites.zip"
 
 #: The turrets, their bullets and their muzzle flash.
 TURRETS = "craftpix-net-715522-turrets-asset-pack-for-merge-shooter.zip"
@@ -128,6 +138,22 @@ CAST_SET = {
     "brute": (BRUTES, "PNG/Monster 5/Walk"),
 }
 
+#: The warlord's three animations, cut together by `paired`.
+#:
+#: **An idle *and* a walk, and shipping only the idle was a bug somebody had to play to find.** The
+#: reasoning that left the walk out was half right: a warlord walks to the middle of the hill and
+#: then stands there for the rest of the run (`SiegeTuning.BossHold`), so a walk cycle looping under
+#: something that is not moving is the very thing this mode's walks were chosen to avoid. What it
+#: misses is the ten seconds *before* that, which is the one stretch where it really is crossing
+#: ground - and an idle sliding down a hill is the exact fault the rule names, reported from play in
+#: one word: **floating**. The view wears whichever matches what the board says it is doing.
+#:
+#: The attack is the only one allowed to leave the frame sideways (see `paired`): it throws a fist
+#: a long way out, where a walk only strides a few pixels wider than a stand.
+BOSS_IDLE = "PNG/Alien05/Idle"
+BOSS_WALK = "PNG/Alien05/Walk"
+BOSS_ATTACK = "PNG/Alien05/Attack"
+
 #: The four turret models a ward line is drawn with, in ward order, and the hue each is painted.
 #:
 #: **The colour is baked in here rather than tinted at run time, and that is a correction.** It was
@@ -151,6 +177,16 @@ WARD_MODELS = (
     ("Turret06", 0.561),        # Azure   #4FC1FF
     ("Turret09", 0.122),        # Sun     #FFC93C
 )
+
+#: How tall a warlord is drawn, in pixels, and how many frames each of its two reels keeps.
+#:
+#: **Bigger than a creeper's source art as well as bigger on the board**, because `SiegeView`
+#: draws it about three cells tall against a creeper's one and a bit: cutting it at `CAST` would
+#: mean upscaling the one thing in this mode the player spends half a minute looking at. The cast
+#: reel keeps more frames than the idle because it is played *once*, over `SiegeTuning.BossTell`,
+#: and a fourteen-frame throw at twelve a second is the difference between a lunge and a jerk.
+BOSS = 340
+BOSS_FRAMES, BOSS_CAST_FRAMES = 12, 14
 
 #: How many frames of a turret's recoil are kept. They are 10 to 20 in the pack and the whole
 #: motion is over in a fifth of a second on screen.
@@ -518,16 +554,43 @@ def blast_frames(z, folder, turns, saturate):
     return out
 
 
-def cast_frames(z, folder):
-    names = sorted(n for n in z.namelist()
-                   if n.startswith(folder + "/") and n.lower().endswith(".png"))
+def ordered(z, folder):
+    """Every frame of one animation, **in the order it was drawn**.
+
+    <b>Numerically, and that is a bug fix rather than a nicety.</b> These packs number frames
+    without padding - `Walk_0`, `Walk_1`, `Walk_10`, `Walk_2` - so a plain `sorted()` deals
+    0, 1, 10, 11 ... 17, 2, 3 and every cast reel this tool has ever written has been a shuffled
+    walk cycle. It reads as a jitter rather than as an error, which is why it survived: nothing
+    about a scrambled loop looks *broken*, it just looks bad. Nothing numeric could have caught
+    it either - the frames are all present, all the right size, and `--check` reproduces a
+    scrambled reel exactly as faithfully as a correct one.
+    """
+    names = [n for n in z.namelist()
+             if n.startswith(folder + "/") and n.lower().endswith(".png")]
+
+    def index(name):
+        digits = re.findall(r"_(\d+)\.png$", name)
+        return (int(digits[0]) if digits else 0, name)
+
+    return sorted(names, key=index)
+
+
+def spaced(names, count):
+    """`count` frames evenly spaced through an animation, or all of them if there are fewer.
+
+    Evenly spaced rather than the first N, or a long walk cycle ships as its first half stride.
+    """
+    if len(names) <= count:
+        return list(names)
+
+    step = len(names) / float(count)
+    return [names[min(len(names) - 1, int(i * step))] for i in range(count)]
+
+
+def cast_frames(z, folder, count=FRAMES, tall=CAST):
+    names = spaced(ordered(z, folder), count)
     if not names:
         return []
-
-    # Evenly spaced rather than the first N, or a long walk cycle ships as its first half stride.
-    if len(names) > FRAMES:
-        step = len(names) / float(FRAMES)
-        names = [names[min(len(names) - 1, int(i * step))] for i in range(FRAMES)]
 
     frames = [read(z, n) for n in names]
 
@@ -538,10 +601,109 @@ def cast_frames(z, folder):
     frames = [im.crop(box) for im in frames]
 
     width, height = frames[0].size
-    ratio = CAST / float(height)
-    size = (max(1, int(width * ratio)), CAST)
+    ratio = tall / float(height)
+    size = (max(1, int(width * ratio)), tall)
 
     return [im.resize(size, Image.LANCZOS) for im in frames]
+
+
+def centroid(im):
+    """The alpha-weighted middle of a frame, in its own pixels."""
+    a = np.asarray(im)[..., 3].astype(np.float64)
+    mass = a.sum()
+    if mass <= 0:
+        return 0.0, 0.0
+
+    ys, xs = np.mgrid[0:a.shape[0], 0:a.shape[1]]
+    return float((xs * a).sum() / mass), float((ys * a).sum() / mass)
+
+
+def paired(z, folders, count, tall, overflow=()):
+    """Two animations of one character, cut onto **one** canvas so the body cannot jump.
+
+    <b>Why this is not two calls to `cast_frames`.</b> Each animation is exported on a canvas
+    cropped to its own extent - this alien's idle is 326 wide and its attack 436, because the
+    attack throws a fist a long way out - so trimming each to its own bounding box and fitting
+    both into the same square draws the body at two different *sizes*. On screen that is a boss
+    that shrinks by a quarter every time it casts and grows back afterwards, which reads as a bug
+    in the game rather than as an animation.
+
+    <b>The alignment is exact rather than approximate.</b> The first frame of each animation is
+    the same pose, so the two frames hold the same pixels translated - which means the offset
+    between the canvases is the difference of their alpha centroids, to the pixel. Measured on the
+    shipped pair: (111, 41), against an overlap search that agreed. It is checked rather than
+    assumed: if the two first frames do not carry the same mass they are not the same pose, and
+    the caller is told rather than handed a silently misaligned reel.
+    """
+    reels = []
+    for folder in folders:
+        names = ordered(z, folder)
+        if not names:
+            return None
+        reels.append([read(z, n) for n in names])
+
+    base = centroid(reels[0][0])
+    shifts = []
+
+    for frames in reels:
+        here = centroid(frames[0])
+        shifts.append((int(round(here[0] - base[0])), int(round(here[1] - base[1]))))
+
+        mass = np.asarray(frames[0])[..., 3].sum()
+        want = np.asarray(reels[0][0])[..., 3].sum()
+        if abs(int(mass) - int(want)) > want * 0.04:
+            raise SystemExit("the first frames of %s are not the same pose as %s, so these two "
+                             "animations cannot be aligned by centroid" % (folders, folders[0]))
+
+    # Every frame of both animations, expressed in the first animation's own pixel space.
+    def extent(over):
+        box = None
+        for frames, (dx, dy) in over:
+            for im in frames:
+                bb = im.getbbox()
+                if bb is None:
+                    continue
+                here = (bb[0] - dx, bb[1] - dy, bb[2] - dx, bb[3] - dy)
+                box = here if box is None else (min(box[0], here[0]), min(box[1], here[1]),
+                                                max(box[2], here[2]), max(box[3], here[3]))
+        return box
+
+    kept = [(r, s) for r, s, f in zip(reels, shifts, folders) if f not in overflow]
+
+    home = extent(kept) or extent([(reels[0], shifts[0])])
+    whole = extent(list(zip(reels, shifts)))
+
+    if home is None or whole is None:
+        return None
+
+    # **Wide as everything that stays in frame, and tall as everything full stop** - two decisions
+    # rather than one lazy union.
+    #
+    # *Wide*: this alien's attack throws a fist a long way sideways, and framing that would put the
+    # body in 60% of a 522-pixel canvas - which the view then centres, so the boss would be drawn
+    # standing off to one side of the lane it is in and at two thirds the size it should be. With
+    # the attack named in `overflow` the fist simply leaves the frame, which is what "it threw
+    # something" looks like anyway, and the spell crossing the hill is the follow-through. The walk
+    # is *not* in `overflow` and must not be: its legs stride nine pixels wider than the stand, and
+    # a clipped foot is a boss walking on stumps.
+    #
+    # *Tall*: a clipped head is not a throw, it is a mistake. Nothing is ever cut off the top.
+    box = (home[0], whole[1], home[2], whole[3])
+
+    wide, high = box[2] - box[0], box[3] - box[1]
+    ratio = tall / float(high)
+    size = (max(1, int(wide * ratio)), tall)
+
+    out = []
+    for frames, (dx, dy) in zip(reels, shifts):
+        cut = []
+        for im in spaced(frames, count):
+            pane = Image.new("RGBA", (wide, high), (0, 0, 0, 0))
+            pane.alpha_composite(im, (-box[0] - dx, -box[1] - dy))
+            cut.append(pane.resize(size, Image.LANCZOS))
+        out.append(cut)
+
+    return out
 
 
 # --------------------------------------------------------------------------- the drop
@@ -613,6 +775,20 @@ def build():
             continue
         for i, im in enumerate(cast_frames(z, folder)):
             made["Siege/%s/f%02d.png" % (key, i)] = im
+
+    # The warlord: two reels off one canvas, so it neither jumps nor changes size when it throws.
+    warlord = zipped(WARLORDS)
+    if warlord is not None:
+        reels = paired(warlord, [BOSS_IDLE, BOSS_WALK, BOSS_ATTACK],
+                       max(BOSS_FRAMES, BOSS_CAST_FRAMES), BOSS,
+                       overflow=(BOSS_ATTACK,))
+
+        if reels is not None:
+            for key, frames, want in (("boss", reels[0], BOSS_FRAMES),
+                                      ("boss_walk", reels[1], BOSS_FRAMES),
+                                      ("boss_cast", reels[2], BOSS_CAST_FRAMES)):
+                for i, im in enumerate(spaced(frames, want)):
+                    made["Siege/%s/f%02d.png" % (key, i)] = im
 
     return made
 

@@ -125,6 +125,17 @@ namespace GlimmerGrove.Content
             AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon3")),
             AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute")),
 
+            // The warlord: one alien from a pack none of the creepers came from, drawn several
+            // times their size. **Three reels**, which is the ward line's bargain read across - a
+            // turret that only ever cycled its idle would have no way to say it had fired, and
+            // neither would a boss that only ever hovered. The walk is the one that was missing
+            // and it was missed by *playing* it: a warlord wears its idle standing still and its
+            // walk for the six seconds it is actually crossing ground, and shipping only the idle
+            // read as floating.
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boss")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boss_walk")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boss_cast")),
+
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("boom_fire")),
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("boom_smoke")),
 
@@ -152,6 +163,16 @@ namespace GlimmerGrove.Content
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("hit_b")),
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("hit_y")),
 
+            // What the warlord throws, as the same three parts. **One set rather than four**, and
+            // graded to a colour no ward and no gem wears: the elemental double is a rule about
+            // bolts going *into* the boss, so a spell coming *out* of it that wore one of the
+            // board's four colours would be saying something the rules do not mean. Being one set
+            // is also what keeps a boss affordable - four would double this mode's whole effects
+            // budget for one wave of one level.
+            AssetRequest.SpriteSet(AssetManifest.SiegeFx("spell")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeFx("spell_muzzle")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeFx("spell_hit")),
+
             // Both white, both tinted where they are drawn: a muzzle flash takes the ward's
             // colour and a gem's burst takes the gem's, so one reel serves four.
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("flash")),
@@ -174,7 +195,7 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
-            var layout = new SiegeLayout(grid, block.gems, block.wards, block.waves);
+            var layout = new SiegeLayout(grid, block.gems, block.wards, block.waves, block.boss);
 
             if (layout.Fault != null)
             {

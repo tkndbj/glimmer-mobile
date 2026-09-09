@@ -46,6 +46,9 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const string RaiderLetters = "rgbyRGBY";
 
+        /// <summary>What a warlord may be. The same four, because a boss is answered by a ward.</summary>
+        public const string BossLetters = "rgby";
+
         /// <summary>How many wards a line may hold. Four colours, so four is the whole line.</summary>
         public const int MaxWards = 4;
 
@@ -68,8 +71,42 @@ namespace GlimmerGrove.Modes
         /// <summary>The ward line, left to right. One colour each, and no two the same.</summary>
         public readonly char[] Wards;
 
-        /// <summary>The waves, in the order they come. A wave arrives when the one before it is gone.</summary>
+        /// <summary>
+        /// The waves, in the order they come — <b>including the warlord's</b>, which is appended
+        /// rather than authored.
+        ///
+        /// See <see cref="Boss"/> for why a level says only <em>whether</em> there is one.
+        /// </summary>
         public readonly string[] Waves;
+
+        /// <summary>
+        /// The warlord that comes last, as a colour letter, or <c>'\0'</c> for a siege that sends
+        /// none.
+        ///
+        /// <para>
+        /// <b>A level says whether there is one and what colour it wears, and never which wave it
+        /// is in</b> — the last wave <em>is</em> the boss wave, by rule, so it cannot be authored
+        /// into the middle of a siege and cannot be left off the end of one. That is the same
+        /// bargain invariant 33g strikes with the haul-road and invariant 4a with the manifest:
+        /// where a fact can be derived from a shape rather than typed beside it, the two can never
+        /// come apart.
+        /// </para>
+        /// <para>
+        /// <b>It is still a wave, and that is what makes it cost nothing.</b> The warlord is
+        /// appended to <see cref="Waves"/> as a one-raider wave, so the wave count the header
+        /// reads, the muster, the banner, <see cref="RaiderCount"/> and
+        /// <see cref="SiegeTuning.Par"/> all take it without a single special case — the only
+        /// question anything has to ask is <see cref="BossWave"/>, and only because a warlord's
+        /// health and its way of fighting are not a creeper's.
+        /// </para>
+        /// </summary>
+        public readonly char Boss;
+
+        /// <summary>Which wave the warlord is, or -1. Always the last one when there is one.</summary>
+        public readonly int BossWave = -1;
+
+        /// <summary>Whether this siege ends with a warlord.</summary>
+        public bool HasBoss => Boss != '\0';
 
         /// <summary>
         /// Where the refill stream starts, derived from the authored field rather than typed.
@@ -83,14 +120,32 @@ namespace GlimmerGrove.Modes
         /// <summary>What is wrong with this level, or null.</summary>
         public readonly string Fault;
 
-        public SiegeLayout(ProtoGrid grid, string deal, string wards, string[] waves)
+        public SiegeLayout(ProtoGrid grid, string deal, string wards, string[] waves, string boss)
         {
             Grid = grid;
             Deal = Tidy(deal, Letters);
             Wards = Tidy(wards, WardLetters).ToCharArray();
-            Waves = Trim(waves);
+
+            // **Exactly one legal letter, or nothing** — not `Tidy`, which keeps whatever it
+            // recognises and throws the rest away. "dragon" would salvage an 'r' out of itself and
+            // ship a red warlord nobody authored, which is the shape of accident invariant 5f
+            // exists to refuse: content written for a build that is not this one has to be said
+            // out loud rather than quietly interpreted.
+            string named = (boss ?? string.Empty).Trim();
+
+            Boss = named.Length == 1 && BossLetters.IndexOf(named[0]) >= 0 ? named[0] : '\0';
+
+            var coming = new List<string>(Trim(waves));
+
+            if (HasBoss)
+            {
+                BossWave = coming.Count;
+                coming.Add(Boss.ToString());
+            }
+
+            Waves = coming.ToArray();
             Seed = Hash(grid);
-            Fault = Check();
+            Fault = Check(boss);
         }
 
         static string Tidy(string raw, string legal)
@@ -136,9 +191,17 @@ namespace GlimmerGrove.Modes
             return h == 0u ? 1u : h;
         }
 
-        string Check()
+        string Check(string boss)
         {
             if (Grid == null) return "no field";
+
+            // Refused by name rather than ignored, which is invariant 5f's rule for a token a
+            // build no longer knows read the other way round: a level that names a warlord this
+            // mode cannot draw would otherwise index, validate and ship as a siege with no boss in
+            // it, and nothing anywhere would say so.
+            if (!string.IsNullOrEmpty(boss) && boss.Trim().Length > 0 && !HasBoss)
+                return $"'{boss}' is not a warlord this mode knows; a boss is one of "
+                     + $"'{BossLetters}', and an empty field is how a siege says it sends none";
 
             if (Wards.Length < 2 || Wards.Length > MaxWards)
                 return $"a ward line holds 2 to {MaxWards} wards; this one names {Wards.Length}";
@@ -176,9 +239,15 @@ namespace GlimmerGrove.Modes
                 for (int i = 0; i < Waves[w].Length; i++)
                 {
                     char colour = char.ToLowerInvariant(Waves[w][i]);
-                    if (Array.IndexOf(Wards, colour) < 0)
-                        return $"wave {w + 1} sends a '{colour}' raider and no ward on this line "
-                             + $"carries '{colour}', so nothing here is strong against it";
+                    if (Array.IndexOf(Wards, colour) >= 0) continue;
+
+                    // The warlord is the one this really matters for: it has the health of a whole
+                    // wave, so answering it at half rate is a duel nobody can finish.
+                    string what = w == BossWave ? "a '" + colour + "' warlord"
+                                                : "a '" + colour + "' raider";
+
+                    return $"wave {w + 1} sends {what} and no ward on this line carries "
+                         + $"'{colour}', so nothing here is strong against it";
                 }
 
             // Authored settled. A field that goes off before anybody has touched it is a board
@@ -334,16 +403,135 @@ namespace GlimmerGrove.Modes
         public const float BruteMarch = 26f;
         public const int BruteBlow = 2;
 
+        // ------------------------------------------------------------------ the warlord
+        /// <summary>
+        /// The warlord's health, and it is deliberately under a quarter of the whole hill's.
+        ///
+        /// <para>
+        /// <b>A boss has to be worth a fight rather than a raider with a bigger number.</b> At a
+        /// hundred and eighty it is nearly four brutes standing still, which under the ordinary
+        /// play <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> models is about thirteen
+        /// matches of nothing else and twenty-five seconds of clock — long enough that the player
+        /// has to keep choosing the right colour under fire, short enough that the last stretch of
+        /// a two-minute level is not a grind.
+        /// </para>
+        /// <para>
+        /// <b>And the ceiling on it is arithmetic rather than taste, which is the half worth
+        /// knowing before anybody makes a warlord bigger.</b> <see cref="PerfectMatch"/> assumes
+        /// every gem a match clears is spent as a bolt that lands <em>double</em> — which a hill
+        /// wearing all four colours very nearly allows, because each ward finds its own. A duel
+        /// cannot: the warlord is one colour, so one ward doubles and three do not, and a match
+        /// therefore delivers about 13.75 rather than 22. Par is still a genuine floor (no run of
+        /// fewer matches could destroy this), it is simply a <b>looser</b> one over a duel, so
+        /// every point of warlord pushes the three-star line further from real play. Measured on
+        /// the shipped level: at 180 an unhurried player needs 44 matches against a three-star line
+        /// of 44, and at 200 it is 47 against 46 and the ladder's top rung is gone. <b>Health moved
+        /// from the hill to the warlord makes three stars harder without par saying so.</b>
+        /// </para>
+        /// </summary>
+        public const int BossHealth = 180;
+
+        /// <summary>
+        /// Where the warlord stops, as a march reading.
+        ///
+        /// <b>It never reaches the line, and that is the whole shape of the fight.</b> Everything
+        /// else on this hill is answered by killing it before it arrives; a warlord walks to the
+        /// middle of the hill, stands there, and hits the line from where nothing can stop it
+        /// except the wards themselves. So the pressure it applies cannot be outrun — it can only
+        /// be out-damaged, which is what makes the last wave a duel rather than a longer wave.
+        /// </summary>
+        public const float BossHold = .46f;
+
+        /// <summary>
+        /// Seconds it would take to cross the whole hill. It only walks <see cref="BossHold"/> of
+        /// it, so the entrance a player actually watches is a little under six seconds.
+        ///
+        /// <b>It was 22, which is ten seconds of entrance, and the owner asked for it faster after
+        /// playing.</b> A creeper crosses the whole hill in fifteen; there was no reason for the
+        /// warlord to be slower per unit of ground than the smallest thing on the board except that
+        /// slow reads as heavy — and past a few seconds it stops reading as heavy and starts reading
+        /// as a wait. What carries the weight instead is its size, its own frames and the shake it
+        /// arrives with. <c>SiegeRuleTests.AWarlordWalksOnBeforeItStands</c> holds the entrance
+        /// under eight seconds so the number cannot drift back.
+        /// </summary>
+        public const float BossMarch = 13f;
+
+        /// <summary>
+        /// The quiet before the warlord, which is longer than the quiet before any other wave.
+        ///
+        /// <para>
+        /// <b>He sends his raiders first and comes himself after them</b>, which is the pacing the
+        /// finale wants and is also the one place this mode's own wave rule needed an exception.
+        /// Invariant 37k's shortcut still applies — a player who has cleared the hill gets the
+        /// warlord at once rather than standing about — so what this longer clock buys is entirely
+        /// for the player who is <em>behind</em>: it stops a duel being stacked on top of a wave
+        /// still swinging at the line, which is two fail states arriving together and reads as
+        /// being cheated rather than as being outpaced.
+        /// </para>
+        /// <para>
+        /// It is pinned by <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> like everything
+        /// else here, and it is the number that moved when the warlord was first put on the hill:
+        /// at <see cref="BetweenWaves"/> the shipped level's last brutes and its warlord reached
+        /// the line within seconds of each other and the run was lost with two raiders left.
+        /// </para>
+        /// <para>
+        /// <b>It came back down from 34 to 28 for the same verdict that shortened
+        /// <see cref="BossMarch"/>, and that is not free.</b> The warlord now opens fire about
+        /// eleven seconds earlier, which is eleven seconds of it overlapping the tail of the last
+        /// wave — measured, an unhurried player finishes with 15 of the line's 56 rather than 21.
+        /// <b>A pacing change is a difficulty change</b> (37s said the same thing about the fuel
+        /// flight), and this one is the level getting tighter rather than the boss getting
+        /// stronger. If it plays too tight, <see cref="BossCastEvery"/> is the constant to move —
+        /// not this one, which is what the player asked for.
+        /// </para>
+        /// </summary>
+        public const float BossAfter = 28f;
+
+        /// <summary>Quiet between the warlord reaching its ground and its first spell.</summary>
+        public const float BossWakes = 3.4f;
+
+        /// <summary>Seconds between one spell and the next.</summary>
+        public const float BossCastEvery = 5f;
+
+        /// <summary>
+        /// How long a spell is telegraphed before it leaves, and how long it is then in the air.
+        ///
+        /// <para>
+        /// <b>Drawing numbers living in the rules, for <see cref="SwapFor"/>'s reason and one
+        /// more.</b> A spell that landed on the frame the warlord decided to cast would take a
+        /// ward down before anything had crossed the hill, which is the fault invariant 37s is
+        /// about. And the wind-up is not only an animation: it is the window in which a
+        /// <c>mending</c> is worth pouring into the ward that is about to be hit, so how long it
+        /// lasts is a rule the player plays against rather than a flourish.
+        /// </para>
+        /// </summary>
+        public const float BossTell = 1.15f, BossFlight = .45f;
+
+        /// <summary>What one spell takes off a ward.</summary>
+        public const int BossCast = 3;
+
         /// <summary>
         /// Blows a ward takes before it falls.
         ///
-        /// <b>Ten, and it is drawn as a bar rather than as pips for that reason.</b> It was four
+        /// <b>Drawn as a bar rather than as pips, because it is too many to count.</b> It was four
         /// while fuel faded on a clock; taking the fade out roughly doubled what a match delivers,
         /// so the hill had to grow, and a hill that can put four brutes on the line at once takes
         /// a line apart in three seconds against four. What this number really sets is *how long
-        /// a leak is survivable*, which is the whole texture of the mode's last wave.
+        /// a leak is survivable*.
+        ///
+        /// <para>
+        /// <b>It went from ten to fourteen when the warlord arrived, and that is a fact about the
+        /// shape of a level rather than about how hard one should be.</b> At ten the shipped siege
+        /// ended within seconds of the line coming down — which is the right texture for a level
+        /// whose last wave is its climax, and the wrong one for a level that has a duel *after*
+        /// its last wave: measured, the run was lost with two raiders left, the line falling to
+        /// brutes that used to be the finale. A longer level needs a line that can carry a leak
+        /// into the next phase, and the compensation is that a leak now bleeds for longer rather
+        /// than that the level got easier — an unhurried player still finishes 43% down
+        /// (<c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, invariant 37j).
+        /// </para>
         /// </summary>
-        public const int WardHealth = 10;
+        public const int WardHealth = 14;
 
         /// <summary>Seconds between a raider's blows once it has reached the line.</summary>
         public const float BlowEvery = 1.9f;
@@ -426,9 +614,39 @@ namespace GlimmerGrove.Modes
         /// <summary>When a cascade's <paramref name="beat"/>th wave of fuel reaches the line.</summary>
         public static float FuelLands(int beat) => SwapFor + beat * BeatFor + FuelFlight;
 
-        public static int HealthOf(bool brute) => brute ? BruteHealth : CreeperHealth;
-        public static float MarchOf(bool brute) => brute ? BruteMarch : CreeperMarch;
-        public static int BlowOf(bool brute) => brute ? BruteBlow : CreeperBlow;
+        /// <summary>
+        /// Which of the three a wave's token is.
+        ///
+        /// <b>The wave decides, never the letter.</b> A warlord is written as its colour — the
+        /// same character a creeper is — because what makes it a warlord is standing alone in the
+        /// last wave (<see cref="SiegeLayout.Boss"/>). Asking the letter would be a second opinion
+        /// about a fact the layout already holds.
+        /// </summary>
+        public static SiegeKind KindOf(char token, bool boss)
+            => boss ? SiegeKind.Boss
+             : char.IsUpper(token) ? SiegeKind.Brute
+             : SiegeKind.Creeper;
+
+        public static int HealthOf(SiegeKind kind)
+            => kind == SiegeKind.Boss ? BossHealth
+             : kind == SiegeKind.Brute ? BruteHealth : CreeperHealth;
+
+        public static float MarchOf(SiegeKind kind)
+            => kind == SiegeKind.Boss ? BossMarch
+             : kind == SiegeKind.Brute ? BruteMarch : CreeperMarch;
+
+        /// <summary>
+        /// What one swing at the line costs a ward.
+        ///
+        /// <b>A warlord swings at nothing</b>, because it never reaches the line — what it costs
+        /// the line is <see cref="BossCast"/>, from where it stands.
+        /// </summary>
+        public static int BlowOf(SiegeKind kind)
+            => kind == SiegeKind.Boss ? 0
+             : kind == SiegeKind.Brute ? BruteBlow : CreeperBlow;
+
+        /// <summary>How far down the hill this kind comes before it stops. A warlord stops early.</summary>
+        public static float HoldOf(SiegeKind kind) => kind == SiegeKind.Boss ? BossHold : 1f;
 
         /// <summary>
         /// Gems an ordinary match clears, cascades included, in tenths.
@@ -487,11 +705,28 @@ namespace GlimmerGrove.Modes
             int health = 0;
             for (int w = 0; w < layout.Waves.Length; w++)
                 for (int i = 0; i < layout.Waves[w].Length; i++)
-                    health += HealthOf(char.IsUpper(layout.Waves[w][i]));
+                    health += HealthOf(KindOf(layout.Waves[w][i], w == layout.BossWave));
 
             int par = (health + PerfectMatch - 1) / PerfectMatch;
             return par < 1 ? 1 : par;
         }
+    }
+
+    /// <summary>
+    /// What is walking down the hill: an ordinary raider, a brute, or the warlord.
+    ///
+    /// <b>An enum rather than a second bool, and the third member is why.</b> It was
+    /// <c>bool Brute</c>, which is exactly right for two kinds and becomes a pair of flags that
+    /// can both be true the moment there is a third — and every table keyed on it (health, march,
+    /// blow, how far it comes) would then have had to agree about which flag wins.
+    /// </summary>
+    public enum SiegeKind
+    {
+        Creeper,
+        Brute,
+
+        /// <summary>The warlord: it holds the middle of the hill and hits the line from there.</summary>
+        Boss,
     }
 
     /// <summary>One raider on the hill.</summary>
@@ -502,7 +737,7 @@ namespace GlimmerGrove.Modes
         /// <summary>Which of <see cref="SiegeLayout.Letters"/> it wears, as an index.</summary>
         public readonly int Colour;
 
-        public readonly bool Brute;
+        public readonly SiegeKind Kind;
 
         /// <summary>Which lane it walks down, 0 at the left.</summary>
         public readonly int Lane;
@@ -513,6 +748,9 @@ namespace GlimmerGrove.Modes
         /// <summary>How far down the hill it is: 0 at the top, 1 at the ward line.</summary>
         public float March;
 
+        /// <summary>How far down it comes before it stops. One for everything but a warlord.</summary>
+        public readonly float Hold;
+
         public int Health;
         public readonly int MaxHealth;
 
@@ -521,24 +759,42 @@ namespace GlimmerGrove.Modes
         /// <summary>Seconds until its next blow, once it has arrived.</summary>
         public float Blow;
 
+        /// <summary>Seconds until its next spell. A warlord's only, and only once it is in place.</summary>
+        public float Spell;
+
         /// <summary>Set for one frame after it has been hit, so the view can flash it.</summary>
         public float Flash;
 
-        public SiegeRaider(int id, int colour, bool brute, int lane, float wait)
+        public SiegeRaider(int id, int colour, SiegeKind kind, int lane, float wait)
         {
             Id = id;
             Colour = colour;
-            Brute = brute;
+            Kind = kind;
             Lane = lane;
             Wait = wait;
-            MaxHealth = SiegeTuning.HealthOf(brute);
+            Hold = SiegeTuning.HoldOf(kind);
+            MaxHealth = SiegeTuning.HealthOf(kind);
             Health = MaxHealth;
             Blow = SiegeTuning.BlowEvery * .5f;
+            Spell = SiegeTuning.BossWakes;
         }
+
+        public bool Brute => Kind == SiegeKind.Brute;
+
+        public bool Boss => Kind == SiegeKind.Boss;
 
         public bool OnTheHill => Wait <= 0f;
 
-        public bool AtTheLine => Alive && OnTheHill && March >= 1f;
+        /// <summary>
+        /// Whether it is standing at the line and swinging.
+        ///
+        /// <b>A warlord never is</b>, because <see cref="Hold"/> stops it short of it — which is
+        /// what makes <see cref="SiegeBoard.Swing"/> need no clause about bosses at all.
+        /// </summary>
+        public bool AtTheLine => Alive && OnTheHill && Hold >= 1f && March >= 1f;
+
+        /// <summary>Whether it has reached the ground it holds and may start casting.</summary>
+        public bool InPlace => Alive && OnTheHill && March >= Hold;
     }
 
     /// <summary>One ward on the line.</summary>
@@ -613,11 +869,58 @@ namespace GlimmerGrove.Modes
         }
     }
 
+    /// <summary>
+    /// A warlord beginning a spell: which ward it has chosen, and how long the player has.
+    ///
+    /// <b>Its own record and raised the moment the spell is <em>decided</em></b>, which is the
+    /// point of it: the wind-up is what the view draws over the ward that is about to be hit, and
+    /// it is the window a <c>mending</c> is worth spending in. A cast that was reported only when
+    /// it landed would be a fail state arriving with no warning, which is the one thing this mode
+    /// already refuses to do with a wave.
+    /// </summary>
+    public readonly struct SiegeCast
+    {
+        public readonly int Raider, Ward;
+
+        /// <summary>Seconds from now until it lands. <see cref="SiegeTuning.BossTell"/> of that is the tell.</summary>
+        public readonly float In;
+
+        public SiegeCast(int raider, int ward, float @in)
+        {
+            Raider = raider;
+            Ward = ward;
+            In = @in;
+        }
+    }
+
+    /// <summary>
+    /// A spell landing on the line.
+    ///
+    /// Its own record and not a <see cref="SiegeBlow"/>, for <see cref="SiegeStrike"/>'s reason:
+    /// a blow is swung at the line by something standing at it, a spell is thrown from the middle
+    /// of the hill, and the view draws the two nothing alike.
+    /// </summary>
+    public readonly struct SiegeSpell
+    {
+        public readonly int Raider, Ward, Damage;
+        public readonly bool Felled;
+
+        public SiegeSpell(int raider, int ward, int damage, bool felled)
+        {
+            Raider = raider;
+            Ward = ward;
+            Damage = damage;
+            Felled = felled;
+        }
+    }
+
     /// <summary>Everything that happened in one step of the clock.</summary>
     public sealed class SiegeReport
     {
         public readonly List<SiegeBolt> Bolts = new List<SiegeBolt>(16);
         public readonly List<SiegeBlow> Blows = new List<SiegeBlow>(4);
+        public readonly List<SiegeCast> Casts = new List<SiegeCast>(2);
+        public readonly List<SiegeSpell> Spells = new List<SiegeSpell>(2);
         public readonly List<int> Arrived = new List<int>(8);
 
         /// <summary>The wave that has just stepped out, or -1.</summary>
@@ -627,11 +930,14 @@ namespace GlimmerGrove.Modes
         {
             Bolts.Clear();
             Blows.Clear();
+            Casts.Clear();
+            Spells.Clear();
             Arrived.Clear();
             Wave = -1;
         }
 
-        public bool Any => Bolts.Count > 0 || Blows.Count > 0 || Arrived.Count > 0 || Wave >= 0;
+        public bool Any => Bolts.Count > 0 || Blows.Count > 0 || Casts.Count > 0
+                        || Spells.Count > 0 || Arrived.Count > 0 || Wave >= 0;
     }
 
     /// <summary>Fuel a match has earned that has not reached its ward yet.</summary>
@@ -704,6 +1010,15 @@ namespace GlimmerGrove.Modes
         readonly SiegeReport _report = new SiegeReport();
         readonly List<SiegeCharge> _flying = new List<SiegeCharge>(16);
 
+        /// <summary>A spell that has been cast and has not arrived. See <see cref="Conjure"/>.</summary>
+        struct Flight
+        {
+            public int Raider, Ward;
+            public float In;
+        }
+
+        readonly List<Flight> _spells = new List<Flight>(4);
+
         uint _rng;
         int _wave;
         int _minted;
@@ -755,7 +1070,23 @@ namespace GlimmerGrove.Modes
         /// <summary>The wave now on the hill, counting from one. Nought before the first.</summary>
         public int Wave => _wave;
 
+        /// <summary>How many waves this siege sends, the warlord's included.</summary>
         public int Waves => Layout.Waves.Length;
+
+        /// <summary>Whether the wave now on the hill is the warlord's.</summary>
+        public bool BossWave => Layout.HasBoss && _wave == Layout.BossWave + 1;
+
+        /// <summary>The warlord, while it is standing, or null.</summary>
+        public SiegeRaider Warlord
+        {
+            get
+            {
+                for (int i = 0; i < _raiders.Count; i++)
+                    if (_raiders[i].Boss && _raiders[i].Alive) return _raiders[i];
+
+                return null;
+            }
+        }
 
         // ------------------------------------------------------------------ IProtoBoard
         public bool IsFinished => GoalsLeft == 0;
@@ -965,9 +1296,10 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// The order matters and is the order a player would want: the wave arrives, then the
-        /// raiders walk, then the wards shoot at where the raiders now are, then whatever reached
-        /// the line swings. A ward that has just been fuelled therefore gets its bolt away in the
-        /// same step, and a raider killed by that bolt never lands the blow it was about to.
+        /// raiders walk, then the wards shoot at where the raiders now are, then the warlord casts,
+        /// then whatever reached the line swings. A ward that has just been fuelled therefore gets
+        /// its bolt away in the same step, and a raider killed by that bolt never lands the blow it
+        /// was about to — nor does a warlord killed by it ever start the spell it was about to.
         /// </para>
         /// </summary>
         public SiegeReport Advance(float dt)
@@ -981,6 +1313,7 @@ namespace GlimmerGrove.Modes
             Muster(dt);
             Walk(dt);
             Shoot(dt);
+            Conjure(dt);
             Swing(dt);
 
             for (int i = _raiders.Count - 1; i >= 0; i--)
@@ -1017,6 +1350,55 @@ namespace GlimmerGrove.Modes
 
                 ward.Fuel = Math.Min(SiegeTuning.WardCapacity, ward.Fuel + charge.Fuel);
             }
+
+            Arrive(dt);
+        }
+
+        /// <summary>
+        /// Lands whatever spell has finished crossing the hill.
+        ///
+        /// <para>
+        /// <b>A spell whose caster has been destroyed fizzles</b>, and that is a decision rather
+        /// than tidiness. The alternative is a ward coming down — and a run being lost — to
+        /// something thrown by a warlord the player had already beaten, which reads as the game
+        /// getting the last word. It also makes killing a warlord mid-wind-up worth something,
+        /// which the tell is long enough to make possible.
+        /// </para>
+        /// <para>
+        /// A spell aimed at a ward that has since fallen is dropped for <see cref="Land"/>'s own
+        /// reason: the ward that is asked is the one standing when it gets there.
+        /// </para>
+        /// </summary>
+        void Arrive(float dt)
+        {
+            for (int i = _spells.Count - 1; i >= 0; i--)
+            {
+                var spell = _spells[i];
+                spell.In -= dt;
+
+                if (spell.In > 0f) { _spells[i] = spell; continue; }
+
+                _spells.RemoveAt(i);
+
+                var caster = Find(spell.Raider);
+                if (caster == null || !caster.Alive) continue;
+
+                var ward = _wards[spell.Ward];
+                if (!ward.Alive) continue;
+
+                ward.Health -= SiegeTuning.BossCast;
+
+                bool felled = ward.Health <= 0;
+                if (felled)
+                {
+                    ward.Health = 0;
+                    ward.Alive = false;
+                    ward.Fuel = 0f;
+                }
+
+                _report.Spells.Add(new SiegeSpell(spell.Raider, spell.Ward,
+                                                  SiegeTuning.BossCast, felled));
+            }
         }
 
         void Muster(float dt)
@@ -1042,24 +1424,34 @@ namespace GlimmerGrove.Modes
             }
 
             string wave = Layout.Waves[_wave];
+            bool boss = _wave == Layout.BossWave;
 
             for (int i = 0; i < wave.Length; i++)
             {
                 char token = wave[i];
-                bool brute = char.IsUpper(token);
+                var kind = SiegeTuning.KindOf(token, boss);
                 int colour = SiegeLayout.Letters.IndexOf(char.ToLowerInvariant(token));
 
                 // Lanes are dealt from the same stream the field is, so a wave arrives spread out
                 // rather than in a column - and spread the same way on every device.
-                int lane = (int)(Next() % SiegeTuning.Lanes);
+                //
+                // **The warlord is the exception and walks down the middle**, because where it
+                // stands is not a fact anybody should have to hunt for: it is the largest thing on
+                // the board and it stays put for the rest of the run, so a dealt lane would put it
+                // over a ward on some devices and off the edge of the hill on others.
+                int lane = boss ? SiegeTuning.Lanes / 2 : (int)(Next() % SiegeTuning.Lanes);
 
-                _raiders.Add(new SiegeRaider(_minted++, colour, brute, lane,
+                _raiders.Add(new SiegeRaider(_minted++, colour, kind, lane,
                                              i * SiegeTuning.RaiderSpacing));
             }
 
             _report.Wave = _wave;
             _wave++;
-            _rest = SiegeTuning.BetweenWaves;
+
+            // The warlord gets a longer quiet in front of him than any other wave - see
+            // `SiegeTuning.BossAfter`. The shortcut above is unaffected, so a player who has
+            // cleared the hill still gets him at once.
+            _rest = _wave == Layout.BossWave ? SiegeTuning.BossAfter : SiegeTuning.BetweenWaves;
         }
 
         void Walk(float dt)
@@ -1077,13 +1469,19 @@ namespace GlimmerGrove.Modes
                     continue;
                 }
 
-                if (raider.March >= 1f) continue;
+                if (raider.March >= raider.Hold) continue;
 
-                raider.March += dt / SiegeTuning.MarchOf(raider.Brute);
+                raider.March += dt / SiegeTuning.MarchOf(raider.Kind);
 
-                if (raider.March < 1f) continue;
+                if (raider.March < raider.Hold) continue;
 
-                raider.March = 1f;
+                // **Stopped where its kind stops**, which for a warlord is the middle of the hill
+                // and for everything else is the line. Nothing here needs to know which: the two
+                // differ by one number the raider was minted with.
+                raider.March = raider.Hold;
+
+                if (!raider.AtTheLine) continue;
+
                 raider.Blow = SiegeTuning.BlowEvery;
                 _report.Arrived.Add(raider.Id);
             }
@@ -1150,6 +1548,71 @@ namespace GlimmerGrove.Modes
             return weak ?? near;
         }
 
+        /// <summary>
+        /// The warlord's spells: chosen, telegraphed, and thrown at the line from where it stands.
+        ///
+        /// <para>
+        /// <b>Nothing lands here.</b> A cast decides a target and books a
+        /// <see cref="Flight"/>; <see cref="Arrive"/> is what takes the ward's health, a whole
+        /// <see cref="SiegeTuning.BossTell"/> plus <see cref="SiegeTuning.BossFlight"/> later. That
+        /// split is invariant 37s — a move's effect may not land before its animation does, and on
+        /// a board whose clock never stops the only way to guarantee it is for the schedule to be
+        /// a rule the view reads rather than a duration the view invents.
+        /// </para>
+        /// </summary>
+        void Conjure(float dt)
+        {
+            for (int i = 0; i < _raiders.Count; i++)
+            {
+                var boss = _raiders[i];
+                if (!boss.Boss || !boss.Alive || !boss.InPlace) continue;
+
+                boss.Spell -= dt;
+                if (boss.Spell > 0f) continue;
+
+                boss.Spell = SiegeTuning.BossCastEvery;
+
+                int ward = Wanted();
+                if (ward < 0) continue;
+
+                float lands = SiegeTuning.BossTell + SiegeTuning.BossFlight;
+
+                _spells.Add(new Flight { Raider = boss.Id, Ward = ward, In = lands });
+                _report.Casts.Add(new SiegeCast(boss.Id, ward, lands));
+            }
+        }
+
+        /// <summary>
+        /// Which ward a warlord throws at: the standing one with the most health left.
+        ///
+        /// <para>
+        /// <b>The freshest rather than the weakest, and that is what keeps the fight winnable.</b>
+        /// A warlord that finished off whatever was nearly down would take the line apart one ward
+        /// at a time — and the ward it would reach first is the one whose colour the player has to
+        /// feed to answer it, so the mode's own answer would be the thing it destroyed. Picking the
+        /// freshest spreads the damage instead: the line comes down evenly, no colour is ever
+        /// locked out, and a run that is losing is losing to arithmetic rather than to a trap.
+        /// </para>
+        /// <para>
+        /// It is also what keeps <see cref="Stranded"/> an honest certainty (invariant 28f): the
+        /// warlord can never leave a player alive with no way to hurt it.
+        /// </para>
+        /// </summary>
+        int Wanted()
+        {
+            int best = -1, most = -1;
+
+            for (int w = 0; w < _wards.Length; w++)
+            {
+                if (!_wards[w].Alive || _wards[w].Health <= most) continue;
+
+                most = _wards[w].Health;
+                best = w;
+            }
+
+            return best;
+        }
+
         void Swing(float dt)
         {
             for (int i = 0; i < _raiders.Count; i++)
@@ -1166,7 +1629,7 @@ namespace GlimmerGrove.Modes
                 if (w < 0) continue;
 
                 var ward = _wards[w];
-                int damage = SiegeTuning.BlowOf(raider.Brute);
+                int damage = SiegeTuning.BlowOf(raider.Kind);
                 ward.Health -= damage;
 
                 bool felled = ward.Health <= 0;

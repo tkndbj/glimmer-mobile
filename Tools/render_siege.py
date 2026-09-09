@@ -29,6 +29,11 @@ decision no gate can look at. Five questions to ask of what comes out, in order:
      is playing a different game.
   5. **Is the field big enough to play on?** It is forty per cent of the height and it is where
      the finger goes.
+  6. **Does the warlord read as the boss?** It is three cells tall against a creeper's one, it
+     stands still in the middle of the hill, its health is a bar pinned across the top of the
+     board, and while it is winding up a violet ring closes over the ward it has chosen. Three of
+     those four are placements, and a placement is exactly what no gate in this project can look
+     at - two of them were already moved twice by this picture (`SiegeView.Crown`).
 """
 from __future__ import annotations
 
@@ -254,6 +259,106 @@ def banner(sheet, cx, cy, depth, cell, span):
     sheet.alpha_composite(layer)
 
 
+#: `SiegeTuning.BossHold` and `SiegeView.TallOf` - where the warlord stops, and how big it is.
+BOSS_HOLD = 0.46
+BOSS_TALL = 3.1
+
+#: `SiegeView.Spellfire` - Pal.Foxglove, the one colour on this board that is not one of the
+#: four gems, so nothing it lights can be read as a colour rule.
+SPELLFIRE = (180, 120, 255)
+
+
+def warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, casting):
+    """The warlord holding the middle of the hill, and the spell it is winding up.
+
+    <p><b>Drawn here because it is the one thing on this board no number can judge.</b> Whether a
+    boss reads as a boss is a question about size against the band it stands in, about its
+    silhouette against four round monsters, and about whether the ring closing over the ward it
+    has chosen is legible at the moment the player most needs to see it. Every gate in this
+    project reads the model, and the model is right the whole time (invariants 32b, 33h, 34e,
+    36g, 37g).</p>
+
+    <p>Three questions to ask of what comes out. Does it read as <em>the</em> thing on the hill
+    rather than as a big raider? Can you tell what colour it is - it says so three times, a coat,
+    an aura and a gem over its head, and the coat is the one that struggles at this size? And can
+    you see, without being told, which ward the closing ring is over?</p>
+    """
+    if not lay.boss:
+        return
+
+    colour = siege.LETTERS.index(lay.boss)
+    tint = TINTS[colour]
+
+    tall = cell * BOSS_TALL
+    ly = hill_top + (hill_foot - hill_top) * BOSS_HOLD
+    cx, cy = at(0.0, ly)
+
+    # `SiegeView.Follow` - the walk while it is crossing ground, the idle once it is standing.
+    # This picture is of a warlord in place, so the idle is the honest one to draw; `--warlord-walk`
+    # is what looks at the reel that was missing for a whole session.
+    body = reel("boss_cast" if casting == "cast" else "boss_walk" if casting == "walk" else "boss")
+    if body is None:
+        return
+
+    wide = tall * body.width / body.height
+
+    # The aura, then the body: a wash behind it is the second of the three things that say its
+    # colour, and it is the one that survives being drawn over a lit hill.
+    glow = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(glow)
+    pen.ellipse([cx - tall * 0.62, cy - tall * 0.62, cx + tall * 0.62, cy + tall * 0.62],
+                fill=tint + (96,))
+    glow = glow.filter(ImageFilter.GaussianBlur(cell * 0.55))
+    sheet.alpha_composite(glow)
+
+    if casting == "cast":
+        spark = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+        pen = ImageDraw.Draw(spark)
+        pen.ellipse([cx - tall * 0.5, cy - tall * 0.5, cx + tall * 0.5, cy + tall * 0.5],
+                    fill=SPELLFIRE + (150,))
+        spark = spark.filter(ImageFilter.GaussianBlur(cell * 0.42))
+        sheet.alpha_composite(spark)
+
+    put(sheet, coat(body, tint), cx, cy, wide, tall)
+
+    # `SiegeView.Crown` - a warlord's health is pinned across the top of the board rather than
+    # carried, which is what lets it be three cells tall on a hill four cells deep.
+    wide = span[0] * 0.60
+    bx, by = at(cell * 0.34, hill_top + cell * 0.12)
+
+    draw_on.rounded_rectangle([bx - wide / 2, by - cell * 0.13, bx + wide / 2, by + cell * 0.13],
+                              radius=11, fill=(0, 0, 0, 178))
+    draw_on.rounded_rectangle([bx - wide / 2 + 2, by - cell * 0.13 + 2,
+                               bx - wide / 2 + 2 + wide * 0.64, by + cell * 0.13 - 2],
+                              radius=11, fill=(255, 107, 87, 255))
+
+    gx = bx - wide / 2 - cell * 0.45
+    put(sheet, sprite(GEM_ART[lay.boss]), gx, by, cell * 0.62, cell * 0.62)
+
+    if casting != "cast":
+        return
+
+    # The spell in the air, and the ring closing over the ward it is coming for.
+    ward = 1
+    wx, wy = at(post_x(span, ward, len(lay.wards)), line_y + cell * 0.3)
+
+    layer = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(layer)
+    r = cell * 1.5
+    pen.ellipse([wx - r, wy - r, wx + r, wy + r], outline=SPELLFIRE + (240,),
+                width=max(4, int(cell * 0.09)))
+    sheet.alpha_composite(layer)
+
+    orb = blast("spell", 9)
+    if orb is not None:
+        mx, my = cx, cy + tall * 0.1
+        put(sheet, orb, mx + (wx - mx) * 0.55, my + (wy - my) * 0.55, cell * 1.6, cell * 1.6)
+
+    flare = loudest("spell_muzzle")
+    if flare is not None:
+        put(sheet, flare, cx, cy + tall * 0.1, cell * 4.2, cell * 4.2)
+
+
 def post_x(span, index, wards):
     """`SiegeView.PostX`, at module scope so the ward rings can use it too."""
     wide = span[0] / (wards + 0.6)
@@ -309,10 +414,11 @@ def coat(im, tint):
 def layout_of(level):
     block = level["siege"]
     grid = proto.Grid(block["rows"], block["width"], block["height"], siege.LETTERS)
-    return siege.Layout(grid, block["gems"], block["wards"], block["waves"])
+    return siege.Layout(grid, block["gems"], block["wards"], block["waves"],
+                        block.get("boss"))
 
 
-def draw(level, raiders, bolts=True, aim=False):
+def draw(level, raiders, bolts=True, aim=False, boss="cast"):
     lay = layout_of(level)
     grid = lay.grid
 
@@ -355,7 +461,10 @@ def draw(level, raiders, bolts=True, aim=False):
     stretch(sheet, sprite("hill"), cx, cy, span[0], h + cell * 0.5)
 
     # ------------------------------------------------------------------ the raiders
-    wave = lay.waves[-1] if lay.waves else ""
+    # The last *authored* wave, because the one after it is the warlord and it is drawn on its
+    # own below - `SiegeLayout` appends a one-raider wave for the boss (invariant 37t).
+    body = [w for i, w in enumerate(lay.waves) if i != lay.boss_wave]
+    wave = body[-1] if body else ""
     mob = []
     for i, token in enumerate(wave[:raiders]):
         colour = siege.LETTERS.index(token.lower())
@@ -424,6 +533,10 @@ def draw(level, raiders, bolts=True, aim=False):
                                    cx - cell * 0.53 + 2 + cell * 1.02 * 0.72,
                                    cy + cell * 0.085 - 2],
                                   radius=8, fill=(255, 194, 60, 255))
+
+    # The warlord, over the ward line so its ring reads on top of the turrets, and under the
+    # exchange so a bolt crossing the hill still passes in front of it.
+    warlord(sheet, draw_on, lay, span, cell, hill_top, hill_foot, line_y, at, casting=boss)
 
     # ------------------------------------------------------------------ the exchange
     # Every ward firing at once, each shot caught at a different point of its flight: the flash
@@ -611,6 +724,8 @@ def main():
                     help="how many of the first wave to stand on the hill")
     ap.add_argument("--no-bolts", action="store_true",
                     help="draw the board with nothing in flight")
+    ap.add_argument("--warlord", default="cast", choices=("cast", "idle", "walk"),
+                    help="draw the warlord mid-cast, standing, or walking on")
     ap.add_argument("--no-bar", action="store_true",
                     help="draw the board without the utility bar under it")
     ap.add_argument("--aim", choices=("hill", "wards"),
@@ -626,7 +741,8 @@ def main():
 
     shots = []
     for lv in picked:
-        shot = draw(lv, args.raiders, not args.no_bolts, aim=args.aim)
+        shot = draw(lv, args.raiders, not args.no_bolts, aim=args.aim,
+                    boss=args.warlord)
         if not args.no_bar:
             bar(shot, held)
         shots.append((lv["id"], shot))

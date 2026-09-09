@@ -339,7 +339,7 @@ namespace GlimmerGrove.Tests
             return new SiegeLayout(
                 ProtoGrid.TryRead(rows, 6, 4, SiegeLayout.Letters, out var grid, out _)
                     ? grid : null,
-                "rgby", "rgby", new[] { "rrgg" });
+                "rgby", "rgby", new[] { "rrgg" }, boss: null);
         }
 
         static SiegeBoard Board()

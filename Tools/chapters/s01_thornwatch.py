@@ -97,6 +97,20 @@ WAVES = [
     "RGBYRGBY",
 ]
 
+#: The warlord that comes after them, as one colour letter.
+#:
+#: **Which wave it is in is not authored and cannot be**: `SiegeLayout` appends it, so the last
+#: wave *is* the boss wave by rule (invariant 37t). What a level decides is whether there is one
+#: and what colour it wears.
+#:
+#: **Red, and the choice is legibility rather than balance.** Any of the four would play the same -
+#: whichever it wears is the ward that answers it at double - so what decides it is that this is
+#: the largest thing on the board and the one object a player has to read at a glance from the
+#: moment it walks on. Red is the colour this game already spends on danger, and it is the one the
+#: alien's own art takes best: the body is coated 62% toward it, and a purple machine pulled toward
+#: `Pal.Poppy` comes out unmistakably red where the same coat over a blue one comes out muddy.
+BOSS = "r"
+
 
 def level():
     x, y = mapart.places(ORDINAL)[0]
@@ -117,6 +131,7 @@ def level():
             "gems": GEMS,
             "wards": WARDS,
             "waves": list(WAVES),
+            "boss": BOSS,
         },
     }
 
@@ -142,7 +157,8 @@ def prove(written):
     block = written["levels"][0]["siege"]
 
     grid = proto.Grid(block["rows"], block["width"], block["height"], siege.LETTERS)
-    layout = siege.Layout(grid, block["gems"], block["wards"], block["waves"])
+    layout = siege.Layout(grid, block["gems"], block["wards"], block["waves"],
+                          block.get("boss"))
 
     if layout.fault:
         sys.exit("%s: %s" % (written["levels"][0]["id"], layout.fault))
@@ -151,10 +167,11 @@ def prove(written):
     read = siege.readings(layout)
 
     print("%-18s par %-4d 3* %-4d 2* %-4d %d raider(s) in %d wave(s), %d brute(s), "
-          "%d colour(s) against %d ward(s)"
+          "%d colour(s) against %d ward(s)%s"
           % (written["levels"][0]["id"], par,
              proto.over(par, proto.GOLD_HUNDREDTHS), proto.over(par, proto.SILVER_HUNDREDTHS),
-             read["raiders"], read["waves"], read["brutes"], read["colours"], read["wards"]))
+             read["raiders"], read["waves"], read["brutes"], read["colours"], read["wards"],
+             (", a '%s' warlord last" % read["boss"]) if read["boss"] else ""))
 
     if not read["threat"]:
         sys.exit("this siege cannot be lost - no wave could bring a ward down")

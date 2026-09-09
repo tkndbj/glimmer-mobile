@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Dev;
+using GlimmerGrove.Modes;
 using UnityEditor;
 using UnityEngine;
 
@@ -84,6 +85,38 @@ namespace GlimmerGrove.EditorTools
             new Shot { Key = "b", Prefab = "vfx_Projectile_Icicle01",     Hue = Pal.Azure },
             new Shot { Key = "y", Prefab = "vfx_Projectile_Lightning01",  Hue = Pal.Sun   },
         };
+
+        /// <summary>
+        /// What the warlord throws.
+        ///
+        /// <para>
+        /// <b>One set rather than four, and graded to a colour no ward and no gem wears.</b> The
+        /// elemental double is a rule about bolts landing <em>on</em> a raider; a spell coming out
+        /// of one that wore one of the board's four colours would be saying something the rules do
+        /// not mean, and a player would reasonably read it as "this is the blue one, so it hurts
+        /// the blue ward". Violet is the one entry in <c>Pal</c>'s board set that is none of the
+        /// four, so it cannot be read as a colour rule at all.
+        /// </para>
+        /// <para>
+        /// <b>And it is a different <em>kind</em> of thing rather than a bigger bolt</b>, which is
+        /// invariant 33e's test asked of the boss: a sun rather than a comet, a dart, a shard or a
+        /// bolt of lightning. At the size it is drawn — half again a ward's bolt — silhouette is
+        /// what tells a player this one is not a turret shooting.
+        /// </para>
+        /// </summary>
+        static readonly Shot Spell =
+            new Shot { Key = "spell", Prefab = "vfx_Projectile_Sun01", Hue = Pal.Foxglove };
+
+        /// <summary>
+        /// How much bigger the warlord's three reels are than a ward's.
+        ///
+        /// <b>A boss's spell is on screen about twice a minute against a bolt's twenty-eight a
+        /// second</b>, so it can afford the frames — and it has to be worth stopping for, which is
+        /// the whole of invariant 26f's rule about price and spectacle read from the other end:
+        /// this one is rare, so it is allowed to be loud.
+        /// </summary>
+        const int SpellTall = 384, SpellBurst = 320;
+        const int SpellFrames = 18, SpellBurstFrames = 16;
 
         static string PrefabPath(string name)
             => VfxBench.PackRoot + "/Projectiles/" + name + ".prefab";
@@ -304,6 +337,13 @@ namespace GlimmerGrove.EditorTools
                     BakeOne(stage.transform, cam, prefab, shot, made);
                 }
 
+                var warlord = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(Spell.Prefab));
+
+                if (warlord == null)
+                    Debug.LogWarning($"[siege shots] {Spell.Prefab} is not in this project — skipped.");
+                else
+                    BakeSpell(stage.transform, cam, warlord, made);
+
                 if (made.Count == 0)
                 {
                     Debug.LogWarning("[siege shots] nothing baked — is the projectile pack imported?");
@@ -369,6 +409,49 @@ namespace GlimmerGrove.EditorTools
                 made["hit_" + shot.Key] =
                     Capture(stage, cam, hit, shot.Hue, HitFrames, Burst(hit), 0f, 0f,
                             .5f, BurstSide, BurstSide, BurstSide, 1f, 1f, comet: false);
+        }
+
+        /// <summary>
+        /// The warlord's spell, as the same three parts a ward's bolt is.
+        ///
+        /// <b>Its own method rather than a flag on <see cref="BakeOne"/></b>, because almost every
+        /// number differs — it is baked bigger, kept longer, and framed with more of its own tail,
+        /// and a <c>BakeOne</c> with six extra parameters would be the same method twice with the
+        /// two versions interleaved.
+        /// </summary>
+        static void BakeSpell(Transform stage, Camera cam, GameObject prefab,
+                              Dictionary<string, Book> made)
+        {
+            float warm = WarmFor(TrailOf(prefab));
+            float seconds = SiegeTuning.BossFlight * 2f;
+
+            // **Framed square and flown at the speed it was authored at, unlike every bolt.**
+            // The wards' four are comets — nearly all trail — so their frames are tall and their
+            // speed is bent until the tail fits one. This is an orb: baked as a comet it came out
+            // 112 x 512 with the whole effect inside the top ninety rows and *eighty per cent of
+            // the frame empty*, which the view then draws as a violet sliver seven cells long
+            // crossing a hill four cells deep (invariant 37k's sliver, from the other direction).
+            // Nothing about the framing was wrong for a comet; the thing being framed was not one.
+            //
+            // It also does the job invariant 33e asks of anything the boss brings: a slow round
+            // orb is a different *kind* of object from four streaking comets, not a bigger one.
+            made[Spell.Key] =
+                Capture(stage, cam, prefab, Spell.Hue, SpellFrames, seconds,
+                        Mathf.Max(1f, Reflected(prefab, "speed", 30f)), warm,
+                        .5f, SpellTall, SpellTall, SpellTall, 1f, 1f, comet: false);
+
+            var muzzle = Companion(prefab, "muzzlePrefab");
+            if (muzzle != null)
+                made[Spell.Key + "_muzzle"] =
+                    Capture(stage, cam, muzzle, Spell.Hue, SpellBurstFrames, Burst(muzzle), 0f, 0f,
+                            SiegeView.MuzzleAt, SpellBurst, NarrowestMuzzle, SpellBurst,
+                            LeanestMuzzle, LongestMuzzle, comet: false);
+
+            var hit = Companion(prefab, "hitPrefab");
+            if (hit != null)
+                made[Spell.Key + "_hit"] =
+                    Capture(stage, cam, hit, Spell.Hue, SpellBurstFrames, Burst(hit), 0f, 0f,
+                            .5f, SpellBurst, SpellBurst, SpellBurst, 1f, 1f, comet: false);
         }
 
         // ------------------------------------------------------------------ the rig
