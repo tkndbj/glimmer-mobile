@@ -382,7 +382,7 @@ namespace GlimmerGrove
             _siege.Done = () => { if (_bar != null) _bar.Arm(null); };
 
             _bar.Arm(null);
-            _bar.Paint();
+            _bar.Cooled();
         }
 
         /// <summary>
@@ -442,6 +442,12 @@ namespace GlimmerGrove
             if (item == null || _siege == null || _siege.Siege == null) return SiegeUse.Refused;
             if (UtilityLedger.WhyNotUse(item) != UtilityRefusal.None) return SiegeUse.Refused;
 
+            // **Asked here as well as on the bar**, for the reason the held check is: this is
+            // the transaction, and a bar is a picture of what was true when it was last
+            // painted. A cooling item reaching this point would be a bug rather than a race
+            // today, and the honest answer to a bug that spends something is still to refuse.
+            if (_bar != null && !_bar.Cooling.Ready(item)) return SiegeUse.Refused;
+
             var use = SiegeUtility.Apply(_siege.Siege, item, aim, strikes);
             if (!use.Landed) return SiegeUse.Refused;
 
@@ -451,11 +457,22 @@ namespace GlimmerGrove
             // is still to leave the board as it stands rather than to un-kill a raider.
             UtilityLedger.TryUse(item);
 
+            // One line later and for the same reason: a use that landed is a use that is paid
+            // for in both currencies, and one that was refused is paid for in neither.
+            if (_bar != null) _bar.Spent(item);
+
             LevelAnalytics.TrackUtility(Level, item.Id, use.Matches, use.Delivered);
             return use;
         }
 
-        /// <summary>Opens the shop behind an empty slot.</summary>
+        /// <summary>
+        /// Opens the shop behind an empty slot.
+        ///
+        /// <b>The raid stops while it is up, and not because of anything here.</b>
+        /// <c>RunHold.Covered</c> holds any run behind any panel, asked once a frame by
+        /// <c>RunScreen</c> — so this is one <c>Flow.Modal</c> call and stays one, and a panel
+        /// added to this mode next year inherits the same answer without being told.
+        /// </summary>
         void Offer(UtilityItem item)
         {
             if (item == null) return;
@@ -500,7 +517,18 @@ namespace GlimmerGrove
         {
             base.Running(running);
 
-            if (_bar != null) _bar.Live = running;
+            if (_bar != null)
+            {
+                _bar.Live = running;
+
+                // **The bar is given the run's own seconds, not a wall clock**, so a cooldown
+                // cannot be paid off by opening a panel: a modal holds the run
+                // (`RunHold.Covered`), `running` goes false with it, and the counting stops with
+                // everything else. Unscaled, because a modal also sets `Time.timeScale` to
+                // nought and every board in this project is on the unscaled clock for it.
+                if (running) _bar.Tick(Time.unscaledDeltaTime);
+            }
+
             if (!running && _siege != null) _siege.Arming = null;
         }
 
@@ -514,13 +542,23 @@ namespace GlimmerGrove
         protected override void Rewind()
         {
             base.Rewind();
-            if (_bar != null) _bar.Arm(null);
+            if (_bar == null) return;
+
+            _bar.Arm(null);
+
+            // And every cooldown with it. A restart is a new board, so a firepot thrown at the
+            // one that was thrown away is not a debt this one inherits — which would make
+            // restarting a thing the bar punished.
+            _bar.Cooled();
         }
 
         public override void RetryAfterDefeat()
         {
             base.RetryAfterDefeat();
-            if (_bar != null) _bar.Arm(null);
+            if (_bar == null) return;
+
+            _bar.Arm(null);
+            _bar.Cooled();
         }
 
         protected override string GoalCaption => "mode.cap.raid";

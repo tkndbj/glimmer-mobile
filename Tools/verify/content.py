@@ -2076,6 +2076,12 @@ UTILITY_KINDS = {"blast", "mend", "surge", "storm"}
 #: rectangle on the bar (invariant 7b). Mirrors the `Utility/` block in `AssetManifest.UiSprites`.
 UTILITY_ART = {"firepot", "mending", "surge", "stormcall"}
 
+#: The longest cooldown content may author, in whole seconds. Mirrors
+#: `UtilityCooldown.MaxSeconds`. It is a guard against a *unit* rather than a balance opinion:
+#: five minutes is longer than any run in this game, so anything past it is almost certainly a
+#: figure written in milliseconds - which plays as an item usable once and validates perfectly.
+UTILITY_MAX_COOLDOWN = 300
+
 
 def check_utilities(progression, keys, warnings):
     """The action bar's catalog. `ContentValidation.ValidateUtilities`, offline.
@@ -2088,6 +2094,9 @@ def check_utilities(progression, keys, warnings):
       30d's situation exactly, and the reason they are checked here or nowhere.
     * **The ladder is 1..N with no gaps and no ties**, because it is authored rather than
       derived: a duplicated rung reorders the bar under a player between two content pushes.
+    * **Every cooldown is whole seconds inside the supported range.** Nought means none, which
+      is what a file written before the field existed says and is the behaviour the bar had
+      then; what is refused is a figure so large it can only have been written in another unit.
     * **Every utility a chest names exists**, which is the one cross-block check in this file
       that can be wrong in a way nothing else notices - a chest paying `utility:firepop` rolls,
       publishes, seeds and grants nothing.
@@ -2143,6 +2152,14 @@ def check_utilities(progression, keys, warnings):
         if entry.get("maxHeld", 0) < 1:
             errors.append(f"utilities entry '{uid}' may be held {entry.get('maxHeld', 0)} times, "
                           "so a grant could never land")
+
+        cooldown = entry.get("cooldownSeconds", 0)
+        if not isinstance(cooldown, int) or cooldown < 0 or cooldown > UTILITY_MAX_COOLDOWN:
+            # Refused rather than clamped, for the reason the C# reader refuses it: a clamp
+            # would hide the one mistake worth failing a build over.
+            errors.append(f"utilities entry '{uid}' cools for {cooldown}s; a cooldown is whole "
+                          f"seconds from 0 (none) to {UTILITY_MAX_COOLDOWN}, and anything past "
+                          "that is a number written in the wrong unit")
 
         if uid not in UTILITY_ART:
             errors.append(f"utilities entry '{uid}' has no icon in this build - a picture is not "
@@ -2993,6 +3010,22 @@ def main():
     # one, so `loc.py` cannot either.
     ward_errors, wards = check_wards(progression, keys, warnings, art_on_disk())
     errors.extend(ward_errors)
+
+    if utilities:
+        # Printed rather than merely checked, because a cooldown is a number nobody can read off
+        # a running game and the whole bar's pacing is four of them side by side.
+        print("")
+        print(f"action bar: {len(utilities)} utility(ies)")
+
+        for entry in sorted(((progression.get("utilities") or {}).get("items")) or [],
+                            key=lambda e: e.get("order", 0)):
+            cools = entry.get("cooldownSeconds", 0)
+            price = entry.get("gemPrice", 0)
+            print("       {0:<10} {1:<6} {2:>4}  {3}, hold up to {4}, {5}".format(
+                entry.get("id", "?"), entry.get("kind", "?"), entry.get("magnitude", 0),
+                f"{price} gem(s)" if price else "chests only",
+                entry.get("maxHeld", 0),
+                f"{cools}s cooldown" if cools else "no cooldown"))
 
     if wards:
         print("")

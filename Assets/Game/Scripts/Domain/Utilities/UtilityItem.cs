@@ -229,8 +229,30 @@ namespace GlimmerGrove.Utilities
         /// </summary>
         public readonly int MinLevel;
 
+        /// <summary>
+        /// How long after one is used before another may be, in whole seconds. Nought means
+        /// none, and that is what an older file — or one written before this existed — says.
+        ///
+        /// <para>
+        /// <b>Content, for the reason the price and the magnitude are.</b> It is the number that
+        /// decides whether a wave is answered with one firepot or four, so it is the number most
+        /// certain to be wrong first guess and the one a live game most needs to move without a
+        /// store review. What it may never do is vary per level: a cooldown is a fact about the
+        /// item and never about the board, or two players would be playing the same board with
+        /// two different allowances (invariant 29c).
+        /// </para>
+        /// <para>
+        /// <b>Whole seconds, never a float.</b> Nothing graded is decided by it, so the usual
+        /// argument does not bite — but a countdown a player reads is written down here once and
+        /// mirrored by <c>content.py</c>, and an integer is the one shape three code generators
+        /// cannot round three ways. <see cref="UtilityCooldown.MaxSeconds"/> is the ceiling.
+        /// </para>
+        /// </summary>
+        public readonly int CooldownSeconds;
+
         public UtilityItem(string id, UtilityKind kind, int magnitude,
-                           int gemPrice, int maxHeld, int order, int minLevel = 0)
+                           int gemPrice, int maxHeld, int order, int minLevel = 0,
+                           int cooldownSeconds = 0)
         {
             Id = id ?? string.Empty;
             Kind = kind;
@@ -239,6 +261,9 @@ namespace GlimmerGrove.Utilities
             MaxHeld = maxHeld < 1 ? 1 : maxHeld > UtilityStock.MaxHeld ? UtilityStock.MaxHeld : maxHeld;
             Order = order;
             MinLevel = minLevel < 0 ? 0 : minLevel;
+            CooldownSeconds = cooldownSeconds < 0 ? 0
+                            : cooldownSeconds > UtilityCooldown.MaxSeconds
+                              ? UtilityCooldown.MaxSeconds : cooldownSeconds;
         }
 
         public UtilityTarget Target => UtilityKinds.TargetOf(Kind);
@@ -248,6 +273,9 @@ namespace GlimmerGrove.Utilities
 
         /// <summary>Whether gems can buy one. A chest-only utility answers false.</summary>
         public bool ForSale => GemPrice > 0;
+
+        /// <summary>Whether using one puts it out of reach for a while.</summary>
+        public bool Cools => CooldownSeconds > 0;
 
         /// <summary>The loc key for its name. Derived, never authored (invariant 5a's rule).</summary>
         public string NameKey => "utility." + Id + ".name";

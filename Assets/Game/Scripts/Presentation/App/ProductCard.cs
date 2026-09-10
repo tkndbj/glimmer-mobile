@@ -87,7 +87,11 @@ namespace GlimmerGrove
 
         readonly Image _plate, _spot, _ribbon, _seal, _priceFace, _priceMark;
         readonly RectTransform _art;
-        readonly Text _amount, _sub, _price, _ribbonText, _sealText;
+        readonly Text _amount, _sub, _price, _sealText;
+        readonly RectTransform _ribbonArc;
+        readonly int _ribbonFont;
+        readonly float _ribbonRadius;
+        string _ribbonSaid;
 
         /// <summary>
         /// How wide the price caption and any glyph beside it may be, together.
@@ -115,12 +119,15 @@ namespace GlimmerGrove
             button.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
             Root = (RectTransform)button.transform;
 
-            // The kit's own card frame, nine-sliced. It replaced a generated rounded
-            // rectangle plus a drawn outline, and the outline went with it rather than being
-            // kept and hidden: the frame carries its own black keyline, and a second one at a
-            // radius that no longer matches the sprite's would be a halo a hair off the shape
-            // it is tracing. Which colour it is, is the shelf's — see `ShopSkins.Frame`.
-            _plate = UIKit.Img("Plate", Root, Art.S(ShopSkins.PlainFrame), Color.white,
+            // The kit's own card, nine-sliced: one teal plate on every shelf.
+            //
+            // It used to be three coloured frames keyed on the shelf, and losing them is what
+            // this restyle is really about. Five saturated blocks of colour side by side read
+            // as five different games rather than as one shop, and what the colour was *for* —
+            // telling one shelf from another — is now said twice over by things that say it
+            // better: a lit tab, which the old dark chips could not do at all, and a coloured
+            // light under the goods, where a player is already looking.
+            _plate = UIKit.Img("Plate", Root, Art.S("Ui/" + Skins.Card), Color.white,
                                new Vector2(look.Width - PlateInsetX, look.Height - PlateInsetY),
                                new Vector2(.5f, .5f), Vector2.zero);
 
@@ -135,8 +142,11 @@ namespace GlimmerGrove
             // the object; a soft round light centred on the object reads as light on it. One
             // colour, one strength, no rung and no rotation — nothing here is saying how much,
             // because the picture already does.
+            // It carries the shelf's colour now rather than plain white, which is the job the
+            // frame used to do. Still one strength and no rotation - nothing here says *how
+            // much*, because the picture already does.
             _spot = UIKit.Img("Spot", _plate.transform, Art.Glow(160, 1.6f),
-                              new Color(1f, 1f, 1f, .17f), Vector2.one * (370f * kv),
+                              Pal.A(Pal.Bloom, SpotAlpha), Vector2.one * (370f * kv),
                               new Vector2(.5f, 1f), new Vector2(0f, -168f * kv));
             _spot.raycastTarget = false;
 
@@ -159,7 +169,7 @@ namespace GlimmerGrove
 
             float faceH = 96f * kv;
             _priceFace = UIKit.Img("PriceFace", _plate.transform,
-                                   Art.S(ShopSkins.Buy(StoreShelf.Gems)), Color.white,
+                                   Art.S("Ui/" + Skins.Buy), Color.white,
                                    new Vector2(look.Width - 110f * kh, faceH),
                                    new Vector2(.5f, 0f), new Vector2(0f, 74f * kv));
 
@@ -190,32 +200,47 @@ namespace GlimmerGrove
 
             if (!look.Decorated) return;
 
-            // The bonus ribbon, across the top-left corner. A real ribbon rather than a caption
-            // because it has to survive being read at a glance on a scrolling page, and because
-            // it is the one number on the card that is arithmetic over the ladder rather than a
-            // claim.
-            _ribbon = UIKit.Img("Ribbon", _plate.transform, Art.S(ShopSkins.Ribbon), Color.white,
+            // The bonus mark, across the top-left corner: the kit's own ribbon, which is a real
+            // one with tails and a heavy keyline. The two kits before this one had nothing of
+            // the sort, so this was a machined title plate standing in for cloth.
+            //
+            // **It hangs again**, at `ProductCardBadges.RibbonTilt`. That went to nought while
+            // the mark was a plate — a plate off square reads as one that has come loose — and
+            // the reason expired with the art. The angle is applied here and the *reach* it
+            // costs is arithmetic over in `ProductCardBadges`, which is what keeps a tilted
+            // ribbon from quietly growing into the seal on the card beside it.
+            _ribbon = UIKit.Img("Ribbon", _plate.transform, Art.S("Ui/" + Skins.Title), Color.white,
                                 new Vector2(ProductCardBadges.RibbonWidth * kh,
                                             ProductCardBadges.RibbonHeight * kv),
                                 new Vector2(0f, 1f),
                                 new Vector2(ProductCardBadges.RibbonInset * kh,
                                             -ProductCardBadges.RibbonDrop * kv));
-            _ribbon.transform.localRotation = Quaternion.Euler(0f, 0f, ProductCardBadges.RibbonTilt);
+            _ribbon.transform.localRotation =
+                Quaternion.Euler(0f, 0f, ProductCardBadges.RibbonTilt);
 
-            _ribbonText = UIKit.Shrinkable(
-                // Sized to the flag rather than to the sprite: the tails are the bottom
-                // third of the ribbon and nothing may be written across them. The two-unit
-                // lift is the panel's own offset from the sprite's centre.
-                UIKit.Titled("RT", _ribbon.transform, string.Empty, Font(25, kh), Pal.Cream,
-                             TextAnchor.MiddleCenter, new Vector2(186f * kh, 44f * kv),
-                             new Vector2(.5f, .5f), new Vector2(0f, -2f * kv), 3f, 2f),
-                Font(15, kh));
+            // **Bent to the cloth, and lifted onto the flag.** A straight word inside a ribbon
+            // reads as a label that happens to be sitting on a curved thing, which is what this
+            // was; and the sprite's own centre is not the writable band's centre, because the
+            // tails hang below it — see `Skins.RibbonLift`, which is measured off the picture.
+            //
+            // The radius is the ribbon's own width, which is what keeps every card's mark
+            // bending by the same amount however wide the grid draws a column. It is not
+            // `Shrinkable`, because best-fit works on one label's box and an arc is one box per
+            // character; the caption is "+12% EXTRA" at its longest, which the flag holds.
+            _ribbonFont = Font(23, kh);
+            // 1.41x the drawn width, which is the same ratio the storefront's own title uses
+            // (620 over a 440-wide plate). It has to be a ratio rather than a number: this is
+            // the same sprite drawn smaller, so its curve is proportionally identical and a
+            // fixed radius would bend a card's mark far harder than the header's.
+            _ribbonRadius = ProductCardBadges.RibbonWidth * kh * 1.41f;
+            _ribbonArc = UIKit.Box("RT", _ribbon.transform, Vector2.zero, new Vector2(.5f, .5f),
+                                   new Vector2(0f, ProductCardBadges.RibbonHeight * kv * Skins.RibbonLift));
 
             // The badge, top right, on the seal the win panel already uses for a record. Where
             // it sits is ProductCardBadges' — it has to clear the *next column's* ribbon, which
             // is a fact about the grid rather than about this card, and it was drawn straight
             // through one for as long as the shop has had two shelves.
-            _seal = UIKit.Img("Seal", _plate.transform, Art.S(ShopSkins.Badge), Color.white,
+            _seal = UIKit.Img("Seal", _plate.transform, Art.S("Ui/" + Skins.Badge), Pal.Rose,
                               new Vector2(ProductCardBadges.SealSize * kh,
                                           ProductCardBadges.SealSize * kv),
                               new Vector2(1f, 1f),
@@ -279,11 +304,7 @@ namespace GlimmerGrove
 
             _plate.gameObject.SetActive(true);
 
-            // The shelf decides the colour and nothing else does. A featured card is said
-            // by its badge and by the light behind it (`Light`), not by a fourth frame — two
-            // cards of different colours on one shelf read as two shelves.
-            _plate.sprite = Art.S(ShopSkins.Frame(product.Shelf));
-            _plate.color = Color.white;
+            Shelf(product.Shelf);
 
             ShopArt.Paint(_art, product);
 
@@ -326,7 +347,7 @@ namespace GlimmerGrove
                 _sub.color = bundle ? Pal.A(Pal.Gold, .95f) : Unit;
             }
 
-            PaintPrice(offer, product.Shelf);
+            PaintPrice(offer);
             PaintRibbon(product.BonusPercent);
             PaintSeal(StoreWording.Badge(product.Badge));
         }
@@ -349,8 +370,7 @@ namespace GlimmerGrove
 
             bool ready = state == GoodOfferState.Ready;
 
-            _plate.sprite = Art.S(ShopSkins.Frame(StoreShelf.Supplies));
-            _plate.color = Color.white;
+            Shelf(StoreShelf.Supplies);
 
 
             ShopArt.PaintGood(_art, good);
@@ -381,7 +401,7 @@ namespace GlimmerGrove
             // inviting the one purchase it exists to prevent.
             bool priced = ready || state == GoodOfferState.ShortOfGems;
 
-            Face(ShopSkins.Gem, ready);
+            Face(Skins.Gem, ready);
             _price.color = ready ? Pal.Cream : Pal.A(Pal.Cream, .72f);
 
             // The gem rides with the number and only with the number. A price on this face is
@@ -435,8 +455,7 @@ namespace GlimmerGrove
             bool ready = refusal == UtilityRefusal.None;
             bool priced = ready || refusal == UtilityRefusal.Poor;
 
-            _plate.sprite = Art.S(ShopSkins.Frame(StoreShelf.Utilities));
-            _plate.color = Color.white;
+            Shelf(StoreShelf.Utilities);
 
             var tint = ShopRarity.Of(item);
 
@@ -448,7 +467,7 @@ namespace GlimmerGrove
             _sub.text = Loc.Format("ui.shop.utility_held", held, item.MaxHeld);
             _sub.color = Unit;
 
-            Face(ShopSkins.Gem, ready);
+            Face(Skins.Gem, ready);
             _price.color = ready ? Pal.Cream : Pal.A(Pal.Cream, .72f);
 
             SetPrice(priced ? Loc.Format("ui.shop.gem_price", Compact.Number(item.GemPrice))
@@ -471,7 +490,7 @@ namespace GlimmerGrove
         /// rule for that and drawing anything else is a review risk as well as simply wrong in
         /// most of the world.
         /// </summary>
-        void PaintPrice(StoreOffer offer, StoreShelf shelf)
+        void PaintPrice(StoreOffer offer)
         {
             // Never a gem: everything drawn through here is bought with money, and the string is
             // the store's own with the player's own currency symbol already in it. The glyph is
@@ -483,13 +502,13 @@ namespace GlimmerGrove
             switch (offer.State)
             {
                 case StoreOfferState.Ready:
-                    Face(ShopSkins.Buy(shelf), live: true);
+                    Face(Skins.Buy, live: true);
                     _price.text = offer.Price;
                     _price.color = Pal.Cream;
                     break;
 
                 case StoreOfferState.Owned:
-                    Face(ShopSkins.Buy(shelf), live: false);
+                    Face(Skins.Buy, live: false);
                     _price.text = Loc.Get("ui.shop.owned");
                     _price.color = Pal.A(Pal.Cream, .85f);
                     break;
@@ -497,25 +516,25 @@ namespace GlimmerGrove
                 // Grey like Owned, and a different word: the rung is included in what they
                 // hold rather than bought. See StoreOfferState.Included.
                 case StoreOfferState.Included:
-                    Face(ShopSkins.Buy(shelf), live: false);
+                    Face(Skins.Buy, live: false);
                     _price.text = Loc.Get("ui.shop.included");
                     _price.color = Pal.A(Pal.Cream, .85f);
                     break;
 
                 case StoreOfferState.AwaitingGrant:
-                    Face(ShopSkins.Gem, live: true);
+                    Face(Skins.Gem, live: true);
                     _price.text = Loc.Get("ui.shop.awaiting_short");
                     _price.color = Pal.Cream;
                     break;
 
                 case StoreOfferState.Purchasing:
-                    Face(ShopSkins.Buy(shelf), live: false);
+                    Face(Skins.Buy, live: false);
                     _price.text = Loc.Get("ui.shop.purchasing");
                     _price.color = Pal.A(Pal.Cream, .85f);
                     break;
 
                 default:
-                    Face(ShopSkins.Buy(shelf), live: false);
+                    Face(Skins.Buy, live: false);
                     _price.text = Loc.Get("ui.shop.price_pending");
                     _price.color = Pal.A(Pal.Cream, .70f);
                     break;
@@ -560,9 +579,32 @@ namespace GlimmerGrove
         /// </summary>
         void Face(string skin, bool live)
         {
-            _priceFace.sprite = Art.S(skin);
-            _priceFace.color = live ? Color.white : ShopSkins.Muted;
+            _priceFace.sprite = Art.S("Ui/" + skin);
+            _priceFace.color = live ? Color.white : Skins.Muted;
         }
+
+        /// <summary>
+        /// The one thing on the card that is the shelf's: the light under the goods.
+        ///
+        /// <para>
+        /// Set on every draw rather than once, because a cell is rebound as the grid scrolls
+        /// (invariant 16d) - and the supplies shelf mixes a gem-priced good with a real-money
+        /// container, so two shelves' worth of colour can reach one cell object in one session.
+        /// </para>
+        /// </summary>
+        void Shelf(StoreShelf shelf)
+        {
+            _plate.color = Color.white;
+            if (_spot) _spot.color = Pal.A(Skins.Accent(shelf), SpotAlpha);
+        }
+
+        /// <summary>
+        /// How strong the shelf's light is. Low on purpose: it is a wash under a painted
+        /// object, and the moment it competes with the object it stops reading as light *on*
+        /// it and starts reading as decoration *behind* it - which is the reading that took
+        /// the ray fan and the coloured seats off this card in the first place.
+        /// </summary>
+        const float SpotAlpha = .22f;
 
         void PaintRibbon(int bonusPercent)
         {
@@ -570,7 +612,18 @@ namespace GlimmerGrove
 
             bool show = bonusPercent >= 5;
             _ribbon.gameObject.SetActive(show);
-            if (show) _ribbonText.text = Loc.Format("ui.shop.bonus", bonusPercent);
+            if (!show) return;
+
+            // An arc is one label per character, so re-laying it out is destroying and
+            // rebuilding them. This card is recycled and rebound as the grid scrolls and
+            // repainted whenever a price arrives, so the caption is remembered and the work is
+            // skipped when it has not moved — which is most binds, since a shelf of coin packs
+            // carries the same handful of percentages.
+            string said = Loc.Format("ui.shop.bonus", bonusPercent);
+            if (said == _ribbonSaid) return;
+
+            _ribbonSaid = said;
+            UIKit.Arc(_ribbonArc, said, _ribbonFont, Pal.Sun, _ribbonRadius, 3f, 2f, 1f);
         }
 
         void PaintSeal(string key)

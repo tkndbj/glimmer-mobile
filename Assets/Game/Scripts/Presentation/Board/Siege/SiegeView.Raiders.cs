@@ -244,14 +244,39 @@ namespace GlimmerGrove
         /// </summary>
         static bool Throwing(Mob mob) => mob.Casting != null && mob.Playing == mob.Casting;
 
-        /// <summary>Takes down the widgets of raiders the model has already forgotten.</summary>
+        /// <summary>
+        /// Takes down the widgets of raiders that are dead.
+        ///
+        /// <para>
+        /// <b>Dead, not <em>forgotten</em> — and the difference was a bug the player met.</b> It
+        /// used to reap a widget whose raider the model had swept out of its list, which is the
+        /// same question only while every kill happens inside <c>SiegeBoard.Advance</c>: the
+        /// sweep is the last thing that method does, so a bolt's kill is gone by the time this
+        /// runs. A <em>utility</em> kills outside <c>Advance</c> — no sweep has run, the raider
+        /// is still in the list with <c>Alive</c> false, so this skipped it. Ordinarily the next
+        /// frame put it right; on the killing blow it never came, because <see cref="Judge"/>
+        /// ends the run in the same breath and <c>Update</c> stops with it. What shipped was a
+        /// firepot or a storm finishing a hill and leaving every raider it had just killed
+        /// standing there under the victory panel.
+        /// </para>
+        /// <para>
+        /// Asking <c>Alive</c> is the question that was always meant, and it is true one step
+        /// earlier than "swept" on every path, so both agree without either having to know when
+        /// the model tidies up.
+        /// </para>
+        /// </summary>
         void Reap()
         {
             for (int i = _mob.Count - 1; i >= 0; i--)
             {
                 var mob = _mob[i];
                 if (mob.Falling) continue;
-                if (_board.Find(mob.Id) != null) continue;
+
+                var raider = _board.Find(mob.Id);
+                if (raider != null && raider.Alive) continue;
+
+                // Unless a storm has claimed it and not yet struck it. See `_striking`.
+                if (_striking.Contains(mob.Id)) continue;
 
                 mob.Falling = true;
                 Die(mob);
@@ -264,6 +289,9 @@ namespace GlimmerGrove
             var at = mob.Node.anchoredPosition;
 
             if (mob.Boss) { Fall(mob, at); return; }
+
+            // The run may not be told until this has been watched. See `_felling`.
+            Felling(DyingFor);
 
             Boom(at, Blast("boom_fire"), mob.Height * 2f);
             Burst.Sparks(_fx, at, Pal.Ember, 14, mob.Height * 1.6f, mob.Height * .2f);
@@ -299,20 +327,65 @@ namespace GlimmerGrove
         bool _roared;
 
         /// <summary>
-        /// Seconds left of a boss coming apart, or nought.
+        /// Seconds left of <em>something</em> coming apart, or nought.
         ///
+        /// <para>
         /// <b>The one thing in this mode allowed to hold the ending up</b> — see
-        /// <see cref="Judge"/>. Everything else a run ends on is already on the screen when the
-        /// verdict lands; a boss's death is a second of explosions that has only just started.
+        /// <see cref="Judge"/>. It was a boss's alone, on the reasoning that everything else a
+        /// run ends on is already on the screen when the verdict lands. That is true of a ward
+        /// falling and false of a raider: a killing blow decides the run in the frame it lands,
+        /// and the death it caused is a burst and a third of a second of tween that has not
+        /// started yet. Reported from play about a firepot and a storm, which are the two ways a
+        /// player can land that blow themselves — so it is the two moments in this mode most
+        /// worth watching, and both of them were being covered by a panel.
+        /// </para>
+        /// <para>
+        /// <b>It is decremented by <c>Update</c> rather than by <see cref="Judge"/>, and that is
+        /// load-bearing now that ordinary deaths arm it.</b> A latch only ticked down inside the
+        /// won branch would be armed by the first creeper of the run and still standing at full
+        /// when the last one died, holding the panel for a boss's worth of seconds over a hill
+        /// that came apart a minute ago.
+        /// </para>
         /// </summary>
         float _felling;
 
         /// <summary>How long <see cref="Fall"/> takes end to end. The ending waits this out.</summary>
         const float FellingFor = 1.45f;
 
+        /// <summary>
+        /// How long an ordinary raider's death is watched before the run may be told.
+        ///
+        /// Comfortably past <see cref="Die"/>'s own tween rather than exactly it: what the player
+        /// is owed is the burst reading as a burst, not the last frame of an alpha ramp.
+        /// </summary>
+        const float DyingFor = .50f;
+
+        /// <summary>
+        /// Holds the ending for at least this long, and never shortens a hold already running.
+        ///
+        /// <b>The larger of the two, always</b> — a boss and three creepers going off together is
+        /// one event that lasts as long as its longest part, and taking the newer figure would
+        /// let a creeper dying a frame after the warlord cut the warlord's death short.
+        /// </summary>
+        void Felling(float seconds)
+        {
+            if (seconds > _felling) _felling = seconds;
+        }
+
+        /// <summary>
+        /// Counts the hold down. Called once a frame by the clock, whether or not the run is won.
+        ///
+        /// Named away from <c>Fade</c> deliberately — this file fades half a dozen widgets and a
+        /// method of that name here would read as one more of them.
+        /// </summary>
+        void Watching(float dt)
+        {
+            if (_felling > 0f) _felling -= dt;
+        }
+
         void Fall(Mob mob, Vector2 at)
         {
-            _felling = FellingFor;
+            Felling(FellingFor);
 
             var node = mob.Node;
             var group = UIKit.Group(node);

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GlimmerGrove.Content;
 using GlimmerGrove.Modes;
 using GlimmerGrove.Progression;
@@ -1730,6 +1731,79 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(0, board.WardsStanding,
                             "the hill could not bring the line down, so this level cannot be lost");
+        }
+
+        // ------------------------------------------------------------------ what a kill leaves
+        /// <summary>
+        /// A raider a utility kills is <em>dead</em> and still <em>held</em>, and the run is won
+        /// in the same instant.
+        ///
+        /// <para>
+        /// <b>This pins the seam a player fell through.</b> <c>SiegeBoard.Advance</c> sweeps its
+        /// dead as the last thing it does, so a bolt's kill has left the list by the time anybody
+        /// looks. A utility kills from outside that method — nothing has swept — so for a moment
+        /// the model holds a raider with <c>Alive</c> false, and <c>GoalsLeft</c> has *already*
+        /// counted it. <c>SiegeView.Reap</c> asked "has the model forgotten this one", which is
+        /// the same question only on the first path: on the second it answered no, the widget was
+        /// never taken down, and because the win ends the run in the same breath the clock never
+        /// came back to put it right. What shipped was a firepot or a storm finishing a hill and
+        /// leaving every raider it had just killed standing there under the victory panel.
+        /// </para>
+        /// <para>
+        /// So the view asks <c>Alive</c> now, and these are the three facts that makes correct.
+        /// Sweeping inside <see cref="SiegeBoard.Blast"/> would also fix it and would break the
+        /// strike reports, which name raiders by id — this is the half that says so out loud.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AUtilitysKillIsDeadAndStillHeldAndWinsTheRunAtOnce()
+        {
+            foreach (bool storm in new[] { false, true })
+            {
+                var board = SiegeBoard.Build(Layout(Field, Gems, Wards, new[] { "rg" }));
+
+                for (int i = 0; i < 60 * 120 && board.OnTheHill < 2; i++) board.Advance(1f / 60f);
+                Assert.AreEqual(2, board.OnTheHill, "the wave never reached the hill");
+                Assert.IsFalse(board.IsFinished);
+
+                var ids = new List<int>();
+                for (int i = 0; i < board.Raiders.Count; i++) ids.Add(board.Raiders[i].Id);
+
+                var strikes = new List<SiegeStrike>();
+
+                // Enough to kill everything standing, which is the case that ends the run.
+                if (storm) board.Storm(9999, strikes);
+                else
+                    for (int lane = 0; lane < SiegeTuning.Lanes; lane++)
+                        for (int row = 0; row < SiegeTuning.BlastRows; row++)
+                            board.Blast(lane, row, 9999, strikes);
+
+                Assert.AreEqual(2, strikes.Count, "both raiders were struck");
+                for (int i = 0; i < strikes.Count; i++)
+                    Assert.IsTrue(strikes[i].Killed, "and both were killed");
+
+                // One: the run is already over. This is why nothing gets a second chance to
+                // notice — `ProtoVerdict` reads `IsFinished` and the screen ends the run.
+                Assert.IsTrue(board.IsFinished,
+                              "the last raider fell, so the verdict is already Done");
+
+                // Two: nothing has been swept, so "forgotten" is still false for both of them.
+                for (int i = 0; i < ids.Count; i++)
+                    Assert.IsNotNull(board.Find(ids[i]),
+                                     "a utility kills outside Advance, so nothing has swept yet");
+
+                // Three: and they answer `Alive` false, which is the question that is true on
+                // every path and is therefore the one the view has to ask.
+                for (int i = 0; i < ids.Count; i++)
+                    Assert.IsFalse(board.Find(ids[i]).Alive,
+                                   "dead is true one step before swept, on every path");
+
+                // The sweep does follow, one step later — so a view that waited for it is not
+                // wrong about the hill, only about the one frame that turns out to be the last.
+                board.Advance(1f / 60f);
+                for (int i = 0; i < ids.Count; i++)
+                    Assert.IsNull(board.Find(ids[i]), "the next step tidies up");
+            }
         }
     }
 }

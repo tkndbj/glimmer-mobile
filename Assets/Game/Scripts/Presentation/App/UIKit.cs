@@ -124,6 +124,101 @@ namespace GlimmerGrove
         /// is what <see cref="Scenery.Toast"/> is.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// A caption bent along an arc, one character at a time.
+        ///
+        /// <para>
+        /// uGUI's <c>Text</c> lays out on a straight baseline and has no way to curve one, so a
+        /// word that has to follow a ribbon's own edge is built as one label per character,
+        /// each placed on a circle and turned to its tangent. That is the whole trick; there is
+        /// no mesh work and nothing to keep in step with the font.
+        /// </para>
+        /// <para>
+        /// <paramref name="radius"/> is the circle the baseline rides, measured in the same
+        /// units everything else here is, and the centre sits <em>below</em> the text — so a
+        /// larger radius is a flatter arc and the word always bows upward, which is the shape a
+        /// ribbon drawn with a raised middle wants. A negative radius bows it the other way.
+        /// </para>
+        /// <para>
+        /// Each character is measured through <see cref="Text.preferredWidth"/>, which uGUI
+        /// answers from the font's cached character info in the same frame — no layout pass —
+        /// so the advance is the font's own rather than a guess, and a space is as wide here as
+        /// it would be on a straight line. The word is then centred about the arc's middle.
+        /// </para>
+        /// <para>
+        /// Returns the host, so a caller can pop or fade the word as one object.
+        /// </para>
+        /// </summary>
+        public static RectTransform Arced(string name, Transform parent, string text, int size,
+                                          Color colour, float radius, Vector2 anchorPt,
+                                          Vector2 pos, float outline = 3f, float shadow = 3f,
+                                          float tracking = 0f)
+        {
+            var host = Box(name, parent, Vector2.zero, anchorPt, pos);
+            Arc(host, text, size, colour, radius, outline, shadow, tracking);
+            return host;
+        }
+
+        /// <summary>
+        /// Writes an arced caption into a host that already exists, replacing whatever was in
+        /// it.
+        ///
+        /// <para>
+        /// The overload a repainting caller wants: a product card is recycled and rebound, so
+        /// its ribbon has to be able to say a different number without the card being rebuilt.
+        /// Everything an arc is made of is per-character, so there is nothing to repaint — the
+        /// letters are destroyed and laid out again. Cheap at a word's length, and the caller
+        /// is expected not to call it with a caption that has not changed.
+        /// </para>
+        /// </summary>
+        public static void Arc(RectTransform host, string text, int size, Color colour,
+                               float radius, float outline = 3f, float shadow = 3f,
+                               float tracking = 0f)
+        {
+            if (host == null) return;
+
+            for (int i = host.childCount - 1; i >= 0; i--)
+            {
+                var child = host.GetChild(i).gameObject;
+                child.SetActive(false);
+                UnityEngine.Object.Destroy(child);
+            }
+
+            if (string.IsNullOrEmpty(text) || Mathf.Abs(radius) < 1f) return;
+
+            // Measured first, placed second: the word has to be centred about the middle of the
+            // arc, and that cannot be known until every character has been measured.
+            var glyphs = new Text[text.Length];
+            var widths = new float[text.Length];
+            float total = 0f;
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                var t = Titled("c" + i, host, text[i].ToString(), size, colour,
+                               TextAnchor.MiddleCenter, new Vector2(size * 2f, size * 2f),
+                               new Vector2(.5f, .5f), Vector2.zero, outline, shadow);
+                t.raycastTarget = false;
+                glyphs[i] = t;
+                widths[i] = t.preferredWidth + tracking;
+                total += widths[i];
+            }
+
+            float walked = -total * .5f;
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                // The centre of this character, as a distance along the arc from its middle.
+                float along = walked + widths[i] * .5f;
+                walked += widths[i];
+
+                float angle = along / radius;                       // radians
+                var rt = (RectTransform)glyphs[i].transform;
+                rt.anchoredPosition = new Vector2(radius * Mathf.Sin(angle),
+                                                  radius * Mathf.Cos(angle) - radius);
+                rt.localRotation = Quaternion.Euler(0f, 0f, -angle * Mathf.Rad2Deg);
+            }
+        }
+
         public static Text Titled(string name, Transform parent, string text, int size, Color colour,
                                   TextAnchor anchor = TextAnchor.MiddleCenter,
                                   Vector2 boxSize = default, Vector2 anchorPt = default, Vector2 pos = default,
@@ -164,13 +259,32 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The jelly button art carries a moulded base below its lit face, so the face
-        /// centre sits above the middle of the sprite. Labels and glyphs are lifted by
-        /// this fraction of the button height to land optically centred at any size.
-        /// Measured from the sprites: 8.8% for the pills, 8.1% for the squares.
+        /// How far above a button sprite's middle its lit face sits. Labels and glyphs are
+        /// lifted by this fraction of the button height to land optically centred at any size.
+        ///
+        /// <para>
+        /// <b>Three kits have now answered this and no call site has ever moved, which is the
+        /// whole argument for keeping a question whose answer was once nought.</b> The first
+        /// jelly art carried a moulded base below its face and measured 8.8% and 8.1%; the
+        /// interface kit that replaced it centred its face in its frame, so both went to
+        /// nought; the merge-shooter kit moulded a bright face over an indigo base and they
+        /// came back at 6.7% and 5.4%. This kit does neither — it draws a lighter top half
+        /// over a saturated bottom half of the same hue, which is a <em>material</em> rather
+        /// than a moulding, so the face is very nearly the whole sprite and the lift is very
+        /// nearly nought again. Twenty call sites correctly ask "lift my caption by whatever
+        /// this art needs" and not one of them has ever had to know which kit is answering.
+        /// </para>
+        /// <para>
+        /// <b>Measured rather than typed.</b> <c>Tools/make_hud_kit_art.py</c> prints both on
+        /// every run, off the two moulds it actually cuts, so re-cutting the kit re-answers
+        /// the question instead of leaving a number here that used to be true. A caption that
+        /// were *not* re-measured would sit a few units low on every control in the game at
+        /// once — the kind of wrongness that is much easier to see than to explain, and which
+        /// would be spread across twenty files rather than living in one.
+        /// </para>
         /// </summary>
-        public const float PillFaceLift = 0.088f;
-        public const float SquareFaceLift = 0.081f;
+        public const float PillFaceLift = 0.0231f;
+        public const float SquareFaceLift = 0.0231f;
 
         /// <summary>
         /// The map node is a disc seen at an angle: its white face sits in the upper

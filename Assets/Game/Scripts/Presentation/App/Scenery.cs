@@ -79,6 +79,101 @@ namespace GlimmerGrove
             return host;
         }
 
+        // -------------------------------------------------------------------- the kit
+        /// <summary>
+        /// The world the hub and the storefront both stand in: one authored painting,
+        /// enveloped.
+        ///
+        /// <para>
+        /// <b>It is a picture again, and this one was drawn for the job rather than cut out of
+        /// a pack.</b> The three that came before were a forest, a machine room and a slice of
+        /// a level map, and each was a picture of somewhere <em>else</em> with an interface put
+        /// on top; this one is composed around the thing the screen actually holds — a lit
+        /// plinth, dead centre, with the eye led to it by a stair, a ring on the floor and a
+        /// shaft of light. The companion stands on the plinth and the plates stand either side
+        /// of the light.
+        /// </para>
+        /// <para>
+        /// <b>It lives under <c>Art/Bg/</c> and not under <c>Art/Ui/</c>, which is a memory
+        /// decision rather than a filing one</b>: <c>ArtImportRules</c> caps the UI folder at
+        /// 1024 and a backdrop at 2048, and 1024 on a 1920 canvas is a soft picture behind
+        /// crisp text.
+        /// </para>
+        /// <para>
+        /// <b>No shade and only a light vignette.</b> The painting is already dark at its
+        /// corners and bright where the plinth is, which is the job a vignette was doing for a
+        /// flat fill; dimming it further is undoing the composition.
+        /// <paramref name="dim"/> is kept and ignored, because a dozen call sites pass it.
+        /// </para>
+        /// </summary>
+        public static RectTransform Room(Transform parent, float dim = .10f, float vignette = .52f)
+        {
+            var host = UIKit.Node("Room", parent);
+
+            var s = Art.S("Bg/hub_room");
+            if (s != null)
+            {
+                var img = UIKit.Img("Bg", host, s, Color.white);
+                var rt = (RectTransform)img.transform;
+                rt.anchorMin = rt.anchorMax = new Vector2(.5f, .5f);
+                rt.anchoredPosition = Vector2.zero;
+                var fit = img.gameObject.AddComponent<AspectRatioFitter>();
+                fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+                fit.aspectRatio = s.rect.width / s.rect.height;
+                rt.localScale = Vector3.one * 1.04f;
+                Parallax.Attach(rt, 8f);
+                img.raycastTarget = false;
+            }
+            else
+            {
+                // The frame between a cold boot and the bundle arriving, rather than a missing
+                // file - and an `Image` with no sprite is a white rectangle over the whole
+                // screen (invariant 7b), which is the one thing a backdrop may never be.
+                UIKit.Img("Flat", host, Art.Pixel, Skins.Sky).raycastTarget = false;
+            }
+
+            if (vignette > 0f)
+            {
+                var vig = UIKit.Img("Vignette", host, Art.Vignette(256),
+                                    Pal.A(Color.black, vignette * .40f));
+                vig.type = Image.Type.Simple;
+                vig.raycastTarget = false;
+            }
+            return host;
+        }
+
+        /// <summary>
+        /// The kit's rail across the top or the foot of a screen.
+        ///
+        /// <para>
+        /// Stretched to the full width rather than nine-sliced, because the kit draws a notch
+        /// in the middle of each one and a slice would stretch exactly that. What a plain
+        /// stretch does at this canvas width is <em>shrink</em> the sprite by a fifth, which is
+        /// nothing a player can see on a bar and is what keeps the notch.
+        /// </para>
+        /// </summary>
+        public static Image Rail(Transform parent, bool top)
+        {
+            var img = UIKit.Img(top ? "RailTop" : "RailFoot", parent,
+                                Art.S("Ui/" + (top ? Skins.Rail : Skins.RailFoot)), Color.white,
+                                new Vector2(Boot.RefWidth, top ? RailTopH : RailFootH),
+                                new Vector2(.5f, top ? 1f : 0f),
+                                new Vector2(0f, top ? -RailTopH * .5f : RailFootH * .5f));
+
+            var rt = (RectTransform)img.transform;
+            rt.anchorMin = new Vector2(0f, top ? 1f : 0f);
+            rt.anchorMax = new Vector2(1f, top ? 1f : 0f);
+            rt.sizeDelta = new Vector2(0f, top ? RailTopH : RailFootH);
+            return img;
+        }
+
+        /// <summary>
+        /// How tall each rail draws. The kit's own proportions at this canvas width — 1330x80
+        /// and 1333x95 taken to 1080 — so the notch keeps its shape.
+        /// </summary>
+        public const float RailTopH = 65f;
+        public const float RailFootH = 77f;
+
         /// <summary>Rounded pill with a label, used for counters and headings.</summary>
         public static Text Pill(Transform parent, string text, int fontSize, Vector2 size,
                                 Vector2 anchor, Vector2 pos, Color? tint = null, string icon = null)

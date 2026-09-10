@@ -10,6 +10,7 @@ using GlimmerGrove.Content.Sources;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Homestead;
 using GlimmerGrove.Localization;
+using GlimmerGrove.Modes;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using GlimmerGrove.Store;
@@ -805,6 +806,16 @@ namespace GlimmerGrove.EditorTools
                     result.Errors.Add($"utility '{item.Id}' draws '{item.Art}', which " +
                                       "AssetManifest does not name; a picture is not content, so " +
                                       "adding a utility is a build");
+
+                // **A warning rather than an error, and about the run rather than the file.**
+                // `UtilityCatalog.Resolve` has already refused anything outside the supported
+                // range, so what is left to say is a judgement: a cooldown longer than the quiet
+                // between two waves is an item that can be used about once a raid, which is a
+                // real authoring choice for a stormcall and almost never one for a mending.
+                if (item.CooldownSeconds > SiegeTuning.BetweenWaves * 2f)
+                    result.Warnings.Add($"utility '{item.Id}' cools for {item.CooldownSeconds}s, " +
+                                        "which is more than two waves apart - it can be used " +
+                                        "about once a raid, so check that is what was meant");
             }
 
             if (daily != null)
@@ -823,7 +834,8 @@ namespace GlimmerGrove.EditorTools
             foreach (var item in utilities.Items)
                 Debug.Log($"[Glimmer] utility '{item.Id}': {UtilityKinds.Id(item.Kind)} " +
                           $"{item.Magnitude}, hold up to {item.MaxHeld}, " +
-                          (item.ForSale ? $"{item.GemPrice} gem(s)" : "chests only"));
+                          (item.ForSale ? $"{item.GemPrice} gem(s)" : "chests only") +
+                          (item.Cools ? $", cools {item.CooldownSeconds}s" : ", no cooldown"));
         }
 
         /// <summary>

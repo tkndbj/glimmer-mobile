@@ -26,6 +26,10 @@ namespace GlimmerGrove
             _gems.Clear();
             _mob.Clear();
 
+            // A storm still falling over a board that has just been dealt again owns nothing:
+            // the widgets it claimed went with `_mob`. See `_striking`.
+            _striking.Clear();
+
             _tally.Clear();
             _chain = null;
             _chainAura = null;

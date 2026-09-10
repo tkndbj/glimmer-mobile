@@ -76,22 +76,23 @@ namespace GlimmerGrove
 
             if (verdict.IsWon)
             {
-                // **A boss is watched dying before the run is allowed to end.** Reported from
-                // play: a cascade big enough to finish the hill killed the boss and the victory
+                // **Whatever the killing blow felled is watched dying before the run is allowed
+                // to end.** Reported from play twice, and the second report is the general one.
+                // First: a cascade big enough to finish the hill killed the boss and the victory
                 // panel was up before anything came apart, so the player was told they had won
-                // and never saw the thing they beat. The win is already decided — this only
-                // holds the *telling* of it, and `Update` re-asks every frame, so nothing can be
+                // and never saw the thing they beat. Then the same about a firepot and a storm,
+                // which are the two ways a player lands the killing blow with their own hand and
+                // so the two most worth watching. The win is already decided — this only holds
+                // the *telling* of it, and `Update` re-asks every frame, so nothing can be
                 // stranded by it.
                 //
                 // It is a countdown rather than a callback for the reason `Fall` is five
-                // staggered explosions rather than one: the death is a handful of tweens with no
+                // staggered explosions rather than one: a death is a handful of tweens with no
                 // single end, and a latch that outlives the last of them is the only version that
-                // cannot end early.
-                if (_felling > 0f)
-                {
-                    _felling -= Time.unscaledDeltaTime;
-                    return;
-                }
+                // cannot end early. `Update` counts it down (`Watching`), not this branch — a hold
+                // only ticked while the run is won would be armed by the first creeper and still
+                // standing when the last one died.
+                if (_felling > 0f) return;
 
                 Over = true;
                 Finishing?.Invoke();

@@ -459,6 +459,39 @@ namespace GlimmerGrove
         public static bool HasModal => _modals.Count > 0;
 
         /// <summary>
+        /// Whether anything is standing over the screen — including a panel part-way through
+        /// its exit.
+        ///
+        /// <para>
+        /// <b>A panel on its way out still counts here, which is the opposite of what
+        /// <see cref="IsTopModal"/> and <see cref="HasModalAbove"/> answer</b>, and the
+        /// difference is not an inconsistency. Those two are asked whether a panel <em>may be
+        /// raised</em>, where a closing one must not refuse its successor. This is asked whether
+        /// the screen underneath <em>may be played</em>, and a closing panel is still drawn over
+        /// it and still swallows every tap aimed through it: <c>ModalView.Close</c> fades the
+        /// group for a fifth of a second without ever dropping its raycasts, and only calls
+        /// <see cref="Dismiss"/> at the end. A run handed back during that fade is a hill the
+        /// player can watch walking and cannot answer.
+        /// </para>
+        /// <para>
+        /// Read every frame by <c>RunScreen</c>, which turns it into <c>RunHold.Covered</c> —
+        /// see there for why the question is asked rather than announced. A destroyed panel that
+        /// has somehow outlived its removal is skipped rather than counted, because the failure
+        /// this must not have is a run held for ever by something nobody can close.
+        /// </para>
+        /// </summary>
+        public static bool Covered
+        {
+            get
+            {
+                for (int i = _modals.Count - 1; i >= 0; i--)
+                    if (_modals[i]) return true;
+
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Whether <paramref name="v"/> is the topmost panel that is up and staying up.
         ///
         /// <para>

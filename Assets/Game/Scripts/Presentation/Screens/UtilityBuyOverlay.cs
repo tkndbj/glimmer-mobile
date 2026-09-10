@@ -28,18 +28,22 @@ namespace GlimmerGrove
     /// so nothing about the in-run route costs a tap more than it did.
     /// </para>
     /// <para>
-    /// <b>It opens over a live board and must not disturb it.</b> A siege's clock does not stop
-    /// for a modal (<c>SiegeScreen.Runnable</c>), so this is the one shop in the game a player
-    /// can open while something is walking down a hill at them — which is why it says its price
-    /// and closes, and why the ceremony a grove piece gets would be wrong here.
+    /// <b>It opens over a live board and the board stops while it is up.</b> It shipped without
+    /// that and was reported from play: the hill kept walking behind the panel, so a player who
+    /// tapped an empty slot was reading a price while raiders closed on their ward line — a run
+    /// being lost by somebody who had asked the game a question. It is not this panel's rule,
+    /// though, and it is deliberately not written here: <c>RunHold.Covered</c> holds any run
+    /// behind any panel, asked once a frame by <c>RunScreen</c>. What survives as this panel's
+    /// own business is the <em>manner</em> — it says its price and closes, with none of the
+    /// ceremony a grove piece gets, because it is an errand in the middle of a raid.
     /// </para>
     /// <para>
     /// <b>A short balance keeps a live button</b>, which is <see cref="HomesteadBuyOverlay"/>'s
     /// rule and its reason: this is the moment a player has decided they want something, and a
     /// greyed control spends it on teaching them the feature is broken. The gem shelf is stacked
-    /// on top rather than navigated to, because the board behind is still running — the same
-    /// argument <c>ContinueOverlay</c> makes about a frozen board, with a clock instead of a
-    /// freeze.
+    /// on top rather than navigated to — <c>ContinueOverlay</c>'s argument, and it survives the
+    /// board being held: leaving the screen would abandon a run that is still standing, where
+    /// stacking keeps the raid exactly where the player left it.
     /// </para>
     /// </summary>
     public sealed class UtilityBuyOverlay : ModalView
@@ -326,9 +330,10 @@ namespace GlimmerGrove
 
         void OnGetGems()
         {
-            // Stacked on this panel rather than navigated to, because the board behind is a
-            // siege and its clock does not stop — leaving the screen to buy gems would be
-            // leaving a run that is still being lost. ContinueOverlay's rule, one screen along.
+            // Stacked on this panel rather than navigated to: the board behind is held while
+            // anything is over it (RunHold.Covered), and it stays held because this panel is
+            // still up underneath the shelf — where leaving the screen would abandon the run
+            // outright. ContinueOverlay's rule, one screen along.
             Flow.Modal<GemShopOverlay>(v => v.Bought = () => { if (this) Repaint(); });
         }
 
@@ -364,7 +369,9 @@ namespace GlimmerGrove
             Bought?.Invoke();
 
             // Closed on a short delay rather than at once, so the player sees the panel confirm
-            // before it goes — and with no unveiling, because the board behind is still running.
+            // before it goes — and with no unveiling, because a raid is waiting behind it. The
+            // delay is the last of the hold: the run is handed back when this panel is, not when
+            // the gems left.
             Tween.After(.55f, () => { if (this) Close(); }, this);
         }
     }

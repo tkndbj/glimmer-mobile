@@ -145,6 +145,66 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(hold.Held, "a mistyped reason must not hold a run for ever");
         }
 
+        /// <summary>
+        /// The reason nobody takes, and the one property that makes polling it safe.
+        ///
+        /// <para>
+        /// <c>RunHold.Covered</c> is written by <c>RunScreen</c>'s frame from
+        /// <c>Flow.Covered</c> rather than by the panels, so it is taken and released far more
+        /// often than any of the others — every frame, for as long as anything is over the
+        /// board. That is only sound because a reason cannot free another one: a shop panel
+        /// closing over a board a lesson is still holding must leave the run held, and a lesson
+        /// ending under a shop panel must too.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void APanelClosingCannotFreeARunALessonIsStillHolding()
+        {
+            var hold = new RunHold();
+
+            hold.Take(RunHold.Teaching);
+            hold.Take(RunHold.Covered);
+
+            hold.Release(RunHold.Covered);
+
+            Assert.IsTrue(hold.Held, "the lesson is still up; the hill must not start walking");
+            Assert.IsTrue(hold.Holds(RunHold.Teaching));
+        }
+
+        /// <summary>
+        /// Polled rather than announced, so the same answer arriving on a thousand frames has to
+        /// cost nothing and mean the same thing as one.
+        /// </summary>
+        [Test]
+        public void HoldingForAPanelEveryFrameIsHoldingForItOnce()
+        {
+            var hold = new RunHold();
+
+            for (int i = 0; i < 100; i++) hold.Take(RunHold.Covered);
+
+            Assert.AreEqual(1, hold.Count);
+
+            hold.Release(RunHold.Covered);
+            Assert.IsFalse(hold.Held, "one release has to answer however many frames took it");
+        }
+
+        /// <summary>
+        /// Every reason names itself, because two that collided would be one reason wearing two
+        /// names — and the second release would free a run the first was still holding.
+        /// </summary>
+        [Test]
+        public void NoTwoReasonsShareAName()
+        {
+            var reasons = new[] { RunHold.Opening, RunHold.Teaching,
+                                  RunHold.Deciding, RunHold.Covered };
+
+            for (int i = 0; i < reasons.Length; i++)
+                for (int j = i + 1; j < reasons.Length; j++)
+                    Assert.AreNotEqual(reasons[i], reasons[j],
+                                       "two hold reasons share the string \"" + reasons[i] +
+                                       "\", so either can release the other");
+        }
+
         [Test]
         public void WhatIsHoldingTheRunCanBeRead()
         {

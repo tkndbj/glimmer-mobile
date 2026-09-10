@@ -3454,6 +3454,26 @@
    "text": "Checking for anything not yet delivered..."
   },
   {
+   "key": "ui.shop.tab_gems",
+   "text": "Gems"
+  },
+  {
+   "key": "ui.shop.tab_coins",
+   "text": "Coins"
+  },
+  {
+   "key": "ui.shop.tab_bundles",
+   "text": "Bundles"
+  },
+  {
+   "key": "ui.shop.tab_supplies",
+   "text": "Supplies"
+  },
+  {
+   "key": "ui.shop.tab_utilities",
+   "text": "Kit"
+  },
+  {
    "key": "ui.shop.shelf_bundles",
    "text": "Everything at once, for less than the parts"
   },

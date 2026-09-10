@@ -6,42 +6,48 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The bottom navigation shared by the hub and the glade map.
+    /// The bottom navigation shared by the hub, the glade map and the storefront.
     ///
     /// <para>
     /// Every tab is a full-height cell that takes the tap — cap, glyph and caption
-    /// together — rather than the glyph alone. A 200x176 target is what a thumb
-    /// actually hits on a phone; the old 124px icon was the whole hit box and the
-    /// caption under it was dead.
+    /// together — rather than the glyph alone. A 200x176 target is what a thumb actually
+    /// hits on a phone; the old 124px icon was the whole hit box and the caption under it
+    /// was dead.
     /// </para>
     /// <para>
-    /// <b>There is no bar.</b> The five caps sit straight on the grove: no plate, no
-    /// wash, no seam. A plate is the cheap way to guarantee contrast, and it costs the
-    /// bottom eighth of every screen — the backdrop stops being the grove and becomes a
-    /// slab. Instead each cap earns its own contrast the way the rest of this UI does,
-    /// from the moulded jelly art's dark rim plus a soft seat shadow beneath it. That
-    /// matters because <c>grove_near</c> runs from near-white inside the light shaft to
-    /// dark teal beside it, so a flat shape would vanish on one half of the screen.
-    /// Anything added here that spans the full width — a rail, a seam, a gradient with
-    /// a visible edge — puts the slab back.
+    /// <b>There is a bar again, and the reason it came back is the reason it went.</b> It was
+    /// removed because a plate is the cheap way to guarantee contrast and it cost the bottom
+    /// eighth of every screen — the backdrop stopped being the grove and became a slab. What
+    /// replaced it was five caps earning their own contrast off a moulded rim and a seat
+    /// shadow, which worked. The kit's rail is not that plate: it is a 77-unit strip with a
+    /// notch in it that the caps <em>overhang</em>, so it reads as the console they are set
+    /// into rather than as a floor laid over the picture. Nothing behind it is lost, because
+    /// nothing was ever drawn in the bottom 77 units of any screen.
     /// </para>
     /// <para>
-    /// Selection is carried by size, colour and height together rather than by a single
-    /// marker: the live cap swells, lifts, turns teal and breathes. Three signals beat
-    /// one because half these glyphs are painted in full colour and half are white
-    /// silhouettes, so any scheme that leans on tinting the glyph reads differently
-    /// depending on which tab you happen to be standing on.
+    /// Selection is carried by the cap itself — the kit draws a lit tab and an unlit one as
+    /// two different objects, a yellow face in a bright frame against a blue face in a dark
+    /// one — plus size, height and a breath. Four signals beat one because half these glyphs
+    /// are painted in full colour and half are white silhouettes, so any scheme that leans on
+    /// tinting the glyph reads differently depending on which tab you happen to be standing
+    /// on.
+    /// </para>
+    /// <para>
+    /// <b>The glyphs are this game's own and never the kit's.</b> The pack ships five caps
+    /// carrying a champion, a weapon and a backpack, which name nothing here — so what is used
+    /// is the kit's blank face wearing the icons the rest of the UI already draws. A restyle
+    /// that quietly renamed five destinations would be a much more expensive change than a
+    /// restyle.
     /// </para>
     /// </summary>
     public static class NavBar
     {
         /// <summary>
         /// Vertical space the bar occupies. Screens keep their content above this.
-        /// Unchanged from the plated design on purpose — the caps were sized to fit the
-        /// budget that every screen already reserves, so dropping the plate costs no
-        /// layout anywhere else.
+        /// Unchanged across two restyles on purpose — the caps were sized to fit the budget
+        /// every screen already reserves, so the look can move without any layout moving.
         /// </summary>
-        public const float Height = 206f;
+        public const float Height = 236f;
 
         public enum Tab { None, Home, Shop, Grove, Ranks, Profile }
 
@@ -53,32 +59,20 @@ namespace GlimmerGrove
         /// </summary>
         static readonly Tab[] Order = { Tab.Home, Tab.Shop, Tab.Grove, Tab.Ranks, Tab.Profile };
 
-        const float CellW = 200f;
-        const float CellH = 176f;
-
         /// <summary>
-        /// Cap sizes. The live one is roughly a quarter wider, which is most of what says "here";
-        /// both are sized so the taller cap plus its caption fits inside <see cref="Height"/>.
+        /// The button itself, and the cell that takes the tap. The button is the whole tab —
+        /// icon and caption sit inside it — which is the shape the genre uses and the reason
+        /// the icon is allowed to break its top edge: a glyph that overhangs reads as a thing
+        /// standing in a slot rather than as a picture printed on a square.
         /// </summary>
-        const float CapLive = 152f;
-        const float CapRest = 124f;
+        const float CellW = 214f;
+        const float CellH = 208f;
+        const float BtnW = 200f;
+        const float BtnH = 172f;
 
-        /// <summary>
-        /// How much larger the Grovement's cap draws than the rest.
-        ///
-        /// <para>
-        /// The one tab that is bigger, and it is bigger for a reason rather than for
-        /// emphasis' sake: it is the only tab leading somewhere the player <em>made</em>.
-        /// Two of the other four are still promises, and the two that are not — the hub and
-        /// the profile — are places the game takes you anyway. A grove nobody finds is a
-        /// grove nobody builds, and the whole feature rests on somebody tapping this once.
-        /// </para>
-        /// <para>
-        /// Sized so the enlarged live cap still clears its neighbours: the slot is
-        /// <c>RefWidth / 5</c> = 216px and 152 x 1.18 is 179.
-        /// </para>
-        /// </summary>
-        const float GroveCapScale = 1.18f;
+        /// <summary>How far above the button's own middle the glyph sits, so it overhangs.</summary>
+        const float IconY = 40f;
+        const float IconSize = 136f;
 
         /// <summary>
         /// Draws the bar with <paramref name="active"/> marked.
@@ -116,7 +110,7 @@ namespace GlimmerGrove
             string labelKey = LabelKey(tab);
 
             // the cell is the button; everything below is decoration inside it, so a
-            // press squashes cap, glyph and caption as one object
+            // press squashes plate, glyph and caption as one object
             bool standing = active && !onSidePage;
 
             var cell = UIKit.Button("Nav_" + tab, bar, Art.Pixel, new Vector2(CellW, CellH),
@@ -125,50 +119,55 @@ namespace GlimmerGrove
             hit.color = new Color(1f, 1f, 1f, 0f);
             if (standing) { cell.ClickSfx = null; cell.PressScale = .97f; }
 
-            float cap = (active ? CapLive : CapRest) * (tab == Tab.Grove ? GroveCapScale : 1f);
-            float capY = active ? 22f : 14f;
+            float grow = active ? 1.06f : 1f;
+            var face = Skins.Plate;
 
-            // Every tab carries a cap, and the live one differs by size, colour and
-            // height at once. It has to: half these glyphs are painted in full colour
-            // and half are white silhouettes, so a single marker that works under one
-            // would be the wrong marker under the next.
-            if (active) UIKit.Halo(cell.transform, Pal.Aqua, cap * 1.62f, .30f, new Vector2(0f, capY));
+            if (active) UIKit.Halo(cell.transform, Pal.Sun, BtnW * 1.7f, .30f, new Vector2(0f, 6f));
 
-            // what a plate used to do — a soft dark seat under the cap, sized to it, so
-            // the tab holds its own over both the light shaft and the dark teal
-            var seat = UIKit.Img("Seat", cell.transform, Art.Glow(128, 1.7f),
-                                 new Color(.02f, .07f, .09f, active ? .42f : .34f),
-                                 new Vector2(cap * 1.18f, cap * .74f), new Vector2(.5f, .5f),
-                                 new Vector2(0f, capY - cap * .40f));
-            seat.transform.SetAsFirstSibling();
+            // A soft-cornered plate in the tab's own colour, lifted when it is the live one.
+            // Selection is the plate and its frame, never the glyph — see Glyph.
+            var plate = UIKit.Img("Plate", cell.transform, Art.Round(26),
+                                  active ? Lift(face, .22f) : Pal.A(face, .92f),
+                                  new Vector2(BtnW * grow, BtnH * grow), new Vector2(.5f, .5f),
+                                  new Vector2(0f, 0f));
 
-            // A resting tab is still a tab you can press, so it carries colour — the live
-            // one is already marked out four other ways (a halo, a bigger cap, a breathing
-            // scale and a brighter label), which is plenty of separation without spending
-            // the disabled grey on five permanent controls. See Skins.
-            var capImg = UIKit.Img("Cap", cell.transform, Art.S("Ui/" + CapSkin(tab, active)),
-                                   Color.white, Vector2.one * cap, new Vector2(.5f, .5f),
-                                   new Vector2(0f, capY));
-            capImg.preserveAspect = true;
-            if (active) Tween.Breathe(capImg.transform, .025f, 2.8f);
+            // Two rims: a dark seat under everything, and the kit's gold on the live tab.
+            var seat = UIKit.Img("Seat", plate.transform, Art.RoundOutline(26, 4f),
+                                 new Color(.02f, .06f, .13f, .85f));
+            UIKit.StretchTo((RectTransform)seat.transform, 0, 0, 0, 0);
 
-            // The jelly art carries a moulded base below its lit face, so the face
-            // centre sits above the sprite's middle — the glyph rides up by the same
-            // fraction the rest of the UI uses, or it looks low in the cap.
-            var ic = UIKit.Img("Icon", capImg.transform, Icon(tab),
-                               active ? Pal.Cream : new Color(1f, .97f, .90f, .82f),
-                               Vector2.one * (active ? cap * .54f : cap * .50f), new Vector2(.5f, .5f),
-                               new Vector2(0f, cap * UIKit.SquareFaceLift));
+            if (active)
+            {
+                var lit = UIKit.Img("Lit", plate.transform, Art.RoundOutline(26, 6f), Skins.PlateEdge);
+                UIKit.StretchTo((RectTransform)lit.transform, -3, -3, -3, -3);
+                Tween.Breathe(plate.transform, .018f, 2.8f);
+            }
+
+            // The glyph, big, and hanging over the plate's top edge. Never blacked out: it
+            // keeps its own colour whether or not this is the live tab, so a selection can
+            // never be read as an icon that has gone dead.
+            float size = IconSize * grow;
+            var ic = UIKit.Img("Icon", plate.transform, Icon(tab), Color.white,
+                               Vector2.one * size, new Vector2(.5f, .5f),
+                               new Vector2(0f, IconY * grow));
             ic.preserveAspect = true;
 
-            UIKit.Titled("L_" + tab, cell.transform, Loc.Get(labelKey), active ? 26 : 24,
-                         active ? Pal.Cream : new Color(1f, .96f, .88f, .70f), TextAnchor.MiddleCenter,
-                         new Vector2(CellW, 32f), new Vector2(.5f, .5f), new Vector2(0f, -66f), 4f, 3f);
+            // Inside the plate, under the glyph - which is what makes the button one object
+            // rather than a square with a caption parked beneath it.
+            UIKit.Shrinkable(
+                UIKit.Titled("L_" + tab, plate.transform, Loc.Get(labelKey), active ? 27 : 25,
+                             active ? Pal.Sun : new Color(1f, .97f, .90f, .92f),
+                             TextAnchor.MiddleCenter, new Vector2(BtnW - 16f, 34f),
+                             new Vector2(.5f, 0f), new Vector2(0f, 28f), 4f, 3f), 17);
 
             cell.transform.localScale = Vector3.zero;
             Tween.Pop(cell.transform, 0f, .5f, .62f + Mathf.Abs(x) * .00035f)
                  .OnDone(() => { if (cell) cell.Rehome(); });
         }
+
+        /// <summary>The same colour with more light in it, for the live tab.</summary>
+        static Color Lift(Color c, float k)
+            => new Color(c.r + (1f - c.r) * k, c.g + (1f - c.g) * k, c.b + (1f - c.b) * k, 1f);
 
         // ------------------------------------------------------------- tab tables
         /// <summary>
@@ -188,36 +187,34 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Which jelly a cap wears.
+        /// Which cap a tab wears.
         ///
         /// <para>
-        /// The Grovement keeps its orange whether it is the live tab or not, which is the one
-        /// exception to the teal-means-here rule and deliberate. Selection here was never
-        /// carried by colour alone — see the type's remarks — it is size, height, a halo and a
-        /// breath, and all four still apply. What the orange buys is the thing the other four
-        /// cannot: a tab that stands out when you are standing somewhere else, which is the
-        /// only moment it matters.
+        /// <b>The Grovement's permanent orange did not survive the kit, and losing it is a
+        /// gain.</b> It used to keep a colour of its own whether or not it was the live tab —
+        /// the one exception to the teal-means-here rule — because it needed to stand out when
+        /// you were standing somewhere else. The kit's unlit cap is a *frame* rather than a
+        /// flat jelly, so what makes this tab stand out now is its size alone, which is the
+        /// signal that was doing most of the work anyway. A third cap colour in a row of five
+        /// would be a second thing saying "here" and disagreeing with the first.
         /// </para>
         /// </summary>
-        static string CapSkin(Tab tab, bool active)
-        {
-            if (tab == Tab.Grove) return "jelly_orange";
-            return active ? "jelly_teal" : Skins.Nav;
-        }
+        static string CapSkin(Tab tab, bool active) => active ? Skins.CapOn : Skins.CapOff;
 
+        /// <summary>
+        /// The pack's own glyphs — painted pictures rather than silhouettes, so nothing here
+        /// tints one and a selected tab cannot black its icon out. Cut by
+        /// <c>Tools/make_nav_icons.py</c>, which is where a name is re-pointed.
+        /// </summary>
         static Sprite Icon(Tab tab)
         {
             switch (tab)
             {
-                case Tab.Home: return Art.S("Ui/ic_home");
-                case Tab.Shop: return Art.S("Ui/ic_chest");
-                // The grove's own islands, which is literally what the tab leads to. Map
-                // furniture rather than a Ui glyph, and already in the global preload, so it
-                // costs nothing; it is also full colour where most of this row is, which the
-                // cap's selection markers were designed around — see the type's remarks.
-                case Tab.Grove: return Art.S("Map/rock_grass");
-                case Tab.Ranks: return Art.S("Ui/ic_trophy");
-                default: return Art.S("Ui/ic_profile");
+                case Tab.Home: return Art.S("Ui/ic_nav_home");
+                case Tab.Shop: return Art.S("Ui/ic_nav_shop");
+                case Tab.Grove: return Art.S("Ui/ic_nav_grove");
+                case Tab.Ranks: return Art.S("Ui/ic_nav_ranks");
+                default: return Art.S("Ui/ic_nav_profile");
             }
         }
 

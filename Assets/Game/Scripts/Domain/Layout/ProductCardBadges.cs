@@ -57,19 +57,20 @@ namespace GlimmerGrove.Layout
 
         // ------------------------------------------------------------------ the ribbon
         /// <summary>The bonus ribbon's cloth, and the angle it is pinned at.</summary>
-        // The kit's ribbon is a banner with two tails, so the flat flag words sit on is only
-        // part of it: the panel is about 69% of the height and, where the tails cut in, 84% of
-        // the width. Both bounds bind. At 230x62, the size cut for the thin ribbon this project
-        // drew itself, the panel was ~40 units tall and "+23% EXTRA" ran off it onto the tails;
-        // at 300x112 the text fitted and the thing was a slab. 240x82 is where the widest string
-        // a shelf can produce ("+68% EXTRA", 153 units at 25pt) sits inside the panel with room,
-        // and it is the smallest that does. Both faults came from a device and neither is
-        // visible to any gate here — `render_shop.py` draws ribbons now for that reason.
+        // **What has to fit is the interior, and on this mark the interior is not the sprite.**
+        // The tails eat the bottom third of the cloth and about 16% of its width, so the widest
+        // string a shelf can produce ("+68% EXTRA", 153 units at 25pt) needs 153 plus both tails
+        // plus a margin. 268 is where it sits inside them.
         //
-        // Nothing downstream needed touching, which is what these derived numbers are for:
-        // `RibbonReach` grows with the width, so `SealInset` walks the badge further in by
-        // itself to keep clear of the next column's now-wider ribbon.
-        public const float RibbonWidth = 240f, RibbonHeight = 82f, RibbonTilt = -8f;
+        // **And the tilt is back, which is what says the mark is cloth.** It went to nought
+        // under the kit before this one for a good reason — that kit had no ribbon at all, so
+        // this was a machined plate with a clip on each end, and a plate a few degrees off
+        // square reads as one that has come loose rather than as one that hangs. This kit ships
+        // a real ribbon with tails, so the reason expired with the art. Six degrees, because
+        // `RibbonReach` grows with it and the seal on the card to the left has to stay clear:
+        // measured, six costs three units of reach and `ProductCardBadgeTests` proves what is
+        // left is still more than `Clearance`.
+        public const float RibbonWidth = 268f, RibbonHeight = 76f, RibbonTilt = 6f;
 
         /// <summary>Its centre, in from the plate's left edge and down from the plate's top.</summary>
         // A ribbon is centred `RibbonDrop` below the plate's top edge, so half its height

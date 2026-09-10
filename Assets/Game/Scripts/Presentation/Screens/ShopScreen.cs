@@ -59,7 +59,7 @@ namespace GlimmerGrove
         public override string Track => "mus_menu";
 
         const float HeaderHeight = 300f;
-        const float TabRow = 132f;
+        const float TabRow = 156f;
 
         const int Columns = 2;
         const float CellW = 508f;
@@ -119,13 +119,18 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            // A flat blue page rather than the forest every other screen stands in, and the
-            // fireflies with it. Every card here is a saturated block with a painted pile on
-            // it, so the ground's only job is not to compete — CRAFT.md's plate rule asked of
-            // a storefront. It is `ShopSkins.Ground`, the kit's own blue two steps down, so
-            // the furniture stands on a darker shade of itself.
-            UIKit.StretchTo((RectTransform)UIKit.Img("Ground", Content, Art.Pixel,
-                                                     ShopSkins.Ground).transform, 0, 0, 0, 0);
+            // The kit's own machine room rather than the flat page this screen used to be,
+            // and rather than the forest every other screen stands in.
+            //
+            // <para>
+            // The flat page was right while the cards were saturated blocks of colour: the
+            // ground's one job was not to compete, which is CRAFT.md's plate rule asked of a
+            // storefront. The cards are teal machinery now, so the argument runs the other way
+            // - a shop floating on nothing reads as a menu, and what makes a storefront a
+            // *place* is that it is somewhere. The room is dark, out of focus and has nothing
+            // in its middle, which is what lets it be a place and still not compete.
+            // </para>
+            Scenery.Room(Content);
 
             BuildGrid();
             BuildHeader();
@@ -241,7 +246,18 @@ namespace GlimmerGrove
         // ---------------------------------------------------------------- header
         void BuildHeader()
         {
-            var fade = UIKit.Img("TopFade", Content, Art.FadeUp(64), new Color(.02f, .06f, .09f, .84f));
+            // A wash under the header, so the title, the balances and the tabs are read against
+            // something rather than against whatever part of the world happens to be behind
+            // them.
+            //
+            // **.62 rather than .88, and it is the world that moved rather than the taste.**
+            // Under the last kit what was behind this band was a flat near-black ground, so an
+            // almost-opaque wash cost nothing and bought contrast for free. Over an illustrated
+            // world it is the difference between a header that sits *in* the picture and a
+            // black bar laid across the top of it — and the pieces standing on it are opaque
+            // navy plates with their own keylines now, so most of the contrast it used to buy
+            // is already paid for.
+            var fade = UIKit.Img("TopFade", Content, Art.FadeUp(64), new Color(.02f, .05f, .09f, .62f));
             var frt = (RectTransform)fade.transform;
             frt.anchorMin = new Vector2(0f, 1f); frt.anchorMax = new Vector2(1f, 1f);
             frt.pivot = new Vector2(.5f, 1f);
@@ -249,21 +265,26 @@ namespace GlimmerGrove
             frt.anchoredPosition = Vector2.zero;
             frt.localRotation = Quaternion.Euler(0, 0, 180f);
 
-            UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", new Vector2(118f, 118f),
-                             new Vector2(0f, 1f), new Vector2(96f, -120f), () => Flow.Go<HomeScreen>());
+            UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", new Vector2(112f, 112f),
+                             new Vector2(0f, 1f), new Vector2(94f, -128f), () => Flow.Go<HomeScreen>());
 
-            // The kit's own tab chip, stretched into a title bar, rather than the cream
-            // banner every other screen wears. That banner is a woodland sign — it is right
-            // above a forest and wrong above this, and a storefront whose header belongs to a
-            // different game is the seam a player notices first. The lettering is cream on
-            // blue rather than brown on cream for the same reason.
-            var banner = UIKit.Img("Banner", Safe, Art.S(ShopSkins.TabOn), ShopSkins.Band,
-                                   new Vector2(480f, 116f), new Vector2(.5f, 1f), new Vector2(0f, -108f));
-            UIKit.Shrinkable(
-                UIKit.Titled("Title", banner.transform, Loc.Get("ui.nav.shop").ToUpperInvariant(), 42,
-                             Pal.Cream, TextAnchor.MiddleCenter,
-                             new Vector2(400f, 60f), new Vector2(.5f, .5f),
-                             Vector2.zero, 3f, 3f), 24);
+            // The kit's title plate, which is the same rim a currency readout sits in one row
+            // below. That is deliberate rather than thrifty: a word the game owns and a number
+            // the game owns are the same kind of thing, and one rim is one thing to learn. It
+            // replaced a tab chip stretched into a banner, which was the nearest shape the last
+            // kit had and read as a tab that had grown.
+            var banner = UIKit.Img("Banner", Safe, Art.S("Ui/" + Skins.Title), Color.white,
+                                   new Vector2(440f, 104f), new Vector2(.5f, 1f), new Vector2(0f, -112f));
+            // Bent to the plate's own top edge rather than set on a straight baseline. The
+            // kit draws this ribbon with a raised middle and tails that fall away, so a
+            // straight word inside it reads as a label that happens to be sitting on a curved
+            // thing. 620 is the radius the plate's own arc is drawn at; see `UIKit.Arced`.
+            //
+            // Not `Shrinkable`, because best-fit works on one label's box and this is one label
+            // per character — a translated title that outgrew the plate would need a smaller
+            // `size` here, which is a decision rather than something to leave to a fitter.
+            UIKit.Arced("Title", banner.transform, Loc.Get("ui.nav.shop").ToUpperInvariant(), 40,
+                        Pal.Sun, 620f, new Vector2(.5f, .5f), new Vector2(0f, 104f * Skins.RibbonLift), 3f, 3f, 2f);
 
             BuildBalances();
             BuildTabs();
@@ -442,25 +463,23 @@ namespace GlimmerGrove
         static void BalancePill(Transform row, Color tint, string icon, string value,
                                 ResourceSlots.Kind kind, Func<long, string> format)
         {
-            // The kit's trough, nine-sliced, with no drawn outline: it has its own, and a
-            // second one traced at a radius the sprite no longer has is a halo a hair off the
-            // shape it is following. The "+" on the end is what makes it read as a control
-            // rather than as a label — it is the reference this screen was restyled against,
-            // and it is honest here because tapping the row does open the shop.
-            var pill = UIKit.Img("Pill", row, Art.S(ShopSkins.Pill), ShopSkins.Trough,
+            // The kit's trough, nine-sliced and drawn at white: it carries its own dark
+            // interior and its own orange rim, so there is nothing here to tint and nothing to
+            // trace. It used to be a flat chip tinted by hand. The "+" that used to sit on the
+            // end has gone: on the hub it is a control that opens a panel, and here the panel
+            // *is* the screen, so it was a button promising to take you where you already are.
+            var pill = UIKit.Img("Pill", row, Art.S("Ui/" + Skins.Trough), Color.white,
                                  new Vector2(228f, 74f), new Vector2(.5f, .5f), Vector2.zero);
 
-            var plus = UIKit.Img("Add", pill.transform, Art.S(ShopSkins.Add), Color.white,
-                                 new Vector2(46f, 46f), new Vector2(1f, .5f), new Vector2(-6f, 0f));
-            plus.preserveAspect = true;
-            plus.raycastTarget = false;
-
+            // 62 rather than 38, and it is the trough's own geometry rather than taste: the
+            // kit clips each end of the plate and a clip is 43 units wide whatever width the
+            // plate is drawn at, so a glyph 38 in from the edge is a glyph standing on the pipe.
             var glow = UIKit.Img("Glow", pill.transform, Art.Glow(96, 2f), Pal.A(tint, .22f),
-                                 new Vector2(96f, 96f), new Vector2(0f, .5f), new Vector2(38f, 0f));
+                                 new Vector2(96f, 96f), new Vector2(0f, .5f), new Vector2(62f, 0f));
 
             var glyph = UIKit.Img("Icon", pill.transform, icon == null ? null : Art.S("Ui/" + icon),
-                                  Color.white, new Vector2(50f, 50f), new Vector2(0f, .5f),
-                                  new Vector2(38f, 0f));
+                                  Color.white, new Vector2(48f, 48f), new Vector2(0f, .5f),
+                                  new Vector2(62f, 0f));
             glyph.preserveAspect = true;
 
             // The coin is the hub's own spinning one. Consistency here is worth the two
@@ -470,7 +489,7 @@ namespace GlimmerGrove
 
             var text = UIKit.Shrinkable(
                 UIKit.Titled("V", pill.transform, value, 30, Pal.Cream, TextAnchor.MiddleCenter,
-                             new Vector2(104f, 44f), new Vector2(.5f, .5f), new Vector2(4f, 0f), 3f, 3f), 18);
+                             new Vector2(120f, 44f), new Vector2(.5f, .5f), new Vector2(26f, 0f), 3f, 3f), 18);
 
             ResourceSlots.Register(kind, (RectTransform)glyph.transform, text, glow, tint, format);
         }
@@ -697,27 +716,27 @@ namespace GlimmerGrove
         {
             if (!_summary) return;
 
-            // The supplies shelf answers with the number every card on it is measured
-            // against — what this player's hearts refill to today. That is the context a
-            // container needs and the one thing the cards themselves cannot say: "20" only
-            // means something beside "yours is 5". It replaces a line that said nothing but
-            // real money was involved, which stopped being true when containers arrived.
-            if (OnSupplies)
-            {
-                _summary.text = Loc.Format("ui.shop.capacity_held", Wallet.MaxHearts);
-                _summary.color = new Color(1f, .96f, .88f, .74f);
-                return;
-            }
+            // **The line is silent unless it has news, which is what "remove the captions"
+            // means without also removing the reporting.** It used to name the shelf on every
+            // shelf — a caption repeating the word already written on the tab above it — and
+            // the tabs now carry their own names, so the routine cases have nothing to say.
+            // What is left are the four states a player genuinely cannot work out from the
+            // cards: the refill this account's containers are measured against, and the three
+            // ways the store itself can be unreachable. A shop that cannot say "we cannot
+            // reach the store" is a shop whose buttons look broken.
+            _summary.text = string.Empty;
+
+            // The supplies shelf used to answer with the refill its containers are measured
+            // against. It says nothing now: it was the last of the captions and the cards do
+            // carry their own numbers. The line is kept for the three ways the store itself can
+            // be unreachable, which is the only thing here a player cannot work out from a card.
+            if (OnSupplies) return;
 
             // The kit shelf never asks the store anything, so it must never be labelled with
             // the store's state: "we cannot reach the shop" over a page of cards that work is
-            // the sentence that teaches somebody the screen is broken.
-            if (OnUtilities)
-            {
-                _summary.text = Loc.Get("ui.shop.shelf_utilities");
-                _summary.color = new Color(1f, .96f, .88f, .74f);
-                return;
-            }
+            // the sentence that teaches somebody the screen is broken. It now says nothing at
+            // all, which is the same rule with nothing left to say.
+            if (OnUtilities) return;
 
             switch (StoreService.Status)
             {
@@ -737,12 +756,11 @@ namespace GlimmerGrove
                     break;
 
                 default:
-                    _summary.text = StoreService.HasUnredeemed
-                        ? Loc.Get("ui.shop.awaiting")
-                        : Loc.Get(ShelfNameKey(_shelf));
-                    _summary.color = StoreService.HasUnredeemed
-                        ? Pal.A(Pal.Sun, .95f)
-                        : new Color(1f, .96f, .88f, .74f);
+                    // A purchase the server has not finished with is the one thing here worth
+                    // interrupting for; a shelf that is simply working says nothing.
+                    if (!StoreService.HasUnredeemed) break;
+                    _summary.text = Loc.Get("ui.shop.awaiting");
+                    _summary.color = Pal.A(Pal.Sun, .95f);
                     break;
             }
         }
@@ -779,6 +797,28 @@ namespace GlimmerGrove
             // navigating anywhere — see StoreWording.
             var (key, tint) = StoreWording.Failure(failure);
             Scenery.Toast(Content, Loc.Get(key), tint, 2.6f);
+        }
+
+        /// <summary>
+        /// The one word on a tab.
+        ///
+        /// <para>
+        /// Separate from <see cref="ShelfNameKey"/>, which answers with a whole sentence —
+        /// "Gems buy hearts, boosts and time". That is a caption and this is a name, and the
+        /// tabs briefly wore the sentence, shrunk to fit, which is how five buttons came to
+        /// carry five lines of small print.
+        /// </para>
+        /// </summary>
+        static string TabNameKey(StoreShelf shelf)
+        {
+            switch (shelf)
+            {
+                case StoreShelf.Gems: return "ui.shop.tab_gems";
+                case StoreShelf.Coins: return "ui.shop.tab_coins";
+                case StoreShelf.Bundles: return "ui.shop.tab_bundles";
+                case StoreShelf.Utilities: return "ui.shop.tab_utilities";
+                default: return "ui.shop.tab_supplies";
+            }
         }
 
         static string ShelfNameKey(StoreShelf shelf)
@@ -883,30 +923,50 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ tab
         sealed class ShelfTab
         {
-            readonly Image _plate, _mark;
+            readonly Image _plate, _mark, _lit;
+            readonly Text _name;
             readonly StoreShelf _shelf;
 
             public ShelfTab(RectTransform row, StoreShelf shelf, float step, float x, Action onTap)
             {
                 _shelf = shelf;
 
-                var cell = UIKit.Button("T_" + shelf, row, Art.Pixel, new Vector2(step - 8f, TabRow),
+                var cell = UIKit.Button("T_" + shelf, row, Art.Pixel, new Vector2(step - 6f, TabRow),
                                         new Vector2(.5f, .5f), new Vector2(x, 0f), onTap);
                 cell.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
 
-                // Two sprites out of the kit rather than one plate recoloured, because the
-                // kit draws a lit tab and an unlit one as different *shapes* — the lit one is
-                // taller and carries a rim. Restyle swaps the sprite; nothing is tinted, so a
-                // tab cannot end up a colour the kit never drew.
-                _plate = UIKit.Img("P", cell.transform, Art.S(ShopSkins.TabOff), Color.white,
-                                   new Vector2(step - 24f, TabRow - 22f), new Vector2(.5f, .5f),
-                                   Vector2.zero);
+                // The bar at the foot of the screen, one level down - the same rounded plate,
+                // the same seat rim, the same gold frame when it is the live one, and the same
+                // glyph hanging over the top edge with the name inside. A row of tabs is the
+                // same question a nav bar asks (*which page*), so it should not be a second
+                // answer to it: this replaced a pair of the kit's round caps, which read as
+                // five coins in a row above a row of five buttons that were not.
+                _plate = UIKit.Img("P", cell.transform, Art.Round(30), Skins.Plate,
+                                   new Vector2(step - 12f, TabRow - 18f), new Vector2(.5f, .5f),
+                                   new Vector2(0f, -4f));
+
+                var seat = UIKit.Img("Seat", _plate.transform, Art.RoundOutline(30, 4f),
+                                     new Color(.02f, .06f, .13f, .85f));
+                UIKit.StretchTo((RectTransform)seat.transform, 0, 0, 0, 0);
+
+                _lit = UIKit.Img("Lit", _plate.transform, Art.RoundOutline(30, 6f), Skins.PlateEdge);
+                UIKit.StretchTo((RectTransform)_lit.transform, -2, -2, -2, -2);
+                _lit.enabled = false;
 
                 _mark = UIKit.Img("A", _plate.transform, Mark(shelf), Color.white,
-                                  new Vector2(TabRow - 58f, TabRow - 58f), new Vector2(.5f, .5f),
-                                  Vector2.zero);
+                                  new Vector2(100f, 100f), new Vector2(.5f, .5f), new Vector2(0f, 30f));
                 _mark.preserveAspect = true;
                 _mark.raycastTarget = false;
+
+                // Inside the plate, under the glyph. The names moved *here* from the caption
+                // line that used to run below this row, which is what stops five picture-only
+                // tabs asking the player to guess what a pouch means.
+                _name = UIKit.Shrinkable(
+                    UIKit.Titled("L", _plate.transform, Loc.Get(TabNameKey(shelf)).ToUpperInvariant(),
+                                 23, Pal.Cream, TextAnchor.MiddleCenter,
+                                 new Vector2(step - 26f, 30f), new Vector2(.5f, 0f),
+                                 new Vector2(0f, 22f), 3f, 2f), 15);
+                _name.raycastTarget = false;
             }
 
             /// <summary>
@@ -933,11 +993,20 @@ namespace GlimmerGrove
             {
                 if (!_plate) return;
 
-                _plate.sprite = Art.S(live ? ShopSkins.TabOn : ShopSkins.TabOff);
+                // Selection is the plate and its frame, never the glyph - the nav bar's rule,
+                // and it matters more here because two of these five marks are painted pictures
+                // and three are flat glyphs, so anything leaning on a tint reads differently
+                // depending on which tab you are standing on.
+                _plate.color = live ? new Color(.098f, .467f, .757f, 1f) : Skins.Plate;
+                _lit.enabled = live;
+                _mark.color = Color.white;
+                _name.color = live ? Pal.Sun : Pal.Cream;
 
-                _mark.color = live ? Color.white : new Color(1f, 1f, 1f, .55f);
-
-                if (live) Tween.Pop(_plate.transform, .86f, .3f);
+                // **No pop and no scale.** The live tab used to spring from .86, which left the
+                // one you were standing on visibly smaller than its neighbours for the length of
+                // the tween — and on the shelf the screen opens on, for as long as nothing had
+                // restyled it since. Selection is the plate's colour and its gold frame; a row
+                // of tabs that changes size as you cross it is a row that never sits still.
             }
         }
 

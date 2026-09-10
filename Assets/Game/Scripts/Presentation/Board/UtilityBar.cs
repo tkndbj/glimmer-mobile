@@ -31,6 +31,15 @@ namespace GlimmerGrove
     /// disarms it, tapping another moves the arming, and the board is told either way — because
     /// a targeting state the player cannot leave is a run they have to lose to escape.
     /// </para>
+    /// <para>
+    /// <b>A cooling slot is drawn counting down and takes no tap at all, and that is the whole
+    /// of the explanation.</b> A sweep over the cell with the seconds on it is the idiom every
+    /// action bar in the genre uses, so it needs no sentence — and a button that visibly refuses
+    /// is better than one that accepts a tap and does nothing, which is what a toast on top of
+    /// an interactive cell would have been. It is <see cref="Cooling"/> that owns the clock;
+    /// this only draws it and refuses on it (see <see cref="UtilityCooldown"/> for why nothing
+    /// about it reaches the save file).
+    /// </para>
     /// </summary>
     public sealed class UtilityBar : MonoBehaviour
     {
@@ -84,12 +93,31 @@ namespace GlimmerGrove
             public Image Badge;
             public Text Count;
             public CanvasGroup Group;
+
+            /// <summary>The wedge over the cell, radial-filled from what is left to wait.</summary>
+            public Image Sweep;
+
+            /// <summary>The seconds, over the middle of the cell.</summary>
+            public Text Clock;
         }
 
         readonly List<Slot> _slots = new List<Slot>(Slots);
 
         RectTransform _row;
         bool _live = true;
+
+        /// <summary>
+        /// What is cooling and for how much longer. One per bar, so one per run.
+        ///
+        /// <para>
+        /// <b>Owned here rather than by a screen</b>, for the reason <see cref="Armed"/> is: it
+        /// is state about this bar over this board, it is built with the bar and dies with it,
+        /// and a second copy on a screen would be a second thing to keep in step with the cells
+        /// that draw it. A mode advances it through <see cref="Tick"/> with the same seconds it
+        /// gives its board.
+        /// </para>
+        /// </summary>
+        public UtilityCooldown Cooling { get; } = new UtilityCooldown();
 
         /// <summary>Which utility is armed, or null. Set only through <see cref="Arm"/>.</summary>
         public UtilityItem Armed { get; private set; }
@@ -219,6 +247,43 @@ namespace GlimmerGrove
                             TextAnchor.MiddleCenter, Vector2.one * (BadgeSize - 8f),
                             new Vector2(.5f, .5f), Vector2.zero, FontStyle.Bold), 20);
 
+            // **The cell's own sprite, tinted dark and radial-filled**, so the wedge is exactly
+            // the shape of the well it covers rather than a square laid over a rounded one. It
+            // is added after the face and before the badge, which is the order it has to read
+            // in: the picture is under the sweep because that is what "not yet" means, and the
+            // count stays over it because how many you hold is true either way.
+            // **A pale veil rather than a dark one, and the first cut had it the wrong way
+            // round.** Every action bar in the genre darkens the part still to wait, which works
+            // because those bars are drawn on something lit. This one is not: the well is
+            // deliberately the darkest thing on the shelf (invariant 39d), so ink over ink says
+            // nothing at all — measured, the wedge was invisible on three of the four icons.
+            // Light is what this cell has room for, which is invariant 37m's rule about a ward
+            // arriving on a widget: a state that has *happened* reads as brighter, never dimmer.
+            slot.Sweep = UIKit.Img("Sweep", slot.Button.transform, Art.S("Ui/Utility/slot"),
+                                   Pal.A(Pal.Glass, .33f), Vector2.one * SlotSize);
+            slot.Sweep.type = Image.Type.Filled;
+            slot.Sweep.fillMethod = Image.FillMethod.Radial360;
+
+            // From the top and clockwise, which is the direction every action bar in the genre
+            // sweeps. `fillAmount` is what is *left*, so the wedge shrinks away rather than
+            // growing — see `Sweep()`.
+            slot.Sweep.fillOrigin = (int)Image.Origin360.Top;
+            slot.Sweep.fillClockwise = true;
+            slot.Sweep.enabled = false;
+            slot.Sweep.transform.SetSiblingIndex(
+                slot.Face.transform.GetSiblingIndex() + 1);
+
+            // **Outlined, because it is the one label here drawn over two grounds.** The
+            // middle of a cooling cell is pale on one side of the wedge and near-black on the
+            // other, so cream alone reads on half of it — and which half moves as the seconds
+            // run out.
+            slot.Clock = UIKit.Shrinkable(
+                UIKit.Titled("Clock", slot.Button.transform, string.Empty, 56, Pal.Cream,
+                             TextAnchor.MiddleCenter, Vector2.one * (SlotSize - 24f),
+                             new Vector2(.5f, .5f), Vector2.zero, outline: 3f, shadow: 3f), 28);
+            slot.Clock.fontStyle = FontStyle.Bold;
+            slot.Clock.enabled = false;
+
             return slot;
         }
 
@@ -226,6 +291,12 @@ namespace GlimmerGrove
         void Tap(Slot slot)
         {
             if (!_live || slot?.Item == null) return;
+
+            // **Cooling wins over empty**, so a cell counting down never opens the shop under
+            // the player's thumb. It cannot be reached anyway — a cooling slot is drawn
+            // uninteractable — and it is written down because the two states can overlap: the
+            // use that started the cooldown may have been the last one held.
+            if (!Cooling.Ready(slot.Item)) return;
 
             if (UtilityLedger.Held(slot.Item) <= 0)
             {
@@ -247,6 +318,7 @@ namespace GlimmerGrove
         public void Arm(UtilityItem item)
         {
             if (item != null && UtilityLedger.Held(item) <= 0) item = null;
+            if (item != null && !Cooling.Ready(item)) item = null;
             if (Armed == item) return;
 
             Armed = item;
@@ -277,21 +349,119 @@ namespace GlimmerGrove
                 }
 
                 int held = UtilityLedger.Held(slot.Item);
+                bool cooling = !Cooling.Ready(slot.Item);
 
                 slot.Count.text = held.ToString();
                 slot.Badge.enabled = held > 0;
                 slot.Count.enabled = held > 0;
 
                 slot.Ring.enabled = Armed == slot.Item;
+
+                // **The picture stays bright while a cell is cooling, and that is what makes
+                // the sweep visible at all.** The first cut faded it and let the wedge darken
+                // the cell — which says nothing, because the well is deliberately the darkest
+                // thing on the bar (invariant 39d) and there is nothing left to take away. A
+                // veil needs something lit to veil, so what is dimmed is only what is *empty*
+                // and the wedge is drawn over a picture at full strength. Caught by
+                // `Tools/render_siege.py --cooling` and by nothing else.
                 slot.Face.color = held > 0 ? Color.white : new Color(1f, 1f, 1f, .36f);
+
+                Sweep(slot);
 
                 // A slot with nothing in it stays *interactable* while the bar is live, because
                 // it is the shop. What dims is the picture, not the control — a disabled button
                 // over the one route to buying more teaches the player the feature is broken,
                 // which is `HomesteadBuyOverlay`'s argument for keeping a short balance live.
                 slot.Group.alpha = _live ? 1f : .40f;
-                slot.Button.Interactable = _live;
+
+                // **A cooling cell takes no tap at all**, which is the one place this bar hands
+                // back a dead control on purpose. The rule everywhere else is that a slot stays
+                // live because it is the shop; here the cell is visibly counting down, so a
+                // press that answered with nothing would read as the bar being broken rather
+                // than as the item not being ready.
+                slot.Button.Interactable = _live && !cooling;
             }
+        }
+
+        /// <summary>Draws one cell's cooldown, or takes it off when there is none.</summary>
+        void Sweep(Slot slot)
+        {
+            if (slot.Sweep == null || slot.Clock == null) return;
+
+            float left = Cooling.Fraction(slot.Item);
+
+            if (left <= 0f)
+            {
+                slot.Sweep.enabled = false;
+                slot.Clock.enabled = false;
+                return;
+            }
+
+            slot.Sweep.enabled = true;
+            slot.Sweep.fillAmount = left;
+
+            slot.Clock.enabled = true;
+            slot.Clock.text = Cooling.Seconds(slot.Item).ToString();
+        }
+
+        // ------------------------------------------------------------------ the frame
+        /// <summary>
+        /// Gives every cooldown some seconds of the run.
+        ///
+        /// <para>
+        /// <b>The seconds come from the mode rather than from a clock here</b>, and that is the
+        /// whole reason this is a method and not an <c>Update</c>. A cooldown must burn on the
+        /// run's own time: counted off a wall clock, a player could pay one off by opening the
+        /// shop, since a panel over a board holds the run (<c>RunHold.Covered</c>) and stops
+        /// everything else. Handing it the same seconds the board is advanced with makes that
+        /// unrepresentable rather than merely unlikely.
+        /// </para>
+        /// <para>
+        /// A cell is repainted in full only on the frame something became usable again — the
+        /// edge rather than the poll, which is <c>SiegeView.Charge</c>'s rule about a ward's
+        /// rank; every other frame moves two numbers on the cells that are counting.
+        /// </para>
+        /// </summary>
+        public void Tick(float seconds)
+        {
+            if (!Cooling.Any) return;
+
+            if (Cooling.Advance(seconds)) { Paint(); return; }
+
+            for (int i = 0; i < _slots.Count; i++)
+                if (_slots[i].Item != null) Sweep(_slots[i]);
+        }
+
+        /// <summary>
+        /// Starts a utility's cooldown, because one was just spent on the board.
+        ///
+        /// <b>Called for a use that landed and never for one that was refused</b>, beside
+        /// <c>UtilityLedger.TryUse</c> and for its reason: a firepot that reached nobody costs
+        /// the player nothing, so it must not cost them the next ten seconds either.
+        /// </summary>
+        public void Spent(UtilityItem item)
+        {
+            if (item == null || !item.Cools) return;
+
+            Cooling.Spend(item);
+
+            // Whatever was armed is put down by the board's own `Done`, but the cell has to stop
+            // being a control on this frame rather than the next: a bar painted a frame late is
+            // one tap of a window in which the item can be used again for free.
+            if (Armed == item) Arm(null);
+            else Paint();
+        }
+
+        /// <summary>
+        /// Forgets every cooldown, because this is a fresh run.
+        ///
+        /// A restart is a new board, so what was cooling on the one that was thrown away is not
+        /// a debt the next one inherits.
+        /// </summary>
+        public void Cooled()
+        {
+            Cooling.Clear();
+            Paint();
         }
 
         /// <summary>

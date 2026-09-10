@@ -84,6 +84,15 @@ namespace GlimmerGrove.Utilities
         /// they are the numbers most likely to be wrong first guess.
         /// </para>
         /// <para>
+        /// <b>A cooldown is the second bound, and it is the one a stock cannot be.</b> How many
+        /// a player holds prices <em>how often</em> across a lifetime; it says nothing about a
+        /// moment, so a hundred firepots is a hundred taps in four seconds and every wave has
+        /// the same answer. <see cref="UtilityCooldown"/> prices <em>when</em>, which is what
+        /// makes the four items differ in a second dimension — a stormcall at thirty seconds is
+        /// held for the wave that needs it rather than being the strongest tap on the bar. It
+        /// can never buy a grade, because it only ever refuses a use (invariant 39).
+        /// </para>
+        /// <para>
         /// <b>The ceiling is a hundred, and it is a bound on a pack rather than a rationing of
         /// one.</b> It shipped at nine, which read as a ration — a shelf that refuses a tenth is
         /// a shop telling somebody they have bought enough — and nine is also low enough that the
@@ -100,15 +109,15 @@ namespace GlimmerGrove.Utilities
             // Damage, into everything standing in the one box it is thrown at. Two creepers
             // die; a brute is left with four health for a ward to finish.
             new UtilityItem("firepot", UtilityKind.Blast, magnitude: 44,
-                            gemPrice: 12, maxHeld: 100, order: 1),
+                            gemPrice: 12, maxHeld: 100, order: 1, cooldownSeconds: 10),
 
             new UtilityItem("mending", UtilityKind.Mend, magnitude: 6,
-                            gemPrice: 8, maxHeld: 100, order: 2),
+                            gemPrice: 8, maxHeld: 100, order: 2, cooldownSeconds: 15),
 
             // Magnitude is fuel in tenths, so 90 is nine shots — a ward that had run dry firing
             // for about two seconds, which is most of a creeper.
             new UtilityItem("surge", UtilityKind.Surge, magnitude: 90,
-                            gemPrice: 10, maxHeld: 100, order: 3),
+                            gemPrice: 10, maxHeld: 100, order: 3, cooldownSeconds: 20),
         });
 
         // ------------------------------------------------------------- building
@@ -198,9 +207,24 @@ namespace GlimmerGrove.Utilities
                     return Default;
                 }
 
+                if (entry.cooldownSeconds < 0 ||
+                    entry.cooldownSeconds > UtilityCooldown.MaxSeconds)
+                {
+                    // **Refused rather than clamped**, because the only way to write a number
+                    // this far out is to have written it in the wrong unit — ten seconds typed
+                    // as ten thousand milliseconds is an item usable once a run, which plays as
+                    // a broken bar rather than as a retune somebody meant. A clamp would hide
+                    // exactly the mistake worth failing a build over.
+                    problems.Add($"utilities entry '{entry.id}' cools for " +
+                                 $"{entry.cooldownSeconds}s; a cooldown is whole seconds from " +
+                                 $"0 (none) to {UtilityCooldown.MaxSeconds}, and anything past " +
+                                 "that is a number written in the wrong unit");
+                    return Default;
+                }
+
                 items.Add(new UtilityItem(entry.id, kind, entry.magnitude,
                                           entry.gemPrice, entry.maxHeld, entry.order,
-                                          entry.minLevel));
+                                          entry.minLevel, entry.cooldownSeconds));
             }
 
             if (items.Count == 0)

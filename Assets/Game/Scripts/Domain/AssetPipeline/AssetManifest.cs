@@ -158,7 +158,10 @@ namespace GlimmerGrove.AssetPipeline
         {
             "panel_main", "panel_soft", "frame_cream", "banner", "wood_panel", "ribbon_flat",
             "ribbon_green", "ribbon_red", "ribbon_cyan", "ribbon_orange",
-            "jelly_gray", "jelly_green", "jelly_teal", "jelly_orange",
+            // `jelly_*` used to be here: four moulded caps the nav bar wore, and nothing else
+            // in the game ever drew one. The bar wears the interface kit's caps now, so all
+            // four are gone from the project rather than left addressed — an addressed sprite
+            // nothing draws is still built into the bundle and still decoded at every launch.
             "star_full", "star_empty", "padlock", "badge_star", "shield",
             "btn_green", "btn_blue", "btn_orange", "btn_red", "btn_aqua", "btn_violet", "btn_gray", "btn_dark",
             "sq_green", "sq_blue", "sq_orange", "sq_aqua", "sq_gray", "sq_dark",
@@ -217,15 +220,26 @@ namespace GlimmerGrove.AssetPipeline
             "Shop/gems_4", "Shop/gems_5", "Shop/gems_6",
             "Shop/bundles_1", "Shop/bundles_2", "Shop/bundles_3",
 
-            // The storefront's own furniture, cut from the same pack as the pictures above
-            // by `Tools/make_ui_kit_art.py`. Global for the reason the pictures are: the
-            // shop is one tap from every screen, and a frame of white rectangles while a
-            // scope loads (invariant 7b) costs money here rather than goodwill.
-            "Kit/frame_green", "Kit/frame_purple", "Kit/frame_yellow",
-            "Kit/btn_blue", "Kit/btn_purple", "Kit/btn_yellow",
-            "Kit/pill", "Kit/add_blue", "Kit/add_purple", "Kit/add_yellow",
-            "Kit/tab_on", "Kit/tab_off",
-            "Kit/badge_red", "Kit/badge_purple", "Kit/ribbon", "Kit/glow",
+            // The interface kit every screen's chrome is made of, cut by
+            // `Tools/make_hud_kit_art.py`. Global rather than scoped, and that is a judgement
+            // rather than laziness: this is what a *screen* is built out of, so it is wanted by
+            // the first screen after the splash and by every screen after that. A scope would
+            // spend a frame loading on every navigation a player makes, and what an `Image`
+            // with no sprite draws while it waits is a white rectangle (invariant 7b) — here
+            // that would be the whole hub.
+            //
+            // The pill and square controls are *not* on this list and do not need to be: they
+            // are re-cuts of `Ui/btn_*` and `Ui/sq_*`, which the block above already names. See
+            // `Skins` for why the names did not move.
+            "Hud/rail_top", "Hud/rail_bottom",
+            "Hud/panel", "Hud/card", "Hud/slot",
+            "Hud/trough", "Hud/fill", "Hud/title",
+            "Hud/cap_on", "Hud/cap_off",
+            "Hud/add", "Hud/burst", "Hud/btn_gold",
+            "Hud/plate_blue", "Hud/plate_orange", "Hud/plate_violet",
+            "ic_nav_home", "ic_nav_shop", "ic_nav_grove",
+            "ic_nav_ranks", "ic_nav_profile", "ic_battle", "ic_chest_wood", "ic_streak",
+            "Hud/lander", "Hud/beam",
         };
 
         /// <summary>Map furniture used by every chapter, unlike the strips themselves.</summary>
@@ -256,6 +270,10 @@ namespace GlimmerGrove.AssetPipeline
             "map_sky", "map_ground", "map_deco",
             "streak_sky", "streak_ground", "streak_deco",
             "event_sky", "event_ground", "event_deco",
+
+            // The hub and the storefront's own room, drawn rather than composed of layers —
+            // hence one name where the others come in threes. See `Scenery.Room`.
+            "hub_room",
         };
 
         static readonly string[] Sfxs =

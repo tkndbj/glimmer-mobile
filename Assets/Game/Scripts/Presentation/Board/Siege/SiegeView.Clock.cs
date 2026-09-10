@@ -48,9 +48,19 @@ namespace GlimmerGrove
 
             var report = _board.Advance(Time.unscaledDeltaTime);
 
+            // How much of a death is still being watched. Counted here rather than inside
+            // `Judge`, so a hold armed early in a run cannot still be standing when the run is
+            // won — see `_felling`. The run's own seconds, unscaled, like everything else here.
+            Watching(Time.unscaledDeltaTime);
+
             Follow();
             Depth();
             Charge();
+
+            // A boss is on the hill for far longer than it is casting, so something has to be
+            // happening on it in between — see `SiegeView.Storm`. It draws nothing on a hill with
+            // no boss on it, which is nine frames in ten.
+            Ambient();
 
             _roared = false;
 
@@ -105,6 +115,14 @@ namespace GlimmerGrove
             {
                 var raider = raiders[i];
                 if (!raider.OnTheHill) continue;
+
+                // **A dead raider is not followed, and that is what makes `Reap` safe to run
+                // before the model has swept.** `OnTheHill` is only "has it walked on"; a raider
+                // felled outside `Advance` — by a firepot or a storm — is still in the list until
+                // the next step tidies up, and `Widget` *hatches* a body for anything it cannot
+                // find. Without this clause, reaping a corpse and then following it would mint it
+                // back for a frame.
+                if (!raider.Alive) continue;
 
                 var mob = Widget(raider);
                 if (mob == null) continue;

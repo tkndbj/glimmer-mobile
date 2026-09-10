@@ -2285,6 +2285,99 @@ In practice:
     over the whole hill on one rung, with the address real, registered, audited and even loaded
     by a different level. `SiegeGroundTests` is the comparison, and it was proved by breaking it.
 
+37ac. **"Boring bosses" was a complaint about the drawing and not about the fight, and the
+    honest answer to it was to *spend* the window rather than to shorten it.** Reported from a
+    device as bosses that "do their attack every 3-4 seconds with 1 simple vfx animation" and
+    "I don't want to wait 5 seconds for each animation". The reflex fix is the cadence, and the
+    cadence is a **rule**: `BossCastEvery`, `BossTell` and `BossFlight` are the window a
+    **mending** is worth pouring into a ward that is about to be hit (37s), so making a boss cast
+    faster is making the chapter harder — and every one of those numbers was tuned by
+    `AnUnhurriedPlayerHoldsThisLine` and nothing else (37j). So **not one number moved**: the same
+    tell, the same flight, the same damage, the same cadence, and the save file, the wire and the
+    server cost nothing (20a).
+    <br>**What was actually wrong is that a boss did one thing per cast and nothing at all in
+    between.** A cast is about a second and a half out of every four to nine, so most of the time
+    a player spends looking at one it is standing in an idle loop — which is the half of the
+    complaint that is not about the spell. `SiegeView.Ambient` crackles every boss on the hill
+    about twice a second, quietly and with one bolt, and the **same drawing louder and faster is
+    the wind-up**: five crackles at rising strength bunched toward the release, motes dragged in
+    off the hill, and a **tether** flickering between the caster and the ward it has chosen. A
+    player learns to read the tell without being told, because they have been watching the quiet
+    version since the thing walked on.
+    <br>**And every cast is a volley now, told apart by *shape of attack* rather than by
+    colour** — which is 37z's rule about four bosses being four fights, carried into the drawing.
+    A **blightcaller** chains: its bolt hops through the wards it is *not* aimed at before
+    settling on the one it is, which is what a douse is. A **warlord** bombards: three orbs on
+    spread arcs and four strikes out of the sky onto one post. A **warbringer** storms: six
+    strikes scattered over the whole hill and two bolts thrown flat across it under the rings. An
+    **overlord** launches a **pair** that bow hard in opposite directions and converge, with a
+    bolt riding down between them. Every arm still lands on `BossFlight` exactly — a stagger
+    shortens each arm's flight by whatever holds it back, so it spreads the *departures* and can
+    never move the arrival.
+    <br>**Procedural rather than baked, and that is a decision.** Every other effect in this mode
+    is a reel out of a bought pack (37k), which is right for a thing that always looks the same
+    and wrong for lightning: a bolt that is the *same* bolt twice reads as a stamp, and a chain
+    has to reach two points the board decides at run time. `SiegeView.Storm` builds polylines of
+    `Art.Capsule` and `Art.SoftCapsule` at run time, so there is **no address to register, no
+    group, no scope and no frame where a strike is a white rectangle** (7b) — and it works on a
+    checkout with no licensed pack in it, which the baked reels cannot say.
+    <br>**Four things the render caught and no number could, which is 32b for the seventh time.**
+    A bolt drawn as a white filament in a soft halo comes out **white** at the size a phone draws
+    it — the glow is thin enough to read as an edge — so a magenta overlord threw the same
+    lightning a teal blightcaller did; it takes a **third bar**, the boss's own colour at full
+    strength and twice the filament's width, for the colour to survive over bright ground. Bolts
+    **left the plate**: `_fx` is sized to the field and carries no mask, so a strike started above
+    the hill draws over the status bar — `OnBoard` clamps every endpoint, and the "sky" is the top
+    of the hill because there is no sky. A bow of half a cell is **invisible**, so three orbs on
+    spread arcs were one orb drawn three times and the overlord's pair was a single sun. And nine
+    strikes over a hill read as **noise** rather than as six things being struck.
+    <br>**The one fault that is not about looking is `Image` count, and it is the reason a
+    delayed bolt is *built* late as well as shown late.** A staggered storm constructed every
+    bolt up front is several hundred `Image`s and a canvas rebuild inside one frame, with the
+    stagger deciding only when they fade up — a hitch on the loudest beat in the mode.
+    `SiegeView.Arc` defers construction past a delay, `ArcSegments` is ten rather than fourteen,
+    and a segment is seven tenths of a cell: each one is three images, and a storm multiplies that
+    by about sixty before it reaches a frame. **Before staggering a hundred widgets, ask whether
+    the stagger delays the work or only the paint.**
+    <br>`python Tools/render_siege.py --warlord storm --level <a>,<b>,<c>,<d>` is the picture, and
+    `--level` is comma-separated for exactly this: the four boss rungs side by side is the only
+    thing that can answer whether they are four attacks or four colours of one.
+
+37ac. **"Dead" and "the model has forgotten it" are two questions, and a view that asks the
+    second is right until something kills outside the clock.** `SiegeBoard.Advance` sweeps its
+    dead as the *last* thing it does, so for every kill a bolt lands "swept" and "dead" are one
+    fact and `SiegeView.Reap` could honestly ask either. A **utility** kills from outside
+    `Advance`: nothing has swept, so the raider is still in the list with `Alive` false, and
+    `Reap` skipped it. Ordinarily the next frame put it right — and on the *killing blow* the
+    next frame never comes, because `Judge` ends the run in the same breath and `Update` stops
+    with it. What shipped was a firepot or a storm finishing a hill and leaving every raider it
+    had just killed **standing there under the victory panel**. `Reap` asks `Alive`, which is
+    true one step earlier on every path, so neither side has to know when the other tidies up;
+    `SiegeRuleTests.AUtilitysKillIsDeadAndStillHeldAndWinsTheRunAtOnce` pins all three facts and
+    was proved by breaking it. **Before a view keys on a model's bookkeeping, ask whether every
+    writer goes through the same door.**
+    <br>**And a run may not be *told* it is over until what ended it has been drawn.** The hold
+    existed and was a boss's alone (`_felling`), on the reasoning that everything else a run ends
+    on is already on the screen when the verdict lands — true of a ward falling, false of a
+    raider: a killing blow decides the run in the frame it lands and the death it caused has not
+    started. So every death arms it, which needed one thing said out loud that the boss-only
+    version could leave unsaid — **the countdown belongs to the clock, not to the won branch**,
+    or a hold armed by the first creeper of a run is still standing at full when the last one
+    dies. It is a *countdown* rather than a callback because a death is a handful of tweens with
+    no single end, and `Update` re-asks every frame, so it can hold the telling and can never
+    strand it.
+    <br>**A storm needed the same rule twice, in opposite directions.** Its strikes all resolve in
+    one instant and are drawn one bolt at a time, so `Reap` — now correctly reaping the dead —
+    would clear the whole hill one frame in and leave the rest of the reel falling on empty
+    ground, which is *the stagger it exists for* undone by the fix to the bug beside it. The
+    storm therefore **claims** its raiders (`_striking`) and gives each up as it strikes it, and
+    it arms the hold from the **length of its own reel** rather than letting it fall out of the
+    per-bolt holds — arithmetic that is correct today and comes apart the day a strike stops
+    being a kill or `StormStep` is retuned. Two smaller ones from the same session: `Follow` skips
+    a raider that is not alive, because `Widget` *hatches* a body for anything it cannot find and
+    would mint a corpse back for a frame; and `Hurt`/`Bolt` ask `MobOf`, never `Widget`, for the
+    same reason said about a raider they are in the middle of killing.
+
 37i. **The chapter is ten rungs now, and what a played run has to answer has grown with it.**
     It shipped as one level to be judged (invariant 29's bargain); the questions that judged it are
     still open and four more are open beside them - see the owed list. In order: does **fuelling a
@@ -2662,6 +2755,73 @@ In practice:
     on a stick and its flask had a notch where two nearly-agreeing shapes met, both invisible in
     the source and both green on every gate.
 
+39i. **A panel over a run holds the run, and the rule had to live in the frame rather than in
+    the panels.** The action bar's shop opens over a live siege, and the hill kept walking behind
+    it: a player who tapped an empty slot was reading a price while raiders closed on their ward
+    line — a run being lost by somebody who had asked the game a question. Every individual piece
+    was correct, which is why nothing saw it. The board latches for a lesson, a pause menu, a
+    forfeit prompt and a restart gate because each of those *remembers to*, and this panel was
+    the first one raised over a running board by a feature that had no reason to think about
+    clocks.
+    <br>**So it is asked, not announced.** `RunHold.Covered` is taken and released by
+    `RunScreen.Update` from `Flow.Covered`, once a frame — the one place that already asks
+    whether a run may advance — so a panel added next year holds the run behind it without being
+    told, and no call site has to be paired with its own release. That is the shape `RunHold`
+    exists for and the third time this project has paid for the alternative: a rule each caller
+    remembers is a rule missing from whichever caller was written last (`RunFrameTests`' own
+    lesson, where three modes out of four never called `Tick`).
+    <br>**It is a no-op in every mode but one, which is exactly why the hole survived.** A
+    turn-based board advances only when touched and a modal's scrim already swallows the touch,
+    so the reason changes nothing for a glade, a well or a field of gems; a siege's hill walks by
+    itself. It also makes `RunScreen.Played` mean what its own remarks already claimed — that a
+    panel over the board contributes nothing — which was false for precisely this case.
+    <br>**A panel part-way through its exit still counts**, and that is the opposite of what
+    `Flow.IsTopModal` and `HasModalAbove` answer. Those decide whether a panel *may be raised*,
+    where a closing one must not refuse its successor. This decides whether the board *may be
+    played*, and `ModalView.Close` fades the group for a fifth of a second **without ever
+    dropping its raycasts** — so a run handed back during that fade is a hill the player can
+    watch walking and cannot answer. A destroyed panel still in the stack is skipped, because the
+    one failure this must not have is a run held for ever by something nobody can close.
+39j. **A stock prices how often across a lifetime; only a cooldown prices *when*.** A utility
+    was bounded by what a player holds and by what it costs, and neither of those is a bound on a
+    *moment* — so a hundred firepots was a hundred taps in four seconds, and every wave a player
+    could not out-match had the same answer, given as fast as a thumb moves. That is a mode
+    decided by inventory rather than by play, and it is invisible to every reading here: the
+    grade is unmoved (a utility is charged in matches, 39), the boards are unmoved, the ladder is
+    unmoved, and every offline gate is green, because *how quickly* a player may act is not a
+    question anything in this project asks. The four items now cool for 10, 15, 20 and 30
+    seconds, which is also what makes them differ in a second dimension — a stormcall is a thing
+    held for the wave that needs it rather than the strongest tap on the bar.
+    <br>**It is the one change to this feature that needs no exchange rate.** Everything else
+    touching a siege has to be proved against `PerfectMatch` before it may move a board, because
+    a grade reaches a public leaderboard (19a). A cooldown can only ever *refuse* a use, so every
+    run playable with one was playable without it and no charge can move — the whole of invariant
+    39, discharged by the direction of the rule rather than by arithmetic. **Before pricing a new
+    limit on a utility, ask which way it can move a run; only the generous direction costs a
+    proof.**
+    <br>**Nothing about it reaches the save file, and both halves of that are rules.** Seconds
+    remaining is a count that goes *down*, so it is exactly what invariant 11b refuses a merge —
+    two devices showing 4 and 0 are equally consistent with "one just used it" and "one has not
+    heard". And it is per **run**: a cooldown surviving a restart would make restarting a thing
+    the bar punished, and one surviving a level would make what a board asks depend on the board
+    before it, which is 29c's objection to a companion that changed what a move does.
+    `UtilityBar.Cooled` is called by `Play`, `Rewind` and `RetryAfterDefeat`.
+    <br>**It burns on the run's own clock and never on a wall clock**, which is 39i read from the
+    other end. A panel over a board holds the run (`RunHold.Covered`), so seconds counted off
+    `Time.unscaledTime` would make *opening the shop* a way of paying a cooldown off — a control
+    the player can use and nothing would ever report. `SiegeScreen.Running` hands the bar the
+    same seconds it hands the board, which makes that unrepresentable rather than merely
+    unlikely.
+    <br>**And the drawing was wrong in the direction only a picture could see.** It shipped as
+    the genre's own idiom — darken the part still to wait — which works on every bar that is
+    drawn over something lit and says nothing here, because the well is deliberately the darkest
+    thing on the shelf (39d). Measured on a render, the wedge was invisible on three of the four
+    icons with every gate green. It is a **pale** veil now (`Pal.Glass` at a third) over a
+    picture left at full brightness, which is 37m's rule about a ward: a state that has
+    *happened* reads as brighter, never dimmer. `Tools/render_siege.py --cooling` is what said
+    so, and it caught a second fault in the same pass — the badge drawn *under* the sweep, so how
+    many you hold went dim while it counted down.
+
 40. **Two raiders now attack the *field*, and that is the hole the mode had.** Everything on this
     hill could only ever hurt the wards, so the field was a fuel tap a player operated while
     looking somewhere else — one arrow, upward, and nothing coming back. A **weaver** stops
@@ -2812,6 +2972,171 @@ In practice:
     body by half a second and a survivor must not jump. **No numeric gate can see either of
     them**: `render_siege.py --wave 21` is what did, and it is why that flag exists.
 
+44. **The whole UI is one bought interface kit, and it moved in one commit because the names
+    were already roles.** `Skins` says `btn_green` and has meant "do the thing" since this UI was
+    written; `btn_red` has meant "leave", `sq_dark` "not a control right now". So ninety-odd call
+    sites were already naming a *role* while appearing to name a colour — which means the way to
+    restyle every screen at once is to **re-cut what those names point at**
+    (`Tools/make_hud_kit_art.py`'s recut list) rather than to sweep the call sites. Nothing can be
+    missed, the compile proves nothing broke, and `git checkout` on fourteen PNGs puts the old
+    look back. **Before planning a sweep, ask whether the thing being swept is already an
+    abstraction wearing a concrete name.**
+    <br>**A re-cut keeps its `.meta`.** Addressables keys every registered entry on the guid, so
+    writing a fresh one orphans the address rather than moving it: the game still asks for
+    `Ui/btn_green`, nothing answers, and what ships is a white rectangle (7b). Only the
+    nine-slice border moves, because the new art's corner is not the old art's corner.
+    <br>**`ShopSkins` was absorbed into `Skins`, which is what its own note said the rollout
+    would be** — "moving names from here to there, rather than rebuilding anything". The
+    storefront was where the look was judged worth changing first and it is now every screen's
+    look, so there is one table again.
+    <br>**It was done a second time on 2026-09-09 and that is what proves it.** The owner did
+    not like the mobile-game-ui kit and named two packs he did — so the whole app moved onto the
+    **merge-shooter kit** for the price of *one file*: `make_hud_kit_art.py` re-pointed at a new
+    source, twenty-eight PNGs rewritten, `UIKit`'s two face lifts re-measured, `Skins`' two
+    ground colours re-sampled and its prose brought up to date. **No screen, no call site and no
+    layout moved**, the compile proved it, and the whole suite was green first time. A restyle
+    costing one tool is the return on having made ninety call sites name roles.
+    <br>**And a third time the same day, which is where the method stopped being about art.**
+    The verdict on the merge-shooter kit was that both screens were boring, the colours were
+    bad and the assets were wrong — and the renders say exactly why, in terms that are not
+    taste. Every plate on those screens was a **cream rim around the ground colour**: the card
+    interiors sat within a few points of the backdrop, so nothing read as an object standing on
+    anything; one rim of one width on every surface left no hierarchy; and behind all of it was
+    a flat near-black wash with no world in it. **A screen made of outlines on a void is boring
+    however well each outline is drawn**, and the fix is not a better rim. It is opaque plates
+    with a material of their own, over something alive — see 44h.
+44h. **A restyle that is only a re-cut can still ship a boring screen, and the two halves that
+    fix it are the *plate* and the *ground*.** The third kit is the cartoon UI mini kit —
+    saturated two-tone faces inside one heavy navy keyline `(6, 24, 56)`, ribbons with tails,
+    discs in a white ring, which is the register the genre this game is aimed at actually plays
+    in. What made the screens change is not that: it is that plates became **opaque navy with
+    their own material** rather than a rim around the ground, and that the ground became a
+    **world** — the level-map pack's sky and islands, composed, blurred hard and graded in the
+    tool. `Scenery.Room`'s dim went .46 → .10 because it no longer has anything to hide.
+    <br>**A backdrop has to read as *somewhere*, not as something**, and that is one number. At
+    a 3-pixel blur every tree, plank and flower was still legible and the world competed with
+    the plates on it — the same fault as the last kit's junction box behind the companion,
+    arriving from the opposite direction. Nine pixels leaves shapes and takes detail, which is
+    what a depth-of-field does and what no gate can have an opinion about.
+    <br>**A hue mask cannot protect a keyline whose own hue the pack also paints faces in.**
+    The last kit masked a re-paint by hue — keep anything within a band of the moulding's navy —
+    which works only while nothing is *drawn* in that colour. Here the pack's blue bar sits
+    0.032 from the keyline, so a band wide enough to cover an outline's antialiasing swallows
+    the face too and the paint is a **silent no-op**; turned off, the outline rotates with the
+    face and eight differently-outlined blobs are not a kit. `DARK_FLOOR` separates them by
+    what they actually differ in — the keyline is 8% luma and the darkest face in the pack is
+    13% — so every recut rotates off one gold mould with the mask left on. **Before masking a
+    re-paint, ask what the thing being protected differs from the thing being painted *in*.**
+    <br>**A shape whose silhouette is wrong cannot be fixed with colour**, which is 44f's coral
+    tab said about an object. Every disc in every pack here is a coin: bright face, gold rim,
+    nothing underneath. The pad was tried gold, teal, dimmed to bronze and gold-and-sunk over
+    two kits and the render said "coin" every time. It is **drawn** now — a navy face in a gold
+    rim with a *side* below it, which is the one thing a coin does not have.
+    <br>**And a mirror that under-draws is worse than no mirror.** `render_home.feature` drew
+    two empty boxes with a "3" in them for as long as it existed, where `BuildStreakBox` has
+    always built a flame, a count, a caption, a strip and a corner badge. Half an hour went on
+    "the feature cards are empty" before the screen was read. **A render that draws less than
+    the screen sends you off to fix something that was never broken** — which is the same class
+    of fault as 44d's own recorded one, where it drew a widget hanging off a plate that was not.
+44a. **Upscaling a nine-sliced sprite makes its unstretchable ends bigger and its usable middle
+    smaller**, which is the opposite of what upscaling is usually for. A border is drawn one
+    *sprite pixel* per UI unit, so cutting the kit's readout plate at twice its size doubled its
+    two side clips to 178 units — on a balance drawn 228 wide that leaves **fifty units of
+    interior for a five-digit number**, and the shop's three balances rendered as two pipes with
+    a black dot between them while every bonus plate wrote its words out over its own rim.
+    **Scale a sliced piece for the size its corner should draw at, never for resolution.** The
+    same arithmetic is why a glyph 38 units in from a trough's edge is a glyph standing on the
+    pipe: a clip does not shrink with the box.
+44b. **A face lift is a property of the art, not of the caller — and keeping a question whose
+    answer was nought is what made the next kit cheap.** `UIKit.PillFaceLift` and
+    `SquareFaceLift` were 8.8% and 8.1% because the first jelly buttons carried a moulded base
+    below their lit face; the mobile-game-ui kit centred its face in its frame, so both went to
+    **nought**, and the note left behind said they were kept rather than deleted because "a kit
+    whose face is off-centre is exactly the sort of thing this project buys next". It was, one
+    kit later: the merge-shooter kit moulds every control as a bright face over an indigo base,
+    and they are **0.0674 and 0.0539**. Twenty call sites correctly ask "lift my caption by
+    whatever this art needs" and not one of them moved.
+    <br>**Measured, not typed.** `make_hud_kit_art.py` prints both on every run off the two
+    moulds it actually cuts, so re-cutting the kit re-answers the question instead of leaving a
+    number that used to be true. A caption not re-measured sits a few units off on every control
+    in the game at once — wrongness that is much easier to see than to explain.
+44g. **Dimming is not how you recolour something warm, and it took a device to say so.** The
+    first cut of 44f's treatment *multiplied* each plate's interior down by .30 — arithmetically
+    a perfectly ordinary way to make something darker, and visually a disaster: multiply takes a
+    colour toward black **along its own hue**, so amber arrives as **brown**. Every panel and
+    every card in the game became a mud box inside a thick pale frame. The renders showed it and
+    it was read as "dark plate, warm rim, fine"; on a phone the owner's verdict was one word.
+    <br>**Three things made it worse than a wrong number, and each is the general lesson.** The
+    fault *scaled with area* — the small troughs were fine and the big plates were not, so the
+    thing that looked acceptable in a contact sheet was the thing that had not been tested. The
+    **rim was a frame rather than a rim** (a 22-pixel border on a 474-unit card reads as a
+    picture frame round a photograph, not as the edge of a card). And the ground, the rails and
+    the lander had each been picked in isolation, so the screen carried a violet room, saturated
+    **cyan** rails and amber plates — three unrelated hues, two of them framing every screen in
+    the game.
+    <br>**A well is a material, so give it one.** `welled` now *replaces* the interior with a
+    named ink (`WELL_INK`, the kit's own indigo near black) and keeps a tenth of what was
+    underneath for grain. The rails and the lander were re-painted to that same indigo, the room
+    taken down to a ground rather than a lavender haze, and the rim thinned to a rim. **Before
+    darkening anything a player will see a lot of, ask what hue it lands on** — and note that a
+    palette is judged on a whole screen, never a piece at a time.
+44f. **A kit drawn for light screens cannot be cut as it ships into a game that writes light
+    text, and the fix is a treatment rather than a sweep.** The merge-shooter pack draws for its
+    own bright screens: cream readout bars, amber boards. This game writes `Pal.Cream` on every
+    count and `Pal.Sun` on every ribbon and header, over a near-black ground. Cut as the pack
+    ships them, the trough was cream on cream and both plates were gold on amber with the label
+    outline doing all the work — the yellow-price-bar-on-a-yellow-card fault (44), arriving on
+    four surfaces at once. Changing the *text* would have been the ninety-call-site sweep this
+    whole invariant exists to avoid, so what changes is the art: `welled()` darkens what is more
+    than a rim's thickness from the sprite's edge, so a plate keeps the frame the pack drew and
+    gains an interior light text reads on. **Before cutting a bought kit, check which way round
+    its contrast runs against yours.**
+    <br>**A sunk plate's ramp has to finish inside its nine-slice border**, and this one is not
+    subtle. The shading is baked per pixel from the sprite's own edge; a nine-slice then keeps
+    the corners and stretches the middle, so a ramp that crosses the border leaves the corner
+    pieces carrying a *rounded* inset and the stretched middle a straight one — and every card
+    on the hub wore a step at all four corners. `build()` now refuses it by name.
+    <br>**And an ornament may be a bump in the silhouette rather than paint on a square.** Both
+    of this kit's boards carry a coral tab, and a tab cannot survive a nine-slice: it sits in the
+    middle of the top edge, which is exactly what a slice stretches, so every panel and card drew
+    a coral band straight through its own header. It was taken for paint and recoloured, which
+    left an amber *bump* and a shoulder either side of it — **two fixes that were not fixes,
+    because nothing about a border or a colour can move a silhouette.** Measured, the board's own
+    top is row 100 and the tab is rows 45..100; the answer was a crop. Every numeric gate was
+    green through all three rounds and `render_home.py` is what saw each of them.
+44c. **A backdrop's crop is a decision for the tool, never an offset in the screen.** The kit
+    authors its room in landscape and this canvas is portrait, so a straight envelope shows the
+    middle third — which is exactly where the pack's junction box and its two red lamps are, so
+    the one object on the hub a player is meant to look at stood in front of a machine competing
+    with it. A screen can only crop by *offset*, which is a number nothing checks and which two
+    screens would each have to get right. The cut is taken in `make_hud_kit_art` instead, from
+    the source's clean run of pipe, and blurred — because a backdrop in focus is a backdrop
+    asking to be looked at. `Scenery.Room` then just envelopes a picture already the canvas's own
+    shape.
+44e. **A `switch` whose `default` is a real answer hides the case nobody is looking at.**
+    `Skins.Accent` gives a shelf the colour that tells it from the next one, and it named four
+    shelves and returned the gems' pink for the rest — which is correct for gems and silently
+    wrong for **`StoreShelf.EventPass`**, the Bloom Pass, which draws no tab today and would
+    have shipped cards identical to the gem shelf's on the day somebody turned it on. Nothing
+    could see it: the enum is exhaustively handled as far as the compiler is concerned, the
+    screen is correct on every shelf a player can currently open, and the render draws the three
+    shelves that have a ladder. What saw it is `SkinsTests.NoTwoShelvesShareAnAccent`, which
+    states the *property* — no two shelves are told apart by nothing — rather than checking the
+    four that were written down. **Prefer a property over a table wherever an enum can grow.**
+
+44d. **Two screens made of the same furniture get one mirror, and it found six faults no gate
+    could.** `Tools/render_home.py` and `Tools/render_shop.py` share `Tools/hudkit.py`, which
+    copies `UIKit`'s nine-slice, aspect fit, tint and outlined caption and `Skins`' palette —
+    two copies of that would be two answers to questions this project settled once. What the
+    pair caught on this restyle: the fifty-unit trough (44a), a bonus plate overflowing its own
+    rim, a beam long enough to wash over the two cards above it, a companion standing *inside*
+    its pad rather than on it, the junction box (44c), and a nav cap that had come off the rail.
+    Every numeric gate was green through all six. **And a mirror has its own bugs**: three of the
+    first round's "faults" were the render reading an `anchoredPosition` as an edge when
+    `UIKit.Box` always pivots at centre, and reading Unity's up-positive y as an image's
+    down-positive one. A picture that disagrees with the code is not automatically the code being
+    wrong.
+
 
 ## Layout
 
@@ -2938,15 +3263,22 @@ compile. Do not guess — verify offline:
   are re-derived from it rather than typed, so a board can never drift from the thing that made it.
 - **Thornwatch legibility:** `python Tools/render_siege.py` draws every shipped level at the size a
   phone draws it, with the real sprites, using `SiegeScreen.HostInset` and `SiegeView`'s own
-  arithmetic; `--level ID` picks one, `--raiders N` stands that many of the first wave on the hill,
-  `--no-bolts` takes the exchange off it, `--no-bar` takes the action bar off, `--warlord
-  cast|idle|walk` picks which of the boss's three reels it is wearing, `--line a,b,c,d` stands a
+  arithmetic; `--level ID` picks one **or several, comma separated** — which is what draws the four boss
+  rungs side by side — `--raiders N` stands that many of the first wave on the hill,
+  `--no-bolts` takes the exchange off it, `--no-bar` takes the action bar off, `--cooling`
+  draws slots mid-cooldown (bare for a sample, or `id=seconds` pairs), `--warlord
+  cast|idle|walk|storm` picks which of the boss's three reels it is wearing, or draws the frame
+  its **volley leaves** (invariant 37ac), `--line a,b,c,d` stands a
   chosen loadout (42), `--wave N` reads the **Infinite** lane's hill at a wave number, and
   `--aim hill` / `--aim wards` draw a utility's targeting. With no `--level` it draws all ten
   rungs and the endless one, each on **its own ground** (37ab), which is the only picture that says whether the ten read as ten places and
   whether any of them competes with the cast standing on it. Render the four boss rungs side by
   side and whether the four are four different fights answers itself — which is the picture that said they were not (37z),
-  and that then caught the first repair reading as a creeper. It draws the ward line **one rank apart across the four
+  and that then caught the first repair reading as a creeper. **`--warlord storm` asks the same
+  question of what they *throw*** and caught four more, every one a placement or a value no gate
+  can see: lightning that came out white whatever colour threw it, bolts drawn off the top of the
+  plate and over the status bar, a volley whose arms were too close together to read as more than
+  one orb, and a storm dense enough to read as noise (37ac). It draws the ward line **one rank apart across the four
   turrets**, so one picture says whether the five tiers read as tiers. **Its insets are in the screen's
   own order — (left, bottom, right, top)** — and were written as (left, top, right, bottom) for
   a long time, which drew the board 55 points high: a diagnostic that is the only thing able to
@@ -2961,29 +3293,55 @@ compile. Do not guess — verify offline:
   same fault as the second of those three, arriving through a door that had been safe for as long
   as a level could only ever send one (43). It draws each reel at its **loudest** frame, because these effects dip:
   drawn at a fixed index it caught two muzzles mid-dip and reported a bake that was fine as broken.
-- **The shop's furniture:** `python Tools/make_ui_kit_art.py --check` proves the sixteen kit
-  sprites under `Art/Ui/Kit/` are what the tool cuts, and `--contact` lays them out. It also
-  **thins the keyline the kit bakes in**, which is a cost of upscaling rather than a taste:
-  the outline is paint at a fixed source width, so cutting a card frame at three times ships a
-  twelve-unit black rim, and the owner's first look at it on a device was "the outlines are too
-  thick". `thinner` erodes the outermost band — which works because the keyline *is* the outside
-  of the shape — taking a frame to five units, a button to four and a tab to six. **It must pad
-  before the distance transform**: several of these sprites are opaque to their own canvas edge,
-  and without a transparent margin `distance_transform_edt` finds no outside there and the
-  erosion is a silent no-op that measures identical before and after. It writes each sprite's
-  **`.meta` as well as its PNG**, which is the other point of it: a nine-sliced border
-  lives in the importer rather than in the image, `UIKit.Img` turns on `Image.Type.Sliced` only
-  for a sprite that has one, and a PNG dropped in without one stretches its corners with nothing
-  anywhere able to notice. The border is **measured** off the alpha (a rounded rectangle's corner
-  is the first row whose opaque span reaches full width), so a source that is not a rounded
-  rectangle fails the run by name instead of shipping a smeared frame.
-- **The shop's look:** `python Tools/render_shop.py [--shelf coins|--all]` draws the storefront at
-  the size a phone draws it, with the real sprites and `ShopScreen`'s own arithmetic. **Look at
-  it.** It is the only thing here that can see a nine-slice that smears, a badge that lands off
-  its plate, or the fault it was written for: a **yellow price bar on the yellow coin frame**,
-  which is the one control on a card that may never be hard to find. Every numeric gate was green
-  over that, because no gate in this project opens a PNG — 32b for the seventh time, met on a
-  storefront rather than on a board.
+- **The interface kit:** `python Tools/make_hud_kit_art.py --check` proves the fifteen
+  sprites under `Art/Ui/Hud/` **and the fourteen it re-cuts in place** (`Ui/btn_*`, `Ui/sq_*`)
+  are what the tool cuts, and `--contact` lays them all out. It reads the **cartoon UI mini
+  kit** and the **level-map background pack** out of `~/Downloads/2D ASSETS`, falling back to
+  `~/Downloads/to-assets` — **two roots, because copying a licensed zip so one path works is a
+  second copy nothing keeps in step** — and **passes when they are absent**, so a checkout
+  without them still runs the gate. Twelve come from the cartoon kit, **one is the world**
+  (sky and ground layers composed here, not the pack's own flattened preview) and **three are
+  drawn** (the beam, the burst and the companion's plinth, which no pack here has). The
+  tower-defence pack is no longer read at all: it was in this tool for the pad, and the pad is
+  drawn. Three things it does that are the point of it rather than incidental.
+  It writes each sprite's
+  **`.meta` as well as its PNG**, because a nine-sliced border lives in the importer rather
+  than in the image and a PNG dropped in without one stretches its corners with nothing
+  anywhere able to notice. For the fourteen re-cuts it **patches the existing meta instead of
+  writing one**, keeping the guid — Addressables keys every registered entry on it, so a fresh
+  guid orphans the address and the game draws a white rectangle (invariant 7b). And **which
+  axes slice is a decision rather than a measurement**: this pack paints tabs and clips *onto*
+  silhouettes that are already square, so `corner()` measures the ornament rather than the frame
+  — the store board comes back with a left border of 212 on a body that starts 27 pixels in — so
+  the plates type their borders outright.
+  <br>It also prints the two **face lifts** on every run (44b), and refuses a sunk plate whose
+  shading ramp crosses its own slice (44f).
+- **The two screens' look:** `python Tools/render_home.py` and
+  `python Tools/render_shop.py [--shelf coins|--all]` draw the hub and the storefront at the
+  size a phone draws them, with the real sprites and each screen's own arithmetic; they share
+  `Tools/hudkit.py`, which mirrors `UIKit` and `Skins`. **Look at them.** Between them they
+  have now caught: a yellow price bar on a yellow card, a ribbon whose words ran onto its own
+  tails, a beam that washed over the cards above it, a companion standing *inside* its pad, a
+  backdrop whose machinery competed with the one object on the screen, and a nine-sliced
+  trough whose two clips left fifty units of interior for a five-digit number. Every numeric
+  gate was green over all six, because no gate in this project opens a PNG — 32b for the
+  seventh and eighth times, met on chrome rather than on a board.
+  <br>**The second kit added four more**, every one green on compile, tests, content, art
+  names and `--check`: a coral tab stretched into a band across every panel and card, an amber
+  bump left where that tab was mistaken for paint, a stepped inset at all four corners of every
+  plate (44f), and a seal whose star was narrower than the word written across it.
+  <br>**And one the renders did *not* catch, which is the limit of them worth knowing.** They
+  showed the mud-brown plates of 44g and were read as fine, because a plate that is "dark with a
+  warm rim" is a defensible thing to see in a picture and only reads as cardboard at the size and
+  the quantity a real screen has. **A render answers *is this widget where I think it is*; it is
+  much weaker at *is this palette any good*** — for that there is no substitute for the device,
+  which is why looking at both of these is a step and not the last one.
+  <br>**And it had one of its own, which is why it is worth saying again that a picture
+  disagreeing with the code is not automatically the code being wrong.** The hub's rank bar and
+  keeper name were placed here by their *left edges* where `UIKit.Box` always pivots at
+  **centre**, so the render put the name 230 units right of where the game puts it and ran the
+  rank bar 176 units off the end of the card it lives inside. A render whose whole job is
+  catching a widget hanging off its plate must not invent one.
 - **The action bar's art:** `python Tools/make_utility_art.py --check` proves the five shipped
   PNGs — three icons, the shelf and one cell — are what the tool draws, and `--contact` shows the
   bar **assembled** plus the icons alone at both sizes they are drawn at. **Look at it.**
@@ -3060,7 +3418,10 @@ compile. Do not guess — verify offline:
   every lookup through one helper is what invariant 7 asks for and would otherwise make the check
   blind to the file that needed it most; and it takes the *first* argument's literals, which is why
   every art helper here takes its key first. A name that is genuinely built is **counted out loud**
-  rather than failed — 39 of them, and that number is the honest size of what still goes unchecked.
+  rather than failed — 74 of them, and that number is the honest size of what still goes
+  unchecked. It rose by nine when the whole UI moved onto one skin table; what closes that gap
+  is `SkinsTests`, which walks `Skins` by reflection and holds every constant on it to what
+  `AssetManifest` preloads.
 - **Sound and music name check:** `Tools/verify/sfxnames.py` proves three lists agree — what the code
   plays, what is on disk, and what `AssetManifest.Sfxs` preloads. A misspelled name was a runtime
   `InvalidKeyException` and a silence that shipped green. It reads **literals only** and scans
@@ -3177,14 +3538,18 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   already cut.
 - **A constant is invisible to `artnames.py`, so replacing a literal with one silently gives up
   the gate.** That check reads *literals* at a call site — `Art.S("Ui/ic_gem")` — which is exactly
-  what a named skin is not. Routing the storefront's sprites through `ShopSkins` took thirteen
+  what a named skin is not. Routing the storefront's sprites through a skin table took thirteen
   names out of its sight in one change, and it says so: the count it prints of names that are
-  **built rather than written** went from 48 to 65, which is the number that noticed. The fix is
-  not to stop naming things — a table of skins is right, and `Skins` has been one for a year — it
-  is to close the chain somewhere else. `ShopSkinsTests` holds every address the skin table can
-  return to what `AssetManifest` actually loads, and the manifest's own entries are literals, so
-  they are already held to disk. **Whenever a name stops being a literal, read that count**: it
-  is the only thing that reports the loss, and the loss is a white rectangle on a player's phone
+  **built rather than written** went from 48 to 65, and then to 74 when the whole UI moved onto
+  one table. The fix is not to stop naming things — a table of skins is right, and `Skins` has
+  been one for a year — it is to close the chain somewhere else. `SkinsTests` walks `Skins` **by
+  reflection** and holds every string constant on it to what `AssetManifest` actually loads; the
+  manifest's own entries are literals, so they are already held to disk. Reflection rather than a
+  written list, because a list is a second copy of the table that goes stale the moment somebody
+  adds a piece — and a skin nobody checked is exactly the skin that draws nothing. (The walk
+  asserts its own size for the same reason: a reflection walk that finds nothing passes every
+  assertion inside it.) **Whenever a name stops being a literal, read that count**: it is the only
+  thing that reports the loss, and the loss is a white rectangle on a player's phone
   (invariant 7b).
 - **A licensed pack's preview sheets carry the vendor's own dummy lettering, and grading it makes it *less*
   obvious rather than more.** One backdrop was cut from a flat panel with two blocks of placeholder text on
@@ -3406,44 +3771,41 @@ live in **Hard-won facts**.
   can never buy a star (39). A firepot is aimed at one box of the hill's own grid (39f). Two
   monotonic counters per id in the save (v22), catalogued in `progression.json`, shelf, cells
   and icons all drawn by `Tools/make_utility_art.py`.
-- **The storefront** — restyled 2026-09-09 onto a bought interface kit (`ShopSkins`,
-  `Art/Ui/Kit/`), cut from the **same pack** as the coin and gem pictures on its cards, which is
-  the whole argument for it: furniture and merchandise drawn by different hands is what a player
-  reads as unfinished on the one screen that takes money. Nine-sliced card frames coloured by
-  shelf, a price bar coloured to contrast with its frame, the kit's badge starburst, tab chips and
-  currency troughs, on a flat deep blue rather than the forest every other screen stands in.
-  <br>**No light behind anything, and that was the first verdict from a device.** Every card
-  carried a coloured seat behind its plate and a slow fan of rays across it, climbing through a
-  six-rung rarity ramp so a shelf read as a ladder from across the room; every heart, container
-  and utility picture stood on a halo of its own. Played, all of it came back circled in red as
-  *weird*, and the reading is that an opaque frame changes what a wash behind an object means —
-  under a dark translucent plate it is light, on a bright frame it is a smudge — while the thing
-  the ramp was saying (*how much*) was already being said, more clearly, by the picture growing
-  with the rung. **The kit's own baked highlight band went with it**, on the second pass and for
-  the same reason: it is good design on a card whose plate is the subject, and on a card whose
-  subject is a bright object floating in the middle of that plate it reads as decoration behind
-  the item. `make_ui_kit_art.flatten` repaints a frame's interior one colour and keeps only its
-  keyline. **What came back is a spotlight**, and the line between it and what was removed is
-  worth keeping: a fan of rays and a lighter band across the top of a frame are *patterns on the
-  card*, so on an opaque frame they read as decoration behind the object — a soft round light
-  centred on the object reads as light on it. One colour, one strength, no rung and no rotation,
-  because nothing there is saying *how much*; the picture already does. It is gone, `ShopRarity` collapsed to the one colour that was saying something
-  else (a utility's name), and `ProductCard.Draw` lost its `featured` flag, which by then reached
-  nothing. **A decoration that has to compete with an opaque frame is not a decoration.**
-  <br>**A ribbon is sized to its flag, not to its sprite, and it took three goes.** The kit's
-  ribbon is a banner with two tails, so the flat panel words sit on is only **69% of its height
-  and, where the tails cut in, 84% of its width** — both bounds bind. At 230x62, the size cut for
-  the thin ribbon this project drew itself, the panel was forty units tall and the bonus text ran
-  off it onto the tails; at 300x112 the text fitted and the thing was a slab. 240x82 is the
-  smallest where the widest string a shelf can produce still sits inside the panel. Nothing
-  downstream needed touching either way, which is what `ProductCardBadges`' derived numbers are
-  for: `RibbonReach` moves with the width, so `SealInset` walks the badge in or out by itself to
-  clear the next column's ribbon. **Every one of the three was reported from a device**, which is
-  why `render_shop.py` draws ribbons now — a mirror is silent about what it does not draw.
-  <br>**Deliberately confined to the shop.** `Skins` — the back keys, the affirmative pills, the
-  plates every screen shares — is untouched, so nothing else moved. Rolling the kit out is then
-  moving names from `ShopSkins` into `Skins`, rather than rebuilding anything; what it costs is
-  that the shop does not match its neighbours until that happens.
+- **The whole front of the game** — restyled three times on 2026-09-09, the last onto the
+  **cartoon UI mini kit** (`Skins`, `Art/Ui/Hud/`, cut by `Tools/make_hud_kit_art.py`):
+  saturated two-tone faces inside one heavy navy keyline, ribbons with tails, discs in a white
+  ring. Eight pill colours, six square colours, navy plates sunk into their own material, a
+  navy trough with a tintable fill, a cloth title ribbon, lit and unlit nav caps as **discs**,
+  a drawn gold-and-navy plinth with a drawn beam — and **a world behind all of it**, the
+  level-map pack's floating islands composed, blurred and graded in the tool.
+  <br>The first two moves cost one file each. This one cost that plus the two screens'
+  composition, because the complaint was not only the art: a plate that is a rim around the
+  ground colour reads as an outline whatever it is cut from (44h). See `Skins`.
+  <br>**The merchandise stayed where it was**, and the rule about furniture and goods coming
+  from one hand is not being broken so much as read properly. What that rule is about is two
+  things drawn in different *registers* on one card; the coin and gem piles are the same
+  register as this kit — chunky, heavy keyline, saturated — and they are a different *kind* of
+  object, treasure inside a machine, which is exactly what the pack's own store mockup does
+  with its energy cans on teal panels.
+  <br>**A shelf stopped being a colour and became a tab.** Three coloured card frames across
+  five shelves was how the storefront said which shelf you were on, and it cost the screen its
+  material: five saturated blocks side by side read as five games rather than as one shop. Every
+  card is the kit's one teal plate now; what says the shelf is the **lit tab** — which the old
+  chips, nearly flat and nearly black, could not say at all — and a coloured light under the
+  goods (`Skins.Accent`), where a player is already looking. It also fixed the yellow-bar-on-a-
+  yellow-card fault *by construction* rather than by a table: the price is orange on teal on
+  every shelf.
+  <br>**The hub's whole reason for being rebuilt is the lander.** Its centrepiece was a
+  grass-topped rock borrowed off the map — a piece of a screen that is not this screen — and
+  the kit ships a lit pad with a beam, which is a *place to stand*. The companion stands on it
+  under its own name plate, which the hub never had: a player who bought one met it as a
+  picture that had changed.
+  <br>Three faults that only a render could see and all three were shipped-shaped: a nine-sliced
+  trough whose two clips left **fifty units of interior for a five-digit number** (upscaling a
+  sliced sprite makes its unstretchable ends *bigger*); a beam long enough to wash over the two
+  cards above it; and the pack's own junction box sitting directly behind the one object on the
+  hub a player is meant to look at, which is why the room is cut to portrait and blurred in the
+  tool rather than cropped by offset in the screen.
 - **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (placeholders).
 
 ### Content shipped
@@ -3557,7 +3919,9 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   each. The player stands four of them, one per colour, and carries that line into every
   siege (invariant 42). None of them makes a bolt weaker than the free one, ever.
 - **Utilities** — four, held up to **100** each, account-wide and shared by every Thornwatch
-  level, and **none of them carries a keeper gate**. Surge was at level 4 and stormcall at
+  level, each with a **cooldown** between two uses of it — firepot 10s, mending 15s, surge 20s,
+  stormcall 30s, burned on the run's own clock and forgotten by a restart (39j) — and **none of
+  them carries a keeper gate**. Surge was at level 4 and stormcall at
   level 9, which contradicted the rule the loadout was commissioned under — *a credit price
   carries a level and a gem price never does* (invariant 42) — and every utility is gem-priced,
   so the two gates could never have been right. It was met exactly as that rule predicts:
@@ -3673,6 +4037,28 @@ secret is pinned at deploy time, so setting one prints `1 functions are using st
 changes nothing until that function is redeployed.
 
 **Owed, in order of cost if forgotten:**
+
+0a. **Open the restyled UI in the Editor, and run `Addressables ▸ Sync All Assets` first.** That
+   step is not optional here and it is not the usual reminder: the kit's PNGs were written while
+   the Editor was closed (so nothing addressed them), *and* `Art/Ui/Kit/`, `Ui/jelly_*` and
+   `Hud/tab_*` were deleted — and a dead Addressables entry does not fail the game, it fails
+   `BuildPlayer` twenty minutes into an Android build with one file name buried in a package
+   stack trace. **Save after the repair**: dropping an entry marks the group asset dirty and
+   nothing more. Then `Validate Art`, `Validate Content` and the EditMode suite, and look at the
+   hub and the shop on a device. Everything offline is green — compile, 1,613 tests, content,
+   loc, art names, sound names, `make_hud_kit_art.py --check` — and every offline gate in this
+   project was also green over the ten faults `render_home.py` and `render_shop.py` have now
+   caught between them, which is the whole point of invariant 44d.
+   <br>**One new address to check**: `Hud/fill`, which is on `AssetManifest` and reached through
+   `Skins.Fill` — a *built* name, so `artnames.py` cannot see it and `SkinsTests` is what holds
+   it to disk. That count went 74 → 81 with this restyle, and every one of the seven is a
+   `Skins` constant, which is the covered case (44's own note about naming roles). Read the
+   count anyway: it is the only thing that reports the loss.
+   <br>**And the palette is the half a render is weakest at.** The world behind both screens is
+   bright now where it was near-black, so the thing to judge on the device is whether the navy
+   plates still read against it in sunlight and whether the backdrop stays a *place* rather than
+   becoming something to look at. That is the fault this project has already met from the
+   opposite direction twice.
 
 0. **Delete an Apple-linked account on a device, and check it leaves Apple's list.** Everything
    else about deletion is live as of 2026-08-28: all fourteen functions deployed, the invoker
@@ -3816,6 +4202,17 @@ changes nothing until that function is redeployed.
     adding an event for is how often a run ends with the line down on a boss rung**, because a boss
     that has to be answered a particular way is the one place this mode can be lost for a reason
     the player never worked out.
+    <br>**And is a boss now worth watching between its casts as well as during them?** That is
+    invariant 37ac, and it is the one question here whose answer is already half known: the
+    complaint it answers came from a device. Three things to watch. Does the **crackle** read as a
+    thing breathing rather than as an effect stuck on — if it is noticed at all it is probably too
+    loud, since the wind-up has to stay unmistakably louder than it. Is the **tell still the most
+    legible thing in the cast**, or has the volley eaten its own warning — the funnel is unchanged
+    (a mending spent inside the window), so a drop in it after this is the spectacle winning. And
+    do the four **volleys** read as four different attacks — a chain that visits the wards it is
+    not aimed at, a bombardment, a storm over the whole hill, a converging pair? There is
+    deliberately no analytics event for any of it; what would say most is the mending funnel
+    against its own figure before the change.
     <br>**And does the last wave feel like a siege?** Rungs 6 to 9 turn the hill from creepers to
     brutes. If the line never gets touched the fail state is decoration; if it falls every time, a
     later rung's hill is doing an earlier one's job. Both are fixed in the waves, which is a content

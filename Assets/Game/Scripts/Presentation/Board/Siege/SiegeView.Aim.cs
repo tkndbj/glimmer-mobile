@@ -312,6 +312,22 @@ namespace GlimmerGrove
             // Not `boom`, which is the firepot's. That one is an explosion and this is not.
             Audio.Sfx("shatter", .9f, .72f);
 
+            // **Claimed before a single bolt falls.** The rules killed all of these the instant
+            // the item was used, so `Reap` — which runs every frame and takes down anything dead —
+            // would clear the hill one frame in and leave the rest of the storm falling on empty
+            // ground. See `_striking`.
+            _striking.Clear();
+            for (int i = 0; i < hits.Count; i++)
+                if (hits[i].Killed) _striking.Add(hits[i].Raider);
+
+            // **And the ending is held for the whole storm, said once here rather than left to
+            // fall out of the per-bolt holds.** A storm very often *is* the killing blow — the
+            // rules resolve it in one instant, so the verdict is already Won while the first
+            // bolt is still in the air — and `Judge` runs every frame. Arming it from the length
+            // of the reel means it cannot come apart if a strike stops being a kill or the step
+            // is retuned. See `_felling`.
+            Felling(hits.Count * StormStep + DyingFor);
+
             // Copied, because `_strikes` is cleared by the next use and this outlives the call.
             StartCoroutine(Storming(new List<SiegeStrike>(hits)));
         }
@@ -339,8 +355,15 @@ namespace GlimmerGrove
                 // describes. Felling the one just struck is what makes the drawing match the item.
                 if (hits[i].Killed) Fell(hits[i].Raider);
 
+                // Given up as it is struck, so a raider this storm never reaches — the board was
+                // dealt again, the reel was cut short — is claimed by nothing and `Reap` has it
+                // back on the next frame.
+                _striking.Remove(hits[i].Raider);
+
                 yield return new WaitForSecondsRealtime(StormStep);
             }
+
+            _striking.Clear();
 
             // Anything the strikes did not account for, then the verdict - held to here so a
             // victory panel cannot arrive over a hill that is still being struck.
@@ -375,6 +398,10 @@ namespace GlimmerGrove
         {
             if (mob.Boss) { Die(mob); return; }
 
+            // The run may not be told until this has been watched, exactly as `Die`'s is — a
+            // storm's last bolt is very often the killing blow. See `_felling`.
+            Felling(DyingFor);
+
             Audio.SfxVaried("blocked", .30f);
 
             var node = mob.Node;
@@ -393,8 +420,11 @@ namespace GlimmerGrove
         /// <summary>One bolt of a storm, falling on one raider.</summary>
         void Bolt(SiegeStrike hit)
         {
-            var raider = _board.Find(hit.Raider);
-            var mob = raider == null ? MobOf(hit.Raider) : Widget(raider);
+            // **`MobOf`, never `Widget`.** A raider can only be struck once it is on the hill, so
+            // its widget already exists — and `Widget` *hatches* one when it does not, which on a
+            // raider this very call is about to kill would put a fresh body on the board to be
+            // torn down again. Asking only what is already drawn cannot resurrect anything.
+            var mob = MobOf(hit.Raider);
             if (mob == null || mob.Node == null || _fx == null) return;
 
             var at = mob.Node.anchoredPosition;
@@ -463,8 +493,9 @@ namespace GlimmerGrove
 
         void Hurt(SiegeStrike hit)
         {
-            var raider = _board.Find(hit.Raider);
-            var mob = raider == null ? MobOf(hit.Raider) : Widget(raider);
+            // `MobOf` rather than `Widget`, for the reason `Bolt` says: a strike never needs a
+            // widget minted, and minting one for a raider that has just died draws a corpse.
+            var mob = MobOf(hit.Raider);
             if (mob == null || mob.Node == null) return;
 
             // Drawn as the player's own, which is bigger and hotter than a bolt's: a firepot

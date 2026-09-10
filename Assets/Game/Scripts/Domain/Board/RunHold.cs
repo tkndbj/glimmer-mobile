@@ -81,6 +81,36 @@ namespace GlimmerGrove
         public const string Deciding = "deciding";
 
         /// <summary>
+        /// A panel is standing over the board.
+        ///
+        /// <para>
+        /// <b>It is the only reason here nobody takes, and that is the whole of its value.</b>
+        /// The other three are taken by the thing that causes them, which works because each of
+        /// those things is a sequence somebody wrote. A panel over a run is not a sequence — it
+        /// is every modal in the game, raised from wherever it happens to be raised, and asking
+        /// each one to hold the run it covers is the "remember to consult the latch" shape this
+        /// type was made to remove. So it is polled, once, from the frame <c>RunScreen</c>
+        /// already owns, and a panel added next year holds the run behind it without knowing
+        /// this reason exists.
+        /// </para>
+        /// <para>
+        /// <b>It was bought by the one mode with a clock.</b> Every other board here is
+        /// turn-based, so a panel over it stops nothing by itself and the reason is a no-op —
+        /// which is exactly why the hole went unseen for as long as it did. A siege's hill walks
+        /// on its own, and the action bar's shop opens over a live one: a player who tapped an
+        /// empty slot was reading a price while raiders closed on their ward line. It also makes
+        /// <c>RunScreen.Played</c> mean what its own remarks already claimed — that a panel over
+        /// the board contributes nothing.
+        /// </para>
+        /// <para>
+        /// It overlaps <see cref="Teaching"/> and <see cref="Deciding"/> on purpose and cannot
+        /// disturb them: this type's reasons are named and independent, so the same run being
+        /// held twice for two true reasons releases correctly in either order.
+        /// </para>
+        /// </summary>
+        public const string Covered = "covered";
+
+        /// <summary>
         /// Small enough that a list beats a set on every count that matters here — no
         /// hashing, no allocation on the first take, and it keeps the order for a log line.
         /// </summary>

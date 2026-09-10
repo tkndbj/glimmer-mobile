@@ -39,9 +39,9 @@ namespace GlimmerGrove
         /// one box and a hole.
         /// </para>
         /// </summary>
-        const float RowTop = 556f;
+        const float RowTop = 570f;
         const float RowHeight = 300f;
-        const float RowWidth = 900f;    // the daily panel's width, so the column lines up
+        const float RowWidth = 960f;    // every element above the hero shares it
         const float RowGap = 24f;
 
         Image _hero;
@@ -194,42 +194,26 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------- backdrop
+        /// <summary>
+        /// The interface kit's own machine room, and a rail across the top of it.
+        ///
+        /// <para>
+        /// <b>It replaced three painted forest layers, a pulsing shaft of light and thirty
+        /// fireflies</b>, and the trade is worth stating because what went was not bad. Those
+        /// layers were a *place* and the panels standing on them were primitives — rounded
+        /// rectangles with a traced outline — so the hub read as a good painting with a
+        /// prototype UI on it. The room is a worse painting and the whole screen is now one
+        /// object, which is the trade the owner asked for.
+        /// </para>
+        /// <para>
+        /// Nothing here is per-screen: the storefront draws the same room and the same rail, so
+        /// the two tabs a player crosses most often are one place seen twice rather than two
+        /// screens that happen to share a nav bar.
+        /// </para>
+        /// </summary>
         void BuildBackdrop()
         {
-            Cover("Bg/grove_far", 1f, 0f);
-            var light = Art.S("Bg/grove_light");
-            if (light != null)
-            {
-                var img = UIKit.Img("Light", Content, light, new Color(1f, 1f, 1f, .55f));
-                Fit(img, light, 1f);
-                Tween.Run(3.4f, Ease.InOutSine,
-                    t => { if (img) img.color = new Color(1f, 1f, 1f, Mathf.Lerp(.42f, .68f, t)); },
-                    img, "pulse").Loop(-1, true);
-            }
-            Cover("Bg/grove_near", .9f, 18f);
-            Fireflies.Spawn(Content, 30, new Color(1f, .93f, .68f), 7f, 26f);
-            var vig = UIKit.Img("Vignette", Content, Art.Vignette(256), new Color(.01f, .04f, .06f, .58f));
-            vig.type = Image.Type.Simple;
-        }
-
-        void Cover(string path, float alpha, float parallax)
-        {
-            var s = Art.S(path);
-            if (s == null) return;
-            var img = UIKit.Img(path, Content, s, new Color(1, 1, 1, alpha));
-            Fit(img, s, parallax > 0f ? 1.05f : 1f);
-            if (parallax > 0f) Parallax.Attach((RectTransform)img.transform, parallax);
-        }
-
-        static void Fit(Image img, Sprite s, float scale)
-        {
-            var rt = (RectTransform)img.transform;
-            rt.anchorMin = rt.anchorMax = new Vector2(.5f, .5f);
-            rt.anchoredPosition = Vector2.zero;
-            rt.localScale = Vector3.one * scale;
-            var fit = img.gameObject.AddComponent<AspectRatioFitter>();
-            fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
-            fit.aspectRatio = s.rect.width / s.rect.height;
+            Scenery.Room(Content);
         }
 
         // -------------------------------------------------------------- top bar
@@ -243,14 +227,18 @@ namespace GlimmerGrove
             // bar and the card was cut back to make room for it. With the chip gone the
             // space belongs to the name and the rank bar, which were both short of it —
             // a name is the one string here whose length the game does not choose.
-            var card = UIKit.Img("Card", bar, Art.Round(26), new Color(.05f, .11f, .14f, .74f),
-                                 new Vector2(620f, 132f), new Vector2(0f, .5f), new Vector2(352f, 0f));
-            var cardEdge = UIKit.Img("Edge", card.transform, Art.RoundOutline(26, 3f), new Color(1, 1, 1, .16f));
-            UIKit.StretchTo((RectTransform)cardEdge.transform, 0, 0, 0, 0);
+            //
+            // The kit's card, nine-sliced, rather than a rounded rectangle and a traced
+            // outline. The outline went with it rather than being kept: the sprite carries its
+            // own keyline, and a second one at a radius the sprite no longer has is a halo a
+            // hair off the shape it is following.
+            var card = UIKit.Img("Card", bar, Art.S("Ui/" + Skins.Card), Color.white,
+                                 new Vector2(620f, 138f), new Vector2(0f, .5f), new Vector2(352f, 0f));
 
-            // avatar
-            var frame = UIKit.Img("Avatar", card.transform, Art.S("Ui/sq_dark"), Color.white,
-                                  new Vector2(112f, 112f), new Vector2(0f, .5f), new Vector2(66f, 0f));
+            // The kit's inset slot — the one piece in it that reads as a hole rather than as a
+            // thing standing on the screen, which is what an avatar wants to sit in.
+            var frame = UIKit.Img("Avatar", card.transform, Art.S("Ui/" + Skins.Slot), Color.white,
+                                  new Vector2(116f, 116f), new Vector2(0f, .5f), new Vector2(70f, 0f));
             var face = UIKit.Img("Face", frame.transform, null, Color.white,
                                  new Vector2(84f, 84f), new Vector2(.5f, .5f), new Vector2(0f, 2f));
             face.preserveAspect = true;
@@ -271,22 +259,29 @@ namespace GlimmerGrove
                              new Vector2(460f, 46f), new Vector2(0f, .5f), new Vector2(362f, 22f),
                              3f, 3f), 24);
 
-            // rank experience bar, filled by stars toward the next rank
-            var track = UIKit.Img("XpTrack", card.transform, Art.Round(12), new Color(.02f, .05f, .07f, .85f),
-                                  new Vector2(440f, 26f), new Vector2(0f, .5f), new Vector2(352f, -22f));
-            var xp = UIKit.Img("XpFill", track.transform, Art.Round(10), Pal.Mint,
-                               new Vector2(0f, 18f), new Vector2(0f, .5f), new Vector2(4f, 0f));
+            // The rank bar, filled by stars toward the next rank — the kit's own trough with
+            // the kit's own fill in it, rather than two drawn rounded rectangles.
+            //
+            // **The fill is a white sprite tinted**, which is what `Skins.Fill` is cut for: it
+            // keeps the lighter top half the pack draws into every bar, so this reads as a tube
+            // with something in it rather than as a green rectangle inside a black one. One
+            // sprite serves every bar in the app, and a bar can no longer come to disagree with
+            // the trough it sits in.
+            var track = UIKit.Img("XpTrack", card.transform, Art.S("Ui/" + Skins.Trough), Color.white,
+                                  new Vector2(440f, 30f), new Vector2(0f, .5f), new Vector2(356f, -24f));
+            var xp = UIKit.Img("XpFill", track.transform, Art.S("Ui/" + Skins.Fill), Pal.Mint,
+                               new Vector2(0f, 22f), new Vector2(0f, .5f), new Vector2(4f, 0f));
             var xpRT = (RectTransform)xp.transform;
             xpRT.pivot = new Vector2(0f, .5f);
-            xpRT.sizeDelta = new Vector2(0f, 18f);
+            xpRT.sizeDelta = new Vector2(0f, 22f);
             float w = 432f * Profile.RankProgress;
-            Tween.Run(.7f, Ease.OutCubic, t => { if (xpRT) xpRT.sizeDelta = new Vector2(w * t, 18f); }, xp).Delay(.35f);
+            Tween.Run(.7f, Ease.OutCubic, t => { if (xpRT) xpRT.sizeDelta = new Vector2(w * t, 22f); }, xp).Delay(.35f);
 
             // corner buttons
-            UIKit.IconButton("Settings", bar, Skins.Aside, "ic_gear", new Vector2(104f, 104f),
+            UIKit.IconButton("Settings", bar, Skins.Aside, "ic_gear", new Vector2(106f, 106f),
                              new Vector2(1f, .5f), new Vector2(-92f, 0f), () => Flow.Modal<SettingsOverlay>());
-            UIKit.IconButton("Info", bar, Skins.Aside, "ic_info", new Vector2(104f, 104f),
-                             new Vector2(1f, .5f), new Vector2(-206f, 0f), () => Flow.Modal<HowToOverlay>());
+            UIKit.IconButton("Info", bar, Skins.Aside, "ic_info", new Vector2(106f, 106f),
+                             new Vector2(1f, .5f), new Vector2(-208f, 0f), () => Flow.Modal<HowToOverlay>());
         }
 
         /// <summary>
@@ -302,7 +297,7 @@ namespace GlimmerGrove
             int sibling = _resourceRow ? _resourceRow.GetSiblingIndex() : -1;
             if (_resourceRow) Hide(_resourceRow.gameObject);
 
-            var row = UIKit.Box("Resources", Safe, new Vector2(1000f, 92f), new Vector2(.5f, 1f), new Vector2(0f, -250f));
+            var row = UIKit.Box("Resources", Safe, new Vector2(RowWidth, 104f), new Vector2(.5f, 1f), new Vector2(0f, -254f));
             _resourceRow = row;
             if (sibling >= 0) row.SetSiblingIndex(sibling);
 
@@ -317,7 +312,7 @@ namespace GlimmerGrove
             // whatever the network is doing and offers the video when there is one. The
             // states that used to hide it are states the panel renders honestly: at the
             // ceiling it says so, with nothing loaded it says it is looking.
-            ResourcePill(row, -318f, Pal.Rose, "ic_heart", Profile.HeartsLabel(), false,
+            ResourcePill(row, -322f, Pal.Rose, "ic_heart", Profile.HeartsLabel(), false,
                          () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.HeartRefill),
                          ResourceSlots.Kind.Hearts, n => Profile.HeartsLabel((int)n));
             ResourcePill(row, 0f, Pal.Gold, null, Compact.Number(Profile.Coins), true,
@@ -334,7 +329,7 @@ namespace GlimmerGrove
             // still underneath when they close it. It also keeps the house rule this row
             // exists to obey — a `+` beside a resource always opens that resource's panel,
             // whatever the state of the world.
-            ResourcePill(row, 318f, Pal.Bloom, "ic_gem", Compact.Number(Profile.Gems), false,
+            ResourcePill(row, 322f, Pal.Bloom, "ic_gem", Compact.Number(Profile.Gems), false,
                          () => Flow.Modal<GemShopOverlay>(),
                          ResourceSlots.Kind.Gems, Compact.Number);
         }
@@ -354,27 +349,33 @@ namespace GlimmerGrove
                           bool animatedCoin, Action onAdd,
                           ResourceSlots.Kind kind, Func<long, string> format)
         {
-            var bg = UIKit.Img("Pill", parent, Art.Round(24), new Color(.04f, .09f, .12f, .78f),
-                               new Vector2(268f, 80f), new Vector2(.5f, .5f), new Vector2(x, 0f));
-            var edge = UIKit.Img("Edge", bg.transform, Art.RoundOutline(24, 3f), Pal.A(tint, .45f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
+            // The kit's trough, drawn at white: it carries its own near-black interior, its own
+            // orange rim and its own side clips, so there is nothing here to tint and nothing to
+            // trace. It is the same rim the storefront's balances sit in and the same rim a
+            // title is written on — one shape for "a number or a word the game owns", which is
+            // one thing for a player to learn instead of three.
+            var bg = UIKit.Img("Pill", parent, Art.S("Ui/" + Skins.Trough), Color.white,
+                               new Vector2(304f, 96f), new Vector2(.5f, .5f), new Vector2(x, 0f));
 
+            // 66 in from the edge, because the kit clips each end of the trough and a clip is
+            // 43 units wide however wide the plate is drawn - a nine-sliced border is one sprite
+            // pixel per unit, so it does not shrink with the box.
             var glow = UIKit.Img("Glow", bg.transform, Art.Glow(96, 2f), Pal.A(tint, .30f),
-                                 new Vector2(120f, 120f), new Vector2(0f, .5f), new Vector2(46f, 0f));
+                                 new Vector2(120f, 120f), new Vector2(0f, .5f), new Vector2(66f, 0f));
             var ic = UIKit.Img("Icon", bg.transform, animatedCoin ? null : Art.S("Ui/" + icon), Color.white,
-                               new Vector2(62f, 62f), new Vector2(0f, .5f), new Vector2(46f, 0f));
+                               new Vector2(62f, 62f), new Vector2(0f, .5f), new Vector2(66f, 0f));
             ic.preserveAspect = true;
             if (animatedCoin) Flipbook.Attach(ic, "Ui/Coin", 11f);
             Tween.Breathe(ic.transform, .06f, 2.2f, x * .01f);
 
-            var t = UIKit.Titled("V", bg.transform, value, 36, Pal.Cream, TextAnchor.MiddleCenter,
-                                 new Vector2(120f, 50f), new Vector2(.5f, .5f), new Vector2(6f, 0f), 3f, 3f);
+            var t = UIKit.Titled("V", bg.transform, value, 37, Pal.Cream, TextAnchor.MiddleCenter,
+                                 new Vector2(128f, 52f), new Vector2(.5f, .5f), new Vector2(22f, 0f), 3f, 3f);
 
-            var add = UIKit.Button("Add", bg.transform, Art.S("Ui/sq_green"), new Vector2(58f, 58f),
+            // The kit's own "+", which is a painted control rather than a glyph on a square —
+            // so it is one image instead of two, and it is the same "+" the storefront draws.
+            var add = UIKit.Button("Add", bg.transform, Art.S("Ui/" + Skins.Add), new Vector2(64f, 64f),
                                    new Vector2(1f, .5f), new Vector2(-16f, 0f), onAdd);
-            var plus = UIKit.Img("P", add.transform, Art.S("Ui/ic_plus"), Pal.Cream,
-                                 new Vector2(28f, 28f), new Vector2(.5f, .5f), new Vector2(0f, 1f));
-            plus.preserveAspect = true;
+            add.GetComponent<Image>().preserveAspect = true;
 
             ResourceSlots.Register(kind, (RectTransform)ic.transform, t, glow, tint, format);
 
@@ -411,13 +412,14 @@ namespace GlimmerGrove
             // that space rather than leaving it, because everything under it is now taller.
             // Moved rather than shrunk: the panel's internals are laid out from its own
             // edges, so its height is load-bearing and its position is not.
-            var panel = UIKit.Img("Daily", Safe, Art.Round(28), new Color(.04f, .09f, .12f, .72f),
-                                  new Vector2(900f, 208f), new Vector2(.5f, 1f), new Vector2(0f, -424f));
+            // 240 rather than 208. The kit's panel carries a bracket on each corner and a
+            // notch out of its top edge, so its usable interior is smaller than its box — and
+            // the first chest sits under the title rather than beside it, which a render showed
+            // as a treasure chest drawn through the word BONUSES.
+            var panel = UIKit.Img("Daily", Safe, Art.S("Ui/" + Skins.PlateBlue), Color.white,
+                                  new Vector2(RowWidth, 240f), new Vector2(.5f, 1f), new Vector2(0f, -436f));
             _dailyPanel = (RectTransform)panel.transform;
             if (sibling >= 0) _dailyPanel.SetSiblingIndex(sibling);
-
-            var edge = UIKit.Img("Edge", panel.transform, Art.RoundOutline(28, 3f), new Color(1, 1, 1, .14f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
 
             // The header is two labels sharing one 900-wide row, so both are placed from
             // the panel edges rather than by eye. A box anchored to the right edge has its
@@ -439,14 +441,17 @@ namespace GlimmerGrove
             // plus a two-digit hour is the long one.
             _resetClock = UIKit.Shrinkable(
                 UIKit.Titled("Reset", panel.transform, ResetLine(), 26,
-                             new Color(1f, .95f, .84f, .62f), TextAnchor.MiddleRight,
+                             Pal.Cream, TextAnchor.MiddleRight,
                              new Vector2(ClockW, 36f), new Vector2(1f, 1f),
                              new Vector2(-(Margin + ClockW * .5f), -38f), 0f, 0f), 17);
 
-            var track = UIKit.Img("Track", panel.transform, Art.Round(16), new Color(.02f, .05f, .07f, .9f),
-                                  new Vector2(816f, 38f), new Vector2(.5f, .5f), new Vector2(0f, -16f));
-            var fill = UIKit.Img("Fill", track.transform, Art.Round(14), Pal.Gold,
-                                 new Vector2(0f, 28f), new Vector2(0f, .5f), new Vector2(5f, 0f));
+            // The kit's trough and the kit's fill, for `BuildTopBar`'s reason: one sprite for
+            // every bar in the app, so the chest track and the rank bar cannot come to draw two
+            // different ideas of what a progress bar is.
+            var track = UIKit.Img("Track", panel.transform, Art.S("Ui/" + Skins.Trough), Color.white,
+                                  new Vector2(816f, 42f), new Vector2(.5f, .5f), new Vector2(0f, -4f));
+            var fill = UIKit.Img("Fill", track.transform, Art.S("Ui/" + Skins.Fill), Pal.Gold,
+                                 new Vector2(0f, 32f), new Vector2(0f, .5f), new Vector2(5f, 0f));
             var fillRT = (RectTransform)fill.transform;
             fillRT.pivot = new Vector2(0f, .5f);
 
@@ -454,7 +459,7 @@ namespace GlimmerGrove
             Tween.Run(.9f, Ease.OutCubic, t =>
             {
                 if (!fillRT) return;
-                fillRT.sizeDelta = new Vector2(full * t, 28f);
+                fillRT.sizeDelta = new Vector2(full * t, 32f);
                 fill.color = Color.Lerp(Pal.Sun, Pal.Gold, t);
             }, fill).Delay(.35f);
 
@@ -464,7 +469,7 @@ namespace GlimmerGrove
             // Inset from the panel rather than filling it, and allowed to shrink: this is
             // a whole sentence, and it is the line most likely to grow in translation.
             UIKit.Shrinkable(
-                UIKit.Titled("Hint", panel.transform, HintLine(), 24, new Color(1f, .95f, .84f, .58f),
+                UIKit.Titled("Hint", panel.transform, HintLine(), 24, Pal.Cream,
                              TextAnchor.MiddleCenter, new Vector2(820f, 34f), new Vector2(.5f, 0f),
                              new Vector2(0f, 24f), 0f, 0f), 16);
 
@@ -497,7 +502,7 @@ namespace GlimmerGrove
             {
                 bool opened = state == ChestState.Opened;
                 var img = UIKit.Img("C" + index, track,
-                                    Art.S(opened ? "Ui/ic_chest_open" : "Ui/ic_chest"),
+                                    Art.S(opened ? "Ui/ic_chest_open" : "Ui/ic_chest_wood"),
                                     opened ? new Color(1f, 1f, 1f, .72f) : new Color(.5f, .54f, .58f, .92f),
                                     new Vector2(78f, 78f), new Vector2(.5f, .5f), new Vector2(px, 8f));
                 img.preserveAspect = true;
@@ -516,7 +521,7 @@ namespace GlimmerGrove
             }
 
             int chestIndex = index;
-            var btn = UIKit.Button("C" + index, track, Art.S("Ui/ic_chest"),
+            var btn = UIKit.Button("C" + index, track, Art.S("Ui/ic_chest_wood"),
                                    new Vector2(96f, 96f), new Vector2(.5f, .5f), new Vector2(px, 8f),
                                    () => OpenChest(chestIndex));
 
@@ -652,15 +657,23 @@ namespace GlimmerGrove
         /// it and a flat shape would vanish over half of it.
         /// </para>
         /// </summary>
-        RectTransform FeatureCard(Transform host, float w, Color tint, float edge, Action onTap)
+        RectTransform FeatureCard(Transform host, float w, string skin, Color tint, float edge,
+                                  Action onTap)
         {
-            var btn = UIKit.Button("Card", host, Art.Round(28), new Vector2(w, RowHeight),
+            var btn = UIKit.Button("Card", host, Art.S("Ui/" + skin), new Vector2(w, RowHeight),
                                    new Vector2(.5f, .5f), Vector2.zero, onTap);
-            btn.GetComponent<Image>().color = new Color(.04f, .09f, .12f, .76f);
             btn.PressScale = .985f;
 
-            var rim = UIKit.Img("Edge", btn.transform, Art.RoundOutline(28, 3f), Pal.A(tint, edge));
-            UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
+            // The kit's card carries its own keyline, so the traced rim is gone — but the
+            // box's own colour is not, because it is what tells the streak from the event at a
+            // glance and the plate is now the same teal on both. It is a light along the top
+            // edge rather than an outline around the whole card: a coloured rectangle traced
+            // over a frame that already has one is a halo a hair off the shape it follows,
+            // which is the fault this restyle removed from six other places.
+            var lamp = UIKit.Img("Lamp", btn.transform, Art.Glow(96, 1.9f),
+                                 Pal.A(Color.white, edge * .55f),
+                                 new Vector2(w * .78f, 86f), new Vector2(.5f, 1f), new Vector2(0f, -14f));
+            lamp.transform.SetAsFirstSibling();
             return (RectTransform)btn.transform;
         }
 
@@ -700,7 +713,7 @@ namespace GlimmerGrove
             if (!hasMeta) return;
 
             UIKit.Shrinkable(
-                UIKit.Titled("Meta", card, meta, 23, new Color(1f, .95f, .84f, .66f),
+                UIKit.Titled("Meta", card, meta, 23, Pal.Cream,
                              TextAnchor.MiddleRight, new Vector2(200f, 32f), new Vector2(1f, 1f),
                              new Vector2(-126f - inset, -36f), 0f, 0f), 15);
         }
@@ -723,7 +736,7 @@ namespace GlimmerGrove
                              3f, 4f), 30);
 
             UIKit.Shrinkable(
-                UIKit.Titled("Cap", card, caption, 22, Pal.A(tint, .95f), TextAnchor.MiddleCenter,
+                UIKit.Titled("Cap", card, caption, 22, tint, TextAnchor.MiddleCenter,
                              new Vector2(210f, 30f), new Vector2(.5f, .5f), new Vector2(vx, -32f),
                              0f, 0f), 15);
         }
@@ -731,8 +744,8 @@ namespace GlimmerGrove
         /// <summary>The inset that runs along the bottom of a box, holding its one live detail.</summary>
         RectTransform FeatureStrip(Transform card, float w)
         {
-            var strip = UIKit.Img("Strip", card, Art.Round(18), new Color(.01f, .04f, .05f, .62f),
-                                  new Vector2(w - 72f, 54f), new Vector2(.5f, .5f),
+            var strip = UIKit.Img("Strip", card, Art.S("Ui/" + Skins.Trough), Color.white,
+                                  new Vector2(w - 72f, 58f), new Vector2(.5f, .5f),
                                   new Vector2(0f, -(RowHeight * .5f) + 46f));
             return (RectTransform)strip.transform;
         }
@@ -817,17 +830,17 @@ namespace GlimmerGrove
         {
             float track = w - 132f;
 
-            var bar = UIKit.Img("Track", strip, Art.Round(9), new Color(.01f, .02f, .04f, .85f),
-                                new Vector2(track, 18f), new Vector2(.5f, .5f), Vector2.zero);
-            var fill = UIKit.Img("Fill", bar.transform, Art.Round(6), tint,
-                                 new Vector2(0f, 12f), new Vector2(0f, .5f), new Vector2(3f, 0f));
+            var bar = UIKit.Img("Track", strip, Art.S("Ui/" + Skins.Trough), Color.white,
+                                new Vector2(track, 22f), new Vector2(.5f, .5f), Vector2.zero);
+            var fill = UIKit.Img("Fill", bar.transform, Art.S("Ui/" + Skins.Fill), tint,
+                                 new Vector2(0f, 14f), new Vector2(0f, .5f), new Vector2(3f, 0f));
             var fillRT = (RectTransform)fill.transform;
             fillRT.pivot = new Vector2(0f, .5f);
-            fillRT.sizeDelta = new Vector2(0f, 12f);
+            fillRT.sizeDelta = new Vector2(0f, 14f);
 
             float full = (track - 6f) * Mathf.Clamp01(fill01);
             Tween.Run(.85f, Ease.OutCubic,
-                      t => { if (fillRT) fillRT.sizeDelta = new Vector2(full * t, 12f); },
+                      t => { if (fillRT) fillRT.sizeDelta = new Vector2(full * t, 14f); },
                       fill).Delay(.5f);
 
             return (RectTransform)bar.transform;
@@ -869,10 +882,15 @@ namespace GlimmerGrove
             bool atRisk = DailyStreak.AtRisk;
             bool lit = days > 0 && !atRisk;
 
-            var tint = lit ? Pal.Sun : atRisk ? Pal.Ember : new Color(.52f, .56f, .60f);
+            // **The streak's orange moved from the words to the plate.** It was asked for as
+            // the settings key's own orange on the title and the countdown; the box is now
+            // drawn in that orange, and orange words on an orange plate is the one thing that
+            // cannot be read. Same identity, and the flame still says lit from at-risk from
+            // cold in three different drawings.
+            var tint = Pal.Cream;
             float gx = -w * .5f + 115f;
 
-            var card = FeatureCard(_streakBox, w, tint, lit ? .52f : .30f, OpenStreak);
+            var card = FeatureCard(_streakBox, w, Skins.PlateOrange, tint, lit ? .52f : .30f, OpenStreak);
 
             // Straight after the card, so the lit rim and the ring sit under everything the
             // box draws. They live at the border, where nothing else does.
@@ -884,7 +902,7 @@ namespace GlimmerGrove
                                new Vector2(200f, 200f), new Vector2(.5f, .5f), new Vector2(gx, 4f));
 
             var flame = UIKit.Img("Flame", card, null,
-                                  days > 0 ? Color.white : new Color(.62f, .66f, .70f, .55f),
+                                  days > 0 ? Color.white : new Color(.78f, .82f, .88f, 1f),
                                   new Vector2(138f, 138f), new Vector2(.5f, .5f), new Vector2(gx, 4f));
             flame.preserveAspect = true;
 
@@ -905,7 +923,7 @@ namespace GlimmerGrove
                                   flame, "risk").Loop(-1, true);
 
             FeatureValue(card, w, days > 0 ? days.ToString() : "—",
-                         days > 0 ? Pal.Cream : new Color(1f, .96f, .86f, .5f),
+                         Pal.Cream,
                          StreakCaption(days, atRisk), tint);
 
             StreakStrip(FeatureStrip(card, w), w, pending);
@@ -947,7 +965,7 @@ namespace GlimmerGrove
                         : Loc.Format("ui.home.streak_next", RewardArt.Amount(drop));
 
             UIKit.Shrinkable(
-                UIKit.Titled("L", strip, line, 24, new Color(1f, .95f, .84f, .82f),
+                UIKit.Titled("L", strip, line, 24, Pal.Cream,
                              TextAnchor.MiddleLeft, new Vector2(lw, 34f), new Vector2(0f, .5f),
                              new Vector2(70f + lw * .5f, 0f), 0f, 0f), 15);
         }
@@ -1071,7 +1089,7 @@ namespace GlimmerGrove
             float gx = -w * .5f + 115f;
             long left = live.SecondsLeftAt(GameClock.NowUnix());
 
-            var card = FeatureCard(_focusBox, w, Pal.Bloom, .50f, OpenEvent);
+            var card = FeatureCard(_focusBox, w, Skins.PlateViolet, Pal.Cream, .50f, OpenEvent);
 
             // Straight after the card, for the reason the streak's is: the lit rim and the
             // ring live at the border, under everything else the box draws.
@@ -1205,7 +1223,7 @@ namespace GlimmerGrove
             // The meta says the condition rather than the state — "at rank 8" rather than
             // "locked" — which is the same job the event's countdown does on the other box:
             // both name what the player is waiting on, and only one of the two is useful.
-            var card = FeatureCard(_focusBox, w, Pal.Bloom, .38f, () => Flow.Go<ProfileScreen>());
+            var card = FeatureCard(_focusBox, w, Skins.PlateViolet, Pal.Cream, .38f, () => Flow.Go<ProfileScreen>());
             FeatureHeader(card, w, Loc.Get(goal.NameKey), Pal.Bloom,
                           Loc.Format("ui.home.at_rank", goal.AtLevel));
 
@@ -1244,31 +1262,28 @@ namespace GlimmerGrove
         /// </summary>
         void BuildHero()
         {
-            var host = UIKit.Box("Hero", Content, new Vector2(600f, 500f), new Vector2(.5f, .5f), new Vector2(0f, -130f));
-
-            var rock = UIKit.Img("Rock", host, Art.S("Map/rock_grass"), Color.white,
-                                 new Vector2(378f, 297f), new Vector2(.5f, .5f), new Vector2(0f, -137f));
-            rock.preserveAspect = true;
-            Tween.Bob((RectTransform)rock.transform, 9f, 3.4f);
-
-            // The companion the player chose, not a fixed critter. This is where the
-            // choice actually pays off: the profile is where you pick one, the hub is
-            // where you live with it. The screen is rebuilt on every navigation, so
-            // coming back from the profile already shows the new one.
+            var host = UIKit.Box("Hero", Content, new Vector2(620f, 700f), new Vector2(.5f, .5f),
+                                 new Vector2(0f, -150f));
+            var beam = UIKit.Img("Beam", host, Art.S("Ui/" + Skins.Beam),
+                                 new Color(1f, 1f, 1f, .50f),
+                                 new Vector2(408f, 296f), new Vector2(.5f, .5f), new Vector2(0f, 126f));
+            Tween.Run(2.9f, Ease.InOutSine,
+                t => { if (beam) beam.color = new Color(1f, 1f, 1f, Mathf.Lerp(.36f, .58f, t)); },
+                beam, "pulse").Loop(-1, true);
+            // -12 rather than 66, in two goes: three screen pixels first, then thirty. The
+            // canvas is 1080 reference units wide against a taller phone, so a unit here is
+            // rather less than a pixel there — 72 units is the thirty that was asked for. The
+            // poke target below moves with it.
             _hero = UIKit.Img("Critter", host, null, Color.white,
-                              new Vector2(286f, 286f), new Vector2(.5f, .5f), new Vector2(0f, 27f));
+                              new Vector2(286f, 286f), new Vector2(.5f, .5f), new Vector2(0f, -12f));
             _hero.preserveAspect = true;
             CompanionArt.Paint(_hero, Profile.Avatar, animate: true);
-            Tween.Bob((RectTransform)_hero.transform, 12f, 3.4f, .35f);
-            UIKit.Halo(host, new Color(1f, .88f, .55f), 522f, .24f);
-
-            // the hero answers a poke
+            UIKit.Halo(host, Pal.Aqua, 500f, .18f).transform.SetAsFirstSibling();
             var hit = UIKit.Button("Poke", host, Art.Pixel, new Vector2(306f, 306f),
-                                   new Vector2(.5f, .5f), new Vector2(0f, 27f), Poke);
+                                   new Vector2(.5f, .5f), new Vector2(0f, -12f), Poke);
             hit.GetComponent<Image>().color = new Color(1, 1, 1, 0);
             hit.ClickSfx = null;
             hit.PressScale = 1f;
-
             host.localScale = Vector3.zero;
             Tween.Pop(host, 0f, .75f, .42f);
         }
@@ -1303,10 +1318,23 @@ namespace GlimmerGrove
         // ----------------------------------------------------------- play + nav
         void BuildPlay()
         {
-            var play = UIKit.TextButton("Play", Content, "btn_green", "PLAY", 66,
-                                        new Vector2(600f, 172f), new Vector2(.5f, 0f), new Vector2(0f, NavBar.Height + 190f),
-                                        () => Flow.Go<LevelsScreen>());
-            UIKit.Halo(play.transform, Pal.Mint, 760f, .3f);
+            var play = UIKit.TextButton("Play", Content, Skins.Battle, "BATTLE", 62,
+                                        new Vector2(620f, 178f), new Vector2(.5f, 0f), new Vector2(0f, NavBar.Height + 262f),
+                                        () => Flow.Go<LevelsScreen>(), "ic_battle");
+
+            // The kit sizes a pill's glyph at a third of its height, which is right for a small
+            // mark beside a word and small for the one control this screen is about. Two things
+            // have to follow the resize: the glyph is a *painted* picture rather than a
+            // silhouette, so it is drawn white rather than in the caption's cream; and
+            // `FitLabel` re-centres the glyph and the caption as one block off the glyph's own
+            // width, so it has to run again or the pair sits off-centre.
+            if (play.Icon)
+            {
+                ((RectTransform)play.Icon.transform).sizeDelta = Vector2.one * 112f;
+                play.Icon.color = Color.white;
+                UIKit.FitLabel(play);
+            }
+            UIKit.Halo(play.transform, Pal.Sun, 760f, .26f);
             play.transform.localScale = Vector3.zero;
             Tween.Pop(play.transform, 0f, .7f, .62f).OnDone(() =>
             {
@@ -1315,10 +1343,6 @@ namespace GlimmerGrove
                 Tween.Breathe(play.transform, .03f, 2.1f);
                 Sheen.Attach((RectTransform)play.transform, 3.4f);
             });
-
-            UIKit.Titled("Next", Content, NextGladeLine(), 27, new Color(1f, .96f, .86f, .68f),
-                         TextAnchor.MiddleCenter, new Vector2(900f, 38f), new Vector2(.5f, 0f),
-                         new Vector2(0f, NavBar.Height + 84f), 3f, 0f);
         }
 
         static string NextGladeLine()

@@ -93,6 +93,31 @@ namespace GlimmerGrove.Tests
                           "opt-in the first time");
         }
 
+        /// <summary>
+        /// The base owns the frame, which is where the rule no panel has to remember lives.
+        ///
+        /// <para>
+        /// <c>RunHold.Covered</c> is taken and released from here by polling
+        /// <c>Flow.Covered</c> — that is what holds a run behind a shop panel, a receipt or
+        /// anything else raised over it. Moving that out to the panels is the shape this whole
+        /// file exists to refuse, and losing the base's <c>Update</c> would take it with it.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheBaseOwnsTheFrame()
+        {
+            var update = typeof(RunScreen).GetMethod("Update", Declared, null,
+                                                     Type.EmptyTypes, null);
+
+            Assert.IsNotNull(update,
+                             "RunScreen no longer declares Update, so nothing asks once a frame " +
+                             "whether this run may advance — and nothing holds a run behind a " +
+                             "panel standing over it (RunHold.Covered)");
+
+            Assert.IsTrue(update.IsPrivate,
+                          "Update is reachable from a mode, which is a second way to advance a run");
+        }
+
         [Test]
         public void EveryRunScreenAnswersBothHalvesOfTheFrame()
         {

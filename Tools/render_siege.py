@@ -49,9 +49,21 @@ decision no gate can look at. Five questions to ask of what comes out, in order:
      a player's verdict was that they looked exactly the same. It then caught the first repair too:
      the blightcaller cut at 2.6 cells stood beside a creeper and read as one, and a green coat put
      it in the same family as the green raiders around it.
+  8. **And do they throw four different things?** `--warlord storm` draws the frame a spell leaves
+     rather than the wind-up, and `--level a,b,c,d` puts the four side by side. A chain that visits
+     the wards it is not aimed at, a bombardment, a storm over the whole hill, a converging pair -
+     or four colours of one volley? This picture caught four faults on its first frame, every one a
+     placement or a value no numeric gate can look at (invariant 37ac): lightning that came out
+     white whatever colour threw it, bolts drawn off the top of the plate and over the status bar,
+     a bow too small for a volley to read as more than one orb, and a storm dense enough to read as
+     noise. **The wind-up is the other half of it** - render `cast` beside `storm` and ask whether
+     the ring closing over a ward is still the most legible thing in the cast, because a spectacle
+     that eats its own warning has made the mode harder without any number saying so.
 """
 from __future__ import annotations
 
+import math
+import random
 import argparse
 import json
 import sys
@@ -92,7 +104,12 @@ INSET = (0, BAR_HEIGHT, 0, 300)
 #: `UtilityBar`'s own numbers.
 SLOTS, SLOT, BADGE, ICON = 5, 184, 60, 136
 UTILITY_ART = REPO / "Assets" / "Game" / "Art" / "Ui" / "Utility"
-UTILITIES = ["firepot", "mending", "surge"]
+#: In `order`, as `progression.json` authors it, with the seconds each one cools for. The
+#: cooldown is here because it is 228 points of screen doing something a number cannot
+#: describe: whether a cell counting down still reads as an item you have, and whether the
+#: seconds are legible over the picture. Mirrors the `utilities` block.
+UTILITIES = ["firepot", "mending", "surge", "stormcall"]
+COOLDOWNS = {"firepot": 10, "mending": 15, "surge": 20, "stormcall": 30}
 
 #: `SiegeView`'s own numbers. The field is laid out to the *width* and the hill and the line
 #: then share what is left in the proportion below - see `SiegeView.Fit` and `MaxGemBand`.
@@ -407,7 +424,27 @@ def warlord(sheet, draw_on, kind, colour, wards, span, cell, hill_top, hill_foot
     gx = bx - wide / 2 - cell * 0.45
     put(sheet, sprite(GEM_ART[letter]), gx, by, cell * 0.62, cell * 0.62)
 
-    if casting != "cast":
+    if casting not in ("cast", "storm"):
+        return
+
+    # **The release, which is a different picture from the wind-up and needs to be.** `--warlord
+    # cast` draws the tell - the ring closing over a ward, which is the thing a player has to read
+    # in time to answer it - and `--warlord storm` draws the frame the spell leaves, which is what
+    # invariant 37ac is about. Rendering the two side by side is the only way to answer the
+    # question the change was made against: is the spectacle louder than the warning?
+    if casting == "storm":
+        # The seed is the level's own boss and slot, so the picture is the same picture every run
+        # and a difference in it is a difference in the code (`Tools/siege_sweep.py`'s rule).
+        random.seed(hash((kind, letter, slot)) & 0xFFFF)
+
+        aimed_at = 1 if slot == 0 else 2
+        storm(sheet, kind, look, fire,
+              at(0.0 if lane is None else lane_x(span, lane), ly + tall * 0.1),
+              at(post_x(span, aimed_at, wards), line_y + cell * 0.3),
+              cell, span, at(0, hill_top)[1], (hill_top, hill_foot), at,
+              wards, aimed_at,
+              (at(-span[0] * 0.5, hill_top)[0], at(0, hill_top)[1],
+               at(span[0] * 0.5, hill_top)[0], at(0, hill_foot)[1]))
         return
 
     # **A roar is thrown at nothing**, so what is drawn for a warbringer is its ring going out over
@@ -425,6 +462,26 @@ def warlord(sheet, draw_on, kind, colour, wards, span, cell, hill_top, hill_foot
     ward = 1 if slot == 0 else 2
     wx, wy = at(post_x(span, ward, wards), line_y + cell * 0.3)
 
+    # **`SiegeView.Winding` - the crackle and the tether, drawn *under* the ring.** They are the
+    # loud half of the wind-up (invariant 37ac) and the ring is the half that has to be read, so
+    # the whole point of putting them in this picture is being able to see whether one has eaten
+    # the other. The order is the answer: the warning goes on top.
+    random.seed(hash((kind, letter, slot, "wind")) & 0xFFFF)
+    plate = (at(-span[0] * 0.5, hill_top)[0], at(0, hill_top)[1],
+             at(span[0] * 0.5, hill_top)[0], at(0, hill_foot)[1])
+    hand = (cx, cy + tall * 0.1)
+
+    for _ in range(3):
+        turn = random.uniform(0, math.tau)
+        reach = tall * 0.38 * 1.6
+        axis = (math.cos(turn) * reach, math.sin(turn) * reach)
+        bolt(sheet,
+             onboard((hand[0] - axis[0], hand[1] - axis[1]), plate),
+             onboard((hand[0] + axis[0], hand[1] + axis[1]), plate),
+             fire, cell * 0.075, cell, jag=0.3, forks=1)
+
+    bolt(sheet, hand, (wx, wy), fire, cell * 0.045, cell, jag=0.22)
+
     layer = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
     pen = ImageDraw.Draw(layer)
     r = cell * 1.5
@@ -440,6 +497,229 @@ def warlord(sheet, draw_on, kind, colour, wards, span, cell, hill_top, hill_foot
     flare = loudest(look["fx"] + "_muzzle")
     if flare is not None:
         put(sheet, flare, cx, cy + tall * 0.1, cell * 4.2, cell * 4.2)
+
+
+
+# ------------------------------------------------------------------ the storm
+#: `SiegeView.ArcSegments`. Each segment is three `Image`s on the real board and a storm is nine
+#: bolts with forks on them, so this number is multiplied by about sixty before it reaches a frame.
+#: A bolt with ten bends in it is not visibly straighter than one with fourteen.
+ARC_SEGMENTS = 10
+
+
+def joints(a, b, jag, cell):
+    """`SiegeView.Joints` - a straight run pushed sideways, pinched at both ends.
+
+    The pinch is the whole of it: `sin(pi*t)` is nought at both ends, so a bolt leaves the hand
+    that threw it and arrives on the thing it hit, and wanders only in between. Without that one
+    term this is a broken line rather than lightning.
+    """
+    (ax, ay), (bx, by) = a, b
+    dx, dy = bx - ax, by - ay
+    length = math.hypot(dx, dy)
+
+    steps = max(3, min(ARC_SEGMENTS, int(round(length / (cell * 0.7)))))
+    sx, sy = (-dy / length, dx / length) if length > 0.001 else (1.0, 0.0)
+
+    out = []
+    for i in range(steps + 1):
+        t = i / steps
+        push = random.uniform(-1.0, 1.0) * jag * cell * math.sin(t * math.pi)
+        out.append((ax + dx * t + sx * push, ay + dy * t + sy * push))
+    return out
+
+
+def onboard(p, plate):
+    """`SiegeView.OnBoard` - a point pulled back inside the plate.
+
+    **A bolt that leaves the board is a bolt drawn on the app's background**, and nothing about the
+    effects layer stops one: it is sized to the field and carries no mask, so a strike out of the
+    sky and a bolt thrown off a boss's hand both happily draw over the status bar. This picture is
+    what said so, on the first frame it ever drew (invariants 37g, 37u - a placement is exactly
+    what no numeric gate can look at).
+    """
+    (x0, y0, x1, y1) = plate
+    return (min(max(p[0], x0), x1), min(max(p[1], y0), y1))
+
+
+def bolt(sheet, a, b, fire, wide, cell, jag=0.34, forks=0, alpha=255):
+    """`SiegeView.Arc` - one jagged bolt, a white filament inside a coloured sheath.
+
+    **Two passes and both are needed.** Real lightning is white with a coloured glow round it, and
+    a bolt drawn in a flat hue reads as a painted stick; the halo is what says whose lightning
+    this is on a hill already carrying four ward colours.
+    """
+    trunk = joints(a, b, jag, cell)
+    lines = [(trunk, wide)]
+
+    for _ in range(forks):
+        root = trunk[random.randrange(1, max(2, len(trunk) - 1))]
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        span = math.hypot(dx, dy) or 1.0
+        ux, uy = dx / span, dy / span
+        turn = random.uniform(0.5, 1.3) * random.choice((-1.0, 1.0))
+        vx, vy = ux - uy * turn, uy + ux * turn
+        vlen = math.hypot(vx, vy) or 1.0
+        reach = span * random.uniform(0.22, 0.42)
+        tip = (root[0] + vx / vlen * reach, root[1] + vy / vlen * reach)
+        lines.append((joints(root, tip, jag * 1.4, cell), wide * 0.58))
+
+    # **Three passes rather than two, and the middle one is the whole reason the colour survives.**
+    # A white filament in a blurred halo is what lightning looks like in isolation and *not* what it
+    # looks like over a lit hill: at the size a phone draws it the halo is thin enough to read as an
+    # edge, so the bolt comes out white and a magenta overlord throws the same lightning a teal
+    # blightcaller does. The sheath is drawn at full strength in the boss's own colour, at about
+    # twice the filament's width, so the thing carries its colour even where the glow is lost.
+    halo = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(halo)
+    for path, w in lines:
+        pen.line(path, fill=fire + (int(alpha * 0.55),), width=max(3, int(w * 4.2)), joint="curve")
+    sheet.alpha_composite(halo.filter(ImageFilter.GaussianBlur(cell * 0.16)))
+
+    sheath = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(sheath)
+    for path, w in lines:
+        pen.line(path, fill=fire + (alpha,), width=max(3, int(w * 2.0)), joint="curve")
+    sheet.alpha_composite(sheath)
+
+    core = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(core)
+    hot = tuple(int(c + (255 - c) * 0.62) for c in fire)
+    for path, w in lines:
+        pen.line(path, fill=hot + (alpha,), width=max(2, int(w)), joint="curve")
+    sheet.alpha_composite(core)
+
+
+def strike(sheet, spot, fire, wide, cell, sky):
+    """`SiegeView.Strike` - a bolt out of the sky, and the ground answering it.
+
+    It comes down from above the hill rather than from the boss, which is what makes a volley read
+    as weather rather than as more throwing: a boss that only ever emits things has one direction,
+    and a strike gives the board a second one.
+    """
+    x, y = spot
+    start = (x + random.uniform(-cell * 0.8, cell * 0.8), sky + cell * random.uniform(0.0, 0.5))
+    bolt(sheet, start, (x, y), fire, wide, cell, jag=0.26, forks=1)
+
+    flash = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(flash)
+    r = cell * 1.1
+    pen.ellipse([x - r, y - r, x + r, y + r], fill=fire + (150,))
+    sheet.alpha_composite(flash.filter(ImageFilter.GaussianBlur(cell * 0.3)))
+
+
+def storm(sheet, kind, look, fire, hand, target, cell, span, sky, hill, at, wards, ward, plate):
+    """`SiegeView.Unleash` - the frame a spell leaves, drawn as the volley it is.
+
+    <p><b>This is the picture the whole change exists for.</b> Every gate in this project reads the
+    model, and the model did not move at all: the same spell, the same tell, the same flight, the
+    same damage and the same cadence. What moved is what a player watches across a window they were
+    already waiting through, and there is no number anywhere that can say whether it is worth
+    watching.</p>
+
+    <p>Two questions to ask of what comes out. Are the four <em>shapes of attack</em> different - a
+    chain that visits the wards it is not aimed at, a bombardment, a storm over the whole hill, a
+    converging pair - or is it four colours of one volley? And is the ward the thing is coming for
+    still the most legible object on the board, or has the spectacle eaten its own tell?</p>
+
+    `hand` and `target` are canvas pixels; `hill` is the hill's own (top, foot) in board units.
+    """
+    scale = 1.2 if kind == "overlord" else 0.85 if kind == "blightcaller" else 1.0
+    wx, wy = target
+
+    # `SiegeView.Leaving` - the pack's muzzle, and bolts thrown off the hand. A warbringer's muzzle
+    # reel is spoken for: `Roar` draws it flat over the ground, so drawing it upright here as well
+    # would be the same picture twice, once wrong.
+    if kind != "warbringer":
+        flare = loudest(look["fx"] + "_muzzle")
+        if flare is not None:
+            put(sheet, flare, hand[0], hand[1], cell * 4.6 * scale, cell * 4.6 * scale)
+
+    for i in range(5):
+        turn = i / 5 * math.tau + random.uniform(-0.3, 0.3)
+        away = cell * random.uniform(1.2, 2.0) * scale
+        bolt(sheet, hand,
+             onboard((hand[0] + math.cos(turn) * away, hand[1] + math.sin(turn) * away), plate),
+             fire, cell * 0.055, cell, jag=0.4, forks=1)
+
+    orb = blast(look["fx"], 9)
+
+    def fly(t, bowed):
+        """One arm of the volley at phase `t`, bowed sideways by `SiegeView.Hurl`'s own sine."""
+        dx, dy = wx - hand[0], wy - hand[1]
+        length = math.hypot(dx, dy) or 1.0
+        sx, sy = -dy / length, dx / length
+        # **The bow is more than a cell at full lean, and it has to be.** At half a cell three orbs
+        # on spread arcs are one orb drawn three times and an overlord's pair is a single sun; what
+        # makes a volley read as a volley is that the arms are visibly *apart* in the middle of the
+        # flight and visibly *together* at the end of it.
+        push = bowed * 1.4 * math.sin(t * math.pi) * cell
+        return hand[0] + dx * t + sx * push, hand[1] + dy * t + sy * push
+
+    if kind == "blightcaller":
+        # **Chain lightning** - the only one of the four whose bolt visits the wards it is not
+        # aimed at, which is exactly what a douse is: something spreading through the line and
+        # settling on one of them. In post order rather than by distance, so the walk is the same
+        # shape every time and can be learned.
+        path, taken = [hand], 0
+        for i in range(wards):
+            if i == ward or taken >= 2:
+                continue
+            path.append(at(post_x(span, i, wards), hill[1]))
+            path[-1] = (path[-1][0], wy)
+            taken += 1
+        path.append(target)
+
+        for i in range(len(path) - 1):
+            bolt(sheet, path[i], path[i + 1], fire, cell * 0.075, cell, forks=1)
+
+        if orb is not None:
+            put(sheet, orb, *fly(0.72, 0.55), cell * 1.35, cell * 1.35)
+
+    elif kind == "warlord":
+        # **Four strikes and a triple volley.** A smite takes health, so what it looks like is a
+        # bombardment: three orbs on spread arcs and four bolts out of the sky onto the ward.
+        if orb is not None:
+            for t, bowed, size in ((0.78, -0.7, 0.62), (0.66, 0.0, 1.0), (0.55, 0.7, 0.62)):
+                put(sheet, orb, *fly(t, bowed), cell * 1.6 * size, cell * 1.6 * size)
+
+        for _ in range(4):
+            strike(sheet, (wx + random.uniform(-cell * 0.5, cell * 0.5), wy), fire,
+                   cell * 0.07, cell, sky)
+
+    elif kind == "warbringer":
+        # **A storm over the whole hill**, because a roar is aimed at nothing and the one thing it
+        # has to say is that everything out there is about to move.
+        for name, size in (("roar_hit", 7.0), ("roar_muzzle", 9.0)):
+            ring = loudest(name)
+            if ring is not None:
+                put(sheet, ring, hand[0], hand[1], cell * size, cell * size)
+
+        # Six rather than nine, spread a little wider apart: nine read as noise over the hill
+        # rather than as six things being struck, and cost half as much again on a real frame.
+        for _ in range(6):
+            spot = at(random.uniform(-span[0] * 0.44, span[0] * 0.44),
+                      random.uniform(hill[1], hill[0]))
+            strike(sheet, spot, fire, cell * 0.07, cell, sky)
+
+        for i in range(2):
+            y = hill[1] + (hill[0] - hill[1]) * (0.3 + i * 0.35)
+            bolt(sheet, at(-span[0] * 0.5, y), at(span[0] * 0.5, y),
+                 fire, cell * 0.05, cell, jag=0.5, forks=3)
+
+    else:
+        # **Double rockets** - the finale's spell takes a rank as well as health, so it is the one
+        # that has to look like more than a bigger smite: two orbs bowing hard in opposite
+        # directions and converging on the ward together, with a bolt riding down between them.
+        if orb is not None:
+            for t, bowed in ((0.70, -1.35), (0.62, 1.35)):
+                put(sheet, orb, *fly(t, bowed), cell * 2.1 * 0.85, cell * 2.1 * 0.85)
+
+        for _ in range(3):
+            strike(sheet, (wx + random.uniform(-cell * 0.7, cell * 0.7), wy), fire,
+                   cell * 0.085, cell, sky)
+
+        bolt(sheet, hand, target, fire, cell * 0.06, cell, jag=0.3, forks=2)
 
 
 def post_x(span, index, wards):
@@ -787,7 +1067,38 @@ def load(path):
     return Image.open(path).convert("RGBA") if path.exists() else None
 
 
-def bar(sheet, held):
+def cooling_pane(cell, left):
+    """`UtilityBar.Sweep` - the wedge over a cell that is not ready yet.
+
+    <p>The cell's own sprite tinted dark and cut by angle, so the wedge is the shape of the well
+    it covers rather than a square laid over a rounded one. From the top and clockwise, with
+    `left` being what is *still to wait*, so it shrinks away.</p>
+
+    <p>The pieslice is drawn on a circle twice the cell wide, because Unity's `Radial360` fills
+    the whole rectangle by angle and an inscribed circle would leave the four corners uncovered -
+    which reads as a broken sweep rather than as a nearly-finished one.</p>
+    """
+    if cell is None or left <= 0:
+        return None
+
+    pane = cell.resize((SLOT, SLOT), Image.LANCZOS)
+
+    # `Pal.Glass` at a third. Pale rather than dark, because the well is already the darkest
+    # thing on the shelf and ink over ink says nothing (invariant 39d, and 37m's rule that a
+    # state which has happened reads as brighter).
+    dark = Image.new("RGBA", (SLOT, SLOT), (220, 235, 245, 84))
+    dark.putalpha(ImageChops.multiply(dark.split()[3], pane.split()[3]))
+
+    mask = Image.new("L", (SLOT, SLOT), 0)
+    ImageDraw.Draw(mask).pieslice(
+        [-SLOT / 2, -SLOT / 2, SLOT * 1.5, SLOT * 1.5],
+        -90, -90 + 360 * min(1.0, left), fill=255)
+
+    dark.putalpha(ImageChops.multiply(dark.split()[3], mask))
+    return dark
+
+
+def bar(sheet, held, cooling=None):
     """The action bar, where `SiegeScreen` hangs it: filling the foot of the safe area.
 
     <p>Drawn here rather than left to the imagination because it is not decoration - it is 228
@@ -824,6 +1135,10 @@ def bar(sheet, held):
         n = held.get(name, 0)
         icon = load(UTILITY_ART / (name + ".png"))
 
+        # Seconds still to wait on this one, or nought.
+        waiting = (cooling or {}).get(name, 0)
+        full = COOLDOWNS.get(name, 0)
+
         if icon is not None:
             if n <= 0:
                 faded = icon.copy()
@@ -831,6 +1146,13 @@ def bar(sheet, held):
                 icon = faded
 
             put(sheet, icon, cx, cy, ICON, ICON)
+
+        # The sweep, over the picture and under the badge, which is the order the hierarchy
+        # draws them in - how many you hold is true whether or not it is ready.
+        if waiting > 0 and full > 0:
+            wedge = cooling_pane(cell, waiting / float(full))
+            if wedge is not None:
+                put(sheet, wedge, cx, cy, SLOT, SLOT)
 
         if n > 0:
             bx = cx + SLOT / 2 - 4 - BADGE / 2
@@ -840,6 +1162,13 @@ def bar(sheet, held):
             font = face(34)
             if font is not None:
                 draw_on.text((bx, by), str(n), font=font, fill=(255, 243, 220, 255), anchor="mm")
+
+        if waiting > 0 and full > 0:
+            font = face(56)
+            if font is not None:
+                secs = str(int(math.ceil(waiting)))
+                draw_on.text((cx, cy), secs, font=font, fill=(255, 243, 220, 255), anchor="mm",
+                             stroke_width=3, stroke_fill=(23, 36, 51, 242))
 
 
 def hill_grid(sheet, span, cell, hill_top, hill_foot, at):
@@ -897,8 +1226,11 @@ def main():
                     help="how many of the first wave to stand on the hill")
     ap.add_argument("--no-bolts", action="store_true",
                     help="draw the board with nothing in flight")
-    ap.add_argument("--warlord", default="cast", choices=("cast", "idle", "walk"),
-                    help="draw the warlord mid-cast, standing, or walking on")
+    ap.add_argument("--warlord", default="cast", choices=("cast", "idle", "walk", "storm"),
+                    help="draw the boss winding up (cast), standing, walking on, or the frame "
+                         "its volley leaves (storm)")
+    ap.add_argument("--cooling", nargs="?", const="firepot=6,stormcall=22", default="",
+                    help="draw slots mid-cooldown, as id=seconds pairs; bare gives a sample")
     ap.add_argument("--no-bar", action="store_true",
                     help="draw the board without the utility bar under it")
     ap.add_argument("--wave", type=int, default=1,
@@ -912,7 +1244,12 @@ def main():
     ap.add_argument("--out", default=str(REPO / "Tools" / "siege_boards.png"))
     args = ap.parse_args()
 
-    picked = [(i, lv) for i, lv in enumerate(levels()) if args.level in (None, lv["id"])]
+    # **Comma separated**, because the one picture this mode cannot do without is the four boss
+    # rungs side by side: invariant 37z was found by looking at exactly that, and 37ac was tuned
+    # against it. One at a time is four windows and no comparison.
+    wanted = [x.strip() for x in args.level.split(",")] if args.level else None
+    picked = [(i, lv) for i, lv in enumerate(levels())
+              if wanted is None or lv["id"] in wanted]
     if not picked:
         sys.exit("no level called %s" % args.level)
 
@@ -924,14 +1261,21 @@ def main():
         if not (ART / "Wards" / ("%s_r.png" % model)).exists():
             sys.exit("no turret called %s" % model)
 
-    held = {"firepot": 2, "mending": 0, "surge": 5}
+    held = {"firepot": 2, "mending": 0, "surge": 5, "stormcall": 1}
+
+    cooling = {}
+    for pair in (args.cooling or "").split(","):
+        if "=" not in pair:
+            continue
+        name, _, secs = pair.partition("=")
+        cooling[name.strip()] = float(secs)
 
     shots = []
     for rung, lv in picked:
         shot = draw(lv, args.raiders, not args.no_bolts, aim=args.aim,
                     boss=args.warlord, rung=rung, wave=args.wave, line=stood)
         if not args.no_bar:
-            bar(shot, held)
+            bar(shot, held, cooling)
         shots.append((lv["id"], shot))
 
     pad = 24

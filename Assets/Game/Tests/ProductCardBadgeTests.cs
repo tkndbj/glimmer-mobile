@@ -42,12 +42,31 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A ribbon is a rotated rectangle, so it is wider than its own cloth — measured rather
-        /// than assumed, because reading its width alone is what made the overlap invisible.
+        /// That a mark's reach is measured from the angle it is actually drawn at.
+        ///
+        /// <para>
+        /// It used to assert the stronger thing — that a bonus mark reaches <em>further</em>
+        /// than its own width — because it was a cloth ribbon pinned at eight degrees, and
+        /// reading its width alone is exactly what made it overlap its neighbour's badge
+        /// invisibly. That mark is the kit's title plate now and hangs at nought, so the
+        /// stronger claim is simply false: the honest property is that the reach and the tilt
+        /// agree, which still fails the moment somebody pins a mark and leaves the reach
+        /// reading half a width.
+        /// </para>
         /// </summary>
         [Test]
-        public void APinnedRibbonReachesFurtherThanItsClothIsWide()
-            => Assert.Greater(ProductCardBadges.RibbonReach, ProductCardBadges.RibbonWidth * .5f);
+        public void AMarksReachAgreesWithTheAngleItIsDrawnAt()
+        {
+            bool pinned = ProductCardBadges.RibbonTilt != 0f;
+            float flat = ProductCardBadges.RibbonWidth * .5f;
+
+            if (pinned)
+                Assert.Greater(ProductCardBadges.RibbonReach, flat,
+                               "a mark drawn at an angle occupies more than its own width");
+            else
+                Assert.AreEqual(flat, ProductCardBadges.RibbonReach, .01f,
+                                "a mark drawn square occupies exactly its own width");
+        }
 
         /// <summary>
         /// The badge may overhang the top of its plate — that is what makes it read as stuck on

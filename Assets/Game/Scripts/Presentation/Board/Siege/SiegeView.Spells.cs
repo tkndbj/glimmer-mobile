@@ -79,6 +79,12 @@ namespace GlimmerGrove
             if (aimed) Sigil(cast.Ward, mob.Kind);
             else Brace(mob, from);
 
+            // **The storm the wind-up is actually made of** (see `SiegeView.Storm`): crackle
+            // accelerating over the whole window, motes dragged in off the hill, and — for a boss
+            // that has chosen a ward — a tether flickering between it and its target. None of it
+            // moves the schedule; all of it happens inside `BossTell`.
+            Winding(mob, from, to, aimed);
+
             Audio.Sfx("whoosh", .5f, Pitch(mob.Kind));
 
             // The bolt itself leaves when the wind-up ends, and crosses in `BossFlight` — but only
@@ -88,14 +94,13 @@ namespace GlimmerGrove
             // hit having been missed rather than as the cast having been interrupted.
             int caster = cast.Raider;
 
-            var kind = mob.Kind;
+            int ward = aimed ? cast.Ward : -1;
 
             Tween.After(SiegeTuning.BossTell, () =>
             {
                 if (_board == null || _board.Find(caster) == null) return;
 
-                if (aimed) Hurl(from, to, kind);
-                else Roar(from, kind);
+                Unleash(mob, from, to, ward);
             }, mob.Node);
         }
 
@@ -224,28 +229,35 @@ namespace GlimmerGrove
             => kind == SiegeKind.Overlord ? 1.2f
              : kind == SiegeKind.Blightcaller ? .85f : 1f;
 
-        /// <summary>The spell crossing the hill, and the flash it leaves the boss with.</summary>
-        void Hurl(Vector2 from, Vector2 to, SiegeKind kind)
+        /// <summary>
+        /// One arm of a volley: an orb crossing the hill on a bowed path.
+        ///
+        /// <para>
+        /// <b>It draws the projectile and nothing else now.</b> The flash, the ring, the starburst
+        /// and the bolts thrown off the caster all moved to <see cref="Leaving"/>, because every
+        /// boss throws two or three of these at once and a muzzle drawn per orb is three muzzles
+        /// on one frame. What is left here is exactly "a thing flying from A to B".
+        /// </para>
+        /// <para>
+        /// <b><paramref name="bow"/> is what makes a volley read as a volley.</b> Three orbs on
+        /// the same straight line are one orb drawn three times; pushed sideways by a sine that is
+        /// nought at both ends, they leave together, spread across the hill and converge on the
+        /// ward — and the two halves of an overlord's pair bow in opposite directions, which is
+        /// the whole of why it reads as a launch rather than as a bigger smite.
+        /// </para>
+        /// <para>
+        /// <b>Every arm still lands on the rules' clock</b> (invariant 37s): the flight is
+        /// shortened by exactly whatever <paramref name="delay"/> holds it back, so a stagger
+        /// spreads the departures and never moves the arrival.
+        /// </para>
+        /// </summary>
+        void Hurl(Vector2 from, Vector2 to, SiegeKind kind, float flight, float bow, float scale,
+                  float delay)
         {
             var dir = to - from;
             float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
 
             var fire = Casting(kind);
-            float scale = BurstAt(kind);
-
-            var muzzle = SpellMuzzleArt(kind);
-            if (muzzle != null && muzzle.Length > 0)
-                Ends(Lend(muzzle, Color.white, Cell * 4.2f * scale, from, angle, 30f,
-                          false, MuzzleAt), .38f);
-
-            // The pack's own flash for this one is faint - a thin ring and a few sparks - so the
-            // moment the spell *leaves* is carried by these two rather than by it. Cheaper than
-            // swapping a whole three-part set for its weakest part, which is what the alternative
-            // was: its orb and its impact are the best in the pack.
-            Shockwave(from, Pal.Lift(fire, .5f), 3.4f * scale, .3f);
-            Pop(from, fire, 2.6f * scale, .26f);
-
-            Audio.Sfx("poke", .5f, Pitch(kind) - .12f);
 
             var frames = SpellArt(kind);
 
@@ -255,29 +267,51 @@ namespace GlimmerGrove
             // **Half again the width of a ward's bolt, and anchored at its middle rather than at
             // `HeadAt`.** A boss's spell is an orb rather than a comet — it is baked square
             // (`SiegeShotBake.BakeSpell`), so there is no head leading a trail to step back from.
-            var puff = Lend(frames, Color.white, Cell * ThrownAt(kind), from, angle, 30f,
+            var puff = Lend(frames, Color.white, Cell * ThrownAt(kind) * scale, from, angle, 30f,
                             true, .5f);
-            Glow(puff, fire, Cell * 3f * scale);
+            Glow(puff, fire, Cell * 3f * BurstAt(kind) * scale);
 
             var node = puff.Node;
+
+            node.gameObject.SetActive(delay <= 0f);
 
             // **A hex drifts rather than flies**, which is the one thing about its motion a player
             // can read before it lands: it wobbles across the hill and swells, where a smite and
             // an omen go straight. The arrival is on the rules' clock either way (invariant 37s) —
             // what changes is the path, never the time.
             bool wafts = SiegeTuning.SpellOf(kind) == SiegeSpell.Douse;
-            var side = new Vector2(-dir.y, dir.x).normalized * Cell * .55f;
+            var side = new Vector2(-dir.y, dir.x).normalized * Cell;
 
-            Tween.Run(SiegeTuning.BossFlight, Ease.Linear, t =>
+            float crosses = Mathf.Max(.05f, flight - delay);
+
+            var trail = Time.unscaledTime;
+
+            Tween.Run(crosses, Ease.Linear, t =>
             {
                 if (!node) return;
 
+                node.gameObject.SetActive(true);
+
                 var at = Vector2.Lerp(from, to, t);
-                if (wafts) at += side * Mathf.Sin(t * Mathf.PI * 2f) * (1f - t);
+
+                // **More than a cell at full lean, and it has to be.** At half a cell three orbs
+                // on spread arcs are one orb drawn three times and an overlord's pair is a single
+                // sun; what makes a volley read as one is that the arms are visibly *apart* in the
+                // middle of the flight and visibly *together* at the end of it.
+                at += side * bow * 1.4f * Mathf.Sin(t * Mathf.PI);
+                if (wafts) at += side * .55f * Mathf.Sin(t * Mathf.PI * 2f) * (1f - t);
 
                 node.anchoredPosition = at;
                 node.localScale = Vector3.one * Mathf.Lerp(.8f, 1.25f, t);
-            }, node).OnDone(() => Give(puff));
+
+                // A wake of embers behind it, thinned to about twenty a second so a three-orb
+                // volley is a trail of sparks rather than a wall of them.
+                if (_fx != null && Time.unscaledTime - trail > .05f)
+                {
+                    trail = Time.unscaledTime;
+                    Burst.Sparks(_fx, at, fire, 2, Cell * .7f, Cell * .12f, .24f);
+                }
+            }, node).Delay(delay).OnDone(() => Give(puff));
         }
 
         /// <summary>
@@ -354,6 +388,10 @@ namespace GlimmerGrove
             {
                 _roared = true;
                 Stampede(fire);
+
+                // The line's own answer to a roar, drawn once for all four records for the reason
+                // the stampede is: lightning running post to post along the wards it just shook.
+                Aftermath(SiegeKind.Warbringer, -1, default, fire);
             }
 
             if (spell.Ward < 0) return;
@@ -370,6 +408,11 @@ namespace GlimmerGrove
             Pop(at, fire, 2.6f * BurstAt(kind), .3f);
             Shockwave(at, fire, 3.6f * BurstAt(kind), .34f);
             Burst.Sparks(_fx, at, fire, greater ? 20 : 14, Cell * 3f, Cell * .24f, .5f);
+
+            // What the boss's own verb leaves behind on the post, over and above the burst — see
+            // `SiegeView.Storm`. A roar has already had its own above, because it lands on four
+            // wards at once and this is one drawing.
+            if (spell.Craft != SiegeSpell.Rally) Aftermath(kind, spell.Ward, at, fire);
 
             // **A douse is drawn as a light going out, and everything about it is quieter.** It
             // takes no health, so a hit that shook the board and flashed the screen would be the

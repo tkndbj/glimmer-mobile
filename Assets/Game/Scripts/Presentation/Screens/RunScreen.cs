@@ -582,8 +582,24 @@ namespace GlimmerGrove
         /// grove was charged for at the next launch. The compiler cannot catch it, so
         /// <c>RunFrameTests</c> does.
         /// </para>
+        /// <para>
+        /// <b>A panel over the board holds the run, and it is answered here rather than by the
+        /// panels.</b> Every modal in this game can end up over a run, so a rule each of them
+        /// had to remember would be the shape <see cref="RunHold"/> exists to remove — and it
+        /// would be missing from whichever one was written next. Polled rather than raised,
+        /// because this is already the one place that asks every frame and the reading is a
+        /// glance at the top of a stack that is never more than three deep;
+        /// <see cref="RunHold"/> is idempotent both ways, so a frame answering the same thing as
+        /// the last one changes nothing, and no panel has to be paired with its own release.
+        /// </para>
         /// </summary>
-        void Update() => Running(Tick(Runnable));
+        void Update()
+        {
+            if (Flow.Covered) Hold.Take(RunHold.Covered);
+            else Hold.Release(RunHold.Covered);
+
+            Running(Tick(Runnable));
+        }
 
         /// <summary>
         /// Gives a run one frame of play, if it is allowed one. Returns whether it got it, so a

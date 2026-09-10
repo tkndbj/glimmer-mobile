@@ -945,6 +945,14 @@ namespace GlimmerGrove.Content
         /// this says, or a retune would confiscate something bought with gems.
         /// </summary>
         public int minLevel;
+
+        /// <summary>
+        /// Whole seconds before another may be used. Absent or nought means no cooldown, which
+        /// is exactly how the bar behaved before the field existed — the shape every optional
+        /// number here takes, because <c>JsonUtility</c> writes a nought into a field an older
+        /// file never had.
+        /// </summary>
+        public int cooldownSeconds;
     }
 
     /// <summary>The turret roster. In shelf order, which is authored on each entry.</summary>

@@ -129,6 +129,15 @@ namespace GlimmerGrove
             public Image Charge;
 
             /// <summary>
+            /// Seconds until this boss crackles again. See <c>SiegeView.Ambient</c>.
+            ///
+            /// <b>A countdown per boss rather than one clock for the hill</b>, because a pair of
+            /// them striking on the same frame reads as one flash rather than as two creatures —
+            /// and it is jittered on every reset for the same reason.
+            /// </summary>
+            public float Crackle;
+
+            /// <summary>
             /// A warlord's health, pinned across the top of the board rather than carried.
             ///
             /// Its own node under the effects layer, so it is not moved by the raider and has to
@@ -213,6 +222,25 @@ namespace GlimmerGrove
         RectTransform _aim;
         UtilityItem _arming;
         readonly List<SiegeStrike> _strikes = new List<SiegeStrike>(16);
+
+        /// <summary>
+        /// Raiders a storm has claimed and not yet dropped a bolt on.
+        ///
+        /// <para>
+        /// <b>A storm resolves in the rules in one instant and is drawn over a second or more</b>
+        /// (see <c>Stormcall</c>), so between the two there is a stretch where the model holds a
+        /// dozen dead raiders that are still standing on the screen on purpose. <c>Reap</c> runs
+        /// every frame and takes down the widget of anything dead — correctly, and it would take
+        /// the whole hill down one frame in, leaving the rest of the bolts falling on empty
+        /// ground and the staggering pointless.
+        /// </para>
+        /// <para>
+        /// So the storm says which raiders are its, and <c>Reap</c> leaves them alone until it
+        /// has had its bolt. Cleared by <c>Compose</c>, because a board dealt again mid-storm
+        /// must not leave a claim standing over widgets that no longer exist.
+        /// </para>
+        /// </summary>
+        readonly List<int> _striking = new List<int>(16);
 
         /// <summary>
         /// What the screen does when a target is chosen: apply it, charge for it and spend it.
