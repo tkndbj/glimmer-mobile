@@ -47,9 +47,35 @@ namespace GlimmerGrove.Wards
         readonly WardModel[] _models;
         readonly Dictionary<string, WardModel> _byId;
 
+        /// <summary>
+        /// Holds the roster in <b>shelf order</b>, which is the catalog's own job rather than the
+        /// caller's.
+        ///
+        /// <para>
+        /// <b>Sorted here rather than at the one call site that reads a file.</b> It used to be,
+        /// and that left <see cref="Default"/> - which is an array written by hand - showing
+        /// whatever sequence it happened to be typed in, while a roster read from content showed
+        /// the authored rungs. The two agreed only for as long as nobody re-rung the shelf without
+        /// also re-typing the fallback, which is exactly the drift invariant 5b is about: one rule,
+        /// written twice, correct until the day the two are asked a question that separates them.
+        /// </para>
+        /// <para>
+        /// <b>Ties break on the id</b>, because <c>Array.Sort</c> is not stable and two runtimes
+        /// are not obliged to settle an equal pair the same way - <c>SiegeBoard</c>'s own rule
+        /// about a <c>HashSet</c> walk. A tie is refused by both content gates anyway; this is
+        /// what happens while a bad file is still being loaded.
+        /// </para>
+        /// </summary>
         WardCatalog(WardModel[] models)
         {
             _models = models ?? Array.Empty<WardModel>();
+
+            Array.Sort(_models, (a, b) =>
+            {
+                int by = a.Order.CompareTo(b.Order);
+                return by != 0 ? by : string.CompareOrdinal(a.Id, b.Id);
+            });
+
             _byId = new Dictionary<string, WardModel>(_models.Length, StringComparer.Ordinal);
 
             foreach (var model in _models) _byId[model.Id] = model;
@@ -115,36 +141,46 @@ namespace GlimmerGrove.Wards
         /// same band the grove's gem-priced land sits in (invariant 16j) so the two shelves cost a
         /// player the same kind of decision.
         /// </para>
+        /// <para>
+        /// <b>The shelf is one ladder read top to bottom: free, then the nine earned, then the ten
+        /// bought</b> - and within each of those the price only ever climbs. It is authored
+        /// (<c>WardModel.Order</c>) rather than derived, for invariant 16j's reason: 600 gems and
+        /// 5,000 credits do not compare, so there is no arithmetic that could put these twenty in
+        /// one sequence. What an author owes in exchange is that the rung, the price and the gate
+        /// move <em>together</em> - a shelf whose prices go up, down and up again is one a player
+        /// reads as arbitrary, and the fix is never to sort it at run time (that reshuffles the
+        /// shelf under somebody part-way up it) but to re-rung the file.
+        /// </para>
         /// </summary>
         public static readonly WardCatalog Default = new WardCatalog(new[]
         {
             // ---- the yardstick ------------------------------------------------------------
             // Free, and never a weak choice: every turret in this roster fires the same primary
             // bolt, so this is exactly as good against a lone raider as the dearest one here.
-            new WardModel("bolt", WardAbility.None, 0, 0, 0, 0, 0, 1),
+            new WardModel("bolt",       WardAbility.None,   0,  0,    0,    0,  0,   1),
 
             // ---- earned: credits, behind a keeper level ------------------------------------
-            new WardModel("spark",   WardAbility.Chain,  5,  1, 0, 1200,  2,  2),
-            new WardModel("mortar",  WardAbility.Splash, 5,  1, 0, 1800,  3,  3),
-            new WardModel("rime",    WardAbility.Frost,  4, 15, 0, 2400,  4,  4),
-            new WardModel("lance",   WardAbility.Pierce, 8,  5, 0, 3200,  5,  5),
-            new WardModel("cleaver", WardAbility.Rend,   5,  0, 0, 4000,  6,  6),
-            new WardModel("siphon",  WardAbility.Siphon, 4,  0, 0, 5000,  8,  7),
-            new WardModel("ember",   WardAbility.Ember,  3, 30, 0, 6000, 10,  8),
-            new WardModel("beacon",  WardAbility.Beacon, 5,  0, 0, 7500, 12,  9),
-            new WardModel("prism",   WardAbility.Prism,  0,  0, 0, 9000, 14, 10),
+            new WardModel("spark",      WardAbility.Chain,  5,  1,    0, 1200,  2,   4),
+            new WardModel("lance",      WardAbility.Pierce, 8,  5,    0, 1800,  3,   5),
+            new WardModel("mortar",     WardAbility.Splash, 5,  1,    0, 2400,  4,   7),
+            new WardModel("rime",       WardAbility.Frost,  4, 15,    0, 3200,  5,   8),
+            new WardModel("cleaver",    WardAbility.Rend,   5,  0,    0, 4000,  6,  12),
+            new WardModel("siphon",     WardAbility.Siphon, 4,  0,    0, 5000,  8,  13),
+            new WardModel("beacon",     WardAbility.Beacon, 5,  0,    0, 6000, 10,  16),
+            new WardModel("ember",      WardAbility.Ember,  3, 30,    0, 7500, 12,  17),
+            new WardModel("prism",      WardAbility.Prism,  0,  0,    0, 9000, 14, 19),
 
             // ---- bought: gems, no gate ------------------------------------------------------
-            new WardModel("arcstorm",   WardAbility.Chain,  7,  2,  600, 0, 0, 11),
-            new WardModel("howitzer",   WardAbility.Splash, 7,  1,  700, 0, 0, 12),
-            new WardModel("glacier",    WardAbility.Frost,  6, 25,  800, 0, 0, 13),
-            new WardModel("harpoon",    WardAbility.Pierce,10,  4,  900, 0, 0, 14),
-            new WardModel("breaker",    WardAbility.Rend,  10,  0, 1000, 0, 0, 15),
-            new WardModel("leech",      WardAbility.Siphon, 8,  0, 1100, 0, 0, 16),
-            new WardModel("pyre",       WardAbility.Ember,  6, 40, 1200, 0, 0, 17),
-            new WardModel("lighthouse", WardAbility.Beacon,10,  0, 1400, 0, 0, 18),
-            new WardModel("spectrum",   WardAbility.Prism,  0,  0, 1600, 0, 0, 19),
-            new WardModel("apex",       WardAbility.Chain, 10,  3, 2000, 0, 0, 20),
+            new WardModel("glacier",    WardAbility.Frost,  6, 25,  600,    0,  0,  2),
+            new WardModel("lighthouse", WardAbility.Beacon, 10,  0,  700,    0,  0,  3),
+            new WardModel("arcstorm",   WardAbility.Chain,  7,  2,  800,    0,  0,  6),
+            new WardModel("howitzer",   WardAbility.Splash, 7,  1,  900,    0,  0,  9),
+            new WardModel("harpoon",    WardAbility.Pierce, 10,  4, 1000,    0,  0, 10),
+            new WardModel("breaker",    WardAbility.Rend,   10,  0, 1100,    0,  0, 11),
+            new WardModel("leech",      WardAbility.Siphon, 8,  0, 1200,    0,  0, 14),
+            new WardModel("pyre",       WardAbility.Ember,  6, 40, 1400,    0,  0, 15),
+            new WardModel("spectrum",   WardAbility.Prism,  0,  0, 1600,    0,  0, 18),
+            new WardModel("apex",       WardAbility.Chain,  10,  3, 2000,    0,  0, 20),
         });
 
         // ------------------------------------------------------------- building
@@ -254,7 +290,8 @@ namespace GlimmerGrove.Wards
                 return Default;
             }
 
-            models.Sort((a, b) => a.Order.CompareTo(b.Order));
+            // Shelf order is the constructor's, so a hand-written fallback and a roster read from
+            // a file cannot come out in two different sequences.
             return new WardCatalog(models.ToArray());
         }
     }

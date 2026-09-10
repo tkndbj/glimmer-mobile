@@ -2205,6 +2205,11 @@ WARD_ABILITIES = {"none", "splash", "chain", "frost", "pierce", "rend", "siphon"
 WARD_COLOURS = "rgby"
 
 
+#: `WardModel.Elemental` - the one turret whose bolt is a different element on each
+#: colour. Named rather than derived; see the note in `check_wards`.
+WARD_ELEMENTAL = "rime"
+
+
 def check_wards(progression, keys, warnings, art):
     """The turret roster. `ContentValidation.ValidateWards`, offline.
 
@@ -2283,6 +2288,21 @@ def check_wards(progression, keys, warnings, art):
                 if address not in art:
                     errors.append(f"wards entry '{wid}' has no art at '{address}' - a picture is "
                                   "not content, so adding a turret is a build")
+
+            # **What it throws.** Every turret owns three reels per colour - the bolt, the flash
+            # it leaves at the barrel and what it does when it arrives - except the one that draws
+            # the four elemental bolts instead (`WardModel.Elemental`). Named outright rather than
+            # derived from the ability, which is the C# side's own rule: that reading was honest
+            # only while the starter was the only model without one, and the owner has since moved
+            # the elemental set onto a bought turret.
+            if wid == WARD_ELEMENTAL:
+                continue
+
+            for kind in ("shot", "muzzle", "hit"):
+                address = f"Fx/Siege/{kind}_{wid}_{colour}"
+                if address not in art:
+                    errors.append(f"wards entry '{wid}' has no projectile reel at '{address}' - "
+                                  "run Art > Bake Turret Projectiles")
 
         if f"Ui/Wards/{wid}" not in art:
             errors.append(f"wards entry '{wid}' has no shelf thumbnail at 'Ui/Wards/{wid}'")

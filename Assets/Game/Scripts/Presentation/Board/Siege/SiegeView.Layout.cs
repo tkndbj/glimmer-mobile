@@ -71,6 +71,47 @@ namespace GlimmerGrove
         /// <summary>How far down the hill a raider has come.</summary>
         float MarchY(float march) => Mathf.Lerp(_hillTop, _hillFoot, Mathf.Clamp01(march));
 
+        // ------------------------------------------------------------------ the aiming grid
+        /// <summary>
+        /// Where the middle of one box of the hill's aiming grid sits.
+        ///
+        /// <para>
+        /// <b>The one arithmetic, and it is written in terms of <see cref="MarchY"/> rather than
+        /// beside it.</b> The panes a player taps and the boxes <c>SiegeBoard.Blast</c> reads have
+        /// to be the same twenty rectangles — invariant 33g — and the cheapest way to guarantee
+        /// that is for the drawing to be a function of the mapping the rule uses, so there is
+        /// nothing left to agree about.
+        /// </para>
+        /// <para>
+        /// <b>It was two, and both differences were silent.</b> The panes were laid out from
+        /// <c>_hillTop + Cell * .35f</c> downward, where <c>march</c> nought is <c>_hillTop</c>
+        /// exactly, so every row boundary on the screen sat up to a third of a cell above the one
+        /// the rule read — a raider near a boundary was genuinely in the band above the box it
+        /// looked like it was in. And the panes were <c>Span.x / Lanes</c> wide while their centres
+        /// were spaced on <see cref="LaneX"/>'s inset pitch of <c>Span.x / (Lanes + .6f)</c>, so
+        /// each one overlapped its neighbour by about a tenth of its width and the later sibling —
+        /// the higher lane — won every tap in the seam. Reported from play as tapping a raider and
+        /// being told nothing was there.
+        /// </para>
+        /// <para>
+        /// <b>The grid is spaced flat and the raiders are inset, deliberately.</b> A raider's x is
+        /// pulled in (see <see cref="LaneX"/>) so that a wide reel does not hang off the plate;
+        /// the grid is not, because a grid must tile the board it is drawn over — an inset one
+        /// would leave a strip down each edge that belongs to no box, and a tap there would fall
+        /// through the targeting layer onto the gems underneath. Every lane's inset centre still
+        /// lands inside its own flat box, so nothing is misfiled by the difference.
+        /// </para>
+        /// </summary>
+        Vector2 BoxAt(int lane, int row)
+            => new Vector2((lane - (SiegeTuning.Lanes - 1) * .5f) * BoxWide,
+                           MarchY((row + .5f) / SiegeTuning.BlastRows));
+
+        /// <summary>How wide one box of the aiming grid is. They abut; they do not overlap.</summary>
+        float BoxWide => Span.x / SiegeTuning.Lanes;
+
+        /// <summary>How deep one box of the aiming grid is.</summary>
+        float BoxTall => (MarchY(0f) - MarchY(1f)) / SiegeTuning.BlastRows;
+
         /// <summary>
         /// Where a ward's fuel tube sits, as a board coordinate rather than a ward's own.
         ///

@@ -106,8 +106,11 @@ namespace GlimmerGrove.Utilities
         /// </summary>
         public static readonly UtilityCatalog Default = new UtilityCatalog(new[]
         {
-            // Damage, into everything standing in the one box it is thrown at. Two creepers
-            // die; a brute is left with four health for a ward to finish.
+            // Damage, into everything standing on the plus of boxes it is thrown at
+            // (`SiegeTuning.BlastReach`) — full damage to each, never shared out. Two creepers
+            // die; a brute is left with four health for a ward to finish. Widening it needed no
+            // retune, because a firepot is charged for what it absorbs (invariant 39): catching
+            // three raiders instead of one bills three raiders' worth of matches.
             new UtilityItem("firepot", UtilityKind.Blast, magnitude: 44,
                             gemPrice: 12, maxHeld: 100, order: 1, cooldownSeconds: 10),
 

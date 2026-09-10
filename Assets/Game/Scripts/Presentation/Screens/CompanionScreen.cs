@@ -71,7 +71,7 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            Scenery.Layered(Content, "home", .26f);
+            Scenery.Plain(Content);
             Fireflies.Spawn(Content, 18, new Color(1f, .93f, .70f), 6f, 20f);
 
             BuildGrid();
@@ -256,16 +256,8 @@ namespace GlimmerGrove
         /// </summary>
         void StyleWorn(CellView view, bool worn)
         {
-            if (view.Plate)
-                view.Plate.color = worn ? Pal.A(Pal.Hex("#0C4A44"), .92f)
-                                        : new Color(.03f, .10f, .13f, .78f);
-
-            if (view.Edge)
-            {
-                view.Edge.sprite = Art.RoundOutline(CellRadius, worn ? 4f : 2f);
-                view.Edge.color = worn ? Pal.A(Pal.Gold, .95f)
-                                       : new Color(1f, 1f, 1f, view.Unlocked ? .14f : .07f);
-            }
+            // The plate never changes: it is the kit's card, drawn at white on every cell.
+            if (view.Edge) view.Edge.enabled = worn;
 
             // Made on first wear rather than up front, so the roster does not carry one hidden
             // Image per companion for a decoration at most one of them shows at a time. Halo
@@ -292,13 +284,28 @@ namespace GlimmerGrove
                                     new Vector2(.5f, 1f), at, () => Choose(avatar, unlocked));
             cell.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
 
-            var plate = UIKit.Img("Plate", cell.transform, Art.Round(CellRadius), Color.white,
+            // The grove shop's cell, to the sprite: `Skins.Card`, drawn at white, with no rim
+            // traced over it. The two shelves list the same thirty-one companions and a player
+            // crosses between them, so a cell that is one shape here and another there is one
+            // roster wearing two designs.
+            var plate = UIKit.Img("Plate", cell.transform, Art.S("Ui/" + Skins.Card), Color.white,
                                   new Vector2(CellW - 28f, CellH - 34f), new Vector2(.5f, .5f), Vector2.zero);
-            var edge = UIKit.Img("Edge", plate.transform, Art.RoundOutline(CellRadius, 2f), Color.white);
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
 
-            var face = UIKit.Img("Face", plate.transform, null,
-                                 unlocked ? Color.white : new Color(.15f, .21f, .25f, .95f),
+            // The worn marker, off until it is. It used to be a rim whose *width and colour*
+            // both moved, over a plate whose colour moved with it — none of which survives the
+            // kit's card, because the sprite paints its own keyline and its own face and a tint
+            // over either only darkens them. So worn is the one thing it can still be: the gold
+            // frame the nav bar and both shops already use for "this is the live one".
+            var edge = UIKit.Img("Edge", plate.transform, Art.RoundOutline(CellRadius, 6f),
+                                 Skins.PlateEdge);
+            UIKit.StretchTo((RectTransform)edge.transform, -2, -2, -2, -2);
+            edge.enabled = false;
+            edge.raycastTarget = false;
+
+            // Full colour whichever it is - the veil below dims it. A tint multiplies, so it
+            // only ever darkens, and a portrait knocked back to a blue-grey silhouette is the
+            // one thing a shelf of thirty-one faces cannot afford.
+            var face = UIKit.Img("Face", plate.transform, null, Color.white,
                                  new Vector2(196f, 196f), new Vector2(.5f, 1f), new Vector2(0f, -118f));
             face.preserveAspect = true;
             CompanionArt.Paint(face, avatar);
@@ -306,14 +313,24 @@ namespace GlimmerGrove
 
             if (!unlocked)
             {
-                var padlock = UIKit.Img("Lock", plate.transform, Art.S("Ui/padlock"), Color.white,
-                                        new Vector2(72f, 72f), new Vector2(1f, 1f), new Vector2(-26f, -26f));
+                // Veil then padlock, and the order is the whole of it: uGUI paints in sibling
+                // order, so this darkens the portrait and leaves the lock - and the name and the
+                // price built after it - at full strength.
+                var veil = UIKit.Img("Veil", plate.transform, Art.Round(CellRadius),
+                                     new Color(0f, 0f, 0f, .48f));
+                UIKit.StretchTo((RectTransform)veil.transform, 0, 0, 0, 0);
+                veil.raycastTarget = false;
+
+                var padlock = UIKit.Img("Lock", plate.transform, Art.S("Ui/ic_padlock"), Color.white,
+                                        new Vector2(112f, 112f), new Vector2(.5f, 1f),
+                                        new Vector2(0f, -118f));
                 padlock.preserveAspect = true;
+                padlock.raycastTarget = false;
             }
 
             UIKit.Titled("Name", plate.transform,
                          unlocked ? Loc.Get(avatar.NameKey) : Loc.Get("ui.profile.locked"),
-                         30, unlocked ? Pal.Cream : new Color(1f, .95f, .88f, .55f),
+                         30, Pal.Cream,
                          TextAnchor.MiddleCenter, new Vector2(CellW - 60f, 40f), new Vector2(.5f, 0f),
                          new Vector2(0f, 76f), 3f, 3f);
 
@@ -383,7 +400,11 @@ namespace GlimmerGrove
         {
             if (!unlocked)
             {
-                Audio.Sfx("chime", .45f);
+                // No second sound. The cell is a `Btn` and speaks on the way down, so this was
+                // a chime a tenth of a second behind an ordinary click - one tap making two
+                // noises, which is the rule `Btn` already states and `MakePanel` already hushes
+                // for. Wearing one keeps its own, because that is a *result* rather than a
+                // panel opening.
                 Flow.Modal<CompanionUnlockOverlay>(v => v.Avatar = avatar);
                 return;
             }
@@ -394,7 +415,7 @@ namespace GlimmerGrove
             // one relying on a call site to remember.
             if (!Profile.TryWearAvatar(avatar.Id)) return;
 
-            Audio.Sfx("chime2", .5f);
+            Audio.Sfx("wear", .5f);
         }
 
         // --------------------------------------------------------------- chrome
@@ -411,10 +432,9 @@ namespace GlimmerGrove
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, 1f), new Vector2(96f, -132f), () => Flow.Go<ProfileScreen>());
 
-            var banner = UIKit.Img("Banner", Safe, Art.S("Ui/banner"), Color.white,
-                                   new Vector2(560f, 148f), new Vector2(.5f, 1f), new Vector2(0f, -142f));
-            UIKit.Titled("Title", banner.transform, Loc.Get("ui.profile.companions").ToUpperInvariant(), 40,
-                         new Color(.36f, .24f, .16f), TextAnchor.MiddleCenter, outline: 0f, shadow: 2f);
+            var banner = Scenery.TitleRibbon(Safe, Loc.Get("ui.profile.companions").ToUpperInvariant(),
+                                             new Vector2(520f, 148f), new Vector2(.5f, 1f),
+                                             new Vector2(0f, -142f), 42, 22f);
             banner.transform.localScale = Vector3.zero;
             Tween.Pop(banner.transform, 0f, .6f, .1f);
 

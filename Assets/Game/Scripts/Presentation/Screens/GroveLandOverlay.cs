@@ -71,10 +71,11 @@ namespace GlimmerGrove
                 UIKit.Titled("Size", Panel, SizeText(), 52, Pal.Cream, TextAnchor.MiddleCenter,
                              new Vector2(640f, 72f), new Vector2(.5f, .5f), new Vector2(0f, 110f), 3f, 3f), 32);
 
-            UIKit.Shrinkable(
-                UIKit.Titled("Note", Panel, Loc.Get("ui.land.note"), 26,
-                             new Color(1f, .96f, .88f, .70f), TextAnchor.MiddleCenter,
-                             new Vector2(640f, 76f), new Vector2(.5f, .5f), new Vector2(0f, 22f), 3f, 0f), 18);
+            // No standing note. "Yours for good - room for anything you like" said nothing this
+            // panel does not already say: the size is above it, the price is below it, and every
+            // stretch of ground in the game is bought once and kept. `ui.land.note` stays in the
+            // string file unused, because a key deleted from a shipped language file is a
+            // warning in every translation that still carries it.
 
             _status = UIKit.Shrinkable(
                 UIKit.Titled("Status", Panel, string.Empty, 30, Pal.Cream, TextAnchor.MiddleCenter,

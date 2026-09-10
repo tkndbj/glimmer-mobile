@@ -635,7 +635,7 @@ namespace GlimmerGrove.Modes
         /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>: at 1.9 an unhurried player
         /// finished with one ward standing out of four, which is a rung that is lost by anybody
         /// having a worse afternoon. At 1.55, with a longer quiet in front of it
-        /// (<see cref="WarbringerAfter"/>), the same player finishes with three and the line down
+        /// (<see cref="CrowdAfter"/>), the same player finishes with three and the line down
         /// to 38 of 56 — bled hard, which is what a penultimate rung should feel like.
         /// </summary>
         public const float Rally = 1.55f;
@@ -713,6 +713,24 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Seconds between one spell and the next.</summary>
         public const float BossCastEvery = 5f;
+
+        /// <summary>
+        /// How long a boss waits before asking again, having found nothing worth casting at.
+        ///
+        /// <para>
+        /// <b>Short, and it is a retry rather than a cadence.</b> A cast that finds no target
+        /// used to spend a whole <see cref="CastEveryFor"/> on nothing, because the timer was
+        /// re-armed before the target was known — on a blightcaller, whose spell already takes no
+        /// health, that is a boss standing silent for four and a half seconds and is how "it
+        /// attacks and my turrets lose nothing" came to be true.
+        /// </para>
+        /// <para>
+        /// It can only ever make a spell arrive <em>sooner than it would have</em> and never more
+        /// often than the cadence, because a cast that lands re-arms in full — so nothing about
+        /// a level's tuning moves except that a boss stops wasting its turns.
+        /// </para>
+        /// </summary>
+        public const float CastRetry = .3f;
 
         /// <summary>
         /// How long a spell is telegraphed before it leaves, and how long it is then in the air.
@@ -824,6 +842,13 @@ namespace GlimmerGrove.Modes
         /// It is <c>SiegeView</c>'s number too: the boxes it draws are these boxes, which is
         /// invariant 33g's rule about the haul-road - the drawn thing and the played thing have
         /// to be one thing, and the cheapest way to guarantee that is for there to be only one.
+        /// <b>And for a long time there were two.</b> The panes were laid out from a third of a
+        /// cell above the top of the hill, where <c>march</c> nought is the top of the hill exactly,
+        /// so every boundary a player could see sat up to a third of a cell above the boundary the
+        /// rule read - and they were drawn a fifth wider than the pitch they were spaced on, so
+        /// neighbours overlapped and the higher lane won a tap in the seam. <c>SiegeView.BoxAt</c>
+        /// is the one arithmetic now, and it is written in terms of <c>MarchY</c> rather than
+        /// alongside it.
         /// </para>
         /// </summary>
         public const int BlastRows = 4;
@@ -836,45 +861,209 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// How many of the hill's rows this kind's <em>body</em> covers, counting up from its feet.
+        /// How far a firepot carries, in boxes, measured out from the one that was tapped.
         ///
         /// <para>
-        /// <b>A firepot hits what a player can see, and for a boss those were two different
-        /// things.</b> A raider stands at one point on the hill and a blast takes the box that
-        /// point is in (<see cref="RowOf"/>), which is exactly right while a raider is about a cell
-        /// tall and its body and its feet are in the same box. A boss is drawn three cells and more
-        /// on a hill four rows deep, so most of what a player is aiming at is in the box *above*
-        /// the one it occupies — tap the thing and nothing happens, which came back from play as
-        /// "the bombs don't hit bosses". They did; they hit its feet.
+        /// <b>One, and the shape it makes is a plus rather than a square.</b> A blast used to take
+        /// exactly the box it was dropped on, which is the smallest thing a player can aim at and
+        /// the least forgiving: a raider is drawn a little over a box tall and walks the whole time
+        /// the finger is travelling, so a tap that was right when it was aimed can be a box out by
+        /// the time it lands. That came back from play as <em>"it says there is nothing there, and
+        /// I tapped the thing"</em> — and the player was right, because what they were tapping was
+        /// a picture and what the rule read was a point.
         /// </para>
         /// <para>
-        /// <b>A drawing number living in the rules</b>, exactly as <see cref="BossTell"/> and
-        /// <see cref="SwapFor"/> are and for the same reason: what a blast hits and what the board
-        /// draws have to be one fact, and the cheapest way to guarantee that is for there to be
-        /// only one. <c>SiegeView.TallOf</c> is the height this is the row count of, and
-        /// <c>SiegeRuleTests</c> holds the two in step.
+        /// <b>A plus rather than a two-by-two block</b>, because a block has to lean somewhere. Four
+        /// boxes cannot be centred on one, so a block needs an anchor rule — which way it goes, and
+        /// what it does against an edge — and that is a rule the player has to learn about a thing
+        /// whose whole job is to land where they pointed. A plus is centred by construction, forgives
+        /// a miss by the same amount in every direction, and near an edge simply burns fewer boxes
+        /// rather than sliding somewhere nobody aimed.
+        /// </para>
+        /// <para>
+        /// <b>It cannot buy a grade, and that is arithmetic rather than a judgement.</b> A firepot is
+        /// charged <c>ceil(absorbed / PerfectMatch)</c> matches (invariant 39), so a wider blast that
+        /// catches three raiders instead of one is charged for three raiders — the exchange rate
+        /// prices the change by itself and neither star line moves. What it buys is forgiveness,
+        /// which costs the player nothing and the run nothing.
+        /// </para>
+        /// </summary>
+        public const int BlastReach = 1;
+
+        /// <summary>
+        /// Whether a box of the hill is inside a firepot dropped on <paramref name="atLane"/>,
+        /// <paramref name="atRow"/>.
+        ///
+        /// Manhattan rather than Chebyshev, which is what makes it a plus and not a three-by-three:
+        /// see <see cref="BlastReach"/>.
+        /// </summary>
+        public static bool InBlast(int atLane, int atRow, int lane, int row)
+        {
+            int across = lane > atLane ? lane - atLane : atLane - lane;
+            int down = row > atRow ? row - atRow : atRow - row;
+
+            return across + down <= BlastReach;
+        }
+
+        /// <summary>
+        /// How tall each kind is drawn, in cells.
+        ///
+        /// <para>
+        /// <b>In the rules rather than in the view, because a firepot has to hit what a player can
+        /// see.</b> This is the same class of number as <see cref="BossTell"/> and
+        /// <see cref="SwapFor"/> — a fact about the drawing that a rule reads — and it is here for
+        /// the reason invariant 33g gives about the haul-road: the thing that is drawn and the
+        /// thing that is played have to be one fact, and the cheapest way to guarantee that is for
+        /// there to be only one. <c>SiegeView</c> reads it; nothing else may hold a second copy.
+        /// </para>
+        /// <para>
+        /// <b>The warlord is nearly three times a creeper, and that is the whole of what makes it
+        /// read as a boss before anything about it has happened.</b> Its health bar, its damage
+        /// numbers and its silhouette all follow from this one number, and it is bounded by the
+        /// hill rather than by taste: a warlord at three cells fills most of the band a raider
+        /// walks down, and anything larger would stand in the ward line's own space.
         /// </para>
         /// </summary>
         /// <remarks>
-        /// <b>Three, and it is measured rather than picked.</b> The hill is 4.34 cells deep across
-        /// <see cref="BlastRows"/> rows, so a row is about 1.09 cells; a boss is drawn 3.0 to 3.5
-        /// cells tall (<c>SiegeView.TallOf</c>), which is 2.8 to 3.2 rows of body. Ordinary raiders
-        /// are one and a bit cells and stay at one.
+        /// <b>The blightcaller is the smallest of the four, and 2.6 was too small.</b> It is the
+        /// first boss a chapter shows and the only one that takes no health, so it should not
+        /// arrive with the finale's silhouette — but a render put it beside a creeper and it read
+        /// as one: its frame is a floating eye with a long tail under it, so a third of its height
+        /// is not body at all, where every other boss here fills its own frame.
+        /// <br/><b>A bulwark is drawn bigger than a brute</b>, because the one thing a player has
+        /// to read about it before it is in range is that it is carrying something. Its shield is a
+        /// third of its own frame, so at a brute's height the shield is the size of a gem and the
+        /// whole mechanic is invisible until the bolts start bouncing.
         /// </remarks>
-        public static int RowsOf(SiegeKind kind) => IsBoss(kind) ? 3 : 1;
+        public static float TallOf(SiegeKind kind)
+            => kind == SiegeKind.Overlord ? 3.5f
+             : kind == SiegeKind.Warbringer ? 3.3f
+             : kind == SiegeKind.Boss ? 3.1f
+             : kind == SiegeKind.Blightcaller ? 3.0f
+             : kind == SiegeKind.Bulwark ? 1.85f
+             : kind == SiegeKind.Brute ? 1.55f : 1.15f;
 
         /// <summary>
-        /// Whether a raider standing at <paramref name="march"/> is caught by a blast on
-        /// <paramref name="row"/>.
+        /// The shallowest the hill is ever drawn, in cells.
         ///
-        /// Its feet are in <see cref="RowOf"/> and its body reaches <em>up</em> the hill from
-        /// there — up the screen is toward the top, which is the lower row index, because row
-        /// nought is where a wave steps out and the last row is the ward line.
+        /// <para>
+        /// <b>The one number that reconciles a body measured in cells with a grid measured in
+        /// rows, and it is a floor rather than a measurement — deliberately.</b> How deep the hill
+        /// is depends on the screen: the field is laid out to the width and the hill takes what is
+        /// left, so measured across the phone shapes this game ships to it runs from about three
+        /// cells on a 4:3 tablet to five and a half on a 20:9 phone. A body of a fixed height in
+        /// cells therefore covers a different number of rows on every device — which is why a
+        /// constant row count (this used to be <c>RowsOf</c>, answering three for every boss) was
+        /// only ever right on one screen, and was mean by a whole row on two of them.
+        /// </para>
+        /// <para>
+        /// <b>Taking the shallowest hill makes the footprint the most generous a screen could
+        /// justify, and generosity is the safe direction here.</b> A hit box larger than the
+        /// picture costs a player a firepot that caught something a hair outside what they were
+        /// looking at; a hit box smaller than the picture costs them the item and tells them
+        /// nothing was there. Only one of those is a bug report, and it is the one this replaced.
+        /// It cannot reach the economy either, because a firepot is charged for what it absorbs
+        /// (invariant 39) — a more generous blast bills more matches and buys no better a grade.
+        /// </para>
         /// </summary>
-        public static bool Caught(SiegeKind kind, float march, int row)
+        const float ShallowestHill = 3f;
+
+        /// <summary>
+        /// How much of the hill's length a kind's body covers, as a share of it, centred on where
+        /// the raider is standing.
+        ///
+        /// <b>Centred, because that is where the body is drawn.</b> A raider's node is the middle
+        /// of its picture rather than its feet — the old rule counted rows <em>upward</em> from the
+        /// node on the belief that the node was the feet, so the band it caught sat about a row
+        /// above the thing on the screen.
+        ///
+        /// <b>Measured, not picked</b>: a creeper is 1.15 cells against a hill some 3.6 cells deep
+        /// on the reference screen, so it is a little over one row and straddles a boundary about
+        /// as often as not; a warlord is three and a half rows and is on most of the hill at once.
+        /// </summary>
+        public static float BodySpan(SiegeKind kind)
         {
-            int feet = RowOf(march);
-            return row <= feet && row > feet - RowsOf(kind);
+            float span = TallOf(kind) / ShallowestHill;
+            return span > 1f ? 1f : span;
+        }
+
+        /// <summary>
+        /// How many lanes across a kind's body reaches, counting the one it stands in.
+        ///
+        /// <para>
+        /// <b>A boss spans the hill and everything else fits its own lane</b>, and both halves are
+        /// facts about the art rather than opinions. The cast reels are cut to a fixed height and
+        /// whatever width the animation's box came out as, and every boss frame is wider than it is
+        /// tall — measured on the shipped art, between 1.27 and 1.91 — so a warlord drawn three
+        /// cells tall is drawn close to six cells <em>wide</em>, which at five lanes across the
+        /// board is four of them. Tapping the arm of a thing that fills the screen and being told
+        /// nothing is there is the loudest form of this bug, and it was the reported one.
+        /// </para>
+        /// <para>
+        /// <b>Stated in lanes rather than measured off the sprite</b>, for invariant 16i's reason:
+        /// a size measured off whatever art happened to have loaded is a size that is wrong before
+        /// the art arrives and wrong again the day the art is re-cut. A lane count can only ever be
+        /// generous — a boss really is somewhere between three and four lanes wide, so five is the
+        /// forgiveness <see cref="ShallowestHill"/> argues for, said in the other axis.
+        /// </para>
+        /// </summary>
+        public static int LanesOf(SiegeKind kind) => IsBoss(kind) ? Lanes : 1;
+
+        /// <summary>
+        /// Whether a raider standing in <paramref name="lane"/> at <paramref name="march"/> is
+        /// caught by a firepot dropped on <paramref name="atLane"/>, <paramref name="atRow"/>.
+        ///
+        /// <para>
+        /// <b>The raider's drawn body against the boxes the firepot burns</b>, which is two
+        /// rectangles overlapping and nothing cleverer. Its body is
+        /// <see cref="BodySpan"/> of the hill's length and <see cref="LanesOf"/> lanes across,
+        /// centred on where it stands; the firepot is the plus <see cref="InBlast"/> describes.
+        /// </para>
+        /// <para>
+        /// <b>Asked by <c>SiegeBoard.Blast</c> and drawn by nothing</b>, so
+        /// <c>SiegeRuleTests</c> is the only thing holding it to what the board looks like.
+        /// </para>
+        /// </summary>
+        public static bool Caught(SiegeKind kind, int lane, float march, int atLane, int atRow)
+        {
+            for (int row = 0; row < BlastRows; row++)
+                for (int at = 0; at < Lanes; at++)
+                    if (InBlast(atLane, atRow, at, row) && OnBody(kind, lane, march, at, row))
+                        return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Whether one box of the hill is standing on the body of a raider in
+        /// <paramref name="lane"/> at <paramref name="march"/>.
+        ///
+        /// <para>
+        /// <b>The box is on the raider when the box is pointing at it</b> — the middle of the box
+        /// against the body's own extent, not any overlap at all. The looser test reads well and
+        /// is wrong on this hill: it is four rows deep and a creeper is over a row tall, so a body
+        /// poking a tenth of a row into its neighbour would make that neighbour a hit, and with
+        /// <see cref="BlastReach"/> on top of it every firepot would clear its whole lane. The row
+        /// a player taps has to decide something (invariant 5d).
+        /// </para>
+        /// <para>
+        /// <b>Split out from <see cref="Caught"/> so each half can be held on its own.</b> The
+        /// footprint is a fact about the drawing and the plus is a fact about the item; a single
+        /// predicate that was both would be a predicate no test could pin, and every reading of it
+        /// would be the two answers multiplied together.
+        /// </para>
+        /// </summary>
+        public static bool OnBody(SiegeKind kind, int lane, float march, int boxLane, int boxRow)
+        {
+            if (boxLane < 0 || boxLane >= Lanes || boxRow < 0 || boxRow >= BlastRows) return false;
+
+            int reach = (LanesOf(kind) - 1) / 2;
+            if (boxLane < lane - reach || boxLane > lane + reach) return false;
+
+            float half = BodySpan(kind) * .5f;
+            float middle = (boxRow + .5f) / BlastRows;
+
+            return middle - march <= half && march - middle <= half;
         }
 
         // ------------------------------------------------------------------ fuel in flight
@@ -1033,17 +1222,52 @@ namespace GlimmerGrove.Modes
         public static bool EndangersTheLine(SiegeKind kind) => CastOf(kind) > 0;
 
         /// <summary>
-        /// The quiet before a wave, which is longer before a boss and shortest before a
-        /// warbringer.
+        /// Whether this boss's spell is worth less on an empty hill than on a full one.
         ///
         /// <para>
-        /// <b>Per kind, and the two exceptions point opposite ways for the same reason.</b>
-        /// Invariant 37t made the quiet before a <em>warlord</em> longer than any other so that a
-        /// duel is never stacked on a wave still swinging at the line — two fail states arriving
-        /// together read as being cheated. A warbringer wants precisely the opposite: half its
-        /// spell is a rally, and a rally over an empty hill is a mechanic that rejects nothing
-        /// (invariant 5d), so it comes while the last wave is still walking and the two are the
-        /// fight.
+        /// <b>Asked of the spell, never of the kind, and that is what this predicate is for.</b>
+        /// It was written out as <c>kind == SiegeKind.Warbringer</c> inside
+        /// <see cref="RestBefore"/> — correct for the warbringer, whose rally charges the hill and
+        /// so needs a hill — and it silently left the <em>blightcaller</em> on the long quiet.
+        /// A douse takes a ward's <em>fire</em>, and fire is worth exactly what there is to burn:
+        /// arriving onto a hill somebody has already cleared, it takes fuel that was going to
+        /// nothing, and the whole boss reads as a thing that attacks and does not hurt. That was
+        /// reported from play twice — once on the endless lane, where the answer was an escort
+        /// (invariant 43), and once on this chapter's third rung, where the answer was supposed
+        /// to be this and never was.
+        /// </para>
+        /// <para>
+        /// A warlord and an overlord want the opposite and get it: they shell the line for as long
+        /// as they live, so an empty hill is the <em>point</em> and stacking a duel on a wave
+        /// still swinging is two fail states arriving together (invariant 37t).
+        /// </para>
+        /// </summary>
+        public static bool WantsACrowd(SiegeKind kind)
+        {
+            var craft = SpellOf(kind);
+            return craft == SiegeSpell.Rally || craft == SiegeSpell.Douse;
+        }
+
+        /// <summary>
+        /// The quiet before a wave: long before a boss that shells the line, short before one
+        /// whose spell needs a hill to be worth anything.
+        ///
+        /// <para>
+        /// <b>Per spell rather than per kind, and the two exceptions point opposite ways for the
+        /// same reason.</b> Invariant 37t made the quiet before a <em>warlord</em> longer than any
+        /// other so that a duel is never stacked on a wave still swinging at the line — two fail
+        /// states arriving together read as being cheated. A warbringer and a blightcaller want
+        /// precisely the opposite, and <see cref="WantsACrowd"/> is why: a rally over an empty
+        /// hill and a douse over an empty hill are both a mechanic that rejects nothing (invariant
+        /// 5d), so they come while the last wave is still walking and the two are the fight.
+        /// </para>
+        /// <para>
+        /// <b>And a boss that cannot bring a ward down gets the ordinary quiet</b>, because it is
+        /// not a wave of its own at all: <c>SiegeLayout</c> stands it at the head of the last
+        /// authored wave, so what this is being asked about is that wave rather than a duel. That
+        /// is the answer a shorter quiet could not give — <c>SiegeBoard.Muster</c> sends the next
+        /// wave the moment the hill is clear (invariant 37k), so a player who is ahead of the
+        /// clock meets a lone boss however long the quiet is.
         /// </para>
         /// <para>
         /// Both numbers are pinned by <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> rather
@@ -1051,19 +1275,24 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// </summary>
         public static float RestBefore(SiegeKind kind)
-            => kind == SiegeKind.Warbringer ? WarbringerAfter
-             : IsBoss(kind) ? BossAfter : BetweenWaves;
+            => !IsBoss(kind) || !EndangersTheLine(kind) ? BetweenWaves
+             : WantsACrowd(kind) ? CrowdAfter : BossAfter;
 
         /// <summary>
-        /// The quiet before a warbringer: short, so it arrives into a hill worth rallying.
+        /// The quiet before a boss that needs a hill: short, so it arrives into one worth rallying
+        /// and worth dousing.
         ///
         /// <b>Shorter than <see cref="BetweenWaves"/> and much shorter than
         /// <see cref="BossAfter"/></b>, which is the whole of why it is a number of its own — see
         /// <see cref="RestBefore"/>. It was 14, which with a rally of 1.9 cost an unhurried player
         /// three of four wards; 17 with a rally of 1.55 leaves three standing on a line bled to 38
         /// of 56. Neither number was reasoned about.
+        ///
+        /// <b>It is named for the question rather than for the warbringer now</b>, because it
+        /// answers two bosses and a name that answers one is how the blightcaller came to be left
+        /// out of the rule it needed.
         /// </summary>
-        public const float WarbringerAfter = 17f;
+        public const float CrowdAfter = 17f;
 
         /// <summary>
         /// Gems an ordinary match clears, cascades included, in tenths.

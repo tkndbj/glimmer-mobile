@@ -237,12 +237,27 @@ class Layout(object):
         self.boss_kind, self.boss = named_boss(boss)
         self.boss_wave = -1
 
-        # The warlord is *appended* rather than authored into a wave - the last wave is the boss
-        # wave by rule, so it can neither be put in the middle of a siege nor left off the end of
-        # one. See `SiegeLayout.Boss`.
+        # The boss is *derived into* the wave list rather than authored into one - the last wave is
+        # the boss wave by rule, so it can neither be put in the middle of a siege nor left off the
+        # end of one. See `SiegeLayout.Boss`.
+        #
+        # **A boss that cannot bring a ward down rides the last authored wave rather than getting
+        # one of its own.** A warlord, a warbringer and an overlord shell the line for as long as
+        # they live, so a wave to themselves is the point; a blightcaller takes a ward's *fire*,
+        # which is worth exactly what there is to burn, so alone on a cleared hill it costs
+        # nothing at all (invariant 5d, reported from play twice). Merging is the endless lane's
+        # escort said in the idiom of an authored ladder, and it costs par nothing because the
+        # company is the raiders the level already sends.
         if self.boss:
-            self.boss_wave = len(self.waves)
-            self.waves = self.waves + [self.boss]
+            rides = not endangers(self.boss_kind) and len(self.waves) > 0
+
+            if rides:
+                self.boss_wave = len(self.waves) - 1
+                self.waves = (self.waves[:-1]
+                              + [self.boss + self.waves[-1]])
+            else:
+                self.boss_wave = len(self.waves)
+                self.waves = self.waves + [self.boss]
 
         # Every wave parsed once into (colour, kind) pairs. Nothing below asks a wave's text
         # how many raiders it holds - see `SHIELD`.
@@ -357,7 +372,10 @@ def read_wave(wave, boss_kind, boss):
                 break
 
         letter = wave[i]
-        kind = (boss_kind if boss
+
+        # The first raider of the boss wave, and only the first: a boss that rides the last
+        # authored wave stands at its head with an ordinary wave behind it.
+        kind = (boss_kind if boss and not made
                 else MODIFIERS[mark] if mark is not None
                 else "brute" if letter.isupper() else "creeper")
         made.append((letter.lower(), kind))
@@ -397,8 +415,16 @@ def health_of(kind):
 
 
 def kind_at(layout, wave, index):
-    """`SiegeLayout.KindAt` - the wave decides, never the letter."""
-    if wave == layout.boss_wave:
+    """`SiegeLayout.KindAt` - the wave decides, never the letter.
+
+    **The first raider of the boss wave, and only the first.** It answered `boss_kind` for every
+    index of that wave, which was exactly right while a boss wave held nothing but its boss - and
+    a boss that rides the last authored wave (see `Layout`) would otherwise have read every raider
+    standing beside it as another boss: measured on `s01_stonewatch`, par came out 63 against the
+    36 `SiegeTuning.Par` computes, because nine raiders were valued at a blightcaller's health
+    each.
+    """
+    if wave == layout.boss_wave and index == 0:
         return layout.boss_kind
 
     return layout.coming[wave][index][1]
@@ -438,9 +464,11 @@ def threatens(layout):
     if layout.boss and endangers(layout.boss_kind):
         return True
 
-    for w, line in enumerate(layout.coming):
-        if w == layout.boss_wave:
-            continue
+    # **Every wave, the boss's included.** `blow_of` already answers nought for anything that
+    # never reaches the line, so skipping the boss wave was only ever a way of saying the same
+    # thing twice - and it became wrong the day a boss could ride a wave of real raiders.
+    # `ModeValidator.Threatens` has always walked all of them.
+    for line in layout.coming:
         blow = sum(blow_of(kind) for _, kind in line)
         if blow * SWINGS_BEFORE_ANSWERED >= WARD_HEALTH:
             return True
@@ -495,11 +523,12 @@ def readings(layout):
     """The handful of numbers only this mode's own rules can give."""
     colours = set()
     brutes = bulwarks = 0
-    for w, line in enumerate(layout.coming):
+    # The boss's own kind is neither a brute nor a bulwark, so nothing has to be skipped to keep
+    # it out of these counts - and skipping its whole wave would now lose the raiders riding with
+    # it (see the constructor).
+    for line in layout.coming:
         for colour, kind in line:
             colours.add(colour)
-            if w == layout.boss_wave:
-                continue
             if kind == "brute":
                 brutes += 1
             elif kind == "bulwark":

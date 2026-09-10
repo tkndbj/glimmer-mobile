@@ -208,6 +208,9 @@ namespace GlimmerGrove
 
         RectTransform _hill, _mobs, _wall, _field, _meters, _fx;
 
+        /// <summary>The effect layer that is clipped to the board — see <c>SiegeView.Build</c>.</summary>
+        RectTransform _sky;
+
         readonly List<Gem> _gems = new List<Gem>(48);
         readonly List<Mob> _mob = new List<Mob>(24);
         readonly List<Mob> _order = new List<Mob>(24);

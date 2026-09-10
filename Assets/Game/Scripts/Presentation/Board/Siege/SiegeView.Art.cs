@@ -107,7 +107,14 @@ namespace GlimmerGrove
             Pal.Poppy, Pal.Mint, Pal.Azure, Pal.Sun,
         };
 
-        static Color TintOf(int colour)
+        /// <summary>
+        /// What colour a ward burns, as the board paints it.
+        ///
+        /// <b>Public because <c>WardFiringStage</c> asks it</b>, and that widget draws a turret
+        /// firing outside a board — a second table of these four would be a second answer to a
+        /// question invariant 37f settles by there being exactly one.
+        /// </summary>
+        public static Color TintOf(int colour)
             => colour >= 0 && colour < Tints.Length ? Tints[colour] : Pal.Cream;
 
         /// <summary>
@@ -291,60 +298,67 @@ namespace GlimmerGrove
         /// What a ward <em>fires</em>, as frames.
         ///
         /// <para>
-        /// <b>Four elements rather than four tints of one round</b> — a fireball, a venom dart, an
-        /// icicle and a lightning bolt, baked out of the bought projectile pack by
-        /// <c>SiegeShotBake</c>. The argument is <see cref="WardArt"/>'s one step on: four turret
-        /// models exist because a tint alone is a difference only some people can see, and the
-        /// thing crossing the hill is on screen far more often than the turret that let it go. At
-        /// the size a bolt is drawn, silhouette is the only difference that survives.
+        /// <b>The turret decides the shape and the ward decides the colour</b>, which is the
+        /// division that let nineteen bought turrets each get an effect of their own. A model with
+        /// an ability throws a reel named after its own id — a crescent that cuts, an arrow that
+        /// runs a lane, a wisp that drains — baked in each of the four ward colours; a model with
+        /// no ability throws the four elemental bolts the starter has always thrown
+        /// (<c>WardModel.ShotFor</c>). Nothing here is tinted: invariant 37l's rule is that a
+        /// multiply can only darken, so what a reel is worn in has to be what was baked into it.
         /// </para>
         /// <para>
-        /// <b>Keyed by colour and never by ward index</b>, because which colour a ward burns is
-        /// content — a table by post would put a fireball on whichever ward happened to stand
-        /// first and disagree with the turret beside it.
+        /// <b>Keyed by the model and never by ward index</b>, which was the old rule's point and
+        /// still is: which colour a ward burns is content, so a table by post would put a fireball
+        /// on whichever ward happened to stand first and disagree with the turret beside it.
         /// </para>
         /// <para>
-        /// <b>The hue is baked and nothing here tints it</b>, which is <see cref="WardArt"/>'s
-        /// lesson taken at face value: pulled the whole way to a saturated <c>Pal</c> entry these
-        /// come back dark, and lifted toward white they come back pastel. The bake reads
-        /// <c>Pal</c> itself, so the colour cannot drift from the gems and the turrets however
-        /// they are retuned — it simply has to be re-run.
+        /// <b>Built rather than written out as a literal</b>, which <c>Tools/verify/artnames.py</c>
+        /// cannot check — the same bargain <c>WardModel.ArtFor</c> already strikes and for the same
+        /// reason (invariant 42). What replaces the literal is stronger: the roster is content, so
+        /// <c>ContentValidation</c> and <c>content.py</c> both walk it and error on a model whose
+        /// reels are not on disk, which catches a missing bake and a misspelled id at once.
         /// </para>
         /// </summary>
-        static Sprite[] ShotArt(int colour)
+        static Sprite[] ShotArt(Wards.WardModel model, int colour)
+            => Blast(model.ShotFor(Wards.WardLine.Colours[Hue(colour)]));
+
+        /// <summary>
+        /// How big this turret's bolt is drawn, as a multiple of the ordinary one.
+        ///
+        /// <para>
+        /// <b>The one thing about a turret's projectile that is a decision rather than a bake.</b>
+        /// Every reel is framed round its own content, so how much of a frame an effect fills says
+        /// nothing about how big it is on the hill - that is this number, and without it a "big"
+        /// effect is only a differently-shaped one. It was asked for by name: the top of the credit
+        /// ladder is a heavy turret and its sun should read as the largest thing either line throws.
+        /// </para>
+        /// <para>
+        /// <b>A short table rather than a field on the model</b>, because it is not content: a
+        /// picture is not content and adding a turret is a build (invariant 39c), and the size a
+        /// particular effect wants is a fact about that effect. Everything not named here is drawn
+        /// the ordinary size, which is nearly all of them - a line where every bolt is special is a
+        /// line where none of them is.
+        /// </para>
+        /// </summary>
+        public static float BoltScale(Wards.WardModel model)
         {
-            switch (colour)
+            switch (model.Id)
             {
-                case 0: return Blast("shot_r");
-                case 1: return Blast("shot_g");
-                case 2: return Blast("shot_b");
-                default: return Blast("shot_y");
+                case "prism": return 1.55f;     // a sun, and the biggest thing on the board
+                case "breaker": return 1.24f;   // a wrecking slug, and it has to have weight
+                case "spectrum": return 1.16f;
+                case "harpoon": return 1.10f;
+                default: return 1f;
             }
         }
 
         /// <summary>The flash a ward throws as it lets one go. See <see cref="ShotArt"/>.</summary>
-        static Sprite[] MuzzleArt(int colour)
-        {
-            switch (colour)
-            {
-                case 0: return Blast("muzzle_r");
-                case 1: return Blast("muzzle_g");
-                case 2: return Blast("muzzle_b");
-                default: return Blast("muzzle_y");
-            }
-        }
+        static Sprite[] MuzzleArt(Wards.WardModel model, int colour)
+            => Blast(model.MuzzleFor(Wards.WardLine.Colours[Hue(colour)]));
 
         /// <summary>What a bolt does when it arrives. See <see cref="ShotArt"/>.</summary>
-        static Sprite[] HitArt(int colour)
-        {
-            switch (colour)
-            {
-                case 0: return Blast("hit_r");
-                case 1: return Blast("hit_g");
-                case 2: return Blast("hit_b");
-                default: return Blast("hit_y");
-            }
-        }
+        static Sprite[] HitArt(Wards.WardModel model, int colour)
+            => Blast(model.HitFor(Wards.WardLine.Colours[Hue(colour)]));
 
         /// <summary>
         /// How far a thing is pulled toward the colour it wears.
@@ -516,33 +530,12 @@ namespace GlimmerGrove
         /// <summary>
         /// How tall a raider is drawn, in cells.
         ///
-        /// <para>
-        /// <b>The warlord is nearly three times a creeper, and that is the whole of what makes it
-        /// read as a boss before anything about it has happened.</b> Its health bar, its damage
-        /// numbers and its silhouette all follow from this one number, and it is bounded by the
-        /// hill rather than by taste: the band a raider walks down is about four cells deep, so a
-        /// warlord at three fills three quarters of it and anything larger would stand in the
-        /// ward line's own space.
-        /// </para>
+        /// <b>The number itself lives in <see cref="SiegeTuning.TallOf"/>, in the rules.</b> A
+        /// firepot has to hit the body a player can see, so how big that body is stopped being a
+        /// fact only the view knew — see the rule's own remarks, and invariant 33g for why a
+        /// drawn thing and a played thing may not be two facts that agree.
         /// </summary>
-        static float TallOf(SiegeRaider raider)
-            => raider.Kind == SiegeKind.Overlord ? 3.5f
-             : raider.Kind == SiegeKind.Warbringer ? 3.3f
-             : raider.Kind == SiegeKind.Boss ? 3.1f
-             // **The blightcaller is the smallest of the four, and 2.6 was too small.** It is the
-             // first boss a chapter shows and the only one that takes no health, so it should not
-             // arrive with the finale's silhouette — but a render put it beside a creeper and it
-             // read as one: its frame is a floating eye with a long tail under it, so a third of
-             // its height is not body at all, where every other boss here fills its own frame.
-             // Three cells of frame is about one and three quarters of eye, which is the size a
-             // brute is and the smallest thing that reads as more than a raider (invariant 32b).
-             : raider.Kind == SiegeKind.Blightcaller ? 3.0f
-             // **A bulwark is drawn bigger than a brute**, because the one thing a player has to
-             // read about it before it is in range is that it is carrying something. Its shield is
-             // a third of its own frame, so at a brute's height the shield is the size of a gem
-             // and the whole mechanic is invisible until the bolts start bouncing.
-             : raider.Kind == SiegeKind.Bulwark ? 1.85f
-             : raider.Brute ? 1.55f : 1.15f;
+        static float TallOf(SiegeRaider raider) => SiegeTuning.TallOf(raider.Kind);
 
         /// <summary>
         /// Where a raider carries its health bar and its colour, as a fraction of its own height.

@@ -194,10 +194,23 @@ namespace GlimmerGrove
 
             for (int i = 0; i < text.Length; i++)
             {
+                // **A black outline and no drop shadow, whatever the caller asked for.** uGUI's
+                // `Shadow` offsets the whole mesh in one fixed direction, so under a *rotated*
+                // glyph it no longer falls where the letter's own light does — on an arc, each
+                // character gets its shadow at a different angle to itself and the word reads as
+                // a double image rather than as lifted type. And `Outline`'s default here is a
+                // near-black navy, which is right on this UI's own plates and muddy on the one
+                // place an arc is ever drawn: a bright ribbon.
+                //
+                // The parameters are kept because they say how *thick*, which is still the
+                // caller's to choose.
                 var t = Titled("c" + i, host, text[i].ToString(), size, colour,
                                TextAnchor.MiddleCenter, new Vector2(size * 2f, size * 2f),
-                               new Vector2(.5f, .5f), Vector2.zero, outline, shadow);
+                               new Vector2(.5f, .5f), Vector2.zero, outline, 0f);
                 t.raycastTarget = false;
+
+                var ink = t.GetComponent<Outline>();
+                if (ink) ink.effectColor = new Color(0f, 0f, 0f, .92f);
                 glyphs[i] = t;
                 widths[i] = t.preferredWidth + tracking;
                 total += widths[i];
@@ -501,6 +514,49 @@ namespace GlimmerGrove
         /// down, and a fit the caller had to re-apply would be right only on the first frame.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// <see cref="OneLine"/> for a caption that is not on a button: keeps it on one line and
+        /// shrinks it until it fits <paramref name="room"/>.
+        ///
+        /// <para>
+        /// The same two rules pulling against each other, and the same resolution. <see
+        /// cref="Shrinkable"/> gets "must not draw outside the box" by conceding "must not
+        /// wrap" — it turns on best-fit, which sets <c>HorizontalWrapMode.Wrap</c>, so a caption
+        /// too wide for its box breaks onto a second line and never shrinks at all, because two
+        /// short lines fit where one long one did not. On a button that made "WATCH FOR HEARTS"
+        /// come out stacked; on a title ribbon it made "THE ENDLESS WATCH" come out as three
+        /// lines standing well outside the cloth.
+        /// </para>
+        /// <para>
+        /// So the size is worked out directly from <see cref="Text.preferredWidth"/>, which uGUI
+        /// answers from cached glyph metrics in the same frame the caption was set — one ratio,
+        /// then a re-measure to catch the rounding. Unlike the button's version this is a
+        /// one-off rather than a property, because nothing rewrites a heading after it is drawn.
+        /// </para>
+        /// </summary>
+        public static Text OneLineLabel(Text label, float room, int minSize = 16)
+        {
+            if (label == null) return label;
+
+            label.resizeTextForBestFit = false;
+            label.horizontalOverflow = HorizontalWrapMode.Overflow;
+            label.verticalOverflow = VerticalWrapMode.Overflow;
+
+            if (room <= 0f || string.IsNullOrEmpty(label.text)) return label;
+
+            int floor = Mathf.Clamp(minSize, 1, Mathf.Max(1, label.fontSize));
+
+            float wide = label.preferredWidth;
+            if (wide > room)
+                label.fontSize = Mathf.Max(floor, Mathf.FloorToInt(label.fontSize * room / wide));
+
+            // A ratio is not exact - the font's metrics are per glyph and do not scale evenly -
+            // so the last point or two is walked off by hand.
+            while (label.fontSize > floor && label.preferredWidth > room) label.fontSize--;
+
+            return label;
+        }
+
         public static Btn OneLine(Btn button, int minSize = 16)
         {
             if (button == null || button.Label == null) return button;

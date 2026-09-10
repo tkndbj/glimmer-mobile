@@ -153,7 +153,12 @@ namespace GlimmerGrove
             // the line, so the drawing has to say those are one thing.
             for (int i = 0; i < beat.Rises.Count; i++) Forge(beat.Rises[i]);
 
-            Audio.SfxVaried("pop", .42f + Mathf.Min(.3f, beat.Depth * .08f));
+            // **`.68f` rather than `pop`'s `.42f`, and that is a measurement not a taste.**
+            // `gem` is a very peaky transient, so the loudness match is caught by the -1 dBFS
+            // ceiling about 4 dB under the rest of the set (`make_sfx.py --report` names it) -
+            // the volume here is what buys that back, so a match lands where the old wooden pop
+            // landed. The ramp with depth is unchanged in spirit: a deeper beat is louder.
+            Audio.SfxVaried("gem", .68f + Mathf.Min(.24f, beat.Depth * .07f));
 
             if (beat.Depth > 1) Chain(beat.Depth);
 
@@ -192,6 +197,14 @@ namespace GlimmerGrove
 
                 Tween.Move(gem.Img.rectTransform, CentreOf(to), fall, Ease.OutBounce);
             }
+
+            // **The refill is audible, once.** A voice per falling gem would be twenty of them on
+            // the one moment the ten-voice pool is already carrying the match, the motes and a
+            // cascade banner - and `Audio.PlayOne` stops a voice it reuses, so what that buys is
+            // not a fuller sound but the match being cut off mid-tail. One sound for the fall says
+            // the same thing: the board filled back in. It is `gem`'s own clip a minor third below
+            // and trimmed under it, so the pair reads as burst-and-answer rather than as two events.
+            if (beat.Drops.Count > 0) Audio.SfxVaried("settle", .52f);
 
             yield return new WaitForSecondsRealtime(SiegeTuning.BeatFor * .5f);
         }

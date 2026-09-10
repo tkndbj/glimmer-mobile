@@ -906,6 +906,24 @@ namespace GlimmerGrove.EditorTools
 
                     if (!Addressed(fire))
                         result.Errors.Add($"turret '{model.Id}' has no recoil reel at '{fire}'");
+
+                    // **What it throws**, which a turret with an ability owns and one without
+                    // borrows from the colour. Errors rather than warns for the reason the body
+                    // does: these names are *built* from the id, so `Tools/verify/artnames.py`
+                    // cannot see them (invariant 42), and what a missing reel costs is a white
+                    // rectangle crossing the hill four or five times a second (invariant 7b).
+                    if (!model.OwnShot) continue;
+
+                    foreach (var reel in new[]
+                             {
+                                 AssetManifest.SiegeFx(model.ShotFor(colour)),
+                                 AssetManifest.SiegeFx(model.MuzzleFor(colour)),
+                                 AssetManifest.SiegeFx(model.HitFor(colour)),
+                             })
+                        if (!Addressed(reel))
+                            result.Errors.Add(
+                                $"turret '{model.Id}' has no projectile reel at '{reel}'; run " +
+                                "Art ▸ Bake Turret Projectiles");
                 }
 
             }

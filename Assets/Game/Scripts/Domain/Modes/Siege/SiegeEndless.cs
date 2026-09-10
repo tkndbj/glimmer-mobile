@@ -279,10 +279,17 @@ namespace GlimmerGrove.Modes
                 // because that predicate already exists for this exact question one level up
                 // (<c>ModeValidator.Threatens</c>), and a fifth boss that took something other
                 // than health would need this answer without anybody remembering to come back.
-                // The authored ladder answers the same question with a **short quiet**
-                // (<c>SiegeTuning.RestBefore</c>), which an endless lane cannot use: its muster
-                // fires the moment the hill is clear, so a player who is ahead meets the boss
-                // alone however long the clock says (37k).
+                //
+                // **The authored ladder asks the same predicate and answers it by *merging*
+                // rather than escorting** (<c>SiegeLayout</c>'s constructor): a boss that cannot
+                // bring a ward down is stood at the head of the last authored wave instead of
+                // being given one of its own. Two shapes, one rule, because the lanes differ —
+                // this one derives its waves and has spare raiders to hand, that one authors
+                // them and merging costs par nothing. What neither can use is a *shorter quiet*:
+                // the muster fires the moment the hill is clear, so a player who is ahead meets a
+                // lone boss however long the clock says (37k). That was believed to be the
+                // authored ladder's answer, was written down as such, and was measured on
+                // `s01_stonewatch` to be no answer at all.
                 bool bites = false;
                 for (int i = 0; i < bosses.Count; i++)
                     if (SiegeTuning.EndangersTheLine(bosses[i])) bites = true;

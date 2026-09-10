@@ -60,20 +60,31 @@ namespace GlimmerGrove
         const float HeadRoom = 190f;
         const float FootRoom = 150f;
 
-        const int Columns = 4;
-        const float CellW = 214f;
-        const float CellH = 214f;
-        const int CellRadius = 26;
+        /// <summary>Side padding on the grid's viewport, which is what leaves room for three.</summary>
+        const float SidePad = 40f;
 
         /// <summary>
-        /// The middle of the space the caption leaves. See <c>HomesteadShopScreen</c>'s note —
-        /// this one was worse: the box was pinned 22 pixels below the plate's top edge with a
-        /// centre pivot, so its upper half hung 39 pixels off the plate entirely.
+        /// Three across, and as wide as three will go — the shop's own grid, which this panel
+        /// is a smaller window onto.
+        ///
+        /// <para>
+        /// It was four at 214, which is what a card has to shrink to before four of them fit a
+        /// 960-wide panel: a 112-unit picture of a fence, a name shrunk to fifteen point, and a
+        /// grid that read as a list of icons rather than as the shelf the player had just come
+        /// from. Three is the number the card was designed at (<see cref="PieceCard"/>), so the
+        /// only thing that differs between here and the shop is how much room there is to draw
+        /// it in.
+        /// </para>
         /// </summary>
-        const float PlateH = CellH - 26f;
-        const float CaptionTop = 34f + 54f * .5f;
-        static readonly float ArtCentre = -(PlateH - (CaptionTop + PlateH) * .5f);
-        const float ArtBox = 112f;
+        const int Columns = 3;
+
+        /// <summary>
+        /// Derived rather than typed, because it is exactly "what is left over": a mistyped
+        /// number here is a column drawn off the side of the panel, which is the one fault in a
+        /// grid nothing else can see.
+        /// </summary>
+        const float CellW = (PanelW - SidePad * 2f) / Columns;
+        const float CellH = CellW;
 
         RectTransform _viewport;
         GridView _grid;
@@ -85,6 +96,12 @@ namespace GlimmerGrove
         /// inventing one would put an empty string through the same paths a real piece takes.
         /// </summary>
         readonly List<HomesteadPiece> _items = new List<HomesteadPiece>();
+
+        /// <summary>
+        /// Where the next offer is assembled before it is compared with the one on screen.
+        /// Held rather than allocated per call: this runs on every sync while the panel is open.
+        /// </summary>
+        readonly List<HomesteadPiece> _offer = new List<HomesteadPiece>();
 
         protected override void Build()
         {
@@ -135,14 +152,26 @@ namespace GlimmerGrove
         void BuildGrid()
         {
             _viewport = UIKit.Node("Viewport", Panel);
-            _viewport.offsetMin = new Vector2(40f, FootRoom);
-            _viewport.offsetMax = new Vector2(-40f, -HeadRoom);
+            _viewport.offsetMin = new Vector2(SidePad, FootRoom);
+            _viewport.offsetMax = new Vector2(-SidePad, -HeadRoom);
 
             _grid = GridView.Attach(_viewport, Columns, CellW, CellH,
                                     parent => new PickerCell(this, parent), 8f, 30f);
         }
 
-        /// <summary>Rebuilds what is on offer. See <see cref="Repaint"/> for the cheaper half.</summary>
+        /// <summary>
+        /// Works out what is on offer, and hands it to the grid as a new page only when it is
+        /// genuinely a different one.
+        ///
+        /// <para>
+        /// <b>The comparison is the point rather than a saving.</b> <c>GridView.Show</c> resets
+        /// the scroll and replays the entrance, which is right for a list that has changed and
+        /// wrong for one that has not — and this is subscribed to
+        /// <c>HomesteadLedger.Changed</c>, which every sync raises by adopting a merge whether
+        /// or not anything moved. A placement asks for a sync, so a panel left open a few
+        /// seconds after one used to throw the player back to the top of the list for nothing.
+        /// </para>
+        /// </summary>
         void Reload()
         {
             if (_grid == null) return;
@@ -150,12 +179,12 @@ namespace GlimmerGrove
             var catalog = HomesteadCatalog.Current;
             string standing = HomesteadLayout.At(Slot.Id);
 
-            _items.Clear();
+            _offer.Clear();
 
             // "Take it away" leads, and only when there is something to take. A clear button
             // sitting first on an empty slot would be the panel's most prominent control doing
             // nothing, which is how a player learns to stop reading the first row.
-            if (!string.IsNullOrEmpty(standing)) _items.Add(default);
+            if (!string.IsNullOrEmpty(standing)) _offer.Add(default);
 
             // Residents first, because they are the half of the catalog nobody can be sold
             // outright and the half a player is proudest of. Decor then follows in catalog
@@ -163,23 +192,72 @@ namespace GlimmerGrove
             // Two passes rather than a sort: the catalog is already in the order both halves
             // want, so sorting would be a second opinion about it that a drop could break.
             foreach (var piece in catalog.Pieces)
-                if (piece.IsResident && piece.CanBePlaced && HomesteadLedger.IsHeld(piece))
-                    _items.Add(piece);
+                if (piece.IsResident && Offerable(piece, standing)) _offer.Add(piece);
 
             foreach (var piece in catalog.Pieces)
-                if (!piece.IsResident && piece.CanBePlaced && HomesteadLedger.IsHeld(piece))
-                    _items.Add(piece);
+                if (!piece.IsResident && Offerable(piece, standing)) _offer.Add(piece);
 
             // Nothing the player owns belongs here. Said plainly, with the kind named, because
             // an empty grid is indistinguishable from a broken one — and this is the only place
             // in the feature that can explain what a slot is for without labelling all eleven
             // of them on the island itself.
-            if (_hint) _hint.gameObject.SetActive(_items.Count == 0);
+            if (_hint) _hint.gameObject.SetActive(_offer.Count == 0);
+
+            if (Same(_items, _offer)) { Repaint(); return; }
+
+            _items.Clear();
+            _items.AddRange(_offer);
 
             _grid.Show(_items.Count);
         }
 
-        /// <summary>Redraws the cells in place: for art arriving, and nothing else.</summary>
+        /// <summary>
+        /// Whether a piece belongs on the shelf: held, placeable, and — for anything sold by
+        /// the copy — with a copy left to place.
+        ///
+        /// <para>
+        /// <b>A piece with none left is taken off the list rather than dimmed, and that is the
+        /// owner's call over this panel's first design.</b> It used to stay, wearing "None left
+        /// — tap to buy", on the argument that a piece which vanished when it ran out would
+        /// read as a piece that had been taken away. What playing it found is the other half of
+        /// that trade: the row a player is choosing from fills up with things they cannot
+        /// choose, and a dead-looking cell among live ones reads as the panel being broken
+        /// rather than as an offer. What is lost is a route to the shop that the button at the
+        /// foot of this panel already provides.
+        /// </para>
+        /// <para>
+        /// <b>What is standing on this very tile is offered whatever the stock says</b>, and
+        /// that clause is load-bearing rather than kind: a copy is only spent because it is out
+        /// in the grove, so a player who placed their last fence here would otherwise open the
+        /// panel and find no cell marked as the one they are looking at — and no way to take it
+        /// away except the cross, which says nothing about what is there.
+        /// </para>
+        /// </summary>
+        static bool Offerable(HomesteadPiece piece, string standing)
+        {
+            if (!piece.CanBePlaced || !HomesteadLedger.IsHeld(piece)) return false;
+            if (!piece.IsStocked || HomesteadLedger.Available(piece) > 0) return true;
+
+            return string.Equals(piece.Id, standing, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Whether two offers are the same pieces in the same order.
+        ///
+        /// By id, because that is what a cell draws from; the "take it away" entry is an
+        /// invalid piece whose id is null, which compares equal to itself and to nothing else.
+        /// </summary>
+        static bool Same(List<HomesteadPiece> a, List<HomesteadPiece> b)
+        {
+            if (a.Count != b.Count) return false;
+
+            for (int i = 0; i < a.Count; i++)
+                if (!string.Equals(a[i].Id, b[i].Id, StringComparison.Ordinal)) return false;
+
+            return true;
+        }
+
+        /// <summary>Redraws the cells in place: for art arriving, and for a list that has not moved.</summary>
         void Repaint()
         {
             if (_grid != null) _grid.Refresh();
@@ -192,7 +270,7 @@ namespace GlimmerGrove
         sealed class PickerCell : IGridCell
         {
             readonly HomesteadPickerOverlay _panel;
-            readonly Image _plate, _edge, _art, _cross;
+            readonly Image _plate, _art, _cross, _tick;
             readonly Text _name, _stock;
 
             HomesteadPiece _piece;
@@ -203,62 +281,55 @@ namespace GlimmerGrove
             {
                 _panel = panel;
 
-                var cell = UIKit.Button("Cell", parent, Art.Pixel,
-                                        new Vector2(CellW - 12f, CellH - 12f), new Vector2(.5f, 1f),
-                                        Vector2.zero, () => _panel.Choose(_piece));
-                cell.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
+                // **The shop's card, built by the one thing that knows how.** This used to be a
+                // drawn rounded box with a traced outline over it, tinted per state — the shape
+                // this UI drew before it had a kit — so a player walked out of a shelf of kit
+                // cards into a grid of something else, one tap away. See <see cref="PieceCard"/>.
+                var cell = PieceCard.Touch("Cell", parent, CellW, () => _panel.Choose(_piece));
                 Root = (RectTransform)cell.transform;
 
-                // Lifted off near-black for HomesteadShopScreen's reason: a fallen log or a
-                // bramble on a very dark plate is a dark rectangle, and this panel is where
-                // somebody picks between forty of them.
-                _plate = UIKit.Img("Plate", Root, Art.Round(CellRadius), Color.white,
-                                   new Vector2(CellW - 26f, CellH - 26f), new Vector2(.5f, .5f),
-                                   Vector2.zero);
+                _plate = PieceCard.Plate(Root, CellW);
 
-                _edge = UIKit.Img("Edge", _plate.transform, Art.RoundOutline(CellRadius, 2f), Color.white);
-                UIKit.StretchTo((RectTransform)_edge.transform, 0, 0, 0, 0);
-
-                _art = UIKit.Img("A", _plate.transform, null, Color.white,
-                                 new Vector2(ArtBox, ArtBox), new Vector2(.5f, 1f),
-                                 new Vector2(0f, ArtCentre));
-                _art.preserveAspect = true;
-                _art.raycastTarget = false;
+                _art = PieceCard.Picture(_plate, CellW);
 
                 // A cross rather than an empty plate, because "nothing" needs a shape or it
-                // reads as a cell whose art has not loaded.
-                _cross = UIKit.Img("X", _plate.transform, Art.S("Ui/ic_close"),
-                                   new Color(1f, .96f, .88f, .70f),
-                                   new Vector2(74f, 74f), new Vector2(.5f, 1f),
-                                   new Vector2(0f, ArtCentre));
-                _cross.preserveAspect = true;
-                _cross.raycastTarget = false;
+                // reads as a cell whose art has not loaded. Drawn where the picture would be
+                // and at the size the shop's padlock is, so the two read as the same kind of
+                // statement about a card.
+                _cross = PieceCard.Glyph("X", _plate, CellW, Art.S("Ui/ic_close"),
+                                         new Color(1f, .96f, .88f, .70f), .58f);
 
-                _name = UIKit.Shrinkable(
-                    UIKit.Titled("N", _plate.transform, string.Empty, 24, Pal.Cream,
-                                 TextAnchor.MiddleCenter, new Vector2(CellW - 44f, 54f),
-                                 new Vector2(.5f, 0f), new Vector2(0f, 34f), 3f, 2f), 15);
+                _name = PieceCard.Name(_plate, CellW);
+                _stock = PieceCard.Line(_plate, CellW);
 
-                _stock = UIKit.Shrinkable(
-                    UIKit.Titled("S", _plate.transform, string.Empty, 20, Pal.A(Pal.Mint, .95f),
-                                 TextAnchor.MiddleCenter, new Vector2(CellW - 44f, 34f),
-                                 new Vector2(.5f, 0f), new Vector2(0f, 8f), 3f, 2f), 13);
+                // **What is standing on this tile wears a badge rather than a gold rim.** The
+                // rim was how this said it while the plate was a drawn box, and a card that
+                // carries its own keyline has nothing to trace — the shop met the same problem
+                // and answered it with a corner mark, so this answers it the same way. Built
+                // last so it paints over everything, and in the corner opposite the shop's
+                // leaf, which costs nothing and keeps two different marks in two places.
+                _tick = UIKit.Img("Here", _plate.transform, Art.S("Ui/ic_check"), Pal.Gold,
+                                  new Vector2(48f, 48f) * PieceCard.ScaleFor(CellW),
+                                  new Vector2(1f, 1f),
+                                  new Vector2(-30f, -30f) * PieceCard.ScaleFor(CellW));
+                _tick.preserveAspect = true;
+                _tick.raycastTarget = false;
             }
 
             /// <summary>
-            /// How many of this one are left to place, and the dimming when there are none.
+            /// How many of this one are left to place.
             ///
-            /// <para>
-            /// <b>A depleted piece stays in the grid rather than disappearing from it.</b>
-            /// Hiding it would be the same picture as never having owned it, so a player who
-            /// has used all ten of their fences would conclude the fence had been taken away —
-            /// and there would be nothing on the screen to correct them. It is dimmed, it says
-            /// why, and tapping it goes and buys more.
-            /// </para>
             /// <para>
             /// Nothing is drawn for a resident or an earned piece: those cannot run out, and a
             /// count on one would be inviting the player to worry about a number that has no
             /// meaning.
+            /// </para>
+            /// <para>
+            /// <b>There is no "none left" line here any more.</b> A piece with nothing left to
+            /// place is not on the shelf at all (see <see cref="Offerable"/>), and the one that
+            /// is offered with none left — the piece standing on this very tile — is already
+            /// marked as standing here, which is the true thing to say about it. A count of
+            /// nought under it would be the same cell saying two things, one of them useless.
             /// </para>
             /// </summary>
             void PaintStock(bool standing)
@@ -266,22 +337,15 @@ namespace GlimmerGrove
                 bool stocked = _piece.IsStocked;
                 int left = stocked ? HomesteadLedger.Available(_piece) : 0;
 
-                _stock.gameObject.SetActive(stocked);
-                if (stocked)
+                _stock.gameObject.SetActive(stocked && left > 0);
+                if (_stock.gameObject.activeSelf)
                 {
-                    _stock.text = left > 0
-                        ? Loc.Format("ui.grove.stock_left", left)
-                        : Loc.Get("ui.grove.stock_none");
-                    _stock.color = left > 0 ? Pal.A(Pal.Mint, .95f) : Pal.A(Pal.Sun, .95f);
+                    _stock.text = Loc.Format("ui.grove.stock_left", left);
+                    _stock.color = Pal.A(Pal.Mint, .95f);
                 }
 
-                // The art is knocked back rather than greyed, for the shop grid's reason: a
-                // tint multiplies, and half this catalog is dark enough that a grey silhouette
-                // is a black rectangle.
-                bool spent = stocked && left <= 0 && !standing;
-                _art.color = spent ? new Color(.72f, .76f, .80f, .55f) : Color.white;
-                _name.color = spent ? new Color(1f, .96f, .88f, .48f)
-                            : standing ? Pal.Cream : new Color(1f, .96f, .88f, .82f);
+                _art.color = Color.white;
+                _name.color = standing ? Pal.Cream : new Color(1f, .96f, .88f, .82f);
             }
 
             public void Bind(int index)
@@ -291,19 +355,13 @@ namespace GlimmerGrove
                 bool standing = _piece.IsValid
                     && string.Equals(_piece.Id, HomesteadLayout.At(_panel.Slot.Id), StringComparison.Ordinal);
 
-                _plate.color = standing ? new Color(.10f, .24f, .26f, .96f)
-                                        : new Color(.12f, .19f, .25f, .88f);
-
-                _edge.sprite = Art.RoundOutline(CellRadius, standing ? 4f : 2f);
-                _edge.color = standing ? Pal.Gold : new Color(1f, .97f, .90f, .16f);
-
                 _art.gameObject.SetActive(_piece.IsValid);
                 _cross.gameObject.SetActive(!_piece.IsValid);
+                _tick.gameObject.SetActive(standing);
 
                 if (_piece.IsValid) HomesteadArt.PaintThumb(_art, _piece);
 
                 _name.text = _piece.IsValid ? Loc.Get(_piece.NameKey) : Loc.Get("ui.grove.clear");
-                _name.color = standing ? Pal.Cream : new Color(1f, .96f, .88f, .82f);
 
                 PaintStock(standing);
             }
@@ -311,10 +369,29 @@ namespace GlimmerGrove
 
         void Choose(HomesteadPiece piece)
         {
+            // Tapping what is already here means "yes, that one" — so the panel simply goes.
+            // It is asked before the stock branch below and that ordering is the whole of it:
+            // a piece is only ever out of stock because its copies are standing in the grove,
+            // so the one standing on this very tile is always at nought, and without this the
+            // player would tap the thing they are looking at and be sold another (see
+            // Offerable, which is why it is on the shelf at all).
+            if (piece.IsValid
+                && string.Equals(piece.Id, HomesteadLayout.At(Slot.Id), StringComparison.Ordinal))
+            {
+                Close();
+                return;
+            }
+
             // Nothing left to place: this goes and buys more rather than doing nothing. A dead
             // cell is the refusal HintPrompt exists to prevent one screen over — the player has
             // just told us exactly what they want, which is the worst possible moment to teach
             // them that a control does not work.
+            //
+            // Reachable only from a shelf that has gone stale under an open panel — the last
+            // copy spent on another device, or a merge landing — because a depleted piece is
+            // taken off the list rather than dimmed. Kept because a panel that is a few seconds
+            // out of date is an ordinary thing, and because a tap that does nothing at all is
+            // the one answer this must never give.
             //
             // Closed first and the panel raised from the continuation, so the buy panel lands
             // over the grove rather than over a picker that is about to be destroyed —

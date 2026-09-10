@@ -176,30 +176,34 @@ namespace GlimmerGrove
         {
             if (target == null) return;
 
-            // Every flipbook the image carries, not the first one found: two repaints in one
-            // frame stacked two, GetComponent stopped one, and the other went on painting a
-            // well's frames into a tile that had been re-sized for brambles. See
-            // Flipbook.Detach for the report that found it.
-            Flipbook.Detach(target);
-
-            if (!piece.IsValid)
-            {
-                target.sprite = null;
-                target.color = Fade(target.color, 0f);
-                return;
-            }
-
-            if (piece.Animated)
+            // **Ensure rather than Attach, and the reel is asked for before anything is
+            // stopped.** A tile is rebound on every repaint of the grove, and a repaint is
+            // raised by the ledger, the layout, the wallet and the art scope — so a sync
+            // landing a few seconds after a placement raises three of them and every animated
+            // piece on the floor snapped back to its first frame at once. Reported as the tiles
+            // reloading while the player was building. See Flipbook.Ensure for the split.
+            if (piece.IsValid && piece.Animated)
             {
                 var frames = AssetLibrary.PeekFrames(AssetManifest.ArtRoot + piece.Art);
                 if (frames != null && frames.Length > 0)
                 {
                     target.color = Fade(target.color, 1f);
-                    Flipbook.Attach(target, piece.Art, 12f);
+                    Flipbook.Ensure(target, frames, 12f);
                     return;
                 }
+            }
 
-                // Frames not in yet. Hidden rather than white; the repaint puts it back.
+            // Nothing below this line animates, so whatever was running has to be stopped
+            // first — every flipbook the image carries, not the first one found: two repaints
+            // in one frame stacked two, GetComponent stopped one, and the other went on
+            // painting a well's frames into a tile that had been re-sized for brambles. See
+            // Flipbook.Detach for the report that found it.
+            Flipbook.Detach(target);
+
+            // Either there is no piece, or its frames have not arrived. Hidden rather than
+            // white; the repaint puts it back.
+            if (!piece.IsValid || piece.Animated)
+            {
                 target.sprite = null;
                 target.color = Fade(target.color, 0f);
                 return;
@@ -628,10 +632,6 @@ namespace GlimmerGrove
         {
             if (target == null) return;
 
-            // A browse cell is recycled, so it can arrive carrying a flipbook — or two — that
-            // previous bindings left on it. Every one is stopped, for Paint's reason.
-            Flipbook.Detach(target);
-
             // A piece that moves in the grove moves here too, which is the only way a player
             // browsing the shop can know that it does. This reverses a rule this file used to
             // state outright — "nothing in a grid ever animates" — and the reason it was safe
@@ -639,12 +639,20 @@ namespace GlimmerGrove
             // moving in step.
             var frames = ThumbFrames(piece);
 
+            // Ensure rather than Attach, for Paint's reason: a shelf is rebound whenever the
+            // ledger, the catalog or the wallet moves — which a purchase does immediately and
+            // the sync it triggers does again a few seconds later — and restarting every reel
+            // on the page is what "the shop refreshes when I buy something" was.
             if (frames.Length > 1)
             {
                 target.color = Fade(target.color, 1f);
-                Flipbook.Attach(target, frames, 12f).Offset = PhaseOf(piece.Id, frames.Length);
+                Flipbook.Ensure(target, frames, 12f).Offset = PhaseOf(piece.Id, frames.Length);
                 return;
             }
+
+            // A browse cell is recycled, so it can arrive carrying a flipbook — or two — that
+            // previous bindings left on it. Nothing below animates, so every one is stopped.
+            Flipbook.Detach(target);
 
             var sprite = frames.Length == 1 ? frames[0] : null;
             target.sprite = sprite;

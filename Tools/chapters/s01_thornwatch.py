@@ -134,7 +134,7 @@ LEVELS = (
          # A longer last wave than the rung would otherwise want, and a *lighter* one, and the
          # warbringer is the reason for both. Half its roar sets the hill charging, and a roar over
          # an empty hill is a mechanic that rejects nothing (invariant 5d) - so it comes early on
-         # purpose (`SiegeTuning.WarbringerAfter`) and this wave is still walking when it arrives.
+         # purpose (`SiegeTuning.CrowdAfter`) and this wave is still walking when it arrives.
          # Six all-brute raiders charging at 1.55x took the line apart with a raider left
          # (`SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine`, which is the only thing that can see
          # it); four brutes and two creepers is the same wave to rally and a rung that holds.

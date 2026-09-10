@@ -77,7 +77,7 @@ namespace GlimmerGrove
             var answers = Answers();
 
             MakePanel(new Vector2(PanelStack.Width, PanelStack.HeightFor(answers.Count)),
-                      Loc.Get("ui.levels.info_title"));
+                      Loc.Get("ui.levels.info_title").ToUpperInvariant());
 
             for (int i = 0; i < answers.Count; i++) Section(i, answers[i]);
 

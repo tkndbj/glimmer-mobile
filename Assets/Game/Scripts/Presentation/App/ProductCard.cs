@@ -623,7 +623,7 @@ namespace GlimmerGrove
             if (said == _ribbonSaid) return;
 
             _ribbonSaid = said;
-            UIKit.Arc(_ribbonArc, said, _ribbonFont, Pal.Sun, _ribbonRadius, 3f, 2f, 1f);
+            UIKit.Arc(_ribbonArc, said, _ribbonFont, Pal.Sun, _ribbonRadius, 2.5f, 0f, 1f);
         }
 
         void PaintSeal(string key)

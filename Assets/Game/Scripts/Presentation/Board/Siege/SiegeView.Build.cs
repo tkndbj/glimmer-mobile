@@ -87,6 +87,20 @@ namespace GlimmerGrove
             _meters = Layer("Meters");
             _fx = Layer("Fx");
 
+            // **A layer that is clipped to the board, for the one thing that comes from outside
+            // it.** Everything else drawn here starts somewhere on the hill and stays there, which
+            // is why `_fx` carries no mask and the procedural bolts clamp their own endpoints
+            // instead (`OnBoard`, invariant 37ac). A stormcall's bolt cannot: it falls out of the
+            // sky onto a raider, so it is longer than the room above whatever it hit and the top
+            // of it belongs off the top of the picture. The two ways to spend that are to *shrink*
+            // the bolt until it fits — which on a hill four cells deep is a spark rather than
+            // lightning — or to let it run off and cut it at the frame, which is what every game
+            // that has ever drawn a lightning strike does. `RectMask2D` rather than `Mask`: it is
+            // a clip rectangle handed to the shader, so it costs no stencil buffer and no extra
+            // draw call.
+            _sky = Layer("Sky");
+            _sky.gameObject.AddComponent<RectMask2D>();
+
             Ground();
             Line();
             Sockets();

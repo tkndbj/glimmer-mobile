@@ -48,10 +48,27 @@ namespace GlimmerGrove
 
         const float HeaderHeight = 268f;
         const int Columns = 3;
-        const float CellW = 320f;
-        const float CellH = 384f;
-        const int CellRadius = 30;
+        /// <summary>
+        /// Three across the screen, and as wide as three will go. 344 leaves 24 units of margin
+        /// at each edge, which is what the grid actually needs; it was 320 and left 60 a side —
+        /// a band of nothing on a screen whose whole job is showing pictures of things to buy.
+        /// </summary>
+        const float CellW = 344f;
+
+        /// <summary>
+        /// Square, and the same shape the money shop's cards are. A grid of two different
+        /// rectangles across two shops one tap apart is two designs; and a piece of decor has
+        /// no natural aspect of its own to argue for one, since what a cell holds is a picture,
+        /// a name and a line.
+        /// </summary>
+        const float CellH = CellW;
         const float TabRow = 150f;
+
+        /// <summary>
+        /// How wide one shelf tab is drawn, whatever the catalog holds. See <c>BuildTabs</c> for
+        /// why this is a constant rather than the screen's width over the number of shelves.
+        /// </summary>
+        const float TabStep = 178f;
 
         /// <summary>
         /// Breathing room under the last row. There is no nav bar here — the back arrow and
@@ -59,20 +76,6 @@ namespace GlimmerGrove
         /// rather than stopping short of a control that is not there.
         /// </summary>
         const float BottomPad = 24f;
-
-        /// <summary>
-        /// Where a cell's picture sits, and why it is computed rather than typed.
-        ///
-        /// The art used to be pinned a fixed distance from the top of the plate, which left it
-        /// riding high in a box whose real bounds are the plate's top edge and the caption's —
-        /// so every cell had a band of empty plate under the picture and none above it. This is
-        /// the middle of the space the labels actually leave, so a change to either label moves
-        /// the art with it instead of quietly unbalancing the cell.
-        /// </summary>
-        const float PlateH = CellH - 34f;
-        const float CaptionTop = 82f + 42f * .5f;
-        static readonly float ArtCentre = -(PlateH - (CaptionTop + PlateH) * .5f);
-        const float ArtBox = 176f;
 
         RectTransform _viewport, _tabs;
         GridView _grid;
@@ -170,6 +173,7 @@ namespace GlimmerGrove
             // every tab change threw an InvalidKeyException out of Addressables. Two faults in
             // one line, and the fix for both is the rule Btn already states: one sound per tap.
             Reload();
+            RevealTab();
         }
 
         // ---------------------------------------------------------------- header
@@ -244,42 +248,79 @@ namespace GlimmerGrove
         /// emblem, and an emblem changes only when a content drop lands.
         /// </para>
         /// <para>
-        /// A glyph per tab and no label: the picture answers the question better anyway — the
-        /// tab that holds fences has a fence on it — and the shelf's name is spelled out under
-        /// the row. The one that is showing wears a lit plate and grows; the rest sit back.
-        /// Nothing here is a scroll view: eight is the whole vocabulary of the content, and it
-        /// is not going to become sixty.
+        /// <b>It scrolls sideways, and that is what let the tabs be a proper size.</b> The row
+        /// used to divide the screen's width by however many shelves there were — nine of them
+        /// at 115 units each, which is a plate barely wider than the emblem on it and a name
+        /// shrunk to eleven point. Dividing by the count is the right rule for a row that must
+        /// fit; it is the wrong rule the moment the row is allowed not to. Every tab is
+        /// <see cref="TabStep"/> wide now whatever the catalog holds, and a drop that adds a
+        /// kind of thing makes the row longer rather than making every tab thinner.
+        /// </para>
+        /// <para>
+        /// The scroll is only armed when the row is actually wider than the screen, so eight
+        /// shelves or four sit still and centred exactly as they did.
         /// </para>
         /// </summary>
         void BuildTabs()
         {
-            _tabs = UIKit.Node("Tabs", Safe);
-            _tabs.anchorMin = new Vector2(0f, 1f);
-            _tabs.anchorMax = new Vector2(1f, 1f);
-            _tabs.pivot = new Vector2(.5f, 1f);
-            _tabs.sizeDelta = new Vector2(0f, TabRow);
-
-            // Directly under the header, and the viewport starts under *that* — the row is a
-            // band of its own rather than an overlay. Placed against the header's height
-            // rather than a constant so the two cannot drift apart.
-            _tabs.anchoredPosition = new Vector2(0f, -HeaderHeight);
-
             var shelves = GroveShelves.All;
 
-            // The step is derived from how many shelves there are, not typed. A drop that adds
-            // a kind of thing adds a tab, and a row that had been hand-spaced would put it off
-            // the edge of the screen.
-            float step = Mathf.Min(168f, 1040f / shelves.Length);
+            float span = shelves.Length * TabStep;
+            bool scrolls = span > Boot.RefWidth;
+
+            // The viewport is the band; the row inside it is as long as the tabs need. A
+            // `RectMask2D` rather than a `Mask`, for `GridView`'s reason: it costs no extra
+            // draw call and it clips by rectangle, which is all a strip needs.
+            var band = UIKit.Node("TabBand", Safe);
+            band.anchorMin = new Vector2(0f, 1f);
+            band.anchorMax = new Vector2(1f, 1f);
+            band.pivot = new Vector2(.5f, 1f);
+            band.sizeDelta = new Vector2(0f, TabRow);
+
+            // Directly under the header, and the grid's viewport starts under *that* — the row
+            // is a band of its own rather than an overlay. Placed against the header's height
+            // rather than a constant so the two cannot drift apart.
+            band.anchoredPosition = new Vector2(0f, -HeaderHeight);
+
+            _tabs = UIKit.Node("Tabs", band);
+            _tabs.anchorMin = _tabs.anchorMax = new Vector2(.5f, .5f);
+            _tabs.pivot = new Vector2(.5f, .5f);
+            _tabs.sizeDelta = new Vector2(span, TabRow);
+            _tabs.anchoredPosition = Vector2.zero;
+
+            if (scrolls)
+            {
+                // A drag anywhere in the band has to move the row, including on the gaps
+                // between tabs — a strip that only scrolls when your thumb lands on a button is
+                // a strip that reads as stuck (`GridView`'s note about dead space).
+                var catcher = band.gameObject.AddComponent<Image>();
+                catcher.color = new Color(0f, 0f, 0f, 0f);
+                catcher.raycastTarget = true;
+
+                band.gameObject.AddComponent<RectMask2D>();
+
+                var scroll = band.gameObject.AddComponent<ScrollRect>();
+                scroll.content = _tabs;
+                scroll.viewport = band;
+                scroll.horizontal = true;
+                scroll.vertical = false;
+                scroll.movementType = ScrollRect.MovementType.Elastic;
+                scroll.elasticity = .14f;
+                scroll.inertia = true;
+                scroll.decelerationRate = .04f;
+                scroll.scrollSensitivity = 55f;
+            }
 
             for (int i = 0; i < shelves.Length; i++)
             {
                 var shelf = shelves[i];
-                float x = (i - (shelves.Length - 1) * .5f) * step;
+                float x = (i - (shelves.Length - 1) * .5f) * TabStep;
 
-                _tabViews[shelf] = new ShelfTab(_tabs, shelf, step, x, () => Show(shelf));
+                _tabViews[shelf] = new ShelfTab(_tabs, shelf, TabStep, x, () => Show(shelf));
             }
 
             PaintTabs();
+            RevealTab();
 
             // The emblems, in a scope of their own that survives every shelf change — see
             // HomesteadArt.OpenTabsAsync. Asked for once here rather than on every shelf,
@@ -290,6 +331,38 @@ namespace GlimmerGrove
         void PaintTabs()
         {
             foreach (var pair in _tabViews) pair.Value.Restyle(pair.Key == _shelf);
+        }
+
+        /// <summary>
+        /// Slides the row so the shelf being shown is on screen.
+        ///
+        /// <para>
+        /// The row is centred in its band, so with nine tabs at <see cref="TabStep"/> the first
+        /// two and the last two start outside it — and the shelf this screen opens on is the
+        /// first one. A strip that opens with its own selection off the left edge is a strip
+        /// that reads as having lost it.
+        /// </para>
+        /// <para>
+        /// Set directly rather than tweened, and clamped here rather than left to the
+        /// <c>ScrollRect</c>: its elastic clamp runs in its own <c>LateUpdate</c> against bounds
+        /// it recomputes there, so a position written on the frame the row was built is a
+        /// position it has not agreed to yet.
+        /// </para>
+        /// </summary>
+        void RevealTab()
+        {
+            if (_tabs == null) return;
+
+            float span = _tabs.sizeDelta.x;
+            float slack = (span - Boot.RefWidth) * .5f;
+            if (slack <= 0f) return;
+
+            var shelves = GroveShelves.All;
+            int at = System.Array.IndexOf(shelves, _shelf);
+            if (at < 0) return;
+
+            float x = (at - (shelves.Length - 1) * .5f) * TabStep;
+            _tabs.anchoredPosition = new Vector2(Mathf.Clamp(-x, -slack, slack), 0f);
         }
 
         // ------------------------------------------------------------------ grid
@@ -385,31 +458,11 @@ namespace GlimmerGrove
         {
             if (!_summary) return;
 
-            if (!HomesteadCatalog.IsLoaded)
-            {
-                _summary.text = Loc.Get("ui.grove.loading");
-                return;
-            }
-
-            int held = 0, total;
-
-            if (OnLand)
-            {
-                foreach (var region in _land)
-                    if (GroveLand.IsOwned(region)) held++;
-
-                total = _land.Count;
-            }
-            else
-            {
-                foreach (var piece in _items)
-                    if (HomesteadLedger.IsHeld(piece)) held++;
-
-                total = _items.Count;
-            }
-
-            _summary.text = Loc.Format("ui.grove.shelf", Loc.Get(GroveShelves.NameKey(_shelf)),
-                                       held, total);
+            // **Silent unless it has news.** It counted how much of the shelf is already yours,
+            // which every cell on that shelf says for itself by wearing a padlock or not — and
+            // the shelf's own name, which is now written on its tab. What is left is the one
+            // state the grid cannot draw, because in it there is no grid.
+            _summary.text = HomesteadCatalog.IsLoaded ? string.Empty : Loc.Get("ui.grove.loading");
         }
 
         // ------------------------------------------------------------------ cell
@@ -522,7 +575,7 @@ namespace GlimmerGrove
         {
             readonly HomesteadShopScreen _screen;
             readonly Btn _button;
-            readonly Image _plate, _edge, _art, _lock, _leaf;
+            readonly Image _plate, _art, _veil, _lock, _leaf, _money;
             readonly Text _name, _status;
 
             HomesteadPiece _piece;
@@ -533,45 +586,109 @@ namespace GlimmerGrove
             {
                 _screen = screen;
 
-                _button = UIKit.Button("Cell", parent, Art.Pixel,
-                                       new Vector2(CellW - 16f, CellH - 20f), new Vector2(.5f, 1f),
-                                       Vector2.zero,
-                                       () => { if (_region != null) _screen.TapLand(_region);
-                                               else _screen.Tap(_piece); });
-                _button.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
+                // **The money shop's card, to the sprite, and now built by the one thing that
+                // knows how.** These were a drawn rounded box tinted per state with a traced
+                // outline over it - the shape this UI drew before it had a kit. `ProductCard`
+                // uses `Skins.Card` and nothing else, so this does too: it carries its own
+                // keyline, so there is no rim to trace, and its own face, so there is nothing to
+                // tint. Which state a cell is in is said by the padlock, the caption and the
+                // leaf, none of which ever depended on the plate.
+                //
+                // The plate, the picture and the two lines come from `PieceCard` because the
+                // picker draws the same card at its own size, and two screens assembling one
+                // design is two designs a week later. Everything below them is this screen's.
+                _button = PieceCard.Touch("Cell", parent, CellW,
+                                          () => { if (_region != null) _screen.TapLand(_region);
+                                                  else _screen.Tap(_piece); });
                 Root = (RectTransform)_button.transform;
 
-                _plate = UIKit.Img("Plate", Root, Art.Round(CellRadius), Color.white,
-                                   new Vector2(CellW - 28f, CellH - 34f), new Vector2(.5f, .5f),
-                                   Vector2.zero);
+                _plate = PieceCard.Plate(Root, CellW);
+                _art = PieceCard.Picture(_plate, CellW);
 
-                _edge = UIKit.Img("Edge", _plate.transform, Art.RoundOutline(CellRadius, 2f), Color.white);
-                UIKit.StretchTo((RectTransform)_edge.transform, 0, 0, 0, 0);
+                // Over the picture rather than pinned to a corner, and drawn at white - the
+                // same lock on the same decision the profile, the companion shelf and the ward
+                // loadout make. Built after the art so it paints over it (uGUI draws in sibling
+                // order), and before the labels so it never covers a price.
+                // **The veil, and where it sits in the order is the whole of it.** uGUI paints
+                // in sibling order, so this is built after the picture and before the padlock:
+                // it darkens the thing that is not yours and leaves the lock — and the name and
+                // the price under it — at full strength. The companion shelf says the same thing
+                // by knocking its portrait back; this says it over the whole plate, which is
+                // what a cell holding a fence rather than a face needs.
+                _veil = UIKit.Img("Veil", _plate.transform, Art.Round(PieceCard.Radius),
+                                  new Color(0f, 0f, 0f, .48f));
+                UIKit.StretchTo((RectTransform)_veil.transform, 0, 0, 0, 0);
+                _veil.raycastTarget = false;
 
-                _art = UIKit.Img("A", _plate.transform, null, Color.white,
-                                 new Vector2(ArtBox, ArtBox), new Vector2(.5f, 1f),
-                                 new Vector2(0f, ArtCentre));
-                _art.preserveAspect = true;
-                _art.raycastTarget = false;
-
-                _lock = UIKit.Img("Lock", _plate.transform, Art.S("Ui/padlock"), Color.white,
-                                  new Vector2(66f, 66f), new Vector2(1f, 1f), new Vector2(-24f, -24f));
-                _lock.preserveAspect = true;
-                _lock.raycastTarget = false;
+                _lock = PieceCard.Glyph("Lock", _plate, CellW, Art.S("Ui/ic_padlock"),
+                                        Color.white, .58f);
 
                 _leaf = UIKit.Img("Leaf", _plate.transform, Art.Leaf(64), Pal.A(Pal.Verdant, .85f),
                                   new Vector2(44f, 44f), new Vector2(0f, 1f), new Vector2(26f, -26f));
                 _leaf.raycastTarget = false;
 
-                _name = UIKit.Shrinkable(
-                    UIKit.Titled("N", _plate.transform, string.Empty, 30, Pal.Cream,
-                                 TextAnchor.MiddleCenter, new Vector2(CellW - 60f, 42f),
-                                 new Vector2(.5f, 0f), new Vector2(0f, 82f), 3f, 3f), 17);
+                _name = PieceCard.Name(_plate, CellW);
+                _status = PieceCard.Line(_plate, CellW);
 
-                _status = UIKit.Shrinkable(
-                    UIKit.Titled("S", _plate.transform, string.Empty, 24, Pal.Cream,
-                                 TextAnchor.MiddleCenter, new Vector2(CellW - 52f, 60f),
-                                 new Vector2(.5f, 0f), new Vector2(0f, 34f), 3f, 0f), 16);
+                // The currency, as a picture rather than as the word "coins". The money shop
+                // has never written its currency out and this one did on every priced cell,
+                // which is the same number said twice - once in figures and once in a noun that
+                // has to be translated. Placed against the caption's own measured width, so it
+                // stays beside the number rather than at a fixed offset that a four-digit price
+                // would run into.
+                _money = UIKit.Img("Money", _plate.transform, null, Color.white,
+                                   new Vector2(32f, 32f), new Vector2(.5f, 0f),
+                                   new Vector2(0f, PieceCard.LineY(CellW)));
+                _money.preserveAspect = true;
+                _money.raycastTarget = false;
+            }
+
+            /// <summary>
+            /// Puts the currency glyph beside the price, or takes it away.
+            ///
+            /// <para>
+            /// <see cref="Currency.Credits"/> has no still picture in this UI, only the
+            /// <c>Ui/Coin</c> flipbook, so it is a reel that is attached once and detached for a
+            /// gem price - an <c>Image</c> with a cleared sprite is a white rectangle rather
+            /// than nothing (invariant 7b), and <c>Attach</c> restarts a reel, so asking for it
+            /// on every bind would snap the coin back to frame nought as the grid scrolls.
+            /// </para>
+            /// </summary>
+            void Money(int currency)
+            {
+                if (currency == 0)
+                {
+                    Flipbook.Detach(_money);
+                    _money.enabled = false;
+                    _status.rectTransform.anchoredPosition = new Vector2(0f, PieceCard.LineY(CellW));
+                    return;
+                }
+
+                _money.enabled = true;
+
+                if (currency == 2)
+                {
+                    Flipbook.Detach(_money);
+                    _money.sprite = Art.S("Ui/ic_gem");
+                }
+                else if (_money.GetComponent<Flipbook>() == null)
+                {
+                    Flipbook.Attach(_money, "Ui/Coin", 11f);
+                }
+
+                // The pair is centred as one block: the caption shifts right by half the glyph
+                // and the gap, and the glyph sits off its left edge. `preferredWidth` is
+                // answered from cached glyph metrics in the same frame, so no layout pass is
+                // forced (`UIKit.CentreGlyph`'s note, which this is a small copy of - that one
+                // works on a `Btn` and there is none here).
+                const float Gap = 10f;
+                float half = (32f + Gap) * .5f;
+
+                float y = PieceCard.LineY(CellW);
+
+                _status.rectTransform.anchoredPosition = new Vector2(half, y);
+                _money.rectTransform.anchoredPosition =
+                    new Vector2(half - _status.preferredWidth * .5f - half, y);
             }
 
             GroveRegion _region;
@@ -585,31 +702,30 @@ namespace GlimmerGrove
 
                 bool held = HomesteadLedger.IsHeld(_piece);
 
-                // A locked plate is *lighter* than a held one, which looks backwards and is not.
-                // The art on it is the thing that has to read, and half this catalog is dark —
-                // a brown log or a bramble on a near-black plate is a black rectangle, which is
-                // exactly what shipped. Held cells are marked out by their mint edge, their
-                // caption and the absence of a padlock, none of which depend on the plate.
-                _plate.color = held ? new Color(.07f, .16f, .17f, .93f)
-                                    : new Color(.11f, .18f, .24f, .90f);
-
-                // A home wears gold whether or not it is held, because the ladder is the one
-                // thing on this page a player is meant to be saving for rather than browsing.
-                _edge.sprite = Art.RoundOutline(CellRadius, _piece.IsDwelling ? 4f : held ? 3f : 2f);
-                _edge.color = _piece.IsDwelling ? Pal.A(Pal.Gold, .70f)
-                            : held ? Pal.A(Pal.Mint, .55f)
-                                   : new Color(1f, .97f, .90f, .14f);
-
-                // Locked art draws in **its own colours**, barely knocked back. Tinting it
-                // toward a grey silhouette was the obvious idea and it is wrong here: a tint
-                // multiplies, so it only ever darkens, and the pieces that most need to be
-                // recognised before you buy them — a fallen log, brambles, a cave — are the dark
-                // ones. A shop whose locked half is unreadable is a shop that cannot sell
-                // anything. The padlock says "not yours"; the picture says what it is.
-                _art.color = held ? Color.white : new Color(.88f, .92f, .96f, 1f);
+                // **Locked art draws in its own colours and the veil over it does the dimming.**
+                // Knocking the picture back here was the old answer and it is the wrong one: a
+                // tint multiplies, so it only ever darkens, and the pieces that most need to be
+                // recognised before they are bought — a fallen log, brambles, a cave — are the
+                // dark ones. A shop whose locked half is unreadable cannot sell anything. The
+                // padlock says "not yours"; the picture says what it is.
+                _art.color = Color.white;
                 HomesteadArt.PaintThumb(_art, _piece);
 
-                _lock.gameObject.SetActive(!held && _piece.IsValid);
+                // **Only where there is a gate, which is the residents' shelf and the land.** A
+                // padlock over a fence, a tree or a path is a lie: it is not locked, it is
+                // simply unbought, and every one of those cells already says its price. A
+                // companion is the one piece here that can be refused for a reason money cannot
+                // answer (a keeper level - invariant 15a), and ground is sold one rung at a time
+                // up an authored ladder (16j), so those two are the ones a lock is about.
+                //
+                // Read off the shelf rather than off the requirement, because that is the rule
+                // as stated: a resident whose gate the player has already passed is still a
+                // companion, and a row of companions where some wear a lock and some do not
+                // reads as a bug rather than as a distinction.
+                bool gated = !held && _piece.IsValid && _screen._shelf == GroveShelf.Residents;
+
+                _veil.enabled = gated;
+                _lock.gameObject.SetActive(gated);
 
                 // The leaf marks what play alone will reach. It used to be every piece with a
                 // requirement, which put it on the whole residents' shelf — and that stopped
@@ -620,9 +736,10 @@ namespace GlimmerGrove
                 _name.text = _piece.IsValid ? Loc.Get(_piece.NameKey) : string.Empty;
                 _name.color = held ? Pal.Cream : new Color(1f, .95f, .88f, .62f);
 
-                var (line, tint) = StatusOf(_piece, held);
+                var (line, tint, money) = StatusOf(_piece, held);
                 _status.text = line;
                 _status.color = tint;
+                Money(money);
             }
 
             /// <summary>
@@ -637,18 +754,17 @@ namespace GlimmerGrove
 
                 bool owned = GroveLand.IsOwned(_region);
 
-                _plate.color = owned ? new Color(.07f, .16f, .17f, .93f)
-                                     : new Color(.11f, .18f, .24f, .90f);
-
-                _edge.sprite = Art.RoundOutline(CellRadius, owned ? 3f : 2f);
-                _edge.color = owned ? Pal.A(Pal.Mint, .55f) : new Color(1f, .97f, .90f, .14f);
-
-                _art.color = owned ? Pal.A(Pal.Verdant, .85f) : Pal.A(Pal.Verdant, .55f);
+                _art.color = Pal.A(Pal.Verdant, .85f);
                 var running = _art.GetComponent<Flipbook>();
                 if (running) { running.enabled = false; UnityEngine.Object.Destroy(running); }
                 _art.sprite = Art.IsoTile(256);
 
-                _lock.gameObject.SetActive(false);
+                // Ground behind the ladder or behind a price is locked in exactly the sense the
+                // rest of the shop means it, so it wears the same padlock. It used to wear none,
+                // which left the one shelf in the game where "not yours yet" was said only in
+                // words.
+                _veil.enabled = !owned && _region != null;
+                _lock.gameObject.SetActive(!owned && _region != null);
                 _leaf.gameObject.SetActive(false);
 
                 _name.text = _region == null ? string.Empty : Loc.Get(_region.NameKey);
@@ -660,6 +776,7 @@ namespace GlimmerGrove
                 {
                     _status.text = Loc.Format("ui.land.size", _region.Cols, _region.Rows);
                     _status.color = Pal.A(Pal.Mint, .95f);
+                    Money(0);
                     return;
                 }
 
@@ -672,13 +789,14 @@ namespace GlimmerGrove
                 {
                     _status.text = Loc.Format("ui.land.earlier_first", Loc.Get(next.NameKey));
                     _status.color = Pal.A(Pal.Aqua, .95f);
+                    Money(0);
                     return;
                 }
 
                 bool gems = _region.IsGemPriced;
 
-                _status.text = Loc.Format(gems ? "ui.grove.price_gems" : "ui.grove.price",
-                                          Compact.Number(_region.Price));
+                _status.text = Compact.Number(_region.Price);
+                Money(gems ? 2 : 1);
 
                 // Measured against the wallet this stretch is actually bought with. Reading the
                 // credit balance for a gem price would paint nearly every gem stretch as
@@ -697,17 +815,24 @@ namespace GlimmerGrove
         /// single "locked" would draw the same caption for a piece 40 credits away and one
         /// that will never be for sale, and only one of those resolves by playing for an hour.
         /// </summary>
-        static (string, Color) StatusOf(HomesteadPiece piece, bool held)
+        /// <remarks>
+        /// The third value is the currency the line is quoting - nought for a line that is not a
+        /// price at all, 1 for credits, 2 for gems - which is what lets the cell put a glyph
+        /// beside the number instead of writing the word out. It is returned rather than worked
+        /// out again at the call site because the branch that chose the sentence is the only
+        /// place that knows, and asking twice is how the picture and the words come to disagree.
+        /// </remarks>
+        static (string, Color, int) StatusOf(HomesteadPiece piece, bool held)
         {
-            if (!piece.IsValid) return (string.Empty, Pal.Cream);
+            if (!piece.IsValid) return (string.Empty, Pal.Cream, 0);
 
             // A home is never "yours" in the sense the rest of the grid means it — the player
             // always has one. What the cell has to say is whether this is the next one up.
             if (piece.IsDwelling)
                 return held
-                    ? (Loc.Get("ui.grove.home_best"), Pal.A(Pal.Gold, .95f))
-                    : (Loc.Format("ui.grove.price", Compact.Number(piece.Cost)),
-                       Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Sun, .95f) : Pal.A(Pal.Sun, .58f));
+                    ? (Loc.Get("ui.grove.home_best"), Pal.A(Pal.Gold, .95f), 0)
+                    : (Compact.Number(piece.Cost),
+                       Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Sun, .95f) : Pal.A(Pal.Sun, .58f), 1);
 
             // Stock keeps its price on the cell, because a stocked piece is never finished
             // being sold — "Yours" over something the player wants three more of is the cell
@@ -716,9 +841,9 @@ namespace GlimmerGrove
             if (held && piece.IsStocked)
                 return (Loc.Format("ui.grove.owned_price", HomesteadLedger.Copies(piece),
                                    Compact.Number(piece.Cost)),
-                        Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Mint, .95f) : Pal.A(Pal.Mint, .62f));
+                        Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Mint, .95f) : Pal.A(Pal.Mint, .62f), 1);
 
-            if (held) return (Loc.Get("ui.grove.yours"), Pal.A(Pal.Mint, .95f));
+            if (held) return (Loc.Get("ui.grove.yours"), Pal.A(Pal.Mint, .95f), 0);
 
             // The keeper gate leads whenever it is the refusal that binds, priced or not.
             // It used to be drawn only on a resident with no price, back when reaching the
@@ -727,24 +852,24 @@ namespace GlimmerGrove
             // on and hiding the half stopping them.
             if (piece.RequiresKeeperLevel > 0 && Profile.Rank < piece.RequiresKeeperLevel)
                 return (Loc.Format("ui.grove.needs_level", piece.RequiresKeeperLevel),
-                        Pal.A(Pal.Aqua, .95f));
+                        Pal.A(Pal.Aqua, .95f), 0);
 
             if (piece.RequiresLevel.IsValid)
                 return (Loc.Format("ui.grove.needs_glade", LevelName(piece.RequiresLevel)),
-                        Pal.A(Pal.Aqua, .95f));
+                        Pal.A(Pal.Aqua, .95f), 0);
 
             if (piece.RequiresChapter.IsValid)
                 return (Loc.Format("ui.grove.needs_chapter", ChapterName(piece.RequiresChapter)),
-                        Pal.A(Pal.Aqua, .95f));
+                        Pal.A(Pal.Aqua, .95f), 0);
 
             if (piece.IsForSale)
-                return (Loc.Format("ui.grove.price", Compact.Number(piece.Cost)),
-                        Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Sun, .95f) : Pal.A(Pal.Sun, .58f));
+                return (Compact.Number(piece.Cost),
+                        Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Sun, .95f) : Pal.A(Pal.Sun, .58f), 1);
 
             // Left over: no requirement, no price, and not held — which the catalog cannot
             // produce, since a piece with neither is a starter. Said plainly rather than left
             // blank, so a content mistake shows up on the screen it broke.
-            return (Loc.Get("ui.grove.not_for_sale"), new Color(1f, .96f, .88f, .55f));
+            return (Loc.Get("ui.grove.not_for_sale"), new Color(1f, .96f, .88f, .55f), 0);
         }
 
         /// <summary>
@@ -808,7 +933,7 @@ namespace GlimmerGrove
 
             if (!piece.IsForSale)
             {
-                var (line, _) = StatusOf(piece, false);
+                var (line, _, _) = StatusOf(piece, false);
                 Scenery.Toast(Content, line, Pal.Aqua);
                 return;
             }

@@ -495,9 +495,17 @@ namespace GlimmerGrove
 
             if (!unlocked)
             {
-                var lockIcon = UIKit.Img("Lock", disc.transform, Art.S("Ui/padlock"), Color.white,
-                                         new Vector2(64f, 64f), new Vector2(.5f, 0f), new Vector2(0f, 6f));
+                // **Over the companion rather than under it, and never tinted.** It hung at the
+                // foot of the disc, which reads as a badge sitting beside a portrait rather than
+                // as the portrait being shut away — and the padlock is a painted picture, so
+                // anything but white is a multiply that eats the gold it is drawn in.
+                //
+                // Built after the face, so it draws over it: uGUI paints in sibling order and
+                // there is nothing else here that decides it.
+                var lockIcon = UIKit.Img("Lock", disc.transform, Art.S("Ui/ic_padlock"), Color.white,
+                                         new Vector2(78f, 78f), new Vector2(.5f, .5f), new Vector2(0f, 4f));
                 lockIcon.preserveAspect = true;
+                lockIcon.raycastTarget = false;
             }
 
             UIKit.Shrinkable(
@@ -531,7 +539,10 @@ namespace GlimmerGrove
             // a sound, a bump and the sparks off the medallion.
             if (!Profile.TryWearAvatar(avatar.Id)) return;
 
-            Audio.Sfx("chime2", .5f);
+            // **Its own slot rather than `chime2`.** That bell is the confirmation three other
+            // things ring, and one of them is `ToggleBoardVisibility` two cards down this very
+            // screen - so wearing a friend and joining a leaderboard said exactly the same thing.
+            Audio.Sfx("wear", .5f);
             if (_portrait) Burst.Sparks(_portrait.transform, Vector2.zero, Pal.Gold, 12, 190f, 26f, .6f);
         }
 
@@ -579,20 +590,28 @@ namespace GlimmerGrove
                              3f, 3f), 18);
 
             UIKit.TextButton("Open", card, "btn_orange", Loc.Get("ui.board.open"), 32,
-                             new Vector2(420f, 104f), new Vector2(0f, 0f), new Vector2(280f, 62f),
+                             // 268 rather than 280, and the toggle's -280 moves to -268 with it.
+                             // Both are 420 wide on a 980 card, so at the old numbers they met
+                             // at exactly 490 and touched. Moving each 12 out gives 24 between
+                             // them and leaves the card's two margins equal at 58.
+                             new Vector2(420f, 104f), new Vector2(0f, 0f), new Vector2(268f, 62f),
                              () => Flow.Go<LeaderboardScreen>());
 
             // A toggle rather than a line in a menu somewhere else, and it says which state it
             // is in rather than which state it would move to — the ambiguity that makes every
             // "Disable notifications?" button in the world a coin flip.
+            // The same box as the key beside it, to the unit. Two controls in one row at two
+            // sizes reads as one of them having been added later, which is exactly what
+            // happened — and the caption is `Shrinkable`, so matching the larger of the two
+            // costs the longer word nothing.
             var toggle = UIKit.TextButton("Visibility", card,
                                           Skins.Battle,
                                           Loc.Get(GroveBoard.OptedIn ? "ui.board.leave"
-                                                                     : "ui.board.join"), 28,
-                                          new Vector2(380f, 92f), new Vector2(1f, 0f),
-                                          new Vector2(-260f, 68f),
+                                                                     : "ui.board.join"), 32,
+                                          new Vector2(420f, 104f), new Vector2(1f, 0f),
+                                          new Vector2(-268f, 62f),
                                           ToggleBoardVisibility);
-            UIKit.Shrinkable(toggle.Label, 17);
+            UIKit.Shrinkable(toggle.Label, 19);
             UIKit.FitLabel(toggle);
         }
 
@@ -747,10 +766,9 @@ namespace GlimmerGrove
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, 1f), new Vector2(96f, -132f), () => Flow.Go<HomeScreen>());
 
-            var banner = UIKit.Img("Banner", Safe, Art.S("Ui/banner"), Color.white,
-                                   new Vector2(520f, 148f), new Vector2(.5f, 1f), new Vector2(0f, -142f));
-            UIKit.Titled("Title", banner.transform, Loc.Get("ui.profile.title").ToUpperInvariant(), 40,
-                         new Color(.36f, .24f, .16f), TextAnchor.MiddleCenter, outline: 0f, shadow: 2f);
+            var banner = Scenery.TitleRibbon(Safe, Loc.Get("ui.profile.title").ToUpperInvariant(),
+                                             new Vector2(520f, 148f), new Vector2(.5f, 1f),
+                                             new Vector2(0f, -142f));
             banner.transform.localScale = Vector3.zero;
             Tween.Pop(banner.transform, 0f, .6f, .1f);
 

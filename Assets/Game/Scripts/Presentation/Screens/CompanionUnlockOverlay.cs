@@ -113,7 +113,7 @@ namespace GlimmerGrove
             float statusY = y + StatusH * .5f;     y += StatusH + 12f;
             float buttonY = y + ButtonH * .5f;     y += ButtonH + FootRoom;
 
-            MakePanel(new Vector2(PanelW, y), Loc.Get("ui.companion.title"));
+            MakePanel(new Vector2(PanelW, y), Loc.Get("ui.companion.title").ToUpperInvariant());
 
             BuildPortrait(discY);
 
@@ -233,22 +233,34 @@ namespace GlimmerGrove
 
         void Fact(float top, int index, Sprite sprite, ChestDropKind kind, Color tint, string line)
         {
-            const float left = -ContentW * .5f;
-            float textW = ContentW - FactIcon - FactGap;
             float y = top + FactStep * index + FactStep * .5f;
+
+            // **Centred as one block rather than left-aligned against the panel's edge.**
+            // Everything else here - the portrait, the name, the status, the button - is on the
+            // panel's centre line, so three facts hard against the left margin read as a list
+            // pasted onto a poster. The glyph and its line are measured together and centred,
+            // which is `UIKit.CentreGlyph`'s idea on something that is not a button.
+            //
+            // `preferredWidth` is answered from cached glyph metrics in the same frame the
+            // caption is set, so no layout pass is forced.
+            float textW = ContentW - FactIcon - FactGap;
+
+            var label = UIKit.Titled("L" + index, Panel, line, 27, new Color(.36f, .25f, .18f),
+                                     TextAnchor.MiddleCenter, new Vector2(textW, FactStep - 12f),
+                                     new Vector2(.5f, 1f), new Vector2(0f, -y),
+                                     outline: 0f, shadow: 0f, wrap: true);
+            UIKit.Shrinkable(label, 19);
+
+            float wide = Mathf.Min(label.preferredWidth, textW);
+            float half = (FactIcon + FactGap) * .5f;
+
+            label.rectTransform.anchoredPosition = new Vector2(half, -y);
 
             var glyph = UIKit.Img("F" + index, Panel, sprite ?? Art.Disc(128), tint,
                                   Vector2.one * FactIcon, new Vector2(.5f, 1f),
-                                  new Vector2(left + FactIcon * .5f, -y));
+                                  new Vector2(half - wide * .5f - FactGap - FactIcon * .5f, -y));
             glyph.preserveAspect = true;
             RewardArt.Glyph(glyph, kind, 10f);      // a no-op for anything but credits
-
-            UIKit.Shrinkable(
-                UIKit.Titled("L" + index, Panel, line, 27, new Color(.36f, .25f, .18f),
-                             TextAnchor.MiddleLeft, new Vector2(textW, FactStep - 12f),
-                             new Vector2(.5f, 1f),
-                             new Vector2(left + FactIcon + FactGap + textW * .5f, -y),
-                             outline: 0f, shadow: 0f, wrap: true), 19);
         }
 
         // ------------------------------------------------------------- the button

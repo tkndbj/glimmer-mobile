@@ -1791,11 +1791,11 @@
   },
   {
    "key": "ui.grove.owned_price",
-   "text": "{0} yours · {1} coins"
+   "text": "{0} yours · {1}"
   },
   {
    "key": "ui.grove.place",
-   "text": "place"
+   "text": "PLACE"
   },
   {
    "key": "ui.grove.price",
@@ -1852,10 +1852,6 @@
   {
    "key": "ui.grove.stock_left",
    "text": "{0} left"
-  },
-  {
-   "key": "ui.grove.stock_none",
-   "text": "None left — tap to buy"
   },
   {
    "key": "ui.grove.summary",
@@ -2011,27 +2007,27 @@
   },
   {
    "key": "ui.howto.line1",
-   "text": "Tap a conduit to turn it a quarter step."
+   "text": "Match 3 gems to fuel the turret of that colour."
   },
   {
    "key": "ui.howto.line2",
-   "text": "Guide light from every heart-crystal to the sleeping critters."
+   "text": "Fuelled turrets fire at the raiders walking down the hill."
   },
   {
    "key": "ui.howto.line3",
-   "text": "Hearts joined into one network blend their colours."
+   "text": "A shot hurts most when it hits a raider of its own colour."
   },
   {
    "key": "ui.howto.line4",
-   "text": "A critter only wakes to the exact colour it dreams of."
+   "text": "Let the raiders through and they break your wall. Hold it and you win."
   },
   {
    "key": "ui.howto.line5",
-   "text": "Rooted tiles wear a padlock and will not turn."
+   "text": "Spend gems on stronger turrets and on firepots, mendings and surges."
   },
   {
    "key": "ui.howto.line6",
-   "text": "Fewer moves, more stars. There is no timer here."
+   "text": "Spend coins on your grove: land, homes, decor and friends."
   },
   {
    "key": "ui.howto.red",
@@ -2159,7 +2155,7 @@
   },
   {
    "key": "ui.levels.info_title",
-   "text": "information"
+   "text": "Information"
   },
   {
    "key": "ui.levels.locked",
@@ -2175,71 +2171,71 @@
   },
   {
    "key": "ui.levels.rewards_again_body",
-   "text": "Each star is paid for once. Play a glade again and only new stars pay, so beating your rating earns the difference and matching it earns nothing."
+   "text": "Each star pays once. Beat your rating and you earn the difference."
   },
   {
    "key": "ui.levels.rewards_again_title",
-   "text": "playing again"
+   "text": "Playing again"
   },
   {
    "key": "ui.levels.rewards_finish_body",
-   "text": "Every run you finish moves your daily chests along — one per {0} runs — and keeps your streak lit, win or lose. Leaving early counts for nothing."
+   "text": "Every run you finish moves your daily chests along and keeps your streak lit, win or lose."
   },
   {
    "key": "ui.levels.rewards_finish_title",
-   "text": "finishing counts"
+   "text": "Finishing counts"
   },
   {
    "key": "ui.levels.rewards_free_body",
-   "text": "The first {0} levels of this chapter cost no heart. Lose one, restart it or leave it as often as you like while you are finding your feet — and once you have finished a level, playing it again is always free."
+   "text": "The first {0} levels of this chapter cost no heart, and a level you have finished is always free to replay."
   },
   {
    "key": "ui.levels.rewards_free_title",
-   "text": "free to try"
+   "text": "Free to try"
   },
   {
    "key": "ui.levels.rewards_golden_body",
-   "text": "A few glades quietly pay more — up to {0}% of the usual coins. Which ones is fixed for your groove, and the victory panel says so."
+   "text": "A few levels pay up to {0}% more coins. The victory panel says when."
   },
   {
    "key": "ui.levels.rewards_golden_title",
-   "text": "golden glades"
+   "text": "Golden levels"
   },
   {
    "key": "ui.levels.rewards_open_body",
-   "text": "The next chapter opens at {0} stars a level — {1} of this chapter's {2}. Finishing every level is not what opens it, and where the stars come from is up to you: three here and one there counts the same."
+   "text": "The next chapter opens at {0} stars a level - {1} of this chapter's {2}. Where they come from is up to you."
   },
   {
    "key": "ui.levels.rewards_open_free",
-   "text": "Every chapter is open. Play them in any order you like."
+   "text": "Every chapter is open. Play them in any order."
   },
   {
    "key": "ui.levels.rewards_open_rule",
-   "text": "The next chapter opens once you hold {0} stars a level in this one. Finishing every level is not what opens it, and where the stars come from is up to you."
+   "text": "The next chapter opens once you hold {0} stars a level here. Where they come from is up to you."
   },
   {
    "key": "ui.levels.rewards_open_title",
-   "text": "opening the next chapter"
+   "text": "Opening the next chapter"
   },
   {
    "key": "ui.levels.rewards_replay_body",
-   "text": "A level you have already finished costs no heart to play again. Lose it, restart it or leave it as often as you like — only a level you have not finished yet can take one."
+   "text": "A level you have already finished costs no heart. Only a level you have not beaten yet can take one."
   },
   {
    "key": "ui.levels.rewards_replay_title",
-   "text": "free to try again"
+   "text": "Free to try again"
   },
   {
    "key": "ui.levels.rewards_stars_body",
-   "text": "Clearing a glade pays coins and keeper XP, and your stars decide how much — {0}, {1} or {2} coins in this chapter."
+   "text": "Your stars decide the coins: {0}, {1} or {2} in this chapter."
   },
   {
    "key": "ui.levels.rewards_stars_title",
-   "text": "stars pay"
+   "text": "Stars pay"
   },
   {
    "key": "ui.levels.rewards_title",
-   "text": "how a glade pays"
+   "text": "How a level pays"
   },
   {
    "key": "ui.levels.swipe",
@@ -4543,11 +4539,11 @@
   },
   {
    "key": "ui.loadout.stand",
-   "text": "Stand here"
+   "text": "Equip"
   },
   {
    "key": "ui.loadout.standing",
-   "text": "On the line"
+   "text": "Equipped"
   },
   {
    "key": "ui.loadout.title",
@@ -4567,7 +4563,7 @@
   },
   {
    "key": "ward.apex.name",
-   "text": "Apex"
+   "text": "Lighthouse"
   },
   {
    "key": "ward.apex.note",
@@ -4663,7 +4659,7 @@
   },
   {
    "key": "ward.lighthouse.name",
-   "text": "Lighthouse"
+   "text": "Apex"
   },
   {
    "key": "ward.lighthouse.note",

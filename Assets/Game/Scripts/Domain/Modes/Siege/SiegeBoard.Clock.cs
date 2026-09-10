@@ -215,6 +215,12 @@ namespace GlimmerGrove.Modes
             int size = Layout.SizeOf(_wave);
             var surge = Layout.SurgeOf(_wave);
 
+            // **How many bosses, not how big the wave is.** They were the same number for as long
+            // as a boss wave held nothing else; a boss that rides the last authored wave has an
+            // ordinary wave behind it, and `BossLane` reads this to decide whether it stands in
+            // the middle of the hill or beside it.
+            int bosses = Layout.BossesIn(_wave);
+
 
             for (int i = 0; i < size; i++)
             {
@@ -244,7 +250,7 @@ namespace GlimmerGrove.Modes
                 // side of it as a pair - said once so the view and the render can draw the hill
                 // the board is playing. A boss wave sends bosses and nothing else, so the wave's
                 // own size is how many of them there are.
-                int lane = boss ? SiegeTuning.BossLane(i, size)
+                int lane = boss ? SiegeTuning.BossLane(i, bosses)
                                 : (int)(Next() % SiegeTuning.Lanes);
 
                 _raiders.Add(new SiegeRaider(_minted++, colour, kind, lane,
@@ -414,15 +420,31 @@ namespace GlimmerGrove.Modes
                 boss.Spell -= dt;
                 if (boss.Spell > 0f) continue;
 
-                boss.Spell = SiegeTuning.CastEveryFor(boss.Kind);
-
                 var craft = boss.Spellcraft;
 
                 // **A roar is thrown at the hill, so it carries no ward.** Three of the four aim
                 // at the line and one does not, and the difference is asked once here rather than
                 // by every reader of a ward index nobody set.
                 int ward = SiegeTuning.AimsAtAWard(boss.Kind) ? Wanted(craft) : -1;
-                if (ward < 0 && craft != SiegeSpell.Rally) continue;
+
+                // **A cast that found nothing to aim at does not spend its cadence.** The timer
+                // used to be re-armed above, before the target was known, so a blightcaller that
+                // found every ward already dark - or, until `Wanted` was narrowed, one that found
+                // nothing but empty ones - stood in silence for a further
+                // `SiegeTuning.CastEveryFor` seconds having done nothing at all. On the one boss
+                // whose spell takes no health that is indistinguishable from a boss that does not
+                // work, which is exactly how it was reported from play.
+                //
+                // Re-arming short instead means the spell lands on the frame there is something
+                // to take. It can only ever make a cast arrive *sooner than it would have* and
+                // never more often than the cadence, because a cast that lands re-arms in full.
+                if (ward < 0 && craft != SiegeSpell.Rally)
+                {
+                    boss.Spell = SiegeTuning.CastRetry;
+                    continue;
+                }
+
+                boss.Spell = SiegeTuning.CastEveryFor(boss.Kind);
 
                 float lands = SiegeTuning.BossTell + SiegeTuning.BossFlight;
 
@@ -449,7 +471,10 @@ namespace GlimmerGrove.Modes
         /// decision rather than a tax: the fuel it takes is fuel somebody just earned, and the
         /// answer — feed a different colour, or spend a surge — is one they choose every few
         /// seconds. An already-dark ward is never chosen twice; there is nothing left to take and
-        /// a second one would read as the boss doing nothing.
+        /// a second one would read as the boss doing nothing. An <em>empty</em> one still is
+        /// chosen, and that was measured rather than assumed — see the clause itself. When every
+        /// standing ward is already out there is nothing to throw at, and the boss holds its cast
+        /// rather than spending it (<see cref="SiegeTuning.CastRetry"/>).
         /// </para>
         /// <para>
         /// <b>A sunder wants the best turret on the line</b>, which is the one thing in this
@@ -476,6 +501,14 @@ namespace GlimmerGrove.Modes
                 long rank;
                 switch (craft)
                 {
+                    // **An empty ward is still worth putting out, and that is not an oversight.**
+                    // It reads like one - "take the fire" with no fire to take - and refusing an
+                    // empty tube was tried and is strictly worse: a match keeps a ward firing for
+                    // about two seconds, so at the instant a boss decides, most tubes are empty
+                    // most of the time, and a blightcaller that would only throw at a full one
+                    // throws far less often and takes *less*. What a douse really costs is the
+                    // five seconds of dark (`SiegeWard.Snuff`), which land whatever was in the
+                    // tube. The fuel is the tie-break, not the point.
                     case SiegeSpell.Douse:
                         if (ward.Doused) continue;
                         rank = (long)(ward.Fuel * 1000f) * 64L + ward.Health;

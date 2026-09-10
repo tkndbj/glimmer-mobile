@@ -59,14 +59,17 @@ heard as a phrase rather than as one note) and **the run** (the clip at the rate
 really repeats it, which is how `coin` at nine a second is judged). Those are the two
 cases every wrong choice here has been wrong in.
 
-**One clip is chosen against its measurements, and it is `reward`.** It carries 61% of its
-energy in the 2-5 kHz band - by some distance the most fatiguing thing here, where nothing
-else exceeds 17%. It is in anyway, because the owner picked it by ear and because *how often
-a sound plays is part of whether harshness matters*: `reward` fires only on coming back from
-a watched ad, which is opt-in, capped at a handful a day, and is the one moment in the game
-that is allowed to be brash. The same sample on `click` or `rotate_a` would be indefensible.
-Keep that distinction if this table grows: the fatigue readings are a budget spent against
-repetition, not a pass mark every clip has to clear.
+**Two clips are chosen against their measurements, and both are defended the same way.**
+`reward` carries 61% of its energy in the 2-5 kHz band and `stand` 56%, where the rest of
+the set runs from nothing to `pilfer`'s 30%. Both are in anyway, because the owner picked
+them by ear and because *how often a sound plays is part of whether harshness matters*:
+`reward` fires only on coming back from a watched ad, which is opt-in and capped at a
+handful a day, and `stand` fires on arranging a turret line, which happens a few times on a
+screen visited between runs. The same samples on `click` or `rotate_a` would be
+indefensible. Keep that distinction if this table grows: the fatigue readings are a budget
+spent against repetition, not a pass mark every clip has to clear - and the corollary is
+that a bright clip may never be *borrowed* for a slot that repeats, which is the one way
+this bargain gets broken by accident.
 
 **The source is outside the repo** - see the audio-source-pack note. It is a 384 MB
 licensed pack (GameBurp 2000 Game Sound FX Collection, royalty-free, EULA in the pack),
@@ -80,6 +83,7 @@ import html
 import io
 import json
 import sys
+import uuid
 import wave
 from pathlib import Path
 
@@ -151,7 +155,78 @@ USE = {
     "blocked":  ((1.00, 1.00), 0.00, "a refused keeper name"),
     "boom":     ((0.94, 1.06), 0.00, "a firepot bursting on Thornwatch's hill"),
     "mend":     ((1.00, 1.00), 0.00, "a mending poured into a ward"),
+    "gem":      ((0.94, 1.06), 0.40, "a match going off in Thornwatch, once a cascade beat"),
+    "settle":   ((0.94, 1.06), 0.40, "the refill landing, half a beat behind the match"),
+    "shot":     ((1.00, 1.00), 0.055, "a ward firing - four lit wards at .22s each, flat"),
+    "zap":      ((0.94, 1.06), 0.22, "a ward's bolt killing what it hit"),
+    "stand":    ((1.00, 1.00), 0.25, "standing a turret on a colour in the loadout"),
+    "wear":     ((1.00, 1.00), 0.30, "wearing a companion, on the profile or the grid"),
 }
+
+
+# ------------------------------------------------------------------- importer
+#: How every clip in this set is imported, and why the tool owns it rather than Unity.
+#:
+#: **Four of these settings undo something the table did.** `normalize: 1` re-levels the clip on
+#: import, which is `sfx_dsp.normalise` thrown away and the whole premise of the loudness match
+#: with it - `volume: .5` stops meaning one thing. `compressionFormat: 1` (Vorbis) re-encodes a
+#: sample chosen for a measured spectrum. `preloadAudioData: 0` leaves a clip out of the preload
+#: `AssetManifest.Sfxs` exists to perform, so the first play of it is a load. `3D: 1` is a
+#: positioned source in a game where `Audio.cs` sets `spatialBlend = 0` on all twelve of its
+#: voices.
+#:
+#: **Unity writes exactly those four defaults for a wav dropped in beside a closed Editor, and it
+#: already happened**: `snare` and `pilfer` shipped that way, unpreloaded and re-normalised, and
+#: nothing anywhere said so - a clip imported wrong sounds like a clip mixed wrong. So the meta is
+#: written here, which is the same bargain `make_hud_kit_art.py` strikes for a nine-slice border:
+#: an import setting that decides how the asset behaves is part of the asset, not a step somebody
+#: remembers.
+META = """fileFormatVersion: 2
+guid: {guid}
+AudioImporter:
+  externalObjects: {{}}
+  serializedVersion: 8
+  defaultSettings:
+    serializedVersion: 2
+    loadType: 0
+    sampleRateSetting: 0
+    sampleRateOverride: 44100
+    compressionFormat: 0
+    quality: 1
+    conversionMode: 0
+    preloadAudioData: 1
+  platformSettingOverrides: {{}}
+  forceToMono: 0
+  normalize: 0
+  loadInBackground: 0
+  ambisonic: 0
+  3D: 0
+  userData:
+  assetBundleName:
+  assetBundleVariant:
+"""
+
+
+def write_meta(dest):
+    """Give a clip the set's import settings, keeping any guid it already has.
+
+    **The guid is kept rather than minted**, for the reason `make_hud_kit_art.py` patches a meta
+    instead of writing one: Addressables keys a registered entry on the guid, so a fresh one
+    orphans the address and the game asks for a clip nothing answers with (invariant 7b). A clip
+    that has never been imported has no guid to keep, so it gets one.
+    """
+    meta = dest.with_suffix(dest.suffix + ".meta")
+    guid = None
+    if meta.exists():
+        for line in meta.read_text(encoding="utf-8").splitlines():
+            if line.startswith("guid:"):
+                guid = line.split(":", 1)[1].strip()
+                break
+    want = META.format(guid=guid or uuid.uuid4().hex)
+    if meta.exists() and meta.read_text(encoding="utf-8") == want:
+        return False
+    meta.write_text(want, encoding="utf-8", newline="\n")
+    return True
 
 
 # ---------------------------------------------------------------------- table
@@ -332,6 +407,26 @@ SCENES = [
      + [("tick", 0.20 + 0.055 * i + 0.0042 * i * i, 1.0 + 0.35 * min(i / 22.0, 1.0), 0.34)
         for i in range(22)]
      + [("wheel", 2.15, 1.00, 0.62)]),
+
+    # The two Thornwatch cases, and they are here for the tool's own reason: neither of these
+    # sounds can be judged alone. A match is heard *under* a cascade and a bolt is heard as one of
+    # eighteen a second, which is exactly where every wrong choice in this set has been wrong.
+    ("a cascade", "A swap, three beats of matching, and the board filling back in after each. "
+                  "`gem` and `settle` a beat apart, at `SiegeTuning.BeatFor`.",
+     [("rotate_a", 0.00, 1.00, 0.30)]
+     + [s for i in range(3) for s in (
+         ("gem", 0.16 + i * 0.40, 1.00, 0.68 + min(0.24, i * 0.07)),
+         ("settle", 0.36 + i * 0.40, 1.00, 0.52))]
+     + [("chime", 0.56, 1.14, 0.35), ("chime", 0.96, 1.26, 0.35)]),
+
+    ("a lit line", "Four wards firing at once — one clip, flat, .22s each, so about eighteen "
+                   "bolts a second — with two of them killing. The .12 here is the call site's "
+                   "own figure: play this scene against a single `shot` above and the gap "
+                   "between them is what four overlapping copies are worth. This is the scene "
+                   "that decides whether flat reads as one line or as one drone.",
+     [("shot", i * 0.055, 1.00, 0.12) for i in range(28)]
+     + [("zap", 0.44, 1.02, 0.42), ("zap", 1.10, 0.97, 0.42),
+        ("chime2", 0.72, 1.05, 0.20)]),
 ]
 
 PAGE = r"""<title>Grove Sound Audition</title>
@@ -686,7 +781,8 @@ def main():
                 bad.append(f"{row.slot}: {len(want)} bytes on disk, {len(got)} from the table")
         else:
             dsp.write(dest, a)
-            print(f"  {row.slot:10} {a.size / dsp.RATE:5.2f}s  peak {dsp.peak(a):.2f}  <- {row.source}")
+            meta = " +meta" if write_meta(dest) else ""
+            print(f"  {row.slot:10} {a.size / dsp.RATE:5.2f}s  peak {dsp.peak(a):.2f}  <- {row.source}{meta}")
 
     if args.check:
         if bad:

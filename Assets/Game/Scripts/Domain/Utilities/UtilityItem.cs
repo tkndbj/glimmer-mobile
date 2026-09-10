@@ -181,9 +181,11 @@ namespace GlimmerGrove.Utilities
         /// </summary>
         public readonly int Magnitude;
 
-        // No reach. A blast takes exactly what is standing in the box that was tapped
-        // (`SiegeTuning.BlastRows`), so how far it carries is a rule rather than a number — and a
-        // content field with one legal value is the decoration invariant 5d names.
+        // No reach. How far a blast carries is `SiegeTuning.BlastReach` — a rule rather than a
+        // number, because it has to be the same fact the view lights and the mirror draws, and a
+        // content field with one legal value is the decoration invariant 5d names. It stopped
+        // being one box and became a plus of five without this comment changing, which is the
+        // point of it living there.
 
         /// <summary>
         /// What one costs in gems, or nought for something only a chest hands out.

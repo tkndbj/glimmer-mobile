@@ -1312,7 +1312,7 @@ namespace GlimmerGrove
         void BuildPlay()
         {
             var play = UIKit.TextButton("Play", Content, Skins.Battle, "BATTLE", 62,
-                                        new Vector2(620f, 178f), new Vector2(.5f, 0f), new Vector2(0f, NavBar.Height + 262f),
+                                        new Vector2(620f, 178f), new Vector2(.5f, 0f), new Vector2(0f, NavBar.Height + 274f),
                                         () => Flow.Go<LevelsScreen>(), "ic_battle");
 
             // The kit sizes a pill's glyph at a third of its height, which is right for a small

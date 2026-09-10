@@ -382,6 +382,17 @@ namespace GlimmerGrove.Content
                 char colour = Wards.WardLine.Colours[i];
                 yield return AssetRequest.Sprite(AssetManifest.SiegeArt(starter.ArtFor(colour)));
                 yield return AssetRequest.SpriteSet(AssetManifest.SiegeArt(starter.FireFor(colour)));
+
+                // **And what it throws**, which used to be resident anyway under another name: the
+                // starter fired the four elemental reels the mode's cast already carries, so a
+                // line falling back to it could always draw. It has an effect of its own now
+                // (`WardModel.Elemental` moved), so the safety net has to name that instead - or
+                // the one turret a broken line resolves to is the one with no bolt.
+                if (!starter.OwnShot) continue;
+
+                yield return AssetRequest.SpriteSet(AssetManifest.SiegeFx(starter.ShotFor(colour)));
+                yield return AssetRequest.SpriteSet(AssetManifest.SiegeFx(starter.MuzzleFor(colour)));
+                yield return AssetRequest.SpriteSet(AssetManifest.SiegeFx(starter.HitFor(colour)));
             }
         }
 

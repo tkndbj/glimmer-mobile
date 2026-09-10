@@ -59,7 +59,7 @@ namespace GlimmerGrove
 
         RectTransform _viewport;
         GridView _grid;
-        Text _empty, _boardCaption;
+        Text _empty;
         Btn _globalTab, _leagueTab;
 
         LeaderboardBoard _board = LeaderboardBoard.None;
@@ -123,13 +123,9 @@ namespace GlimmerGrove
 
             var chrome = Safe;
 
-            var banner = UIKit.Img("Banner", chrome, Art.S("Ui/banner"), Color.white,
-                                   new Vector2(430f, 114f), new Vector2(.5f, 1f), new Vector2(0f, -102f));
-            UIKit.Shrinkable(
-                UIKit.Titled("Title", banner.transform, Loc.Get("ui.board.title").ToUpperInvariant(), 32,
-                             new Color(.36f, .24f, .16f), TextAnchor.MiddleCenter,
-                             new Vector2(300f, 46f), new Vector2(.5f, .5f),
-                             new Vector2(0f, 114f * UIKit.PillFaceLift), 0f, 2f), 20);
+            var banner = Scenery.TitleRibbon(chrome, Loc.Get("ui.board.title").ToUpperInvariant(),
+                                             new Vector2(470f, 128f), new Vector2(.5f, 1f),
+                                             new Vector2(0f, -106f), 38, 20f);
             banner.transform.localScale = Vector3.zero;
             Tween.Pop(banner.transform, 0f, .6f, .1f);
 
@@ -141,13 +137,10 @@ namespace GlimmerGrove
                              new Vector2(0f, 1f), new Vector2(92f, -104f),
                              () => Flow.Go<HomeScreen>());
 
+            // The caption that used to sit under the tabs is gone. It said how many keepers
+            // the board holds, which is a fact about the population rather than about the
+            // player's standing — and the rows themselves are what somebody came here to read.
             BuildTabs(chrome);
-
-            _boardCaption = UIKit.Shrinkable(
-                UIKit.Titled("BoardCaption", chrome, string.Empty, 22,
-                             new Color(1f, .96f, .88f, .62f), TextAnchor.MiddleCenter,
-                             new Vector2(900f, 30f), new Vector2(.5f, 1f), new Vector2(0f, -285f),
-                             3f, 0f), 15);
         }
 
         void BuildTabs(Transform chrome)
@@ -156,14 +149,14 @@ namespace GlimmerGrove
 
             _globalTab = UIKit.TextButton("Global", chrome, "btn_orange",
                                           Loc.Get("ui.board.global"), 28, size,
-                                          new Vector2(.5f, 1f), new Vector2(-158f, -215f),
+                                          new Vector2(.5f, 1f), new Vector2(-158f, -230f),
                                           () => Select(LeaderboardBoard.Global));
             UIKit.Shrinkable(_globalTab.Label, 18);
             UIKit.FitLabel(_globalTab);
 
             _leagueTab = UIKit.TextButton("League", chrome, Skins.Alternate,
                                           Loc.Get("ui.board.league"), 28, size,
-                                          new Vector2(.5f, 1f), new Vector2(158f, -215f),
+                                          new Vector2(.5f, 1f), new Vector2(158f, -230f),
                                           () => Select(GroveBoard.MyLeagueId()));
             UIKit.Shrinkable(_leagueTab.Label, 18);
             UIKit.FitLabel(_leagueTab);
@@ -248,7 +241,6 @@ namespace GlimmerGrove
             // GridView exists to keep, and the reason the shop stopped flickering.
             _grid?.Show(_board.Entries.Count);
             PaintEmpty();
-            PaintCaption();
         }
 
         void OnPublished()
@@ -261,27 +253,9 @@ namespace GlimmerGrove
         void Repaint()
         {
             _grid?.Refresh();
-            PaintCaption();
         }
 
         // ------------------------------------------------------------------ copy
-        void PaintCaption()
-        {
-            if (!_boardCaption) return;
-
-            if (_board.Population > 0)
-            {
-                _boardCaption.text = _boardId == LeaderboardBoard.Global
-                    ? Loc.Format("ui.board.of_keepers", Compact.Number(_board.Population))
-                    : Loc.Format("ui.board.of_league",
-                                 Loc.Get(GroveLeague.NameKey(GroveLeague.StarsOf(_boardId))),
-                                 Compact.Number(_board.Population));
-                return;
-            }
-
-            _boardCaption.text = string.Empty;
-        }
-
         /// <summary>
         /// Six ways for a list to be empty, and each says which one it is.
         ///

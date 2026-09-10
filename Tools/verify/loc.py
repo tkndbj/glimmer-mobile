@@ -38,7 +38,11 @@ SOURCE = os.path.join(ROOT, "Assets", "Game")
 # "ui.something.else" — two or more dot-separated lowercase segments. The same
 # shape the Editor validator looks for, and the reason keys must be written out
 # rather than concatenated: a literal is the only thing either checker can see.
-KEY = re.compile(r'"((?:ui|err|mech)\.[a-z0-9_]+(?:\.[a-z0-9_]+)+)"')
+# **One dot is enough.** This asked for at least two segments after the prefix, so a two-part key
+# was invisible to the scanner - and `ui.ok` sat in a shipping panel for months, defined nowhere,
+# drawing the literal text "ui.ok" on a purchase button. The gate could not see it because of the
+# shape of the name rather than anything about the key.
+KEY = re.compile(r'"((?:ui|err|mech)\.[a-z0-9_]+(?:\.[a-z0-9_]+)*)"')
 
 # Keys the game derives from a permanent id rather than writing out — a level's
 # name, a companion's, a mechanic tip's. They are checked by the content

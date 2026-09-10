@@ -500,13 +500,9 @@ namespace GlimmerGrove
             // and keeps the sky and the fade above — see View.Safe.
             var chrome = Safe;
 
-            var banner = UIKit.Img("Banner", chrome, Art.S("Ui/banner"), Color.white,
-                                   new Vector2(430f, 114f), new Vector2(.5f, 1f), new Vector2(0f, -102f));
-            UIKit.Shrinkable(
-                UIKit.Titled("Title", banner.transform, Loc.Get("ui.grove.title").ToUpperInvariant(), 32,
-                             new Color(.36f, .24f, .16f), TextAnchor.MiddleCenter,
-                             new Vector2(300f, 46f), new Vector2(.5f, .5f),
-                             new Vector2(0f, 114f * UIKit.PillFaceLift), 0f, 2f), 20);
+            var banner = Scenery.TitleRibbon(chrome, Loc.Get("ui.grove.title").ToUpperInvariant(),
+                                             new Vector2(470f, 128f), new Vector2(.5f, 1f),
+                                             new Vector2(0f, -106f), 38, 20f);
             banner.transform.localScale = Vector3.zero;
             Tween.Pop(banner.transform, 0f, .6f, .1f);
 
@@ -518,10 +514,15 @@ namespace GlimmerGrove
                              new Vector2(0f, 1f), new Vector2(NavX, NavY),
                              () => Flow.Go<HomeScreen>());
 
+            // The line under the banner, and it is silent unless it has news. It used to
+            // count what is standing, how much floor is owned and how many kinds are on it —
+            // three numbers a player reads off the grove itself by looking at it, on the one
+            // screen whose whole surface *is* that answer. What is left are the two states the
+            // field cannot draw, because in both of them there is no field yet.
             _summary = UIKit.Shrinkable(
-                UIKit.Titled("Summary", chrome, string.Empty, 26,
-                             new Color(1f, .96f, .88f, .72f), TextAnchor.MiddleCenter,
-                             new Vector2(720f, 34f), new Vector2(.5f, 1f), new Vector2(0f, -172f), 3f, 0f), 18);
+                UIKit.Titled("Summary", chrome, string.Empty, 26, Pal.Cream,
+                             TextAnchor.MiddleCenter, new Vector2(720f, 34f),
+                             new Vector2(.5f, 1f), new Vector2(0f, -176f), 3f, 0f), 18);
 
             // The shop is a screen of its own rather than a panel over this one, for
             // CompanionScreen's reason: what it lists is unbounded, and a grid that scrolls
@@ -573,10 +574,7 @@ namespace GlimmerGrove
                 return;
             }
 
-            _summary.text = Loc.Format("ui.grove.summary",
-                                       HomesteadLayout.OccupiedCount(catalog),
-                                       GroveLand.OwnedTileCount(catalog.Floor),
-                                       HomesteadLayout.VarietyCount(catalog));
+            _summary.text = string.Empty;
         }
 
         // ----------------------------------------------------------------- score
@@ -1174,6 +1172,30 @@ namespace GlimmerGrove
             bool _rising;
             int _riseCol, _riseRow;
 
+            /// <summary>
+            /// The idle breath under this cell's empty-tile ring, and which tile it belongs to.
+            ///
+            /// <para>
+            /// <b>Held so a redraw can leave it alone.</b> <c>Tween.Breathe</c> restarts: it
+            /// kills the channel, re-reads the transform's scale as its rest point and fades the
+            /// oscillation back in from nothing. Started on every <see cref="Bind"/>, that made
+            /// a repaint of the field visible — every ring on the screen collapsing to rest and
+            /// swelling back together — which is half of what "the tiles reload while I am
+            /// building" was, the other half being the flipbooks (see <c>Flipbook.Ensure</c>).
+            /// The field is repainted by the ledger, the layout, the wallet and the art scope,
+            /// and a sync landing after a placement raises three of those.
+            /// </para>
+            /// <para>
+            /// The tile is part of the state because the phase is a function of the
+            /// coordinates: a cell recycled onto another tile has to start its own breath, or
+            /// the field beats in bands rather than as a field. And the tween is held rather
+            /// than a bare flag, because a flag cannot see a <c>KillChannel</c> raised by
+            /// somebody else — see <see cref="Tw.Running"/>.
+            /// </para>
+            /// </summary>
+            Tw _breath;
+            int _breathCol = -1, _breathRow = -1;
+
             public RectTransform Ground { get; }
 
             public RectTransform Root { get; }
@@ -1241,8 +1263,12 @@ namespace GlimmerGrove
                 _art.gameObject.SetActive(drawn);
                 if (drawn) GroveTileArt.LayPiece(_art, piece, stand);
 
-                _ring.gameObject.SetActive(!anchored && !covered);
-                if (_ring.gameObject.activeSelf)
+                bool empty = !anchored && !covered;
+                _ring.gameObject.SetActive(empty);
+
+                if (!empty) StopBreathing();
+                else if (_breath == null || !_breath.Running
+                         || col != _breathCol || row != _breathRow)
                 {
                     // Reset before restarting, and that is not tidiness. Tween.Breathe captures
                     // the transform's current scale as the value it oscillates about, and killing
@@ -1253,7 +1279,10 @@ namespace GlimmerGrove
 
                     // Phased off the tile's own coordinates so the field breathes as a field
                     // rather than pulsing in unison, which reads as a fault rather than as life.
-                    Tween.Breathe(_ring.transform, .10f, 2.4f, (col * .37f + row * .61f) % 1f);
+                    _breath = Tween.Breathe(_ring.transform, .10f, 2.4f,
+                                            (col * .37f + row * .61f) % 1f);
+                    _breathCol = col;
+                    _breathRow = row;
                 }
 
                 // Ground the player has just paid for arrives out of the floor rather than
@@ -1286,6 +1315,25 @@ namespace GlimmerGrove
                     if (_body) { _body.anchoredPosition = at; _body.localScale = scale; }
                     if (_groundBody) { _groundBody.anchoredPosition = at; _groundBody.localScale = scale; }
                 }, _body, "rise").OnDone(EndRise);
+            }
+
+            /// <summary>
+            /// Puts the ring's breath away when the tile stops being empty, and puts the scale
+            /// back. Killing the channel is what runs <c>OnAbandon</c>, so a tile that gains a
+            /// piece mid-breath does not leave a ring frozen at some fraction of its size for
+            /// whatever this cell is recycled onto next.
+            /// </summary>
+            void StopBreathing()
+            {
+                if (_breath == null) return;
+
+                _breath = null;
+                _breathCol = _breathRow = -1;
+
+                if (!_ring) return;
+
+                Tween.KillChannel(_ring.transform, "breathe");
+                _ring.transform.localScale = Vector3.one;
             }
 
             void EndRise()

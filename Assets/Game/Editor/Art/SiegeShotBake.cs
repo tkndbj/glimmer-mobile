@@ -50,7 +50,7 @@ namespace GlimmerGrove.EditorTools
     /// picture being wrong (invariant 37g).
     /// </para>
     /// </summary>
-    public static class SiegeShotBake
+    public static partial class SiegeShotBake
     {
         // ------------------------------------------------------------------ what each ward fires
         /// <summary>
@@ -86,6 +86,38 @@ namespace GlimmerGrove.EditorTools
             /// and <see cref="Prefab"/> is ignored.
             /// </summary>
             public string Path;
+
+            /// <summary>
+            /// A second effect layered into this one, or null.
+            ///
+            /// <para>
+            /// <b>Because the pack holds twenty silhouettes and this roster wants nineteen good
+            /// ones.</b> Four of the twenty are weak on their own - a plain pill, a puff of wind, a
+            /// disc, a stave of music - and three of those were the only shapes left once the
+            /// starter and the bosses had taken theirs. Layering is what a VFX artist does with a
+            /// library like this: the base decides the silhouette and the second one gives it a
+            /// head, a shell or a wake. It is composition rather than approximation, which is the
+            /// difference invariant 32b keeps drawing.
+            /// </para>
+            /// <para>
+            /// The two are flown as one object at one speed, so a trail smears the same way for
+            /// both, and the muzzle and impact are still the base's unless overridden.
+            /// </para>
+            /// </summary>
+            public string With;
+
+            /// <summary>
+            /// The flash and the impact, when the projectile's own pair are not the ones to use.
+            ///
+            /// <b>A projectile can be right while its companions are wrong, and that is a real
+            /// case rather than a hypothetical.</b> The crescent blade came back from play as "a
+            /// weird circular animation on initial fire" and "no impact effect" - its flight was
+            /// exactly right, its muzzle was an expanding ring and its impact was a two-pixel
+            /// vertical line the bake framed as a hairline. Giving up the flight to fix those would
+            /// have been throwing away the part that worked.
+            /// </summary>
+            public string Muzzle, Hit;
+
         }
 
         static readonly Shot[] Shots =
@@ -94,6 +126,151 @@ namespace GlimmerGrove.EditorTools
             new Shot { Key = "g", Prefab = "vfx_Projectile_PoisonDart01", Hue = Pal.Mint  },
             new Shot { Key = "b", Prefab = "vfx_Projectile_Icicle01",     Hue = Pal.Azure },
             new Shot { Key = "y", Prefab = "vfx_Projectile_Lightning01",  Hue = Pal.Sun   },
+        };
+
+        /// <summary>
+        /// What each turret in the roster throws — one effect per model, chosen to say what that
+        /// model's <em>ability</em> does.
+        ///
+        /// <para>
+        /// <b>Nineteen distinct silhouettes, because a turret somebody paid credits or gems for
+        /// has to be visibly the thing they bought.</b> The four elemental bolts belong to the
+        /// starter and are untouched; every model with an ability throws something of its own,
+        /// worn in whichever colour its ward burns. The pack holds exactly twenty families and the
+        /// three files in each are the same shape in three colours — so the shapes are the scarce
+        /// thing, and every one of these is a different one.
+        /// </para>
+        /// <para>
+        /// <b>Chosen by looking, which is the only way these can be chosen.</b> Their names say a
+        /// family and their thumbnails are grey cubes; <c>Survey Projectile Pack</c> rasterises all
+        /// sixty onto one sheet at the size a phone draws them, and that sheet is what picked
+        /// these. Invariant 37k records the same method choosing one boss spell out of six
+        /// candidates, and every time this project has skipped it, it has shipped a picture
+        /// somebody had to do again.
+        /// </para>
+        /// <para>
+        /// <b>The pairing rule is that the silhouette says the ability, not the tier.</b> Two
+        /// models sharing an ability are the same answer at two strengths, so making them two
+        /// tints of one shape would be invariant 37z's fault exactly — two things told apart by a
+        /// hue are not told apart. They are instead two different readings of the same idea: a
+        /// crescent and a shockwave both cut through armour, an arrow and a lance both run a lane.
+        /// </para>
+        /// </summary>
+        static readonly Shot[] Roster =
+        {
+            // ---- Chain: it arcs on to the raiders behind the one it hit -----------------------
+            // A spark, a forked bolt and a crackling nexus: three readings of electricity, climbing
+            // in weight the way the ability does (5 -> 7 -> 10 tenths, over one, two and three
+            // extra raiders).
+            new Shot { Key = "spark",      Prefab = "vfx_Projectile_Fireworks02" },
+            new Shot { Key = "arcstorm",   Prefab = "vfx_Projectile_Lightning02" },
+            // **Its effect and its label were swapped with the beacon's after play.** What moved
+            // is what a player sees; the id, the turret body, the ability and the price all stayed
+            // where they were, because a model id is permanent (invariant 1) and the save keys a
+            // purchase and a stood line on it.
+            new Shot { Key = "apex",       Prefab = "vfx_Projectile_ShootingStar01" },
+
+            // ---- Splash: it strikes everything within a band of what it hit -------------------
+            // Ordnance. A finned shell that is unmistakably fired, and a heavy slug that arrives
+            // with a wake — both of which are read as "this one goes off" before it lands.
+            new Shot { Key = "mortar",     Prefab = "vfx_Projectile_Rocket01" },
+            new Shot { Key = "howitzer",   Prefab = "vfx_Projectile_Capsule02" },
+
+            // ---- Frost: what it hits walks slower --------------------------------------------
+            // The one ability that buys time rather than damage, so both of these are *solid* and
+            // faceted where everything else in the roster is light: a shard and a block of ice.
+            new Shot { Key = "glacier",    Prefab = "vfx_Projectile_Cube01" },
+
+            // ---- the starter, which now throws one effect rather than four --------------------
+            // **The free turret used to fire the elemental set and the frost turret an ice shard;
+            // the owner swapped them.** So `bolt` is an ordinary roster entry with a shard of its
+            // own, and `rime` draws the four elements (`WardModel.Elemental`). It is graded here
+            // rather than on the elemental path because that path leans a reel only a third of the
+            // way onto its colour - which is right for four effects chosen for already wearing
+            // roughly the right hue, and leaves a pale shard whitish in four colours.
+            new Shot { Key = "bolt",       Prefab = "vfx_Projectile_Icicle02" },
+
+            // ---- Pierce: every so often it runs the whole lane --------------------------------
+            // Both are *linear* — an arrow with a shaft behind it and a straight lance of light —
+            // because what this ability does is a line, and a round thing cannot say that.
+            new Shot { Key = "lance",      Prefab = "vfx_Projectile_MagicArrow01" },
+            // A lance of light with a crystal head on it. `Bullet` alone came back from play as
+            // "so primitive, I do not even understand it" - a plain pill on a soft trail - and what
+            // it was missing is a *point*.
+            new Shot
+            {
+                Key = "harpoon", Prefab = "vfx_Projectile_Bullet02",
+                With = "vfx_Projectile_Icicle03",
+                Muzzle = "vfx_Muzzle_Fireworks03", Hit = "vfx_Hit_Rocket03",
+            },
+
+            // ---- Rend: it is not blunted by a shield ------------------------------------------
+            // A crescent that cuts and a wave that shatters. Two ways of getting through armour
+            // rather than one drawn twice, which is what keeps a five-thousand-credit turret and a
+            // thousand-gem one from reading as the same purchase.
+            // The crescent is right and both its companions were wrong: its own muzzle opens an
+            // expanding ring (the "weird circular animation on initial fire") and its own impact is
+            // a two-pixel vertical line. A sharp burst leaving the barrel and a bright sparking
+            // ring where it lands say what a cut does.
+            new Shot
+            {
+                Key = "cleaver", Prefab = "vfx_Projectile_Slash01",
+                Muzzle = "vfx_Muzzle_Icicle03", Hit = "vfx_Hit_Fireworks03",
+            },
+            // A wrecking slug wrapped in shattering crystal, which lands as a shatter. `Wind`
+            // alone was a grey puff and came back as "weak, does not feel good"; what a shield
+            // breaker needs is weight and debris.
+            new Shot
+            {
+                Key = "breaker", Prefab = "vfx_Projectile_Capsule01",
+                With = "vfx_Projectile_Cube03",
+                Muzzle = "vfx_Muzzle_Cube03", Hit = "vfx_Hit_Cube03",
+            },
+
+            // ---- Siphon: a kill hands some of its fuel back -----------------------------------
+            // The two things in the pack that read as *taking* something: a spectral wisp trailing
+            // smoke, and a dart that leaves venom behind it.
+            new Shot { Key = "siphon",     Prefab = "vfx_Projectile_Ghostly01" },
+            new Shot { Key = "leech",      Prefab = "vfx_Projectile_PoisonDart02" },
+
+            // ---- Ember: what it hits goes on burning ------------------------------------------
+            // Fire, twice, and the second one is a firestorm rather than a bigger flame: twin
+            // spirals that keep turning after the head has gone, which is the ability drawn.
+            new Shot { Key = "ember",      Prefab = "vfx_Projectile_Fireball02" },
+            new Shot { Key = "pyre",       Prefab = "vfx_Projectile_Spiral01" },
+
+            // ---- Beacon: it holds more fuel, so a big match banks rather than spills -----------
+            // Light that is *stored* — a lamp and a star. Neither is a weapon shape, deliberately:
+            // this is the one ability that does nothing to a raider at all.
+            new Shot { Key = "beacon",     Prefab = "vfx_Projectile_Orb17_blue" },
+            new Shot { Key = "lighthouse", Prefab = "vfx_Projectile_Orb18_red" },
+
+            // ---- Prism: its bolts are worth double against two colours -------------------------
+            // The one ability that widens the mode's central rule, so both of these are about
+            // *two-ness*: a disc split into two halves, and a sun that is every colour at once.
+            // **A sun, and the biggest thing on the board.** The disc that was here first was
+            // asked to be replaced by name: "this is a thick turret, give it a big effect like a
+            // sun or a huge fireball". It is drawn half again the size of every other bolt
+            // (`SiegeView.BoltScale`), which is the only place a turret's projectile is allowed to
+            // differ in size - and it is the top of the credit ladder, so it should be.
+            new Shot
+            {
+                Key = "prism", Prefab = "vfx_Projectile_Sun02",
+                Hit = "vfx_Hit_Orb18_purple",
+            },
+
+            // The same light thrown as a spray of stars, which is what splitting it looks like.
+            // Its pair share a family because the pack holds one sun; what tells them apart is the
+            // spray, the sparkling impact and half a cell of size. It carried a crystal shell for
+            // one bake and that was wrong in the way this file keeps recording - a shatter beside
+            // a shatter is two turrets told apart by nothing (invariant 37z), because the wrecking
+            // slug two rows up already lands as one.
+            new Shot
+            {
+                Key = "spectrum", Prefab = "vfx_Projectile_Sun02",
+                With = "vfx_Projectile_Fireworks03",
+                Muzzle = "vfx_Muzzle_ShootingStar02", Hit = "vfx_Hit_ShootingStar02",
+            },
         };
 
         /// <summary>
@@ -233,8 +410,25 @@ namespace GlimmerGrove.EditorTools
         const int SpellTall = 384, SpellBurst = 320;
         const int SpellFrames = 18, SpellBurstFrames = 16;
 
+        /// <summary>
+        /// Where a named prefab lives in the pack.
+        ///
+        /// <b>Three folders tried in turn, because a muzzle and an impact are prefabs of their own
+        /// here.</b> Every projectile names its own pair, which is what the bake normally follows —
+        /// but a projectile whose flight is right and whose flash is wrong is a real case (a
+        /// crescent blade that opens with an expanding ring), and the answer to it is to take the
+        /// two from somewhere else rather than to give up the flight.
+        /// </summary>
         static string PrefabPath(string name)
-            => VfxBench.PackRoot + "/Projectiles/" + name + ".prefab";
+        {
+            foreach (var folder in new[] { "/Projectiles/", "/Muzzles/", "/Hits/" })
+            {
+                string at = VfxBench.PackRoot + folder + name + ".prefab";
+                if (System.IO.File.Exists(at)) return at;
+            }
+
+            return VfxBench.PackRoot + "/Projectiles/" + name + ".prefab";
+        }
 
         static string PathOf(Shot shot)
             => string.IsNullOrEmpty(shot.Path) ? PrefabPath(shot.Prefab) : shot.Path;
@@ -405,14 +599,49 @@ namespace GlimmerGrove.EditorTools
         const float SlowestBake = .30f, FastestBake = 1.4f;
 
         // ------------------------------------------------------------------ menu
+        /// <summary>
+        /// Which half of the mode's projectile art a run touches.
+        ///
+        /// <b>Separable because the two halves are baked differently and change for different
+        /// reasons.</b> The elemental four and the bosses' four are graded into a colour and have
+        /// been stable for chapters; the roster's nineteen are bleached and are the ones being
+        /// tuned. Re-baking everything to iterate on one of them would rewrite thirty reels nobody
+        /// asked to change, and <see cref="Verify"/> would then be comparing a fresh bake against
+        /// a fresh bake.
+        /// </summary>
+        [System.Flags]
+        enum Parts
+        {
+            Elemental = 1,      // the starter's four, and the four spells the bosses throw
+            Roster = 2,         // one effect per bought turret
+            Strike = 4,         // the stormcall, out of a different pack and graded its own way
+            All = Elemental | Roster | Strike,
+        }
+
         [MenuItem("Glimmer Grove/Art/Bake Siege Projectiles", false, 30)]
-        public static void Bake() => Run(write: true, contact: false);
+        public static void Bake() => Run(write: true, contact: false, parts: Parts.All);
 
         [MenuItem("Glimmer Grove/Art/Verify Siege Projectiles", false, 31)]
-        public static void Verify() => Run(write: false, contact: false);
+        public static void Verify() => Run(write: false, contact: false, parts: Parts.All);
 
         [MenuItem("Glimmer Grove/Art/Siege Projectile Contact Sheet", false, 32)]
-        public static void Contact() => Run(write: false, contact: true);
+        public static void Contact() => Run(write: false, contact: true, parts: Parts.Elemental);
+
+        /// <summary>Bakes only the turret roster — see <see cref="Parts"/>.</summary>
+        [MenuItem("Glimmer Grove/Art/Bake Turret Projectiles", false, 34)]
+        public static void BakeRoster() => Run(write: true, contact: false, parts: Parts.Roster);
+
+        /// <summary>
+        /// Bakes only the stormcall's strike — see <see cref="Parts"/>.
+        ///
+        /// <b>Its own item for the same reason the roster has one.</b> It comes out of a different
+        /// bought pack, it is framed round a ground burst rather than round a flying head, and it
+        /// is graded and lit by numbers nothing else uses — so it is the one reel that gets tuned
+        /// on its own, and re-baking thirty others to look at it would rewrite art nobody asked to
+        /// change and leave <see cref="Verify"/> comparing a fresh bake against a fresh bake.
+        /// </summary>
+        [MenuItem("Glimmer Grove/Art/Bake Storm Strike", false, 35)]
+        public static void BakeStrikeOnly() => Run(write: true, contact: false, parts: Parts.Strike);
 
         // ------------------------------------------------------------------ the run
         /// <summary>One baked reel: its frames, stacked bottom-up, and the size one of them is.</summary>
@@ -428,7 +657,7 @@ namespace GlimmerGrove.EditorTools
         /// <c>finally</c>, because a camera left in the scene at y = -4000 is invisible, saved with
         /// the scene, and renders into whatever is next asked to render.
         /// </summary>
-        static void Run(bool write, bool contact)
+        static void Run(bool write, bool contact, Parts parts)
         {
             var made = new Dictionary<string, Book>();
             GameObject stage = null;
@@ -438,61 +667,11 @@ namespace GlimmerGrove.EditorTools
             {
                 stage = BuildStage(out cam);
 
-                for (int i = 0; i < Shots.Length; i++)
-                {
-                    var shot = Shots[i];
-                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(shot.Prefab));
+                if ((parts & Parts.Roster) != 0) RunRoster(stage.transform, cam, made);
+                if ((parts & Parts.Elemental) != 0) RunElemental(stage.transform, cam, made);
+                if ((parts & Parts.Strike) != 0) RunStrike(stage.transform, cam, made);
 
-                    if (prefab == null)
-                    {
-                        // The pack is a bought asset and a checkout may not have it. Say which one
-                        // is missing and carry on, exactly as the Python art tools pass when the
-                        // licensed zips are absent.
-                        Debug.LogWarning($"[siege shots] {shot.Prefab} is not in this project — skipped.");
-                        continue;
-                    }
-
-                    BakeOne(stage.transform, cam, prefab, shot, made);
-                }
-
-                // **One row per boss, and four rather than two.** A chapter shipped two bosses
-                // sharing a body reel and separated by a run-time hue; this is the same fault's
-                // other half — two spells that were one prefab at two colours. Each of the four
-                // now throws a different *kind* of object, which is invariant 33e's test asked of
-                // the thing the author places rather than of the thing the player makes.
-                foreach (var thrown in new[] { Hex, Spell, Roar, Omen })
-                {
-                    var warlord = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(thrown.Prefab));
-
-                    if (warlord == null)
-                        Debug.LogWarning($"[siege shots] {thrown.Prefab} is not in this project — skipped.");
-                    else
-                        BakeSpell(stage.transform, cam, warlord, thrown, made);
-                }
-
-                // **The storm is baked on the *comet* path, not the spell one, and the first cut
-                // proved why.** `BakeSpell` frames square because the thing it was written for is
-                // an orb; a bolt of lightning is eight to one, so framed square it came out as a
-                // thread down the middle of a 384-square texture with ninety per cent of the frame
-                // empty — invariant 37k's sliver exactly, and the second time this pack has
-                // produced it. What a bolt wants is what a ward's bolt gets: a tall narrow frame
-                // measured off its own picture.
-                var storm = AssetDatabase.LoadAssetAtPath<GameObject>(PathOf(Storm));
-
-                if (storm == null)
-                    Debug.LogWarning($"[siege shots] {PathOf(Storm)} is not in this project — skipped.");
-                else
-                    BakeStorm(stage.transform, cam, storm, made);
-
-                if (made.Count == 0)
-                {
-                    Debug.LogWarning("[siege shots] nothing baked — is the projectile pack imported?");
-                    return;
-                }
-
-                if (contact) WriteContact(made);
-                else if (write) WriteAll(made);
-                else CompareAll(made);
+                Finish(made, write, contact);
             }
             finally
             {
@@ -507,6 +686,294 @@ namespace GlimmerGrove.EditorTools
                 foreach (var book in made.Values)
                     if (book != null && book.Sheet != null) Object.DestroyImmediate(book.Sheet);
             }
+        }
+
+        /// <summary>The starter's four bolts, and the four spells the bosses throw.</summary>
+        static void RunElemental(Transform stage, Camera cam, Dictionary<string, Book> made)
+        {
+            for (int i = 0; i < Shots.Length; i++)
+            {
+                var shot = Shots[i];
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(shot.Prefab));
+
+                if (prefab == null)
+                {
+                    // The pack is a bought asset and a checkout may not have it. Say which one
+                    // is missing and carry on, exactly as the Python art tools pass when the
+                    // licensed zips are absent.
+                    Debug.LogWarning($"[siege shots] {shot.Prefab} is not in this project — skipped.");
+                    continue;
+                }
+
+                BakeOne(stage, cam, prefab, shot, made);
+            }
+
+            // **One row per boss, and four rather than two.** A chapter shipped two bosses
+            // sharing a body reel and separated by a run-time hue; this is the same fault's
+            // other half — two spells that were one prefab at two colours. Each of the four
+            // now throws a different *kind* of object, which is invariant 33e's test asked of
+            // the thing the author places rather than of the thing the player makes.
+            foreach (var thrown in new[] { Hex, Spell, Roar, Omen })
+            {
+                var warlord = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(thrown.Prefab));
+
+                if (warlord == null)
+                    Debug.LogWarning($"[siege shots] {thrown.Prefab} is not in this project — skipped.");
+                else
+                    BakeSpell(stage, cam, warlord, thrown, made);
+            }
+        }
+
+        /// <summary>
+        /// The stormcall's strike, which is the only thing here out of the lightning pack.
+        ///
+        /// <para>
+        /// <b>It is baked on the *comet* path rather than the spell one, and the first cut proved
+        /// why.</b> <see cref="BakeSpell"/> frames square because the thing it was written for is
+        /// an orb; a bolt of lightning is eight to one, so framed square it came out as a thread
+        /// down the middle of a 384-square texture with ninety per cent of the frame empty —
+        /// invariant 37k's sliver exactly, and the second time this pack has produced it. What a
+        /// bolt wants is a tall narrow frame measured off its own picture.
+        /// </para>
+        /// <para>
+        /// <b>Its own step rather than a line in <see cref="RunElemental"/></b>, so that
+        /// <see cref="Parts.Strike"/> can be baked on its own: it is graded, lit, framed and
+        /// angled by numbers nothing else in this file uses, so it is the one reel that gets
+        /// tuned alone.
+        /// </para>
+        /// </summary>
+        static void RunStrike(Transform stage, Camera cam, Dictionary<string, Book> made)
+        {
+            var storm = AssetDatabase.LoadAssetAtPath<GameObject>(PathOf(Storm));
+
+            if (storm == null)
+                Debug.LogWarning($"[siege shots] {PathOf(Storm)} is not in this project — skipped.");
+            else
+                BakeStorm(stage, cam, storm, made);
+        }
+
+        /// <summary>Writes, compares or lays out whatever was baked. Reports rather than throws.</summary>
+        static void Finish(Dictionary<string, Book> made, bool write, bool contact)
+        {
+            if (made.Count == 0)
+            {
+                Debug.LogWarning("[siege shots] nothing baked — is the projectile pack imported?");
+                return;
+            }
+
+            if (contact) WriteContact(made);
+            else if (write) WriteAll(made);
+            else CompareAll(made);
+        }
+
+        /// <summary>
+        /// Bakes one effect per bought turret — see <see cref="Roster"/>.
+        ///
+        /// <b>A missing prefab is a warning and never a throw</b>, exactly as the elemental four
+        /// are: the pack is a bought asset and a checkout may not have it, and the whole of the
+        /// rest of the bake is still worth having.
+        /// </summary>
+        static void RunRoster(Transform stage, Camera cam, Dictionary<string, Book> made)
+        {
+            for (int i = 0; i < Roster.Length; i++)
+            {
+                var shot = Roster[i];
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PathOf(shot));
+
+                if (prefab == null)
+                {
+                    Debug.LogWarning($"[siege shots] {shot.Prefab} is not in this project — " +
+                                     $"{shot.Key} skipped.");
+                    continue;
+                }
+
+                GameObject composite = null;
+
+                try
+                {
+                    var with = Named(shot.With);
+                    if (with != null) prefab = composite = Composite(stage, prefab, with);
+
+                    BakeTurret(stage, cam, prefab, shot, made);
+                }
+                finally { if (composite != null) Object.DestroyImmediate(composite); }
+            }
+        }
+
+        /// <summary>
+        /// The four ward colours a roster effect is baked in, in the order
+        /// <c>WardLine.Colours</c> names them.
+        ///
+        /// <b>Read off <c>Pal</c> rather than written out</b>, which is what makes invariant 37f
+        /// hold by construction: a bolt, the turret that threw it, the raider it is worth double
+        /// against and the gems that paid for it all take one entry, so a palette retune moves
+        /// every one of them and none of them can drift.
+        /// </summary>
+        static readonly Color[] WardHues = { Pal.Poppy, Pal.Mint, Pal.Azure, Pal.Sun };
+
+        /// <summary>
+        /// How far a roster effect is pulled onto its ward's colour.
+        ///
+        /// <para>
+        /// <b>Nearly all the way, where the elemental four are pulled about a third.</b> Those
+        /// four were <em>chosen</em> in invariant 37k because the pack already paints them roughly
+        /// the colours the wards burn, so a lean is enough and more would flatten a fireball's
+        /// yellow-hot head into one red. Nothing in the roster was chosen that way — a turret's
+        /// effect is picked for its silhouette, so it arrives teal, magenta or gold and has to be
+        /// carried the whole way. Left at a lean, a red ward fires a teal arrow.
+        /// </para>
+        /// <para>
+        /// <b>Not the whole way, and the remainder is the point.</b> <see cref="Grade"/> keeps a
+        /// pixel's own saturation and value — a near-white glint stays near-white, a deep body
+        /// stays deep — so a full pull still leaves the effect's internal structure intact, and
+        /// the last sixth keeps a little of whatever the pack drew so the four do not come out as
+        /// four flat stencils.
+        /// </para>
+        /// </summary>
+        const float RosterToward = .84f;
+
+        /// <summary>
+        /// How much of a near-white pixel a roster effect is allowed to keep.
+        ///
+        /// <para>
+        /// <b>Much less than the elemental four keep, and the first roster bake is why.</b>
+        /// <see cref="MostWhite"/> exists so a fireball's glint and the flash inside a lightning
+        /// bolt stay light rather than being painted a flat colour, and at 0.62 it is right for
+        /// four effects the pack already draws in roughly the right hue. Half this roster is drawn
+        /// pale — an icicle, a crystal, a plasma core, a spark — so under the same rule the grade
+        /// had almost nothing to bite on and they came out of the bake white with a tinge: a blue
+        /// ward firing a white shard, which is the one thing invariant 37f is about. It is the same
+        /// measurement 37k already records (0.18 median saturation on a bolt fired by a blue
+        /// turret), arriving through a different door.
+        /// </para>
+        /// <para>
+        /// <b>Not nought, because a specular highlight is not a colour.</b> A little protection
+        /// keeps the hottest point of a flash and the glint off a facet light, which is what stops
+        /// a graded effect reading as a coloured cut-out.
+        /// </para>
+        /// </summary>
+        const float RosterWhite = .22f;
+
+        /// <summary>How saturated the palest roster pixel still comes out. See <c>Recipe.Floor</c>.</summary>
+        const float RosterMuted = .84f;
+
+        /// <summary>
+        /// How solid and how lit a ward's projectile comes out - see <c>Recipe.Lift</c> and
+        /// <c>Recipe.Bloom</c>.
+        ///
+        /// <para>
+        /// <b>Both moved together after play, and the complaint they answer was one sentence:</b>
+        /// "they all look too shallow and transparent, I want them thick and bright and alive".
+        /// Those are two different faults with two different causes. <em>Thin</em> was the alpha
+        /// exponent, which at 1.25 took a trail's half-coverage down to 0.42 and its wisps to
+        /// nothing. <em>Not alive</em> was the bloom this bake never had: these effects are drawn
+        /// to be seen through a post-processing stack, and a bare camera renders the geometry
+        /// without the light it throws.
+        /// </para>
+        /// <para>
+        /// Applied to every ward projectile, the starter's four included, because the complaint
+        /// was about all of them. The bosses' spells are deliberately left alone - they are not
+        /// what was being judged, and a boss is loud enough already.
+        /// </para>
+        /// </summary>
+        const float WardLift = .62f, WardBloom = .85f;
+
+        /// <summary>
+        /// One roster turret's three reels, in all four ward colours.
+        ///
+        /// <para>
+        /// <b>Baked in four colours rather than bleached and tinted at run time, and that was
+        /// settled by looking.</b> A bleached reel — white, with all its brightness in coverage —
+        /// costs a quarter as much and can be worn in any colour by one multiply, which is what
+        /// this shipped as first. Held up beside the elemental fireball it was a flat pink smear:
+        /// a multiply can only vary <em>value</em>, and what makes these effects read is variation
+        /// in <em>hue</em> — a yellow-hot head inside an orange body inside a red trail. Neither a
+        /// white-core overlay nor a saturation ramp recovered it, because this pack's hot cores are
+        /// saturated yellow rather than white and there is nothing for a white-core rule to catch.
+        /// That is invariant 37l met from a third direction, and the cost of ignoring it is the one
+        /// thing a turret somebody paid nine thousand credits for may not look: cheaper than the
+        /// free one.
+        /// </para>
+        /// </summary>
+        static void BakeTurret(Transform stage, Camera cam, GameObject prefab, Shot shot,
+                               Dictionary<string, Book> made)
+        {
+            string key = shot.Key;
+
+            var recipes = new Recipe[WardHues.Length];
+            for (int i = 0; i < WardHues.Length; i++)
+                recipes[i] = Ward(WardHues[i], RosterToward, RosterWhite, RosterMuted);
+
+            float authored = Mathf.Max(1f, Reflected(prefab, "speed", 30f));
+            float warm = WarmFor(TrailOf(prefab));
+
+            var seen = Sample(stage, prefab, authored, warm, ShotSeconds, SiegeView.HeadAt);
+
+            float want = seen.Across * 2f * WantedShot * SiegeView.HeadAt;
+            float speed = seen.Behind > .05f
+                ? authored * Mathf.Clamp(want / seen.Behind, SlowestBake, FastestBake)
+                : authored;
+
+            Keep(made, "shot_" + key,
+                 CaptureAll(stage, cam, prefab, recipes, ShotFrames, ShotSeconds, speed, warm,
+                            SiegeView.HeadAt, ShotTall, NarrowestShot, WidestShot,
+                            LeanestShot, LongestShot, comet: true));
+
+            var muzzle = Named(shot.Muzzle) ?? Companion(prefab, "muzzlePrefab");
+            if (muzzle != null)
+                Keep(made, "muzzle_" + key,
+                     CaptureAll(stage, cam, muzzle, recipes, MuzzleFrames, Burst(muzzle), 0f, 0f,
+                                SiegeView.MuzzleAt, BurstSide, NarrowestMuzzle, BurstSide,
+                                LeanestMuzzle, LongestMuzzle, comet: false));
+
+            var hit = Named(shot.Hit) ?? Companion(prefab, "hitPrefab");
+            if (hit != null)
+                Keep(made, "hit_" + key,
+                     CaptureAll(stage, cam, hit, recipes, HitFrames, Burst(hit), 0f, 0f,
+                                .5f, BurstSide, BurstSide, BurstSide, 1f, 1f, comet: false));
+        }
+
+        /// <summary>A pack prefab by name, or null when the name is blank or nothing answers it.</summary>
+        static GameObject Named(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
+
+            var found = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(name));
+            if (found == null) Debug.LogWarning("[siege shots] " + name + " is not in this project.");
+
+            return found;
+        }
+
+        /// <summary>
+        /// Two pack prefabs under one root, so the bake can fly them as a single effect.
+        ///
+        /// <b>A scene object rather than an asset, and everything downstream is fine with that.</b>
+        /// <see cref="Spawn"/> instantiates whatever it is handed and the rig walks the copy's own
+        /// hierarchy - <see cref="Roots"/> finds the top system of each half, <see cref="Burst"/>
+        /// and <see cref="TrailOf"/> measure across both, and <see cref="Advance"/> moves the pair
+        /// together at one speed, which is what makes their trails agree.
+        /// </summary>
+        static GameObject Composite(Transform stage, GameObject baseFx, GameObject withFx)
+        {
+            var root = new GameObject("~SiegeComposite") { hideFlags = HideFlags.HideAndDontSave };
+            root.transform.SetParent(stage, false);
+            root.transform.localPosition = Vector3.zero;
+
+            foreach (var part in new[] { baseFx, withFx })
+            {
+                var copy = (GameObject)PrefabUtility.InstantiatePrefab(part, root.transform);
+                copy.transform.localPosition = Vector3.zero;
+                copy.transform.localRotation = Quaternion.identity;
+            }
+
+            return root;
+        }
+
+        /// <summary>Files one effect's four colours under <c>&lt;key&gt;_r</c> … <c>_y</c>.</summary>
+        static void Keep(Dictionary<string, Book> made, string key, Book[] books)
+        {
+            for (int i = 0; i < books.Length && i < Wards.WardLine.Colours.Length; i++)
+                made[key + "_" + Wards.WardLine.Colours[i]] = books[i];
         }
 
         static void BakeOne(Transform stage, Camera cam, GameObject prefab, Shot shot,
@@ -527,10 +994,12 @@ namespace GlimmerGrove.EditorTools
                 ? authored * Mathf.Clamp(want / seen.Behind, SlowestBake, FastestBake)
                 : authored;
 
+            var recipes = new[] { Ward(shot.Hue, Toward, MostWhite, Muted) };
+
             made["shot_" + shot.Key] =
-                Capture(stage, cam, prefab, shot.Hue, ShotFrames, ShotSeconds, speed, warm,
-                        SiegeView.HeadAt, ShotTall, NarrowestShot, WidestShot,
-                        LeanestShot, LongestShot, comet: true);
+                CaptureAll(stage, cam, prefab, recipes, ShotFrames, ShotSeconds, speed, warm,
+                           SiegeView.HeadAt, ShotTall, NarrowestShot, WidestShot,
+                           LeanestShot, LongestShot, comet: true)[0];
 
             // The pack fires as three parts and the vendor's own demo plays all three. Showing the
             // middle one alone was judging a sentence by its verb.
@@ -540,16 +1009,24 @@ namespace GlimmerGrove.EditorTools
             var muzzle = Companion(prefab, "muzzlePrefab");
             if (muzzle != null)
                 made["muzzle_" + shot.Key] =
-                    Capture(stage, cam, muzzle, shot.Hue, MuzzleFrames, Burst(muzzle), 0f, 0f,
-                            SiegeView.MuzzleAt, BurstSide, NarrowestMuzzle, BurstSide,
-                            LeanestMuzzle, LongestMuzzle, comet: false);
+                    CaptureAll(stage, cam, muzzle, recipes, MuzzleFrames, Burst(muzzle), 0f, 0f,
+                               SiegeView.MuzzleAt, BurstSide, NarrowestMuzzle, BurstSide,
+                               LeanestMuzzle, LongestMuzzle, comet: false)[0];
 
             var hit = Companion(prefab, "hitPrefab");
             if (hit != null)
                 made["hit_" + shot.Key] =
-                    Capture(stage, cam, hit, shot.Hue, HitFrames, Burst(hit), 0f, 0f,
-                            .5f, BurstSide, BurstSide, BurstSide, 1f, 1f, comet: false);
+                    CaptureAll(stage, cam, hit, recipes, HitFrames, Burst(hit), 0f, 0f,
+                               .5f, BurstSide, BurstSide, BurstSide, 1f, 1f, comet: false)[0];
         }
+
+        /// <summary>One ward-projectile recipe: graded to a hue, and lit the way a ward's bolt is.</summary>
+        static Recipe Ward(Color hue, float toward, float white, float floor)
+            => new Recipe
+            {
+                Hue = hue, Toward = toward, White = white, Floor = floor,
+                Lift = WardLift, Bloom = WardBloom,
+            };
 
         /// <summary>
         /// A stormcall's bolt and the burst it leaves, cut bigger than a ward's.
@@ -576,19 +1053,207 @@ namespace GlimmerGrove.EditorTools
             // because it is a projectile crossing the hill. This is a *strike*: the bolt, the
             // ground crack and the shockwave rings are one effect that happens in one place, so
             // there is nothing to fly and nothing to fire it. It is captured standing still.
-            made["storm"] =
-                Capture(stage, cam, prefab, Storm.Hue, StormFrames, StormSeconds, 0f, 0f,
-                        .5f, StormTall, NarrowestStorm, WidestStorm,
-                        LeanestStorm, LongestStorm, comet: false);
+            var book = CaptureAll(stage, cam, prefab, new[] { Strike(Storm.Hue) },
+                                  StormFrames, StormSeconds, 0f, 0f,
+                                  1f - SiegeView.StrikeAt, StormTall, NarrowestStorm, WidestStorm,
+                                  LeanestStorm, LongestStorm, comet: false, tilt: StormTilt)[0];
+
+            Tighten(book, 1f - SiegeView.StrikeAt);
+            made["storm"] = book;
         }
 
+        /// <summary>
+        /// Trims a reel to its own picture, keeping the point it is anchored by exactly where it
+        /// is.
+        ///
+        /// <para>
+        /// <b>Because a sprite whose frame is bigger than its content cannot be reasoned about
+        /// from outside.</b> <see cref="Frame"/> sizes the world frame from the widest thing in
+        /// shot, so an effect that is wide and short — which a strike is, once its ground burst is
+        /// rendered at all — comes out in a frame a third taller than anything drawn in it. That
+        /// is invisible while a reel is only ever *drawn*: transparent padding costs nothing to
+        /// look at. It stops being invisible the moment the board has to know **where the bolt
+        /// ends**, which is what keeps a strike on the plate rather than over the status bar
+        /// (invariant 37ac). With this, a strike's picture runs from its own frame's foot to its
+        /// own frame's top and the view can size it against the room it has.
+        /// </para>
+        /// <para>
+        /// <b>It keeps the anchor rather than centring the content</b>, which is the whole
+        /// difficulty: the flash has to stay at <paramref name="head"/> of the way up, so the
+        /// frame is re-cut around *that row* and the two sides are padded to whatever the fraction
+        /// demands. Cropping to the bounding box alone would move the flash and put the strike
+        /// back where it was.
+        /// </para>
+        /// </summary>
+        static void Tighten(Book book, float head)
+        {
+            var all = book.Sheet.GetPixels32();
+            int w = book.Wide, t = book.Tall, n = book.Frames;
+
+            int minX = w, maxX = -1, minY = t, maxY = -1;
+
+            for (int f = 0; f < n; f++)
+                for (int y = 0; y < t; y++)
+                    for (int x = 0; x < w; x++)
+                    {
+                        if (all[(f * t + y) * w + x].a <= AlphaFloor) continue;
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+
+            if (maxX < minX || maxY < minY) return;
+
+            // A margin, because the alpha floor cuts the very last of a bloom and a hard edge on a
+            // halo is a line drawn across the sky.
+            minX = Mathf.Max(0, minX - Margin); maxX = Mathf.Min(w - 1, maxX + Margin);
+            minY = Mathf.Max(0, minY - Margin); maxY = Mathf.Min(t - 1, maxY + Margin);
+
+            // The row the effect is anchored by. `Roll` puts the prefab's own origin `head` of the
+            // way up whatever it renders into, so this is exact rather than measured.
+            int origin = Mathf.Clamp(Mathf.RoundToInt(head * t), 0, t - 1);
+
+            float over = Mathf.Max(1, maxY - origin) / Mathf.Max(.02f, 1f - head);
+            float under = Mathf.Max(1, origin - minY) / Mathf.Max(.02f, head);
+
+            int tall = Mathf.Max(32, Mathf.CeilToInt(Mathf.Max(over, under) / 4f) * 4);
+            int mark = Mathf.RoundToInt(head * tall);
+
+            // The rig is centred in x, so the picture is too: the frame is cut round the middle
+            // rather than round the bounding box, or a strike leans to whichever side its sparks
+            // happened to fly.
+            int reach = Mathf.Max(maxX - w / 2, w / 2 - minX) + 1;
+            int wide = Mathf.Clamp(Mathf.CeilToInt(reach / 8f) * 16, 16, w);
+
+            if (wide >= w && tall >= t) return;
+
+            var cut = new Color32[wide * tall * n];
+            var clear = new Color32(255, 255, 255, 0);
+            for (int i = 0; i < cut.Length; i++) cut[i] = clear;
+
+            for (int f = 0; f < n; f++)
+                for (int y = 0; y < tall; y++)
+                {
+                    int sy = y - mark + origin;
+                    if (sy < 0 || sy >= t) continue;
+
+                    for (int x = 0; x < wide; x++)
+                    {
+                        int sx = x - wide / 2 + w / 2;
+                        if (sx < 0 || sx >= w) continue;
+                        cut[(f * tall + y) * wide + x] = all[(f * t + sy) * w + sx];
+                    }
+                }
+
+            var sheet = new Texture2D(wide, tall * n, TextureFormat.RGBA32, false, false);
+            sheet.SetPixels32(cut);
+            sheet.Apply(false);
+
+            Object.DestroyImmediate(book.Sheet);
+            book.Sheet = sheet;
+            book.Wide = wide;
+            book.Tall = tall;
+        }
+
+        /// <summary>The alpha a pixel has to carry before <see cref="Tighten"/> counts it drawn.</summary>
+        const byte AlphaFloor = 4;
+
+        /// <summary>Pixels of air <see cref="Tighten"/> leaves round what it found.</summary>
+        const int Margin = 3;
+
         /// <summary>How a storm's bolt is cut: taller and wider than a ward's, and held longer.</summary>
-        const int StormFrames = 18, StormTall = 512;
-        const int NarrowestStorm = 128, WidestStorm = 448;
-        const float StormSeconds = .85f;
+        const int StormFrames = 20, StormTall = 512;
+        const int NarrowestStorm = 160, WidestStorm = 448;
+        const float StormSeconds = 1.0f;
 
         /// <summary>How far from square a storm's frame may go. Wider than a bolt: it has ground.</summary>
-        const float LeanestStorm = 0.5f, LongestStorm = 2.4f;
+        const float LeanestStorm = 0.55f, LongestStorm = 3.0f;
+
+        /// <summary>
+        /// How far the rig is pitched down to bake a strike — see <see cref="Roll"/>'s tilt.
+        ///
+        /// <para>
+        /// <b>Enough that a ring on the floor is an ellipse, and not so much that the bolt is
+        /// foreshortened.</b> At nought the pack's ground crack, splat, shockwave and rings are
+        /// all edge-on hairlines and the reel is a bolt with a small star at the end of it; every
+        /// one of them is a flat quad, so what shows them is the only thing that ever could. A
+        /// strike is also the one effect here whose *ground* is part of the picture — the board
+        /// draws raiders standing on a hill, so a burst spreading around their feet is what says
+        /// the lightning arrived somewhere rather than merely existed.
+        /// </para>
+        /// </summary>
+        const float StormTilt = 26f;
+
+        /// <summary>
+        /// How a strike is graded and lit — see <see cref="Strike"/>.
+        ///
+        /// <para>
+        /// <b><c>Toward</c> is high where a ward's is a third, and the pack is why.</b>
+        /// <see cref="Toward"/> is .38 because the four elemental effects were *chosen* for
+        /// already wearing roughly the colour the ward burns, so agreeing with <c>Pal</c> is a
+        /// lean. Nothing about this pack was chosen that way: its bolt is white with cyan through
+        /// the core and a gold flare at the end, so a .38 lean left the cyan exactly where it was
+        /// — which on a device read as lightning with a green tinge in it, in an item whose own
+        /// icon draws its bolts in <c>Pal.Sun</c>.
+        /// </para>
+        /// <para>
+        /// <b>And it stops short of all the way</b>, for invariant 37p's reason: a full re-hue
+        /// takes every warm and cool note the artist drew and collapses them into one flat
+        /// colour. A fifth of the original spread is what makes a thing look *made of* a colour
+        /// rather than painted it.
+        /// </para>
+        /// <para>
+        /// <b><c>White</c> is the highest here of anywhere</b>, because a white-hot core inside a
+        /// coloured halo is not a nicety of lightning, it is what lightning <em>is</em> — and it
+        /// is the difference between the vendor's picture and a gold streak. It is safe here in a
+        /// way invariant 37f says it would not be on a ward: a strike answers to no colour rule,
+        /// so a white core cannot be read as the wrong element.
+        /// </para>
+        /// </summary>
+        const float StrikeToward = .80f, StrikeWhite = .76f, StrikeFloor = .72f;
+
+        /// <summary>
+        /// How thick a strike is drawn and how much light it spills — invariant 37af's two
+        /// numbers, which this reel was never given.
+        ///
+        /// <b>Both further than a ward's</b> (.62 and .85): a bolt is thin geometry, so the curve
+        /// has to work harder to make a body out of it, and a strike is the one effect in this
+        /// game that is allowed to light the hill around it.
+        /// </summary>
+        const float StrikeLift = .50f, StrikeBloom = 1.85f;
+
+        /// <summary>
+        /// The colour the wide half of a strike's halo is lit in — see <see cref="Recipe.Halo"/>.
+        ///
+        /// <para>
+        /// <b><c>Pal.Ember</c>, so the light goes gold at the bolt and warm in the air.</b> The
+        /// tight scale keeps <c>Pal.Sun</c> on its way to white, which is what the item's own icon
+        /// draws; the wash around it is the next colour along the board's own warm run. That is
+        /// what an incandescent thing looks like, and it is what a single-coloured halo could only
+        /// ever have made bigger.
+        /// </para>
+        /// <para>
+        /// <b>A colour the board already has</b>, rather than a red picked to match a vendor's
+        /// demo. Ember is the fire the firepot throws, so a strike and a blast agree about what
+        /// hot looks like on this hill.
+        /// </para>
+        /// </summary>
+        static Color StrikeHalo => Pal.Ember;
+
+        /// <summary>
+        /// How hard a strike's core is blown out, and from what coverage — see
+        /// <see cref="Recipe.Hot"/>.
+        ///
+        /// <para>
+        /// <b>Nearly all the way, and only at the very top.</b> The three-rung ladder this
+        /// completes is white core, gold body, ember haze, and it only reads if the rungs are far
+        /// apart: blowing out from half coverage would take the body with it and leave a pale
+        /// bolt with a gold edge, which is the mirror of the fault it fixes. Above four fifths is
+        /// the bolt's own filament and the middle of the ground burst, and nothing else.
+        /// </para>
+        /// </summary>
+        const float StrikeHot = .90f, StrikeHotFrom = .80f;
 
         /// <summary>
         /// The warlord's spell, as the same three parts a ward's bolt is.
@@ -705,6 +1370,176 @@ namespace GlimmerGrove.EditorTools
                             float seconds, float speed, float warm, float head, int tallPx,
                             int narrowest, int widest, float leanest, float longest,
                             bool comet)
+            => CaptureAll(stage, cam, prefab,
+                          new[]
+                          {
+                              new Recipe
+                              {
+                                  Hue = hue, Toward = Toward, White = MostWhite, Floor = Muted,
+                                  Lift = Lift, Bloom = 0f,
+                              },
+                          },
+                          frames, seconds, speed, warm, head, tallPx, narrowest, widest,
+                          leanest, longest, comet)[0];
+
+        /// <summary>
+        /// One reel graded the way a <em>strike</em> is: the loudest thing this mode ever draws.
+        ///
+        /// <para>
+        /// <b>Its own recipe because it was on nobody's.</b> Invariant 37af gave every ward
+        /// projectile a bloom and an alpha curve that thickens rather than thins, on the finding
+        /// that these packs are authored to be seen through a post-processing stack and a bare
+        /// camera bakes the geometry with the light left out. <see cref="Capture"/> — which is
+        /// what the storm and the four boss spells are baked through — was never moved, so this
+        /// reel shipped with <c>Bloom = 0</c> and an exponent of <see cref="Lift"/> thinning it on
+        /// top. That is the whole of "it looks nothing like the store page": the vendor's own
+        /// demo scene carries a bloom profile, and ours rendered without one.
+        /// </para>
+        /// <para>
+        /// <b>Louder than a ward's, and that is a decision rather than a slip.</b> A ward fires
+        /// four or five bolts a second for a whole run; this goes off once, costs forty gems and
+        /// is the biggest thing on the board when it does. It is the one reel allowed to spill
+        /// more light than it draws.
+        /// </para>
+        /// </summary>
+        static Recipe Strike(Color hue)
+            => new Recipe
+            {
+                Hue = hue, Toward = StrikeToward, White = StrikeWhite, Floor = StrikeFloor,
+                Lift = StrikeLift, Bloom = StrikeBloom, Halo = StrikeHalo,
+                Hot = StrikeHot, HotFrom = StrikeHotFrom,
+            };
+
+        /// <summary>
+        /// How one reel is coloured: which hue it is pulled onto, and how far.
+        ///
+        /// <para>
+        /// <b>How far is a per-effect decision, and treating it as a constant is what made the
+        /// first roster bake unusable.</b> The elemental four were chosen in invariant 37k
+        /// <em>because</em> the pack already paints them roughly the colours the wards burn, so
+        /// agreeing with <c>Pal</c> is a lean of about a third and anything more flattens a
+        /// fireball's yellow-hot head into one red. Nothing else in the pack was chosen that way —
+        /// a turret's effect is picked for its silhouette, so it arrives teal or magenta or gold
+        /// and has to be carried the whole way, or a red ward fires a teal arrow.
+        /// </para>
+        /// </summary>
+        struct Recipe
+        {
+            public Color Hue;
+            public float Toward;
+            public float White;
+
+            /// <summary>
+            /// The least saturated a graded pixel may come out, as a fraction of full.
+            ///
+            /// <para>
+            /// <b>A floor rather than a scale, because the source's own saturation is the thing
+            /// that cannot be trusted here.</b> <see cref="Grade"/> keeps a pixel's saturation so
+            /// that grey smoke stays grey and a strongly coloured pixel becomes strongly the
+            /// ward's colour — which is right for four effects the pack draws saturated already.
+            /// Half the turret roster is drawn pale, so under the same rule every one of them
+            /// graded to a wash: a pink icicle, a pink crystal, a pink plasma core. Raising the
+            /// floor makes the colour the bake's decision instead of the pack's, which is what it
+            /// has to be for an effect chosen by silhouette.
+            /// </para>
+            /// </summary>
+            public float Floor;
+
+            /// <summary>
+            /// The exponent the coverage is raised to before it becomes alpha.
+            ///
+            /// <para>
+            /// <b>Above one thins a reel and below one thickens it, and the shipped 1.25 was the
+            /// wrong side of that.</b> Coverage is nearly all mid-tones on a trail — a wisp is a
+            /// tenth of an alpha and a flame's body about a half — so an exponent of 1.25 takes a
+            /// half to 0.42 and a tenth to 0.06, which is what "they all look shallow and
+            /// transparent" was. It is not the haze problem that number was chosen for:
+            /// <see cref="Haze"/> now drops the near-black wash outright, so what an exponent
+            /// below one promotes is the effect rather than the fog it sits in.
+            /// </para>
+            /// </summary>
+            public float Lift;
+
+            /// <summary>
+            /// How much light a reel spills around itself.
+            ///
+            /// <para>
+            /// <b>These effects are authored to be seen through bloom, and this bake had none.</b>
+            /// The pack's own demos run a post-processing stack — the lightning pack in this
+            /// project ships one — so what a plain camera renders is the raw geometry of an effect
+            /// with the glow that makes it read as *light* missing. Adding it here is restoring the
+            /// intended picture rather than decorating one: a bright-pass, blurred at two scales
+            /// and added back, which is what a renderer's bloom is.
+            /// </para>
+            /// <para>
+            /// <b>It raises alpha as well as colour</b>, because a halo nothing can see through is
+            /// not a halo — the glow has to be *drawn* over the hill, and a reel is composited with
+            /// ordinary alpha blending.
+            /// </para>
+            /// </summary>
+            public float Bloom;
+
+            /// <summary>
+            /// The colour the <em>wide</em> half of the bloom is lit in, when it differs from the
+            /// tight half. Left unset (alpha nought) the whole halo is one colour, which is what
+            /// every reel but the strike wants.
+            ///
+            /// <para>
+            /// <b>Light reddens as it spreads, and a bloom that does not is the difference between
+            /// a shape painted a colour and a thing that is burning.</b> Every photograph of
+            /// something incandescent is a white middle inside a warm haze — it is what the eye
+            /// reads as heat — and it is most of why the vendor's own picture of this pack looks
+            /// the way it does. A single-colour halo can only make the gold larger.
+            /// </para>
+            /// </summary>
+            public Color Halo;
+
+            /// <summary>
+            /// How far the densest coverage is blown out toward white, and where that starts.
+            ///
+            /// <para>
+            /// <b>The exposure a bare camera never applied.</b> <see cref="Reel"/> divides every
+            /// pixel by its own largest channel, which is what puts all of an effect's brightness
+            /// into the alpha and lets one render be graded four ways — and the cost of it is that
+            /// the *colour* left behind carries no brightness at all. A pixel with a tenth of the
+            /// light and a pixel with all of it come out the same gold, so a thick bolt is not a
+            /// hot bolt, it is a wide one.
+            /// </para>
+            /// <para>
+            /// <b>Every real renderer does this and ours had no way to.</b> An emissive effect at
+            /// full coverage is over one in linear light, and a tonemap brings it back as *white*;
+            /// the pack is authored against a stack that does exactly that, and the camera here
+            /// runs with <c>allowHDR</c> off and nothing after it. So the ladder a hot thing is
+            /// read by — white core, saturated body, warm haze — had its top rung missing, and
+            /// what shipped was the middle rung painted over all three.
+            /// </para>
+            /// <para>
+            /// <b>Driven by coverage rather than by the source's own whiteness</b>, which is what
+            /// separates it from <see cref="Recipe.White"/>. That one asks whether the artist drew
+            /// this pixel pale and protects it; this one asks how much light is standing here. A
+            /// flame's core is saturated yellow and still blows out, which is precisely the case
+            /// the whiteness rule is documented as unable to see.
+            /// </para>
+            /// </summary>
+            public float Hot, HotFrom;
+        }
+
+        /// <summary>
+        /// Renders an effect once and grades it into several reels.
+        ///
+        /// <para>
+        /// <b>One render, many colours, and that is not merely an optimisation.</b> The four
+        /// colours of a turret's bolt have to be the same *picture* — the same trail, the same
+        /// sparks, the same frame — or a player who re-stands a turret on another slot is looking
+        /// at a different effect. Rendering four times would give four, because a particle system
+        /// reseeded is a different comet however carefully it is seeded, and the framing is
+        /// measured off what was drawn. It also happens to make the bake four times cheaper.
+        /// </para>
+        /// </summary>
+        static Book[] CaptureAll(Transform stage, Camera cam, GameObject prefab, Recipe[] recipes,
+                                 int frames, float seconds, float speed, float warm, float head,
+                                 int tallPx, int narrowest, int widest, float leanest,
+                                 float longest, bool comet, float tilt = 0f)
         {
             // **Rendered twice, and the second one is what ships.** The first pass is framed off
             // the renderers' bounds, which is the only thing available before anything has been
@@ -732,7 +1567,7 @@ namespace GlimmerGrove.EditorTools
                 float height = Frame(seen, head, ratio, comet);
 
                 raw = Roll(stage, cam, rt, pixels, prefab, frames, seconds, speed, warm, head,
-                           height);
+                           height, tilt);
 
                 // Measured over the frames the window trim keeps, and only those. Sized over all
                 // of them instead, a burst whose last drifting smoke is its widest moment reserves
@@ -774,18 +1609,23 @@ namespace GlimmerGrove.EditorTools
                     }
 
                     raw = Roll(stage, cam, rt, pixels, prefab, frames, window, speed,
-                               warm + live.Skip, head, take);
+                               warm + live.Skip, head, take, tilt);
                 }
             }
             finally { Object.DestroyImmediate(pixels); }
 
-            return new Book
-            {
-                Sheet = Reel(raw, hue, wide, tallPx, comet),
-                Wide = wide,
-                Tall = tallPx,
-                Frames = frames,
-            };
+            var books = new Book[recipes.Length];
+
+            for (int i = 0; i < recipes.Length; i++)
+                books[i] = new Book
+                {
+                    Sheet = Reel(raw, recipes[i], wide, tallPx, comet),
+                    Wide = wide,
+                    Tall = tallPx,
+                    Frames = frames,
+                };
+
+            return books;
         }
 
         /// <summary>
@@ -842,11 +1682,26 @@ namespace GlimmerGrove.EditorTools
         }
 
         /// <summary>One pass of the effect, recorded into a stack of renders.</summary>
+        /// <param name="tilt">
+        /// Degrees the camera is pitched down by, orbiting the point it is aimed at.
+        ///
+        /// <para>
+        /// <b>Nought for everything that flies, and the one thing that does not needs it.</b> A
+        /// projectile is billboards and trails: it looks the same from any angle, so the rig has
+        /// always looked straight along Z and there was never a reason to ask. A *strike* is not —
+        /// this pack draws its ground crack, its splat, its shockwave and its rings as horizontal
+        /// quads lying on the floor, so a camera level with them sees every one of them edge-on
+        /// and each collapses to a hairline. That is most of what the vendor's own picture is, and
+        /// this bake was rendering none of it: the reel came out as a bolt and a small star, which
+        /// is the geometry of a lightning strike with the *strike* left out.
+        /// </para>
+        /// </summary>
         static Color[][] Roll(Transform stage, Camera cam, RenderTexture rt, Texture2D pixels,
                               GameObject prefab, int frames, float seconds, float speed, float warm,
-                              float head, float height)
+                              float head, float height, float tilt)
         {
             float back = height * .5f / Mathf.Tan(FieldOfView * .5f * Mathf.Deg2Rad);
+            var look = Quaternion.Euler(tilt, 0f, 0f);
 
             var shot = Spawn(stage, prefab);
             var roots = Roots(shot);
@@ -861,10 +1716,15 @@ namespace GlimmerGrove.EditorTools
                 {
                     // The camera rides with the head, and the head sits `head` of the way up the
                     // frame — so the trail has the whole rest of the frame to lie in.
+                    //
+                    // **It orbits what it is aimed at rather than being rotated where it stands**,
+                    // so a tilt changes the angle the effect is seen from and never what is in
+                    // shot. At nought this is the straight-on rig to the pixel.
                     Vector3 at = shot.transform.position;
-                    cam.transform.position =
-                        new Vector3(at.x, at.y - (head - .5f) * height, at.z - back);
-                    cam.transform.rotation = Quaternion.identity;
+                    var aim = new Vector3(at.x, at.y - (head - .5f) * height, at.z);
+
+                    cam.transform.position = aim - look * Vector3.forward * back;
+                    cam.transform.rotation = look;
 
                     cam.Render();
                     raw[f] = ReadBack(rt, pixels);
@@ -1306,10 +2166,17 @@ namespace GlimmerGrove.EditorTools
         /// </summary>
         const float Haze = .05f;
         const float Lift = 1.25f;
-        static Texture2D Reel(Color[][] raw, Color hue, int wide, int tall, bool comet)
+        static Texture2D Reel(Color[][] raw, Recipe recipe, int wide, int tall, bool comet)
         {
             int bigW = wide * Super;
             int frames = raw.Length;
+
+            // Hoisted out of the pixel loop: this runs tens of millions of times per bake.
+            Color tint = recipe.Hue;
+            float toward = recipe.Toward;
+            float mostWhite = recipe.White;
+            float floor = recipe.Floor;
+            float lift = recipe.Lift > 0f ? recipe.Lift : Lift;
 
             var keyed = new Color[frames][];
             float peak = 0f;
@@ -1326,7 +2193,13 @@ namespace GlimmerGrove.EditorTools
 
                     if (cover <= Haze) { dst[i] = new Color(0f, 0f, 0f, 0f); continue; }
 
-                    dst[i] = Grade(new Color(c.r / cover, c.g / cover, c.b / cover, 1f), hue);
+                    // `cover` is the largest channel, so dividing by it leaves a pure
+                    // chromaticity and puts every scrap of the effect's brightness in the alpha.
+                    // What the grade then decides is the *hue* of that chromaticity, which is the
+                    // one thing a run-time tint could never have supplied (see `BakeTurret`).
+                    dst[i] = Grade(new Color(c.r / cover, c.g / cover, c.b / cover, 1f),
+                                   tint, toward, mostWhite, floor);
+
                     dst[i].a = cover;
 
                     if (cover > peak) peak = cover;
@@ -1338,6 +2211,24 @@ namespace GlimmerGrove.EditorTools
 
             var sheet = new Texture2D(wide, tall * frames, TextureFormat.RGBA32, false, false);
             var outPix = new Color32[wide * tall * frames];
+
+            int cells = wide * tall;
+            var flatR = new float[cells];
+            var flatG = new float[cells];
+            var flatB = new float[cells];
+            var flatA = new float[cells];
+
+            // What a bloom is lit in. Its own colour rather than the pixels it came from, which is
+            // both far cheaper - one channel to blur instead of three - and right: everything in
+            // the frame has already been graded onto this hue, so the light it spills is that hue,
+            // and a hot glow is that hue on its way to white.
+            var glowTint = Color.Lerp(tint, Color.white, .34f);
+
+            // The wide half of the halo, when the recipe asks for one of its own. Unset it is the
+            // same colour as the tight half, which is the single-coloured bloom every other reel
+            // here carries.
+            bool twoTone = recipe.Halo.a > 0f;
+            var hazeTint = twoTone ? recipe.Halo : glowTint;
 
             for (int f = 0; f < frames; f++)
             {
@@ -1357,32 +2248,271 @@ namespace GlimmerGrove.EditorTools
                                 r += c.r * c.a; g += c.g * c.a; b += c.b * c.a; a += c.a;
                             }
 
+                        int at = y * wide + x;
+                        flatA[at] = Mathf.Clamp01(a / (Super * Super) * gain);
+                        flatR[at] = a > 1e-5f ? Mathf.Clamp01(r / a) : 0f;
+                        flatG[at] = a > 1e-5f ? Mathf.Clamp01(g / a) : 0f;
+                        flatB[at] = a > 1e-5f ? Mathf.Clamp01(b / a) : 0f;
+                    }
+
+                float[] glowNear = null, glowFar = null;
+                if (recipe.Bloom > 0f) Glow(flatA, wide, tall, out glowNear, out glowFar);
+
+                for (int y = 0; y < tall; y++)
+                    for (int x = 0; x < wide; x++)
+                    {
+                        int at = y * wide + x;
+
                         // The tail runs off the bottom of a comet's frame, so it is thinned out
                         // over the last of it: a hard edge there is a line drawn across the sky.
                         float ramp = comet
                             ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0f, tall * TailFade, y))
                             : 1f;
 
-                        Color32 outc;
-                        if (a <= 1e-5f || ramp <= 0f) outc = new Color32(255, 255, 255, 0);
-                        else
-                        {
-                            float alpha = Mathf.Pow(
-                                Mathf.Clamp01(a / (Super * Super) * gain), Lift) * ramp;
+                        float alpha = Mathf.Pow(flatA[at], lift);
+                        float cr = flatR[at], cg = flatG[at], cb = flatB[at];
 
-                            outc = new Color32((byte)(Mathf.Clamp01(r / a) * 255f),
-                                               (byte)(Mathf.Clamp01(g / a) * 255f),
-                                               (byte)(Mathf.Clamp01(b / a) * 255f),
-                                               (byte)(Mathf.Clamp01(alpha) * 255f));
+                        // **Blown out where the light is densest** — the exposure the bare camera
+                        // never applied. Before the halo, so the glow is added on top of a core
+                        // that is already white rather than mixed into one that never gets there.
+                        if (recipe.Hot > 0f)
+                        {
+                            float blown = Mathf.SmoothStep(
+                                0f, 1f, Mathf.InverseLerp(recipe.HotFrom, 1f, flatA[at]))
+                                * recipe.Hot;
+
+                            cr = Mathf.Lerp(cr, 1f, blown);
+                            cg = Mathf.Lerp(cg, 1f, blown);
+                            cb = Mathf.Lerp(cb, 1f, blown);
                         }
 
-                        outPix[(f * tall + y) * wide + x] = outc;
+                        if (glowNear != null && glowNear[at] + glowFar[at] > .002f)
+                        {
+                            // **Added as light, which means in emission and not in colour.** What
+                            // an effect contributes to the screen is rgb times alpha, so a halo is
+                            // added there and the pair separated again afterwards - adding it to
+                            // the colour instead would brighten a transparent pixel, which draws
+                            // nothing, and adding it to the alpha alone would make a *darker* halo
+                            // rather than a lit one.
+                            float near = glowNear[at] * recipe.Bloom;
+                            float airy = glowFar[at] * recipe.Bloom;
+                            float lit = near + airy;
+
+                            // Each scale carries its own colour into the emission, so the wash in
+                            // the air is warm where the rim on the object's own edge is hot. Summed
+                            // with one tint this is the single-coloured halo exactly.
+                            float er = cr * alpha + glowTint.r * near + hazeTint.r * airy;
+                            float eg = cg * alpha + glowTint.g * near + hazeTint.g * airy;
+                            float eb = cb * alpha + glowTint.b * near + hazeTint.b * airy;
+
+                            alpha = Mathf.Clamp01(alpha + lit * GlowOpacity);
+
+                            if (alpha > 1e-4f)
+                            {
+                                cr = Mathf.Clamp01(er / alpha);
+                                cg = Mathf.Clamp01(eg / alpha);
+                                cb = Mathf.Clamp01(eb / alpha);
+                            }
+                        }
+
+                        alpha *= ramp;
+
+                        outPix[(f * tall + y) * wide + x] = alpha <= 1e-4f
+                            ? new Color32(255, 255, 255, 0)
+                            : new Color32((byte)(cr * 255f), (byte)(cg * 255f), (byte)(cb * 255f),
+                                          (byte)(Mathf.Clamp01(alpha) * 255f));
                     }
             }
 
             sheet.SetPixels32(outPix);
             sheet.Apply(false);
             return sheet;
+        }
+
+        /// <summary>
+        /// How much of a bloom's brightness becomes opacity.
+        ///
+        /// <b>A halo has to be drawn to be seen.</b> These reels are composited with ordinary alpha
+        /// blending, so light that only changes a transparent pixel's colour changes nothing; the
+        /// glow earns its own alpha.
+        /// </summary>
+        const float GlowOpacity = .82f;
+
+        /// <summary>Where a pixel starts counting as bright enough to spill light.</summary>
+        const float GlowFloor = .38f;
+
+        /// <summary>
+        /// The faintest glow that is kept at all.
+        ///
+        /// <b>A halo has to end somewhere.</b> A blur has no zero — it puts a thousandth of an
+        /// alpha over the whole frame — and a thousandth of an alpha across a rectangle is still a
+        /// rectangle. Subtracting a floor is what gives the light an edge to fade to.
+        /// </summary>
+        const float GlowCut = .035f;
+
+        /// <summary>
+        /// The bright parts of a frame, blurred at two scales - a renderer's bloom, done here.
+        ///
+        /// <para>
+        /// <b>One channel and two scales, because that is what makes it affordable.</b> The colour
+        /// is the recipe's own hue, so only the *shape* of the light has to be blurred; and a bloom
+        /// is low-frequency, so the wide scale is computed on a buffer an eighth the size and
+        /// stretched back. Blurring three channels at full resolution across two hundred and
+        /// twenty-eight reels would be minutes of bake for a picture nobody could tell apart.
+        /// </para>
+        /// <para>
+        /// <b>Two scales rather than one</b>, which is what separates a bloom from a smudge: a
+        /// tight one puts a rim of light on the object's own edge and a wide one puts a wash in the
+        /// air around it, and a single radius can only ever be one of those.
+        /// </para>
+        /// <para>
+        /// <b>And they are handed back separately, because they are allowed to be different
+        /// colours.</b> Light spreading through air reddens as it goes — which is why every
+        /// photograph of something incandescent has a white middle inside a warm haze, and why a
+        /// bloom drawn in one colour reads as a coloured shape rather than as something burning.
+        /// A caller that does not care adds them and gets exactly what a single array gave it;
+        /// <see cref="Recipe.Halo"/> is the one that does.
+        /// </para>
+        /// </summary>
+        static void Glow(float[] alpha, int wide, int tall, out float[] tight, out float[] airy)
+        {
+            int cells = wide * tall;
+            var bright = new float[cells];
+
+            for (int i = 0; i < cells; i++)
+                bright[i] = Mathf.Max(0f, alpha[i] - GlowFloor) / (1f - GlowFloor);
+
+            int nw, nh, fw, fh;
+
+            // **The wide scale is shrunk by a factor the frame can afford.** A muzzle flash is 128
+            // by 192, so an eighth of it is sixteen across — and three box passes of radius three
+            // on a buffer that size reach right across the picture, which is a wash rather than a
+            // halo. The divisor is held so the small buffer never falls under about forty across.
+            int far8 = Mathf.Clamp(Mathf.Min(wide, tall) / 40, 2, 8);
+
+            var near = Blur(Shrink(bright, wide, tall, 2, out nw, out nh), nw, nh, 2);
+            var far = Blur(Shrink(bright, wide, tall, far8, out fw, out fh), fw, fh, 3);
+
+            tight = new float[cells];
+            airy = new float[cells];
+
+            // The cut is taken here rather than by the caller so that a caller adding the two back
+            // together gets the single array this used to return, to the last bit. It is shared
+            // out in proportion, because it is one floor under one halo rather than one under each.
+            for (int y = 0; y < tall; y++)
+                for (int x = 0; x < wide; x++)
+                {
+                    int at = y * wide + x;
+
+                    float n = Bilinear(near, nw, nh, x / 2f, y / 2f) * .58f;
+                    float f = Bilinear(far, fw, fh, (float)x / far8, (float)y / far8) * .52f;
+                    float sum = n + f;
+
+                    if (sum <= GlowCut) { tight[at] = 0f; airy[at] = 0f; continue; }
+
+                    float keep = (sum - GlowCut) / sum;
+                    tight[at] = n * keep;
+                    airy[at] = f * keep;
+                }
+        }
+
+        /// <summary>Averages a buffer down by a whole factor.</summary>
+        static float[] Shrink(float[] src, int wide, int tall, int by, out int outW, out int outH)
+        {
+            outW = Mathf.Max(1, wide / by);
+            outH = Mathf.Max(1, tall / by);
+
+            var dst = new float[outW * outH];
+
+            for (int y = 0; y < outH; y++)
+                for (int x = 0; x < outW; x++)
+                {
+                    float sum = 0f;
+                    int n = 0;
+
+                    for (int sy = 0; sy < by; sy++)
+                        for (int sx = 0; sx < by; sx++)
+                        {
+                            int px = x * by + sx, py = y * by + sy;
+                            if (px >= wide || py >= tall) continue;
+                            sum += src[py * wide + px];
+                            n++;
+                        }
+
+                    dst[y * outW + x] = n > 0 ? sum / n : 0f;
+                }
+
+            return dst;
+        }
+
+        /// <summary>
+        /// Three separable box passes, which is a Gaussian to within what anybody can see and is
+        /// linear in the radius rather than square.
+        ///
+        /// <para>
+        /// <b>Divided by the whole kernel and never by how much of it was in bounds, which is the
+        /// difference between a bloom and a box.</b> Averaging only the samples that exist treats
+        /// the edge of the frame as a mirror: a pixel one step in is divided by half the kernel, so
+        /// its light is doubled, and three passes of that pile a bright rim against all four
+        /// edges. Baked into a reel that reads as a faintly glowing rectangle around the effect —
+        /// which is exactly what it did, most visibly on the small frames where the kernel is a
+        /// large part of the picture. Treating everything outside as dark is both the physically
+        /// honest answer and the one that lets a halo fade out.
+        /// </para>
+        /// </summary>
+        static float[] Blur(float[] src, int wide, int tall, int radius)
+        {
+            var a = src;
+            var b = new float[src.Length];
+            float span = radius * 2 + 1;
+
+            for (int pass = 0; pass < 3; pass++)
+            {
+                for (int y = 0; y < tall; y++)
+                    for (int x = 0; x < wide; x++)
+                    {
+                        float sum = 0f;
+
+                        for (int k = -radius; k <= radius; k++)
+                        {
+                            int at = x + k;
+                            if (at < 0 || at >= wide) continue;
+                            sum += a[y * wide + at];
+                        }
+                        b[y * wide + x] = sum / span;
+                    }
+
+                for (int y = 0; y < tall; y++)
+                    for (int x = 0; x < wide; x++)
+                    {
+                        float sum = 0f;
+
+                        for (int k = -radius; k <= radius; k++)
+                        {
+                            int at = y + k;
+                            if (at < 0 || at >= tall) continue;
+                            sum += b[at * wide + x];
+                        }
+                        a[y * wide + x] = sum / span;
+                    }
+            }
+
+            return a;
+        }
+
+        /// <summary>Bilinear read, so a bloom computed small comes back smooth rather than blocky.</summary>
+        static float Bilinear(float[] src, int wide, int tall, float x, float y)
+        {
+            int x0 = Mathf.Clamp(Mathf.FloorToInt(x), 0, wide - 1);
+            int y0 = Mathf.Clamp(Mathf.FloorToInt(y), 0, tall - 1);
+            int x1 = Mathf.Min(x0 + 1, wide - 1);
+            int y1 = Mathf.Min(y0 + 1, tall - 1);
+
+            float fx = Mathf.Clamp01(x - x0), fy = Mathf.Clamp01(y - y0);
+
+            float top = Mathf.Lerp(src[y0 * wide + x0], src[y0 * wide + x1], fx);
+            float bot = Mathf.Lerp(src[y1 * wide + x0], src[y1 * wide + x1], fx);
+            return Mathf.Lerp(top, bot, fy);
         }
 
         /// <summary>
@@ -1426,18 +2556,27 @@ namespace GlimmerGrove.EditorTools
         /// </summary>
         const float Toward = .38f;
 
-        static Color Grade(Color lit, Color hue)
+        /// <summary>
+        /// The saturation floor the elemental four are graded with — see <c>Recipe.Floor</c>.
+        ///
+        /// <b>Named and kept exactly where it was</b>, because these four have shipped for
+        /// chapters and <see cref="Verify"/> holds what is on disk to what this tool bakes: the
+        /// number moving would read as the art having drifted.
+        /// </summary>
+        const float Muted = .55f;
+
+        static Color Grade(Color lit, Color hue, float toward, float mostWhite, float floor)
         {
             Color.RGBToHSV(lit, out _, out float s, out float v);
             Color.RGBToHSV(hue, out float h, out _, out _);
 
             float white = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(.86f, 1f, v * (1f - s)))
-                          * MostWhite;
+                          * mostWhite;
 
-            float sat = Mathf.Clamp01(s * .45f + .55f) * (1f - white);
+            float sat = Mathf.Clamp01(s * (1f - floor) + floor) * (1f - white);
             var wanted = Color.HSVToRGB(h, sat, Mathf.Clamp01(v * 1.06f + .04f));
 
-            return Color.Lerp(lit, wanted, Toward * (1f - white));
+            return Color.Lerp(lit, wanted, toward * (1f - white));
         }
 
         // ------------------------------------------------------------------ on disk

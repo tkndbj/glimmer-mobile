@@ -925,6 +925,146 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(whole, left, "no health may leave the line to a blightcaller");
         }
 
+        /// <summary>
+        /// The blightcaller rung sends it into a hill that is still walking, and that is the whole
+        /// of what was wrong with it.
+        ///
+        /// <para>
+        /// <b>Reported from play as "it attacks my turrets and they lose no health".</b> The first
+        /// half of that is by design and must stay: a blightcaller takes a ward's <em>fire</em>
+        /// rather than its health, which is what makes it a different fight from the warlord
+        /// rather than a weaker one (invariant 37z). The second half was real, and the cause was
+        /// nowhere near the boss — <c>SiegeTuning.RestBefore</c> named the warbringer instead of
+        /// asking the question, so a blightcaller got <c>BossAfter</c>, the longest quiet in the
+        /// mode, and walked onto a hill the player had already cleared. Five seconds of one ward's
+        /// dark costs exactly nothing when there is nothing for it to shoot at, so the boss took
+        /// no health <em>and</em> no time: invariant 5d, arriving through the pacing.
+        /// </para>
+        /// <para>
+        /// So what is pinned is the consequence rather than the constant: at the moment it steps
+        /// onto the hill there is still something on the hill with it.
+        /// </para>
+        /// </summary>
+        /// <summary>
+        /// The blightcaller rung sends it into a hill that is still walking, and that is the whole
+        /// of what was wrong with it.
+        ///
+        /// <para>
+        /// <b>Reported from play as "it attacks my turrets and they lose no health".</b> The first
+        /// half of that is by design and must stay: a blightcaller takes a ward's <em>fire</em>
+        /// rather than its health, which is what makes it a different fight from the warlord
+        /// rather than a weaker one (invariant 37z). The second half was real, and the cause was
+        /// nowhere near the boss — <c>SiegeTuning.RestBefore</c> named the warbringer instead of
+        /// asking the question, so a blightcaller got <c>BossAfter</c>, the longest quiet in the
+        /// mode, and walked onto a hill the player had already cleared. Five seconds of one ward's
+        /// dark costs exactly nothing when there is nothing for it to shoot at, so the boss took
+        /// no health <em>and</em> no time: invariant 5d, arriving through the pacing.
+        /// </para>
+        /// <para>
+        /// So what is pinned is the consequence rather than the constant: at the moment it steps
+        /// onto the hill there is still something on the hill with it.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheBlightcallerRungSendsItIntoAHillStillWalking()
+        {
+            const float Frame = 1f / 60f;
+
+            SiegeLayout plan = null;
+            for (int i = 0; i < Chapter.Length; i++)
+                if (Chapter[i].Id == "s01_stonewatch") plan = Chapter[i].Built();
+
+            Assert.IsNotNull(plan, "s01_stonewatch is not in the chapter any more");
+
+            var board = SiegeBoard.Build(plan);
+
+            Assert.AreEqual(SiegeKind.Blightcaller, plan.BossKind,
+                            "this test is about the rung that sends one");
+
+            float since = Unhurried;
+            int company = -1;
+
+            for (int i = 0; i < 60 * 600 && company < 0; i++)
+            {
+                board.Advance(Frame);
+
+                if (board.IsFinished || board.Stranded) break;
+
+                // The frame the boss is first standing on the hill: count what came with it.
+                var raiders = board.Raiders;
+                for (int r = 0; r < raiders.Count && company < 0; r++)
+                {
+                    if (!raiders[r].Boss || !raiders[r].Alive || !raiders[r].OnTheHill) continue;
+
+                    // **Mustered rather than already walking.** Every raider but the first is
+                    // dealt a `SiegeTuning.RaiderSpacing` head start behind the one in front, so
+                    // on the frame the boss steps out its company is on the board and not yet on
+                    // the hill - counting `OnTheHill` here would report an empty hill for every
+                    // wave in the mode.
+                    company = 0;
+                    for (int o = 0; o < raiders.Count; o++)
+                        if (raiders[o].Alive && !raiders[o].Boss) company++;
+                }
+
+                since += Frame;
+                if (since < Unhurried) continue;
+                if (!Aimed(board, out int a, out int b)) continue;
+
+                board.Swap(a, b);
+                since = 0f;
+            }
+
+            Assert.GreaterOrEqual(company, 1,
+                "the blightcaller walked onto an empty hill, where the fire it takes was not "
+                + "going to be shot at anything - so it costs the player nothing at all and reads "
+                + "as a boss that does not work");
+        }
+
+        /// <summary>
+        /// A boss whose spell needs a hill arrives while the last wave is still walking, and one
+        /// that shells the line arrives onto an empty one.
+        ///
+        /// <para>
+        /// <b>The rule was written as "is this a warbringer" and that left the blightcaller
+        /// out.</b> Invariant 43 records the authored ladder as answering "a boss that takes no
+        /// health has to arrive with an escort" with a <em>short quiet</em> — and it did not: a
+        /// blightcaller got <c>BossAfter</c>, the longest quiet in the mode, so it walked onto a
+        /// hill the player had cleared and took fuel that was not going to be shot at anything.
+        /// Keyed on <see cref="SiegeTuning.WantsACrowd"/>, a fifth boss inherits the answer
+        /// without anybody remembering to come back.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ABossWhoseSpellNeedsAHillComesWhileTheHillIsStillWalking()
+        {
+            Assert.AreEqual(SiegeTuning.CrowdAfter, SiegeTuning.RestBefore(SiegeKind.Warbringer),
+                            "a rally over an empty hill rallies nothing");
+
+            // A blightcaller is not a wave of its own at all - `SiegeLayout` stands it at the head
+            // of the last authored one - so what this quiet is in front of is that wave.
+            Assert.AreEqual(SiegeTuning.BetweenWaves,
+                            SiegeTuning.RestBefore(SiegeKind.Blightcaller),
+                            "a boss that rides a wave takes that wave's own quiet");
+
+            Assert.AreEqual(SiegeTuning.BossAfter, SiegeTuning.RestBefore(SiegeKind.Boss),
+                            "a duel is never stacked on a wave still swinging");
+            Assert.AreEqual(SiegeTuning.BossAfter, SiegeTuning.RestBefore(SiegeKind.Overlord));
+
+            Assert.AreEqual(SiegeTuning.BetweenWaves, SiegeTuning.RestBefore(SiegeKind.Creeper));
+            Assert.AreEqual(SiegeTuning.BetweenWaves, SiegeTuning.RestBefore(SiegeKind.Brute));
+
+            Assert.Less(SiegeTuning.CrowdAfter, SiegeTuning.BetweenWaves,
+                        "the short quiet has to be shorter than an ordinary one, or the wave in "
+                        + "front of it is always gone");
+
+            // And the two questions are genuinely different: a warbringer takes health and still
+            // wants a crowd, so this can never be folded back into `EndangersTheLine`.
+            Assert.IsTrue(SiegeTuning.EndangersTheLine(SiegeKind.Warbringer));
+            Assert.IsTrue(SiegeTuning.WantsACrowd(SiegeKind.Warbringer));
+            Assert.IsFalse(SiegeTuning.WantsACrowd(SiegeKind.Boss));
+            Assert.IsFalse(SiegeTuning.WantsACrowd(SiegeKind.Overlord));
+        }
+
         [Test]
         public void ASurgeLiftsADouseBecauseThatIsWhatMakesItTheAnswer()
         {
@@ -1052,15 +1192,23 @@ namespace GlimmerGrove.Tests
 
 
         /// <summary>
-        /// A firepot hits the body a player is aiming at, not the box its feet are in.
+        /// A firepot hits the body a player is aiming at, not the point the raider stands on.
         ///
-        /// <b>Reported from play as "the bombs don't hit bosses".</b> They did — they hit its feet.
-        /// A raider is about a cell tall, so where it stands and what it looks like are the same
-        /// box; a boss is three cells on a four-row hill, so most of the thing being aimed at is in
-        /// the box above the one it occupies, and a firepot dropped on its chest took nothing.
+        /// <para>
+        /// <b>Reported from play twice.</b> First as "the bombs don't hit bosses" — they did, they
+        /// hit the box its node was in — and then, after that was patched with a row count, as
+        /// <em>"it says there is nothing there and I tapped the thing"</em>. Both are the same
+        /// fault: a raider is a picture some cells wide and some cells deep and the rule was
+        /// reading a point.
+        /// </para>
+        /// <para>
+        /// A boss is drawn close to six cells wide against a board five lanes across, so its body
+        /// genuinely reaches every lane; that is <c>SiegeTuning.LanesOf</c>, and it is what makes
+        /// tapping the arm of the biggest thing on the screen work.
+        /// </para>
         /// </summary>
         [Test]
-        public void AFirepotHitsABosssBodyAndNotOnlyItsFeet()
+        public void AFirepotHitsABosssBodyAndNotOnlyThePointItStandsOn()
         {
             var board = SiegeBoard.Build(Duel("warlord:r"));
             var boss = Standing(board);
@@ -1068,39 +1216,84 @@ namespace GlimmerGrove.Tests
             int feet = SiegeTuning.RowOf(boss.March);
             int lane = boss.Lane;
 
-            Assert.Greater(feet, 0, "this test needs a boss with a row above its feet");
-            Assert.AreEqual(3, SiegeTuning.RowsOf(boss.Kind));
-            Assert.AreEqual(1, SiegeTuning.RowsOf(SiegeKind.Creeper),
-                            "an ordinary raider is where it stands and nowhere else");
+            Assert.AreEqual(SiegeTuning.Lanes, SiegeTuning.LanesOf(boss.Kind),
+                            "a boss is drawn wider than the hill and has to be catchable there");
+            Assert.AreEqual(1, SiegeTuning.LanesOf(SiegeKind.Creeper),
+                            "an ordinary raider fits its own lane");
 
-            // Its chest, one row up the hill from its feet: the box a player aiming at the thing
-            // they can see would actually tap.
-            int before = boss.Health;
-            int took = board.Blast(lane, feet - 1, 400, null);
+            // **A point of damage a tap, not four hundred.** The boss has to survive every probe
+            // below or the later ones read as a miss when what really happened is that the first
+            // one killed it - which is a test passing, and then failing, for reasons that have
+            // nothing to do with what it is about.
+            if (feet > 0)
+            {
+                int before = boss.Health;
+                Assert.Greater(board.Blast(lane, feet - 1, 1, null), 0,
+                               "a firepot on a boss's body has to hit it");
+                Assert.Less(boss.Health, before);
+            }
 
-            Assert.Greater(took, 0, "a firepot on a boss's body has to hit it");
-            Assert.Less(boss.Health, before);
+            // And the point it stands on, which always worked.
+            Assert.Greater(board.Blast(lane, feet, 1, null), 0);
 
-            // And its feet, which always worked.
-            Assert.Greater(board.Blast(lane, feet, 400, null), 0);
-
-            // Not the whole lane, though: a blast is still aimed, and the ground below a boss is
-            // ground it is not standing on.
-            if (feet + 1 < SiegeTuning.BlastRows)
-                Assert.AreEqual(0, board.Blast(lane, feet + 1, 400, null),
-                                "the box below a boss's feet is not part of it");
-
-            // Nor the lane beside it.
-            int aside = lane > 0 ? lane - 1 : lane + 1;
-            Assert.AreEqual(0, board.Blast(aside, feet - 1, 400, null),
-                            "a blast is still aimed at one lane");
+            // **And every lane, which is the reported half.** A warlord fills the width of the
+            // board; being told nothing is there because the tap landed on the lane beside its
+            // middle is the bug this test exists for.
+            for (int at = 0; at < SiegeTuning.Lanes; at++)
+            {
+                Assert.IsTrue(boss.Alive, "the probes are meant to leave the boss standing");
+                Assert.Greater(board.Blast(at, feet, 1, null), 0,
+                               "a boss's body reaches lane " + at);
+            }
         }
 
         /// <summary>
-        /// Every boss reaches further than the box it stands in, and no ordinary raider does.
+        /// A firepot burns the box that was tapped and the four touching it, and nothing further.
         ///
+        /// <c>SiegeTuning.InBlast</c> is asked by <c>SiegeBoard.Blast</c> and by
+        /// <c>SiegeView.Scorch</c>, so the boxes that light and the boxes that burn are one fact.
+        /// </summary>
+        [Test]
+        public void AFirepotBurnsAPlusAndNotASquare()
+        {
+            Assert.AreEqual(1, SiegeTuning.BlastReach);
+
+            int lit = 0;
+
+            for (int row = 0; row < SiegeTuning.BlastRows; row++)
+                for (int lane = 0; lane < SiegeTuning.Lanes; lane++)
+                    if (SiegeTuning.InBlast(2, 1, lane, row)) lit++;
+
+            Assert.AreEqual(5, lit, "the box tapped and the four touching it");
+
+            Assert.IsTrue(SiegeTuning.InBlast(2, 1, 2, 1), "the box it was dropped on");
+            Assert.IsTrue(SiegeTuning.InBlast(2, 1, 1, 1));
+            Assert.IsTrue(SiegeTuning.InBlast(2, 1, 2, 0));
+
+            // The corners are what separate a plus from a three-by-three, and the second box out
+            // is what separates it from a radius.
+            Assert.IsFalse(SiegeTuning.InBlast(2, 1, 1, 0), "a corner is not touching");
+            Assert.IsFalse(SiegeTuning.InBlast(2, 1, 4, 1), "two boxes out is not a firepot");
+
+            // Against an edge it simply burns fewer, rather than sliding somewhere nobody aimed.
+            int edge = 0;
+            for (int row = 0; row < SiegeTuning.BlastRows; row++)
+                for (int lane = 0; lane < SiegeTuning.Lanes; lane++)
+                    if (SiegeTuning.InBlast(0, 0, lane, row)) edge++;
+
+            Assert.AreEqual(3, edge);
+        }
+
+        /// <summary>
+        /// Every boss reaches further than the point it stands on, and no ordinary raider reaches
+        /// across a lane.
+        ///
+        /// <para>
         /// <c>SiegeTuning.Caught</c> is asked by <c>SiegeBoard.Blast</c> and drawn by nothing, so
-        /// this is the only thing that holds it to what the board looks like.
+        /// this is the only thing that holds it to what the board looks like. It is asked at
+        /// <c>BlastReach</c> nought — the box alone — because otherwise the plus would hide
+        /// everything the footprint is doing.
+        /// </para>
         /// </summary>
         [Test]
         public void ABossIsCaughtByABlastAnywhereItsBodyReaches()
@@ -1110,25 +1303,42 @@ namespace GlimmerGrove.Tests
             {
                 float hold = SiegeTuning.HoldOf(kind);
                 int feet = SiegeTuning.RowOf(hold);
+                int lane = SiegeTuning.Lanes / 2;
 
-                Assert.IsTrue(SiegeTuning.Caught(kind, hold, feet), kind + " at its own feet");
+                Assert.IsTrue(SiegeTuning.OnBody(kind, lane, hold, lane, feet),
+                              kind + " where it stands");
 
                 if (feet > 0)
-                    Assert.IsTrue(SiegeTuning.Caught(kind, hold, feet - 1),
+                    Assert.IsTrue(SiegeTuning.OnBody(kind, lane, hold, lane, feet - 1),
                                   kind + " one row up, which is its chest");
 
-                if (feet + 1 < SiegeTuning.BlastRows)
-                    Assert.IsFalse(SiegeTuning.Caught(kind, hold, feet + 1),
-                                   kind + " does not reach below its own feet");
+                // Its body is some six cells wide on a board five lanes across, so a tap on the
+                // far lane is a tap on the thing.
+                Assert.IsTrue(SiegeTuning.OnBody(kind, lane, hold, 0, feet),
+                              kind + " reaches the outside lane");
+
+                Assert.Greater(SiegeTuning.BodySpan(kind), SiegeTuning.BodySpan(SiegeKind.Creeper),
+                               kind + " is drawn deeper than a creeper");
             }
 
-            // The shape that must not change: a creeper is one box, wherever it is standing.
+            // **The shape that must not change: an ordinary raider is one lane wide.** Asked of
+            // the footprint rather than of `Caught`, because `Caught` is the footprint and the
+            // plus multiplied together and would answer for both at once.
             for (int row = 0; row < SiegeTuning.BlastRows; row++)
             {
                 float march = (row + .5f) / SiegeTuning.BlastRows;
-                for (int other = 0; other < SiegeTuning.BlastRows; other++)
-                    Assert.AreEqual(other == row,
-                                    SiegeTuning.Caught(SiegeKind.Creeper, march, other));
+
+                for (int lane = 0; lane < SiegeTuning.Lanes; lane++)
+                    Assert.AreEqual(lane == 2,
+                                    SiegeTuning.OnBody(SiegeKind.Creeper, 2, march, lane, row),
+                                    "a creeper stands in its own lane and no other");
+
+                // And it is a little over a row tall, so it is on its own row and never two away.
+                Assert.IsTrue(SiegeTuning.OnBody(SiegeKind.Creeper, 2, march, 2, row));
+
+                if (row + 2 < SiegeTuning.BlastRows)
+                    Assert.IsFalse(SiegeTuning.OnBody(SiegeKind.Creeper, 2, march, 2, row + 2),
+                                   "a creeper is not two rows tall");
             }
         }
 

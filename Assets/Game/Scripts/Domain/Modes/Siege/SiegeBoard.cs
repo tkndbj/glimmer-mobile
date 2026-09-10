@@ -182,6 +182,9 @@ namespace GlimmerGrove.Modes
         /// <summary>How many waves this siege sends, the warlord's included.</summary>
         public int Waves => Layout.Waves.Length;
 
+        /// <summary>Whether this lane's waves never stop. <see cref="SiegeLayout.IsEndless"/>.</summary>
+        public bool IsEndless => Layout.IsEndless;
+
         /// <summary>Whether the wave now on the hill is the warlord's.</summary>
         public bool BossWave => Layout.HasBoss && _wave == Layout.BossWave + 1;
 

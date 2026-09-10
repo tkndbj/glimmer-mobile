@@ -189,6 +189,59 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// The heading every screen wears: the modal panel's own ribbon, off square, with the
+        /// word set on it in cream.
+        ///
+        /// <para>
+        /// <b>It came off `ModalView.MakePanel` because the owner liked it there.</b> That was
+        /// the one place in the game a heading was a real cloth ribbon rather than a wooden
+        /// plaque with brown lettering on it — the shape this UI drew before it had a kit, and
+        /// the one four screens still had at the top of them. So the ribbon is the heading now,
+        /// and the panel and the screens draw the same object.
+        /// </para>
+        /// <para>
+        /// <b>The tilt is the point and is why this is a function.</b> A ribbon hung dead
+        /// straight reads as a plate; -1.6 degrees is what makes it cloth, and it is a number
+        /// four call sites would otherwise each have to remember. So are the ink and the
+        /// outline: the sprite is orange, so the word is cream over a dark outline, and a
+        /// screen that reached for its own brown would be writing on it as if it were wood.
+        /// </para>
+        /// <para>
+        /// <paramref name="caption"/> narrows the word's own box where something else has to
+        /// fit beside it — the glade map's two chapter chevrons sit inside the ribbon's width,
+        /// so its title gets less room than the ribbon has.
+        /// </para>
+        /// <para>
+        /// The caption is kept to one line and shrunk to fit rather than trusted to be short — three of the four are
+        /// translated nouns and the fourth is a chapter name authored per drop. Returns the
+        /// ribbon, so a caller can pop it or hang a chevron off it.
+        /// </para>
+        /// </summary>
+        public static Image TitleRibbon(Transform parent, string text, Vector2 size,
+                                        Vector2 anchor, Vector2 pos, int fontSize = 44,
+                                        float floor = 24f, float caption = 0f)
+        {
+            var ribbon = UIKit.Img("Banner", parent, Art.S("Ui/ribbon_orange"), Color.white,
+                                   size, anchor, pos);
+            ribbon.transform.localRotation = Quaternion.Euler(0f, 0f, -1.6f);
+
+            // **One line, always.** `UIKit.Shrinkable` is the wrong fitter for a heading: best
+            // fit keeps a caption inside its box by letting it *wrap*, so a long title comes out
+            // as two or three stacked lines standing well outside the cloth rather than as one
+            // smaller line on it. Reported from the glade map, where "THE ENDLESS WATCH" was
+            // three of them. See `UIKit.OneLineLabel`.
+            float room = caption > 0f ? caption : size.x * .74f;
+
+            UIKit.OneLineLabel(
+                UIKit.Titled("Title", ribbon.transform, text, fontSize, Pal.Cream,
+                             TextAnchor.MiddleCenter, new Vector2(room, size.y * .5f),
+                             new Vector2(.5f, .5f), Vector2.zero, 4f, 4f),
+                room, Mathf.RoundToInt(floor));
+
+            return ribbon;
+        }
+
+        /// <summary>
         /// The kit's rail across the top or the foot of a screen.
         ///
         /// <para>

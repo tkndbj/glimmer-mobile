@@ -65,11 +65,43 @@ namespace GlimmerGrove.AssetPipeline
         /// <summary>
         /// One turret's shelf thumbnail. <c>Ui/Wards/{id}</c>.
         ///
-        /// <b>Under the UI root rather than the mode's</b>, because a thumbnail is what a shelf
-        /// browses with and never what a board draws - the four a run stands come out of
-        /// <see cref="AssetLibrary.LineScope"/> in the mode's own colours.
+        /// <b>Nothing draws these any more</b>, and they are kept rather than deleted. The loadout
+        /// used to browse uncoloured pictures on the argument that colour is a property of the
+        /// <em>seat</em> and not of the model - which is true, and which left the one screen that
+        /// is supposed to be a picture of the line showing four grey turrets a player then met on
+        /// the hill in red, green, blue and yellow. It draws <see cref="WardArt"/> now
+        /// (see <see cref="WardShelfAssets"/>). They stay on disk and stay listed by
+        /// <see cref="AllWardAssets"/> so the audit is not told eighty sprites went unused,
+        /// because nothing here has been looked at on a device yet and going back is one line.
         /// </summary>
         public static string WardThumb(string id) => UiRoot + "Wards/" + id;
+
+        /// <summary>
+        /// One turret's picture in one of the line's four colours - the very sprite the board
+        /// draws, at <c>Art/Siege/Wards/{id}_{c}</c>.
+        ///
+        /// <para>
+        /// <b>A shelf may draw the real art here, and that is a fact about these pictures rather
+        /// than a relaxing of invariant 16c.</b> That rule says browsing loads thumbnails because
+        /// a grove cell draws at ~170 points against art cut at 512; a turret is cut at 192x240,
+        /// which is smaller than the thumbnail it was being browsed with. So the cheap picture and
+        /// the true one cost the same, and only one of them is what the player is choosing.
+        /// </para>
+        /// <para>
+        /// <b>Clamped rather than refused</b>, for <c>WardLine.At</c>'s reason: a colour index out
+        /// of range is a caller's slip and a turret drawn on the wrong colour is a far better
+        /// answer than an <c>Image</c> with no sprite, which is a white rectangle (invariant 7b).
+        /// </para>
+        /// </summary>
+        public static string WardArt(Wards.WardModel model, int colour)
+        {
+            if (model == null) return string.Empty;
+
+            var colours = Wards.WardLine.Colours;
+            int at = colour < 0 || colour >= colours.Length ? 0 : colour;
+
+            return SiegeArt(model.ArtFor(colours[at]));
+        }
 
         /// <summary>
         /// Every address the turret roster could ever ask for: twenty models in four colours,
@@ -99,21 +131,55 @@ namespace GlimmerGrove.AssetPipeline
                     list.Add(AssetRequest.Sprite(SiegeArt(model.ArtFor(colour))));
                     list.Add(AssetRequest.SpriteSet(SiegeArt(model.FireFor(colour))));
                 }
+
+                // Its projectile, flash and impact, in all four ward colours. A model with no
+                // ability of its own throws the four elemental bolts instead, which the mode's own
+                // cast already names — asking for them here would be a second claim on an address
+                // the global set owns (invariant 7b).
+                if (!model.OwnShot) continue;
+
+                for (int i = 0; i < Wards.WardLine.Colours.Length; i++)
+                {
+                    char colour = Wards.WardLine.Colours[i];
+                    list.Add(AssetRequest.SpriteSet(SiegeFx(model.ShotFor(colour))));
+                    list.Add(AssetRequest.SpriteSet(SiegeFx(model.MuzzleFor(colour))));
+                    list.Add(AssetRequest.SpriteSet(SiegeFx(model.HitFor(colour))));
+                }
             }
 
             return list;
         }
 
-        /// <summary>Every turret's thumbnail, for the loadout's own scope.</summary>
+        /// <summary>
+        /// Every turret's picture in every ward colour, for the loadout's own scope.
+        ///
+        /// <para>
+        /// <b>All four colours at once rather than the seat being filled</b>, which is the one
+        /// decision in here. Scoping a single colour and swapping it when the player taps a
+        /// different seat is a quarter of the memory and an <em>asynchronous load on a tap</em>:
+        /// the grid would repaint before the sprites arrived, and an <c>Image</c> with no sprite
+        /// is a white rectangle rather than a blank (invariant 7b). Eighty pictures at 192x240 is
+        /// a few megabytes on a screen with no board behind it, and they leave with the scope.
+        /// </para>
+        /// <para>
+        /// <b>Still a scope and not the global set</b>, for the reason it always was: twenty
+        /// turrets resident for the life of a session to draw one screen is memory bounded by how
+        /// much content exists rather than by what is on the screen.
+        /// </para>
+        /// </summary>
         public static List<AssetRequest> WardShelfAssets(
             IEnumerable<Wards.WardModel> models)
         {
-            var list = new List<AssetRequest>(32);
+            var list = new List<AssetRequest>(96);
             if (models == null) return list;
 
             foreach (var model in models)
-                if (model != null && !string.IsNullOrEmpty(model.Id))
-                    list.Add(AssetRequest.Sprite(WardThumb(model.Id)));
+            {
+                if (model == null || string.IsNullOrEmpty(model.Id)) continue;
+
+                for (int i = 0; i < Wards.WardLine.Colours.Length; i++)
+                    list.Add(AssetRequest.Sprite(WardArt(model, i)));
+            }
 
             return list;
         }
@@ -238,7 +304,7 @@ namespace GlimmerGrove.AssetPipeline
             "Hud/add", "Hud/burst", "Hud/btn_gold",
             "Hud/plate_blue", "Hud/plate_orange", "Hud/plate_violet",
             "ic_nav_home", "ic_nav_shop", "ic_nav_grove",
-            "ic_nav_ranks", "ic_nav_profile", "ic_battle", "ic_chest_wood", "ic_streak",
+            "ic_nav_ranks", "ic_nav_profile", "ic_battle", "ic_chest_wood", "ic_streak", "ic_padlock",
             "Hud/lander", "Hud/beam",
         };
 
@@ -286,6 +352,7 @@ namespace GlimmerGrove.AssetPipeline
             "unlock", "shatter", "burst", "free", "pop", "pop2", "whoosh", "chest", "win", "star",
             "tick", "tock", "bell", "lit", "chime", "chime2",
             "boom", "mend", "snare", "pilfer",
+            "gem", "settle", "shot", "zap", "stand", "wear",
         };
 
         /// <summary>Everything the game needs before the menu appears.</summary>

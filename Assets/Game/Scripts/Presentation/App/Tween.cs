@@ -71,6 +71,17 @@ namespace GlimmerGrove
         internal int loops;          // 0 = once, -1 = forever
         internal bool pingPong;
 
+        /// <summary>
+        /// Whether this is still going: not killed, not superseded on its channel, and not
+        /// finished.
+        ///
+        /// For a caller holding a tween it must not restart — an idle breath under a recycled
+        /// cell, say — which needs to be able to tell "still breathing" from "ended while I was
+        /// not looking". Without it the only honest guard is a flag the caller keeps, and a
+        /// flag cannot see a <c>KillChannel</c> raised by somebody else.
+        /// </summary>
+        public bool Running => alive;
+
         public Tw OnDone(Action a) { done = a; return this; }
 
         /// <summary>

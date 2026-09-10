@@ -644,6 +644,20 @@ namespace GlimmerGrove.Content
                         + "take and half of what makes it an overlord rejects nothing"));
                     break;
 
+                // A douse takes a ward's fire, and fire is worth what there is to burn. It comes
+                // early on purpose (`SiegeTuning.WantsACrowd`), so what this catches is the same
+                // thing the rally clause below does: a level that sends it after a wave too small
+                // to still be walking. On an empty hill the fuel it takes was going nowhere, and
+                // a boss that takes no health and costs no time is a boss that rejects no play
+                // (invariant 5d) - reported from play, twice, as "it attacks and my turrets lose
+                // no health".
+                case SiegeSpell.Douse when Coming(layout) < 4:
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                        $"this siege ends with a {who}, whose spell takes a ward's fire, and only "
+                        + $"{Coming(layout)} raiders come before it - it will arrive onto an empty "
+                        + "hill, where the fuel it takes was not going to be shot at anything"));
+                    break;
+
                 // Half a warbringer's roar is a rally, and a rally needs something to rally. It
                 // comes early on purpose (`SiegeTuning.RestBefore`), so what this really catches
                 // is a level that sends it after a wave too small to still be walking.
@@ -666,16 +680,24 @@ namespace GlimmerGrove.Content
         }
 
         /// <summary>
-        /// How many raiders are in the last wave before the boss.
+        /// How many raiders the boss has for company.
         ///
-        /// The last one rather than all of them, because a warbringer's quiet
-        /// (<c>SiegeTuning.WarbringerAfter</c>) is shorter than <c>BetweenWaves</c> - so the only
-        /// wave that can still be walking when it arrives is the one immediately in front of it.
+        /// <para>
+        /// <b>Its own wave when it rides one, and otherwise the wave in front of it.</b> A boss
+        /// that cannot bring a ward down is stood at the head of the last authored wave rather
+        /// than given one of its own (<c>SiegeLayout</c>), so its company is what is standing
+        /// beside it. One with a wave to itself has only the wave immediately in front, because
+        /// its quiet (<c>SiegeTuning.CrowdAfter</c>) is shorter than <c>BetweenWaves</c> and
+        /// nothing earlier can still be walking.
+        /// </para>
         /// </summary>
         static int Coming(SiegeLayout layout)
         {
-            int last = layout.BossWave >= 0 ? layout.BossWave - 1 : layout.Coming.Length - 1;
-            return layout.SizeOf(last);
+            if (layout.BossWave < 0) return layout.SizeOf(layout.Coming.Length - 1);
+
+            int beside = layout.SizeOf(layout.BossWave) - layout.BossesIn(layout.BossWave);
+            return beside > 0 ? beside
+                 : layout.BossWave > 0 ? layout.SizeOf(layout.BossWave - 1) : 0;
         }
 
         /// <summary>Whether anything on the hill wears this colour.</summary>

@@ -69,20 +69,31 @@ namespace GlimmerGrove.Privacy
         /// Whether to clear UMP's stored consent state before each debug run.
         ///
         /// <para>
-        /// <b>Without this the forced geography appears not to work at all</b>, which cost an
-        /// evening. UMP caches its decision on the device: the first launch — before any debug
-        /// settings existed — evaluated a Turkish network, stored <c>NotRequired</c>, and every
-        /// later run was served that cached answer no matter what geography was forced. The
-        /// symptom is indistinguishable from a wrong device id or an unpublished message, and
-        /// no log says "this came from cache".
+        /// <b>Turn this on to see the form, and off to prove it was remembered.</b> Those are
+        /// two different tests and only one of them can run at a time, which is the whole
+        /// reason this is a switch rather than a companion to <see cref="ForceEea"/>. On, the
+        /// form is drawn on every launch — correctly, because the state it would have been
+        /// answered from has just been thrown away. Off is what asks the question that
+        /// actually matters: a player who consented once is never interrupted again.
+        /// </para>
+        /// <para>
+        /// <b>It has to exist, because without it the forced geography appears not to work at
+        /// all</b>, which cost an evening. UMP caches its decision on the device: the first
+        /// launch — before any debug settings existed — evaluated a Turkish network, stored
+        /// <c>NotRequired</c>, and every later run was served that cached answer no matter
+        /// what geography was forced. The symptom is indistinguishable from a wrong device id
+        /// or an unpublished message, and no log says "this came from cache". So the order is:
+        /// on for one run to reach the form, then off for ever after.
         /// </para>
         /// <para>
         /// Only ever true alongside <see cref="IsActive"/>, so it cannot reach a player — and
         /// it must not, because resetting a real player's consent would silently re-prompt
-        /// somebody who had already answered.
+        /// somebody who had already answered. That is also the failure this resting state
+        /// mimics: a debug build that re-prompts every launch is exactly what a release build
+        /// must never do, so leaving it on hides the one bug worth watching for.
         /// </para>
         /// </summary>
-        public const bool ResetEachRun = true;
+        public const bool ResetEachRun = false;
 
         /// <summary>Whether anything here should be applied to a consent request.</summary>
         public static bool IsActive

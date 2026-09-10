@@ -120,8 +120,13 @@ LANES = 5
 
 #: `SiegeTuning.BlastRows`.
 BLAST_ROWS = 4
+BLAST_REACH = 1
 
 #: `Pal.Board`, over the dark ground a sky is graded against.
+#: `Pal.Ember` - the warm outer rung of the ladder a strike is lit on (white core, `Pal.Sun`
+#: body, this in the air around it). See `SiegeShotBake.StrikeHalo`.
+EMBER = (255, 107, 87)
+
 PLATE = (14, 27, 37)
 BACK = (9, 14, 20)
 
@@ -146,6 +151,28 @@ LINE = ["bolt", "mortar", "lance", "beacon"]
 #: reason - `Image.color` is a multiply and a turret has to read as lit.
 def ward_art(model, colour):
     return "Wards/%s_%s" % (model, colour)
+
+
+#: `WardModel.Elemental` - the one turret whose bolt is a different element on each colour. Every
+#: other model throws one effect of its own, named after its id and baked in all four ward colours.
+#:
+#: **Named outright rather than derived**, which is the C# side's own rule and for its reason: it
+#: used to be read off the ability, and that was honest only while the starter was the only model
+#: without one. Never "the free one" - that is invariant 16j's trap, and it is wrong today anyway,
+#: since the turret with the elemental set is one somebody pays credits for.
+ELEMENTAL = "rime"
+
+
+def shot_key(kind, model, colour):
+    """`WardModel.ShotFor` - which reel this turret throws, in this colour.
+
+    Nothing is tinted on the way in: a roster reel is baked in all four ward colours, because a
+    multiply can only darken and what makes these effects read is variation in hue rather than in
+    value (invariant 37l, and `SiegeShotBake.BakeTurret`).
+    """
+    if model == ELEMENTAL:
+        return "%s_%s" % (kind, colour)
+    return "%s_%s_%s" % (kind, model, colour)
 
 
 #: `SiegeView.RankTint` - what colour a ward's badge is at this rank. Steel, bronze, silver, gold,
@@ -213,6 +240,19 @@ def loudest(name):
 HEAD_AT = 0.82
 MUZZLE_AT = 0.22
 
+#: `SiegeView.StrikeAt` - how far up its own frame a stormcall's strike lands, drawn.
+#:
+#: **This is the one of the three that had never been mirrored, and it was wrong in the game.** The
+#: reel was framed with its flash in the middle and drawn with its *centre* on the raider, so the
+#: lightning went off nearly three cells over the target's head with nothing at all where it was
+#: aimed - reported from a device as strikes landing at random spots rather than on enemies. No
+#: gate in this project opens a PNG, so this picture is the only thing that can ever say whether a
+#: strike lands on the thing it struck.
+STRIKE_AT = 0.17
+
+#: `SiegeView.StormTall` - how many cells tall a strike's whole frame is drawn.
+STORM_TALL = 5.0
+
 
 def aimed(sheet, im, hx, hy, wide, ux, uy, head=0.5):
     """Draws a reel frame turned to point along (ux, uy), with its head landing on (hx, hy).
@@ -239,6 +279,58 @@ def aimed(sheet, im, hx, hy, wide, ux, uy, head=0.5):
     cy = hy - uy * back
 
     sheet.alpha_composite(turned, (int(cx - turned.width / 2), int(cy - turned.height / 2)))
+
+
+def struck(sheet, cx, cy, cell, frame, plate_top):
+    """One bolt of a stormcall, landing on the raider standing at (cx, cy).
+
+    **Anchored by where it hits and never by the frame's middle**, which is the whole of what
+    `SiegeView.StrikeAt` is for - see that constant. The reel is baked with the flash near the foot
+    of the picture and the bolt filling the rest, so the sprite's centre goes below the target by
+    however far the flash sits from it.
+
+    It also draws the ground the bolt lands on - a warm scorch and a ring - because that is what
+    `SiegeView.Struck` draws and a bolt with no lit ground under it is a picture of lightning
+    rather than of something being struck.
+    """
+    im = blast("storm", frame)
+    if im is None:
+        return
+
+    # One size wherever it lands, cut off at the top of the board - `SiegeView.Bolt` and the
+    # `_strikes` layer's mask. Sizing it to the room above the target instead made a bolt on a
+    # raider half way up the hill a cell and a half long, which reads as a spark.
+    tall = cell * STORM_TALL
+    wide = tall * im.width / im.height
+    im = im.resize((max(1, int(wide)), max(1, int(tall))), Image.LANCZOS)
+    im = im.transpose(Image.FLIP_TOP_BOTTOM)
+
+    # The ground first, so the bolt and its sparks are drawn over their own light. Small: the reel
+    # carries the bright half of the burst and this is only the warm rung under it.
+    glow = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    g = ImageDraw.Draw(glow)
+    rx, ry = cell * 0.95, cell * 0.42
+    for k in range(7):
+        t = k / 6.0
+        g.ellipse((cx - rx * (1 - t * 0.8), cy - ry * (1 - t * 0.8),
+                   cx + rx * (1 - t * 0.8), cy + ry * (1 - t * 0.8)),
+                  fill=EMBER + (int(14 + 26 * t),))
+    sheet.alpha_composite(glow)
+
+    back = (STRIKE_AT - 0.5) * tall
+    top = int(cy + back - im.height / 2)
+
+    # The board clips it - `_strikes` carries a `RectMask2D`. Without this the picture would show
+    # a bolt over the status bar that the game does not draw, which is a mirror lying the other
+    # way round.
+    cut = int(max(0, plate_top - top))
+    if cut >= im.height:
+        return
+    if cut:
+        im = im.crop((0, cut, im.width, im.height))
+        top += cut
+
+    sheet.alpha_composite(im, (int(cx - im.width / 2), top))
 
 
 def face(size):
@@ -729,8 +821,34 @@ def post_x(span, index, wards):
 
 
 def lane_x(span, lane):
-    """`SiegeView.LaneX`, at module scope so the aim grid can use it too."""
-    return (lane - (LANES - 1) * 0.5) * (span[0] / LANES)
+    """`SiegeView.LaneX` - where a raider stands, inset so a wide reel stays on the plate.
+
+    It was `span[0] / LANES` here for a long time while the view used `LANES + 0.6`, so the mirror
+    stood every boss a little further out than the board does - and the raiders beside it were
+    already drawn on the view's pitch, so the picture disagreed with itself."""
+    return (lane - (LANES - 1) * 0.5) * (span[0] / (LANES + 0.6))
+
+
+def box_wide(span):
+    """`SiegeView.BoxWide` - the aiming grid tiles the board flat, and is not inset."""
+    return span[0] / LANES
+
+
+def box_at(span, hill_top, hill_foot, lane, row):
+    """`SiegeView.BoxAt` - the middle of one box of the hill's aiming grid.
+
+    Worked out from the march mapping rather than beside it: `march` nought is `hill_top` and one
+    is `hill_foot`, so the boxes a player taps are the bands `SiegeTuning.RowOf` reads. The view
+    laid them out from `hill_top + cell * 0.35` for a long time, which put every boundary on the
+    screen up to a third of a cell above the boundary the rule used."""
+    march = (row + 0.5) / BLAST_ROWS
+    return ((lane - (LANES - 1) * 0.5) * box_wide(span),
+            hill_top + (hill_foot - hill_top) * march)
+
+
+def in_blast(at_lane, at_row, lane, row):
+    """`SiegeTuning.InBlast` - the plus a firepot burns, around the box that was tapped."""
+    return abs(lane - at_lane) + abs(row - at_row) <= BLAST_REACH
 
 
 def boss_lane(index, bosses):
@@ -774,13 +892,22 @@ def layout_of(level):
 def coming(lay, wave):
     """What is standing on the hill, as (colour, kind) pairs, on either ladder.
 
-    On the ordinary ladder it is the last **authored** wave, because the one after it is the boss
-    and that is drawn on its own (`SiegeLayout` appends a one-raider wave for it, 37t). On the
-    Infinite lane there is nothing authored at all: the muster is a rule, so the picture reads it
-    at a wave number exactly as the board does (`SiegeEndless.WaveAt`, invariant 43) - which is
-    what lets one picture say whether wave forty is a hill anybody could hold."""
+    On the ordinary ladder it is the wave the boss stands in, which is where the picture is worth
+    taking. A warlord, a warbringer and an overlord get a wave of their own (`SiegeLayout` appends
+    a one-raider one, 37t), so what is standing with them is the wave in front; a boss that cannot
+    bring a ward down rides the last authored wave instead, and then its company *is* that wave -
+    which is the whole of what a picture of `s01_stonewatch` has to show. On the Infinite lane
+    there is nothing authored at all: the muster is a rule, so the picture reads it at a wave
+    number exactly as the board does (`SiegeEndless.WaveAt`, invariant 43) - which is what lets
+    one picture say whether wave forty is a hill anybody could hold."""
     if lay.endless:
         return siege.endless_wave(list(lay.deal), lay.seed, wave)
+
+    if lay.boss_wave >= 0:
+        # The boss itself is index nought and is drawn on its own, below.
+        beside = lay.coming[lay.boss_wave][1:]
+        if beside:
+            return beside
 
     body = [w for i, w in enumerate(lay.waves) if i != lay.boss_wave]
     return siege.read_wave(body[-1] if body else "", lay.boss_kind, False)
@@ -794,7 +921,8 @@ def ground(rung):
     return "hill%d" % (rung % GROUNDS + 1)
 
 
-def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, line=None):
+def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, line=None,
+         burn=None, storm=0):
     lay = layout_of(level)
     grid = lay.grid
 
@@ -957,7 +1085,13 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         for i, ward in enumerate(lay.wards):
             wide = span[0] / (len(lay.wards) + 0.6)
             wx = (i - (len(lay.wards) - 1) / 2) * wide
-            key = ward   # r, g, b, y - the reels are named for the colour, not the post
+            # **The turret decides the shape and the ward decides the colour** - the reels are
+            # named for the model a player stood here, not for the post and not for the colour,
+            # and a bleached one is multiplied by that ward's own `Pal` entry (`WardModel.ShotFor`,
+            # `SiegeView.ShotTint`). Nineteen bought turrets each throw something of their own, so
+            # whether nineteen silhouettes actually read as nineteen is a question only this
+            # picture answers.
+            stood_here = (line or LINE)[i % len(line or LINE)]
 
             mx, my = at(wx, line_y + cell * 1.0)
             tx, ty = mob[i % len(mob)]
@@ -970,10 +1104,11 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
             # copies of one instant.
             along = (0.30, 0.55, 0.78, 0.42)[i % 4]
 
-            aimed(sheet, loudest("muzzle_" + key), mx, my, cell * 2.7, ux, uy, MUZZLE_AT)
-            aimed(sheet, blast("shot_" + key, 6),
+            aimed(sheet, loudest(shot_key("muzzle", stood_here, ward)), mx, my, cell * 2.7,
+                  ux, uy, MUZZLE_AT)
+            aimed(sheet, blast(shot_key("shot", stood_here, ward), 6),
                   mx + dx * along, my + dy * along, cell * 1.0, ux, uy, HEAD_AT)
-            aimed(sheet, loudest("hit_" + key), tx, ty, cell * 3.2, ux, uy)
+            aimed(sheet, loudest(shot_key("hit", stood_here, ward)), tx, ty, cell * 3.2, ux, uy)
 
             # The tally floating off it. Two of the four are drawn as doubles, because the
             # elemental double is the rule this mode is about and it has to read as a different
@@ -1027,7 +1162,14 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
                                   radius=9, fill=tint + (255,))
 
     if aim == "hill":
-        hill_grid(sheet, span, cell, hill_top, hill_foot, at)
+        hill_grid(sheet, span, cell, hill_top, hill_foot, at, burn)
+
+    # ------------------------------------------------------------------ the stormcall
+    # Bolts falling on the raiders the item killed, drawn at three points of one reel so a still
+    # picture shows the strike arriving, at its loudest, and going out.
+    if storm and mob:
+        for i, (mx, my) in enumerate(mob[:storm]):
+            struck(sheet, mx, my, cell, (2, 6, 11, 8)[i % 4], at(0, hill_top)[1])
     elif aim == "wards":
         ward_rings(sheet, span, cell, line_y, len(lay.wards), at)
 
@@ -1171,28 +1313,34 @@ def bar(sheet, held, cooling=None):
                              stroke_width=3, stroke_fill=(23, 36, 51, 242))
 
 
-def hill_grid(sheet, span, cell, hill_top, hill_foot, at):
+def hill_grid(sheet, span, cell, hill_top, hill_foot, at, burn=None):
     """`SiegeView.AimHill` - what a firepot is aimed with.
 
     <p>Drawn because it is the one thing on this board that is neither the board nor the bar, and
     because whether twenty panes over a hill full of raiders reads as a target or as a mess is a
     question only a picture answers.</p>
+
+    <p>`burn` is a (lane, row) tap: the plus a firepot would take is lit in ember, which is
+    `SiegeView.Scorch`. It is the only picture that can say whether five boxes of fire over a hill
+    full of raiders reads as one blast or as five.</p>
     """
     lanes, rows = LANES, BLAST_ROWS
-    top = hill_top + cell * 0.35
-    wide = span[0] / lanes
-    tall = (top - hill_foot) / rows
+    wide = box_wide(span)
+    tall = (hill_top - hill_foot) / rows
 
     layer = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
     pen = ImageDraw.Draw(layer)
 
     for row in range(rows):
         for lane in range(lanes):
-            cx, cy = at(lane_x(span, lane), top - (row + 0.5) * tall)
+            cx, cy = at(*box_at(span, hill_top, hill_foot, lane, row))
+
+            lit = burn is not None and in_blast(burn[0], burn[1], lane, row)
+            fill = (255, 148, 66, 150) if lit else (79, 193, 255, 46)
 
             pen.rounded_rectangle(
                 [cx - wide / 2 + 3, cy - tall / 2 + 3, cx + wide / 2 - 3, cy + tall / 2 - 3],
-                radius=18, fill=(79, 193, 255, 46))
+                radius=18, fill=fill)
 
             r = min(wide, tall) * 0.23
             pen.ellipse([cx - r, cy - r, cx + r, cy + r], outline=(79, 193, 255, 200), width=6)
@@ -1241,6 +1389,13 @@ def main():
                          "player's, so this is the only way to look at one" % ", ".join(LINE))
     ap.add_argument("--aim", choices=("hill", "wards"),
                     help="draw a utility's targeting: the firepot's grid, or the ward rings")
+    ap.add_argument("--storm", type=int, nargs="?", const=3, default=0, metavar="N",
+                    help="drop a stormcall bolt on the first N raiders - the only picture that "
+                         "says whether a strike lands on the thing it struck")
+    ap.add_argument("--burn", metavar="LANE,ROW",
+                    help="with --aim hill, light the plus a firepot dropped on that box would "
+                         "burn (`SiegeView.Scorch`) - the only picture that says whether five "
+                         "boxes of fire read as one blast")
     ap.add_argument("--out", default=str(REPO / "Tools" / "siege_boards.png"))
     args = ap.parse_args()
 
@@ -1270,10 +1425,17 @@ def main():
         name, _, secs = pair.partition("=")
         cooling[name.strip()] = float(secs)
 
+    burn = None
+    if args.burn:
+        lane, _, row = args.burn.partition(",")
+        burn = (int(lane), int(row))
+        if not (0 <= burn[0] < LANES and 0 <= burn[1] < BLAST_ROWS):
+            sys.exit("--burn is lane 0..%d, row 0..%d" % (LANES - 1, BLAST_ROWS - 1))
+
     shots = []
     for rung, lv in picked:
         shot = draw(lv, args.raiders, not args.no_bolts, aim=args.aim,
-                    boss=args.warlord, rung=rung, wave=args.wave, line=stood)
+                    boss=args.warlord, rung=rung, wave=args.wave, line=stood, burn=burn, storm=args.storm)
         if not args.no_bar:
             bar(shot, held, cooling)
         shots.append((lv["id"], shot))

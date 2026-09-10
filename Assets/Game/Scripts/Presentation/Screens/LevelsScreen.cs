@@ -56,6 +56,20 @@ namespace GlimmerGrove
 
         ScrollRect _scroll;
         RectTransform _viewport, _map;
+
+        /// <summary>The loadout bar along the foot, or null for a mode that has no line.</summary>
+        LoadoutBar _kit;
+
+        /// <summary>
+        /// How much of the screen's foot is spoken for.
+        ///
+        /// <b>Asked of the mode rather than of whether the bar has been built yet</b>, because the
+        /// scroller is built before the header and would otherwise reserve nothing. It is the one
+        /// number the map and the bar both have to agree about: too little and the first glade of
+        /// every chapter sits behind an opaque shelf, too much and there is a strip of nothing
+        /// under the map.
+        /// </summary>
+        float FootRoom => Mode == GameMode.Siege ? LoadoutBar.Height : 0f;
         LevelCatalog _catalog;
         CatalogIndex _index;
 
@@ -307,8 +321,13 @@ namespace GlimmerGrove
             // for the same reason.
             _viewport.SetAsFirstSibling();
 
-            // Full screen: nothing reserves the bottom any more, so the offsets Node()
-            // already set are what we want and the old NavBar.Height inset is gone.
+            // **The foot is reserved when a loadout bar is standing in it.** The bar is opaque
+            // and fills the width, so a viewport left full-screen would put the first glade of
+            // every chapter behind it — and a map is scrolled to the bottom by default. `FootRoom`
+            // already carries the safe-area inset, so this is right on a phone with a home
+            // indicator and unchanged on one without.
+            _viewport.offsetMin = new Vector2(0f, FootRoom);
+
             var catcher = _viewport.gameObject.AddComponent<Image>();
             catcher.color = new Color(0, 0, 0, 0);         // invisible, but drags land on it
             catcher.raycastTarget = true;
@@ -889,22 +908,18 @@ namespace GlimmerGrove
                              new Vector2(1f, 1f), new Vector2(-CornerX, CornerY),
                              () => { if (!Flow.HasModal) Flow.Modal<GladeRewardsOverlay>(v => v.For(chapter)); });
 
-            _banner = UIKit.Img("Banner", Safe, Art.S("Ui/banner"), Color.white,
-                                new Vector2(BannerWidth, BannerHeight), new Vector2(.5f, 1f),
-                                new Vector2(0f, BannerY));
             string title = _entry != null ? Loc.Get(_entry.NameKey) : Loc.Get("ui.levels.title");
-            var name = UIKit.Titled("Title", _banner.transform, title.ToUpperInvariant(), 40,
-                                    BannerInk, TextAnchor.MiddleCenter,
-                                    new Vector2(NameWidth, 96f), new Vector2(.5f, .5f),
-                                    Vector2.zero, outline: 0f, shadow: 2f);
 
-            // One unwrapped line, narrowed until it fits between the chevrons rather than
-            // trusted to be short. A chapter name is authored per drop and translated after
-            // that, so it is the string on this screen most likely to arrive longer than
-            // the space it was measured against.
-            while (name.fontSize > 26 && name.preferredWidth > NameWidth) name.fontSize--;
+            _banner = Scenery.TitleRibbon(Safe, title.ToUpperInvariant(),
+                                          new Vector2(BannerWidth, BannerHeight),
+                                          new Vector2(.5f, 1f), new Vector2(0f, BannerY), 40,
+                                          26f, NameWidth);
 
-            _name = name;
+            // Narrowed to `NameWidth` rather than to the ribbon's own width, because the two
+            // chapter chevrons sit inside it. The hand-rolled shrink loop that used to be here
+            // went with the ribbon: `Scenery.TitleRibbon` makes the caption `Shrinkable`, which
+            // is uGUI's own best fit, and setting `fontSize` under best fit does nothing.
+            _name = _banner.transform.Find("Title").GetComponent<Text>();
 
             _banner.transform.localScale = Vector3.zero;
             Tween.Pop(_banner.transform, 0f, .6f, .1f);
@@ -954,28 +969,24 @@ namespace GlimmerGrove
             // where somebody is about to choose a level, which is the moment they would want to
             // change what they are taking into it. Drawn only for a mode that has a line at all,
             // so a mode without one never carries a control that does nothing.
+            //
+            // **It is a readout now rather than a button**, which is the whole change: a corner
+            // control said the feature existed and nothing about what was in it, so the one screen
+            // where somebody is about to choose a level told them nothing about what they were
+            // choosing it with. The bar shows the four turrets and the five kits, and opens the
+            // shelf when it is tapped — so the button came out rather than sitting beside it.
             if (Mode == GameMode.Siege)
             {
-                var kit = UIKit.Button("Loadout", Safe, Art.S("Ui/btn_blue"),
-                                       new Vector2(300f, 92f), new Vector2(0f, 0f),
-                                       new Vector2(180f, 132f), () => Flow.Go<LoadoutScreen>());
-
-                float kitLift = 92f * UIKit.PillFaceLift;
-
-                UIKit.Shrinkable(
-                    UIKit.Titled("T", kit.transform, Loc.Get("ui.loadout.title").ToUpperInvariant(),
-                                 28, Pal.Cream, TextAnchor.MiddleCenter, new Vector2(212f, 44f),
-                                 new Vector2(.5f, .5f), new Vector2(18f, kitLift), 0f, 2f), 18);
-
-                UIKit.Img("Icon", kit.transform, Art.S("Ui/ic_gear"), Pal.Cream,
-                          new Vector2(40f, 40f), new Vector2(.5f, .5f),
-                          new Vector2(-98f, kitLift));
+                _kit = LoadoutBar.Build(Content, () => Flow.Go<LoadoutScreen>());
+                _kit.Load();
             }
 
+            // Above the bar when there is one, because the hint is about the map and the bar is
+            // not part of it.
             var swipe = UIKit.Titled("Swipe", Safe, Loc.Get("ui.levels.swipe"), 26,
                                      new Color(1f, .96f, .88f, .5f), TextAnchor.MiddleCenter,
                                      new Vector2(700f, 36f), new Vector2(.5f, 0f),
-                                     new Vector2(0f, 118f), 3f, 0f);
+                                     new Vector2(0f, 118f + FootRoom), 3f, 0f);
             Tween.Tint(swipe, new Color(1f, .96f, .88f, 0f), .8f).Delay(4.2f);
         }
 

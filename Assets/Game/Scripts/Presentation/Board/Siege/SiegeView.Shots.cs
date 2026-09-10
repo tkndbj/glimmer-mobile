@@ -151,10 +151,10 @@ namespace GlimmerGrove
             _spare.Push(puff);
         }
 
-        /// <summary>The bolt itself: the ward's own comet, aimed, with a light under its head.</summary>
-        Puff Round(int colour, Color tint, Vector2 at, float angle)
+        /// <summary>The bolt itself: the turret's own comet, aimed, with a light under its head.</summary>
+        Puff Round(Wards.WardModel model, int colour, Color tint, Vector2 at, float angle)
         {
-            var frames = ShotArt(colour);
+            var frames = ShotArt(model, colour);
 
             // The shared round, drained of colour so it can take the ward's, is what is drawn when
             // the projectile pack is not in this checkout. It is one sprite rather than a reel, so
@@ -174,8 +174,10 @@ namespace GlimmerGrove
             // Sized by the frame's *width*, which is the comet's own width because the bake frames
             // it that tightly — so this number means "a bolt is two thirds of a gem across" and
             // stays true when a reel is re-baked into a different shape.
-            var puff = Lend(frames, Color.white, Cell * 1.0f, at, angle, 30f, true, HeadAt);
-            Glow(puff, tint, Cell * 1.7f);
+            float scale = BoltScale(model);
+
+            var puff = Lend(frames, Color.white, Cell * scale, at, angle, 30f, true, HeadAt);
+            Glow(puff, tint, Cell * 1.7f * scale);
             return puff;
         }
 
@@ -259,7 +261,7 @@ namespace GlimmerGrove
             // came back from play was that the firing was boring, and the fix is not one bigger
             // thing - it is that a shot has *four* beats a player can see: the barrel kicks, the
             // muzzle throws light, something with a tail crosses the hill, and it arrives.
-            Flash(muzzle, angle, ward.Colour, tint);
+            Flash(muzzle, angle, ward.Model, ward.Colour, tint);
 
             // The kick, on top of the pack's own frames. A turret that only cycles frames stays
             // put; one that is shoved backwards and springs forward has weight.
@@ -278,7 +280,7 @@ namespace GlimmerGrove
                 }, body, "kick");
             }
 
-            var round = Round(ward.Colour, tint, muzzle, angle);
+            var round = Round(ward.Model, ward.Colour, tint, muzzle, angle);
             float flight = Mathf.Clamp(dir.magnitude / (Cell * 26f), ShortestFlight, LongestFlight);
 
             var node = round.Node;
@@ -294,14 +296,33 @@ namespace GlimmerGrove
             }, node).OnDone(() =>
             {
                 Give(round);
-                Land(to, tint, ward.Colour, angle, shot);
+                Land(to, tint, ward.Model, ward.Colour, angle, shot);
             });
 
-            // **A ward is audible.** Each of the four is pitched differently, so a player can
-            // hear which one they just fed without looking away from the field - and a hit that
-            // lands double is a brighter note on top, which is the rule the mode is about said in
-            // the one channel that was silent.
-            Audio.Sfx("poke", .32f, 1.18f - shot.Ward * .11f);
+            // **One sound at one pitch for all four wards.** It used to be pitched per ward
+            // (1.18 / 1.07 / 0.96 / 0.85) so a player could hear which colour they had just fed
+            // without looking away from the field. Withdrawn by the owner after playing it: four
+            // pitches of one clip read as four different sound effects rather than as four
+            // sources of one, which is the opposite of what the spread was for. The reading is
+            // gone with it and that is accepted - what says which ward is firing is the board,
+            // where the bolts visibly leave their own turret. Do not put the spread back without
+            // asking; it has been heard and rejected.
+            // **`.20f`, and the number is about density rather than about one bolt.** A lit
+            // line fires about eighteen a second across four wards, so three or four copies
+            // are sounding at any instant - roughly +5 dB over a single one - which is why
+            // the turrets read as loud while every individual bolt sits at the same matched
+            // level as everything else in the set. It went .32 -> .20 -> .12, which is 8.5 dB
+            // below the rest of the set: a bolt is now deliberately *under* the matched level,
+            // because what a player hears is never one of them. To nudge further, .09 is another
+            // 2.5 dB down; below about .07 the four authored pitches stop being tellable apart,
+            // which is the reading this sound exists to carry.
+            //
+            // What must never be reached for instead is `SiegeTuning.FireEvery`. It is the
+            // same density from the other end and it is a *rule* - .26 loses the ward line
+            // outright (invariant 37k), and every number in this mode is held by
+            // `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine`. A mixing complaint is fixed
+            // in the mix.
+            Audio.Sfx("shot", .12f);
             if (shot.Weak) Audio.SfxVaried("chime2", .2f);
         }
 
@@ -319,9 +340,9 @@ namespace GlimmerGrove
         /// missing reel must cost the thing it draws and never a white rectangle (invariant 7b).
         /// </para>
         /// </summary>
-        void Flash(Vector2 at, float angle, int colour, Color tint)
+        void Flash(Vector2 at, float angle, Wards.WardModel model, int colour, Color tint)
         {
-            var frames = MuzzleArt(colour);
+            var frames = MuzzleArt(model, colour);
             bool own = frames != null && frames.Length > 0;
 
             if (!own) frames = Blast("flash");
@@ -346,13 +367,15 @@ namespace GlimmerGrove
             Ends(puff, own ? .32f : .3f);
         }
 
-        void Land(Vector2 at, Color tint, int colour, float angle, SiegeBolt shot)
+        void Land(Vector2 at, Color tint, Wards.WardModel model, int colour, float angle,
+                  SiegeBolt shot)
         {
-            var frames = HitArt(colour);
+            var frames = HitArt(model, colour);
 
             if (frames != null && frames.Length > 0)
-                Ends(Lend(frames, Color.white, Cell * (shot.Killed ? 4.1f : 3.2f), at, angle,
-                          35f, false, .5f), .35f);
+                Ends(Lend(frames, Color.white,
+                          Cell * (shot.Killed ? 4.1f : 3.2f) * BoltScale(model), at,
+                          angle, 35f, false, .5f), .35f);
 
             Pop(at, shot.Weak ? Pal.Gold : tint, shot.Weak ? 1.9f : 1.2f, .24f);
 
@@ -366,7 +389,13 @@ namespace GlimmerGrove
 
             Number(shot.Raider, at, shot.Damage, shot.Weak);
 
-            if (shot.Killed) Audio.SfxVaried("burst", .42f);
+            // **The bolt's own voice, and on the kill rather than on every landing.** A lit
+            // line lands about eighteen hits a second (see `Number`, which tallies them for
+            // exactly that reason), so a sound on each would double the busiest thing in the
+            // mix to say something the damage figure already says. A kill is the beat worth
+            // marking. Its own slot rather than `burst`, which a firepot's and a storm's kills
+            // still play: a turret's kill gets the turret's voice.
+            if (shot.Killed) Audio.SfxVaried("zap", .42f);
 
             for (int i = 0; i < _mob.Count; i++)
                 if (_mob[i].Id == shot.Raider && _mob[i].Body != null)

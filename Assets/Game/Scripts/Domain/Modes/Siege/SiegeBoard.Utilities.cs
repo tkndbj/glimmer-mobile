@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace GlimmerGrove.Modes
 {
     /// <summary>
-    /// What the action bar spends into the board: a firepot into one box of the hill, a storm
+    /// What the action bar spends into the board: a firepot onto the hill, a storm
     /// over all of it, a mending into a ward, a surge of fuel.
     ///
     /// <para>
@@ -17,16 +17,23 @@ namespace GlimmerGrove.Modes
     {
         // ------------------------------------------------------------------ utilities
         /// <summary>
-        /// Burns everything standing in one box of the hill.
+        /// Burns every body reaching into the boxes a firepot dropped here covers.
         ///
         /// <para>
-        /// <b>A box rather than a radius, and that is a change of kind rather than of degree.</b>
+        /// <b>Boxes rather than a radius, and that is a change of kind rather than of degree.</b>
         /// A blast used to take everything within a distance of the point a finger left; exact in
         /// the rule, and on the screen it asked the player to judge a radius against raiders that
-        /// were moving. The hill is a grid now (<see cref="SiegeTuning.BlastRows"/> bands by
-        /// <see cref="SiegeTuning.Lanes"/> lanes), the boxes are drawn, and a firepot takes
-        /// exactly what is standing in the one that was tapped - which is invariant 33g's rule at
-        /// its strongest, because the drawn thing and the played thing are now the same integers.
+        /// were moving. The hill is a grid (<see cref="SiegeTuning.BlastRows"/> bands by
+        /// <see cref="SiegeTuning.Lanes"/> lanes), the boxes are drawn, and a firepot burns the one
+        /// that was tapped and the four touching it (<see cref="SiegeTuning.BlastReach"/>) - which
+        /// is invariant 33g's rule at its strongest, because the drawn thing and the played thing
+        /// are the same integers rather than two grids agreeing about a mapping.
+        /// </para>
+        /// <para>
+        /// <b>What it catches is a body rather than a point</b>, which is the half that was wrong
+        /// for as long as this took one box. A raider's node is the middle of its picture and a
+        /// boss is drawn some six cells wide and three deep, so most of the thing a player aims at
+        /// was never in the box the rule read. See <see cref="SiegeTuning.Caught"/>.
         /// </para>
         /// <para>
         /// <b>It reports damage <em>absorbed</em>, not damage offered</b>, and that number is
@@ -53,12 +60,14 @@ namespace GlimmerGrove.Modes
                 var raider = _raiders[i];
                 if (!raider.Alive || !raider.OnTheHill) continue;
 
-                if (raider.Lane != lane) continue;
-
-                // **What its body covers, not the box its feet are in.** A boss is three cells of
-                // silhouette on a four-row hill, so aiming at the thing you can see and missing is
-                // the whole of the "bombs don't hit bosses" report.
-                if (!SiegeTuning.Caught(raider.Kind, raider.March, row)) continue;
+                // **What its body covers, against the boxes the firepot burns** — two rectangles
+                // overlapping, and neither of them a point. `SiegeTuning.Caught` owns both halves:
+                // a raider is as wide as it is drawn (a boss spans the hill; everything else fits
+                // its lane) and as deep as it is drawn, centred where it stands, and a firepot is
+                // the plus around the tapped box. Aiming at the thing you can see and being told
+                // nothing is there is what this replaced.
+                if (!SiegeTuning.Caught(raider.Kind, raider.Lane, raider.March, lane, row))
+                    continue;
 
                 int took = damage < raider.Health ? damage : raider.Health;
                 absorbed += took;

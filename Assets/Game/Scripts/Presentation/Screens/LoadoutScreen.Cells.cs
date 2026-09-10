@@ -29,17 +29,6 @@ namespace GlimmerGrove
 
             PaintLine();
             PaintShelf();
-            PaintSummary();
-        }
-
-        void PaintSummary()
-        {
-            if (_summary == null) return;
-
-            _summary.text = _shelf == Shelf.Wards
-                ? Loc.Format("ui.loadout.held", WardLedger.HeldCount,
-                             WardLedger.Catalog.Count)
-                : Loc.Get("ui.loadout.items_note");
         }
 
         void PaintLine()
@@ -57,13 +46,21 @@ namespace GlimmerGrove
                 slot.Seat.sprite = Art.S("Ui/" + (picked ? Skins.PlateOrange : Skins.PlateBlue));
                 slot.Edge.enabled = picked;
                 slot.Glow.color = Pal.A(accent, picked ? .52f : .34f);
-                slot.Icon.sprite = AssetLibrary.Sprite(AssetManifest.WardThumb(model.Id));
+                // **The turret in the colour it stands on, which is the picture of the line.**
+                // These four boxes are what a player takes into a run, and they used to draw the
+                // same uncoloured thumbnail the catalogue does with the colour carried by the glow
+                // behind at a third of an alpha - so the one screen that is supposed to show the
+                // line never showed it, and the four turrets met on the hill were four objects the
+                // player had never seen. The glow stays and stops being the only thing saying it.
+                slot.Icon.sprite = AssetLibrary.Sprite(AssetManifest.WardArt(model, slot.Colour));
                 slot.Name.text = Loc.Get(model.NameKey);
             }
         }
 
         void PaintShelf()
         {
+            _shelfIcons.Clear();
+
             for (int i = _grid.childCount - 1; i >= 0; i--)
             {
                 var old = _grid.GetChild(i).gameObject;
@@ -73,6 +70,9 @@ namespace GlimmerGrove
 
             if (_shelf == Shelf.Wards) PaintWards();
             else PaintItems();
+
+            // Spent on the way in, so every repaint after it is a redraw rather than an arrival.
+            _shown = true;
         }
 
         // ----------------------------------------------------------------- turrets
@@ -82,12 +82,12 @@ namespace GlimmerGrove
             int level = PlayerProgression.Level.Level;
             var line = WardLoadout.Line;
 
-            float gapX = 24f, gapY = 24f;
+            const float gapX = CellGapX, gapY = CellGapY;
             float span = Columns * CellW + (Columns - 1) * gapX;
             float left = -span * .5f + CellW * .5f;
 
             int rows = (models.Count + Columns - 1) / Columns;
-            _grid.sizeDelta = new Vector2(0f, rows * (CellH + gapY) + gapY);
+            _grid.sizeDelta = new Vector2(0f, rows * (WardCellH + gapY) + gapY);
 
             for (int i = 0; i < models.Count; i++)
             {
@@ -95,7 +95,7 @@ namespace GlimmerGrove
                 var offer = WardLedger.OfferFor(model, level);
 
                 float x = left + (i % Columns) * (CellW + gapX);
-                float y = -gapY - (i / Columns) * (CellH + gapY) - CellH * .5f;
+                float y = -gapY - (i / Columns) * (WardCellH + gapY) - WardCellH * .5f;
 
                 bool standing = line.At(_slot) == model;
 
@@ -107,7 +107,7 @@ namespace GlimmerGrove
         {
             bool held = offer.State == WardPurchaseState.AlreadyHeld;
 
-            var cell = UIKit.Box("Ward_" + model.Id, _grid, new Vector2(CellW, CellH),
+            var cell = UIKit.Box("Ward_" + model.Id, _grid, new Vector2(CellW, WardCellH),
                                  new Vector2(.5f, 1f), at);
 
             var hit = cell.gameObject.AddComponent<Image>();
@@ -125,48 +125,88 @@ namespace GlimmerGrove
                 UIKit.StretchTo((RectTransform)edge.transform, -2, -2, -2, -2);
             }
 
-            // The picture. **A thumbnail out of the shared UI set, never the turret itself** —
-            // browsing twenty models in four colours would be eighty textures for a grid whose
-            // cells draw at 150 points (invariant 16c).
+            // The picture. **The real turret, worn in the colour of the seat being filled** —
+            // so tapping a different slot turns the whole shelf that colour, which is the mode's
+            // central rule shown in one gesture rather than explained: a turret has no colour of
+            // its own, and the colour is the seat it is put in. It answers the question somebody
+            // browsing is actually asking, which is not "what is this turret" but "what will this
+            // look like on red".
+            //
+            // **Not the invariant-16c relaxation it looks like.** That rule browses thumbnails
+            // because a grove cell draws at ~170 points against art cut at 512; a turret is cut at
+            // 192x240, *smaller* than the 176-square thumbnail it replaces, so the true picture
+            // and the cheap one cost the same. All eighty are in the scope, so a slot tap repaints
+            // rather than loading (`AssetManifest.WardShelfAssets`).
             // **Placed by its centre, and it is worth saying why the old numbers looked
             // plausible.** `UIKit.Box` pivots at the middle whatever it is anchored to, so a
             // 179-tall picture anchored to the cell's top edge at -22 had 68 units of itself
             // above the cell — the turret was drawn high, clipped by nothing (uGUI does not
             // clip), and the gap it left below read as a picture that had slipped up. Every
             // number under here is now `margin + half the box`.
-            const float IconBox = CellW * .55f;
-
-            var icon = UIKit.Img("Turret", cell, AssetLibrary.Sprite(AssetManifest.WardThumb(model.Id)),
-                                 held ? Color.white : new Color(.62f, .66f, .72f, 1f),
-                                 new Vector2(IconBox, IconBox),
-                                 new Vector2(.5f, 1f), new Vector2(0f, -(18f + IconBox * .5f)));
+            // Full colour whichever it is: the veil below does the dimming, and a tint on the
+            // picture only ever *darkens* it — which on a shelf whose whole job is telling twenty
+            // silhouettes apart is the one thing not to do (the grove shop's own lesson).
+            var icon = UIKit.Img("Turret", cell, AssetLibrary.Sprite(AssetManifest.WardArt(model, _slot)),
+                                 Color.white, new Vector2(IconBox, IconBox),
+                                 new Vector2(.5f, 1f), new Vector2(0f, -(IconTop + IconBox * .5f)));
             icon.preserveAspect = true;
 
-            var name = UIKit.Titled("Name", cell, Loc.Get(model.NameKey), 28,
-                                    held ? Pal.Cream : Pal.A(Pal.Cream, .82f),
-                                    TextAnchor.MiddleCenter, new Vector2(CellW - 28f, 38f),
-                                    new Vector2(.5f, 1f), new Vector2(0f, -216f),
-                                    0f, 2f);
-            UIKit.Shrinkable(name, 18);
+            // Held so the scope arriving can dress this cell rather than rebuild it (`Dress`).
+            _shelfIcons[model.Id] = icon;
 
-            // What it does, in one line. The only place the game says it, and it is here rather
-            // than on a panel because this is where somebody is deciding.
-            var note = UIKit.Label("Note", cell, Loc.Get(model.NoteKey), 21,
-                                   Pal.A(Pal.Cream, .86f), TextAnchor.UpperCenter,
-                                   new Vector2(CellW - 34f, 54f), new Vector2(.5f, 1f),
-                                   new Vector2(0f, -264f));
-            UIKit.Shrinkable(note, 15);
+            if (!held)
+            {
+                // **The veil, and where it sits in the order is the whole of it.** uGUI paints in
+                // sibling order, so this goes after the picture and before the padlock — and the
+                // name, the note and the footer are all built after it, so the price stays at
+                // full strength. It covers the plate rather than the picture alone, which is what
+                // says the *cell* is not yours rather than that its turret is faded.
+                var veil = UIKit.Img("Veil", cell, Art.Round(CellRadius),
+                                     new Color(0f, 0f, 0f, .48f));
+                UIKit.StretchTo((RectTransform)veil.transform, 0, 0, 0, 0);
+                veil.raycastTarget = false;
+
+                // Over the turret rather than beside it, and drawn at white — the same lock on
+                // the same decision the profile and the companion shelf make. `held` rather
+                // than a narrower state on purpose: what the padlock says is "this one is not
+                // yours", which is true of a turret you could buy this second as much as of one
+                // behind a keeper level. Which of the two it is, the footer says in words.
+                //
+                // Built after the picture, so it draws over it: uGUI paints in sibling order.
+                var padlock = UIKit.Img("Lock", cell, Art.S("Ui/ic_padlock"), Color.white,
+                                        new Vector2(IconBox * .62f, IconBox * .62f),
+                                        new Vector2(.5f, 1f), new Vector2(0f, -(IconTop + IconBox * .5f)));
+                padlock.preserveAspect = true;
+                padlock.raycastTarget = false;
+            }
+
+            // The name and the price, and nothing else - see `WardCellH`. What an ability does
+            // is a sentence, and twenty sentences four across is small print rather than a shelf;
+            // it is drawn on the panel one tap in, where somebody is deciding rather than
+            // scanning.
+            var name = UIKit.Titled("Name", cell, Loc.Get(model.NameKey), 26, Pal.Cream,
+                                    TextAnchor.MiddleCenter, new Vector2(CellW - 24f, 36f),
+                                    new Vector2(.5f, 1f), new Vector2(0f, -WardNameY),
+                                    0f, 2f);
+            UIKit.Shrinkable(name, 16);
 
             Footer(cell, model, offer, standing);
 
-            cell.gameObject.AddComponent<Btn>().Setup(() => Tap(model, offer));
+            cell.gameObject.AddComponent<Btn>().Setup(() => Tap(model));
 
-            Tween.Pop(cell, Mathf.Min(index, 9) * .022f, .3f);
+            // **Only on the way in.** A repaint - art arriving, a purchase landing, a slot being
+            // tapped - must not replay the entrance, or the screen reads as reloading itself
+            // (invariant 16d).
+            if (!_shown) Tween.Pop(cell, Mathf.Min(index, 9) * .022f, .3f);
         }
 
         /// <summary>
-        /// The one line at the foot of a cell: what it costs, what it asks for, or that it is
-        /// standing on the line.
+        /// The one line at the foot of a cell: what it costs, or what it asks for.
+        ///
+        /// <b>A turret already held draws no strip at all.</b> It used to say STAND or ON THE
+        /// LINE, which is a caption on twenty cells telling nineteen of them something the plate
+        /// already says: the one standing on this colour wears the lit plate and the gold rim, and
+        /// the rest are simply not it.
         /// </summary>
         void Footer(RectTransform cell, WardModel model, WardOffer offer, bool standing)
         {
@@ -177,9 +217,7 @@ namespace GlimmerGrove
             switch (offer.State)
             {
                 case WardPurchaseState.AlreadyHeld:
-                    text = standing ? Loc.Get("ui.loadout.standing") : Loc.Get("ui.loadout.stand");
-                    ink = standing ? Pal.Sun : Pal.A(Pal.Cream, .82f);
-                    break;
+                    return;
 
                 case WardPurchaseState.LevelLocked:
                     text = Loc.Format("ui.loadout.level", offer.RequiredLevel);
@@ -192,26 +230,32 @@ namespace GlimmerGrove
                     break;
 
                 default:
+                    // **`coin` is "there is a price here", `gems` is "and it is in gems".** It
+                    // was only ever set from `gems`, so a turret priced in credits drew its
+                    // number with no glyph beside it — half the roster, and the half whose
+                    // currency a player cannot guess from the number.
                     text = offer.Cost.ToString("N0");
                     ink = offer.State == WardPurchaseState.Ready
                         ? Pal.Cream : Pal.A(Pal.Cream, .55f);
+                    coin = true;
                     gems = offer.Currency == Currency.Gems;
                     break;
             }
 
-            var box = UIKit.Box("Foot", cell, new Vector2(CellW - 36f, 46f),
-                                new Vector2(.5f, 0f), new Vector2(0f, 30f));
+            // Bigger than it was, which is what the description's height paid for: the price is
+            // the number this shelf is about and it was set at the size of a caption.
+            var box = UIKit.Box("Foot", cell, new Vector2(CellW - 20f, 56f),
+                                new Vector2(.5f, 0f), new Vector2(0f, WardFootY));
 
-            var seat = UIKit.Img("Seat", box, Art.Round(16), new Color(0f, 0f, 0f, .30f));
+            var seat = UIKit.Img("Seat", box, Art.Round(18), new Color(0f, 0f, 0f, .30f));
             UIKit.StretchTo((RectTransform)seat.transform, 0, 0, 0, 0);
 
-            coin = coin || gems;
-            float shift = coin ? 16f : 0f;
+            float shift = coin ? 18f : 0f;
 
-            var label = UIKit.Titled("T", box, text, 26, ink, TextAnchor.MiddleCenter,
-                                     new Vector2(CellW - 80f, 40f), new Vector2(.5f, .5f),
+            var label = UIKit.Titled("T", box, text, 32, ink, TextAnchor.MiddleCenter,
+                                     new Vector2(CellW - 66f, 48f), new Vector2(.5f, .5f),
                                      new Vector2(shift, 0f), 0f, 2f);
-            UIKit.Shrinkable(label, 16);
+            UIKit.Shrinkable(label, 20);
 
             if (!coin) return;
 
@@ -219,35 +263,38 @@ namespace GlimmerGrove
             // sprite, so it is attached rather than named (`ShopScreen.BalancePill`'s idiom: the
             // pile on a card is made of this coin, so a price and a purse read as one currency).
             var glyph = UIKit.Img("Coin", box, gems ? Art.S("Ui/ic_gem") : null, Color.white,
-                                  new Vector2(30f, 30f), new Vector2(.5f, .5f),
-                                  new Vector2(-label.preferredWidth * .5f - 18f, 0f));
+                                  new Vector2(34f, 34f), new Vector2(.5f, .5f),
+                                  new Vector2(-label.preferredWidth * .5f - 19f, 0f));
             glyph.preserveAspect = true;
 
             if (!gems) Flipbook.Attach(glyph, "Ui/Coin", 11f);
         }
 
         /// <summary>
-        /// One tap on a turret: stand it, or offer it.
+        /// One tap on a turret, held or not: show it.
         ///
-        /// <b>Standing is the common case and gets the plain tap</b>, because a player who owns
-        /// six turrets is arranging far more often than buying — and a confirmation on an action
-        /// that is one tap to undo is a confirmation that teaches people to tap through them
-        /// (which is the argument the three real confirmations in this game are held to).
+        /// <para>
+        /// <b>Standing used to be the plain tap and is now one tap deeper, which is a real cost
+        /// paid for a real reason.</b> A held turret went straight onto the line and an unheld one
+        /// opened a price — so the only turrets a player could ever *see* firing were the ones they
+        /// had already bought, and the decision this shelf exists to ask them to make was being
+        /// made from a thumbnail. <c>WardPreviewOverlay</c> answers both, and standing is still one
+        /// tap from inside it.
+        /// </para>
+        /// <para>
+        /// <b>The seat's colour travels with it</b>, because the panel is raised by tapping a cell
+        /// that is already wearing one: a grey turret one tap deeper is the very inconsistency the
+        /// shelf stopped having.
+        /// </para>
         /// </summary>
-        void Tap(WardModel model, WardOffer offer)
+        void Tap(WardModel model)
         {
-            if (offer.State == WardPurchaseState.AlreadyHeld)
+            Flow.Modal<WardPreviewOverlay>(v =>
             {
-                char colour = WardLine.Colours[_slot];
-
-                if (WardLoadout.Choose(colour, model.Id)) Audio.Sfx("unlock", .5f);
-                else Audio.Sfx("blocked", .4f);
-
-                Paint();
-                return;
-            }
-
-            Flow.Modal<WardBuyOverlay>(v => { v.Model = model; v.Bought = Paint; });
+                v.Model = model;
+                v.Colour = _slot;
+                v.Changed = Paint;
+            });
         }
 
         // ----------------------------------------------------------------- items
@@ -256,7 +303,7 @@ namespace GlimmerGrove
             var items = UtilityLedger.Catalog.Items;
             int level = PlayerProgression.Level.Level;
 
-            float gapX = 24f, gapY = 24f;
+            const float gapX = CellGapX, gapY = CellGapY;
             float span = Columns * CellW + (Columns - 1) * gapX;
             float left = -span * .5f + CellW * .5f;
 
@@ -290,27 +337,27 @@ namespace GlimmerGrove
             UIKit.StretchTo((RectTransform)plate.transform, 0, 0, 0, 0);
 
             // The ward cell's numbers, for the ward cell's reason - the two grids share a cell
-            // size, so anything that is not the same here is a difference nobody chose.
-            const float IconBox = CellW * .55f;
-
+            // size, so anything that is not the same here is a difference nobody chose. They are
+            // constants on the screen now rather than a pair of matching literals, which is what
+            // let four columns be one edit instead of two that could disagree.
             var icon = UIKit.Img("Icon", cell, Art.S(item.Art),
                                  open ? Color.white : new Color(.62f, .66f, .72f, 1f),
                                  new Vector2(IconBox, IconBox),
-                                 new Vector2(.5f, 1f), new Vector2(0f, -(18f + IconBox * .5f)));
+                                 new Vector2(.5f, 1f), new Vector2(0f, -(IconTop + IconBox * .5f)));
             icon.preserveAspect = true;
 
-            var name = UIKit.Titled("Name", cell, Loc.Get(item.NameKey), 28,
+            var name = UIKit.Titled("Name", cell, Loc.Get(item.NameKey), 25,
                                     open ? Pal.Cream : Pal.A(Pal.Cream, .82f),
-                                    TextAnchor.MiddleCenter, new Vector2(CellW - 28f, 38f),
-                                    new Vector2(.5f, 1f), new Vector2(0f, -216f),
+                                    TextAnchor.MiddleCenter, new Vector2(CellW - 24f, 34f),
+                                    new Vector2(.5f, 1f), new Vector2(0f, -NameY),
                                     0f, 2f);
-            UIKit.Shrinkable(name, 18);
+            UIKit.Shrinkable(name, 16);
 
-            var note = UIKit.Label("Note", cell, Loc.Get(item.NoteKey), 21,
+            var note = UIKit.Label("Note", cell, Loc.Get(item.NoteKey), 19,
                                    Pal.A(Pal.Cream, .86f), TextAnchor.UpperCenter,
-                                   new Vector2(CellW - 34f, 54f), new Vector2(.5f, 1f),
-                                   new Vector2(0f, -264f));
-            UIKit.Shrinkable(note, 15);
+                                   new Vector2(CellW - 28f, 50f), new Vector2(.5f, 1f),
+                                   new Vector2(0f, -NoteY));
+            UIKit.Shrinkable(note, 14);
 
             // How many are in hand, top-right, where the bar's own badge is — so the two readouts
             // of one number are in the same corner of the same shape (invariant 39d's rule about
@@ -319,37 +366,37 @@ namespace GlimmerGrove
             {
                 var badge = UIKit.Img("Badge", cell, Art.Round(999),
                                       new Color(.10f, .16f, .12f, .96f),
-                                      new Vector2(64f, 44f), new Vector2(1f, 1f),
-                                      new Vector2(-16f, -16f));
+                                      new Vector2(56f, 40f), new Vector2(1f, 1f),
+                                      new Vector2(-12f, -12f));
 
-                var count = UIKit.Titled("N", badge.transform, held.ToString(), 26, Pal.Cream,
-                                         TextAnchor.MiddleCenter, new Vector2(60f, 40f),
+                var count = UIKit.Titled("N", badge.transform, held.ToString(), 23, Pal.Cream,
+                                         TextAnchor.MiddleCenter, new Vector2(52f, 36f),
                                          new Vector2(.5f, .5f), Vector2.zero, 0f, 2f);
-                UIKit.Shrinkable(count, 16);
+                UIKit.Shrinkable(count, 14);
             }
 
             string text = !open ? Loc.Format("ui.loadout.level", item.MinLevel)
                         : item.ForSale ? item.GemPrice.ToString("N0")
                         : Loc.Get("ui.loadout.chest_only");
 
-            var box = UIKit.Box("Foot", cell, new Vector2(CellW - 36f, 46f),
-                                new Vector2(.5f, 0f), new Vector2(0f, 30f));
+            var box = UIKit.Box("Foot", cell, new Vector2(CellW - 24f, 42f),
+                                new Vector2(.5f, 0f), new Vector2(0f, FootY));
 
             var seat = UIKit.Img("Seat", box, Art.Round(16), new Color(0f, 0f, 0f, .30f));
             UIKit.StretchTo((RectTransform)seat.transform, 0, 0, 0, 0);
 
             bool priced = open && item.ForSale;
 
-            var label = UIKit.Titled("T", box, text, 26,
+            var label = UIKit.Titled("T", box, text, 23,
                                      open ? Pal.Cream : Pal.A(Pal.Cream, .55f),
-                                     TextAnchor.MiddleCenter, new Vector2(CellW - 80f, 40f),
-                                     new Vector2(.5f, .5f), new Vector2(priced ? 16f : 0f, 0f),
+                                     TextAnchor.MiddleCenter, new Vector2(CellW - 62f, 36f),
+                                     new Vector2(.5f, .5f), new Vector2(priced ? 14f : 0f, 0f),
                                      0f, 2f);
-            UIKit.Shrinkable(label, 16);
+            UIKit.Shrinkable(label, 14);
 
             if (priced)
-                UIKit.Img("Gem", box, Art.S("Ui/ic_gem"), Color.white, new Vector2(30f, 30f),
-                          new Vector2(.5f, .5f), new Vector2(-label.preferredWidth * .5f - 18f, 0f));
+                UIKit.Img("Gem", box, Art.S("Ui/ic_gem"), Color.white, new Vector2(26f, 26f),
+                          new Vector2(.5f, .5f), new Vector2(-label.preferredWidth * .5f - 15f, 0f));
 
             cell.gameObject.AddComponent<Btn>().Setup(() =>
             {

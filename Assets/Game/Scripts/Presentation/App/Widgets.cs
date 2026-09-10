@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -384,6 +385,88 @@ namespace GlimmerGrove
 
         public static Flipbook Attach(Image img, string folder, float fps = 24f, bool loop = true)
             => Attach(img, Art.Frames(folder), fps, loop);
+
+        /// <summary>
+        /// Plays a reel, and leaves it exactly where it is when it is already the reel running.
+        ///
+        /// <para>
+        /// <b>The split between this and <see cref="Attach"/> is the same one
+        /// <c>GridView</c> draws between <c>Show</c> and <c>Refresh</c>, and it exists for
+        /// the same report.</b> Attaching is an <em>event</em> — a burst, a cast, a piece
+        /// arriving — so it restarts from frame nought, which is what a caller firing an
+        /// effect means. A recycled cell being rebound is a <em>redraw</em>: the shop grid, the
+        /// picker grid and every tile of the grove floor rebind on any event that touches the
+        /// ledger, the layout or the wallet, and a sync landing raises three of those a few
+        /// seconds after every placement. Restarting there snapped every animated piece on the
+        /// screen back to its first frame at once, which is what "the tiles reload while I am
+        /// building" was.
+        /// </para>
+        /// <para>
+        /// Only a <b>looping</b> reel is left alone, and that is the whole of the rule: a loop
+        /// is a state and a one-shot is an event, so a caller replaying a burst still gets its
+        /// burst. A reel that has finished, one that was stopped, and a stack of more than one
+        /// are all replaced rather than adopted — the second of those is what
+        /// <see cref="Attach"/>'s own note is about, and this must not quietly keep it.
+        /// </para>
+        /// </summary>
+        public static Flipbook Ensure(Image img, Sprite[] frames, float fps = 24f, bool loop = true)
+        {
+            var running = Playing(img, frames, fps, loop);
+            return running != null ? running : Attach(img, frames, fps, loop);
+        }
+
+        /// <summary>The same, for a reel named by the folder it lives in.</summary>
+        public static Flipbook Ensure(Image img, string folder, float fps = 24f, bool loop = true)
+            => Ensure(img, Art.Frames(folder), fps, loop);
+
+        /// <summary>
+        /// Reused rather than allocated: <c>GetComponents&lt;T&gt;()</c> returns a fresh array,
+        /// and this is asked once per cell per repaint on a screen that can hold a hundred.
+        /// </summary>
+        static readonly List<Flipbook> Found = new List<Flipbook>(2);
+
+        /// <summary>
+        /// The one flipbook already playing exactly this reel on this image, or null.
+        ///
+        /// Every clause narrows for a reason. More than one is the stacking
+        /// <see cref="Attach"/> documents and has to be collapsed; a disabled one is doomed and
+        /// its <c>Destroy</c> has not landed yet; a finished one has nothing left to leave
+        /// alone; and a reel differing in speed or in whether it loops is a different reel.
+        /// </summary>
+        static Flipbook Playing(Image img, Sprite[] frames, float fps, bool loop)
+        {
+            if (img == null || !loop || frames == null || frames.Length == 0) return null;
+
+            img.GetComponents(Found);
+            if (Found.Count != 1) return null;
+
+            var running = Found[0];
+            Found.Clear();
+
+            if (running == null || !running.enabled || running._done) return null;
+            if (running._loop != loop || !Mathf.Approximately(running._fps, fps)) return null;
+
+            return Same(running._frames, frames) ? running : null;
+        }
+
+        /// <summary>
+        /// Whether two reels are the same pictures in the same order.
+        ///
+        /// A reference test alone is not enough: frames read from a folder are cached and so
+        /// come back as one array, but a browse atlas's are assembled per call
+        /// (<c>HomesteadArt.ThumbFrames</c>), so two asks for one piece's thumbnail are two
+        /// arrays holding the same sprites. Reels here are a handful of frames long.
+        /// </summary>
+        static bool Same(Sprite[] a, Sprite[] b)
+        {
+            if (ReferenceEquals(a, b)) return true;
+            if (a == null || b == null || a.Length != b.Length) return false;
+
+            for (int i = 0; i < a.Length; i++)
+                if (!ReferenceEquals(a[i], b[i])) return false;
+
+            return true;
+        }
 
         /// <summary>
         /// Runs frames already in hand, rather than an address to load them from.

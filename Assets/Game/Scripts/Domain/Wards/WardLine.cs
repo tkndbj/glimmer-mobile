@@ -121,7 +121,7 @@ namespace GlimmerGrove.Wards
         /// </summary>
         public List<AssetPipeline.AssetRequest> Art()
         {
-            var list = new List<AssetPipeline.AssetRequest>(Colours.Length * 2);
+            var list = new List<AssetPipeline.AssetRequest>(Colours.Length * 5);
 
             for (int i = 0; i < _byColour.Length; i++)
             {
@@ -132,6 +132,23 @@ namespace GlimmerGrove.Wards
 
                 list.Add(AssetPipeline.AssetRequest.SpriteSet(
                     AssetPipeline.AssetManifest.SiegeArt(_byColour[i].FireFor(colour))));
+
+                // **The three reels a turret throws, and only for the ones that own a set.** The
+                // one model that draws the four elemental bolts instead (`WardModel.Elemental`)
+                // takes them from the mode's own cast, where they are resident — asking for them
+                // here would be a second claim on an address the global set already owns, which
+                // invariant 7b refuses. The two have to stay in step: drop them from `SiegeMode`
+                // and that turret draws nothing at all.
+                if (!_byColour[i].OwnShot) continue;
+
+                list.Add(AssetPipeline.AssetRequest.SpriteSet(
+                    AssetPipeline.AssetManifest.SiegeFx(_byColour[i].ShotFor(colour))));
+
+                list.Add(AssetPipeline.AssetRequest.SpriteSet(
+                    AssetPipeline.AssetManifest.SiegeFx(_byColour[i].MuzzleFor(colour))));
+
+                list.Add(AssetPipeline.AssetRequest.SpriteSet(
+                    AssetPipeline.AssetManifest.SiegeFx(_byColour[i].HitFor(colour))));
             }
 
             return list;

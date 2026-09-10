@@ -165,12 +165,41 @@ namespace GlimmerGrove.Tests
             Settle(board, 30f);
             Assert.IsNotEmpty(Webs(board));
 
-            // One of the two, by hand: a blast into the box the first one is standing in.
+            // One of the two, by hand. **The box it is standing in is not enough**: a firepot
+            // takes the box that was tapped and the four touching it, so the obvious tap can
+            // easily take both and this test would pass for the wrong reason. The box is searched
+            // for instead - one that reaches this weaver and no other.
             var weaver = FirstOf(board, SiegeKind.Weaver);
             Assert.IsNotNull(weaver);
 
+            int lane = -1, row = -1;
+
+            for (int r = 0; r < SiegeTuning.BlastRows && row < 0; r++)
+            {
+                for (int l = 0; l < SiegeTuning.Lanes; l++)
+                {
+                    if (!SiegeTuning.Caught(weaver.Kind, weaver.Lane, weaver.March, l, r)) continue;
+
+                    bool alone = true;
+
+                    foreach (var other in board.Raiders)
+                        if (other != weaver && other.Alive && other.OnTheHill
+                            && other.Kind == SiegeKind.Weaver
+                            && SiegeTuning.Caught(other.Kind, other.Lane, other.March, l, r))
+                            alone = false;
+
+                    if (!alone) continue;
+
+                    lane = l;
+                    row = r;
+                    break;
+                }
+            }
+
+            Assert.GreaterOrEqual(row, 0, "no firepot reaches one of these weavers on its own");
+
             var into = new List<SiegeStrike>();
-            board.Blast(weaver.Lane, SiegeTuning.RowOf(weaver.March), 9999, into);
+            board.Blast(lane, row, 9999, into);
             board.Advance(1f / 60f);
 
             Assert.IsNotNull(FirstOf(board, SiegeKind.Weaver), "the fixture killed both");

@@ -720,8 +720,17 @@ namespace GlimmerGrove
         {
             var run = _siege != null ? _siege.Run : null;
             var board = _siege != null ? _siege.Siege : null;
+            bool endless = board != null && board.IsEndless;
 
-            into.Add(new Readout(Loc.Get(GoalCaption), run == null ? "0" : run.Left.ToString()));
+            // **An endless lane carries the wave and nothing else, and the two it drops are two
+            // numbers that cannot be true there.** "Left to clear" is the goals still on the
+            // hill against an allowance, and an endless lane has none — so it read as
+            // `int.MaxValue`, ten digits of it, which is a readout saying the run is broken.
+            // "Matches" is the count the *authored* ladder is graded on; an endless run is
+            // graded on how far it got (`LevelTuning.Climbs`), which is the wave, so a matches
+            // column beside it is the one number on the header that decides nothing.
+            if (!endless)
+                into.Add(new Readout(Loc.Get(GoalCaption), run == null ? "0" : run.Left.ToString()));
 
             if (board == null)
             {
@@ -735,12 +744,20 @@ namespace GlimmerGrove
                 int wave = board.Wave < 1 ? 1 : board.Wave;
                 int last = board.Waves;
 
-                into.Add(new Readout(Loc.Get("mode.cap.wave"), wave + "/" + last,
-                                     wave >= last ? Pal.Gold : Pal.Cream));
+                // **The lemniscate rather than the count, and it is drawn rather than written.**
+                // An endless lane's authored wave list is empty, so `Waves` is nought and the
+                // header read "8/0" — a fraction whose denominator says the run is over. There
+                // is no last wave to name, so the sign says so; and it is the one glyph here
+                // that needs no translating, which is why it is a literal rather than a key.
+                into.Add(endless
+                             ? new Readout(Loc.Get("mode.cap.wave"), wave + "/∞")
+                             : new Readout(Loc.Get("mode.cap.wave"), wave + "/" + last,
+                                           wave >= last ? Pal.Gold : Pal.Cream));
             }
 
-            into.Add(new Readout(Loc.Get("mode.cap.matches"),
-                                 run == null ? "0" : run.Spent.ToString()));
+            if (!endless)
+                into.Add(new Readout(Loc.Get("mode.cap.matches"),
+                                     run == null ? "0" : run.Spent.ToString()));
         }
 
         /// <summary>

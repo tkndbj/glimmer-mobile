@@ -509,13 +509,19 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The property the boxes exist for: what burns is exactly what is standing in the one
-        /// that was tapped. A radius could take a raider the player had not aimed at and leave one
-        /// they had; a box cannot, which is what makes the panes on the board honest (invariant
-        /// 33g).
+        /// The property the boxes exist for: a firepot is <em>aimed</em>, and how far it carries
+        /// is bounded by a rule rather than by a distance.
+        ///
+        /// <para>
+        /// A radius could take a raider the player had not aimed at and leave one they had; boxes
+        /// cannot, which is what makes the panes on the board honest (invariant 33g). What bounds
+        /// it is <c>BlastReach</c> plus the width of the thing being hit - so an ordinary raider is
+        /// never touched from two lanes away, and every raider that <em>was</em> touched really was
+        /// standing on one of the boxes that burned.
+        /// </para>
         /// </summary>
         [Test]
-        public void ABlastTakesEverythingInItsBoxAndNothingOutsideIt()
+        public void ABlastIsBoundedByItsBoxesAndNotByADistance()
         {
             var board = Board();
             Settle(board, SiegeTuning.FirstWaveAfter + 1f);
@@ -523,18 +529,51 @@ namespace GlimmerGrove.Tests
             var target = board.Raiders[0];
             int lane = target.Lane, row = SiegeTuning.RowOf(target.March);
 
-            var inside = new HashSet<int>();
-            foreach (var raider in board.Raiders)
-                if (raider.Alive && raider.OnTheHill && raider.Lane == lane
-                    && SiegeTuning.RowOf(raider.March) == row) inside.Add(raider.Id);
-
             var strikes = new List<SiegeStrike>();
             board.Blast(lane, row, 1, strikes);
 
             var struck = new HashSet<int>();
             foreach (var hit in strikes) struck.Add(hit.Raider);
 
-            CollectionAssert.AreEquivalent(inside, struck);
+            Assert.IsTrue(struck.Contains(target.Id),
+                          "a firepot on the box a raider stands in has to reach it");
+
+            foreach (var raider in board.Raiders)
+            {
+                if (!raider.Alive || !raider.OnTheHill) continue;
+
+                // Everything struck was standing on one of the boxes that burned. This is the half
+                // a radius cannot promise.
+                if (struck.Contains(raider.Id))
+                {
+                    bool standing = false;
+
+                    for (int r = 0; r < SiegeTuning.BlastRows; r++)
+                        for (int l = 0; l < SiegeTuning.Lanes; l++)
+                            if (SiegeTuning.InBlast(lane, row, l, r)
+                                && SiegeTuning.OnBody(raider.Kind, raider.Lane, raider.March, l, r))
+                                standing = true;
+
+                    Assert.IsTrue(standing, "nothing burns that was not on a box that burned");
+                    continue;
+                }
+
+                Assert.IsFalse(SiegeTuning.OnBody(raider.Kind, raider.Lane, raider.March, lane, row),
+                               "anything standing on the box that was tapped has to burn");
+            }
+
+            // And an ordinary raider two lanes off is never touched, whatever row it is in: its
+            // body is one lane wide and the plus carries one.
+            foreach (var raider in board.Raiders)
+            {
+                if (SiegeTuning.LanesOf(raider.Kind) > 1) continue;
+
+                int across = raider.Lane > lane ? raider.Lane - lane : lane - raider.Lane;
+
+                if (across >= 2)
+                    Assert.IsFalse(struck.Contains(raider.Id),
+                                   "a firepot does not carry two lanes");
+            }
         }
 
         [Test]
@@ -581,14 +620,17 @@ namespace GlimmerGrove.Tests
             var raider = board.Raiders[0];
             int lane = raider.Lane, row = SiegeTuning.RowOf(raider.March);
 
-            // Everything in the box, so the bound is the health that was really standing there.
-            int standing = 0;
+            // Health as it stood, by id, so the bound is what was really there rather than a
+            // second copy of the rule that decides who is caught.
+            var held = new Dictionary<int, int>();
             foreach (var other in board.Raiders)
-                if (other.Alive && other.OnTheHill && other.Lane == lane
-                    && SiegeTuning.RowOf(other.March) == row) standing += other.Health;
+                if (other.Alive && other.OnTheHill) held[other.Id] = other.Health;
 
             var strikes = new List<SiegeStrike>();
             int absorbed = board.Blast(lane, row, 9_999, strikes);
+
+            int standing = 0;
+            foreach (var hit in strikes) standing += held[hit.Raider];
 
             Assert.AreEqual(standing, absorbed,
                 "absorbed damage is exactly the health that was actually there");
@@ -603,16 +645,18 @@ namespace GlimmerGrove.Tests
 
             var item = UtilityCatalog.Default.Find("firepot");
 
-            // A box nothing is standing in: the foot of the hill, before anything has walked
-            // down it. Which box that is has to be found rather than assumed, because a wave is
-            // dealt into lanes deterministically but not predictably.
+            // A tap that reaches nobody: the foot of the hill, before anything has walked down
+            // it. Which box that is has to be found rather than assumed, because a wave is dealt
+            // into lanes deterministically but not predictably - and it is asked of the whole
+            // plus, since a firepot carries a box in every direction.
             int lane = 0, row = SiegeTuning.BlastRows - 1;
             for (; lane < SiegeTuning.Lanes; lane++)
             {
                 bool clear = true;
                 foreach (var raider in board.Raiders)
-                    if (raider.Alive && raider.OnTheHill && raider.Lane == lane
-                        && SiegeTuning.RowOf(raider.March) == row) clear = false;
+                    if (raider.Alive && raider.OnTheHill
+                        && SiegeTuning.Caught(raider.Kind, raider.Lane, raider.March, lane, row))
+                        clear = false;
 
                 if (clear) break;
             }

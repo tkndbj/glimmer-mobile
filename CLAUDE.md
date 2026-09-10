@@ -423,6 +423,52 @@ In practice:
     any event with cells entering from scale zero, so a screen that repainted twice played that entrance
     twice. `Show` is a new list and animates; `Refresh` is the same list redrawn and does not — anything
     raised by an event is a `Refresh`.
+16k. **A `Refresh` that restarts an animation is a `Show` wearing a `Refresh`'s name, and that is what
+    "the tiles reload while I am building" was.** 16d put the entrance behind `Show`; what it could not see
+    is that a *bind* restarts things of its own. `Flipbook.Attach` rewinds to frame nought by design, and
+    `Tween.Breathe` kills its channel and fades the oscillation back in from rest — so a repaint of a grove
+    tile or a shop cell snapped every animated piece and every empty-tile ring on the screen back to the
+    beginning at once, which is a picture of the screen reloading. **The trigger is the half worth
+    remembering: a repaint is not rare.** `HomesteadLayout.Changed`, `HomesteadLedger.Changed`,
+    `PlayerProgression.Changed` and `HomesteadArt.Changed` all raise one, and **a sync raises three of them
+    whether or not anything moved** — `SaveService.Adopt` re-reads the whole save and every ledger's
+    `LoadFrom` raises `Changed` unconditionally (SyncTriggers' own note, read from the drawing end). A
+    placement asks for a sync, so every piece a player put down was followed a few seconds later by the whole
+    field restarting.
+    <br>The fix is that **a redraw must not disturb what is already drawn**, and it is a verb rather than a
+    guard each caller remembers: `Flipbook.Ensure` leaves the reel already running exactly where it is, where
+    `Attach` restarts it — 16d's own split one layer down, and the same distinction `SiegeView.Wear` had
+    hand-rolled for one mode (37u). **Only a *looping* reel is adopted**, because a loop is a state and a
+    one-shot is an event, so a pooled burst asked for again is still a burst. A stack of two is collapsed
+    rather than adopted, or this would quietly keep the bug `Attach` was built beside (16i). The breath is
+    held rather than flagged (`Tw.Running`), because a flag cannot see a `KillChannel` raised by somebody
+    else. And a list rebuilt into the same list is `Refresh`ed rather than `Show`n — `HomesteadPickerOverlay`
+    compares before it hands the grid a new page, or a sync throws the player back to the top of it.
+    <br>**Before subscribing a repaint to an event, ask what a bind restarts.**
+16l. **Two screens offering one catalog draw one card, and the picker was the second drawing.**
+    `HomesteadShopScreen` sells a piece and `HomesteadPickerOverlay` stands one on a tile, one tap apart —
+    and the picker carried its own chrome, a drawn rounded box with a traced outline over it, which is the
+    shape this UI used before it had a kit (44). `PieceCard` is the one card: the plate, the picture, the
+    name and the line under it, **as a builder rather than a table of numbers**, because a table leaves each
+    caller to assemble it and two callers assembling one design is two designs a week later. Everything a
+    screen has of its own — a padlock, a price, a "take it away" cross, a badge saying what is standing here
+    — goes on top of what it hands back.
+    <br>**One design, drawn at whatever size the screen has room for.** The numbers are the shop's, scaled by
+    the cell against `PieceCard.DesignSize`, so a panel three across a 960-wide plate gets the same card the
+    shop draws three across the display; `PieceCardTests` pins both the design's own figures and the fact
+    that the scaling is a scaling. Two consequences worth stating: the picker's cell width is **derived** from
+    its panel and its padding rather than typed, because a mistyped one is a column drawn off the side of a
+    panel and nothing but a screenshot can see that; and a card that carries its own keyline has **nothing to
+    trace**, so state is said with a mark rather than with a tinted rim — which is the same correction the
+    shop made when it took the kit.
+    <br>**A depleted piece is taken off the picker rather than dimmed**, which reverses that panel's first
+    design on the owner's verdict after playing it. The argument for keeping it was that a piece vanishing
+    when it ran out reads as a piece taken away; what play found is the other half of the trade — the row a
+    player is choosing from fills with things they cannot choose, and a dead-looking cell among live ones
+    reads as the panel being broken. What is lost is a route to the shop the button at the foot already
+    provides. **The piece standing on this very tile is offered whatever the stock says**, and that clause is
+    load-bearing rather than kind: a copy is only spent because it is out in the grove, so its last copy is
+    always the one being looked at.
 17. **A save may only ever be pushed to the account it says it belongs to.** `AccountGate`, five lines, and
     the only rule here whose failure has no undo: a sync is pull → join → push and the join is monotonic, so
     aimed at the wrong account it takes the better half of two strangers' groves and writes it over one of
@@ -2378,6 +2424,294 @@ In practice:
     would mint a corpse back for a frame; and `Hurt`/`Bolt` ask `MobOf`, never `Widget`, for the
     same reason said about a raider they are in the middle of killing.
 
+37ad. **A boss that cannot bring a ward down is not a wave of its own; it rides the last one —
+    and "it attacks and my turrets lose no health" was true for a reason nowhere near the boss.**
+    Reported from a device against `s01_stonewatch`. The half that is *by design* has to stay: a
+    blightcaller takes a ward's **fire** and never its health, which is the whole of what makes it
+    a different fight rather than a weaker warlord (37z), and `EndangersTheLine` — which gates the
+    build check, the endless lane's escort and now this — is literally `CastOf(kind) > 0`, so
+    giving it a damage number is a design reversal with three call sites, not a knob.
+    <br>**The half that was a fault is the pacing, and it was a rule that had been written down as
+    fixed.** 43 records the authored ladder as answering this with a short quiet; `RestBefore`
+    named the *warbringer* instead of asking a question, so the blightcaller drew `BossAfter`, the
+    **longest** quiet in the mode. And a quiet was never the answer anyway: `Muster` sends the next
+    wave the moment the hill is clear (37k), so an unhurried player met it alone whatever the clock
+    said — measured on the shipped rung, every wave went early and the boss walked onto an empty
+    hill 57 seconds in. Five seconds of one turret's dark over an empty hill costs **nothing**, so
+    the boss took no health *and* no time: invariant 5d, arriving through the pacing, with every
+    numeric gate green.
+    <br>**So it is merged rather than escorted, and the two lanes are one predicate in two
+    idioms.** An endless lane derives its waves and has spare raiders to hand, so it escorts (43);
+    an authored ladder has the raiders written down, so `SiegeLayout` stands the boss at the **head
+    of the last authored wave** instead of appending one for it. That costs **par, both star lines
+    and `RaiderCount` exactly nothing** — the company is the raiders the level already sends — and
+    it cannot be defeated by the clear-the-hill shortcut, because the boss and its company are one
+    muster. Measured on the rung: par unmoved at 36, an unhurried player 37 against a three-star
+    line of 44, and the line finishing at **46 of 56** where it used to finish untouched.
+    <br>**Two identities broke because they had been one number for as long as a boss wave held
+    nothing else.** `KindAt` answered the boss's kind for **every** index of the boss wave, so nine
+    raiders were valued at a blightcaller's health each and `Tools/verify/siege.py` reported par
+    **63** against C#'s 36 — the mirror had the same line and needed the same `index == 0`. And
+    `Muster` handed the *wave's size* to `BossLane`, which decides whether a boss stands in the
+    middle of the hill or beside it, so a lone blightcaller would have taken a pair's lane the
+    moment it had company; `SiegeLayout.BossesIn` is that question asked out loud.
+    <br>Two smaller ones. **An empty ward is still worth putting out** — refusing one was tried and
+    is strictly worse, because a match keeps a ward firing about two seconds, so at the instant a
+    boss decides most tubes are empty and a blightcaller that only threw at a full one threw far
+    less often; what a douse costs is the five seconds of dark, and the fuel is the tie-break. And
+    **a cast that finds nothing to aim at must not spend its cadence** (`SiegeTuning.CastRetry`):
+    the timer was re-armed before the target was known, so a boss that found every ward already out
+    bought itself a full cadence of silence.
+
+37ae. **Every turret a player buys throws an effect of its own, and what settled how it is
+    baked was looking at it rather than costing it.** The roster's nineteen priced turrets all
+    fired the free one's four elemental bolts, so a nine-thousand-credit turret and the starter
+    were the same picture with a different body behind it — 26h's complaint about a mechanic
+    that is the thing before it wearing a different colour, asked of a *purchase*. Each of them
+    now throws a projectile, a muzzle flash and an impact chosen to say what its **ability**
+    does: a crescent that cuts through armour, an arrow and a lance that run a lane, a rocket
+    and a slug that go off, a shard and a block of ice, a wisp and a venom dart that drain, two
+    kinds of fire, a lamp and a star, a two-halved disc and a sun. It cost the save file, the
+    wire and the server **nothing** (20a); what it cost is download, and that number is below.
+    <br>**Nineteen distinct silhouettes, and the pack decides how many are available.** It holds
+    exactly twenty families and the three files in each are one shape in three colours — so
+    shapes are the scarce thing, and four are already spent on the starter and three on the
+    bosses. Which is which was chosen by rasterising all sixty onto one sheet
+    (`Survey Projectile Pack`), because their names say a family, their thumbnails are grey
+    cubes and no gate in this project opens a PNG (32b, for the ninth time).
+    <br>**Two turrets sharing an ability are two readings of it, never one shape in two tints.**
+    They differ only in degree in the rules, so telling them apart by hue would be 37z's fault
+    exactly — a crescent and a shockwave both cut through armour, and a player can see which
+    they bought.
+    <br>**A reel is baked in all four ward colours, and the cheap alternative was built first and
+    thrown away.** A *bleached* reel — white, with all its brightness in coverage — costs a
+    quarter as much and can be worn in any colour by one `Image.color` multiply, which also makes
+    37f hold by construction. Held up beside the elemental fireball it was a flat pink smear, and
+    the reason is exact: a multiply can only vary **value**, and what makes these effects read is
+    variation in **hue** — a yellow-hot head inside an orange body inside a red trail. A
+    white-core overlay recovers nothing either, because this pack's hot cores are *saturated
+    yellow* rather than white and there is nothing for a white-core rule to catch. That is
+    invariant 37l met from a third direction, and the direction that matters: what a bought turret
+    may not look is **cheaper than the free one**.
+    <br>**Two grading numbers had to become per-effect, and both were constants that had only ever
+    been right by luck.** `Toward` is a 38% lean because the elemental four were *chosen* in 37k
+    for already wearing roughly the right hue; nothing in the roster was, so a teal arrow stayed
+    teal on a red ward — it is `RosterToward` .84 for those. And `MostWhite`, which keeps a glint
+    light, had almost nothing to bite on for the half of this roster that is drawn pale, so an
+    icicle and a crystal graded to white-with-a-tinge; `RosterWhite` is .22. A third,
+    `Recipe.Floor`, is the saturation a graded pixel may not fall below — at the elemental .55 a
+    pale source came out pink whatever else moved. **Before reusing a grading constant on art
+    chosen a different way, ask what the old art was chosen for.**
+    <br>**One render, four gradings** (`CaptureAll`): the four colours of a bolt have to be the
+    same *picture*, or a player re-standing a turret is looking at a different effect — and a
+    particle system re-simulated is a different comet however carefully it is seeded. It happens
+    to make the bake four times cheaper too.
+    <br>**What it costs is 46 MB of PNG and about four times that in reels a device never loads,**
+    because a run stands four turrets and `WardLine.Art` scopes twelve reels (7b). That is the
+    largest single art cost in the game and it is the price of the feature; the bleached path is a
+    quarter of it and is what to reach for if the download has to come down, at the quality shown
+    above. **`WardModel.OwnShot` is read off the *ability*, never off the price** — "free" was
+    `Cost <= 0` for a year and 16j records what the second currency did to it, so a roster that one
+    day hands out a second turret keeps its projectile.
+    <br>**And the names are built, so the gate had to move** (42's own bargain): `artnames.py`
+    reads literals and cannot see `shot_{id}_{colour}`, so `ContentValidation.ValidateWards` and
+    `content.py`'s `check_wards` walk the roster and **error** on a reel that is not on disk —
+    which catches a missing bake and a misspelled id at once, where a literal only ever catches the
+    second. **Nothing here has been seen on a device**; that is owed.
+
+37af. **Baked VFX are authored to be seen through bloom, and a bake that renders without any
+    ships the geometry of an effect with the light it throws left out.** The nineteen turret
+    projectiles came back from play as *"they all look too shallow and transparent — I want them
+    thick and bright, more alive"*, which is two faults with two causes and neither of them is
+    the art. **Thin** was `Recipe.Lift`, the exponent coverage is raised to before it becomes
+    alpha: at 1.25 a trail's half-coverage arrives at 0.42 and its wisps at nothing, so the
+    reels were being *systematically* thinned by the one number nobody had questioned since the
+    haze it was chosen to suppress stopped existing (`Haze` now drops that outright). **Not
+    alive** was the bloom: the pack's own demos run a post-processing stack — the lightning pack
+    in this project ships one — and `SiegeShotBake` renders on a bare camera, so what was baked
+    was the effect with its glow missing. `WardLift` is .62 and `WardBloom` .85, applied to
+    every ward projectile including the starter's four, because the complaint was about all of
+    them. **Before tuning a bought effect, check what the artist expected to be applied to it.**
+    <br>**A bloom is a bright-pass blurred at two scales**, one channel and downsampled, because
+    the colour is already the recipe's own hue and a bloom is low-frequency — three channels at
+    full resolution across 253 reels is minutes of bake for a picture nobody could tell apart. It
+    is added in **emission** (`rgb × alpha`) and not in colour, and it earns its own alpha: these
+    reels composite with ordinary alpha blending, so light that only changes a transparent
+    pixel's colour changes nothing.
+    <br>**Two things about the blur are load-bearing and the first cut got both wrong.** A box
+    pass must divide by the **whole kernel** and never by how much of it was in bounds —
+    averaging only the samples that exist treats the frame's edge as a mirror, doubles the light
+    one step in, and three passes of that bake a glowing rectangle around every effect, worst on
+    the small frames where the kernel is a large part of the picture. And the wide scale's
+    divisor has to be **held to the frame's own size**: an eighth of a 128-wide muzzle is sixteen
+    across, which three passes of radius three cross entirely, so the halo becomes a wash. A blur
+    also has no zero, so `GlowCut` subtracts a floor — a thousandth of an alpha over a whole
+    rectangle is still a rectangle.
+37ag. **A projectile can be right while the flash and the impact it names are wrong, and giving
+    up the flight to fix them is the wrong trade.** The crescent blade came back as *"a weird
+    circular animation on initial fire, and it does not have an impact effect"* — both true, and
+    neither about the bolt: the pack pairs it with a muzzle that opens an expanding ring and an
+    impact that is a two-pixel vertical line the bake correctly framed as a hairline. `Shot.Muzzle`
+    and `Shot.Hit` name a replacement from anywhere in the pack, which is why `PrefabPath` now
+    looks in all three of its folders.
+    <br>**And where the pack has no silhouette left worth having, two are layered into one.**
+    It holds exactly twenty shapes; the starter and the bosses take seven, and of what remains
+    four are weak on their own — a plain pill, a puff of wind, a disc, a stave of music. Those
+    were what the last three turrets got, and two came back by name: *"so primitive I do not even
+    understand it"* and *"weak, does not feel good"*. `Shot.With` layers a second effect into the
+    base, flown as one object at one speed so their trails agree, which turned a pill into a lance
+    of light with a crystal head and a puff into a wrecking slug wrapped in shattering crystal.
+    That is composition rather than approximation — 32b's distinction, met on a projectile.
+    <br>**`SiegeView.BoltScale` is the one place a turret's projectile may differ in size**, and it
+    exists because a reel is framed around its own content: how much of a frame an effect fills
+    says nothing about how big it is on the hill. The top of the credit ladder throws a sun at
+    1.55×, asked for by name. It is a short table and not a field on the model, because a picture
+    is not content (39c) and the size a particular effect wants is a fact about that effect.
+    <br>**Two turrets of one ability may share a family, and then everything else about them has
+    to differ.** The Prism pair both throw the pack's only sun; one is plain and large, the other
+    is wrapped in a spray of stars and lands sparkling. The first cut gave the second a crystal
+    shell and a shattering impact — beside the wrecking slug two rows up that was two turrets told
+    apart by nothing, which is 37z arriving through a door that had been safe while every turret
+    had a shape of its own.
+
+37ah. **Which turret throws the elemental set is a decision, and the day it moved it stopped
+    being derivable.** The rule was that a turret with no ability has nothing to depict, so it
+    fires what the *colour* fires — the fireball, venom dart, ice shard and lightning bolt of
+    invariant 37k — and every other turret throws one effect of its own in four colours. That
+    was honest for exactly as long as the starter was the only model without an ability. The
+    owner swapped it: the free turret now throws an ice shard in four colours like any other,
+    and the elemental set moved onto **`rime`**, which is a credit-priced Frost turret. No
+    property of a model tells you that, so `WardModel.Elemental` names it outright.
+    <br>**Never spelled as <c>IsStarter</c>**, which is what it looks like it should be: that is
+    invariant 16j's trap, and here it is not merely fragile but already wrong — the turret with
+    the elemental set is one somebody pays for.
+    <br>**Two things had to move with it, and both are the kind that fail silently.** The
+    resident safety net is the *starter's* reels rather than the elemental four
+    (`SiegeMode.StarterLine`), because a line that falls back to the starter when anything at all
+    is wrong must not fall back to the one turret with no bolt; and the elemental four stay
+    resident in the mode's cast, because `WardLine.Art` deliberately does not scope them — drop
+    them from one place and the turret that draws them draws nothing.
+    <br>**And the frost turret now throws fire on red.** That is what the swap means and it was
+    asked for with the consequence stated; the ability, the price and the note under it are
+    unchanged, so only the picture disagrees with the word.
+37ai. **A turret's effect and the name over it may be swapped; its id may not.** The beacon and
+    the chain flagship exchanged both after play — the body, the ability, the price and the id all
+    stayed where they were, because a model id is permanent (invariant 1) and the save keys both
+    `wardsOwned` and `wardLoadout` on it. What that costs is worth stating out loud, because it is
+    not obvious from either half: **the labels moved to different ability slots**, so the card
+    reading "Apex" is now the Beacon at 1,400 gems and "Lighthouse" is the Chain at 2,000. The
+    *note* under each name did not move, because a note describes the ability and the ability
+    stayed. **If a name is meant to keep its rung, the price and the ability have to be moved
+    too — and that is a balance change, not a re-skin.**
+
+37aj. **A bake fix applied to one kind of reel is not applied to the others, and the stormcall
+    was on nobody's.** Reported from a device, of the bought lightning pack, as blurry, wrongly
+    coloured, and striking at random spots rather than at enemies. Every word of that was true and
+    all of it was five separate faults, none of which any gate here can see.
+    <br>**The loud one is that it landed nowhere near what it hit.** A reel is framed with the
+    prefab's own origin at `head` of the way up (`Roll`), and `BakeStorm` passed `.5`; `Bolt` then
+    anchored the sprite's *centre* at `at.y + tall * .5f`. `UIKit.Box` pivots at centre, so the
+    flash went off **half a frame — two and a half cells — above the raider**, with nothing at all
+    drawn where it was aimed. `SiegeView.StrikeAt` is the fix and it is `HeadAt`/`MuzzleAt`'s
+    pattern for the third time: **declared in the view, read by the bake**, so the number that
+    frames the render and the number that positions the sprite are one number. Those two constants
+    existed and carried a remark saying exactly why; a strike simply never got one.
+    <br>**And it was flat because invariant 37af was only ever half applied.** That entry gave
+    every *ward* projectile a bloom and an alpha curve that thickens (`WardLift`, `WardBloom`), on
+    the finding that these packs are authored to be seen through a post-processing stack. The
+    storm and the four boss spells go through `Capture`, which was left on `Bloom = 0` and
+    `Lift = 1.25` — so the one reel taken from a pack that **ships its own bloom profile** was the
+    one baked with none, and thinned on top. **When a fix is a recipe, grep for every caller that
+    builds one.** The boss spells are still on the old recipe, deliberately: four bosses whose look
+    the owner has signed off are a separate decision.
+    <br>**A third rung was missing from the ladder and no dial could have supplied it.** `Reel`
+    divides every pixel by its own largest channel — which is what puts all the brightness in the
+    alpha and lets one render be graded four ways — so the colour left behind carries none, and a
+    pixel with a tenth of the light and one with all of it come out the same gold. Every real
+    renderer tonemaps that top rung to **white**; this camera runs with `allowHDR` off and nothing
+    after it. `Recipe.Hot` is that exposure, driven by *coverage* rather than by the source's own
+    paleness — which is the case `Recipe.White` is documented as unable to see. White core, hue
+    body, warm haze, and **the haze is a second colour** (`Recipe.Halo`): light reddens as it
+    spreads, which is why anything incandescent photographs as a white middle in a warm glow, and a
+    single-coloured bloom can only ever make the gold bigger.
+    <br>**Most of the pack was not being rendered at all.** Its ground crack, splat, shockwave and
+    rings are flat quads lying on the floor, and the rig has always looked straight along Z —
+    because everything it had ever baked was a projectile, which looks the same from any angle. So
+    every one of them was edge-on and collapsed to a hairline, and what shipped was a bolt and a
+    small star: the geometry of a lightning strike with the *strike* left out. `Roll` takes a tilt
+    now and orbits what it is aimed at, so at nought it is the old rig to the pixel.
+    <br>**Two smaller rules, each bought by a picture.** `Tighten` trims a strike to its own
+    content while keeping the anchor row where it is — dead frame is invisible while a reel is only
+    *drawn*, and stops being invisible the moment the board has to know **where the bolt ends**.
+    And a bolt falls from outside the board, so it is **clipped** rather than shrunk: sizing it to
+    the room above whatever it hit was built first and made a strike on a raider half way up a
+    four-cell hill a cell and a half long, which reads as a spark. `_sky` carries the `RectMask2D`;
+    `_fx` still carries none, because everything else drawn there starts on the hill and `OnBoard`
+    clamps the procedural bolts instead (37ac).
+    <br>**`Tools/render_siege.py --storm N` is the eye, and it is the only thing that could ever
+    have said any of it** — the anchor, the bolts leaving the plate, the ground burst that was not
+    there, and a first cut of the scorch so wide that three of them stained the hill. Every numeric
+    gate was green through all of it, because no gate in this project opens a PNG (32b, for the
+    tenth time). **Nothing here has been seen on a device**; that is owed.
+
+42a. **A shop that only lets you see what you have already bought is asking for a decision it
+    will not show you.** Tapping a held turret on the loadout stood it on the line and tapping an
+    unheld one opened a price — so the nineteen projectiles each turret throws were visible
+    *after* nine thousand credits and never before, and the shelf was asking a player to choose
+    between twenty thumbnails. `WardPreviewOverlay` answers both taps: what the turret does, and
+    what it looks like firing, in the colour of the cell that raised it. **It costs the held case
+    one extra tap**, which is a real price and the right one — standing is still one tap from
+    inside the panel, and every purchase on that shelf was being made blind.
+    <br>**The stage is one widget used twice** (`WardFiringStage`): the panel a player opens and
+    the bench used to tune the art ask the same question, and two answers would be two places a
+    bolt is anchored, sized or timed. It draws through `SiegeView.HeadAt`, `MuzzleAt` and
+    `BoltScale` and invents nothing — a preview that flattered a turret would be worse than none.
+    <br>**The thing being shot at is a raider the game already draws**, one of the weaver's
+    beetles, so the panel costs no art at all and shows the turret against what it will actually
+    be shooting. **Its own asset scope**, never `LineScope`: a panel that took the line's would
+    release a live board's turrets when it closed (invariant 7b).
+    <br>**The button says the game's own words** — the price, then "Stand here", then "On the
+    line" — because the panel is one tap in front of a shelf whose cells already read the last
+    two. And **it does not close on a purchase**: what was just paid for is the thing firing
+    behind the button, and closing over it would hide the one moment worth watching.
+    <br>**Two layout faults, both found by measuring the built panel rather than by reading it,
+    and both the same fault.** `UIKit.Box` pivots at centre whatever it is anchored to, so a band
+    placed at the y its *top* should sit at is drawn half above that — the stage's 640 units drew
+    straight through the description and the status line. Every band is now stated as a middle
+    derived from its top. And the target has to stand at least 1.6 cells down, because an impact
+    is drawn 3.2 cells across and centred on it, and the stage is masked: nearer the top and half
+    of the loudest frame in the exchange is cut off rather than merely overhanging.
+    <br>**`WardBuyOverlay` is deleted** — the preview absorbed it — and with it went the last
+    caller of `ui.ok`, a key that was **defined nowhere and drawn as the literal text "ui.ok" on
+    a purchase button**. `Tools/verify/loc.py` could not see it: its scanner demanded at least two
+    dots after the prefix, so every two-segment key in the game was invisible to the gate. One
+    character (`+` to `*`) closes that, and there are no others.
+
+42b. **The map carries the line it is about to send.** The one screen where somebody is choosing
+    a level used to say nothing about what they were choosing it with: a LOADOUT button sat in the
+    bottom corner, which announces that a feature exists and shows none of it. `LoadoutBar` is a
+    readout along the foot — four turret cells over five kit cells — and it is also the door, so
+    the button came out rather than sitting beside it. Two ways into one room is one too many.
+    <br>**Both rows are spread across the whole width by even shares** (`(2i+1)/2n`) rather than
+    packed from a side, which is the only arrangement that stays centred when the safe area changes
+    shape — and the two rows are deliberately different sizes, because a turret is a permanent
+    choice out of twenty and a kit is a consumable that runs out.
+    <br>**It is the action bar's own furniture** — the same well, the same shelf, the same badge in
+    the same corner as `UtilityBar`. A kit in the corner of the map and the same kit in the corner
+    of a board must not be two different objects, and reusing it costs no art.
+    <br>**A kit nobody holds shows an empty well rather than a dimmed picture.** The question this
+    row answers is *what am I taking in*; a greyed icon answers *what exists*, which is the shop's
+    question and is asked one screen away.
+    <br>**Two numbers have to agree and only one of them is obvious.** `LoadoutBar.Height` includes
+    `SafeArea.Bottom` and the scroller is inset by exactly it (`LevelsScreen.FootRoom`) — a map is
+    scrolled to its bottom by default, so a viewport left full-screen puts the first glade of every
+    chapter behind an opaque shelf, and a bar that ignores the inset puts the kit row under a home
+    indicator. The bar is built in the header pass and the scroller calls `SetAsFirstSibling`
+    afterwards, which is what keeps the map behind it.
+    <br>**And it is asked of the *mode*, not of whether the bar exists yet**: the scroller reserves
+    its foot before the header has built anything, so a check on the field would reserve nothing and
+    the inset would silently be zero.
+
 37i. **The chapter is ten rungs now, and what a played run has to answer has grown with it.**
     It shipped as one level to be judged (invariant 29's bargain); the questions that judged it are
     still open and four more are open beside them - see the owed list. In order: does **fuelling a
@@ -2682,10 +3016,11 @@ In practice:
     is standing in the one that was tapped. That is invariant 33g at its strongest: the drawn
     thing and the played thing are not two things agreeing about a mapping, they are the same two
     integers. `SiegeAim` is integers throughout for the same reason.
-    <br>**And `reach` went with it.** A blast covering exactly one box has nothing to tune, and a
-    content field with one legal value is the decoration invariant 5d names — so the field is
-    gone from the DTO, the catalog, the content file and both gates, and `content.py` *errors* on
-    one that reappears rather than ignoring it.
+    <br>**And `reach` went with it.** How far a blast carries is a *rule* and not a number a
+    level may set, so the field is gone from the DTO, the catalog, the content file and both
+    gates, and `content.py` *errors* on one that reappears rather than ignoring it. It went one
+    box → five without that decision moving (39k), which is the point of it: the reach has to be
+    the same fact the view lights and the mirror draws, and a content field would be a third.
     <br>Two smaller things the same session fixed, both invisible in the source. The ring a
     mending and a surge are aimed with was 1.6 cells centred a third of a cell high, which sat on
     a ward's barrel rather than round the ward — it is an ellipse sized to the post's own node
@@ -2822,6 +3157,63 @@ In practice:
     so, and it caught a second fault in the same pass — the badge drawn *under* the sweep, so how
     many you hold went dim while it counted down.
 
+39k. **A target is a picture, so the rule has to read the picture — and for as long as it read a
+    *point* there were three different ways to tap a raider and be told it was not there.** Reported
+    from a device as *"I tap the target and it says there is nothing there"*, and the player was
+    right every time. Each of the three was individually invisible, all three were green on the
+    compile, the whole suite, `content.py`, `artnames.py` and every art gate, and the two that were
+    geometry had been sitting under a comment claiming invariant 33g held.
+    <br>**One: the drawn grid was not the played grid.** `AimHill` laid the panes out from
+    `_hillTop + Cell * .35f` downward while `march` nought *is* `_hillTop`, so every row boundary a
+    player could see sat up to a third of a cell above the boundary `RowOf` read — a raider near a
+    boundary was genuinely in the band above the box it looked like it was in. **Two: the panes
+    overlapped each other.** They were `Span.x / Lanes` wide and spaced on `LaneX`'s inset pitch of
+    `Span.x / (Lanes + .6f)`, so each overlapped its neighbour by about a tenth of its width and the
+    later sibling — the higher lane — won every tap in the seam. `SiegeView.BoxAt` is the one
+    arithmetic now and it is written *in terms of* `MarchY` rather than beside it, which is the only
+    shape where the two cannot come apart again. The grid is spaced **flat** while the raiders stay
+    **inset**, deliberately: a grid must tile the board it is drawn over, and an inset one would
+    leave a strip down each edge belonging to no box, where a tap falls through the targeting layer
+    onto the gems.
+    <br>**Three, and the loud one: the rule read a point where the player sees a body.** A raider's
+    node is the *middle* of its picture; `Caught` counted rows *upward* from it on the belief that
+    it was the feet, and it only ever tested one lane. A warlord is drawn close to six cells wide
+    — four of the five lanes — and three deep, so about three quarters of the biggest thing on
+    the screen was not catchable and the catchable band sat a row above its body.
+    `SiegeTuning.OnBody` is the footprint (`BodySpan` of the hill's length by `LanesOf` lanes,
+    centred where it stands) and `Caught` is that against the boxes that burn. **A box is on a
+    raider when the box is *pointing* at it** — the middle of the box against the body's extent,
+    never any overlap at all: the hill is four rows deep and a creeper is over a row tall, so
+    "touches" would make every neighbour a hit and every firepot would clear its lane, and the row
+    a player taps has to decide something (5d).
+    <br>**And `RowsOf(kind) = 3` could not have been right on more than one screen, which is the
+    transferable half.** A body is measured in **cells** and the grid in **rows**, and how many
+    cells a row is depends on the phone: the field is laid out to the width and the hill takes what
+    is left, so the hill runs 3.03 cells deep on a 4:3 tablet and 5.59 on a 20:9 phone. A constant
+    row count was mean by a whole row on two of the three shapes measured. `SiegeTuning.TallOf` —
+    the height, moved out of `SiegeView` — over `ShallowestHill` is the conversion, and it is a
+    **floor** on purpose: the most generous footprint a screen could justify, because a hit box
+    bigger than the picture costs a firepot that caught something a hair outside what was looked at,
+    and one smaller costs the item *and* says nothing was there. Only one of those is a bug report.
+    <br>**The widening is the plus, and it is priced by arithmetic that was already there.** A
+    firepot burns the box tapped and the four touching it (`SiegeTuning.BlastReach`) — a plus
+    rather than a two-by-two, because four boxes cannot be centred on one, so a block needs an
+    anchor rule and an edge rule about a thing whose whole job is landing where you pointed. It cost
+    **no retune at all**, because a firepot is charged `ceil(absorbed / PerfectMatch)` matches
+    (39): catching three raiders instead of one bills three raiders' worth, so the exchange rate
+    prices the change by itself and neither star line moves. Nothing reached the save file, the
+    wire, the server or `seed-config.mjs`.
+    <br>**The footprint and the plus are two predicates, deliberately.** `OnBody` is a fact about
+    the drawing and `InBlast` a fact about the item; one predicate that was both is one no test can
+    pin, and every reading of it would be the two answers multiplied together.
+    `SiegeView.Scorch` lights exactly the boxes `InBlast` names, so what burned is said once, at
+    the moment it happens, in the same twenty rectangles that were just being aimed at — 32c is
+    untroubled, because that is what the item **did** and not a preview of what it would do.
+    <br>**No numeric gate in this project could see any of the three**, and that is 32b for the
+    eighth time met on a *hit box* rather than on a picture: `python Tools/render_siege.py --aim
+    hill --burn <lane>,<row>` is the only thing that can answer whether the boxes line up with the
+    raiders standing in them and whether five boxes of fire read as one blast.
+
 40. **Two raiders now attack the *field*, and that is the hole the mode had.** Everything on this
     hill could only ever hurt the wards, so the field was a fuel tap a player operated while
     looking somewhere else — one arrow, upward, and nothing coming back. A **weaver** stops
@@ -2954,9 +3346,11 @@ In practice:
     this exact question one level up — and escorts its bosses with the raiders that wave would
     otherwise have sent when none of them can take a ward down. It is asked of the *predicate*
     rather than of the blightcaller by name, so a fifth boss taking something other than health
-    inherits the answer. **The authored ladder answers the same question with a short quiet
-    (`RestBefore`) and an endless lane cannot**: its muster fires the moment the hill is clear, so
-    a player who is ahead of the clock meets the boss alone however long the quiet is (37k).
+    inherits the answer. **This was written down as "the authored ladder answers the same question
+    with a short quiet (`RestBefore`)", and that was false in two ways at once** — `RestBefore`
+    named the *warbringer* rather than asking anything, so a blightcaller got the longest quiet in
+    the mode; and a quiet is no answer anyway, because the muster fires the moment the hill is
+    clear (37k). Both were fixed by 37ad, which is what the authored ladder really does.
     **Before giving a boss a spell that takes something other than health, ask what that thing is
     worth when the hill is empty.**
     <br>**A pair is the first thing in this mode that is two of something, and both halves of
@@ -3241,7 +3635,15 @@ compile. Do not guess — verify offline:
   come out of `Bake Siege Projectiles` below.
 - **Thornwatch's projectiles:** `Glimmer Grove ▸ Art ▸ Bake Siege Projectiles` renders the four
   ward projectiles, their muzzle flashes and their impacts out of the bought pack's own prefabs
-  into sprite reels under `Art/Fx/Siege` (invariant 37k); `▸ Verify Siege Projectiles` re-bakes and
+  into sprite reels under `Art/Fx/Siege` (invariant 37k), **and `▸ Bake Turret Projectiles` does
+  the roster's nineteen** — three reels each in all four ward colours, 228 in all (37ae), which is
+  a separate menu item because the two halves are graded differently and change for different
+  reasons. **`▸ Bake Storm Strike` is a third**, for the stormcall alone: it comes out of the
+  Mirza Beig lightning pack rather than the projectile one, it is framed round a ground burst
+  rather than round a flying head, and it is graded, lit, angled and trimmed by numbers nothing
+  else uses (invariant 37aj). `▸ Survey Projectile Pack` rasterises every prefab in the pack onto one sheet at the
+  size a phone draws it, which is the only way one of these can be *chosen*: their names say a
+  family and their thumbnails are grey cubes. **Look at it.** `▸ Verify Siege Projectiles` re-bakes and
   holds what is on disk to it within a tolerance, and `▸ Siege Projectile Contact Sheet` lays every
   reel out on the hill's own colour. **This is the one art tool here with no offline gate** — no
   Python script can rasterise a particle system — and it needs the pack, which is gitignored, so it
@@ -3270,7 +3672,9 @@ compile. Do not guess — verify offline:
   cast|idle|walk|storm` picks which of the boss's three reels it is wearing, or draws the frame
   its **volley leaves** (invariant 37ac), `--line a,b,c,d` stands a
   chosen loadout (42), `--wave N` reads the **Infinite** lane's hill at a wave number, and
-  `--aim hill` / `--aim wards` draw a utility's targeting. With no `--level` it draws all ten
+  `--aim hill` / `--aim wards` draw a utility's targeting, and `--burn LANE,ROW` lights the
+  plus a firepot dropped there would take (39k) — the only picture that says whether the boxes
+  line up with the raiders standing in them. With no `--level` it draws all ten
   rungs and the endless one, each on **its own ground** (37ab), which is the only picture that says whether the ten read as ten places and
   whether any of them competes with the cast standing on it. Render the four boss rungs side by
   side and whether the four are four different fights answers itself — which is the picture that said they were not (37z),
@@ -3917,7 +4321,12 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
 - **Turrets** — 20, one free (`bolt`), 10 priced 1,200 → 9,000 **credits** behind keeper
   levels 2 → 14, and 10 priced 600 → 2,000 **gems** with no gate. Ten abilities, two rungs
   each. The player stands four of them, one per colour, and carries that line into every
-  siege (invariant 42). None of them makes a bolt weaker than the free one, ever.
+  siege (invariant 42). None of them makes a bolt weaker than the free one, ever. **Each of
+  the nineteen throws a projectile, a muzzle flash and an impact of its own**, chosen to say
+  what its ability does and baked in all four ward colours (37ae); the free one throws the
+  four elemental bolts it always has. Every ward projectile is baked with a **bloom** and at
+  the density these effects are drawn to be seen at (37af), and four of the nineteen are two
+  pack effects **layered** into one because the pack holds only twenty silhouettes (37ag).
 - **Utilities** — four, held up to **100** each, account-wide and shared by every Thornwatch
   level, each with a **cooldown** between two uses of it — firepot 10s, mending 15s, surge 20s,
   stormcall 30s, burned on the run's own clock and forgotten by a restart (39j) — and **none of
@@ -4248,6 +4657,25 @@ changes nothing until that function is redeployed.
     loses **every** save write rather than that key (12a).
     <br>Pre-launch this is all academic — there are no real players and the only accounts are the
     ~210 synthetic saves — but the ordering is what it is the day there are.
+22b. **Judge the nineteen turret projectiles on a device.**
+    Every tap on the loadout shelf now opens `WardPreviewOverlay`, which fires the turret at a
+    beetle in the colour of the cell that raised it — so this is judged where a player judges it,
+    on the panel they buy from. `WardDemoScreen` is still on disk and **no longer reachable**: the
+    DEMO button came out with the panel that replaced it, and putting it back is one
+    `Flow.Go<Dev.WardDemoScreen>()` behind a button in `LoadoutScreen.BuildHeader`. It survives
+    because comparing nineteen effects against each other is a different job from judging one.
+    <br>Three questions, in the order they matter. Does a bought turret read as **worth what it
+    cost** beside the free one, which is the fault that started this (invariant 37ae)? Do two
+    turrets sharing an ability read as **two things** rather than one at two strengths (37z's test,
+    asked of a purchase)? And does a bolt still read as **its ward's colour** — the elemental
+    double is what this mode is about, and a grade pulled 84% of the way is the number most likely
+    to be wrong first guess. Every offline gate is green and every reel has been looked at on a
+    contact sheet; none of that can answer any of the three.
+    <br>The dial for the first is `RosterToward` / `RosterWhite` / `Recipe.Floor` in
+    `SiegeShotBake`, and for the second it is which prefab a turret names — both are a re-bake and
+    no code. If the **download** has to come down instead, the bleached path is a quarter of the
+    size and is described in 37ae.
+
 22a. **Judge the loadout, the two field raiders and the Infinite lane by playing them.** Three
     features shipped together and each has one question nothing offline can answer.
     <br>**The turrets** (invariant 42): does a player understand that the line is *theirs* and

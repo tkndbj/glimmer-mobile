@@ -871,7 +871,7 @@ namespace GlimmerGrove
     {
         protected override void Build()
         {
-            MakePanel(new Vector2(880f, 1220f), Loc.Get("ui.howto.title"));
+            MakePanel(new Vector2(880f, 1060f), Loc.Get("ui.howto.title"));
 
             // Body copy lives in the string table like everything else the player reads.
             string[] lineKeys =
@@ -893,28 +893,15 @@ namespace GlimmerGrove
                 Tween.Pop(dot.transform, 0f, .45f, .12f + i * .07f);
             }
 
-            var mix = UIKit.Box("Mix", Panel, new Vector2(700f, 150f), new Vector2(.5f, 1f), new Vector2(0f, -930f));
-            Swatch(mix, Pal.EnergyColour(Energy.R), -230f, "ui.howto.red");
-            UIKit.Titled("plus", mix, "+", 46, new Color(.4f, .3f, .22f), TextAnchor.MiddleCenter,
-                         new Vector2(60f, 60f), new Vector2(.5f, .5f), new Vector2(-140f, 14f), 0f, 0f);
-            Swatch(mix, Pal.EnergyColour(Energy.B), -50f, "ui.howto.blue");
-            UIKit.Titled("eq", mix, "=", 46, new Color(.4f, .3f, .22f), TextAnchor.MiddleCenter,
-                         new Vector2(60f, 60f), new Vector2(.5f, .5f), new Vector2(45f, 14f), 0f, 0f);
-            Swatch(mix, Pal.EnergyColour(Energy.R | Energy.B), 150f, "ui.howto.purple");
+            // **No colour-mixing row.** It showed red + blue = purple, which was the classic
+            // glade's rule and is not this game's: gems are matched by colour rather than
+            // blended, and a panel teaching an arithmetic the board no longer does is worse
+            // than a panel that says nothing. `ui.howto.red` / `.blue` / `.purple` stay in the
+            // string file unused, because a key deleted from a shipped language file is a
+            // warning in every translation that still carries it.
 
             UIKit.TextButton("Ok", Panel, "btn_green", Loc.Get("ui.common.got_it"), 48, new Vector2(520f, 132f),
                              new Vector2(.5f, 0f), new Vector2(0f, 86f), () => Close());
-        }
-
-        void Swatch(Transform parent, Color colour, float x, string labelKey)
-        {
-            var glow = UIKit.Img("g", parent, Art.Glow(96, 1.9f), Pal.A(colour, .6f),
-                                 new Vector2(128f, 128f), new Vector2(.5f, .5f), new Vector2(x, 24f));
-            var d = UIKit.Img("d", parent, Art.Disc(96), Pal.Lift(colour, .2f),
-                              new Vector2(68f, 68f), new Vector2(.5f, .5f), new Vector2(x, 24f));
-            Tween.Breathe(glow.transform, .09f, 1.9f, x * .01f);
-            UIKit.Titled("t", parent, Loc.Get(labelKey), 24, new Color(.42f, .31f, .23f), TextAnchor.MiddleCenter,
-                         new Vector2(200f, 34f), new Vector2(.5f, .5f), new Vector2(x, -32f), 0f, 0f);
         }
 
         public override bool OnBack() { Close(); return true; }

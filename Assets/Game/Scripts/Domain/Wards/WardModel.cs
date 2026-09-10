@@ -129,6 +129,78 @@ namespace GlimmerGrove.Wards
         /// <summary>The reel it fires with, in this colour.</summary>
         public string FireFor(char colour) => "Wards/" + Id + "_" + colour + "_fire";
 
+        /// <summary>
+        /// The one turret whose bolt is a <em>different element on each colour</em> — a fireball
+        /// on red, a venom dart on green, an ice shard on blue, a bolt of lightning on yellow.
+        ///
+        /// <para>
+        /// <b>Named outright, because it stopped being derivable.</b> It used to be read off the
+        /// ability — a turret with no ability has nothing to depict, so it fired what the colour
+        /// fired — and that was honest for exactly as long as the starter was the only model
+        /// without one. The owner moved the elemental set onto a bought turret and gave the
+        /// starter a single effect of its own, and no property of a model tells you that: it is a
+        /// decision about art, so it is written down as one rather than smuggled into a predicate
+        /// that means something else.
+        /// </para>
+        /// <para>
+        /// <b>Never <see cref="IsStarter"/>, whatever the roster looks like on the day.</b> That
+        /// is invariant 16j's trap: "free" was <c>Cost &lt;= 0</c> for a year and the day a second
+        /// currency arrived every gem-priced thing in the game read as free. Under that spelling a
+        /// roster handing out a second free turret would silently take its projectile away — and
+        /// it would be wrong today in any case, since the turret with the elemental set is one
+        /// somebody pays credits for.
+        /// </para>
+        /// </summary>
+        public const string Elemental = "rime";
+
+        /// <summary>
+        /// Whether this turret throws one effect of its own in four colours, rather than the four
+        /// elemental bolts. See <see cref="Elemental"/>.
+        /// </summary>
+        public bool OwnShot => Id != Elemental;
+
+        /// <summary>
+        /// The bolt this turret puts in the air, as an <c>Fx/Siege</c> key.
+        ///
+        /// <para>
+        /// <b>Per turret <em>and</em> per colour, which is dearer than it looks and was settled by
+        /// looking rather than by arithmetic.</b> A bleached reel — white, with all its brightness
+        /// in coverage — would cost a quarter as much and could be worn in any colour by one
+        /// multiply. That is what this shipped as first, and held up beside the elemental fireball
+        /// it was a flat smear: a multiply can only vary <em>value</em>, and what makes these
+        /// effects read is variation in <em>hue</em>. Invariant 37l, met from a third direction.
+        /// </para>
+        /// <para>
+        /// <b>What keeps it affordable is invariant 7b's own bargain.</b> A run stands four
+        /// turrets, so <c>WardLine.Art</c> scopes twelve reels and never the roster's; the other
+        /// fifteen models cost the download and never the device.
+        /// </para>
+        /// <para>
+        /// Derived from the id and never authored, which is invariant 5a's rule: anything holding
+        /// a model can name its art without reading the catalog it came from. The colour is
+        /// suffixed rather than prefixed so that a turret's four reels sort together, which is the
+        /// order somebody reads a contact sheet in.
+        /// </para>
+        /// </summary>
+        public string ShotFor(char colour) => Reel("shot", colour);
+
+        /// <summary>The flash it throws as it lets one go. See <see cref="ShotFor"/>.</summary>
+        public string MuzzleFor(char colour) => Reel("muzzle", colour);
+
+        /// <summary>What its bolt does when it arrives. See <see cref="ShotFor"/>.</summary>
+        public string HitFor(char colour) => Reel("hit", colour);
+
+        /// <summary>
+        /// One of this turret's three reels, in one colour.
+        ///
+        /// <b>A turret with no ability falls back to the colour's own</b>, which is not a special
+        /// case so much as the honest reading: these effects depict what a turret <em>does</em>,
+        /// and one that does nothing beyond firing has nothing to depict. Those four are the
+        /// elemental bolts the starter has always thrown.
+        /// </summary>
+        string Reel(string kind, char colour)
+            => OwnShot ? kind + "_" + Id + "_" + colour : kind + "_" + colour;
+
         /// <summary>The one uncoloured picture the shelf browses it with.</summary>
         public string Thumb => "Wards/" + Id;
 

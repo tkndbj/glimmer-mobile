@@ -255,12 +255,22 @@ namespace GlimmerGrove.Modes
         /// come apart.
         /// </para>
         /// <para>
-        /// <b>It is still a wave, and that is what makes it cost nothing.</b> The warlord is
+        /// <b>It is still a wave, and that is what makes it cost nothing.</b> A warlord is
         /// appended to <see cref="Waves"/> as a one-raider wave, so the wave count the header
         /// reads, the muster, the banner, <see cref="RaiderCount"/> and
         /// <see cref="SiegeTuning.Par"/> all take it without a single special case — the only
         /// question anything has to ask is <see cref="BossWave"/>, and only because a warlord's
         /// health and its way of fighting are not a creeper's.
+        /// </para>
+        /// <para>
+        /// <b>A boss that cannot bring a ward down does not get a wave of its own; it is stood at
+        /// the head of the last authored one.</b> A warlord, a warbringer and an overlord shell
+        /// the line for as long as they live, so an empty hill is the point (invariant 37t); a
+        /// blightcaller takes a ward's <em>fire</em>, which is worth exactly what there is to
+        /// burn, so alone it costs nothing at all — invariant 5d, and reported from play twice.
+        /// The predicate is <see cref="SiegeTuning.EndangersTheLine"/>, the same one the endless
+        /// lane's escort asks (invariant 43), and it costs par nothing because the company is the
+        /// raiders the level already sends. See the constructor.
         /// </para>
         /// </summary>
         public readonly char Boss;
@@ -275,7 +285,12 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly SiegeKind BossKind = SiegeKind.Creeper;
 
-        /// <summary>Which wave the warlord is, or -1. Always the last one when there is one.</summary>
+        /// <summary>
+        /// Which wave the boss stands in, or -1. Always the last one when there is one — either a
+        /// wave of its own, or, for a boss that cannot bring a ward down, the last authored wave
+        /// with the boss at its head. <see cref="BossesIn"/> says how many of that wave are
+        /// bosses; the boss itself is always index nought.
+        /// </summary>
         public readonly int BossWave = -1;
 
         /// <summary>Whether this siege ends with a boss of any of the four kinds.</summary>
@@ -291,7 +306,8 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public SiegeKind KindAt(int wave, int index)
         {
-            if (!IsEndless && wave == BossWave && wave >= 0 && wave < Coming.Length) return BossKind;
+            if (!IsEndless && wave == BossWave && index == 0
+                && wave >= 0 && wave < Coming.Length) return BossKind;
 
             var spec = At(wave, index);
             return spec.Kind;
@@ -302,6 +318,26 @@ namespace GlimmerGrove.Modes
         /// as an index into <see cref="Letters"/>, or -1.
         /// </summary>
         public int ColourAt(int wave, int index) => Letters.IndexOf(At(wave, index).Colour);
+
+        /// <summary>
+        /// How many of wave <paramref name="wave"/>'s raiders are bosses.
+        ///
+        /// <b>Asked rather than assumed, because it is no longer the wave's size.</b> It was, for
+        /// as long as a boss wave held nothing but bosses — an endless lane's pair wave, an
+        /// authored ladder's appended duel — and a boss that rides the last authored wave
+        /// (invariant 43's escort, in this lane's idiom) breaks that identity. <c>Muster</c> hands
+        /// this to <see cref="SiegeTuning.BossLane"/>, which decides whether a boss stands in the
+        /// middle of the hill or beside it, and handing it the wave's size instead would have put
+        /// a lone blightcaller in a pair's lane the moment it had company.
+        /// </summary>
+        public int BossesIn(int wave)
+        {
+            int bosses = 0;
+            for (int i = 0; i < SizeOf(wave); i++)
+                if (SiegeTuning.IsBoss(KindAt(wave, i))) bosses++;
+
+            return bosses;
+        }
 
         /// <summary>How many raiders wave <paramref name="wave"/> holds.</summary>
         public int SizeOf(int wave)
@@ -397,7 +433,11 @@ namespace GlimmerGrove.Modes
                 if (mark != '\0' && ++i >= wave.Length) break;
 
                 char letter = wave[i];
-                var kind = boss ? bossKind
+                // **The first raider of the boss wave, and only the first.** It used to be every
+                // raider in it, which was exactly right while a boss wave held nothing else - and
+                // a boss that rides the last wave (see the constructor) stands at its head with
+                // an ordinary wave behind it.
+                var kind = boss && made.Count == 0 ? bossKind
                          : mark != '\0' ? Modified(mark)
                          : char.IsUpper(letter) ? SiegeKind.Brute : SiegeKind.Creeper;
 
@@ -473,8 +513,31 @@ namespace GlimmerGrove.Modes
 
             if (HasBoss)
             {
-                BossWave = coming.Count;
-                coming.Add(Boss.ToString());
+                // **A boss that cannot bring a ward down is not a wave of its own; it rides the
+                // last one.**
+                //
+                // A warlord, a warbringer and an overlord all shell the line for as long as they
+                // live, so a wave to themselves is the *point* - a duel stacked on a wave still
+                // swinging is two fail states arriving together (invariant 37t). A blightcaller
+                // takes a ward's **fire**, and fire is worth exactly what there is to burn: alone
+                // on a hill the player has cleared, five seconds of one turret's dark costs
+                // nothing at all, so the boss takes no health *and* no time. That is invariant 5d
+                // arriving through the pacing, and it was reported from play twice - once on the
+                // endless lane, where the answer was an escort (invariant 43), and once here.
+                //
+                // **A shorter quiet cannot fix it**, which is the half that had to be measured:
+                // `SiegeBoard.Muster` sends the next wave the moment the hill is clear (invariant
+                // 37k), so on `s01_stonewatch` every wave went early and the boss met an empty
+                // hill however long the clock said. Merging is the endless lane's escort said in
+                // the idiom of an authored ladder, and it is the cheaper half of the bargain: the
+                // company is the raiders the level already sends, so **par, both star lines and
+                // `RaiderCount` do not move by one**.
+                bool rides = !SiegeTuning.EndangersTheLine(BossKind) && coming.Count > 0;
+
+                BossWave = rides ? coming.Count - 1 : coming.Count;
+
+                if (rides) coming[BossWave] = Boss.ToString() + coming[BossWave];
+                else coming.Add(Boss.ToString());
             }
 
             Waves = coming.ToArray();
@@ -665,8 +728,9 @@ namespace GlimmerGrove.Modes
 
                     // The boss is the one this really matters for: it has the health of a whole
                     // wave, so answering it at half rate is a duel nobody can finish.
-                    string what = w == BossWave ? $"a '{colour}' {SiegeTuning.NameOf(BossKind)}"
-                                                : "a '" + colour + "' raider";
+                    string what = w == BossWave && i == 0
+                                ? $"a '{colour}' {SiegeTuning.NameOf(BossKind)}"
+                                : "a '" + colour + "' raider";
 
                     return $"wave {w + 1} sends {what} and no ward on this line carries "
                          + $"'{colour}', so nothing here is strong against it";
