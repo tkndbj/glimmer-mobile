@@ -54,8 +54,9 @@ namespace GlimmerGrove
 
                 var accent = Pal.EnergyColour(1 << slot.Colour);
 
-                slot.Seat.color = picked ? Pal.A(accent, .26f) : Pal.A(accent, .10f);
-                slot.Edge.color = picked ? Pal.A(accent, .95f) : Pal.A(Color.white, .14f);
+                slot.Seat.sprite = Art.S("Ui/" + (picked ? Skins.PlateOrange : Skins.PlateBlue));
+                slot.Edge.enabled = picked;
+                slot.Glow.color = Pal.A(accent, picked ? .52f : .34f);
                 slot.Icon.sprite = AssetLibrary.Sprite(AssetManifest.WardThumb(model.Id));
                 slot.Name.text = Loc.Get(model.NameKey);
             }
@@ -105,7 +106,6 @@ namespace GlimmerGrove
         void WardCell(WardModel model, WardOffer offer, bool standing, Vector2 at, int index)
         {
             bool held = offer.State == WardPurchaseState.AlreadyHeld;
-            var accent = Pal.EnergyColour(1 << _slot);
 
             var cell = UIKit.Box("Ward_" + model.Id, _grid, new Vector2(CellW, CellH),
                                  new Vector2(.5f, 1f), at);
@@ -114,37 +114,47 @@ namespace GlimmerGrove
             hit.color = new Color(0f, 0f, 0f, 0f);
             hit.raycastTarget = true;
 
-            var plate = UIKit.Img("Plate", cell, Art.Round(CellRadius),
-                                  standing ? Pal.A(accent, .20f)
-                                           : new Color(.06f, .12f, .16f, .86f));
+            var plate = UIKit.Img("Plate", cell,
+                                  Art.S("Ui/" + (standing ? Skins.PlateOrange : Skins.PlateBlue)),
+                                  Color.white);
             UIKit.StretchTo((RectTransform)plate.transform, 0, 0, 0, 0);
 
-            var edge = UIKit.Img("Edge", cell, Art.RoundOutline(CellRadius, 3f),
-                                 standing ? Pal.A(accent, .90f) : new Color(1f, 1f, 1f, .12f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
+            if (standing)
+            {
+                var edge = UIKit.Img("Edge", cell, Art.RoundOutline(CellRadius, 6f), Skins.PlateEdge);
+                UIKit.StretchTo((RectTransform)edge.transform, -2, -2, -2, -2);
+            }
 
             // The picture. **A thumbnail out of the shared UI set, never the turret itself** —
             // browsing twenty models in four colours would be eighty textures for a grid whose
             // cells draw at 150 points (invariant 16c).
+            // **Placed by its centre, and it is worth saying why the old numbers looked
+            // plausible.** `UIKit.Box` pivots at the middle whatever it is anchored to, so a
+            // 179-tall picture anchored to the cell's top edge at -22 had 68 units of itself
+            // above the cell — the turret was drawn high, clipped by nothing (uGUI does not
+            // clip), and the gap it left below read as a picture that had slipped up. Every
+            // number under here is now `margin + half the box`.
+            const float IconBox = CellW * .55f;
+
             var icon = UIKit.Img("Turret", cell, AssetLibrary.Sprite(AssetManifest.WardThumb(model.Id)),
-                                 held ? Color.white : new Color(.55f, .58f, .62f, .92f),
-                                 new Vector2(CellW * .56f, CellW * .56f),
-                                 new Vector2(.5f, 1f), new Vector2(0f, -22f));
+                                 held ? Color.white : new Color(.62f, .66f, .72f, 1f),
+                                 new Vector2(IconBox, IconBox),
+                                 new Vector2(.5f, 1f), new Vector2(0f, -(18f + IconBox * .5f)));
             icon.preserveAspect = true;
 
             var name = UIKit.Titled("Name", cell, Loc.Get(model.NameKey), 28,
-                                    held ? Pal.Cream : Pal.A(Pal.Cream, .70f),
+                                    held ? Pal.Cream : Pal.A(Pal.Cream, .82f),
                                     TextAnchor.MiddleCenter, new Vector2(CellW - 28f, 38f),
-                                    new Vector2(.5f, 1f), new Vector2(0f, -CellW * .58f - 34f),
+                                    new Vector2(.5f, 1f), new Vector2(0f, -216f),
                                     0f, 2f);
             UIKit.Shrinkable(name, 18);
 
             // What it does, in one line. The only place the game says it, and it is here rather
             // than on a panel because this is where somebody is deciding.
             var note = UIKit.Label("Note", cell, Loc.Get(model.NoteKey), 21,
-                                   Pal.A(Pal.Cream, .58f), TextAnchor.UpperCenter,
-                                   new Vector2(CellW - 34f, 60f), new Vector2(.5f, 1f),
-                                   new Vector2(0f, -CellW * .58f - 74f));
+                                   Pal.A(Pal.Cream, .86f), TextAnchor.UpperCenter,
+                                   new Vector2(CellW - 34f, 54f), new Vector2(.5f, 1f),
+                                   new Vector2(0f, -264f));
             UIKit.Shrinkable(note, 15);
 
             Footer(cell, model, offer, standing);
@@ -276,31 +286,30 @@ namespace GlimmerGrove
             hit.color = new Color(0f, 0f, 0f, 0f);
             hit.raycastTarget = true;
 
-            var plate = UIKit.Img("Plate", cell, Art.Round(CellRadius),
-                                  new Color(.06f, .12f, .16f, .86f));
+            var plate = UIKit.Img("Plate", cell, Art.S("Ui/" + Skins.PlateBlue), Color.white);
             UIKit.StretchTo((RectTransform)plate.transform, 0, 0, 0, 0);
 
-            var edge = UIKit.Img("Edge", cell, Art.RoundOutline(CellRadius, 3f),
-                                 new Color(1f, 1f, 1f, .12f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
+            // The ward cell's numbers, for the ward cell's reason - the two grids share a cell
+            // size, so anything that is not the same here is a difference nobody chose.
+            const float IconBox = CellW * .55f;
 
             var icon = UIKit.Img("Icon", cell, Art.S(item.Art),
-                                 open ? Color.white : new Color(.55f, .58f, .62f, .92f),
-                                 new Vector2(CellW * .5f, CellW * .5f),
-                                 new Vector2(.5f, 1f), new Vector2(0f, -26f));
+                                 open ? Color.white : new Color(.62f, .66f, .72f, 1f),
+                                 new Vector2(IconBox, IconBox),
+                                 new Vector2(.5f, 1f), new Vector2(0f, -(18f + IconBox * .5f)));
             icon.preserveAspect = true;
 
             var name = UIKit.Titled("Name", cell, Loc.Get(item.NameKey), 28,
-                                    open ? Pal.Cream : Pal.A(Pal.Cream, .70f),
+                                    open ? Pal.Cream : Pal.A(Pal.Cream, .82f),
                                     TextAnchor.MiddleCenter, new Vector2(CellW - 28f, 38f),
-                                    new Vector2(.5f, 1f), new Vector2(0f, -CellW * .54f - 36f),
+                                    new Vector2(.5f, 1f), new Vector2(0f, -216f),
                                     0f, 2f);
             UIKit.Shrinkable(name, 18);
 
             var note = UIKit.Label("Note", cell, Loc.Get(item.NoteKey), 21,
-                                   Pal.A(Pal.Cream, .58f), TextAnchor.UpperCenter,
-                                   new Vector2(CellW - 34f, 58f), new Vector2(.5f, 1f),
-                                   new Vector2(0f, -CellW * .54f - 76f));
+                                   Pal.A(Pal.Cream, .86f), TextAnchor.UpperCenter,
+                                   new Vector2(CellW - 34f, 54f), new Vector2(.5f, 1f),
+                                   new Vector2(0f, -264f));
             UIKit.Shrinkable(note, 15);
 
             // How many are in hand, top-right, where the bar's own badge is — so the two readouts

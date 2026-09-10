@@ -274,6 +274,10 @@ namespace GlimmerGrove.AssetPipeline
             // The hub and the storefront's own room, drawn rather than composed of layers —
             // hence one name where the others come in threes. See `Scenery.Room`.
             "hub_room",
+
+            // And the quiet ground behind every screen that is a list rather than a place —
+            // the storefront, the boards, the profile and the grove's shop. See `Scenery.Plain`.
+            "plain",
         };
 
         static readonly string[] Sfxs =

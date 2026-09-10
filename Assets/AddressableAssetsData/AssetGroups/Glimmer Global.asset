@@ -2567,6 +2567,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Prism/mon1_jump
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2f70ff4a761900b8c1211faa9f8cce52
+    m_Address: Art/Ui/ic_streak
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2f87d14125e7f949ada93f47089b3e68
     m_Address: Art/Critters/c3/f13
     m_ReadOnly: 0
@@ -3203,6 +3208,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Prism/mon3
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3ca21c64f35d6386961b3840c0d86209
+    m_Address: Art/Bg/plain
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3ca5a4fdea35ac2439198fcbe15a8017
     m_Address: Art/Fx/Siege/omen_muzzle/f11

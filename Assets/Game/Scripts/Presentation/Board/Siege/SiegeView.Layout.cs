@@ -94,7 +94,10 @@ namespace GlimmerGrove
             get
             {
                 float plate = _gemCentre + (Cell * Height + Cell * .34f) * .5f;
-                return plate + Cell * .22f;
+                // .15 rather than .22: a device said the bar sat a few pixels high of where it
+                // belongs, which is as close to the plate's edge as it can be without the tube's
+                // own trough overlapping it.
+                return plate + Cell * .15f;
             }
         }
     }

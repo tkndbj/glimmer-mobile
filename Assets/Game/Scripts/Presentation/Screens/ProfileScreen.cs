@@ -78,7 +78,7 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            Scenery.Layered(Content, "home", .22f);
+            Scenery.Plain(Content);
             Fireflies.Spawn(Content, 22, new Color(1f, .93f, .70f), 6f, 22f);
 
             BuildBody();
@@ -238,11 +238,15 @@ namespace GlimmerGrove
         /// </summary>
         RectTransform Section(string name, float height, int order)
         {
-            var card = UIKit.Img(name, _stack, Art.Round(34), new Color(.03f, .10f, .13f, .80f),
+            // **The hub's own plate, which is the Battle key's mould sliced both ways.** These
+            // were a translucent near-black rounded box with a 13%-white outline traced round
+            // it - the shape this UI drew before it had a kit, and the last place on either of
+            // these two screens still drawing one. Nothing traces a border any more: the sprite
+            // carries its own keyline, and a second outline at a radius the sprite does not
+            // have is a halo a hair off the shape it is following.
+            var card = UIKit.Img(name, _stack, Art.S("Ui/" + Skins.PlateBlue), Color.white,
                                  new Vector2(CardWidth, height), new Vector2(.5f, 1f),
                                  new Vector2(0f, _cursor - height * .5f));
-            var edge = UIKit.Img("Edge", card.transform, Art.RoundOutline(34, 3f), new Color(1f, 1f, 1f, .13f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
 
             _cursor -= height + Gap;
 
@@ -299,9 +303,9 @@ namespace GlimmerGrove
                          new Color(.34f, .22f, .12f), TextAnchor.MiddleCenter, outline: 0f, shadow: 2f);
 
             // experience toward the next keeper level
-            var track = UIKit.Img("XpTrack", card, Art.Round(18), new Color(.01f, .05f, .07f, .92f),
+            var track = UIKit.Img("XpTrack", card, Art.S("Ui/" + Skins.Trough), Color.white,
                                   new Vector2(612f, 40f), new Vector2(.5f, .5f), new Vector2(178f, -34f));
-            var fill = UIKit.Img("XpFill", track.transform, Art.Round(15), Pal.Mint,
+            var fill = UIKit.Img("XpFill", track.transform, Art.S("Ui/" + Skins.Fill), Pal.Mint,
                                  new Vector2(0f, 30f), new Vector2(0f, .5f), new Vector2(5f, 0f));
             var fillRT = (RectTransform)fill.transform;
             fillRT.pivot = new Vector2(0f, .5f);
@@ -352,10 +356,13 @@ namespace GlimmerGrove
 
         static void Tile(Transform card, float x, float y, string icon, string value, string labelKey, Color tint)
         {
-            var bg = UIKit.Img("Tile_" + labelKey, card, Art.Round(24), new Color(1f, 1f, 1f, .055f),
+            // The tiles go the *other* way now the card under them is bright: a 5%-white wash
+            // was a lighter shape on a near-black card and is invisible on a lit one, so this is
+            // an inset - the same navy every plate in the game is drawn in, sunk into the plate
+            // rather than floated on it. The tint stays on the glow and the caption, which is
+            // where it was doing the work anyway.
+            var bg = UIKit.Img("Tile_" + labelKey, card, Art.Round(24), Skins.Plate,
                                new Vector2(290f, 148f), new Vector2(.5f, .5f), new Vector2(x, y));
-            var edge = UIKit.Img("Edge", bg.transform, Art.RoundOutline(24, 2f), Pal.A(tint, .32f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
 
             UIKit.Img("Glow", bg.transform, Art.Glow(96, 2f), Pal.A(tint, .22f),
                       new Vector2(120f, 120f), new Vector2(0f, .5f), new Vector2(56f, 12f));
@@ -571,7 +578,7 @@ namespace GlimmerGrove
                              new Vector2(560f, 60f), new Vector2(0f, .5f), new Vector2(440f, 54f),
                              3f, 3f), 18);
 
-            UIKit.TextButton("Open", card, "btn_blue", Loc.Get("ui.board.open"), 32,
+            UIKit.TextButton("Open", card, "btn_orange", Loc.Get("ui.board.open"), 32,
                              new Vector2(420f, 104f), new Vector2(0f, 0f), new Vector2(280f, 62f),
                              () => Flow.Go<LeaderboardScreen>());
 
@@ -579,7 +586,7 @@ namespace GlimmerGrove
             // is in rather than which state it would move to — the ambiguity that makes every
             // "Disable notifications?" button in the world a coin flip.
             var toggle = UIKit.TextButton("Visibility", card,
-                                          GroveBoard.OptedIn ? Skins.Alternate : "btn_green",
+                                          Skins.Battle,
                                           Loc.Get(GroveBoard.OptedIn ? "ui.board.leave"
                                                                      : "ui.board.join"), 28,
                                           new Vector2(380f, 92f), new Vector2(1f, 0f),

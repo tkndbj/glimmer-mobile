@@ -901,22 +901,15 @@ namespace GlimmerGrove
             if (lit) UIKit.Img("Glow", card, Art.Glow(128, 2f), Pal.A(Pal.Sun, .32f),
                                new Vector2(200f, 200f), new Vector2(.5f, .5f), new Vector2(gx, 4f));
 
-            var flame = UIKit.Img("Flame", card, null,
+            // **A calendar, still, in place of the flipbook flame.** What the number under it
+            // counts is nights in a row, which a calendar says without being taught; and the
+            // flame was the one animated thing on a screen of still ones, which is a lot of
+            // motion to spend on a readout. The three states are still told apart — by the
+            // number, by the caption, and by the pulse below when the flame is at risk.
+            var flame = UIKit.Img("Flame", card, Art.S("Ui/ic_streak"),
                                   days > 0 ? Color.white : new Color(.78f, .82f, .88f, 1f),
-                                  new Vector2(138f, 138f), new Vector2(.5f, .5f), new Vector2(gx, 4f));
+                                  new Vector2(130f, 130f), new Vector2(.5f, .5f), new Vector2(gx, 4f));
             flame.preserveAspect = true;
-
-            // Animated only while the streak is actually alive. A flame that flickers on a
-            // player who has no streak is decoration claiming to be a state.
-            if (days > 0)
-            {
-                Flipbook.Attach(flame, "Ui/Flame", 9f);
-            }
-            else
-            {
-                var frames = Art.Frames("Ui/Flame");
-                flame.sprite = frames != null && frames.Length > 0 ? frames[0] : null;
-            }
 
             if (atRisk) Tween.Run(1.1f, Ease.InOutSine,
                                   t => { if (flame) flame.color = Color.Lerp(new Color(1f, 1f, 1f, .45f), Color.white, t); },
@@ -1270,17 +1263,17 @@ namespace GlimmerGrove
             Tween.Run(2.9f, Ease.InOutSine,
                 t => { if (beam) beam.color = new Color(1f, 1f, 1f, Mathf.Lerp(.36f, .58f, t)); },
                 beam, "pulse").Loop(-1, true);
-            // -12 rather than 66, in two goes: three screen pixels first, then thirty. The
-            // canvas is 1080 reference units wide against a taller phone, so a unit here is
-            // rather less than a pixel there — 72 units is the thirty that was asked for. The
-            // poke target below moves with it.
+            // Settled over three passes: three screen pixels down, then thirty, then seven
+            // back up. The canvas is 1080 reference units wide against a taller, denser phone,
+            // so a unit here is rather less than a pixel there — about 2.4 to one, which is the
+            // rate every one of those moves was converted at. The poke target moves with it.
             _hero = UIKit.Img("Critter", host, null, Color.white,
-                              new Vector2(286f, 286f), new Vector2(.5f, .5f), new Vector2(0f, -12f));
+                              new Vector2(286f, 286f), new Vector2(.5f, .5f), new Vector2(0f, 5f));
             _hero.preserveAspect = true;
             CompanionArt.Paint(_hero, Profile.Avatar, animate: true);
             UIKit.Halo(host, Pal.Aqua, 500f, .18f).transform.SetAsFirstSibling();
             var hit = UIKit.Button("Poke", host, Art.Pixel, new Vector2(306f, 306f),
-                                   new Vector2(.5f, .5f), new Vector2(0f, -12f), Poke);
+                                   new Vector2(.5f, .5f), new Vector2(0f, 5f), Poke);
             hit.GetComponent<Image>().color = new Color(1, 1, 1, 0);
             hit.ClickSfx = null;
             hit.PressScale = 1f;

@@ -68,7 +68,7 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            Scenery.Layered(Content, "home", .26f);
+            Scenery.Plain(Content);
             Fireflies.Spawn(Content, 14, new Color(1f, .93f, .70f), 6f, 20f);
 
             // Finest groves by default, and deliberately: the league is where the player is
@@ -322,7 +322,7 @@ namespace GlimmerGrove
         sealed class Row : IGridCell
         {
             readonly LeaderboardScreen _screen;
-            readonly Image _plate, _edge, _portrait;
+            readonly Image _plate, _portrait;
             readonly Text _place, _name, _worth;
             readonly Btn _button;
 
@@ -337,18 +337,21 @@ namespace GlimmerGrove
                 Root = UIKit.Node("Row", parent);
                 Root.sizeDelta = new Vector2(960f, RowHeight);
 
-                _button = UIKit.Button("Hit", Root, Art.Round(26), new Vector2(940f, 118f),
+                // **The hub's own plate, which is the Battle key's mould sliced both ways.** A
+                // row was a translucent near-black box with a 12%-white outline traced round it,
+                // and a hundred of those down a screen is the "simple dark frames" this replaced.
+                // Whose row it is is the *sprite* rather than a tint, for the reason the nav bar
+                // and both shops now share: the mould paints its own keyline, its own two-tone
+                // face and its own highlight, and none of those survives being multiplied by a
+                // colour.
+                _button = UIKit.Button("Hit", Root, Art.S("Ui/" + Skins.PlateBlue),
+                                       new Vector2(940f, 118f),
                                        new Vector2(.5f, .5f), Vector2.zero, Open);
                 _plate = _button.GetComponent<Image>();
-                _plate.color = new Color(.06f, .12f, .17f, .70f);
-
-                _edge = UIKit.Img("Edge", _plate.transform, Art.RoundOutline(26, 3f),
-                                  new Color(1f, 1f, 1f, .12f));
-                UIKit.StretchTo((RectTransform)_edge.transform, 0, 0, 0, 0);
 
                 _place = UIKit.Shrinkable(
                     UIKit.Titled("Place", _plate.transform, string.Empty, 34,
-                                 new Color(1f, .96f, .88f, .86f), TextAnchor.MiddleCenter,
+                                 Pal.Cream, TextAnchor.MiddleCenter,
                                  new Vector2(110f, 60f), new Vector2(0f, .5f), new Vector2(74f, 0f),
                                  3f, 2f), 18);
 
@@ -386,9 +389,7 @@ namespace GlimmerGrove
                 bool mine = !string.IsNullOrEmpty(CloudState.UserId)
                          && _entry.OwnerId == CloudState.UserId;
 
-                _plate.color = mine ? new Color(.16f, .12f, .05f, .84f)
-                                    : new Color(.06f, .12f, .17f, .70f);
-                _edge.color = mine ? Pal.A(Pal.Gold, .55f) : new Color(1f, 1f, 1f, .12f);
+                _plate.sprite = Art.S("Ui/" + (mine ? Skins.PlateOrange : Skins.PlateBlue));
             }
 
             void Open() => _screen.Visit(_entry);

@@ -81,6 +81,52 @@ namespace GlimmerGrove
 
         // -------------------------------------------------------------------- the kit
         /// <summary>
+        /// The quiet ground every screen that is not the hub stands on: a flat blue scattered
+        /// with the game's own confetti — hearts, stars, crowns, leaves — all of it within a
+        /// shade or two of the ground itself.
+        ///
+        /// <para>
+        /// <b>Separate from <see cref="Room"/> on purpose, and the difference is what each
+        /// screen is for.</b> The hub is a place: one object stands in the middle of it and the
+        /// painting is composed around that. A board, a profile or a shop shelf is a *list* —
+        /// its whole surface is plates and rows, and a composed picture behind one is a picture
+        /// nobody can see any of. So this is texture rather than scenery: enough that the screen
+        /// is not a flat fill, never enough to be looked at.
+        /// </para>
+        /// <para>
+        /// It replaced <see cref="Layered"/> with the grove's own three layers on the four
+        /// screens that used it, which were three sprites and a parallax rig each to draw
+        /// something a dim of .22 to .26 was mostly hiding anyway.
+        /// </para>
+        /// </summary>
+        public static RectTransform Plain(Transform parent)
+        {
+            var host = UIKit.Node("Plain", parent);
+
+            var s = Art.S("Bg/plain");
+            if (s == null)
+            {
+                // The frame between a cold boot and the bundle arriving. An `Image` with no
+                // sprite is a white rectangle over the whole screen (invariant 7b).
+                UIKit.Img("Flat", host, Art.Pixel, Skins.Sky).raycastTarget = false;
+                return host;
+            }
+
+            var img = UIKit.Img("Bg", host, s, Color.white);
+            var rt = (RectTransform)img.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(.5f, .5f);
+            rt.anchoredPosition = Vector2.zero;
+            var fit = img.gameObject.AddComponent<AspectRatioFitter>();
+            fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            fit.aspectRatio = s.rect.width / s.rect.height;
+            img.raycastTarget = false;
+
+            // No parallax and no vignette. The pattern is uniform, so drifting it says nothing
+            // and darkening its corners darkens a colour that was chosen.
+            return host;
+        }
+
+        /// <summary>
         /// The world the hub and the storefront both stand in: one authored painting,
         /// enveloped.
         ///

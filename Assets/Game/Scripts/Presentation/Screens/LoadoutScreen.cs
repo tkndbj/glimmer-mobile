@@ -70,13 +70,13 @@ namespace GlimmerGrove
         sealed class SlotView
         {
             public int Colour;
-            public Image Seat, Edge, Icon;
+            public Image Seat, Edge, Icon, Glow;
             public Text Name;
         }
 
         protected override void Build()
         {
-            Scenery.Layered(Content, "home", .26f);
+            Scenery.Plain(Content);
 
             BuildGrid();
             BuildLine();
@@ -173,7 +173,7 @@ namespace GlimmerGrove
         /// <summary>One balance pill. The shop's, without the flare registry a shelf needs.</summary>
         static void Balance(Transform row, Color tint, string icon, string value)
         {
-            var pill = UIKit.Img("Pill", row, Art.Round(20), new Color(.04f, .09f, .12f, .82f),
+            var pill = UIKit.Img("Pill", row, Art.S("Ui/" + Skins.Trough), Color.white,
                                  new Vector2(206f, 62f), new Vector2(.5f, .5f), Vector2.zero);
 
             var edge = UIKit.Img("Edge", pill.transform, Art.RoundOutline(20, 2.5f),
@@ -231,15 +231,31 @@ namespace GlimmerGrove
                 hit.color = new Color(0f, 0f, 0f, 0f);
                 hit.raycastTarget = true;
 
-                var seat = UIKit.Img("Seat", box, Art.Round(24), new Color(1f, 1f, 1f, .06f));
+                // The hub's own plate rather than a 6%-white wash inside a traced rim, which is
+                // the shape this UI drew before it had a kit. Which slot you are on is the
+                // sprite and the gold rim, not a tint: the mould paints its own keyline and its
+                // own two-tone face, and neither survives being multiplied by a colour.
+                var seat = UIKit.Img("Seat", box, Art.S("Ui/" + Skins.PlateBlue), Color.white);
                 UIKit.StretchTo((RectTransform)seat.transform, 0, 0, 0, 0);
 
-                var edge = UIKit.Img("Edge", box, Art.RoundOutline(24, 4f),
-                                     new Color(1f, 1f, 1f, .12f));
-                UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
+                var edge = UIKit.Img("Edge", box, Art.RoundOutline(26, 6f), Skins.PlateEdge);
+                UIKit.StretchTo((RectTransform)edge.transform, -2, -2, -2, -2);
+
+                // **Centre, not top.** `UIKit.Box` pivots at the middle whatever it is anchored
+                // to, so a 112-tall picture anchored to the top edge at -16 hung 40 units of
+                // itself off the top of its own box. It is placed by its centre now, which is
+                // what "-70" is: 14 of margin plus half the picture.
+                // The slot's own colour, kept as a light rather than as a plate tint. It is the
+                // one thing about these four boxes a player cannot read off the turret standing
+                // in them, and the plate can no longer carry it: the mould paints its own
+                // keyline and two-tone face, and neither survives being multiplied by a colour.
+                var glow = UIKit.Img("Glow", box, Art.Glow(128, 1.9f), Color.white,
+                                     new Vector2(150f, 150f), new Vector2(.5f, 1f),
+                                     new Vector2(0f, -70f));
+                glow.raycastTarget = false;
 
                 var icon = UIKit.Img("Turret", box, null, Color.white, new Vector2(112f, 112f),
-                                     new Vector2(.5f, 1f), new Vector2(0f, -16f));
+                                     new Vector2(.5f, 1f), new Vector2(0f, -70f));
                 icon.preserveAspect = true;
 
                 var name = UIKit.Label("Name", box, string.Empty, 22, Pal.A(Pal.Cream, .86f),
@@ -251,7 +267,7 @@ namespace GlimmerGrove
 
                 _slots.Add(new SlotView
                 {
-                    Colour = colour, Seat = seat, Edge = edge, Icon = icon, Name = name,
+                    Colour = colour, Seat = seat, Edge = edge, Icon = icon, Name = name, Glow = glow,
                 });
             }
         }
@@ -290,18 +306,18 @@ namespace GlimmerGrove
 
             bool on = _shelf == shelf;
 
-            var seat = UIKit.Img("Seat", box, Art.Round(20),
-                                 on ? Pal.A(Pal.Sun, .22f) : new Color(1f, 1f, 1f, .05f));
+            var seat = UIKit.Img("Seat", box, Art.S("Ui/" + (on ? Skins.PlateOrange : Skins.PlateBlue)),
+                                 Color.white);
             UIKit.StretchTo((RectTransform)seat.transform, 0, 0, 0, 0);
 
             if (on)
             {
-                var rim = UIKit.Img("Rim", box, Art.RoundOutline(20, 3f), Pal.A(Pal.Sun, .72f));
-                UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
+                var rim = UIKit.Img("Rim", box, Art.RoundOutline(22, 5f), Skins.PlateEdge);
+                UIKit.StretchTo((RectTransform)rim.transform, -2, -2, -2, -2);
             }
 
             var label = UIKit.Titled("T", box, Loc.Get(key).ToUpperInvariant(), 30,
-                                     on ? Pal.Cream : Pal.A(Pal.Cream, .70f),
+                                     on ? Pal.Sun : Pal.Cream,
                                      TextAnchor.MiddleCenter, new Vector2(250f, 48f),
                                      new Vector2(.5f, .5f), Vector2.zero, 0f, 2f);
             UIKit.Shrinkable(label, 18);

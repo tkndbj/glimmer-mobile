@@ -1819,7 +1819,7 @@
   },
   {
    "key": "ui.grove.shelf",
-   "text": "{0}  ·  {1} of {2} yours"
+   "text": "{1} of {2} yours"
   },
   {
    "key": "ui.grove.shop",
@@ -3275,7 +3275,7 @@
   },
   {
    "key": "ui.shelf.land",
-   "text": "ground"
+   "text": "land"
   },
   {
    "key": "ui.shelf.path",

@@ -51,7 +51,7 @@ namespace GlimmerGrove
         const float CellW = 320f;
         const float CellH = 384f;
         const int CellRadius = 30;
-        const float TabRow = 104f;
+        const float TabRow = 150f;
 
         /// <summary>
         /// Breathing room under the last row. There is no nav bar here — the back arrow and
@@ -97,7 +97,7 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            Scenery.Layered(Content, "home", .26f);
+            Scenery.Plain(Content);
             Fireflies.Spawn(Content, 14, new Color(1f, .93f, .70f), 6f, 20f);
 
             BuildGrid();
@@ -186,40 +186,50 @@ namespace GlimmerGrove
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, 1f), new Vector2(96f, -132f), () => Flow.Go<HomesteadScreen>());
 
-            var banner = UIKit.Img("Banner", Safe, Art.S("Ui/banner"), Color.white,
-                                   new Vector2(520f, 140f), new Vector2(.5f, 1f), new Vector2(0f, -128f));
-            UIKit.Shrinkable(
-                UIKit.Titled("Title", banner.transform, Loc.Get("ui.grove.shop").ToUpperInvariant(), 40,
-                             new Color(.36f, .24f, .16f), TextAnchor.MiddleCenter,
-                             new Vector2(360f, 58f), new Vector2(.5f, .5f),
-                             new Vector2(0f, 140f * UIKit.PillFaceLift), 0f, 2f), 24);
+            // The money shop's header, exactly - the kit's ribbon with the word bent to its
+            // own curve and lifted onto the flag. Two shops one tap apart should not be two
+            // designs, and this was a wooden banner with brown lettering: the last thing on
+            // either screen still wearing the look that came before the kit.
+            var banner = UIKit.Img("Banner", Safe, Art.S("Ui/" + Skins.Title), Color.white,
+                                   new Vector2(440f, 104f), new Vector2(.5f, 1f), new Vector2(0f, -112f));
+            UIKit.Arced("Title", banner.transform, Loc.Get("ui.grove.shop").ToUpperInvariant(), 40,
+                        Pal.Sun, 620f, new Vector2(.5f, .5f),
+                        new Vector2(0f, 104f * Skins.RibbonLift), 3f, 3f, 2f);
 
             // The balance, because every price on this page is measured against it and a
             // player deciding between two pieces should not have to leave to find out.
-            var pillSize = new Vector2(212f, 76f);
+            // The money shop's balance pill, to the unit: the kit's trough drawn at white, the
+            // hub's own spinning coin 62 in from the edge (the trough clips 43 of each end
+            // whatever width it is drawn at), and no "+" - the panel a plus would open is the
+            // screen you are already standing on.
+            var pillSize = new Vector2(228f, 74f);
             var pillAnchor = new Vector2(1f, 1f);
-            var pill = UIKit.Img("Coins", Safe, Art.Round(22), new Color(.04f, .09f, .12f, .80f),
+            var pill = UIKit.Img("Coins", Safe, Art.S("Ui/" + Skins.Trough), Color.white,
                                  pillSize, pillAnchor, UIKit.Corner(pillSize, pillAnchor, 28f, 94f));
-            var edge = UIKit.Img("Edge", pill.transform, Art.RoundOutline(22, 3f), Pal.A(Pal.Gold, .45f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
 
-            var coin = UIKit.Img("Icon", pill.transform, null, Color.white, new Vector2(56f, 56f),
-                                 new Vector2(0f, .5f), new Vector2(42f, 0f));
+            var glow = UIKit.Img("Glow", pill.transform, Art.Glow(96, 2f), Pal.A(Pal.Gold, .22f),
+                                 new Vector2(96f, 96f), new Vector2(0f, .5f), new Vector2(62f, 0f));
+            glow.raycastTarget = false;
+
+            var coin = UIKit.Img("Icon", pill.transform, null, Color.white, new Vector2(48f, 48f),
+                                 new Vector2(0f, .5f), new Vector2(62f, 0f));
             coin.preserveAspect = true;
             Flipbook.Attach(coin, "Ui/Coin", 11f);
 
-            _coins = UIKit.Titled("V", pill.transform, Compact.Number(Profile.Coins), 32, Pal.Cream,
-                                  TextAnchor.MiddleCenter, new Vector2(112f, 46f), new Vector2(.5f, .5f),
-                                  new Vector2(14f, 0f), 3f, 3f);
+            _coins = UIKit.Titled("V", pill.transform, Compact.Number(Profile.Coins), 30, Pal.Cream,
+                                  TextAnchor.MiddleCenter, new Vector2(120f, 44f), new Vector2(.5f, .5f),
+                                  new Vector2(26f, 0f), 3f, 3f);
 
-            // The shelf's own name lives here rather than under its tab. Eight translated nouns
-            // across a 1080 phone is eight truncated words; one, under the tab row, is the line
-            // that says which shelf you are looking at — and it is the only place the count of
-            // what you hold on it can go without turning every cell into a receipt.
+            // **The shelf's name moved onto its tab and this line kept the count.** The old
+            // argument against naming the tabs was that nine translated nouns across a phone is
+            // nine truncated words - and the money shop names five, so the shape had to match.
+            // What makes it fit is that these nouns are short by design ("trees", "paths",
+            // "friends") on a plate 100 units wide. What could never go on a tab is how much of
+            // the shelf you already hold, which is the one number somebody comparing two pieces
+            // wants, so that is all this says now.
             _summary = UIKit.Shrinkable(
-                UIKit.Titled("Summary", Safe, string.Empty, 26,
-                             new Color(1f, .96f, .88f, .72f), TextAnchor.MiddleCenter,
-                             new Vector2(760f, 34f), new Vector2(.5f, 1f), new Vector2(0f, -216f), 3f, 0f), 18);
+                UIKit.Titled("Summary", Safe, string.Empty, 26, Pal.Cream, TextAnchor.MiddleCenter,
+                             new Vector2(760f, 34f), new Vector2(.5f, 1f), new Vector2(0f, -226f), 3f, 0f), 18);
 
             BuildTabs();
         }
@@ -413,6 +423,7 @@ namespace GlimmerGrove
         sealed class ShelfTab
         {
             readonly Image _plate, _edge, _mark;
+            readonly Text _name;
             readonly GroveShelf _shelf;
 
             public ShelfTab(RectTransform row, GroveShelf shelf, float step, float x, Action onTap)
@@ -423,58 +434,65 @@ namespace GlimmerGrove
                                         new Vector2(.5f, .5f), new Vector2(x, 0f), onTap);
                 cell.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
 
-                _plate = UIKit.Img("P", cell.transform, Art.Round(22), new Color(.06f, .12f, .16f, .72f),
-                                   new Vector2(step - 22f, TabRow - 16f), new Vector2(.5f, .5f),
-                                   Vector2.zero);
+                // The money shop's tab, which is the bar at the foot of the screen one level
+                // down: a rounded plate, a dark seat, a gold frame when it is the live one, the
+                // emblem hanging over the top edge and the name inside.
+                _plate = UIKit.Img("P", cell.transform, Art.Round(30), Skins.Plate,
+                                   new Vector2(step - 10f, TabRow - 18f), new Vector2(.5f, .5f),
+                                   new Vector2(0f, -4f));
 
-                _edge = UIKit.Img("E", _plate.transform, Art.RoundOutline(22, 2f),
-                                  new Color(1f, .97f, .90f, .12f));
-                UIKit.StretchTo((RectTransform)_edge.transform, 0, 0, 0, 0);
+                var seat = UIKit.Img("Seat", _plate.transform, Art.RoundOutline(30, 4f),
+                                     new Color(.02f, .06f, .13f, .85f));
+                UIKit.StretchTo((RectTransform)seat.transform, 0, 0, 0, 0);
+
+                _edge = UIKit.Img("E", _plate.transform, Art.RoundOutline(30, 6f), Skins.PlateEdge);
+                UIKit.StretchTo((RectTransform)_edge.transform, -2, -2, -2, -2);
+                _edge.enabled = false;
 
                 _mark = UIKit.Img("A", _plate.transform, null, Color.white,
-                                  new Vector2(TabRow - 40f, TabRow - 40f), new Vector2(.5f, .5f),
-                                  Vector2.zero);
+                                  new Vector2(92f, 92f), new Vector2(.5f, .5f), new Vector2(0f, 30f));
                 _mark.preserveAspect = true;
                 _mark.raycastTarget = false;
+
+                _name = UIKit.Shrinkable(
+                    UIKit.Titled("L", _plate.transform,
+                                 Loc.Get(GroveShelves.NameKey(shelf)).ToUpperInvariant(),
+                                 20, Pal.Cream, TextAnchor.MiddleCenter,
+                                 new Vector2(step - 16f, 28f), new Vector2(.5f, 0f),
+                                 new Vector2(0f, 19f), 3f, 2f), 11);
+                _name.raycastTarget = false;
             }
 
             /// <summary>
-            /// Whether this tab was live the last time it was painted, and whether it has ever
-            /// been painted at all.
+            /// Restyles the tab.
             ///
             /// <para>
-            /// <see cref="GridView"/>'s <c>Show</c>/<c>Refresh</c> rule, on a control rather
-            /// than on a list, and it is here for exactly the reason it is there: this row is
-            /// repainted by <em>events</em> — a balance moving, a ledger changing, a run
-            /// finishing, the shelf's atlas landing — and every one of those was replaying the
-            /// selected tab's entrance. Tapping a tab fires two of them back to back (the
-            /// reload, then the atlas callback), which is the flicker.
+            /// <b>Nothing here animates and nothing here changes size, which is the money
+            /// shop's rule and the end of a bug this class carried twice.</b> The live tab used
+            /// to spring from .86, and because <c>Tween.Pop</c> reads the transform's current
+            /// scale as the size to spring back to, a second pop landing inside the first one's
+            /// 0.3s captured a half-sprung scale as its new resting size — so a tab ended up
+            /// permanently smaller, and smaller again on the next one. That was patched by
+            /// resetting the scale first; it is now fixed by there being no scale to reset.
+            /// Reported from play both times, as filter buttons that shrank and then as one tab
+            /// smaller than its neighbours.
             /// </para>
-            /// </summary>
-            bool _live, _painted;
-
-            /// <summary>
-            /// Restyles the tab, and animates only when its selected-ness has actually moved.
-            ///
             /// <para>
-            /// Colours and sprites are assigned unconditionally because they are idempotent —
-            /// Unity's own setters compare before dirtying a mesh. The <em>animation</em> is
-            /// the part that must not repeat.
+            /// <c>_painted</c> and <c>_live</c> go with it: the assignments below are
+            /// idempotent (Unity's own setters compare before dirtying a mesh), so there is
+            /// nothing left that must not repeat.
             /// </para>
             /// </summary>
             public void Restyle(bool live)
             {
                 if (!_plate) return;
 
-                bool moved = !_painted || live != _live;
-                _painted = true;
-                _live = live;
-
-                _plate.color = live ? new Color(.10f, .26f, .27f, .96f)
-                                    : new Color(.06f, .12f, .16f, .72f);
-
-                _edge.sprite = Art.RoundOutline(22, live ? 3f : 2f);
-                _edge.color = live ? Pal.A(Pal.Mint, .70f) : new Color(1f, .97f, .90f, .12f);
+                // Selection is the plate's colour and its gold frame, never the emblem: two of
+                // these nine marks are painted pictures and the rest are flat, so anything
+                // leaning on a tint reads differently depending on which tab you stand on.
+                _plate.color = live ? new Color(.098f, .467f, .757f, 1f) : Skins.Plate;
+                _edge.enabled = live;
+                _name.color = live ? Pal.Sun : Pal.Cream;
 
                 // The emblem comes out of the tab row's own little atlas, so a tab can be drawn
                 // before its shelf has been loaded — which is the whole point, since a tab has
@@ -484,28 +502,9 @@ namespace GlimmerGrove
                 var mark = _shelf == GroveShelf.Land ? Art.IsoTile(128) : HomesteadArt.ShelfMark(_shelf);
                 _mark.sprite = mark;
                 _mark.preserveAspect = true;
-                _mark.color = mark == null
-                    ? new Color(1f, 1f, 1f, 0f)
-                    : _shelf == GroveShelf.Land
-                        ? (live ? Pal.Verdant : Pal.A(Pal.Verdant, .55f))
-                        : (live ? Color.white : new Color(1f, 1f, 1f, .55f));
-
-                if (!live || !moved) return;
-
-                // Reset before popping, and that is not tidiness — it is the bug this fixes.
-                //
-                // Tween.Pop reads the transform's *current* scale as the size to spring back
-                // to. A second pop landing inside the first one's 0.3s therefore captures a
-                // half-sprung scale as its new resting size and springs to that instead of to
-                // one, so the tab ends up permanently smaller — and smaller again on the next
-                // one, because the mistake compounds. Reported from play as filter buttons
-                // shrinking. The channel does not save it: killing the old tween is exactly
-                // what leaves the transform mid-flight for the new one to read.
-                //
-                // The same hazard HomesteadScreen records for Tween.Breathe on an empty tile's
-                // ring, in the other place a repeated animation reads its own start state.
-                _plate.transform.localScale = Vector3.one;
-                Tween.Pop(_plate.transform, .86f, .3f);
+                _mark.color = mark == null ? new Color(1f, 1f, 1f, 0f)
+                            : _shelf == GroveShelf.Land ? Pal.Verdant
+                            : Color.white;
             }
         }
 

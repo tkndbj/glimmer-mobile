@@ -953,20 +953,30 @@ def pngs(z, prefix):
 def ward_model(z, model, frame=0):
     """One of the roster's twenty turrets, cut clean of its number plate and fitted to the ward box.
 
-    <b>The plate is cropped rather than detected</b> - see `WARD_PLATE`. Every sprite in the pack is
-    one 500x500 layout, so the cut is the same on all twenty, and the edge it leaves sits behind the
-    plinth the view already draws.
+    <b>Cut at the model's own base rather than at `WARD_PLATE`, and that was reported from a
+    phone.</b> A straight crop at a measured height was written on the argument that the edge it
+    leaves sits behind the plinth the view draws - and it does not: the plate *overlaps* the
+    turret's lower body, so cutting above the plate cuts the body, and what shipped was four
+    turrets on a ward line with their bases sliced flat. `body_base` finds where the silhouette
+    itself ends and `undigited` wipes the baked figure that is then still in shot.
+
+    **The base is measured on frame nought and used for every frame**, or a recoil whose barrel
+    moved would be cut a pixel differently from the one before it and the line would flicker.
 
     **Fitted to one box, pinned by its foot**, which is `turret`'s rule for the same reason: the
     twenty differ mostly at the top - a taller barrel, a second mount - and a turret that rose off
     its plinth when the player swapped it would read as the plinth having sunk.
     """
+    base = body_base(read(z, "Merge Turrets/Png/Turrets/%s/%s-Shoot_00.png" % (model, model))) + 6
+
     im = read(z, "Merge Turrets/Png/Turrets/%s/%s-Shoot_%02d.png" % (model, model, frame))
-    im = im.crop((0, 0, im.width, min(im.height, WARD_PLATE)))
+    im = im.crop((0, 0, im.width, min(im.height, base)))
 
     box = im.getbbox()
     if box is not None:
         im = im.crop(box)
+
+    im = undigited(im)
 
     out = Image.new("RGBA", (WARD_W, WARD_H), (0, 0, 0, 0))
     ratio = min(WARD_W / max(1, im.width), WARD_H / max(1, im.height)) * 0.94
@@ -976,16 +986,83 @@ def ward_model(z, model, frame=0):
     return out
 
 
+def body_base(im):
+    """The row the turret's own silhouette ends on, ignoring what hangs below it.
+
+    `WARD_PLATE` is a straight crop at a measured height, which is right on the board because
+    the view draws a plinth over the cut edge - and wrong on a shelf, where there is no plinth
+    and the cut reads as a turret with its feet chopped off. What is wanted here is the model's
+    own base, so this walks up from the bottom to the last row still carrying most of the
+    widest run: below that there is nothing but the pack's number plate, which is narrow.
+    """
+    px = im.load()
+    wide = [sum(1 for x in range(im.width) if px[x, y][3] > 40) for y in range(im.height)]
+    most = max(wide) if wide else 0
+
+    for y in range(len(wide) - 1, -1, -1):
+        if wide[y] >= most * 0.62:
+            return y
+
+    return im.height - 1
+
+
+def undigited(im):
+    """The pack's baked level number wiped out of its window.
+
+    **The plate cannot be cropped away, because it overlaps the turret's own base** - crop above
+    it and the model loses its feet, crop below it and the digit ships. So the digit goes and
+    the window stays: it is exactly `(255, 255, 0)` in every one of the twenty, drawn on the
+    plate's black, and nothing else in the kit is pure yellow. What is left reads as a dark
+    vent, which is what it looks like anyway.
+
+    It has to go because a ward's number is its **rank**, drawn at run time on the crest at its
+    shoulder - two numbers on one turret is two readouts nobody can read (invariant 37y), and a
+    shelf showing every model wearing a different baked figure is twenty of them.
+    """
+    out = im.copy()
+    px = out.load()
+
+    # The digit's own extent first, off the one colour that is exact. Its antialiasing is not
+    # exact and would survive a colour test, so what is wiped is the *box* it stands in grown by
+    # a few pixels - which is still comfortably inside the window, because the pack sets every
+    # figure with a margin. Wiping a box rather than a colour is also what makes this safe on the
+    # models whose bodies are themselves orange.
+    x0, y0, x1, y1 = out.width, out.height, -1, -1
+    for y in range(out.height):
+        for x in range(out.width):
+            r, g, b, a = px[x, y]
+            if a > 40 and r > 210 and g > 210 and b < 90:
+                if x < x0: x0 = x
+                if y < y0: y0 = y
+                if x > x1: x1 = x
+                if y > y1: y1 = y
+
+    if x1 < 0:
+        return out
+
+    pad = 3
+    for y in range(max(0, y0 - pad), min(out.height, y1 + pad + 1)):
+        for x in range(max(0, x0 - pad), min(out.width, x1 + pad + 1)):
+            a = px[x, y][3]
+            if a > 40:
+                px[x, y] = (0, 0, 0, a)
+
+    return out
+
+
 def ward_thumb(z, model):
-    """The one uncoloured picture the loadout shelf browses a turret with."""
+    """The one uncoloured picture the loadout shelf browses a turret with.
+
+    **The whole turret, which is not what the board draws.** See `body_base` and `undigited`.
+    """
     im = read(z, "Merge Turrets/Png/Turrets/%s/%s-Shoot_00.png" % (model, model))
-    im = im.crop((0, 0, im.width, min(im.height, WARD_PLATE)))
+    im = im.crop((0, 0, im.width, min(im.height, body_base(im) + 6)))
 
     box = im.getbbox()
     if box is not None:
         im = im.crop(box)
 
-    return fit(im, THUMB, 0.94)
+    return fit(undigited(im), THUMB, 0.94)
 
 
 def cog():

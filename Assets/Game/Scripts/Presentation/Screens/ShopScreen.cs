@@ -130,7 +130,7 @@ namespace GlimmerGrove
             // *place* is that it is somewhere. The room is dark, out of focus and has nothing
             // in its middle, which is what lets it be a place and still not compete.
             // </para>
-            Scenery.Room(Content);
+            Scenery.Plain(Content);
 
             BuildGrid();
             BuildHeader();
