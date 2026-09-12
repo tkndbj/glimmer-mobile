@@ -44,7 +44,7 @@ namespace GlimmerGrove
     public sealed class UtilityBar : MonoBehaviour
     {
         /// <summary>
-        /// How tall the bar is. What a screen has to leave under its board.
+        /// The cell band: how much of the bar holds slots, above whatever the system has taken.
         ///
         /// <para>
         /// <b>It fills the room under the board rather than sitting in it.</b> The first cut was a
@@ -60,7 +60,52 @@ namespace GlimmerGrove
         /// agree or the cells sit off the plate.
         /// </para>
         /// </summary>
-        public const float Height = 228f;
+        public const float Shelf = 228f;
+
+        /// <summary>
+        /// The most of the display's own bottom inset the bar keeps clear under its cells.
+        ///
+        /// <para>
+        /// <b>A ceiling rather than the inset itself, and the difference is 70 points of board.</b>
+        /// The bar used to hang off the safe layer, so an iPhone's home-indicator strip — 94 units
+        /// of it — sat *below* the shelf as a band of backdrop with nothing in it, which is what
+        /// was reported from a device: a gap at the foot of the screen. Honouring the inset in
+        /// full would fill that band with plate and give the board back nothing, because the cells
+        /// would stay exactly where they are; giving it up in full would put a cell's rim on the
+        /// indicator itself, where iOS's own swipe-up gesture lives.
+        /// </para>
+        /// <para>
+        /// So the shelf runs to the physical bottom of the display and the <em>cells</em> stand
+        /// this far above it. Twenty-four units is about nine points: the indicator pill sits in
+        /// the bottom five or so, and a cell's lower rim already carries twenty-two of its own,
+        /// so nothing tappable lands on the pill and everything above it is board.
+        /// </para>
+        /// </summary>
+        const float MostFoot = 24f;
+
+        /// <summary>How far the cells stand above the physical bottom of the display.</summary>
+        public static float Foot => Mathf.Min(SafeArea.Bottom, MostFoot);
+
+        /// <summary>
+        /// The whole bar, measured from the bottom of the <em>display</em> — what
+        /// <see cref="Build"/> makes its rect.
+        ///
+        /// It hangs off <c>View.Content</c> rather than off the safe layer for the reason the
+        /// safe layer's own remarks give: only what a player reads or presses belongs inside the
+        /// inset, and a flat plate under a home indicator is exactly the full-bleed case. The
+        /// cells are what the inset is for, and <see cref="Foot"/> is what they get.
+        /// </summary>
+        public static float Height => Shelf + Foot;
+
+        /// <summary>
+        /// What a board laid out <em>inside</em> the safe layer has to leave under it.
+        ///
+        /// <b>Read rather than assumed, because the two are not the same number.</b> A screen
+        /// insetting its host by <see cref="Height"/> would leave the display's own foot under the
+        /// board twice — once here and once in the safe layer — and lose it off the bottom of the
+        /// board. On a display with nothing in the way both answers are <see cref="Shelf"/>.
+        /// </summary>
+        public static float Room => Mathf.Max(0f, Height - SafeArea.Bottom);
 
         /// <summary>
         /// How many cells the shelf holds, whatever the catalog currently fills.
@@ -84,6 +129,27 @@ namespace GlimmerGrove
 
         const float IconSize = 136f, BadgeSize = 60f;
 
+        /// <summary>
+        /// What an <em>empty</em> cell draws instead: a smaller picture, lifted, with room under
+        /// it for the caption that says what a tap does.
+        ///
+        /// <para>
+        /// <b>Measured against the well rather than against the cell.</b> The slot sprite's rim
+        /// is nine units at the sides, thirteen at the top and fourteen at the foot
+        /// (<c>Tools/make_utility_art.slot</c>), so the well a cell can actually draw in runs
+        /// y ∈ [-77, +79] and x ∈ [-83, +83]. At these figures the picture takes [-14, +74] and
+        /// the caption [-69, -21], which leaves both inside the well and seven units between them.
+        /// A <c>UIKit.Label</c> that overflows is not clipped — it keeps drawing, out over the
+        /// cell beside it (the toast's lesson, invariant 37n) — so the caption is
+        /// <see cref="UIKit.Shrinkable"/> as well, and a language that needs two lines gets
+        /// them rather than a sentence across the shelf.
+        /// </para>
+        /// </summary>
+        const float EmptyIconSize = 88f, EmptyIconLift = 30f;
+
+        /// <summary>The caption band at the foot of an empty cell.</summary>
+        const float HintW = 156f, HintH = 48f, HintY = -45f;
+
         sealed class Slot
         {
             public UtilityItem Item;
@@ -93,6 +159,9 @@ namespace GlimmerGrove
             public Image Badge;
             public Text Count;
             public CanvasGroup Group;
+
+            /// <summary>TAP TO BUY, drawn only while the cell is empty and the thing is sold.</summary>
+            public Text Hint;
 
             /// <summary>The wedge over the cell, radial-filled from what is left to wait.</summary>
             public Image Sweep;
@@ -170,8 +239,11 @@ namespace GlimmerGrove
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = new Vector2(0f, Height);
 
-            // The shelf itself, stretched over the whole bar. One sprite rather than a nine-slice
-            // because nothing here writes a sprite border — see the art tool.
+            // The shelf itself, stretched over the whole bar — the display's own foot included,
+            // which is what stops the strip under the cells reading as a gap. One sprite rather
+            // than a nine-slice because nothing here writes a sprite border, and stretching it is
+            // safe because it is a flat plate: a lit line along the top, a face, and a shaded lip.
+            // See the art tool.
             var plate = UIKit.Img("Tray", rt, Art.S("Ui/Utility/tray"), Color.white);
             plate.rectTransform.anchorMin = Vector2.zero;
             plate.rectTransform.anchorMax = Vector2.one;
@@ -209,9 +281,14 @@ namespace GlimmerGrove
             // assuming the canvas's own reference width.
             float share = (2f * index + 1f) / (2f * Slots);
 
+            // **Centred in the cell band, not in the bar.** The bar's rect runs to the bottom of
+            // the display so the plate has no gap under it; the cells sit in the top
+            // <see cref="Shelf"/> of it, above <see cref="Foot"/>. Anchored to the bar's own foot
+            // rather than to its middle, because the middle moves with the inset and the cells
+            // must not.
             slot.Button = UIKit.Button("Slot" + index, _row, Art.S("Ui/Utility/slot"),
-                                       Vector2.one * SlotSize, new Vector2(share, .5f),
-                                       Vector2.zero, () => Tap(slot));
+                                       Vector2.one * SlotSize, new Vector2(share, 0f),
+                                       new Vector2(0f, Foot + Shelf * .5f), () => Tap(slot));
 
             slot.Button.PressScale = item == null ? 1f : .95f;
             if (item == null) slot.Button.ClickSfx = null;
@@ -283,6 +360,28 @@ namespace GlimmerGrove
                              new Vector2(.5f, .5f), Vector2.zero, outline: 3f, shadow: 3f), 28);
             slot.Clock.fontStyle = FontStyle.Bold;
             slot.Clock.enabled = false;
+
+            // **The caption under an empty cell, and it is the one thing on this bar that says
+            // out loud what a tap does.** An empty slot has always been the shop
+            // (see <see cref="Tap"/>), and it said so only by being dim — which is a state
+            // rather than an invitation, so the one route to buying more was a picture with
+            // nothing on it. It is drawn over the well rather than under the cell because
+            // there is no room under the cell: the shelf leaves twenty-two units either side
+            // of a slot, and a `UIKit.Label` that overflows is not clipped (invariant 37n).
+            //
+            // Built for every sellable slot and shown by `Paint`, never rebuilt — invariant
+            // 16d's distinction, which is why the picture is *moved* between its two places
+            // rather than the cell being made again.
+            if (item.ForSale)
+            {
+                slot.Hint = UIKit.Shrinkable(
+                    UIKit.Titled("Hint", slot.Button.transform, Loc.Get("ui.utility.tap_to_buy"),
+                                 26, Pal.Sun, TextAnchor.MiddleCenter,
+                                 new Vector2(HintW, HintH), new Vector2(.5f, .5f),
+                                 new Vector2(0f, HintY), outline: 3f, shadow: 0f, wrap: true), 14);
+                slot.Hint.fontStyle = FontStyle.Bold;
+                slot.Hint.enabled = false;
+            }
 
             return slot;
         }
@@ -365,6 +464,22 @@ namespace GlimmerGrove
                 // and the wedge is drawn over a picture at full strength. Caught by
                 // `Tools/render_siege.py --cooling` and by nothing else.
                 slot.Face.color = held > 0 ? Color.white : new Color(1f, 1f, 1f, .36f);
+
+                // **The caption, and the picture moving to make room for it.** Shown only when
+                // the cell is empty *and* the thing can actually be bought — a chest-only
+                // utility invited to a shop it cannot be had from would be the panel lying
+                // before it opened — and never while the cell is cooling, because the clock is
+                // drawn across the same middle at font 56 and two readouts over one cell are
+                // two readouts nobody can read (invariant 37u, on a slot). The two states can
+                // genuinely overlap: the use that started the cooldown may have been the last
+                // one held.
+                bool inviting = held <= 0 && !cooling && slot.Item.ForSale;
+
+                if (slot.Hint != null) slot.Hint.enabled = inviting;
+
+                var face = slot.Face.rectTransform;
+                face.sizeDelta = Vector2.one * (inviting ? EmptyIconSize : IconSize);
+                face.anchoredPosition = new Vector2(0f, inviting ? EmptyIconLift : 0f);
 
                 Sweep(slot);
 

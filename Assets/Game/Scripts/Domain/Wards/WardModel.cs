@@ -39,7 +39,9 @@ namespace GlimmerGrove.Wards
         /// <summary>
         /// How strong the ability is, in tenths of whatever it measures: tenths of a baseline bolt
         /// for the ones that deal damage, tenths of a march for frost, tenths of a fuel unit for
-        /// siphon, tenths of a capacity for a beacon.
+        /// siphon, tenths of a capacity for a beacon, tenths of a bolt bitten deeper into plating
+        /// for a rend — and for a prism alone it is not tenths at all but a <em>count</em>, of how
+        /// many colours besides its own it is strong against.
         ///
         /// <b>Tenths throughout, and never a float.</b> Everything this multiplies ends up in a
         /// graded number, and a threshold decided by a float is a number three code generators
@@ -57,6 +59,50 @@ namespace GlimmerGrove.Wards
         /// on the ability, which is where a reader is already looking.
         /// </summary>
         public readonly int Extent;
+
+        /// <summary>
+        /// What this turret's bolt is worth, in tenths of the baseline one.
+        ///
+        /// <para>
+        /// <b>Ten is the floor and the data cannot express less</b> — <see cref="Power"/> clamps
+        /// it — which is the same rule <see cref="WardAbility"/> is built around, moved onto the
+        /// one number that could otherwise break it. A siege's par is the hill's health over
+        /// <c>SiegeTuning.PerfectMatch</c>, computed against the <em>baseline</em> bolt, so a
+        /// turret that hit softer would need more matches than par assumes and push three stars
+        /// out of reach of whoever bought it. That is a grade decided by a purchase, and a grade
+        /// reaches a public leaderboard (invariant 19a).
+        /// </para>
+        /// <para>
+        /// <b>So a roster where turrets differ in damage is built upward from the baseline, never
+        /// down from an average.</b> What a player reads as "the mortar hits softer than the
+        /// cleaver" is the mortar sitting <em>at</em> the floor while the cleaver stands above it
+        /// — the same spread on the card, and no level's par moves. Above only ever makes par
+        /// over-state what a good run needs, which is the direction invariant 22 says to err in
+        /// and what invariant 37w already accepted when cogs shipped.
+        /// </para>
+        /// </summary>
+        public readonly int PowerTenths;
+
+        /// <summary>
+        /// How much this turret can take before it falls, in tenths of the baseline.
+        ///
+        /// <para>
+        /// <b>This one is allowed below ten, and that asymmetry is the whole trade.</b> Health
+        /// reaches nothing that is graded: par is counted in matches, the star lines are multiples
+        /// of par, and what a run is worth does not ask whether the line survived comfortably. So
+        /// a turret may be bought that hits harder and falls sooner, and a player who stands four
+        /// of them has made a choice they can be wrong about — which is what invariant 26h asks of
+        /// anything on this shelf.
+        /// </para>
+        /// <para>
+        /// <b>Bounded rather than free, because the one thing it must not do is make a rung
+        /// impossible.</b> <c>SiegeTuning.LeastGuardTenths</c> is the floor and
+        /// <c>SiegeRuleTests</c> plays the whole chapter with a line of the flimsiest turret in
+        /// the roster: measuring says a fragile line is a harder game, and only that says it is
+        /// still a game.
+        /// </para>
+        /// </summary>
+        public readonly int GuardTenths;
 
         /// <summary>What one costs in gems. Nought means it cannot be bought with gems.</summary>
         public readonly int GemPrice;
@@ -92,7 +138,8 @@ namespace GlimmerGrove.Wards
         public readonly int Order;
 
         public WardModel(string id, WardAbility ability, int magnitude, int extent,
-                         int gemPrice, int coinPrice, int minLevel, int order)
+                         int gemPrice, int coinPrice, int minLevel, int order,
+                         int powerTenths = Baseline, int guardTenths = Baseline)
         {
             Id = id ?? string.Empty;
             Ability = ability;
@@ -102,7 +149,26 @@ namespace GlimmerGrove.Wards
             CoinPrice = coinPrice < 0 ? 0 : coinPrice;
             MinLevel = minLevel < 0 ? 0 : minLevel;
             Order = order;
+
+            // **Clamped here rather than checked at a call site**, so "no turret hits softer than
+            // the baseline" is a fact about the type and not a rule somebody has to remember. A
+            // content push that authors nought gets the baseline, which is what an older file and
+            // a rolled-back client both mean by leaving the field out.
+            PowerTenths = powerTenths < Baseline ? Baseline : powerTenths;
+            GuardTenths = guardTenths <= 0 ? Baseline : guardTenths;
         }
+
+        /// <summary>
+        /// The tenths a turret that is neither tougher nor harder-hitting than the yardstick
+        /// carries. The starter's, and what an unauthored field means.
+        /// </summary>
+        public const int Baseline = 10;
+
+        /// <summary>What its bolt is worth against the baseline: 1.0 for the starter.</summary>
+        public float Power => PowerTenths / (float)Baseline;
+
+        /// <summary>What it can take against the baseline: 1.0 for the starter.</summary>
+        public float Guard => GuardTenths / (float)Baseline;
 
         /// <summary>The loc key for its name. Derived, never authored (invariant 5a).</summary>
         public string NameKey => "ward." + Id + ".name";
@@ -130,10 +196,26 @@ namespace GlimmerGrove.Wards
         public string FireFor(char colour) => "Wards/" + Id + "_" + colour + "_fire";
 
         /// <summary>
-        /// The one turret whose bolt is a <em>different element on each colour</em> — a fireball
-        /// on red, a venom dart on green, an ice shard on blue, a bolt of lightning on yellow.
+        /// The one turret that draws the shared <c>shot_{colour}</c> reels rather than four of its
+        /// own — a fireball, in whichever colour its ward burns.
         ///
         /// <para>
+        /// <b>It was four different elements and the owner had it made one.</b> The set began as
+        /// fire, venom, ice and lightning, one per ward colour, which was right while the
+        /// <em>starter</em> threw them: a line of four starters put four silhouettes in the air at
+        /// once. Once the set moved onto a bought turret only this model drew it, so the four never
+        /// appeared together except on a player who had bought the same turret for all four seats —
+        /// where they read as four unrelated weapons wearing one name. Reported off the preview
+        /// panel as the red Breaker doing a different animation from the orange one. See
+        /// <c>SiegeShotBake.Shots</c>.
+        /// </para>
+        ///
+        /// <para>
+        /// <b>It has now moved twice, which is the argument for naming it rather than deriving
+        /// it.</b> The owner put the elemental set on `rime` and has since moved it to `breaker`,
+        /// giving both frost rungs a white snowball instead - so the turret that draws the four
+        /// elements is a <em>rend</em> turret today and nothing about a model says so.
+        ///
         /// <b>Named outright, because it stopped being derivable.</b> It used to be read off the
         /// ability — a turret with no ability has nothing to depict, so it fired what the colour
         /// fired — and that was honest for exactly as long as the starter was the only model
@@ -151,7 +233,7 @@ namespace GlimmerGrove.Wards
         /// somebody pays credits for.
         /// </para>
         /// </summary>
-        public const string Elemental = "rime";
+        public const string Elemental = "breaker";
 
         /// <summary>
         /// Whether this turret throws one effect of its own in four colours, rather than the four
@@ -205,6 +287,7 @@ namespace GlimmerGrove.Wards
         public string Thumb => "Wards/" + Id;
 
         public override string ToString()
-            => Id + " (" + WardAbilities.NameOf(Ability) + " " + Magnitude + "/" + Extent + ")";
+            => Id + " (" + WardAbilities.NameOf(Ability) + " " + Magnitude + "/" + Extent
+             + ", power " + PowerTenths + ", guard " + GuardTenths + ")";
     }
 }

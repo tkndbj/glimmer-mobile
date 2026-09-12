@@ -103,12 +103,16 @@ namespace GlimmerGrove.Tests
                 },
                 homesteadOwned = new[] { "bench_oak", "lantern_post" },
                 groveLandOwned = new[] { "r_north", "r_east" },
+                groveEpoch = Homestead.GroveEpoch.Current,
+                groveHall = "t_009_004",
+                groveHallFacing = 2,
+                groveHallSetUnix = 1_699_100_000,
                 homesteadPlaced = new[]
                 {
                     new HomesteadPlacementDto { slot = "t_006_006", piece = "bench_oak", setUnix = 1_699_000_000 },
                     new HomesteadPlacementDto
                     {
-                        slot = "t_007_006", piece = "lantern_post", setUnix = 1_699_000_500, flipped = true,
+                        slot = "t_007_006", piece = "lantern_post", setUnix = 1_699_000_500, facing = 3,
                     },
                 },
                 utilityStock = new[]
@@ -135,6 +139,14 @@ namespace GlimmerGrove.Tests
                 endlessBest = new[]
                 {
                     new EndlessBestDto { level = "s02_endless", wave = 23 },
+                },
+
+                // Two seats of one turret at different stars, which is the shape that would catch
+                // a mapper keyed on the turret rather than on the holding.
+                wardStars = new[]
+                {
+                    new WardStarDto { ward = "mortar:b", stars = 5 },
+                    new WardStarDto { ward = "mortar:r", stars = 3 },
                 },
             };
         }
@@ -337,15 +349,28 @@ namespace GlimmerGrove.Tests
             CollectionAssert.AreEqual(new[] { "bench_oak", "lantern_post" }, restored.homesteadOwned);
             CollectionAssert.AreEqual(new[] { "r_north", "r_east" }, restored.groveLandOwned);
 
+            // Which generation of the catalogue the grove belongs to. It has to reach the
+            // server or the reset does not stick: a device that discarded an older grove
+            // pushes an empty one, and without the stamp beside it the server's copy still
+            // claims the older epoch and wins the next join back. See GroveEpoch.
+            Assert.AreEqual(Homestead.GroveEpoch.Current, restored.groveEpoch);
+
+            // Where the player moved their home. An instruction rather than an
+            // achievement, so the stamp travels with it or the merge has nothing to
+            // decide by and every seat loses to whichever file was written last.
+            Assert.AreEqual("t_009_004", restored.groveHall);
+            Assert.AreEqual(2, restored.groveHallFacing);
+            Assert.AreEqual(1_699_100_000, restored.groveHallSetUnix);
+
             Assert.AreEqual(2, restored.homesteadPlaced.Length);
             Assert.AreEqual("t_006_006", restored.homesteadPlaced[0].slot);
             Assert.AreEqual("bench_oak", restored.homesteadPlaced[0].piece);
             Assert.AreEqual(1_699_000_000, restored.homesteadPlaced[0].setUnix);
-            Assert.IsFalse(restored.homesteadPlaced[0].flipped);
+            Assert.AreEqual(0, restored.homesteadPlaced[0].facing);
 
             // A piece that comes back facing the other way is the same loss as one that comes
             // back missing, only quieter.
-            Assert.IsTrue(restored.homesteadPlaced[1].flipped);
+            Assert.AreEqual(3, restored.homesteadPlaced[1].facing);
 
             CollectionAssert.AreEqual(new[] { "duskcap", "taproot" }, restored.tipsSeen);
         }

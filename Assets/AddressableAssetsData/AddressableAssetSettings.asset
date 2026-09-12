@@ -68,13 +68,13 @@ MonoBehaviour:
   m_BuildAddressablesWithPlayerBuild: 1
   m_overridePlayerVersion: '[UnityEditor.PlayerSettings.bundleVersion]'
   m_GroupAssets:
-  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
   - {fileID: 11400000, guid: 47c46bda514740a4dbc05a44d4a23ac8, type: 2}
   - {fileID: 11400000, guid: 4d5a579f47b771f40be12597dc3a83b4, type: 2}
   - {fileID: 11400000, guid: 984a834b48cbf384482d9e2e9aebfe5d, type: 2}
   - {fileID: 11400000, guid: 82cde781aeb2b8c47a1f377b73392623, type: 2}
-  - {fileID: 11400000, guid: 5e8a41f35fab60c4ab9e941e3a2c58f5, type: 2}
+  - {fileID: 11400000, guid: b92e976ef28c68c42becd8a3e8622ca7, type: 2}
   - {fileID: 11400000, guid: eb66a2de3aecee54b8958759c2eff7bc, type: 2}
+  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
   - {fileID: 11400000, guid: d66337f20f2bdd44d867926ead515cc3, type: 2}
   m_BuildSettings:
     m_LogResourceManagerExceptions: 1
@@ -705,6 +705,104 @@ MonoBehaviour:
     - Art/Fx/Siege/shot_bolt_g
     - Art/Fx/Siege/shot_bolt_r
     - Art/Fx/Siege/shot_bolt_y
+    - Art/Siege/kayBrute_b
+    - Art/Siege/kayBrute_g
+    - Art/Siege/kayBrute_r
+    - Art/Siege/kayBrute_y
+    - Art/Siege/kayBulwark_b
+    - Art/Siege/kayBulwark_g
+    - Art/Siege/kayBulwark_r
+    - Art/Siege/kayBulwark_y
+    - Art/Siege/kayMon_b
+    - Art/Siege/kayMon_g
+    - Art/Siege/kayMon_r
+    - Art/Siege/kayMon_y
+    - Art/Homestead/target
+    - Art/Homestead/house_large_red
+    - Art/Homestead/mine
+    - Art/Siege/broodBulwark_b
+    - Art/Siege/broodBulwark_g
+    - Art/Homestead/step_ladder
+    - Art/Homestead/crate_produce
+    - Art/Siege/broodBrute_b
+    - Art/Homestead/wall_barbican
+    - Art/Homestead/wall_elbow
+    - Art/Siege/broodMon_y
+    - Art/Siege/broodBulwark_y
+    - Art/Siege/broodMon_g
+    - Art/Homestead/catapult
+    - Art/Homestead/grain_sack
+    - Art/Homestead/wheelbarrow
+    - Art/Siege/broodBrute_g
+    - Art/Homestead/fence_stone
+    - Art/Homestead/house_large_green
+    - Art/Siege/broodMon_r
+    - Art/Homestead/pine_copse
+    - Art/Homestead/watermill
+    - Art/Siege/broodBrute_r
+    - Art/Siege/broodMon_b
+    - Art/Homestead/church
+    - Art/Homestead/pine_stand
+    - Art/Homestead/fence_stone_gate
+    - Art/Homestead/pine_wood
+    - Art/Homestead/watchtower
+    - Art/Homestead/stone_pile
+    - Art/Siege/broodBrute_y
+    - Art/Homestead/barracks
+    - Art/Homestead/crate_empty
+    - Art/Homestead/crate_wares
+    - Art/Homestead/village_well
+    - Art/Homestead/crate_open
+    - Art/Homestead/bridge_span
+    - Art/Homestead/fir_stump
+    - Art/Homestead/house_small_yellow
+    - Art/Siege/broodBulwark_r
+    - Art/Homestead/fir
+    - Art/Homestead/clearing_pine
+    - Art/Homestead/house_small_red
+    - Art/Homestead/pine_stump
+    - Art/Homestead/pine_tree
+    - Art/Homestead/pallet
+    - Art/Homestead/wall
+    - Art/Homestead/smithy
+    - Art/Homestead/lumber_pile
+    - Art/Homestead/house_small_green
+    - Art/Homestead/pennant_green
+    - Art/Homestead/crate_bread
+    - Art/Homestead/fir_copse
+    - Art/Homestead/market_table
+    - Art/Homestead/pennant_gold
+    - Art/Homestead/scaffold
+    - Art/Homestead/pennant_red
+    - Art/Homestead/fence_wood
+    - Art/Homestead/fence_wood_gate
+    - Art/Homestead/stage_round
+    - Art/Homestead/bridge_stone
+    - Art/Homestead/wall_turn
+    - Art/Homestead/wall_gate
+    - Art/Homestead/fir_wood
+    - Art/Homestead/wall_corner
+    - Art/Homestead/windmill
+    - Art/Homestead/house_large_yellow
+    - Art/Homestead/market
+    - Art/Homestead/wall_bend
+    - Art/Homestead/weapon_rack
+    - Art/Homestead/archery
+    - Art/Homestead/clearing_fir
+    - Art/Homestead/stage_long
+    - Art/Homestead/ruin
+    - Art/Homestead/fir_stand
+    - Art/Homestead/sawmill
+    - Art/Homestead/pennant_blue
+    - Art/Homestead/stage_tiered
+    - Art/Homestead/citadel
+    - Art/Homestead/home_barracks
+    - Art/Homestead/home_farmhouse
+    - Art/Homestead/home_cottage
+    - Art/Homestead/home_citadel
+    - Art/Homestead/tower_stone
+    - Art/Homestead/tower_round
+    - Art/Homestead/tavern
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1c550e3b8c7244948b0ae7d2fbce14c6, type: 2}

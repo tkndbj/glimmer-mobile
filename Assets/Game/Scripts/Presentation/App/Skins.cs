@@ -110,6 +110,47 @@ namespace GlimmerGrove
         public const string Gem = "btn_violet";
 
         /// <summary>
+        /// The key that does the thing a panel exists for, whether or not it costs — the turret
+        /// preview's UPGRADE and its price, and the upgrade panel's own.
+        ///
+        /// <para>
+        /// <b>A role of its own rather than <see cref="Buy"/> turned green</b>, because the price
+        /// pill is on the real-money storefront as well (<c>ProductCard</c>) and repainting every
+        /// product card is not what was asked for. It is the same argument <see cref="Battle"/>
+        /// makes: a screen's own affirmative is a role, and a role gets a name.
+        /// </para>
+        /// <para>
+        /// <b>The same green as <see cref="Settled"/> today, and the two are not the same
+        /// thing.</b> That one says <em>this is already so</em> and this one says <em>do it</em>,
+        /// and a player who taps one turret that is for sale and the next one that is equipped
+        /// sees one colour meaning both — which is precisely the confusion <see cref="Settled"/>
+        /// was split off to end. It stands because the owner asked for green on the keys they
+        /// press and nothing yet asks these two to be told apart; the day something does, the one
+        /// to move is <see cref="Settled"/>, because it is the dead key and <c>btn_gray</c> and
+        /// <c>btn_dark</c> are both cut.
+        /// </para>
+        /// </summary>
+        public const string Affirm = "btn_green";
+
+        /// <summary>
+        /// A control that states where things already stand rather than offering to change
+        /// them: the loadout preview's EQUIPPED key, which pays nothing, moves nothing and only
+        /// closes the panel it is on.
+        ///
+        /// <para>
+        /// <b>Named because <c>btn_green</c> has meant "do the thing" everywhere else since this
+        /// UI was written, and this is the one place it does not.</b> Left on <see cref="Buy"/>
+        /// it was the price pill, so a turret already standing on the line shouted exactly as
+        /// loudly as a nine-thousand-credit one — and the two states a player is actually
+        /// choosing between, <em>equip this</em> and <em>this is equipped</em>, were drawn
+        /// identically. Green is what this UI already spends on <em>you have this</em>
+        /// (<c>Pal.Mint</c> on the grove shelf's held line); this raises it off a status line
+        /// and onto the control saying the same thing.
+        /// </para>
+        /// </summary>
+        public const string Settled = "btn_green";
+
+        /// <summary>
         /// The hub's affirmative — the one control on that screen a player is meant to press.
         /// Its own mould rather than a colour name, because #FFC83D is not one of the eight
         /// the pill family is re-cut in and a tint on a green sprite cannot reach it.

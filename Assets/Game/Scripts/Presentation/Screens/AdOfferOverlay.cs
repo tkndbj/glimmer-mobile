@@ -312,7 +312,12 @@ namespace GlimmerGrove
         void BuildRewardCard(AdOffer offer, float y)
         {
             var kind = offer.IsValid ? offer.Kind : ResourceOf(PlacementId);
-            var tint = RewardArt.Tint(kind);
+
+            // No item, and that is a fact about `AdOffer` rather than an omission: an ad's
+            // reward is a kind and an amount, so it can never pay one of the kinds that name
+            // a thing (`ChestDropKinds.NeedsItem`). The day one can, `AsDrop` grows an item
+            // and these three calls are where it arrives.
+            var tint = RewardArt.Tint(kind, null);
 
             var card = UIKit.Img("Card", Panel, Art.Round(26), new Color(.04f, .09f, .12f, .82f),
                                  Vector2.one * CardSize, new Vector2(.5f, 1f), new Vector2(0f, -y));
@@ -323,7 +328,7 @@ namespace GlimmerGrove
 
             UIKit.Halo(card.transform, tint, CardSize * 1.1f, .30f);
 
-            var icon = UIKit.Img("Icon", card.transform, RewardArt.Icon(kind), Color.white,
+            var icon = UIKit.Img("Icon", card.transform, RewardArt.Icon(kind, null), Color.white,
                                  new Vector2(114f, 114f), new Vector2(.5f, 1f), new Vector2(0f, -68f));
             icon.preserveAspect = true;
             RewardArt.Glyph(icon, kind, 11f);
@@ -336,7 +341,7 @@ namespace GlimmerGrove
                                    TextAnchor.MiddleCenter, new Vector2(230f, 62f),
                                    new Vector2(.5f, 1f), new Vector2(0f, -166f), outline: 3f, shadow: 3f);
 
-            UIKit.Titled("Kind", card.transform, RewardArt.Name(kind), 28, Pal.A(tint, .95f),
+            UIKit.Titled("Kind", card.transform, RewardArt.Name(kind, null), 28, Pal.A(tint, .95f),
                          TextAnchor.MiddleCenter, new Vector2(230f, 44f),
                          new Vector2(.5f, 1f), new Vector2(0f, -218f), outline: 2f, shadow: 2f);
         }
@@ -611,7 +616,7 @@ namespace GlimmerGrove
             }
 
             Audio.Sfx("reward", .6f);
-            Burst.Sparks(_card, Vector2.zero, RewardArt.Tint(drop.Kind), 20, 420f, 30f, .8f);
+            Burst.Sparks(_card, Vector2.zero, RewardArt.Tint(drop.Kind, drop.Item), 20, 420f, 30f, .8f);
         }
 
         // ------------------------------------------------------------- collecting

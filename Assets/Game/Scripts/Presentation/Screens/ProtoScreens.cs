@@ -240,20 +240,19 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Which cast this chapter draws, by its ordinal inside its own mode.
+        /// Which cast this level draws.
         ///
-        /// Invariant 7c's rule, the ground's shape exactly: arithmetic rather than a choice, so
-        /// two sets serve every siege chapter that ships and a chapter published next year costs
-        /// no cast art at all.
+        /// <b>Asked of <see cref="SiegeMode.CastFor"/> rather than worked out here</b>, because the
+        /// same answer decides what <c>SiegeMode.ArtFor</c> preloads: a screen with its own opinion
+        /// would draw a cast the level never loaded, which is a white rectangle over every raider
+        /// on the hill (invariant 7b). A level outside a chapter draws the insects.
         /// </summary>
         int CastFor()
         {
-            if (Level == null) return 0;
+            if (Level == null) return SiegeMode.Insects;
 
-            int at = GameContent.Index.ChapterOrderOf(Level.Chapter);
-            if (at < 0) return 0;
-
-            return ((at % SiegeView.CastSets) + SiegeView.CastSets) % SiegeView.CastSets;
+            return SiegeMode.CastFor(GameContent.Index.TrackOf(Level.Chapter),
+                                     GameContent.Index.ChapterOrderOf(Level.Chapter));
         }
 
         /// <summary>
@@ -353,10 +352,19 @@ namespace GlimmerGrove
         /// them.
         ///
         /// <para>
-        /// <b>The bar hangs off the safe area rather than off the board host</b>, because the
-        /// host is what a mode's view fills and a view that resized itself around a bar would be
-        /// a view that has to know about one. What the board gives up for it is
+        /// <b>The bar hangs off the full-bleed layer rather than off the board host</b>, because
+        /// the host is what a mode's view fills and a view that resized itself around a bar would
+        /// be a view that has to know about one. What the board gives up for it is
         /// <see cref="HostInset"/>'s bottom margin, which is the only line either of them shares.
+        /// </para>
+        /// <para>
+        /// <b><c>Content</c> rather than <c>Safe</c>, and that is what closed the gap.</b> Hung
+        /// off the safe layer the shelf stopped where the layer did, so on any phone with a home
+        /// indicator there was a band of backdrop under it with nothing in it — reported from a
+        /// device as a gap at the foot of the screen. A flat plate under a home indicator is the
+        /// full-bleed case the safe layer's own remarks describe; what belongs inside the inset is
+        /// the cells, and <c>UtilityBar.Foot</c> is what they get. See <c>UtilityBar.Room</c> for
+        /// why the board's inset is not the bar's height.
         /// </para>
         /// </summary>
         protected override void Play()
@@ -366,9 +374,9 @@ namespace GlimmerGrove
 
             if (_bar == null)
             {
-                var node = UIKit.Node("Utilities", Safe);
+                var node = UIKit.Node("Utilities", Content);
                 _bar = node.gameObject.AddComponent<UtilityBar>();
-                _bar.Build(Safe);
+                _bar.Build(Content);
 
                 _bar.Aiming = Aim;
                 _bar.Wanted = Offer;
@@ -376,6 +384,19 @@ namespace GlimmerGrove
 
             _siege.Fire = Fire;
             _siege.Rejected = Refuse;
+
+            // A tapped bomb throws what a firepot throws, so it borrows the firepot's own item
+            // for its targeting layer and its magnitude - and pays for it in matches through a
+            // path of its own, because nothing about it is owned. See `SiegeView.Salvo`.
+            _siege.Blew = Blew;
+            _siege.Appeared = Met;
+
+            // **What a bomb hits for is the published firepot's number, not a constant.** The two
+            // are the same blast and the player is told so; a second figure is a second thing a
+            // content push can move half of.
+            var pot = Firepot();
+            if (pot != null && _siege.Siege != null) _siege.Siege.BombDamage = pot.Magnitude;
+            _siege.Appeared = Met;
 
             // The bar owns what is armed; the board only mirrors it. Without this the view
             // disarmed itself and the slot kept its ring, which read as an item stuck on.
@@ -416,7 +437,7 @@ namespace GlimmerGrove
             if (item == null || _bar == null) return;
 
             Scenery.Toast(Safe, _bar.AimingNote, Pal.Cream, 1.8f,
-                          new Vector2(.5f, 0f), UtilityBar.Height + 90f);
+                          new Vector2(.5f, 0f), UtilityBar.Room + 90f);
         }
 
         /// <summary>
@@ -466,6 +487,76 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// What a bomb the player tapped delivers.
+        ///
+        /// <para>
+        /// <b>The firepot's blast, charged the firepot's way, and spending nothing.</b> The three
+        /// halves of a utility are the effect, the price in stock and the price in matches; a
+        /// bomb was dropped on the board rather than bought, so it has no stock to spend and no
+        /// cooldown to start — and it has exactly the same price in matches, because that price
+        /// is what stops damage the player did not match for improving their grade (invariant 39,
+        /// and 19a for why a grade here is not a private number).
+        /// </para>
+        /// <para>
+        /// <b>A blast that reached nobody is refused</b>, exactly as a firepot's is — but the
+        /// bomb is already off the board by then, which is the one place the two differ and it is
+        /// deliberate: the alternative is putting a bomb back on a cell the field has since
+        /// filled. What it costs is a wasted tap on an empty stretch of hill, which is the same
+        /// thing a wasted firepot costs minus the firepot.
+        /// </para>
+        /// </summary>
+        /// <summary>
+        /// Teaches whichever field raider has just stepped onto the board, once ever.
+        ///
+        /// <para>
+        /// <b>The tip holds the raid, and that costs nothing to arrange.</b> `RunLessons.Teach`
+        /// takes `RunHold.Teaching`, and a held run is one whose hill stops walking - so a player
+        /// meeting a weaver for the first time reads about it over a board that is not being
+        /// overrun while they read (invariant 39i, from the other end).
+        /// </para>
+        /// <para>
+        /// <b>Refused for anything already seen, mid-chain, or on a board that cannot be taught</b>
+        /// - all three inside `Teach`, so this is a hook rather than a rule.
+        /// </para>
+        /// </summary>
+        void Met(SiegeKind kind)
+        {
+            if (Teaching == null) return;
+
+            if (kind == SiegeKind.Bomber) Teaching.Teach(Mechanic.SiegeBomber);
+        }
+
+        /// <summary>
+        /// The firepot in the published catalog, whatever it is called there.
+        ///
+        /// <b>Found by <em>kind</em> and never by id</b>, because what a bomb throws is "the
+        /// blast this build knows about" — the roster is content, so an id typed in here would be
+        /// a second copy of a name a config push can change, and its failure is a bomb that does
+        /// nothing when tapped.
+        /// </summary>
+        static UtilityItem Firepot()
+        {
+            var items = UtilityLedger.Catalog.Items;
+
+            for (int i = 0; i < items.Count; i++)
+                if (items[i].Kind == UtilityKind.Blast) return items[i];
+
+            return null;
+        }
+
+        SiegeUse Blew(int id, List<SiegeStrike> strikes)
+        {
+            if (_siege == null || _siege.Siege == null) return SiegeUse.Refused;
+
+            int absorbed = _siege.Siege.Detonate(id, strikes);
+            if (absorbed <= 0) return SiegeUse.Refused;
+
+            LevelAnalytics.TrackUtility(Level, "bomb", SiegeUtility.MatchesFor(absorbed), absorbed);
+
+            return new SiegeUse(true, SiegeUtility.MatchesFor(absorbed), absorbed, -1);
+        }
+
+        /// <summary>
         /// Opens the shop behind an empty slot.
         ///
         /// <b>The raid stops while it is up, and not because of anything here.</b>
@@ -480,7 +571,7 @@ namespace GlimmerGrove
             if (!item.ForSale)
             {
                 Scenery.Toast(Safe, Loc.Get("ui.utility.chest_only"), Pal.Cream, 2.4f,
-                              new Vector2(.5f, 0f), UtilityBar.Height + 90f);
+                              new Vector2(.5f, 0f), UtilityBar.Room + 90f);
                 return;
             }
 
@@ -501,7 +592,7 @@ namespace GlimmerGrove
         void Refuse()
         {
             Scenery.Toast(Safe, Loc.Get("ui.utility.no_target"), Pal.Cream, 2.2f,
-                          new Vector2(.5f, 0f), UtilityBar.Height + 90f);
+                          new Vector2(.5f, 0f), UtilityBar.Room + 90f);
         }
 
         /// <summary>
@@ -628,11 +719,12 @@ namespace GlimmerGrove
             if (board.Upgrades && anchor != null)
                 into.Add(Lesson.At(Mechanic.SiegeCog, anchor, icon: _siege.CogArt));
 
-            // The shield is pointed at the *line* rather than at the hill, because what it is
-            // really about is which ward to feed - and a bulwark is walking, so a ring drawn round
-            // where it happened to be would be round bare ground a second later.
-            if (board.Shielded && anchor != null)
-                into.Add(Lesson.At(Mechanic.SiegeShield, anchor));
+            // **Deferred, and pointed at the bomber itself.** There *is* something to ring here -
+            // the raider whose death is about to hand the player a bomb - and it is exactly what
+            // the tip is about. `Later` keeps it out of the opening chain;
+            // `SiegeView` raises it the first time one walks on, which may be on the fourth rung
+            // of the chapter or never.
+            into.Add(Lesson.Later(Mechanic.SiegeBomber, _siege.Walking(SiegeKind.Bomber)));
         }
 
         /// <summary>
@@ -695,20 +787,29 @@ namespace GlimmerGrove
         /// Three numbers, and the middle one is not the one every other mode on this shape shows.
         ///
         /// <para>
-        /// <b>The allowance is replaced by how far through the raid this is</b>, because this mode
-        /// has no move allowance and the shared readout would print "free" over the one screen
-        /// where something really is running out.
+        /// <b>One number, in the middle, and it is the wave.</b> Invariant 33a says the number in
+        /// the corner and the picture on the board have to be the same number, and 37v already
+        /// applied that once — the ward line came off the header because the line itself
+        /// <em>is</em> a picture, four turrets carrying health bars across the middle of the
+        /// board for the whole run. The other two go for the same reason and it took a device to
+        /// see it: <b>"left to clear" is the raiders still walking down the hill</b>, which is the
+        /// largest thing on the screen, so it was a second copy of what the player was already
+        /// looking at.
         /// </para>
         /// <para>
-        /// <b>It used to be the ward line, and moving it is invariant 33a read the other way
-        /// round.</b> That rule says the number in the corner and the picture on the board have to
-        /// be the same number — and the line already <em>is</em> a picture: four turrets, each
-        /// carrying a health bar, filling the middle band of the board for the whole run. A corner
-        /// reading of it was a second copy of something a player was already looking at. How many
-        /// waves are left is the opposite: it existed nowhere but in a banner that fades after a
-        /// second and a half, so a player who looked away at the wrong moment had no way to find
-        /// out whether the worst was over. What a siege owes the corner is the thing the board
-        /// cannot say.
+        /// <b>What is genuinely given up is the matches count, and that is a real trade rather
+        /// than a tidy-up.</b> It is the number a siege is <em>graded</em> on (invariant 37a), so
+        /// dropping it means a player cannot watch their own star line during a run — they meet it
+        /// on the victory panel. The argument for going anyway is that it is the one reading here
+        /// nobody can act on: a match is worth the colour it was, never the count, so there is no
+        /// play a player would change on seeing it. If it comes back it belongs somewhere the eye
+        /// is already going, not in a third column.
+        /// </para>
+        /// <para>
+        /// So the row holds one, and <c>ReadoutRow.XFor</c> puts a row of one in the middle, where
+        /// the eye already is. How far through the raid this is is the thing the board cannot say
+        /// — it existed nowhere but in a banner that fades after a second and a half, so a player
+        /// who looked away at the wrong moment had no way to find out whether the worst was over.
         /// </para>
         /// <para>
         /// The last wave is gold, because "this is the last one" is the one thing this number is
@@ -718,46 +819,35 @@ namespace GlimmerGrove
         /// </summary>
         protected override void Readouts(List<Readout> into)
         {
-            var run = _siege != null ? _siege.Run : null;
             var board = _siege != null ? _siege.Siege : null;
-            bool endless = board != null && board.IsEndless;
-
-            // **An endless lane carries the wave and nothing else, and the two it drops are two
-            // numbers that cannot be true there.** "Left to clear" is the goals still on the
-            // hill against an allowance, and an endless lane has none — so it read as
-            // `int.MaxValue`, ten digits of it, which is a readout saying the run is broken.
-            // "Matches" is the count the *authored* ladder is graded on; an endless run is
-            // graded on how far it got (`LevelTuning.Climbs`), which is the wave, so a matches
-            // column beside it is the one number on the header that decides nothing.
-            if (!endless)
-                into.Add(new Readout(Loc.Get(GoalCaption), run == null ? "0" : run.Left.ToString()));
 
             if (board == null)
             {
+                // Asked once while the header is being built, before `Play` has made a board.
                 into.Add(new Readout(Loc.Get("mode.cap.wave"), "-"));
+                return;
             }
-            else
+
+            // Nought before the first wave musters, and a run that says "wave 0" during its own
+            // countdown is reading as broken rather than as early: what is true in that moment is
+            // that wave one is coming.
+            int wave = board.Wave < 1 ? 1 : board.Wave;
+
+            // **The lemniscate rather than the count, and it is drawn rather than written.** An
+            // endless lane's authored wave list is empty, so `Waves` is nought and the header read
+            // "8/0" — a fraction whose denominator says the run is over. There is no last wave to
+            // name, so the sign says so; and it is the one glyph here that needs no translating,
+            // which is why it is a literal rather than a key.
+            if (board.IsEndless)
             {
-                // Nought before the first wave musters, and a run that says "wave 0" during its own
-                // countdown is reading as broken rather than as early: what is true in that moment
-                // is that wave one is coming.
-                int wave = board.Wave < 1 ? 1 : board.Wave;
-                int last = board.Waves;
-
-                // **The lemniscate rather than the count, and it is drawn rather than written.**
-                // An endless lane's authored wave list is empty, so `Waves` is nought and the
-                // header read "8/0" — a fraction whose denominator says the run is over. There
-                // is no last wave to name, so the sign says so; and it is the one glyph here
-                // that needs no translating, which is why it is a literal rather than a key.
-                into.Add(endless
-                             ? new Readout(Loc.Get("mode.cap.wave"), wave + "/∞")
-                             : new Readout(Loc.Get("mode.cap.wave"), wave + "/" + last,
-                                           wave >= last ? Pal.Gold : Pal.Cream));
+                into.Add(new Readout(Loc.Get("mode.cap.wave"), wave + "/\u221e"));
+                return;
             }
 
-            if (!endless)
-                into.Add(new Readout(Loc.Get("mode.cap.matches"),
-                                     run == null ? "0" : run.Spent.ToString()));
+            int last = board.Waves;
+
+            into.Add(new Readout(Loc.Get("mode.cap.wave"), wave + "/" + last,
+                                 wave >= last ? Pal.Gold : Pal.Cream));
         }
 
         /// <summary>
@@ -776,6 +866,14 @@ namespace GlimmerGrove
         /// `Margin` inside this host, so the two are separated without a number here saying so.
         /// </para>
         /// <para>
+        /// <b>`Room` rather than `Height`, because this host lives inside the safe layer and the
+        /// bar does not.</b> The bar's rect starts at the bottom of the display; this margin is
+        /// measured from the bottom of the safe area, which is already the display's own inset up
+        /// from there. Insetting by the bar's whole height would count that inset twice and push
+        /// the board's foot up behind the shelf — and on every device with nothing in the way the
+        /// two answers are the same number, so nothing would say so.
+        /// </para>
+        /// <para>
         /// Two earlier cuts, both caught by a render and neither by anything numeric (invariant
         /// 37g): the first left 190 points of nothing between the field and three loose squares,
         /// and the one before that added the bar's whole height to a margin that already very
@@ -791,8 +889,18 @@ namespace GlimmerGrove
         /// The board is still tall because it holds a hill, a line and a field, and the hill is
         /// the half a player spends the run looking at.
         /// </para>
+        /// <para>
+        /// <b>The top went 300 -> 236 when the readout row moved up beside the header keys</b>
+        /// (<c>ModeScreen.ReadoutsY</c>), which is where the enemy ground's extra height came
+        /// from. It is <em>six</em> units below the row's foot rather than the thirty-four it
+        /// used to be *above* it, and that direction is the whole point: <c>ProtoView</c> sizes
+        /// its plate to fill this host exactly, so 300 against a row ending at 334 meant the
+        /// plate was drawn over the captions and they had been invisible on this mode since it
+        /// shipped. A host inset here is a hard edge, not a margin — anything the row leaves
+        /// below it is painted over.
+        /// </para>
         /// </summary>
         protected override Vector4 HostInset
-            => new Vector4(0f, UtilityBar.Height, 0f, 300f);
+            => new Vector4(0f, UtilityBar.Room, 0f, 236f);
     }
 }

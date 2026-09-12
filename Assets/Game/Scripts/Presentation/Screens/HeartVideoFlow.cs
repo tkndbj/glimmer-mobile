@@ -235,7 +235,7 @@ namespace GlimmerGrove
             {
                 v.Drop = payment.Drop;
                 v.TitleKey = "ui.ads.hearts_prize";
-                v.Tint = RewardArt.Tint(payment.Drop.Kind);
+                v.Tint = RewardArt.Tint(payment.Drop.Kind, payment.Drop.Item);
                 v.Loud = true;
                 v.Flight = payment.Flight;
                 v.Collected = _onward;

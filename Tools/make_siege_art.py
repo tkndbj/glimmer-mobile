@@ -64,57 +64,40 @@ SOURCE = Path(r"C:\Users\Digikey\Downloads\craftpix-assets")
 #: `--tower` the second.
 TOWER = Path(r"C:\Users\Digikey\Downloads\to-assets")
 
+#: The third folder, added when the bosses stopped being insects and the second chapter got a cast
+#: of its own. A third root rather than a copy of the zip into one of the other two, for the reason
+#: the second one exists: **copying a licensed pack so that one path works is a second copy nothing
+#: keeps in step**, and the day the owner re-downloads it only one of them moves. `--enemies` moves
+#: this one.
+ENEMIES = Path(r"C:\Users\Digikey\Downloads\topdownenemies")
+
 MATCH3 = "craftpix-net-298179-match-3-game-asset-set.zip"
 BLASTS = "craftpix-517297-explosions-sprite.zip"
-MONSTERS = "craftpix-net-205925-monster-v3-character-sprites.zip"
-BRUTES = "craftpix-net-894353-monster-v4-character-sprites.zip"
-
-#: The overlord: the greatest of the four, and the thing the chapter ends on.
+#: Where every enemy in this mode comes from, and the whole of what it may draw from.
 #:
-#: **A third pack, for the reason the second one exists.** Three creepers come from one pack so they
-#: read as three of a kind; the brute comes from another so a player can see at a glance it is not
-#: one of those; the warlord from a third at three times the size. An overlord has to clear that bar
-#: again - it is the last thing in the chapter and the one object a player spends a whole minute
-#: looking at - so it is a different alien in different armour, and it is drawn taller still.
-OVERLORDS = "craftpix-net-104412-alien-v5-enemy-sprite-set.zip"
-
-OVER_IDLE = "PNG/Alien02/Idle"
-OVER_WALK = "PNG/Alien02/Walk"
-OVER_ATTACK = "PNG/Alien02/Attack"
-
-#: The warlord, from a pack none of the creepers came from.
+#: <b>One pack, because it is the only one on this machine that draws insects at all.</b> The hill
+#: used to be cast out of nine monster, alien and robot packs - eighty-three side-view cartoon
+#: characters - and the owner's call is that the raid is insects and nothing else. Surveyed, those
+#: nine packs hold ninety-six characters and not one beetle, fly, ant or wasp between them; the
+#: idle-defence kit holds fifteen, drawn <b>top-down</b>, which is also the one view this board has
+#: (the ground is a top-down tileset and the hill is looked down on, so the old side-view cast was
+#: a mismatch nobody had named).
 #:
-#: **A different pack on purpose, and it is the same argument the brute already makes one step
-#: further.** Three creepers come from one pack so they read as three of a kind; the brute comes
-#: from another so that the one thing a player has to see at a glance is that it is not one of
-#: those. A boss has to clear that bar by more: it is an armoured alien in a machine, against four
-#: round soft monsters, at three times the size.
-WARLORDS = "craftpix-net-515480-alien-v4-character-sprites.zip"
-
-#: The blightcaller: the first boss a chapter shows, and the only one that does not walk.
+#: <b>Fifteen bodies is the budget and it decided three things below.</b> A chapter draws twelve
+#: raiders and the bosses take four, which is sixteen - so the cast is <b>one set rather than two</b>
+#: (`SiegeMode.CastSets`), and one body is worn twice on purpose (see `BOSS_SET`). A second insect
+#: pack would buy a second set for the price of one table here and no code, which is exactly what
+#: that seam was built for.
 #:
-#: **A floating eye, and the pack it comes from is the point.** Four bosses on one hill have to be
-#: told apart before any of them has done anything, and the two that shipped were an armoured alien
-#: and another armoured alien. This one hovers, has one enormous eye and a tail instead of legs -
-#: nothing else on this board is round, airborne or watching. Its `Fly` reel stands in for a walk,
-#: which is exactly right: it is the only thing here that arrives without touching the ground.
-BLIGHTCALLERS = "craftpix-net-248806-robots-v4-game-sprite-set.zip"
-
-BLIGHT_IDLE = "PNG/Char04/Idle"
-BLIGHT_WALK = "PNG/Char04/Fly"
-BLIGHT_ATTACK = "PNG/Char04/Attack"
-
-#: The warbringer: the one boss in this mode that reaches the line.
+#: <b>It is `MERGE` - the same zip the twenty turrets come out of</b>, which is not a coincidence
+#: worth hiding: one hand drew the machines and the things they shoot at, so the hill reads as one
+#: game. There is deliberately no second name for it here, because two constants holding one file
+#: name is two things a `--source` move can leave disagreeing.
 #:
-#: **A slab**, and it is chosen for the silhouette rather than for the paint. Everything else on
-#: this hill is round - four monsters, an eye, two domed aliens - so the thing whose whole fight is
-#: "it is coming and it will get here" is a walking rectangle with fists, which reads as weight at
-#: any size and at any distance down the hill.
-WARBRINGERS = "craftpix-net-684986-robot-v3-enemy-character-sprites.zip"
-
-BRINGER_IDLE = "PNG/Char05/Idle"
-BRINGER_WALK = "PNG/Char05/Walk"
-BRINGER_ATTACK = "PNG/Char05/Attack"
+#: Where each family lives inside it. Three folders, and the split is the pack's own.
+CRAWLERS = "Merge Turrets/Png/Enemies/Grounds Enemy/"
+FLIERS = "Merge Turrets/Png/Enemies/Fly Enemy/"
+HYBRIDS = "Merge Turrets/Png/Enemies/Hybrid Enemy/"
 
 #: The turrets, their bullets and their muzzle flash.
 TURRETS = "craftpix-net-715522-turrets-asset-pack-for-merge-shooter.zip"
@@ -137,6 +120,31 @@ KIT = "craftpix-net-239749-merge-shooter-cartoon-asset-kit.zip"
 #: heavy mount). Twenty turrets assembled from four packs would be four games on one plinth.
 MERGE = "craftpix-net-206389-free-idle-turret-defense-asset-kit.zip"
 
+#: The top-down monster pack: **five bosses and five small monsters**, and the only pack on this
+#: machine that draws a body big enough and odd enough to read as a boss from above.
+#:
+#: <b>It is what took the bosses off the insect roster.</b> The four bosses were four insects out of
+#: the same fifteen the raiders come from, which made a boss a creeper drawn three times the size -
+#: invariant 37z's complaint ("two bosses separated by a hue read as one boss") arriving one level
+#: up, where the thing being compared is not two bosses but a boss and the wave it walks in front
+#: of. The five here are horned, armed, crowned and helmed: they project sideways, which is the one
+#: thing 37ar says a silhouette has to do, and none of them can be mistaken for a beetle.
+#:
+#: <b>And its five monsters are what buys the second cast set back.</b> 37ar recorded that a second
+#: pack would cost "one table in `RAIDER_SET`, twelve rows in `SiegeMode`, and no code" - this is
+#: that, and the prediction held. Five here plus the ten in `KIT` is fifteen bodies for twelve
+#: slots, so the second chapter's cast needs no body worn twice.
+MONSTERS = "craftpix-net-377044-top-down-monsters-asset-pack-for-merge-shooter.zip"
+
+#: Where the two families live inside it. The pack spells "Bos", not "Boss".
+BROOD = "Png/Monster%02d"
+WARLORDS = "Png/Bos%02d"
+
+#: The ten small monsters in `KIT`, which is the same zip the gem debris comes from. They are the
+#: other half of the second chapter's cast and they are drawn by the same hand as `MONSTERS` -
+#: the two packs are one family, which is what lets a chapter mix them without reading as two games.
+KIT_BROOD = "Png/Monster/Monster%02d"
+
 #: Where the number plate hangs, measured.
 #:
 #: **Every turret in the pack carries a baked level number on a plate under its feet**, which is
@@ -147,41 +155,80 @@ MERGE = "craftpix-net-206389-free-idle-turret-defense-asset-kit.zip"
 #: hidden by the plinth the view already draws under every ward.
 WARD_PLATE = 372
 
-#: The mine tileset the hill is floored with. Its own download rather than one of the folders
-#: above, so `--mine` points at it.
-MINE = Path(r"C:\Users\Digikey\Downloads\graphicriver-95eo2prH-topdown-tiles-mine.zip")
+#: The top-down tile sheets the hill is floored from. Their own download rather than one of the
+#: folders above, so `--tiles` points at it.
+#:
+#: Eight sheets of thirty square tiles each: stone, sandstone, ice, lava, granite, grass, cobble
+#: and sand.
 
-#: The ground each rung of a siege chapter is fought over: a **gradient map** over the mine
-#: tileset's own square slabs, the tiles it is laid from, and the seed that lays them.
+#: How the sheets are laid out. Every one of them is a six by five grid of one tile, with a
+#: transparent margin around it on three of the eight - so the cut is taken from the sheet's own
+#: alpha box rather than from its file size, and the tiles come out slightly rectangular because
+#: they are (256 by 205 on the largest sheet). That is fine and is not corrected: a floor is laid
+#: from them and resized whole, so what the proportion decides is the paving pattern rather than
+#: the shape of anything the player reads.
+
+#: The ground each rung of a siege chapter is fought over: which sheet it is paved from, which of
+#: that sheet's thirty tiles are used, and the seed that lays them.
 #:
 #: <b>Which ground is arithmetic on the level's place in its chapter</b> - invariant 7c's rule and
 #: the backdrop's shape exactly, so ten grounds serve every siege chapter that ever ships and a
-#: second one costs no art at all.
+#: second one costs no art at all. It is <em>not</em> rolled at run time, and that is the one place
+#: this reads differently from how it was asked for: a chapter preloads exactly one ground per rung
+#: (`SiegeMode.ArtFor`) and two switches in two assemblies have to agree about which
+#: (`SiegeGroundTests`), so a floor chosen when the board opens is either ten grounds resident for
+#: ever or a white rectangle over the whole hill (invariant 7b). What varies is the sheet, the tile
+#: mix and the seed, which is the variety that was actually wanted.
 #:
-#: <b>One tileset rather than ten, and that is a decision with a known cost.</b> The isometric
-#: terrain packs on this machine cannot floor this board at all: their ground is drawn as diamonds
-#: with the side faces baked into the pixels, so a tile cannot be un-skewed into a square, and
-#: laying them as a field and cropping a rectangle out of it only hides the skirts - what comes
-#: back is still diagonal. The mine set is the only **top-down** terrain here, so ten places are
-#: made out of one material. What that buys is real (a gradient map turns near-grey stone into
-#: moss, sandstone, clay, basalt and ice, and a different tile mix repaves it) and what it cannot
-#: buy is a different *surface*: every rung is stone, cut the same way. Nine more top-down
-#: tilesets would replace `TONES` with nine `zipped` calls and change nothing else.
+#: <b>Eight surfaces rather than one regraded ten ways, which is the cost this pays off.</b> The
+#: ten grounds used to be the mine tileset's own grey stone read through ten gradient maps, and
+#: that entry said so out loud: every rung was stone, cut the same way, and "nine more top-down
+#: tilesets would replace `TONES` with nine `zipped` calls and change nothing else". These are
+#: those tilesets. So there is no gradient map here at all - each sheet is already a material, and
+#: supplying a colour to a surface that has one is how you get ten versions of the same place.
 #:
-#: The **ramp is a place rather than a difficulty** - the raid reads as moving somewhere over ten
-#: rungs - and the mine's own untouched floor keeps rung five, where the first warlord stands.
-GROUNDS = [
-    ("hill1",  "moss",      (0x12, 0x1B, 0x0E), (0x86, 0x9A, 0x55), (5, 10, 8, 2, 7),      11),
-    ("hill2",  "steel",     (0x11, 0x13, 0x17), (0x84, 0x8E, 0x9C), (13, 5, 10, 2, 11),     5),
-    ("hill3",  "sandstone", (0x1F, 0x17, 0x0D), (0xAE, 0x8E, 0x5C), (5, 8, 2, 7, 1),       17),
-    ("hill4",  "bog",       (0x0D, 0x15, 0x12), (0x55, 0x7C, 0x6C), (14, 10, 8, 7, 11),     3),
-    ("hill5",  None,        None,               None,               (13, 14, 5, 10, 8, 2), 23),
-    ("hill6",  "clay",      (0x1E, 0x0F, 0x0B), (0xA0, 0x55, 0x3E), (5, 2, 7, 1, 11),      29),
-    ("hill7",  "khaki",     (0x1A, 0x18, 0x0E), (0xA4, 0x9C, 0x62), (10, 8, 2, 1),         31),
-    ("hill8",  "basalt",    (0x0C, 0x0C, 0x12), (0x66, 0x62, 0x80), (13, 14, 8, 7, 1, 11), 37),
-    ("hill9",  "ice",       (0x0E, 0x16, 0x1E), (0x74, 0x9C, 0xB8), (5, 10, 2, 11),        41),
-    ("hill10", "ember",     (0x1C, 0x0E, 0x07), (0xB0, 0x68, 0x34), (14, 5, 8, 7, 1),      43),
-]
+#: <b>Two sheets are used twice, because there are eight of them and ten rungs.</b> The repeats sit
+#: seven rungs from their twin and are paved from different tiles with a different seed, and
+#: <b>no two rungs running share a material</b> - which is the half that matters, because what a
+#: player can compare is the rung they are on against the one they just left.
+#:
+#: <b>The ramp is a place rather than a difficulty</b> - the raid reads as moving somewhere over ten
+#: rungs: out of the grass, onto worked stone, through sand and cold, and down into the lava, which
+#: is <b>the finale and the only rung that wears it</b>. Rung five keeps the plainest floor of the
+
+import make_siege_ground as ground_art
+
+#: The value ladder every ground is put on, and the cast's own ladder is what decides it.
+#:
+#: <b>A floor must be darker than what walks on it, and for two chapters this one was brighter.</b>
+#: `CAST_VALUE` holds every raider, boss and beetle at a mean of 118; this stood at <b>147</b>, so
+#: the hill was a third brighter than the monsters crossing it. That is CRAFT.md's plate rule
+#: exactly inverted - and inverted <em>while citing it</em>, because the number was recorded as
+#: "the value the cast was judged against" when what it had actually been measured off was one
+#: tileset's own brightness. Nothing could see it: every gate here reads the model, a ground is
+#: individually well-composed at any mean, and the two numbers live in different sections of one
+#: file and had never been read side by side. What did see it is the owner, who said the tiles were
+#: too bright.
+#:
+#: <b>Seventy-eight, which is two thirds of the cast.</b> Far enough below that a bright cartoon
+#: raider reads as lit rather than as a silhouette, far enough above black that the rock still
+#: shows the structure composed into it - `make_siege_ground` lays a chasm and a stratum and a
+#: rockfall, and a floor normalised to near-black would deliver none of them. <b>The rule is the
+#: relation, not the number</b>: if `CAST_VALUE` ever moves, this moves with it.
+GROUND_MEAN, GROUND_SPREAD = 78.0, 30.0
+
+#: How much of a ground's own colour survives being put on that ladder.
+#:
+#: <b>Above one, and the reason is arithmetic rather than taste.</b> `graded` maps luminance
+#: affinely and leaves the colour offset alone - so lifting a dark tileset from a mean of 84 to
+#: 147 divides its apparent saturation by the same 1.75, and what comes out is pastel. Putting the
+#: colour back is a multiply on the offset, and 1.5 is where the mine reads as terracotta, slate
+#: and violet rather than as a wash of each.
+#:
+#: <b>The ceiling above it is the one that matters</b>: the red floor carries nearly four times
+#: the colour the grey one does, and pushed further it stops being terracotta and becomes
+#: *orange* - which is `Pal.Amber`, one of the four colours this whole mode is told apart by
+#: (37f). So the cap binds on that one material and touches none of the others.
 
 #: The most colour a ground may carry, as its mean distance from grey.
 #:
@@ -191,7 +238,9 @@ GROUNDS = [
 #: the one thing on this board competing with the cast walking over it, which is 37f's argument
 #: said about the floor instead. Twelve is unmistakably a colour and does not fight four
 #: cartoon-bright monsters for it.
-GROUND_CHROMA_CAP = 12.0
+GROUND_CHROMA_CAP = 24.0
+
+GROUND_CHROMA = 1.5
 
 #: One gem, in pixels. An import-cap decision rather than a drawing one - `ArtImportRules.Caps`
 #: gives this folder 512, and a texture costs its dimensions rather than its file size.
@@ -224,99 +273,52 @@ BLAST_SET = {
     "boom_smoke": ("3", 0.0, 1.0),
 }
 
-#: Every cast flipbook: the pack, the folder inside it, and what it is.
-#:
-#: **Walks rather than idles**, which is the whole point of this mode's hill - a raider that stands
-#: still while sliding down a lane reads as a sprite being moved rather than as something coming.
-#: The three creepers come from one pack on purpose (three creatures drawn by three hands read as
-#: three games) and the brute comes from another, because the one thing a player has to see about a
-#: brute at a glance is that it is not one of those.
-#: The packs the shielded raiders come from. Two of these are opened for nothing else.
-BULWARKS_A = "craftpix-net-603718-alien-v1-enemy-sprite-set.zip"
-BULWARKS_B = "craftpix-net-424965-alien-v3-enemy-character-sprites.zip"
-BULWARKS_C = "craftpix-net-259073-alien-v2-enemy-sprite-set.zip"
-
 #: Every raider that walks down the hill: one body per colour, per kind.
 #:
-#: **Four bodies a kind rather than three shared between four colours, and the tint is gone.** A
-#: raider used to be the pack's own art multiplied by 62% toward a `Pal` entry, with a coloured
-#: wash behind it. `Image.color` is a multiply, so that could only ever *darken*: what it drew was
-#: four silhouettes of the same value, and everything these packs are actually good at - the
-#: shading, the highlights, the face - was spent saying one bit. The wards learned this one folder
-#: over and the answer is the same: a real **hue rotation baked into the sprite**, which keeps every
-#: highlight and simply makes the body that colour.
+#: <b>Every one of them is an insect, and the roster is the pack's own.</b> Fifteen bodies in three
+#: families the pack already separates - eight beetles that crawl, three flies that hover, four
+#: hybrids that do both - and what makes them a <em>set</em> is that one hand drew all fifteen,
+#: which is the argument `MERGE` already makes about twenty turrets standing side by side.
 #:
-#: Once the colour is in the paint, the body is free to say it too - so each colour gets its own
-#: model and a player who cannot separate red from green can still separate a mushroom from a
-#: cyclops. That is eighty-three characters in these packs being asked to do the job four were
-#: doing.
+#: <b>The hue is baked and the body is the second reading.</b> A raider is hue-rotated into its
+#: colour (`hued`, `CAST_PULL`), so which colour a source beetle happens to be painted decides
+#: nothing - what a body is picked for is its <em>silhouette</em>, so a player who cannot separate
+#: red from green can still separate a smooth shell from a horned one.
 #:
-#: **Three families, told apart by where they come from.** The creepers are one pack so they read
-#: as a set; the brutes are another, so the one thing a player must see at a glance is that a brute
-#: is not one of those; and the bulwarks are aliens that are literally carrying a shield - which is
-#: the only honest way to draw a unit holding one, and it cost a folder name rather than a drawing.
-#: The packs the second cast set comes from. Opened for nothing else.
-CREEPERS_B = "craftpix-net-167954-monster-v1-character-sprites.zip"
-BRUTES_B = "craftpix-net-925935-monster-v7-sprite-pack.zip"
-BULWARKS_D = "craftpix-net-534332-monster-v6-sprite-set.zip"
-BULWARKS_E = "craftpix-net-154190-monster-v2-character-sprites.zip"
-
+#: <b>Three families, and the kinds are cut across them by weight rather than by folder.</b> A
+#: creeper is the thing that comes in swarms, so it is light: two flies with their wings out and
+#: the two smoothest beetles. A brute is heavier, so it is the four beetles that carry horns,
+#: spikes or a fan. A bulwark is the one carrying its armour, which for an insect is not a held
+#: shield but a <em>shell</em> - so it is the four hybrids, the only bodies here drawn as a hard
+#: domed carapace with the legs tucked under it.
+#:
+#: <b>One set, not two, and that is the fifteen-body budget rather than a change of mind.</b> The
+#: second set was twelve monsters from four packs; there is no second insect pack on this machine,
+#: and twelve more distinct insects do not exist to cut. `SiegeMode.CastSets` is 1 and the seam is
+#: unchanged - a second pack buys a second set for one table here and no code.
 RAIDER_SET = {
-    # creepers - one pack, four bodies
-    "mon_r":     (MONSTERS, "PNG/Monster 1/Walk"),
-    "mon_g":     (MONSTERS, "PNG/Monster 2/Walk"),
-    "mon_b":     (MONSTERS, "PNG/Monster 5/Walk"),
-    "mon_y":     (MONSTERS, "PNG/Monster 4/Walk"),
+    # creepers - light and plain: two fliers and the two smoothest shells
+    "mon_r":     FLIERS + "FlyingBlue",
+    "mon_g":     FLIERS + "FlyingOrange",
+    "mon_b":     CRAWLERS + "BlackBeetle",
+    "mon_y":     CRAWLERS + "BlueBeetle",
 
-    # brutes - a second pack, so they are visibly not creepers
-    "brute_r":   (BRUTES, "PNG/Monster 4/Walk"),
-    "brute_g":   (BRUTES, "PNG/Monster 2/Walk"),
-    "brute_b":   (BRUTES, "PNG/Monster 1/Walk"),
-    "brute_y":   (BRUTES, "PNG/Monster 5/Walk"),
+    # brutes - the four beetles that carry something on their backs
+    "brute_r":   CRAWLERS + "RedBeetle",
+    "brute_g":   CRAWLERS + "PurpleBeetle",
+    "brute_b":   CRAWLERS + "DarkBeetle",
+    "brute_y":   CRAWLERS + "OrangeBeetle",
 
-    # bulwarks - the four characters in these packs that hold a shield through a whole walk cycle
-    "bulwark_r": (BULWARKS_A, "PNG/Alien2/Walk"),
-    "bulwark_g": (BULWARKS_B, "PNG/Alien01/Walk"),
-    "bulwark_b": (WARLORDS, "PNG/Alien01/Walk"),
-    "bulwark_y": (BULWARKS_C, "PNG/Alien2/Walk"),
-
-    # ---- the second set -----------------------------------------------------------------
-    # **A chapter draws one set of twelve, chosen by its ordinal inside its own mode**, which is
-    # invariant 7c's rule and the backdrop's shape exactly: two sets serve every siege chapter that
-    # ever ships, a third costs one row here and no code, and a chapter never pays for a body it is
-    # not drawing. What it buys is the thing ten rungs of one cast cannot: the second chapter is
-    # visibly somewhere else, with something else coming down the hill.
-    "monB_r":     (CREEPERS_B, "PNG/MonsterV2/Walk"),
-    "monB_g":     (CREEPERS_B, "PNG/MonsterV4/Walk"),
-    "monB_b":     (CREEPERS_B, "PNG/MonsterV5/Walk"),
-    "monB_y":     (CREEPERS_B, "PNG/MonsterV1/Walk"),
-
-    "bruteB_r":   (BRUTES_B, "Png/Mons 3/Walk"),
-    "bruteB_g":   (BRUTES_B, "Png/Mons 1/Walk"),
-    "bruteB_b":   (BRUTES_B, "Png/Mons 4/Walk"),
-    "bruteB_y":   (BRUTES_B, "Png/Mons 5/Walk"),
-
-    "bulwarkB_r": (BULWARKS_D, "Png/Mons 2/Walk"),
-    "bulwarkB_g": (BULWARKS_E, "PNG/Monster 3/Walk"),
-    "bulwarkB_b": (BULWARKS_D, "Png/Mons 5/Walk"),
-    "bulwarkB_y": (BULWARKS_E, "PNG/Monster 1/Walk"),
+    # bulwarks - the hard domed shell, which is the only honest way an insect carries plating.
+    # **A hybrid's animations are in subfolders of its own**, where a beetle's are loose in its
+    # folder - so every entry here is one whole path rather than a pair, which is also what keeps
+    # the file names out of it: this pack ships `HybridBlue/Flying/HybridPur-Flying_10.png`, so a
+    # body identified by its file name would be the wrong insect.
+    "bulwark_r": HYBRIDS + "HybridRed/Move",
+    "bulwark_g": HYBRIDS + "HybridGreen/Move",
+    "bulwark_b": HYBRIDS + "HybridBlue/Move",
+    "bulwark_y": HYBRIDS + "HybridPur/Move",
 }
-
-#: The warlord's three animations, cut together by `paired`.
-#:
-#: **An idle *and* a walk, and shipping only the idle was a bug somebody had to play to find.** The
-#: reasoning that left the walk out was half right: a warlord walks to the middle of the hill and
-#: then stands there for the rest of the run (`SiegeTuning.BossHold`), so a walk cycle looping under
-#: something that is not moving is the very thing this mode's walks were chosen to avoid. What it
-#: misses is the ten seconds *before* that, which is the one stretch where it really is crossing
-#: ground - and an idle sliding down a hill is the exact fault the rule names, reported from play in
-#: one word: **floating**. The view wears whichever matches what the board says it is doing.
-#:
-#: The attack is the only one allowed to leave the frame sideways (see `paired`): it throws a fist
-#: a long way out, where a walk only strides a few pixels wider than a stand.
-BOSS_IDLE = "PNG/Alien05/Idle"
-BOSS_WALK = "PNG/Alien05/Walk"
-BOSS_ATTACK = "PNG/Alien05/Attack"
 
 #: The four turret models a ward line is drawn with, in ward order, and the hue each is painted.
 #:
@@ -329,7 +331,7 @@ BOSS_ATTACK = "PNG/Alien05/Attack"
 #: shading the pack drew and simply makes them *that colour*, which is what "brighter and more
 #: alive" actually asks for.
 #:
-#: The hues are `Pal.Poppy`, `Pal.Mint`, `Pal.Azure` and `Pal.Sun` measured as hue angles, so the
+#: The hues are `Pal.Poppy`, `Pal.Mint`, `Pal.Azure` and `Pal.Amber` measured as hue angles, so the
 #: line still agrees with the gems that feed it - the agreement is now checked by eye through
 #: `--contact` rather than enforced by sharing one `Color`.
 #:
@@ -357,31 +359,32 @@ WARD_TIERS = ("Gun06", "Gun07", "Gun08", "Gun09", "Gun10")
 #: turret whose picture is missing draws as a white rectangle two cells tall (invariant 7b) on the
 #: one object a player is looking at for a whole run.
 #:
-#: **Ordered as a ladder, because the pack drew one.** T1 is a single barrel on a plain hull and T20
-#: is a four-barrel heavy mount, so the shelf climbs visibly from the free turret to the dearest -
-#: and the ten earned rungs and the ten bought ones interleave, so a player who has not spent a gem
-#: still sees their shelf getting bigger.
+#: **The hull is the shelf rung, and that is a rule rather than a table somebody keeps in step.**
+#: T1 is a single barrel on a plain hull and T20 is a four-barrel heavy mount, so a shelf ordered
+#: cheapest-first climbs visibly from the free turret to the dearest. It was hand-paired once and
+#: drifted the moment the shelf was re-rung - `apex`, the dearest turret in the game, was wearing
+#: T2. **Re-rung the shelf, re-cut this list in the same order.**
 WARD_MODELS = (
-    ("bolt",       "T1"),
-    ("spark",      "T3"),
-    ("mortar",     "T5"),
-    ("rime",       "T7"),
-    ("lance",      "T9"),
-    ("cleaver",    "T11"),
-    ("siphon",     "T13"),
-    ("ember",      "T15"),
-    ("beacon",     "T17"),
-    ("prism",      "T19"),
-    ("arcstorm",   "T4"),
-    ("howitzer",   "T6"),
-    ("glacier",    "T8"),
-    ("harpoon",    "T10"),
-    ("breaker",    "T12"),
-    ("leech",      "T14"),
-    ("pyre",       "T16"),
-    ("lighthouse", "T18"),
-    ("spectrum",   "T20"),
-    ("apex",       "T2"),
+    ("bolt",        "T1"),
+    ("siphon",      "T2"),
+    ("beacon",      "T3"),
+    ("ember",       "T4"),
+    ("rime",        "T5"),
+    ("cleaver",     "T6"),
+    ("prism",       "T7"),
+    ("lance",       "T8"),
+    ("mortar",      "T9"),
+    ("spark",       "T10"),
+    ("leech",       "T11"),
+    ("lighthouse",  "T12"),
+    ("pyre",        "T13"),
+    ("glacier",     "T14"),
+    ("breaker",     "T15"),
+    ("spectrum",    "T16"),
+    ("harpoon",     "T17"),
+    ("howitzer",    "T18"),
+    ("arcstorm",    "T19"),
+    ("apex",        "T20"),
 )
 
 #: How tall a turret's thumbnail is cut for the loadout shelf.
@@ -413,12 +416,25 @@ THIEF_SET = ("HybridRed", "HybridGreen", "HybridBlue", "HybridPur")
 INSECT = 210
 
 #: Which colour each ward is painted, as a hue angle. `Pal.Poppy`, `Pal.Mint`, `Pal.Azure` and
-#: `Pal.Sun`, measured - so the line still agrees with the gems that feed it.
+#: `Pal.Amber`, measured - so the line still agrees with the gems that feed it.
+#:
+#: **The fourth was `Pal.Sun` and the gem is what moved it.** Three of these sit within about
+#: eight degrees of the jewel they are matched on; the fourth sat at 43 degrees against a gem cut
+#: at 34, so the one colour slot in this mode was painted two ways - an orange gem feeding a
+#: yellow turret, with a yellow raider walking down at it. Every half of that was individually
+#: correct, so nothing here could see it: the gems are cut from the pack untouched and everything
+#: else is rotated onto a `Pal` entry, and no gate in this project holds one to the other. It was
+#: reported off a device in four words. `--contact` is what the agreement is checked by, and this
+#: is the second time that has been the only instrument (invariant 37f).
+#:
+#: The letter stays `y`. It is a *cell* letter - it reaches the authored boards, the offline
+#: mirror and `WardLine.Colours`, and a save keys a loadout on it - so renaming it to `o` would
+#: be renaming a shipped id to fix a picture.
 WARD_HUES = (
     ("r", 0.986),               # Poppy   #F2404F
     ("g", 0.308),               # Mint    #7BD86A
     ("b", 0.561),               # Azure   #4FC1FF
-    ("y", 0.122),               # Sun     #FFC93C
+    ("y", 0.075),               # Amber   #FF8A2B
 )
 
 #: How tall a warlord is drawn, in pixels, and how many frames each of its two reels keeps.
@@ -442,22 +458,110 @@ OVERLORD = 400
 BLIGHT = 290
 WARBRINGER = 360
 
-#: The four bosses, each from a pack none of the others came from.
+#: The four bosses: a body reel, a cast reel, and how tall each is cut.
 #:
-#: **Four bodies, four packs, four sizes**, because a boss has to be told apart before it has done
-#: anything. The chapter shipped two of these drawn from one *reel* and separated by a run-time
-#: hue, which is the thinnest possible difference and read exactly as what it was.
+#: <b>Not insects, and that is the whole of what this table is for.</b> They were four insects out
+#: of the same fifteen bodies the raiders wear, which made every boss in this game a creeper drawn
+#: three times the size - and the owner's verdict, met from a device, is that the raid and the thing
+#: leading it must not be the same animal. It is invariant 37z's rule asked one level up: that entry
+#: is about two <em>bosses</em> told apart by nothing, and this is a boss and the wave it walks in
+#: front of told apart by nothing but scale. A boss is what a chapter is remembered for, so it may
+#: not be a bigger copy of what the player has been shooting for nine rungs.
 #:
-#: Each row is (pack, [idle, walk, attack], height, folders allowed to overflow the frame). All
-#: three reels of one boss come off **one canvas** (`paired`), or it changes size when it throws.
+#: <b>Four bodies out of `MONSTERS`' five, chosen on what each one <em>projects</em></b> (37ar's
+#: rule, which is the one thing that decides whether a body survives a top-down camera): `Bos02` is
+#: hooded with white horns and drawn in the douse's own teal, so the <b>blightcaller</b> looks like
+#: the caster it is; `Bos03` is helmed and <b>holds a mace</b>, which is a duellist, so it is the
+#: <b>warlord</b>; `Bos05` is the widest and the oddest - a barrel body under a teal lid with a
+#: mace in one hand and a disc in the other - so it is the <b>warbringer</b>, the one that roars at
+#: the whole line rather than picking a turret; and `Bos04` wears a <b>gold crown</b> over magenta,
+#: which is what invariant 37x already called the overlord in prose. The fifth is spare,
+#: deliberately - a fifth verb one day gets a body without a purchase.
+#:
+#: <b>The warbringer was `Bos01` until a render put it beside the second chapter's cast.</b> A green
+#: boss with arms stood next to a green brute with arms and the only thing telling them apart was
+#: size, which is the whole complaint this table exists to answer arriving one chapter later. Brown
+#: and teal is a pair of colours no raider in either chapter wears - and that is the general point:
+#: **a boss body has to be picked against the cast it will stand in front of, not on its own.**
+#:
+#: <b>Nothing here is hue-rotated</b>, exactly as before: a raider's colour is a rule (37f) and a
+#: boss's colour is not, so these keep what the pack painted and are told apart by silhouette.
+#:
+#: <b>Two reels rather than three, and the walk is what went.</b> A boss used to carry idle, walk
+#: and attack because it was a biped: an idle sliding down a hill reads as <em>floating</em>
+#: (invariant 37u), so something had to choose between them every frame. Nothing in this cast
+#: strides - these bodies bob in place over 25 frames and travel nowhere - so standing and walking
+#: are one picture and the board is the only thing that moves it. A boss that really walked would
+#: want `WalkReel` back.
+#:
+#: <b>And none of the five has a second animation</b>, where the old overlord had a take-off. So all
+#: four cast reels are `pulse`'s synthesised rear-up rather than three of four. That is a real loss
+#: and it is priced: a bought gesture beats a generated one, and what it buys back is four bosses
+#: that do not look like the wave behind them.
 BOSS_SET = {
-    "blight": (BLIGHTCALLERS, [BLIGHT_IDLE, BLIGHT_WALK, BLIGHT_ATTACK], BLIGHT,
-               (BLIGHT_ATTACK,)),
-    "boss": (WARLORDS, [BOSS_IDLE, BOSS_WALK, BOSS_ATTACK], BOSS, (BOSS_ATTACK,)),
-    "bringer": (WARBRINGERS, [BRINGER_IDLE, BRINGER_WALK, BRINGER_ATTACK], WARBRINGER,
-                (BRINGER_ATTACK,)),
-    "over": (OVERLORDS, [OVER_IDLE, OVER_WALK, OVER_ATTACK], OVERLORD, (OVER_ATTACK,)),
+    "blight":  (WARLORDS % 2, None, BLIGHT),
+    "boss":    (WARLORDS % 3, None, BOSS),
+    "bringer": (WARLORDS % 5, None, WARBRINGER),
+    "over":    (WARLORDS % 4, None, OVERLORD),
 }
+
+#: The second chapter's twelve raiders: which pack a body comes from, and where in it.
+#:
+#: <b>This is the second cast set 37ar said a second pack would buy, and it cost exactly what that
+#: entry predicted</b> - one table here, twelve rows in `SiegeMode`, and no code. The first set is
+#: insects and stays insects; this one is the blob family the two monster packs share, so a player
+#: crossing from one chapter to the next meets a different <em>kind</em> of thing rather than the
+#: same thing in new colours (invariant 37z's complaint, asked of a chapter).
+#:
+#: <b>The kind is said by the silhouette and by nothing else, because colour is already spoken
+#: for.</b> Every raider is hue-rotated onto the colour it answers to (37f), so the pack's own paint
+#: is overwritten and cannot carry the kind. What survives a rotation is shape: a <b>plain smooth
+#: egg</b> creeps, <b>arms</b> make a brute, and a <b>hard crest, stalks or a banded shell</b> makes
+#: a bulwark. That the brutes are exactly the four bodies in either pack with arms is luck; that the
+#: rule is one a player can learn without being told is not.
+#:
+#: <b>Three bodies are left out and one of them on purpose</b>: `MONSTERS`' fifth is a money bag,
+#: which is loot rather than a raider, and standing one in a wave would teach that a thing on the
+#: hill might be worth something.
+#:
+#: <b>The sources are smaller than the insects' and are cut to the same `CAST`</b>, so there is a
+#: mild upscale in the bake - about 1.4x off a 130-pixel body. Flat vector art carries that where
+#: pixel art would not (37at's "upscaling is the plainest cheap signal there is" is about a body
+#: drawn at 180 and blown up on a phone, which is the runtime's job and is unchanged here). Cutting
+#: them smaller would only move the same stretch to the device.
+BROOD_SET = {
+    # creepers - four plain eggs with nothing on them, so a wave of them reads as a swarm
+    "broodMon_r":     (MONSTERS, BROOD % 1),
+    "broodMon_g":     (MONSTERS, BROOD % 2),
+    "broodMon_b":     (MONSTERS, BROOD % 4),
+    "broodMon_y":     (KIT, KIT_BROOD % 3),
+
+    # brutes - the four bodies in either pack that have arms
+    "broodBrute_r":   (KIT, KIT_BROOD % 2),
+    "broodBrute_g":   (KIT, KIT_BROOD % 6),
+    "broodBrute_b":   (KIT, KIT_BROOD % 7),
+    "broodBrute_y":   (KIT, KIT_BROOD % 10),
+
+    # bulwarks - a banded shell over one armoured eye, a spined crest, two stalks, a visored eye
+    "broodBulwark_r": (MONSTERS, BROOD % 3),
+    "broodBulwark_g": (KIT, KIT_BROOD % 5),
+    "broodBulwark_b": (KIT, KIT_BROOD % 8),
+    "broodBulwark_y": (KIT, KIT_BROOD % 4),
+}
+
+#: How far a synthesised cast reel surges, and how far down the hill it leans.
+#:
+#: <b>A top-down beetle rears at the camera, so rearing is a change of size.</b> Three of the four
+#: bosses have exactly one animation in the pack, and shipping them with no cast gesture at all
+#: would have been the last verdict on this mode ("boring bosses") invited straight back - so the
+#: reel is built: the body surges toward the viewer and a little down the hill over the same
+#: `BossTell` window the ring and the crackle already fill, then settles. It is a real gesture
+#: rather than a zoom because that is what the motion <em>is</em> from above; what would be a bug
+#: is a boss that changed size and stayed changed, which is why the pulse is a sine.
+BOSS_RISE, BOSS_LEAN = 0.17, 0.05
+
+#: How much of a real cast animation is kept. See `boss_reels`.
+BOSS_GESTURE = 0.40
 
 #: How many frames of a turret's recoil are kept. They are 10 to 20 in the pack and the whole
 #: motion is over in a fifth of a second on screen.
@@ -492,11 +596,33 @@ CAST_PULL, CAST_SAT_GAIN, CAST_SAT_FLOOR = 0.92, 0.62, 0.30
 
 #: How much a raider's value is lifted. Small, and it is here for one colour.
 #:
-#: **Yellow only reads as yellow when it is bright**, so a body rotated onto the Sun hue off a dark
-#: source comes out *brown* - which was the yellow creeper, at every pull. A modest lift fixes it
-#: and costs the other three nothing; twice this much starts flattening the reds, which is the
-#: thing the low saturation floor is protecting. Rendered at 1.0, 1.08 and 1.15 to pick it.
+#: **A warm hue only reads warm when it is bright**, so a body rotated onto the fourth ward's hue
+#: off a dark source comes out *brown* - which was the yellow creeper, at every pull. A modest
+#: lift fixes it and costs the other three nothing; twice this much starts flattening the reds,
+#: which is the thing the low saturation floor is protecting. Rendered at 1.0, 1.08 and 1.15 to
+#: pick it.
+#:
+#: **It is kept now that the fourth ward is `Pal.Amber` rather than `Pal.Sun`**, and for a reason
+#: worth stating: orange is more forgiving than yellow here, so the lift is doing less work than
+#: it was - but red and orange are now 32 degrees apart where red and yellow were 48, and value is
+#: one of the two things keeping them separate. Take this out and the orange raider walks toward
+#: the red one.
 CAST_VAL_GAIN, CAST_VAL_LIFT = 1.08, 0.04
+
+#: The value every raider is lifted onto, and the most it may be lifted by.
+#:
+#: <b>Measured per body rather than typed once, because these shells are not all painted at the
+#: same brightness.</b> `hued` sets a pixel's <em>hue</em> and pushes its saturation, and leaves
+#: its value alone - which is right, and is why a body drawn near black comes out near black in
+#: whatever colour it was asked for. Measured across the twelve: the mean opaque value of a
+#: hybrid's shell is 140 and of the darkest beetle 47, so on a board where <b>the colour of a
+#: raider is the whole mechanic</b> two of the four blues read as black.
+#:
+#: So the gain is `CAST_VALUE / whatever this body actually measures`, which is `graded`'s argument
+#: about the ground asked of the cast: the variety a pack gives you is hue and material, never
+#: brightness, because brightness is what decides whether anything can be read at all. The ceiling
+#: is there so a near-black body is lifted a long way and never turned into a grey one.
+CAST_VALUE, CAST_VALUE_CEILING = 118.0, 3.0
 
 STONE_DARK = (38, 46, 58)
 STONE_MID = (62, 74, 90)
@@ -580,81 +706,6 @@ def ground(w, h, top, bottom, seed):
 
 
 # --------------------------------------------------------------------------- the board
-
-
-def slabs():
-    """The mine tileset's own square floor pieces, by number. None when the pack is absent."""
-    z = zipped(MINE.name, MINE.parent)
-    if z is None:
-        return None
-
-    art = {}
-    for name in z.namelist():
-        if not name.endswith(".png") or "__MACOSX" in name:
-            continue
-
-        stem = name.split("/")[-1].replace("Asset ", "").replace("xhdpi.png", "")
-        if stem.isdigit():
-            art[int(stem)] = read(z, name)
-
-    # The 265-square pieces are the floor; everything taller is a wall block or an ore cluster.
-    floor = {k: v for k, v in art.items() if v.size == (265, 265)}
-    return floor or None
-
-
-def floor(pieces, mix, seed, across=4, down=5):
-    """One ground, laid from a named mix of the mine's slabs.
-
-    <b>Three grounds in three sittings, and the reason it moved twice is worth keeping.</b> The
-    first was drawn - dark earth under a black wash - and read as a hole. The second was the
-    top-down pack's grass, which read correctly and was chosen for brightness. This is the owner's
-    third call and it is a *place* rather than a brightness: a mine floor, which is what a line of
-    turrets standing in front of a jewel field is plausibly defending.
-
-    <b>The plate rule comes back with it</b> (CRAFT.md: a dark ground is what makes bright pieces
-    read), so unlike the grass this needs no help - the raiders are saturated cartoon colours and
-    every one of them now sits on something that is not competing with it. What it does need is to
-    not be *flat*, which is what the mix is for: a different handful of slabs and a different seed
-    repave the same stone, so two rungs sharing a tileset do not share a paving pattern.
-
-    **No ore scattered over it.** The pack's ore clusters were laid across the floor to stop it
-    reading as flat, drained most of the way to grey so they would not compete with the four
-    colours this board spends on things the player has to tell apart. Played, they read as litter.
-    """
-    tiles = [pieces[k] for k in mix if k in pieces]
-    if len(tiles) < 2:
-        sys.exit("a ground needs at least two of the mine's slabs; got %r" % (mix,))
-
-    side = 265
-    im = Image.new("RGBA", (side * across, side * down), (26, 24, 26, 255))
-
-    rng = np.random.RandomState(seed)
-    for y in range(down):
-        for x in range(across):
-            im.alpha_composite(tiles[int(rng.rand() * len(tiles))], (x * side, y * side))
-
-    return im.resize((512, 640), Image.LANCZOS)
-
-
-def toned(im, shadow, light):
-    """A gradient map: the slab's own luminance read through a two-point ramp.
-
-    <b>A hue rotation cannot do this and that is why it is not used.</b> `hued` turns the wards,
-    and it works because the kit paints them - rotating the hue of something that has none leaves
-    it exactly as grey as it was, and the mine's stone sits at a chroma of about two. So the colour
-    has to be *supplied*, and a ramp from a dark end to a light one is the way that keeps every
-    seam, chip and edge the tileset drew: what changes is the material, not the masonry.
-    """
-    a = np.asarray(im.convert("RGB")).astype(np.float32)
-    lum = a[..., 0] * 0.30 + a[..., 1] * 0.59 + a[..., 2] * 0.11
-
-    low, high = float(lum.min()), float(lum.max())
-    t = ((lum - low) / max(high - low, 1.0))[..., None]
-
-    out = np.asarray(shadow, np.float32) + t * (np.asarray(light, np.float32) -
-                                                np.asarray(shadow, np.float32))
-    rgba = np.dstack([out, np.full(lum.shape, 255.0, np.float32)])
-    return Image.fromarray(np.clip(rgba, 0, 255).astype(np.uint8), "RGBA")
 
 
 def lit(im):
@@ -1211,12 +1262,12 @@ def spaced(names, count):
     return [names[min(len(names) - 1, int(i * step))] for i in range(count)]
 
 
-def cast_frames(z, folder, count=FRAMES, tall=CAST):
+def cast_frames(z, folder, count=FRAMES, tall=CAST, ink=(0, 0, 0)):
     names = spaced(ordered(z, folder), count)
     if not names:
         return []
 
-    frames = [read(z, n) for n in names]
+    frames = deshadow([read(z, n) for n in names], ink)
 
     box = box_of(frames)
     if box is None:
@@ -1242,113 +1293,238 @@ def centroid(im):
     return float((xs * a).sum() / mass), float((ys * a).sum() / mass)
 
 
-def paired(z, folders, count, tall, overflow=()):
-    """Two animations of one character, cut onto **one** canvas so the body cannot jump.
+#: What a baked ground shadow is made of, measured: <b>pure black at partial alpha</b>. The pack
+#: composites every insect over a soft ellipse drawn at alpha 87 and RGB (0, 0, 0); the body is at
+#: alpha 255, and the one other thing drawn see-through is a fly's <em>wings</em>, which are white.
+#: So the shadow is separable exactly, and by something more honest than a threshold on darkness -
+#: a black leg is opaque and stays, a white wing is translucent and stays.
+SHADOW_ALPHA, SHADOW_INK = 200, 24
 
-    <b>Why this is not two calls to `cast_frames`.</b> Each animation is exported on a canvas
-    cropped to its own extent - this alien's idle is 326 wide and its attack 436, because the
-    attack throws a fist a long way out - so trimming each to its own bounding box and fitting
-    both into the same square draws the body at two different *sizes*. On screen that is a boss
-    that shrinks by a quarter every time it casts and grows back afterwards, which reads as a bug
-    in the game rather than as an animation.
+#: The same fact about the monster pack, measured the same way: <b>one violet at partial alpha</b>.
+#: Every shaded pixel in `MONSTERS` and in `KIT`'s monsters is RGB (85, 63, 136) at alpha 8-128,
+#: and every body is opaque - so the separation is exact here too, and it is a <em>different</em>
+#: exact ink rather than a looser version of the same one.
+#:
+#: <b>Which is why `deshadow` takes the ink rather than growing a second branch.</b> A baked shadow
+#: is a flat ink under an opaque body; that is one rule, and two packs each naming their own ink is
+#: the rule used twice. A second function would be invariant 5b's fault - the same rule written out
+#: again, correct until one copy meets a case the other was never given. Note what a colour test
+#: buys that a darkness test cannot: these bodies carry a <b>very thick dark outline</b>, so
+#: "anything dark and see-through" would eat the drawing's own line.
+SHADE_VIOLET = (85, 63, 136)
 
-    <b>The alignment is exact rather than approximate.</b> The first frame of each animation is
-    the same pose, so the two frames hold the same pixels translated - which means the offset
-    between the canvases is the difference of their alpha centroids, to the pixel. Measured on the
-    shipped pair: (111, 41), against an overlap search that agreed. It is checked rather than
-    assumed: if the two first frames do not carry the same mass they are not the same pose, and
-    the caller is told rather than handed a silently misaligned reel.
+
+def value_gain(frames):
+    """How far this body has to be lifted to read at all. See `CAST_VALUE`."""
+    total, count = 0.0, 0
+    for im in spaced(frames, 4):
+        a = np.asarray(im).astype(np.float32)
+        body = a[..., 3] > 200
+        if not body.any():
+            continue
+        total += float(a[..., :3][body].max(axis=-1).mean())
+        count += 1
+
+    if count == 0 or total <= 0.0:
+        return CAST_VAL_GAIN
+
+    return min(CAST_VALUE_CEILING, max(CAST_VAL_GAIN, CAST_VALUE / (total / count)))
+
+
+def deshadow(frames, ink=(0, 0, 0), tol=SHADOW_INK):
+    """Drop the ground shadow a pack bakes under every body.
+
+    <b>It has to go because of what it does to the *frame*, not because of how it looks.</b> The
+    ellipse is wider than the insect and sits below it, so a bounding box taken over the animation
+    is half as wide again and a third taller than the body - and `SiegeView` sizes a body by its
+    frame's height. Left in, a bulwark came out in a 242x177 frame around a body 110 across: a
+    small beetle adrift in a box, which is invariant 37u's fault arriving through the art rather
+    than through the framing.
+
+    <b>The view draws its own shadow under every raider</b> (`SiegeView.Hatch`), sized to the body
+    and sitting still while the body bobs - so nothing is lost here, and what is gained is that the
+    shadow stops bobbing with the thing casting it.
+
+    <b>What this does not take is the ellipse's own feathered edge</b> - a rim of grey at alpha
+    5-86 and a halo out at alpha 1, which is invisible and which `Image.getbbox` counts, so a fly
+    is still framed a good deal taller than its body. Measured and left alone deliberately: closing
+    it changes how every raider is framed and therefore how big each is drawn, and this cast has
+    been played and approved. It is its own change, not a tidy-up.
+
+    <b>`ink` is what this pack's shadow is made of</b>, and the default is the insect pack's black,
+    so every existing call cuts exactly what it always did: for black, "within `tol` of the ink on
+    every channel" *is* "max channel below `tol`". See `SHADE_VIOLET` for why the second pack
+    needed a colour rather than a darkness.
     """
-    reels = []
-    for folder in folders:
-        names = ordered(z, folder)
-        if not names:
-            return None
-        reels.append([read(z, n) for n in names])
+    ink = np.array(ink, dtype=np.int16)
+    out = []
+    for im in frames:
+        a = np.array(im)
+        near = np.abs(a[..., :3].astype(np.int16) - ink).max(axis=-1) < tol
+        shade = (a[..., 3] < SHADOW_ALPHA) & near
+        if not shade.any():
+            out.append(im)
+            continue
 
-    base = centroid(reels[0][0])
-    shifts = []
+        a[shade, 3] = 0
+        out.append(Image.fromarray(a, "RGBA"))
 
-    for frames in reels:
-        here = centroid(frames[0])
-        shifts.append((int(round(here[0] - base[0])), int(round(here[1] - base[1]))))
+    return out
 
-        mass = np.asarray(frames[0])[..., 3].sum()
-        want = np.asarray(reels[0][0])[..., 3].sum()
-        if abs(int(mass) - int(want)) > want * 0.04:
-            raise SystemExit("the first frames of %s are not the same pose as %s, so these two "
-                             "animations cannot be aligned by centroid" % (folders, folders[0]))
 
-    # Every frame of both animations, expressed in the first animation's own pixel space.
+def pulse(frames, count, rise, lean):
+    """A cast reel built out of a body reel: the insect surges at the viewer and settles.
+
+    <b>Three of the four bosses have exactly one animation in the pack</b>, and a boss that does
+    nothing at all when it throws is the last verdict on this mode invited straight back. From
+    above, rearing up <em>is</em> a change of size - so the body grows toward the viewer and leans
+    a little down the hill over the same window the ring and the crackle already fill.
+
+    <b>A sine, so it begins and ends on the standing pose.</b> A ramp would leave the boss bigger
+    than it started and the snap back would read as the bug invariant 37u names; the legs keep
+    cycling underneath, because the body reel is still being walked through.
+    """
+    n = max(2, count)
+    wide = int(math.ceil(frames[0].width * (1.0 + rise)))
+    high = int(math.ceil(frames[0].height * (1.0 + rise + lean)))
+
+    out = []
+    for i in range(n):
+        t = math.sin(math.pi * i / float(n - 1))
+        src = frames[min(len(frames) - 1, int(i * len(frames) / float(n)))]
+
+        scale = 1.0 + rise * t
+        big = src.resize((max(1, int(round(src.width * scale))),
+                          max(1, int(round(src.height * scale)))), Image.LANCZOS)
+
+        pane = Image.new("RGBA", (wide, high), (0, 0, 0, 0))
+        pane.alpha_composite(big, (int(round((wide - big.width) / 2.0)),
+                                   int(round((high - big.height) / 2.0 + lean * high * t))))
+        out.append(pane)
+
+    return out
+
+
+def one_canvas(reels, body, count, tall):
+    """Every reel of one character, cut onto **one** canvas so the body cannot jump or resize.
+
+    <b>Why this is not one call to `cast_frames` per reel.</b> Trimming each animation to its own
+    bounding box and fitting each into its own frame draws the body at a different *size* in each -
+    on screen that is a boss that shrinks by a quarter every time it casts and grows back
+    afterwards, which reads as a bug in the game rather than as an animation.
+
+    <b>The alignment is the canvas centre, which is exact rather than approximate.</b> Every
+    animation of one insect in this pack is exported on the same canvas, and a reel this tool
+    synthesises (`pulse`) is grown symmetrically about that centre - so two frames of one body sit
+    at the same place by construction, with nothing to measure and nothing to get wrong. The
+    version this replaced aligned two *differently sized* canvases by matching the alpha centroid
+    of their first frames, which needed those frames to be the same pose and said so out loud;
+    that is a stronger check than it sounds, and it is simply not needed once the canvas is shared.
+
+    <b>Nothing is ever cut off, and the frame is widened symmetrically to manage it.</b> The view
+    sizes a body by its *height* (`SiegeView.Frame`), so a wider canvas costs no size at all - what
+    it costs is **centring**, because the view centres the canvas on the lane. So the width is
+    taken as far as the widest thing reaches on either side of the body's own centre, and mirrored.
+    """
+    middles = [(r[0].width / 2.0, r[0].height / 2.0) for r in reels]
+
     def extent(over):
         box = None
-        for frames, (dx, dy) in over:
+        for frames, (cx, cy) in over:
             for im in frames:
                 bb = im.getbbox()
                 if bb is None:
                     continue
-                here = (bb[0] - dx, bb[1] - dy, bb[2] - dx, bb[3] - dy)
+                here = (bb[0] - cx, bb[1] - cy, bb[2] - cx, bb[3] - cy)
                 box = here if box is None else (min(box[0], here[0]), min(box[1], here[1]),
                                                 max(box[2], here[2]), max(box[3], here[3]))
         return box
 
-    kept = [(r, s) for r, s, f in zip(reels, shifts, folders) if f not in overflow]
-
-    home = extent(kept) or extent([(reels[0], shifts[0])])
-    whole = extent(list(zip(reels, shifts)))
+    pairs = list(zip(reels, middles))
+    home = extent([pairs[body]])
+    whole = extent(pairs)
 
     if home is None or whole is None:
         return None
 
-    # **Nothing is cut off any more, and the frame is widened symmetrically to manage it.**
-    #
-    # It used to be *wide as what stays in frame, tall as everything*: the attack was named in
-    # `overflow` and its thrown fist simply left the canvas, on the argument that "it threw
-    # something" looks like that anyway and that framing the fist would put the body in 60% of a
-    # 522-pixel canvas. Played, it came back as parts of a boss visibly cut off mid-animation, and
-    # the argument was half wrong: the *view sizes a body by its height* (`SiegeView.Frame`), so a
-    # wider canvas costs no size at all. What it really costs is **centring** - the canvas grows on
-    # whichever side the fist goes, and the view centres the canvas on the lane, so the body would
-    # stand off to one side.
-    #
-    # So the width is taken as far as the widest thing reaches on *either* side of the body's own
-    # centre, and mirrored. The body stays exactly where it was and exactly the size it was; what
-    # grows is transparent margin, which is what "expand the container" means.
-    #
-    # `overflow` therefore no longer decides what is *drawn* - it decides what defines the body's
-    # centre, which is still the standing and walking reels, because a fist is not a body.
-    #
-    # *Tall*: a clipped head is not a throw, it is a mistake. Nothing is ever cut off the top.
-    middle = (home[0] + home[2]) / 2.0
-    reach = max(middle - whole[0], whole[2] - middle, middle - home[0], home[2] - middle)
+    across = (home[0] + home[2]) / 2.0
+    reach = max(across - whole[0], whole[2] - across, across - home[0], home[2] - across)
 
-    box = (int(math.floor(middle - reach)), whole[1], int(math.ceil(middle + reach)), whole[3])
+    # **Mirrored on both axes about the body's own middle, not just across.**
+    #
+    # The width has always been taken this way, for a stated reason: the view centres the canvas on
+    # the lane, so a canvas that grew only on the side a thrown fist went would stand the body off
+    # to one side. The *height* was taken as the plain union - tall as everything, so nothing is
+    # ever clipped - and that has the same fault one axis over, which nothing noticed until the
+    # cast became insects: a gesture that rises puts the body low in its own frame, and everything
+    # the view positions relative to a body is positioned relative to the *frame*. What that looked
+    # like on a device is a boss whose shadow sat further from it than its raiders' did.
+    #
+    # Mirroring only ever grows the canvas, so the promise below is untouched: a clipped head is
+    # not a throw, it is a mistake, and nothing is cut off anywhere.
+    down = (home[1] + home[3]) / 2.0
+    fall = max(down - whole[1], whole[3] - down, down - home[1], home[3] - down)
+
+    box = (math.floor(across - reach), math.floor(down - fall),
+           math.ceil(across + reach), math.ceil(down + fall))
 
     # The claim above, asserted rather than believed. It is the one property of this frame that
-    # matters and the one nothing downstream could ever notice: a clipped fist imports, addresses,
-    # audits and draws, and the only symptom is a boss losing an arm for four frames of a throw
+    # matters and the one nothing downstream could ever notice: a clipped body imports, addresses,
+    # audits and draws, and the only symptom is a boss losing a horn for four frames of a lunge
     # that nobody is looking at closely (invariant 32b - no gate in this project opens a PNG).
-    # Measured when this replaced the old `overflow` rule: the four bosses were losing 162, 102,
-    # 106 and 6 pixels of their attacks.
     if not (box[0] <= whole[0] and box[2] >= whole[2]
             and box[1] <= whole[1] and box[3] >= whole[3]):
-        raise SystemExit("%s: the shared canvas does not contain every frame of every reel, so "
-                         "something is being cut off" % (folders,))
+        raise SystemExit("the shared canvas does not contain every frame of every reel, so "
+                         "something is being cut off")
 
-    wide, high = box[2] - box[0], box[3] - box[1]
+    wide, high = int(box[2] - box[0]), int(box[3] - box[1])
     ratio = tall / float(high)
     size = (max(1, int(wide * ratio)), tall)
 
     out = []
-    for frames, (dx, dy) in zip(reels, shifts):
+    for frames, (cx, cy) in pairs:
         cut = []
         for im in spaced(frames, count):
             pane = Image.new("RGBA", (wide, high), (0, 0, 0, 0))
-            pane.alpha_composite(im, (-box[0] - dx, -box[1] - dy))
+            pane.alpha_composite(im, (int(round(-box[0] - cx)), int(round(-box[1] - cy))))
             cut.append(pane.resize(size, Image.LANCZOS))
         out.append(cut)
 
     return out
+
+
+def boss_reels(z, body, cast, tall, ink=(0, 0, 0)):
+    """A boss's two reels: the one it stands and walks in, and the one it throws in.
+
+    The cast reel is a <b>there-and-back</b> whichever way it is come by - the pack's own take-off
+    played forward and then reversed, or `pulse`'s sine - so it always begins and ends on the
+    standing pose and there is no frame anywhere on which the boss snaps.
+    """
+    stand = deshadow([read(z, n) for n in ordered(z, body)], ink)
+    if not stand:
+        return None
+
+    if cast is None:
+        thrown = pulse(stand, BOSS_CAST_FRAMES, BOSS_RISE, BOSS_LEAN)
+    else:
+        gesture = deshadow([read(z, n) for n in ordered(z, cast)], ink)
+        if not gesture:
+            return None
+
+        # **Only the first part of it**, and the reason is the shared canvas rather than the
+        # gesture. The pack's take-off carries the insect 64 pixels off the ground out of a
+        # 278-pixel frame, and `one_canvas` is tall as everything - so the whole reel would set
+        # the frame's height and the body would be drawn a quarter smaller in *both* reels for
+        # the sake of a rise nobody is looking at. Cut to a rear-up it costs nothing and reads
+        # better: the overlord lifts, hurls, and settles.
+        gesture = gesture[:max(2, int(len(gesture) * BOSS_GESTURE))]
+        thrown = gesture + gesture[::-1]
+
+    reels = one_canvas([stand, thrown], 0, max(BOSS_FRAMES, BOSS_CAST_FRAMES), tall)
+    if reels is None:
+        return None
+
+    return spaced(reels[0], BOSS_FRAMES), spaced(reels[1], BOSS_CAST_FRAMES)
 
 
 # --------------------------------------------------------------------------- the drop
@@ -1358,41 +1534,40 @@ def build():
     """Every PNG this mode ships, as {relative path: image}. Empty when the packs are absent."""
     match3, blasts = zipped(MATCH3), zipped(BLASTS)
     turrets, kit = zipped(TURRETS, TOWER), zipped(KIT, TOWER)
+    monsters = zipped(MONSTERS, ENEMIES)
 
     if match3 is None or blasts is None or turrets is None or kit is None:
         return None
+
+    # The bosses and half the second chapter's cast live here. Absent, this is a checkout without
+    # the pack rather than a mistake - the same bargain every art tool in this project strikes -
+    # so it is answered by cutting neither, and `--check` then has nothing to hold them to.
+    if monsters is None:
+        return None
+
+    #: Which zip a `BROOD_SET` row names. A table of bodies has to say which pack each is in, and
+    #: one dict is how it says it without a branch per row.
+    packs = {KIT: kit, MONSTERS: monsters}
 
     made = {}
 
     for key, (src, _) in GEMS.items():
         made["Siege/%s.png" % key] = fit(read(match3, src), TILE, 0.88)
 
-    # **Ten grounds, one per place in a chapter** (invariant 7c). The mine's own untouched floor
-    # is one of them and is measured first, because the other nine are normalised onto its value
-    # ladder rather than onto a pair of typed numbers - see `graded`.
-    pieces = slabs()
-    if pieces is None:
-        return None
+    # **Ten grounds, one per place in a chapter** (invariant 7c). One rung's floor keeps whatever
+    # value ladder its own sheet was drawn with and is measured first, because the other nine are
+    # normalised onto it rather than onto a pair of typed numbers - see `graded`.
+    # **Generated rather than laid** - see `make_siege_ground`. What did not change is the rule
+    # underneath: one rung's floor still sets the value ladder the other nine are normalised onto,
+    # because that is what keeps a hill darker and duller than the cast walking over it, and it
+    # has been got wrong twice before. What changed is where the pixels come from, and that the
+    # ten no longer need a folder nobody else has.
+    raw = ground_art.grounds()
 
-    plain = None
-    for key, tone, shadow, light, mix, seed in GROUNDS:
-        if tone is None:
-            plain = depth(floor(pieces, mix, seed))
-            break
-
-    if plain is None:
-        return None
-
-    light_of = lit(plain)
-    mean, spread = float(light_of.mean()), float(light_of.std())
-
-    for key, tone, shadow, light, mix, seed in GROUNDS:
-        if tone is None:
-            made["Siege/%s.png" % key] = plain
-            continue
-
-        made["Siege/%s.png" % key] = graded(
-            depth(toned(floor(pieces, mix, seed), shadow, light)), mean, spread)
+    for spec in ground_art.GROUND:
+        key = spec["key"]
+        made["Siege/%s.png" % key] = graded(depth(raw[key]), GROUND_MEAN,
+                                            GROUND_SPREAD, GROUND_CHROMA)
     made["Siege/rampart.png"] = rampart()
     made["Siege/plate.png"] = plate()
     made["Siege/socket.png"] = socket()
@@ -1506,48 +1681,46 @@ def build():
         for i, im in enumerate(blast_frames(blasts, folder, turns, saturate)):
             made["Fx/Siege/%s/f%02d.png" % (key, i)] = im
 
-    packs = {}
-
-    # **Every raider, hue-rotated into its own colour.** `CAST_HUE` is a gentler grade than the
-    # wards get: a turret has to read as *lit* on a bright green field, where a monster has to keep
-    # its own face - so saturation is pushed less far and the value is not lifted at all. Both go
-    # through one function, because two copies of a hue rotation is two ways for a red raider and a
-    # red bolt to disagree about what red is.
+    # **Every raider, hue-rotated into its own colour.** A gentler grade than the wards get: a
+    # turret has to read as *lit* on a bright hill, where a raider has to keep its own face - so
+    # saturation is pushed less far and the value is barely lifted. Both go through one function,
+    # because two copies of a hue rotation is two ways for a red raider and a red bolt to disagree
+    # about what red is.
     hues = dict(WARD_HUES)
 
-    for key, (pack, folder) in RAIDER_SET.items():
-        if pack not in packs:
-            packs[pack] = zipped(pack)
-        z = packs[pack]
-        if z is None:
-            continue
-
+    for key, folder in RAIDER_SET.items():
         hue = hues.get(key[-1])
-        for i, im in enumerate(cast_frames(z, folder)):
+        frames = cast_frames(merge, folder)
+        gain = value_gain(frames)
+
+        for i, im in enumerate(frames):
             made["Siege/%s/f%02d.png" % (key, i)] = im if hue is None else hued(
                 im, hue, pull=CAST_PULL, sat_gain=CAST_SAT_GAIN, sat_floor=CAST_SAT_FLOOR,
-                val_gain=CAST_VAL_GAIN, val_lift=CAST_VAL_LIFT)
+                val_gain=gain, val_lift=CAST_VAL_LIFT)
 
-    # The four bosses: three reels each, all off one canvas so none of them jumps or changes size
+    # The second chapter's cast, out of the two blob packs. The same three lines as the insects
+    # above, because a cast set is a *table* and not a code path - which is the whole of what
+    # `BROOD_SET`'s entry claims and the reason a third set would cost nothing either.
+    for key, (pack, folder) in BROOD_SET.items():
+        hue = hues.get(key[-1])
+        frames = cast_frames(packs[pack], folder, ink=SHADE_VIOLET)
+        gain = value_gain(frames)
+
+        for i, im in enumerate(frames):
+            made["Siege/%s/f%02d.png" % (key, i)] = im if hue is None else hued(
+                im, hue, pull=CAST_PULL, sat_gain=CAST_SAT_GAIN, sat_floor=CAST_SAT_FLOOR,
+                val_gain=gain, val_lift=CAST_VAL_LIFT)
+
+    # The four bosses: two reels each, both off one canvas so none of them jumps or changes size
     # when it throws. One loop rather than one block per boss, which is what stopped a third and a
     # fourth being expensive - and what makes the *set* something a reader can see at once.
-    for key, (pack, folders, tall, overflow) in BOSS_SET.items():
-        if pack not in packs:
-            packs[pack] = zipped(pack)
-
-        source = packs[pack]
-        if source is None:
-            continue
-
-        reels = paired(source, folders, max(BOSS_FRAMES, BOSS_CAST_FRAMES), tall,
-                       overflow=overflow)
+    for key, (body, cast, tall) in BOSS_SET.items():
+        reels = boss_reels(monsters, body, cast, tall, ink=SHADE_VIOLET)
         if reels is None:
             continue
 
-        for name, frames, want in ((key, reels[0], BOSS_FRAMES),
-                                   (key + "_walk", reels[1], BOSS_FRAMES),
-                                   (key + "_cast", reels[2], BOSS_CAST_FRAMES)):
-            for i, im in enumerate(spaced(frames, want)):
+        for name, frames in ((key, reels[0]), (key + "_cast", reels[1])):
+            for i, im in enumerate(frames):
                 made["Siege/%s/f%02d.png" % (name, i)] = im
 
     return made
@@ -1588,7 +1761,41 @@ def check(made):
             print("differs: %s" % rel)
         sys.exit("%d missing, %d differ - re-run with --write" % (len(missing), len(differ)))
 
+    shape(made)
     print("%d files are what this tool cuts" % len(made))
+
+
+def shape(made):
+    """The shape a hill is authored at, held to the one other place that has to know it.
+
+    <b>A check that compares this tool to itself cannot fail, and the first cut of this was
+    exactly that</b> - it asserted the pictures it had just generated were the size of the canvas
+    it had just generated them on. What actually needs joining is the two *sides*: the hill's
+    aspect decides how much `SiegeView.GroundSize` crops off a band, and the only place C# writes
+    that number down is `SiegeGroundTests.GroundAspect`, which has to be typed because an offline
+    run loads no sprite (a lookup that answers null whatever is on disk is not a check). So this
+    reads the literal out of the fixture and holds it to `make_siege_ground.W/H`. Re-author the
+    canvas without it and the test goes on proving the old shape covers a band - green, and about
+    art that no longer exists.
+    """
+    want = (ground_art.W, ground_art.H)
+    wrong = [rel for rel, im in sorted(made.items())
+             if rel.startswith("Siege/hill") and im.size != want]
+    if wrong:
+        sys.exit("%s: not the authored %dx%d - see make_siege_ground.W/H"
+                 % (", ".join(wrong), want[0], want[1]))
+
+    fixture = Path(__file__).resolve().parent.parent / "Assets/Game/Tests/SiegeGroundTests.cs"
+    if not fixture.exists():
+        return
+
+    said = re.search(r"GroundAspect\s*=\s*(\d+)f\s*/\s*(\d+)f", fixture.read_text(encoding="utf-8"))
+    if not said:
+        sys.exit("SiegeGroundTests: no GroundAspect to hold the hill's shape to")
+
+    if (int(said.group(1)), int(said.group(2))) != want:
+        sys.exit("SiegeGroundTests.GroundAspect is %s/%s and the hill is authored %dx%d"
+                 % (said.group(1), said.group(2), want[0], want[1]))
 
 
 def contact(made):
@@ -1636,7 +1843,7 @@ def contact(made):
 
 
 def main():
-    global SOURCE, TOWER, MINE
+    global SOURCE, TOWER, ENEMIES
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true")
@@ -1644,12 +1851,12 @@ def main():
     ap.add_argument("--contact", action="store_true")
     ap.add_argument("--source", default=str(SOURCE))
     ap.add_argument("--tower", default=str(TOWER))
-    ap.add_argument("--mine", default=str(MINE))
+    ap.add_argument("--enemies", default=str(ENEMIES))
     args = ap.parse_args()
 
     SOURCE = Path(args.source)
     TOWER = Path(args.tower)
-    MINE = Path(args.mine)
+    ENEMIES = Path(args.enemies)
 
     made = build()
 

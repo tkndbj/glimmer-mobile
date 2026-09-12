@@ -249,28 +249,46 @@ namespace GlimmerGrove
         }
 
         /// <summary>How tall the header band is, and where the readout row sits under it.</summary>
-        const float BarHeight = 210f, ReadoutsY = 274f;
+        const float BarHeight = 210f, ReadoutsY = 186f;
 
         /// <summary>
         /// How tall the readout row is, and where its two lines sit inside it.
         ///
         /// <para>
-        /// The row spans <c>ReadoutsY ± RowHeight / 2</c>, so 214 to 334 down from the safe
-        /// area's top edge: it starts just under the header bar and its foot stays above the
-        /// 350 every mode's board host begins at (<c>FallScreen</c>, <c>ProtoScreen</c>,
-        /// <c>BudBand.LegendTop</c>). The two offsets are the only place a value and its
-        /// caption are placed, read by both <see cref="Slot"/> and <see cref="Lay"/>, because
-        /// the same two numbers written twice is how a row comes to be built at one height and
-        /// laid out at another.
+        /// The row spans <c>ReadoutsY ± RowHeight / 2</c>, so 142 to 230 down from the safe
+        /// area's top edge. The two offsets are the only place a value and its caption are
+        /// placed, read by both <see cref="Slot"/> and <see cref="Lay"/>, because the same two
+        /// numbers written twice is how a row comes to be built at one height and laid out at
+        /// another.
         /// </para>
         /// <para>
-        /// The type was raised from 58 / 22 after the row was reported as too small to read at
-        /// a glance mid-run. The values are sized as a row rather than one at a time, for the
-        /// reason on <see cref="BuildReadouts"/>.
+        /// <b>It sits level with the header's own two keys now, and that is where the board's
+        /// extra height came from.</b> It used to have a band to itself under the bar, 214 to
+        /// 334, which put its foot 34 units *below* the 300 the siege board's host begins at — so
+        /// on that mode the captions were drawn behind an opaque plate and had been invisible for
+        /// as long as the mode had shipped, which is the half of this nobody had noticed. Moving
+        /// the row up into the bar's band puts every caption back on screen **and** lets the
+        /// board start 64 units higher, and the middle of a header bar is empty on every mode:
+        /// what lives up there is one key in each corner. What that costs is a second question
+        /// about the row's width, which is <c>ReadoutRow.ClearsTheKeys</c>.
+        /// </para>
+        /// <para>
+        /// <b>The type came back down to 56 / 22, asked for from a device.</b> It had been raised
+        /// to 74 / 28 when the row was reported as too small to read at a glance mid-run, and at
+        /// that size it cannot share a band with anything. The values are sized as a row rather
+        /// than one at a time, for the reason on <see cref="BuildReadouts"/>.
+        /// </para>
+        /// <para>
+        /// <b>And the top of it is decided by a camera rather than by taste.</b> A dynamic island
+        /// reaches about 132 units down the middle of the display and the run screens deliberately
+        /// give up the top safe inset (<c>RunScreen.SafeEdges</c>), so the middle readout — which
+        /// is the one directly under it — must keep its glyphs clear of that on its own. At 56pt
+        /// centred on 172 they start around 152. Do not move this row up without measuring that
+        /// again.
         /// </para>
         /// </summary>
-        const float RowHeight = 120f, ValueY = 20f, CaptionY = -38f;
-        const int ValueSize = 74, ValueMinSize = 32, CaptionSize = 28, CaptionMinSize = 18;
+        const float RowHeight = 88f, ValueY = 14f, CaptionY = -29f;
+        const int ValueSize = 56, ValueMinSize = 26, CaptionSize = 22, CaptionMinSize = 15;
 
         /// <summary>
         /// How far the header's shade reaches below the bar, in canvas units.
@@ -340,7 +358,7 @@ namespace GlimmerGrove
             // Rotated, so it is opaque along the top edge and gone by its bottom one. It reaches
             // `ShadeDrop` below the bar rather than the 40 it used to, and that is what pays for
             // the backdrop no longer being dimmed as a whole: the readouts are bare text — a
-            // 58pt value and a 22pt caption at 55% white, with no pill under them, unlike the
+            // 56pt value and a 22pt caption at 62% white, with no pill under them, unlike the
             // glade's — so they are the one thing on this screen that needs the sky behind it
             // held down, and they are the only thing that now gets it.
             var shade = UIKit.Img("Shade", bar, Art.FadeUp(64), new Color(.02f, .04f, .08f, .58f));
@@ -433,15 +451,15 @@ namespace GlimmerGrove
         /// </summary>
         static Text Slot(RectTransform row, out Text caption)
         {
-            // The value's box is 80 tall and the caption's 36: together they fill the row's
-            // 120 with a little air at the top and the foot, and they meet at the row's middle.
+            // The value's box is 58 tall and the caption's 26: together they fill the row's
+            // 88 with a little air at the top and the foot, and they meet at the row's middle.
             var value = UIKit.Titled("Value", row, "0", ValueSize, Pal.Cream, TextAnchor.MiddleCenter,
-                                     new Vector2(ReadoutRow.Width, 80f), new Vector2(.5f, .5f),
+                                     new Vector2(ReadoutRow.Width, 58f), new Vector2(.5f, .5f),
                                      new Vector2(0f, ValueY), 4f, 3f);
             UIKit.Shrinkable(value, ValueMinSize);
 
             caption = UIKit.Titled("Cap", row, "", CaptionSize, new Color(.92f, .96f, 1f, .62f),
-                                   TextAnchor.MiddleCenter, new Vector2(ReadoutRow.Width, 36f),
+                                   TextAnchor.MiddleCenter, new Vector2(ReadoutRow.Width, 26f),
                                    new Vector2(.5f, .5f), new Vector2(0f, CaptionY), 3f, 0f);
             UIKit.Shrinkable(caption, CaptionMinSize);
             return value;

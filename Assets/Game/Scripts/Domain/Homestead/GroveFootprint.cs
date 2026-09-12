@@ -59,11 +59,35 @@ namespace GlimmerGrove.Homestead
 
         public int TileCount => Cols * Rows;
 
-        /// <summary>The same footprint mirrored: columns and rows exchanged. See the type's remarks.</summary>
-        public GroveFootprint Mirrored => new GroveFootprint(Rows, Cols);
+        /// <summary>How many ways a piece may face: the four quarter turns of the grid.</summary>
+        public const int Facings = 4;
 
-        /// <summary>This footprint as it stands when the piece faces one way or the other.</summary>
-        public GroveFootprint Facing(bool flipped) => flipped ? Mirrored : this;
+        /// <summary>A facing index wrapped into 0..3, whatever it was handed.</summary>
+        public static int Quarter(int facing) => ((facing % Facings) + Facings) % Facings;
+
+        /// <summary>The same footprint with its columns and rows exchanged.</summary>
+        public GroveFootprint Turned => new GroveFootprint(Rows, Cols);
+
+        /// <summary>
+        /// This footprint as it stands at one of the four facings.
+        ///
+        /// <para>
+        /// Only the parity matters: a quarter turn exchanges the axes and a half turn puts
+        /// them back, so a 2x3 piece covers 3x2 facing east or west and 2x3 facing north or
+        /// south. The anchor does not move through any of them, which is what keeps turning
+        /// a decision about one tile rather than a move in disguise.
+        /// </para>
+        /// <para>
+        /// <b>This used to ask whether the piece was <em>mirrored</em>, and the change is the
+        /// art rather than the arithmetic.</b> A mirror was the only transform a flat cut-out
+        /// could survive — one drawing from one camera angle cannot be rotated, because
+        /// turning the transform turns the <em>painting</em> and a tree leans over. Every
+        /// piece is rendered from a model now, so a facing is a different picture rather than
+        /// a transform, and there are four of them. Both operations exchange the axes, which
+        /// is why nothing that reads a footprint had to learn anything new.
+        /// </para>
+        /// </summary>
+        public GroveFootprint Facing(int facing) => (Quarter(facing) & 1) == 1 ? Turned : this;
 
         /// <summary>Whether a tile lies inside this footprint when it is anchored at a tile.</summary>
         public bool Holds(int anchorCol, int anchorRow, int col, int row)

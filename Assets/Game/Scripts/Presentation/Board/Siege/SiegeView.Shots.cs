@@ -234,6 +234,112 @@ namespace GlimmerGrove
         /// </summary>
         const float ShortestFlight = .20f, LongestFlight = .40f;
 
+        /// <summary>
+        /// How wide the turret itself is drawn, as a multiple of a cell, and how tall.
+        ///
+        /// <b>Here rather than at the places that build the sprite</b>, because
+        /// <see cref="BarrelGap"/> is measured as a fraction of the turret's own picture and has
+        /// to be converted into board units by exactly the width that picture is drawn at. There
+        /// were three copies of these two numbers - the board, the loadout panel and the render -
+        /// and a copy that drifts is a bolt leaving from beside the gun rather than out of it.
+        /// </summary>
+        public const float BodyWide = 1.72f, BodyTall = 2.15f;
+
+        /// <summary>
+        /// How far a twin-barrelled turret's barrels sit from its middle, as a fraction of the
+        /// turret's own picture.
+        ///
+        /// <b>Measured off the art rather than chosen</b>: the seven twin hulls all carry their
+        /// barrels at .091 to .107 of the sprite's width either side of the middle, so one number
+        /// serves all of them and a hull re-cut is the thing that would move it.
+        /// </summary>
+        const float BarrelGap = .097f;
+
+        /// <summary>
+        /// How much of the barrel gap two bolts still have between them when they arrive.
+        ///
+        /// <b>Nearly all of it, because converging is what made two bolts read as one.</b> Bolts
+        /// aimed at one point are a third of a cell apart at the muzzle and touching a few
+        /// hundredths of a second later, which over a flight of a fifth of a second is a single
+        /// comet with a wide start. Held apart they are two comets crossing the hill side by
+        /// side, which is what a twin-barrelled turret is supposed to look like.
+        /// </summary>
+        public const float ApartOnArrival = .8f;
+
+        /// <summary>
+        /// How many barrels this turret is <em>drawn</em> with, which is how many bolts leave it.
+        ///
+        /// <para>
+        /// <b>A fact about the hull, so it is keyed on the rung and never on the id.</b> The art
+        /// tool's own rule is that the hull <em>is</em> the shelf rung (T1 for order 1, T20 for
+        /// order 20), so a table of ids would go stale the next time the shelf is re-rung - which
+        /// has already happened twice (invariants 37ax, 37ay). Reading <c>Order</c> means the
+        /// barrels follow the picture wherever a turret is moved to.
+        /// </para>
+        /// <para>
+        /// <b>It is drawing and nothing else.</b> The board fires one bolt, it lands once, it
+        /// deals its damage once and it plays one sound; what a second barrel adds is a second
+        /// flash and a second comet. Nothing here may reach the rules, or a turret would be
+        /// paying twice for a purchase that bought a picture.
+        /// </para>
+        /// <para>
+        /// <b>Hulls T11 to T17 all carry two barrels, at the same spacing</b>, so this is a list
+        /// of rungs rather than a test: turning one on is one number. T18 to T20 carry a single
+        /// wide mount with the mouths drawn onto it, which alpha cannot separate - those want
+        /// offsets read off the picture by eye rather than measured, so they stay at one.
+        /// </para>
+        /// <para>
+        /// <b>The list is shorter than the band on purpose.</b> It is the owner's, turret by
+        /// turret, after looking at each on a device - measuring says which hulls *could* fire
+        /// twice and only playing says which *should*. T11, T12, T13 and T16 are one entry each
+        /// whenever they are wanted.
+        /// </para>
+        /// </summary>
+        /// <b>A switch rather than a static table</b>, and the reason is the gate rather than
+        /// taste: a static field on a <c>MonoBehaviour</c> needs the type initialised, which the
+        /// offline runner cannot do — so a table here quietly takes `ATurretDrawnWithTwoBarrels`
+        /// out of every run but the Editor's, which is the one nobody makes on the way past.
+        public static int Barrels(Wards.WardModel model)
+        {
+            if (model == null) return 1;
+
+            switch (model.Order)
+            {
+                case 11: case 14: case 15: case 17: return 2;
+                default: return 1;
+            }
+        }
+
+        /// <summary>
+        /// How far barrel <paramref name="barrel"/> of <paramref name="model"/> sits from the
+        /// middle of the turret, in board units, given the cell it is drawn at.
+        ///
+        /// <b>One answer, because there are three callers.</b> The board draws a turret firing,
+        /// <c>WardFiringStage</c> draws the same turret firing on the loadout panel, and
+        /// <c>Tools/render_siege.py</c> mirrors both - and a preview that fired down the middle
+        /// while the board fired from two barrels is exactly the disagreement the panel exists to
+        /// rule out. It takes the cell rather than reading this class's own, so the panel can
+        /// hand it the cell it is drawing at.
+        /// </summary>
+        public static float BarrelStep(Wards.WardModel model, int barrel, float cell)
+        {
+            int barrels = Barrels(model);
+            if (barrels < 2) return 0f;
+
+            return (barrel * 2f - (barrels - 1)) * cell * BodyWide * BarrelGap;
+        }
+
+        /// <summary>
+        /// How much of a lone muzzle flash each barrel's is drawn at.
+        ///
+        /// <b>Well under one, and that is the half that decides whether any of this reads.</b> A
+        /// flash is 2.7 cells across and the barrels are a third of a cell apart, so two at full
+        /// size are one blob with the centres 12% of their own width apart - which is not a wide
+        /// flash, it is the same flash twice as bright. <b>Down if it ever needs to read harder,
+        /// never up.</b>
+        /// </summary>
+        public static float BarrelFlare(Wards.WardModel model) => Barrels(model) > 1 ? .70f : 1f;
+
         void Bolt(SiegeBolt shot)
         {
             var post = _posts[shot.Ward];
@@ -257,12 +363,6 @@ namespace GlimmerGrove
             var dir = to - muzzle;
             float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
 
-            // **The whole shot, and it is deliberately more than a dot crossing a gap.** What
-            // came back from play was that the firing was boring, and the fix is not one bigger
-            // thing - it is that a shot has *four* beats a player can see: the barrel kicks, the
-            // muzzle throws light, something with a tail crosses the hill, and it arrives.
-            Flash(muzzle, angle, ward.Model, ward.Colour, tint);
-
             // The kick, on top of the pack's own frames. A turret that only cycles frames stays
             // put; one that is shoved backwards and springs forward has weight.
             var body = post.Body;
@@ -280,24 +380,68 @@ namespace GlimmerGrove
                 }, body, "kick");
             }
 
-            var round = Round(ward.Model, ward.Colour, tint, muzzle, angle);
             float flight = Mathf.Clamp(dir.magnitude / (Cell * 26f), ShortestFlight, LongestFlight);
 
-            var node = round.Node;
-            Tween.Run(flight, Ease.Linear, t =>
-            {
-                if (!node) return;
-                node.anchoredPosition = Vector2.Lerp(muzzle, to, t);
+            // **One bolt in the rules, one per barrel on the screen.** A twin-barrelled turret
+            // that fires down the middle reads as a turret with one barrel painted on it, so each
+            // barrel throws its own flash and its own comet. Only the last one lands: the impact,
+            // the damage figure and the kill are the board's one bolt, and drawing them twice
+            // would say the purchase hits twice.
+            int barrels = Barrels(ward.Model);
 
-                // It grows a little on the way in, which is a cheap read of "coming toward you"
-                // on a board with no depth - and it is the only thing about the bolt this class
-                // animates, because the fourteen frames under it are doing the rest.
-                node.localScale = Vector3.one * Mathf.Lerp(.86f, 1.12f, t);
-            }, node).OnDone(() =>
+            // **A ring of light off the muzzle, once, from the middle of the turret**, because
+            // this is the moment the player's own move pays out and a turret pays out once. Drawn
+            // here rather than inside `Flash` for exactly that reason: two rings a sixth of a cell
+            // apart is one ring at twice the brightness, which reads as a brighter turret rather
+            // than as a second barrel.
+            Shockwave(muzzle, Pal.Lift(tint, .5f), 2.2f, .22f);
+
+            float flare = BarrelFlare(ward.Model);
+
+            for (int b = 0; b < barrels; b++)
             {
-                Give(round);
-                Land(to, tint, ward.Model, ward.Colour, angle, shot);
-            });
+                float step = BarrelStep(ward.Model, b, Cell);
+                var from = muzzle + new Vector2(step, 0f);
+
+                // **The bolts stay apart rather than converging, which was the whole reason the
+                // first cut read as one shot.** Aimed at the raider they start a third of a cell
+                // apart and are on top of each other within a few hundredths of a second - so what
+                // a player sees is two comets for one frame and a single comet for the rest of a
+                // flight that is a fifth of a second long. Each one lands beside the raider
+                // instead, keeping most of the gap the whole way, and the impact is still drawn on
+                // the raider: an eighth of a cell off centre is invisible under a hit drawn three
+                // cells wide, and two parallel comets are not.
+                var land = to + new Vector2(step * ApartOnArrival, 0f);
+
+                var aim = land - from;
+                float lean = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg - 90f;
+
+                // **The whole shot, and it is deliberately more than a dot crossing a gap.** What
+                // came back from play was that the firing was boring, and the fix is not one
+                // bigger thing - it is that a shot has *four* beats a player can see: the barrel
+                // kicks, the muzzle throws light, something with a tail crosses the hill, and it
+                // arrives.
+                Flash(from, lean, ward.Model, ward.Colour, tint, flare);
+
+                var round = Round(ward.Model, ward.Colour, tint, from, lean);
+                var node = round.Node;
+                bool lands = b == barrels - 1;
+
+                Tween.Run(flight, Ease.Linear, t =>
+                {
+                    if (!node) return;
+                    node.anchoredPosition = Vector2.Lerp(from, land, t);
+
+                    // It grows a little on the way in, which is a cheap read of "coming toward
+                    // you" on a board with no depth - and it is the only thing about the bolt this
+                    // class animates, because the fourteen frames under it are doing the rest.
+                    node.localScale = Vector3.one * Mathf.Lerp(.86f, 1.12f, t);
+                }, node).OnDone(() =>
+                {
+                    Give(round);
+                    if (lands) Land(to, tint, ward.Model, ward.Colour, angle, shot);
+                });
+            }
 
             // **One sound at one pitch for all four wards.** It used to be pitched per ward
             // (1.18 / 1.07 / 0.96 / 0.85) so a player could hear which colour they had just fed
@@ -340,7 +484,8 @@ namespace GlimmerGrove
         /// missing reel must cost the thing it draws and never a white rectangle (invariant 7b).
         /// </para>
         /// </summary>
-        void Flash(Vector2 at, float angle, Wards.WardModel model, int colour, Color tint)
+        void Flash(Vector2 at, float angle, Wards.WardModel model, int colour, Color tint,
+                   float size)
         {
             var frames = MuzzleArt(model, colour);
             bool own = frames != null && frames.Length > 0;
@@ -356,13 +501,9 @@ namespace GlimmerGrove
             // The pack's own flash is drawn pointing along the shot; the shared one is a radial
             // burst with no direction in it, so it is spun instead of aimed.
             var puff = Lend(frames, own ? Color.white : Pal.A(Pal.Lift(tint, .55f), 1f),
-                            Cell * (own ? 2.7f : 1.7f), at,
+                            Cell * (own ? 2.7f : 1.7f) * size, at,
                             own ? angle : Random.Range(0f, 360f), 33f, false,
                             own ? MuzzleAt : .5f);
-
-            // A ring of light off the muzzle as well as the frames, because this is the moment the
-            // player's own move pays out.
-            Shockwave(at, Pal.Lift(tint, .5f), 2.2f, .22f);
 
             Ends(puff, own ? .32f : .3f);
         }

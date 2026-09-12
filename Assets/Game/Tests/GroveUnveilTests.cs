@@ -116,8 +116,8 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(GroveUnveil.FanfareFor(Piece(1500)).HasConfetti, "the ninth decile");
 
             Assert.IsTrue(GroveUnveil.FanfareFor(Piece(4000)).HasConfetti, "the dearest decor");
-            Assert.IsTrue(GroveUnveil.FanfareFor(Piece(2500)).HasSeal, "the first home rung");
-            Assert.IsTrue(GroveUnveil.FanfareFor(Piece(28000)).HasSeal, "the last");
+            Assert.IsTrue(GroveUnveil.FanfareFor(Piece(2500)).HasConfetti, "the first home rung");
+            Assert.IsTrue(GroveUnveil.FanfareFor(Piece(30000)).HasConfetti, "the last");
         }
 
         [Test]
@@ -204,7 +204,14 @@ namespace GlimmerGrove.Tests
             // A ceremony seen a hundred and fifty times has to be short; one seen four times in
             // an account's life can afford to linger. Both halves matter — a flat duration is
             // the tiering not happening.
-            Assert.Less(GroveUnveil.Seconds(1), 2f);
+            //
+            // **The bound was two seconds and it is now 2.4, because the two-second version was
+            // played and reported as too fast.** What moved is this number rather than the rule
+            // it guards: the ceiling above is still three seconds, the bottom tier is still the
+            // shortest, and the spread below still has to be real. The original bound was
+            // reasoned about rather than watched, which is the one kind of number in this
+            // project that a session of play is allowed to overrule.
+            Assert.Less(GroveUnveil.Seconds(1), 2.4f);
             Assert.Greater(GroveUnveil.Seconds(GroveUnveil.Tiers), GroveUnveil.Seconds(1) + .5f);
         }
 

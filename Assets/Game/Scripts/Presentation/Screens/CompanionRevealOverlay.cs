@@ -440,8 +440,6 @@ namespace GlimmerGrove
                 if (_aurora != null)
                     for (int i = 0; i < _aurora.Length; i++)
                         Tween.Fade(_aurora[i], AuroraAlpha[i], .70f);
-
-                Audio.Sfx("whoosh", .55f, .78f);
             });
 
             // Rings collapsing inward. Anticipation is the only thing on screen for half a
@@ -459,9 +457,6 @@ namespace GlimmerGrove
                 // The colour the white leaves behind, outliving it by a quarter of a second, so
                 // the impact resolves into the friend's own hue instead of back into the room.
                 ChromaPulse();
-
-                Audio.Sfx("unlock", .8f);
-                Audio.Sfx("shatter", .32f, 1.25f);
 
                 Tween.Shake((RectTransform)Content, 26f, .42f);
 
@@ -497,8 +492,12 @@ namespace GlimmerGrove
                 _face.color = Silhouette;
                 Tween.Tint(_face, Color.white, .46f, Ease.OutQuad).Delay(.12f);
 
+                // The one sound in the reveal, and it lands on the beat the friend appears.
+                // The sequence used to ring on all six of its beats — a whoosh, the break, a
+                // bell under this, a pop on the name, one per star and a chime to settle — and
+                // played back it read as a pile-up rather than as a fanfare: six cues inside
+                // two seconds leave nothing for the eye to be told about. One is the arrival.
                 Audio.Sfx("win", .62f);
-                Audio.Sfx("bell", .45f, 1.05f, .10f);
 
                 Burst.Sparks(_discRt, Vector2.zero, _tint, 22 + _tier * 5, 520f, 34f, .95f);
 
@@ -517,7 +516,6 @@ namespace GlimmerGrove
                 Tween.Scale(_name.transform, 1f, .30f, Ease.InCubic).OnDone(() =>
                 {
                     Tween.Punch(_name.transform, .16f, .34f);
-                    Audio.Sfx("pop2", .55f, .95f);
                 });
             });
 
@@ -533,14 +531,15 @@ namespace GlimmerGrove
             });
 
             // -- the stars ---------------------------------------------------
-            // One per tier, each a little later and a little higher than the last. The rising
-            // pitch is most of the effect: it says "and there is more" without a word.
+            // One per tier, each a little later than the last. It used to climb in pitch as
+            // well, which said "and there is more" without a word and is the one cue here
+            // genuinely worth missing — but five of them land inside half a second on top of
+            // everything else the reveal was ringing, and the stagger says the same thing.
             cue.Then(.16f, null).Repeat(_tier, .13f, i =>
             {
                 if (_stars == null || i >= _stars.Length || !_stars[i]) return;
 
                 Tween.Pop(_stars[i].transform, 0f, .46f);
-                Audio.Sfx("star", .5f, .92f + i * .09f);
 
                 // The stars stay gold — they are the rarity count, and counting in five colours
                 // would read as five kinds of thing — but each one throws its own colour of the
@@ -562,8 +561,6 @@ namespace GlimmerGrove
                 // half apart read as longer than one wave twice the size, and the top of the
                 // ladder is where length is the point.
                 if (_tier >= 3) Burst.Confetti(Content, 20 + _tier * 8);
-
-                Audio.Sfx("chime2", .5f);
             });
 
             cue.Then(.12f, Idle);

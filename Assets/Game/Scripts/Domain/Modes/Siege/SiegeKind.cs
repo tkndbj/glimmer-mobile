@@ -57,45 +57,42 @@ namespace GlimmerGrove.Modes
         Bulwark,
 
         /// <summary>
-        /// The weaver: it stops halfway down the hill and spins webs over the field.
+        /// <b>Retired: nothing sends one and these two ids must never be reused.</b>
         ///
-        /// <para>
-        /// <b>The first raider in this mode that attacks the board rather than the line.</b>
-        /// Every kind before it differs from a creeper in how much of the same thing it needs —
-        /// more health, a shield, a spell aimed at a ward — so the hill could only ever hurt the
-        /// wards, and the field was a fuel tap the player operated while looking somewhere else.
-        /// A weaver reaches the other way: it takes cells out of the field, so the answer to it
-        /// is on the board the player is already touching.
-        /// </para>
-        /// <para>
-        /// <b>It never reaches the line and takes no ward health at all</b>
-        /// (<see cref="SiegeTuning.EndangersTheLine"/> answers false), which is what makes it a
-        /// <em>pressure</em> rather than a threat: a level whose only raiders were weavers could
-        /// not be lost, so <c>ModeValidator</c> refuses one. What it costs is time — every web is
-        /// a cell that can never be matched until it is dead.
-        /// </para>
-        /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
+        /// The weaver spun webs over the field and the thief took gems off it. Neither was ever
+        /// authored into a shipped wave — the mechanic was built, validated, arted and never sent
+        /// (invariant 40a) — and both were withdrawn whole by the owner. Kept as members rather
+        /// than deleted because these ordinals reach analytics on every run the endless lane ever
+        /// recorded, which is the rule <c>DefeatReason</c> keeps its retired members for.
         /// </summary>
         Weaver,
 
+        /// <summary><b>Retired with <see cref="Weaver"/>.</b> See above.</summary>
+        Thief,
+
         /// <summary>
-        /// The thief: it stops further down the hill than a weaver and takes gems off the field
-        /// altogether, leaving a sack where each one stood.
+        /// The bomber: an ordinary raider that leaves a live bomb standing where it dies.
         ///
         /// <para>
-        /// <b>A weaver's web and a thief's sack are the two halves of one idea and they are
-        /// deliberately not the same.</b> A web is <em>inconvenient</em> — the gem is still there,
-        /// still that colour, and a player can still see what they are being denied. A sack is
-        /// <em>dead</em>: it is not a colour at all, so it can never line up with anything and it
-        /// falls to the bottom of the field like silt. Answering a weaver is playing around it;
-        /// answering a thief is killing it before the field silts up.
+        /// <b>It walks the hill like anything else, and everything about it happens after it is
+        /// dead.</b> That is the whole design: the player does not fight a bomber differently, they
+        /// deal with what it leaves — a bomb sitting on the hill at the spot it fell, which goes
+        /// off the instant it is tapped and takes a firepot's worth of everything around it.
         /// </para>
         /// <para>
-        /// <b>Both are undone by its death, and that is what makes killing one a payoff rather
-        /// than a relief</b> (invariant 20m: the event is the reward, so it gets the biggest
-        /// drawing). Every sack bursts back into a gem in the same beat.
+        /// <b>It is the one thing in this mode that makes the player touch the hill.</b> Every
+        /// other input goes into the gem field; a bomb has to be found on the enemy's own ground
+        /// and hit, so the hill stops being a thing that is only watched. That is the connection
+        /// between the two halves of this screen, and it is the reason this raider exists.
         /// </para>
+        /// <para>
+        /// <b>What stops it being free damage is invariant 39</b>: the blast is charged against
+        /// the graded count exactly as a firepot's is, so a player who leans on bombs pays for
+        /// every point of it in the one currency this mode grades — and cannot buy a star with
+        /// something a grade reaching a public board (19a) was not earned by.
+        /// </para>
+        /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
         /// </summary>
-        Thief,
+        Bomber,
     }
 }

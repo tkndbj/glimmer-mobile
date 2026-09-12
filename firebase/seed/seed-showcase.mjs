@@ -35,22 +35,26 @@
  *
  * Four facts about the art decide the vocabulary, all measured by rendering rather than
  * read off the catalog, and a plan that ignores them looks wrong however carefully it is
- * composed:
+ * composed. They were re-measured when the whole catalogue was replaced, and every one of
+ * them changed:
  *
- *   * **Only four fences join into a line** — `fence_long`, `fence_wide`, `fence_low` and
- *     `rope_fence` — and each joins along one diagonal as drawn and along the other when
- *     mirrored (`fence_long` and `rope_fence` run along +col flipped and +row unflipped;
- *     `fence_wide` and `fence_low` the other way round). `fence_picket` and `fence_timber`
- *     are too short for the tile pitch and read as a row of loose posts whichever way they
- *     are laid, so no plan uses them for a line.
- *   * **`plank_bridge` is the only paving that tiles**, as a raised boardwalk with posts,
- *     and `stepping_stones` the only ground path that survives repetition. Everything else
- *     on the path shelf is an object.
+ *   * **A line is a run of a multi-tile piece, not a row of one-tile ones.** `fence_wood`,
+ *     `fence_stone` and their gates are 1x3 and `wall`, `wall_gate` and `wall_barbican`
+ *     3x1, so a fence laid at facing 0 runs along **+row** and a wall along **+col** — and
+ *     a quarter turn swaps that, because an odd facing swaps the footprint's axes. Laid
+ *     nose to tail they **join seamlessly**, which is what lets a plan enclose a yard.
+ *     Nothing 1x1 tiles into a line any more; there is no paving piece at all.
+ *   * **A building's picture is far taller than its footprint.** Stood shoulder to
+ *     shoulder the big ones pile into one mass — a 4x4 mine or citadel needs a clear
+ *     tile or two of ground in front of it to read as a separate object.
  *   * **Depth is a constraint.** The field draws back to front by a piece's front tile, so
- *     anything tall in front of the hall covers it. Woods go behind and to the sides; the
- *     ground in front of the door holds paths, beds, lamps at the edges and friends.
+ *     anything tall in front of the hall covers it. Depth is `col + row`, so the *back* is
+ *     the low corner: woods, walls and the big workshops belong in rows 0–3, and the
+ *     ground in front of the door holds crates, pennants, market stalls and friends.
  *   * **Only the five companions with board flipbooks may stand in a grove** — the other
- *     twenty-six draw their UI portrait, a head the size of the house. See `CRITTERS`.
+ *     twenty-six draw their UI portrait, a head the size of the house. See `CRITTERS`. A
+ *     village may only wear and stand ones its own derived keeper level reaches, which
+ *     with one chapter of content is about level 9.
  *
  * ## What is written, and why the card is not written by hand
  *
@@ -280,9 +284,10 @@ function die(seed) {
  *
  * A plan is `ROWS` strings of `COLS` characters: `.` is empty ground, `#` is the hall's
  * footprint, `+` is ground covered by a multi-tile piece anchored at its top-left, and any
- * other character is looked up in the village's legend — a piece id, or `[id, "flip"]`
- * for a mirrored one. Footprints follow `HomesteadPiece.Footprint`: `cols` x `rows`,
- * swapped when flipped, exactly as `GroveOccupancy` reads them.
+ * other character is looked up in the village's legend — a piece id, or `[id, facing]`
+ * for a turned one, where a facing is 0..3 quarters. Footprints follow
+ * `HomesteadPiece.Footprint`: `cols` x `rows`, axes swapped on an odd quarter, exactly as
+ * `GroveFootprint.Facing` reads them.
  *
  * Every check here is something the picker enforces for a real player: on owned ground,
  * off the hall, one piece per tile, a footprint that fits. A script that skipped them
@@ -322,7 +327,13 @@ function compile(village) {
 
       const entry = village.legend[ch];
       if (!entry) throw new Error(`${village.id}: no legend entry for '${ch}' at ${c},${w}`);
-      const [piece, flipped] = Array.isArray(entry) ? [entry[0], entry[1] === "flip"] : [entry, false];
+      const [piece, facing] = Array.isArray(entry) ? [entry[0], Number(entry[1]) || 0] : [entry, 0];
+      if (!Number.isInteger(facing) || facing < 0 || facing > 3) {
+        throw new Error(`${village.id}: '${ch}' asks for facing ${facing}, which is not 0..3`);
+      }
+      if (facing && (PIECES[piece]?.facings ?? 1) < 4) {
+        throw new Error(`${village.id}: ${piece} has one facing and cannot be turned`);
+      }
 
       const def = PIECES[piece];
       const isResident = piece.startsWith("friend_");
@@ -333,8 +344,10 @@ function compile(village) {
         throw new Error(`${village.id}: ${piece} draws a portrait, not a critter — see CRITTERS`);
       }
 
+      // A quarter turn swaps the axes, exactly as `GroveFootprint.Facing` does: the odd
+      // quarters stand a piece across the other diagonal, and the even ones do not.
       let fc = def?.cols ?? 1, fr = def?.rows ?? 1;
-      if (flipped) [fc, fr] = [fr, fc];
+      if (facing & 1) [fc, fr] = [fr, fc];
 
       for (let dc = 0; dc < fc; dc++) {
         for (let dw = 0; dw < fr; dw++) {
@@ -350,7 +363,7 @@ function compile(village) {
         }
       }
 
-      placements.push({ slot: tileId(c, w), piece, flipped });
+      placements.push({ slot: tileId(c, w), piece, facing });
     }
   }
 
@@ -463,7 +476,7 @@ function buildSave(village, play, held, placements, nowUnix) {
   // The starter is held by everybody and never bought, so it is not in the roster's
   // purchased set — exactly as `CompanionLedger` keeps it.
   return {
-    schemaVersion: 21,
+    schemaVersion: 24,
     updatedUnix: play.lastUnix,
     legacyImportDone: true,
     lastPlayedLevelId: LEVEL_IDS[LEVEL_IDS.length - 1],
@@ -484,6 +497,10 @@ function buildSave(village, play, held, placements, nowUnix) {
     homesteadOwned: held.stock.map((row) => row.id),
     homesteadPlaced: placements.map((p) => ({ ...p, setUnix: play.lastUnix })),
     groveLandOwned: held.land,
+    // Stamped, or a client adopting this save would read it as belonging to a floor that no
+    // longer exists and blank the grove (invariant 16n). Nothing merges these documents, so
+    // it is here for correctness rather than for a case that can arise today.
+    groveEpoch: 1,
     heartContainersOwned: [],
     heartContainersRevoked: [],
   };

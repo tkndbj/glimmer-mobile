@@ -142,7 +142,7 @@ namespace GlimmerGrove.Homestead
                                       Scale, Lift, HomesteadSlotKind.Ground, 0,
                                       companion.UnlockLevel,
                                       artWidth: companion.GroveArtWidth, artHeight: companion.GroveArtHeight,
-                                      hit: hit);
+                                      hits: new[] { hit });
         }
 
         /// <summary>The whole roster, as pieces. Invalid entries are dropped, never projected.</summary>

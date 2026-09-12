@@ -91,6 +91,26 @@ namespace GlimmerGrove
         /// </summary>
         readonly List<GroveRegion> _land = new List<GroveRegion>();
 
+        /// <summary>
+        /// Where <see cref="Reload"/> builds the next page before deciding whether it is a new
+        /// one. Kept as fields rather than made per call so a screen that repaints on four
+        /// events does not allocate a list on each of them.
+        /// </summary>
+        readonly List<HomesteadPiece> _nextItems = new List<HomesteadPiece>();
+        readonly List<GroveRegion> _nextLand = new List<GroveRegion>();
+
+        /// <summary>
+        /// Which shelf the grid is currently paged to, or null before it has been filled at all.
+        ///
+        /// <b>It is not the same question as <see cref="_shelf"/>.</b> Two shelves can hold two
+        /// lists that compare equal to a stale one — the land list survives a trip through the
+        /// fences tab untouched, so coming back to it would compare equal to itself and be
+        /// <em>refreshed</em> into a grid still sized and scrolled for fences. A list comparison
+        /// alone cannot see that; what changed is not the page's contents but which page the
+        /// grid is holding.
+        /// </summary>
+        GroveShelf? _paged;
+
         bool OnLand => _shelf == GroveShelf.Land;
         readonly Dictionary<GroveShelf, ShelfTab> _tabViews = new Dictionary<GroveShelf, ShelfTab>();
 
@@ -377,11 +397,29 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Rebuilds the list this shelf shows and hands it to the grid as a new page.
+        /// Rebuilds the list this shelf shows, and hands it to the grid as a new page
+        /// <em>only if it is one</em>.
         ///
-        /// Called when the shelf changes, when the catalog is republished, and once when the
-        /// body has been read — the three moments the <em>contents</em> of the page differ.
-        /// Everything else is a <see cref="Repaint"/>.
+        /// <para>
+        /// Called when the shelf changes, when the catalog is republished and once when the
+        /// body has been read — but also, and this is the half that shipped a bug, whenever a
+        /// <b>sync</b> lands: <c>SaveService.Adopt</c> re-reads the whole save and
+        /// <c>GroveLand.LoadFrom</c> raises <c>Changed</c> unconditionally, whether or not a
+        /// single region moved. A purchase asks for a sync, so every piece a player bought was
+        /// followed a few seconds later by <c>GridView.Show</c> replaying the entrance of every
+        /// cell <em>and throwing the scroll back to the top</em> — which is a picture of the
+        /// shop reloading itself, and is exactly the fault invariant 16k names about the grove's
+        /// own tiles. This screen's subscriptions were annotated "every one of these is a
+        /// repaint, not a rebuild", and for two of the four that was simply not true.
+        /// </para>
+        /// <para>
+        /// <b>The fix is to compare rather than to unsubscribe</b>, because the events are not
+        /// wrong: buying land genuinely does move a region to the bottom of the land shelf, and
+        /// a republished catalog genuinely can change what is on sale. What must not happen is a
+        /// <em>new page</em> being declared when the page has not changed — which is
+        /// <c>HomesteadPickerOverlay</c>'s rule, and it is one comparison rather than a guard
+        /// each caller has to remember.
+        /// </para>
         /// </summary>
         void Reload()
         {
@@ -389,8 +427,11 @@ namespace GlimmerGrove
 
             var catalog = HomesteadCatalog.Current;
 
-            _items.Clear();
-            _land.Clear();
+            var items = _nextItems;
+            var land = _nextLand;
+
+            items.Clear();
+            land.Clear();
 
             if (OnLand)
             {
@@ -403,9 +444,9 @@ namespace GlimmerGrove
                 // stood the five most expensive stretches in the game at the top of the list
                 // looking free.
                 foreach (var region in catalog.Floor.Regions)
-                    if (region.IsValid && !region.IsStarter) _land.Add(region);
+                    if (region.IsValid && !region.IsStarter) land.Add(region);
 
-                _land.Sort((a, b) =>
+                land.Sort((a, b) =>
                 {
                     bool oa = GroveLand.IsOwned(a), ob = GroveLand.IsOwned(b);
                     return oa != ob ? (oa ? 1 : -1)
@@ -420,7 +461,7 @@ namespace GlimmerGrove
                 // home panel, where the pips can show it.
                 var rung = HomesteadLedger.NextDwelling(catalog);
                 if (!rung.IsValid) rung = HomesteadLedger.BestDwelling(catalog);
-                if (rung.IsValid) _items.Add(rung);
+                if (rung.IsValid) items.Add(rung);
             }
             else
             {
@@ -428,18 +469,63 @@ namespace GlimmerGrove
                 // for residents the keeper ladder, because that is the order a player meets
                 // them in. No sort, and therefore no second opinion about the order to drift.
                 foreach (var piece in catalog.Pieces)
-                    if (GroveShelves.Of(piece) == _shelf) _items.Add(piece);
+                    if (GroveShelves.Of(piece) == _shelf) items.Add(piece);
             }
+
+            // Asked before the lists are replaced, because the question is whether this page is
+            // the one already on screen — which is the shelf as well as its contents.
+            bool moved = _paged != _shelf
+                      || (OnLand ? !Same(_land, land) : !Same(_items, items));
+
+            _items.Clear(); _items.AddRange(items);
+            _land.Clear(); _land.AddRange(land);
 
             PaintTabs();
             PaintSummary();
 
-            _grid.Show(OnLand ? _land.Count : _items.Count);
+            // `Show` is a new page and animates; `Refresh` is this page redrawn and does not —
+            // GridView's own split, and the whole of what stops a sync throwing the player back
+            // to the top of a hundred and fifty cells.
+            if (moved) _grid.Show(OnLand ? _land.Count : _items.Count);
+            else _grid.Refresh();
+
+            _paged = _shelf;
 
             // The atlas last, so the grid is on screen before the pictures are. The callback
             // rebinds rather than refilling, so nothing plays its entrance twice.
             HomesteadArt.OpenShelfAsync(_shelf, () => { if (this) Repaint(); });
-            if (OnLand) return;
+        }
+
+        /// <summary>
+        /// Whether two pages are the same page.
+        ///
+        /// <b>By id and in order</b>, because that is what a cell draws from and what its place
+        /// in the grid is decided by — <c>HomesteadPickerOverlay.Same</c>, asked of the shop.
+        /// </summary>
+        static bool Same(List<HomesteadPiece> a, List<HomesteadPiece> b)
+        {
+            if (a.Count != b.Count) return false;
+
+            for (int i = 0; i < a.Count; i++)
+                if (!string.Equals(a[i].Id, b[i].Id, StringComparison.Ordinal)) return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// The same question about the land shelf, where owning a region <em>moves</em> it to the
+        /// bottom of the list — so the order is part of what is compared rather than incidental
+        /// to it, and buying land is correctly a new page while a sync that changed nothing is
+        /// correctly not one.
+        /// </summary>
+        static bool Same(List<GroveRegion> a, List<GroveRegion> b)
+        {
+            if (a.Count != b.Count) return false;
+
+            for (int i = 0; i < a.Count; i++)
+                if (!string.Equals(a[i].Id, b[i].Id, StringComparison.Ordinal)) return false;
+
+            return true;
         }
 
         /// <summary>Redraws what is on screen: same cells, same place, no entrance.</summary>

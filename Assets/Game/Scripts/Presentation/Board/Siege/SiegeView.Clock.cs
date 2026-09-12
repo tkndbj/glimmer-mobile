@@ -44,9 +44,21 @@ namespace GlimmerGrove
 
         void Update()
         {
+            // **Before the gate, deliberately.** A board nobody may touch has to put the idle
+            // clock back to nought rather than freeze it, and everything that stops a run being
+            // touched — a cascade, a lesson, the pause menu, a panel over the board — reads as
+            // `Playable` rather than as `Live`. See `SiegeView.Hint`.
+            Idle(Time.unscaledDeltaTime);
+
             if (!Live) return;
 
             var report = _board.Advance(Time.unscaledDeltaTime);
+
+            // **The count-in is part of the run, so it is paced by the run.** Read off the
+            // board's own quiet rather than timed beside it, which is what stops it running out
+            // behind a first-timer's tip - see `CountIn`. After `Advance`, so the first beat
+            // lands on the first frame the hill really starts walking.
+            CountIn();
 
             // How much of a death is still being watched. Counted here rather than inside
             // `Judge`, so a hold armed early in a run cannot still be standing when the run is
@@ -68,18 +80,43 @@ namespace GlimmerGrove
             for (int i = 0; i < report.Bolts.Count; i++) Bolt(report.Bolts[i]);
             for (int i = 0; i < report.Casts.Count; i++) Cast(report.Casts[i]);
 
-            // What the hill has done to the field. Drawn after the casts, so the mark a mote was
-            // crossing toward lands after the mote arrives rather than under it.
-            for (int i = 0; i < report.Meddles.Count; i++) Meddled(report.Meddles[i]);
-            Freed(report.Meddles);
+            // What a bomber left behind. Drawn after the bolts, so the bomb arrives after the
+            // shot that killed the thing carrying it rather than under it.
+            for (int i = 0; i < report.Dropped.Count; i++) Dropped(report.Dropped[i]);
+
             for (int i = 0; i < report.Spells.Count; i++) Smite(report.Spells[i]);
             for (int i = 0; i < report.Blows.Count; i++) Blow(report.Blows[i]);
 
             Reap();
+            Fuses();
+            Sighted();
 
             if (report.Any) Changed?.Invoke();
 
             Judge();
+        }
+
+        /// <summary>
+        /// Raises <see cref="Appeared"/> the first time each kind of raider walks on.
+        ///
+        /// <b>Asked of the hill rather than of the wave</b>, because what the tip is about is a
+        /// thing the player can see — a wave that has been mustered but whose raiders are still
+        /// waiting their spacing would ring a body that is not there yet.
+        /// </summary>
+        void Sighted()
+        {
+            if (Appeared == null) return;
+
+            var raiders = _board.Raiders;
+
+            for (int i = 0; i < raiders.Count; i++)
+            {
+                var raider = raiders[i];
+                if (!raider.Alive || !raider.OnTheHill) continue;
+                if (raider.Kind != SiegeKind.Bomber) continue;
+
+                if (_met.Add(raider.Kind)) Appeared(raider.Kind);
+            }
         }
 
         /// <summary>Puts every raider widget where the model says it is.</summary>
@@ -114,6 +151,7 @@ namespace GlimmerGrove
             for (int i = 0; i < raiders.Count; i++)
             {
                 var raider = raiders[i];
+
                 if (!raider.OnTheHill) continue;
 
                 // **A dead raider is not followed, and that is what makes `Reap` safe to run
@@ -144,13 +182,12 @@ namespace GlimmerGrove
                                    ? Color.Lerp(Color.white, Pal.Cream, raider.Flash * 5f)
                                    : Color.white;
 
-                // **A warlord walks on and then stands, and which of the two it wears is read off
-                // the board rather than latched at spawn.** It was drawn in its idle for the whole
-                // walk-in, which came back from play in one word — *floating* — and is exactly the
-                // fault this mode's cast reels are walks to avoid (`make_siege_art.CAST_SET`). The
-                // question is asked every frame and `Wear` answers it once.
+                // **A boss goes back to its own body the frame after a spell finishes.** There
+                // is nothing to choose between any more - an insect stands in the reel it walks in
+                // (see `Mob.Idle`) - so all this has to do is take the cast reel off, which `Wear`
+                // answers once however often it is asked.
                 if (mob.Boss && !Throwing(mob))
-                    Wear(mob, raider.InPlace || mob.Walking == null ? mob.Idle : mob.Walking);
+                    Wear(mob, mob.Idle);
             }
         }
 
@@ -292,7 +329,7 @@ namespace GlimmerGrove
 
                 // Cream, then gold, then ember: the line says how close it is to going in the
                 // one place a player is already looking.
-                float held = Mathf.Clamp01(ward.Health / (float)SiegeTuning.WardHealth);
+                float held = Mathf.Clamp01(ward.Health / (float)ward.Full);
 
                 post.Fill.rectTransform.sizeDelta =
                     new Vector2((post.Bar.sizeDelta.x - 4f) * held, post.Bar.sizeDelta.y - 4f);

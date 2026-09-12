@@ -1,0 +1,7 @@
+The grove's pieces are rendered from these packs. All CC0.
+
+  dungeon  KayKit Dungeon Pack 1.1 (CC0) — Kay Lousberg
+  forest   KayKit Forest Nature Pack 1.0 (CC0) — Kay Lousberg
+  hex      KayKit Medieval Hexagon Pack 1.0 (CC0) — Kay Lousberg
+
+Only the models Tools/grove_pieces.tsv names are kept here; `make_grove_art.py --vendor --source <bundle>` restores them.

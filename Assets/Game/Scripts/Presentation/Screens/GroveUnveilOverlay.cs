@@ -53,8 +53,18 @@ namespace GlimmerGrove
         const float FallFrom = 640f;
         const float FanSize = 1060f;
 
-        /// <summary>How long the piece is in the air. The fall accelerates; see <see cref="Play"/>.</summary>
-        const float FallAt = .10f, FallFor = .34f;
+        /// <summary>
+        /// When the piece is let go, and how long it is in the air. The fall accelerates; see
+        /// <see cref="Play"/>.
+        ///
+        /// <b>Both were a third shorter and it read as a flicker.</b> The room had no beat to
+        /// establish itself in before the piece was already down, and six hundred and forty
+        /// units crossed in a third of a second is nearer a cut than a fall. What holds them in
+        /// proportion is <c>GroveUnveil.PlateAt</c>, which has to stay past the landing —
+        /// otherwise the name arrives on the same frame as the impact and the sequence has two
+        /// beats in one.
+        /// </summary>
+        const float FallAt = .20f, FallFor = .46f;
 
         /// <summary>Resting brightnesses, held as constants because <see cref="Skip"/> assigns them.</summary>
         const float VignetteAlpha = .66f, FanAlpha = .30f, Fan2Alpha = .22f, GlowAlpha = .42f;
@@ -67,7 +77,7 @@ namespace GlimmerGrove
         GroveUnveil.Fanfare _f;
         Chroma _c;
 
-        Image _sky, _vignette, _fan, _fan2, _glow, _flash, _ground, _shadow, _seal;
+        Image _sky, _vignette, _fan, _fan2, _glow, _flash, _ground, _shadow;
         Image[] _aurora;
         RectTransform _fanRt, _fan2Rt, _artRt, _plate;
         Image _art;
@@ -285,13 +295,6 @@ namespace GlimmerGrove
                              28, new Color(1f, .96f, .88f, .0f), TextAnchor.MiddleCenter,
                              new Vector2(760f, 44f), new Vector2(.5f, .5f), new Vector2(0f, -62f), 3f, 0f), 19);
 
-            if (!_f.HasSeal) return;
-
-            _seal = UIKit.Img("Seal", _plate, Art.S("Ui/seal_gold"), Color.white,
-                              new Vector2(132f, 132f), new Vector2(.5f, .5f),
-                              new Vector2(PlateWidth * .5f - 24f, 34f));
-            _seal.transform.localScale = Vector3.zero;
-            _seal.transform.localRotation = Quaternion.Euler(0f, 0f, 14f);
         }
 
         // ------------------------------------------------------------------- play
@@ -363,7 +366,14 @@ namespace GlimmerGrove
         {
             if (_settled) return;
 
-            Audio.Sfx("unlock", .78f, 1.06f - _tier * .02f);
+            // **The sound of the picture, which `unlock` was not.** This beat is an object
+            // hitting the ground; `unlock` is a rising bell phrase — C5, G5, C6 — and it read as
+            // a chime arriving over an impact, which is the mismatch a player hears as "that
+            // dong". A lock opening is what the *purchase* was, and the purchase already spoke
+            // (`coin`, on the panel that took the money). `arrive` is the landing's own slot, so
+            // nothing else can retune it. Pitched down a little as the tier climbs, because a
+            // heavier thing lands lower.
+            Audio.Sfx("arrive", .78f, 1.06f - _tier * .02f);
 
             SetAlpha(_flash, _f.Flash);
             Tween.Fade(_flash, 0f, .34f);
@@ -437,11 +447,12 @@ namespace GlimmerGrove
 
             Tween.Fade(_note, .80f, .40f);
 
-            if (_seal)
-            {
-                Tween.Scale(_seal.transform, 1f, .42f, Ease.OutBack).Delay(.12f);
-                Tween.RotateBy((RectTransform)_seal.transform, -14f, .42f, Ease.OutBack).Delay(.12f);
-            }
+            // **The fanfare, and only for a home.** `arrive` above is the landing — an object
+            // hitting the ground — and this is the beat after it, when the name and the rule
+            // under it come up. A home is the one purchase that changes the whole island, and
+            // it is the only thing here that gets this; a decor unveil keeps the landing alone,
+            // or the loudest sound in the game would play every time somebody bought a fence.
+            if (Piece.IsDwelling) Audio.Sfx("win", .85f);
 
             if (_f.HasConfetti) Burst.Confetti(Content, 44);
 
@@ -531,7 +542,6 @@ namespace GlimmerGrove
                 if (_name) { SetAlpha(_name, 1f); _name.transform.localScale = Vector3.one; }
                 if (_line) { _line.rectTransform.sizeDelta = new Vector2(PlateWidth, 10f); _line.color = Pal.A(_c.Tint, PlateLineAlpha); }
                 if (_note) SetAlpha(_note, .80f);
-                if (_seal) { _seal.transform.localScale = Vector3.one; _seal.transform.localRotation = Quaternion.identity; }
 
                 _settled = true;
                 Bob();

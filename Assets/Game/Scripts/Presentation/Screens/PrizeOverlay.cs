@@ -177,7 +177,7 @@ namespace GlimmerGrove
             _coin = UIKit.Box("Coin", panel, Vector2.one * stack.CoinSize, new Vector2(.5f, 1f),
                               new Vector2(0f, -stack.CoinCentre));
 
-            var face = UIKit.Img("Face", _coin, RewardArt.Icon(Drop.Kind), Color.white,
+            var face = UIKit.Img("Face", _coin, RewardArt.Icon(Drop.Kind, Drop.Item), Color.white,
                                  Vector2.one * stack.CoinSize, new Vector2(.5f, .5f), Vector2.zero);
             face.preserveAspect = true;
             face.raycastTarget = false;
@@ -258,10 +258,10 @@ namespace GlimmerGrove
         /// </summary>
         void BuildChip(RectTransform panel, float y)
         {
-            RewardArt.Token(Drop.Kind, out var token, out var tokenTint);
+            RewardArt.Token(Drop.Kind, Drop.Item, out var token, out var tokenTint);
 
             _chip = Payout.Chip("Prize", panel, new Vector2(.5f, 1f), new Vector2(0f, -y),
-                                null, RewardArt.Tint(Drop.Kind),
+                                null, RewardArt.Tint(Drop.Kind, Drop.Item),
                                 n => "+" + Compact.Number(n), Drop.Amount,
                                 token, tokenTint, sfx: "coin", glyphSize: 0f);
         }

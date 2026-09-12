@@ -883,11 +883,15 @@ namespace GlimmerGrove.EditorTools
                     result.Errors.Add($"turret '{model.Id}' is priced in both gems and credits; " +
                                       "it carries one price or the other");
 
-                if (model.MinLevel > 0 && !model.ForCoins)
-                    result.Errors.Add($"turret '{model.Id}' asks for keeper level " +
-                                      $"{model.MinLevel} but is not priced in credits; the gate " +
-                                      "is permission to spend credits and means nothing beside " +
-                                      "gems");
+                if (model.MinLevel <= 0 && !model.IsStarter)
+                    result.Errors.Add($"turret '{model.Id}' is priced but asks for no keeper " +
+                                      "level; every turret on the shelf is behind one, so nought " +
+                                      "is no longer how an entry says it is ungated");
+
+                if (!WardHolding.Spellable(model.Id))
+                    result.Errors.Add($"turret '{model.Id}' contains " +
+                                      $"'{WardHolding.Mark}', which separates a turret from the " +
+                                      "colour it was bought for in wardsOwned");
 
                 if (!Addressed(AssetManifest.WardThumb(model.Id)))
                     result.Errors.Add($"turret '{model.Id}' has no shelf thumbnail at " +
@@ -937,10 +941,95 @@ namespace GlimmerGrove.EditorTools
                     break;
                 }
 
+            // **The shelf read as one ladder**, which is the roster's own rule rather than a
+            // second opinion about it: a turret is sealed until the rung below it is bought, so a
+            // gate that does not climb can never refuse anybody (invariant 5d). Asked of the
+            // catalog rather than re-derived, so this gate and the reader cannot disagree.
+            string climb = wards.LadderProblem();
+            if (climb != null) result.Errors.Add(climb);
+
             if (!starter)
                 result.Errors.Add("wards lists no free turret; a player who has bought nothing " +
                                   "would stand an empty line, and a siege with no line cannot be " +
                                   "played");
+
+            // **The upgrade ladder, asked of the table in force rather than of the file**, so a
+            // block the reader refused and a block it accepted are both judged by what a player
+            // would actually be charged. Every rung has to climb: one that costs no more than the
+            // one below it is a rung nobody chooses between (invariant 5d, on a price).
+            foreach (var model in wards.Models)
+            {
+                if (model.IsStarter) continue;
+
+                int under = 0;
+
+                for (int stars = WardStars.Least; stars < WardStars.Most; stars++)
+                {
+                    int price = WardStars.PriceOf(model, stars);
+
+                    if (price <= 0)
+                        result.Errors.Add($"turret '{model.Id}' prices star {stars + 1} at " +
+                                          "nought, which is how the ladder says there is no next " +
+                                          "star at all");
+                    else if (price <= under)
+                        result.Errors.Add($"turret '{model.Id}' prices star {stars + 1} at " +
+                                          $"{price}, no more than the {under} below it — an " +
+                                          "upgrade nobody chooses between");
+
+                    under = price;
+                }
+
+                // The top of the ladder is where it stops, and nothing beyond it is for sale.
+                if (WardStars.PriceOf(model, WardStars.Most) != 0)
+                    result.Errors.Add($"turret '{model.Id}' prices a star past the top of the " +
+                                      "ladder");
+            }
+
+            // **No two rungs of the shelf are the same turret.** A magnitude nobody reads makes
+            // two rungs of one ability identical, and both `rend` and `prism` shipped that way —
+            // so a thousand-gem breaker was exactly a four-thousand-credit cleaver, and the
+            // dearer one bought nothing (invariant 5d, met on the one thing a player pays for).
+            // Priced rungs only: the free turret is not a rung.
+            var shapes = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            foreach (var model in wards.Models)
+            {
+                if (model.IsStarter) continue;
+
+                // **Every field that plays**, so two rungs that differ only in what their bolt
+                // weighs or what they can take are two turrets rather than one twice.
+                string shape = WardAbilities.NameOf(model.Ability)
+                             + " " + model.Magnitude + "/" + model.Extent
+                             + " " + model.PowerTenths + "/" + model.GuardTenths;
+
+                if (shapes.TryGetValue(shape, out string first))
+                    result.Errors.Add($"turrets '{first}' and '{model.Id}' are the same turret — " +
+                                      $"{shape} — so whichever is dearer buys nothing at all");
+                else
+                    shapes[shape] = model.Id;
+            }
+
+            // **A family's dearer rung is never worse at both jobs.** Trading weight for
+            // toughness is the whole of what makes the roster a choice, and it is a choice
+            // *between* abilities: within one, the rung that costs more must be better at
+            // something and no worse at the rest, or the shelf is asking a player to pay to be
+            // downgraded. Asked in shelf order, so it reads the way a player does.
+            var below = new Dictionary<WardAbility, WardModel>();
+
+            foreach (var model in wards.Models)
+            {
+                if (model.IsStarter) continue;
+
+                if (below.TryGetValue(model.Ability, out var under)
+                    && model.PowerTenths < under.PowerTenths
+                    && model.GuardTenths < under.GuardTenths)
+                    result.Errors.Add(
+                        $"turret '{model.Id}' sits below '{under.Id}' on the shelf and is worse " +
+                        "at both jobs — a dearer rung may trade weight for toughness and may not " +
+                        "give up both");
+
+                below[model.Ability] = model;
+            }
 
             if (!verbose) return;
 
@@ -1950,7 +2039,7 @@ namespace GlimmerGrove.EditorTools
                 return;
             }
 
-            RequireGroveArt(floor.TileArt, "grove floor", false, result, optional: true);
+            RequireGroveArt(floor.TileArt, "grove floor", false, 1, result, optional: true);
             CheckTileProjection(floor, result);
 
             // Which region owns each tile, built once — the same map answers overlap, holes and
@@ -2297,7 +2386,7 @@ namespace GlimmerGrove.EditorTools
 
                 ValidateGroveBundle(piece, result);
 
-                RequireGroveArt(piece.Art, $"grove piece '{piece.Id}'", piece.Animated, result);
+                RequireGroveArt(piece.Art, $"grove piece '{piece.Id}'", piece.Animated, piece.Facings, result);
 
                 if (piece.RequiresLevel.IsValid && !content.Index.Contains(piece.RequiresLevel))
                     result.Warnings.Add($"grove piece '{piece.Id}' is earned by clearing " +
@@ -2386,16 +2475,33 @@ namespace GlimmerGrove.EditorTools
                 return;
             }
 
-            if (!piece.Hit.IsSet)
-                result.Errors.Add($"grove piece '{piece.Id}' has no hit mask; run " +
-                                  "Tools/grove_art_facts.py so it can be tapped where it is painted");
+            // One mask per facing, because a facing is a different picture. A piece missing
+            // the mask for a facing it can be turned to is tapped as its whole box on that
+            // facing alone — a fault that would only show after the player turned it.
+            for (int facing = 0; facing < piece.Facings; facing++)
+                if (!piece.Hit(facing).IsSet)
+                    result.Errors.Add($"grove piece '{piece.Id}' has no hit mask for facing " +
+                                      $"{facing}; run Tools/import_grove_art.py so it can be " +
+                                      "tapped where it is painted");
 
-            string path = "Assets/Game/Art/" + piece.Art + (piece.Animated ? string.Empty : ".png");
+            // A turnable piece draws its facings out of a folder, exactly as an animated one
+            // draws its frames, so a piece claiming both would have two readings of one folder
+            // and the reader would silently pick one. Refused rather than salvaged.
+            if (piece.Facings > 1 && piece.Animated)
+                result.Errors.Add($"grove piece '{piece.Id}' is both animated and turnable, and " +
+                                  "both are drawn from the same frames; it can only be one");
+
+            bool folder = piece.Animated || piece.Facings > 1;
+            string path = "Assets/Game/Art/" + piece.Art + (folder ? string.Empty : ".png");
             Texture2D texture = null;
 
-            if (piece.Animated)
+            if (folder)
             {
                 var frames = AssetDatabase.FindAssets("t:Texture2D", new[] { path });
+                if (piece.Facings > 1 && frames.Length != piece.Facings)
+                    result.Errors.Add($"grove piece '{piece.Id}' can be turned {piece.Facings} " +
+                                      $"ways and has {frames.Length} picture(s) at {path}; run " +
+                                      "Tools/make_grove_art.py");
                 if (frames.Length > 0)
                     texture = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(frames[0]));
             }
@@ -2517,8 +2623,17 @@ namespace GlimmerGrove.EditorTools
         /// that looks like a rendering bug. It checks the asset database directly rather than
         /// leaning on <c>AddressableAudit</c>, because that runs only where Addressables is
         /// installed and this has to hold in every project state.
+        ///
+        /// <para>
+        /// <b>Three shapes, and the piece is what says which.</b> A plain piece is one sprite at
+        /// its own address; an <em>animated</em> one is a folder of frames; a <em>turnable</em>
+        /// one is a folder of exactly <paramref name="facings"/> renders, one per quarter turn.
+        /// Asking for a single PNG of a piece that has four is what this reported on the first
+        /// run after the catalogue became a village: 52 errors naming art that is on disk, in a
+        /// folder, addressed and perfectly loadable.
+        /// </para>
         /// </summary>
-        static void RequireGroveArt(string art, string owner, bool animated,
+        static void RequireGroveArt(string art, string owner, bool animated, int facings,
                                     ContentValidationResult result, bool optional = false)
         {
             if (string.IsNullOrEmpty(art))
@@ -2537,6 +2652,22 @@ namespace GlimmerGrove.EditorTools
                 if (!AssetDatabase.IsValidFolder(folder))
                     result.Errors.Add($"{owner} names animation set '{art}', " +
                                       "which is not a folder under Art/");
+                return;
+            }
+
+            if (facings > 1)
+            {
+                if (!AssetDatabase.IsValidFolder(folder))
+                {
+                    result.Errors.Add($"{owner} is turned {facings} ways, so its art is the " +
+                                      $"folder '{art}', which is not under Art/");
+                    return;
+                }
+
+                for (int facing = 0; facing < facings; facing++)
+                    if (AssetDatabase.LoadAssetAtPath<Sprite>($"{folder}/f{facing}.png") == null)
+                        result.Errors.Add($"{owner} has no sprite for facing {facing} at " +
+                                          $"{folder}/f{facing}.png");
                 return;
             }
 

@@ -30,7 +30,21 @@ namespace GlimmerGrove.Wards
 
         readonly WardModel[] _byColour;
 
-        WardLine(WardModel[] byColour) => _byColour = byColour;
+        /// <summary>
+        /// How far each seat's turret has been upgraded, in colour order.
+        ///
+        /// <b>Beside the models rather than looked up when a board is built</b>, because a line is
+        /// resolved once from the save and then handed around: a board that asked a ledger would
+        /// be asking a *later* question than the one the line answered, and the two could differ
+        /// across a sync. What a line is, is the whole answer to "what is standing here".
+        /// </summary>
+        readonly int[] _stars;
+
+        WardLine(WardModel[] byColour, int[] stars)
+        {
+            _byColour = byColour;
+            _stars = stars;
+        }
 
         /// <summary>The turret standing on this colour. Never null once built.</summary>
         public WardModel this[char colour]
@@ -50,6 +64,20 @@ namespace GlimmerGrove.Wards
         public IReadOnlyList<WardModel> Models => _byColour;
 
         /// <summary>
+        /// The turret on this colour index <em>and how far it has been taken</em> — what the board
+        /// actually stands.
+        ///
+        /// <b>One value rather than a model and a number</b>, for <see cref="WardBuild"/>'s reason:
+        /// a caller that took the model and forgot the stars would silently play an un-upgraded
+        /// turret, and nothing would report it.
+        /// </summary>
+        public WardBuild BuildAt(int colour)
+        {
+            int at = colour < 0 || colour >= _byColour.Length ? 0 : colour;
+            return new WardBuild(_byColour[at], _stars[at]);
+        }
+
+        /// <summary>
         /// The line every player starts on, and the one a run falls back to.
         ///
         /// <b>Four of the roster's starter</b>, which is what a save that has never been written
@@ -61,9 +89,17 @@ namespace GlimmerGrove.Wards
 
             var starter = catalog.Starter;
             var line = new WardModel[Colours.Length];
+            var ladder = new int[Colours.Length];
 
-            for (int i = 0; i < line.Length; i++) line[i] = starter;
-            return new WardLine(line);
+            // The starter at the first star, which is where every turret begins and what every
+            // content gate, offline mirror and rule test plays against.
+            for (int i = 0; i < line.Length; i++)
+            {
+                line[i] = starter;
+                ladder[i] = WardStars.Least;
+            }
+
+            return new WardLine(line, ladder);
         }
 
         /// <summary>
@@ -84,17 +120,42 @@ namespace GlimmerGrove.Wards
         /// that lost a purchase to a failed sync must fall back rather than play a turret it
         /// cannot account for.
         /// </para>
+        /// <para>
+        /// <b>The ownership question takes the <em>seat's</em> colour</b>, because a turret is
+        /// bought for one colour rather than for the line (<see cref="WardHolding"/>). Asked
+        /// without it, a turret bought for red would stand on blue the moment somebody chose it
+        /// there — which is the rule this feature exists to have, undone at the one place that
+        /// decides what a board plays.
+        /// </para>
         /// </summary>
         public static WardLine Resolve(WardCatalog catalog, IReadOnlyList<WardSlot> chosen,
-                                       Func<WardModel, bool> held)
+                                       Func<WardModel, char, bool> held)
+            => Resolve(catalog, chosen, held, null);
+
+        /// <summary>
+        /// The same, told how far each seat's turret has been upgraded.
+        ///
+        /// <b><paramref name="stars"/> may be null</b>, which is every turret at the first star —
+        /// what a content gate, an offline mirror and every rule test play against, and what a
+        /// save written before the ladder shipped means.
+        /// </summary>
+        public static WardLine Resolve(WardCatalog catalog, IReadOnlyList<WardSlot> chosen,
+                                       Func<WardModel, char, bool> held,
+                                       Func<WardModel, char, int> stars)
         {
             catalog = catalog ?? WardCatalog.Default;
 
             var starter = catalog.Starter;
             var line = new WardModel[Colours.Length];
+            var ladder = new int[Colours.Length];
 
-            for (int i = 0; i < line.Length; i++) line[i] = starter;
-            if (chosen == null) return new WardLine(line);
+            for (int i = 0; i < line.Length; i++)
+            {
+                line[i] = starter;
+                ladder[i] = Rung(stars, starter, Colours[i]);
+            }
+
+            if (chosen == null) return new WardLine(line, ladder);
 
             for (int i = 0; i < chosen.Count; i++)
             {
@@ -103,13 +164,18 @@ namespace GlimmerGrove.Wards
 
                 var model = catalog.Find(chosen[i].Ward);
                 if (model == null) continue;
-                if (held != null && !held(model)) continue;
+                if (held != null && !held(model, Colours[at])) continue;
 
                 line[at] = model;
+                ladder[at] = Rung(stars, model, Colours[at]);
             }
 
-            return new WardLine(line);
+            return new WardLine(line, ladder);
         }
+
+        /// <summary>How far this turret has been taken on this seat, with no lookup meaning one.</summary>
+        static int Rung(Func<WardModel, char, int> stars, WardModel model, char colour)
+            => stars == null ? WardStars.Least : WardStars.Sane(stars(model, colour));
 
         /// <summary>
         /// Every address this line's art needs, as a flat list, so a screen can scope it.
@@ -134,7 +200,7 @@ namespace GlimmerGrove.Wards
                     AssetPipeline.AssetManifest.SiegeArt(_byColour[i].FireFor(colour))));
 
                 // **The three reels a turret throws, and only for the ones that own a set.** The
-                // one model that draws the four elemental bolts instead (`WardModel.Elemental`)
+                // one model that draws the shared elemental reels instead (`WardModel.Elemental`)
                 // takes them from the mode's own cast, where they are resident — asking for them
                 // here would be a second claim on an address the global set already owns, which
                 // invariant 7b refuses. The two have to stay in step: drop them from `SiegeMode`

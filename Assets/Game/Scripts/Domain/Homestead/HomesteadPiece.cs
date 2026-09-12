@@ -280,7 +280,43 @@ namespace GlimmerGrove.Homestead
         public readonly int ArtWidth, ArtHeight;
 
         /// <summary>Where the picture is inside its rectangle. See <see cref="GroveHitMask"/>.</summary>
-        public readonly GroveHitMask Hit;
+        readonly GroveHitMask[] _hits;
+
+        /// <summary>
+        /// How many ways this piece may be turned: 1 or <see cref="GroveFootprint.Facings"/>.
+        ///
+        /// <para>
+        /// It is per piece rather than a constant, and that is a download decision as much as a
+        /// design one: four facings is four pictures and four hit masks, and a barrel looks the
+        /// same from every side. Anything with a front — a house, a cart, a gate — earns them;
+        /// a rock does not. The roster says which, and <c>make_grove_art.py</c> renders exactly
+        /// that many.
+        /// </para>
+        /// <para>
+        /// A piece with more than one facing draws its art as <em>frames</em>, indexed by
+        /// facing, so a multi-facing piece and an <see cref="Animated"/> one want the same
+        /// folder for different reasons and may never be both. <c>ContentValidation</c> refuses
+        /// the combination rather than picking one.
+        /// </para>
+        /// </summary>
+        public readonly int Facings;
+
+        /// <summary>
+        /// Where the paint is, for each facing. See <see cref="GroveHitMask"/>.
+        ///
+        /// <para>
+        /// One mask per facing, because a facing is a different picture: a cart seen from the
+        /// front and the same cart seen from the side cover quite different parts of their
+        /// shared rectangle. This used to be a single mask read backwards for a mirrored piece,
+        /// which was exactly right while a flip was the only facing and is wrong the moment a
+        /// quarter turn is a re-render rather than a reflection.
+        /// </para>
+        /// </summary>
+        public GroveHitMask Hit(int facing)
+        {
+            if (_hits == null || _hits.Length == 0) return default;
+            return _hits[GroveFootprint.Quarter(facing) % _hits.Length];
+        }
 
         public HomesteadPiece(string id, string art, bool animated, HomesteadPieceKind kind,
                               int cost, LevelId requiresLevel, ChapterId requiresChapter,
@@ -288,13 +324,14 @@ namespace GlimmerGrove.Homestead
                               HomesteadSlotKind slot = HomesteadSlotKind.Ground, int tier = 0,
                               int requiresKeeperLevel = 0, int bundle = 1,
                               GroveFootprint footprint = default, int artWidth = 0, int artHeight = 0,
-                              GroveHitMask hit = default)
+                              GroveHitMask[] hits = null, int facings = 1)
         {
             Bundle = bundle < 1 ? 1 : bundle;
             Footprint = footprint.Cols < 1 ? GroveFootprint.Single : footprint;
             ArtWidth = artWidth < 0 ? 0 : artWidth;
             ArtHeight = artHeight < 0 ? 0 : artHeight;
-            Hit = hit;
+            _hits = hits;
+            Facings = facings == GroveFootprint.Facings ? GroveFootprint.Facings : 1;
             Id = id;
             Art = string.IsNullOrEmpty(art) ? id : art;
             Animated = animated;

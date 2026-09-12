@@ -38,6 +38,12 @@ namespace GlimmerGrove.Homestead
     {
         static readonly HashSet<string> _bought = new HashSet<string>(StringComparer.Ordinal);
 
+        /// <summary>
+        /// Where <see cref="LoadFrom"/> assembles a file's set before deciding whether it is
+        /// news. A field rather than a local, because this runs on every sync.
+        /// </summary>
+        static readonly HashSet<string> _incoming = new HashSet<string>(StringComparer.Ordinal);
+
         /// <summary>Prefix on a purchase's spend reason. Read by support, never by code.</summary>
         public const string SpendReason = "land:";
 
@@ -69,7 +75,7 @@ namespace GlimmerGrove.Homestead
         /// one square on the floor that is not a slot — the hearth's rule, carried over.
         /// </summary>
         public static bool IsBuildable(GroveFloor floor, int col, int row)
-            => IsOwned(floor, col, row) && !floor.IsHall(GroveFloor.TileId(col, row));
+            => IsOwned(floor, col, row) && !HomesteadLayout.IsHall(floor, col, row);
 
         /// <summary>How many regions were paid for. See <c>CompanionLedger.BoughtCount</c>.</summary>
         public static int BoughtCount => _bought.Count;
@@ -273,14 +279,44 @@ namespace GlimmerGrove.Homestead
         }
 
         // --------------------------------------------------- file bridge (internal)
+        /// <summary>
+        /// Takes the owned set from a file — a launch, or a sync adopting a merge.
+        ///
+        /// <para>
+        /// <b>It raises <see cref="Changed"/> only when the set really moved</b>, which is the
+        /// difference between an event named for a change and an event named for a read.
+        /// <c>SaveService.Adopt</c> runs the whole load path on every sync, and a purchase asks
+        /// for a sync — so an unconditional raise here meant a few seconds after buying
+        /// <em>anything</em>, every screen listening for land was told the ground had changed
+        /// when it had not. What that looked like was the grove's shop replaying the entrance of
+        /// all hundred and fifty cells and throwing the player back to the top of the grid, and
+        /// the grove itself rebuilding its floor. Both were reported as the screen reloading
+        /// itself, and both were correct code listening to an event that was not true.
+        /// </para>
+        /// <para>
+        /// <b>Safe because nothing uses this as "a save arrived".</b> Every listener asks the
+        /// same question the name asks — what land is held — and a screen's own first fill comes
+        /// from its <c>Warm</c> rather than from this. It is deliberately narrower than the
+        /// ledgers around it, which still raise on every read (invariant 16k): the general
+        /// defence is that a redraw must not disturb what is already drawn, and this is the
+        /// cheaper half — not saying anything when there is nothing to say.
+        /// </para>
+        /// </summary>
         internal static void LoadFrom(SaveFileDto dto)
         {
-            _bought.Clear();
+            _incoming.Clear();
 
             var ids = dto?.groveLandOwned;
             if (ids != null)
                 foreach (var id in ids)
-                    if (!string.IsNullOrEmpty(id)) _bought.Add(id);
+                    if (!string.IsNullOrEmpty(id)) _incoming.Add(id);
+
+            // Compared before it is taken, so the "no news" case costs one set comparison and
+            // touches nothing else.
+            if (_incoming.SetEquals(_bought)) return;
+
+            _bought.Clear();
+            _bought.UnionWith(_incoming);
 
             Raise();
         }

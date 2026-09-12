@@ -304,9 +304,26 @@ namespace GlimmerGrove.Homestead
         public bool IsHallAnchor(int col, int row) => _hasHall && col == _hallCol && row == _hallRow;
 
         /// <summary>The hall as a stand, for an occupancy index. Invalid when the floor has no hall.</summary>
+        /// <summary>
+        /// The hall standing somewhere other than where the content put it, which is what a
+        /// player who has moved their home has.
+        ///
+        /// <para>
+        /// The floor keeps saying where the hall <em>starts</em> — that is content, and it is
+        /// what a new grove opens on — and the seat it actually occupies is the layout's
+        /// (<see cref="HomesteadLayout.HallSeat"/>). Anything asking "is this the hall" has to
+        /// ask there rather than here, because here is only ever the default.
+        /// </para>
+        /// </summary>
+        public GroveStand HallStand(string dwellingId, int col, int row, int facing)
+            => string.IsNullOrEmpty(dwellingId) || !Contains(col, row)
+                ? default
+                : new GroveStand(col, row, dwellingId, GroveFootprint.Quarter(facing),
+                                 HallFootprint, true);
+
         public GroveStand HallStand(string dwellingId)
             => _hasHall && !string.IsNullOrEmpty(dwellingId)
-                ? new GroveStand(_hallCol, _hallRow, dwellingId, false, HallFootprint, true)
+                ? new GroveStand(_hallCol, _hallRow, dwellingId, 0, HallFootprint, true)
                 : default;
 
         /// <summary>

@@ -71,7 +71,10 @@ namespace GlimmerGrove.Wards
 
                 foreach (var pair in _chosen) slots.Add(new WardSlot(pair.Key, pair.Value));
 
-                return WardLine.Resolve(catalog, slots, WardLedger.IsHeld);
+                // The stars too, or a player's upgrades stop at the shelf: a line is what a
+                // board stands, so it has to carry how far each seat has been taken.
+                return WardLine.Resolve(catalog, slots, WardLedger.IsHeld,
+                                        WardStarLedger.StarsOf);
             }
         }
 
@@ -96,7 +99,11 @@ namespace GlimmerGrove.Wards
             if (WardLine.Colours.IndexOf(colour) < 0) return false;
 
             var model = WardLedger.Catalog.Find(wardId);
-            if (model == null || !WardLedger.IsHeld(model)) return false;
+
+            // Held **on this seat**, not merely owned: a turret is bought per colour
+            // (`WardHolding`), so this is the one place a stored choice could otherwise put one
+            // on a colour nobody paid for.
+            if (model == null || !WardLedger.IsHeld(model, colour)) return false;
 
             if (_chosen.TryGetValue(colour, out string held)
                 && string.Equals(held, model.Id, StringComparison.Ordinal))

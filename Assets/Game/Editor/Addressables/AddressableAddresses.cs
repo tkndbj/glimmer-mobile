@@ -126,6 +126,25 @@ namespace GlimmerGrove.EditorTools
             foreach (var request in AssetManifest.AllWardAssets(ProgressionRules.Table.Wards))
                 if (request.Kind == AssetKind.SpriteSet) folders.Add(request.Address);
 
+            // **Every mode's own art, asked without a chapter, and it is the one entry here that
+            // is about what *exists* rather than about what something loads.**
+            //
+            // A frame folder is a fact about the art on disk: these reels have no notion of a
+            // folder, so each needs a label, and a folder that never gets one imports as loose
+            // sprites that cannot be loaded at all. Built from the chapters alone that question
+            // gets answered by whatever a chapter happens to ask for — and a mode may hand back a
+            // different cast depending on which chapter is asking (`SiegeMode.ArtFor`), which in
+            // the Editor is decided by a catalog index that is not necessarily loaded.
+            //
+            // Measured, that shipped: the second siege cast came back labelless, so twelve reels
+            // were addressed, audited green and **unloadable**, and what reached a device was
+            // raiders with no body and a health bar floating where each should have been, with
+            // `No Location found for Key=Art/Siege/kayBrute_b` in the log. `Art` is the mode's
+            // whole art with nothing asking, which is exactly the set this needs.
+            foreach (var mode in Content.LevelModes.All)
+                foreach (var request in mode.Art)
+                    if (request.Kind == AssetKind.SpriteSet) folders.Add(request.Address);
+
             return folders;
         }
 

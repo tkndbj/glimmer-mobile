@@ -14,15 +14,15 @@ namespace GlimmerGrove.Tests
     /// Placing was always easy and editing was not — a piece could only be moved by clearing
     /// one tile and finding the same thing again in the shop's grid, which is two operations
     /// and a search for what the player experiences as one gesture. <c>Move</c> and
-    /// <c>Flip</c> are that gesture, and both write to the one part of the save file that can
+    /// <c>Turn</c> are that gesture, and both write to the one part of the save file that can
     /// lose something (invariant 11c), which is what this suite is for.
     /// </para>
     /// <para>
-    /// <b>A flip and not a rotation.</b> Every piece in the catalog is a single drawing from
-    /// one fixed isometric angle — the packs the art was cut from ship no directional variants
-    /// — so there is no second sprite to rotate to, and rotating the transform would turn the
-    /// painting rather than the object. A mirror is the only transform that leaves an
-    /// isometric drawing standing on its own tile. See <see cref="Placement.Flipped"/>.
+    /// <b>A quarter turn, and it used to be a mirror.</b> Every piece in the old catalog was a
+    /// single drawing from one fixed isometric angle, so there was no second sprite to turn to
+    /// and turning the transform would have turned the painting rather than the object. Every
+    /// piece is now rendered from a model at four camera yaws, so a facing is a different
+    /// picture. See <see cref="Placement.Facing"/>.
     /// </para>
     /// </summary>
     public sealed class GroveEditTests
@@ -72,29 +72,34 @@ namespace GlimmerGrove.Tests
             return map;
         }
 
-        // ============================================================== flipping
+        // =============================================================== turning
         [Test]
-        public void AFlipTogglesAndIsRemembered()
+        public void FourTurnsComeBackToWhereItStarted()
         {
             var grove = Grove();
             HomesteadLayout.Place(T(2, 2), "fence");
 
-            Assert.IsFalse(HomesteadLayout.FlippedAt(T(2, 2)), "a piece faces the way it was drawn");
+            Assert.AreEqual(0, HomesteadLayout.FacingAt(T(2, 2)), "a piece faces the way it was drawn");
 
-            Assert.AreEqual(GrovePlaceResult.Placed, HomesteadLayout.Flip(grove, T(2, 2)));
-            Assert.IsTrue(HomesteadLayout.FlippedAt(T(2, 2)));
+            // One step at a time and in order. A control that skipped a facing would be a cart
+            // the player could not point at the road.
+            for (int expected = 1; expected <= 3; expected++)
+            {
+                Assert.AreEqual(GrovePlaceResult.Placed, HomesteadLayout.Turn(grove, T(2, 2)));
+                Assert.AreEqual(expected, HomesteadLayout.FacingAt(T(2, 2)));
+            }
 
-            Assert.AreEqual(GrovePlaceResult.Placed, HomesteadLayout.Flip(grove, T(2, 2)));
-            Assert.IsFalse(HomesteadLayout.FlippedAt(T(2, 2)), "and back again — it is a toggle");
+            Assert.AreEqual(GrovePlaceResult.Placed, HomesteadLayout.Turn(grove, T(2, 2)));
+            Assert.AreEqual(0, HomesteadLayout.FacingAt(T(2, 2)), "and round again");
         }
 
         [Test]
-        public void FlippingNothingDoesNothing()
+        public void TurningNothingDoesNothing()
         {
             var grove = Grove();
 
-            Assert.AreNotEqual(GrovePlaceResult.Placed, HomesteadLayout.Flip(grove, T(3, 3)), "bare ground has no facing");
-            Assert.AreNotEqual(GrovePlaceResult.Placed, HomesteadLayout.Flip(grove, null));
+            Assert.AreNotEqual(GrovePlaceResult.Placed, HomesteadLayout.Turn(grove, T(3, 3)), "bare ground has no facing");
+            Assert.AreNotEqual(GrovePlaceResult.Placed, HomesteadLayout.Turn(grove, null));
         }
 
         /// <summary>
@@ -102,10 +107,10 @@ namespace GlimmerGrove.Tests
         /// because writing it at first launch would stamp it with now and put it back on a
         /// device where the player had moved it (invariant 16f). So flipping it has to write
         /// the friend down as well as the facing — a row saying only "mirrored" would be a row
-        /// saying the tile is empty, and the friend would vanish on the first flip.
+        /// saying the tile is empty, and the friend would vanish on the first turn.
         /// </summary>
         [Test]
-        public void FlippingTheStarterWritesTheCompanionDownAsWellAsTheFacing()
+        public void TurningTheStarterWritesTheCompanionDownAsWellAsTheFacing()
         {
             var grove = Grove();
             string starter = grove.Floor.StarterPiece;
@@ -114,10 +119,10 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(starter, HomesteadLayout.Shown(grove, T(1, 0)));
             Assert.AreEqual(string.Empty, HomesteadLayout.At(T(1, 0)), "shown, not stored");
 
-            Assert.AreEqual(GrovePlaceResult.Placed, HomesteadLayout.Flip(grove, T(1, 0)));
+            Assert.AreEqual(GrovePlaceResult.Placed, HomesteadLayout.Turn(grove, T(1, 0)));
 
             Assert.AreEqual(starter, HomesteadLayout.At(T(1, 0)), "the friend is still there");
-            Assert.IsTrue(HomesteadLayout.FlippedAt(T(1, 0)));
+            Assert.AreEqual(1, HomesteadLayout.FacingAt(T(1, 0)));
         }
 
         /// <summary>
@@ -129,27 +134,27 @@ namespace GlimmerGrove.Tests
         {
             var grove = Grove();
             HomesteadLayout.Place(T(2, 2), "fence");
-            HomesteadLayout.Flip(grove, T(2, 2));
+            HomesteadLayout.Turn(grove, T(2, 2));
 
             HomesteadLayout.Place(T(2, 2), "oak");
 
-            Assert.IsFalse(HomesteadLayout.FlippedAt(T(2, 2)));
+            Assert.AreEqual(0, HomesteadLayout.FacingAt(T(2, 2)));
         }
 
         [Test]
-        public void AClearedSlotIsNeverFlipped()
+        public void AClearedSlotAlwaysFacesZero()
         {
             // Not tidiness: an emptied slot keeps its row (that is how "taken away" survives a
-            // merge), and a facing on nothing is a bit the join would have to break a tie on
+            // merge), and a facing on nothing is a value the join would have to break a tie on
             // that no player could ever see.
-            Assert.IsFalse(new Placement(string.Empty, 100, true).Flipped);
+            Assert.AreEqual(0, new Placement(string.Empty, 100, 2).Facing);
 
             var grove = Grove();
             HomesteadLayout.Place(T(2, 2), "fence");
-            HomesteadLayout.Flip(grove, T(2, 2));
+            HomesteadLayout.Turn(grove, T(2, 2));
             HomesteadLayout.Clear(T(2, 2));
 
-            Assert.IsFalse(HomesteadLayout.FlippedAt(T(2, 2)));
+            Assert.AreEqual(0, HomesteadLayout.FacingAt(T(2, 2)));
         }
 
         // ================================================================ moving
@@ -187,7 +192,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The facing is a fact about the piece rather than about the ground under it. Leaving
-        /// it behind would mean re-flipping after every move, so the two controls would undo
+        /// it behind would mean re-turning after every move, so the two controls would undo
         /// each other.
         /// </summary>
         [Test]
@@ -195,13 +200,13 @@ namespace GlimmerGrove.Tests
         {
             var grove = Grove();
             HomesteadLayout.Place(T(2, 2), "oak");
-            HomesteadLayout.Flip(grove, T(2, 2));
+            HomesteadLayout.Turn(grove, T(2, 2));
             HomesteadLayout.Place(T(4, 3), "well");
 
             HomesteadLayout.Move(grove, T(2, 2), T(4, 3));
 
-            Assert.IsTrue(HomesteadLayout.FlippedAt(T(4, 3)), "the mirrored oak is still mirrored");
-            Assert.IsFalse(HomesteadLayout.FlippedAt(T(2, 2)), "and the well it displaced is not");
+            Assert.AreEqual(1, HomesteadLayout.FacingAt(T(4, 3)), "the turned oak is still turned");
+            Assert.AreEqual(0, HomesteadLayout.FacingAt(T(2, 2)), "and the well it displaced is not");
         }
 
         /// <summary>
@@ -270,26 +275,27 @@ namespace GlimmerGrove.Tests
         {
             var grove = Grove();
             HomesteadLayout.Place(T(2, 2), "fence");
-            HomesteadLayout.Flip(grove, T(2, 2));
+            HomesteadLayout.Turn(grove, T(2, 2));
+            HomesteadLayout.Turn(grove, T(2, 2));
 
             var save = new SaveFileDto();
             HomesteadLayout.WriteInto(save);
 
-            Assert.IsTrue(ById(save.homesteadPlaced)[T(2, 2)].flipped);
+            Assert.AreEqual(2, ById(save.homesteadPlaced)[T(2, 2)].facing);
 
             HomesteadLayout.ResetForTests();
             HomesteadLayout.LoadFrom(save);
 
-            Assert.IsTrue(HomesteadLayout.FlippedAt(T(2, 2)));
+            Assert.AreEqual(2, HomesteadLayout.FacingAt(T(2, 2)));
         }
 
         /// <summary>
-        /// A v17 row has no facing at all, and <c>JsonUtility</c> writes false into a field an
-        /// older file never had. False is exactly what every v17 row meant — nothing could be
-        /// mirrored before this existed — so there is no migration and no ambiguity.
+        /// A row written before facings has none at all, and <c>JsonUtility</c> writes 0 into a
+        /// field an older file never had. Zero is exactly what every such row meant — nothing
+        /// could be turned before this existed — so there is no migration and no ambiguity.
         /// </summary>
         [Test]
-        public void AFileWrittenBeforeFacingsReadsAsUnflipped()
+        public void AFileWrittenBeforeFacingsReadsAsFacingZero()
         {
             HomesteadLayout.LoadFrom(new SaveFileDto
             {
@@ -300,7 +306,7 @@ namespace GlimmerGrove.Tests
             });
 
             Assert.AreEqual("fence", HomesteadLayout.At(T(2, 2)));
-            Assert.IsFalse(HomesteadLayout.FlippedAt(T(2, 2)));
+            Assert.AreEqual(0, HomesteadLayout.FacingAt(T(2, 2)));
         }
 
         /// <summary>
@@ -316,21 +322,21 @@ namespace GlimmerGrove.Tests
         {
             var mine = new[]
             {
-                new HomesteadPlacementDto { slot = T(2, 2), piece = "fence", setUnix = 500, flipped = true },
+                new HomesteadPlacementDto { slot = T(2, 2), piece = "fence", setUnix = 500, facing = 3 },
             };
             var theirs = new[]
             {
-                new HomesteadPlacementDto { slot = T(2, 2), piece = "fence", setUnix = 500, flipped = false },
+                new HomesteadPlacementDto { slot = T(2, 2), piece = "fence", setUnix = 500, facing = 1 },
             };
 
             var one = ById(HomesteadLayout.Join(mine, theirs))[T(2, 2)];
             var other = ById(HomesteadLayout.Join(theirs, mine))[T(2, 2)];
 
-            Assert.AreEqual(one.flipped, other.flipped, "commutative");
+            Assert.AreEqual(one.facing, other.facing, "commutative");
 
             // And idempotent: joining a result with either side again must not move it.
             var again = ById(HomesteadLayout.Join(HomesteadLayout.Join(mine, theirs), mine))[T(2, 2)];
-            Assert.AreEqual(one.flipped, again.flipped);
+            Assert.AreEqual(one.facing, again.facing);
         }
 
         [Test]
@@ -338,15 +344,15 @@ namespace GlimmerGrove.Tests
         {
             var older = new[]
             {
-                new HomesteadPlacementDto { slot = T(2, 2), piece = "fence", setUnix = 100, flipped = true },
+                new HomesteadPlacementDto { slot = T(2, 2), piece = "fence", setUnix = 100, facing = 3 },
             };
             var newer = new[]
             {
-                new HomesteadPlacementDto { slot = T(2, 2), piece = "fence", setUnix = 900, flipped = false },
+                new HomesteadPlacementDto { slot = T(2, 2), piece = "fence", setUnix = 900, facing = 1 },
             };
 
-            Assert.IsFalse(ById(HomesteadLayout.Join(older, newer))[T(2, 2)].flipped);
-            Assert.IsFalse(ById(HomesteadLayout.Join(newer, older))[T(2, 2)].flipped);
+            Assert.AreEqual(1, ById(HomesteadLayout.Join(older, newer))[T(2, 2)].facing);
+            Assert.AreEqual(1, ById(HomesteadLayout.Join(newer, older))[T(2, 2)].facing);
         }
 
         // ============================================================== touching

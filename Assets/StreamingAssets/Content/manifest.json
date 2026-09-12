@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "progressionVersion": 4,
-  "groveVersion": 11,
+  "groveVersion": 21,
   "chapters": [
     {
       "id": "c01_shallows",
@@ -172,6 +172,26 @@
       ]
     },
     {
+      "id": "s03_broodmarch",
+      "version": 1,
+      "order": 145,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s03_firstbrood",
+        "s03_hollowshell",
+        "s03_mirewalk",
+        "s03_spinecrest",
+        "s03_blightfen",
+        "s03_stillmire",
+        "s03_thornbrood",
+        "s03_gloamfield",
+        "s03_deepmire",
+        "s03_broodheart"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,
@@ -235,46 +255,246 @@
         "c04_the_nightbriar_knot"
       ],
       "milestones": [
-        { "goal": 1, "credits": 60, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 2, "credits": 90, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 3, "credits": 50, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 4, "credits": 250, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 5, "credits": 50, "premiumCredits": 0, "premiumGems": 50 },
-        { "goal": 6, "credits": 400, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 7, "credits": 50, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 8, "credits": 600, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 9, "credits": 50, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 10, "credits": 1000, "premiumCredits": 1200, "premiumGems": 100 },
-        { "goal": 11, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 12, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 13, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 14, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 15, "credits": 300, "premiumCredits": 0, "premiumGems": 50 },
-        { "goal": 16, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 17, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 18, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 19, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 20, "credits": 300, "premiumCredits": 1200, "premiumGems": 100 },
-        { "goal": 21, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 22, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 23, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 24, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 25, "credits": 300, "premiumCredits": 0, "premiumGems": 50 },
-        { "goal": 26, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 27, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 28, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 29, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 30, "credits": 300, "premiumCredits": 1200, "premiumGems": 100 },
-        { "goal": 31, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 32, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 33, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 34, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 35, "credits": 300, "premiumCredits": 0, "premiumGems": 50 },
-        { "goal": 36, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 37, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 38, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 39, "credits": 80, "premiumCredits": 225, "premiumGems": 0 },
-        { "goal": 40, "credits": 300, "premiumCredits": 1200, "premiumGems": 100 }
+        {
+          "goal": 1,
+          "credits": 60,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 2,
+          "credits": 90,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 3,
+          "credits": 50,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 4,
+          "credits": 250,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 5,
+          "credits": 50,
+          "premiumCredits": 0,
+          "premiumGems": 50
+        },
+        {
+          "goal": 6,
+          "credits": 400,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 7,
+          "credits": 50,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 8,
+          "credits": 600,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 9,
+          "credits": 50,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 10,
+          "credits": 1000,
+          "premiumCredits": 1200,
+          "premiumGems": 100
+        },
+        {
+          "goal": 11,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 12,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 13,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 14,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 15,
+          "credits": 300,
+          "premiumCredits": 0,
+          "premiumGems": 50
+        },
+        {
+          "goal": 16,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 17,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 18,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 19,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 20,
+          "credits": 300,
+          "premiumCredits": 1200,
+          "premiumGems": 100
+        },
+        {
+          "goal": 21,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 22,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 23,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 24,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 25,
+          "credits": 300,
+          "premiumCredits": 0,
+          "premiumGems": 50
+        },
+        {
+          "goal": 26,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 27,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 28,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 29,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 30,
+          "credits": 300,
+          "premiumCredits": 1200,
+          "premiumGems": 100
+        },
+        {
+          "goal": 31,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 32,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 33,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 34,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 35,
+          "credits": 300,
+          "premiumCredits": 0,
+          "premiumGems": 50
+        },
+        {
+          "goal": 36,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 37,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 38,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 39,
+          "credits": 80,
+          "premiumCredits": 225,
+          "premiumGems": 0
+        },
+        {
+          "goal": 40,
+          "credits": 300,
+          "premiumCredits": 1200,
+          "premiumGems": 100
+        }
       ]
     }
   ],

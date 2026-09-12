@@ -101,11 +101,9 @@ namespace GlimmerGrove.Modes
             MaxHealth = Surge.Health(SiegeTuning.HealthOf(kind));
             Health = MaxHealth;
             Blow = SiegeTuning.BlowEvery * .5f;
-            // A boss stands and winds up; a weaver or a thief takes a shorter beat before
-            // its first web. Both are the same field, because both are "how long until this
-            // one does its thing" and two timers would be two places to forget one.
-            Spell = SiegeTuning.HoldsTheField(kind)
-                  ? SiegeTuning.MeddleWakes : SiegeTuning.BossWakes;
+            // A boss stands and winds up before its first spell. Nothing else casts, so nothing
+            // else reads this.
+            Spell = SiegeTuning.BossWakes;
         }
 
         public bool Brute => Kind == SiegeKind.Brute;

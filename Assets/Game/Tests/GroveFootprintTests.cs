@@ -65,17 +65,26 @@ namespace GlimmerGrove.Tests
 
         // ============================================================ footprints
         [Test]
-        public void AMirroredFootprintSwapsItsColumnsForItsRows()
+        public void AQuarterTurnSwapsAFootprintsColumnsForItsRowsAndAHalfTurnPutsThemBack()
         {
-            // Screen x is (col - row) * w/2, so reflecting the drawing is exactly exchanging
-            // the two axes: a ramp two tiles long along one diagonal runs along the other.
+            // Only the parity matters: a ramp two tiles long along one diagonal runs along
+            // the other when it is turned a quarter, and back along its own when it is turned
+            // again.
             var ramp = new GroveFootprint(1, 2);
 
-            Assert.AreEqual(new GroveFootprint(2, 1), ramp.Mirrored);
-            Assert.AreEqual(ramp, ramp.Mirrored.Mirrored);
-            Assert.AreEqual(ramp, ramp.Facing(false));
-            Assert.AreEqual(ramp.Mirrored, ramp.Facing(true));
-            Assert.AreEqual(GroveFootprint.Single, GroveFootprint.Single.Mirrored, "a square is its own mirror");
+            Assert.AreEqual(new GroveFootprint(2, 1), ramp.Turned);
+            Assert.AreEqual(ramp, ramp.Turned.Turned);
+
+            Assert.AreEqual(ramp, ramp.Facing(0));
+            Assert.AreEqual(ramp.Turned, ramp.Facing(1));
+            Assert.AreEqual(ramp, ramp.Facing(2));
+            Assert.AreEqual(ramp.Turned, ramp.Facing(3));
+
+            Assert.AreEqual(ramp, ramp.Facing(4), "and round again");
+            Assert.AreEqual(ramp.Turned, ramp.Facing(-1), "wrapped, not clamped");
+
+            Assert.AreEqual(GroveFootprint.Single, GroveFootprint.Single.Turned,
+                            "a square covers the same tile whichever way it faces");
         }
 
         [Test]
@@ -350,7 +359,7 @@ namespace GlimmerGrove.Tests
 
         // ============================================================== flipping
         [Test]
-        public void FlippingALongPieceTurnsItsFootprintAndNeedsTheRoomToDoIt()
+        public void TurningALongPieceTurnsItsFootprintAndNeedsTheRoomToDoIt()
         {
             var grove = Grove();
             HomesteadLayout.Place(T(4, 4), "ramp");         // 1 col x 2 rows: covers 4,4 and 4,5
@@ -358,15 +367,16 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(HomesteadLayout.Occupancy(grove).IsCovered(4, 5));
             Assert.IsFalse(HomesteadLayout.Occupancy(grove).IsCovered(5, 4));
 
-            Assert.AreEqual(GrovePlaceResult.Placed, HomesteadLayout.Flip(grove, T(4, 4)));
+            Assert.AreEqual(GrovePlaceResult.Placed, HomesteadLayout.Turn(grove, T(4, 4)));
 
             Assert.IsTrue(HomesteadLayout.Occupancy(grove).IsCovered(5, 4), "now 2 cols x 1 row");
             Assert.IsFalse(HomesteadLayout.Occupancy(grove).IsCovered(4, 5));
 
-            // Something standing where the turn would land refuses it, and nothing is written.
+            // Something standing where the turn would land refuses it, and nothing is written —
+            // including the facing, so a refused turn does not step the piece round invisibly.
             HomesteadLayout.Place(T(4, 5), "fence");
-            Assert.AreEqual(GrovePlaceResult.NoRoom, HomesteadLayout.Flip(grove, T(4, 4)));
-            Assert.IsTrue(HomesteadLayout.FlippedAt(T(4, 4)), "still facing the way it was");
+            Assert.AreEqual(GrovePlaceResult.NoRoom, HomesteadLayout.Turn(grove, T(4, 4)));
+            Assert.AreEqual(1, HomesteadLayout.FacingAt(T(4, 4)), "still facing the way it was");
         }
 
         // ============================================================ hit masks
@@ -435,18 +445,20 @@ namespace GlimmerGrove.Tests
             var post = GroveHitMask.FromCells(10, 10, cells);
 
             // Drawn 320 wide, so a cell is 32 floor pixels and the slop is under one cell.
-            var hit = new GroveHit(3, 3, 0f, 0f, 160f, 160f, 99, post, false);
+            var hit = new GroveHit(3, 3, 0f, 0f, 160f, 160f, 99, post);
 
             Assert.IsTrue(hit.Contains(16f, 100f), "on the post");
             Assert.IsTrue(hit.Contains(-10f, -100f), "within the slop of it");
             Assert.IsFalse(hit.Contains(-120f, 0f), "inside the box, well off the post");
             Assert.IsFalse(hit.Contains(0f, 300f), "outside the box");
 
-            // Mirrored, a post on the left is on the right.
-            var offset = GroveHitMask.FromCells(10, 10, (1, 5), (1, 6));
-            var flipped = new GroveHit(3, 3, 0f, 0f, 160f, 160f, 99, offset, true);
-            Assert.IsTrue(flipped.Contains(112f, -20f));
-            Assert.IsFalse(flipped.Contains(-112f, -20f));
+            // A facing is a different picture, so it is a different mask rather than the same
+            // one read backwards — which is what the caller hands over (`HomesteadPiece.Hit`).
+            // The same post drawn on the other side is tapped on the other side.
+            var offset = GroveHitMask.FromCells(10, 10, (8, 5), (8, 6));
+            var turned = new GroveHit(3, 3, 0f, 0f, 160f, 160f, 99, offset);
+            Assert.IsTrue(turned.Contains(112f, -20f));
+            Assert.IsFalse(turned.Contains(-112f, -20f));
         }
 
         [Test]
@@ -456,7 +468,7 @@ namespace GlimmerGrove.Tests
             // and the slop spans several of them, so a tap 20 pixels off still lands.
             var cells = new (int, int)[10];
             for (int y = 0; y < 10; y++) cells[y] = (5, y);
-            var small = new GroveHit(3, 3, 0f, 0f, 32f, 32f, 99, GroveHitMask.FromCells(10, 10, cells), false);
+            var small = new GroveHit(3, 3, 0f, 0f, 32f, 32f, 99, GroveHitMask.FromCells(10, 10, cells));
 
             Assert.IsTrue(small.Contains(20f, 0f));
             Assert.IsFalse(small.Contains(-31f, 0f), "but not from the far edge of the box");
@@ -473,9 +485,9 @@ namespace GlimmerGrove.Tests
                 for (int x = 5; x < 10; x++) half[n++] = (x, y);
 
             var tree = new GroveHit(2, 2, 0f, 200f, 200f, 300f, GroveFootprint.Single.Depth(2, 2),
-                                    GroveHitMask.FromCells(10, 10, half), false);
+                                    GroveHitMask.FromCells(10, 10, half));
             var fence = new GroveHit(3, 3, 0f, 0f, 100f, 60f, GroveFootprint.Single.Depth(3, 3),
-                                     GroveHitMask.None, false);
+                                     GroveHitMask.None);
 
             Assert.IsTrue(GrovePick.Topmost(new[] { tree, fence }, 0f, 0f, out int col, out int row));
             Assert.AreEqual((3, 3), (col, row), "the fence is in front where both are drawn");

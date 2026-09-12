@@ -486,10 +486,12 @@ namespace GlimmerGrove
         /// </summary>
         static Payout Chip(RectTransform panel, float y, ChestDropKind kind, long amount)
         {
-            RewardArt.Token(kind, out var token, out var tokenTint);
+            // No item: a real-money product grants currency, or one idempotent permanent
+            // entitlement (invariant 18d), and never one of the kinds that name a thing.
+            RewardArt.Token(kind, null, out var token, out var tokenTint);
 
             var chip = Payout.Chip("Chip" + kind, panel, new Vector2(.5f, 1f), new Vector2(0f, -y),
-                                   RewardArt.Icon(kind), RewardArt.Tint(kind),
+                                   RewardArt.Icon(kind, null), RewardArt.Tint(kind, null),
                                    n => "+" + Compact.Number(n), amount,
                                    token, tokenTint, sfx: "coin");
 

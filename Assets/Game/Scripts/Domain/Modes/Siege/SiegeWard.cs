@@ -10,8 +10,18 @@ namespace GlimmerGrove.Modes
         public readonly int Colour;
 
         public float Fuel;
-        public int Health = SiegeTuning.WardHealth;
+        public int Health;
         public bool Alive = true;
+
+        /// <summary>
+        /// What this turret holds when it is whole — its own, not the mode's.
+        ///
+        /// <b>Read once when the ward is built and then asked by everything that repairs or draws
+        /// it.</b> A mending, a rally and the health bar all used the mode's constant, which was
+        /// the same number while every turret was; with a roster that trades toughness for weight
+        /// it would cap a tough turret's repairs at the baseline and draw its bar as overfull.
+        /// </summary>
+        public readonly int Full;
 
         /// <summary>Seconds until its next bolt.</summary>
         public float Cool;
@@ -71,11 +81,30 @@ namespace GlimmerGrove.Modes
         public int Shots;
 
         public SiegeWard(int colour, Wards.WardModel model = null)
+            : this(colour, new Wards.WardBuild(model ?? Wards.WardCatalog.Default.Starter)) { }
+
+        /// <summary>
+        /// One ward, standing the turret a player chose at the star they have taken it to.
+        ///
+        /// <b>Its figures are read once, here</b>, exactly as its capacity always was: a bolt's
+        /// weight and a chassis's health are properties of what is standing, not questions to ask
+        /// a ledger mid-run — and a ledger can move under a run when a sync lands.
+        /// </summary>
+        public SiegeWard(int colour, Wards.WardBuild build)
         {
             Colour = colour;
-            Model = model ?? Wards.WardCatalog.Default.Starter;
+            Build = build.Has ? build : new Wards.WardBuild(Wards.WardCatalog.Default.Starter);
+            Model = Build.Model;
             Capacity = SiegeTuning.CapacityOf(Model);
+            Full = SiegeTuning.HealthOf(Build);
+            Health = Full;
         }
+
+        /// <summary>What is standing here: the turret and how far it has been upgraded.</summary>
+        public readonly Wards.WardBuild Build;
+
+        /// <summary>How far this turret has been upgraded, one to five.</summary>
+        public int Stars => Build.Stars;
 
         /// <summary>Whether it is standing but smothered. Fuel poured in is still fuel.</summary>
         public bool Doused => Alive && Dark > 0f;
@@ -87,7 +116,37 @@ namespace GlimmerGrove.Modes
         public Wards.WardAbility Ability => Model.Ability;
 
         /// <summary>
-        /// The second colour this turret is strong against, or -1.
+        /// How many colours besides its own this turret is strong against.
+        ///
+        /// <para>
+        /// <b>The ability's magnitude, and it is what tells a prism's two rungs apart.</b> The
+        /// field was read by nothing for as long as a prism meant "its own colour and the next",
+        /// so a sixteen-hundred-gem spectrum and a nine-thousand-credit prism were one turret at
+        /// two prices - the decoration invariant 5d names, on the one thing a player pays for.
+        /// An unauthored nought still means one, so an older file and a rolled-back client both
+        /// read a prism as the pair they have always drawn.
+        /// </para>
+        /// <para>
+        /// <b>Capped below the number of colours there are</b>, because a turret strong against
+        /// all four would not be widening the mode's central rule, it would be deleting it: the
+        /// elemental double is what makes the colour of a match matter at all.
+        /// </para>
+        /// </summary>
+        public int Partners
+        {
+            get
+            {
+                if (Ability != Wards.WardAbility.Prism) return 0;
+
+                int want = Model.Magnitude <= 0 ? 1 : Model.Magnitude;
+                int most = SiegeLayout.Letters.Length - 1;
+
+                return want > most ? most : want;
+            }
+        }
+
+        /// <summary>
+        /// The first colour this turret is strong against besides its own, or -1.
         ///
         /// <b>The colour after its own, and it is arithmetic rather than authored.</b> A prism
         /// answering an authored pairing would be a content field with one legal answer per
@@ -95,10 +154,18 @@ namespace GlimmerGrove.Modes
         /// line answers without the line having changed.
         /// </summary>
         public int Partner
-            => Ability == Wards.WardAbility.Prism ? (Colour + 1) % SiegeLayout.Letters.Length : -1;
+            => Partners > 0 ? (Colour + 1) % SiegeLayout.Letters.Length : -1;
 
         /// <summary>Whether a bolt at this raider's colour counts as the strong one.</summary>
-        public bool StrongAgainst(int colour) => colour == Colour || colour == Partner;
+        public bool StrongAgainst(int colour)
+        {
+            if (colour == Colour) return true;
+
+            for (int step = 1; step <= Partners; step++)
+                if (colour == (Colour + step) % SiegeLayout.Letters.Length) return true;
+
+            return false;
+        }
 
         public float Charge => Capacity <= 0f ? 0f : Fuel / Capacity;
 

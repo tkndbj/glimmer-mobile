@@ -86,20 +86,94 @@ namespace GlimmerGrove
             float span = Columns * CellW + (Columns - 1) * gapX;
             float left = -span * .5f + CellW * .5f;
 
-            int rows = (models.Count + Columns - 1) / Columns;
-            _grid.sizeDelta = new Vector2(0f, rows * (WardCellH + gapY) + gapY);
+            // **Laid out by a cursor rather than by index arithmetic**, because a band breaks the
+            // "cell i sits at row i/4" rule the moment it exists: a tier starts a fresh row under
+            // a header of its own, so where the next cell goes depends on what came before it
+            // rather than on how many. Written as `i % Columns` with a header spliced in, the two
+            // would disagree the first time a band held a number that does not divide by four -
+            // which is every band on this shelf.
+            float y = -gapY;
+            int tier = 0, column = 0;
 
             for (int i = 0; i < models.Count; i++)
             {
                 var model = models[i];
-                var offer = WardLedger.OfferFor(model, level);
+                int band = WardTier.Of(model);
 
-                float x = left + (i % Columns) * (CellW + gapX);
-                float y = -gapY - (i / Columns) * (WardCellH + gapY) - WardCellH * .5f;
+                if (band != tier)
+                {
+                    if (tier != 0)
+                    {
+                        if (column != 0) y -= CellH + gapY;      // close the part-full row
+                        y -= TierGap;
+                    }
 
+                    TierBadge(band, span, y - TierH * .5f);
+                    y -= TierH;
+
+                    tier = band;
+                    column = 0;
+                }
+
+                // **Per seat**, which is the whole of the per-colour rule reaching the shelf: the
+                // same turret is held on red and for sale on blue, so this grid is a different
+                // grid on every slot and tapping a seat repaints it (`Choose`).
+                var offer = WardLedger.OfferFor(model, _slot, level);
+
+                float x = left + column * (CellW + gapX);
                 bool standing = line.At(_slot) == model;
 
-                WardCell(model, offer, standing, new Vector2(x, y), i);
+                WardCell(model, offer, standing, new Vector2(x, y - CellH * .5f), i);
+
+                if (++column < Columns) continue;
+
+                column = 0;
+                y -= CellH + gapY;
+            }
+
+            if (column != 0) y -= CellH + gapY;
+
+            _grid.sizeDelta = new Vector2(0f, -y + gapY);
+        }
+
+        /// <summary>How tall a band's header is, and the air above it.</summary>
+        const float TierH = 64f, TierGap = 26f;
+
+        /// <summary>
+        /// The header over one band: its name, with a rule running out to either side.
+        ///
+        /// <para>
+        /// <b>A label between two rules rather than a plate</b>, because this is punctuation and
+        /// not a control. A filled bar the width of the grid would read as another row of the
+        /// shelf — one a player could try to tap — where a caption on a line reads as a heading
+        /// the way it does in every list they have ever scrolled.
+        /// </para>
+        /// <para>
+        /// It carries no state and nothing keys on it: a band is <c>WardTier</c>, which is a label
+        /// on the order the shelf already had. What opens a rung is still the rung below it.
+        /// </para>
+        /// </summary>
+        void TierBadge(int tier, float span, float midY)
+        {
+            var row = UIKit.Box("Tier" + tier, _grid, new Vector2(span, TierH),
+                                new Vector2(.5f, 1f), new Vector2(0f, midY));
+
+            var name = UIKit.Label("Name", row, Loc.Get(WardTier.NameKey(tier)), 30,
+                                   Pal.A(Pal.Cream, .92f), TextAnchor.MiddleCenter,
+                                   new Vector2(240f, TierH), new Vector2(.5f, .5f), Vector2.zero,
+                                   FontStyle.Bold);
+            name.raycastTarget = false;
+
+            // The rules stop short of the caption on both sides, so the line never runs under the
+            // letters however wide the grid is drawn.
+            float reach = (span - 280f) * .5f;
+
+            for (int side = -1; side <= 1; side += 2)
+            {
+                var rule = UIKit.Img("Rule", row, Art.Round(2), Pal.A(Pal.Cream, .22f),
+                                     new Vector2(reach, 3f), new Vector2(.5f, .5f),
+                                     new Vector2(side * (140f + reach * .5f), 0f));
+                rule.raycastTarget = false;
             }
         }
 
@@ -107,7 +181,7 @@ namespace GlimmerGrove
         {
             bool held = offer.State == WardPurchaseState.AlreadyHeld;
 
-            var cell = UIKit.Box("Ward_" + model.Id, _grid, new Vector2(CellW, WardCellH),
+            var cell = UIKit.Box("Ward_" + model.Id, _grid, new Vector2(CellW, CellH),
                                  new Vector2(.5f, 1f), at);
 
             var hit = cell.gameObject.AddComponent<Image>();
@@ -180,15 +254,20 @@ namespace GlimmerGrove
                 padlock.raycastTarget = false;
             }
 
-            // The name and the price, and nothing else - see `WardCellH`. What an ability does
-            // is a sentence, and twenty sentences four across is small print rather than a shelf;
-            // it is drawn on the panel one tap in, where somebody is deciding rather than
-            // scanning.
+            // The name and the price, and nothing else - see `CellH`.
             var name = UIKit.Titled("Name", cell, Loc.Get(model.NameKey), 26, Pal.Cream,
                                     TextAnchor.MiddleCenter, new Vector2(CellW - 24f, 36f),
-                                    new Vector2(.5f, 1f), new Vector2(0f, -WardNameY),
+                                    new Vector2(.5f, 1f), new Vector2(0f, -NameY),
                                     0f, 2f);
             UIKit.Shrinkable(name, 16);
+
+            // **Only on a turret this seat actually holds.** A ladder over a card that is still
+            // for sale would read as a promise about what buying it gives you; what a player owns
+            // is what has a place on the ladder at all, and an unheld card's own strip already
+            // says what it costs.
+            if (held)
+                WardStarRow.Build(cell, new Vector2(0f, -StarsY),
+                                  WardStarLedger.StarsOf(model, WardLine.Colours[_slot]));
 
             Footer(cell, model, offer, standing);
 
@@ -219,6 +298,24 @@ namespace GlimmerGrove
                 case WardPurchaseState.AlreadyHeld:
                     return;
 
+                case WardPurchaseState.Sealed:
+                    // **One word, and the same word the panel behind this cell uses.** It read
+                    // "After Lighthouse" — the rung named, on the argument that it is the only
+                    // one of the three refusals that names something to do. What that produced
+                    // on a shelf is a row of cells each naming a different turret, so the line a
+                    // player scans reads as twenty unrelated conditions rather than as one state
+                    // repeated; and the name is the *other* turret's, which is the one thing on
+                    // the cell not about the turret it is drawn on.
+                    //
+                    // What is lost is which turret unlocks it, and that is one tap away and
+                    // fuller: `ui.loadout.sealed_note` says "Buy {0} on this colour first" on the
+                    // panel, where there is room for a sentence. Same key as that panel's own
+                    // button, so the shelf and the thing it opens cannot come to disagree about
+                    // what this state is called.
+                    text = Loc.Get("ui.loadout.sealed");
+                    ink = Pal.A(Pal.Cream, .55f);
+                    break;
+
                 case WardPurchaseState.LevelLocked:
                     text = Loc.Format("ui.loadout.level", offer.RequiredLevel);
                     ink = Pal.A(Pal.Cream, .55f);
@@ -245,7 +342,7 @@ namespace GlimmerGrove
             // Bigger than it was, which is what the description's height paid for: the price is
             // the number this shelf is about and it was set at the size of a caption.
             var box = UIKit.Box("Foot", cell, new Vector2(CellW - 20f, 56f),
-                                new Vector2(.5f, 0f), new Vector2(0f, WardFootY));
+                                new Vector2(.5f, 0f), new Vector2(0f, FootY));
 
             var seat = UIKit.Img("Seat", box, Art.Round(18), new Color(0f, 0f, 0f, .30f));
             UIKit.StretchTo((RectTransform)seat.transform, 0, 0, 0, 0);
@@ -255,7 +352,12 @@ namespace GlimmerGrove
             var label = UIKit.Titled("T", box, text, 32, ink, TextAnchor.MiddleCenter,
                                      new Vector2(CellW - 66f, 48f), new Vector2(.5f, .5f),
                                      new Vector2(shift, 0f), 0f, 2f);
-            UIKit.Shrinkable(label, 20);
+
+            // **Down to 14 rather than 20, because this strip now sometimes holds a sentence.** A
+            // price is four characters and a sealed rung is "After Lighthouse"; a `UIKit.Label`
+            // that overflows is not clipped by anything (invariant 37n), so the floor is what
+            // stops it being drawn over the plate's own edge.
+            UIKit.Shrinkable(label, 14);
 
             if (!coin) return;
 
@@ -340,6 +442,10 @@ namespace GlimmerGrove
             // size, so anything that is not the same here is a difference nobody chose. They are
             // constants on the screen now rather than a pair of matching literals, which is what
             // let four columns be one edit instead of two that could disagree.
+            //
+            // A name and a price and nothing else, which is the turret shelf's rule arrived at
+            // here too: what a utility *does* is a sentence, and it is drawn in full on the panel
+            // this cell opens - see `CellH`.
             var icon = UIKit.Img("Icon", cell, Art.S(item.Art),
                                  open ? Color.white : new Color(.62f, .66f, .72f, 1f),
                                  new Vector2(IconBox, IconBox),
@@ -352,12 +458,6 @@ namespace GlimmerGrove
                                     new Vector2(.5f, 1f), new Vector2(0f, -NameY),
                                     0f, 2f);
             UIKit.Shrinkable(name, 16);
-
-            var note = UIKit.Label("Note", cell, Loc.Get(item.NoteKey), 19,
-                                   Pal.A(Pal.Cream, .86f), TextAnchor.UpperCenter,
-                                   new Vector2(CellW - 28f, 50f), new Vector2(.5f, 1f),
-                                   new Vector2(0f, -NoteY));
-            UIKit.Shrinkable(note, 14);
 
             // How many are in hand, top-right, where the bar's own badge is — so the two readouts
             // of one number are in the same corner of the same shape (invariant 39d's rule about

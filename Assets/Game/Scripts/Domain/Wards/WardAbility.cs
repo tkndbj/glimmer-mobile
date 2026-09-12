@@ -77,12 +77,16 @@ namespace GlimmerGrove.Wards
         Pierce,
 
         /// <summary>
-        /// Its bolts are not blunted by a shield.
+        /// Its bolts are not blunted by a shield, and bite its magnitude deeper into plating.
         ///
         /// <b>The narrowest ability in the roster on purpose.</b> A bulwark takes half from any
         /// colour but its own (<c>SiegeTuning.ShieldSoakTenths</c>), so this is worth a clean
         /// doubling on a rung that sends them and is worth precisely nothing on one that does not.
         /// A roster where every model is useful everywhere is a roster with no decision in it.
+        ///
+        /// <b>The bonus is what tells its two rungs apart</b>, and it had to be added: "not
+        /// blunted" is a flat answer, so the magnitude was read by nothing at all and the two
+        /// rungs of this ability were one turret at two prices (<c>SiegeTuning.RendBonus</c>).
         /// </summary>
         Rend,
 
@@ -103,12 +107,19 @@ namespace GlimmerGrove.Wards
         Ember,
 
         /// <summary>
-        /// Its bolts are worth double against <em>two</em> colours rather than one.
+        /// Its bolts are worth double against its own colour <em>and the next few</em> — as many
+        /// as its magnitude names, and never all four.
         ///
         /// <b>The one model that widens the mode's central rule instead of adding to it.</b> The
         /// elemental double is what makes the colour of a match matter; a prism turret makes one
-        /// slot of the line answer twice as much of the hill, at the cost of that slot having no
-        /// other trick at all.
+        /// slot of the line answer more of the hill, at the cost of that slot having no other
+        /// trick at all — and a turret strong against every colour would not be widening that rule
+        /// but deleting it, which is why <c>SiegeWard.Partners</c> caps below four.
+        ///
+        /// <b>The count is what tells its two rungs apart.</b> It was "its own colour and the
+        /// next" flat, so the magnitude was read by nothing and the two rungs were one turret at
+        /// two prices; an unauthored nought still means one, so an older file reads as it always
+        /// did.
         /// </summary>
         Prism,
 

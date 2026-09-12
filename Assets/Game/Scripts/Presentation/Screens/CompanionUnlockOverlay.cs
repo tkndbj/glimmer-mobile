@@ -220,7 +220,7 @@ namespace GlimmerGrove
             {
                 var coin = Art.CoinFace();
                 Fact(top, i++, coin, ChestDropKind.None,
-                     coin == null ? RewardArt.Tint(ChestDropKind.Credits) : Color.white,
+                     coin == null ? RewardArt.Tint(ChestDropKind.Credits, null) : Color.white,
                      Loc.Format("ui.companion.by_coins", Compact.Number(offer.Cost)));
             }
 
@@ -453,8 +453,10 @@ namespace GlimmerGrove
         {
             _paid = true;
 
-            Audio.Sfx("chime", .5f, 1.15f);
-
+            // Silent, for the same reason the celebrating moved: this panel closes into the
+            // reveal in the same breath, so a chime here is not the purchase being confirmed —
+            // it is the first note of the reveal's fanfare, played by the wrong screen and a
+            // beat early. The unlock has exactly one sound and the reveal owns it.
             Close(() => Flow.Modal<CompanionRevealOverlay>(v => v.Avatar = Avatar));
         }
     }

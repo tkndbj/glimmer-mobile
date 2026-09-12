@@ -22,14 +22,34 @@ namespace GlimmerGrove.Wards
         TooExpensive,
 
         /// <summary>
-        /// For sale in credits and unheld, but the keeper gate is not reached.
+        /// For sale and unheld, but the keeper gate is not reached.
         ///
         /// <b>Tested before affordability</b>, which is <c>CompanionLedger</c>'s ordering and
-        /// invariant 15a's: when both refusals apply, the gate is the one credits cannot answer,
-        /// so leading with the price would offer somebody a rewarded video for something the video
+        /// invariant 15a's: when both refusals apply, the gate is the one money cannot answer, so
+        /// leading with the price would offer somebody a rewarded video for something the video
         /// cannot buy.
+        ///
+        /// <b>It reaches a gem price too</b>, which is the owner's reversal of what shipped: a
+        /// gate used to belong to a credit price alone, so half the shelf could be taken in any
+        /// order by anybody holding gems.
         /// </summary>
         LevelLocked,
+
+        /// <summary>
+        /// For sale and unheld, and the turret before it on the shelf is not held on this colour.
+        ///
+        /// <para>
+        /// <b>Asked before the level and before the price</b>, which is the coarsest-first reading
+        /// of invariant 15a's ordering: a player three rungs down the ladder cannot act on the
+        /// keeper level of a rung they have not reached, and the rung in front of them will state
+        /// its own gate when they get to it. It is also the only one of the three refusals that
+        /// names something to <em>do</em>.
+        /// </para>
+        /// <para>
+        /// Carries the id of the turret that has to come first, in <see cref="WardOffer.Needs"/>.
+        /// </para>
+        /// </summary>
+        Sealed,
     }
 
     /// <summary>What a turret costs this player right now, and whether they can pay it.</summary>
@@ -46,17 +66,26 @@ namespace GlimmerGrove.Wards
         /// <summary>What the player is holding of that currency, for a panel that shows the gap.</summary>
         public readonly long Balance;
 
-        /// <summary>The keeper level a credit price is gated behind. Nought when ungated.</summary>
+        /// <summary>The keeper level this price is gated behind. Nought when ungated.</summary>
         public readonly int RequiredLevel;
 
+        /// <summary>
+        /// The turret that has to be bought on this colour first, or empty.
+        ///
+        /// Only ever set on <see cref="WardPurchaseState.Sealed"/>. An id rather than a name,
+        /// because a name is a loc key the caller resolves and this type may not reach for one.
+        /// </summary>
+        public readonly string Needs;
+
         public WardOffer(WardPurchaseState state, long cost, string currency, long balance,
-                         int requiredLevel = 0)
+                         int requiredLevel = 0, string needs = null)
         {
             State = state;
             Cost = cost;
             Currency = currency;
             Balance = balance;
             RequiredLevel = requiredLevel;
+            Needs = needs ?? string.Empty;
         }
 
         public bool CanBuy => State == WardPurchaseState.Ready;
@@ -78,6 +107,12 @@ namespace GlimmerGrove.Wards
     /// the starter companion is not (16f): "absent" and "owns nothing but the free one" stay one
     /// fact, so a roster that later prices a turret cannot confiscate one from somebody who was
     /// only ever holding the default.
+    /// </para>
+    /// <para>
+    /// <b>A row is a turret <em>and a colour</em></b> (<see cref="WardHolding"/>), so every read
+    /// here takes one and the whole shelf is a ladder climbed four times over. A row with no
+    /// colour on it is one an older build wrote and means all four, which is the only reading a
+    /// union merge could safely give it.
     /// </para>
     /// <para>
     /// <b>Owning a turret is not money</b>, so a forged entry buys a silhouette and never an
@@ -110,55 +145,95 @@ namespace GlimmerGrove.Wards
 
         // ------------------------------------------------------------- reading
         /// <summary>
-        /// Whether the player holds this turret: bought it, or it is one the roster hands over.
+        /// Whether the player holds this turret <em>on this colour</em>: bought it for that seat,
+        /// or it is one the roster hands over.
         ///
-        /// <b>The whole unlock rule, and nothing else composes it</b> — invariant 15a's lesson,
+        /// <para>
+        /// <b>The whole unlock rule, and nothing else composes it</b> - invariant 15a's lesson,
         /// where a call site checking half a rule under a name promising all of it is how
         /// something somebody paid for stays behind a padlock. Note what is deliberately absent:
-        /// reaching the keeper level of a <em>priced</em> turret grants nothing. It is permission
-        /// to pay.
+        /// reaching the keeper level of a <em>priced</em> turret grants nothing, and neither does
+        /// holding the rung below it. Both are permission to pay.
+        /// </para>
+        /// <para>
+        /// <b>And the colour is not optional.</b> It was, and a turret bought for red stood on
+        /// all four seats - which is buying one decision and receiving four. See
+        /// <see cref="WardHolding"/>.
+        /// </para>
         /// </summary>
-        public static bool IsHeld(WardModel model) => IsHeld(model, _bought.Contains);
+        public static bool IsHeld(WardModel model, char colour) => IsHeld(model, colour, Holds);
+
+        /// <summary>The same question about a colour index (0..3).</summary>
+        public static bool IsHeld(WardModel model, int colour) => IsHeld(model, Letter(colour));
 
         /// <summary>
-        /// The unlock rule over any purchased set — this ledger's, or one written in a save file.
+        /// The unlock rule over any purchased set - this ledger's, or one written in a save file.
         /// One body, so the two cannot come to disagree about what "held" means.
         /// </summary>
-        public static bool IsHeld(WardModel model, Func<string, bool> bought)
+        public static bool IsHeld(WardModel model, char colour, Func<string, bool> holds)
+        {
+            if (model == null) return false;
+            if (model.IsStarter) return true;
+            if (holds == null) return false;
+
+            // Both spellings, because a row written before colours existed means every colour and
+            // reading only the exact key would confiscate it (`WardHolding`).
+            return holds(WardHolding.Key(model.Id, colour)) || holds(model.Id);
+        }
+
+        public static bool IsHeld(string id, char colour) => IsHeld(Catalog.Find(id), colour);
+
+        /// <summary>Whether this exact row is in the purchased set. The predicate, said once.</summary>
+        static bool Holds(string row) => _bought.Contains(row);
+
+        /// <summary>The colour letter for an index, clamped the way the line clamps it.</summary>
+        static char Letter(int colour)
+            => WardLine.Colours[colour < 0 || colour >= WardLine.Colours.Length ? 0 : colour];
+
+        /// <summary>Whether this turret was paid for on this colour. For a panel that says so.</summary>
+        public static bool WasBought(WardModel model, char colour)
             => model != null
-            && (model.IsStarter || (bought != null && bought(model.Id)));
+            && (_bought.Contains(WardHolding.Key(model.Id, colour)) || _bought.Contains(model.Id));
 
-        public static bool IsHeld(string id) => IsHeld(Catalog.Find(id));
-
-        /// <summary>Whether this turret was paid for. Only for a panel that wants to say so.</summary>
-        public static bool WasBought(WardModel model)
-            => model != null && _bought.Contains(model.Id);
-
-        /// <summary>How many turrets were paid for.</summary>
+        /// <summary>How many rows were paid for, across every turret and every colour.</summary>
         public static int BoughtCount => _bought.Count;
 
-        /// <summary>How many the player holds, for the "6 of 20" caption.</summary>
-        public static int HeldCount
+        /// <summary>How many of the shelf's turrets the player holds on one colour.</summary>
+        public static int HeldOn(char colour)
         {
-            get
-            {
-                int count = 0;
-                var models = Catalog.Models;
+            int count = 0;
+            var models = Catalog.Models;
 
-                for (int i = 0; i < models.Count; i++)
-                    if (IsHeld(models[i])) count++;
+            for (int i = 0; i < models.Count; i++)
+                if (IsHeld(models[i], colour)) count++;
 
-                return count;
-            }
+            return count;
         }
 
         /// <summary>
-        /// What this turret costs the player right now.
+        /// The rung this turret is sealed behind on this colour, or null once it is open.
         ///
-        /// <b>The gate is asked before the price</b> (invariant 15a's ordering), so a keeper both
-        /// a rung short and out of credits is told about the wall money cannot climb.
+        /// <b>One rung rather than the whole prefix</b> - see <see cref="WardCatalog.Before"/>.
         /// </summary>
-        public static WardOffer OfferFor(WardModel model, int keeperLevel)
+        public static WardModel SealedBehind(WardModel model, char colour)
+        {
+            var before = Catalog.Before(model);
+            return before != null && !IsHeld(before, colour) ? before : null;
+        }
+
+        /// <summary>
+        /// What this turret costs the player on this colour right now.
+        ///
+        /// <para>
+        /// <b>Three refusals in coarsest-first order: the rung, then the gate, then the price.</b>
+        /// That is invariant 15a's ordering with one more wall in front of it - when several
+        /// apply, the one to say is the one furthest from money, because leading with a price
+        /// offers somebody a way to spend that could not have worked. A player two rungs down is
+        /// told to buy the rung in front of them rather than the keeper level of something they
+        /// cannot reach yet, which is also the only one of the three that names an action.
+        /// </para>
+        /// </summary>
+        public static WardOffer OfferFor(WardModel model, char colour, int keeperLevel)
         {
             if (model == null)
                 return new WardOffer(WardPurchaseState.NotForSale, 0L, Currency.Credits, 0L);
@@ -168,13 +243,19 @@ namespace GlimmerGrove.Wards
                          ? PlayerProgression.Gems : PlayerProgression.Credits;
             long cost = model.ForGems ? model.GemPrice : model.CoinPrice;
 
-            if (IsHeld(model))
+            if (IsHeld(model, colour))
                 return new WardOffer(WardPurchaseState.AlreadyHeld, cost, currency, balance);
 
             if (cost <= 0)
                 return new WardOffer(WardPurchaseState.NotForSale, 0L, currency, balance);
 
-            if (model.ForCoins && keeperLevel < model.MinLevel)
+            var behind = SealedBehind(model, colour);
+
+            if (behind != null)
+                return new WardOffer(WardPurchaseState.Sealed, cost, currency, balance,
+                                     model.MinLevel, behind.Id);
+
+            if (keeperLevel < model.MinLevel)
                 return new WardOffer(WardPurchaseState.LevelLocked, cost, currency, balance,
                                      model.MinLevel);
 
@@ -182,12 +263,17 @@ namespace GlimmerGrove.Wards
             return new WardOffer(state, cost, currency, balance, model.MinLevel);
         }
 
+        /// <summary>The same offer for a colour index (0..3).</summary>
+        public static WardOffer OfferFor(WardModel model, int colour, int keeperLevel)
+            => OfferFor(model, Letter(colour), keeperLevel);
+
         // ------------------------------------------------------------- writing
         /// <summary>
-        /// Buys a turret, debiting the currency it is priced in and recording it as held.
+        /// Buys a turret <em>for one colour</em>, debiting the currency it is priced in and
+        /// recording that seat as held.
         ///
         /// <para>
-        /// <b>The debit goes first and the id is only added if it succeeded</b>, which is
+        /// <b>The debit goes first and the row is only added if it succeeded</b>, which is
         /// <c>CompanionLedger.TryBuy</c>'s ordering and its argument: a process killed between the
         /// two leaves a player who paid and did not receive, which the spend log can see and
         /// support can put right, where the other order leaves a turret nobody paid for, which is
@@ -198,18 +284,22 @@ namespace GlimmerGrove.Wards
         /// already held on the second pass and returns false without charging.
         /// </para>
         /// </summary>
-        public static bool TryBuy(WardModel model, int keeperLevel)
+        public static bool TryBuy(WardModel model, char colour, int keeperLevel)
         {
-            var offer = OfferFor(model, keeperLevel);
+            var offer = OfferFor(model, colour, keeperLevel);
             if (!offer.CanBuy) return false;
 
-            if (!PlayerProgression.TrySpend(offer.Currency, offer.Cost, SpendReason + model.Id))
+            // The spend reason carries the seat as well as the turret, because support reading a
+            // debit has to know which of the four a player paid for.
+            string row = WardHolding.Key(model.Id, colour);
+
+            if (!PlayerProgression.TrySpend(offer.Currency, offer.Cost, SpendReason + row))
                 return false;
 
-            _bought.Add(model.Id);
+            _bought.Add(row);
 
-            Telemetry.Track("ward_bought", "ward", model.Id, "cost", offer.Cost,
-                            "currency", offer.Currency, "level", keeperLevel);
+            Telemetry.Track("ward_bought", "ward", model.Id, "colour", colour.ToString(),
+                            "cost", offer.Cost, "currency", offer.Currency, "level", keeperLevel);
 
             SaveService.Save();
             Raise();
@@ -219,6 +309,10 @@ namespace GlimmerGrove.Wards
 
             return true;
         }
+
+        /// <summary>The same purchase for a colour index (0..3).</summary>
+        public static bool TryBuy(WardModel model, int colour, int keeperLevel)
+            => TryBuy(model, Letter(colour), keeperLevel);
 
         static void Raise()
         {

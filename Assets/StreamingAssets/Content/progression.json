@@ -488,38 +488,57 @@
     ]
   },
   "wards": {
+    "upgrades": {
+      "tiers": [
+      {
+        "prices": [ 2000, 5000, 12000, 30000 ]
+      },
+      {
+        "prices": [ 4000, 10000, 28000, 60000 ]
+      },
+      {
+        "prices": [ 10000, 28000, 60000, 150000 ]
+      }
+      ]
+    },
     "models": [
       {
         "id": "bolt",
         "ability": "none",
+        "power": 10,
+        "guard": 10,
         "order": 1
       },
       {
-        "id": "spark",
-        "ability": "chain",
-        "magnitude": 5,
-        "extent": 1,
+        "id": "siphon",
+        "ability": "siphon",
+        "magnitude": 4,
         "coinPrice": 1200,
         "minLevel": 2,
-        "order": 4
+        "power": 11,
+        "guard": 13,
+        "order": 2
       },
       {
-        "id": "lance",
-        "ability": "pierce",
-        "magnitude": 8,
-        "extent": 5,
+        "id": "beacon",
+        "ability": "beacon",
+        "magnitude": 5,
         "coinPrice": 1800,
         "minLevel": 3,
-        "order": 5
+        "power": 10,
+        "guard": 14,
+        "order": 3
       },
       {
-        "id": "mortar",
-        "ability": "splash",
-        "magnitude": 5,
-        "extent": 1,
+        "id": "ember",
+        "ability": "ember",
+        "magnitude": 3,
+        "extent": 30,
         "coinPrice": 2400,
         "minLevel": 4,
-        "order": 7
+        "power": 13,
+        "guard": 8,
+        "order": 4
       },
       {
         "id": "rime",
@@ -528,7 +547,9 @@
         "extent": 15,
         "coinPrice": 3200,
         "minLevel": 5,
-        "order": 8
+        "power": 11,
+        "guard": 11,
+        "order": 5
       },
       {
         "id": "cleaver",
@@ -536,106 +557,147 @@
         "magnitude": 5,
         "coinPrice": 4000,
         "minLevel": 6,
-        "order": 12
-      },
-      {
-        "id": "siphon",
-        "ability": "siphon",
-        "magnitude": 4,
-        "coinPrice": 5000,
-        "minLevel": 8,
-        "order": 13
-      },
-      {
-        "id": "beacon",
-        "ability": "beacon",
-        "magnitude": 5,
-        "coinPrice": 6000,
-        "minLevel": 10,
-        "order": 16
-      },
-      {
-        "id": "ember",
-        "ability": "ember",
-        "magnitude": 3,
-        "extent": 30,
-        "coinPrice": 7500,
-        "minLevel": 12,
-        "order": 17
+        "power": 14,
+        "guard": 8,
+        "order": 6
       },
       {
         "id": "prism",
         "ability": "prism",
-        "coinPrice": 9000,
-        "minLevel": 14,
-        "order": 19
+        "magnitude": 1,
+        "coinPrice": 5000,
+        "minLevel": 8,
+        "power": 12,
+        "guard": 9,
+        "order": 7
       },
       {
-        "id": "glacier",
-        "ability": "frost",
-        "magnitude": 6,
-        "extent": 25,
-        "gemPrice": 600,
-        "order": 2
+        "id": "lance",
+        "ability": "pierce",
+        "magnitude": 8,
+        "extent": 5,
+        "coinPrice": 6000,
+        "minLevel": 10,
+        "power": 10,
+        "guard": 12,
+        "order": 8
       },
       {
-        "id": "lighthouse",
-        "ability": "beacon",
-        "magnitude": 10,
-        "gemPrice": 700,
-        "order": 3
-      },
-      {
-        "id": "arcstorm",
-        "ability": "chain",
-        "magnitude": 7,
-        "extent": 2,
-        "gemPrice": 800,
-        "order": 6
-      },
-      {
-        "id": "howitzer",
+        "id": "mortar",
         "ability": "splash",
-        "magnitude": 7,
+        "magnitude": 5,
         "extent": 1,
-        "gemPrice": 900,
+        "coinPrice": 7500,
+        "minLevel": 12,
+        "power": 10,
+        "guard": 11,
         "order": 9
       },
       {
-        "id": "harpoon",
-        "ability": "pierce",
+        "id": "spark",
+        "ability": "beacon",
         "magnitude": 10,
-        "extent": 4,
-        "gemPrice": 1000,
+        "coinPrice": 9000,
+        "minLevel": 14,
+        "power": 11,
+        "guard": 15,
         "order": 10
-      },
-      {
-        "id": "breaker",
-        "ability": "rend",
-        "magnitude": 10,
-        "gemPrice": 1100,
-        "order": 11
       },
       {
         "id": "leech",
         "ability": "siphon",
         "magnitude": 8,
-        "gemPrice": 1200,
-        "order": 14
+        "gemPrice": 600,
+        "minLevel": 15,
+        "power": 12,
+        "guard": 14,
+        "order": 11
+      },
+      {
+        "id": "lighthouse",
+        "ability": "chain",
+        "magnitude": 6,
+        "extent": 2,
+        "gemPrice": 700,
+        "minLevel": 16,
+        "power": 10,
+        "guard": 9,
+        "order": 12
       },
       {
         "id": "pyre",
         "ability": "ember",
         "magnitude": 6,
         "extent": 40,
-        "gemPrice": 1400,
+        "gemPrice": 800,
+        "minLevel": 17,
+        "power": 15,
+        "guard": 8,
+        "order": 13
+      },
+      {
+        "id": "glacier",
+        "ability": "frost",
+        "magnitude": 6,
+        "extent": 25,
+        "gemPrice": 900,
+        "minLevel": 18,
+        "power": 12,
+        "guard": 12,
+        "order": 14
+      },
+      {
+        "id": "breaker",
+        "ability": "rend",
+        "magnitude": 10,
+        "gemPrice": 1000,
+        "minLevel": 19,
+        "power": 16,
+        "guard": 8,
         "order": 15
       },
       {
         "id": "spectrum",
         "ability": "prism",
-        "gemPrice": 1600,
+        "magnitude": 2,
+        "gemPrice": 1100,
+        "minLevel": 20,
+        "power": 13,
+        "guard": 10,
+        "order": 16
+      },
+      {
+        "id": "harpoon",
+        "ability": "pierce",
+        "magnitude": 10,
+        "extent": 4,
+        "gemPrice": 1200,
+        "minLevel": 21,
+        "power": 11,
+        "guard": 13,
+        "order": 17
+      },
+      {
+        "id": "howitzer",
+        "ability": "splash",
+        "magnitude": 7,
+        "extent": 1,
+        "gemPrice": 1400,
+        "minLevel": 22,
+        "power": 11,
+        "guard": 12,
         "order": 18
+      },
+      {
+        "id": "arcstorm",
+        "ability": "chain",
+        "magnitude": 8,
+        "extent": 3,
+        "gemPrice": 1600,
+        "minLevel": 23,
+        "power": 10,
+        "guard": 10,
+        "order": 19
       },
       {
         "id": "apex",
@@ -643,6 +705,9 @@
         "magnitude": 10,
         "extent": 3,
         "gemPrice": 2000,
+        "minLevel": 24,
+        "power": 11,
+        "guard": 10,
         "order": 20
       }
     ]

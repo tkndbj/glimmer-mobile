@@ -151,23 +151,9 @@ namespace GlimmerGrove.Content
             // its colour — which `Image.color` can only do by *darkening*, so what four packs had
             // drawn came out as four silhouettes of one value. The colour is baked now
             // (`make_siege_art.RAIDER_SET`), which lets the body say it too: one model per colour
-            // per kind, so a player who cannot separate two hues can still separate a mushroom
-            // from a skull.
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon_y")),
-
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute_y")),
-
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_y")),
-
+            // per kind, so a player who cannot separate two hues can still separate a fly from a
+            // horned beetle.
+            //
             // **The two that work on the field, and they are one set whatever the chapter.** A
             // creeper is scenery and is re-cast per chapter; a weaver and a thief are rules, and a
             // player who has learned that the crawling beetle locks cells must not have to learn
@@ -249,7 +235,6 @@ namespace GlimmerGrove.Content
             {
                 case SiegeKind.Blightcaller:
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("blight")));
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("blight_walk")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("blight_cast")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("hex")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("hex_muzzle")));
@@ -258,7 +243,6 @@ namespace GlimmerGrove.Content
 
                 case SiegeKind.Boss:
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("boss")));
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("boss_walk")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("boss_cast")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("spell")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("spell_muzzle")));
@@ -267,7 +251,6 @@ namespace GlimmerGrove.Content
 
                 case SiegeKind.Warbringer:
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("bringer")));
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("bringer_walk")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("bringer_cast")));
                     // **Two of its three reels, because a roar is thrown at nothing.** It has no
                     // flight, so `roar` is baked and never scoped in - see `SiegeView.Roar`, which
@@ -278,7 +261,6 @@ namespace GlimmerGrove.Content
 
                 case SiegeKind.Overlord:
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("over")));
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("over_walk")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("over_cast")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("omen")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("omen_muzzle")));
@@ -334,33 +316,235 @@ namespace GlimmerGrove.Content
         /// about the chapter.
         /// </summary>
         /// <summary>
-        /// The second cast: the twelve bodies a chapter draws instead of the first twelve.
+        /// The insects: the twelve bodies the <b>first</b> chapter draws.
         ///
-        /// <b>One set per chapter, by the chapter's ordinal inside its own mode</b> — invariant
-        /// 7c's rule and the ground's shape exactly. Two sets serve every siege chapter that ever
-        /// ships, a third costs one table here and no code, and no chapter pays for a body it is
-        /// not drawing.
+        /// <para>
+        /// <b>Twelve bodies rather than four, and none of them is tinted here.</b> A raider used to
+        /// be one of three creeper models or the brute, multiplied at run time by 62% toward its
+        /// colour — which <c>Image.color</c> can only do by <em>darkening</em>, so what four packs
+        /// had drawn came out as four silhouettes of one value. The colour is baked now
+        /// (<c>make_siege_art.RAIDER_SET</c>), which lets the body say it too: one model per colour
+        /// per kind, so a player who cannot separate two hues can still separate a fly from a
+        /// horned beetle.
+        /// </para>
+        /// <para>
+        /// <b>All twelve are insects, drawn top-down, out of one pack</b> — which is the owner's
+        /// call and also the one view this board has: the hill is looked down on and its floor is a
+        /// top-down tileset, so the side-view cast that stood here was a mismatch nobody had named.
+        /// Light fliers and smooth shells creep, horned beetles are the brutes, and the hard domed
+        /// hybrids are the bulwarks, because for an insect plating is a shell rather than a held
+        /// shield.
+        /// </para>
+        /// <para>
+        /// <b>Lifted out of <see cref="Cast"/> when the second chapter arrived</b>, and that was a
+        /// real fix rather than tidying: while the insects were part of the always-resident set,
+        /// the Infinite lane loaded twenty-four bodies to draw twelve. A chapter pays for one cast
+        /// now (invariant 7b).
+        /// </para>
+        /// </summary>
+        static readonly AssetRequest[] InsectCast =
+        {
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("mon_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("brute_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwark_y")),
+        };
+
+        /// <summary>
+        /// The brood: the twelve bodies the <b>second</b> chapter draws.
+        ///
+        /// <para>
+        /// <b>This is the second cast set invariant 37ar said a second pack would buy.</b> That
+        /// entry recorded the price in advance — "one table in <c>make_siege_art.RAIDER_SET</c>,
+        /// twelve rows in <c>SiegeMode</c>, and no code" — and the prediction held to the letter.
+        /// The owner supplied two monster packs that between them draw fifteen small bodies, so the
+        /// set needs no body worn twice.
+        /// </para>
+        /// <para>
+        /// <b>The kind is said by the silhouette, because the colour is already spoken for.</b>
+        /// Every raider is hue-rotated onto the colour it answers to (37f), so the pack's own paint
+        /// is overwritten and cannot carry the kind. What survives a rotation is shape: plain
+        /// smooth bodies creep, the four with <em>arms</em> are the brutes, and a hard crest,
+        /// stalks or a banded shell make a bulwark.
+        /// </para>
+        /// </summary>
+        static readonly AssetRequest[] BroodCast =
+        {
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("broodMon_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("broodMon_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("broodMon_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("broodMon_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("broodBrute_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("broodBrute_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("broodBrute_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("broodBrute_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("broodBulwark_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("broodBulwark_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("broodBulwark_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("broodBulwark_y")),
+        };
+
+        /// <summary>
+        /// The baked cast: the twelve bodies the <b>Infinite</b> lane draws instead of the
+        /// insects.
+        ///
+        /// <para>
+        /// <b>Baked out of 3D rather than bought</b> (<c>SiegeCastBake</c>), which is what this
+        /// seam was re-opened for. The insect roster is one pack of fifteen and there is no second
+        /// one on this machine — "top-down" in the sprite market nearly always means a
+        /// three-quarter RPG view, and true overhead only reads for creatures whose silhouette
+        /// <em>is</em> their back (37ar). Rendering a rigged model makes the angle a decision
+        /// rather than a purchase, which is the same technique <c>SiegeShotBake</c> already uses
+        /// for the bought VFX pack and the one Clash Royale's whole cast is made with.
+        /// </para>
+        /// <para>
+        /// <b>By track rather than by chapter ordinal, and that is a trial rather than a rule.</b>
+        /// Invariant 7c's arithmetic is what a cast should hang on once one is settled; hanging it
+        /// on the track puts the two one tap apart, so the authored chapter's insects and the baked
+        /// cast can be compared without leaving the mode. If the bake is kept this goes back to an
+        /// ordinal; if it is not, this row and twelve reels are the whole of what has to be undone.
+        /// </para>
         /// </summary>
         static readonly AssetRequest[] SecondCast =
         {
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("monB_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("monB_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("monB_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("monB_y")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_y")),
 
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bruteB_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bruteB_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bruteB_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bruteB_y")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_y")),
 
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwarkB_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwarkB_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwarkB_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("bulwarkB_y")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_y")),
         };
 
-        /// <summary>How many casts this mode ships, and therefore how far that ladder goes.</summary>
-        public const int CastSets = 2;
+        /// <summary>The insects, which are what a siege draws unless something says otherwise.</summary>
+        public const int Insects = 0;
+
+        /// <summary>The cast rendered out of 3D. See <see cref="SecondCast"/>.</summary>
+        public const int Baked = 1;
+
+        /// <summary>The blob brood. See <see cref="BroodCast"/>.</summary>
+        public const int Brood = 2;
+
+        /// <summary>How many casts this mode ships.</summary>
+        public const int CastSets = 3;
+
+        /// <summary>
+        /// The casts the <b>main ladder</b> draws from, in the order its chapters meet them.
+        ///
+        /// <b>A chapter's cast is arithmetic on its ordinal, exactly as its map and its skies are</b>
+        /// (invariant 7c). Two entries, so the third siege chapter draws the insects again and the
+        /// fourth the brood — which is the point rather than a shortage: <b>a chapter published next
+        /// year costs no cast at all</b>, and no chapter can ship drawing bodies nobody chose. A
+        /// third pack lengthens this array and changes nothing else.
+        /// </summary>
+        static readonly int[] MainCasts = { Insects, Brood };
+
+        /// <summary>
+        /// Which cast a chapter draws.
+        ///
+        /// <para>
+        /// <b>One function, asked by both ends</b>, which is the rule <see cref="Ground"/> and
+        /// <c>SiegeView.GroundAddress</c> are held to by <c>SiegeGroundTests</c> and for the same
+        /// reason: two switches disagreeing about a chapter would <em>load</em> one cast and
+        /// <em>draw</em> another, and an <c>Image</c> with a null sprite is a white rectangle over
+        /// every raider on the hill rather than a blank (invariant 7b). <see cref="ArtFor"/> asks it
+        /// to decide what to preload and <c>SiegeScreen</c> asks it to decide what to draw.
+        /// </para>
+        /// <para>
+        /// <b>The Infinite lane is the one answer that is not arithmetic</b>, and it is a trial
+        /// rather than a rule (see <see cref="SecondCast"/>): hanging the baked cast on the track
+        /// puts it one tap from the authored chapters so the two can be judged against each other
+        /// without leaving the mode. If the bake is kept, this line goes and the bake takes a place
+        /// in <see cref="MainCasts"/>.
+        /// </para>
+        /// <para>
+        /// <b>An unknown chapter answers with the insects</b>, because <c>ChapterOrderOf</c> reports
+        /// -1 for one this catalog has never heard of and the fallback has to be a cast that is
+        /// certainly on disk.
+        /// </para>
+        /// </summary>
+        public static int CastFor(GameTrack track, int ordinal)
+        {
+            if (track == GameTrack.Infinite) return Baked;
+            if (ordinal < 0) return Insects;
+
+            return MainCasts[ordinal % MainCasts.Length];
+        }
+
+        /// <summary>
+        /// The reels one cast is made of, in a <b>fixed order</b>: four creepers, then four brutes,
+        /// then four bulwarks, each in <c>WardLine.Colours</c> order.
+        ///
+        /// <b>The order is the contract</b>, because <see cref="CastAddress"/> indexes into it —
+        /// see that method for why the names live here and only here. <c>SiegeCastTests</c> pins it.
+        /// </summary>
+        public static IReadOnlyList<AssetRequest> CastArt(int set)
+        {
+            switch (set)
+            {
+                case Baked: return SecondCast;
+                case Brood: return BroodCast;
+                default: return InsectCast;
+            }
+        }
+
+        /// <summary>How many bodies a cast holds: three kinds in four colours.</summary>
+        public const int CastBodies = 12;
+
+        /// <summary>
+        /// The address one raider's reel is at, in one cast.
+        ///
+        /// <para>
+        /// <b>Indexed into <see cref="CastArt"/> rather than switched over a second copy of the
+        /// names</b>, and that is the whole point of this method. The view used to carry its own
+        /// switch of twelve literals per cast — thirty-six names written down twice, once to
+        /// <em>load</em> and once to <em>draw</em> — which is exactly the fault <c>SiegeGroundTests</c>
+        /// exists to police for the ten grounds: two switches disagreeing load one thing and draw
+        /// another, and an <c>Image</c> with a null sprite is a <b>white rectangle</b> rather than a
+        /// blank (invariant 7b), over every raider on the hill, with every gate green.
+        /// </para>
+        /// <para>
+        /// So there is one copy. The arrays keep their literals, so
+        /// <c>Tools/verify/artnames.py</c> still reads every name at its own call site and holds it
+        /// to disk, and the view now has none of its own to get wrong. Adding a fourth cast is one
+        /// array and one row of <see cref="MainCasts"/>.
+        /// </para>
+        /// <para>
+        /// <b>A kind this cast has no body for draws the creeper</b>, which is what a bomber has
+        /// always done: it is a creeper carrying something, and giving it a body of its own is a
+        /// decision nobody has made.
+        /// </para>
+        /// </summary>
+        public static string CastAddress(int set, SiegeKind kind, int colour)
+        {
+            var art = CastArt(set);
+            if (art == null || art.Count < CastBodies) return string.Empty;
+
+            int colours = Wards.WardLine.Colours.Length;
+            int row = kind == SiegeKind.Bulwark ? 2 : kind == SiegeKind.Brute ? 1 : 0;
+            int at = colour < 0 || colour >= colours ? 0 : colour;
+
+            return art[row * colours + at].Address;
+        }
 
         /// <summary>
         /// The turrets a run is guaranteed to be able to draw: the roster's starter, in four
@@ -402,7 +586,14 @@ namespace GlimmerGrove.Content
             {
                 var list = new List<AssetRequest>(Cast);
                 list.AddRange(StarterLine());
-                list.AddRange(SecondCast);
+
+                // **Every cast, because this is the question about what *exists*.** It is what
+                // `AddressableAddresses.FrameFolders` walks to label frames, and a reel that is
+                // never named here ships addressed, grouped, built into a bundle and impossible to
+                // load (invariant 7at's `No Location found for Key=...`). Only `ArtFor` narrows.
+                for (int set = 0; set < CastSets; set++)
+                    list.AddRange(CastArt(set));
+
                 return list;
             }
         }
@@ -414,15 +605,14 @@ namespace GlimmerGrove.Content
 
             if (chapter == null)
             {
-                list.AddRange(SecondCast);
+                list.AddRange(CastArt(Insects));
                 return list;
             }
 
-            // Which of the two casts this chapter draws. Arithmetic on its ordinal inside its own
-            // mode, which is invariant 7c's rule — so a chapter published next year costs no cast
-            // art at all, and no chapter can be published drawing one nobody decided on.
-            int ordinal = GameContent.Index.ChapterOrderOf(chapter.Id);
-            if (((ordinal % CastSets) + CastSets) % CastSets == 1) list.AddRange(SecondCast);
+            // One cast, chosen by where this chapter sits and which lane it is in - and by the same
+            // function the view asks when it draws a body, so the two cannot disagree.
+            list.AddRange(CastArt(CastFor(GameContent.Index.TrackOf(chapter.Id),
+                                          GameContent.Index.ChapterOrderOf(chapter.Id))));
 
             var seen = new HashSet<SiegeKind>();
 

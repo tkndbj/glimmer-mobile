@@ -22,6 +22,7 @@ namespace GlimmerGrove
             // own answer to a tap on a jewel - and the screen says the sentence, rate-limited, so
             // a player poking about is answered once rather than shouted at.
             HideCoach();
+            Stir();
 
             var gem = _gems[cell];
             if (gem != null && gem.Img != null) Refuse(gem.Img.rectTransform);
@@ -34,6 +35,7 @@ namespace GlimmerGrove
             if (!Playable) return;
 
             HideCoach();
+            Stir();
 
             int x = cell % Width + dir.x;
             int y = cell / Width - dir.y;      // screen up is a lower row
@@ -474,13 +476,8 @@ namespace GlimmerGrove
 
         /// <summary>
         /// What is standing in this cell, as the number <see cref="GemArt"/> is keyed on.
-        ///
-        /// <b>Asked here rather than from <c>SiegeBoard.ColourAt</c> alone</b>, which answers -1
-        /// for a cog and for a sack alike: they are the two cells that are not colours and they
-        /// are opposite things.
         /// </summary>
-        int Face(int cell)
-            => _board.IsSack(cell) ? SackColour : _board.ColourAt(cell);
+        int Face(int cell) => _board.ColourAt(cell);
 
         /// <summary>
         /// Shows or hides the lock over a gem, minting it the first time one is needed.
@@ -546,8 +543,6 @@ namespace GlimmerGrove
                 float side = Cell * (face == CogColour ? GemInset * .88f : GemInset);
                 gem.Img.rectTransform.sizeDelta = new Vector2(side, side);
             }
-
-            Lock(gem, _board.IsWebbed(cell));
         }
 
         void Place(int cell)

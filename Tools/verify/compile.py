@@ -462,7 +462,14 @@ def check_layout(files):
 #
 # The rule: a class-typed field of a DTO gets an `IsAuthored`-style test on a value a real
 # one cannot hold, never a null test. Arrays are exempt - JsonUtility does leave those null.
-DTO_FIELD = re.compile(r"^\s*public\s+(\w+Dto)\s+(\w+)\s*;", re.M)
+
+# Every public field of the DTO file, type and name. Both halves are needed: a name is only
+# safe to flag when *every* declaration of it is a non-array serialised class, because the
+# check is a name match with no type behind it. `stars` is both a `WardStarLadderDto` (never
+# null) and a `GroveScoreDto`'s own `int[]` (legitimately null, and `HomesteadMapper` has
+# always tested it) - so an ambiguous name is dropped rather than reported, or the guard
+# reports a correct line the day somebody adds a block that happens to reuse the word.
+DTO_ANY_FIELD = re.compile(r"^\s*public\s+(\S+)\s+(\w+)\s*;", re.M)
 
 # Comments are stripped before any of these scan. This codebase documents its traps in prose
 # next to the code that avoids them, so the wrong shape appears in a doc comment far more often
@@ -476,14 +483,15 @@ def without_comments(text):
 
 
 def check_dto_nulls(files):
-    fields = set()
+    serialised, other = set(), set()
     for path in files:
         if not path.endswith("ContentDto.cs"):
             continue
         text = without_comments(io.open(path, encoding="utf-8", errors="replace").read())
-        for _, name in DTO_FIELD.findall(text):
-            fields.add(name)
+        for kind, name in DTO_ANY_FIELD.findall(text):
+            (serialised if kind.endswith("Dto") else other).add(name)
 
+    fields = serialised - other
     if not fields:
         return []
 

@@ -40,7 +40,6 @@ namespace GlimmerGrove.Modes
             Walk(dt);
             Shoot(dt);
             Conjure(dt);
-            Meddle(dt);
             Smoulder(dt);
             Swing(dt);
 
@@ -114,11 +113,6 @@ namespace GlimmerGrove.Modes
 
                 var caster = Find(spell.Raider);
                 if (caster == null || !caster.Alive) continue;
-
-                // **A spell aimed at the field never touches a ward**, so it is settled before
-                // anything below indexes `spell.Ward` — which for these carries a cell.
-                if (!SiegeTuning.AimsAtAWard(caster.Kind)
-                    && spell.Craft != SiegeSpell.Rally) { Landed(spell); continue; }
 
                 // **A roar is aimed at no ward and lands on every one of them.** It is settled
                 // here rather than falling through to the single-target path below, because that
@@ -353,7 +347,7 @@ namespace GlimmerGrove.Modes
                 // asked of the ward rather than compared here, so nothing can end up with a
                 // second opinion about what "its own colour" means.
                 bool weak = ward.StrongAgainst(target.Colour);
-                int damage = SiegeTuning.DamageTo(target.Kind, ward.Rank, weak, ward.Ability);
+                int damage = SiegeTuning.DamageTo(target.Kind, ward.Rank, weak, ward.Build);
 
                 target.Health -= damage;
                 target.Flash = .18f;
@@ -379,6 +373,7 @@ namespace GlimmerGrove.Modes
         /// </summary>
         SiegeRaider Aim(int colour)
         {
+
             SiegeRaider weak = null, near = null;
 
             for (int i = 0; i < _raiders.Count; i++)

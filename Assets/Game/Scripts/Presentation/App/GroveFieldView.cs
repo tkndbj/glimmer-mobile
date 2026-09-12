@@ -80,10 +80,23 @@ namespace GlimmerGrove
         /// something precisely is a real need and a little softness in the art at the closest
         /// zoom is a fair price for it.
         /// </para>
+        /// <para>
+        /// <b>The band moved out when the floor doubled (16p), and the argument above is what
+        /// let it.</b> That reasoning is entirely about a tile being a tap target — and a tap
+        /// on a tile no longer opens anything: the inventory is a button and placing is a
+        /// ghost you drag and confirm (16o), so the only tap the floor still takes is lifting
+        /// a piece, and a piece is far bigger than the tile it stands on. What replaced the
+        /// tap as the binding constraint is the **tallest thing that can stand on the floor**:
+        /// the camera opens on the hall, a piece is drawn from its own tile upward by
+        /// <c>size.y * Lift</c> on top of half its height, and the citadel comes to 1,298 floor
+        /// units above the centre — 1,103 canvas units at the old .85, against about 840 of
+        /// room. Its roof was cut off, which is what was reported. At <see cref="DefaultZoom"/>
+        /// it is 753 and clears a notch as well.
+        /// </para>
         /// </summary>
-        public const float MinZoom = .55f;
+        public const float MinZoom = .35f;
         public const float MaxZoom = 1.2f;
-        public const float DefaultZoom = .85f;
+        public const float DefaultZoom = .58f;
 
         /// <summary>Tiles realised beyond each edge of the viewport, on top of <see cref="SetReach"/>.</summary>
         const int Overscan = 1;
@@ -257,6 +270,22 @@ namespace GlimmerGrove
         {
             _pan = new Vector2(-GroveFloor.TileX(col, row), GroveFloor.TileY(col, row));
             Apply();
+        }
+
+        /// <summary>
+        /// The tile the camera is looking at: <see cref="CentreOn"/> read backwards, clamped
+        /// onto the floor.
+        ///
+        /// For anything that has to appear where the player is already looking rather than at a
+        /// fixed place — a ghost arriving from the inventory, which would read as the panel
+        /// having done nothing if it landed off-screen.
+        /// </summary>
+        public void CentreTile(out int col, out int row)
+        {
+            GroveFloor.TileAt(-_pan.x, _pan.y, out col, out row);
+
+            col = Mathf.Clamp(col, 0, Mathf.Max(0, _floor.Cols - 1));
+            row = Mathf.Clamp(row, 0, Mathf.Max(0, _floor.Rows - 1));
         }
 
         /// <summary>
@@ -468,6 +497,39 @@ namespace GlimmerGrove
 
             if (!_floor.Contains(col, row)) return false;
             return _visible == null || _visible(col, row);
+        }
+
+        /// <summary>
+        /// Which tile of the floor's own grid a point lies over, as geometry and nothing else.
+        ///
+        /// <para>
+        /// <b>A tap and a drag ask different questions, and <see cref="TryTileAt"/> answers the
+        /// tap's.</b> A tap asks <em>what did I touch</em>, so it prefers what is drawn over the
+        /// point and refuses a point that is over nothing — both correct, and both wrong for a
+        /// finger that is already holding something. Answering a drag that way produced two
+        /// faults a player reported as one: the ghost <b>froze</b> the moment the finger left
+        /// owned ground, because a refusal leaves the drag with no new tile to move to; and it
+        /// could never be taken <b>behind</b> a piece, because the piece's own paint won the
+        /// point and the ghost snapped to its anchor — which is in front. Neither is a bug in
+        /// the drag; both are the tap's preferences applied where they do not belong.
+        /// </para>
+        /// <para>
+        /// So this refuses only a point it cannot convert at all, and answers an out-of-range
+        /// tile rather than nothing — <c>GroveDraft.MoveTo</c> clamps onto the floor, so a
+        /// finger dragged off the edge keeps its direction and the ghost rests against the
+        /// nearest legal tile instead of sticking where it was.
+        /// </para>
+        /// </summary>
+        public bool GroundTileAt(Vector2 screenPos, Camera cam, out int col, out int row)
+        {
+            col = row = 0;
+
+            if (_field == null) return false;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _field, screenPos, cam, out var local)) return false;
+
+            GroveFloor.TileAt(local.x, -local.y, out col, out row);
+            return true;
         }
 
         /// <summary>

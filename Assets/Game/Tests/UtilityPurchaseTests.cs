@@ -138,6 +138,45 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(0, UtilityLedger.MaxQuantity(free));
         }
 
+        /// <summary>
+        /// The two stops are told apart by the room left, which is what lets a refused <c>+</c>
+        /// say <em>which</em> wall it hit.
+        ///
+        /// <para>
+        /// <c>UtilityBuyOverlay</c> answers a refused tap upward with "not enough gems" or "no
+        /// room for more", and it decides between them with <c>RoomFor(item) &lt;= quantity</c>
+        /// rather than by re-deriving the purse. This is the property that makes that reading
+        /// right: <see cref="UtilityLedger.MaxQuantity"/> is the lesser of the two, so at the top
+        /// stop the room is *equal* to it when the pack is the tighter and *greater* when the
+        /// purse is. Pinned rather than described, because the panel's branch is one comparison
+        /// and a panel naming the wrong wall sends a player who is full to the gem shelf.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AtTheTopStopTheRoomLeftSaysWhichOfTheTwoWallsWasHit()
+        {
+            var item = Firepot;
+
+            // The purse is the tighter: the room is strictly greater than the stop, so the wall
+            // is money and the panel offers the shelf.
+            Hold(item.GemPrice * 4L);
+
+            int stop = UtilityLedger.MaxQuantity(item);
+            Assert.AreEqual(4, stop);
+            Assert.Greater(UtilityLedger.RoomFor(item), stop,
+                "a purse-bound stop must leave room, or the panel names the wrong wall");
+
+            // The pack is the tighter: the room is exactly the stop, so the wall is one money
+            // cannot climb and the panel says so instead (invariant 15a's ordering).
+            Hold(item.GemPrice * 500L);
+            UtilityLedger.Grant(item.Id, item.MaxHeld - 3);
+
+            stop = UtilityLedger.MaxQuantity(item);
+            Assert.AreEqual(3, stop);
+            Assert.AreEqual(stop, UtilityLedger.RoomFor(item),
+                "a room-bound stop must equal the room, or a full pack is sent to the gem shelf");
+        }
+
         // ============================================================ the charge
         [Test]
         public void AnOrderOfSeveralChargesTheWholeOrderAndLandsAllOfThem()

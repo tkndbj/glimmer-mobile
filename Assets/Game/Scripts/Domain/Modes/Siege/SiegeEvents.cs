@@ -174,48 +174,6 @@ namespace GlimmerGrove.Modes
     }
 
     /// <summary>Everything that happened in one step of the clock.</summary>
-    /// <summary>
-    /// One mark going on to the field or coming off it: a weaver's web, a thief's sack.
-    ///
-    /// <para>
-    /// <b>Its own record rather than a <c>SiegeSpellLanded</c> with a cell in it.</b> A spell
-    /// landing is always about a ward — the view draws a hit on a turret, a health bar moves, a
-    /// mending is worth spending — and a reader that had to test which of two things the index
-    /// meant is a reader that will one day get it wrong. This says what it is.
-    /// </para>
-    /// <para>
-    /// <b>It carries the colour now standing there</b>, so the view never has to ask the board
-    /// what a cell became: an undo deals a fresh gem, and a view reading the board a frame later
-    /// would draw whatever the next turn had already put in its place.
-    /// </para>
-    /// </summary>
-    public readonly struct SiegeMeddle
-    {
-        /// <summary>Who did it, or -1 when the mark is coming off because that raider is dead.</summary>
-        public readonly int Raider;
-
-        /// <summary>The cell of the field it landed on.</summary>
-        public readonly int Cell;
-
-        /// <summary><see cref="SiegeSpell.Weave"/> or <see cref="SiegeSpell.Snatch"/>.</summary>
-        public readonly SiegeSpell Craft;
-
-        /// <summary>Whether the mark went on. False is the raider dying and giving it back.</summary>
-        public readonly bool Placed;
-
-        /// <summary>The gem now standing in the cell, or -1 for a cell a sack is standing on.</summary>
-        public readonly int Colour;
-
-        public SiegeMeddle(int raider, int cell, SiegeSpell craft, bool placed, int colour)
-        {
-            Raider = raider;
-            Cell = cell;
-            Craft = craft;
-            Placed = placed;
-            Colour = colour;
-        }
-    }
-
     public sealed class SiegeReport
     {
         public readonly List<SiegeBolt> Bolts = new List<SiegeBolt>(16);
@@ -224,8 +182,14 @@ namespace GlimmerGrove.Modes
         public readonly List<SiegeSpellLanded> Spells = new List<SiegeSpellLanded>(2);
         public readonly List<int> Arrived = new List<int>(8);
 
-        /// <summary>Webs and sacks that went on to the field this step, or came off it.</summary>
-        public readonly List<SiegeMeddle> Meddles = new List<SiegeMeddle>(4);
+        /// <summary>
+        /// Bombs a bomber left standing on the hill this step.
+        ///
+        /// <b>Its own list rather than a flag on the bomb</b>, because the view has to play the
+        /// drop exactly once and a flag would have to be cleared by whoever noticed it first —
+        /// which is the class of two-places-hold-one-state bug this report exists to remove.
+        /// </summary>
+        public readonly List<SiegeBomb> Dropped = new List<SiegeBomb>(2);
 
         /// <summary>The wave that has just stepped out, or -1.</summary>
         public int Wave = -1;
@@ -237,12 +201,12 @@ namespace GlimmerGrove.Modes
             Casts.Clear();
             Spells.Clear();
             Arrived.Clear();
-            Meddles.Clear();
+            Dropped.Clear();
             Wave = -1;
         }
 
         public bool Any => Bolts.Count > 0 || Blows.Count > 0 || Casts.Count > 0
-                        || Spells.Count > 0 || Arrived.Count > 0 || Meddles.Count > 0
+                        || Spells.Count > 0 || Arrived.Count > 0 || Dropped.Count > 0
                         || Wave >= 0;
     }
 

@@ -102,9 +102,27 @@ namespace GlimmerGrove
             return img;
         }
 
+        /// <summary>
+        /// The four colours a ward line is painted in, in <c>WardLine.Colours</c> order.
+        ///
+        /// <para>
+        /// <b>The fourth is <see cref="Pal.Amber"/> rather than <see cref="Pal.Sun"/>, and the
+        /// gem is what decided it.</b> The jewel this colour is matched on is cut from the pack
+        /// at roughly 34 degrees of hue - an orange - while <c>Sun</c> sits at 43, so the one
+        /// slot in this mode was painted two ways: an orange gem feeding a yellow turret, with a
+        /// yellow raider walking down at it. Nothing numeric could see it, because every half of
+        /// it was individually correct; it was reported off a device in four words. The other
+        /// three tints sit within about eight degrees of their own gem, so this now does too.
+        /// </para>
+        /// <para>
+        /// <b><c>Amber</c> rather than a fifth orange</b>, which is that entry's own instruction
+        /// - it is named for the colour rather than for the line that first wanted it, precisely
+        /// so the next warm accent does not invent a second orange a shade away from it.
+        /// </para>
+        /// </summary>
         static readonly Color[] Tints =
         {
-            Pal.Poppy, Pal.Mint, Pal.Azure, Pal.Sun,
+            Pal.Poppy, Pal.Mint, Pal.Azure, Pal.Amber,
         };
 
         /// <summary>
@@ -138,6 +156,9 @@ namespace GlimmerGrove
                 // A thief's sack: not a colour, and deliberately the dullest thing on the field.
                 case SackColour: return Piece("sack");
 
+                // A bomber's bomb, drawn as the firepot it turns into when it is tapped.
+                case BombColour: return Art.S("Ui/Utility/firepot");
+
                 // A cog, which is what `SiegeBoard.ColourAt` answers -1 for. It is the one cell of
                 // this field that is not a colour, so it is the one that falls off the end of a
                 // table keyed on colour - and that is the right shape rather than a gap in one
@@ -159,6 +180,17 @@ namespace GlimmerGrove
         /// draw the wrong one, which is a mechanic reading as its opposite.
         /// </summary>
         const int SackColour = -2;
+
+        /// <summary>
+        /// A bomb standing on the field, which is drawn as the <em>firepot the player already
+        /// owns</em>.
+        ///
+        /// <b>The same picture on purpose.</b> A bomb tapped throws exactly what a firepot throws
+        /// (invariant 39's charge included), so drawing it as anything else would be teaching a
+        /// second name for one thing. It costs no art at all: <c>Utility/firepot</c> is resident
+        /// because the action bar draws it on every siege.
+        /// </summary>
+        const int BombColour = -3;
 
         /// <summary>
         /// A ward's body. Four models rather than four paint jobs.
@@ -302,7 +334,7 @@ namespace GlimmerGrove
         /// division that let nineteen bought turrets each get an effect of their own. A model with
         /// an ability throws a reel named after its own id — a crescent that cuts, an arrow that
         /// runs a lane, a wisp that drains — baked in each of the four ward colours; a model with
-        /// no ability throws the four elemental bolts the starter has always thrown
+        /// no ability throws the shared elemental reels the starter has always thrown
         /// (<c>WardModel.ShotFor</c>). Nothing here is tinted: invariant 37l's rule is that a
         /// multiply can only darken, so what a reel is worn in has to be what was baked into it.
         /// </para>
@@ -344,7 +376,11 @@ namespace GlimmerGrove
         {
             switch (model.Id)
             {
-                case "prism": return 1.55f;     // a sun, and the biggest thing on the board
+                // A sun, and the biggest thing on the board. **A fact about the effect rather
+                // than about the rung or the id**: the shelf was re-rung (invariant 37ax) without
+                // moving this, and the sun itself then moved from `prism` to `apex` (37ay) — and
+                // the scale went with the picture, because what wants the room is the sun.
+                case "apex": return 1.55f;
                 case "breaker": return 1.24f;   // a wrecking slug, and it has to have weight
                 case "spectrum": return 1.16f;
                 case "harpoon": return 1.10f;
@@ -418,8 +454,15 @@ namespace GlimmerGrove
             // three creeper models handed out on `Colour % 3`, so two of the four colours shared a
             // body and the only thing separating them was a wash that has now gone. Four bodies
             // means the silhouette says the colour on its own — which is the half of the rule a
-            // player who cannot separate red from green depends on — and it costs nothing but
-            // folder names, out of eighty-three characters these packs hold.
+            // player who cannot separate red from green depends on.
+            //
+            // **One set rather than two, and that is the insect roster's size rather than a change
+            // of mind.** A chapter used to draw one of two twelve-body casts by its ordinal, out
+            // of eighty-three characters across nine monster, alien and robot packs. The raid is
+            // insects now, the one pack on this machine that draws any holds fifteen, and the four
+            // bosses take four of them — so there is exactly one cast and no arithmetic to do. A
+            // second insect pack buys the second set back for one table in
+            // `make_siege_art.RAIDER_SET` and nothing here.
             // **The two that work on the field rather than on the line, and they are one set
             // whatever the chapter.** A creeper is scenery that can be re-cast per chapter; a
             // weaver and a thief are *rules*, and a player who has learned that the crawling
@@ -446,86 +489,31 @@ namespace GlimmerGrove
                     }
             }
 
-            return CastSet == 1 ? SecondSet(raider) : FirstSet(raider);
+            // **The address comes out of the same array the chapter preloaded.** Three switches of
+            // twelve literals used to live here - the names written down twice, once to load and
+            // once to draw - which is `SiegeGroundTests`' fault waiting to happen on thirty-six
+            // names instead of ten. `SiegeMode.CastAddress` is the one copy.
+            return AssetLibrary.Frames(SiegeMode.CastAddress(CastSet, raider.Kind, raider.Colour));
         }
 
         /// <summary>
-        /// Which cast a chapter draws, by its <b>ordinal inside its own mode</b>.
+        /// Which cast this level draws — one of <see cref="SiegeMode.Insects"/>,
+        /// <see cref="SiegeMode.Brood"/> or <see cref="SiegeMode.Baked"/>.
         ///
-        /// <b>Arithmetic rather than a choice</b>, which is invariant 7c's rule and the ground's
-        /// shape exactly: two sets serve every siege chapter that ever ships, a third costs one
-        /// table row and no code, and no chapter can be published drawing a cast nobody decided
-        /// on. Set by <c>SiegeScreen</c> before the board is built, so a run without a chapter
-        /// draws the first set rather than nothing.
+        /// <para>
+        /// <b>Decided by <see cref="SiegeMode.CastFor"/> and nowhere else</b>, because the same
+        /// answer has to reach two places: this, which <em>draws</em> the bodies, and
+        /// <c>SiegeMode.ArtFor</c>, which <em>loads</em> them. Two switches forming their own
+        /// opinions would load one cast and draw another, and an <c>Image</c> with a null sprite is
+        /// a white rectangle over every raider on the hill rather than a blank (invariant 7b).
+        /// <c>SiegeCastTests</c> is the comparison.
+        /// </para>
+        /// <para>
+        /// Set by <c>SiegeScreen</c> before the board is built; nought when nothing has said
+        /// otherwise, so a siege opened outside a chapter draws the insects rather than nothing.
+        /// </para>
         /// </summary>
         public int CastSet;
-
-        /// <summary>How many casts this mode ships. See <see cref="CastSet"/>.</summary>
-        public const int CastSets = 2;
-
-        static Sprite[] FirstSet(SiegeRaider raider)
-        {
-            switch (raider.Kind)
-            {
-                case SiegeKind.Bulwark:
-                    switch (raider.Colour)
-                    {
-                        case 0: return Reel("bulwark_r");
-                        case 1: return Reel("bulwark_g");
-                        case 2: return Reel("bulwark_b");
-                        default: return Reel("bulwark_y");
-                    }
-
-                case SiegeKind.Brute:
-                    switch (raider.Colour)
-                    {
-                        case 0: return Reel("brute_r");
-                        case 1: return Reel("brute_g");
-                        case 2: return Reel("brute_b");
-                        default: return Reel("brute_y");
-                    }
-            }
-
-            switch (raider.Colour)
-            {
-                case 0: return Reel("mon_r");
-                case 1: return Reel("mon_g");
-                case 2: return Reel("mon_b");
-                default: return Reel("mon_y");
-            }
-        }
-
-        static Sprite[] SecondSet(SiegeRaider raider)
-        {
-            switch (raider.Kind)
-            {
-                case SiegeKind.Bulwark:
-                    switch (raider.Colour)
-                    {
-                        case 0: return Reel("bulwarkB_r");
-                        case 1: return Reel("bulwarkB_g");
-                        case 2: return Reel("bulwarkB_b");
-                        default: return Reel("bulwarkB_y");
-                    }
-
-                case SiegeKind.Brute:
-                    switch (raider.Colour)
-                    {
-                        case 0: return Reel("bruteB_r");
-                        case 1: return Reel("bruteB_g");
-                        case 2: return Reel("bruteB_b");
-                        default: return Reel("bruteB_y");
-                    }
-            }
-
-            switch (raider.Colour)
-            {
-                case 0: return Reel("monB_r");
-                case 1: return Reel("monB_g");
-                case 2: return Reel("monB_b");
-                default: return Reel("monB_y");
-            }
-        }
 
         /// <summary>
         /// How tall a raider is drawn, in cells.
@@ -657,7 +645,7 @@ namespace GlimmerGrove
         /// spell coming <em>out</em> of one in one of the board's four colours would be saying
         /// something the rules do not mean — a player would reasonably read it as "this hurts the
         /// blue ward more". <c>Pal</c>'s board set has exactly four entries that are none of
-        /// <c>Poppy</c>, <c>Mint</c>, <c>Azure</c> or <c>Sun</c>, and the four bosses take one
+        /// <c>Poppy</c>, <c>Mint</c>, <c>Azure</c> or <c>Amber</c>, and the four bosses take one
         /// each.
         /// </para>
         /// <para>

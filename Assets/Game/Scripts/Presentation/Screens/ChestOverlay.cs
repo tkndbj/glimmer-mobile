@@ -3,6 +3,7 @@ using System.Text;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,7 +27,7 @@ namespace GlimmerGrove
     /// a heart with a bolt through it, built from the two glyphs this UI already ships.
     /// </para>
     /// </summary>
-    static class RewardArt
+    public static class RewardArt
     {
         /// <summary>
         /// One key per <see cref="ChestDropKind"/>, indexed by the enum's own value — so the
@@ -47,14 +48,40 @@ namespace GlimmerGrove
             "ui.reward.hints",
         };
 
-        public static string Name(ChestDropKind kind)
+        public static string Name(ChestDropKind kind, string item)
         {
+            // A kind that names a thing is named by the thing, not by the kind: "Firepot",
+            // never "Utility". The key is derived from the id (`UtilityItem.NameKey`), which
+            // is why the array above cannot hold it and why `content.py` resolves it instead.
+            if (ChestDropKinds.NeedsItem(kind))
+            {
+                var held = Item(item);
+                return held == null ? string.Empty : Loc.Get(held.NameKey);
+            }
+
             int i = (int)kind;
             return i > 0 && i < NameKeys.Length ? Loc.Get(NameKeys[i]) : string.Empty;
         }
 
-        public static Color Tint(ChestDropKind kind)
+        /// <summary>
+        /// The catalog entry a drop names, or null when this build has never heard of it.
+        ///
+        /// <b>A published chest table can name a utility a client does not have</b> — the band
+        /// reader proves an item id is *present* and cannot prove the catalog knows it, which is
+        /// invariant 20's "content from the future" arriving through the daily chest. Every
+        /// answer here has to survive that, and none of them may survive it by returning null to
+        /// a caller that draws what it is handed.
+        /// </summary>
+        static UtilityItem Item(string item)
+            => string.IsNullOrEmpty(item) ? null : UtilityLedger.Catalog.Find(item);
+
+        public static Color Tint(ChestDropKind kind, string item)
         {
+            // One place decides what a utility's colour is, and it is the shop's - so a firepot
+            // is the same ember on the chest card, on the shelf and on the action bar. A fifth
+            // hue invented here would be a fourth answer to a question `ShopRarity` settles.
+            if (ChestDropKinds.NeedsItem(kind)) return ShopRarity.Of(Item(item));
+
             switch (kind)
             {
                 case ChestDropKind.Credits: return Pal.Gold;
@@ -118,7 +145,7 @@ namespace GlimmerGrove
         /// an <c>Image</c> with no sprite is a white rectangle, and a handful of white
         /// rectangles crossing the screen is how a player discovers the art had not loaded.
         /// </summary>
-        public static void Token(ChestDropKind kind, out Sprite sprite, out Color tint)
+        public static void Token(ChestDropKind kind, string item, out Sprite sprite, out Color tint)
         {
             if (kind == ChestDropKind.Credits)
             {
@@ -127,33 +154,77 @@ namespace GlimmerGrove
             }
             else
             {
-                sprite = Icon(kind);
+                sprite = Icon(kind, item);
                 if (sprite != null)
                 {
-                    tint = kind == ChestDropKind.HeartBoost ? Tint(kind) : Color.white;
+                    tint = kind == ChestDropKind.HeartBoost ? Tint(kind, item) : Color.white;
                     return;
                 }
             }
 
             sprite = Art.Disc(64);
-            tint = Tint(kind);
+            tint = Tint(kind, item);
         }
 
-        /// <summary>Null for credits, which use the spinning coin flipbook instead.</summary>
-        public static Sprite Icon(ChestDropKind kind)
+        /// <summary>
+        /// Null for credits, which use the spinning coin flipbook instead — and for nothing else.
+        ///
+        /// <para>
+        /// <b>That is a contract rather than an observation.</b> Every caller passes what comes
+        /// back straight into a <c>UIKit.Img</c> and then leans on <see cref="Glyph"/>, which
+        /// only ever fills in for credits — so a null returned for any other kind is not a
+        /// missing decoration, it is a <b>white rectangle</b> where the prize should be
+        /// (invariant 7b). That is exactly what a utility drop drew for as long as this switch
+        /// had no case for one.
+        /// </para>
+        /// </summary>
+        public static Sprite Icon(ChestDropKind kind, string item)
+        {
+            // Generated, not addressed — see Art.Dial. This one is drawn at the instant a run
+            // is lost, which is the worst moment in the game to show a white square because a
+            // sprite had not finished loading.
+            if (kind == ChestDropKind.RunTime) return Art.Dial(128);
+
+            var address = Address(kind, item);
+            return address == null ? null : Art.S(address);
+        }
+
+        /// <summary>
+        /// Where a drop's picture lives, or null for the two kinds that have no address:
+        /// credits, which are the spinning flipbook, and the retired run-time dial, which is
+        /// drawn rather than loaded.
+        ///
+        /// <para>
+        /// <b>Split out of <see cref="Icon"/> so something can check it.</b> A sprite cannot be
+        /// asserted offline — nothing is loaded, so every lookup answers null whatever the table
+        /// says — but an *address* can be held to what <c>AssetManifest</c> preloads, which is
+        /// `SkinsTests`' bargain and the same one for the same reason. It costs the four
+        /// literals that used to sit at an <c>Art.S</c> call, which <c>artnames.py</c> could
+        /// read; `RewardArtTests` checks all of them and every utility besides, which is what
+        /// that scanner could never do for a name built from an id.
+        /// </para>
+        /// </summary>
+        public static string Address(ChestDropKind kind, string item)
         {
             switch (kind)
             {
-                case ChestDropKind.Gems: return Art.S("Ui/ic_gem");
-                case ChestDropKind.Hearts: return Art.S("Ui/ic_heart");
-                case ChestDropKind.HeartBoost: return Art.S("Ui/ic_heart_boost");
+                case ChestDropKind.Gems: return "Ui/ic_gem";
+                case ChestDropKind.Hearts: return "Ui/ic_heart";
+                case ChestDropKind.HeartBoost: return "Ui/ic_heart_boost";
+                case ChestDropKind.Hints: return "Ui/ic_hint";
 
-                // Generated, not addressed — see Art.Dial. This one is drawn at the instant a
-                // run is lost, which is the worst moment in the game to show a white square
-                // because a sprite had not finished loading.
-                case ChestDropKind.RunTime: return Art.Dial(128);
-
-                case ChestDropKind.Hints: return Art.S("Ui/ic_hint");
+                // The item's own picture, which is the one the action bar and the shelf already
+                // draw (`UtilityItem.Art`) — and `AssetManifest` names all four, so it is
+                // resident rather than scoped and cannot arrive late.
+                //
+                // **A gift when this build does not know the item.** A published table can name
+                // a utility from a newer build, and the one thing that may not happen then is
+                // the white rectangle `Icon`'s remarks describe. `ic_gift` is resident, reads as
+                // "a prize" and never as a bug — and the grant stays honest either way, because
+                // `UtilityLedger.Grant` refuses an id the catalog has never heard of.
+                case ChestDropKind.Utility:
+                    var held = Item(item);
+                    return held != null ? held.Art : "Ui/ic_gift";
 
                 default: return null;
             }
@@ -199,7 +270,7 @@ namespace GlimmerGrove
             var frames = Art.Frames("Ui/Coin");
 
             if (frames != null && frames.Length > 0) Flipbook.Attach(icon, "Ui/Coin", fps);
-            else { icon.sprite = Art.Disc(128); icon.color = Tint(kind); }
+            else { icon.sprite = Art.Disc(128); icon.color = Tint(kind, null); }
         }
     }
 
@@ -461,7 +532,7 @@ namespace GlimmerGrove
         {
             if (!_rewardRow) return;
 
-            var tint = RewardArt.Tint(drop.Kind);
+            var tint = RewardArt.Tint(drop.Kind, drop.Item);
 
             var card = UIKit.Img("R", _rewardRow, Art.Round(26), new Color(.04f, .09f, .12f, .82f),
                                  new Vector2(206f, 236f), new Vector2(.5f, .5f), new Vector2(x, 0f));
@@ -470,7 +541,7 @@ namespace GlimmerGrove
 
             UIKit.Halo(card.transform, tint, 260f, .30f);
 
-            var icon = UIKit.Img("Icon", card.transform, RewardArt.Icon(drop.Kind), Color.white,
+            var icon = UIKit.Img("Icon", card.transform, RewardArt.Icon(drop.Kind, drop.Item), Color.white,
                                  new Vector2(104f, 104f), new Vector2(.5f, 1f), new Vector2(0f, -70f));
             icon.preserveAspect = true;
 
@@ -481,7 +552,7 @@ namespace GlimmerGrove
             UIKit.Titled("Amount", card.transform, RewardArt.Amount(drop), 46, Pal.Cream,
                          TextAnchor.MiddleCenter, new Vector2(190f, 56f), new Vector2(.5f, 1f),
                          new Vector2(0f, -148f), 3f, 3f);
-            UIKit.Titled("Name", card.transform, RewardArt.Name(drop.Kind), 24, Pal.A(tint, .92f),
+            UIKit.Titled("Name", card.transform, RewardArt.Name(drop.Kind, drop.Item), 24, Pal.A(tint, .92f),
                          TextAnchor.MiddleCenter, new Vector2(190f, 34f), new Vector2(.5f, 1f),
                          new Vector2(0f, -198f), 0f, 0f);
 
@@ -646,7 +717,8 @@ namespace GlimmerGrove
             for (int i = 0; i < definition.Options.Count; i++)
             {
                 text.Append("  ·  ")
-                    .Append(RewardArt.Name(definition.Options[i].Band.Kind))
+                    .Append(RewardArt.Name(definition.Options[i].Band.Kind,
+                                           definition.Options[i].Band.Item))
                     .Append(' ')
                     .Append(Mathf.RoundToInt(definition.ChanceOf(i)))
                     .Append('%');

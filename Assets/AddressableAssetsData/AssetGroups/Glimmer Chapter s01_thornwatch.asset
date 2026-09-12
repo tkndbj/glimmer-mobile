@@ -25,18 +25,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 15ba35e587f44284ca64d5f06721d71a
-    m_Address: Art/Siege/hill6
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1a158e089440f7146b1a8f742abf4b84
     m_Address: Art/Map/map1_strip4
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3ebd1259f61eb5b42a78f58c81c228e3
-    m_Address: Art/Siege/hill9
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -47,16 +37,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 67a3c70d2bf465a47a342aa56e5c3b23
     m_Address: Art/Bg/sky_02
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6864205700b0d474bb09a223b01c6fb0
-    m_Address: Art/Siege/hill8
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6aabbb961093d2a4f86c5c0286d75d59
-    m_Address: Art/Siege/hill7
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -72,11 +52,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6bd1e279517059ffd82412677d275239
     m_Address: Art/Map/map1_strip2
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7b69cf61a4e183e48a09e50370f49081
-    m_Address: Art/Siege/hill4
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -100,16 +75,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9dbf5c88a371c2441939fb4e8a4eda61
-    m_Address: Art/Siege/hill10
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a29c6388d24503a46867c4dfaa8f5f8c
-    m_Address: Art/Siege/hill2
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a4fd1a367c4e19845a7cd56e1f7214ef
     m_Address: Art/Bg/sky_03
     m_ReadOnly: 0
@@ -125,18 +90,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d93fc23f299ea3f41bd2bd21af5454eb
-    m_Address: Art/Siege/hill3
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dfbf61084bad150138874059e8c6a223
     m_Address: Art/Map/map1_strip1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e3eda18106f6795468f8b273ab0f982e
-    m_Address: Art/Siege/hill5
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

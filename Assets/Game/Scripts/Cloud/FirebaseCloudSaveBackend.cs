@@ -1202,20 +1202,21 @@ namespace GlimmerGrove.Cloud
                 {
                     if (string.IsNullOrEmpty(pair.Key)) continue;
 
-                    // Two shapes, because a flipped piece is the exception: a bare string is
+                    // Two shapes, because a turned piece is the exception: a bare string is
                     // the piece id, and a map carries the facing with it. That keeps the
                     // common row to a single value and the document to about a third of what
-                    // a uniform map would cost across a full floor.
+                    // a uniform map would cost across a full floor. See `CardPlacement` in
+                    // functions/src/grove.ts, which is the writer.
                     switch (pair.Value)
                     {
                         case string pieceId when pieceId.Length > 0:
-                            placed[pair.Key] = new Homestead.Placement(pieceId, 0L, false);
+                            placed[pair.Key] = new Homestead.Placement(pieceId, 0L, 0);
                             break;
 
                         case IDictionary<string, object> entry:
                             string id = Text(entry, "piece");
                             if (id.Length == 0) break;
-                            placed[pair.Key] = new Homestead.Placement(id, 0L, ReadLong(entry, "flip") != 0L);
+                            placed[pair.Key] = new Homestead.Placement(id, 0L, (int)ReadLong(entry, "facing"));
                             break;
                     }
                 }
@@ -1232,7 +1233,9 @@ namespace GlimmerGrove.Cloud
                 ReadLong(document, "builtUnix"),
                 Text(document, "dwelling"),
                 land,
-                placed);
+                placed,
+                Text(document, "hall"),
+                (int)ReadLong(document, "hallFacing"));
         }
 
         static IDictionary<string, object> ReadMap(IDictionary<string, object> reply, string key)

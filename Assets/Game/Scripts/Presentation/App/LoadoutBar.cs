@@ -33,10 +33,12 @@ namespace GlimmerGrove
     /// kit in the corner of a board should not be two different objects — and it costs no art.
     /// </para>
     /// <para>
-    /// <b>It bleeds to the bottom of the screen and pads its contents by the safe area</b>, because
-    /// a shelf that stops short of the edge leaves a strip of map under it that scrolls, and a
-    /// shelf that ignores the inset puts the kit row under a home indicator. <see cref="Height"/>
-    /// is what a caller must inset a scroller by; it already includes the inset.
+    /// <b>It bleeds to the bottom of the screen and stands its cells <c>UtilityBar.Foot</c> above
+    /// it</b>, because a shelf that stops short of the edge leaves a strip of map under it that
+    /// scrolls, a shelf that gives the inset up in full puts the kit row on the home indicator,
+    /// and a shelf that honours it in full is 94 units of empty plate — which is the gap that was
+    /// reported off an iPhone. <see cref="Height"/> is what a caller must inset a scroller by; it
+    /// already includes the foot.
     /// </para>
     /// </summary>
     public sealed class LoadoutBar : MonoBehaviour
@@ -61,17 +63,29 @@ namespace GlimmerGrove
         /// <summary>The tab on the top edge, which is what says the shelf is a way in.</summary>
         const float TabW = 300f, TabH = 66f;
 
-        /// <summary>What the bar is, before the safe area is added to it.</summary>
+        /// <summary>What the bar is, before the display's own foot is added to it.</summary>
         const float Bare = Pad + TurretCell + Gap + KitCell + Pad;
 
         /// <summary>
-        /// How much room the bar takes at the foot of the screen, safe area included.
+        /// How much room the bar takes at the foot of the screen, the display's foot included.
         ///
+        /// <para>
         /// <b>Read rather than assumed by whatever is above it.</b> A scroller inset by the bare
         /// height leaves its last row under a home indicator on the phones that have one, which is
         /// invisible on every device without.
+        /// </para>
+        /// <para>
+        /// <b><c>UtilityBar.Foot</c> rather than the whole inset, and that is a lesson this bar
+        /// was written after and did not take.</b> It honoured <c>SafeArea.Bottom</c> in full — 94
+        /// units of it on an iPhone — and every one of those units was empty shelf under the kit
+        /// row, which is the *same report from the same device* the action bar had already
+        /// answered: a gap at the foot of the screen. The answer there is a ceiling rather than
+        /// the inset, and it is one number for both bars because they are one shelf drawn in two
+        /// places (invariant 42b) — the cells stand clear of the indicator pill and nothing else
+        /// is spent on it.
+        /// </para>
         /// </summary>
-        public static float Height => Bare + SafeArea.Bottom;
+        public static float Height => Bare + UtilityBar.Foot;
 
         /// <summary>The turret cells, left to right, in the order <c>WardLine.Colours</c> names.</summary>
         readonly List<Image> _turrets = new List<Image>(WardLine.Colours.Length);
@@ -128,7 +142,9 @@ namespace GlimmerGrove
             // flinching, so the shelf answers a tap with its sound and nothing else.
             shelf.PressScale = 1f;
 
-            float foot = SafeArea.Bottom;
+            // Measured from the physical bottom of the display, exactly as the action bar's
+            // cells are: the shelf runs to the edge and the cells stand `Foot` above it.
+            float foot = UtilityBar.Foot;
             float kitMid = foot + Pad + KitCell * .5f;
             float turretMid = kitMid + KitCell * .5f + Gap + TurretCell * .5f;
 

@@ -87,12 +87,25 @@ WIDE, TALL = 8, 5
 #: fresh gem falls in as a cog, per hundred, and ``boss`` names one of the four bosses and the
 #: colour it wears (``"warlord:r"``) - or is empty for a siege that sends none.
 #:
-#: **Four bosses across ten rungs, and each of them takes a different thing.** The chapter shipped
-#: with two, told apart by their hue and nothing else, which read exactly as what it was. A
-#: blightcaller **douses** a ward (its fuel and its fire, no health); a warlord **smites** one
-#: (health, the classic duel); a warbringer **roars** (it charges the hill and walks to the line
-#: itself, the only boss here that arrives); an overlord **sunders** (health *and* a rank the
-#: player earned with a cog). Each has its own answer, and only two of the four are a mending.
+#: **Two bosses across ten rungs, on the fifth and the tenth, and the other two moved to the second
+#: chapter.** It shipped with four, one every two or three rungs, and that is too many for one
+#: reason a count makes obvious: a boss is what a rung is *remembered* for, and a chapter where
+#: nearly half the rungs have one has no rungs that are remembered for anything else. Five and ten
+#: is the shape the genre uses - a midpoint and a finale - and it leaves the six rungs between them
+#: to be about the hill, the bulwark and the cog.
+#:
+#: A warlord **smites** a ward (health, the classic duel) and an overlord **sunders** one (health
+#: *and* a rank the player earned with a cog). The blightcaller's **douse** and the warbringer's
+#: **roar** are `s03_broodmarch`'s, so a player meets all four verbs across twenty rungs and never
+#: the same fight twice (invariant 37z).
+#:
+#: **What the two that left cost, and what paid it back.** Rung three was a blightcaller riding the
+#: head of its last wave and rung eight a warbringer; between them they carried 3,500 health and one
+#: boss's worth of pressure on the line. Taking them out drops par on both rungs and - on rung eight
+#: - the whole reason its last wave was written *light* (a roar over an empty hill rejects nothing,
+#: so the wave had to still be walking when it landed). Both waves are heavier now, measured back to
+#: where they stood by `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine`, which is the only instrument
+#: that can see any of it (invariant 37j).
 LEVELS = (
     dict(id="s01_firstwatch", seed=413, swaps=10, stood=0,
          wards="rgby", gems="rgby", cogs=0, boss="",
@@ -102,17 +115,22 @@ LEVELS = (
          wards="rgby", gems="rgby", cogs=4, boss="",
          waves=["rgbyrg", "rgbyrgby", "rgByrgby"]),
 
+    # **The rung that used to open with a boss, and now opens with brutes.** It is the third of ten
+    # and the first one past the teaching rungs' shelter, so what it is for is the brute - a raider
+    # that takes two matches rather than one - and a boss standing in front of that was answering
+    # the question the rung asks. The last wave carries the blightcaller's brutes instead of the
+    # blightcaller.
     dict(id="s01_stonewatch", seed=1338, swaps=10, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="blightcaller:b",
-         waves=["rgbyRG", "rgbyRGby", "RGBYrgby"]),
+         wards="rgby", gems="rgby", cogs=3, boss="",
+         waves=["rgbyRG", "rgbyRGby", "RGBYRGby"]),
 
     dict(id="s01_thornhollow", seed=4176, swaps=9, stood=0,
          wards="rgby", gems="rgby", cogs=3, boss="",
-         waves=["rrrgggbb", "YYYYrrrr", "GGBBYY"]),
+         waves=["rrrgggbb", "YYYY!rrrr", "GGBBYY"]),
 
     dict(id="s01_warlordsgate", seed=4510, swaps=9, stood=0,
          wards="rgby", gems="rgby", cogs=3, boss="warlord:r",
-         waves=["rgbyrg", "rgbyRGby", "RGbyRG"]),
+         waves=["rgbyrg", "rgby!bRGby", "RGbyRG"]),
 
     # **The bulwark, on the rung that used to be "more brutes".** It is written `#r`: a raider
     # that halves every bolt of the wrong colour, takes its own in full, and walks at half a
@@ -121,30 +139,29 @@ LEVELS = (
     # and the first rung that punishes it.
     dict(id="s01_bramblerun", seed=3603, swaps=8, stood=0,
          wards="rgby", gems="rgby", cogs=3, boss="",
-         waves=["RGby#rby", "RGbyRGby", "RGBYRG#gRG"]),
+         waves=["RGby#rby", "RGby!yRGby", "RGBYRG#gRG"]),
 
     # Three bulwarks, and one of them in the opening wave, so the rung starts on the question
     # rather than working up to it.
     dict(id="s01_ashenfield", seed=5206, swaps=8, stood=0,
          wards="rgby", gems="rgby", cogs=3, boss="",
-         waves=["#bgyRGby", "RGBY#rG", "RGBYRG#y"]),
+         waves=["#bgyRGby", "RGBY#rG!g", "RGBYRG#y"]),
 
+    # **The warbringer's rung without the warbringer, so its last wave went back to being heavy.**
+    # It was written *light* on purpose - four brutes and two creepers - because half a roar sets
+    # the hill charging and six all-brute raiders at 1.55x took the line apart with a raider left.
+    # Nothing charges here now, so the wave the roar could not afford is the wave this rung wants:
+    # it is the ninth-hardest hill in the chapter and the last one before the finale, and what it
+    # is about is armour arriving while brutes are still walking.
     dict(id="s01_blackmarch", seed=1952, swaps=8, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="warbringer:g",
-         # A longer last wave than the rung would otherwise want, and a *lighter* one, and the
-         # warbringer is the reason for both. Half its roar sets the hill charging, and a roar over
-         # an empty hill is a mechanic that rejects nothing (invariant 5d) - so it comes early on
-         # purpose (`SiegeTuning.CrowdAfter`) and this wave is still walking when it arrives.
-         # Six all-brute raiders charging at 1.55x took the line apart with a raider left
-         # (`SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine`, which is the only thing that can see
-         # it); four brutes and two creepers is the same wave to rally and a rung that holds.
-         waves=["rgbyRGby", "RGBYRGby", "RGBYrg"]),
+         wards="rgby", gems="rgby", cogs=3, boss="",
+         waves=["rgbyRGby", "RGBYRGby", "RGBY#gRGby!y"]),
 
     # The longest hill, and the one that sends bulwarks in a group - three of them across the
     # last two waves, so the slow armour piles up while the brutes behind it are still coming.
     dict(id="s01_thornsiege", seed=7881, swaps=7, stood=0,
          wards="rgby", gems="rgby", cogs=3, boss="",
-         waves=["rgbyRGby", "RGBY#rGBY", "RGBY#gRGB#b"]),
+         waves=["rgbyRGby", "RGBY#rGBY", "RGBY#gRGB#b!r"]),
 
     dict(id="s01_lastlight", seed=11445, swaps=7, stood=0,
          wards="rgby", gems="rgby", cogs=3, boss="overlord:y",
@@ -157,7 +174,7 @@ LEVELS = (
          # The middle wave's two bulwarks are the finale's own reason to keep reading the hill:
          # they are still walking when the overlord lands, so the player is answering armour and a
          # boss at the same time and neither is answered by the biggest match.
-         waves=["rgbyRGby", "RGB#rY#gG", "RGBYRGby"]),
+         waves=["rgby!bRGby", "RGB#rY#gG", "RGBYRGby"]),
 )
 
 

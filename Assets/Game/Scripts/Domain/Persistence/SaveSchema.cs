@@ -334,8 +334,58 @@ namespace GlimmerGrove.Persistence
         ///      Absent is the same fact as "bought nothing, chose nothing, never played one", so
         ///      a v22 file needs no migration and no sentinel.
         ///      </para>
+        /// v24 — the grove is a village, so a piece can be <em>turned</em>
+        ///      (<see cref="HomesteadPlacementDto.facing"/>) and a grove belongs to a
+        ///      generation of the catalogue (<see cref="SaveFileDto.groveEpoch"/>).
+        ///      <para>
+        ///      <b>The facing is v18's mirror widened, and what changed is the art.</b> Every
+        ///      grove piece used to be one drawing cut from a flat isometric sheet, so the only
+        ///      transform it survived was a reflection — turning the transform turns the
+        ///      <em>painting</em>, and a tree leans over. Every piece is now rendered from a
+        ///      model at four camera yaws, so a facing is a different picture and a village can
+        ///      be laid out with its doors facing the road. It rides the row it belongs to and
+        ///      needs no stamp of its own, for exactly v18's reason (invariant 11c); 0 is what
+        ///      every earlier row meant, so a v23 file needs no migration.
+        ///      <c>flipped</c> is retired in place and still carried, because a rolled-back
+        ///      client still writes it (invariant 12a).
+        ///      </para>
+        ///      <para>
+        ///      <b>The epoch is the first thing in this file that can take something away, and
+        ///      it exists because nothing else could.</b> The grove's three sections are joined
+        ///      so that nothing is ever lost — purchases and land by union, placements by the
+        ///      later stamp — which is invariant 11's promise and also means a grove cannot be
+        ///      <em>cleared</em>: clearing it locally is undone by the next pull, and wiping the
+        ///      server is undone by the first device that has not synced. A monotonic integer
+        ///      merged by <c>max</c> says it, because the rule is that the lower epoch's grove
+        ///      is discarded rather than joined. It was needed because the whole catalogue was
+        ///      replaced on 2026-09-11 and not one piece id survived, so every stored grove
+        ///      named pieces that no longer exist. See <see cref="Homestead.GroveEpoch"/> for
+        ///      why it must never be used to take things away from players.
+        ///      </para>
+        /// v25 — a turret can be upgraded, so how far each one has been taken is stored
+        ///      (<see cref="SaveFileDto.wardStars"/>).
+        ///      <para>
+        ///      <b>A count that may be stored, which is rare here and is worth the sentence.</b>
+        ///      Invariant 11b refuses a stored count because two devices cannot be told apart —
+        ///      and an upgrade is irreversible, so the join is a per-key <c>max</c> and there is
+        ///      nothing to be ambiguous about. It is keyed on the <em>holding</em>
+        ///      (<c>{id}:{colour}</c>), because a turret is bought per colour and the shelf is
+        ///      drawn per seat, so the card a player upgrades is already one seat's.
+        ///      </para>
+        ///      <para>
+        ///      <b>Absent means one star</b> — what a turret bought before this shipped means,
+        ///      and what a rolled-back client writes — so a v24 file needs no migration and no
+        ///      sentinel, and a row is written only above the first star.
+        ///      </para>
+        ///      <para>
+        ///      <b>Nothing about it is adjudicated</b>, for <c>wardsOwned</c>'s reason: a forged
+        ///      star buys an addition to a bolt and can never reach a public number, because a
+        ///      grove's worth is derived from what is held in the grove (19a) and the line is not
+        ///      part of it. The money half is defended where money always is, by
+        ///      <c>submitSpends</c> refusing a debit the derived balance cannot cover.
+        ///      </para>
         /// </summary>
-        public const int Version = 23;
+        public const int Version = 26;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -565,6 +615,48 @@ namespace GlimmerGrove.Persistence
         public string[] groveLandOwned;
 
         /// <summary>
+        /// Which generation of the grove catalogue this file's grove belongs to. Added in v24.
+        ///
+        /// <para>
+        /// <b>The one field here that lets something be taken away.</b> Everything else about
+        /// the grove is joined so nothing is ever lost — purchases and land are unions,
+        /// placements take the later stamp — which is invariant 11's promise and also means a
+        /// grove cannot be <em>cleared</em>: clear it locally and the next pull joins the
+        /// server's copy back, wipe the server and an unsynced device pushes it back up.
+        /// This is a monotonic integer, merged by <c>max</c> like every other mergeable number
+        /// (invariant 11b), and the grove belonging to the lower epoch is discarded rather than
+        /// joined. Two devices converge on the higher one whatever order they merge in.
+        /// </para>
+        /// <para>
+        /// Absent reads as 0, which is exactly right: every file written before this existed
+        /// belongs to the generation before this one. See <see cref="Homestead.GroveEpoch"/>
+        /// for what raising it means and why it must not be used to take things away.
+        /// </para>
+        /// </summary>
+        public int groveEpoch;
+
+        /// <summary>
+        /// Where the player has moved their hall, and which way they turned it. Empty means
+        /// wherever the floor says, which is what every grove starts as.
+        ///
+        /// <para>
+        /// An <b>instruction</b> rather than an achievement, so it is merged by recency against
+        /// its own stamp (invariant 11c) and never joined on value — two devices cannot both be
+        /// right about where a house is, and the later decision is the one to keep. The stamp is
+        /// its own field for 11c's other half: read off the file's <c>updatedUnix</c> it would
+        /// lose every time, because <c>SaveService.Snapshot</c> stamps that with <em>now</em>.
+        /// </para>
+        /// <para>
+        /// <b>And the default is never written.</b> Nothing is stored until somebody moves the
+        /// hall, so a grove that has never been rearranged and one deliberately put back are
+        /// different facts — the second carries a stamp and can win a merge, the first cannot.
+        /// </para>
+        /// </summary>
+        public string groveHall;
+        public int groveHallFacing;
+        public long groveHallSetUnix;
+
+        /// <summary>
         /// The heart containers this account has bought, sorted.
         ///
         /// <para>
@@ -638,13 +730,25 @@ namespace GlimmerGrove.Persistence
         public UtilityStockDto[] utilityStock;
 
         /// <summary>
-        /// The turrets this player has bought, sorted by id.
+        /// The turrets this player has bought, as <c>{id}:{colour}</c> rows sorted as text.
         ///
         /// <para>
         /// <b>A union-joined set of permanent ids</b>, which is invariant 15's shape and its
         /// reason: buying is irreversible, so between two devices the player owns whatever either
         /// bought. A count could not be merged at all (11b) and a per-turret flag could not tell
         /// "not bought" from "written before this turret existed".
+        /// </para>
+        /// <para>
+        /// <b>A row names a turret <em>and the colour it was bought for</em></b>
+        /// (<see cref="Wards.WardHolding"/>), because a line holds four turrets and a colour is
+        /// what a level's hill decides - so one purchase covering all four seats is buying one
+        /// decision and receiving four. <b>It cost no schema version</b>, and that is a property
+        /// of the shape rather than luck: what changed is what a string means, not what the field
+        /// is, and a row with no colour on it - which is what an older build wrote - reads as
+        /// every colour. That is the only interpretation a union merge could safely give it,
+        /// since one colour or none would confiscate something somebody paid for. Such a row is
+        /// carried through untouched rather than rewritten, so both builds read the same holdings
+        /// out of the same file.
         /// </para>
         /// <para>
         /// <b>A free turret is never written here.</b> "Absent" and "owns nothing but the one
@@ -704,6 +808,24 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// </summary>
         public EndlessBestDto[] endlessBest;
+
+        /// <summary>
+        /// How far each turret a player owns has been upgraded, keyed on the holding.
+        ///
+        /// <para>
+        /// <b>A count, and storable only because it cannot fall.</b> Invariant 11b refuses a
+        /// stored count outright — two devices showing 3 and 0 are equally consistent with "one
+        /// spent three" and "one has not heard yet" — and an upgrade cannot be undone, so the
+        /// join is a per-key <c>max</c> and the two devices are unambiguous. The same shape as
+        /// <see cref="endlessBest"/>.
+        /// </para>
+        /// <para>
+        /// <b>Absent is one star</b>, which is what a turret bought before this shipped means and
+        /// what a rolled-back client writes, so no migration and no sentinel. A row is written
+        /// only above the first star, which keeps the file small and the absent state single.
+        /// </para>
+        /// </summary>
+        public WardStarDto[] wardStars;
 
         /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before
@@ -1277,6 +1399,22 @@ namespace GlimmerGrove.Persistence
         public int wave;
     }
 
+    /// <summary>
+    /// One turret's place on the upgrade ladder.
+    ///
+    /// <b>Keyed on the holding rather than the turret</b> — <c>{id}:{colour}</c>, the string
+    /// <c>wardsOwned</c> already uses (<c>WardHolding</c>), because a turret is bought per colour.
+    /// </summary>
+    [Serializable]
+    public sealed class WardStarDto
+    {
+        /// <summary>The holding: <c>{id}:{colour}</c>. Invariant 1 reaches the id in it.</summary>
+        public string ward;
+
+        /// <summary>How far it has been taken, one to five. Only ever rises.</summary>
+        public int stars;
+    }
+
     [Serializable]
     public sealed class UtilityStockDto
     {
@@ -1311,17 +1449,34 @@ namespace GlimmerGrove.Persistence
         public long setUnix;
 
         /// <summary>
-        /// Drawn mirrored. Added in v18; see <see cref="Homestead.Placement.Flipped"/> for why
-        /// the grove offers a flip rather than a rotation.
+        /// Which quarter turn it is drawn at, 0 to 3. Added in v24; see
+        /// <see cref="Homestead.Placement.Facing"/>.
         ///
         /// <para>
-        /// This is the one field in the save file whose "absent" state is a value a real one
-        /// can also hold, and it is the one case where that is harmless rather than the mistake
-        /// invariant 11b warns about. <see cref="JsonUtility"/> writes false into a field an
-        /// older file never had — and false is exactly what every v17 row meant, because
-        /// nothing could be mirrored before this existed. There is no third state to confuse it
-        /// with: the row's own <see cref="setUnix"/> already carries the "has the player
-        /// decided" question, so this never has to answer it.
+        /// This is one of the few fields in the save file whose "absent" state is a value a
+        /// real one can also hold, and it is one of the cases where that is harmless rather
+        /// than the mistake invariant 11b warns about. <see cref="JsonUtility"/> writes 0 into
+        /// a field an older file never had — and 0 is exactly what every earlier row meant,
+        /// because nothing could be turned before this existed. There is no third state to
+        /// confuse it with: the row's own <see cref="setUnix"/> already carries the "has the
+        /// player decided" question, so this never has to answer it.
+        /// </para>
+        /// </summary>
+        public int facing;
+
+        /// <summary>
+        /// <b>Retired in place at v24 and still carried, never read.</b> It said a piece was
+        /// drawn mirrored, which was the only facing a flat cut-out could have; every piece is
+        /// rendered from a model now, so <see cref="facing"/> replaced it.
+        ///
+        /// <para>
+        /// Kept rather than deleted for invariant 12a's reason, narrowed to where it actually
+        /// bites: a rolled-back client still writes this field, and a mapper that dropped it
+        /// would quietly discard whatever that client had said. It costs one bool on a row
+        /// that already exists. Nothing reads it, because there is no honest reading — a
+        /// mirror and a quarter turn are not the same transform, and every grove that could
+        /// have held one was reset with the catalogue that made them (see
+        /// <see cref="SaveFileDto.groveEpoch"/>).
         /// </para>
         /// </summary>
         public bool flipped;

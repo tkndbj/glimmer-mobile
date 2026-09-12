@@ -23,8 +23,9 @@ same art and the same numbers:
   * every tile of ground is drawn first, back to front, and every piece over all of it —
     `GroveFieldView`'s two layers, which is what keeps a tile's skirt off the base of the
     piece behind it
-  * a piece stands on its footprint (`cols` x `rows`, mirrored when flipped, the hall's
-    from the floor) and is drawn at the footprint's centre, sorted by its front tile —
+  * a piece stands on its footprint (`cols` x `rows`, axes exchanged on an odd quarter
+    turn, the hall's from the floor) and is drawn at the footprint's centre, sorted by its
+    front tile —
     `GroveFootprint.Depth`, with a single tile one step in front of a larger one on the
     same front tile
   * a piece draws at authored `w` x `h` (the PNG's size) x `piece.scale` x 1.15, lifted by
@@ -92,6 +93,7 @@ def load_catalog():
             "slot": p.get("slot", "ground"),
             "cols": int(p.get("cols") or 1),
             "rows": int(p.get("rows") or 1),
+            "facings": int(p.get("facings") or 1),
             "w": int(p.get("w") or 0),
             "h": int(p.get("h") or 0),
         }
@@ -110,6 +112,7 @@ def load_catalog():
             "slot": "ground",
             "cols": 1,
             "rows": 1,
+            "facings": 1,
             "w": 0,
             "h": 0,
         }
@@ -139,10 +142,24 @@ def sprite(art: str):
     return img
 
 
+def art_for(piece, facing: int):
+    """The picture a piece shows at one facing — `HomesteadArt.Still`'s choice.
+
+    A piece with one facing is a single sprite at its own address. A piece with four is a
+    folder of renders indexed by facing, which is the same machinery an animated piece
+    uses for a different reason (see `HomesteadPiece.Facings`), so the two may never be
+    both and this reader does not have to tell them apart.
+    """
+    facings = int(piece.get("facings") or 1)
+    if facings <= 1:
+        return sprite(piece["art"])
+    return sprite(f"{piece['art']}/f{facing % facings}")
+
+
 # -------------------------------------------------------------------- render
 def render(floor, pieces, land, placed, dwelling, scale=0.5, pad_top=760.0):
     """
-    `placed` is {tileId: (pieceId, flipped)}; `land` is a list of region ids.
+    `placed` is {tileId: (pieceId, facing)}; `land` is a list of region ids.
 
     Only owned ground is drawn, because that is what the game draws — a grove is exactly
     the land its keeper bought (invariant 16e), so a renderer that drew the whole field
@@ -154,7 +171,17 @@ def render(floor, pieces, land, placed, dwelling, scale=0.5, pad_top=760.0):
     # Starter land is never written down — "absent" and "bought nothing" are the same fact
     # (invariant 16e), so a card's `land` holds only the regions that were paid for. A
     # renderer reading it literally draws a ring with a hole where the hall stands.
-    held = [r for r in floor["regions"] if r.get("cost", 0) <= 0 or r["id"] in land]
+    #
+    # **Starter means no price at all, in either currency** — `GroveFloor.IsStarter` is
+    # `Cost <= 0 && Gems <= 0`. Reading it as `cost <= 0` alone is invariant 16j's own trap:
+    # a gem-priced stretch carries `cost: 0`, so five of the eight paid regions read as free
+    # and this drew half the world nobody had bought. The game fixed that predicate; this
+    # mirror had not, so every picture it has drawn since the gem ladder shipped has been
+    # flattering.
+    def starter(r):
+        return int(r.get("cost") or 0) <= 0 and int(r.get("gems") or 0) <= 0
+
+    held = [r for r in floor["regions"] if starter(r) or r["id"] in land]
 
     owned = set()
     for r in held:
@@ -171,13 +198,16 @@ def render(floor, pieces, land, placed, dwelling, scale=0.5, pad_top=760.0):
 
     canvas = Image.new("RGBA", (width, height), (32, 44, 40, 255))
 
-    def paste(img, cx, cy, w, h, flip=False):
-        """Centre `img` at (cx, cy) in floor space, drawn `w` x `h`."""
+    def paste(img, cx, cy, w, h):
+        """Centre `img` at (cx, cy) in floor space, drawn `w` x `h`.
+
+        No transform. A facing used to be a mirror and was drawn by flipping the sprite;
+        it is a quarter turn now and the art is a *different picture* per facing, chosen
+        in `art_for` — which is what the game does (`HomesteadArt.Still`).
+        """
         if img is None or w < 1 or h < 1:
             return
         s = img.resize((max(1, int(w * scale)), max(1, int(h * scale))), Image.LANCZOS)
-        if flip:
-            s = s.transpose(Image.FLIP_LEFT_RIGHT)
         x = int((cx - min_x) * scale - s.width / 2)
         y = int((cy + pad_top) * scale - s.height / 2)
         canvas.alpha_composite(s, (x, y))
@@ -197,34 +227,35 @@ def render(floor, pieces, land, placed, dwelling, scale=0.5, pad_top=760.0):
     hall = floor["hallTile"]
     hall_cols, hall_rows = int(floor.get("hallCols") or 1), int(floor.get("hallRows") or 1)
 
-    standing = []   # (depth, anchor col, anchor row, footprint cols, rows, piece id, flip)
+    standing = []   # (depth, anchor col, anchor row, footprint cols, rows, piece id, facing)
 
-    def stand(c, w, pid, flip, fcols, frows):
+    def stand(c, w, pid, facing, fcols, frows):
         front = draw_order(c + fcols - 1, w + frows - 1)
         depth = front * 2 + (1 if fcols == 1 and frows == 1 else 0)
-        standing.append((depth, c, w, fcols, frows, pid, flip))
+        standing.append((depth, c, w, fcols, frows, pid, facing))
 
     for (c, w) in owned:
         tid = f"t_{c:03d}_{w:03d}"
         if tid == hall:
-            stand(c, w, dwelling, False, hall_cols, hall_rows)
+            stand(c, w, dwelling, 0, hall_cols, hall_rows)
         elif tid in placed:
-            pid, flip = placed[tid]
+            pid, facing = placed[tid]
             piece = pieces.get(pid)
             fcols, frows = (piece["cols"], piece["rows"]) if piece else (1, 1)
-            if flip:
+            # An odd quarter turn exchanges the axes; an even one puts them back.
+            if facing % 2:
                 fcols, frows = frows, fcols
-            stand(c, w, pid, flip, fcols, frows)
+            stand(c, w, pid, facing, fcols, frows)
 
     standing.sort()
 
-    for (_depth, c, w, fcols, frows, pid, flip) in standing:
+    for (_depth, c, w, fcols, frows, pid, facing) in standing:
         piece = pieces.get(pid)
         if not piece:
             print(f"  note: unknown piece {pid}", file=sys.stderr)
             continue
 
-        img = sprite(piece["art"])
+        img = art_for(piece, facing)
         if img is None:
             continue
 
@@ -235,7 +266,7 @@ def render(floor, pieces, land, placed, dwelling, scale=0.5, pad_top=760.0):
 
         cc = c + (fcols - 1) * 0.5
         cw = w + (frows - 1) * 0.5
-        paste(img, tile_x(cc, cw), tile_y(cc, cw) - ph * piece["lift"], pw, ph, flip)
+        paste(img, tile_x(cc, cw), tile_y(cc, cw) - ph * piece["lift"], pw, ph)
 
     return canvas.convert("RGB")
 
@@ -257,11 +288,11 @@ def fetch_card(uid: str, bearer: str):
     placed = {}
     for tid, v in f.get("placed", {}).get("mapValue", {}).get("fields", {}).items():
         if "stringValue" in v:
-            placed[tid] = (v["stringValue"], False)
+            placed[tid] = (v["stringValue"], 0)
         else:
             inner = v["mapValue"]["fields"]
             placed[tid] = (inner["piece"]["stringValue"],
-                           inner.get("flip", {}).get("integerValue", "0") != "0")
+                           int(inner.get("facing", {}).get("integerValue", "0")))
 
     return {
         "name": f.get("name", {}).get("stringValue", uid),
@@ -273,7 +304,7 @@ def fetch_card(uid: str, bearer: str):
 
 def read_layout(path: Path):
     d = json.loads(path.read_text(encoding="utf8"))
-    placed = {p["slot"]: (p["piece"], bool(p.get("flipped"))) for p in d["placements"]}
+    placed = {p["slot"]: (p["piece"], int(p.get("facing") or 0)) for p in d["placements"]}
     return {"name": d.get("name", path.stem), "land": d["land"],
             "placed": placed, "dwelling": d.get("dwelling", "cottage")}
 

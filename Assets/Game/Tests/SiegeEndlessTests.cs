@@ -176,19 +176,17 @@ namespace GlimmerGrove.Tests
 
             for (int wave = 1; wave <= SiegeEndless.PairsAfter * 3; wave++)
             {
-                int weavers = 0, thieves = 0;
+                int bombers = 0;
 
                 foreach (var spec in layout.Endless.WaveAt(wave, layout.Seed))
-                {
-                    if (spec.Kind == SiegeKind.Weaver) weavers++;
-                    if (spec.Kind == SiegeKind.Thief) thieves++;
-                }
+                    if (spec.Kind == SiegeKind.Bomber) bombers++;
 
-                Assert.LessOrEqual(weavers, 1, $"wave {wave}");
-                Assert.LessOrEqual(thieves, 1, $"wave {wave}");
+                // **At most one, and never before its depth.** A wave of bombers is a wave that
+                // pays the player rather than pressing them, which is the one shape this lane may
+                // not deal - see `SiegeTuning.MostBombs`.
+                Assert.LessOrEqual(bombers, 1, $"wave {wave}");
 
-                if (wave < SiegeEndless.WeaversFrom) Assert.AreEqual(0, weavers, $"wave {wave}");
-                if (wave < SiegeEndless.ThievesFrom) Assert.AreEqual(0, thieves, $"wave {wave}");
+                if (wave < SiegeEndless.BombersFrom) Assert.AreEqual(0, bombers, $"wave {wave}");
             }
         }
 

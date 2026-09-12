@@ -64,10 +64,9 @@ namespace GlimmerGrove.Persistence
             Utilities.UtilityLedger.LoadFrom(dto);
             Wards.WardLedger.LoadFrom(dto);
             Wards.WardLoadout.LoadFrom(dto);
+            Wards.WardStarLedger.LoadFrom(dto.wardStars);
             Progression.EndlessLedger.LoadFrom(dto);
-            Homestead.HomesteadLedger.LoadFrom(dto);
-            Homestead.GroveLand.LoadFrom(dto);
-            Homestead.HomesteadLayout.LoadFrom(dto);
+            Homestead.GroveSave.LoadFrom(dto);
             Daily.DailyChests.LoadFrom(dto);
             Daily.DailyStreak.LoadFrom(dto);
             Events.EventCollection.LoadFrom(dto);
@@ -172,10 +171,9 @@ namespace GlimmerGrove.Persistence
             Utilities.UtilityLedger.WriteInto(dto);
             Wards.WardLedger.WriteInto(dto);
             Wards.WardLoadout.WriteInto(dto);
+            dto.wardStars = Wards.WardStarLedger.ToRows();
             Progression.EndlessLedger.WriteInto(dto);
-            Homestead.HomesteadLedger.WriteInto(dto);
-            Homestead.GroveLand.WriteInto(dto);
-            Homestead.HomesteadLayout.WriteInto(dto);
+            Homestead.GroveSave.WriteInto(dto);
             Daily.DailyChests.WriteInto(dto);
             Daily.DailyStreak.WriteInto(dto);
             Events.EventCollection.WriteInto(dto);
@@ -211,10 +209,9 @@ namespace GlimmerGrove.Persistence
             Utilities.UtilityLedger.LoadFrom(dto);
             Wards.WardLedger.LoadFrom(dto);
             Wards.WardLoadout.LoadFrom(dto);
+            Wards.WardStarLedger.LoadFrom(dto.wardStars);
             Progression.EndlessLedger.LoadFrom(dto);
-            Homestead.HomesteadLedger.LoadFrom(dto);
-            Homestead.GroveLand.LoadFrom(dto);
-            Homestead.HomesteadLayout.LoadFrom(dto);
+            Homestead.GroveSave.LoadFrom(dto);
             Daily.DailyChests.LoadFrom(dto);
             Daily.DailyStreak.LoadFrom(dto);
             Events.EventCollection.LoadFrom(dto);

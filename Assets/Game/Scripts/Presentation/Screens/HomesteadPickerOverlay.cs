@@ -47,13 +47,24 @@ namespace GlimmerGrove
     public sealed class HomesteadPickerOverlay : ModalView
     {
         /// <summary>
-        /// The slot being filled. Set by the caller before Build runs.
+        /// What to do with the piece the player picks. Set by the caller before Build runs.
         ///
-        /// A property rather than a field for <c>CompanionUnlockOverlay.Avatar</c>'s reason:
-        /// <see cref="HomesteadSlot"/> is not <c>[Serializable]</c>, so a public field of that
-        /// type earns a UAC1001 warning about serialisation that will never happen.
+        /// <para>
+        /// <b>This panel used to place things, and it no longer does.</b> It was opened on a
+        /// tile and wrote into it, which made it a per-tile picker: it needed to know what was
+        /// standing there, it had a "take it away" row of its own, and it had to offer a piece
+        /// whose last copy was the one being looked at. It is an <em>inventory</em> now — the
+        /// catalogue of what the player holds — so it hands the choice back and closes, and the
+        /// grove turns it into a ghost the player drags (see <c>GroveDraftView</c>). Every one
+        /// of those special cases went with the slot.
+        /// </para>
+        /// <para>
+        /// A property rather than a field for <c>CompanionUnlockOverlay.Avatar</c>'s reason: a
+        /// public delegate field earns a UAC1001 warning about serialisation that will never
+        /// happen.
+        /// </para>
         /// </summary>
-        public HomesteadSlot Slot { get; set; }
+        public System.Action<string> Chosen { get; set; }
 
         const float PanelW = 960f;
         const float PanelH = 1180f;
@@ -177,14 +188,12 @@ namespace GlimmerGrove
             if (_grid == null) return;
 
             var catalog = HomesteadCatalog.Current;
-            string standing = HomesteadLayout.At(Slot.Id);
 
             _offer.Clear();
 
-            // "Take it away" leads, and only when there is something to take. A clear button
-            // sitting first on an empty slot would be the panel's most prominent control doing
-            // nothing, which is how a player learns to stop reading the first row.
-            if (!string.IsNullOrEmpty(standing)) _offer.Add(default);
+            // No "take it away" row. Taking something away is done to the thing itself — tap it
+            // on the floor and the draft offers it — which is where it belongs: this panel is
+            // no longer opened *at* anything, so it has nothing to clear.
 
             // Residents first, because they are the half of the catalog nobody can be sold
             // outright and the half a player is proudest of. Decor then follows in catalog
@@ -192,10 +201,10 @@ namespace GlimmerGrove
             // Two passes rather than a sort: the catalog is already in the order both halves
             // want, so sorting would be a second opinion about it that a drop could break.
             foreach (var piece in catalog.Pieces)
-                if (piece.IsResident && Offerable(piece, standing)) _offer.Add(piece);
+                if (piece.IsResident && Offerable(piece)) _offer.Add(piece);
 
             foreach (var piece in catalog.Pieces)
-                if (!piece.IsResident && Offerable(piece, standing)) _offer.Add(piece);
+                if (!piece.IsResident && Offerable(piece)) _offer.Add(piece);
 
             // Nothing the player owns belongs here. Said plainly, with the kind named, because
             // an empty grid is indistinguishable from a broken one — and this is the only place
@@ -233,13 +242,21 @@ namespace GlimmerGrove
         /// away except the cross, which says nothing about what is there.
         /// </para>
         /// </summary>
-        static bool Offerable(HomesteadPiece piece, string standing)
-        {
-            if (!piece.CanBePlaced || !HomesteadLedger.IsHeld(piece)) return false;
-            if (!piece.IsStocked || HomesteadLedger.Available(piece) > 0) return true;
-
-            return string.Equals(piece.Id, standing, StringComparison.Ordinal);
-        }
+        /// <summary>
+        /// Whether a piece belongs on the shelf: one the player holds and has a copy of.
+        ///
+        /// <para>
+        /// It used to take the id standing on the slot this panel was opened at, and offer that
+        /// one whatever the stock said — because a copy is only ever out of stock by standing in
+        /// the grove, so the piece being looked at was always at nought. That clause went with
+        /// the slot: the panel is not opened at anything now, and a piece whose copies are all
+        /// out in the grove is moved by tapping it there rather than by finding it in here.
+        /// </para>
+        /// </summary>
+        static bool Offerable(HomesteadPiece piece)
+            => piece.CanBePlaced
+            && HomesteadLedger.IsHeld(piece)
+            && (!piece.IsStocked || HomesteadLedger.Available(piece) > 0);
 
         /// <summary>
         /// Whether two offers are the same pieces in the same order.
@@ -332,7 +349,7 @@ namespace GlimmerGrove
             /// nought under it would be the same cell saying two things, one of them useless.
             /// </para>
             /// </summary>
-            void PaintStock(bool standing)
+            void PaintStock()
             {
                 bool stocked = _piece.IsStocked;
                 int left = stocked ? HomesteadLedger.Available(_piece) : 0;
@@ -345,92 +362,65 @@ namespace GlimmerGrove
                 }
 
                 _art.color = Color.white;
-                _name.color = standing ? Pal.Cream : new Color(1f, .96f, .88f, .82f);
+                _name.color = new Color(1f, .96f, .88f, .82f);
             }
 
             public void Bind(int index)
             {
                 _piece = index >= 0 && index < _panel._items.Count ? _panel._items[index] : default;
 
-                bool standing = _piece.IsValid
-                    && string.Equals(_piece.Id, HomesteadLayout.At(_panel.Slot.Id), StringComparison.Ordinal);
-
+                // Nothing is "the one standing here" any more: the panel is a catalogue rather
+                // than a picker aimed at a tile, so the tick has nothing to mark.
                 _art.gameObject.SetActive(_piece.IsValid);
                 _cross.gameObject.SetActive(!_piece.IsValid);
-                _tick.gameObject.SetActive(standing);
+                _tick.gameObject.SetActive(false);
 
                 if (_piece.IsValid) HomesteadArt.PaintThumb(_art, _piece);
 
                 _name.text = _piece.IsValid ? Loc.Get(_piece.NameKey) : Loc.Get("ui.grove.clear");
 
-                PaintStock(standing);
+                PaintStock();
             }
         }
 
+        /// <summary>
+        /// Hands the choice back to the grove and closes.
+        ///
+        /// <para>
+        /// Nothing is written here. The player has said <em>what</em>, and the grove asks
+        /// <em>where</em> with a ghost they can drag, turn and confirm — so a tap in this panel
+        /// can never put something down in a place they did not look at. That was the old
+        /// behaviour and it is the reason the footprint mismatch went unnoticed for so long: a
+        /// piece appeared somewhere near where the panel was opened and the player had no
+        /// picture of what it would take.
+        /// </para>
+        /// <para>
+        /// Out of stock goes and buys more rather than doing nothing, which is the one case
+        /// worth keeping from the old path: the player has just told us exactly what they want,
+        /// and that is the worst possible moment to teach them a control does not work. It is
+        /// reachable only from a list that has gone stale under an open panel, because a
+        /// depleted piece is taken off the list rather than dimmed (invariant 16l).
+        /// </para>
+        /// </summary>
         void Choose(HomesteadPiece piece)
         {
-            // Tapping what is already here means "yes, that one" — so the panel simply goes.
-            // It is asked before the stock branch below and that ordering is the whole of it:
-            // a piece is only ever out of stock because its copies are standing in the grove,
-            // so the one standing on this very tile is always at nought, and without this the
-            // player would tap the thing they are looking at and be sold another (see
-            // Offerable, which is why it is on the shelf at all).
-            if (piece.IsValid
-                && string.Equals(piece.Id, HomesteadLayout.At(Slot.Id), StringComparison.Ordinal))
-            {
-                Close();
-                return;
-            }
+            if (!piece.IsValid) { Close(); return; }
 
-            // Nothing left to place: this goes and buys more rather than doing nothing. A dead
-            // cell is the refusal HintPrompt exists to prevent one screen over — the player has
-            // just told us exactly what they want, which is the worst possible moment to teach
-            // them that a control does not work.
-            //
-            // Reachable only from a shelf that has gone stale under an open panel — the last
-            // copy spent on another device, or a merge landing — because a depleted piece is
-            // taken off the list rather than dimmed. Kept because a panel that is a few seconds
-            // out of date is an ordinary thing, and because a tap that does nothing at all is
-            // the one answer this must never give.
-            //
-            // Closed first and the panel raised from the continuation, so the buy panel lands
-            // over the grove rather than over a picker that is about to be destroyed —
-            // HomesteadBuyOverlay.OnBuy's ordering, for its reason.
             if (piece.IsStocked && HomesteadLedger.Available(piece) <= 0)
             {
+                // Closed first and the buy panel raised from the continuation, so it lands over
+                // the grove rather than over a picker that is about to be destroyed.
                 Close(() => Flow.Modal<HomesteadBuyOverlay>(v => v.Piece = piece));
                 return;
             }
 
-            // Place first, close second. The screen behind repaints on HomesteadLayout.Changed,
-            // so by the time the panel has faded the slot is already showing what was chosen —
-            // which is the whole feedback for the tap. The footprint is fitted around the tile
-            // the player touched, so a two-wide piece lands wherever it fits beside it.
-            var result = HomesteadLayout.TryPlace(HomesteadCatalog.Current, Slot.Col, Slot.Row,
-                                                  piece.IsValid ? piece.Id : string.Empty,
-                                                  out _, out _);
+            // The piece's own art, loaded into the grove's scope before the ghost asks for it —
+            // this panel draws thumbnails and the floor draws the real thing, so without the
+            // claim the ghost would be a white rectangle until the grove was reloaded.
+            HomesteadArt.Claim(piece);
 
-            if (result == GrovePlaceResult.Placed)
-            {
-                Audio.Sfx("pop", .6f);
-
-                // This panel draws thumbnails; an island draws the real thing. Claiming loads
-                // the piece's own art into the grove's scope, where it belongs now that it is
-                // standing on an island — without it the slot would be empty until the whole
-                // grove was reloaded.
-                HomesteadArt.Claim(piece);
-            }
-
-            // A refusal is said by the grove, after this panel has gone: a picker that closes
-            // over a floor that did not change teaches the player the control is broken, and a
-            // toast under a closing panel is a toast nobody reads.
-            if (result == GrovePlaceResult.NoRoom)
-            {
-                Close(() => (Flow.Current as HomesteadScreen)?.SayNoRoom());
-                return;
-            }
-
-            Close();
+            string id = piece.Id;
+            Close(() => Chosen?.Invoke(id));
         }
     }
 }

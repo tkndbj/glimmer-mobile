@@ -616,6 +616,57 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
+        public void ReadingASaveThatChangesNothingSaysNothing()
+        {
+            // Every sync runs the whole load path (`SaveService.Adopt`), and a purchase asks for
+            // a sync — so a `Changed` raised on every read is a screen told the ground moved
+            // several seconds after every single thing a player buys. What that looked like was
+            // the grove's shop replaying the entrance of all hundred and fifty cells and losing
+            // the player's place in the grid.
+            //
+            // Both halves are pinned: silence when the set is the same, and news when it is not.
+            // Only the first one is new, and only the second one keeps this honest — an event
+            // that has stopped firing at all is a far worse bug than the one being fixed.
+            var save = new SaveFileDto
+            {
+                schemaVersion = SaveSchema.Version,
+                groveLandOwned = new[] { "east" },
+            };
+
+            int raised = 0;
+            Action count = () => raised++;
+
+            GroveLand.LoadFrom(save);
+
+            GroveLand.Changed += count;
+            try
+            {
+                GroveLand.LoadFrom(save);
+                Assert.AreEqual(0, raised, "the same set read again is not news");
+
+                // Order is not the question — a set is a set, and `WriteInto` sorts — so a file
+                // that spells the same holding differently must be just as quiet.
+                GroveLand.LoadFrom(new SaveFileDto
+                {
+                    schemaVersion = SaveSchema.Version,
+                    groveLandOwned = new[] { "east" },
+                });
+                Assert.AreEqual(0, raised, "and neither is the same set written another way");
+
+                GroveLand.LoadFrom(new SaveFileDto
+                {
+                    schemaVersion = SaveSchema.Version,
+                    groveLandOwned = new[] { "east", "north" },
+                });
+                Assert.AreEqual(1, raised, "land arriving from another device is news");
+
+                GroveLand.LoadFrom(new SaveFileDto { schemaVersion = SaveSchema.Version });
+                Assert.AreEqual(2, raised, "and so is a save that holds none of it");
+            }
+            finally { GroveLand.Changed -= count; }
+        }
+
+        [Test]
         public void StarterLandIsNeverWrittenDown()
         {
             // A region with no price is owned by everyone, so writing it into the save would be

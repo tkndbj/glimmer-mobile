@@ -301,8 +301,8 @@ namespace GlimmerGrove
             int slot = (int)item.Kind;
             float start = ClearAt + index * CardGap;
 
-            RewardArt.Token(item.Drop.Kind, out var sprite, out var tint);
-            var tone = RewardArt.Tint(item.Drop.Kind);
+            RewardArt.Token(item.Drop.Kind, item.Drop.Item, out var sprite, out var tint);
+            var tone = RewardArt.Tint(item.Drop.Kind, item.Drop.Item);
 
             // The card leaves as its tokens do, so the prize is not still sitting there while
             // copies of it fly away.

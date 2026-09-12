@@ -39,12 +39,11 @@ namespace GlimmerGrove
         Image _art;
         Text _name, _status;
         Btn _action;
-        RectTransform _pips;
         bool _buying;
 
         protected override void Build()
         {
-            MakePanel(new Vector2(PanelW, PanelH), Loc.Get("ui.grove.home"));
+            MakePanel(new Vector2(PanelW, PanelH), Loc.Get("ui.grove.town_hall"));
 
             UIKit.IconButton("Close", Panel, Skins.Nav, "ic_close", new Vector2(92f, 92f),
                              new Vector2(1f, 1f), new Vector2(-44f, -44f), () => Close());
@@ -60,16 +59,30 @@ namespace GlimmerGrove
                 UIKit.Titled("Name", Panel, string.Empty, 36, Pal.Cream, TextAnchor.MiddleCenter,
                              new Vector2(660f, 48f), new Vector2(.5f, .5f), new Vector2(0f, -84f), 3f, 3f), 24);
 
-            _pips = UIKit.Node("Pips", Panel);
-            _pips.anchorMin = _pips.anchorMax = new Vector2(.5f, .5f);
-            _pips.pivot = new Vector2(.5f, .5f);
-            _pips.sizeDelta = new Vector2(560f, 40f);
-            _pips.anchoredPosition = new Vector2(0f, -146f);
-
+            // Plain text, deliberately. `Titled` hangs an `Outline` on anything given a width,
+            // which is right for a caption over a busy board and wrong here: this sits on a flat
+            // panel, where a three-pixel outline on two-and-a-half-line type reads as a fringe
+            // rather than as weight, and it was reported as hard to read. Nought is the whole
+            // fix — the colour already carries it against the plate.
+            //
+            // It sits where the rung pips used to, because taking them out left a hole between
+            // the name and this line rather than tightening the panel.
             _status = UIKit.Shrinkable(
-                UIKit.Titled("Status", Panel, string.Empty, 27,
-                             new Color(1f, .96f, .88f, .78f), TextAnchor.MiddleCenter,
-                             new Vector2(680f, 76f), new Vector2(.5f, .5f), new Vector2(0f, -214f), 3f, 0f), 18);
+                UIKit.Titled("Status", Panel, string.Empty, 31,
+                             Pal.A(Pal.Amber, .95f), TextAnchor.MiddleCenter,
+                             new Vector2(680f, 88f), new Vector2(.5f, .5f), new Vector2(0f, -170f), 0f, 0f), 21);
+
+            // **Where the long press is taught, and the only place it could be.** A home can be
+            // picked up and turned now that its seat is the player's rather than the floor's —
+            // and a gesture nobody is told about is a feature nobody has. This panel is what a
+            // tap on the hall raises, so it is exactly where somebody who has just tried to move
+            // their house by tapping it is looking. Quiet type: it is an aside, not the news this
+            // panel is for, and the ladder above it is what a player came here to read.
+            UIKit.Shrinkable(
+                UIKit.Titled("Hint", Panel, Loc.Get("ui.grove.home_hold"), 22,
+                             Pal.A(Pal.Cream, .60f), TextAnchor.MiddleCenter,
+                             new Vector2(680f, 44f), new Vector2(.5f, .5f),
+                             new Vector2(0f, -262f), 0f, 0f), 17);
 
             Paint();
 
@@ -111,16 +124,22 @@ namespace GlimmerGrove
             if (_name)
                 _name.text = home.IsValid ? Loc.Get(home.NameKey) : Loc.Get("ui.grove.home");
 
-            PaintPips(catalog, home);
-
             var offer = next.IsValid ? HomesteadLedger.OfferFor(next) : default;
 
+            // One colour for all three states, which is the owner's call and worth stating
+            // so nobody "fixes" it back. This line is the panel's own accent rather than a
+            // signal: what the three states differ in is what they *say*, and the words are
+            // unambiguous without a second channel carrying the same news in hue.
+            //
+            // What it replaced could not have carried that news anyway: the "cannot afford it"
+            // line was `Pal.Sun` and the "finest home" line `Pal.Gold`, which differ by six in
+            // one channel — two states drawn in the same colour, and a third drawn in cream.
             if (_status)
             {
                 if (!next.IsValid)
                 {
                     _status.text = Loc.Get("ui.grove.home_best");
-                    _status.color = Pal.A(Pal.Gold, .95f);
+                    _status.color = Pal.A(Pal.Amber, .95f);
                 }
                 else if (offer.State == HomesteadPurchaseState.TooExpensive)
                 {
@@ -129,12 +148,12 @@ namespace GlimmerGrove
                     // should be able to see what it is called.
                     _status.text = Loc.Format("ui.grove.home_short", Loc.Get(next.NameKey),
                                               Compact.Number(offer.Shortfall));
-                    _status.color = Pal.A(Pal.Sun, .95f);
+                    _status.color = Pal.A(Pal.Amber, .95f);
                 }
                 else
                 {
                     _status.text = Loc.Format("ui.grove.home_next", Loc.Get(next.NameKey));
-                    _status.color = new Color(1f, .96f, .88f, .78f);
+                    _status.color = Pal.A(Pal.Amber, .95f);
                 }
             }
 
@@ -153,41 +172,6 @@ namespace GlimmerGrove
 
             _action = null;
             BuildAction(wanted, next, offer);
-        }
-
-        /// <summary>
-        /// One pip per rung, filled up to the one the player lives in.
-        ///
-        /// Laid out from the catalog rather than from a constant, because the ladder is content
-        /// — a drop that adds a sixth home must not leave a panel that can only draw five.
-        /// </summary>
-        void PaintPips(HomesteadCatalog catalog, HomesteadPiece home)
-        {
-            if (_pips == null) return;
-
-            for (int i = _pips.childCount - 1; i >= 0; i--)
-            {
-                var old = _pips.GetChild(i).gameObject;
-                old.SetActive(false);
-                Destroy(old);
-            }
-
-            int rungs = HomesteadLedger.DwellingCount(catalog);
-            if (rungs <= 0) return;
-
-            const float step = 46f;
-            float left = -(rungs - 1) * step * .5f;
-
-            for (int i = 0; i < rungs; i++)
-            {
-                bool lit = home.IsValid && i < home.Tier;
-
-                var pip = UIKit.Img("P" + i, _pips, Art.Disc(32),
-                                    lit ? Pal.A(Pal.Gold, .95f) : new Color(1f, .96f, .88f, .22f),
-                                    Vector2.one * (lit ? 26f : 18f), new Vector2(.5f, .5f),
-                                    new Vector2(left + i * step, 0f));
-                pip.raycastTarget = false;
-            }
         }
 
         void BuildAction(string wanted, HomesteadPiece next, HomesteadOffer offer)

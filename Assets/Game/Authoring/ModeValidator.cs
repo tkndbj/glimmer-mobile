@@ -492,7 +492,6 @@ namespace GlimmerGrove.Content
             // health, so a wave holding nothing else is a wave the player can simply ignore: the
             // webs and the sacks stay, but nothing about the run gets worse for leaving them
             // standing, and a mechanic whose wrong answer costs nothing has no decision in it.
-            Meddlers(layout, issues);
         }
 
         /// <summary>
@@ -570,38 +569,6 @@ namespace GlimmerGrove.Content
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
                     "nothing this endless lane ever sends can bring a ward down, so the run has "
                     + "no ending at all"));
-        }
-
-        /// <summary>
-        /// The two raiders that hold the hill and work on the field.
-        ///
-        /// <b>Invariant 5d asked of a wave rather than of a board.</b> Neither takes a ward's
-        /// health, so a wave holding nothing else costs a player nothing to ignore - the webs and
-        /// the sacks stay, and the run is no closer to being lost for having left them standing.
-        /// A warning rather than an error, because a chapter's first meeting with one may
-        /// legitimately be a wave that is only that.
-        /// </summary>
-        static void Meddlers(SiegeLayout layout, ICollection<LevelIssue> issues)
-        {
-            for (int w = 0; w < layout.Coming.Length; w++)
-            {
-                bool meddles = false, threatens = false;
-
-                for (int i = 0; i < layout.Coming[w].Length; i++)
-                {
-                    var kind = layout.KindAt(w, i);
-
-                    if (SiegeTuning.HoldsTheField(kind)) meddles = true;
-                    else threatens = true;
-                }
-
-                if (!meddles || threatens) continue;
-
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"wave {w + 1} holds nothing but raiders that work on the field. Neither a "
-                    + "weaver nor a thief takes a ward's health, so a player can ignore this wave "
-                    + "outright and lose nothing by it - send something with it"));
-            }
         }
 
         /// <summary>
@@ -762,6 +729,11 @@ namespace GlimmerGrove.Content
                 for (int i = 0; i < layout.Coming[w].Length; i++)
                     blow += SiegeTuning.BlowOf(layout.KindAt(w, i));
 
+                // **The starter's health, deliberately, not the flimsiest turret's.** This asks
+                // whether the *level* can take a line down, and a level is judged against the line
+                // every player already holds rather than against one somebody could choose to
+                // stand. What measures a chosen line is the hold simulation in `SiegeRuleTests`,
+                // which plays both (invariant 37bb).
                 if (blow * SwingsBeforeAnswered >= SiegeTuning.WardHealth) return true;
             }
 

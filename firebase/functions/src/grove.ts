@@ -611,8 +611,15 @@ export function boardName(
 
 // ------------------------------------------------------------------------ the card
 
-/** A placement as it appears on a card: a bare id, or a map when the piece is mirrored. */
-type CardPlacement = string | { piece: string; flip: number };
+/**
+ * A placement as it appears on a card: a bare id, or a map when the piece has been turned.
+ *
+ * Two shapes because a turned piece is the exception, and a full floor is a thousand rows:
+ * a bare string keeps the common case to one value and the document to about a third of
+ * what a uniform map would cost. `facing` is a quarter turn, 1..3 — a piece facing 0 is
+ * written as the bare string, because that is what it means.
+ */
+type CardPlacement = string | { piece: string; facing: number };
 
 export interface GroveCardDoc {
   name: string;
@@ -625,6 +632,17 @@ export interface GroveCardDoc {
   land: string[];
   placed: Record<string, CardPlacement>;
   builtUnix: number;
+
+  /**
+   * Where the keeper moved their hall, and which way they turned it. Absent means wherever
+   * the floor says, which is what every grove was before a seat could be stored at all.
+   *
+   * Sanitised rather than trusted, exactly as `placed` is: it is a picture, it is worth
+   * nothing to forge, and the only thing a bad value could do is put somebody's own house
+   * somewhere odd on their own card.
+   */
+  hall?: string;
+  hallFacing?: number;
 
   /** The grove catalog this was scored against, so a stale seed is diagnosable. */
   catalogVersion: number;
@@ -694,7 +712,7 @@ export function buildCard(
   const rows = Array.isArray(save.homesteadPlaced) ? save.homesteadPlaced : [];
 
   for (const raw of rows) {
-    const row = raw as { slot?: unknown; piece?: unknown; flipped?: unknown } | null;
+    const row = raw as { slot?: unknown; piece?: unknown; facing?: unknown } | null;
     if (!row || typeof row !== "object") continue;
 
     const slot = typeof row.slot === "string" ? row.slot : "";
@@ -704,7 +722,15 @@ export function buildCard(
     // on a card: a visitor cannot tell "never touched" from "cleared", and does not need to.
     if (slot.length === 0 || slot.length > 32 || piece.length === 0 || piece.length > 64) continue;
 
-    placed[slot] = row.flipped === true ? { piece, flip: 1 } : piece;
+    // Clamped rather than trusted: `facing` comes out of a client-written save, and a card
+    // is what strangers see. Anything outside 0..3 is read as 0, which is the facing every
+    // piece had before they could be turned and the only safe reading of a value that
+    // cannot have come from this build.
+    const facing = typeof row.facing === "number" && Number.isInteger(row.facing)
+      ? ((row.facing % 4) + 4) % 4
+      : 0;
+
+    placed[slot] = facing === 0 ? piece : { piece, facing };
 
     if (Object.keys(placed).length >= 1024) break;
   }
@@ -719,9 +745,27 @@ export function buildCard(
     dwelling,
     land,
     placed,
+    ...hallSeat(save),
     builtUnix: nowUnix,
     catalogVersion: Math.floor(grove.version ?? 0),
   };
+}
+
+/**
+ * The hall's seat, read off the save the way a placement is.
+ *
+ * Omitted entirely when the keeper has never moved their home, so a card carries the field
+ * only when it says something — which keeps every card written before this deployment
+ * correct rather than merely old: absent has always meant "where the floor says".
+ */
+function hallSeat(save: Record<string, unknown>): { hall?: string; hallFacing?: number } {
+  const slot = typeof save.groveHall === "string" ? save.groveHall : "";
+  if (slot.length === 0 || slot.length > 32) return {};
+
+  const raw = save.groveHallFacing;
+  const facing = typeof raw === "number" && Number.isInteger(raw) ? ((raw % 4) + 4) % 4 : 0;
+
+  return facing === 0 ? { hall: slot } : { hall: slot, hallFacing: facing };
 }
 
 /** Guards against a grove config that was never seeded or was seeded badly. */

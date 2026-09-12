@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
@@ -41,6 +40,10 @@ namespace GlimmerGrove
 
             _wave = 0;
 
+            // The idle nudge is per run and its widgets hang off gems this rebuild is about to
+            // replace — a kept one is a destroyed node held as a live one. See `SiegeView.Hint`.
+            Unhinted();
+
             // The targeting layer hangs off the layers this rebuild is about to replace, so a
             // board dealt again while something was armed would leave a destroyed node behind a
             // live `Arming` — and the bar would still be showing a ring. Cleared through the
@@ -53,17 +56,16 @@ namespace GlimmerGrove
             // destroyed node handed to a lesson as a live one.
             _wardAnchor = null;
             _meters = null;
+            _fuseLayer = null;
 
-            // **The bands are derived from the cell, not the other way round.** The field is
-            // laid out to fill the width (see `Fit`), so how much height its rows need is a fact
-            // rather than a share — and the hill and the line then take what is left in the
-            // proportion they were authored in. Written as a share of the authored pair rather
-            // than as two more constants, so moving `HillBand` still moves only one thing.
+            // **The bands are derived from the cell, not the other way round**, and the
+            // arithmetic lives in `Bands.Of` rather than here so a test can sweep the screen
+            // shapes a render can only look at one at a time (`SiegeBandTests`).
             float h = Span.y;
-            float gems = Mathf.Clamp(Cell * Height / h, .28f, MaxGemBand);
-            float rest = 1f - gems;
-            float hill = rest * (HillBand / (HillBand + LineBand));
-            float line = rest - hill;
+            var bands = Bands.Of(h, Cell, Height);
+            float hill = bands.Hill, line = bands.Line;
+
+            _lineBand = line;
 
             _hillTop = h * .5f - Cell * .35f;
             _hillFoot = h * (.5f - hill);
@@ -75,6 +77,13 @@ namespace GlimmerGrove
 
             _hill = Layer("Hill");
             _mobs = Layer("Raiders");
+
+            // **Bombs sit above the raiders, and that is about the finger rather than the eye.**
+            // A bomb is the one thing on this hill that is tapped, and it is left exactly where
+            // something died - which is ground other raiders go on walking over. Sharing the
+            // raiders' layer would put a body between the finger and the only control on that half
+            // of the screen, and the failure reads as a bomb that does not answer.
+            _fuseLayer = Layer("Bombs");
             _wall = Layer("Line");
             _field = Layer("Field");
 
@@ -108,7 +117,46 @@ namespace GlimmerGrove
             Targets();
             Banner();
 
-            StartCoroutine(Countdown());
+            // A fresh board is a fresh count-in. It is not started here: it is read off the
+            // board's own quiet every frame the run is allowed to advance. See `CountIn`.
+            _counted = 0;
+        }
+
+        /// <summary>
+        /// How big the ground is drawn, given the band it has to cover and the shape it was drawn
+        /// at: the smallest rectangle of the art's own aspect that covers the band.
+        ///
+        /// <para>
+        /// <b>Worked out here rather than handed to an <see cref="AspectRatioFitter"/>, and the
+        /// reason is that this has to be testable.</b> <see cref="Scenery.Cover"/> uses the fitter
+        /// because a backdrop's parent resizes under it; the hill band does not — it is one
+        /// rectangle, computed once — so the fitter would buy nothing but a dependency on when
+        /// layout runs. This is <c>SiegeView.StrikeCentre</c>'s bargain for the same reason: the
+        /// arithmetic is a static a fixture can sweep, and the fixture asserts <em>the
+        /// consequence</em> (it covers, and its aspect is the art's) rather than restating the
+        /// formula, which would agree with a wrong one as happily as with a right one.
+        /// </para>
+        /// </summary>
+        /// <summary>
+        /// How wide the hill and the rampart are drawn: the <em>plate's</em> width, not the field's.
+        ///
+        /// <para>
+        /// <b>They were drawn at <c>Span.x</c>, which is a strip of bare plate down each side.</b>
+        /// <c>ProtoView</c> sizes the plate to the field plus <c>Margin</c> on every edge, so a
+        /// ground drawn at the field's own width leaves 18 units showing left and right — reported
+        /// as tiny side gaps, and correct in the sense that every widget on a board is inset by
+        /// that margin. A floor is not a widget on the board; it <em>is</em> the board, and so is
+        /// the rampart the turrets stand on. Both run to the edge.
+        /// </para>
+        /// </summary>
+        protected float PlateWide => Span.x + Margin * 2f;
+
+        public static Vector2 GroundSize(Vector2 band, float aspect)
+        {
+            if (aspect <= 0f) return band;
+
+            float tall = Mathf.Max(band.y, band.x / aspect);
+            return new Vector2(tall * aspect, tall);
         }
 
         RectTransform Layer(string name)
@@ -120,15 +168,59 @@ namespace GlimmerGrove
             return rt;
         }
 
-        /// <summary>The hill: ground the raiders walk over, and the breach they come out of.</summary>
+        /// <summary>
+        /// The hill: ground the raiders walk over, and the breach they come out of.
+        ///
+        /// <para>
+        /// <b>Enveloped, never stretched — and it was stretched on every device this game runs
+        /// on.</b> The ground was drawn as a plain <c>Image</c> sized to the band, which scales a
+        /// sprite independently in x and y; the band's aspect is <b>0.99</b> on a 21:9 phone,
+        /// <b>1.14</b> on an iPhone, <b>1.77</b> on a 16:9 screen and <b>2.85</b> on an iPad,
+        /// against art authored at 0.80. So every square rock plate on the hill arrived as a wide
+        /// rectangle and every rounded corner as an ellipse, by 1.24x at the kindest and 3.57x at
+        /// the worst. <see cref="AspectRatioFitter.AspectMode.EnvelopeParent"/> is what
+        /// <see cref="Scenery.Cover"/> has always used for a backdrop, and a floor wants it for
+        /// exactly the same reason: what may vary between devices is <em>how much of the edges is
+        /// cropped</em>, and never the shape of anything drawn.
+        /// </para>
+        ///
+        /// <para>
+        /// <b>Which is why the ground needs a clip of its own.</b> Enveloping means the sprite is
+        /// deliberately larger than the band on one axis, so without a mask it would draw over the
+        /// ward line and the field below it. <c>RectMask2D</c> rather than <c>Mask</c>, for the
+        /// reason <c>_sky</c> gives: a clip rectangle handed to the shader costs no stencil buffer
+        /// and no extra draw call. The mask wraps the ground alone — the raiders are in
+        /// <c>_mobs</c> and are untouched.
+        /// </para>
+        ///
+        /// <para>
+        /// <b>Nothing offline could see any of this.</b> Every gate here reads the model, and
+        /// <c>Tools/render_siege.py</c> — the one instrument built to catch a widget in the wrong
+        /// place — stretched it in exactly the same way, so the mirror reproduced the fault
+        /// faithfully and drew a picture that looked composed (44d). What saw it is the owner.
+        /// </para>
+        /// </summary>
         void Ground()
         {
             float h = _hillTop - _hillFoot + Cell * .35f;
+            var band = new Vector2(PlateWide, h + Cell * .5f);
 
-            var ground = UIKit.Img("Ground", _hill, Hill(Rung), Color.white,
-                                   new Vector2(Span.x, h + Cell * .5f));
+            var host = UIKit.Node("Ground", _hill);
+            host.anchorMin = host.anchorMax = new Vector2(.5f, .5f);
+            host.sizeDelta = band;
+            host.anchoredPosition = new Vector2(0f, (_hillTop + _hillFoot) * .5f);
+            host.gameObject.AddComponent<RectMask2D>();
+
+            var rock = Hill(Rung);
+
+            // An absent sprite keeps the plain fit: a white rectangle the size of the band is a
+            // missing address (invariant 7b) and has to look like one, where enveloping an aspect
+            // of nought would leave nothing on the screen at all.
+            var ground = UIKit.Img("Rock", host, rock, Color.white,
+                                   rock != null && rock.rect.height > 0f
+                                       ? GroundSize(band, rock.rect.width / rock.rect.height)
+                                       : band);
             ground.raycastTarget = false;
-            ground.rectTransform.anchoredPosition = new Vector2(0f, (_hillTop + _hillFoot) * .5f);
 
             // **Nothing over the top of it, and nothing standing at the head of it.** The first
             // cut put a black gradient across the far end (so the hill "got darker the further up
@@ -147,10 +239,15 @@ namespace GlimmerGrove
         /// <summary>The rampart and the wards standing on it.</summary>
         void Line()
         {
-            float band = Span.y * LineBand;
+            // **The band `Compose` derived, never `LineBand` again.** The two are only the same
+            // number when the field happens to take exactly its authored share: `LineBand` is one
+            // half of a *ratio* that divides whatever the field leaves, so reading it directly
+            // draws a rampart of one height under a line standing at another. It was out by a
+            // sixth on a 16:9 canvas before anything moved it.
+            float band = Span.y * _lineBand;
 
             var wall = UIKit.Img("Rampart", _wall, Piece("rampart"), Color.white,
-                                 new Vector2(Span.x, band * 1.02f));
+                                 new Vector2(PlateWide, band * 1.02f));
             wall.raycastTarget = false;
             wall.type = Image.Type.Sliced;
             wall.rectTransform.anchoredPosition = new Vector2(0f, _hillFoot - band * .5f);
@@ -182,8 +279,12 @@ namespace GlimmerGrove
                 post.Colour = ward.Colour;
                 post.Rank = ward.Rank;
 
+                // Sized through the constants rather than by two numbers typed here, because
+                // `BarrelGap` is a fraction of this picture and has to be converted into board
+                // units by exactly the width it is drawn at.
                 post.Body = UIKit.Img("Post", post.Node, WardArt(ward),
-                                      post.Coat, new Vector2(Cell * 1.72f, Cell * 2.15f));
+                                      post.Coat,
+                                      new Vector2(Cell * BodyWide, Cell * BodyTall));
                 post.Body.raycastTarget = false;
                 post.Body.preserveAspect = true;
                 post.Body.rectTransform.anchoredPosition = new Vector2(0f, Cell * .06f);
@@ -331,9 +432,6 @@ namespace GlimmerGrove
                 gem.Img.rectTransform.anchoredPosition = CentreOf(i);
                 _gems.Add(gem);
 
-                // A field may open with nothing on it, but a rebuild after a continue may not:
-                // the weaver that locked those cells is still standing there.
-                Lock(gem, _board.IsWebbed(i));
             }
         }
 
@@ -368,53 +466,135 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// How many beats the count-in draws: three numbers and then GO!.
+        ///
+        /// Public because <see cref="BeatsBy"/> is, and a fixture that typed a four of its own
+        /// would go on passing the day this became five.
+        /// </summary>
+        public const int Beats = 4;
+
+        /// <summary>How many of them this board has drawn. Reset by every <see cref="Compose"/>.</summary>
+        int _counted;
+
+        /// <summary>
         /// Three, two, one, and they come.
         ///
         /// <para>
         /// <b>Once, at the start, and never per wave.</b> What it is for is the half-second a
         /// player needs to look at the hill before anything is on it - a siege that opens with
         /// something already walking has been going on before they arrived. It is not a *pause*:
-        /// the clock runs underneath it, and the first wave is timed to step out as the last
-        /// number leaves (<see cref="SiegeTuning.FirstWaveAfter"/>), so nothing is being held up
-        /// and the count is telling the truth about when they arrive.
+        /// the clock runs underneath it and the board is <c>Playable</c> throughout, so nothing
+        /// is being held up.
+        /// </para>
+        /// <para>
+        /// <b>Paced by the run's own clock rather than by a wall clock, and it was a coroutine on
+        /// <c>WaitForSecondsRealtime</c>.</b> That drew the same four beats over the same 3.4
+        /// seconds and agreed with the first wave only because both numbers were
+        /// <see cref="SiegeTuning.FirstWaveAfter"/> - two clocks kept in step by arithmetic, which
+        /// is fine until something stops one of them. Everything that holds a run stops the
+        /// board's: a first-timer's tip (<c>RunHold.Teaching</c>), the pause menu, a panel over
+        /// the board (<c>RunHold.Covered</c>) and the transition that is still hiding the screen
+        /// (<c>RunHold.Opening</c>). None of them stops a wall clock, so the count-in burned
+        /// through the tip boxes a first-timer was reading and they were handed a hill with no
+        /// count-in and a wave already due. Read off <see cref="SiegeBoard.BeforeFirstWave"/> the
+        /// two cannot disagree on any frame for any reason, and GO! landing with the first raider
+        /// stops being an arrangement and becomes a fact - which is also why this needs no flag
+        /// of its own and has no coroutine to strand (invariant 30g).
+        /// </para>
+        /// <para>
+        /// <b>One beat a frame, and a missed one is skipped rather than queued.</b> A hitch that
+        /// swallows a whole step should cost the beat it swallowed, not print two numbers on top
+        /// of each other a frame apart - so the count jumps to where the quiet actually is and
+        /// draws only the newest. The board clamps its own step (<c>SiegeBoard.Advance</c>), so
+        /// on any frame rate anybody plays at nothing is ever missed.
         /// </para>
         /// </summary>
-        IEnumerator Countdown()
+        void CountIn()
         {
-            // **Four beats inside the quiet, and the quiet was lengthened to fit them.** At a
-            // 2.2-second opening the numbers went past in half a second each and read as a
-            // flicker; the count now paces itself and `FirstWaveAfter` is what it is so that
-            // GO! and the first raider still land together. The count does not hold the game up
-            // - the clock runs underneath it - so lengthening it lengthens the quiet, which is
-            // the honest thing for it to do.
-            float step = SiegeTuning.FirstWaveAfter / 4f;
+            if (_counted >= Beats || _board == null || _fx == null) return;
 
-            for (int i = 3; i >= 0; i--)
-            {
-                if (_fx == null) yield break;
+            // The quiet the board says is left, not the seconds this screen has been up. It does
+            // not move at all until the run is allowed to advance, which is the whole fix.
+            int want = BeatsBy(_board.BeforeFirstWave);
+            if (want <= _counted) return;
 
-                string say = i > 0 ? i.ToString() : Loc.Get("mode.siege.go");
+            _counted = want;
+            CountBeat(Beats - want, SiegeTuning.FirstWaveAfter / Beats);
+        }
 
-                var label = UIKit.Label("Count", _fx, say,
-                                        Mathf.RoundToInt(Cell * (i > 0 ? 1.5f : 1.1f)),
-                                        i > 0 ? Pal.Cream : Pal.Gold, TextAnchor.MiddleCenter,
-                                        new Vector2(Span.x, Cell * 2f));
-                label.rectTransform.anchoredPosition =
-                    new Vector2(0f, (_hillTop + _hillFoot) * .5f);
+        /// <summary>
+        /// How many beats of the count-in are owed, given the seconds of opening quiet left.
+        ///
+        /// <para>
+        /// <b>A static, so a fixture can sweep it</b> — <see cref="GroundSize"/>'s bargain and
+        /// <c>SiegeView.StrikeCentre</c>'s: what a render can only look at one frame at a time, a
+        /// test can walk end to end. It answers nought at the top of the quiet, climbs one beat a
+        /// step, and reaches <see cref="Beats"/> no later than the quiet runs out — which is the
+        /// property that makes GO! and the first raider land together
+        /// (<c>SiegeCountInTests</c>).
+        /// </para>
+        /// </summary>
+        /// <param name="left">
+        /// <see cref="SiegeBoard.BeforeFirstWave"/>: seconds until the first wave steps out, and
+        /// nought once it has.
+        /// </param>
+        public static int BeatsBy(float left)
+        {
+            float quiet = SiegeTuning.FirstWaveAfter;
+            if (quiet <= 0f) return Beats;
 
-                var mark = label;
-                mark.transform.localScale = Vector3.one * 2.1f;
+            float step = quiet / Beats;
+            float gone = quiet - Mathf.Clamp(left, 0f, quiet);
 
-                Tween.Scale(mark.transform, 1f, step * .55f, Ease.OutBack);
-                Tween.Fade(mark, 0f, step * .95f, Ease.InQuad)
-                     .OnDone(() => { if (mark) Destroy(mark.gameObject); });
+            // Nought only at the very top of the quiet: the first beat is owed the instant the
+            // board's clock has moved at all, which is the frame the hill starts walking.
+            if (gone <= 0f) return 0;
 
-                Audio.Sfx(i > 0 ? "tick" : "bell", i > 0 ? .5f : .8f, i > 0 ? 1f : 1.2f);
+            return Mathf.Clamp(Mathf.FloorToInt(gone / step) + 1, 1, Beats);
+        }
 
-                if (i == 0) Flow.Flash(new Color(1f, .86f, .5f), .3f, .35f);
+        /// <summary>
+        /// One beat of the count-in: the number, its sound, and the flash the last one earns.
+        ///
+        /// <para>
+        /// <b>Not called <c>Beat</c>, which is what it wants to be called.</b> There is already a
+        /// <c>Beat(SiegeBeat)</c> on this view - the coroutine that draws one beat of a cascade -
+        /// and the two would be an overload pair that differ only in their arguments. This
+        /// project has paid once for two members sharing a name (<c>ModeScreen</c>'s coroutine
+        /// hiding <c>RunScreen.Resolve</c>, and a won grove charged for at the next launch), and
+        /// a compiler is happy with both.
+        /// </para>
+        ///
+        /// <para>
+        /// The label fades on the ordinary unscaled clock rather than on the run's, which is the
+        /// one thing here deliberately left on a wall clock. A number is a three-quarter-second
+        /// mark with nothing depending on it; holding one still behind a pause menu would mean a
+        /// widget that has to be found and released on every way out of that menu, and what it
+        /// would buy is a "2" that survives being paused. What the run's clock owns is *when a
+        /// beat is drawn*, which is the half that decides anything.
+        /// </para>
+        /// </summary>
+        void CountBeat(int i, float step)
+        {
+            string say = i > 0 ? i.ToString() : Loc.Get("mode.siege.go");
 
-                yield return new WaitForSecondsRealtime(step);
-            }
+            var label = UIKit.Label("Count", _fx, say,
+                                    Mathf.RoundToInt(Cell * (i > 0 ? 1.5f : 1.1f)),
+                                    i > 0 ? Pal.Cream : Pal.Gold, TextAnchor.MiddleCenter,
+                                    new Vector2(Span.x, Cell * 2f));
+            label.rectTransform.anchoredPosition =
+                new Vector2(0f, (_hillTop + _hillFoot) * .5f);
+
+            var mark = label;
+            mark.transform.localScale = Vector3.one * 2.1f;
+
+            Tween.Scale(mark.transform, 1f, step * .55f, Ease.OutBack);
+            Tween.Fade(mark, 0f, step * .95f, Ease.InQuad)
+                 .OnDone(() => { if (mark) Destroy(mark.gameObject); });
+
+            Audio.Sfx(i > 0 ? "tick" : "bell", i > 0 ? .5f : .8f, i > 0 ? 1f : 1.2f);
+
+            if (i == 0) Flow.Flash(new Color(1f, .86f, .5f), .3f, .35f);
         }
     }
 }

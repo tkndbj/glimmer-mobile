@@ -947,7 +947,7 @@ namespace GlimmerGrove
             bool plain = pending > 0 || drop.Kind == ChestDropKind.None;
 
             var icon = UIKit.Img("M", strip,
-                                 plain ? Art.S("Ui/ic_gift") : RewardArt.Icon(drop.Kind),
+                                 plain ? Art.S("Ui/ic_gift") : RewardArt.Icon(drop.Kind, drop.Item),
                                  Color.white, new Vector2(40f, 40f), new Vector2(0f, .5f),
                                  new Vector2(38f, 0f));
             icon.preserveAspect = true;

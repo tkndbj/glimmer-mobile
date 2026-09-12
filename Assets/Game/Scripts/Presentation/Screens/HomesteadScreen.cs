@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GlimmerGrove.App;
 using GlimmerGrove.Homestead;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
@@ -94,15 +95,6 @@ namespace GlimmerGrove
         public int ArrivingStars { get; set; } = -1;
 
         const float HeaderHeight = 214f;
-
-        /// <summary>
-        /// Size of the ring marking a buildable tile with nothing on it.
-        ///
-        /// Grown from 64 when the floor was reported hard to aim at: the ring is the one thing
-        /// on an empty tile that says <em>here</em>, and at the old size it read as a speck
-        /// between two fences.
-        /// </summary>
-        const float EmptyMark = 84f;
 
         /// <summary>
         /// The top-left pair — the way out and the way to the boards.
@@ -224,7 +216,7 @@ namespace GlimmerGrove
 
             // The ground itself changed, so a bar anchored to a tile is anchored to a fact that
             // no longer holds.
-            CloseEditor();
+            _draft?.Close();
 
             ShowOwned();
             _field.Rebuild();
@@ -263,7 +255,7 @@ namespace GlimmerGrove
             _viewport.offsetMax = new Vector2(0f, -HeaderHeight);
 
             _field = GroveFieldView.Attach(_viewport, HomesteadCatalog.Current.Floor,
-                                           (col, row) => new TileCell(this));
+                                           (col, row) => new GroveTileCell(TakeArrival));
             _field.TileTapped = Tap;
             _field.TileHeld = Hold;
             _field.Hit = Hit;
@@ -271,8 +263,57 @@ namespace GlimmerGrove
             // Tapping the sky puts the editing controls away, exactly as tapping a tile does.
             // The two have to agree: the sky is the largest target on this screen and the one a
             // player aims at when they mean "never mind".
-            _field.TappedNothing = CloseEditor;
+            _field.TappedNothing = () => _draft?.Close();
+
+            // The ghost and its buttons hang off the same node the field does, so they are
+            // inside the safe area and above the floor. They are placed in world space every
+            // frame they move, so being a sibling of the viewport rather than a child of a tile
+            // is what keeps them alive while the field pools cells underneath them.
+            _draft = new GroveDraftView(stage, _field, () => HomesteadCatalog.Current)
+            {
+                Settled = Repaint,
+                Refused = key => Scenery.Toast(Content, Loc.Get(key)),
+            };
+
+            BuildInventoryButton(stage);
             ShowOwned();
+        }
+
+        /// <summary>
+        /// The way into the inventory, in the corner a thumb rests in.
+        ///
+        /// <para>
+        /// <b>It is a button because a tile is not a menu.</b> Opening the inventory by tapping
+        /// the ground meant the one gesture the floor has was answering two questions — "what
+        /// goes here" and "what is here" — and it put a modal in front of the player every time
+        /// they missed a piece. A tap on the floor now means the thing under it, and the
+        /// inventory is somewhere you go.
+        /// </para>
+        /// <para>
+        /// Bottom left rather than bottom right: the right corner is where a right thumb pans
+        /// from, and a panning thumb that catches a modal is the fault that took the nav bar off
+        /// this screen in the first place.
+        /// </para>
+        /// </summary>
+        void BuildInventoryButton(RectTransform stage)
+        {
+            UIKit.TextButton("Inventory", stage, Skins.Alternate, Loc.Get("ui.grove.inventory"), 30,
+                             new Vector2(228f, 92f), new Vector2(0f, 0f),
+                             new Vector2(130f, 78f), OpenInventory);
+        }
+
+        /// <summary>
+        /// Opens the inventory, and turns whatever is chosen into a draft.
+        ///
+        /// The panel does not place anything any more: it hands back a piece and closes, and the
+        /// ghost appears over the middle of the view. That is what makes the inventory a
+        /// catalogue of what the player holds rather than a per-tile picker, and it is why the
+        /// panel no longer needs to know which tile it was opened from.
+        /// </summary>
+        void OpenInventory()
+        {
+            _draft?.Close();
+            Flow.Modal<HomesteadPickerOverlay>(v => v.Chosen = id => _draft?.Begin(id));
         }
 
         /// <summary>
@@ -302,7 +343,7 @@ namespace GlimmerGrove
                 _rise.Skip();
             }
 
-            CloseEditor();
+            _draft?.Close();
 
             _field.SetFloor(floor);
 
@@ -691,22 +732,6 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------ what is drawn
-        /// <summary>
-        /// The piece a stand draws: the best home the player owns on the hall, and whatever
-        /// the stand names everywhere else.
-        ///
-        /// <para>
-        /// Held in one place because two things need the same answer and a disagreement between
-        /// them is invisible: the cell that <em>paints</em> the tile, and the box that decides
-        /// what a finger <em>hit</em>. If those drifted, the player would be picking pieces from
-        /// somewhere other than where the picture puts them.
-        /// </para>
-        /// </summary>
-        static HomesteadPiece PieceOf(HomesteadCatalog catalog, GroveStand stand)
-            => stand.IsHall
-                ? HomesteadLedger.BestDwelling(catalog)
-                : catalog.Find(stand.PieceId);
-
         /// <summary>The stand covering a tile — anchored on it or reaching over it — or an invalid one.</summary>
         static bool StandAt(int col, int row, out GroveStand stand)
             => HomesteadLayout.TryStandAt(HomesteadCatalog.Current, col, row, out stand);
@@ -735,643 +760,78 @@ namespace GlimmerGrove
             var hit = new GroveHit(col, row, 0f, 0f, 0f, 0f);
 
             if (HomesteadLayout.Occupancy(catalog).TryAnchored(col, row, out var stand))
-                hit = GroveTileArt.Hit(PieceOf(catalog, stand), stand);
+                hit = GroveTileArt.Hit(GroveTileArt.PieceOf(catalog, stand), stand);
 
             _hits[key] = hit;
             return hit;
         }
 
-        // --------------------------------------------------------------- editing
-        /// <summary>
-        /// How far above a stand's centre the edit bar floats, before zoom.
-        ///
-        /// Above the piece rather than over it: both controls act on the thing standing there,
-        /// and a bar drawn across it would hide what the player is deciding about — the same
-        /// reason the victory panel's route note is a bubble hanging below its row rather than
-        /// a panel over it.
-        /// </summary>
-        const float BarLift = 176f;
+        // ------------------------------------------------------------- placing
+        //
+        // Everything about putting something down lives in GroveDraftView and GroveDraft, which
+        // is the whole of this rework. What used to be here was a state machine in loose fields
+        // — an _editing flag, a _dragging flag, a ghost, two mark sets, a cached plan and four
+        // coordinates — so "what is lit", "what will be written" and "is the button live" were
+        // three answers kept in step by hand. They are one object now and this screen composes
+        // it rather than being it.
 
-        /// <summary>What a piece is drawn at while it is in the air.</summary>
-        const float GhostAlpha = .78f;
-
-        RectTransform _bar;
-        Image _ghost;
-        MarkSet _origin, _target;
-        int _editCol, _editRow;
-        bool _editing, _dragging;
-        int _dropCol, _dropRow;
-        GroveMovePlan _plan;
-
-        string EditSlot => GroveFloor.TileId(_editCol, _editRow);
+        GroveDraftView _draft;
 
         /// <summary>
-        /// Says that what was asked for does not fit — the one refusal on this screen that has
-        /// to be said out loud, because a picker closing over an unchanged grove teaches that
-        /// the control is broken. Public so the picker, which is a panel over this screen, can
-        /// have the grove say it after the panel has gone.
+        /// Says that what was asked for does not fit. Kept public because the draft view raises
+        /// its refusals as loc keys rather than drawing them: a toast belongs to the screen that
+        /// owns the safe area, not to a control floating over a floor.
         /// </summary>
         public void SayNoRoom() => Scenery.Toast(Content, Loc.Get("ui.grove.no_room"));
 
-        /// <summary>
-        /// A finger rested on a tile with something on it: offer the two things that can be
-        /// done to it.
-        ///
-        /// <para>
-        /// <b>Why editing is a long press and not a mode.</b> The grove deliberately has no
-        /// edit toggle — a mode changes what every other control on the screen does, on a
-        /// screen whose whole vocabulary is "tap the thing you want to change". A long press is
-        /// the one gesture that can say <em>this one, differently</em> without taking the
-        /// screen over, and it leaves the tap free to go on meaning exactly what it meant.
-        /// </para>
-        /// <para>
-        /// Nothing opens for the hall or for bare ground. The hall is derived from the best home
-        /// the player owns rather than placed (invariant 16), so it can neither be picked up nor
-        /// swapped into, and an empty tile already has a tap that does the useful thing. A tile
-        /// a piece reaches over resolves to that piece, so holding the far end of a bridge
-        /// picks the bridge up.
-        /// </para>
-        /// </summary>
-        void Hold(int col, int row)
-        {
-            if (!StandAt(col, row, out var stand) || stand.IsHall) return;
-
-            _editCol = stand.AnchorCol;
-            _editRow = stand.AnchorRow;
-            _editing = true;
-
-            EnsureBar();
-            EnsureMarks();
-            _bar.gameObject.SetActive(true);
-            PlaceBar();
-            Tween.Pop(_bar, .6f, .26f);
-
-            // The press has already happened by the time this fires, so the player gets no
-            // feedback from the button they did not touch. This is the whole acknowledgement
-            // that the hold worked, and without it a long press feels like a tap that failed.
-            Audio.SfxVaried("tick", .5f);
-        }
-
-        void CloseEditor()
-        {
-            _editing = false;
-            _dragging = false;
-
-            if (_bar) _bar.gameObject.SetActive(false);
-            if (_ghost) _ghost.gameObject.SetActive(false);
-            _target?.Hide();
-            _origin?.Hide();
-        }
-
-        void EnsureBar()
-        {
-            if (_bar != null) return;
-
-            _bar = UIKit.Box("EditBar", Content, new Vector2(356f, 96f),
-                             new Vector2(.5f, .5f), Vector2.zero);
-
-            var move = UIKit.TextButton("Move", _bar, "btn_aqua", Loc.Get("ui.grove.move"), 30,
-                                        new Vector2(168f, 92f), new Vector2(.5f, .5f),
-                                        new Vector2(-90f, 0f), MoveHint);
-
-            var handle = move.gameObject.AddComponent<DragHandle>();
-            handle.Began = BeginMove;
-            handle.Moved = DragMove;
-            handle.Ended = EndMove;
-
-            UIKit.TextButton("Flip", _bar, "btn_violet", Loc.Get("ui.grove.flip"), 30,
-                             new Vector2(168f, 92f), new Vector2(.5f, .5f),
-                             new Vector2(90f, 0f), FlipHere);
-        }
-
-        /// <summary>
-        /// Tapping the move handle rather than dragging it. It is the likeliest first thing
-        /// anybody does with it, and a control that answers a tap with nothing at all is a
-        /// control the player concludes is broken.
-        /// </summary>
-        void MoveHint() => Scenery.Toast(Content, Loc.Get("ui.grove.move_hint"));
-
-        /// <summary>The stand being edited, re-read each time because a repaint may have moved it.</summary>
-        bool EditStand(out GroveStand stand)
-            => HomesteadLayout.Occupancy(HomesteadCatalog.Current).TryAnchored(_editCol, _editRow, out stand)
-            && !stand.IsHall;
-
-        /// <summary>
-        /// Keeps the bar over its stand as the floor is panned and zoomed under it, and takes it
-        /// away when that stand leaves the window.
-        ///
-        /// <para>
-        /// Followed every frame rather than placed once, because the bar is anchored to a tile
-        /// and the tile moves for reasons the bar never hears about. Closing on the way out is
-        /// deliberate: controls pointing at a piece the player can no longer see are controls
-        /// that will be used on the wrong piece. Closed too when the stand is gone — a row
-        /// merged in from another device can take it away under an open bar.
-        /// </para>
-        /// </summary>
-        void PlaceBar()
-        {
-            if (_bar == null || _field == null || _viewport == null) return;
-
-            if (!EditStand(out var stand)) { CloseEditor(); return; }
-
-            var world = _field.TileWorld(stand.CentreCol, stand.CentreRow);
-
-            if (!_viewport.rect.Contains(_viewport.InverseTransformPoint(world)))
-            {
-                CloseEditor();
-                return;
-            }
-
-            _origin.Light(stand.AnchorCol, stand.AnchorRow, stand.Footprint);
-
-            _bar.position = world;
-            _bar.anchoredPosition += new Vector2(0f, BarLift * _field.Zoom);
-        }
-
-        void LateUpdate()
-        {
-            // After the field has applied this frame's pan and zoom, never before it.
-            if (!_editing) return;
-
-            // The origin keeps its light through a drag as well, so the piece in the air can
-            // always be seen to have come from somewhere.
-            if (_dragging)
-            {
-                if (EditStand(out var stand)) _origin.Light(stand.AnchorCol, stand.AnchorRow, stand.Footprint);
-                if (_plan.Ok) _target.Light(_plan.AnchorCol, _plan.AnchorRow, _plan.Footprint);
-            }
-            else PlaceBar();
-        }
-
-        // ------------------------------------------------------------- move drag
-        void BeginMove(PointerEventData e)
-        {
-            if (!_editing) return;
-
-            var catalog = HomesteadCatalog.Current;
-            if (!EditStand(out var stand)) { CloseEditor(); return; }
-
-            var piece = catalog.Find(stand.PieceId);
-            if (!piece.IsValid) { CloseEditor(); return; }
-
-            EnsureGhost();
-
-            ((RectTransform)_ghost.transform).sizeDelta =
-                HomesteadArt.SizeOnFloor(piece, GroveTileArt.PieceScale) * _field.Zoom;
-
-            // Painted through the shared path rather than from a still, because a resident is a
-            // flipbook and has no single sprite — and an Image with no sprite is a white
-            // rectangle, not a blank (invariant 7b). Paint leaves it transparent when the art
-            // has not arrived, which is why the alpha is applied on top rather than assigned.
-            HomesteadArt.Paint(_ghost, piece);
-            _ghost.color = new Color(_ghost.color.r, _ghost.color.g, _ghost.color.b,
-                                     _ghost.color.a * GhostAlpha);
-
-            _ghost.transform.localScale = new Vector3(stand.Flipped ? -1f : 1f, 1f, 1f);
-
-            _ghost.gameObject.SetActive(true);
-            _bar.gameObject.SetActive(false);
-
-            _dragging = true;
-            _plan = default;
-
-            DragMove(e);
-        }
-
-        /// <summary>
-        /// The finger moving with a piece in the air: the ghost follows it, and the ground
-        /// under it says what a drop would do.
-        ///
-        /// <para>
-        /// The answer is <see cref="HomesteadLayout.PlanMove"/>'s, drawn as the footprint lit
-        /// where the piece would land — green for room or a swap, red for a refusal — so the
-        /// drop can do exactly what was shown. A piece two tiles long shows its two tiles,
-        /// which is the first time the floor says out loud how much of it a thing takes.
-        /// </para>
-        /// </summary>
-        void DragMove(PointerEventData e)
-        {
-            if (!_dragging) return;
-
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    Content, e.position, e.pressEventCamera, out var local))
-                ((RectTransform)_ghost.transform).anchoredPosition = local;
-
-            EnsureMarks();
-
-            if (!_field.TryTileAt(e.position, e.pressEventCamera, out _dropCol, out _dropRow))
-            {
-                _plan = default;
-                _target.Hide();
-                return;
-            }
-
-            _plan = HomesteadLayout.PlanMove(HomesteadCatalog.Current, EditSlot, _dropCol, _dropRow);
-
-            if (_plan.Ok) _target.Light(_plan.AnchorCol, _plan.AnchorRow, _plan.Footprint, MarkSet.Room);
-            else if (_plan.Result == GrovePlaceResult.NoRoom)
-                _target.Light(_plan.AnchorCol, _plan.AnchorRow, _plan.Footprint, MarkSet.NoRoom);
-            else _target.Hide();
-        }
-
-        void EndMove(PointerEventData e)
-        {
-            if (!_dragging) return;
-            _dragging = false;
-
-            if (_ghost) _ghost.gameObject.SetActive(false);
-            _target?.Hide();
-
-            var result = _plan.Ok
-                ? HomesteadLayout.Move(HomesteadCatalog.Current, EditSlot, _dropCol, _dropRow)
-                : _plan.Result;
-
-            if (result == GrovePlaceResult.Placed)
-            {
-                // Follow the piece. Somebody who has just moved something is far likelier to
-                // move it again than to be finished with it, and reopening where it landed
-                // makes the second adjustment cost a drag rather than another hold.
-                _editCol = _plan.AnchorCol;
-                _editRow = _plan.AnchorRow;
-
-                Audio.SfxVaried("tick", .62f);
-            }
-            else if (result == GrovePlaceResult.NoRoom) SayNoRoom();
-
-            _plan = default;
-
-            if (!_editing) return;
-            _bar.gameObject.SetActive(true);
-            PlaceBar();
-        }
-
-        void FlipHere()
-        {
-            if (!_editing) return;
-
-            if (HomesteadLayout.Flip(HomesteadCatalog.Current, EditSlot) == GrovePlaceResult.NoRoom)
-                SayNoRoom();
-        }
-
-        void EnsureGhost()
-        {
-            if (_ghost != null) return;
-
-            _ghost = UIKit.Img("Ghost", Content, null, Color.white, new Vector2(140f, 140f),
-                               new Vector2(.5f, .5f), Vector2.zero);
-            _ghost.preserveAspect = true;
-            _ghost.raycastTarget = false;
-            _ghost.gameObject.SetActive(false);
-        }
-
-        /// <summary>
-        /// The two footprint lights: where the piece is, and where it would land.
-        ///
-        /// <para>
-        /// Generated rather than addressed, for <c>Art.Bloom</c>'s reason — they appear under a
-        /// moving finger, which is the worst moment on this screen for a sprite that has not
-        /// arrived. They are parented to the screen rather than to the field so that they are
-        /// drawn over every tile rather than sorted among them: a light under the piece it is
-        /// naming would be hidden by exactly the sprite whose tile is in question.
-        /// </para>
-        /// </summary>
-        void EnsureMarks()
-        {
-            _origin ??= new MarkSet(this, "Origin", Pal.A(Pal.Sun, .50f));
-            _target ??= new MarkSet(this, "Drop", MarkSet.Room);
-        }
-
-        /// <summary>
-        /// A footprint's worth of tile lights, one diamond per tile, pooled.
-        ///
-        /// A single diamond used to name a tile; a piece that stands on four needs four, and a
-        /// light that showed one tile of a house would say the house was smaller than it is —
-        /// which is the misunderstanding footprints exist to end. Kept on the screen rather than
-        /// the field for the reason <see cref="EnsureMarks"/> gives, so each diamond is placed
-        /// in world space every frame from <see cref="Light"/>.
-        /// </summary>
-        sealed class MarkSet
-        {
-            public static readonly Color Room = Pal.A(Pal.Mint, .58f);
-            public static readonly Color NoRoom = new Color(1f, .36f, .30f, .55f);
-
-            readonly HomesteadScreen _screen;
-            readonly string _name;
-            readonly List<Image> _marks = new List<Image>(4);
-            Color _colour;
-
-            public MarkSet(HomesteadScreen screen, string name, Color colour)
-            {
-                _screen = screen;
-                _name = name;
-                _colour = colour;
-            }
-
-            public void Light(int anchorCol, int anchorRow, GroveFootprint footprint)
-                => Light(anchorCol, anchorRow, footprint, _colour);
-
-            public void Light(int anchorCol, int anchorRow, GroveFootprint footprint, Color colour)
-            {
-                var field = _screen._field;
-                if (field == null) return;
-
-                _colour = colour;
-                int wanted = footprint.TileCount;
-
-                while (_marks.Count < wanted) _marks.Add(Make());
-
-                int i = 0;
-                for (int c = 0; c < footprint.Cols; c++)
-                    for (int r = 0; r < footprint.Rows; r++)
-                    {
-                        var mark = _marks[i++];
-                        mark.gameObject.SetActive(true);
-                        mark.color = colour;
-                        ((RectTransform)mark.transform).sizeDelta =
-                            new Vector2(GroveFloor.TileWidth, GroveFloor.TileHeight) * field.Zoom;
-                        mark.transform.position = field.TileWorld(anchorCol + c, anchorRow + r);
-                    }
-
-                for (; i < _marks.Count; i++) _marks[i].gameObject.SetActive(false);
-            }
-
-            public void Hide()
-            {
-                foreach (var mark in _marks) mark.gameObject.SetActive(false);
-            }
-
-            Image Make()
-            {
-                var mark = UIKit.Img(_name, _screen.Content, Art.IsoTile(128), _colour,
-                                     new Vector2(GroveFloor.TileWidth, GroveFloor.TileHeight),
-                                     new Vector2(.5f, .5f), Vector2.zero);
-                mark.raycastTarget = false;
-                mark.gameObject.SetActive(false);
-                return mark;
-            }
-        }
-
-        /// <summary>
-        /// Turns a drag that begins on one control into three callbacks.
-        ///
-        /// <para>
-        /// This is why moving is behind a handle rather than behind a drag on the piece itself.
-        /// Unity routes a drag to the first ancestor of the pressed object that handles one, so
-        /// a handle that takes the drag is also a handle the field never sees — and the floor
-        /// does not pan out from under the thing being moved. A bare drag on a piece would be
-        /// indistinguishable from a pan, on a screen that has to be panned.
-        /// </para>
-        /// </summary>
-        sealed class DragHandle : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
-        {
-            public Action<PointerEventData> Began, Moved, Ended;
-
-            public void OnBeginDrag(PointerEventData e) => Began?.Invoke(e);
-            public void OnDrag(PointerEventData e) => Moved?.Invoke(e);
-            public void OnEndDrag(PointerEventData e) => Ended?.Invoke(e);
-        }
-
-        // ------------------------------------------------------------------ tile
-        /// <summary>
-        /// One tile: the ground, whatever is anchored on it, and the marks that say what it is.
-        ///
-        /// <para>
-        /// Built once and rebound as the camera moves it across the field — see
-        /// <see cref="GroveFieldView"/>. Everything that can differ between tiles is a field
-        /// here rather than a fresh object, because the alternative is building and destroying a
-        /// subtree per tile per pan, which is the cost that made a floor look impossible before
-        /// culling existed.
-        /// </para>
-        /// <para>
-        /// <b>Two nodes, one per layer.</b> The ground lives in the field's ground layer and
-        /// the art in its piece layer, so no tile's skirt can paint over the base of a piece
-        /// behind it — see the field for the report that bought this. A tile a footprint
-        /// reaches over draws its ground and nothing else: the art is the anchor's.
-        /// </para>
-        /// </summary>
-        sealed class TileCell : GroveFieldView.ITileCell
-        {
-            readonly HomesteadScreen _screen;
-            readonly Image _ground, _art, _ring;
-
-            /// <summary>
-            /// Everything each node draws, held one level below it.
-            ///
-            /// <para>
-            /// <b>The split exists so a tile can be moved without moving the tile.</b> The
-            /// nodes' positions are the field's — written by <c>GroveFieldView</c> every time a
-            /// cell is recycled onto new coordinates, and the pick box is derived from the same
-            /// arithmetic. A rise animated on them would therefore be fighting the one transform
-            /// that has to be authoritative, and a cell recycled mid-rise would drag its old
-            /// destination onto its new tile. Animating a child means the offset is purely
-            /// cosmetic and can be abandoned at any moment by writing two zeroes.
-            /// </para>
-            /// </summary>
-            readonly RectTransform _body, _groundBody;
-
-            bool _rising;
-            int _riseCol, _riseRow;
-
-            /// <summary>
-            /// The idle breath under this cell's empty-tile ring, and which tile it belongs to.
-            ///
-            /// <para>
-            /// <b>Held so a redraw can leave it alone.</b> <c>Tween.Breathe</c> restarts: it
-            /// kills the channel, re-reads the transform's scale as its rest point and fades the
-            /// oscillation back in from nothing. Started on every <see cref="Bind"/>, that made
-            /// a repaint of the field visible — every ring on the screen collapsing to rest and
-            /// swelling back together — which is half of what "the tiles reload while I am
-            /// building" was, the other half being the flipbooks (see <c>Flipbook.Ensure</c>).
-            /// The field is repainted by the ledger, the layout, the wallet and the art scope,
-            /// and a sync landing after a placement raises three of those.
-            /// </para>
-            /// <para>
-            /// The tile is part of the state because the phase is a function of the
-            /// coordinates: a cell recycled onto another tile has to start its own breath, or
-            /// the field beats in bands rather than as a field. And the tween is held rather
-            /// than a bare flag, because a flag cannot see a <c>KillChannel</c> raised by
-            /// somebody else — see <see cref="Tw.Running"/>.
-            /// </para>
-            /// </summary>
-            Tw _breath;
-            int _breathCol = -1, _breathRow = -1;
-
-            public RectTransform Ground { get; }
-
-            public RectTransform Root { get; }
-
-            public int Depth { get; private set; }
-
-            public TileCell(HomesteadScreen screen)
-            {
-                _screen = screen;
-
-                Ground = UIKit.Node("Tile", null);
-                Ground.sizeDelta = new Vector2(GroveFloor.TileWidth, GroveFloor.TileHeight);
-
-                _groundBody = UIKit.Node("B", Ground);
-
-                _ground = UIKit.Img("G", _groundBody, null, Color.white,
-                                    new Vector2(GroveFloor.TileWidth, GroveFloor.TileHeight),
-                                    new Vector2(.5f, .5f), Vector2.zero);
-                _ground.raycastTarget = false;
-                _ground.preserveAspect = false;
-
-                Root = UIKit.Node("Stand", null);
-                Root.sizeDelta = new Vector2(GroveFloor.TileWidth, GroveFloor.TileHeight);
-
-                _body = UIKit.Node("B", Root);
-
-                // A ring rather than a fill, and only on tiles you can build on: an empty tile
-                // has to look like an invitation rather than like a hole, and the whole floor is
-                // empty on the first visit.
-                _ring = UIKit.Img("R", _body, Art.Ring(96, 7f), Pal.A(Pal.Cream, .30f),
-                                  new Vector2(EmptyMark, EmptyMark * .5f), new Vector2(.5f, .5f),
-                                  Vector2.zero);
-                _ring.raycastTarget = false;
-
-                _art = UIKit.Img("A", _body, null, Color.white, new Vector2(140f, 140f),
-                                 new Vector2(.5f, .5f), Vector2.zero);
-                _art.preserveAspect = true;
-                _art.raycastTarget = false;
-            }
-
-            public void Bind(int col, int row)
-            {
-                // A cell recycled onto another tile while it was still rising has to let go of
-                // the rise, or the new tile inherits the old one's offset for the rest of it.
-                if (_rising && (col != _riseCol || row != _riseRow)) EndRise();
-
-                var catalog = HomesteadCatalog.Current;
-                var floor = catalog.Floor;
-
-                GroveTileArt.LayGround(_ground, floor);
-
-                // What this tile shows is whatever is anchored on it — the best home the player
-                // owns on the hall, whatever they placed, or the starter companion on the one
-                // tile that has one and has never been touched (see HomesteadLayout.Shown). A
-                // tile another stand reaches over shows the ground and nothing else.
-                var index = HomesteadLayout.Occupancy(catalog);
-                bool anchored = index.TryAnchored(col, row, out var stand);
-                bool covered = !anchored && index.IsCovered(col, row);
-
-                var piece = anchored ? PieceOf(catalog, stand) : default;
-                bool drawn = anchored && piece.IsValid;
-
-                Depth = anchored ? stand.Depth : GroveFootprint.Single.Depth(col, row);
-
-                _art.gameObject.SetActive(drawn);
-                if (drawn) GroveTileArt.LayPiece(_art, piece, stand);
-
-                bool empty = !anchored && !covered;
-                _ring.gameObject.SetActive(empty);
-
-                if (!empty) StopBreathing();
-                else if (_breath == null || !_breath.Running
-                         || col != _breathCol || row != _breathRow)
-                {
-                    // Reset before restarting, and that is not tidiness. Tween.Breathe captures
-                    // the transform's current scale as the value it oscillates about, and killing
-                    // one leaves the transform wherever in the cycle it stopped — so a recycled
-                    // cell would take a mid-breath scale as its new rest point and the rings
-                    // would drift larger every time the player panned across them.
-                    _ring.transform.localScale = Vector3.one;
-
-                    // Phased off the tile's own coordinates so the field breathes as a field
-                    // rather than pulsing in unison, which reads as a fault rather than as life.
-                    _breath = Tween.Breathe(_ring.transform, .10f, 2.4f,
-                                            (col * .37f + row * .61f) % 1f);
-                    _breathCol = col;
-                    _breathRow = row;
-                }
-
-                // Ground the player has just paid for arrives out of the floor rather than
-                // switching on. Asked last, so the tile is fully drawn before it starts moving.
-                if (_screen.TakeArrival(col, row)) BeginRise(col, row);
-            }
-
-            /// <summary>
-            /// One tile of new ground travelling up into its place, overshooting a little as it
-            /// lands. Both nodes travel together, so what stands on the tile rises with it.
-            ///
-            /// <para>
-            /// On a channel so a second rise replaces the first rather than running beside it,
-            /// and owned by the body so it dies with the cell. The overshoot is <c>OutBack</c>
-            /// read unclamped — clamping it would flatten precisely the part of the motion that
-            /// makes ground feel like it has weight.
-            /// </para>
-            /// </summary>
-            void BeginRise(int col, int row)
-            {
-                _rising = true;
-                _riseCol = col;
-                _riseRow = row;
-
-                Tween.Run(GroveGrowth.RiseSeconds, Ease.OutBack, t =>
-                {
-                    var at = new Vector2(0f, Mathf.LerpUnclamped(-GroveRise.Lift, 0f, t));
-                    var scale = Vector3.one * Mathf.LerpUnclamped(GroveRise.RiseFrom, 1f, t);
-
-                    if (_body) { _body.anchoredPosition = at; _body.localScale = scale; }
-                    if (_groundBody) { _groundBody.anchoredPosition = at; _groundBody.localScale = scale; }
-                }, _body, "rise").OnDone(EndRise);
-            }
-
-            /// <summary>
-            /// Puts the ring's breath away when the tile stops being empty, and puts the scale
-            /// back. Killing the channel is what runs <c>OnAbandon</c>, so a tile that gains a
-            /// piece mid-breath does not leave a ring frozen at some fraction of its size for
-            /// whatever this cell is recycled onto next.
-            /// </summary>
-            void StopBreathing()
-            {
-                if (_breath == null) return;
-
-                _breath = null;
-                _breathCol = _breathRow = -1;
-
-                if (!_ring) return;
-
-                Tween.KillChannel(_ring.transform, "breathe");
-                _ring.transform.localScale = Vector3.one;
-            }
-
-            void EndRise()
-            {
-                _rising = false;
-                Tween.KillChannel(_body, "rise");
-
-                if (_body) { _body.anchoredPosition = Vector2.zero; _body.localScale = Vector3.one; }
-                if (_groundBody) { _groundBody.anchoredPosition = Vector2.zero; _groundBody.localScale = Vector3.one; }
-            }
-        }
 
         // ------------------------------------------------------------------- tap
         void Tap(int col, int row)
         {
-            // A tap anywhere puts the editing controls away, and does nothing else. One tap to
-            // dismiss is what every panel here does, and answering the dismissing tap with a
-            // picker as well would be two responses to one gesture — the mistake the hub's "+"
-            // buttons made before AdOfferOverlay became one destination.
-            if (_editing) { CloseEditor(); return; }
+            // A tap while something is being placed puts it away and does nothing else. One
+            // tap to dismiss is what every panel here does, and answering the dismissing tap by
+            // lifting something else as well would be two responses to one gesture.
+            if (_draft != null && _draft.Active) { _draft.Close(); return; }
 
             // No land branch: ground the player does not own is not drawn, so there is nothing
             // here to tap. Expanding is done in the shop, where the other things they buy are.
 
-            // Whatever covers the tile is what was tapped: a tap on the far tile of a bridge is
-            // a tap on the bridge, and the picker opens on its anchor so choosing "take it
-            // away" takes the whole thing away.
-            if (StandAt(col, row, out var stand))
-            {
-                // A home goes to the home panel in every state — the question at a house is
-                // never "shall I buy this one item", it is "where am I on the ladder".
-                if (stand.IsHall) { Flow.Modal<HomesteadHomeOverlay>(); return; }
+            if (!StandAt(col, row, out var stand)) return;      // bare ground; the button is the way in
 
-                col = stand.AnchorCol;
-                row = stand.AnchorRow;
-            }
+            // A home goes to the home panel in every state — the question at a house is
+            // almost always "where am I on the ladder" rather than "shall I move this", and a
+            // tap is the gesture that asks it. Moving one is a **hold** (see `Hold`), which is
+            // the split every other tile makes too: a tap asks about a thing, a press picks it
+            // up. Reaching the ladder would otherwise cost a trip through a menu on the one
+            // object a player looks at most.
+            if (stand.IsHall) { Flow.Modal<HomesteadHomeOverlay>(); return; }
 
-            Flow.Modal<HomesteadPickerOverlay>(v => v.Slot = new HomesteadSlot(col, row));
+            // Whatever covers the tile is what was tapped, so touching the far end of a bridge
+            // lifts the bridge. The draft resolves that itself, from the stand.
+            _draft?.Lift(col, row);
+        }
+
+        /// <summary>
+        /// A finger resting on a tile lifts whatever is standing there, the hall included.
+        ///
+        /// <para>
+        /// <b>It is the same verb on every tile rather than a gesture the hall alone answers.</b>
+        /// A control that works in one place and nowhere else is one nobody finds twice, and the
+        /// hold is already how the rest of this floor behaves — a piece a tap lifts is a piece a
+        /// press lifts, so there is nothing new to learn and the hall is simply no longer the
+        /// exception. What it buys is the home: a tap there opens the ladder (see
+        /// <see cref="Tap"/>), so without this there would be no gesture left that could move a
+        /// house.
+        /// </para>
+        /// <para>
+        /// The hold cancels the tap that press would have produced (`GroveFieldView.Hold`), so
+        /// a player who holds the hall gets the draft and never the panel behind it.
+        /// </para>
+        /// </summary>
+        void Hold(int col, int row)
+        {
+            if (_draft != null && _draft.Active) return;   // already holding something
+            _draft?.Lift(col, row);
         }
 
         // ------------------------------------------------------------------ tips
@@ -1446,7 +906,7 @@ namespace GlimmerGrove
 
             if (index >= queue.Count) { _teaching = false; return; }
 
-            CloseEditor();
+            _draft?.Close();
 
             var mechanic = queue[index];
 

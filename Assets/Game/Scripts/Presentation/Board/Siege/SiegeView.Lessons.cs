@@ -56,6 +56,46 @@ namespace GlimmerGrove
         public Sprite CogArt => Piece("gem_cog");
 
         /// <summary>
+        /// The body of a raider of this kind on the hill, for a tip to ring, or null.
+        ///
+        /// <para>
+        /// <b>Asked at the moment the tip goes up rather than remembered</b>, because the two are
+        /// a beat apart and the raider may already be dead — a lesson is resolved through
+        /// <c>Lessons</c> every time one is offered, so a null here is a tip that teaches without
+        /// pointing rather than a ring drawn round bare hill.
+        /// </para>
+        /// <para>
+        /// <b>The one furthest down, not the one that arrived.</b> Two bombers is one lesson, and
+        /// ringing whichever is nearest the line is the only version that both points at a live
+        /// body and points at the one the player is about to have to deal with.
+        /// </para>
+        /// </summary>
+        public RectTransform Walking(SiegeKind kind)
+        {
+            if (_board == null) return null;
+
+            RectTransform found = null;
+            float furthest = -1f;
+
+            var raiders = _board.Raiders;
+
+            for (int i = 0; i < raiders.Count; i++)
+            {
+                var raider = raiders[i];
+                if (!raider.Alive || raider.Kind != kind || !raider.OnTheHill) continue;
+                if (raider.March <= furthest) continue;
+
+                var mob = MobOf(raider.Id);
+                if (mob == null || mob.Node == null) continue;
+
+                furthest = raider.March;
+                found = mob.Node;
+            }
+
+            return found;
+        }
+
+        /// <summary>
         /// Something for the cog lesson to ring, and it is the <em>line</em> rather than a cell.
         ///
         /// <para>

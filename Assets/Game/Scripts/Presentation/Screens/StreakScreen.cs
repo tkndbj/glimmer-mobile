@@ -646,7 +646,7 @@ namespace GlimmerGrove
 
             // Never tinted: every reward glyph carries its own colour now that the boost has
             // a real one of its own. See RewardArt.
-            var icon = UIKit.Img("I", tile, RewardArt.Icon(drop.Kind),
+            var icon = UIKit.Img("I", tile, RewardArt.Icon(drop.Kind, drop.Item),
                                  new Color(1f, 1f, 1f, bright ? 1f : .82f),
                                  new Vector2(92f, 92f), new Vector2(.5f, .5f), new Vector2(0f, lift - 4f));
             icon.preserveAspect = true;
@@ -754,7 +754,7 @@ namespace GlimmerGrove
                 t.Aura = null;
             }
 
-            var tint = t.Drop.IsValid ? RewardArt.Tint(t.Drop.Kind) : Pal.Gold;
+            var tint = t.Drop.IsValid ? RewardArt.Tint(t.Drop.Kind, t.Drop.Item) : Pal.Gold;
             Burst.Sparks(t.Root, Vector2.zero, tint, 22, 380f, 30f, .72f);
             Flow.Flash(Pal.A(tint, 1f), .10f, .34f);
 
@@ -828,7 +828,7 @@ namespace GlimmerGrove
             if (!t.Drop.IsValid) return;
 
             var line = UIKit.Titled("Won", Content,
-                                    RewardArt.Amount(t.Drop) + " " + RewardArt.Name(t.Drop.Kind),
+                                    RewardArt.Amount(t.Drop) + " " + RewardArt.Name(t.Drop.Kind, t.Drop.Item),
                                     46, Pal.Cream, TextAnchor.MiddleCenter,
                                     new Vector2(560f, 64f), new Vector2(.5f, .5f), at + new Vector2(0f, 40f),
                                     5f, 5f);
@@ -970,7 +970,7 @@ namespace GlimmerGrove
             _state.color = _atRisk ? new Color(1f, .62f, .50f) : Pal.Cream;
 
             string beyond = _ladder.Rung(_rungs + 1).AsDrop() is var repeat && repeat.IsValid
-                ? Loc.Format("ui.streak.beyond", RewardArt.Amount(repeat) + " " + RewardArt.Name(repeat.Kind))
+                ? Loc.Format("ui.streak.beyond", RewardArt.Amount(repeat) + " " + RewardArt.Name(repeat.Kind, repeat.Item))
                 : Loc.Get("ui.streak.beyond_plain");
 
             UIKit.Shrinkable(

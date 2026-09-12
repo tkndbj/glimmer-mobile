@@ -494,7 +494,8 @@ namespace GlimmerGrove.Tests
         /// the build failed over two keys nobody wanted. In the same list <c>Mechanic.SiegeShield</c>
         /// was live, shown by <c>SiegeScreen.Lessons</c>, and had never been added — so nothing
         /// proved it had strings at all, which is the exact failure <c>All</c> exists to prevent and
-        /// which read as fine only because somebody happened to write them.
+        /// which read as fine only because somebody happened to write them. Both have since been
+        /// withdrawn; they are named here for how they failed rather than for what they taught.
         /// </para>
         /// <para>
         /// Reflection over the declared fields rather than a third hand-kept list, because a third

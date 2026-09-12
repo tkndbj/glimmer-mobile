@@ -96,13 +96,56 @@ CHAPTERS = REPO / "Assets" / "StreamingAssets" / "Content" / "chapters"
 #: Kept in step with the screen by hand.
 CANVAS = (1080, 1920)
 
-#: `UtilityBar.Height`. The bar is a shelf that meets the board's plate rather than a strip
-#: floating under it, so the bottom inset is the bar and nothing else.
-BAR_HEIGHT = 228
-INSET = (0, BAR_HEIGHT, 0, 300)
+#: What the system has taken at the foot of the display, in canvas units. Nought here, because
+#: `CANVAS` above is a 16:9 sheet and no such display has a home indicator.
+#:
+#: **`--phone` is what makes this tool able to see the fault it was blind to.** A gap under the
+#: action bar was reported from an iPhone and could not be reproduced in any picture this file
+#: drew, for the plain reason that it drew a shape no iPhone has: 16:9, and no inset anywhere. The
+#: run screens give up the *top* inset deliberately (`RunScreen.SafeEdges`), so the top needs
+#: nothing here; the foot is the half that decides where the shelf sits.
+SAFE_BOTTOM = 0
+
+#: A tall phone with a home indicator: 19.5:9 at the canvas's own width, and iOS's 34pt strip at
+#: the foot of it. `--phone` swaps these in.
+PHONE_CANVAS = (1080, 2340)
+PHONE_SAFE_BOTTOM = 94
+
+#: `UtilityBar.Shelf` and `UtilityBar.MostFoot`. The bar is a shelf that meets the board's plate
+#: rather than a strip floating under it, so the bottom inset is the bar and nothing else - but
+#: the bar's rect runs to the bottom of the *display* while the board's host is laid out inside
+#: the safe layer, which is `UtilityBar.Room`'s whole reason for existing.
+BAR_SHELF, BAR_MOST_FOOT = 228, 24
+
+
+def bar_foot():
+    """`UtilityBar.Foot`: how far the cells stand above the bottom of the display."""
+    return min(SAFE_BOTTOM, BAR_MOST_FOOT)
+
+
+def bar_height():
+    """`UtilityBar.Height`: the whole shelf, measured from the bottom of the display."""
+    return BAR_SHELF + bar_foot()
+
+
+def inset():
+    """`SiegeScreen.HostInset`, in `ModeScreen`'s own order - (left, bottom, right, top).
+
+    <p>The screen's own number is `UtilityBar.Room` - what a board laid out *inside* the safe
+    layer has to leave - and this file has no safe layer, so what it wants is that measured from
+    the display instead, which is the bar's whole height. Written as the sum rather than as the
+    constant so the two halves are visible: on a display with nothing in the way they are the
+    same number, which is exactly why the gap was invisible here for as long as it was.</p>
+    """
+    return (0, SAFE_BOTTOM + max(0, bar_height() - SAFE_BOTTOM), 0, 236)
 
 #: `UtilityBar`'s own numbers.
 SLOTS, SLOT, BADGE, ICON = 5, 184, 60, 136
+#: What an empty cell draws instead - `UtilityBar.EmptyIconSize`, `EmptyIconLift` and the
+#: caption band under it. Mirrored here because whether the picture and the words clear each
+#: other inside the slot's own well is the one question about them a number cannot answer.
+EMPTY_ICON, EMPTY_LIFT = 88, 30
+HINT_W, HINT_H, HINT_Y = 156, 48, -45
 UTILITY_ART = REPO / "Assets" / "Game" / "Art" / "Ui" / "Utility"
 #: In `order`, as `progression.json` authors it, with the seconds each one cools for. The
 #: cooldown is here because it is 228 points of screen doing something a number cannot
@@ -114,7 +157,12 @@ COOLDOWNS = {"firepot": 10, "mending": 15, "surge": 20, "stormcall": 30}
 #: `SiegeView`'s own numbers. The field is laid out to the *width* and the hill and the line
 #: then share what is left in the proportion below - see `SiegeView.Fit` and `MaxGemBand`.
 MARGIN = 18
-HILL_BAND, LINE_BAND, MAX_GEM_BAND = 0.44, 0.16, 0.52
+HILL_BAND, LINE_BAND, MAX_GEM_BAND = 0.54, 0.16, 0.52
+
+#: `SiegeView.LineFloor`: the least the ward line may be, in cells. What stands on it is
+#: sized off the cell, so a band that is only a share of what the field leaves can be
+#: squeezed under the turrets on a short display.
+LINE_FLOOR = 1.5
 GEM_INSET = 0.84
 LANES = 5
 
@@ -130,10 +178,24 @@ EMBER = (255, 107, 87)
 PLATE = (14, 27, 37)
 BACK = (9, 14, 20)
 
-#: `SiegeView.Tints` - Pal.Poppy, Pal.Mint, Pal.Azure, Pal.Sun.
-TINTS = [(242, 64, 79), (123, 216, 106), (79, 193, 255), (255, 201, 60)]
+#: `SiegeView.Tints` - Pal.Poppy, Pal.Mint, Pal.Azure, Pal.Amber.
+TINTS = [(242, 64, 79), (123, 216, 106), (79, 193, 255), (255, 138, 43)]
 
 GEM_ART = {"r": "gem_r", "g": "gem_g", "b": "gem_b", "y": "gem_y", "*": "gem_cog"}
+
+#: `SiegeLayout.Bomb` - what a bomber drops. Drawn as the firepot the player already owns, which
+#: is what the view draws it as: tapping it throws exactly what a firepot throws, so a second
+#: picture would be a second name for one thing.
+BOMB_ART = "firepot"
+
+
+def utility(name):
+    """A picture out of the action bar's own folder, which is where the firepot lives."""
+    from PIL import Image as _I
+    path = ART.parent / "Ui" / "Utility" / (name + ".png")
+    if not path.exists():
+        raise SystemExit("missing %s - run: python Tools/make_utility_art.py --write" % path.name)
+    return _I.open(path).convert("RGBA")
 
 #: Which four turrets the render stands on the line.
 #:
@@ -141,7 +203,7 @@ GEM_ART = {"r": "gem_r", "g": "gem_g", "b": "gem_b", "y": "gem_y", "*": "gem_cog
 #: is for that no number can answer is whether a line of four *chosen* turrets reads as a line -
 #: four silhouettes side by side at the size a phone draws them, each in its own colour, each on
 #: its own rank. `--line` swaps them.
-LINE = ["bolt", "mortar", "lance", "beacon"]
+LINE = ["bolt", "rime", "mortar", "harpoon"]   # shelf rungs 1, 5, 9 and 17
 
 #: `SiegeView.WardArt` - the turret the player stood on this colour, baked in that colour.
 #:
@@ -160,7 +222,39 @@ def ward_art(model, colour):
 #: used to be read off the ability, and that was honest only while the starter was the only model
 #: without one. Never "the free one" - that is invariant 16j's trap, and it is wrong today anyway,
 #: since the turret with the elemental set is one somebody pays credits for.
-ELEMENTAL = "rime"
+ELEMENTAL = "breaker"
+
+
+#: `SiegeView.BodyWide` / `.BodyTall` and `.BarrelGap` - how wide a turret is drawn and how far
+#: from its middle a twin hull carries its barrels, as a fraction of its own picture.
+BODY_WIDE, BODY_TALL = 1.72, 2.15
+BARREL_GAP = 0.097
+APART_ON_ARRIVAL = 0.8
+
+#: `SiegeView.Barrels` - how many bolts leave a turret, which is a fact about the **hull** and so
+#: about the shelf rung rather than about the id (the art tool's rule is that the hull *is* the
+#: rung). Mirrored by shelf position, so it survives the shelf being re-rung the way the game's
+#: own copy does.
+TWIN_RUNGS = (11, 14, 15, 17)
+
+
+def shelf():
+    """Which rung each turret stands on, read from `progression.json`.
+
+    Read rather than typed, because the whole point of keying barrels on the rung is that the
+    shelf can be re-rung - so a list here would be the copy that goes stale.
+    """
+    if not hasattr(shelf, "_rungs"):
+        path = REPO / "Assets" / "StreamingAssets" / "Content" / "progression.json"
+        models = json.loads(path.read_text(encoding="utf-8"))["wards"]["models"]
+        shelf._rungs = {m["id"]: int(m.get("order") or 0) for m in models}
+
+    return shelf._rungs
+
+
+def barrels(model_id):
+    """How many barrels the turret standing here is drawn with."""
+    return 2 if shelf().get(model_id, 0) in TWIN_RUNGS else 1
 
 
 def shot_key(kind, model, colour):
@@ -185,8 +279,73 @@ RANK_TINTS = [(158, 173, 189), (217, 140, 82), (219, 227, 240), (255, 204, 77), 
 #: colour at run time, which `Image.color` can only do by darkening. The colour is baked now
 #: (`make_siege_art.RAIDER_SET`), so this draws the sprite as it is - which is also what makes this
 #: render able to say whether the bake is any good.
+#: Where a raider's shadow sits and how big it is, and how much of its frame a body fills -
+#: `SiegeView.ShadowDrop`, `ShadowWide`, `ShadowTall`, `BodyLift` and `BodyFill`, mirrored.
+#:
+#: <b>This picture drew no shadow at all until a player reported the cast floating</b>, which is
+#: the whole reason it is here: the one instrument this mode has for anything a number cannot see
+#: was blind to the single widget that says a thing is standing on the ground. A render that draws
+#: less than the screen cannot report what the screen gets wrong.
+SHADOW_DROP, SHADOW_WIDE, SHADOW_TALL, BODY_LIFT = 0.21, 0.78, 0.37, 0.04
+
+#: The same three for a body that *stands* on the ground rather than lying on it -
+#: `SiegeView.StandingDrop` and its neighbours, mirrored. The numbers above are an insect's,
+#: whose picture is its own footprint; a baked humanoid has its feet at the bottom edge of the
+#: frame, so its shadow goes most of a half-height below the middle or it is drawn inside the
+#: knees. **This picture has to know which cast it is drawing**, or it draws the fault it exists
+#: to catch (invariant 44d): a mirror that under-draws sends you off to fix what was never broken.
+STANDING_DROP, STANDING_WIDE, STANDING_TALL, STANDING_ALPHA = 0.44, 0.86, 0.26, 0.62
+
+
+def body_fill(boss):
+    return 0.72 if boss else 0.94
+
+
+#: The alpha and falloff of the sprite the view puts under a raider - `SiegeView.ShadowInk`
+#: and `ShadowFalloff`, mirrored.
+#:
+#: <b>Mirrored as the formula rather than approximated with a blurred ellipse</b>, which is the
+#: difference between an instrument and a decoration: the power decides how much of the rect is
+#: actually dark, so a blurred ellipse stood in for it draws a shadow of a quite different size and
+#: weight - and this picture's whole job is saying whether that blob is the right size, in the
+#: right place, and solid enough to ground the thing above it.
+SHADOW_ALPHA, SHADOW_POWER = 0.55, 0.25
+
+
+def shadow(sheet, cx, cy, wide, tall, boss=False, upright=False):
+    """The soft dark blob under a raider, drawn where `SiegeView.Hatch` puts it."""
+    body = tall * body_fill(boss)
+    drop = STANDING_DROP if upright else SHADOW_DROP
+    across = STANDING_WIDE if upright else SHADOW_WIDE
+    deep = STANDING_TALL if upright else SHADOW_TALL
+    alpha = STANDING_ALPHA if upright else SHADOW_ALPHA
+    w, h = max(2, int(wide * across)), max(2, int(body * deep))
+
+    ys, xs = [(i + 0.5) / h * 2 - 1 for i in range(h)], [(i + 0.5) / w * 2 - 1 for i in range(w)]
+    blob = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    px = blob.load()
+    for y, dy in enumerate(ys):
+        for x, dx in enumerate(xs):
+            d = math.sqrt(dx * dx + dy * dy)
+            if d >= 1.0:
+                continue
+            px[x, y] = (0, 0, 0, int(255 * alpha * (1.0 - d) ** SHADOW_POWER))
+
+    sheet.alpha_composite(blob, (int(cx - w / 2),
+                                 int(cy - h / 2 - BODY_LIFT * tall + body * drop)))
+
+
+#: Which cast is being drawn: the insects, or the one baked out of 3D (`SiegeCastBake`).
+#:
+#: **By track, mirroring `SiegeView.CastSet`** — the authored chapter sends insects and the
+#: Infinite lane sends the baked cast, so `--wave` draws what that lane really draws. Set by
+#: `main`; a board drawn without one is the authored chapter's.
+CAST = ""
+
+
 def skin(kind, colour):
-    return "%s_%s" % (kind, siege.LETTERS[colour])
+    return "%s%s_%s" % (CAST, kind if not CAST else kind[0].upper() + kind[1:],
+                        siege.LETTERS[colour])
 
 
 #: What a weaver and a thief leave on the field. Drawn rather than cut (invariant 32b, from the
@@ -481,7 +640,10 @@ def warlord(sheet, draw_on, kind, colour, wards, span, cell, hill_top, hill_foot
     # This picture is of a boss in place, so the idle is the honest one to draw; `--warlord walk`
     # is what looks at the reel that was missing for a whole session.
     stem = look["stem"]
-    body = reel(stem + ("_cast" if casting == "cast" else "_walk" if casting == "walk" else ""))
+    # **Two reels rather than three**: every body in this cast is a top-down insect whose legs and
+    # wings cycle in place, so standing and walking are one picture and only the throw is its own
+    # (see `SiegeView.Mob.Idle`).
+    body = reel(stem + ("_cast" if casting == "cast" else ""))
     if body is None:
         return
 
@@ -871,8 +1033,28 @@ def put(sheet, im, cx, cy, w, h):
 
 
 def stretch(sheet, im, cx, cy, w, h):
-    """Draws a sprite stretched to w x h, which is what the view does to the hill and the wall."""
+    """Draws a sprite stretched to w x h, which is what the view does to the wall."""
     sheet.alpha_composite(im.resize((max(1, int(w)), max(1, int(h))), Image.LANCZOS),
+                          (int(cx - w / 2), int(cy - h / 2)))
+
+
+def envelope(sheet, im, cx, cy, w, h):
+    """`AspectRatioFitter.EnvelopeParent` inside a `RectMask2D` - scaled uniformly to cover the
+    band, centred, and cut at its edges.
+
+    <b>This mirror drew the hill stretched for as long as the game did, which is the whole
+    argument for keeping the two in step.</b> `render_siege.py` exists to catch what no numeric
+    gate can see, and a ground squashed sideways by 1.42x on the shape most players hold is
+    exactly that - but the tool reproduced the squash faithfully, so every picture it drew agreed
+    with the game and looked composed. A mirror vouches for a bug as readily as for a feature
+    (44d); it can only ever say the two *agree*.
+    """
+    w, h = max(1, int(w)), max(1, int(h))
+    scale = max(w / im.width, h / im.height)
+    big = im.resize((max(1, round(im.width * scale)), max(1, round(im.height * scale))),
+                    Image.LANCZOS)
+    sheet.alpha_composite(big.crop(((big.width - w) // 2, (big.height - h) // 2,
+                                   (big.width - w) // 2 + w, (big.height - h) // 2 + h)),
                           (int(cx - w / 2), int(cy - h / 2)))
 
 
@@ -922,11 +1104,11 @@ def ground(rung):
 
 
 def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, line=None,
-         burn=None, storm=0):
+         burn=None, storm=0, bombs=None):
     lay = layout_of(level)
     grid = lay.grid
 
-    left, bottom, right, top = INSET
+    left, bottom, right, top = inset()
     host = (CANVAS[0] - left - right, CANVAS[1] - top - bottom)
 
     cell = min((host[0] - MARGIN * 2) / grid.w,
@@ -937,6 +1119,11 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
     rest = 1.0 - gem_band
     hill_band = rest * (HILL_BAND / (HILL_BAND + LINE_BAND))
     line_band = rest - hill_band
+
+    floor = min(rest, LINE_FLOOR * cell / span[1])
+    if line_band < floor:
+        line_band = floor
+        hill_band = rest - line_band
 
     hill_top = span[1] * 0.5 - cell * 0.35
     hill_foot = span[1] * (0.5 - hill_band)
@@ -962,7 +1149,9 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
     # ------------------------------------------------------------------ the hill
     h = hill_top - hill_foot + cell * 0.35
     cx, cy = at(0, (hill_top + hill_foot) / 2)
-    stretch(sheet, sprite(ground(rung)), cx, cy, span[0], h + cell * 0.5)
+    # `SiegeView.PlateWide` - the hill and the rampart run to the plate's edge, not the
+    # field's, which is what the margin either side of them used to be.
+    envelope(sheet, sprite(ground(rung)), cx, cy, span[0] + MARGIN * 2, h + cell * 0.5)
 
     # ------------------------------------------------------------------ the raiders
     # A boss is drawn on its own below, at its own size and in its own place, so what walks the
@@ -992,7 +1181,8 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         # check it.
         body = reel(skin("bulwark" if bulwark else "brute" if brute else "mon", colour))
         wide = tall if body is None else tall * body.width / body.height
-        put(sheet, body, cx, cy, wide, tall)
+        shadow(sheet, cx, cy, wide, tall, upright=CAST == "kay")
+        put(sheet, body, cx, cy - BODY_LIFT * tall, wide, tall)
 
         # The gem over its head, which is the third of the three things that say its colour.
         cx, cy = at(lx - tall * 0.46, ly + tall * 0.58)
@@ -1010,9 +1200,9 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
                                   else (232, 97, 90, 255))
 
     # ------------------------------------------------------------------ the ward line
-    band = span[1] * LINE_BAND
+    band = span[1] * line_band
     cx, cy = at(0, hill_foot - band / 2)
-    stretch(sheet, sprite("rampart"), cx, cy, span[0], band * 1.02)
+    stretch(sheet, sprite("rampart"), cx, cy, span[0] + MARGIN * 2, band * 1.02)
 
     n = len(lay.wards)
     for i, ward in enumerate(lay.wards):
@@ -1093,21 +1283,40 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
             # picture answers.
             stood_here = (line or LINE)[i % len(line or LINE)]
 
-            mx, my = at(wx, line_y + cell * 1.0)
+            cx, cy = at(wx, line_y + cell * 1.0)
             tx, ty = mob[i % len(mob)]
-
-            dx, dy = tx - mx, ty - my
-            far = math.hypot(dx, dy) or 1.0
-            ux, uy = dx / far, dy / far
 
             # A different beat per ward, so one picture shows the whole event rather than four
             # copies of one instant.
             along = (0.30, 0.55, 0.78, 0.42)[i % 4]
 
-            aimed(sheet, loudest(shot_key("muzzle", stood_here, ward)), mx, my, cell * 2.7,
-                  ux, uy, MUZZLE_AT)
-            aimed(sheet, blast(shot_key("shot", stood_here, ward), 6),
-                  mx + dx * along, my + dy * along, cell * 1.0, ux, uy, HEAD_AT)
+            # **A twin-barrelled turret throws one bolt per barrel** (`SiegeView.Barrels`), which
+            # is drawing and not damage: the impact is drawn once, because the board fired once.
+            # Whether two converging comets read as one shot or as two is a question only this
+            # picture answers.
+            count = barrels(stood_here)
+            reach = cell * BODY_WIDE * BARREL_GAP if count > 1 else 0.0
+
+            for b in range(count):
+                step = (b * 2 - (count - 1)) * reach if count > 1 else 0.0
+                mx, my = cx + step, cy
+
+                # `SiegeView.ApartOnArrival` - each bolt lands *beside* the raider rather than on
+                # it, so the pair stays parallel instead of converging into one comet.
+                lx, ly = tx + step * APART_ON_ARRIVAL, ty
+
+                dx, dy = lx - mx, ly - my
+                far = math.hypot(dx, dy) or 1.0
+                ux, uy = dx / far, dy / far
+
+                aimed(sheet, loudest(shot_key("muzzle", stood_here, ward)), mx, my,
+                      cell * 2.7 * (0.70 if count > 1 else 1.0), ux, uy, MUZZLE_AT)
+                aimed(sheet, blast(shot_key("shot", stood_here, ward), 6),
+                      mx + dx * along, my + dy * along, cell * 1.0, ux, uy, HEAD_AT)
+
+            dx, dy = tx - cx, ty - cy
+            far = math.hypot(dx, dy) or 1.0
+            ux, uy = dx / far, dy / far
             aimed(sheet, loudest(shot_key("hit", stood_here, ward)), tx, ty, cell * 3.2, ux, uy)
 
             # The tally floating off it. Two of the four are drawn as doubles, because the
@@ -1138,6 +1347,22 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         # that survives being forty pixels wide (`SiegeView.Mint`).
         side = cell * (GEM_INSET * 0.88 if c == "*" else GEM_INSET)
         put(sheet, sprite(GEM_ART[c]), cx, cy, side, side)
+
+    # ------------------------------------------------------------------ the bombs
+    # **What a bomber leaves, standing on the hill.** Whether a bomb reads as a thing to *tap* on
+    # a board where every other input is a drag, and whether it can be picked out of a hill full
+    # of walking monsters at all, are the two questions only a picture answers.
+    for lane, row in (bombs or ()):
+        bx = (lane - (LANES - 1) / 2) * (span[0] / (LANES + 0.6))
+        by = hill_top + (hill_foot - hill_top) * ((row + 0.5) / BLAST_ROWS)
+        cx, cy = at(bx, by)
+
+        glow = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+        ImageDraw.Draw(glow).ellipse([cx - cell, cy - cell, cx + cell, cy + cell],
+                                     fill=(255, 190, 90, 60))
+        sheet.alpha_composite(glow)
+
+        put(sheet, utility(BOMB_ART), cx, cy, cell * 0.92, cell * 0.92)
 
     # ------------------------------------------------------------------ the fuel tubes
     # **Drawn after the field, because the view draws them after the field** (`SiegeView.Compose`
@@ -1193,14 +1418,29 @@ def levels():
     """
     made = []
 
-    for name in ("s01_thornwatch", "s02_endlesswatch"):
+    for name in CHAPTER_CASTS:
         path = CHAPTERS / (name + ".json")
         if not path.exists():
             continue
 
-        made.extend(json.loads(path.read_text(encoding="utf-8"))["levels"])
+        for lv in json.loads(path.read_text(encoding="utf-8"))["levels"]:
+            made.append((name, lv))
 
     return made
+
+
+#: Which cast each shipped chapter draws, mirroring `SiegeMode.CastFor`.
+#:
+#: **Written out rather than derived from an ordinal**, because this tool has no catalog: it reads
+#: chapter bodies off disk and a body does not carry its own place in the ladder. What that costs is
+#: a row per chapter; what it buys is that the picture cannot quietly draw a different cast from the
+#: one the game loads - which is the fault this whole file exists to catch (invariant 44d: a render
+#: that draws differently from the screen sends you off to fix something that was never broken).
+CHAPTER_CASTS = {
+    "s01_thornwatch": "",
+    "s03_broodmarch": "brood",
+    "s02_endlesswatch": "kay",
+}
 
 
 def load(path):
@@ -1240,6 +1480,78 @@ def cooling_pane(cell, left):
     return dark
 
 
+#: `ModeScreen`'s header: the bar's height, and the readout row's middle and height.
+#:
+#: **Drawn here because the row moved into the bar's own band.** It used to sit below it, so the
+#: only thing its spacing could collide with was itself and there was nothing for a picture to
+#: judge; it is level with the two corner keys now, which bought the board 64 units of height and
+#: made "does a number land on a button" a question — and one that is invisible in every gate,
+#: because a number drawn over a button is perfectly legible.
+#:
+#: Kept in step with `ModeScreen` and `ReadoutRow` by hand, exactly as the band numbers are.
+BAR_H, READOUTS_Y, ROW_H = 210, 186, 88
+VALUE_Y, CAPTION_Y, VALUE_PT, CAPTION_PT = 14, -29, 56, 22
+SLOT_W, TRIPLE_STEP, KEY_REACH, KEY_SIZE = 220, 250, 161, 118
+
+
+def header(sheet, readouts):
+    """`ModeScreen.BuildHeader` and `BuildReadouts`, at the size a phone draws them.
+
+    <p>Only what can collide: the shade, the two keys where they really sit, and the row of
+    numbers where it really sits. It draws no icons and no captions worth reading — what this is
+    for is whether a value lands on a key, and whether the row clears a camera cutout.</p>
+    """
+    draw_on = ImageDraw.Draw(sheet, "RGBA")
+
+    # The shade, opaque along the top edge and gone by `ShadeDrop` below the bar.
+    drop = READOUTS_Y + ROW_H / 2 + 40 - BAR_H
+    for y in range(int(BAR_H + drop)):
+        k = 1.0 - y / (BAR_H + drop)
+        draw_on.line([(0, y), (CANVAS[0], y)], fill=(5, 10, 20, int(150 * k)))
+
+    # The two corner keys, 118 square with their centres 102 in from each edge.
+    for cx in (102, CANVAS[0] - 102):
+        cy = BAR_H / 2 + 4
+        draw_on.rounded_rectangle([cx - KEY_SIZE / 2, cy - KEY_SIZE / 2,
+                                   cx + KEY_SIZE / 2, cy + KEY_SIZE / 2],
+                                  radius=26, fill=(38, 58, 96, 255), outline=(96, 130, 190, 255),
+                                  width=4)
+
+    # And the band a key reaches into, so the picture says where the wall is rather than leaving
+    # it to be eyeballed.
+    for x in (KEY_REACH, CANVAS[0] - KEY_REACH):
+        draw_on.line([(x, 0), (x, BAR_H + drop)], fill=(240, 90, 90, 90), width=2)
+
+    n = len(readouts)
+    for i, (value, caption) in enumerate(readouts):
+        x = CANVAS[0] / 2 + (0 if n <= 1 else
+                             (-170 if i == 0 else 170) if n == 2 else
+                             (i - 1) * TRIPLE_STEP)
+
+        # The slot's own box, which is what `ReadoutRow.ClearsTheKeys` is about.
+        draw_on.rectangle([x - SLOT_W / 2, READOUTS_Y - ROW_H / 2,
+                           x + SLOT_W / 2, READOUTS_Y + ROW_H / 2],
+                          outline=(120, 200, 255, 70))
+
+        write(sheet, draw_on, value, face(VALUE_PT), x, READOUTS_Y - VALUE_Y, (242, 236, 220, 255))
+        write(sheet, draw_on, caption, face(CAPTION_PT), x, READOUTS_Y - CAPTION_Y,
+              (235, 245, 255, 158))
+
+
+def write(sheet, draw_on, text, font, cx, cy, fill):
+    """One centred, outlined line - `UIKit.Titled`'s own look, near enough to judge a position."""
+    if not text:
+        return
+
+    box = draw_on.textbbox((0, 0), text, font=font)
+    at = (cx - (box[2] - box[0]) / 2 - box[0], cy - (box[3] - box[1]) / 2 - box[1])
+
+    for dx, dy in ((-2, 0), (2, 0), (0, -2), (0, 2)):
+        draw_on.text((at[0] + dx, at[1] + dy), text, font=font, fill=(8, 12, 20, 220))
+
+    draw_on.text(at, text, font=font, fill=fill)
+
+
 def bar(sheet, held, cooling=None):
     """The action bar, where `SiegeScreen` hangs it: filling the foot of the safe area.
 
@@ -1247,19 +1559,27 @@ def bar(sheet, held, cooling=None):
     points of the screen, and it decides how much is left for the three bands above it
     (invariant 37g). What this picture is for is seeing whether the hill, the ward line and the
     field still read with a shelf under them, and whether the shelf reads as one.</p>
+
+    <p><b>And with `--phone`, whether there is anything under it.</b> The shelf's plate runs to the
+    bottom of the display and its cells stand `UtilityBar.Foot` above it, so the home indicator's
+    strip is shelf rather than backdrop. That was reported from a device and could not be drawn
+    here at all until this file learned what a phone is shaped like.</p>
     """
     draw_on = ImageDraw.Draw(sheet)
-    top = CANVAS[1] - BAR_HEIGHT
+
+    # The plate runs to the bottom of the display; the cells stand `UtilityBar.Foot` above it.
+    top = CANVAS[1] - bar_height()
 
     tray = load(UTILITY_ART / "tray.png")
     if tray is not None:
-        sheet.alpha_composite(tray.resize((CANVAS[0], BAR_HEIGHT), Image.LANCZOS), (0, top))
+        sheet.alpha_composite(
+            tray.resize((CANVAS[0], int(round(bar_height()))), Image.LANCZOS), (0, int(top)))
 
     cell = load(UTILITY_ART / "slot.png")
 
     for i in range(SLOTS):
         cx = CANVAS[0] * (2 * i + 1) / (2 * SLOTS)
-        cy = top + BAR_HEIGHT / 2
+        cy = CANVAS[1] - bar_foot() - BAR_SHELF / 2
 
         if cell is not None:
             # An empty place on the shelf is drawn dimmer than one holding something.
@@ -1281,13 +1601,26 @@ def bar(sheet, held, cooling=None):
         waiting = (cooling or {}).get(name, 0)
         full = COOLDOWNS.get(name, 0)
 
+        # An empty cell that can be *bought* from is drawn as an invitation: a smaller picture,
+        # lifted, with "TAP TO BUY" in the room under it. Never while it is cooling, because the
+        # seconds are drawn across the same middle at font 56 (`UtilityBar.Paint`).
+        inviting = n <= 0 and waiting <= 0
+
         if icon is not None:
             if n <= 0:
                 faded = icon.copy()
                 faded.putalpha(faded.split()[3].point(lambda v: int(v * 0.36)))
                 icon = faded
 
-            put(sheet, icon, cx, cy, ICON, ICON)
+            size = EMPTY_ICON if inviting else ICON
+            put(sheet, icon, cx, cy - (EMPTY_LIFT if inviting else 0), size, size)
+
+        if inviting:
+            font = face(26)
+            if font is not None:
+                draw_on.text((cx, cy - HINT_Y), "TAP TO BUY", font=font,
+                             fill=(255, 206, 92, 255), anchor="mm",
+                             stroke_width=3, stroke_fill=(23, 36, 51, 242))
 
         # The sweep, over the picture and under the badge, which is the order the hierarchy
         # draws them in - how many you hold is true whether or not it is ready.
@@ -1374,13 +1707,16 @@ def main():
                     help="how many of the first wave to stand on the hill")
     ap.add_argument("--no-bolts", action="store_true",
                     help="draw the board with nothing in flight")
-    ap.add_argument("--warlord", default="cast", choices=("cast", "idle", "walk", "storm"),
-                    help="draw the boss winding up (cast), standing, walking on, or the frame "
+    ap.add_argument("--warlord", default="cast", choices=("cast", "idle", "storm"),
+                    help="draw the boss winding up (cast), standing, or the frame "
                          "its volley leaves (storm)")
     ap.add_argument("--cooling", nargs="?", const="firepot=6,stormcall=22", default="",
                     help="draw slots mid-cooldown, as id=seconds pairs; bare gives a sample")
     ap.add_argument("--no-bar", action="store_true",
                     help="draw the board without the utility bar under it")
+    ap.add_argument("--cast", default="", choices=("", "kay", "brood"),
+                    help="which cast to draw: the insects (default) or the 3D bake, which is "
+                         "what the Infinite lane draws")
     ap.add_argument("--wave", type=int, default=1,
                     help="which Infinite wave to stand on the hill; ignored on the authored "
                          "ladder, whose hill is its last authored wave")
@@ -1396,14 +1732,30 @@ def main():
                     help="with --aim hill, light the plus a firepot dropped on that box would "
                          "burn (`SiegeView.Scorch`) - the only picture that says whether five "
                          "boxes of fire read as one blast")
+    ap.add_argument("--stood", action="store_true",
+                    help="stand two live bombs on the hill where bombers died - the only picture "
+                         "that says whether a bomb can be picked out of a hill full of walking "
+                         "monsters, and whether it reads as a thing to tap")
+    ap.add_argument("--no-header", action="store_true",
+                    help="leave off the header bar and its readouts, which since the row moved "
+                         "up level with the two corner keys is the only picture that says "
+                         "whether a number lands on a button")
+    ap.add_argument("--phone", action="store_true",
+                    help="draw a 19.5:9 display with an iPhone's home-indicator strip at the "
+                         "foot of it, rather than the 16:9 sheet this file draws by default - "
+                         "the only shape in which the shelf's own foot is visible at all")
     ap.add_argument("--out", default=str(REPO / "Tools" / "siege_boards.png"))
     args = ap.parse_args()
+
+    if args.phone:
+        globals()["CANVAS"] = PHONE_CANVAS
+        globals()["SAFE_BOTTOM"] = PHONE_SAFE_BOTTOM
 
     # **Comma separated**, because the one picture this mode cannot do without is the four boss
     # rungs side by side: invariant 37z was found by looking at exactly that, and 37ac was tuned
     # against it. One at a time is four windows and no comparison.
     wanted = [x.strip() for x in args.level.split(",")] if args.level else None
-    picked = [(i, lv) for i, lv in enumerate(levels())
+    picked = [(i, chapter, lv) for i, (chapter, lv) in enumerate(levels())
               if wanted is None or lv["id"] in wanted]
     if not picked:
         sys.exit("no level called %s" % args.level)
@@ -1432,12 +1784,34 @@ def main():
         if not (0 <= burn[0] < LANES and 0 <= burn[1] < BLAST_ROWS):
             sys.exit("--burn is lane 0..%d, row 0..%d" % (LANES - 1, BLAST_ROWS - 1))
 
+    # **Each rung draws its own chapter's cast**, which is `SiegeMode.CastFor` mirrored: a picture
+    # of two chapters side by side that drew one cast on both would be a picture of neither.
+    # `--cast` overrides, for the one job an override is for - holding two casts up against each
+    # other on the same rung.
+    #
+    # **It used to read `"kay" if args.wave else ""`, and `--wave` defaults to one**, so the
+    # condition was true on every run this tool has ever made: the authored chapter has been drawn
+    # with the Infinite lane's baked cast since that cast was added, in the one picture this mode
+    # has for everything a number cannot see. That is invariant 44d's own trap - a render that
+    # draws something other than the screen sends you off to fix what was never broken - and the
+    # lane needed no special case at all, because it is a chapter and the chapter decides.
+    global CAST
+
     shots = []
-    for rung, lv in picked:
+    for rung, chapter, lv in picked:
+        CAST = args.cast or CHAPTER_CASTS.get(chapter, "")
+        bombs = [(1, 2), (3, 1)] if args.stood else None
+
         shot = draw(lv, args.raiders, not args.no_bolts, aim=args.aim,
-                    boss=args.warlord, rung=rung, wave=args.wave, line=stood, burn=burn, storm=args.storm)
+                    boss=args.warlord, rung=rung, wave=args.wave, line=stood, burn=burn, storm=args.storm,
+                    bombs=bombs)
         if not args.no_bar:
             bar(shot, held, cooling)
+        if not args.no_header:
+            # **The siege's own one.** How far through the raid this is, and nothing else: the
+            # raiders left and the matches spent both came off the header after a device said so
+            # (invariant 37v's rule applied twice more), and a row of one sits in the middle.
+            header(shot, [("3/8", "WAVE")])
         shots.append((lv["id"], shot))
 
     pad = 24

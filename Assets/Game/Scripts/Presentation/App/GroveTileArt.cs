@@ -73,9 +73,12 @@ namespace GlimmerGrove
         /// <summary>
         /// Sizes, places, paints and faces a stand's art on the image its anchor cell holds.
         ///
-        /// The facing is written on every call rather than only when it is mirrored: cells are
-        /// pooled and rebound as the camera pans, so a scale left behind by a flipped fence
-        /// would be inherited by whatever tile reused the object.
+        /// <b>The facing is a different sprite, not a transform.</b> A mirrored piece used to
+        /// be drawn by negating the x scale, which was the one transform a flat cut-out could
+        /// survive; every piece is now rendered from a model at four camera yaws, so turning
+        /// one means painting a different picture. The scale is still written on every call —
+        /// cells are pooled and rebound as the camera pans, so a negative scale left behind by
+        /// an older build would otherwise be inherited by whatever tile reused the object.
         /// </summary>
         public static void LayPiece(Image art, HomesteadPiece piece, GroveStand stand)
         {
@@ -86,10 +89,27 @@ namespace GlimmerGrove
             rt.sizeDelta = size;
             rt.anchoredPosition = Offset(piece, stand, size);
 
-            HomesteadArt.Paint(art, piece);
+            HomesteadArt.Paint(art, piece, stand.Facing);
 
-            art.transform.localScale = new Vector3(stand.Flipped && !stand.IsHall ? -1f : 1f, 1f, 1f);
+            art.transform.localScale = Vector3.one;
         }
+
+        /// <summary>
+        /// The piece a stand draws: the best home the player owns on the hall, and whatever the
+        /// stand names everywhere else.
+        ///
+        /// <para>
+        /// Held in one place because three things need the same answer and a disagreement
+        /// between them is invisible: the cell that <em>paints</em> the tile, the box that
+        /// decides what a finger <em>hit</em>, and the ghost a player is dragging. If those
+        /// drifted, the player would be picking pieces from somewhere other than where the
+        /// picture puts them.
+        /// </para>
+        /// </summary>
+        public static HomesteadPiece PieceOf(HomesteadCatalog catalog, GroveStand stand)
+            => stand.IsHall
+                ? HomesteadLedger.BestDwelling(catalog)
+                : catalog.Find(stand.PieceId);
 
         /// <summary>
         /// The box a stand's art covers in field space, with the piece's mask — what
@@ -108,8 +128,13 @@ namespace GlimmerGrove
             float cx = GroveFloor.TileX(stand.AnchorCol, stand.AnchorRow) + offset.x;
             float cy = -GroveFloor.TileY(stand.AnchorCol, stand.AnchorRow) + offset.y;
 
+            // **The hall is drawn at its own facing like anything else**, which it was not
+            // for as long as its seat was content: nothing could turn it, so a stand built for
+            // it carried whatever facing the tile's row happened to hold, and the safe answer
+            // was to force nought. A home is turned by its owner now (save v26), and forcing
+            // nought here would paint one picture and hit-test another.
             return new GroveHit(stand.AnchorCol, stand.AnchorRow, cx, cy, size.x * .5f, size.y * .5f,
-                                stand.Depth, piece.Hit, stand.Flipped && !stand.IsHall);
+                                stand.Depth, piece.Hit(stand.Facing));
         }
 
         /// <summary>

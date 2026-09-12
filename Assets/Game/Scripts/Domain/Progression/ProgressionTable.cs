@@ -481,6 +481,11 @@ namespace GlimmerGrove.Progression
             // table's own curve decides.
             var wards = WardCatalog.Resolve(dto.wards, problems);
 
+            // The upgrade ladder rides the same block, because it prices the same shelf.
+            // Handed the whole block, like the roster above it, so a DTO built by hand rather
+            // than by `JsonUtility` cannot be dereferenced through.
+            WardStars.Resolve(dto.wards, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
                           store, prompts, chapterGate, carryOn, utilities, wards);

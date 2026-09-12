@@ -50,6 +50,7 @@ import json
 import os
 import sys
 
+import numpy as np
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -77,62 +78,100 @@ def hex_length(w: int, h: int) -> int:
     return (side(w) * side(h) + 3) // 4
 
 
-def art_path(art: str, animated: bool) -> str | None:
-    """The PNG for an art key, or the first frame of an animated folder."""
+def art_paths(art: str, animated: bool, facings: int = 1) -> list:
+    """Every picture an art key stands for, in the order a facing index means.
+
+    Three shapes, and the reader tells them apart the way the game does. A plain piece is
+    one PNG at its own address. An **animated** one is a folder of frames and only the
+    first is measured, because every frame of a reel shares one box. A **turnable** one is
+    a folder too, `f0`..`f3`, and every one of them is measured — a facing is a different
+    picture, so it has a mask of its own (`HomesteadPiece.Hit`).
+    """
+    if facings > 1:
+        folder = os.path.join(ART, art)
+        if not os.path.isdir(folder):
+            return []
+        out = [os.path.join(folder, "f%d.png" % k) for k in range(facings)]
+        return out if all(os.path.isfile(p) for p in out) else []
+
     if animated:
         folder = os.path.join(ART, art)
         if not os.path.isdir(folder):
-            return None
+            return []
         frames = sorted(f for f in os.listdir(folder) if f.lower().endswith(".png"))
-        return os.path.join(folder, frames[0]) if frames else None
+        return [os.path.join(folder, frames[0])] if frames else []
 
     path = os.path.join(ART, art + ".png")
-    return path if os.path.isfile(path) else None
+    return [path] if os.path.isfile(path) else []
+
+
+def art_path(art: str, animated: bool) -> str | None:
+    """The first picture an art key stands for, or None. See :func:`art_paths`."""
+    found = art_paths(art, animated)
+    return found[0] if found else None
 
 
 def mask_of(img: Image.Image) -> str:
-    """The hit mask for a picture. See the module docstring for the encoding."""
+    """The hit mask for a picture. See the module docstring for the encoding.
+
+    Counted with numpy rather than pixel by pixel. The catalogue went from 160 single
+    drawings to 85 pieces at up to four facings each, and a nested Python loop over a
+    quarter of a million pixels per picture turned a re-import into minutes of nothing
+    happening. The arithmetic is unchanged and deliberately so: this is a *contract*
+    with `GroveHitMask.TryParse`, and a faster spelling of it that disagreed anywhere
+    would be the worst kind of change to make here.
+    """
     w, h = img.size
     cols, rows = side(w), side(h)
-    alpha = img.convert("RGBA").getchannel("A")
-    px = alpha.load()
-    threshold = int(ALPHA * 255)
 
-    bits = []
-    for cy in range(rows):
-        y0, y1 = cy * CELL, min(h, (cy + 1) * CELL)
-        for cx in range(cols):
-            x0, x1 = cx * CELL, min(w, (cx + 1) * CELL)
+    alpha = np.asarray(img.convert("RGBA").getchannel("A"))
+    paint = alpha > int(ALPHA * 255)
 
-            total = (x1 - x0) * (y1 - y0)
-            paint = 0
-            for y in range(y0, y1):
-                for x in range(x0, x1):
-                    if px[x, y] > threshold:
-                        paint += 1
+    # Pad out to whole cells with False, so the edge cells count only the pixels that are
+    # really there — which is what the per-pixel version did by clamping its ranges.
+    padded = np.zeros((rows * CELL, cols * CELL), bool)
+    padded[:h, :w] = paint
 
-            bits.append(1 if paint >= max(1, CELL_FILL * total) else 0)
+    counts = padded.reshape(rows, CELL, cols, CELL).sum(axis=(1, 3))
 
-    while len(bits) % 4:
-        bits.append(0)
+    # The denominator is the cell's *own* area, which on a right or bottom edge is less
+    # than a full cell. Same clamp, expressed as two arrays.
+    wide = np.minimum(np.arange(1, cols + 1) * CELL, w) - np.arange(cols) * CELL
+    tall = np.minimum(np.arange(1, rows + 1) * CELL, h) - np.arange(rows) * CELL
+    total = np.outer(tall, wide)
+    need = np.maximum(1, CELL_FILL * total)
 
-    out = []
-    for k in range(0, len(bits), 4):
-        nibble = (bits[k] << 3) | (bits[k + 1] << 2) | (bits[k + 2] << 1) | bits[k + 3]
-        out.append("0123456789abcdef"[nibble])
+    bits = (counts >= need).reshape(-1).astype(np.uint8)
+    if len(bits) % 4:
+        bits = np.concatenate([bits, np.zeros(4 - len(bits) % 4, np.uint8)])
 
-    return "".join(out)
+    nibbles = bits.reshape(-1, 4) @ np.array([8, 4, 2, 1], np.uint8)
+    return "".join("0123456789abcdef"[n] for n in nibbles)
 
 
-def facts_for(art: str, animated: bool):
-    """(w, h, hit) for an art key, or None when there is no picture to read."""
-    path = art_path(art, animated)
-    if path is None:
+def facts_for(art: str, animated: bool, facings: int = 1):
+    """(w, h, masks) for an art key, or None when there is no picture to read.
+
+    `masks` is one per facing. A turnable piece's facings are rendered into one shared box
+    by `make_grove_art.py`, so they agree about `w` and `h` by construction — and that is
+    *checked* here rather than assumed, because the catalogue carries one size for all four
+    and a disagreement would draw three facings in the wrong box.
+    """
+    paths = art_paths(art, animated, facings)
+    if not paths:
         return None
 
-    img = Image.open(path)
-    w, h = img.size
-    return w, h, mask_of(img)
+    sizes, masks = [], []
+    for path in paths:
+        img = Image.open(path)
+        sizes.append(img.size)
+        masks.append(mask_of(img))
+
+    if len(set(sizes)) != 1:
+        return None
+
+    w, h = sizes[0]
+    return w, h, masks
 
 
 def piece_art(piece: dict) -> tuple[str, bool]:
@@ -147,14 +186,23 @@ def companion_art(companion: dict) -> tuple[str, bool]:
     return PORTRAITS + (companion.get("portrait") or companion.get("id", "")), False
 
 
-def apply(row: dict, art: str, animated: bool, fields=("w", "h", "hit")) -> tuple[bool, str | None]:
-    """Write the facts into one catalog row under the given field names. Returns (changed, problem)."""
-    facts = facts_for(art, animated)
-    if facts is None:
-        return False, f"{row.get('id')}: no art at Art/{art}"
+def apply(row: dict, art: str, animated: bool, fields=("w", "h", "hit"),
+          facings: int = 1) -> tuple[bool, str | None]:
+    """Write the facts into one catalog row. Returns (changed, problem).
 
-    changed = any(row.get(name) != value for name, value in zip(fields, facts))
-    for name, value in zip(fields, facts):
+    The mask field takes a *list* when the piece has more than one facing and a bare string
+    when it has one, which is what the reader expects: a companion and a plain piece carry
+    `hit`, a turnable piece carries `hits`.
+    """
+    facts = facts_for(art, animated, facings)
+    if facts is None:
+        return False, f"{row.get('id')}: no art at Art/{art} (or its facings disagree about size)"
+
+    w, h, masks = facts
+    values = (w, h, masks if facings > 1 else masks[0])
+
+    changed = any(row.get(name) != value for name, value in zip(fields, values))
+    for name, value in zip(fields, values):
         row[name] = value
     return changed, None
 

@@ -183,6 +183,8 @@ namespace GlimmerGrove
 
         void Spend(UtilityItem item, SiegeAim aim)
         {
+            Stir();
+
             if (item == null || Fire == null) { Arming = null; return; }
 
             _strikes.Clear();
@@ -524,15 +526,11 @@ namespace GlimmerGrove
             shaft.raycastTarget = false;
             shaft.rectTransform.localScale = new Vector3(1f, -1f, 1f);
 
-            // **Anchored by where the strike lands, never by the frame's middle.** `UIKit.Box`
-            // pivots at centre, so `at.y + tall * .5f` - what this shipped as - put the *centre*
-            // of a 5.4-cell frame on the raider's feet and the flash half a frame above it. On
-            // screen that is a bolt going off nearly three cells over the raider's head with
-            // nothing at all drawn where it was aimed, which is exactly what "it strikes at
-            // random spots, not even at enemies" was. The flash sits `StrikeAt` up the drawn
-            // frame, so the frame's centre goes `(.5 - StrikeAt)` of it *below* the target.
+            // **Anchored by where the strike lands, never by the frame's middle** — see
+            // <see cref="StrikeCentre"/>, which is where the arithmetic and the two ways it has
+            // been wrong are written down.
             shaft.rectTransform.anchoredPosition =
-                new Vector2(at.x, at.y - tall * (.5f - StrikeAt));
+                new Vector2(at.x, StrikeCentre(at.y, tall));
 
             var group = UIKit.Group(shaft.rectTransform);
             var book = Flipbook.Attach(shaft, frames, StormFps, false);
@@ -642,6 +640,38 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         public const float StrikeAt = .17f;
+
+        /// <summary>
+        /// Where the middle of a strike's sprite goes so that its flash lands on
+        /// <paramref name="targetY"/>.
+        ///
+        /// <para>
+        /// <b>A method rather than a line inside <see cref="Bolt"/>, because it has now been
+        /// wrong twice in two different ways and neither was visible to anything but a player.</b>
+        /// First it was <c>targetY + tall * .5f</c> — the frame's *centre* on the raider, so the
+        /// flash went off half a frame above it. Then it was the right shape with the wrong sign,
+        /// which put the flash <b>3.3 cells below</b> the raider: on a board where the ward line
+        /// is exactly that far down, what a player saw was lightning striking their own turrets.
+        /// </para>
+        /// <para>
+        /// <b>The sign is the whole trap, and it is the one invariant 44d already records.</b>
+        /// <c>Tools/render_siege.py</c> mirrors this and drew it correctly with the *same*
+        /// expression, because PIL's y runs down the picture where Unity's runs up it — so the
+        /// mirror agreed with itself and disagreed with the game, and the render that exists to
+        /// catch a misplaced widget confirmed a misplaced widget. **A mirror cannot check a sign
+        /// it has to re-derive in the opposite axis.** What checks this one is
+        /// <c>SiegeStrikeTests</c>, which asserts the consequence — the flash lands on the target
+        /// — rather than the formula.
+        /// </para>
+        /// <para>
+        /// The sprite is drawn from <c>centre - tall/2</c> up, and the flash sits
+        /// <see cref="StrikeAt"/> of the way up it, so the centre has to sit
+        /// <c>(.5 - StrikeAt)</c> of the frame <em>above</em> whatever was hit: what is over the
+        /// flash is the whole length of the bolt and what is under it is only the ground burst.
+        /// </para>
+        /// </summary>
+        public static float StrikeCentre(float targetY, float tall)
+            => targetY + tall * (.5f - StrikeAt);
 
         static Sprite[] StormBolt => Blast("storm") ?? Blast("shot_y");
 

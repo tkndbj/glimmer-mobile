@@ -302,7 +302,7 @@ namespace GlimmerGrove.EditorTools
                 if (string.IsNullOrEmpty(art)) continue;
 
                 var shelf = plan[GroveShelves.Key(GroveShelves.Of(piece))];
-                var sources = Sources(art);
+                var sources = Sources(art, piece.Facings);
 
                 // One thumbnail per frame, so a piece that moves in the grove moves in the
                 // shop. Frame zero keeps the bare id (see GroveThumbs), so every reader that
@@ -320,7 +320,7 @@ namespace GlimmerGrove.EditorTools
 
                 // A tab wears one still picture whatever the piece does: eight flickering
                 // emblems over a grid that is already moving is a header nobody can read.
-                var sources = Sources(BrowseArtOf(emblem));
+                var sources = Sources(BrowseArtOf(emblem), emblem.Facings);
                 if (sources.Count > 0)
                     plan[TabBucket].Add(new Thumb(GroveShelves.Key(shelf), sources[0]));
             }
@@ -355,13 +355,22 @@ namespace GlimmerGrove.EditorTools
         /// still picture anyway.
         /// </para>
         /// <para>
+        /// <b>A piece that can be <em>turned</em> addresses a folder too, and only its first
+        /// facing is packed.</b> The two shapes are indistinguishable on disk — both are a
+        /// folder of PNGs — and taking all four would put them in the atlas as
+        /// <c>GroveThumbs.Frame(id, 0..3)</c>, which is exactly what an animation is: every
+        /// turnable piece on a shelf would sit there rotating through its four facings. A
+        /// shelf cell shows a piece as it was drawn, and the player turns it after they have
+        /// put it down.
+        /// </para>
+        /// <para>
         /// Resolved here rather than at the call site because this is the one place that turns
         /// an address into a path. Until the waterfall there was no animated decor and the
         /// question could not come up; a piece whose folder went unresolved would have logged
         /// "which is not at ..." and shipped a shelf with a hole in it.
         /// </para>
         /// </summary>
-        static List<string> Sources(string art)
+        static List<string> Sources(string art, int facings)
         {
             var found = new List<string>(1);
             if (string.IsNullOrEmpty(art)) return found;
@@ -380,7 +389,10 @@ namespace GlimmerGrove.EditorTools
             var frames = Directory.GetFiles(folder, "*.png");
             System.Array.Sort(frames, System.StringComparer.Ordinal);
 
-            for (int i = 0; i < frames.Length && i < GroveThumbs.MaxFrames; i++)
+            // One for a turnable piece, its whole reel for an animated one. See the remarks.
+            int most = facings > 1 ? 1 : GroveThumbs.MaxFrames;
+
+            for (int i = 0; i < frames.Length && i < most; i++)
                 found.Add(frames[i].Replace('\\', '/'));
 
             if (found.Count == 0) found.Add(single);

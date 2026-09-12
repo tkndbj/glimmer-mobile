@@ -15,19 +15,19 @@ namespace GlimmerGrove.Homestead
     {
         public readonly int AnchorCol, AnchorRow;
         public readonly string PieceId;
-        public readonly bool Flipped;
+        public readonly int Facing;
         public readonly GroveFootprint Footprint;
 
         /// <summary>True for the hall: drawn from the best home owned, never placed, never picked up.</summary>
         public readonly bool IsHall;
 
-        public GroveStand(int anchorCol, int anchorRow, string pieceId, bool flipped,
+        public GroveStand(int anchorCol, int anchorRow, string pieceId, int facing,
                           GroveFootprint footprint, bool isHall = false)
         {
             AnchorCol = anchorCol;
             AnchorRow = anchorRow;
             PieceId = pieceId ?? string.Empty;
-            Flipped = flipped;
+            Facing = GroveFootprint.Quarter(facing);
             Footprint = footprint;
             IsHall = isHall;
         }
@@ -47,7 +47,7 @@ namespace GlimmerGrove.Homestead
 
         public float CentreRow => Footprint.CentreRow(AnchorRow);
 
-        public override string ToString() => $"{PieceId}@{AnchorId} {Footprint}{(Flipped ? " flipped" : "")}";
+        public override string ToString() => $"{PieceId}@{AnchorId} {Footprint} f{Facing}";
     }
 
     /// <summary>Why a placement did or did not happen. See <see cref="HomesteadLayout.TryPlace"/>.</summary>
@@ -178,7 +178,6 @@ namespace GlimmerGrove.Homestead
                     int col = anchorCol + c, row = anchorRow + r;
 
                     if (!floor.Contains(col, row)) return false;
-                    if (floor.IsHall(col, row)) return false;
                     if (buildable != null && !buildable(col, row)) return false;
 
                     if (_anchorOf.TryGetValue(Key(col, row), out long anchor)
@@ -270,7 +269,7 @@ namespace GlimmerGrove.Homestead
         /// let this build silently bury it.
         /// </summary>
         public static GroveStand Of(HomesteadCatalog catalog, string tileId, string pieceId,
-                                    bool flipped, bool isHall = false)
+                                    int facing, bool isHall = false)
         {
             if (string.IsNullOrEmpty(pieceId)) return default;
             if (!GroveFloor.TryParse(tileId, out int col, out int row)) return default;
@@ -278,9 +277,9 @@ namespace GlimmerGrove.Homestead
             var piece = catalog != null ? catalog.Find(pieceId) : default;
             var footprint = isHall && catalog != null
                 ? catalog.Floor.HallFootprint
-                : (piece.IsValid ? piece.Footprint : GroveFootprint.Single).Facing(flipped);
+                : (piece.IsValid ? piece.Footprint : GroveFootprint.Single).Facing(facing);
 
-            return new GroveStand(col, row, pieceId, flipped, footprint, isHall);
+            return new GroveStand(col, row, pieceId, facing, footprint, isHall);
         }
     }
 }

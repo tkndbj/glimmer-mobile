@@ -37,12 +37,6 @@ namespace GlimmerGrove
             if (mob == null || mob.Node == null) return;
 
             // **A spell aimed at the field is a different drawing entirely**, and it is settled
-            // before anything below reads `cast.Ward` as a post index — which for these carries a
-            // *cell*. `SiegeTuning.AimsAtAWard` is the question, for the reason it exists: three
-            // things can be in that field and only the caster's kind says which.
-            if (!SiegeTuning.AimsAtAWard(mob.Kind)
-                && cast.Craft != SiegeSpell.Rally) { Snare(cast, mob); return; }
-
             Vector2 from = mob.Node.anchoredPosition + new Vector2(0f, mob.Height * .10f);
 
             // **A roar is thrown at the ground it is standing on**, so it has no ward and its
@@ -872,17 +866,20 @@ namespace GlimmerGrove
             opaque.a = 1f;
             label.color = opaque;
 
-            // **Lower and shorter than it was.** The first cut floated a cell and a half over a
-            // second, which is a long time for a figure to be over the hill when the next one is
-            // 55 milliseconds behind it — the numbers stacked up the screen and stayed there. What
-            // a floating number owes the player is to be legible on arrival and then get out of
-            // the way, so it lifts about half a cell and is gone inside two thirds of a second.
+            // **It lifts, and then it stands still.** The first cut floated a cell and a half
+            // over a second and the second floated half a cell over the whole of its life — both
+            // of them numbers still travelling at the moment they are being read, which on a
+            // board sending the next one 55 milliseconds behind reads as figures climbing the
+            // screen. What a floating number owes the player is to be legible on arrival and then
+            // get out of the way, so the lift is a quarter of the life and a fifth of a cell: it
+            // pops clear of the body it came off, holds where the eye caught it, and fades from
+            // there.
             float life = tally.Weak ? .68f : .52f;
             Vector2 from = rt.anchoredPosition;
-            Vector2 to = from + new Vector2(tally.Drift * Cell * .22f,
-                                            Cell * (tally.Weak ? .75f : .55f));
+            Vector2 to = from + new Vector2(tally.Drift * Cell * .10f,
+                                            Cell * (tally.Weak ? .26f : .20f));
 
-            Tween.Run(life, Ease.OutCubic, k =>
+            Tween.Run(life * .28f, Ease.OutCubic, k =>
             {
                 if (rt) rt.anchoredPosition = Vector2.Lerp(from, to, k);
             }, label, "rise");

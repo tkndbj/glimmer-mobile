@@ -32,15 +32,20 @@ namespace GlimmerGrove.Modes
         Sunder,
 
         /// <summary>
-        /// Spins a web over one cell of the field, locking the gem under it. The weaver's.
+        /// <b>Retired: nothing casts these and the three ids must never be reused.</b>
         ///
-        /// <b>The first spell aimed at the board rather than at a ward</b>, so it carries no ward
-        /// index at all — <c>SiegeSpellLanded.Ward</c> is the cell instead, which is why
-        /// <see cref="SiegeTuning.AimsAtAWard"/> exists rather than every reader assuming.
+        /// A weave locked a cell of the field, a snatch took a gem off it, and a bombard dropped a
+        /// bomb onto one. All three were the same withdrawn idea — the hill reaching into the gem
+        /// board — and the bomber that survived it drops its bomb <em>on the hill where it dies</em>
+        /// rather than casting anything (see <see cref="SiegeKind.Bomber"/>). Kept as members
+        /// because these ordinals reach analytics.
         /// </summary>
         Weave,
 
-        /// <summary>Takes one gem off the field and leaves a sack standing there. The thief's.</summary>
+        /// <summary><b>Retired with <see cref="Weave"/>.</b></summary>
         Snatch,
+
+        /// <summary><b>Retired with <see cref="Weave"/>.</b></summary>
+        Bombard,
     }
 }

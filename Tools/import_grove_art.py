@@ -1,233 +1,272 @@
 # -*- coding: utf-8 -*-
-"""Imports the grove's shop art from a source pack folder, driven by grove_art.tsv.
+"""Turns the roster and the rendered art into the grove's catalogue.
 
-    python Tools/import_grove_art.py --source "C:/path/to/_extracted" [--dry-run]
+    python Tools/import_grove_art.py [--dry-run]
 
-What it does, in order:
+It reads `Tools/grove_pieces.tsv` and the PNGs `make_grove_art.py` wrote, and rewrites the
+`pieces` array of `homestead.json`, the `ui.piece.*` strings in `loc/en.json`, and
+`groveVersion` in `manifest.json`. It copies nothing and cuts nothing: the art is already
+on disk, and this is the step that writes down *what it is*.
 
-  1. reads Tools/grove_art.tsv — the mapping of source PNG to permanent piece id
-  2. copies each source into Assets/Game/Art/Homestead/<id>.png
-  3. writes the display name into StreamingAssets/Content/loc/en.json
-  4. rewrites the `pieces` array of homestead.json from the file
-  5. bumps groveVersion in manifest.json, so clients refetch the catalog
+WHAT IT DERIVES, AND WHY THAT IS THE POINT. `scale`, `lift`, `w`, `h` and the hit masks are
+all facts about a picture. They used to be typed — `scale` and `lift` by hand in a TSV,
+because a flat cut-out knows neither how big the thing was nor where its feet are. A
+rendered model knows both exactly, in world units, so all five are measured here and none
+of them is a judgement anybody can get wrong. That is `UIKit.PillFaceLift`'s rule and
+`GroveFloor.TileFaceRatio`'s: a number describing a picture is only true until the picture
+is re-cut, so it is generated beside the picture and checked against it.
 
-Three rules it enforces, because all three are mistakes this project has already
-made once somewhere:
+THREE RULES IT ENFORCES, each of which is a mistake this project has made once somewhere.
 
-  * **An id is permanent.** It is written into save files twice over — into the
-    owned set and into every slot holding one (invariant 1). Re-pointing an id at
-    different art is fine and expected; *renaming* one silently empties the slots
-    of everybody who placed it, so a row that disappears from the file is reported
-    rather than acted on, and the art is left on disk.
-  * **Nothing is hand-copied.** The import is re-runnable and the diff shows the
-    mapping, the price and the source path together. The next pack is a column.
-  * **Existing pieces are preserved.** The rows already in homestead.json that this
-    file does not mention — the home ladder, the original decor —
-    are carried through untouched. This file owns what it lists and nothing else.
+  * **An id is permanent.** It is written into save files twice over — into the stock and
+    into every tile holding one (invariant 1). `grove_roster` refuses a retired one
+    outright; this refuses to *drop* one silently, because a row that vanishes empties the
+    tiles of everybody who placed it.
+  * **The catalogue may not describe art it does not ship.** Every row's facts are read off
+    the PNGs, and a piece whose pictures are missing stops the whole import rather than
+    being written with a plausible-looking size.
+  * **A bundle must divide its price.** Otherwise a copy is worth `cost/bundle` rounded
+    down and every grove holding one is scored short — on the one number that reaches a
+    public leaderboard (invariant 16h).
 """
-import argparse, io, json, collections, os, shutil, struct, sys
+import argparse
+import collections
+import io
+import json
+import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import grove_art_facts as facts  # noqa: E402
+import grove_art_facts as facts                                        # noqa: E402
+import grove_roster as roster                                          # noqa: E402
+import make_grove_art as art                                           # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-TSV = os.path.join(HERE, "grove_art.tsv")
-ART = os.path.join(ROOT, "Assets", "Game", "Art", "Homestead")
 CONTENT = os.path.join(ROOT, "Assets", "StreamingAssets", "Content")
 CATALOG = os.path.join(CONTENT, "homestead.json")
 MANIFEST = os.path.join(CONTENT, "manifest.json")
 LOC = os.path.join(CONTENT, "loc", "en.json")
 
-KINDS = ("ground", "structure", "bed", "path", "edge", "canopy")
+#: `GroveFloor.TileWidth` and `HomesteadScreen.PieceScale`, as `make_grove_art` mirrors them.
+#: Held to the C# below rather than trusted, because every derived `scale` rests on them.
+CSHARP = [
+    ("Assets/Game/Scripts/Domain/Homestead/GroveFloor.cs",
+     "public const float TileWidth = %g" % art.TILE_WIDTH),
+    ("Assets/Game/Scripts/Domain/Homestead/GroveFloor.cs",
+     # The C# spells it `.5628f` with no leading zero, so the needle does too. A literal
+     # matched loosely is a mirror that agrees with something it was not compared to.
+     "public const float TileFaceRatio = %s" % ("%.4f" % art.TILE_FACE_RATIO).lstrip("0")),
+    ("Assets/Game/Scripts/Presentation/App/GroveTileArt.cs",
+     "PieceScale = %.2f" % art.PIECE_SCALE),
+]
 
 
-def rows():
-    out = []
-    with io.open(TSV, encoding="utf-8") as f:
-        for n, line in enumerate(f, 1):
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            parts = line.split("\t")
-            if len(parts) != 8:
-                sys.exit("%s:%d has %d columns, expected 8" % (TSV, n, len(parts)))
-            src, pid, slot, cost, bundle, scale, lift, name = parts
-            if slot not in KINDS:
-                sys.exit("%s:%d unknown slot kind '%s'" % (TSV, n, slot))
+def held_to_csharp():
+    """Proves the three numbers every derived `scale` and `lift` rests on are still the
+    game's own.
 
-            # A bundle has to divide the price exactly, or a copy is worth cost/bundle
-            # rounded down and every grove holding one is quietly scored short. The
-            # catalog is the only place this can be caught: nothing at runtime can tell
-            # a deliberate 90 from a 99 that should have been 100.
-            cost, bundle = int(cost), int(bundle)
-            if bundle < 1:
-                sys.exit("%s:%d bundle must be at least 1" % (TSV, n))
-            if bundle > 1 and cost % bundle:
-                sys.exit("%s:%d '%s' costs %d, which its bundle of %d does not divide"
-                         % (TSV, n, pid, cost, bundle))
-            if bundle > 1 and cost <= 0:
-                sys.exit("%s:%d '%s' is free, so it is an entitlement and cannot be "
-                         "sold in bundles" % (TSV, n, pid))
+    They are mirrored in `make_grove_art.py` because nothing there reads C#, and a mirror
+    that can drift in silence is worse than no mirror — this project has the scar
+    (`SiegeTuning.PerfectMatch`, and `TileFaceRatio` before it). Grepping the source for the
+    literal is crude and it is the whole of what is needed: the day somebody retunes one,
+    this stops rather than quietly writing a catalogue that draws every piece at the wrong
+    size.
+    """
+    bad = []
+    for relative, needle in CSHARP:
+        path = os.path.join(ROOT, relative.replace("/", os.sep))
+        text = io.open(path, encoding="utf-8").read() if os.path.isfile(path) else ""
+        if needle not in text:
+            bad.append("%s no longer says '%s'" % (relative, needle))
+    if bad:
+        sys.exit("make_grove_art.py has drifted from the game:\n  " + "\n  ".join(bad))
 
-            out.append(dict(src=src, id=pid, slot=slot, cost=cost, bundle=bundle,
-                            scale=float(scale), lift=float(lift), name=name))
+
+def row_for(piece, prior):
+    """One catalogue row, in the order the file reads best."""
+    out = collections.OrderedDict()
+    out["id"] = piece.id
+    out["art"] = "Homestead/" + piece.id
+    out["kind"] = "decor"
+    out["slot"] = piece.shelf
+    out["cost"] = piece.cost
+
+    # Omitted when it is 1, which is what the reader assumes for an absent field — so a
+    # catalogue whose pieces sell singly and one written before bundles existed are the same
+    # file, and a drop's diff shows only what actually bundles.
+    if piece.bundle > 1:
+        out["bundle"] = piece.bundle
+    if piece.facings > 1:
+        out["facings"] = piece.facings
+    if piece.cols > 1 or piece.rows > 1:
+        out["cols"] = piece.cols
+        out["rows"] = piece.rows
+
     return out
 
 
-def dims(path):
-    with open(path, "rb") as f:
-        head = f.read(33)
-    return struct.unpack(">II", head[16:24]) if head[:8] == b"\x89PNG\r\n\x1a\n" else (0, 0)
+def dwelling_row(model, pid, tier, cost, floor):
+    out = collections.OrderedDict()
+    out["id"] = pid
+    out["art"] = "Homestead/" + pid
+    out["kind"] = "dwelling"
+    out["tier"] = tier
+    out["cost"] = cost
+
+    # Every tier shares the floor's own hall footprint. Invariant 16i, and load-bearing: a
+    # grander home that occupied more tiles would evict whatever stood beside the cabin.
+    out["cols"] = int(floor.get("hallCols", 2))
+    out["rows"] = int(floor.get("hallRows", 2))
+
+    # A home turns like anything else now that its seat is the player's rather than the
+    # floor's (save v26). It was rendered at one yaw for as long as nothing could turn it,
+    # and a facing is a different *picture* here (16m) - so this is a mask per facing, not a
+    # flag, and leaving it off would mean the hall hit-tested against the wrong drawing the
+    # first time somebody turned it.
+    if roster.DWELLING_FACINGS > 1:
+        out["facings"] = roster.DWELLING_FACINGS
+    return out
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--source", required=True, help="folder the pack paths are relative to")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
-    wanted = rows()
-    ids = [r["id"] for r in wanted]
-    dupes = [k for k, v in collections.Counter(ids).items() if v > 1]
-    if dupes:
-        sys.exit("duplicate piece ids in grove_art.tsv: " + ", ".join(dupes))
+    held_to_csharp()
+    rows = roster.read()
 
-    # ------------------------------------------------------------------ art
-    copied = missing = same = 0
-    biggest = (0, "")
-    for r in wanted:
-        src = os.path.join(args.source, r["src"].replace("/", os.sep))
-        dst = os.path.join(ART, r["id"] + ".png")
-
-        if not os.path.isfile(src):
-            print("MISSING  %-18s %s" % (r["id"], r["src"]))
-            missing += 1
-            continue
-
-        w, h = dims(src)
-        if max(w, h) > biggest[0]:
-            biggest = (max(w, h), r["id"])
-
-        if os.path.isfile(dst) and open(dst, "rb").read() == open(src, "rb").read():
-            same += 1
-            continue
-
-        if not args.dry_run:
-            shutil.copyfile(src, dst)
-        copied += 1
-
-    if missing:
-        sys.exit("%d source file(s) missing — nothing was written to the catalog" % missing)
-
-    # -------------------------------------------------------------- catalog
     catalog = json.load(io.open(CATALOG, encoding="utf-8"),
                         object_pairs_hook=collections.OrderedDict)
+    before = dict((p.get("id"), p) for p in catalog.get("pieces", []))
+    floor = catalog.get("floor", {})
 
-    mine = {r["id"] for r in wanted}
-    kept = [p for p in catalog["pieces"] if p.get("id") not in mine]
-    before = {p.get("id"): p for p in catalog["pieces"]}
+    # ------------------------------------------------------------------ pieces
+    pieces, problems = [], []
 
-    dropped = [p["id"] for p in catalog["pieces"]
-               if p.get("id") not in mine and p.get("slot") and p.get("_imported")]
-    for pid in dropped:
-        print("WARNING  '%s' was imported before and is no longer in grove_art.tsv; "
-              "it is left in the catalog, because removing an id empties the slots of "
-              "everybody who placed it" % pid)
+    for model, pid, tier, cost, _name, _size in roster.DWELLINGS:
+        pieces.append(dwelling_row(model, pid, tier, cost, floor))
 
-    fresh = []
-    for r in wanted:
-        row = collections.OrderedDict([
-            ("id", r["id"]),
-            ("art", "Homestead/" + r["id"]),
-            ("kind", "decor"),
-            ("slot", r["slot"]),
-            ("cost", r["cost"]),
-        ])
+    for piece in rows:
+        pieces.append(row_for(piece, before.get(piece.id)))
 
-        # Omitted when it is 1, which is what the reader assumes for an absent field —
-        # so a catalog written before bundles existed and one whose pieces sell singly
-        # are the same file, and the diff of a drop shows only what actually bundles.
-        if r["bundle"] > 1:
-            row["bundle"] = r["bundle"]
+    # The facts about each picture, read off the PNGs that were actually rendered. A piece
+    # whose art is missing stops the import: writing a plausible size for a picture that is
+    # not there is exactly how a catalogue comes to describe art it does not ship.
+    for row in pieces:
+        facings = int(row.get("facings", 1))
+        fields = ("w", "h", "hits" if facings > 1 else "hit")
+        _changed, problem = facts.apply(row, row["art"], False, fields, facings)
+        if problem:
+            problems.append(problem)
 
-        # A footprint is a judgement about the picture that lives in the catalog rather than
-        # in this file, so a re-import keeps whatever was decided for the id before.
-        prior = before.get(r["id"]) or {}
-        if prior.get("cols") or prior.get("rows"):
-            row["cols"] = prior.get("cols") or 1
-            row["rows"] = prior.get("rows") or 1
+    if problems:
+        sys.exit("%d piece(s) have no art. Run make_grove_art.py first.\n  %s"
+                 % (len(problems), "\n  ".join(problems)))
 
-        row["scale"] = r["scale"]
-        row["lift"] = r["lift"]
-        row["_imported"] = True
+    # `scale` and `lift`, derived from the render rather than typed. Done after the masks so
+    # a row carries its size before anything reads it.
+    for row, (scale, lift) in zip(pieces, measure(pieces, rows)):
+        row["scale"] = round(scale, 4)
+        row["lift"] = round(lift, 4)
 
-        # What the picture is — its size and where the paint lands — read off the file just
-        # copied, so the catalog can never describe art it does not ship. See grove_art_facts.
-        if not args.dry_run:
-            facts.apply(row, *facts.piece_art(row))
-        fresh.append(row)
-
-    # The home ladder, then decor by kind and price — the order the shop draws them in,
-    # so the file reads the way the screen does. Residents are not in this file at all:
-    # they are the companion roster, projected in from the manifest by GroveResidents, so
-    # a row claiming to be one is refused by HomesteadMapper.
-    order = {"dwelling": 1, "decor": 2}
-    kind_order = {k: i for i, k in enumerate(("structure", "canopy", "bed", "edge", "path", "ground"))}
-    pieces = kept + fresh
-    pieces.sort(key=lambda p: (order.get(p.get("kind", "decor"), 2),
+    # The home ladder, then decor by shelf and price — the order the shop draws them in, so
+    # the file reads the way the screen does.
+    shelf_order = dict((s, i) for i, s in enumerate(roster.SHELVES))
+    kind_order = {"dwelling": 1, "decor": 2}
+    pieces.sort(key=lambda p: (kind_order.get(p.get("kind", "decor"), 2),
                                p.get("tier", 0),
-                               kind_order.get(p.get("slot", "ground"), 9),
-                               p.get("cost", 0)))
+                               shelf_order.get(p.get("slot", "ground"), 9),
+                               p.get("cost", 0),
+                               p.get("id", "")))
     catalog["pieces"] = pieces
 
-    # ------------------------------------------------------------------ loc
+    # ------------------------------------------------------------------- loc
+    #
+    # **This tool owns the whole `ui.piece.` namespace**, so a key whose piece is gone goes
+    # with it. That is narrower than it sounds and it is the only honest arrangement: every
+    # one of these keys is written here, none is written anywhere else, and a piece's key is
+    # *derived from its id* (invariant 5a) — which is exactly why `Tools/verify/loc.py`
+    # cannot see one orphaned. It scans for written keys, and there is no call site to find.
+    # Left alone, replacing the catalogue stranded 163 strings that named pieces which no
+    # longer exist, in a file that ships, with nothing anywhere able to report it.
+    #
+    # The *ids* are not forgotten — `Tools/grove_retired.txt` is the permanent record and is
+    # what stops one ever being reused. What is dropped here is only the English for them.
     loc = json.load(io.open(LOC, encoding="utf-8"), object_pairs_hook=collections.OrderedDict)
-    have = {e["key"]: e for e in loc["entries"]}
+    wanted = collections.OrderedDict(
+        [(d[1], d[4]) for d in roster.DWELLINGS] + [(r.id, r.name) for r in rows])
+    mine = set("ui.piece." + pid for pid in wanted)
+
+    dropped = [e["key"] for e in loc["entries"]
+               if e["key"].startswith("ui.piece.") and e["key"] not in mine]
+    loc["entries"] = [e for e in loc["entries"] if e["key"] not in set(dropped)]
+
+    have = dict((e["key"], e) for e in loc["entries"])
     added = 0
-    for r in wanted:
-        key = "ui.piece." + r["id"]
+    for pid, name in wanted.items():
+        key = "ui.piece." + pid
         if key in have:
-            have[key]["text"] = r["name"]
+            have[key]["text"] = name
         else:
-            loc["entries"].append(collections.OrderedDict([("key", key), ("text", r["name"])]))
+            loc["entries"].append(collections.OrderedDict([("key", key), ("text", name)]))
             added += 1
 
-    # ------------------------------------------------------------- manifest
+    # -------------------------------------------------------------- manifest
     manifest = json.load(io.open(MANIFEST, encoding="utf-8"),
                          object_pairs_hook=collections.OrderedDict)
     manifest["groveVersion"] = int(manifest.get("groveVersion", 1)) + 1
 
     if not args.dry_run:
-        io.open(CATALOG, "w", encoding="utf-8", newline="\n").write(
-            json.dumps(catalog, indent=2, ensure_ascii=False) + "\n")
-        io.open(LOC, "w", encoding="utf-8", newline="\n").write(
-            json.dumps(loc, indent=2, ensure_ascii=False) + "\n")
-        io.open(MANIFEST, "w", encoding="utf-8", newline="\n").write(
-            json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
+        write(CATALOG, catalog)
+        write(LOC, loc)
+        write(MANIFEST, manifest)
 
-    by_kind = collections.Counter(r["slot"] for r in wanted)
-    spend = sum(r["cost"] for r in wanted)
-    print("\n%s%d piece(s): %d copied, %d unchanged, %d new string(s)" %
-          ("DRY RUN — " if args.dry_run else "", len(wanted), copied, same, added))
-    print("   by slot: " + ", ".join("%s %d" % (k, n) for k, n in sorted(by_kind.items())))
-    print("   catalogue is now %d piece(s); the new ones add %d credits" %
-          (len(pieces), spend))
-    print("   largest sprite: %s at %dpx — the importer caps Homestead art at 512" % (biggest[1], biggest[0]))
-    print("   groveVersion -> %d" % manifest["groveVersion"])
+    say(catalog, rows, added, len(dropped), manifest["groveVersion"], args.dry_run)
+
+
+def measure(pieces, rows):
+    """`(scale, lift)` for each row, re-derived from the models the art was rendered from.
+
+    Re-derived rather than carried out of `make_grove_art` in a side file: the two tools run
+    separately, and a file passed between them is a third place for the truth to live. The
+    arithmetic is the renderer's own — `make_grove_art.piece` is called, not copied — so the
+    two cannot come to disagree about what a picture means.
+
+    It is the slowest step of the import by a long way, because it re-renders every facing
+    to measure it. That is the honest cost of deriving these rather than typing them, and
+    an import is not a gate.
+    """
+    by_id = dict((r.id, r) for r in rows + roster.dwellings())
+    done = art.render_all([by_id[p["id"]] for p in pieces])
+    return [(r.scale, r.lift) for r in done]
+
+
+def write(path, doc):
+    io.open(path, "w", encoding="utf-8", newline="\n").write(
+        json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
+
+
+def say(catalog, rows, added, dropped, grove_version, dry):
+    by_shelf = collections.Counter(r.shelf for r in rows)
+    spend = sum(r.cost for r in rows) + sum(d[3] for d in roster.DWELLINGS)
+    print("%s%d piece(s): %d decor, %d dwelling(s), %d new string(s), %d orphaned string(s) dropped"
+          % ("DRY RUN — " if dry else "", len(catalog["pieces"]), len(rows),
+             len(roster.DWELLINGS), added, dropped))
+    print("   by shelf: " + ", ".join("%s %d" % (k, n) for k, n in sorted(by_shelf.items())))
+    print("   the whole catalogue is %d credits" % spend)
+    print("   groveVersion -> %d" % grove_version)
     print("\nNext, in this order:")
-    print("  1. Glimmer Grove > Addressables > Sync All Assets")
-    print("     The importer hook addresses art as it lands, but it does not fire for")
-    print("     files copied in while the Editor was closed or mid-reload, which is")
-    print("     every run of this script. Unaddressed art loads as nothing and the")
-    print("     cell draws blank. The build gate would catch it; the Editor will not.")
+    print("  1. Glimmer Grove > Addressables > Sync All Assets, then SAVE")
+    print("     The importer hook addresses art as it lands and does not fire for files a")
+    print("     tool wrote while the Editor was closed — which is every run of the bake.")
+    print("     Unaddressed art loads as nothing and a tile draws blank (invariant 7b).")
     print("  2. Glimmer Grove > Addressables > Rebuild Grove Atlases")
-    print("     The shop browses through one atlas per shelf, generated from the")
-    print("     catalog. A new piece with no thumbnail in its shelf's atlas draws a")
-    print("     blank plate — on the device, because the Editor still has the old one.")
-    print("  3. Glimmer Grove > Validate Content")
-    print("  4. Glimmer Grove > Validate Art   (proves every atlas has every picture)")
-    print("  5. python Tools/verify/content.py")
+    print("     The shop browses through one atlas per shelf. A piece with no thumbnail in")
+    print("     its shelf's atlas draws a blank plate on the device and not in the Editor.")
+    print("  3. Glimmer Grove > Validate Content   and   > Validate Art")
+    print("  4. python Tools/verify/content.py")
 
 
 if __name__ == "__main__":

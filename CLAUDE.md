@@ -284,12 +284,14 @@ In practice:
     working. The gate is tested **before** the price, so a player both too junior and too poor is told about
     the wall credits cannot climb; and `IsHeld` must never re-check the gate on a companion already bought, or
     a retune confiscates a paid-for friend.
-16. **A grove is built, and only three facts about it are stored.** Everything else is derived, and what is
+16. **A grove is built, and only four facts about it are stored.** Everything else is derived, and what is
     left splits by *shape*, not by feature: a purchase is an **entitlement**, so `homesteadOwned` and
     `groveLandOwned` are union-joined id sets, while an arrangement is an **instruction**, so
     `homesteadPlaced` is merged by recency with a stamp per slot (11c) — the only part that can lose
     something, which is why an untouched slot writes no row and a slot the player *emptied* keeps one.
-    Deliberately absent: any count of tiles. A slot id is written into the save, so invariant 1 applies to it.
+    The fourth is the **hall's seat** (16q), which is an instruction too and is the only one of
+    the four that is a single row rather than a set. Deliberately absent: any count of tiles. A
+    slot id is written into the save, so invariant 1 applies to it.
 16b. **The grove is a tile floor, and a tile is a slot.** Ten islands with hand-authored slots made the
     player's only decision which of eleven pre-placed dots got which sticker; a field of identical tiles moves
     the composition to them, and the slot-kind rule went with the islands, surviving as a **shop shelf**. It
@@ -360,6 +362,12 @@ In practice:
     version that every row write **and the ledger's own event** bump, so nothing rebuilds it on a bind and
     nothing asks the ledger whether it is stale. The zoom band moved with it (`DefaultZoom` .85, .55–1.2), because a
     tile at .7 was a quarter of an inch tall; `render_grove.py` mirrors all of it and stays pinned.
+    **It moved out again when the floor doubled** — `DefaultZoom` .58, .35–1.2 — and the argument
+    above is what permitted it: it is entirely about a tile being a *tap target*, and a tap on a
+    tile stopped opening anything when placing became a button and a ghost (16o). What binds the
+    band now is the tallest thing that can stand on the floor, because the camera opens on the
+    hall: a piece is drawn from its tile upward by `size.y * Lift` on top of half its height, so
+    the citadel reaches 1,298 floor units above the centre and had its roof cut off at .85.
 16j. **The floor is sold in two currencies up a ladder, and both halves of that broke a rule that
     had been "the whole rule" while there was only one currency.** The five biggest stretches are
     priced in **gems** (600 → 2,000) and the three smallest in credits, and they are offered **one at
@@ -400,6 +408,295 @@ In practice:
     after the mapper would be dead code wearing a gate's clothes. And **the ladder is asked before
     the price** (15a's ordering): a keeper both a rung down and short of gems is told about the
     wall money cannot climb.
+16m. **The grove is a village rendered from models, and the one thing that bought is that a
+    piece can be *turned*.** The whole catalogue was replaced on 2026-09-11: the CraftPix
+    isometric sheets went and 90 pieces cut from one CC0 pack took their place —
+    houses in three colours, thirteen civic buildings, walls, gates, fences, trees, props.
+    Nothing about the *shape* of the grove moved: the floor, the footprints, the shelves, the
+    stock, the score and the merge are all as they were, which is why this cost **no new
+    screen and no new rule about money**.
+    <br>**Rendering rather than cutting is what makes a facing possible, and it is not a
+    preference.** A flat cut-out is one drawing from one camera angle, so the only transform
+    it survives is a reflection — turn the transform and you turn the *painting*, and a tree
+    leans over. That is why `Placement` carried a `Flipped` bool for six schema versions. A
+    model renders at four yaws, so a facing is a **different picture** and `Placement.Facing`
+    is a quarter turn (v24). `Turn` steps by one and answers `NoRoom` rather than skipping to
+    the facing that would have fitted, because four taps that walk the four facings in order
+    are a control and four taps that sometimes skip one are not.
+    <br>**And it means five numbers stopped being typed.** `scale`, `lift`, `w`, `h` and the
+    hit masks are all facts about a picture, and the thing that *makes* the picture knows them
+    exactly — in world units, with the model standing on y=0. They are measured by
+    `make_grove_art.py` and written by `import_grove_art.py`; the roster has no column for any
+    of them. **One mask per facing**, because a cart seen from the front and the same cart
+    from the side cover different parts of one rectangle.
+    <br>**The one column that is a judgement is `size`, and it exists because the pack holds two
+    scales.** Its buildings are modelled to *stand on* a hex tile and are about 0.40 of one
+    across; its walls, fences and bridges **are** the tile, edge to edge. One conversion from
+    model units to floor pixels cannot serve both — read as buildings the walls come out two and
+    a half times too big, which is exactly what a played build reported — so a row says which
+    kind of thing it is and `piece()` scales the mesh by it *before* measuring, which keeps
+    `scale`, `lift` and the masks derived from the thing that ships.
+    <br>**The projection is arithmetic and the calibration is a picture.** A unit square on
+    the ground projects to a diamond whose height over width is `sin(pitch)`, so the pitch
+    that agrees with a floor of face ratio r is `asin(r)` and nothing else —
+    `GroveFloor.TileFaceRatio` 0.5628 fixes it at 34.25°, and the constant did not move, so
+    the floor's geometry did not either. What *is* easy to get wrong is the world-to-screen
+    conversion, because a tile's screen width is its side times **√2**: get it wrong and every
+    piece comes out 1.41 times too big *together*, so they still agree with each other and
+    only stop agreeing with the ground under them. Nothing numeric could catch that, so the
+    floor tile is built rather than cut (the pack's ground is hexagonal and a hexagon cannot
+    tile a square grid) and `--floor` **asserts that a one-tile prism draws at exactly
+    `GroveFloor.TileWidth`**. It was wrong when that assertion was written.
+    <br>**The models are committed and the renderer is offline.** Every art tool here is
+    Python with a `--check`, and the one Editor exception is the particle bake for a stated
+    reason — no Python can rasterise a particle system. A static mesh is not that, so
+    `Tools/kaykit.py` rasterises it on the CPU and any checkout can rebuild the whole
+    catalogue with no Editor open. `--vendor` copies in exactly the models the roster names.
+    <br>**Not one old piece id survived, and that is why the reset needed a mechanism.** See
+    16n. `Tools/grove_retired.txt` is the permanent record of all 163 and `grove_roster.read`
+    refuses one outright, which is what caught eight collisions (`well`, `pine`, `tent` and
+    five more) before they could resolve to an object nobody bought.
+16n. **A union-joined set cannot be cleared by clearing it, so a reset is an epoch.** Everything
+    the grove stores is merged so that nothing is ever lost — purchases and land by union,
+    placements by the later stamp — which is invariant 11's promise and also means *deleting a
+    grove is not expressible*. Clear the fields and push, and the next pull joins the server's
+    copy straight back; wipe the server, and the first device that has not synced pushes it
+    back up. Neither half can win, because a monotonic join has no way to say "this is gone",
+    only "I have not heard of it".
+    <br>`groveEpoch` (v24) says it: one integer that only ever rises, merged by `max` like
+    every other mergeable number (11b), and the rule is that the **lower epoch's grove is
+    discarded rather than joined**. Two devices converge on the higher one whichever order
+    they meet in, and a device offline since before the reset cannot reintroduce what the reset
+    removed however long it stays away. It needs no server function to be correct, which is the
+    property a one-off wipe could never have — `firebase/seed/reset-groves.mjs` is the tidy-up
+    for the synthetic saves and the published cards, not the mechanism.
+    <br>**It is asked in one place**, because a rule that spans the grove's three sections has
+    to reach all three or none — a grove whose purchases were kept and whose placements were
+    dropped is a floor standing on pieces nobody owns. `GroveSave.LoadFrom`/`WriteInto` is that
+    door, and a fourth section added next year is one line in it rather than a hunt through
+    `SaveService`.
+    <br>**And `SaveDelta` has to compare it**, which is the half that is easy to miss: a device
+    that cleared an old grove and has placed nothing since differs from the server in this field
+    *alone*, and until it is pushed the server's copy still claims the older epoch and wins the
+    join back — a loop, not a no-op.
+    <br>**What it must never be used for is taking things away from players.** A grove's worth
+    is derived from what is held in it and reaches a public leaderboard (19a), so raising this
+    refunds nothing and silently lowers somebody's standing. It exists because the catalogue it
+    indexes was *replaced*, so those groves were already holes standing on ground nobody could
+    account for.
+16o. **Placing something is a draft, and the whole of what was wrong before is that it was not
+    one.** Reported after playing the rendered catalogue: *a wall visually holds four tiles but
+    the game thinks it occupies one, and it is hard to place, move and turn things*. The first
+    half was already false — `HomesteadPiece.Footprint` has been what a piece occupies since
+    16i — and that is the finding rather than a correction: **the rule was right and nothing on
+    the screen said so**, because the only thing a tap produced was a panel. A four-tile wall
+    that lights one tile is a four-tile wall the player has every reason to believe is one tile.
+    <br>**So the gesture was rebuilt around an object that holds the whole answer.**
+    `GroveDraft` (Domain) is a piece id, an anchor, a facing and a source — stock or floor — and
+    it answers `Fits`, `Stand` and `Footprint` from one place. What it replaced was 390 lines
+    inside `HomesteadScreen`: an `_editing` flag, a `_dragging` flag, a ghost, two mark sets, a
+    cached plan and four loose coordinates, so *what is lit*, *what will be written* and *is the
+    button live* were three answers kept in step by hand. `GroveDraftView` (Presentation) draws
+    it and decides nothing, which is the same split `GroveFloor` made for the geometry.
+    <br>**Four rules the rebuild is made of, each answering a sentence of the report.**
+    *Every tile of the footprint is lit*, green or red, from the same plan the drop executes
+    (`GroveFootprintMarks`) — one diamond per tile, never one on the anchor. *Moving is centred
+    and clamped and never relocates*: `MoveTo` puts the footprint's middle under the finger and
+    clamps it onto the floor, so a drag cannot silently jump a wall two tiles sideways to
+    somewhere it happens to fit. *Turning is allowed even where it will not fit*, because a turn
+    the player can see refused is a control and a turn that is swallowed is a broken button —
+    `Turn` steps one quarter and the marks go red. And *nothing is written until Confirm*:
+    `HomesteadLayout.Rest` takes the anchor and facing it is given, searches for no better one
+    and swaps nothing, so the tile that was lit is the tile that is taken.
+    <br>**A tap on a tile lifts what is standing there into the same draft**, so moving a piece
+    and placing a new one are one mechanism rather than two — which is why `GroveDraftSource`
+    exists at all: the only difference is that a lifted piece may be *removed*, and that the bar
+    gains a third button. The inventory is a button in the bottom-left corner and the floor is
+    no longer a way into it, because a floor that opens a shop on every tap cannot also be a
+    floor you drag on.
+    <br>**And the mark saying what a move is leaving has to use the footprint it was standing
+    at, which is the third time this rework re-derived a fact the draft already knew.** The
+    origin light was lit from `piece.Footprint` — the catalogue's own, which is the piece **as
+    drawn** — so anything that had been turned lit its origin across the grain, on tiles it had
+    never stood on; reported as yellow tiles appearing rotated under the piece the instant a drag
+    began. An odd quarter swaps the axes, and `GroveDraft.Footprint` had said so for the ghost
+    end of the same move in a remark promising *there is deliberately no other way to ask*.
+    `FromFootprint`, `FromCol` and `FromRow` are that promise kept at the other end: it is the
+    facing it was **lifted** at, so it stays put while the piece is turned in the air, because
+    the origin is a fact about where it came from and not about how it is being held.
+    <br>**A tap and a drag ask different questions, and one method was answering both — which
+    is two reported faults with one cause.** `GroveFieldView.TryTileAt` is the *tap's* question,
+    *what did I touch*: it prefers whatever is **drawn** over the point (16i's rule, or an oak is
+    nine tiles of air around a trunk) and refuses a point over nothing. Both are right for a
+    finger that is choosing something and wrong for a finger that is already holding something,
+    and the drag was asking it. So the ghost **froze** the moment the finger left owned ground —
+    a refusal leaves the drag with no tile to move to — and it could never be taken **behind** a
+    piece, because the piece's own paint won the point and the ghost snapped to its anchor, which
+    is in front of where the player was pointing. Reported as two complaints; neither is a bug in
+    the drag. `GroundTileAt` is the drag's question — the floor's own grid, as geometry, with no
+    preference for what is drawn and no refusal for ground nobody owns — and it answers an
+    out-of-range tile rather than nothing, because `MoveTo` already clamps, so a finger dragged
+    off the edge keeps its direction and the ghost rests against the nearest legal tile.
+    **Letting the ghost travel over unowned ground costs nothing**, because `Fits` asks
+    `GroveLand.IsBuildable` of every tile of the footprint: it goes red there and `Commit`
+    refuses, which is the same wall said in the place the player is looking.
+    <br>**And a key is as wide as its own caption, measured.** TAKE AWAY overflowed a key cut for
+    TURN, and a caption that overflows is not clipped (37n), so the words printed over the floor.
+    A second constant for the wide one would be wrong again in the first language that disagrees
+    with English about which word is longest, so each key is grown to `Label.preferredWidth` and
+    the bar is laid out in a second pass once every caption has been measured. The kit's own
+    inset is read back off the button rather than copied, or there would be two numbers to keep
+    in step.
+    <br>**And the empty-tile ring came off with it.** A breathing ring on every buildable tile
+    was the invitation while tapping a tile was how the shop opened; with a button doing that
+    job it is a hundred and ninety-six invitations to a gesture that does nothing — and the
+    breath under it was half of what "the tiles reload while I am building" was (16k).
+    `GroveTileCell` draws the ground and what stands on it and nothing else, and it is a file of
+    its own rather than a nested class, because a cell holding a back-reference to a screen is
+    how a screen becomes the only place a floor can be drawn.
+16p. **The floor doubled and the home ladder ends in a castle, and what made both
+    affordable is that one of them paid for the other.** The field went 14x14 to **28x28** —
+    196 tiles to 784 — and every region on the ladder at least doubled with it, which is what
+    was asked for. The prices did not move, so every rung is simply a better deal than it was;
+    land is still 11,000 credits and 6,200 gems for the lot, and a grove's score is untouched
+    by any of it, because worth is what a region *costs* (16g).
+    <br>**The origin and the hall did not move, and that is the rule rather than a courtesy.**
+    A tile id is its absolute coordinate, so the floor may only ever grow right and down
+    (16b) — scaling the layout would renumber every tile in the world. What *is* redrawn is
+    which region sells which tile, which 16b explicitly allows because it never changes what
+    is standing on one. The centre band therefore has to start at the hall, and the bands fall
+    out of that: **6 | 12 | 10** in both axes, which is why they are not equal thirds. The
+    hall keeps `t_006_006` and sits at the **back corner** of the starter plot, which is the
+    corner it wants — depth is `col + row`, so the back is where a tall thing belongs and the
+    twelve tiles of new ground are all in front of it.
+    <br>**The hall is 4x4 now, and that is what let the ladder end somewhere.** The rungs are
+    Cottage, Farmhouse, Barracks and Citadel; the last two are the pack's blue barracks and
+    castle, which are *drawn* at four tiles. Every dwelling must match the hall's footprint
+    (16i) — the plot is reserved up front so that buying a bigger home never evicts what stood
+    beside the smaller one — so a 2x2 hall could not have held either of them without the art
+    overhanging two tiles in every direction. Growing the hall is the same change seen from
+    the other end, and it costs nothing in proportion: 4 of 28 is what 2 of 14 was.
+    <br>**The two small rungs are scaled and the two big ones are not**, and the ladder is
+    read off the drawing rather than off the price: 2.54, 2.76, 3.60 and 3.83 tiles wide and
+    4.97, 6.63, 7.25 and 12.37 tall, climbing in both axes inside a four-tile plot. The first
+    cut had Barracks coming out *shorter* than Farmhouse, because the small models had been
+    over-scaled to fill their new plot — **a ladder that climbs in price has to be checked for
+    climbing in size, and only measuring says so.**
+    <br>**Retired ids that must never be reused:** the homes **`home_longhouse`**,
+    **`home_tower`** and **`home_keep`**, and the decor **`barracks`** and **`citadel`**, whose
+    models the two new rungs wear under new ids. Minting `home_barracks` and `home_citadel`
+    rather than promoting the decor ids is what keeps `homesteadStock` honest: a decor id that
+    quietly became a dwelling would be a purchase nobody made.
+    <br>**What it cost that nothing warns about is the showcase villages.** Ten hand-authored
+    plans are a grid the size of the floor, so a resize refuses all ten at the seeder rather
+    than shipping them short — which is the gate working. They were re-composed against the new
+    bands, and the honest change is that a keeper now owns **fewer rungs of the land ladder**,
+    because one region is 60 to 144 tiles where the whole old floor was 196.
+16q. **The hall's seat moved from content into the save, and what it cost is the wire's four
+    places and nothing else.** Reported as three things after playing the doubled floor — let me
+    zoom out further, let me move and turn the town hall, and let me move my companion — and only
+    the middle one was a feature. A hall stood on `GroveFloor.HallTile`: one tile, for every grove
+    in the world, authored in `homestead.json`. So there was nowhere for a move to be *written*,
+    which is why `GroveDraft.FromFloor` refused the hall by name and why a tap on it opened a panel
+    instead. `groveHall`, `groveHallFacing` and `groveHallSetUnix` are **save v26**.
+    <br>**It is an instruction, not an entitlement, so it is the second thing in this grove a
+    merge can lose** — and it is exactly the shape 11c prescribes. Two devices holding different
+    tiles are not both right and there is no third tile meaning "both", so it is joined by
+    **recency against its own stamp** rather than on value; and the default is **never written
+    down**, so a grove nobody has rearranged and one deliberately put back are different facts —
+    the second carries a date and can win a merge, the first cannot. A row with a slot and no
+    stamp is not a decision and loses to one that has both, because nothing can ever be later
+    than a value nothing set.
+    <br>**Every runtime question about where the hall is goes through `HomesteadLayout.HallSeat`**,
+    which resolves the stored seat and falls back to the floor's. That is the whole of the work:
+    `GroveFloor.HallTile` is still correct and has stopped being the *answer*, so a reader left
+    pointing at it is not a compile error and not a crash — it is a home drawn on one tile and
+    hit-tested on another, or a stretch of ground the hall has left that can never be built on
+    again. Five readers had to move (the occupancy index's stands, `GroveLand.IsBuildable`, the
+    two guards in `Rest` and `Move`, the region fill, and the hit box), and the one that was
+    **not** obvious is `GroveOccupancy.Fits`, which refused `floor.IsHall(col, row)` outright: the
+    hall is a stand *in* the index, so that line was redundant while the seat was content and
+    became the bug the moment it was not — it refused the tile the hall had left for ever and
+    waved through the one it had arrived on.
+    <br>**The hall is a `GroveDraftSource` of its own rather than an ordinary floor draft**, and
+    the two differences are both rules. It is written through `MoveHall` and never as a placement
+    row, because what stands on it is still derived from the best home owned and a second record
+    of which house the player has is a second thing a merge can disagree about (16). And it can
+    never be **taken away**: there is no grove without a home, so `Remove` refuses it rather than
+    the bar quietly hiding a button — a control that is sometimes absent is one nobody learns.
+    <br>**It asks `GroveLand.IsOwned` where everything else asks `IsBuildable`, and that is not a
+    loosening.** Buildable ground is owned ground *the hall is not standing on*, so asking it of
+    the hall would refuse every seat overlapping where the house already is: a home could be moved
+    a long way and never a short one, and turning one on the spot would be refused outright. Its
+    own tiles are freed the way a moving piece's are, by the index's ignore key.
+    <br>**The gesture is a hold, and the tap is kept** — a house is the thing a player looks at
+    most and the question at one is almost always *where am I on the ladder*, so reaching that
+    through a menu would be the worse trade. `GroveFieldView.TileHeld` already existed and nothing
+    had ever subscribed to it. The hold lifts **anything**, not only the hall, because a gesture
+    that works in one place and nowhere else is one nobody finds twice; and the home panel carries
+    one quiet line naming it, since a gesture nobody is told about is a feature nobody has.
+    <br>**The seat reaches the public card, and leaving it off would have been a visible bug
+    rather than a cosmetic one.** A visitor drawing a stranger's hall at the authored tile would
+    paint it over whatever its owner has since built there — two stands on one set of tiles, which
+    the occupancy index resolves without complaint. It is `hall` / `hallFacing` on the card,
+    published by `grove.ts`, and **absent is a real answer**, which is what makes it safe to ship
+    before the functions are redeployed: a card with no seat draws the hall where the floor says,
+    which is what every card said yesterday. It is in the **fingerprint** too, or a player could
+    move the largest object in their grove and every board would go on showing the old one for
+    ever (19j, arriving through a field rather than a stale read).
+    <br>**And the card has to be built from the seat as it is *written* rather than as it
+    resolves.** `OfPlayer` reads the ledgers and `OfSave` reads the pushed file, and only the
+    first can see the floor's fallback — so a resolved seat would make the two disagree about a
+    grove neither of them had touched, and the fingerprint that decides whether a publish is owed
+    is built from both. `HomesteadLayout.HallSlot` is the raw reading and exists for that one
+    caller.
+    <br>**Two things that are easy to get wrong and cost nothing to state.** The occupancy index
+    is memoised on `_version`, and the hall is *in* it — so a seat written without bumping that
+    leaves every reader going through `Occupancy` answering about the old tile while `HallSeat`
+    and `IsHall`, which read the field directly, answer about the new one; that is not a stale
+    picture, it is a grove where two different tiles are both the hall. And a seat naming a tile
+    **off this floor** falls back rather than refusing: a drop that shrank the world under a saved
+    seat must not cost somebody their house, and the check is the whole footprint rather than the
+    anchor alone.
+    <br>**The homes are rendered at four facings now** (`DWELLING_FACINGS`), because a facing here
+    is a different picture rather than a transform (16m) and a hall forced to draw at nought would
+    paint one picture and hit-test another.
+
+16r. **The pack's building types are spent, and the two it had left were refused for the
+    reason the floor tile is built rather than cut.** Asked for on 2026-09-12 against a future
+    where each building carries an ability — gold every few hours, a buff to the turret line —
+    which makes *types* the thing worth counting rather than pieces. Surveyed, the Medieval
+    Hexagon Pack ships **21** placeable building types and the grove was using 18; the three
+    unused were a **tavern** and the two *finished* towers, which is a distinction worth keeping
+    straight because `watchtower` is `building_tower_base`, the bare stump the pack means as a
+    foundation. `tower_stone` and `tower_round` are that base carrying its own top — two parts
+    joined in the model column — so they are not a second version of it and are priced above it.
+    <br>**Two more models are named `building_*` and are not buildings, and the render is what
+    said so.** `building_dirt` and `building_grain` are a worked-earth patch and a crop field,
+    flat and the width of a hex — which reads as exactly what this grove wants for a plot that
+    *produces* something, and they were authored, rendered and placed before anybody looked. They
+    are **hexagons**. 16m already records that this pack's ground is hexagonal and a hexagon
+    cannot tile a square grid, which is why the floor tile is built rather than cut; a field's
+    whole job is to read as ground, so a hexagonal one is the single shape it may not be. Every
+    numeric gate was green over both — the catalogue validated, the masks matched their pictures,
+    the loc keys resolved — because no gate in this project opens a PNG (32b, for the twelfth
+    time), and `Tools/render_grove.py` answered it in one picture. **A model named after a
+    building is not evidence that it is one.**
+    <br>**What is left is colour, and it is deliberately not taken.** Every civic type ships in
+    blue, green, red and yellow and the grove uses one of each — 33 colourways sitting unused,
+    about 10 MB of PNG and a structure shelf of 58 rather than 25. They are **not** more types:
+    a green smithy and a red smithy want the same ability, so a shelf grown that way is 37z's
+    complaint arriving in the grove (two things told apart by a hue are not told apart) and 5d's
+    decoration arriving on something a player pays for. If they are ever wanted they are a
+    generated block of roster rows and one re-render, and **the ability must key on the type
+    rather than on the piece id** or the same building does two things depending on its roof.
+    <br>**And the ability system has nothing to store yet, which is the half to protect.** A
+    building that pays out over time is a *count* and a *clock*, and 11b refuses a stored count
+    outright — what is mergeable is "credits this building has ever produced", derived against
+    the time it was placed, which the save already knows from the placement row's stamp. Nothing
+    about that needs a schema version today, and it stops being true the moment somebody stores a
+    balance instead.
+
 16a. **A resident is a companion, and the roster is written down once.** The grove used to author five of its
     own — a second roster with its own unlock rule, its own prices and two screens that could disagree about
     what somebody owned. `GroveResidents` projects the roster in, so a drop that adds a companion adds a
@@ -2099,6 +2396,17 @@ In practice:
     its board cannot say.** The last wave is drawn gold, because "this is the last one" is what the
     number is really for — and on a siege that ends in a warlord it is also the warning that the
     last one is not like the others. `mode.cap.wards` is a retired loc key.
+    <br>**And the other two came off as well, which is the same rule applied twice more.**
+    The header is now the wave and nothing else. **"Left to clear" is the raiders still walking
+    down the hill**, which is the largest thing on the screen — a second copy of what the player
+    was already looking at, exactly as the ward line had been. **The matches count is the number
+    a siege is *graded* on** (37a), so dropping it is a real trade rather than a tidy-up: a player
+    cannot watch their own star line during a run and meets it on the victory panel instead. The
+    argument for going anyway is that it is the one reading here nobody can act on — a match is
+    worth the colour it was and never the count, so there is no play anybody would change on
+    seeing it. **If it comes back it belongs where the eye is already going, not in a third
+    column.** A row of one sits in the middle (`ReadoutRow.XFor`), which is also the only slot a
+    dynamic island can reach — so the row cannot be moved up any further than 37an put it.
 37w. **A ward can be upgraded, and the whole mechanic is one question asked about the *line*
     instead of about the hill.** A **cog** falls into the field like a gem, never lines up with
     anything, and is destroyed by a run of gems made **beside** it — and the colour of that run
@@ -2305,23 +2613,38 @@ In practice:
     and cropping a rectangle out of it only hides the skirts, leaving a diagonal weave under a
     board whose every other element is square. That was built, looked at, and thrown away. **An
     isometric pack is not a top-down pack and no amount of transforming makes it one.**
-    <br>So ten places are made out of the mine set's own square slabs, three ways at once: a
-    **gradient map** (`toned`) reads each slab's luminance through a two-point ramp, which is
-    what a hue rotation cannot do — `hued` turns the wards because the kit *paints* them, and
-    rotating the hue of stone sitting at a chroma of two leaves it exactly as grey as it was, so
-    the colour has to be supplied; a different **mix** of the thirteen slabs; and a different
-    **seed** laying them, so two rungs never share a paving pattern. What that buys is real and
-    what it cannot buy should be said out loud: every rung is stone, cut the same way. Nine more
-    top-down tilesets would replace `TONES` with nine `zipped` calls and change nothing else.
-    <br>**Value is the one thing a second ground may not change**, and a gradient map picks its
-    own endpoints so nothing about it keeps a ground where the cast can be seen. Every rung is
-    normalised onto the mine floor's *measured* mean and spread — so re-cutting the mine moves
-    the other nine — and chroma has a ceiling (`GROUND_CHROMA_CAP`), because at their own
-    saturation the moss and the ember read as *brighter* than the rest with their value
-    identical, and a saturated floor is the one thing on this board competing with the cast
-    walking over it. That is CRAFT.md's plate rule and 37f's, said about the floor. It is also a
-    fault this hill has had twice already: its second ground was the grass pack "chosen for
+    <br>**The first answer was one tileset regraded ten ways, and that entry named its own price:
+    "every rung is stone, cut the same way — nine more top-down tilesets would replace `TONES` with
+    nine `zipped` calls and change nothing else". The owner then supplied eight of them, and the
+    prediction held to the letter.** `GROUNDS` is now a sheet, a tile mix and a seed per rung;
+    `toned`, the gradient map that had to *supply* a colour to stone that had none, is deleted,
+    because every sheet is already a material — grass, blue stone, sand, ice, granite, sandstone,
+    mossy cobble and lava, at six by five tiles each. Eight sheets over ten rungs means two are
+    used twice, seven rungs from their twin, and **no two rungs running share a material**, which
+    is the half that matters because what a player can compare is the rung they are on against the
+    one they just left. The finale is the lava and is the only rung that wears it.
+    <br>**A tile sheet is cut from its own alpha box and never from its file size**, because three
+    of the eight are exported with a transparent margin — dividing the file puts every seam a few
+    pixels out and slices a strip of each tile onto its neighbour, which reads as a grubby grid
+    rather than as an error and is exactly the class of fault no gate here can see.
+    <br>**Value is the one thing a second ground may not change**, and a pack of eight materials
+    makes that *more* pressing rather than less: these sheets are drawn for platform games, and
+    several are brighter and far more saturated than anything that has ever floored this board.
+    Every rung is normalised onto one designated rung's *measured* mean and spread
+    (`GROUND_PLAIN`, which is the granite at rung five, where the first warlord stands) — so
+    re-cutting that one moves the other nine — and chroma has a ceiling (`GROUND_CHROMA_CAP`),
+    because at their own saturation the grass and the lava read as *brighter* than the rest with
+    their value identical, and a saturated floor is the one thing on this board competing with the
+    cast walking over it. That is CRAFT.md's plate rule and 37f's, said about the floor. It is also
+    a fault this hill has had twice already: its second ground was the grass pack "chosen for
     brightness", and the owner's third call moved it to a mine.
+    <br>**And "random" is the one word of the ask that is not honoured, on purpose.** A chapter
+    preloads exactly one ground per rung (`SiegeMode.ArtFor`) and two switches in two assemblies
+    have to agree about which (`SiegeGroundTests`), so a floor rolled when the board opens is
+    either ten grounds resident for ever or a white rectangle over the whole hill (invariant 7b).
+    What varies is the sheet, the tile mix and the seed — which is the variety that was wanted —
+    and it is arithmetic on the level's place in its chapter, so a second siege chapter still costs
+    no art at all.
     <br>**Which ground is arithmetic on the level's place in its chapter** (7c), so ten serve
     every siege chapter that ever ships and a second one costs no art. It is `SiegeMode.Ground`
     and `SiegeView.GroundAddress`, **two switches of ten literals**, because `artnames.py` reads
@@ -2330,6 +2653,308 @@ In practice:
     load one floor and draw another, and an `Image` with a null sprite is a **white rectangle**
     over the whole hill on one rung, with the address real, registered, audited and even loaded
     by a different level. `SiegeGroundTests` is the comparison, and it was proved by breaking it.
+    <br>**And the fourth answer is that a ground should be a *place*, not a surface.** Reported as
+    *"I don't like the tiles, and they are huge"* — one complaint said twice: at four tiles across
+    512 pixels each is 128, about two gem-cells on a phone, so the eye reads a **lattice** before it
+    reads anywhere. **Three attempts failed before the fourth worked, and the pattern in them is the
+    finding.** KayKit's 3D floors were baked and held against the shipped grass and granite: flatter
+    and greyer, because *a better slab is still a slab*. Then the whole thing was **generated** —
+    height field, relief shading, ambient occlusion, domain-warped noise, Worley cells, six
+    structural forms — which was technically sound, landed on the right value ladder, and came back
+    from the owner as *the most disgusting tile I have ever seen*. Both are deleted. **All three were
+    trying to make a better texture, and what a battlefield wants is somewhere it is happening.**
+    <br>**So the hill is composed.** `Tools/make_siege_ground.py` lays two bought top-down sets into
+    a **mine the raid is marching out of**: stone, dirt and ochre floors with their own crack
+    variants, boulders and mossy rocks, crystal seams, and the raid's own fortifications — stakes
+    driven into the ground, broken fences, abandoned barrels and planks. Ten rungs are ten workings
+    of one mine, which is a set of decisions rather than a noise function, and it is the first
+    ground here a player could **describe** — which after 37aw re-laid them is the adit, the
+    crevasse, the cutting, the violet seam, the deep, the stockade, gemfall, the emberworks, the
+    shaft and the last working.
+    <br>**Superseded by 37aw, which laid the same two packs a different way** — `ACROSS` is gone
+    and eight was still a paving. The reasoning it was arrived at by is kept because the half of
+    it about the scatter survived.
+    <br>**`ACROSS` was eight against the tilesets' four**, which is the half of the report a number
+    answers: 64 pixels a tile, about one gem-cell, which is the size the eye reads as floor rather
+    than as paving. Variety is a tile *and a quarter turn*, so six drawings give twenty-four faces;
+    and the scatter is placed by its own footprint rather than by a cell, so nothing lying on the
+    floor lines up with the lattice under it — which is most of what stops the lattice being the
+    thing you see.
+    <br>**Two rules bind the composition, and both are this file's own.** The brighter pack is used
+    for its **props and never its ground** — its checkerboard greens and oranges are exactly what a
+    floor may not be (CRAFT.md's plate rule) — and anything borrowed from it is calmed to
+    `PROP_CHROMA` first, because it is drawn for a platform game. And **no scattered thing may wear
+    a board colour**: the crystal seams ship in orange and blue, which are `Pal.Amber` and
+    `Pal.Azure`, and a raider's colour is the whole mechanic (37f) — a glinting amber crystal on the
+    ground is a thing every player must learn means nothing, paid for on every run. Every seam is
+    rotated onto a **violet** no gem, ward, bolt or raider uses, from whatever hue it shipped as.
+    <br>**The value ladder is now written down rather than measured off a rung.** It used to come
+    from whichever rung `GROUND_PLAIN` named, which kept the ten agreeing with each other and left
+    *where* they agreed at the mercy of one rung's own brightness — a set drawn for a dark dungeon
+    dragged all ten to a mean of 84 against the 147 the cast was judged against. `GROUND_MEAN` and
+    `GROUND_SPREAD` are that 147.2 / 34.0, recorded. **And `GROUND_CHROMA` exists because grading is
+    affine**: lifting luminance 84 → 147 divides apparent saturation by the same 1.75 and the result
+    is pastel, so the colour offset is multiplied back by 1.5. `GROUND_CHROMA_CAP` went 12 → 24 and
+    is now a ceiling on *one material* — the red floor carries nearly four times the colour the grey
+    one does, and pushed further it stops being terracotta and becomes **orange**, which is a board
+    colour again.
+    <br>**Four faults on the way, each invisible to every gate.** A zip entry test spelled `/PNG/`
+    matched the pack that nests its folder and silently not the one that puts it at the root, so
+    both packs read as absent. `spin` is **a fact about the object**: a rock, a plank and a crystal
+    have no up, and a barrel, a stump, a gate and a fence do — span, the fences came out lying at
+    thirty-seven degrees. A **gamma** lift to fix the darkness lifted the shadows with it and washed
+    everything to pastel; the affine grade was the right tool and the gamma is gone. And the prop
+    set's moss is a lime-yellow splat that reads as a spill rather than as growth, and had to be
+    taken to less than half value before it read as damp stone.
+
+37av. **The sixth ground is a plain grid of small tiles, and what it is really a record of is
+    five rounds spent pushing the wrong axis.** The instruction was four words long — *do not try
+    to design anything, just use pure plain tiles*, and *small* ones.
+    <br>**Each of the five before it was more deliberate than the one before.** A drawn wash, a
+    grass pack, a mine floor read through ten gradient maps, eight tilesets laid four across, and
+    then a *composition* (37aw): bedrock plates with chasms running through them, strata of warmer
+    stone worked into the rock, rockfalls banked against ledges, the raid's own stakes and fences
+    strung across the path — ten rungs that were ten **places**, each with a shape a player could
+    point at. Every round of that was a response to a complaint, and every round answered it by
+    being *more designed*. The verdict on the last was that the design was bad and that none of it
+    had been wanted.
+    <br>**The lesson is not "the composition was bad", it is that craft was never the axis.** Two
+    rejections in a row along one direction is the signal to ask whether the direction is right,
+    and it was asked five times in a row and never answered. A floor on this board is *behind* four
+    gem colours, a cast, four turrets, bolts, damage figures and a chain banner — it is the one
+    surface whose job is to be unremarkable, and everything that made it a place made it compete.
+    **When a brief says a thing should be plain, more work makes it worse, and the amount of work
+    already spent is not an argument.**
+    <br>**What survived the reversal is exactly the bug fixes, and that split is worth naming.**
+    The canvas is still authored at the aspect the hill band really is and the view still envelopes
+    rather than stretches (37au) — without that every tile here is drawn as a rectangle — and the
+    ground is still normalised below `CAST_VALUE` so the floor stays darker than what walks on it.
+    Neither was a decision; both were things that were *wrong*. Everything that was a taste
+    decision went. **A fix outlives a reversal and an opinion does not**, which is a useful thing
+    to know before starting: it says which half of a rejected piece of work to keep.
+    <br>**The deletion is most of the deliverable.** `patch`, `fissure`, `mass`, `drift`, the
+    value-band normalisation for strewn things, the board-colour calming table, the hue rotation
+    and the entire second pack are gone; `make_siege_ground.py` went from **716 lines to about
+    210**, and the prop zip is not opened at all. What is left is: read a pack, tint a tile, lay a
+    grid.
+    <br>**Small is `ACROSS` and it is sixteen** — a 64-pixel tile drawn about 74 points on a phone,
+    roughly half a gem cell, against the composition's six across and the tilesets' four. Both of
+    those were reported as *huge*. `DOWN` is **derived** from it rather than typed, because a tile
+    is square and a non-square cell stretches every tile before the view ever sees it — which is
+    how the old 512x640 canvas hid that fault for two rounds, its 5x6 giving a cell of 102x107 that
+    was square by luck.
+    <br>**Ten floors are three materials and a hue each, and getting there took one wrong turn
+    inside this round.** They were laid from a single family first, because *mixing* families had
+    been done badly — the rungs carrying the near-black faces came out visibly checkered and the
+    ones carrying the chasm faces read as holes, so ten floors differed in *structure* when nobody
+    had asked them to. The fix for a bad mix is not no mix: the pack has **three whole materials**
+    in it — cave rock (soft mottled faces), cut stone (crazed all over with fine cracks) and blocks
+    (a lit top and a front lip, so a field of them reads as laid brick) — and cycling those three
+    means no two rungs running share a floor and nothing about any one of them was composed. The
+    chasm and near-black tiles stay out of every family: in a plain grid they are holes somebody
+    scattered.
+    <br>**And the colour was then turned up, because ten floors at .04-.10 saturation are one grey
+    floor.** Asked for as more variety. The measurement that settles where to put it is the pack's
+    own: its brick and blue faces come out at **.55 to .73** after grading, which is the "too
+    bright" this ground was first rejected for, and the second pack's floors are worse (.71 olive,
+    .72 green). Swept against that, **.12 is still nearly grey, .18 reads as tinted stone, .26 is a
+    coloured surface and .34 is a wash**; the ten sit at .13-.22, which measures 3.6 to 10.1 chroma
+    against `GROUND_CHROMA_CAP`'s 24. **A floor may carry a real colour; what it may not do is
+    carry a *board* colour** - `Pal.Poppy` .99, `Pal.Amber` .075, `Pal.Mint` .31, `Pal.Azure` .56 -
+    and every rung clears all four by at least .04 of the wheel. `rust` (.04) and `moss` (.24) are
+    the two nearest a gem, and the green floors behind a green raider are the pairing to check on a
+    device first.
+    <br>**And `stain` had to set saturation absolutely rather than scale it, which is invisible
+    until a second material exists.** Scaling what a tile already carries is fine while every tile
+    is nearly grey; the pack's brick faces ship at about half saturation, so the same tint that
+    left the rock a quiet slate turned the brick a **vivid blue** — two floors meant to differ in
+    material differing in *loudness* instead. Setting it makes a family's own colour irrelevant,
+    which is the whole point of tinting. **A constant tuned against one input is a constant nobody
+    has tested.**
+    <br>**And then the question that undid most of the above: *did you genuinely use different
+    tiles, or just recolour them?*** The honest answer was **recoloured** — three tile families out
+    of one mine pack, dressed as ten floors. Asked again whether there were other tiles, there
+    were: **eight complete top-down tilesets, 240 tiles**, sitting in `~/Downloads/tiles` — mossy
+    bluestone, sandstone, ice, lava, granite, grass, cobble and sand. They had floored this hill two
+    grounds earlier, been laid **four tiles across**, been reported as *huge*, and gone out with the
+    composition that replaced them; when the brief became *plain tiles, small*, the floor was
+    rebuilt from whichever pack happened to be open. **A source rejected at the wrong size is not a
+    source rejected**, and nothing in this file said so — which is what let a whole tileset library
+    sit unused for three rounds of work about tiles.
+    <br>**So the ten are now seven whole materials rather than three recoloured.** `stain` is gone
+    and `damp` replaces it, and the two are opposites worth naming: staining *overwrites* hue and
+    saturation, which is the only way to make twenty-two mine tiles look like ten floors and can
+    never make sandstone look like ice; damping only turns a material's own colour down and leaves
+    every crack, speck and bevel where the artist drew it.
+    <br>**What that costs is that the sheets are loud.** Laid raw they measure chroma **8 to 24**
+    against the 3.6–10.1 of the floors before them, with two of them sitting *on*
+    `GROUND_CHROMA_CAP` — a lava floor is `Pal.Amber` and an ice floor is `Pal.Azure`. Damped per
+    sheet they land at **6.9–11.2**, and the per-sheet figure is measured rather than chosen: ice
+    and sand need .18–.19 where cobble needs .85, and **lava is deliberately held higher (.55)
+    because below that it stops reading as lava at all**. The grass sheet is left out entirely — at
+    a third it is *still* at the cap, and the owner had already moved this hill off a grass pack
+    once.
+    <br>**And `down` is derived per sheet, not per project.** A tile is 231x214 on one sheet and
+    249x189 on another — 1.08 against 1.32 — so one row count for all eight squashes some by a
+    fifth to fit a cell that is not their shape. That is 37au's stretch one layer further in, and it
+    is unrepresentable now: the cell is built from the tile rather than the tile fitted to the cell.
+    **The rotation went with it** — square mine faces could be turned for free, these are
+    rectangular and lit from one side, so a quarter turn is a tile lying on its side.
+    <br>**Then two of the eight were taken out by the owner, and the rule in that is about which
+    rung gets reported.** The blue ones — `tile1` (mossy bluestone) and `tile3` (ice) — read as each
+    other and were named by the *levels* they sat on: 4, 7 and 11. Level 1 is bluestone too and was
+    not named, because **the rung nobody lingers on is the rung nobody reports**; the instruction
+    said to drop them wherever they appeared, which is what caught it. Five materials were left, so
+    **recolouring came back — asked for this time** ("use from the others (recoloured)"). It is
+    doing the opposite job to before: with three mine families it was the whole trick and the honest
+    answer to *are these different tiles* was no; with five real tilesets the material is always
+    genuinely different from its neighbours and the paint is only what lets five cover ten. Rungs
+    1–4 and 10 keep their own colour, 5–9 are recoloured, and granite carries three because it is
+    the greyest sheet and so takes paint best — recoloured sandstone is sandstone in a jumper.
+    <br>**The tint saturations came out a third of what the same trick wanted on the mine tiles**,
+    and the reason is the material rather than the colour: those faces were dark cave rock, these
+    sheets are bright, and `recolour` builds its value from the tile — so one number lands twice as
+    loud here. Calibrated per rung against the own-colour rungs, all ten sit at **3.3–11.2**.
+    Granite's own-colour rung is damped to .16 where the others sit at .30–.85, because it is a
+    blue-grey and the two sheets just removed were the blue ones: at .40 rung one still read as
+    *that* floor.
+    <br>**And the hill and the rampart now run to the plate's edge rather than the field's.**
+    Reported as tiny side gaps, and they were exactly `ProtoView.Margin` — 18 units — showing down
+    each side, because both were drawn at `Span.x` while the plate is `Span.x + Margin * 2`. That
+    inset is right for every *widget* on a board and wrong for these two: a floor is not on the
+    board, it **is** the board, and so is the rampart the turrets stand on. `SiegeView.PlateWide`
+    says it once and `render_siege.py` mirrors it. The top corners were the thing to check — the
+    plate is rounded there (39g) and the ground's mask is square — and they clear it, because the
+    ground's top edge lands below the corner radius.
+    <br>**Nothing here has been seen on a device**; that is owed.
+
+37aw. **Superseded by 37av, which threw the whole composition away on the owner's verdict —
+    kept because the two *measurements* in it (the value ladder, and what a mirror can and
+    cannot vouch for) outlived the design they were made for.** The fifth ground answered one
+    sentence — *darker colours and better patterns* — and the
+    two halves had nothing to do with each other: one was a number in a different file, and the
+    other was that this floor was being *paved* rather than laid.**
+    <br>**Dark was never a decision this tool could make.** `make_siege_art.graded` renormalises
+    every ground onto `GROUND_MEAN`, so whichever tiles are picked arrive at that value and no
+    choice of darker source can reach past it. It stood at **147** against a cast normalised to
+    `CAST_VALUE` **118** — so the hill was a third brighter than the monsters walking over it,
+    which is CRAFT.md's plate rule exactly inverted, *and inverted in a comment citing it*: the
+    number had been recorded as "the value the cast was judged against" when what it was actually
+    measured off was one tileset's own brightness (37ab records that raise, and records it as a
+    correction). Nothing here could see it. Every gate reads the model; a ground is individually
+    well-composed at any mean; and the two constants live in different sections of one file and had
+    never been read side by side. It is **78** now, and **the rule is the relation rather than the
+    number** — two thirds of the cast, so a bright cartoon raider reads as lit rather than as a
+    silhouette, and if `CAST_VALUE` moves this moves with it. **Whenever two normalisations decide
+    whether one thing reads against another, the invariant is the gap, and a written-down absolute
+    is a gap nobody is checking.**
+    <br>**Pattern was the tool's own fault, and the fix is that a slab is no longer a cell.** It
+    laid one tile per cell of an 8x10 grid, turned a quarter at a time — a *paving* algorithm, and
+    the tiles it was paving with were the pack's **blocks**, which carry a lit top and a dark front
+    lip, so what shipped was a brick wall seen from above. The floor is now laid from the mine set's
+    **flat rock faces** (its assets 1–14, which are cave rock) as **overlapping plates**: drawn
+    larger than the cell they are placed on and pushed off it, in shuffled order. Two numbers do the
+    work and both were found by looking. `SLAB` is always above one, so plates overlap and the
+    order is what makes the depth. And `WANDER` is the one that decides whether this is rock at
+    all — low, every plate meets its neighbours and the hill is a grey sheet; at **.40** three
+    plates fail to meet about once a plate and the mortar shows through as a **black fissure**, and
+    it is the fissures rather than the plates that make an eye read broken rock.
+    <br>**Small tiles cannot be the answer, and that is a fact about the drawing rather than about
+    the size.** A field of them at cobble scale was built twice — as a mosaic and as rubble strewn
+    over plates — and both read as *scattered objects*, because every tile in this pack has a lit
+    bevel that dominates once it is small. The blocks are worse and cannot merge at any size: a lit
+    top and a front lip is a **3D block**, so two of them never become one surface. So a second
+    material is cut from the **flat** faces and told apart by hue, and the blocks are used as what
+    they are — quarried stone, heaped, which is an object and is allowed to look like one.
+    <br>**Colour has to be *added* to a grey, not multiplied.** `hued` rotates the hue it finds and
+    scales the saturation it finds, which is everything the saturated blocks need and **nothing at
+    all** for rock within a couple of points of grey: a stratum meant to read as warmer stone came
+    out invisible, with the multiplier at 1.9 and every gate green. `stain` sets an absolute
+    saturation, and it is what makes ten workings out of four materials. Measured after it: the ten
+    carry a chroma of 3.3–6.5 against `GROUND_CHROMA_CAP`'s 24, so they are colours a floor is
+    allowed and the cap never binds.
+    <br>**A thing lying on the floor is normalised onto the floor's band, exactly as the cast and
+    the floor are onto theirs.** The two packs disagree wildly about brightness — the bedrock
+    composes at 47, a boulder ships at 70 and the prop set's rocks and moss at 126 to 156, over
+    three times the floor — so a scatter left at its own value is a handful of white chips on a dark
+    hill however carefully it is placed. That is the difference between a thing on the ground and
+    **litter**: a brightness that says it matters over a meaning that says it does not. `LITTER` is
+    62; `GLINT` is the one exception, and it is an exception because a crystal is *meant* to be
+    looked at and is the only strewn thing wearing a hue nothing on the board can be confused with.
+    <br>**And the board-colour rule turned out to have been half applied for two chapters.** 37f's
+    argument sent the orange and blue crystals to violet because `Pal.Amber` and `Pal.Azure` are two
+    of the four — and left alone the prop set's moss and the mine set's mossy boulder, a lime and a
+    sage sitting on `Pal.Mint`, and the cut blocks, a terracotta on `Pal.Amber`. A green patch on
+    the ground is a false positive in a game whose entire verb is finding a colour. They are
+    **calmed rather than rotated**, which is the distinction worth keeping: a crystal is moved to a
+    hue that means nothing and left bright because it is meant to be seen; moss and quarried stone
+    are meant to be read as material, so what they give up is the saturation that made them a
+    signal. **A rule about board colours is about every board colour, so grep the palette rather
+    than the thing that prompted it.**
+    <br>**What tells one rung from another is now structure, not hue** — a chasm across the middle,
+    a shaft down it, a stratum of pale stone worked out of the bedrock, a pit, a stockade dug across
+    the path, a drift of crystal. That is the reading the eight-tileset answer was bought to escape
+    (37ab), arrived at from the other side: ten rungs that differ only in colour are one floor
+    painted ten ways whether the colour comes from a gradient map or from a hue turn.
+    <br>**Every one of the above was caught by `Tools/render_siege.py` and by nothing else** — the
+    compile, 1,647 tests, `content.py`, `artnames.py` and `make_siege_art.py --check` were green
+    through all of it, because no gate in this project opens a PNG (32b, for the eleventh time), and
+    `--check` proves only that the tool reproduces what it wrote. **Nothing here has been seen on a
+    device**; that is owed.
+
+37au. **"The tiles look stretched and low quality" was two measurements, and the stretch had
+    been on every device this game has ever run on.** Reported the moment 37aw's hill reached a
+    screen. Both halves are arithmetic rather than taste, and neither is about the composition.
+    <br>**The ground was drawn as a plain `Image` sized to the hill band, which scales a sprite
+    independently in x and y.** The art was authored **512x640 — portrait, an aspect of 0.80** —
+    and the band's aspect is **0.99** on a 21:9 phone, **1.14** on an iPhone, **1.77** on a 16:9
+    screen and **2.85** on an iPad. So it was stretched sideways on *every* shape, by 1.24x at the
+    kindest and 3.57x at the worst, and by **1.42x on the shape most players hold**: every square
+    rock plate arrived as a wide rectangle and every rounded corner as an ellipse. The fix is the
+    idiom `Scenery.Cover` has always used for a backdrop — **envelope, never stretch** — so what
+    varies between devices is *how much of the edges is cropped* and never the shape of anything.
+    Enveloping means the art deliberately overhangs the band on one axis, so the ground needs a
+    clip of its own (`RectMask2D`, for the reason `_sky` gives), wrapping the ground alone because
+    the raiders are in `_mobs`.
+    <br>**And it is `SiegeView.GroundSize` rather than an `AspectRatioFitter`, which is
+    `StrikeCentre`'s bargain asked again.** A backdrop's parent resizes under it and the hill band
+    does not — it is one rectangle computed once — so a fitter buys nothing but a dependency on
+    when layout runs, where a static is a thing a fixture can sweep.
+    `SiegeGroundTests.TheGroundCoversItsBandAndIsNeverDrawnStretched` asserts **the consequence**
+    across five screen shapes (it covers, its aspect is the art's, and it is no larger than
+    covering needs) rather than restating the formula, which would agree with a wrong one as
+    happily as with a right one.
+    <br>**Low quality was the import cap, and it is the same fault read off the other end.**
+    `ArtImportRules` capped `/Art/Siege/` at 512 — right for a gem, a turret and a beetle — so a
+    512x640 PNG imported at **410x512** and was then blown up to 1044 across: a **2.55x** upscale
+    of an already resampled texture. A ground is not a prop, so `/Art/Siege/hill` is its own entry
+    at **1024**, placed *before* the folder because the lookup takes the first match — and 1024
+    rather than a backdrop's 2048 because a chapter holds **ten** of these resident at once
+    (`SiegeMode.ArtFor`). **A folder-wide cap is a claim that everything in the folder is the same
+    kind of thing.**
+    <br>**The canvas shape was a second stretch nobody had noticed, inside the tool.** `bed`
+    resizes a square source tile into its cell, so a grid whose cell is not square stretches every
+    plate *before* the view gets to — and 512x640 over 5x6 gave a cell of 102x107, which was square
+    **by luck**. `ACROSS, DOWN` is now stated as near-square on purpose. The knock-on is that every
+    authored size in `GROUND` is a fraction of `W` and keeps its own aspect, so how tall a thing
+    stands is `f x W x ar / H` — which was `f x 0.80 x ar` and is now `f x 1.30 x ar`. Every size in
+    the table came down by `0.80/1.30`. **Changing a canvas's shape re-tunes every number measured
+    against it.**
+    <br>**Nothing offline could see any of it, and the reason is sharper than 32b's usual one.**
+    It is not merely that no gate opens a PNG: `Tools/render_siege.py`, the one instrument built to
+    catch a widget in the wrong place, **stretched the hill in exactly the same way the game did**.
+    So the mirror reproduced the fault faithfully, every picture it drew agreed with the device, and
+    all of them looked composed. **A mirror can only ever say the two agree — it vouches for a bug
+    as readily as for a feature** (44d, met from a third direction). `envelope()` is the mirrored
+    fix; the fault that remains possible is the two drifting apart, which is what the test is for.
+    <br>**One gate was written, found to be incapable of failing, and rewritten.** The first cut of
+    `make_siege_art.shape` asserted that the pictures the tool had just generated were the size of
+    the canvas it had just generated them on — true by construction. What actually needs joining is
+    the tool and `SiegeGroundTests.GroundAspect`, which has to *type* the shape because an offline
+    run loads no sprite; so the check reads that literal out of the fixture and holds it to
+    `make_siege_ground.W/H`, and it was proved by breaking it. **Before writing a check, ask what
+    would have to be true for it to fail.**
+    <br>**Nothing here has been seen on a device**; that is owed.
 
 37ac. **"Boring bosses" was a complaint about the drawing and not about the fight, and the
     honest answer to it was to *spend* the window rather than to shorten it.** Reported from a
@@ -2580,8 +3205,11 @@ In practice:
     invariant 37k — and every other turret throws one effect of its own in four colours. That
     was honest for exactly as long as the starter was the only model without an ability. The
     owner swapped it: the free turret now throws an ice shard in four colours like any other,
-    and the elemental set moved onto **`rime`**, which is a credit-priced Frost turret. No
-    property of a model tells you that, so `WardModel.Elemental` names it outright.
+    and the elemental set moved off it. **It has since moved twice more** - onto `rime`, and then
+    onto **`breaker`** when both frost rungs took a white snowball (37ba) - so the turret drawing
+    the four elements is a *rend* turret today. No property of a model tells you that, so
+    `WardModel.Elemental` names it outright, and a thing that has moved three times is the best
+    argument there is for naming rather than deriving.
     <br>**Never spelled as <c>IsStarter</c>**, which is what it looks like it should be: that is
     invariant 16j's trap, and here it is not merely fragile but already wrong — the turret with
     the elemental set is one somebody pays for.
@@ -2591,9 +3219,116 @@ In practice:
     is wrong must not fall back to the one turret with no bolt; and the elemental four stay
     resident in the mode's cast, because `WardLine.Art` deliberately does not scope them — drop
     them from one place and the turret that draws them draws nothing.
-    <br>**And the frost turret now throws fire on red.** That is what the swap means and it was
-    asked for with the consequence stated; the ability, the price and the note under it are
-    unchanged, so only the picture disagrees with the word.
+    <br>**It once meant the frost turret threw fire on red**, which was the swap's stated
+    consequence and was accepted at the time; 37ba is what undid it, and the elemental set now
+    sits on an ability with nothing to say about colour at all.
+    <br>**And the reels move with the designation, which is the half that is not free.** The
+    turret that is elemental draws the shared `shot_{colour}` reels and owns none, so moving the
+    name adds twelve folders to one turret and orphans twelve on another. Orphaned art does not
+    fail the game, it fails `BuildPlayer` twenty minutes into an Android build - so a move is
+    delete, `Addressables > Sync All Assets`, **save**, then `Audit Addresses`.
+37bi. **An accessibility rule is about what is on the board at once, so the thing that
+    invalidates it is a change to *who draws it* rather than to the rule.** The elemental set
+    was four elements - a fireball, a venom dart, an icicle and a lightning bolt, one per ward
+    colour - and 37k's argument for that is exactly right: at the size a bolt is drawn a
+    silhouette is the only difference that survives, so a player who cannot separate red from
+    green separates a comet from a shard. What that argument rests on is **four of them in the
+    air together**, which was true while the *starter* threw them and every line was four
+    starters. It stopped being true the moment the set moved onto a bought turret (37ah, three
+    times now): a line stands one turret per seat, so the four elements never meet unless
+    somebody buys the same turret for all four colours - at which point they read as four
+    unrelated weapons wearing one name. Reported off the preview panel in one sentence: *the
+    red Breaker does a different animation from the orange one.*
+    <br>So the set is **one silhouette in four colours**, like every other turret on the shelf,
+    and the silhouette is the **fireball** because that is the one the owner picked. The
+    accessibility property is not lost, because the four bolts a real line puts in the air come
+    from four different *models* and always did.
+    <br>**And the grading had to move with it, which is the half no picture would have hinted
+    at.** `Toward`'s 38% lean is only enough because the elemental four were *chosen* for
+    already wearing roughly the hue they are graded to; a warm fireball leaned a third of the
+    way toward `Pal.Mint` comes out orange, which is invariant 37f's whole subject. The three
+    now carrying a warm source onto a hue it does not have take the **roster** constants -
+    `RosterToward`/`RosterWhite`/`RosterMuted`, the pair nineteen turrets already use for
+    exactly this - and red keeps the elemental pair, because red is the case those were tuned
+    for and the owner asked for that picture unchanged. The constants are on the **row** now
+    rather than on the bake, since how far a source has to be carried is a fact about that
+    source. Invariant 37ae, the other way round: *before reusing a grading constant on art
+    chosen a different way, ask what the old art was chosen for.*
+    <br>**Measured after the bake**: all four reels are 112x384 over 14 frames with **100%
+    silhouette overlap on every frame**, at hues 15, 99, 195 and 35 degrees - one animation,
+    four colours. Red drifted 7.1/255 on the last frames of its trail against a byte-identical
+    muzzle and impact, which is the flight's particle distribution rather than the recipe and is
+    a hair over `CompareAll`'s tolerance of 6. Nothing else moved: no id, no address, no frame
+    count, no manifest entry, no save field. `Bake Elemental Projectiles` is a new menu item,
+    and it exists because the other two parts already had one and this did not - the only way to
+    re-bake a `Shots` row was to re-bake all 253 reels, which is how a bake comes to be avoided
+    and a table comes to disagree with the pictures on disk.
+
+37bj. **A count-in is part of the run, so it is paced by the run — and the first-timer's tip
+    boxes are what proved it was not.** Reported from a device: the tips go up, the countdown
+    goes off behind them, and a player who reads them is handed a hill with no count-in and a
+    wave already due. Every rule involved was individually correct. `RunHold` does exactly what
+    it was built for and stops the board's clock while a lesson is up (invariant 39i's whole
+    argument, and `RunHold`'s own note about a latch with two writers); what it does not stop —
+    what nothing can stop — is a **wall clock**, and `SiegeView.Countdown` was a coroutine on
+    `WaitForSecondsRealtime`. Two clocks, agreeing only because both were
+    `SiegeTuning.FirstWaveAfter` long.
+    <br>**So the same four things hold both, or they hold neither**: a first-timer's tip
+    (`RunHold.Teaching`), the pause menu, a panel over the board (`RunHold.Covered`) and the
+    transition still hiding the screen (`RunHold.Opening`) all stopped one of the two. The tip
+    is the loudest because it is the one case where the hold is *long* and the player it happens
+    to is meeting the mode for the first time — but the shop opened from the action bar had the
+    same fault, and so did the opening transition, which used to spend a quarter of the count
+    behind an iris nobody could see through.
+    <br>**The fix is a derivation rather than a second clock.** `SiegeBoard.BeforeFirstWave` is
+    the quiet the board is already counting (`_rest`, before the first muster) and
+    `SiegeView.BeatsBy` is how many beats that quiet owes, so GO! landing with the first raider
+    stops being an arrangement held in step by arithmetic and becomes a fact about one number —
+    invariant 33g's bargain (a fact derived from a shape can never come apart from it), and
+    39j's, which says the same thing about a cooldown that must not be payable by opening a
+    panel. It also needs no flag and has no coroutine to strand (30g), which is the shape
+    `SiegeView.Opening` already took for the idle nudge, one layer along.
+    <br>**`BeforeFirstWave` is narrow on purpose and is not "seconds until the next wave".** A
+    hill the player has cleared musters at once whatever the clock says (37k), so a general
+    reading would be a number that lies from the second wave onward; the first wave is the one
+    case that shortcut is explicitly guarded against. And the arithmetic is a **static a fixture
+    can sweep** (`GroundSize`'s and `StrikeCentre`'s bargain): a render can only look at one
+    frame of a count at a time. `SiegeCountInTests` holds the consequences rather than the
+    formula — a held run spends none of its count-in, every beat is owed exactly once and in
+    order, and GO! is owed strictly before the first raider — and all three were proved by
+    breaking them.
+    <br>**What no gate here could see is two clocks disagreeing.** The compile, 1,710 tests,
+    `content.py`, `rungs.py`, `loc.py` and `artnames.py` were green over this for as long as the
+    mode has existed, because each clock is correct and only their relationship is wrong — which
+    is `RunHold`'s own recorded fault (two correct writes in the wrong order) arriving through a
+    door that had been safe while every other board in this game was turn-based. **Before
+    timing anything against a run, ask what happens to it when the run is held.**
+
+37bk. **`siege_shield` is withdrawn, and it is the second Thornwatch lesson to go for saying
+    something the player was going to find out anyway.** It read *SHIELDS ONLY BREAK TO THEIR
+    OWN COLOUR* and went up on the first rung that sends a bulwark. Withdrawn by the owner, and
+    it is the same call `SiegeLine` got: a panel in front of a rule the board demonstrates the
+    first time it is met, which on this hill is one bolt bouncing off one armoured raider while
+    the player is looking straight at it. The rule is untouched — `SiegeTuning.DamageTo` still
+    blunts every colour but a bulwark's own, and every rung that sent one still sends one.
+    <br>**Retired id that must never be reused: the lesson **`siege_shield`**.** The
+    `Mechanic` member is kept, because a lesson id travels in the save (`tipsSeen`) exactly as a
+    level id travels in the ledger, and re-pointing one at a rule it never described tells a
+    player they have already been shown something they never saw. It moves from `Mechanic.All`
+    to `Mechanic.Retired` in the same edit that stops `SiegeScreen.Lessons` raising it and
+    deletes its two strings — **three places, and the gate that holds them together is
+    `TipTests.EveryMechanicIsEitherLiveOrRetired`**, which exists because this very pair failed
+    in both directions at once: `SiegeLine` was left in `All` with its strings deleted and
+    failed the build over two keys nobody wanted, while `SiegeShield` was live and had never
+    been added, so nothing proved it had strings at all.
+    <br>**And `SiegeBoard.Shielded` went with it**, which is the half worth writing down. It
+    answered "does this hill ever send a bulwark", read off the muster rather than off the
+    raiders standing now, and its only caller was the lesson. A public reading on a Domain board
+    with no reader is not free: it is the shape somebody later reaches for to mean something it
+    was never measured against — which is `AvatarCatalog.ReachedBy`'s lesson (15a) met before it
+    could cost anything. **Withdrawing a lesson is three edits; check whether the board grew a
+    reading that existed only to raise it.**
+
 37ai. **A turret's effect and the name over it may be swapped; its id may not.** The beacon and
     the chain flagship exchanged both after play — the body, the ability, the price and the id all
     stayed where they were, because a model id is permanent (invariant 1) and the save keys both
@@ -2648,11 +3383,1064 @@ In practice:
     four-cell hill a cell and a half long, which reads as a spark. `_sky` carries the `RectMask2D`;
     `_fx` still carries none, because everything else drawn there starts on the hill and `OnBoard`
     clamps the procedural bolts instead (37ac).
-    <br>**`Tools/render_siege.py --storm N` is the eye, and it is the only thing that could ever
-    have said any of it** — the anchor, the bolts leaving the plate, the ground burst that was not
+    <br>**And the anchor was then wrong a second time, in the one way the eye could not see.**
+    The offset had the right shape and the wrong sign, which put the flash **3.3 cells below** the
+    raider — and the ward line stands about that far down, so what a player met was lightning
+    striking their own turrets. `Tools/render_siege.py` mirrors the same expression and drew it
+    **correctly**, because PIL's y runs down the picture where Unity's runs up it: the mirror
+    agreed with itself, disagreed with the game, and the render that exists to catch a misplaced
+    widget confirmed one. That is 44d's own recorded trap, met from the far side. **A mirror
+    cannot check a sign it has to re-derive in the opposite axis** — so the arithmetic is
+    `SiegeView.StrikeCentre`, a method rather than a line, and `SiegeStrikeTests` pins the
+    *consequence* (the flash lands on the target, at several heights, because at the board's
+    origin both signs give the same answer) rather than the formula, which would agree with a
+    wrong sign as happily as with a right one.
+    <br>**`Tools/render_siege.py --storm N` is the eye for everything above it, and it is the only
+    thing that could ever have said any of that** — the anchor, the bolts leaving the plate, the ground burst that was not
     there, and a first cut of the scorch so wide that three of them stained the hill. Every numeric
     gate was green through all of it, because no gate in this project opens a PNG (32b, for the
     tenth time). **Nothing here has been seen on a device**; that is owed.
+
+37ak. **The gem is what a colour *is*, and everything else agrees with it — which is a rule
+    because for the life of this mode one of the four did not.** The jewels are cut from the
+    match-three pack untouched; every turret, raider, bolt, bar, badge, mote and tube is hue-rotated
+    onto a `Pal` entry. Three of the four pairs sit within about eight degrees of each other. The
+    fourth did not: the gem is cut at **34 degrees** — an orange — and `Pal.Sun` sits at **43**, so
+    one colour slot in this mode was painted two ways, an orange gem feeding a yellow turret with a
+    yellow raider walking down at it. It is `Pal.Amber` now, at 27, and the reported symptom was
+    four words off a device: *the yellow orange should be orange*.
+    <br>**Nothing in this project could have said so, and the reason is worth more than the fix.**
+    Invariant 37f asks how many *ways* a rule is said and answers "three"; it never asks whether the
+    three agree, because agreement was bought by construction — one `Pal` entry feeds the gems, the
+    raiders and the wards — and that sentence has been quietly false since the gems stopped being
+    tinted and started being **cut**. A cut picture answers to no constant, so nothing holds it to
+    one. Every gate was green: the compile, 1,622 tests, `content.py`, `artnames.py`,
+    `make_siege_art.py --check` — because *reproducibility is not agreement*, and `--check` proves
+    only that the yellow turret is the yellow turret this tool cuts. **Whenever one half of a pair
+    is cut and the other is generated, the gate you have proves each half and not the pair.**
+    <br>**`Pal.Amber` rather than a fifth orange**, which is that entry's own written instruction —
+    it is named for the colour rather than for the line that first wanted it, precisely so the next
+    warm accent does not invent a second orange a shade away from it. And **the letter stays `y`**:
+    it is a cell letter, it reaches the authored boards, the offline mirror and `WardLine.Colours`,
+    and a save keys a loadout on it, so renaming it to `o` would be renaming a shipped id to fix a
+    picture (invariant 1).
+    <br>**What it costs is that red and orange are now 32 degrees apart where red and yellow were
+    48**, and the two things holding them apart are the pack's own pinkish red and
+    `CAST_VAL_LIFT` — which was added because *yellow* needs brightness and is now load-bearing for
+    a different reason. Take it out and the orange raider walks toward the red one. The gems were
+    always 30 degrees apart and are told apart by silhouette as well (34f), which is the argument
+    that this is survivable rather than the argument that it is free.
+    <br>**One copy of the four was deleted on the way**: `WardDemoScreen` held a second `Tints`
+    table, which is the bench that exists to judge a bolt against the colour it will really wear —
+    so a bench flattering an effect with a colour the board does not paint is worse than no bench.
+    It asks `SiegeView.TintOf`, which is public for exactly that.
+    <br>**And the half that cannot be done offline is the projectiles.** `SiegeShotBake` grades
+    every ward effect onto its `Pal` entry, and those sixty `_y` reels are still yellow until
+    `Bake Siege Projectiles` and `Bake Turret Projectiles` are run in the Editor against the
+    gitignored pack — so an orange turret fires a yellow bolt on any build made before that. It is
+    the same shape as invariant 37aj: **when a colour is a recipe, grep for every caller that builds
+    one**, and note that one of them is a menu item rather than a script.
+
+37al. **A shelf belongs to the display and its cells belong to the safe area, and reading those
+    as one thing is what put a band of nothing at the foot of every iPhone.** Reported from a
+    device with the strip circled. `UtilityBar` hung off `Safe`, so the shelf stopped where the
+    safe layer did and iOS's 34-point home-indicator strip below it was backdrop — on a screen
+    whose whole bottom edge is a dark tray, a dark band under the tray reads as a gap. The safe
+    layer's own remarks already say which half goes where (*chrome moves; art does not*): a flat
+    plate under a home indicator is the full-bleed case, and what belongs inside the inset is the
+    thing a player presses. So the bar hangs off `Content`, its plate runs to the physical bottom,
+    and its cells stand `UtilityBar.Foot` above it.
+    <br>**`Height` and `Room` are two numbers and a screen has to ask for the right one.** The bar
+    measures itself from the display; a board host laid out inside `Safe` is already that much up
+    from there, so insetting it by the bar's *height* counts the display's foot twice and loses
+    the board's own foot behind the shelf. `Room` is the one a screen inside the safe layer wants,
+    and on every device with nothing in the way both answers are `Shelf` — **which is exactly why
+    a mistake here is invisible in the Editor, in every render this project draws, and on most
+    Android hardware.**
+    <br>**And `Foot` is a ceiling on the inset rather than the inset itself, which is 70 points of
+    board.** Honouring it in full fills the strip with plate and gives the board back nothing,
+    because the cells do not move; giving it up in full puts a cell's rim on the indicator, where
+    iOS's own swipe-up gesture lives. Twenty-four units is about nine points, the cells already
+    carry twenty-two of their own rim, and everything above that is board.
+    <br>**The hill was too small in the same report, and where its extra room came from is the
+    half worth remembering.** The field's height is a *fact* — it is laid out to the width (37g) —
+    so `HillBand` and `LineBand` are a **ratio over what the field leaves**, never two shares; the
+    hill's half went .44 → .54, which on a 19.5:9 phone is about ninety points of hill and costs
+    the line a tenth of itself. What made that safe is the clause that had to go with it: **the
+    ward line has a floor measured in cells, because what stands on it is measured in cells.** A
+    plinth, a fuel tube, a health bar and a rank badge are all sized off `Cell`, so a band that is
+    only a share gets squeezed under them by a display that is short — and what that looks like is
+    the tube drawn across the turret's own chassis (37y) and the plinth behind the field's plate
+    (37g), which is the same fault this mode has now had three times. On a phone the floor never
+    binds; on a 4:3 it is the whole layout.
+    <br>**Two silent readings were found on the way.** `SiegeView.Line` drew the rampart at
+    `Span.y * LineBand` — the authored half of a *ratio*, read as though it were the band `Compose`
+    had derived, which was out by a sixth on a 16:9 canvas and would have gone to a quarter. And
+    the bands are `SiegeView.Bands.Of` now rather than eight lines inside `Compose`, **because a
+    render can only look at one screen shape at a time**: `render_siege.py` is the instrument for
+    everything here no number can see, it draws whatever canvas it is given, and that is precisely
+    how a band came to be able to collapse on a shape nobody had drawn. `SiegeBandTests` sweeps
+    the shapes between the pictures.
+    <br>**The render could not see any of this, because it drew a shape no phone has.**
+    `Tools/render_siege.py` has always been 1080x1920 with no inset anywhere, so the one fault it
+    exists to catch — a band in the wrong place — was invisible in the one place it happened.
+    `--phone` is a 19.5:9 display with the strip at the foot of it. **Before trusting this tool
+    about anything at the foot of the screen, ask what shape it just drew.**
+
+37ap. **"Super fast paced" is two dials, and only one of them may be turned on its own.** The
+    owner's verdict on the whole mode was that it plays too fast, and the two things asked for were
+    that the raiders come down more slowly and that the turrets shoot more slowly. The first is a
+    number; the second is a trap, and the trap is the one 37aa named from the other side.
+    <br>**Slowing the cadence alone is not available, because the cadence is the line's output.**
+    `FireEvery` decides bolts a second and a bolt decides damage, so stretching it cuts the damage
+    a second the wards deliver — and the raiders do not wait. Measured through the hold simulation:
+    at **.24** the warbringer rung is lost outright, the hill unclear after ten minutes with every
+    ward down, because a boss that shells the line every nine seconds grinds it for as long as the
+    fight lasts and a slower line makes the fight last longer. That is a chapter retune, not "a
+    little slower".
+    <br>**So the bolt got twice as heavy in the same breath, which is 37aa run backwards.** That
+    entry doubled the bolts and halved their weight so a fed ward would stay alight twice as long;
+    this halves the bolts and doubles their weight, at twice the interval — `FireEvery` .22 → .44,
+    `ShotDamage` 10 → 20, `FuelPerShotTenths` 10 → 20. Every one of the four things a player can
+    feel is held exactly where it was: a match delivers the same `PerfectMatch` of 220, a fed ward
+    fires for the same 2.4 seconds, a full tube empties in the same 6.2 (so `WardCapacity` needs no
+    change), and a surge pours the same seconds for the same charge (its magnitude is authored in
+    *fuel*, so it derives). Par came back bit-identical on all ten rungs, which is what says it was
+    free. **A bolt's weight and a bolt's cost move together or every par in the mode halves or
+    doubles**, with each number still individually plausible — the identity `PerfectMatch` exists
+    to say out loud. And **`FuelPerShotTenths` has to stay a multiple of ten**, because a rank is
+    ten per cent off it; `FuelShotTenths` is a *share* of the base now rather than a subtraction
+    from it, which is the same 10, 9, 8, 7, 6 at a base of ten and an exact 20, 18, 16, 14, 12 at a
+    base of twenty. The subtraction read as "a tenth less" and silently meant a **five** per cent
+    step the moment a bolt cost two fuel.
+    <br>**The hill was paced back by a seventh** — creeper 15 → 17 seconds, and brute, bulwark,
+    weaver and thief by the same, so the hill keeps its shape and only its speed moves. A boss is
+    deliberately not in that list: its entrance is timed against its own cadence and the quiet
+    before it (37t). **A seventh is near the ceiling and what stops it is 5d**: a slower column dies
+    further up, and a hill that never reaches the line is a fail state that rejects nothing — at a
+    third slower `s01_bramblerun` finishes untouched at every rhythm measured.
+
+37aq. **The mode's one instrument was a coin toss, and it had been green by luck for as long as it
+    has existed.** `AnUnhurriedPlayerHoldsThisLine` is the only thing that can judge a mode with no
+    search (37j), and it played each rung **once**, at a player rhythm of exactly 2.4 seconds. A
+    match changes the field, the field decides the next match, and the run diverges from there — so
+    two rhythms **twenty milliseconds** apart play out completely differently. Swept across nine
+    rhythms on the numbers that shipped, `s01_blackmarch` and `s01_thornsiege` held at **two of
+    nine**, and 2.40 was one of the two. Every re-tune this mode has had was read off one toss.
+    <br>**What makes it bistable is a death spiral rather than a margin.** One ward falling means
+    its colour is never fed again, so its raiders take single damage instead of double, pile up at
+    the line and take the next ward. Raising `WardHealth` by 43% moved the worst rung from 3/9 to
+    4/9 — which is the proof that it is not a shortage of health. A rung either holds comfortably or
+    is lost outright, and which one is chaos.
+    <br>**So the gate asserts what a sweep can support.** Nine rhythms times ten rungs is ninety
+    runs: a rung that holds at *no* rhythm is a hard failure, so is one that can never be
+    three-starred and one past the teaching rungs that is never once reached by the hill (5d);
+    everything else is judged on the **chapter**, because an aggregate of ninety is steady where any
+    one of them is a toss. The floor is a **record of where the chapter stands and not a target** —
+    75 of 90, up from 67 before 37ap, because a slower column dies further up and fewer runs spiral.
+    <br>**And the honest reading is that the back half of this chapter is lost by an ordinary player
+    more often than it should be** — `s01_blackmarch` holds 3 of 9 and `s01_thornsiege` 4 of 9. That
+    is an open question for the owner (see the owed list) rather than something to tune away
+    quietly, and it is not what the fast-paced verdict was about. **Note which way the two
+    instruments disagreed**: the single sample called 37ap a regression and the sweep called it an
+    improvement, and the sweep is the one with ninety runs behind it.
+    <br>**Before reading anything off this simulation, ask how many samples it took.**
+
+37ar. **The raid is insects, and what a one-pack cast costs is a thing to say out loud rather
+    than to discover later.** The owner's call was that every enemy in this mode is an insect,
+    bosses included. Surveyed first, because the answer decided the whole shape of the work: the
+    nine monster, alien and robot packs on this machine hold **ninety-six characters and not one
+    beetle, fly, ant or wasp**, and the only insects anywhere are the **fifteen** in the
+    idle-defence kit — the same pack the twenty turrets come out of, which is a bonus rather than
+    a coincidence, because one hand drew the machines and the things they shoot at. They are also
+    drawn **top-down**, which is the one view this board has: the hill is looked down on and its
+    floor is a top-down tileset, so the side-view cast that had stood there was a mismatch nobody
+    had ever named.
+    <br>**Twelve raiders and four bosses is sixteen, out of fifteen, and every consequence below is
+    that arithmetic.** The kinds are cut across the pack's three families by *weight* rather than
+    by folder: two fliers and the two smoothest shells creep, four horned beetles are the brutes,
+    and the four hard domed hybrids are the bulwarks — because for an insect plating is a **shell**
+    and not a held shield, which is the only honest way to draw the unit a colour match cannot cut.
+    <br>**The second cast set is gone, and the seam is not.** A chapter used to draw one of two
+    twelve-body casts by its ordinal (7c's rule, the ground's shape exactly), out of eighty-three
+    characters across four packs. There are not twelve more distinct insects to cut, so
+    `SiegeMode.CastSets` is 1 and `SiegeView.SecondSet` is deleted — and nothing else moved, which
+    is the seam paying off in the direction nobody tests: a second insect pack buys the second set
+    back for one table in `make_siege_art.RAIDER_SET`, twelve rows in `SiegeMode`, and no code.
+    Worth noting that **nothing drew it anyway**: `ChapterOrderOf` is per mode *and track*, so the
+    one siege chapter and the endless lane are both ordinal nought (40a's fault, in a second place).
+    <br>**One body is worn twice and it is a decision.** The overlord is `HybridPur`, which is also
+    `bulwark_y` — so the finale is **the giant of an armoured raider the player has been shooting
+    all chapter**, which is a tower-defence idiom rather than an accident. What keeps them apart is
+    not subtle: a bulwark is hue-rotated to amber and drawn 1.85 cells tall, and the overlord keeps
+    its own purple at 3.5.
+    <br>**A boss has two reels now, and the walk is what went.** It carried idle, walk and attack
+    because the cast were bipeds and an idle sliding down a hill reads as *floating* (37u), so
+    something had to choose between them every frame. Nothing here strides — a top-down insect's
+    reel cycles its legs and wings **in place**, measured at 2.3 pixels of drift across a
+    137-pixel frame — so standing and walking are one picture and the board is the only thing that
+    moves it. `WalkReel` and `Mob.Walking` are deleted; **a boss that really walked would want them
+    back.**
+    <br>**And three of the four have no second animation at all, so the cast reel is built.** From
+    above, rearing up *is* a change of size, so `pulse` surges the body at the viewer and leans it
+    a little down the hill over the same `BossTell` window the ring and the crackle already fill.
+    It is a **sine**, so it begins and ends on the standing pose — a ramp would leave the boss
+    bigger than it started and the snap back would be 37u's bug arriving through its own fix — and
+    the overlord's real take-off is played **forward and then reversed** for exactly the same
+    reason. Shipping four bosses that did nothing when they threw would have been the last verdict
+    on this mode (37ac, "boring bosses") invited straight back.
+    <br>**Two things the pack does that no numeric gate could have reported, both found by looking.**
+    Every insect is composited over a **baked ground shadow**, an ellipse wider than the body and
+    sitting below it — so the animation's bounding box is half as wide again and a third taller
+    than the insect, and `SiegeView` sizes a body by its frame's height. Left in, a bulwark came out
+    in a 242x177 frame around a body 110 across: a small beetle adrift in a box, which is 37u's
+    fault arriving through the art rather than through the framing. It is separable **exactly**, and
+    by something better than a threshold on darkness — the shadow is *pure black at partial alpha*
+    where the body is opaque and a fly's wings are *white* at partial alpha, so `SHADOW_INK` keeps a
+    black leg and drops a black shadow. And the shells are not painted at one brightness: `hued`
+    sets a pixel's hue and leaves its **value** alone, so the darkest beetle (mean 47 against a
+    hybrid's 140) came out black in whatever colour it was asked for — on a board where the colour
+    of a raider is the whole mechanic, two of the four blues read as black. `CAST_VALUE` lifts each
+    body onto one measured value, which is `graded`'s argument about the ground asked of the cast:
+    **the variety a pack gives you is hue and material, never brightness, because brightness is
+    what decides whether anything can be read at all.**
+    <br>It cost the save file **no schema version, no merge rule, no `firestore.rules` change and
+    no server work** (20a) — a whole cast is scenery. What it did cost is 192 dead Addressables
+    entries, which fail `BuildPlayer` rather than the game and are stripped here by hand pending the
+    Editor's own repair.
+
+37as. **"They look like they are in the air" was three faults under one sentence, and the one
+    worth remembering is that the shadow is the only widget on this board whose whole job is
+    saying a thing is on the ground.** Reported from a device against the new insect cast, with
+    the cause named correctly: the shadows were too far away.
+    <br>**One: an offset is a fact about what the body is.** The shadow sat 0.46 of the drawn
+    height below the node, which is exactly right for a *biped seen from the side* — the node is
+    the middle of the picture, the feet are near the bottom of it, so the shadow goes under the
+    feet. A top-down insect's picture **is** its footprint, so the same number puts the shadow the
+    better part of a body-length clear of the thing casting it. The replacement is measured rather
+    than guessed: the pack bakes its own shadow under every one of these insects (the one
+    `deshadow` has to strip, because it is wider than the body and inflates every frame), and a
+    crawler's sits 0.17–0.24 of its own height below its middle and runs 1.02–1.15 of its width.
+    **When a cast changes what kind of thing it is, every number placed against its body is
+    suspect — not only the ones about size.**
+    <br>**Two: a soft sprite's rectangle is not its shadow, and its *power* decides whether it is
+    a shadow at all.** `Art.Glow` is `(1 - distance)` raised to a power, so a **high** power fades
+    from its own middle outward; at the cubic it was first asked for that is an eighth of its peak
+    half way out, which at this size is nothing anybody can see — fixing only the offset would have
+    moved a shadow nobody could find. Dropping it to 1.4 made it visible and came back from play
+    as **cloudy**, which is the same reading one step on: a profile that ramps the whole way is a
+    haze, where a shadow is flat in the middle and soft only at its rim. `ShadowFalloff` is a
+    **quarter**, which holds near its peak most of the way out — and the width has to move with it
+    or the footprint does not stay put, because a flat profile reaches almost to the edge of its
+    rect where a steep one dies two thirds of the way. Picked by drawing the candidates under a
+    real insect on the palest floor this mode has and on the brightest; one step darker reads as a
+    hole in the grass. **Before sizing anything drawn with a falloff, work out where the falloff
+    actually reaches — and before believing a soft thing is the wrong size, check it is not the
+    wrong shape.**
+    <br>**Three: a boss's body was not centred in its own frame.** `one_canvas` mirrored the width
+    about the body's middle — for a stated reason, that the view centres a canvas on its lane — and
+    took the *height* as the plain union, so a gesture that rises left the body low in its own box.
+    Everything the view places is placed against the **frame**, so a boss's shadow sat a third
+    further out than its raiders' did: the same fault, one kind further in. It mirrors both axes
+    now, which only ever grows the canvas, so the promise that nothing is ever clipped is
+    untouched. What survives as a rule is `BodyFill` — a raider's frame is trimmed to its own
+    animation and a boss's cannot be, because it shares a canvas with a cast reel, so the two do
+    not fill their frames equally and anything measured against a frame has to know that.
+    <br>**And the reason no picture caught any of it is that `render_siege.py` drew no shadow at
+    all.** The one instrument this mode has for everything a number cannot see was blind to the
+    single widget the complaint was about. It draws them now, from the same constants and with
+    `Art.Glow`'s formula mirrored rather than approximated by a blurred ellipse — which matters,
+    because the blurred version drew a blob half again as big and several times as solid as the
+    game's, and would have said the size was fine. That is 44d's own recorded trap: **a render
+    that draws less than the screen, or draws it differently, sends you to fix something that was
+    never broken.**
+
+37ax. **The shelf is ordered by how much of the hill an ability reaches, and it shipped ordered
+    the other way up.** The turret roster is one ladder — the hull climbs from a single barrel to a
+    four-barrel mount, the price climbs with it, and the rung is the same number in both. What it
+    did *not* climb with is strength: a chain, a lance and a mortar were the three cheapest turrets
+    in the game, and the owner's verdict was the obvious one — the cheap half was stronger than the
+    dear half. It is arithmetic rather than taste: **reaching two or three raiders a bolt beats any
+    amount of help aimed at one**, so multi-target abilities have to be the dearest things on the
+    shelf. The order is now fuel back, fuel banked, one raider burnt, one raider slowed, armour, a
+    second colour, a lane, a box, whatever is nearest — and **the two halves of the shelf must agree
+    about it**, which they also did not: frost was the *cheapest* thing gems could buy and the
+    *fourth* thing credits could, so the shelf said two different things about one ability depending
+    on which currency you read it in.
+    <br>**Nothing about a turret moved except its rung, and that is a property of this roster rather
+    than a piece of luck.** An id is permanent (invariant 1) and everything a player sees is derived
+    from it — the name, the note, the hull, the thumbnail and the bolt it throws — so a re-rung is a
+    change to `order`, `coinPrice`/`gemPrice` and `minLevel`, and to nothing else. **The hull
+    follows for free**, because `Tools/make_siege_art.py`'s own rule is that the hull *is* the shelf
+    rung: re-rung the shelf, re-cut `WARD_MODELS` in the same order, and the ladder still climbs
+    visibly. Not one loc name, projectile reel, address or `.meta` moved; the whole change is two
+    tables, one art re-cut and five notes whose numbers had changed. Compare the alternative that
+    was considered and rejected — moving the *abilities* between ids — which would have taken the
+    name off every card, shuffled 228 baked reels and left `WardCatalog` reading
+    `new WardModel("siphon", WardAbility.Prism, …)` for ever.
+    <br>**And two rungs were the same turret at two prices, which is the complaint in its purest
+    form.** `Rend` was "not blunted by a shield", flat, and `Prism` was "its own colour and the
+    next", flat — so both abilities carried a `Magnitude` that **nothing read**, and a 1,000-gem
+    breaker was exactly a 4,000-credit cleaver with a different hull. That is invariant 5d's
+    decoration arriving on the one thing a player pays for, and it is invisible to every other gate:
+    both entries parse, validate, address, draw and play. A rend now bites its magnitude deeper into
+    plating (`SiegeTuning.RendBonus`) and a prism's magnitude is a **count** of extra colours
+    (`SiegeWard.Partners`, capped below four, because a turret strong against every colour deletes
+    the rule it exists to widen). Both are additions and only ever upward, so par still over-states
+    what a good run needs — the direction invariant 22 says to err in. **An unauthored nought means
+    what the flat rule used to**, so an older file and a rolled-back client read as they always did.
+    <br>**The rule that would have caught it is a property, not a table**: no two priced rungs share
+    an `(ability, magnitude, extent)`. It lives in `content.py`, `ContentValidation` and
+    `WardLoadoutTests` — the last two proved by breaking them — beside a second one saying a
+    family's later rung is really stronger, which is the only half of this ladder that *can* be
+    proved: 600 gems and 5,000 credits do not compare, and neither does a freeze against a splash,
+    so the order of the families stays authored (16j) and the order *within* one is checked.
+    <br>**What it cost the save file, the wire and the server: nothing** (20a). A holding is an id
+    and a colour, and no id moved. What it did cost is a **price change on nineteen turrets** — the
+    turret a player knew at 1,200 credits now asks 9,000 — which is free today because there are no
+    real players, and would be a migration the day there are.
+37ay. **An effect belongs to a turret and an ability belongs to a rung, and after three rounds
+    of tuning those two stopped lining up — which is fine, and had to be said out loud.** The owner
+    moved three things by name off a device: `prism`'s sun onto `apex`, `lighthouse`'s beacon
+    ability onto `spark` (and `spark`'s chain back onto `lighthouse`), and `lighthouse`'s lamp onto
+    `arcstorm` — and, a round later, `beacon`'s orb and `howitzer`'s slug exchanged, so the one
+    ability that does nothing to a raider throws the heaviest-looking thing on the shelf. Each is
+    one line of intent and together they cost **no re-bake, no address, no `.meta`, no schema
+    version and no server work** — because everything a player sees is derived
+    from an id (invariant 5a) and none of the ids moved.
+    <br>**A reel is exchanged on disk rather than re-baked, and that is exact rather than a
+    shortcut.** `SiegeShotBake` grades a projectile by *colour* — one recipe per `Pal` entry, not
+    one per turret — and every reel of a kind carries the same frame count (shot 14, muzzle 8, hit
+    12), so swapping the bytes of two turrets' twelve folders is byte-for-byte what re-baking with
+    the two prefabs exchanged would write. The `.meta` files stay where they are, so no guid and no
+    address moves (7b), and the bake table is re-pointed in the same change so a future
+    `Bake Turret Projectiles` reproduces it. **Check both directions afterwards**: the obvious
+    one-liner copies rather than exchanges, which silently makes two turrets throw one effect and
+    reads as "the swap worked" on whichever card you look at first.
+    <br>**`SiegeView.BoltScale` travels with the picture, never with the id or the rung.** The sun
+    is drawn half again the size of every other bolt because it is a sun; it was keyed on `prism`
+    because that is where the sun stood, and the case is on `apex` now. A scale left behind is a
+    turret drawing somebody else's effect at somebody else's size, and nothing but a render can see
+    it.
+    <br>**And the honest cost: the shelf's ordering rule now has two exceptions, by decision.**
+    37ax put single-target abilities cheap and multi-target dear, and `spark` at 9,000 credits is
+    now the strongest *beacon* while `lighthouse` at 700 gems is the weakest *chain* — so the
+    dearest rung of the earned half banks fuel and a multi-target trick sits near the foot of the
+    bought half. Both families still climb within themselves, which is the half a gate can prove
+    (`AFamilysRungsClimbWithTheShelf`), and the cross-family order stays authored for 16j's reason:
+    600 gems and 5,000 credits do not compare, so it was never derived and cannot be checked. **A
+    named exception the owner made after playing beats a principle nothing can measure** — what
+    matters is that it is written down, so the next re-rung does not "fix" it back.
+    <br>**Two names now describe the wrong ability, deliberately.** The card reading *Spark* banks
+    fuel and the one reading *Lighthouse* arcs. A name may be moved (37ai) and was not, because the
+    owner names turrets by what he reads on the card and moving the labels would move the very
+    thing he is pointing at. If it ever reads wrong, swap the two `ward.{id}.name` strings — not the
+    ids.
+37at. **A sprite can be *baked* instead of bought, which turns the camera angle from a purchase
+    into a decision — and everything hard about it was the bake, not the idea.** The insect cast
+    exists because fifteen bugs were the entire top-down budget on this machine (37ar); the market
+    has no more, and the reason is structural rather than bad luck — "top-down" in an asset store
+    nearly always means a three-quarter RPG view where you still see a face, and *true* overhead
+    only reads for creatures whose silhouette **is** their back. So the second cast is rendered
+    out of rigged 3D models at this board's own camera (`SiegeCastBake`), which is the oldest
+    technique in the genre (Clash Royale's whole cast is sprites baked from 3D) and is what
+    `SiegeShotBake` already does for the bought VFX pack, one step over from particles onto
+    characters. **Nothing about the runtime changes**: what ships is PNG reels drawn exactly as the
+    insects are, and no model, rig or animator reaches a build.
+    <br>**The models live under an `Editor` folder, which is a guarantee rather than a
+    convention** — Unity excludes it from players, so a source FBX cannot ship by accident, and
+    the addressable audit confirms none of them is registered. They are **CC0** (KayKit), which is
+    why they are committed where every CraftPix pack is gitignored: a licensed pack may be built
+    into a game and not redistributed as art, which is why every other art tool here passes when
+    its source is absent. This one need not — any checkout can re-bake, and the licence sits beside
+    the models.
+    <br>**Straight down is wrong for a humanoid, and one picture settled it.** Rendered at 90, 65
+    and 45 on the board's own floor: ninety is a skull and two shoulders, sixty-five reads as a
+    figure, forty-five reads as a figure walking toward you. `Pitch` is 52 — steep enough that the
+    ground still reads as ground under a top-down field, shallow enough that a body is a body — and
+    **it is one constant, so the angle costs a re-bake and nothing else**, which is the entire
+    argument for baking.
+    <br>**What decides whether a model survives that camera is not the camera.** A sweep of pitch
+    against paint said the same thing nine times over: the hooded `Skeleton_Minion` is a
+    featureless dome from above and reads as a skittle at every angle and every tint, where a
+    warrior's horned helm and the blade down its back read instantly. **A silhouette has to be made
+    of something that projects sideways** — which is 37ar's own lesson about insects, asked of a
+    man. It is the rule for picking any future body.
+    <br>**A flat-shaded render is visibly pasted onto this board until it is given a keyline.**
+    Everything else on the hill is cartoon art inside a heavy dark outline; 3D has none. The
+    silhouette is grown and filled behind the body, at supersample size so the line is soft rather
+    than stepped, in the interface kit's navy rather than black (44h's reason: black reads as a
+    hole). It is the single change that made these look like they belong here.
+    <br>**The colour is put on in post, and that is a retreat from something better.** A lit
+    material shaded in its own colour beats a hue rotation and is what the turrets get (37l) — but
+    these imported FBX materials **do not answer `_Color`**: measured, the material reads back as
+    the colour it was set to and the render comes out pixel-identical for all four, on the
+    skeletons and not on the knight, with no difference in shader, emission or texture setup
+    between them. Shipping a cast where one body takes its colour and another silently does not is
+    the worse outcome, so the rotation is `make_siege_art.hued`'s, in C# — which means the whole
+    cast is now coloured **one** way rather than two. It renders once and tints four times, so it
+    is also four times quicker.
+    <br>**Two bugs on the way, both of which drew something plausible.** `Renderer.material` does
+    not instance in edit mode: it hands back the *imported FBX's* material, so painting one body
+    repaints every body sharing it and the asset on disk is quietly modified. And building copies
+    from `sharedMaterial` each pass means the second colour is copied from the first colour's
+    material — which is destroyed at the end of its pass, so what lands on the board is Unity's
+    missing-material **magenta** on three raiders in four, with the bake reporting success.
+    Originals are captured once, before anything is painted.
+    <br>**Which side the camera stands on is a decision too, and the default is the wrong one.**
+    Unity's convention is that a character faces `+Z`, and a camera built from `Euler(pitch, 0, 0)`
+    looks along `+Z` — so the first bake shipped a hill of raiders advancing on the ward line
+    **with their backs to it**, which every gate here passed and a device reported in one line.
+    They come *down* the hill toward the player, so what must face the player is their front;
+    `Yaw` is 180, and the key and fill lights carry it, or a body lit for one side of itself is
+    rendered from the other and comes out flat. The insects never had this because that pack draws
+    them head-down and the bake turns nothing.
+    <br>**And they run rather than walk, because from above a walk is not an animation.** Reported
+    from a device as units that "move in a static position", which was true: a humanoid's limbs
+    swing along its own axis, which is the direction this camera is looking down — so the torso and
+    helm occlude nearly all of it. Rendered side by side, eight frames of `Walking_A` and
+    `Walking_C` are almost indistinguishable at 52 degrees *and* at 40, where `Running_A` visibly
+    rocks the helm and leans the body. Measured on the shipped reels: peak frame-to-frame
+    difference went 14.0 to **33.7**, against an insect's 17.6 — so the cast now carries more
+    motion than the bugs rather than none.
+    <br>**And a run is still not enough, which is the finding that actually matters — the cause is
+    the models' proportions, not the camera.** Reported again from a device: *"only the hoodie is
+    moving, not even their head."* Two hypotheses were wrong and were measured rather than argued
+    about: `clip.SampleAnimation` versus `AnimationMode.SampleAnimationClip` give
+    **identical** results (23 of 35 transforms move, max 0.946 either way), and there is no root
+    motion absorbing it (bone centroid drift 0.021, and the bounding box over the whole clip equals
+    the box at one instant). The bones really do move — the feet travel **1.0 units on a 2.38-tall
+    rig**, 42% of body height.
+    <br>**It did not reach the screen because the camera was too steep — `Pitch` was 52 and is now
+    22.** Recognising a body and reading its *motion* are two different bars and the second is far
+    higher: at 52 the helmet is most of the figure and the legs are nubs, so a run reads as a head
+    rocking. Rendered as a control at **0, 20, 35 and 52 degrees**: at 0 and 20 the legs visibly
+    alternate and it reads as running, and by 35 the helmet has taken over. A shallow camera over a
+    top-down floor is this genre's own answer rather than a compromise — it is what Clash Royale and
+    most tower defence games do, and what has to agree with the floor is the **ground plane**, not
+    every actor standing on it. The insects stay directly overhead; a board may hold both.
+    <br>**Two metrics said the opposite of the truth, and that is the lesson worth keeping.** The
+    first counted **alpha** change, which only sees the silhouette's outline and is blind to a limb
+    moving inside the body — it read flat (12.6–13.3) across every pitch from 60 to 22, which was
+    taken as "no angle helps". The second counted **RGB** change and read *higher* at 52 than at 0
+    (17.6 against 11.5), because a swinging helmet churns more pixels than scissoring legs. On the
+    strength of those two numbers this was written up as *the models are chibi and the pack is
+    wrong*, which was **false**, and it was the owner's disbelief — "these work great elsewhere" —
+    that forced the control render that settled it.
+    **Pixel churn is not legibility. When a number disagrees with an eye about whether something
+    reads, the number is measuring the wrong thing** — which is invariant 32b's own rule arriving
+    from the inside: no gate here opens a PNG, and a metric computed *over* a PNG is not a
+    substitute for looking at one.
+    <br>**And every word above it about the camera was chasing a bug that was nowhere near the
+    camera.** Reported a third time, from a device, as *"only their hoodie — not even their head —
+    moves"*, which is exactly and literally what was shipping. `SampleAnimation` poses the bone
+    **transforms**, and in edit mode that is all it does: skinning is dispatched by the player
+    loop, which is not running, so a `Camera.Render()` driven from a menu item draws every
+    `SkinnedMeshRenderer` in its **bind pose** however the bones stand. Measured on
+    `Skeleton_Warrior` across two poses of `Running_A`: the foot bone travels 0.75 units, the leg
+    mesh's own skinned vertices travel 1.07, and the rendered legs travel **0.000** — the baked
+    reels' bottom 40% was pixel-identical across all twelve frames on all three bodies, while the
+    top third read 25.7. `SiegeCastBake.Skin` is the fix: switch each skinned renderer off, stand a
+    plain mesh renderer in its place under the same transform with the same materials, and
+    `BakeMesh` it every frame — CPU skinning on demand, which needs no player loop. At one pose the
+    two render pixel-identically (0.076 of 255, which is antialiasing), so it buys the motion and
+    changes nothing else; the legs went 0.00 → 16.5–18.2. `Extent` had the same disease and framed
+    the bind pose, which would have cropped the legs off a body that actually ran.
+    <br>**What disguised it for three sessions is which parts of a KayKit body are not skinned.** A
+    helmet, a hood, a hat and a cape are plain meshes parented to a bone, so a transform moves them
+    and they render perfectly — and every one of them is on the head or the shoulders. A hood
+    rocking above a body that never moves is indistinguishable from a figure whose motion the
+    projection has eaten, which is why `Pitch` went 52 → 22 chasing it. That legibility argument is
+    still right and is kept; it simply was not this. **The transform-level measurements were all
+    correct and told nobody anything** — the clip binds, the bones move, the weights are right, and
+    none of that is evidence that any of it was *drawn*. Before believing a bake of an animation,
+    compare the pixels, not the bones.
+    <br>**The knight is back, and it was the healthiest body in the pack.** It was withdrawn as
+    "will not animate, unexplained" and replaced by a third skeleton, costing the bulwark its
+    armour. The explanation is the above: a knight is the one model here with **no static parts at
+    all**, so where a skeleton at least rocked its hat, a knight stood perfectly still and read as
+    broken. Measured since: its skinned leg travels 1.065 units, with either pack's clips and no
+    missing bindings. **The body thrown out was the one with nothing to hide the bug behind** —
+    which is the general shape worth keeping: when one member of a set fails *completely* and the
+    rest fail *partially*, the complete failure is usually the honest one.
+    <br>**And `Moves` is the gate that let it ship, because "any two frames differ anywhere" is a
+    bar a hat clears on a body's behalf.** It now asks the reel's **lower half**, where nothing on
+    any of these bodies is anything but skinned, and it says which of the two faults it found — a
+    dead reel means the clip does not bind, an upper-half-only reel means the skinning is not
+    reaching the pixels.
+    <br>**Then it was judged on looks and came back "not high quality", which was three faults and
+    not one taste.** *One: it was upscaled.* `Tall` was 180, matched to `make_siege_art.CAST` —
+    right for a creeper at 1.15 cells and wrong for a bulwark at 1.85, so every body was drawn back
+    out at about 1.6× on a phone next to gems cut at their own size. It is **384** (the
+    `ArtImportRules` cap on `/Art/Siege/` is 512, and a cut the importer then halves is worse than
+    one never taken), which put a trimmed body at 296–313px against 139, and `Keyline` is a
+    fraction of `Tall` rather than a number of pixels so it moves with it. Cost: 8.0 MB of PNG over
+    144 files, against the turret projectiles' 46 (37ae). **Upscaling is the plainest "cheap"
+    signal there is, and it is invisible in every gate** — the reel is correct, addressed, labelled
+    and animating.
+    <br>*Two: the shadow was an insect's.* 37as's own rule is that an offset is a fact about what
+    the body is, and the baked cast is the case those numbers were written **against** — a top-down
+    insect's picture is its footprint, a humanoid at 22° has its feet at the bottom edge. Left on
+    `ShadowDrop = .21` it was drawn inside the knees, which on a hill is a man hovering over the
+    grass. `StandingDrop/Wide/Tall/Ink` (.44 / .86 / .26 / .62) are the upright set, chosen by
+    `CastSet` rather than by kind because it is a fact about **how the art was made**, and wider
+    than deep because a contact shadow under a raking camera is foreshortened in depth and not in
+    width. A boss keeps the insect numbers, the four bosses still being insects.
+    <br>*Three: the lighting had no rim, and the ambient was whatever scene was open.* A key and a
+    fill shade a body and leave its edge exactly as bright as the hill, so a flat render reads as a
+    sticker with a keyline round it. One directional light from **behind and above** catches the
+    helm, the shoulders and the outside of an arm — the genre's own trick, and it costs one light.
+    **It has to be `Yaw + 180`**: the first cut put it a few degrees off the *camera's* yaw, which
+    lights the face, so it added a wash to the front and made the whole cast paler and flatter than
+    before it was "improved". And `Ambience.Pin()` fixes the environment light for the bake and puts
+    it back — it was inherited from whichever scene somebody had double-clicked, which `Verify`
+    could never catch because it re-bakes in the same session and so agrees with itself whatever
+    the value was.
+    <br>**`Pitch` stays at 22, and that is now a picture rather than a guess.** `Survey Siege Cast
+    Angles (3D)` was sweeping 62/52/42 — left behind when the constant moved, so the one tool for
+    choosing the angle was surveying three angles nobody was considering. It brackets `Pitch` now
+    (`Pitch`, +12, +24), and at +12 the hood has already taken the face and by +24 the rogue is a
+    hood. The reasonable suspicion that a cast which *can* move wants a steeper camera than one that
+    could not is wrong, and it took one render to find out.
+    <br>**The render mirror had to learn the shadow rule or it would have reported the fix as
+    broken** — 44d's recorded trap, met again: `render_siege.py` draws shadows from its own copy of
+    the constants, so the first look after the C# change showed the old blob and sent the search
+    back to the bake. **What is left is the amber tint**, which on a body that is mostly bone and
+    steel reads as tan rather than orange; `Pull`, `SatGain` and `SatFloor` are the dials, and it is
+    a device question.
+    <br>**And it shipped unloadable, which is the half worth keeping.** What reached a device was
+    raiders with **no body and a health bar floating where each should have been** — twelve
+    `No Location found for Key=Art/Siege/kayBrute_b` in the log, every reel addressed, grouped,
+    built into a bundle and impossible to load. A sprite set has no notion of a folder: it is
+    loaded by the **label** its frames share, and these frames carried none.
+    <br>**The cause is that an art list asked a question the Editor cannot answer.**
+    `SiegeMode.ArtFor(chapter)` hands back a different cast depending on the chapter's *track*,
+    which lives only in `CatalogIndex` — so `AddressableAddresses.FrameFolders`, which is built by
+    walking what the manifest requests, never saw these folders and never labelled them.
+    **A `ChapterBody` does not carry its track** (`ChapterDefinition` has no such field), so the fix
+    is not to look it up more carefully: `FrameFolders` now also walks **every mode's `Art`** — the
+    mode's whole art, asked with nothing, which is the honest set for a question about what
+    *exists* rather than about what something loads. Before adding art behind any condition, ask
+    whether the Editor can evaluate that condition.
+    <br>**The audit was green throughout, and that is now closed.** Everything it checked walked
+    the manifest and proved the game's own requests resolve — exactly blind to a reel the manifest
+    does not happen to ask for. `AddressableAudit.CheckFramesAreLabelled` asks about what is
+    **registered** instead: any address ending `/fNN` whose frames do not carry their folder's
+    label is unloadable, reported as an **error** when something requests it and a **warning** when
+    nothing does (dead weight is worth saying and is not worth failing a build over). It was proved
+    by stripping a label and watching it go red — and it immediately found a second one nobody had
+    planted, `Art/Fx/Siege/roar`, baked for the warbringer and never scoped in.
+    <br>**It is hung on the *track* rather than on a chapter ordinal, and that is a trial rather
+    than a rule.** 7c's arithmetic is what a settled cast should use; hanging this on the track
+    puts the two one tap apart — the authored chapter sends insects, the Infinite lane sends the
+    bake — so they can be compared without leaving the mode. If it is kept, this goes back to an
+    ordinal; if not, one row in `SiegeMode.SecondCast` and twelve reels are the whole of what has
+    to be undone. It cost the save file **no schema version, no merge rule, no `firestore.rules`
+    change and no server work** (20a).
+
+
+37az. **A twin-barrelled turret fires twice, and "two of a thing" is only two if the gap
+    between them beats the size of the thing — which is measured against what is *drawn*, never
+    against the art it depicts.** Hulls T11 to T17 carry two barrels and fired one bolt down the
+    middle, so a turret somebody paid for looked like a turret with a second barrel painted on.
+    `SiegeView.Barrels` gives each barrel its own flash and its own comet; it is **drawing and
+    nothing else**, so the board still fires one bolt, lands one impact, prints one figure and
+    plays one sound — a second barrel that dealt damage would be a purchase hitting twice.
+    <br>**Keyed on the rung, never on the id**, because barrels are a fact about the *hull* and the
+    art tool's rule is that the hull **is** the shelf rung. A table of ids would go stale the next
+    time the shelf is re-rung, which has now happened twice (37ax, 37ay).
+    <br>**Which rungs is a list and the list is shorter than the band.** T11 to T17 all carry two
+    barrels at the same spacing, so measuring says which hulls *could* fire twice; only playing
+    says which *should*, and the entries are turned on one at a time as the owner asks for them
+    (T11, T14, T15 and T17 today - T11 arrived as *the Leech shoots from a single barrel*, which
+    is the shape every one of these is reported in). **T12, T13 and T16 are still single and are
+    still twin hulls**, which is written here and pinned by name in `WardLoadoutTests` for the
+    reason below: unlisted, they are indistinguishable from rungs nobody has looked at. `WardLoadoutTests` pins both halves — the ones on **and** the ones
+    deliberately left alone — because the tidy-up that switches the whole band on is exactly the
+    change nobody would question.
+    <br>**It is a `switch` and not a static table, and that is about the gate.** A static field on
+    a `MonoBehaviour` needs the type initialised, which the offline runner cannot do — written as a
+    table it quietly took this invariant's own fixture out of every run but the Editor's, which is
+    the one nobody makes on the way past. It was caught by the run count moving, not by a failure.
+    <br>**The first cut was correct and invisible, and the arithmetic says why.** The barrels are
+    ±0.097 of the sprite's width, which on a board is **a third of a cell apart** — against a muzzle
+    flash drawn **2.7 cells wide**. Two blobs whose centres are 12% of their own width apart are not
+    a pair, they are one blob at twice the brightness. And the two bolts were *aimed at the raider*,
+    so they converged inside a few hundredths of a second of a flight lasting a fifth: two comets
+    for one frame, one comet for the rest. It shipped in an APK and came back as "I still see a
+    single projectile", with the right diagnosis attached.
+    <br>**Two fixes, and the second is the general one.** Each barrel's flash is drawn at .70 so
+    the pair is twin-lobed rather than one bloom — *down* if it ever needs to read harder, never
+    up. And each bolt lands **beside** the raider (`ApartOnArrival`) rather than on it, so the pair
+    stays parallel the whole way; the impact is still drawn on the raider, because an eighth of a
+    cell off centre is invisible under a hit three cells wide and two parallel comets are not.
+    <br>**And the slim is the other half of the same report.** The session that asked for the
+    Leech's second barrel also called its bolt too fat. A projectile's frame is as wide as its own
+    head - `SiegeShotBake.LeanestShot` and its neighbours frame a comet round its own proportions,
+    deliberately - and the view sizes a bolt by that frame's width, so a prefab whose head is a
+    broad capsule is drawn as a broad capsule. Measured, this one covered **0.42 of a cell on
+    average against a fireball's 0.38 and a lance's 0.21**: the fattest thing on the shelf.
+    `Shot.Slim` squeezes the finished frames toward the middle column at .80, which puts its
+    widest point at 0.56 of a cell beside the fireball's 0.57. **The bolt only** - a muzzle flash
+    and an impact are radial, and squeezing a radial burst makes an ellipse of it.
+    <br>**In the pixels rather than in the prefab or the camera, and the framing is why.** Scaling
+    the object or the frustum feeds a narrower measurement back into `Shape`, which asks for a
+    narrower *frame* - and since the view sizes a bolt by its frame's width, that redraws the same
+    bolt at the same width and simply makes it longer. Squeezing the finished frames keeps the
+    frame, so the only thing that changes is the thing that was asked to.
+    <br>**And the first cut of it reported success and did nothing.** `raw` is the
+    **supersampled** buffer (`Super` = 2), so handed the final frame's dimensions the squeeze read
+    a quarter of it at half the stride, scrambled the faintest end of the tail, and left every
+    width measurement identical - a bake that logged 24 reels written and changed no picture. A
+    `<` in the size guard is what let it pass silently; it is `!=` and an error now. **Before
+    indexing a render buffer, check what the render target's size actually is.**
+    <br>**Before duplicating an effect to say "there are two of these", divide the gap by the width
+    of what you are about to draw.** Under about a half it is one effect, and the answer is a
+    smaller effect or a wider gap rather than a second copy. `Tools/render_siege.py --phone
+    --line harpoon,bolt,harpoon,bolt` is the picture, and no numeric gate can see any of it.
+37ba. **Frost is white, which makes it the one ability whose bolt does not wear the colour of
+    the ward that threw it — and the exception costs the mode nothing because the double is not
+    said in the bolt.** The owner's call: both frost rungs throw the same white snowball, on a red
+    turret as much as a blue one. Every other bolt is graded onto its ward's `Pal` entry, which is
+    what keeps a turret, its bullets, the raider it is worth double against and the gems that fed
+    it from ever disagreeing about what red is (37f). What tells a player a hit was worth double
+    is the **gold figure, the ring and the sparks at the impact**, never the colour in the air —
+    so a colourless bolt says "this is the frost turret" and takes nothing away.
+    <br>**It needed a new grade rather than a new constant.** `Recipe.White` only protects pixels
+    that are *already* bright and pale, which is right for stopping a flame's hot core turning red
+    and useless for bleaching a whole effect: a trail at half brightness never reaches its
+    threshold. `Recipe.Bleach` pulls the saturation out of every pixel before the hue is applied,
+    and it stops at .90 rather than 1 — at a full bleach a reel is grey, and grey over a lit hill
+    reads as smoke.
+    <br>**The pack has no snowball, so one was composed.** Its twenty families are all spoken for
+    by nineteen turrets, four elemental bolts and four boss spells, so this is `Orb17` — the only
+    round thing in it — with `Wind01` layered in for spindrift. Both were weak alone (37ag records
+    the same repair turning a plain pill into a lance and a grey puff into a wrecking slug), and it
+    shares a family with `howitzer`: survivable for exactly one reason, that one wears its ward's
+    colour and this is white, which on a board where every other bolt is coloured is the loudest
+    difference available.
+    <br>**And the orb's own impact had to go, for a reason no number could report.** It lands as a
+    plain disc built on a flat shockwave *card*, and this rig looks straight down Z — so the card
+    bakes as a translucent **square the size of the frame**. Coloured it passes unnoticed and has
+    been shipping on `howitzer`; white it is a pane of glass over a quarter of the hill, four of
+    them at once on a lit line. That is invariant 37aj's quads met from the opposite direction —
+    there they were edge-on and collapsed to hairlines. `Icicle03`'s muzzle and hit replace it,
+    and they are the one pair in the pack nothing else uses. **Bake a white reel and look at the
+    board, not the reel: an artefact at a tenth of an alpha is invisible on black and is a sheet
+    of glass over grey stone.**
+    <br>**What it cost elsewhere: the elemental set had to go somewhere.** `rime` drew it and now
+    throws the snowball, so the four elemental bolts moved to `breaker` (`WardModel.Elemental`,
+    37ah) — which also retired the last two cube effects in the mode, the glacier's block of ice
+    and the breaker's shattering crystal shell, since the owner wanted no cube anywhere. Twelve
+    reel folders were minted for `rime` and twelve orphaned on `breaker`; orphaned art fails
+    `BuildPlayer` rather than the game, so it is delete, sync, **save**, audit.
+    <br>**Three mirrors carry the elemental id and only one of them is the game.**
+    `WardModel.Elemental`, `content.py`'s `WARD_ELEMENTAL` and `render_siege.py`'s `ELEMENTAL`.
+    The render was missed on the first pass and drew two turrets' bolts onto the wrong turrets,
+    which is a diagnostic lying about the thing it exists to judge (44d's own trap).
+37bh. **An upgrade is three screens, and the middle one exists because a decision needs both
+    numbers.** The preview panel's key says UPGRADE and opens a panel of its own; that panel shows
+    the two figures where the turret *is* with the gain beside each ("+3"), and the price; buying
+    closes it and `WardUpgradeRevealOverlay` runs the star in and the bars up. A panel that drew
+    the bars already at the upgraded length would be showing a player something they have not paid
+    for, and one that showed only the gain would be asking them to do arithmetic — both at once is
+    the reading that needs neither.
+    <br>**The payoff is the numbers moving, so the numbers are the ceremony.** A turret's *unlock*
+    is a thing arriving and `WardRevealOverlay` stands it firing; an upgrade is the same turret,
+    and what changed is two readings the player was looking at a second ago. The star lands first
+    and the bars follow it, because somebody has to see *why* a figure is climbing before it does
+    — `SiegeView`'s own ordering for a cog (the badge turns, then the bolt gets heavier).
+    <br>**`WardStatBars` had to stop being a draw call.** It shipped as a static builder reading a
+    `WardModel`, so the bars never carried a turret's stars and never moved when one was bought:
+    a player upgraded and watched nothing happen, on the one screen that exists to say what an
+    upgrade is worth. It is a live component now, reads a `WardBuild`, and is written on every
+    repaint rather than rebuilt (16k).
+    <br>**And the fix for that uncovered the real one, which no screen could have shown.** With the
+    bars finally live, `ember` still did not move: it carries guard 8, a star is ten per cent, and
+    `8 x 11 / 10` is 8.8 — which truncates back to **8**. Tenths cannot hold a ten per cent step on
+    a small figure, so the second star bought nothing at all. The answer is not a bigger unit but
+    **one division**: a model's tenths and a star's tenths multiply into *hundredths* and are
+    divided once, where the figure becomes a number somebody reads (`WardBuild.PowerHundredths`,
+    `SiegeTuning.DamageFine`). It answers exactly what the old arithmetic did at the first star,
+    which is what lets every par, star line and gate stand unmoved. **Whenever two tenths multiply,
+    keep the hundredths and divide at the end** — this project has now paid for the opposite twice,
+    once on a float threshold and once here.
+    <br>**It was caught by a fixture rather than by a player**, and the fixture is the honest shape:
+    every turret, every rung, both figures strictly greater than the rung below. A star a player
+    pays for and cannot see is the same fault as a rung that costs no more than the one under it.
+
+37bg. **A turret can be upgraded to five stars, and a star count is the rarest thing in this
+    save: a stored number that may be stored.** Invariant 11b refuses a stored count outright,
+    because two devices showing 3 and 0 are equally consistent with "one spent three" and "one has
+    not heard yet" — and an upgrade cannot be undone, so the join is a per-key `max` and there is
+    nothing to be ambiguous about. **Before storing any count, the only question is whether it can
+    fall.** `wardStars` is save v25, one row per holding, and it cost the wire its four places
+    (`SaveFileDto`, `SaveDelta`, both directions of `FirestoreSaveMapper`, and `hasOnly` in
+    `firestore.rules`, whose bound matches `WardStarLedger.MaxRows` because a save the rules refuse
+    loses *every* field).
+    <br>**Keyed on the holding, not the turret** — `{id}:{colour}`, the string `wardsOwned` already
+    uses. A turret is bought per colour (42c) and the shelf is drawn per seat, so the card a player
+    upgrades is already one seat's; keying on the id would make a red Mortar's stars appear on a
+    blue one nobody paid for.
+    <br>**Absent means one star, not nought**, so a turret bought before this shipped, a row a
+    merge dropped and a file from an older build all read the same way — no migration, no
+    sentinel, and a row is written only above the first star. `WardStars.Sane` is the one place
+    that decides, and every read goes through it.
+    <br>**A star only ever adds, which is what keeps the whole ladder out of par's way.** Par is
+    the hill's health over a match computed against the baseline bolt, so upward-only means par
+    over-states what an upgraded player needs — invariant 22's safe direction, and exactly what
+    37w accepted for cogs. **No level's par or star line moves because somebody upgraded a
+    turret**, and a fresh turret at one star is *bit-identical* to its model, which is what lets
+    every content gate, offline mirror and rule test go on playing an un-upgraded line and still
+    mean what they did.
+    <br>**`WardBuild` is the seam, and naming it was most of its value.** A model is content and a
+    star count is the player's; anything that needs the figures a player actually plays with needs
+    both, so they travel as one value rather than as two arguments a call site can half-pass —
+    which is how `SiegeView.Drop` came to draw every charging drop as a landed one (26f), and why
+    `DamageTo` had already been changed once to take a model instead of three of its fields. A
+    `WardLine` carries the stars it resolved rather than asking a ledger mid-run, because a ledger
+    moves when a sync lands and a line is what a board stands.
+    <br>**The prices are content, and that is not a nicety.** They are the largest credit sink in
+    the game and the number most likely to be wrong first guess, so a ladder that needed a store
+    review to retune would be the one thing this project's standard is most explicit about. The
+    built-in table is the floor rather than a fallback of convenience: a malformed block costs a
+    retune and never a session.
+    <br>**Two traps the gates caught rather than a player.** A DTO field named `stars` made
+    `compile.py`'s name-based check read `GroveScoreDto.stars` — an *array*, which may legitimately
+    be null — as the never-null trap, so the field is `upgrades`. And `WardStars.Resolve` takes the
+    whole `wards` block rather than reaching through it for the ladder: `JsonUtility` never leaves
+    a serialised class field null, but **every test and every offline caller builds its DTO by
+    hand**, and a call site that dereferenced through it failed fifty-two fixtures at once.
+
+37bc. **The shelf is read in three bands, and a band is a label on an order that already
+    exists.** Twenty cells in one grid is a wall; the same twenty under TIER I, TIER II and TIER
+    III is three short lists. `WardTier` keys on `WardModel.Order` for `SiegeView.Barrels`'s
+    reason — the shelf has been re-rung twice already and a table of ids inside a view would have
+    gone stale both times. **Nothing may key on it**: what opens a rung is still the one below it
+    plus a keeper level, and what a turret does is still its ability and its figures, so a band
+    cannot disagree with anything. Tier one happens to be exactly the free turret and the credit
+    ladder, and it is still *authored* rather than derived from the currency — one rule in two
+    spellings is worse than two of the same.
+    <br>**The grid is laid out by a cursor now, not by `i / Columns`.** A band starts a fresh row
+    under its own header, so where a cell goes depends on what came before it rather than on how
+    many there are — index arithmetic with a header spliced in disagrees the first time a band
+    holds a number that does not divide by the column count, which is every band on this shelf.
+    <br>**A caption between two rules rather than a plate**, because this is punctuation and not a
+    control: a filled bar the width of the grid reads as another row of the shelf, one a player
+    could try to tap.
+
+37bb. **A turret carries a bolt weight and a toughness of its own, and the two are not
+    symmetrical: one may only ever go up and the other is the trade.** Asked for as turrets that
+    differ in damage and health, with a multi-target turret hitting softer per raider. The half
+    that needed saying back is *which direction*: a siege's par is the hill's health over
+    `PerfectMatch`, computed against the **baseline** bolt, so a turret that hit under it would
+    need more matches than par assumes and push three stars out of reach of whoever bought it —
+    a grade decided by a purchase, on a number that reaches a public leaderboard (19a).
+    <br>**So the spread is built upward from the baseline rather than down from an average, and
+    what a player reads is identical.** "The mortar hits softer than the cleaver" is the mortar
+    sitting *at* the floor while the cleaver stands above it: the same order on the card, the same
+    ratio between them, and **not one level's par or star line moves**. The alternative — dipping
+    under — costs a chapter-wide retune of every par, every star line and the hold simulation, to
+    buy a smaller number printed on one card. `WardModel.PowerTenths` clamps at
+    `WardModel.Baseline`, so the *data* cannot express a softer bolt; both content gates refuse an
+    entry that asks for one rather than quietly clamping it, because a content push meaning it is
+    asking for something this mode cannot give.
+    <br>**Health is the half allowed to be a trade, because health reaches nothing that is
+    graded.** Par is counted in matches, the star lines are multiples of par, and what a run is
+    worth never asks whether the line survived comfortably — so a turret may hit harder and fall
+    sooner, and a player who stands four of them has made a choice they can be wrong about (26h).
+    What it may never do is make a rung *impossible*: `SiegeTuning.LeastGuardTenths` is the floor,
+    and `SiegeRuleTests.TheFlimsiestLineIsAHarderGameAndStillAGame` plays the whole chapter with a
+    line of the roster's flimsiest turret, spending nothing else. **A fragile line taking losses is
+    the choice working; a fragile line that cannot finish a rung is a trap sold on a shelf.**
+    <br>**A ward's full health is its own, and three places were reading the mode's constant.** A
+    mending's room, a rally's restore and the health bar all used `SiegeTuning.WardHealth`, which
+    was the same number while every turret was — with a roster that trades, it would cap a tough
+    turret's repairs at the baseline and draw its bar as overfull. `SiegeWard.Full` is read once
+    when the ward is built, exactly as its capacity is, and everything asks the ward. The offline
+    mirror deliberately keeps the constant: `threatens` asks whether a *level* can take a line
+    down, and a level is judged against the line every player already holds.
+    <br>**`DamageTo` takes the model now rather than three of its fields.** Ability, magnitude and
+    weight are three parts of one record, and passed separately they are three chances for a call
+    site to hand over two of them — which is how `SiegeView.Drop` came to draw every charging drop
+    as a landed one (26f's own narrowing).
+    <br>**The bars are measured against the roster, not against a constant**
+    (`WardCatalog.MostPowerTenths`), so the day a drop ships a harder-hitting turret every other
+    card shortens by itself; a typed ceiling would leave the new one pinned at full and everything
+    below it wrong. And the figures drawn are the ones the board really uses, read back through
+    `SiegeTuning` — a card that applied the power curve its own way would be a second opinion about
+    what a turret does.
+    <br>**The notes were rewritten into plain words in the same breath, and that is not cosmetic.**
+    "Holds half again as much fuel, so a cascade banks" is prose about the mode's economy that
+    tells a player nothing they can act on; "Stores 50% more fuel" is the same fact in words
+    anybody reads once. The rule that kept them honest is that each line states what the authored
+    numbers actually do — 3s, 40%, 2 more raiders — so a retune that moves a magnitude moves the
+    sentence with it, and **the game's own nouns are kept** (fuel, raiders) rather than inventing a
+    second word for a thing the lessons already name.
+37bd. **A boss may not be a raider drawn three times the size, a chapter may not be half boss
+    rungs, and a second chapter costs one table.** Three things the owner asked for on one day, and
+    they turn out to be one decision seen from three sides: what a player remembers about a chapter
+    is the thing at the end of it, and a boss that is a creeper at 3x is not a thing.
+    <br>**The bosses are off the raider roster.** All four were cut from the same fifteen insects the
+    raiders wear (37ar's budget), so a warlord was a horned beetle standing next to horned beetles.
+    That is invariant 37z's complaint asked one level up - that entry is about two *bosses* told
+    apart by nothing, and this is a boss and the wave it walks in front of told apart by nothing but
+    scale. They are `MONSTERS`' five now: a hooded teal caster for the **blightcaller** (its own
+    spell's colour), a helmed one holding a mace for the **warlord**, the widest and heaviest for the
+    **warbringer**, and a gold-crowned one for the **overlord**, which is what 37x already called it
+    in prose. The fifth is spare, so a fifth verb one day gets a body without a purchase. **Nothing
+    here is hue-rotated**, exactly as before: a raider's colour is a rule (37f) and a boss's is not.
+    <br>**And none of the five has a second animation**, where the old overlord had a take-off - so
+    all four cast reels are `pulse`'s synthesised rear-up rather than three of four. That is a real
+    loss, priced: a bought gesture beats a generated one, and what it buys back is four bosses that
+    do not look like the wave behind them.
+    <br>**Two bosses to a chapter, on the fifth rung and the tenth, and a count is what made that
+    obvious.** The first chapter shipped four across ten - one every two or three - and half a
+    chapter being a boss rung leaves no rung remembered for anything else. Five and ten is the shape
+    the genre uses. The two that left took 3,500 health and, on rung eight, the whole reason its last
+    wave was written *light* (a roar over an empty hill rejects nothing), so both waves are heavier
+    now - measured back by `AnUnhurriedPlayerHoldsThisLine`, which read **82 of 90** afterwards
+    against 79 before. `EachChapterSendsTwoBossesOnTheFifthAndTheTenthRung` is the gate, because a
+    boss token is one field on one rung and every other gate is happy with a boss anywhere or
+    nowhere.
+    <br>**The four verbs are dealt one each across twenty rungs**
+    (`NoBossVerbIsSentByBothChapters`): a warlord and an overlord in Thornwatch, a blightcaller and a
+    warbringer in Broodmarch. 37z's rule is that four bosses are four *fights*; a smite met in each
+    chapter is one fight met twice, however far apart. Note which way the assignment went and why -
+    the **ids stayed put**. `s01_warlordsgate` keeps its warlord and `s01_lastlight` its overlord, so
+    no level's name had to be rewritten to match what stands in it (invariant 1's spirit), and the
+    second chapter's extra difficulty comes from its hill instead. **Difficulty is the boards' job**
+    (5d, 26e), and here that is not a preference: every constant in this mode is shared by both
+    chapters, so a retune aimed at the second would move the first.
+    <br>**The second cast set is exactly what 37ar said a second pack would cost.** That entry
+    recorded the price in advance - "one table in `make_siege_art.RAIDER_SET`, twelve rows in
+    `SiegeMode`, and no code" - and the prediction held to the letter. The kind is said by the
+    **silhouette**, because the colour is already spoken for: every raider is hue-rotated onto the
+    colour it answers to (37f), so plain bodies creep, the four with **arms** are brutes, and a
+    crest, stalks or a banded shell is a bulwark.
+    <br>**Which cast a chapter draws is arithmetic on its ordinal** (`SiegeMode.CastFor`), so the
+    third siege chapter draws the insects again and the fourth the brood - 7c's rule, and **a chapter
+    published next year costs no cast at all**. The Infinite lane is the one answer that is not
+    arithmetic and stays a trial (37at). Two smaller things fell out: the insects **left** the
+    always-resident set, so the Infinite lane had been loading twenty-four bodies to draw twelve; and
+    the thirty-six cast names stopped being written down twice. The view carried its own switch per
+    cast - once to *load* and once to *draw* - which is `SiegeGroundTests`' fault waiting to happen
+    on thirty-six names instead of ten, so `SiegeMode.CastAddress` **indexes the very array
+    `ArtFor` preloads** and the drift is unrepresentable rather than merely checked. The arrays keep
+    their literals, so `artnames.py` still holds every name to disk.
+    <br>**And the picture that judges all of it had been drawing the wrong cast since the wrong cast
+    existed.** `render_siege.py` chose it with `"kay" if args.wave else ""`, and `--wave` **defaults
+    to one** - so the condition was true on every run the tool has ever made, and the authored
+    chapter was drawn with the Infinite lane's baked cast in the one instrument this mode has for
+    everything a number cannot see. That is 44d's own trap, and the lane needed no special case at
+    all: it is a chapter, and the chapter decides.
+
+37be. **"Hard with the default turret, doable with a little better" is a measurement, and making it
+    one meant playing a *chosen* line for the first time.** Every gate in this mode plays
+    `SiegeBoard.Build(layout)`, which falls back to the starter - right for the first chapter, where
+    the free bolt is the whole game, and useless for a question whose whole subject is whether
+    turrets are the answer. `SiegeBoard.Build` has taken a line since the loadout shipped
+    (invariant 42); **nothing had ever asked it for one**.
+    <br>`TheSecondChapterAsksForBetterTurrets` plays all ten rungs at nine rhythms twice - on the
+    free bolt and on the cheapest four-turret line the shelf sells - and asserts four things, each
+    closing a different way of getting this wrong: **no rung is walled** on the starter (a rung held
+    at no rhythm at all with the line a player arrives on is a wall rather than a reason to shop);
+    the starter is **strictly harder** here than on the first chapter (a second chapter that plays
+    like the first did not get harder, whatever its par says); one rung of the shelf **really answers
+    it**, by more than a ninety-run sweep's noise (a shelf that changes nothing is 5d's decoration on
+    the one thing a player pays for); and the kitted line **clears it comfortably**.
+    <br>Measured 2026-09-11: **55 of 90 on the starter, 77 on one rung up, against Thornwatch's 82 on
+    the starter**, with the worst rung on the starter at 3 of 9 and none at nought. Three rungs were
+    walls at 0 of 9 on the first cut and the fix was the waves rather than the numbers.
+    <br>**What the tuning loop taught about this mode is that par is a poor guide to how hard a rung
+    is.** `s03_gloamfield` at par 54 was held at *no* rhythm while `s03_thornbrood` at par 60 held at
+    four - the difference was a **twelve-token wave**, which is still deploying when the next musters
+    (`RaiderSpacing`), so the pile-up costs more than the raiders in it are worth. Three waves of ten
+    with the armour spread one to a wave is the shape that holds. **Before making a rung heavier, ask
+    whether it is longer.**
+
+40a. **A mechanic nobody authored into a wave does not exist, and it shipped that way for two
+    chapters.** Invariant 40 built the weaver and the thief — the rules, the caps, the flight, the
+    give-back on death, the art, the view — and **not one shipped level ever sent one**: there was
+    no `~` and no `$` anywhere in `s01_thornwatch.json`. The owner's report was that these units
+    are "either non-existent, or they immediately die so I don't see them", and both halves were
+    right: the endless lane sent them from waves 9 and 13, and on the hill they held at .66 and
+    died to four dogpiling wards in under two seconds. Every gate was green, because **a mechanic
+    that is never authored is a mechanic nothing measures** — `content.py` validates what a level
+    sends, and a level that sends none of something validates perfectly.
+    <br>**The check that would have caught it is a coverage question nothing here asks**: which of
+    this mode's kinds does the shipped chapter never use? That is one loop over `SiegeKind` against
+    the authored waves, and it is the same shape as `SkinsTests` walking `Skins` by reflection
+    (44's own answer to a name nothing checks). It is not written yet; it is on the owed list.
+
+40h. **The hill may not reach into the gem board, and finding that out cost building it.** The
+    weaver and the thief were rebuilt to *stand on the gem field* — a portal, a cell of their own,
+    killable only by their own colour's ward — on the argument that the two halves of this screen
+    needed joining. The owner's verdict was immediate and is the rule: **a raider has no business
+    standing among the jewels.** The gem board is the player's; putting the enemy's work on it
+    reads as the game taking the one surface they own. Both raiders were then **withdrawn whole**
+    — the kinds, the spells, the webs, the sacks, the caps, the flights, the lessons, the wave
+    tokens, the view and the mirror — and the field is gems again.
+    <br>**What survived is the same idea with the arrow reversed**, which is the whole of 40i. The
+    connection between the two halves is not the hill reaching down; it is the player reaching
+    **up**.
+    <br>**Retired ids that must never be reused:** the kinds `SiegeKind.Weaver` and `.Thief`; the
+    spells `SiegeSpell.Weave`, `.Snatch` and `.Bombard`; the lesson ids **`siege_weaver`** and
+    **`siege_thief`**; the wave tokens **`~`** and **`$`**; and the cell letters **`%`** (a sack)
+    and **`!`** as a *cell* (`SiegeLayout.RetiredSack` / `RetiredBomb`). The enum members are kept
+    rather than deleted because their ordinals reach analytics on every endless run ever recorded,
+    which is the rule `DefeatReason` keeps its retired members for; `!` lives on as a **wave**
+    token, where it means a bomber.
+
+40i. **A bomber is a creeper the player is pleased to see, and its bomb is the one thing in this
+    mode the finger does to the hill.** It walks, it swings, it dies like anything else — and where
+    it dies it leaves a **live bomb standing on the hill**. Tap the bomb and it goes off at once,
+    taking a firepot's damage out of the firepot's own plus around it.
+    <br>**That is the connection, and it runs the right way.** Every other input in this mode goes
+    into the gem field and reaches the raiders through a ward; a bomb has to be *spotted on the
+    enemy's ground and hit*, so the hill stops being a thing that is only watched. Nothing is put
+    on the player's board to achieve it.
+    <br>**It goes off where it stands, immediately.** An aiming step was built first and is wrong:
+    a bomb is already somewhere, so asking the player to pick a target after tapping it is asking
+    them to choose twice for one decision. **The decision is *when*** — a bomb kept for a wave is
+    worth several times one spent on a straggler — and that is a decision the hill in front of them
+    displays without a word.
+    <br>**Charged in matches exactly as a firepot is** (`SiegeUtility.MatchesFor`, invariant 39).
+    It costs no stock, no gems and no cooldown; what it may not be free of is the **grade**,
+    because a grade here is not a private number (19a). And **what it hits for is the published
+    firepot's magnitude** rather than a constant — the two are the same blast and the player is
+    told so, so a second figure would be a second thing a config push can move half of.
+    <br>**A path of its own rather than a free use of the firepot**, and the difference is one
+    word: stock. Everything a player owns goes through `Fire`, which reads the ledger, spends a
+    copy and starts a cooldown. `SiegeView.Blew` skips exactly that one of the three halves.
+    <br>**It is stored as a box of the hill's own targeting grid, never as a raw march.** A bomb is
+    tapped, and what a player taps is one of the twenty boxes a firepot already aims at — so the
+    drawing, the hit test and the blast all read one pair of integers. Storing a position would
+    leave each doing its own arithmetic on it, which is invariant 39k's bug waiting to be written
+    a second time. It also gets **a layer of its own above the raiders**, because a bomb sits where
+    something died and other raiders go on walking over that ground: a body between the finger and
+    the only control on that half of the screen reads as a bomb that does not answer.
+    <br>**And `Fell` is the one door it is dropped from** — a raider dies four ways (a bolt, a
+    firepot, a storm, a beam that overkills it) and a drop hung off any one of them is a drop the
+    other three do not do. That rule is the one worthwhile thing the withdrawn machinery leaves
+    behind.
+
+40j. **A raider that pays the player has to be priced as one, and the measurement inverted the
+    obvious answer.** A bomber was first given a brute's health, blow and march — "a brute with
+    cargo", which reads well and is wrong, because what it is worth killing has to be set by what
+    it *leaves*. A bomb pays 440 back; a raider costing much more than a creeper's 200 turns a gift
+    into a toll. Measured over the whole chapter at nine player rhythms: a **brute-weight bomber
+    cost 16 runs in 90** and a **creeper-weight one gained 4**. So a bomber is a creeper, exactly,
+    and the only thing keeping that from being free money is that a level authors **one** and never
+    a wave of them (`SiegeTuning.MostBombs` caps what may stand at three).
+    <br>**And the player model had to be taught to tap**, which is the second time in one session.
+    `AnUnhurriedPlayerHoldsThisLine` never touched a bomb, so every rung carrying a bomber read as
+    pure added difficulty — 59 of 90 against a floor of 68. With the model tapping a bomb the
+    moment it would catch anything (eager rather than clever, which is the safe direction) the same
+    chapter reads **79 of 90**, better than the 75 it stood at before any of this. **When a mode
+    grows a rule, ask whether its player model knows it** — asked and answered twice now, and both
+    times the number moved by more than a re-tune would have.
+
+37am. **A turret fires on a harp, and which clip that is is the owner's to name.** The firing
+    voice is `RPG_Harp_Attack_Impact_04` rather than the `_01` it shipped on, and the elemental
+    double's `chime2` is gone: what a double is worth is said in gold, with a ring and sparks, and
+    in figures, so a second clip on top of the shot was one more thing in the densest part of the
+    mix saying what the board already says. `zap` on the kill is untouched — a spell impact rather
+    than a harp, so it is plainly not one more shot.
+    <br>**Nothing about the density changed and nothing about it should be reached for casually.**
+    37k records the shot being fought down from four pitches to one and then .32 → .20 → .12,
+    which is 8.5 dB *below* the level the rest of the set is matched at, because a lit line fires
+    about eighteen a second across four wards and three or four copies are sounding at any
+    instant. The call site names both directions out of that now — .09 is another 2.5 dB down,
+    .17 is +3 dB and is about where four overlapping copies start reading as a drone — so the next
+    person to be asked for "louder" or "quieter" has a number rather than a guess. **What must
+    never be reached for instead is `SiegeTuning.FireEvery`**: same density, other end, and it is
+    a *rule* that loses the ward line outright at .26 (37k).
+    <br>**And the instruction was misread once, which is the transferable half.** "Remove every
+    sound a turret makes except the destroy one; they should only do *this* effect" was taken as
+    *the kill sound becomes the harp*, so the firing voice was deleted outright and `zap` re-cut —
+    and what was meant was *the firing sound becomes the harp, and keep the kill*. Both readings
+    are grammatical and only one is a game. **When a request names a removal and a replacement in
+    one breath, ask which of them the replacement attaches to**; it is the same class of misread
+    as taking a commission's goal for its verb (35), and it costs a round trip rather than an
+    argument. It cost nothing on disk because `shot`'s slot, its `.meta` guid and its Addressables
+    entry were restored from HEAD rather than re-minted — **a re-minted guid orphans the address
+    and the game asks for a clip nothing answers with** (7b), which is why `make_sfx.write_meta`
+    keeps a guid it finds.
+37an. **The header row moved into the bar's own band, and the thing that paid for it is that its
+    captions had never been visible on this mode.** Asked for from a device as smaller numbers,
+    higher up, to give the enemy ground more room. The row sat at 214–334 below the safe area's
+    top and `SiegeScreen.HostInset.w` was 300 — and `ProtoView` sizes its plate to fill its host
+    **exactly**, so the plate's top edge *was* 300 and the bottom two thirds of every caption on
+    this mode had been drawn behind an 82%-opaque panel since the mode shipped. **A host inset is
+    a hard edge, not a margin**, and nothing anywhere says so: the values were legible, the
+    captions were faint rather than missing, and every gate was green.
+    <br>So the row is 88 tall at 186 (142–230) with the type back down to 56 / 22 from the 74 / 28
+    it had been raised to, and the board starts at 236. That is **64 more units of board**, of
+    which the hill takes about three quarters (37al), *and* every caption back on screen. What
+    made the room is that **the middle of a header bar is empty on every mode** — what lives up
+    there is one key in each corner.
+    <br>**What that costs is a second question about the row's width, and it is one no picture
+    would have reported.** A number drawn over a button is perfectly legible; it is simply
+    somebody's tap going somewhere else. `ReadoutRow.ClearsTheKeys` is the check —
+    `KeyReach` 161, the slots narrowed to 220 on a 250 step — and it is asked at
+    `CanvasFit.PhoneWidth`, because the slots are placed from the row's middle and the keys from
+    its edges, so the narrowest canvas is the only width that binds and everything wider is slack.
+    <br>**And the top of the row is decided by a camera rather than by taste.** A dynamic island
+    reaches about 132 units down the *middle* of the display — which is exactly where the middle
+    readout is — and the run screens deliberately give up the top safe inset
+    (`RunScreen.SafeEdges`), so that readout has to clear it on its own: at 56pt centred on 172 its
+    glyphs start around 152. **Before moving this row up again, measure that.**
+37ao. **A field that has gone quiet points at a match, three times a level and never while
+    anybody is playing.** Asked for from a device: five seconds with no move made, highlight a
+    pair that would line up, at most three times per level. On a mode whose clock does not stop,
+    five seconds of a *live* board with nothing happening on it is not a pause for thought — it is
+    a player who cannot see a move, and a siege they are losing while they look.
+    <br>**The opening quiet is not playing, and no latch on the view could have said so.** It
+    shipped at four seconds counted from the moment the board was dealt, and the first nudge
+    landed six tenths of a second after GO! — on a hill the first raider had barely walked onto,
+    which reads as the game answering a question nobody had asked. The cause is a *deliberate*
+    property of this mode: `Countdown` draws its four beats over a board that is already
+    `Playable`, because the clock runs underneath the count (37o), so every latch the view has
+    reads "the player may act" throughout it. `SiegeView.Opening` asks the **board** instead —
+    `Wave < 1` is the whole opening quiet and is never true again — and it is derived rather than
+    latched by the countdown for 30g's reason: that coroutine has an exit that would clear no
+    flag, and a flag left set is a run whose hints never arrive, which nothing would report.
+    `SiegeHintTests` pins the fact it rests on.
+    <br>**Idle only is the whole of what makes it safe.** Invariant 20l records a mode whose
+    helpers were withdrawn after play — a halo, graft links, a breathing flower — because a board
+    that reads itself out has answered the question it exists to ask. Nothing here fires while
+    somebody is playing, and what it points at was already on the board.
+    <br>**It needs no exchange rate, and that is 39j's rule rather than an omission.** Before
+    pricing a new limit on what a player may do, ask which way it can move a run; only the
+    generous direction costs a proof. A nudge changes no rule, spends nothing, charges no match
+    and reaches neither `SiegeBoard` nor the grade — so every run playable with it was playable
+    without it, and there is nothing for `PerfectMatch` to price. It is also **not** the hint pool
+    (`RegenLedger`): that is a thing a player asks for and spends, and this is one they are given
+    for not asking.
+    <br>**Nothing about it reaches the save file, and both halves of that are rules.** How many
+    are left is a count that goes *down*, which 11b refuses a merge outright; and it is per
+    **run**, because a nudge surviving a restart would make restarting a thing the board punished
+    and one surviving a level would make what a board asks depend on the board before it (29c).
+    <br>**The finder is in Domain and `AnySwap` is it.** A hint that found its own answer would be
+    a second opinion about the only question this field asks — `SiegeBoard.Lines` — and the two
+    would drift the first time either moved; expressed as `FindSwap(0).Found`, a field the shuffle
+    believes is playable is a field a hint can always point at. `SiegeSwap.At` is where the scan
+    stopped, so a second nudge walks on rather than ringing the same two gems three times, and the
+    order is fixed rather than shuffled because a reading that is not deterministic cannot be
+    pinned.
+    <br>**Two traps, one of them written and caught by its own test.** `SiegeSwap.Found` written
+    as `A >= 0 && B >= 0` reads perfectly and answers **true** for `default`, because a struct's
+    default is nought rather than minus one — so "nothing found" named cell nought twice and an
+    idle field would have rung its own corner on a board with no move on it. **Anything whose
+    default has to mean *absent* needs a field that is false when it is zero.** And the obvious
+    fixture for "no swap here" is a two-colour **checkerboard**, which is wrong: it has no *run*
+    on it, which is what makes it look right, and it has plenty of legal swaps. Four colours
+    stepped by one a row is the field that really has none.
+    <br>The clock runs on `Playable` rather than on `Live` — a cascade, a lesson, the pause menu
+    and a panel over the board (`RunHold.Covered`) all hold it at nought — and it is cleared by
+    every door input arrives through, plus a **meddle**, which is the one thing that changes the
+    field without the player touching it (a webbed gem cannot move and a sack is not a colour).
 
 42a. **A shop that only lets you see what you have already bought is asking for a decision it
     will not show you.** Tapping a held turret on the loadout stood it on the line and tapping an
@@ -2670,10 +4458,34 @@ In practice:
     beetles, so the panel costs no art at all and shows the turret against what it will actually
     be shooting. **Its own asset scope**, never `LineScope`: a panel that took the line's would
     release a live board's turrets when it closed (invariant 7b).
-    <br>**The button says the game's own words** — the price, then "Stand here", then "On the
-    line" — because the panel is one tap in front of a shelf whose cells already read the last
-    two. And **it does not close on a purchase**: what was just paid for is the thing firing
-    behind the button, and closing over it would hide the one moment worth watching.
+    <br>**The button says the game's own words** — the price, then EQUIP, then EQUIPPED —
+    because the panel is one tap in front of a shelf whose cells already read the last two. And
+    **it does not close on a purchase**: what was just paid for is the thing firing behind the
+    button, and closing over it would hide the one moment worth watching.
+    <br>**And it wears the colour of what it *is*, which is the one state that is not an offer.**
+    Every state was built on `Skins.Buy`, the price pill, so a turret **already standing on the
+    line** shouted exactly as loudly as a nine-thousand-credit one — and the two states a player
+    is really choosing between, *equip this* and *this is equipped*, were drawn identically.
+    EQUIPPED pays nothing, moves nothing and only closes the panel, so it is `Skins.Settled`.
+    <br>**That name exists because `btn_green` has meant "do the thing" since this UI was written
+    and this is the one place it does not** (44's whole method is that the colour names are
+    already roles, so a second meaning has to be written down rather than borrowed silently).
+    <br>**And the owner then asked for the keys they press to be green too, which puts one
+    colour back on two meanings.** `Skins.Affirm` is the turret panels' UPGRADE and their price;
+    it is a role of its own rather than `Skins.Buy` turned green, because that pill is on the
+    real-money storefront as well and repainting every product card was not what was asked for.
+    It is the same green as `Settled` today, so a player tapping a turret that is for sale and
+    then one that is equipped meets one colour meaning *do it* and *already so* — the very
+    confusion `Settled` was split off to end. It stands because nothing yet asks the two to be
+    told apart on the same screen at the same moment; the day something does, **the one to move
+    is `Settled`**, because it is the dead key of the pair and `btn_gray` and `btn_dark` are both
+    cut. The three walls and the EQUIP key keep the orange, so a refusal is still the one thing
+    on that panel that does not look live. What
+    makes it the right green anyway is that this UI already spends green on *you have this* —
+    `Pal.Mint` on the grove shelf's held line — so the change raises it off a status line and onto
+    the control saying the same thing. **The reset belongs at the top of `Paint`, not in three of
+    its four branches**: `Paint` runs again after a purchase and after a turret is stood, so a
+    skin left from the last pass is a green EQUIP key on the next turret opened.
     <br>**Two layout faults, both found by measuring the built panel rather than by reading it,
     and both the same fault.** `UIKit.Box` pivots at centre whatever it is anchored to, so a band
     placed at the y its *top* should sit at is drawn half above that — the stage's 640 units drew
@@ -2703,11 +4515,25 @@ In practice:
     row answers is *what am I taking in*; a greyed icon answers *what exists*, which is the shop's
     question and is asked one screen away.
     <br>**Two numbers have to agree and only one of them is obvious.** `LoadoutBar.Height` includes
-    `SafeArea.Bottom` and the scroller is inset by exactly it (`LevelsScreen.FootRoom`) — a map is
-    scrolled to its bottom by default, so a viewport left full-screen puts the first glade of every
-    chapter behind an opaque shelf, and a bar that ignores the inset puts the kit row under a home
-    indicator. The bar is built in the header pass and the scroller calls `SetAsFirstSibling`
-    afterwards, which is what keeps the map behind it.
+    the display's own foot and the scroller is inset by exactly it (`LevelsScreen.FootRoom`) — a map
+    is scrolled to its bottom by default, so a viewport left full-screen puts the first glade of
+    every chapter behind an opaque shelf, and a bar that ignores the foot altogether puts the kit
+    row on a home indicator. The bar is built in the header pass and the scroller calls
+    `SetAsFirstSibling` afterwards, which is what keeps the map behind it.
+    <br>**That foot is `UtilityBar.Foot` and never `SafeArea.Bottom`, which is a lesson this bar was
+    written after and did not take.** It spent the whole inset — 94 units of it on an iPhone — and
+    every one of those units was empty plate under the kit row, reported off a device as a gap at
+    the foot of the screen with the band circled. That is the **same report from the same device**
+    the action bar had already answered, and the answer is a **ceiling** rather than the inset: the
+    shelf runs to the physical bottom and the cells stand 24 units above it, which clears the
+    indicator pill and spends nothing else on it. It is one number for both bars because they are
+    one shelf drawn in two places, so the day it is retuned neither can be left behind.
+    <br>**The general rule is that an inset is a clearance, not a margin.** `SafeArea.Bottom` is how
+    much of the display the system has taken, and a control needs to be *out of* it — which is a
+    handful of units, not the whole strip. Spend it in full below something and what you have built
+    is a band of nothing that is invisible on every device without a cutout, in the Editor, and in
+    every render this project has. Ask, of any layout that reads the inset: **is this clearing the
+    indicator, or is it reserving a room nobody enters?**
     <br>**And it is asked of the *mode*, not of whether the bar exists yet**: the scroller reserves
     its foot before the header has built anything, so a check on the field would reserve nothing and
     the inset would silently be zero.
@@ -2740,7 +4566,9 @@ In practice:
     afford. Four elements rather than four tints, for `WardArt`'s reason one step on - at the size
     a bolt is drawn, silhouette is the only difference that survives - and the hue is graded from
     `Pal` **in the bake**, so a ward, its bolt, its flash, its impact and the gems that feed it
-    cannot drift (37f).
+    cannot drift (37f). **The four elements are gone and the argument for them is the thing to
+    keep**: see 37bi, where an accessibility rule written about the *starter* stopped applying
+    the day the set moved onto a turret only one seat can hold.
     <br>**And the first cut of it was played and reported as bad next to the vendor's own demo,
     which is the fault worth writing down before the six below.** Nothing was wrong with the
     render; what was wrong was the *key*. The coverage a pixel was given was lifted by an exponent
@@ -3077,6 +4905,43 @@ In practice:
     **shrinkable** now, because three digits at a fixed 34pt overflow a 60-unit disc and a
     `UIKit.Label` that overflows is not clipped (37n, on a badge); and one panel serves both
     doors, because two would be two prices.
+39l. **A chest paid a utility and drew a white rectangle for it, and the reason is that the
+    drawing was the one half of "a kind and an id" nobody carried the id to.** 39b added
+    `ChestDropKind.Utility` and was careful about the shape — one kind and an **item id**, so a
+    utility shipped next year stays content — and it taught the reader, the roll, the grant and
+    the seeder. `RewardArt` was never told: `Icon` took a **kind** and nothing else, so a firepot
+    fell through its `default` and answered **null**, and every caller hands what comes back
+    straight to a `UIKit.Img` — which is a white square where the prize is (7b), on the panel a
+    player opens once a day. The noun under it was blank by the same omission, `NameKeys` being
+    indexed by the enum's own value with `Utility` one past its end, and the published odds line
+    read as an orphaned "12%" with nothing in front of it.
+    <br>**Every gate was green and none of them could have been otherwise.** `artnames.py` proves
+    a name a call site *asks for* resolves; there was no name to check, because the fault is a
+    picture **never named at all**. That is the shape worth remembering: **a scanner finds a wrong
+    name and can never find a missing case.** Only a walk over the enum can.
+    <br>So the four answers take `(kind, item)` — a **required** second argument rather than an
+    optional one, which is what made the compiler walk all twenty-four call sites and is the
+    whole reason this is a fix rather than a patch. Three of them genuinely name nothing and say
+    so out loud: an `AdOffer` is a kind and an amount, and a real-money product grants currency or
+    one permanent entitlement (18d), so neither can ever pay a kind that names a thing.
+    <br>**A utility's colour and name come from where they already come from** — `ShopRarity.Of`
+    and `UtilityItem.NameKey` — so a firepot is the same ember on the chest card, the shelf and
+    the action bar, and a fifth hue invented here would have been a fourth answer to a settled
+    question (16a's argument about a second roster, asked of a palette).
+    <br>**The guard checks an *address*, never a sprite**, which is `SkinsTests`' bargain for its
+    reason: nothing is loaded in an offline run, so a sprite lookup answers null whatever the
+    table says and a check that cannot fail is not a check. `RewardArt.Address` is split out for
+    it and `RewardArtTests` walks every `ChestDropKind` and every utility in the catalog against
+    what `AssetManifest` preloads — proved by deleting the case and watching it go red. It costs
+    the four literals that used to sit at an `Art.S` call (`artnames.py` 341 → 337 written, 120 →
+    121 built) and buys a check on every one of them **plus** the four utilities, whose addresses
+    are built from an id and which that scanner could never have seen.
+    <br>**And a published table can name a utility this build has never heard of** — the band
+    reader proves an id is *present* and cannot prove the catalog knows it, which is invariant
+    20's "content from the future" arriving through the daily chest. That draws `ic_gift`, which
+    is resident and reads as a prize; the grant stays honest because `UtilityLedger.Grant` refuses
+    an id the catalog does not know.
+
 39c. **An icon is not content, so adding a utility is a build.** Prices, strengths, ceilings,
     bar order and which chest drops what are all authored in `progression.json` and retunable
     from a config push; a picture is in the app. `ContentValidation` and `content.py` both
@@ -3271,9 +5136,12 @@ In practice:
     *holds* (**beacon**) — and that second one was half-built at first, because three places
     clamped fuel to the mode's constant rather than to the ward's own capacity: a turret that costs
     credits, says it banks a cascade, and does not.
-    <br>**Two prices, one gate**, which is 16j's ladder and 15a's ordering: credits are what play
-    pays out, so a credit price carries a keeper level; gems are the shortcut and ask nothing. Ten
-    abilities times two rungs, so the shelf reads as ten families rather than twenty strangers.
+    <br>**Two prices, and both of them behind a gate.** Ten abilities times two rungs, so the
+    shelf reads as ten families rather than twenty strangers. It shipped as 16j's ladder read
+    strictly — a credit price carries a keeper level and gems ask nothing, because gems are the
+    shortcut — and the owner reversed it: what that made was a shelf whose *dearest half could be
+    taken in any order by anybody holding gems*, which is the ladder under it not being a ladder
+    at all. See 42c.
     <br>**Owning is an entitlement and standing is an instruction**, which is invariant 16's split
     asked of one feature: `wardsOwned` is a union-joined id set with the starter never written down
     (16e, 16f), and `wardLoadout` is merged by recency against its own stamp (11c) with a colour
@@ -3293,6 +5161,61 @@ In practice:
     cannot check them — what replaces the literal is stronger rather than weaker: the roster is
     content, so `ContentValidation` and `content.py` walk it and error on a model whose pictures
     are not on disk, which catches a missing file and a misspelled id at once.
+
+42c. **A turret is bought for one colour, the shelf is one ladder climbed a rung at a time, and
+    every rung carries a keeper level — three rules the owner asked for that need each other.**
+    Each is small on its own and each undoes a hole the other two leave. **Per colour**, because
+    a line holds four turrets and which colour a trick is worth having on is the whole of what
+    makes the shelf a choice (26h): one purchase covering all four seats is buying one decision
+    and receiving four. **One rung at a time**, because a wall of nineteen prices asks a keeper
+    to compare things they have never seen fire, where one offer at a time is a next step — 16j's
+    argument about ground, and its `NextForSale` idiom. And **a gate on every rung**, or the half
+    of the shelf priced in the currency that can be *bought* skips the ladder outright.
+    <br>**The climb is forced rather than chosen, and that is the half worth writing down.** A
+    rung is sealed until the one below it is held, so reaching one means having met every gate
+    under it — therefore a rung asking for a level an earlier rung already demanded can never
+    refuse anybody, which is the decoration 5d names. `WardCatalog.LadderProblem` refuses a gate
+    that does not strictly climb, in the reader and in both content gates, and it is what put the
+    gem ladder at keeper 15–24: it sits above the credit ladder *on the shelf*, so it sits above
+    it in levels. **Gems still buy a rung far sooner than credits could; what they no longer do
+    is skip the rungs below.**
+    <br>**The honest cost, stated because it is not visible from any of the three rules: today's
+    one chapter pays about 1,650 XP, which is roughly keeper level seven.** So most of the shelf
+    is currently gated by how much content exists rather than by the wall. Every number in it is
+    content, so that is a config push rather than a store review.
+    <br>**And it cost the save file no schema version, which is a property of the shape rather
+    than luck.** A row of `wardsOwned` is now `{id}:{colour}` (`WardHolding`): what changed is
+    what a string *means*, not what the field is, so it is still the union-joined set of permanent
+    strings invariant 15 asks for. A row with **no colour on it means every colour** — it is what
+    an older build wrote, and the only reading a union merge could safely give it, since one
+    colour or none would confiscate something somebody paid for; such a row is carried through
+    untouched rather than rewritten, so both builds read the same holdings out of the same file.
+    What it *did* cost is `firestore.rules`, where the row bound was 64 and a full shelf is now
+    76: a save write that exceeds it loses **every** field rather than that one (12a), so the
+    rules go out before a client that can reach it.
+    <br>Three refusals now, in **coarsest-first** order — the rung, then the gate, then the price
+    — which is 15a's ordering with one more wall in front of it: when several apply, the one to
+    say is the one furthest from money, and the rung is also the only one of the three that names
+    something to *do*.
+42d. **A preview that does not show the thing being paid for is a thumbnail with a sentence over
+    it.** `WardFiringStage` stood one raider and fired one bolt, so a splash turret, a chain
+    turret and a pierce turret — three abilities, six of the twenty models — previewed
+    *identically to the free one*: what a player was deciding about was the only thing not on the
+    screen. It now stands **the arrangement each ability is decided by** and fires exactly the
+    bolts `SiegeBoard.Ability` would report against it — a clump for a splash, a line for a chain,
+    a column in one lane for a lance, two colours for a prism, and a **bulwark** for a rend,
+    because the shield is the thing that ability is about. The extras are drawn smaller than the
+    shot that caused them, which is the one thing `SiegeBolt.Extra` exists for.
+    <br>**It mirrors the rules rather than staging a demonstration**, which is what stops a
+    preview and a hill disagreeing about what a turret does: the reach, the hop count and the
+    lance's cadence are all read off `Magnitude` and `Extent`. **One phase is moved and nothing
+    else**: a lance runs its lane every `Extent` shots, so the stage seeds its counter to open on
+    one — the rate stays exactly as authored, which is the part a preview may not flatter, and the
+    alternative is four plain bolts in front of a player who will have closed the panel.
+    <br>**A bolt that travels sideways has to be turned**, and its head anchored along its *own*
+    axis rather than the box's — invisible on the one formation that fires straight up and wrong
+    on every other. That is 37aj's sign trap met a second time, so `Aim` states the identity it
+    rests on. **Nothing here has been seen on a device**; that is owed.
 
 43. **A mode may have a second ladder, and it is a *track* rather than a mode or a chapter.**
     Thornwatch's **Infinite** is the same board, the same wards, the same raiders and the same
@@ -3597,6 +5520,17 @@ compile. Do not guess — verify offline:
   threat is `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine`. `fall-vectors.json` is the contract with the shipping C# rules; the prototype modes have
   no vector file and are pinned **inline** by `ProtoLadderTests` instead, for the reason invariant
   29e gives. `bud-vectors.json` went with Budburst.
+- **Inline rung tables:** `python Tools/verify/rungs.py` holds the `new Rung(...)` arrays in
+  `SiegeRuleTests` to the chapter bodies that ship, and `--print` emits the rows to paste. Twenty
+  rungs are now written down twice - once in `Tools/chapters/*.py`, which writes what a player
+  opens, and once in C#, which is what every tuning decision in this mode is read off - and when
+  they drift **nothing fails**: both parse, both are internally consistent, every gate stays green,
+  and the hold simulation happily measures a chapter nobody ships. The hand copy is not optional
+  (a fixture that loads JSON needs `JsonUtility` and is skipped by the offline runner, which for a
+  mode with no search would mean skipping its only instrument), so the gate is.
+  <br>**Named for rungs rather than chapters** because `Tools/chapters/` is a package the chapter
+  tools import from, and a module called `chapters` on the path shadows it - which it did, the
+  moment the file was written.
 - **Difficulty check:** `python Tools/verify/difficulty.py` — what each glade actually asks of a player,
   counted rather than argued about. Not a gate (5d). It enumerates rotations of a grid of conduits, so it
   reports glades and names other modes as skipped. `dealt` is the one column about the board as the player
@@ -3614,25 +5548,56 @@ compile. Do not guess — verify offline:
   it catches a missing file and a misspelled id at once (invariant 42).
 - **Thornwatch's art:** `Tools/make_siege_art.py --check` proves every sprite, cast flipbook
   and explosion is what the tool writes. It reads **three** source folders - the CraftPix packs,
-  the turret/top-down packs in `to-assets`, and the mine tileset - passes when any of them is
-  absent, so a checkout without them still runs the gate, and `--contact` lays it out to be
-  looked at. Gems, cast, turrets and the mine floor are **cut**; only the rampart, the field's
-  plate and the plinth are drawn.
-  <br>The **ten grounds** are `GROUNDS`, one per rung of a chapter (37ab): the mine tileset's own
-  square slabs, each rung a different gradient map over a different mix of them laid by a different
-  seed, all nine normalised onto the mine's own untouched floor at rung five. It is one tileset
-  because it is the only **top-down** terrain here; the isometric packs cannot floor this board at
-  all.
+  the turret/top-down packs in `to-assets` (`--tower`), and the tile sheets (`--tiles`) - passes
+  when any of them is absent, so a checkout without them still runs the gate, and `--contact` lays
+  it out to be looked at. Gems, cast, turrets and the floors are **cut**; only the rampart, the
+  field's plate and the plinth are drawn.
+  <br>The **ten grounds** are a **plain grid of small tiles** — `Tools/make_siege_ground.py`,
+  called by `make_siege_art` (37ab, then 37aw, then **37av**, which threw the composition away).
+  **Five whole tilesets** out of the eight in `~/Downloads/tiles` (grass is too loud; the two blue
+  ones were taken out by the owner), five of the ten rungs recoloured to cover ten,
+  sixteen tiles across, each cell picked at random from one sheet; **no props, no chasms, no
+  strata, no scatter, no overlap, no jitter, no rotation**. No zip is opened. Each keeps its own
+  colour, turned down per sheet by `damp` until it lands at 6.9–11.2 chroma, so a lava floor and an
+  ice floor stop being `Pal.Amber` and `Pal.Azure`. `down` is derived from each sheet's own tile
+  aspect, because the eight are not cut alike. Graded onto `GROUND_MEAN` / `GROUND_SPREAD`, which
+  sit **below `CAST_VALUE` by design** — see 37aw. It is authored at **1024x788**, the shape the
+  hill band actually is, and the view **envelopes** it rather than stretching it (37au); `--check`
+  holds the ten PNGs to that canvas *and* holds `SiegeGroundTests.GroundAspect` to the same two
+  numbers, which is the only join between the tool and the one place C# writes the shape down. **Licensed, so it is silent when the two zips under
+  `~/Downloads/topdowntiles` are absent** — the ten PNGs it writes are committed.
+  <br>It reads a **third** root, `--enemies`, for the top-down monster pack the four bosses and
+  the second chapter's twelve-body cast come out of (invariant 37bd). Three roots rather than one
+  copy of a zip, for the reason the second exists: copying a licensed pack so that one path works is
+  a second copy nothing keeps in step, and the day the owner re-downloads it only one of them moves.
   <br>The **ward line** is twenty turrets and twenty recoils - five tiers of the merge kit's own
   upgrade ladder, each hue-rotated to one of the four colours - because a ward now carries its
   **rank** in its silhouette and its colour in its hue (37w). Every tier is fitted to one box and
   pinned by its *foot*, so a turret does not change size or rise off its plinth when it goes up.
-  <br>The **four bosses** are `BOSS_SET`: four bodies from four packs at four heights, three reels
-  each off one canvas so none of them changes size when it throws (37z). One loop rather than a
-  block per boss, which is both what made a third and a fourth cheap and what makes the *set*
-  something a reader can see at once.
+  <br>The **cast** is `RAIDER_SET` and the **four bosses** `BOSS_SET`, and all sixteen come out of
+  one pack, because it is the only one here that draws insects (37ar). Two reels a boss rather
+  than three - a top-down insect stands in the reel it walks in - both off one canvas
+  (`one_canvas`) so none of them changes size when it throws, and the cast reel is a there-and-back
+  whichever way it is come by. `deshadow` drops the pack's baked ground shadow before anything is
+  measured, and `value_gain` lifts each body onto one brightness, or the dark-shelled beetles read
+  as black whatever colour they were asked for.
   <br>**The per-colour shot, muzzle and hit reels under `Art/Fx/Siege/` are not its work** - they
   come out of `Bake Siege Projectiles` below.
+- **Thornwatch's second cast, baked from 3D:** `Glimmer Grove ▸ Art ▸ Bake Siege Cast (3D)`
+  renders three rigged KayKit characters at this board's camera into twelve reels under
+  `Art/Siege/kay*` (invariant 37at); `▸ Verify Siege Cast (3D)` re-bakes and holds what is on disk
+  to it within a tolerance (two GPUs are not obliged to rasterise a triangle identically);
+  `▸ Siege Cast Contact Sheet (3D)` and `▸ Survey Siege Cast Angles (3D)` are the pictures. **Look
+  at the survey before moving `Pitch`** — the difference between an angle that reads as a figure
+  and one that reads as a skull is not a number. The models are **CC0 and committed** under
+  `Assets/Game/Editor/Art/KayKit`, so unlike every other art tool here this one needs nothing
+  outside the repo; being under an `Editor` folder is what stops them ever reaching a build.
+  `Tools/render_siege.py --cast kay` draws them on a real board. **Each rung otherwise draws its
+  own chapter's cast** (`CHAPTER_CASTS`, mirroring `SiegeMode.CastFor`), which is a fix rather than
+  a feature: the flag used to be `"kay" if args.wave else ""` and `--wave` defaults to **one**, so
+  every picture this tool has ever drawn of the authored chapter wore the Infinite lane's baked cast
+  (37bd). `--wave N` picks them
+  automatically because that is what the Infinite lane draws.
 - **Thornwatch's projectiles:** `Glimmer Grove ▸ Art ▸ Bake Siege Projectiles` renders the four
   ward projectiles, their muzzle flashes and their impacts out of the bought pack's own prefabs
   into sprite reels under `Art/Fx/Siege` (invariant 37k), **and `▸ Bake Turret Projectiles` does
@@ -3669,12 +5634,20 @@ compile. Do not guess — verify offline:
   rungs side by side — `--raiders N` stands that many of the first wave on the hill,
   `--no-bolts` takes the exchange off it, `--no-bar` takes the action bar off, `--cooling`
   draws slots mid-cooldown (bare for a sample, or `id=seconds` pairs), `--warlord
-  cast|idle|walk|storm` picks which of the boss's three reels it is wearing, or draws the frame
+  cast|idle|storm` picks which of the boss's **two** reels it is wearing, or draws the frame
   its **volley leaves** (invariant 37ac), `--line a,b,c,d` stands a
   chosen loadout (42), `--wave N` reads the **Infinite** lane's hill at a wave number, and
-  `--aim hill` / `--aim wards` draw a utility's targeting, and `--burn LANE,ROW` lights the
-  plus a firepot dropped there would take (39k) — the only picture that says whether the boxes
-  line up with the raiders standing in them. With no `--level` it draws all ten
+  `--aim hill` / `--aim wards` draw a utility's targeting, `--stood` stands two live bombs
+  on the hill where bombers died — the only picture that says whether a bomb can be picked out of
+  a hill full of walking monsters and whether it reads as a thing to tap (40i) — and
+  `--burn LANE,ROW` lights the plus a firepot dropped there would take (39k) — the only picture that says whether the boxes
+  line up with the raiders standing in them. It draws the **header** too — the bar's two corner
+  keys, the reach of each one marked, and the readouts where they really sit — because the row
+  moved up level with those keys (37an) and "does a number land on a button" is invisible in
+  every other gate; `--no-header` takes it off. **`--phone` draws a 19.5:9 display with an
+  iPhone's home-indicator strip at the foot of it** rather than the 16:9 sheet everything else here is
+  drawn on: the shelf's own foot and the three bands' real proportions are only visible in that
+  shape, and a gap under the action bar shipped because they were not (37al). With no `--level` it draws all ten
   rungs and the endless one, each on **its own ground** (37ab), which is the only picture that says whether the ten read as ten places and
   whether any of them competes with the cast standing on it. Render the four boss rungs side by
   side and whether the four are four different fights answers itself — which is the picture that said they were not (37z),
@@ -3687,8 +5660,9 @@ compile. Do not guess — verify offline:
   own order — (left, bottom, right, top)** — and were written as (left, top, right, bottom) for
   a long time, which drew the board 55 points high: a diagnostic that is the only thing able to
   see a band in the wrong place must not itself put one there. **Look at it.** It is the only check that can see a fuel tube hidden behind
-  the field's plate, a raider whose colour does not read, or a bolt baked so loosely that it
-  crosses the hill as a sliver — every one of those a fault it caught, all past a green gate
+  the field's plate, a raider whose colour does not read, a cast **floating over its own shadow**
+  (37as — which it could not see until it was taught to draw one), or a bolt baked so loosely that
+  it crosses the hill as a sliver — every one of those a fault it caught, all past a green gate
   (invariants 37g, 37k). It caught three more putting the warlord on the hill, and all three were
   *placements* (37u): a boss health bar outside the plate, then one on top of the ward line's own
   bars, then a boss shrunk twice to make room for a bar that should never have been carried.
@@ -3752,6 +5726,33 @@ compile. Do not guess — verify offline:
   Everything is *drawn*, so this gate needs no licensed pack and runs on every checkout; it is
   also the only thing that can see a flame that reads as a kite, or a cell that reads as a
   sticker (39c, 39d).
+- **The grove's art:** `python Tools/make_grove_art.py --check` re-renders all 90 pieces and the
+  floor tile from the committed CC0 models and proves every one of the 291 PNGs is what it
+  writes. Unlike every other art gate here this one needs **nothing downloaded** — the models
+  are in `Tools/kaykit/` — so it runs on any checkout. `--contact` lays every piece out at four
+  facings deep, `--floor` rebuilds the ground tile and asserts the world-to-screen calibration,
+  `--survey <pack> --source <bundle>` rasterises a whole pack onto sheets (which is the only way
+  to *choose* from 263 models whose names say a family), and `--vendor --source <bundle>` copies
+  in the models a new roster row names. `Tools/kaykit.py` is the rasteriser and knows nothing
+  about the grove.
+  <br>**`--check` proves reproducibility and says nothing about whether a village reads.** That is
+  `python Tools/render_grove.py --layout <file>`, which draws a grove exactly as the game does —
+  the same grid, the same two layers, the same per-facing sprite, the same derived sizes. It is
+  what caught the world-to-screen error being a factor of √2, and it is the only thing that can.
+  <br>**The ten showcase villages are drawn, looked at and redrawn through that same tool**, and
+  the loop is `node firebase/seed/seed-showcase.mjs --dry-run --dump <dir>` then render the
+  files it wrote. `--dry-run` needs no network and no credentials, and it refuses a plan that
+  names a piece the catalogue does not hold, stands one on ground the village does not own,
+  overlaps two footprints or wears a companion its own derived keeper level cannot reach — so a
+  catalogue replacement fails it loudly rather than publishing ten groves full of holes. It did:
+  all ten were re-authored on 2026-09-11 because 114 of their 119 legend pieces had been
+  retired.
+  <br>`python Tools/import_grove_art.py` turns `Tools/grove_pieces.tsv` and those PNGs into
+  `homestead.json`: it *measures* `scale`, `lift`, `w`, `h` and the masks rather than reading them
+  from anywhere, holds `make_grove_art.py`'s three mirrored constants against the C# that owns
+  them, and owns the whole `ui.piece.` namespace — a key whose piece is gone goes with it, which
+  nothing else could report, because a piece's loc key is derived and `loc.py` scans for written
+  ones.
 - **Prismvale's art:** `Tools/make_prism_art.py --check` proves every sprite, cast flipbook
   and flare is what the tool cuts out of the licensed packs, and `--contact` lays them out to be
   looked at. It reads the zips directly and **passes when the packs are absent**, so a checkout
@@ -3995,6 +5996,29 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   on runs on the unscaled clock (`Tw.unscaled` is the default) and a scaled wait desynchronises from
   them the moment anything touches the scale. Set `Time.timeScale = 1f` through `execute_code` before
   driving a board in the Editor.
+- **A NumPy scalar is *strong* under NEP 50 where a Python float is weak, so one `np.floor` can
+  promote a whole float32 pipeline to float64.** `make_siege_ground.stain` computed its HSV sector
+  as `f = hue * 6.0 - np.floor(hue * 6.0)` — and `np.floor` of a Python float hands back an
+  `np.float64`, which is *not* weakly typed, so `(1 - f) * s` upcast a float32 tile and every array
+  downstream of it doubled. The symptom was the tool failing to allocate **1.6 MiB** with 8 GB of
+  RAM free, which reads as anything but a dtype bug; the tell is the traceback naming a `float64`
+  array of a shape you only ever built in float32. `int(hue * 6.0)` and a plain `float` fix it.
+  **When a numpy pipeline is unexpectedly slow or hungry, print the dtype at each step rather than
+  trusting that it stayed where you put it** — and note that a Python scalar and a numpy scalar
+  behave differently here, which is the opposite of the intuition NEP 50 usually rewards.
+
+- **A gate that reads the file system lies while Unity is reimporting, and it lies by *failing*.**
+  Writing 1,227 art files with the Editor open sends it into a reimport that transiently takes
+  folders away and puts them back: `Assets/Game/Art/Fx/Siege` was measured at 538 entries, then 120,
+  106, 90 four seconds apart, then 310 and back to 538. `content.py` run in that window reported
+  **174 errors**, and run again eight seconds later reported **181** — a set of missing turret reels
+  that grew between two consecutive runs, which reads exactly like something actively deleting the
+  tree. Nothing was deleted and nothing was wrong; once the reimport settled the same command
+  reported **0 errors**. The tell is that the failure count *moves*: a real content failure is
+  deterministic, so **before believing a file-system gate that fails right after an art tool has
+  written, run it twice and compare** — and if the two disagree, wait for the Editor rather than
+  chasing the diff. The same applies to `artnames.py`, `--check` and `AddressableAudit`.
+
 - **Unity only re-resolves packages and reimports on window focus.** If a change seems not to apply, the
   Editor probably has not been clicked.
 - **And `refresh_unity` says `compile_requested: true` without compiling anything**, which is worse than
@@ -4100,7 +6124,7 @@ live in **Hard-won facts**.
 - **Content pipeline** — levels as data in `StreamingAssets/Content/`, stable `LevelId`s, manifest-built
   `CatalogIndex`, lazy chapter bodies, `Content ▸ Sync Manifest`, build gate.
 - **Save** — versioned atomic file with checksum, backup rotation, corrupt-file recovery, tested
-  migrations, monotonic merge. **Save schema v23.** Content schema: manifest and chapter bodies **v2**,
+  migrations, monotonic merge. **Save schema v26.** Content schema: manifest and chapter bodies **v2**,
   grove body **v3**.
 - **Cloud** — Firebase (Firestore + Auth + Functions), anonymous by default, Apple/Google linking,
   per-account local archive for switching, `SyncScheduler` debounce/backoff.
@@ -4112,17 +6136,29 @@ live in **Hard-won facts**.
 - **Economy** — real-money shop (Unity IAP 5.4.2), gems as the soft sink, rewarded ads, refund sweeps,
   server-adjudicated grants, a gem-priced continue on a lost run (23) and a bonus wheel on the victory
   panel's video offer (25), neither costing the save file a field.
-- **The Grovement** — 14x14 isometric tile floor drawn as a ground layer under a piece layer, pieces on
-  authored footprints (the hall and every dwelling 2x2, nine structures and paths 2x2 or 1x2), taps
-  resolved through per-piece hit masks, land sold one rung at a time up an authored ladder — the
-  three smallest stretches for credits and the five biggest for gems (16j) — decor bought by the
-  copy, residents projected from the companion roster, derived grove worth.
+- **The Grovement** — a **village**, 28x28 isometric tile floor (784 tiles) drawn as a ground layer under
+  a piece layer. 90 pieces rendered from one CC0 pack (16m): a four-rung home ladder ending in a castle,
+  houses in three colours, **fourteen civic buildings** (16r), walls and gates, fences, trees and props. A piece
+  stands on an authored footprint (1x1 to 4x4; the hall and every dwelling the floor's own **4x4**) and
+  can be **turned** — four facings, four renders, one hit mask each. Land is sold one rung at a time up
+  an authored ladder — the three smallest stretches for credits and the five biggest for gems (16j) —
+  decor is bought by the copy, residents are projected from the companion roster, and grove worth is
+  derived. The floor doubled per side on 2026-09-11 and every region with it (16p).
+  <br>Placing is a **draft** (16o): the inventory is a button in the bottom-left corner, choosing from it
+  puts a ghost on the floor, dragging moves it with every tile of its footprint lit green or red, and
+  TURN / PLACE — and TAKE AWAY on something lifted off the floor — sit over it. Nothing is written until
+  PLACE, tiles carry no ring, and a tap on a piece lifts it into the same draft.
+  <br>`scale`, `lift`, `w`, `h` and the masks are **measured from the render**, never typed. The floor
+  tile is built rather than cut and asserts the world-to-screen calibration (16m). Every grove
+  arranged before 2026-09-11 was cleared by `groveEpoch` (16n), because not one old piece id survived —
+  and the ten **showcase villages were re-authored** against the new catalogue for the same reason.
 - **Boards** — public `groves/{uid}` cards, published rank distribution, unique keeper names with
   server-side filtering and reporting. A card is rebuilt about fifteen seconds after its owner changes
   the grove while online (a three-second sync debounce, then a ten-second publish debounce), or on
   their next launch; the cost grows with decorating, never with playing (19j).
 - **The one live mode, and the three hidden ones** (invariant 38) — the game a player opens today is
-  **Thornwatch** and nothing else: `s01_thornwatch` (ten rungs, invariant 37) on the ordinary
+  **Thornwatch** and nothing else: `s01_thornwatch` and `s03_broodmarch` (ten rungs each,
+  invariants 37 and 37bd) on the ordinary
   ladder, and `s02_endlesswatch` on an **Infinite** track beside it (invariant 43), reached
   through a second pill under the chapter plaque. The map draws no *mode* switcher, because there
   is one mode; it draws the **track** switcher, because there are two ladders. It is the front
@@ -4237,6 +6273,7 @@ live in **Hard-won facts**.
 | ~~`b02_tanglewood`~~ | ~~bud~~ | — | — | — | **deleted** (38) — Budburst's second chapter; its ids are spent |
 | ~~`k01_kindlewake`~~ | ~~kindle~~ | — | — | — | **retired** (35) — withdrawn after play: the verb was not the one commissioned and the animation followed from that. Its ids are spent |
 | `s01_thornwatch` | siege | 10 | 11–53 matches | none — the ward line is the fail state | raiders come down the hill at four coloured wards; match a colour and that ward fuels up and opens fire, and a bolt is worth double against a raider of its own colour. Fuel leaves a ward as a bolt and no other way (37c). Every rung is an 8x5 field with no move allowance (24); waves come on a clock, or early if the hill is cleared (37k). **The ramp is what is coming**: rung 1 is twelve creepers and nothing else, rung 2 brings the **cog** (37w), rung 3 the **blightcaller** (37z), rung 4 sends waves of one colour at a time, rung 5 the **warlord** (37t), rungs 6–9 turn the hill from creepers to brutes (0 → 18), rung 8 the **warbringer**, and rung 10 ends on the **overlord** (37x). **Four bosses and four different fights** — a douse, a smite, a rally and a sunder, in four colours, from four packs, at four sizes. All four hold the middle of the hill and walk on in 2.7–4.1 seconds. Cogs 3–4% from rung 2, which is where they stop maxing the line. Par is not monotonic — it dips at rung 5 — and an unhurried player clears every rung inside the three-star line with all four wards standing, the most-bled lines being the warlord's rung and the finale's at 46–47 of 56 (37j) |
+| `s03_broodmarch` | siege | 10 | 38-65 matches | none - the ward line is the fail state | **Broodmarch.** The same board and not one new rule: the brood is a second twelve-body cast (invariant 37bd) and what the chapter adds is a hill that no longer forgives a line standing at rank one. Par 38 -> 65 where Thornwatch is 11 -> 58, so it opens roughly where the first chapter ends. **Two bosses, and they are the two the first chapter does not send**: a **blightcaller** on rung 5, riding the head of its last authored wave because it takes a ward's fire and never its health (37ad), and a **warbringer** on rung 10, whose last wave is written light so the roar has a hill to charge. The ramp is what is coming - brutes, then armour, then bombers, then armour in groups, then one colour at a time (three wards idle), then density, then the longest hill in the game at 36 raiders across four waves. Cogs 3% throughout, matching the first chapter, so the *only* thing that moved is the hill. Measured: an unhurried player holds **55 of 90** runs on the free turret and **77 of 90** one rung up the shelf, against Thornwatch's 82 on the free turret (37be) |
 | `s02_endlesswatch` | siege *(infinite track)* | 1 | 3★ at wave 20 | none — the ward line is the fail state | **the Infinite Watch.** The same hill, the same wards, the same verb, and waves that never stop. What comes at wave *n* is a rule rather than a list (`SiegeEndless`): a boss every fourth wave to sixteen — blightcaller, warlord, warbringer, overlord — then every unordered **pair** of the four every fifth wave, which is thirty waves before anything repeats. Brutes from wave 3, bulwarks from 6, a weaver from 9, a thief from 13; health climbs 12 tenths a wave and a blow 4. Graded on how far it got rather than on what was spent (`LevelTuning.Climbs`), so three stars is wave 20 and two is wave 11 — **both guesses until somebody plays it** |
 | `p01_prismvale` | prism *(hidden)* | 2 | 3–4 swaps | none, then par + 3 | drag a gem onto its neighbour and the two change places; a lantern feeds the gems of its own colour touching it, that colour runs on through every matching gem beside them, and a critter standing against the vein wakes. Nothing is ever spent, so a vein can be **broken**. 6x6, critters 2 → 3, lanterns 2 → 3, `ways` 10 → 120, `dealt` 2 → 3 of 25, `used` 2 → 3, greed beaten on the second. The first rung cannot be lost (24) |
 | ~~`e01_emberforge`~~ | ~~ember~~ | — | — | — | **deleted** (38) — Emberforge withdrawn; its ids are spent |
@@ -4297,10 +6334,10 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
 
 - **Companions** — 31, one free (`monarch`, the starter), 30 priced 800 → 30,000
   (~270,500 total). Unlock is keeper level **and** purchase.
-- **Grove catalog** — 436,270 credits **and 6,200 gems** complete: 154,770 decor and homes,
-  11,000 credits + 6,200 gems of land (9 regions, a free 6x6 starter), 270,500 residents.
-  150 priced pieces, of which 99 sell in bundles of ten at what one used to cost. Home
-  ladder 5 rungs, first free.
+- **Grove catalog** — 478,120 credits **and 6,200 gems** complete: 196,620 decor and homes,
+  11,000 credits + 6,200 gems of land (9 regions, a free 12x12 starter), 270,500 residents.
+  89 priced pieces, of which most sell in bundles of ten at what one used to cost. Home
+  ladder **4 rungs**, first free, 45,500 credits to the top (16p).
 - **Land** — one ladder, cheapest rung first and nothing else on offer:
   `east_meadow` 2,500 → `west_hollow` 3,500 → `north_reach` 5,000 in credits, then
   `south_bank` 600 → `sunrise_field` 900 → `dusk_field` 1,200 → `far_terrace` 1,500 →
@@ -4318,13 +6355,20 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   and they buy different things: a glade's turns the conduit (`BoardView.Hint`), a grove's
   *marks a flower* and shows the cascade tapping it would set off (`BudHint`, `BudView.Hint`).
   Neither costs the save file, the wire or the server anything.
-- **Turrets** — 20, one free (`bolt`), 10 priced 1,200 → 9,000 **credits** behind keeper
-  levels 2 → 14, and 10 priced 600 → 2,000 **gems** with no gate. Ten abilities, two rungs
-  each. The player stands four of them, one per colour, and carries that line into every
-  siege (invariant 42). None of them makes a bolt weaker than the free one, ever. **Each of
+- **Turrets** — 20, one free (`bolt`), **9** priced 1,200 → 9,000 **credits** behind keeper
+  levels 2 → 14, and 10 priced 600 → 2,000 **gems** behind keeper levels 15 → 24. Ten
+  abilities, two rungs each (chain three). **Both halves of the shelf run in one order, and
+  it is how much of the hill an ability reaches** (37ax): siphon, beacon, ember, frost, rend,
+  prism, pierce, splash, chain — single target first, multi-target last, **with two named
+  exceptions the owner made after playing** (37ay): the dearest earned rung banks fuel and the
+  second bought rung arcs. **Bought per colour**, and the shelf is one ladder: a rung is
+  sealed until the one below it is held on that colour, so a full line is 76 purchases
+  (invariant 42c). The player stands four of them, one per colour, and carries that line into
+  every siege (invariant 42). None of them makes a bolt weaker than the free one, ever. **Each of
   the nineteen throws a projectile, a muzzle flash and an impact of its own**, chosen to say
-  what its ability does and baked in all four ward colours (37ae); the free one throws the
-  four elemental bolts it always has. Every ward projectile is baked with a **bloom** and at
+  what its ability does and baked in all four ward colours (37ae); the one turret named by
+  `WardModel.Elemental` throws the shared reels, which are **one fireball in four colours**
+  since 37bi and were four different elements before it. Every ward projectile is baked with a **bloom** and at
   the density these effects are drawn to be seen at (37af), and four of the nineteen are two
   pack effects **layered** into one because the pack holds only twenty silhouettes (37ag).
 - **Utilities** — four, held up to **100** each, account-wide and shared by every Thornwatch
@@ -4337,7 +6381,7 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   nine thousand gems in hand and a forty-gem button that would not press. `UtilityItem.MinLevel`
   and `UtilityRefusal.Locked` stay, because they are content and a coin-priced utility would
   want them; nothing authors one. **Firepot** 12 gems (440 damage in one box of the hill, charged 2 matches),
-  **mending** 8 gems (6 ward health, charged nothing), **surge** 10 gems (18 shots' fuel,
+  **mending** 8 gems (6 ward health, charged nothing), **surge** 10 gems (18 fuel, which is 9 bolts and the same four seconds of fire it always was,
   charged 2 matches), **stormcall** 40 gems (700 to every raider on the hill, charged by the
   same arithmetic and so dozens of matches on a full one). Three of the four are a weighted
   option in one daily chest — mending in the first (12 of 100), surge in the second (13 of
@@ -4447,6 +6491,183 @@ changes nothing until that function is redeployed.
 
 **Owed, in order of cost if forgotten:**
 
+0m. ~~**Re-seed so the server knows Broodmarch.**~~ — **done 2026-09-11.**
+   `config/progression.levelChapters` is derived from the manifest's *enabled* chapters, so adding a
+   chapter adds ten level ids the server has never seen. Read live before the run it held **eleven**
+   ids - ten `s01_*` and one `s02_*` and no `s03_*` at all - which means the server valued every
+   Broodmarch clear at **nothing**: the client derives about 2,400 credits from a cleared chapter,
+   the server derives none, `submitSpends` then refuses debits the balance should cover, and
+   `grove.ts` clamps that account's public score harder (19a). It reads **21** now, all ten `s03_*`
+   mapped to `s03_broodmarch`, and `firebase/e2e/smoke-test.mjs` is **91/91**.
+   <br>**What else went out with it, because `seed-config.mjs` reads the working tree rather than
+   HEAD.** The same run published the replaced grove catalogue (`config/grove` v16 - 89 priced
+   pieces, a complete grove worth 504,620 against the 436,270 + 6,200 gems this file still records
+   above) and the re-rung ward roster with its new upgrade price block. Both were uncommitted work
+   in flight at the time; publishing them is consistent with where the grove reset is going
+   (`GroveEpoch` makes every stored grove of the old catalogue dead anyway), but it is not what a
+   seed was asked to do. **Seed from a HEAD shadow clone** when the tree is not yours alone -
+   `seeder-publishes-the-working-tree` says so and this is why.
+   <br>**What made it safe to run mid-flight** was checking one thing rather than assuming: the
+   `daily`, `ads`, `store` and `streak` blocks of `progression.json` were **untouched**, so
+   invariant 38's ordering trap did not apply - the trap is a published chest table disagreeing with
+   the one bundled in a client, which shows a player one number and pays them another. **Check that
+   diff before seeding out of sequence; it is the difference between a re-runnable config push and
+   an economy that lies.**
+   <br>One pre-existing fault surfaced and was repaired on the way: `leaderboards/*` held **no
+   documents at all**, so the live suite's "a signed-in player may read a board" was 404ing. Nothing
+   in the seed touches them; they are rebuilt from `groves/*` by `publishGroveRanks`, forced with
+   `gcloud scheduler jobs run firebase-schedule-publishGroveRanks-europe-west1 --location=europe-west1`.
+
+0h. **Play Broodmarch, and look at the four bosses on a device.** The second chapter and the
+   non-insect bosses are new on 2026-09-11 (invariants 37bd, 37be). Everything offline is green -
+   compile, the whole suite, `content.py`, `rungs.py`, `artnames.py`, `loc.py`,
+   `make_siege_art.py --check` - and every rung has been rendered and looked at; none of that can
+   answer any of the four questions below.
+   <br>**Does a boss read as a boss now?** That is the report this was built for: the four were
+   insects out of the same roster the raiders wear, so a warlord was a horned beetle standing next
+   to horned beetles. The pairing to watch is the second chapter's, where the raiders are blobs and
+   so are the bosses - chapter one gets its contrast free, because insects and a helmed mace-holder
+   have nothing in common. If the blightcaller reads as a big raider rather than as a boss, the
+   dials are `SiegeTuning.TallOf` and which body wears which verb (`make_siege_art.BOSS_SET`), and
+   neither costs anything but a re-bake.
+   <br>**Does the brood read as a different place?** The kind is said by the silhouette - plain
+   bodies creep, arms mean a brute, a crest or stalks mean armour - and that is a rule a player has
+   to pick up without being told, exactly as they did with the insects.
+   <br>**Is two bosses a chapter the right count?** Four was too many and one is probably too few;
+   five and ten is the genre's answer and it has not been played here.
+   <br>**And is "hard on the free turret, fine one rung up" what it actually feels like?** It is
+   measured - 55 of 90 against 77 - but the measurement is a player who never spends a utility,
+   never buys a continue and never learns a board. The honest risk is that a real player finds it
+   *easier* than the number says, because all three of those are available to them; the floors in
+   `TheSecondChapterAsksForBetterTurrets` are where to move it, and the waves are where to move it
+   from.
+
+0i. **Run the cloud half of the grove reset, and rebuild the boards.** `GroveEpoch` makes each
+   account clean itself on its next sync, which is what makes the reset durable - but a dormant
+   account's server document keeps its dead grove until that account syncs, and `publishGrove`
+   builds a leaderboard card from that document. The ~210 synthetic saves the live suite has left
+   behind have no device and will never sync at all.
+   <br>`node firebase/seed/reset-groves.mjs --dry-run` says what it would touch and `--confirm`
+   does it, stamping `groveEpoch` in the same write. Read at 2026-09-11 it reports **400 saves, 0
+   published cards, 0 leaderboard rows** - so what is waiting is the save documents and nothing a
+   stranger can currently see. Then force the board rebuild rather than waiting for the nightly one:
+   `gcloud scheduler jobs run firebase-schedule-publishGroveRanks-europe-west1 --location=europe-west1`.
+   <br>**Run it after a client carrying `GroveEpoch.Current` has shipped, not before.** Before that
+   there is a build in players' hands that still merges by union, so a wipe now is undone by the
+   first device that opens the game - and the script would have to be run again anyway.
+   <br>**It deliberately leaves `companionsOwned` and the currency ledger alone**, which means a
+   player who spent credits on a grove is left with neither the grove nor the credits. That is a
+   decision rather than an oversight (a refund would be a server-side grant per account and would
+   inflate the bought half of the public score ceiling, 19a) and it is worth confirming before the
+   game has real players.
+
+0g. **Rebuild the APK before judging the Infinite lane — the first build of it drew nothing.**
+   The twelve reels were addressed but carried no label, so they were unloadable and the cast came
+   through as health bars floating over empty hill (37at). Both the cause and the gate that missed
+   it are fixed and Addressables has been re-synced and saved, but the device is running a build
+   made before that.
+   <br>**Play the Infinite lane and say whether a baked 3D cast is worth keeping.** The authored
+   chapter sends insects and the Infinite lane now sends a rogue, a warrior and a knight rendered
+   out of 3D (37at), one tap apart on the map, which is the comparison this was built for. Three
+   questions. Does the baked cast **belong on this board** — the keyline is what makes it sit
+   there, and it is the first thing to doubt if it does not. Does a raider's **colour** still read:
+   the post-tint is gentler than the insects' and the bodies are paler, so blue-on-steel is the
+   pair to watch. And is it **better**, not merely different — the insects were bought, cut and
+   approved; the case for the bake is that a second chapter of it costs no purchase and any angle,
+   not that it looks nicer today.
+   <br>**Two things are knowingly unfinished**, so judge the raiders rather than the run: the
+   lane's **bosses are still insects**, so a wave-4 blightcaller arrives among knights; and the
+   creeper is a `Skeleton_Rogue`, the weakest silhouette of the three. Both are a row in
+   `SiegeCastBake.Roster` if the answer is yes.
+   <br>**Re-baked 2026-09-11 and the cast really animates now** (37at): the legs were pixel-frozen
+   in every reel that has ever been on a device, so *nothing* that has been judged so far was the
+   thing being asked about. The bulwark is the **armoured knight** again rather than a wizard,
+   since what it was withdrawn for turned out not to exist. Everything offline is green — compile,
+   1,647 tests, content, art names, `Verify Siege Cast (3D)`, `Validate Art`, and the addressable
+   audit with all 144 `kay*` frames labelled — and none of that can answer whether a running
+   humanoid reads at this pitch. **`Pitch` is still the dial if it does not**, and it is now worth
+   re-asking at a steeper angle than 22, because the legibility sweep that chose 22 was judging
+   bodies whose legs could not move.
+
+
+0f. **Decide whether a raider should be framed to its body, which it is not.** Measured while
+   chasing the floating cast: the pack feathers its baked ground shadow out to **alpha 1**, which
+   no eye resolves and which `Image.getbbox` counts — so `deshadow` takes the black core and
+   `box_of` still frames every insect around the halo that is left. A fly comes out in a 125x116
+   frame around a body 125x**65**, and the view sizes a body by its frame's height, so it is drawn
+   at a bit over half the size it could be, sitting high in its own box; the hybrids lose about a
+   quarter the same way. Closing it is small (grow the core a few pixels before clearing it, and
+   floor `box_of` at an alpha anybody could see) and it is **not** a tidy-up: it changes how every
+   raider is framed and therefore how big each one is drawn, and it makes the flat bodies read
+   *wider than tall*, which is honest for a top-down cast and would want `SiegeView.Frame`'s
+   fit-by-height rule looked at with it (that rule was written for side-view bipeds, where height
+   is the meaningful measure). The cast has been played and approved as it is, so this is a change
+   to ask for rather than to slip in.
+
+
+0d. **Sync Addressables in the Editor and save, because sixteen reels were deleted.** The
+   second cast (`monB_*`, `bruteB_*`, `bulwarkB_*`) and the four `*_walk` boss reels are gone
+   with the monsters (37ar), and a dead Addressables entry does not fail the game - it fails
+   `BuildPlayer` twenty minutes into an Android build with one file name buried in a package
+   stack trace. The 192 entries were stripped from `Glimmer Global.asset` by hand here, which
+   keeps the repo honest and is **not** the supported repair: run
+   `Glimmer Grove ▸ Addressables ▸ Sync All Assets`, **save**, then `▸ Validate Art` and
+   `AddressableAudit`. The 288 *new* reels want the same pass for the opposite reason - the
+   importer hook does not fire on files a tool wrote while the Editor was closed, and an
+   unaddressed sprite loads as nothing (invariant 7b).
+
+0j. **Play the new turret figures and the banded shelf.** `Validate Content` and `Validate Art`
+   are still owed in the Editor: both new scripts (`WardStatBars.cs`, `WardTier.cs`) imported and
+   carry metas, and everything is green offline — compile, 1,676 tests (including the
+   fragile-line proof and the band property), content, loc and art names.
+   <br>**And the figures themselves have never been played** (invariant 37bb). Three questions.
+   Does the **spread read** — damage 20 to 32, health 11 to 21 — or do twenty cards look the
+   same at a glance? Is the **trade legible**: that the hardest hitters (Cleaver, Pyre, Breaker)
+   are the ones that fall first, and that a multi-target turret pays for its reach in damage per
+   raider? And does a player ever **regret** a fragile line — the flimsiest line still clears
+   every rung with nothing else spent, so the risk is the opposite one, that toughness turns out
+   to decide nothing. `SiegeRuleTests.TheFlimsiestLineIsAHarderGameAndStillAGame` is the floor;
+   what it cannot say is whether the choice is interesting.
+
+0e. **Look at the insect cast on a device, which is the half no gate and no render can answer.**
+   Every offline gate is green (compile, 1,644 tests, `content.py`, `artnames.py`,
+   `make_siege_art.py --check`) and the boards have been rendered and looked at, and none of that
+   can say whether this reads. Four questions, in the order a player meets them. Does a **creeper
+   read as an enemy at all** - they are the smallest things this hill has ever sent and two of the
+   four are flies, so the risk is that a wave of them reads as scenery rather than as a threat.
+   Does the **colour of a raider still read**, which is the whole mechanic (37f): `CAST_VALUE`
+   lifts the dark-shelled beetles onto one brightness and the gem pip over the head is the
+   backstop, but blue-on-black is the pair to watch. Do the **four bosses read as four fights**
+   (37z, asked again of four new bodies) - a brown fly that hovers, a red horned beetle, a green
+   horned beetle and a purple spider, at four sizes. And does a **cast gesture read** - three of
+   the four surge at the viewer rather than playing an animation the pack drew, which is the one
+   thing here that is synthesised and the one most likely to look wrong. And — reported once and
+   fixed (37as) — do they **stand on the tiles**? The shadow was a biped's, half a body-length
+   clear of the insect casting it, and the falloff underneath it was cubic, so there was very
+   little there to see once it was moved — and the first repair was then reported as *cloudy*,
+   which was the falloff rather than the weight. Three passes in; whether the blob is now right
+   against all ten floors is still a device question, and `ShadowFalloff` is the dial.
+   <br>**And the ten grounds were rebuilt three times on 2026-09-11 and want a device (37av).**
+   They are now a plain grid of small tiles — three materials cycled, a hue each, nothing on them —
+   and the composition that preceded it was thrown out whole. Three questions, and none of them is
+   about design, which is the point. Is a tile at about **74 points** — half a gem cell — the right
+   size, or still too big; `ACROSS` is the dial and it has gone 4 → 6 → 16. Is it **too dark** now
+   that the floor sits at two thirds of the cast (`GROUND_MEAN` against `CAST_VALUE`, and the rule
+   is the gap rather than either number). And does **`CRAZED`** hold up at board size — it is the
+   busiest of the three, a fine crack net over the whole floor, and it is the one most likely to read
+   as noise behind a lit board.
+
+
+0c. **Two checks this session proved are missing, and each hid a live fault for months.**
+   *One:* nothing asks **which of a mode's kinds the shipped chapter never sends** — the weaver and
+   the thief were built, validated, arted and never authored into a single wave, and every gate was
+   green because a level that sends none of something validates perfectly (40a). One loop over
+   `SiegeKind` against the authored waves, reported as a warning, would have said so on the day.
+   *Two:* `Tools/verify/siege.py`'s `read_wave` **treats an unknown character as a colour letter**
+   rather than refusing it, so a new wave token read as two raiders instead of one and the Python
+   gates agreed with themselves while disagreeing with the shipping C# about par (40f). Both are
+   small; both are the shape of fault this file exists to stop.
+
 0a. **Open the restyled UI in the Editor, and run `Addressables ▸ Sync All Assets` first.** That
    step is not optional here and it is not the usual reminder: the kit's PNGs were written while
    the Editor was closed (so nothing addressed them), *and* `Art/Ui/Kit/`, `Ui/jelly_*` and
@@ -4458,6 +6679,11 @@ changes nothing until that function is redeployed.
    loc, art names, sound names, `make_hud_kit_art.py --check` — and every offline gate in this
    project was also green over the ten faults `render_home.py` and `render_shop.py` have now
    caught between them, which is the whole point of invariant 44d.
+   <br>**`Hud/room` was missing from `AssetManifest` and is now on it.** `Skins.Room` named it,
+   `make_hud_kit_art.py` cut it and the PNG was on disk — it was simply never added to the
+   preload list, so the world behind the hub and the shop was an address resolving to nothing,
+   which is a **white rectangle** filling both screens (invariant 7b). `SkinsTests` had been red
+   on it; it is green now, and that is the gate working rather than a lucky catch.
    <br>**One new address to check**: `Hud/fill`, which is on `AssetManifest` and reached through
    `Skins.Fill` — a *built* name, so `artnames.py` cannot see it and `SkinsTests` is what holds
    it to disk. That count went 74 → 81 with this restyle, and every one of the seven is a
@@ -4622,6 +6848,25 @@ changes nothing until that function is redeployed.
     not aimed at, a bombardment, a storm over the whole hill, a converging pair? There is
     deliberately no analytics event for any of it; what would say most is the mending funnel
     against its own figure before the change.
+    <br>**And does the bomber read?** It is new (40i): one a rung from the fourth on, and killing
+    it leaves a live bomb standing on the hill. Three questions. Is the bomb **found** — it is the
+    only thing on that half of the screen that is tapped rather than shot at, on a board that has
+    spent four rungs teaching that the finger goes in the gem field. Is **when to spend it** felt
+    as a decision, or is it tapped the instant it lands (which is what the simulation does, and is
+    the play the mechanic exists to improve on)? And does it read as a **reward** for the kill
+    rather than as one more thing the hill has thrown out? **The figure worth an event is how long
+    a bomb stands before it is tapped**: near nought means the decision is not being made, and
+    never means it is not being seen.
+    <br>**And is the back half of the chapter simply too hard?** This is the one question here
+    that is not about the verb, and it has a measurement behind it rather than a hunch: swept over
+    nine player rhythms, `s01_blackmarch` is held by an ordinary player at **3 of 9** and
+    `s01_thornsiege` at **4 of 9** (37aq). Ward health is not the lever — 43% more moved it by one
+    run in nine — because what loses these rungs is a death spiral once the first ward falls, not a
+    margin. Three ways out, and the choice is the owner's: lighten the last waves, soften the
+    boss that is grinding the line (`WarbringerCastEvery`, `OverlordCastEvery`), or decide that a
+    **mending** is the intended answer and that the simulation is wrong to model a player who never
+    spends one. **What must not happen is tuning until the old single-sample gate goes green
+    again**, which is how the chapter got here.
     <br>**And does the last wave feel like a siege?** Rungs 6 to 9 turn the hill from creepers to
     brutes. If the line never gets touched the fail state is decoration; if it falls every time, a
     later rung's hill is doing an earlier one's job. Both are fixed in the waves, which is a content
@@ -4657,6 +6902,45 @@ changes nothing until that function is redeployed.
     loses **every** save write rather than that key (12a).
     <br>Pre-launch this is all academic — there are no real players and the only accounts are the
     ~210 synthetic saves — but the ordering is what it is the day there are.
+0b. **Re-bake the projectiles, or the orange ward fires a yellow bolt.** The fourth ward colour
+   moved from `Pal.Sun` to `Pal.Amber` (invariant 37ak) and `make_siege_art.py` has re-cut
+   everything it owns — turrets, roster, raiders, beetles, 296 files. What it does *not* own is
+   `Art/Fx/Siege`, which comes out of the Editor: `Glimmer Grove ▸ Art ▸ Bake Siege Projectiles`
+   and `▸ Bake Turret Projectiles`, both of which need the gitignored projectile pack. Sixty `_y`
+   reels are stale until they run — measured, `shot_apex_y` is still at 42 degrees of hue against
+   a turret now at 28. Then `▸ Addressables ▸ Sync All Assets` (a bake writes files the importer
+   hook does not see) and **save**, then `▸ Verify Siege Projectiles`. Nothing else is owed: no
+   address moved, no file was added or deleted, and every `.meta` was kept.
+
+22c. **Deploy `firestore.rules` before anybody can hold more than 64 turret rows.** A row of
+    `wardsOwned` is now a turret *and a colour* (invariant 42c), so a full shelf is 76 rows against
+    a bound that was 64; it is 160 now. Purely additive, so it can go out today and **must** go out
+    before a client that can reach it — `hasOnly` and its size clauses are an allow-list over the
+    whole document, so a save write that breaks one loses **every** field rather than that one
+    (12a). Nothing else moved: the seeder does not read the roster, and no function values a
+    turret.
+    <br>Not urgent by itself — 65 purchases needs keeper level 24 and most of the catalog's money,
+    which today's one chapter cannot pay for — but it is one command and the failure mode is a
+    device that silently stops syncing.
+
+22d. **Judge the turret ladder and the preview by playing them.** Four things landed together and
+    each has one question nothing offline can answer.
+    <br>**Per-colour ownership**: does a player understand that they bought a turret *for red*, or
+    do they read the same turret still padlocked on blue as the shop taking their money? The shelf
+    turns the colour of the seat being filled, which is what is supposed to say it.
+    <br>**The ladder**: is "After Spark" on eighteen of nineteen cells a next step, or a wall? It is
+    16j's one-offer-at-a-time argument asked of a grid rather than of a single card, which is the
+    part that is genuinely untested — land is offered one rung at a time and *alone*, where this is
+    a rung at a time among nineteen visible cells.
+    <br>**The gates on both currencies**: gems now ask for keeper 15–24, which today's content
+    cannot pay for. If it reads as the gem half being withdrawn rather than gated, the fix is the
+    numbers (content, one config push) rather than the rule.
+    <br>**The preview's formations**: do a splash, a chain and a lance read as three different
+    things now that each stands the arrangement it is decided by (42d)? And does the lance's
+    every-fifth-shot cadence read as "occasionally" rather than as the preview stuttering? Nothing
+    here has been looked at on a device or in a render — there is no `render_*.py` for this panel,
+    which is the gap worth closing first if any of it looks wrong.
+
 22b. **Judge the nineteen turret projectiles on a device.**
     Every tap on the loadout shelf now opens `WardPreviewOverlay`, which fires the turret at a
     beetle in the colour of the cell that raised it — so this is judged where a player judges it,

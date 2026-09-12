@@ -316,10 +316,12 @@ namespace GlimmerGrove.Tests
         [Test]
         public void FuelIsPricedAtTheMostItCouldEverBeWorth()
         {
-            // Ten tenths is one shot; a shot is ShotDamage, doubled against a raider that ward
-            // is strong against. Anything less would under-charge, which is the unsafe direction.
+            // One bolt's fuel is one bolt; a bolt is ShotDamage, doubled against a raider that
+            // ward is strong against. Anything less would under-charge, which is the unsafe
+            // direction. **Asked as `FuelPerShotTenths` rather than as ten**, because a bolt's
+            // cost is a scale that has moved twice and this is a statement about a *bolt*.
             Assert.AreEqual(SiegeTuning.ShotDamage * SiegeTuning.WeakMultiplier,
-                            SiegeUtility.DamageOfFuel(10));
+                            SiegeUtility.DamageOfFuel(SiegeTuning.FuelPerShotTenths));
             Assert.AreEqual(0, SiegeUtility.DamageOfFuel(0));
         }
 

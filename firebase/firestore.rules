@@ -57,11 +57,13 @@ service cloud.firestore {
                  'progression', 'cloud', 'lastPlayedLevelId', 'legacyImportDone',
                  'tipsSeen', 'daily', 'ads', 'streak', 'events', 'eventsSeeded',
                  'companionsOwned', 'homesteadStock', 'homesteadOwned',
-                 'homesteadPlaced', 'groveLandOwned',
+                 'homesteadPlaced', 'groveLandOwned', 'groveEpoch',
+                 'groveHall', 'groveHallFacing', 'groveHallSetUnix',
                  'heartContainersOwned', 'heartContainersRevoked',
                  'utilityStock',
                  'wardsOwned', 'wardLoadout', 'wardLoadoutSetUnix',
                  'endlessBest',
+                 'wardStars',
                  'checksum'
                ])
                && d.schemaVersion is int
@@ -166,6 +168,16 @@ service cloud.firestore {
                && (!('groveLandOwned' in d) || (d.groveLandOwned is list
                                                 && d.groveLandOwned.size() <= 128))
 
+               // Which generation of the grove catalogue this save's grove belongs to. It is
+               // the one grove field that lets something be taken away — a union has no way to
+               // say "this is gone", so the newer epoch's grove replaces the older one's rather
+               // than absorbing it (see Homestead/GroveEpoch.cs). Bounded well above anything
+               // a build will ask for, because the only failure worth guarding is a corrupt
+               // value winning every merge for ever: a save claiming epoch 2^31 would discard
+               // the grove of every device it ever met, and no repair could reach it.
+               && (!('groveEpoch' in d) || (d.groveEpoch is int
+                                            && d.groveEpoch >= 0 && d.groveEpoch <= 64))
+
                // Utilities. Bounded like everything else the client controls the length of,
                // and generously against `UtilityCatalog.MaxItems` (16) so a content drop that
                // adds one never needs a rules deploy to land — and rows naming a utility an
@@ -184,8 +196,12 @@ service cloud.firestore {
                // is defended where money always is, by `submitSpends` refusing a debit the
                // server-derived balance cannot cover. Bounded because the client controls the
                // length, generously against `WardCatalog.MaxModels` so a content drop that adds a
-               // turret never needs a rules deploy to land.
-               && (!('wardsOwned' in d) || (d.wardsOwned is list && d.wardsOwned.size() <= 64))
+               // turret never needs a rules deploy to land. **A row is a turret and a colour**
+               // (`WardHolding`), so the ceiling is four times the roster rather than one - it
+               // was 64 while a purchase covered the whole line, which a full shelf now passes on
+               // its own.  A save write that exceeds this loses **every** field, not this one
+               // (invariant 12a), so the rules go out before a client that can reach it.
+               && (!('wardsOwned' in d) || (d.wardsOwned is list && d.wardsOwned.size() <= 160))
                && (!('wardLoadout' in d) || (d.wardLoadout is list && d.wardLoadout.size() <= 8))
                && (!('wardLoadoutSetUnix' in d) || d.wardLoadoutSetUnix is int)
 
@@ -196,7 +212,21 @@ service cloud.firestore {
                // and it has to: `hasOnly` is an allow-list over the whole document, so a save the
                // client writes and these rules refuse loses *every* save write (invariant 12a).
                && (!('endlessBest' in d) || (d.endlessBest is list
-                                             && d.endlessBest.size() <= 64));
+                                             && d.endlessBest.size() <= 64))
+               // How far each turret has been upgraded: twenty turrets on four seats is eighty,
+               // and the bound matches `WardStarLedger.MaxRows` for the reason above it.
+               && (!('wardStars' in d) || (d.wardStars is list
+                                           && d.wardStars.size() <= 128))
+               // Where the player moved their hall: a tile id, a quarter turn, and the stamp the
+               // merge reads (invariant 11c). Bounded because the client writes the string; a
+               // tile id is fifteen characters and the bound is generous against a floor that
+               // grows. Nothing here can buy anything — a forged seat moves the forger's own
+               // house and nothing else — so the shape is all that is checked.
+               && (!('groveHall' in d) || (d.groveHall is string && d.groveHall.size() <= 32))
+               && (!('groveHallFacing' in d) || (d.groveHallFacing is int
+                                                 && d.groveHallFacing >= 0
+                                                 && d.groveHallFacing <= 3))
+               && (!('groveHallSetUnix' in d) || d.groveHallSetUnix is int);
       }
 
       // The revision only ever moves forward, which gives the sync optimistic

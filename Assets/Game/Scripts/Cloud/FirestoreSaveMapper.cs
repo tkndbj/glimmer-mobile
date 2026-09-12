@@ -153,6 +153,10 @@ namespace GlimmerGrove.Cloud
                 // it pays nothing: credits and XP derive from the star ledger alone (invariant 9).
                 { "endlessBest", Endless(dto.endlessBest) },
 
+                // How far each turret has been upgraded. A count that may be stored only
+                // because it cannot fall, so the merge is a per-key max (invariant 11b).
+                { "wardStars", Stars(dto.wardStars) },
+
                 // The v19 mirror, derived by HomesteadLedger and carried so a rolled-back
                 // client and a not-yet-redeployed groveWorth both keep working.
                 { "homesteadOwned", new List<object>(dto.homesteadOwned ?? new string[0]) },
@@ -169,6 +173,15 @@ namespace GlimmerGrove.Cloud
                 // reader below, and in firestore.rules — where an unlisted key does not fail
                 // the field, it fails the whole write.
                 { "groveLandOwned", new List<object>(dto.groveLandOwned ?? new string[0]) },
+
+                // Which generation of the catalogue this grove belongs to. It has to reach the
+                // server or the reset does not stick: a device that discarded an older grove
+                // pushes an empty one, and without the stamp beside it the server's copy still
+                // claims the older epoch and wins the next join back. See GroveEpoch.
+                { "groveEpoch", (long)dto.groveEpoch },
+                { "groveHall", dto.groveHall ?? string.Empty },
+                { "groveHallFacing", (long)dto.groveHallFacing },
+                { "groveHallSetUnix", dto.groveHallSetUnix },
 
                 { "checksum", dto.checksum ?? string.Empty },
 
@@ -433,6 +446,27 @@ namespace GlimmerGrove.Cloud
             return list;
         }
 
+        /// <summary>The upgrade ladder, as rows. Anything at the first star is left out.</summary>
+        static List<object> Stars(WardStarDto[] rows)
+        {
+            var list = new List<object>();
+            if (rows == null) return list;
+
+            foreach (var row in rows)
+            {
+                if (row == null || string.IsNullOrEmpty(row.ward)) continue;
+                if (row.stars <= Wards.WardStars.Least) continue;
+
+                list.Add(new Dictionary<string, object>
+                {
+                    { "ward", row.ward },
+                    { "stars", (long)row.stars },
+                });
+            }
+
+            return list;
+        }
+
         static List<object> Utilities(UtilityStockDto[] rows)
         {
             var list = new List<object>();
@@ -472,6 +506,11 @@ namespace GlimmerGrove.Cloud
                     // Part of the arrangement, so it travels with it. A piece that comes back
                     // facing the other way is the same loss as one that comes back missing,
                     // only quieter.
+                    { "facing", row.facing },
+
+                    // Retired at v24 and still carried: a rolled-back client writes it, and a
+                    // mapper that dropped it would quietly discard what that client said. See
+                    // HomesteadPlacementDto.flipped.
                     { "flipped", row.flipped },
                 });
             }
@@ -506,6 +545,13 @@ namespace GlimmerGrove.Cloud
                 // mean a sync from an older phone arrived as a grove with nothing bought.
                 homesteadOwned = StrList(doc, "homesteadOwned"),
                 groveLandOwned = StrList(doc, "groveLandOwned"),
+
+                // Absent on a document written before the village replaced the grove, which
+                // reads back as 0 — exactly the generation such a document belongs to.
+                groveEpoch = (int)Long(doc, "groveEpoch", 0),
+                groveHall = Str(doc, "groveHall"),
+                groveHallFacing = (int)Long(doc, "groveHallFacing", 0),
+                groveHallSetUnix = Long(doc, "groveHallSetUnix", 0),
                 checksum = Str(doc, "checksum"),
                 settings = new SettingsDto(),
                 wallet = WalletDto.Unwritten(),
@@ -603,6 +649,7 @@ namespace GlimmerGrove.Cloud
             dto.wardLoadout = ReadLoadout(doc);
             dto.wardLoadoutSetUnix = Long(doc, "wardLoadoutSetUnix", 0L);
             dto.endlessBest = ReadEndless(doc);
+            dto.wardStars = ReadStars(doc);
 
             if (Map(doc, "progression") is IDictionary<string, object> progression)
             {
@@ -766,6 +813,35 @@ namespace GlimmerGrove.Cloud
             return rows.ToArray();
         }
 
+        /// <summary>The upgrade ladder out of a cloud document, dropping anything malformed.</summary>
+        static WardStarDto[] ReadStars(IDictionary<string, object> doc)
+        {
+            if (!doc.TryGetValue("wardStars", out object raw) || !(raw is IEnumerable<object> items))
+                return new WardStarDto[0];
+
+            var rows = new List<WardStarDto>();
+
+            foreach (object item in items)
+            {
+                if (!(item is IDictionary<string, object> map)) continue;
+
+                string ward = Str(map, "ward");
+                long stars = Long(map, "stars", 0L);
+
+                if (string.IsNullOrEmpty(ward) || stars <= Wards.WardStars.Least) continue;
+
+                // Clamped on the way in, so a hand-edited document cannot stand a turret past the
+                // top of the ladder - `WardStars.Sane` is the one place that decides.
+                rows.Add(new WardStarDto
+                {
+                    ward = ward,
+                    stars = Wards.WardStars.Sane(stars > int.MaxValue ? int.MaxValue : (int)stars),
+                });
+            }
+
+            return rows.ToArray();
+        }
+
         static UtilityStockDto[] ReadUtilities(IDictionary<string, object> doc)
         {
             if (!doc.TryGetValue("utilityStock", out object raw) || !(raw is IEnumerable<object> items))
@@ -820,8 +896,11 @@ namespace GlimmerGrove.Cloud
                     piece = Str(entry, "piece"),
                     setUnix = Long(entry, "setUnix", 0),
 
-                    // Absent on a document written before pieces could be flipped, which reads
-                    // back as false — the value a piece that was never flipped already holds.
+                    // Absent on a document written before pieces could be turned, which reads
+                    // back as 0 — the facing a piece that was never turned already holds.
+                    facing = (int)Long(entry, "facing", 0),
+
+                    // Retired at v24. See HomesteadPlacementDto.flipped.
                     flipped = Bool(entry, "flipped"),
                 });
             }

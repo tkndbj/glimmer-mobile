@@ -425,8 +425,7 @@ SCENES = [
                    "between them is what four overlapping copies are worth. This is the scene "
                    "that decides whether flat reads as one line or as one drone.",
      [("shot", i * 0.055, 1.00, 0.12) for i in range(28)]
-     + [("zap", 0.44, 1.02, 0.42), ("zap", 1.10, 0.97, 0.42),
-        ("chime2", 0.72, 1.05, 0.20)]),
+     + [("zap", 0.44, 1.02, 0.42), ("zap", 1.10, 0.97, 0.42)]),
 ]
 
 PAGE = r"""<title>Grove Sound Audition</title>

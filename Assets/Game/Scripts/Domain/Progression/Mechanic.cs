@@ -346,22 +346,49 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic SiegeCog = new Mechanic("siege_cog");
 
         /// <summary>
-        /// The bulwark: a raider carrying a shield, which halves everything that is not its own
-        /// colour and takes its own in full.
+        /// <b>Retired: no screen raises this and its id must never be reused.</b>
         ///
-        /// <para>
-        /// <b>The one raider whose answer is a colour rather than a quantity</b>, which is why it
-        /// is taught at all — a creeper and a brute differ only in how much of the same thing they
-        /// need, so nothing about either has to be said. A player who does not know this one will
-        /// keep taking the biggest match on the field, watch the bolts bounce and read it as the
-        /// game being broken (invariant 20g's state, arrived at by a rule nobody explained).
-        /// </para>
-        /// <para>
-        /// <b>Declared per board</b>, exactly as <see cref="SiegeCog"/> is and for the same
-        /// reason: the first five rungs of the chapter send none.
-        /// </para>
+        /// It taught that a bulwark's shield shrugs off every colour but its own, and was
+        /// withdrawn by the owner. Kept as a member rather than deleted because a lesson id
+        /// travels in the save (<c>tipsSeen</c>) exactly as a level id travels in the ledger, and
+        /// re-pointing one at a rule it never described would tell a player they have already been
+        /// shown something they never saw.
         /// </summary>
         public static readonly Mechanic SiegeShield = new Mechanic("siege_shield");
+
+        /// <summary>
+        /// <b>Retired: no screen raises these and the two ids must never be reused.</b>
+        ///
+        /// They taught a weaver locking cells of the gem field and a thief stealing them. Both
+        /// raiders were withdrawn whole by the owner (invariant 40h) and the gem board is gems
+        /// again. Kept as members rather than deleted because a lesson id travels in the save
+        /// (<c>tipsSeen</c>) exactly as a level id travels in the ledger, and re-pointing one at a
+        /// rule it never described would tell a player they have already been shown something they
+        /// never saw.
+        /// </summary>
+        public static readonly Mechanic SiegeWeaver = new Mechanic("siege_weaver");
+
+        /// <summary><b>Retired with <see cref="SiegeWeaver"/>.</b></summary>
+        public static readonly Mechanic SiegeThief = new Mechanic("siege_thief");
+
+        /// <summary>
+        /// The bomber: that killing it leaves a live bomb on the hill, and that tapping the bomb
+        /// sets it off.
+        ///
+        /// <para>
+        /// <b>The one tip in this mode that is about an opportunity rather than a threat</b>, and
+        /// that is exactly why it cannot be left to the board. Everything else on that hill is to
+        /// be shot at; a bomb is to be <em>tapped</em>, and a player who has spent four rungs
+        /// learning that the hill is not where their finger goes will walk straight past it.
+        /// </para>
+        /// <para>
+        /// <b>Raised when a bomber walks on rather than when its bomb lands</b>, so the sentence
+        /// arrives before the thing it is about: a player who has been told what this raider
+        /// leaves behind is a player watching for it, where one told afterwards has already had
+        /// the moment go past.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic SiegeBomber = new Mechanic("siege_bomber");
 
         // **Two retired lesson ids that must never be reused: `kindle_join` and `kindle_cross`.**
         // Kindlewake was withdrawn by the owner after play and Prismvale took its slot. A lesson
@@ -529,7 +556,9 @@ namespace GlimmerGrove.Progression
         /// <b>The same edit found the mirror fault, which is the one this list is actually
         /// for.</b> <see cref="SiegeShield"/> was raised by <c>SiegeScreen.Lessons</c>, had
         /// its two strings written, and was never added here - so nothing proved it had
-        /// them, and it read as fine only because somebody happened to write them. That is
+        /// them, and it read as fine only because somebody happened to write them. (It has
+        /// since been withdrawn in its own right and sits in <see cref="Retired"/>; the
+        /// history is kept because it is what this list is for.) That is
         /// the failure described above, and it is invisible until a player reaches the
         /// lesson and is shown <c>ui.tip.siege_shield.title</c>. **A lesson is added to this
         /// list in the edit that adds it, and removed in the edit that retires it.**
@@ -541,8 +570,10 @@ namespace GlimmerGrove.Progression
             BoundConduit,
             FallCook, FallSupply, FallBrim, FallLens, FallWhorl,
             ProtoMoves, PrismDrag, PrismVein,
-            // SiegeLine is retired and deliberately absent. See the remarks above.
-            SiegeFuel, SiegeCog, SiegeShield,
+            // SiegeLine and SiegeShield are retired and deliberately absent. See the remarks
+            // above.
+            SiegeFuel, SiegeCog,
+            SiegeBomber,
             ModeSwitch, LuckySpin, Grove,
             GroveShop,
         };
@@ -558,7 +589,8 @@ namespace GlimmerGrove.Progression
         /// forgot to register is a sentence in a doc comment — which is why <see cref="SiegeLine"/>
         /// sat in <see cref="All"/> failing the build over deleted strings while
         /// <see cref="SiegeShield"/> sat outside it with nothing proving it had any. Two opposite
-        /// mistakes, one missing list.
+        /// mistakes, one missing list. (Both are retired now, which is the point: the pair are
+        /// named here because of how they failed, not because of what they taught.)
         /// </para>
         /// <para>
         /// <c>TipTests.EveryMechanicIsEitherLiveOrRetired</c> holds the two together, so a lesson
@@ -567,7 +599,8 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static readonly Mechanic[] Retired =
         {
-            SiegeLine,
+            SiegeLine, SiegeShield,
+            SiegeWeaver, SiegeThief,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);

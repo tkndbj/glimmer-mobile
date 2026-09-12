@@ -115,7 +115,14 @@ namespace GlimmerGrove.Modes
             for (int i = 0; i < _raiders.Count; i++)
             {
                 var raider = _raiders[i];
-                if (!raider.Alive || !raider.OnTheHill) continue;
+
+                // **Everything that has arrived, which is what "everywhere" has to mean.** A
+                // firepot is aimed at a box of the hill and so cannot reach a raider standing on
+                // the field; a storm is aimed at nothing and would be lying about its own name if
+                // the one raider the player most wants gone were the one thing it missed. It is
+                // also the only utility that can answer a field raider at all, which is the
+                // escape hatch that keeps a board with an awkward colour winnable.
+                if (!raider.Alive || raider.Wait > 0f) continue;
 
                 int took = damage < raider.Health ? damage : raider.Health;
                 absorbed += took;
@@ -166,7 +173,7 @@ namespace GlimmerGrove.Modes
             var post = _wards[ward];
             if (!post.Alive) return 0;
 
-            int room = SiegeTuning.WardHealth - post.Health;
+            int room = post.Full - post.Health;
             if (room <= 0) return 0;
 
             int given = health < room ? health : room;
@@ -258,7 +265,7 @@ namespace GlimmerGrove.Modes
                 if (post.Alive) continue;
 
                 post.Alive = true;
-                post.Health = SiegeTuning.WardHealth;
+                post.Health = post.Full;
                 post.Fuel = 0f;
                 post.Dark = 0f;
                 post.Cool = 0f;
@@ -302,7 +309,7 @@ namespace GlimmerGrove.Modes
             var post = _wards[ward];
             if (!post.Alive) return 0;
 
-            int room = SiegeTuning.WardHealth - post.Health;
+            int room = post.Full - post.Health;
             return room < 0 ? 0 : room;
         }
 

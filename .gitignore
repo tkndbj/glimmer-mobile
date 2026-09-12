@@ -132,3 +132,14 @@ firebase-debug.*.log
 # beside the sources; none of it is content and none of it is checked.
 __pycache__/
 *.pyc
+
+# Where the art tools write what they draw for somebody to look at — contact sheets,
+# probes, floor comparisons, the survey pages that are the only way to choose from a pack
+# whose thumbnails are grey cubes. It is `make_grove_art.py`'s default `--out`, so it
+# fills up on every run, and none of it is source: every picture in it is a pure function
+# of a tool plus a model, and the shipped art it is used to judge lives under Assets/.
+# Committing it is tens of megabytes of churn for pictures nothing reads back.
+/Tools/out/
+
+# A scratch file something left at the root. Nine bytes of two numbers, no reader.
+/.anchor

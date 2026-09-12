@@ -50,8 +50,29 @@ namespace GlimmerGrove
         /// the field's plate and the one readout this mode is decided on was invisible. Nothing
         /// but a picture at the size a phone draws it could have said so (invariant 33h).
         /// </para>
+        /// <para>
+        /// <b>They are a ratio and not two shares, which is what makes moving one safe.</b> The
+        /// field's height is a fact rather than a share — it is laid out to the width (see
+        /// <see cref="MaxGemBand"/>) — so these two only ever divide what is left. The hill's half
+        /// went from .44 to .54 after a device reported the enemy ground as too small: on a
+        /// 19.5:9 phone that is about seventy points of hill, and it costs the line a tenth of
+        /// itself, leaving it just under two cells — which is the bar the render bought.
+        /// <b>Check it with <c>Tools/render_siege.py --phone</c> before moving either.</b>
+        /// </para>
         /// </summary>
-        const float HillBand = .44f, LineBand = .16f;
+        const float HillBand = .54f, LineBand = .16f;
+
+        /// <summary>
+        /// The least the ward line may be, in cells, whatever the ratio above works out to.
+        ///
+        /// <b>A floor rather than a share, because the line holds furniture and not a picture.</b>
+        /// Everything standing on it is sized off <c>Cell</c> — plinth, tube, health bar, rank
+        /// badge — so on a short display a band that is only a fraction of what the field leaves
+        /// gets squeezed under them, and what a player sees is a tube drawn across a turret's own
+        /// chassis (invariant 37y) and a plinth behind the field's plate (37g). One and a half
+        /// cells is where the render stops showing either.
+        /// </summary>
+        const float LineFloor = 1.5f;
 
         /// <summary>
         /// The most of the board's height the gem field may take.
@@ -119,10 +140,19 @@ namespace GlimmerGrove
             /// <summary>Whether it is the greatest of the four. Kept for the readouts that scale.</summary>
             public bool Greater => Kind == SiegeKind.Overlord;
 
-            /// <summary>What it stands in, what it comes on in, and what it throws with.</summary>
-            public Sprite[] Idle, Walking, Casting;
+            /// <summary>What it stands and walks in, and what it throws with.</summary>
+            ///
+            /// <b>One reel for standing and walking, which is a fact about the cast rather than a
+            /// saving.</b> Every body in this mode is a top-down insect whose legs and wings cycle
+            /// <em>in place</em> - measured at 2.3 pixels of drift across a 137-pixel frame - so
+            /// the picture of one standing and the picture of one walking are the same picture,
+            /// and the board is the only thing that moves it. A boss that really strode would want
+            /// a walk reel and something choosing between them every frame, which is what this
+            /// carried while the cast were bipeds (invariant 37u, reported in one word:
+            /// <em>floating</em>).
+            public Sprite[] Idle, Casting;
 
-            /// <summary>Which of the three its body is wearing now. See <see cref="SiegeView.Wear"/>.</summary>
+            /// <summary>Which of the two its body is wearing now. See <see cref="SiegeView.Wear"/>.</summary>
             public Sprite[] Playing;
 
             /// <summary>The light it gathers before a spell leaves. Only a warlord has one.</summary>
@@ -206,7 +236,7 @@ namespace GlimmerGrove
         /// </summary>
         public SiegeBoard Siege => _board;
 
-        RectTransform _hill, _mobs, _wall, _field, _meters, _fx;
+        RectTransform _hill, _mobs, _fuseLayer, _wall, _field, _meters, _fx;
 
         /// <summary>The effect layer that is clipped to the board — see <c>SiegeView.Build</c>.</summary>
         RectTransform _sky;
@@ -218,6 +248,12 @@ namespace GlimmerGrove
         Text _waveLabel;
 
         float _hillTop, _hillFoot, _lineY, _gemCentre;
+
+        /// <summary>
+        /// The ward line's share of the board, as <c>Compose</c> derived it — not
+        /// <see cref="LineBand"/>, which is one half of the ratio that produced it.
+        /// </summary>
+        float _lineBand;
         Vector2 _room;
         int _wave;
 
@@ -274,6 +310,19 @@ namespace GlimmerGrove
         public System.Action Done { get; set; }
 
         /// <summary>
+        /// A kind of raider the player has just met for the first time this run.
+        ///
+        /// <b>The view raises it and the screen decides whether to teach</b>, because whether a
+        /// player has seen a lesson before is a fact about the save (<c>TipLedger</c>) and a board
+        /// has no business reading one. Raised once per kind per run: three bombers in a wave is
+        /// one piece of news, and <c>RunLessons.Teach</c> would refuse the other two anyway.
+        /// </summary>
+        public System.Action<SiegeKind> Appeared { get; set; }
+
+        readonly System.Collections.Generic.HashSet<SiegeKind> _met =
+            new System.Collections.Generic.HashSet<SiegeKind>();
+
+        /// <summary>
         /// Which utility is being aimed, or null.
         ///
         /// Setting it builds or tears down the targeting layer, so nothing outside has to
@@ -287,6 +336,11 @@ namespace GlimmerGrove
             {
                 if (_arming == value) return;
                 _arming = value;
+
+                // Arming is the player doing something, so the idle nudge starts over — and a
+                // targeting layer going up over a ringed gem would be two things at once asking
+                // to be looked at. See `SiegeView.Hint`.
+                Stir();
 
                 Aiming();
             }

@@ -81,6 +81,27 @@ namespace GlimmerGrove.Social
         /// <summary>The dwelling standing on the hall tile, or empty for a grove with none.</summary>
         public readonly string DwellingId;
 
+        /// <summary>
+        /// Which tile the keeper has moved their hall onto, and which way they turned it —
+        /// empty for a grove whose home still stands where the floor put it.
+        ///
+        /// <para>
+        /// <b>A visitor has to be told this or they draw the house in the wrong place.</b> A
+        /// seat used to be content, so every grove in the world had its hall on one tile and a
+        /// card never needed to say; it is the player's now (save v26), and a visitor left
+        /// guessing would paint a home on ground its owner has since built on — two stands over
+        /// the same tiles, which the occupancy index resolves without complaint and which reads
+        /// as a bug.
+        /// </para>
+        /// <para>
+        /// <b>Absent is a real answer rather than a missing one</b>, and that is what makes this
+        /// safe to ship before the server publishes it: a card with no seat draws the hall where
+        /// the floor says, which is exactly what every card said yesterday.
+        /// </para>
+        /// </summary>
+        public readonly string HallSlot;
+        public readonly int HallFacing;
+
         readonly HashSet<string> _land;
         readonly Dictionary<string, Placement> _placed;
 
@@ -88,7 +109,8 @@ namespace GlimmerGrove.Social
                          long score, int stars, string leagueId, long publishedUnix,
                          string dwellingId,
                          IEnumerable<string> land,
-                         IReadOnlyDictionary<string, Placement> placed)
+                         IReadOnlyDictionary<string, Placement> placed,
+                         string hallSlot = null, int hallFacing = 0)
         {
             OwnerId = ownerId ?? string.Empty;
             Name = name ?? string.Empty;
@@ -99,6 +121,8 @@ namespace GlimmerGrove.Social
             LeagueId = GroveLeague.IsKnown(leagueId) ? leagueId : GroveLeague.IdFor(Stars);
             PublishedUnix = publishedUnix < 0L ? 0L : publishedUnix;
             DwellingId = dwellingId ?? string.Empty;
+            HallSlot = hallSlot ?? string.Empty;
+            HallFacing = GroveFootprint.Quarter(hallFacing);
 
             _land = new HashSet<string>(StringComparer.Ordinal);
             if (land != null)
@@ -148,10 +172,11 @@ namespace GlimmerGrove.Social
                 ? placement.PieceId
                 : string.Empty;
 
-        /// <summary>Whether the piece on a tile is drawn mirrored.</summary>
-        public bool FlippedAt(string slotId)
+        /// <summary>Which quarter turn the piece on a tile is drawn at.</summary>
+        public int FacingAt(string slotId)
             => !string.IsNullOrEmpty(slotId) && _placed.TryGetValue(slotId, out var placement)
-            && placement.Flipped;
+            ? placement.Facing
+            : 0;
 
         /// <summary>
         /// The piece standing on a tile, resolved against a catalog. Invalid when the tile is
@@ -160,6 +185,30 @@ namespace GlimmerGrove.Social
         /// </summary>
         public HomesteadPiece PieceAt(HomesteadCatalog catalog, string slotId)
             => catalog == null ? default : catalog.Find(PieceIdAt(slotId));
+
+        /// <summary>
+        /// Where this card's hall stands, falling back to the floor's own tile.
+        ///
+        /// The visitor's copy of <see cref="HomesteadLayout.HallSeat"/>, and it falls back the
+        /// same way and for the same reason: a seat naming a tile off this build's floor is a
+        /// card from a drop this build has not taken, and losing the house over it would be
+        /// worse than drawing it where the floor says.
+        /// </summary>
+        public bool HallSeat(GroveFloor floor, out int col, out int row)
+        {
+            col = row = 0;
+            if (floor == null) return false;
+
+            if (GroveFloor.TryParse(HallSlot, out int c, out int r)
+                && floor.Contains(c, r)
+                && floor.Contains(c + floor.HallFootprint.Cols - 1, r + floor.HallFootprint.Rows - 1))
+            {
+                col = c; row = r;
+                return true;
+            }
+
+            return GroveFloor.TryParse(floor.HallTile, out col, out row);
+        }
 
         /// <summary>The dwelling on the hall, resolved against a catalog.</summary>
         public HomesteadPiece Dwelling(HomesteadCatalog catalog)
@@ -185,14 +234,16 @@ namespace GlimmerGrove.Social
 
             var stands = new List<GroveStand>(_placed.Count + 1);
 
-            var hall = catalog.Floor.HallStand(DwellingId);
+            var hall = HallSeat(catalog.Floor, out int hallCol, out int hallRow)
+                ? catalog.Floor.HallStand(DwellingId, hallCol, hallRow, HallFacing)
+                : default;
             if (hall.IsValid) stands.Add(hall);
 
             foreach (var pair in _placed)
             {
                 if (!catalog.Floor.Contains(pair.Key)) continue;
 
-                var stand = GroveOccupancy.Of(catalog, pair.Key, pair.Value.PieceId, pair.Value.Flipped);
+                var stand = GroveOccupancy.Of(catalog, pair.Key, pair.Value.PieceId, pair.Value.Facing);
                 if (stand.IsValid) stands.Add(stand);
             }
 
@@ -256,11 +307,14 @@ namespace GlimmerGrove.Social
                 string pieceId = HomesteadLayout.At(slotId);
                 if (string.IsNullOrEmpty(pieceId)) continue;      // emptied on purpose: nothing to show
 
-                placed[slotId] = new Placement(pieceId, 0L, HomesteadLayout.FlippedAt(slotId));
+                placed[slotId] = new Placement(pieceId, 0L, HomesteadLayout.FacingAt(slotId));
             }
 
+            // `HallSlot` rather than a resolved seat: this and `OfSave` have to produce the
+            // same fingerprint for the same grove, and only one of them can see the floor's
+            // fallback. Absent is the answer for a grove nobody has rearranged, on both sides.
             return Build(catalog, LedgerHoldings.Instance, ownerId, name, avatarId, keeperLevel,
-                         nowUnix, placed);
+                         nowUnix, placed, HomesteadLayout.HallSlot, HomesteadLayout.HallFacing);
         }
 
         /// <summary>
@@ -301,20 +355,22 @@ namespace GlimmerGrove.Social
                         continue;
                     }
 
-                    placed[row.slot] = new Placement(pieceId, 0L, row.flipped);
+                    placed[row.slot] = new Placement(pieceId, 0L, row.facing);
                 }
 
             string stored = save?.wallet?.displayName;
             string name = string.IsNullOrEmpty(stored) ? Persistence.Wallet.DefaultName : stored;
 
             return Build(catalog, new SaveHoldings(save, keeperLevel), ownerId, name,
-                         save?.wallet?.avatarId ?? string.Empty, keeperLevel, nowUnix, placed);
+                         save?.wallet?.avatarId ?? string.Empty, keeperLevel, nowUnix, placed,
+                         save?.groveHall, save?.groveHallFacing ?? 0);
         }
 
         /// <summary>The one builder both readings go through, so they cannot drift.</summary>
         static GroveCard Build(HomesteadCatalog catalog, IGroveHoldings held, string ownerId,
                                string name, string avatarId, int keeperLevel, long nowUnix,
-                               IReadOnlyDictionary<string, Placement> placed)
+                               IReadOnlyDictionary<string, Placement> placed,
+                               string hallSlot = null, int hallFacing = 0)
         {
             catalog = catalog ?? HomesteadCatalog.Empty;
 
@@ -334,7 +390,9 @@ namespace GlimmerGrove.Social
                                  nowUnix,
                                  HomesteadLedger.BestDwelling(catalog, held).Id,
                                  land,
-                                 placed);
+                                 placed,
+                                 hallSlot,
+                                 hallFacing);
         }
 
         /// <summary>
@@ -366,11 +424,19 @@ namespace GlimmerGrove.Social
                 "d:" + DwellingId,
                 "n:" + Name,
                 "a:" + AvatarId,
+
+                // Where the house stands is something a visitor sees, so moving it owes a
+                // publish exactly as moving a bench does. Left out, a player could rearrange
+                // the largest object in their grove and every board would go on showing the
+                // old one for ever — which is the fault invariant 19j is about, arriving
+                // through a field rather than through a stale read.
+                "h:" + HallSlot + (HallFacing != 0 ? "/" + HallFacing : string.Empty),
             };
 
             foreach (string id in _land) parts.Add("l:" + id);
             foreach (var pair in _placed)
-                parts.Add("p:" + pair.Key + "=" + pair.Value.PieceId + (pair.Value.Flipped ? "/f" : string.Empty));
+                parts.Add("p:" + pair.Key + "=" + pair.Value.PieceId
+                          + (pair.Value.Facing != 0 ? "/" + pair.Value.Facing : string.Empty));
 
             parts.Sort(StringComparer.Ordinal);
             return string.Join("|", parts);

@@ -36,11 +36,42 @@ namespace GlimmerGrove
             mob.Boss = raider.Boss;
             mob.Kind = raider.Kind;
 
-            mob.Shadow = UIKit.Img("Shadow", mob.Node, Art.Glow(64, 3f),
-                                   new Color(0f, 0f, 0f, .42f),
-                                   new Vector2(tall * .62f, tall * .22f));
+            // **A shadow belongs under the body, and where that is depends on what the body is.**
+            //
+            // This sat at 0.46 of the drawn height below the node, which is right for a *biped*
+            // seen from the side: the node is the middle of the picture, the feet are near the
+            // bottom of it, and the shadow goes under the feet. The cast are top-down insects now,
+            // whose picture *is* their footprint - so the same number puts the shadow the better
+            // part of a body-length clear of the thing casting it, and what that reads as on a
+            // device is a hill of raiders floating. Reported in exactly those words.
+            //
+            // The numbers are the pack's own, measured off the shadows it bakes under these
+            // insects and which `make_siege_art.deshadow` takes off (it has to: they are wider
+            // than the body and inflate every frame). A beetle's sits about a fifth of its own
+            // height below its middle and is about as wide as it is; `ShadowDrop`, `ShadowWide`
+            // and `ShadowTall` are that, against the *body* rather than against the frame.
+            // **And the baked cast is upright, so it takes the numbers the insects replaced.**
+            // The paragraph above is about a body whose picture *is* its footprint; a KayKit
+            // humanoid rendered at this board's 22° is the other thing entirely — the feet are at
+            // the bottom of the picture and the shadow goes under them, which is precisely the
+            // case the 0.46 figure was right for. Left on the insects' numbers it sat inside the
+            // hips, which on a hill reads as a man hovering an inch above the grass. `Standing`
+            // is that, and it is chosen by which cast is drawn rather than by kind, because it is
+            // a fact about how the art was made.
+            float wide = Frame(mob.Playing, tall);
+            float body = tall * BodyFill(raider.Boss);
+            bool upright = CastSet == SiegeMode.Baked && !raider.Boss;
+
+            float drop = upright ? StandingDrop : ShadowDrop;
+            float across = upright ? StandingWide : ShadowWide;
+            float deep = upright ? StandingTall : ShadowTall;
+
+            mob.Shadow = UIKit.Img("Shadow", mob.Node, Art.Glow(64, ShadowFalloff),
+                                   new Color(0f, 0f, 0f, upright ? StandingInk : ShadowInk),
+                                   new Vector2(wide * across, body * deep));
             mob.Shadow.raycastTarget = false;
-            mob.Shadow.rectTransform.anchoredPosition = new Vector2(0f, -tall * .46f);
+            mob.Shadow.rectTransform.anchoredPosition =
+                new Vector2(0f, BodyLift * tall - body * drop);
 
             // **A raider is drawn in its own paint, and the wash and the coat that used to
             // say its colour are gone.** They were a wash behind the body and a 62% multiply over
@@ -74,13 +105,11 @@ namespace GlimmerGrove
 
             // Written out per kind rather than built from a name, for `GemArt`'s reason: a reel
             // whose key is assembled is a reel `Tools/verify/artnames.py` cannot hold to disk.
-            mob.Walking = WalkReel(raider.Kind);
             mob.Casting = CastReel(raider.Kind);
 
             // A warlord comes on *walking* and stands still once it is in place; everything else
             // is walking for its whole life, so its one reel is both.
-            mob.Playing = raider.Boss && mob.Walking != null && !raider.InPlace
-                        ? mob.Walking : mob.Idle;
+            mob.Playing = mob.Idle;
 
             mob.Body = Book(mob.Playing, "Body", mob.Node, new Vector2(tall, tall),
                             raider.Boss ? BossFps : raider.Brute ? 10f : 13f);
@@ -97,13 +126,11 @@ namespace GlimmerGrove
                 // `mon1` gets, which is why one of the three creepers has always looked squat. The
                 // warlord is the same fault at three times the size and would have been obvious,
                 // which is how this was found.
-                float wide = Frame(mob.Playing, tall);
-
                 mob.Body.rectTransform.sizeDelta = new Vector2(wide, tall);
 
-                // The packs draw them facing right; this hill runs top to bottom, so they are
-                // turned to face down the way a walk cycle reads best - across, and coming on.
-                mob.Body.rectTransform.anchoredPosition = new Vector2(0f, tall * .04f);
+                // This pack draws its insects head-down already, which is the way this hill runs,
+                // so nothing here is turned.
+                mob.Body.rectTransform.anchoredPosition = new Vector2(0f, BodyLift * tall);
                 Tween.Bob(mob.Body.rectTransform, tall * .035f,
                           raider.Boss ? 1.6f : raider.Brute ? 1.1f : .72f,
                           raider.Id * .37f);
@@ -172,25 +199,6 @@ namespace GlimmerGrove
             return mob;
         }
 
-        /// <summary>
-        /// The reel a boss crosses ground in, and null for everything that has only one reel.
-        ///
-        /// Written out per kind rather than built from a name, for <see cref="GemArt"/>'s reason:
-        /// a reel whose key is assembled is a reel <c>Tools/verify/artnames.py</c> cannot hold to
-        /// disk, and twelve of the mode's art names are these.
-        /// </summary>
-        static Sprite[] WalkReel(SiegeKind kind)
-        {
-            switch (kind)
-            {
-                case SiegeKind.Overlord: return Reel("over_walk");
-                case SiegeKind.Warbringer: return Reel("bringer_walk");
-                case SiegeKind.Boss: return Reel("boss_walk");
-                case SiegeKind.Blightcaller: return Reel("blight_walk");
-                default: return null;
-            }
-        }
-
         /// <summary>The reel a boss throws in, and null for everything that never throws.</summary>
         static Sprite[] CastReel(SiegeKind kind)
         {
@@ -206,6 +214,90 @@ namespace GlimmerGrove
 
         /// <summary>How fast a warlord's own frames run. Slow, because it is a heavy thing.</summary>
         const float BossFps = 11f;
+
+        /// <summary>How far a body is lifted off its node, as a share of the drawn height.</summary>
+        const float BodyLift = .04f;
+
+        /// <summary>
+        /// Where a raider's shadow sits and how big it is, against the <b>body</b> rather than
+        /// against the frame.
+        ///
+        /// Measured off the shadows this pack bakes under its own insects and which the bake
+        /// strips (<c>make_siege_art.deshadow</c>): a crawler's sits 0.17 to 0.24 of its own
+        /// height below its middle and runs 1.02 to 1.15 of its width. One number for the whole
+        /// cast rather than one per family, and the family it is taken from is the crawlers,
+        /// because a raider is a thing coming down a hill - a fly drawn with a ground-hugging
+        /// shadow reads as skimming, which is true, where a beetle drawn with a flier's reads as
+        /// floating, which is what was reported.
+        /// </summary>
+        const float ShadowDrop = .21f, ShadowWide = .78f, ShadowTall = .37f;
+
+        /// <summary>
+        /// The same three, for a body that is standing on the ground rather than lying on it.
+        ///
+        /// <para>
+        /// <b>An offset is a fact about what the body is</b> — which is this invariant's own rule
+        /// (37as), and the baked cast is the case it was written *against*. A top-down insect's
+        /// picture is its footprint, so its shadow sits a fifth of its height below its middle; a
+        /// humanoid rendered at 22° has its feet at the bottom edge of the picture, so its shadow
+        /// sits most of a half-height below the middle or it is drawn inside the knees. Measured
+        /// off the baked reels: the feet occupy the bottom eighth of a trimmed frame, which puts
+        /// the contact point at 0.44 of the body below its middle.
+        /// </para>
+        /// <para>
+        /// <b>Wider than it is deep, because it is an ellipse seen at a rake.</b> A shadow on the
+        /// ground under a near-side-on camera is foreshortened in depth and not in width — the
+        /// insects' near-circle is what a plan view gives you and is wrong here. And it is
+        /// <b>darker</b>: a standing body's contact shadow is the only thing saying it is touching
+        /// the hill at all, where a prone insect has its whole silhouette doing that job.
+        /// </para>
+        /// <para>
+        /// A boss keeps the insect numbers, because the four bosses are still insects and are
+        /// drawn from the other cast whatever <see cref="CastSet"/> says.
+        /// </para>
+        /// </summary>
+        const float StandingDrop = .44f, StandingWide = .86f, StandingTall = .26f;
+
+        /// <summary>How dark a standing body's contact shadow is. See <see cref="StandingDrop"/>.</summary>
+        const float StandingInk = .62f;
+
+        /// <summary>
+        /// How dark the shadow is at its middle, and how fast it falls off to nothing.
+        ///
+        /// <para>
+        /// <b>The power is what decides whether this reads as a shadow or as a smudge, and it is
+        /// the number that has been wrong twice.</b> <c>Art.Glow</c> is <c>(1 - distance)</c>
+        /// raised to a power, so a <em>high</em> power fades from its own middle outward — at the
+        /// cubic it was first asked for, an eighth of its peak half way out, which at this size is
+        /// nothing anybody can see. Dropping it to 1.4 made it visible and came straight back from
+        /// play as <b>cloudy</b>, which is the same reading one step on: a profile that ramps the
+        /// whole way is a haze, where a shadow is flat in the middle and soft only at its rim. At
+        /// a quarter it holds near its peak most of the way out and falls off at the edge, which
+        /// is what the pack's own baked shadows are (a near-flat ellipse at 34% alpha, about as
+        /// wide as the insect).
+        /// </para>
+        /// <para>
+        /// <b>The width moves with it or the footprint does not stay put</b>: a flatter profile
+        /// reaches visibly almost to the edge of its rect where a steep one dies two thirds of the
+        /// way, so going from 1.4 to 0.25 means shrinking the rect by about a third to put the
+        /// same amount of dark on the ground. Picked by drawing the candidates under a real insect
+        /// on the palest floor this mode has and on the brightest — the step darker than this
+        /// reads as a hole in the grass.
+        /// </para>
+        /// </summary>
+        const float ShadowInk = .55f, ShadowFalloff = .25f;
+
+        /// <summary>
+        /// How much of its frame a body actually fills, measured off the shipped reels.
+        ///
+        /// <b>A raider's frame is trimmed to its own animation and a boss's is not</b>: a boss
+        /// shares one canvas with its cast reel so that it cannot change size when it throws
+        /// (<c>make_siege_art.one_canvas</c>), and that reel rises, so the frame is taller than the
+        /// body standing in it. Everything the view places is placed against the <em>frame</em>, so
+        /// without this a boss's shadow sits a third further out than its raiders' do — which is
+        /// the same fault this whole rule exists to fix, one kind further in.
+        /// </summary>
+        static float BodyFill(bool boss) => boss ? .72f : .94f;
 
         /// <summary>
         /// Puts one of a raider's reels on its body, and remembers which.

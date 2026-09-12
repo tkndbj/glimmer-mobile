@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using GlimmerGrove.Content;
 using GlimmerGrove.Modes;
 using GlimmerGrove.Progression;
+using GlimmerGrove.Utilities;
 using NUnit.Framework;
 
 namespace GlimmerGrove.Tests
@@ -25,7 +26,7 @@ namespace GlimmerGrove.Tests
     /// <c>Tools/verify/siege.py</c> prints, written down.
     /// </para>
     /// </summary>
-    public sealed class SiegeRuleTests
+    public sealed partial class SiegeRuleTests
     {
         // ------------------------------------------------------------------ the fixture siege
         /// <summary>
@@ -126,14 +127,14 @@ namespace GlimmerGrove.Tests
         {
             new Rung("s01_firstwatch", new[] { "ryybgyyg", "bybgrgyy", "rbryyggr", "grgrgbbr", "yybgrrbg" }, "rgby", "rgby", new[] { "rgby", "rgbyrgby" }, "", 0),
             new Rung("s01_ironward", new[] { "brbybgrg", "yggrbbry", "r*byybgr", "yygbbgby", "bbryygyg" }, "rgby", "rgby", new[] { "rgbyrg", "rgbyrgby", "rgByrgby" }, "", 4),
-            new Rung("s01_stonewatch", new[] { "gbrrgbgy", "rybbrbbr", "grgryyrr", "rbybybby", "ryybgrby" }, "rgby", "rgby", new[] { "rgbyRG", "rgbyRGby", "RGBYrgby" }, "blightcaller:b", 3),
-            new Rung("s01_thornhollow", new[] { "gbrryrbb", "rygbrrbr", "bbgybggy", "ybygyybb", "gyrbbggr" }, "rgby", "rgby", new[] { "rrrgggbb", "YYYYrrrr", "GGBBYY" }, "", 3),
-            new Rung("s01_warlordsgate", new[] { "ygrrbrgg", "ryyrgrrb", "bbggyyby", "brryrbyg", "ggrbggry" }, "rgby", "rgby", new[] { "rgbyrg", "rgbyRGby", "RGbyRG" }, "warlord:r", 3),
-            new Rung("s01_bramblerun", new[] { "bbrgrbrg", "bggrbgyy", "rgyygrry", "brbybyyg", "yrbrgrrg" }, "rgby", "rgby", new[] { "RGby#rby", "RGbyRGby", "RGBYRG#gRG" }, "", 3),
-            new Rung("s01_ashenfield", new[] { "yrbyrgyy", "brggrbby", "gbrgbyrr", "byrbgybg", "yrbbrrbg" }, "rgby", "rgby", new[] { "#bgyRGby", "RGBY#rG", "RGBYRG#y" }, "", 3),
-            new Rung("s01_blackmarch", new[] { "bggbggyr", "rbybgrby", "ybyybryb", "brrgybgr", "bybggybr" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRGby", "RGBYrg" }, "warbringer:g", 3),
-            new Rung("s01_thornsiege", new[] { "gbyygryr", "rbgbrbry", "rgrbgybb", "yygryyrg", "bbrgyrgg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBY#rGBY", "RGBY#gRGB#b" }, "", 3),
-            new Rung("s01_lastlight", new[] { "bbrgbrry", "bbggbgyg", "ryybrgrr", "ryrgbyby", "ggyrgyry" }, "rgby", "rgby", new[] { "rgbyRGby", "RGB#rY#gG", "RGBYRGby" }, "overlord:y", 3),
+            new Rung("s01_stonewatch", new[] { "gbrrgbgy", "rybbrbbr", "grgryyrr", "rbybybby", "ryybgrby" }, "rgby", "rgby", new[] { "rgbyRG", "rgbyRGby", "RGBYRGby" }, "", 3),
+            new Rung("s01_thornhollow", new[] { "gbrryrbb", "rygbrrbr", "bbgybggy", "ybygyybb", "gyrbbggr" }, "rgby", "rgby", new[] { "rrrgggbb", "YYYY!rrrr", "GGBBYY" }, "", 3),
+            new Rung("s01_warlordsgate", new[] { "ygrrbrgg", "ryyrgrrb", "bbggyyby", "brryrbyg", "ggrbggry" }, "rgby", "rgby", new[] { "rgbyrg", "rgby!bRGby", "RGbyRG" }, "warlord:r", 3),
+            new Rung("s01_bramblerun", new[] { "bbrgrbrg", "bggrbgyy", "rgyygrry", "brbybyyg", "yrbrgrrg" }, "rgby", "rgby", new[] { "RGby#rby", "RGby!yRGby", "RGBYRG#gRG" }, "", 3),
+            new Rung("s01_ashenfield", new[] { "yrbyrgyy", "brggrbby", "gbrgbyrr", "byrbgybg", "yrbbrrbg" }, "rgby", "rgby", new[] { "#bgyRGby", "RGBY#rG!g", "RGBYRG#y" }, "", 3),
+            new Rung("s01_blackmarch", new[] { "bggbggyr", "rbybgrby", "ybyybryb", "brrgybgr", "bybggybr" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRGby", "RGBY#gRGby!y" }, "", 3),
+            new Rung("s01_thornsiege", new[] { "gbyygryr", "rbgbrbry", "rgrbgybb", "yygryyrg", "bbrgyrgg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBY#rGBY", "RGBY#gRGB#b!r" }, "", 3),
+            new Rung("s01_lastlight", new[] { "bbrgbrry", "bbggbgyg", "ryybrgrr", "ryrgbyby", "ggyrgyry" }, "rgby", "rgby", new[] { "rgby!bRGby", "RGB#rY#gG", "RGBYRGby" }, "overlord:y", 3),
         };
 
         /// <summary>
@@ -598,8 +599,16 @@ namespace GlimmerGrove.Tests
             // Written as the arithmetic rather than played out, because what this is about is the
             // rule the par calculation assumes - and a par that assumes a rule the board does not
             // have is a level nobody can three-star.
-            Assert.AreEqual(10, SiegeTuning.ShotDamage);
+            Assert.AreEqual(20, SiegeTuning.ShotDamage);
             Assert.AreEqual(2, SiegeTuning.WeakMultiplier);
+
+            // **A bolt's weight and a bolt's cost are one scale, and this is where that is
+            // said.** They have moved together twice now — halved when the wards were asked to
+            // shoot more, doubled again when the mode came back as too fast paced — and moving
+            // either alone halves or doubles every par in the chapter while leaving each number
+            // individually plausible.
+            Assert.AreEqual(SiegeTuning.ShotDamage, SiegeTuning.FuelPerShotTenths,
+                            "a bolt's damage and the fuel it costs are one scale");
 
             // And a rank is a tenth on top of it, which is only exact because of the scale above.
             Assert.AreEqual(SiegeTuning.ShotDamage, SiegeTuning.DamageAt(0));
@@ -970,16 +979,32 @@ namespace GlimmerGrove.Tests
         {
             const float Frame = 1f / 60f;
 
+            // **Whichever shipped rung sends one, rather than a rung named here.** This is a test
+            // about the *rule* - a boss that cannot bring a ward down rides the head of a wave
+            // instead of walking on alone - and the rung that carried it moved chapters the day the
+            // ladder was re-cut, which failed this test for a reason that had nothing to do with
+            // the rule. A rule pinned to a level id is a rule that breaks when content moves.
             SiegeLayout plan = null;
-            for (int i = 0; i < Chapter.Length; i++)
-                if (Chapter[i].Id == "s01_stonewatch") plan = Chapter[i].Built();
+            string sender = null;
 
-            Assert.IsNotNull(plan, "s01_stonewatch is not in the chapter any more");
+            foreach (var rungs in new[] { Chapter, Broodmarch })
+                for (int i = 0; i < rungs.Length && plan == null; i++)
+                {
+                    var built = rungs[i].Built();
+                    if (built.HasBoss && built.BossKind == SiegeKind.Blightcaller)
+                    {
+                        plan = built;
+                        sender = rungs[i].Id;
+                    }
+                }
+
+            Assert.IsNotNull(plan, "no shipped rung sends a blightcaller any more, so this rule "
+                                   + "is no longer exercised by anything a player opens");
 
             var board = SiegeBoard.Build(plan);
 
             Assert.AreEqual(SiegeKind.Blightcaller, plan.BossKind,
-                            "this test is about the rung that sends one");
+                            $"this test is about the rung that sends one ({sender})");
 
             float since = Unhurried;
             int company = -1;
@@ -1426,7 +1451,7 @@ namespace GlimmerGrove.Tests
             // threat rather than of a mechanic - the level would play as a jewel board with
             // scenery over it. This is the number the mode's constants were tuned on: an unhurried
             // player finishes with about half the line's health gone.
-            int whole = board.Wards.Count * SiegeTuning.WardHealth;
+            int whole = Whole(board);
 
             Assert.Less(Health(board), whole,
                         $"the line finished untouched at {whole}, so nothing on this hill ever "
@@ -1562,57 +1587,120 @@ namespace GlimmerGrove.Tests
         /// **The whole chapter is measured and reported together, rather than stopping at the
         /// first rung that misses.** This is the only instrument a mode with no search has
         /// (invariant 37j), and every change to this mode's arithmetic has to be put back through
-        /// it — so a failure that named one rung and hid the other nine made every re-tune a
+        /// it - so a failure that named one rung and hid the other nine made every re-tune a
         /// sequence of nine more runs. The table below is what a re-tune is read off.
+        ///
+        /// <para>
+        /// <b>And it is swept across nine player rhythms rather than sampled at one, because one
+        /// sample of this was measuring noise.</b> A match changes the field, the field decides
+        /// the next match, and the run diverges from there - so two rhythms twenty milliseconds
+        /// apart play out completely differently, and a rung either holds or dies in a death
+        /// spiral (one ward falling means its colour is never fed again, so its raiders take
+        /// single damage, pile up and take the next ward). Measured on the numbers that shipped:
+        /// <c>s01_blackmarch</c> and <c>s01_thornsiege</c> held at <b>two rhythms out of nine</b>,
+        /// and the 2.40 this asserted at was one of them. <b>A green tick was a coin landing the
+        /// right way up</b>, and every re-tune since had been read off one toss - which is what
+        /// invariant 41 records from the other end, where a correct change to a random stream
+        /// "re-rolled all ten shipped rungs" and nothing in any file was wrong.
+        /// </para>
+        /// <para>
+        /// <b>So what is asserted is what a sweep can actually support.</b> A rung that holds at
+        /// no rhythm at all is a rung nobody holds, and that is a hard failure; so is one that can
+        /// never be three-starred, or one past the teaching rungs that is never once reached by
+        /// the hill (invariant 5d). Everything else is judged on the <em>chapter</em>, over ninety
+        /// runs, because an aggregate of ninety is steady where any one of them is a toss.
+        /// </para>
+        /// <para>
+        /// <b>The floor is a record of where the chapter stands, not a target.</b> It has read 67
+        /// (before the wards were slowed and the hill paced back), then 75, and it reads 79 now -
+        /// the bomber is the first raider in this mode that is worth *more* to the player than it
+        /// costs, so a chapter that sends seven of them is a slightly kinder chapter. The number is
+        /// set below what was measured because a sweep of ninety is steady and not exact. If a
+        /// change moves it, measure it and move the number deliberately - but a change that drops
+        /// it several points is a change that loses runs, whatever one rhythm says. <b>The honest reading of the numbers
+        /// below is that the back half of this chapter is lost by an ordinary player more often
+        /// than it should be</b>, and that is an open question for the owner rather than something
+        /// this file should quietly tune away.
+        /// </para>
         /// </summary>
         [Test]
         public void AnUnhurriedPlayerHoldsThisLine()
         {
+            // Nine rhythms around the 2.4 seconds this used to sample alone. Spread rather than
+            // random, so a failure is reproducible and a re-tune is read off the same ninety runs.
+            float[] rhythms = { 2.20f, 2.25f, 2.30f, 2.35f, 2.40f, 2.45f, 2.50f, 2.55f, 2.60f };
+
+            const int Floor = 78;
+
             var table = new System.Text.StringBuilder();
             var faults = new System.Collections.Generic.List<string>();
+            int chapterHeld = 0;
 
             for (int i = 0; i < Chapter.Length; i++)
             {
                 var rung = Chapter[i];
                 var layout = rung.Built();
-                var board = SiegeBoard.Build(layout);
-
-                int matches = Hold(board, out int seconds);
 
                 int par = SiegeTuning.Par(layout);
                 int gold = (par * 120 + 99) / 100;
-                int whole = board.Wards.Count * SiegeTuning.WardHealth;
+                int whole = 0;
 
-                table.AppendLine($"  {rung.Id,-18} par {par,3}  3* {gold,3}  played {matches,3}  "
-                                 + $"{seconds,3}s  line {Health(board),3}/{whole,3}  "
-                                 + $"{board.WardsStanding} ward(s), {board.GoalsLeft} left");
+                int held = 0, starred = 0, touched = 0, thin = 0;
+                int worstLine = int.MaxValue, bestLine = -1, mostMatches = 0;
 
-                if (!board.IsFinished)
-                    faults.Add($"{rung.Id}: the hill was not cleared - {board.GoalsLeft} raider(s) "
-                               + $"left and {board.WardsStanding} ward(s) standing after {seconds}s");
+                foreach (float rhythm in rhythms)
+                {
+                    var board = SiegeBoard.Build(layout);
+                    int matches = Hold(board, rhythm, out int _);
 
-                if (board.WardsStanding < 2)
-                    faults.Add($"{rung.Id}: an unhurried player finished with "
-                               + $"{board.WardsStanding} ward(s) standing");
+                    whole = Whole(board);
+                    int line = Health(board);
 
-                if (matches > gold)
-                    faults.Add($"{rung.Id}: an unhurried player needed {matches} against a "
-                               + $"three-star line of {gold}, so nobody playing this way ever sees "
-                               + "three stars");
+                    if (board.IsFinished && board.WardsStanding >= 2) held++;
+                    if (board.IsFinished && matches <= gold) starred++;
+                    if (line < whole) touched++;
+                    if (board.IsFinished && matches * 2 < par) thin++;
 
-                if (matches * 2 < par)
-                    faults.Add($"{rung.Id}: an unhurried player finished in {matches} against par "
-                               + $"{par}, so par is more than twice what the rung really costs and "
-                               + "every band under it is unreachable");
+                    if (line < worstLine) worstLine = line;
+                    if (line > bestLine) bestLine = line;
+                    if (board.IsFinished && matches > mostMatches) mostMatches = matches;
+                }
+
+                chapterHeld += held;
+
+                table.AppendLine($"  {rung.Id,-18} par {par,3}  3* {gold,3}  held {held}/{rhythms.Length}"
+                                 + $"  3* in {starred}/{rhythms.Length}  worst played {mostMatches,3}"
+                                 + $"  line {worstLine,3}-{bestLine,3} of {whole,3}"
+                                 + $"  reached {touched}/{rhythms.Length}");
+
+                if (held == 0)
+                    faults.Add($"{rung.Id}: an unhurried player held this line at none of "
+                               + $"{rhythms.Length} rhythms, so nobody playing this way clears it");
+
+                if (starred == 0)
+                    faults.Add($"{rung.Id}: three stars was out of reach at every rhythm against a "
+                               + $"line of {gold}, so nobody playing this way ever sees three");
+
+                if (thin == rhythms.Length)
+                    faults.Add($"{rung.Id}: an unhurried player finished in under half of par "
+                               + $"{par} at every rhythm, so every band under it is unreachable");
 
                 // **And the half that says this is a siege at all.** A line nothing ever reaches is
                 // a fail state that rejects nothing, which is invariant 5d asked of a threat rather
                 // than of a mechanic - the rung would play as a jewel board with scenery over it.
                 // The teaching rungs are the deliberate exception (see `TeachingRungs`).
-                if (i >= TeachingRungs && Health(board) >= whole)
-                    faults.Add($"{rung.Id}: the line finished untouched at {whole}, so nothing on "
-                               + "this hill ever reached it");
+                if (i >= TeachingRungs && touched == 0)
+                    faults.Add($"{rung.Id}: the line finished untouched at {whole} at every "
+                               + "rhythm, so nothing on this hill ever reaches it");
             }
+
+            table.AppendLine($"  the chapter holds {chapterHeld} of "
+                             + $"{Chapter.Length * rhythms.Length} runs (floor {Floor})");
+
+            if (chapterHeld < Floor)
+                faults.Add($"the chapter held {chapterHeld} of {Chapter.Length * rhythms.Length} "
+                           + $"runs against a floor of {Floor}, so this change loses runs an "
+                           + "unhurried player used to win - re-measure before moving the floor");
 
             Assert.IsEmpty(faults, string.Join("\n", faults) + "\n\nthe chapter reads:\n" + table);
         }
@@ -1688,18 +1776,38 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ARankIsWorthATenthOfADamageAndATenthOfAFuel()
         {
-            Assert.AreEqual(10, SiegeTuning.DamageAt(0));
-            Assert.AreEqual(11, SiegeTuning.DamageAt(1));
-            Assert.AreEqual(12, SiegeTuning.DamageAt(2));
-            Assert.AreEqual(13, SiegeTuning.DamageAt(3));
-            Assert.AreEqual(14, SiegeTuning.DamageAt(4));
+            // **Written as the rule rather than as five numbers**, because the numbers are a
+            // property of the scale and the scale has now moved twice. What must hold at any
+            // scale is that every rung is exactly a tenth of the base away from the last: a
+            // ladder that truncates is one where some of the four cogs a player spends buy
+            // nothing at all, which is the failure the whole unit is chosen around.
+            for (int rank = 0; rank <= SiegeTuning.MaxRank; rank++)
+            {
+                Assert.AreEqual(SiegeTuning.ShotDamage * (10 + rank) / 10,
+                                SiegeTuning.DamageAt(rank),
+                                $"damage at rank {rank}");
 
-            // **The fuel half of a rank did not move when the fuel unit was subdivided**, which is
-            // the whole reason it was done that way round: halving the *bolt* instead would have
-            // made this ladder 5, 4, 4, 3, 3 after truncation, so two of the four cogs a player
-            // spends would have bought nothing at all.
-            Assert.AreEqual(10, SiegeTuning.FuelShotTenths(0));
-            Assert.AreEqual(6, SiegeTuning.FuelShotTenths(SiegeTuning.MaxRank));
+                Assert.AreEqual(SiegeTuning.FuelPerShotTenths * (10 - rank) / 10,
+                                SiegeTuning.FuelShotTenths(rank),
+                                $"fuel a bolt at rank {rank}");
+
+                if (rank == 0) continue;
+
+                // And exact: every step is a whole tenth of the base, never a truncation of one.
+                Assert.AreEqual(SiegeTuning.ShotDamage / 10,
+                                SiegeTuning.DamageAt(rank) - SiegeTuning.DamageAt(rank - 1),
+                                $"the damage step into rank {rank} is a whole tenth");
+
+                Assert.AreEqual(SiegeTuning.FuelPerShotTenths / 10,
+                                SiegeTuning.FuelShotTenths(rank - 1) - SiegeTuning.FuelShotTenths(rank),
+                                $"the fuel step into rank {rank} is a whole tenth");
+            }
+
+            // A rank-four ward turns one match into 2.33 times what a fresh one does, which is the
+            // number every level that deals cogs is authored against.
+            Assert.AreEqual(SiegeTuning.ShotDamage * 14 / 10, SiegeTuning.DamageAt(SiegeTuning.MaxRank));
+            Assert.AreEqual(SiegeTuning.FuelPerShotTenths * 6 / 10,
+                            SiegeTuning.FuelShotTenths(SiegeTuning.MaxRank));
 
             Assert.AreEqual(SiegeTuning.DamageAt(SiegeTuning.MaxRank), SiegeTuning.DamageAt(99));
             Assert.AreEqual(SiegeTuning.FuelShotTenths(0), SiegeTuning.FuelShotTenths(-1));
@@ -1757,12 +1865,104 @@ namespace GlimmerGrove.Tests
         ///
         /// Frame by frame, because <c>Advance</c> bounds a step - see <see cref="Frames"/>.
         /// </summary>
-        static int Hold(SiegeBoard board, out int seconds)
+        static int Hold(SiegeBoard board, out int seconds) => Hold(board, Unhurried, out seconds);
+
+        /// <summary>
+        /// The same player at a chosen rhythm.
+        ///
+        /// <b>A parameter rather than a constant</b>, because one rhythm is one sample of a run
+        /// that diverges from the first match onward - see <see cref="AnUnhurriedPlayerHoldsThisLine"/>.
+        /// </summary>
+        /// <summary>
+        /// What this line holds when it is whole — the sum of its turrets' own, never four of the
+        /// mode's constant.
+        ///
+        /// <b>The constant was the same number while every turret was.</b> With a roster that
+        /// trades weight for toughness it is only the starter's, so a test measuring "was the line
+        /// touched" against it would read a tough line as damaged from the first frame and a
+        /// fragile one as never quite whole.
+        /// </summary>
+        /// <summary>
+        /// <b>A line of the flimsiest turret in the roster is a harder game and still a game.</b>
+        ///
+        /// <para>
+        /// This is the whole permission slip for letting a turret trade toughness away. Damage
+        /// reaches the grade and so may never go under the baseline; health reaches nothing that
+        /// is graded, so a player may buy a turret that hits harder and falls sooner — and what
+        /// that must never become is a rung nobody can clear however well they play. A fragile
+        /// line taking losses is the choice working; a fragile line that cannot finish a rung is a
+        /// trap sold on a shelf.
+        /// </para>
+        /// <para>
+        /// <b>Three rhythms rather than nine, and the bar is "cleared at one of them".</b> The
+        /// unhurried sweep next door is a tuning instrument and needs ninety runs to say anything
+        /// steady (invariant 37aq); this one asks a yes-or-no question, and a rung that can be
+        /// cleared at any rhythm is a rung that can be cleared. The player it models never spends
+        /// a mending, which is the pessimistic reading on purpose — the answer has to hold for
+        /// somebody who bought nothing else.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheFlimsiestLineIsAHarderGameAndStillAGame()
+        {
+            var catalog = GlimmerGrove.Wards.WardCatalog.Default;
+            GlimmerGrove.Wards.WardModel worst = catalog.Starter;
+
+            foreach (var model in catalog.Models)
+                if (model.GuardTenths < worst.GuardTenths) worst = model;
+
+            Assert.Less(worst.GuardTenths, catalog.Starter.GuardTenths,
+                        "no turret trades toughness away, so this fixture is checking nothing");
+
+            var chosen = new List<GlimmerGrove.Wards.WardSlot>();
+            foreach (char colour in GlimmerGrove.Wards.WardLine.Colours)
+                chosen.Add(new GlimmerGrove.Wards.WardSlot(colour, worst.Id));
+
+            var line = GlimmerGrove.Wards.WardLine.Resolve(catalog, chosen, (_, __) => true);
+
+            float[] rhythms = { 2.25f, 2.40f, 2.55f };
+            var lost = new List<string>();
+
+            for (int i = 0; i < Chapter.Length; i++)
+            {
+                var layout = Chapter[i].Built();
+                bool cleared = false;
+
+                foreach (float rhythm in rhythms)
+                {
+                    var board = SiegeBoard.Build(layout, line);
+                    Hold(board, rhythm, out int _);
+
+                    if (!board.IsFinished) continue;
+
+                    cleared = true;
+                    break;
+                }
+
+                if (!cleared) lost.Add(Chapter[i].Id);
+            }
+
+            Assert.IsEmpty(lost,
+                           $"a line of '{worst.Id}' (guard {worst.GuardTenths}) cannot clear "
+                           + string.Join(", ", lost.ToArray())
+                           + " at any rhythm - a turret may be a fragile choice and may not be an "
+                           + "impossible one; raise SiegeTuning.LeastGuardTenths or the roster's "
+                           + "floor rather than leaving a rung that cannot be held");
+        }
+
+        static int Whole(SiegeBoard board)
+        {
+            int whole = 0;
+            foreach (var ward in board.Wards) whole += ward.Full;
+            return whole;
+        }
+
+        static int Hold(SiegeBoard board, float rhythm, out int seconds)
         {
             const float Frame = 1f / 60f;
 
             int matches = 0;
-            float since = Unhurried;
+            float since = rhythm;
             float clock = 0f;
 
             // Long enough for the whole level and then some: three waves on a 26-second clock, a
@@ -1774,8 +1974,20 @@ namespace GlimmerGrove.Tests
 
                 if (board.IsFinished || board.Stranded) break;
 
+                // **The player taps a bomb the moment it is worth anything.** A bomb that catches
+                // nothing is refused by the board and stays where it is, so "try it every step" is
+                // exactly "take it as soon as it lands on something" - an eager reading rather than a
+                // clever one, which is the right direction for this model to be wrong in. Without it
+                // a bomber is counted as a brute that pays nothing, and every rung carrying one reads
+                // as pure added difficulty.
+                for (int fuse = board.Bombs.Count - 1; fuse >= 0; fuse--)
+                {
+                    int absorbed = board.Detonate(board.Bombs[fuse].Id, null);
+                    if (absorbed > 0) matches += SiegeUtility.MatchesFor(absorbed);
+                }
+
                 since += Frame;
-                if (since < Unhurried) continue;
+                if (since < rhythm) continue;
 
                 if (!Aimed(board, out int a, out int b)) continue;
 
@@ -1808,6 +2020,7 @@ namespace GlimmerGrove.Tests
             var plan = board.Layout;
 
             var raiders = board.Raiders;
+
             for (int i = 0; i < raiders.Count; i++)
             {
                 var raider = raiders[i];

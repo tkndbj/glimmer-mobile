@@ -97,39 +97,81 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// <b>And it stayed at .22 when a bolt's damage halved, which is the whole of what that
-        /// change was for.</b> A gem now buys two bolts (<see cref="FuelPerGemTenths"/>) and each
-        /// is worth half (<see cref="ShotDamage"/>), so at an unchanged cadence a fed ward
-        /// <em>keeps firing for twice as long</em> — which is what "see them shoot more" means.
-        /// Halving this as well was tried and undoes exactly that: the same bolts go through the
-        /// same window twice as densely and a ward stops firing when it always did, so there is
-        /// nothing more to watch. <b>The rate is what makes a ward's fire last; the fuel is what
-        /// makes it long.</b>
+        /// change was for.</b> A gem bought two bolts (<see cref="FuelPerGemTenths"/>) and each
+        /// was worth half (<see cref="ShotDamage"/>), so at an unchanged cadence a fed ward
+        /// <em>kept firing for twice as long</em> — which is what "see them shoot more" means.
+        /// Halving this as well was tried then and undoes exactly that: the same bolts go through
+        /// the same window twice as densely and a ward stops firing when it always did, so there
+        /// is nothing more to watch. <b>The rate is what makes a ward's fire last; the fuel is
+        /// what makes it long.</b>
         /// </para>
         /// <para>
-        /// <b>What that costs is peak damage, and the levels pay it rather than this number.</b>
-        /// Bolts a second times damage a bolt is the line's output, so half-weight bolts at this
-        /// cadence is half the <em>peak</em> — which barely touches attrition (a ward lit twice as
-        /// long kills a marching column better, because less of each burst is spent as overkill)
-        /// and bites hard on an emergency, where one big health pool has to be answered at once.
-        /// Measured through <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, and it moved
-        /// three things in three different directions: a duel got dearer
+        /// <b>What that cost is peak damage, and the levels paid it rather than this number.</b>
+        /// Bolts a second times damage a bolt is the line's output, so half-weight bolts at that
+        /// cadence was half the <em>peak</em> — which barely touches attrition (a ward lit twice
+        /// as long kills a marching column better, because less of each burst is spent as
+        /// overkill) and bites hard on an emergency, where one big health pool has to be answered
+        /// at once. Measured through <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, and it
+        /// moved three things in three different directions: a duel got dearer
         /// (<c>s01_warlordsgate</c> wanted more hill and got it), a long attrition rung got
         /// <em>safer</em> until nothing reached its line at all (<c>s01_thornsiege</c>, two more
         /// brutes), and the rule-test fixture — the one siege in this project that sent a boss and
         /// dealt no cogs — stopped being holdable, and now deals them like every shipped rung.
         /// </para>
+        /// <para>
+        /// <b>It is .44 now, because the owner's next verdict was that the mode reads as super
+        /// fast paced — and what paid for it is the exact inverse of the change above rather than
+        /// a cut to the line's output.</b> Slowing this <em>alone</em> was measured first and is
+        /// not available: fuel still buys the same damage but it arrives later, and the raiders do
+        /// not wait, so the line's damage a second falls with the cadence. <b>At .24 the
+        /// warbringer rung was lost outright</b> — the hill unclear after ten minutes and every
+        /// ward down — because a boss that shells the line every nine seconds grinds it for as
+        /// long as the fight lasts, and a slower line makes the fight last longer. That is a
+        /// difficulty change, and a large one, which is not what "shoot a little slower" asks for.
+        /// </para>
+        /// <para>
+        /// <b>So a bolt got twice as heavy in the same breath</b> (<see cref="ShotDamage"/> 10 to
+        /// 20) <b>and costs twice the fuel</b> (<see cref="FuelPerShotTenths"/> 10 to 20), which
+        /// holds every one of the things a player can feel exactly where it was: a match still
+        /// delivers <see cref="PerfectMatch"/>, a fed ward still fires for the same 2.4 seconds
+        /// (half as many bolts at twice the interval), a full tube still empties in the same 6.2
+        /// (so <see cref="WardCapacity"/> needs no change for the same reason), and a surge still
+        /// pours the same seconds of fire for the same charge. What moves is the one thing that
+        /// was asked to move: <b>half as many bolts, each twice as heavy.</b> Par, both star
+        /// lines, every utility's charge and every rung of the chapter came back bit-identical
+        /// through the hold simulation, which is what says this one was free.
+        /// </para>
+        /// <para>
+        /// <b>Before reaching for this number again, work out which half of "too fast" is being
+        /// complained about.</b> Bolts a second is this; how long a ward keeps firing is the fuel.
+        /// Moving this on its own moves the line's output and is a chapter retune; moving it
+        /// against the fuel unit is free. And note what it costs the view: at .44 a bolt lands
+        /// before the next one leaves (<c>SiegeView.LongestFlight</c> is .40), so a ward no longer
+        /// holds two in the air — which is the picture the change was asked for.
+        /// </para>
         /// </summary>
-        public const float FireEvery = .22f;
+        public const float FireEvery = .44f;
 
         /// <summary>
         /// Fuel one bolt spends at rank nought, in tenths.
         ///
-        /// <b>Unchanged when the fuel unit was subdivided</b>, which is the point of having done it
-        /// that way: every number in <see cref="FuelShotTenths"/> and every rank the cogs pay for
-        /// is bit-identical to what shipped, and what moved is how much fuel a <em>gem</em> is
-        /// worth.
+        /// <para>
+        /// <b>It was unchanged when the fuel unit was subdivided</b>, which was the point of
+        /// having done it that way round: every rank the cogs pay for stayed bit-identical, and
+        /// what moved was how much fuel a <em>gem</em> is worth.
+        /// </para>
+        /// <para>
+        /// <b>Twenty now, and it is this number rather than the cadence that lets the wards shoot
+        /// slower without shooting weaker.</b> A bolt costing two fuel is half as many bolts out
+        /// of the same tube; paired with <see cref="ShotDamage"/> doubling and
+        /// <see cref="FireEvery"/> doubling, a match delivers the same damage over the same
+        /// seconds through half the bolts. <b>A multiple of ten is not optional</b> — a rank is
+        /// ten per cent off this (<see cref="FuelShotTenths"/>), so a base that is not a multiple
+        /// of ten truncates and some of the four cogs a player spends buy nothing, which is the
+        /// failure the subdivision above existed to avoid.
+        /// </para>
         /// </summary>
-        public const int FuelPerShotTenths = 10;
+        public const int FuelPerShotTenths = 20;
 
         /// <summary>Fuel one bolt spends at rank nought. See <see cref="FuelShotTenths"/>.</summary>
         public const float FuelPerShot = FuelPerShotTenths / 10f;
@@ -150,17 +192,30 @@ namespace GlimmerGrove.Modes
         /// <c>Mathf.CeilToInt(45 * 1.20f)</c>).
         /// </para>
         /// <para>
-        /// <b>Then ten, because the owner asked to see the wards shoot more.</b> A gem now buys two
-        /// bolts rather than one (<see cref="FuelPerGemTenths"/>) and each is worth half, so the
-        /// same match delivers the same damage over twice as many bolts and a fed ward stays alight
-        /// for twice as long. <see cref="PerfectMatch"/> is unmoved, so par, both star lines and
-        /// every utility's charge are unmoved with it. <b>Ten is the floor for the ten per cent
-        /// step</b> — at ten the ladder is 10, 11, 12, 13, 14, which is still exact and has no room
-        /// under it, so anything that halves this again has to give the rank ladder a finer unit
-        /// first.
+        /// <b>Then ten, because the owner asked to see the wards shoot more.</b> A gem bought two
+        /// bolts rather than one (<see cref="FuelPerGemTenths"/>) and each was worth half, so the
+        /// same match delivered the same damage over twice as many bolts and a fed ward stayed
+        /// alight for twice as long. <see cref="PerfectMatch"/> was unmoved, so par, both star
+        /// lines and every utility's charge were unmoved with it. Ten was the floor for the ten
+        /// per cent step — at ten the ladder is 10, 11, 12, 13, 14, exact and with no room under
+        /// it — so anything that halved it again had to give the rank ladder a finer unit first.
+        /// </para>
+        /// <para>
+        /// <b>And twenty again, because the verdict after that was that the mode reads as super
+        /// fast paced.</b> A bolt is twice as heavy, costs twice the fuel
+        /// (<see cref="FuelPerShotTenths"/>) and leaves at twice the interval
+        /// (<see cref="FireEvery"/>), so the wards fire half as often for exactly the same output
+        /// — which is the only way to slow the shooting down that is not a chapter retune. See
+        /// <see cref="FireEvery"/> for what slowing the cadence on its own cost.
+        /// </para>
+        /// <para>
+        /// <b>A bolt's weight and a bolt's cost have to move together, and that is the trap
+        /// here.</b> Moving this one alone changes what a match delivers and so halves or doubles
+        /// every par in the mode, with each number still looking perfectly plausible — which is
+        /// the identity <see cref="PerfectMatch"/> exists to say out loud.
         /// </para>
         /// </summary>
-        public const int ShotDamage = 10;
+        public const int ShotDamage = 20;
 
         /// <summary>What a bolt is worth against a raider of its own colour.</summary>
         public const int WeakMultiplier = 2;
@@ -188,6 +243,20 @@ namespace GlimmerGrove.Modes
         public const int ShieldSoakTenths = 5;
 
         /// <summary>
+        /// How much harder a rend turret of <paramref name="magnitude"/> bites into plating, in
+        /// tenths, on top of not being blunted by it.
+        ///
+        /// <para>
+        /// <b>Clamped rather than trusted</b>, because it is content: a magnitude nobody authored
+        /// reads as nought and leaves the ability exactly what it used to be, so an older file
+        /// and a rolled-back client both keep working, and a wild one cannot make a bolt worth
+        /// more than a boss's health.
+        /// </para>
+        /// </summary>
+        public static int RendBonus(int magnitude)
+            => magnitude <= 0 ? 0 : (magnitude > 20 ? 20 : magnitude);
+
+        /// <summary>
         /// What a bolt from a ward of <paramref name="rank"/> takes off <paramref name="kind"/>,
         /// given whether it is the raider's own colour.
         ///
@@ -195,7 +264,7 @@ namespace GlimmerGrove.Modes
         /// The soak is applied after the double, so a bulwark's own colour reaches it in full.
         /// </summary>
         public static int DamageTo(SiegeKind kind, int rank, bool weak)
-            => DamageTo(kind, rank, weak, Wards.WardAbility.None);
+            => DamageTo(kind, rank, weak, Wards.WardAbility.None, 0);
 
         /// <summary>
         /// What a bolt from a ward of <paramref name="rank"/> carrying <paramref name="ability"/>
@@ -210,12 +279,66 @@ namespace GlimmerGrove.Modes
         /// of reach of whoever chose it.
         /// </para>
         /// </summary>
-        public static int DamageTo(SiegeKind kind, int rank, bool weak, Wards.WardAbility ability)
+        public static int DamageTo(SiegeKind kind, int rank, bool weak,
+                                   Wards.WardAbility ability)
+            => DamageTo(kind, rank, weak, ability, 0);
+
+        /// <summary>
+        /// The same, told how strong the ability is. See the overload above.
+        ///
+        /// <b>Only <see cref="Wards.WardAbility.Rend"/> reads the magnitude here</b>, and only
+        /// against a bulwark; everything else is an addition applied after the hit has landed.
+        /// </summary>
+        /// <summary>
+        /// What a bolt from <paramref name="model"/> at <paramref name="rank"/> takes off
+        /// <paramref name="kind"/>.
+        ///
+        /// <b>The one door a played board goes through</b>, because a turret's ability, how strong
+        /// that ability is and how heavy its bolt is are three fields of one record: passed
+        /// separately they are three chances for a call site to hand over two of them.
+        /// </summary>
+        public static int DamageTo(SiegeKind kind, int rank, bool weak, Wards.WardModel model)
+            => DamageTo(kind, rank, weak, new Wards.WardBuild(model));
+
+        /// <summary>
+        /// What a bolt from <paramref name="build"/> at <paramref name="rank"/> takes off
+        /// <paramref name="kind"/> — the turret's own weight with its upgrades in it.
+        /// </summary>
+        public static int DamageTo(SiegeKind kind, int rank, bool weak, Wards.WardBuild build)
+            => build.Model == null
+             ? DamageFineTo(kind, rank, weak, Wards.WardAbility.None, 0,
+                            Wards.WardModel.Baseline * 10)
+             : DamageFineTo(kind, rank, weak, build.Model.Ability, build.Model.Magnitude,
+                            build.PowerHundredths);
+
+        public static int DamageTo(SiegeKind kind, int rank, bool weak,
+                                   Wards.WardAbility ability, int magnitude)
+            => DamageTo(kind, rank, weak, ability, magnitude, Wards.WardModel.Baseline);
+
+        /// <summary>
+        /// The same, told how heavy the bolt is. See <c>WardModel.PowerTenths</c>.
+        /// </summary>
+        public static int DamageTo(SiegeKind kind, int rank, bool weak,
+                                   Wards.WardAbility ability, int magnitude, int powerTenths)
+            => DamageFineTo(kind, rank, weak, ability, magnitude, powerTenths * 10);
+
+        /// <summary>The same, told the weight in hundredths. See <see cref="DamageFine"/>.</summary>
+        public static int DamageFineTo(SiegeKind kind, int rank, bool weak,
+                                       Wards.WardAbility ability, int magnitude,
+                                       int powerHundredths)
         {
-            int hit = DamageAt(rank) * (weak ? WeakMultiplier : 1);
+            int hit = DamageFine(rank, powerHundredths) * (weak ? WeakMultiplier : 1);
             if (kind != SiegeKind.Bulwark) return hit;
 
-            if (ability == Wards.WardAbility.Rend) return hit;
+            // **A rend turret is not blunted, and bites its own magnitude harder on top.** The
+            // bonus is what tells its two rungs apart: the field was read by nothing at all for
+            // as long as "not blunted" was the whole ability, so a thousand-gem breaker and a
+            // four-thousand-credit cleaver were the same turret at two prices - which is the
+            // decoration invariant 5d names, arriving on the one thing a player pays for.
+            // Upward only, which is what keeps it out of par's way (see the summary).
+            if (ability == Wards.WardAbility.Rend)
+                return hit * (10 + RendBonus(magnitude)) / 10;
+
             if (weak) return hit;
 
             int soaked = hit * ShieldSoakTenths / 10;
@@ -238,105 +361,14 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const int BulwarkHealth = 700;
 
-        /// <summary>Seconds a bulwark takes to cross the hill. The slowest thing that is not a boss.</summary>
-        public const float BulwarkMarch = 34f;
+        /// <summary>
+        /// Seconds a bulwark takes to cross the hill. The slowest thing that is not a boss, and
+        /// paced with <see cref="CreeperMarch"/>.
+        /// </summary>
+        public const float BulwarkMarch = 39f;
 
         /// <summary>What one bulwark swing costs a ward. A brute's, because it arrives armoured.</summary>
         public const int BulwarkBlow = 2;
-
-        // ------------------------------------------------------------------ the field raiders
-        /// <summary>
-        /// The weaver and the thief hold this far down the hill, and no further.
-        ///
-        /// <para>
-        /// <b>Between the bosses and the line, and clear of both.</b> A boss holds at .38-.58 and
-        /// the line is at 1.0, so these two stand in the run of hill nothing else occupies - which
-        /// matters for a reason that is about reading rather than about collision: a player has to
-        /// be able to tell at a glance which of the things on the hill is coming for the wards and
-        /// which is coming for the board, and standing still somewhere nothing else stands is the
-        /// cheapest way to say it.
-        /// </para>
-        /// <para>
-        /// <b>The thief stands nearer than the weaver</b>, because its effect is the harsher of
-        /// the two and a player has to be able to reach it: nearer down the hill means more of the
-        /// line has it in range, and it is the one of the pair that has to die.
-        /// </para>
-        /// </summary>
-        public const float WeaverHold = .66f, ThiefHold = .78f;
-
-        /// <summary>
-        /// Seconds a weaver and a thief take to reach where they stop.
-        ///
-        /// Quick, deliberately: these are not a countdown the way a warbringer is, and a raider
-        /// that spends ten seconds arriving before it does anything is ten seconds of a level with
-        /// its own mechanic not on the board.
-        /// </summary>
-        public const float WeaverMarch = 11f, ThiefMarch = 13f;
-
-        /// <summary>
-        /// What they are worth killing.
-        ///
-        /// <para>
-        /// <b>Between a creeper and a bulwark, and that is a decision about the whole hill.</b>
-        /// These two take no ward health at all, so every bolt spent on one is a bolt not spent on
-        /// something that does - which means their health <em>is</em> the price of answering them,
-        /// and a price above a bulwark's would make ignoring them correct at every difficulty.
-        /// What stops ignoring them being correct is that the cost compounds: a web stays until
-        /// the weaver is dead, so the field a player is left matching on gets worse for every
-        /// second they leave it standing.
-        /// </para>
-        /// </summary>
-        public const int WeaverHealth = 620, ThiefHealth = 540;
-
-        /// <summary>
-        /// Seconds between one web and the next, and between one theft and the next.
-        ///
-        /// <b>A thief is slower and its effect is worse</b>, which is the same bargain the two
-        /// healths strike from the other side. Both are pinned by
-        /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>: a rate fast enough to silt the
-        /// field before an ordinary player can answer it is a mechanic that decides the run, and
-        /// this mode has exactly one instrument that can see that (invariant 37j).
-        /// </summary>
-        public const float WeaveEvery = 3.6f, SnatchEvery = 5.4f;
-
-        /// <summary>
-        /// The first web and the first theft come this long after the raider stops, rather than on
-        /// the instant.
-        ///
-        /// A raider whose effect lands in the frame it arrives gives the player nothing to read; a
-        /// beat of standing there winding up is what turns "something appeared" into "something is
-        /// about to happen".
-        /// </summary>
-        public const float MeddleWakes = 1.6f;
-
-        /// <summary>
-        /// How long a web and a theft take to cross the hill and land on the field.
-        ///
-        /// <b>The same split every boss spell keeps</b> (invariant 37s): the raider is told to
-        /// cast, the view draws it leaving, and the cell is not touched until it arrives. Without
-        /// it a gem locks before the thing that locked it has visibly thrown anything.
-        /// </summary>
-        public const float MeddleTell = .55f, MeddleFlight = .40f;
-
-        /// <summary>
-        /// The most webs, and the most sacks, that may stand on a field at once.
-        ///
-        /// <para>
-        /// <b>A cap on the board rather than on the raider, for <see cref="MostCogs"/>'s
-        /// reason.</b> How often one is spun is a rate; how many are standing is a fact about the
-        /// field, and it is the second one a player experiences. Two weavers on one hill are twice
-        /// the pressure and never twice the ceiling.
-        /// </para>
-        /// <para>
-        /// <b>And it is what keeps the field playable.</b> A locked cell can never be matched and
-        /// a sack is not a colour, so both narrow what <c>SiegeBoard.AnySwap</c> can find; past
-        /// about a fifth of a field the board starts re-dealing itself every turn, which reads as
-        /// the game shuffling rather than as the raider doing something. Six of an eight-by-five
-        /// field is fifteen per cent each, and the board refuses to place one that would leave no
-        /// legal swap at all.
-        /// </para>
-        /// </summary>
-        public const int MostWebs = 6, MostSacks = 6;
 
         // ------------------------------------------------------------------ the player's line
         /// <summary>
@@ -364,16 +396,8 @@ namespace GlimmerGrove.Modes
         /// <c>Hold &lt; 1</c>, which was true only of a boss and is now true of four kinds that
         /// want three different things done with them.
         /// </summary>
-        public static bool HoldsTheField(SiegeKind kind)
-            => kind == SiegeKind.Weaver || kind == SiegeKind.Thief;
-
-        /// <summary>Seconds between one of this kind's meddles and the next.</summary>
-        public static float MeddleEveryFor(SiegeKind kind)
-            => kind == SiegeKind.Thief ? SnatchEvery : WeaveEvery;
-
-        /// <summary>The most of this mark that may stand on the field at once.</summary>
-        public static int MostOf(SiegeSpell craft)
-            => craft == SiegeSpell.Snatch ? MostSacks : MostWebs;
+        /// <summary>Whether killing this one leaves a live bomb standing where it fell.</summary>
+        public static bool LeavesABomb(SiegeKind kind) => kind == SiegeKind.Bomber;
 
         // ------------------------------------------------------------------ ward ranks
         /// <summary>
@@ -397,13 +421,56 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const int RankDamageTenths = 1, RankFuelTenths = 1;
 
+        /// <summary>The whole of a tenths-based proportion, so a rank is a share and not a step.</summary>
+        const int Whole = 10;
+
         /// <summary>How much a bolt from a ward of this rank takes off, before the weak double.</summary>
-        public static int DamageAt(int rank)
+        public static int DamageAt(int rank) => DamageAt(rank, Wards.WardModel.Baseline);
+
+        /// <summary>
+        /// The same, for a turret whose bolt is <paramref name="powerTenths"/> of the baseline.
+        ///
+        /// <para>
+        /// <b>The power is applied after the rank and never before</b>, so the two multiply and a
+        /// cog is worth the same ten per cent on every turret. Taken the other way round the
+        /// truncation would eat a rank on a light bolt and the ladder would stop being five even
+        /// steps, which is the fault invariant 37aa records about the fuel unit.
+        /// </para>
+        /// <para>
+        /// <b>Never below the baseline</b>: <c>WardModel</c> clamps the field, and par is computed
+        /// against the baseline. See <c>WardModel.PowerTenths</c> for what a softer bolt would
+        /// cost.
+        /// </para>
+        /// </summary>
+        public static int DamageAt(int rank, int powerTenths)
+            => DamageFine(rank, powerTenths * 10);
+
+        /// <summary>
+        /// The same, for a turret whose bolt is <paramref name="powerHundredths"/> of the baseline
+        /// — its model's weight with its stars already multiplied in.
+        ///
+        /// <para>
+        /// <b>One division, at the end.</b> The rank, the model's weight and the star ladder are
+        /// three tenths figures, and folding them together a pair at a time truncates each time:
+        /// a ten per cent star on a small figure disappears entirely, which shipped as an upgrade
+        /// a player paid for and could not see (see <c>WardBuild.PowerHundredths</c>). Every
+        /// multiplier is gathered first and the division happens once, where the figure becomes a
+        /// number somebody reads.
+        /// </para>
+        /// <para>
+        /// <b>It answers exactly what the old arithmetic did at the first star</b>, which is what
+        /// lets every par, every star line and every gate stand unmoved.
+        /// </para>
+        /// </summary>
+        public static int DamageFine(int rank, int powerHundredths)
         {
             if (rank < 0) rank = 0;
             if (rank > MaxRank) rank = MaxRank;
 
-            return ShotDamage * (10 + rank * RankDamageTenths) / 10;
+            int floor = Wards.WardModel.Baseline * 10;
+            if (powerHundredths < floor) powerHundredths = floor;
+
+            return ShotDamage * (10 + rank * RankDamageTenths) * powerHundredths / 1000;
         }
 
         /// <summary>What one bolt from a ward of this rank costs it, in tenths of fuel.</summary>
@@ -412,7 +479,15 @@ namespace GlimmerGrove.Modes
             if (rank < 0) rank = 0;
             if (rank > MaxRank) rank = MaxRank;
 
-            return FuelPerShotTenths - rank * RankFuelTenths;
+            // **A share of the base rather than a subtraction from it**, which is the same five
+            // numbers while the base is ten tenths and stops being so the moment it is not. It
+            // read `FuelPerShotTenths - rank * RankFuelTenths`, which says "a tenth less" and
+            // really meant "one tenth of a fuel less" — true only at a base of ten, and silently
+            // a five per cent step once a bolt cost two fuel. As a proportion it is 10, 9, 8, 7, 6
+            // at a base of ten and 20, 18, 16, 14, 12 at a base of twenty, both exact, and it is
+            // the rule this constant is named for rather than an arithmetic coincidence of one
+            // scale.
+            return FuelPerShotTenths * (Whole - rank * RankFuelTenths) / Whole;
         }
 
         /// <summary>What one bolt from a ward of this rank costs it.</summary>
@@ -429,12 +504,100 @@ namespace GlimmerGrove.Modes
 
         /// <summary>A creeper: the ordinary raider, and what most of a wave is.</summary>
         public const int CreeperHealth = 200;
-        public const float CreeperMarch = 15f;
+
+        /// <summary>
+        /// Seconds a creeper takes to cross the hill, and the number the whole hill is paced by.
+        ///
+        /// <para>
+        /// <b>Fifteen, then seventeen, because the owner's verdict was that the mode reads as
+        /// super fast paced.</b> Every non-boss march went up by the same seventh
+        /// (<see cref="BruteMarch"/>, <see cref="BulwarkMarch"/>, <see cref="BomberMarch"/>), so
+        /// the hill keeps its shape and only its speed moves — a brute is still the thing that is
+        /// slow because it is heavy, and a bulwark is still the slowest thing that is not a boss.
+        /// <b>A boss's march is deliberately not in that list</b>: a warlord's entrance is timed
+        /// against its own cadence and the quiet before it (<see cref="BossAfter"/>), and it was
+        /// already the one raider on the hill nobody is waiting for.
+        /// </para>
+        /// <para>
+        /// <b>A seventh is close to the ceiling, and what stops it is invariant 5d rather than
+        /// taste.</b> A slower column spends longer under the wards, so more of it dies before it
+        /// arrives — and a hill that never reaches the line is a fail state that rejects nothing,
+        /// which would leave the rung playing as a jewel board with scenery over it. Measured
+        /// across the whole chapter and nine player rhythms: at this pace every rung past the
+        /// teaching ones still draws blood at some rhythm, and <b>at a third slower
+        /// <c>s01_bramblerun</c> finishes untouched at every one of them</b>. Anything past this
+        /// has to buy the threat back in the waves.
+        /// </para>
+        /// </summary>
+        public const float CreeperMarch = 17f;
+
         public const int CreeperBlow = 1;
+
+        /// <summary>
+        /// A bomber: an ordinary raider carrying something that outlives it.
+        ///
+        /// <para>
+        /// <b>A creeper's numbers exactly, and that is the measurement rather than a preference.</b>
+        /// Nothing about fighting one is different — it walks, it swings, it dies — so what it is
+        /// worth killing has to be set by what it <em>leaves</em>: a bomb pays a firepot's 440 back
+        /// to a player who spends it well, and a raider costing much more than a creeper's 200
+        /// turns a gift into a toll. Measured over the whole chapter at nine player rhythms, a
+        /// brute-weight bomber cost 16 runs in 90 and a creeper-weight one gained 4.
+        /// </para>
+        /// <para>
+        /// <b>So a bomber is a creeper the player is pleased to see</b>, and the only thing keeping
+        /// that from being free money is that a level authors one and never a wave of them. See
+        /// <see cref="BombDamage"/> for the other half.
+        /// </para>
+        /// </summary>
+        public const int BomberHealth = 200;
+
+        public const int BomberBlow = 1;
+
+        /// <summary>Seconds a bomber takes to cross the hill. A brute's: it is a brute with cargo.</summary>
+        public const float BomberMarch = 17f;
+
+        /// <summary>
+        /// What a bomb takes off everything in its reach when it is tapped.
+        ///
+        /// <para>
+        /// <b>A firepot's, and read from the same place a firepot's is read</b> — the utility
+        /// catalog is content, so this is the one number here that is deliberately <em>not</em> a
+        /// constant: <c>SiegeScreen</c> hands the board the published magnitude. What is here is
+        /// the fallback for a build with no store configured at all, and it is the shipped
+        /// firepot's figure so the two cannot read differently on a device that has never synced.
+        /// </para>
+        /// <para>
+        /// <b>It is charged in matches exactly as a firepot is</b> (<c>SiegeUtility.MatchesFor</c>,
+        /// invariant 39). A bomb costs no stock, no gems and no cooldown; what it cannot be is
+        /// free of the <em>grade</em>, because a grade here is not a private number (19a) and a
+        /// player who leant on bombs would otherwise beat a three-star line without matching.
+        /// </para>
+        /// </summary>
+        public const int BombDamage = 440;
+
+        /// <summary>
+        /// How far a bomb's blast reaches, in boxes of the hill's targeting grid.
+        ///
+        /// <b>The firepot's plus, said once</b> — <see cref="BlastReach"/> — so what a bomb takes
+        /// and what a firepot takes cannot come apart. A player who has used one knows the other.
+        /// </summary>
+        public static int BombReach => BlastReach;
+
+        /// <summary>
+        /// The most bombs that may be standing on the hill at once.
+        ///
+        /// <b>A cap on a good thing, so it is tight.</b> A hill littered with bombs is a hill the
+        /// player is hoarding rather than clearing, and a level that authored six bombers would
+        /// turn the mode into a tapping game. Three is enough to save one for a wave.
+        /// </summary>
+        public const int MostBombs = 3;
 
         /// <summary>A brute: slower, far tougher, and twice as expensive to let through.</summary>
         public const int BruteHealth = 480;
-        public const float BruteMarch = 26f;
+
+        /// <summary>Seconds a brute takes to cross the hill. Paced with <see cref="CreeperMarch"/>.</summary>
+        public const float BruteMarch = 30f;
         public const int BruteBlow = 2;
 
         // ------------------------------------------------------------------ the warlord
@@ -772,6 +935,50 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const int WardHealth = 14;
 
+        /// <summary>
+        /// The least of the baseline a turret's own toughness may be authored at, in tenths.
+        ///
+        /// <para>
+        /// <b>A floor rather than a taste, because the one thing a loadout may not do is make a
+        /// rung impossible.</b> A player who stands four fragile turrets has chosen a harder
+        /// game, which is the decision the shelf exists to offer; a player who has chosen a rung
+        /// that cannot be held however well they play has been sold a trap.
+        /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> plays the whole chapter with a
+        /// line of the flimsiest turret in the roster, which is the only thing that can say where
+        /// this number belongs.
+        /// </para>
+        /// </summary>
+        public const int LeastGuardTenths = 7;
+
+        /// <summary>
+        /// How much <paramref name="model"/> can take before it falls.
+        ///
+        /// <b>Read once when the ward is built</b>, exactly as its capacity is
+        /// (<see cref="CapacityOf"/>), and held on the ward as <c>SiegeWard.Full</c> — so a
+        /// mending, a rally and the health bar all ask the ward rather than the mode's constant.
+        /// Every one of those three used to read <see cref="WardHealth"/> directly, which was
+        /// right while every turret held the same, and would have quietly capped a tough turret's
+        /// repairs at the baseline.
+        /// </summary>
+        public static int HealthOf(Wards.WardModel model) => HealthOf(new Wards.WardBuild(model));
+
+        /// <summary>The same, with the turret's upgrades in it. See <see cref="HealthOf"/>.</summary>
+        public static int HealthOf(Wards.WardBuild build)
+        {
+            // Hundredths, and divided once - see `WardBuild.PowerHundredths` for the star a
+            // tenths-at-a-time fold used to eat.
+            int fine = build.Model == null ? Wards.WardModel.Baseline * 10 : build.GuardHundredths;
+            int floor = LeastGuardTenths * 10;
+
+            if (fine < floor) fine = floor;
+
+            int health = WardHealth * fine / (Wards.WardModel.Baseline * 10);
+
+            // Never nought, for `DamageTo`'s reason: a turret that falls to the first blow is a
+            // turret the player will believe is broken.
+            return health < 1 ? 1 : health;
+        }
+
         /// <summary>Seconds between a raider's blows once it has reached the line.</summary>
         public const float BlowEvery = 1.9f;
 
@@ -941,6 +1148,7 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Boss ? 3.1f
              : kind == SiegeKind.Blightcaller ? 3.0f
              : kind == SiegeKind.Bulwark ? 1.85f
+             : kind == SiegeKind.Bomber ? 1.30f
              : kind == SiegeKind.Brute ? 1.55f : 1.15f;
 
         /// <summary>
@@ -1120,8 +1328,6 @@ namespace GlimmerGrove.Modes
             => kind == SiegeKind.Overlord ? SiegeSpell.Sunder
              : kind == SiegeKind.Blightcaller ? SiegeSpell.Douse
              : kind == SiegeKind.Warbringer ? SiegeSpell.Rally
-             : kind == SiegeKind.Weaver ? SiegeSpell.Weave
-             : kind == SiegeKind.Thief ? SiegeSpell.Snatch
              : SiegeSpell.Smite;
 
         /// <summary>
@@ -1135,8 +1341,7 @@ namespace GlimmerGrove.Modes
         public static bool AimsAtAWard(SiegeKind kind)
         {
             var craft = SpellOf(kind);
-            return craft != SiegeSpell.Rally && craft != SiegeSpell.Weave
-                && craft != SiegeSpell.Snatch;
+            return craft != SiegeSpell.Rally;
         }
 
         /// <summary>What a boss is called, for a message. Never shown to a player.</summary>
@@ -1146,8 +1351,7 @@ namespace GlimmerGrove.Modes
                 if (SiegeLayout.BossNames[i].Kind == kind) return SiegeLayout.BossNames[i].Name;
 
             return kind == SiegeKind.Bulwark ? "bulwark"
-                 : kind == SiegeKind.Weaver ? "weaver"
-                 : kind == SiegeKind.Thief ? "thief"
+                 : kind == SiegeKind.Bomber ? "bomber"
                  : kind == SiegeKind.Brute ? "brute" : "creeper";
         }
 
@@ -1157,8 +1361,7 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Boss ? BossHealth
              : kind == SiegeKind.Blightcaller ? BlightHealth
              : kind == SiegeKind.Bulwark ? BulwarkHealth
-             : kind == SiegeKind.Weaver ? WeaverHealth
-             : kind == SiegeKind.Thief ? ThiefHealth
+             : kind == SiegeKind.Bomber ? BomberHealth
              : kind == SiegeKind.Brute ? BruteHealth : CreeperHealth;
 
         public static float MarchOf(SiegeKind kind)
@@ -1167,8 +1370,7 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Boss ? BossMarch
              : kind == SiegeKind.Blightcaller ? BlightMarch
              : kind == SiegeKind.Bulwark ? BulwarkMarch
-             : kind == SiegeKind.Weaver ? WeaverMarch
-             : kind == SiegeKind.Thief ? ThiefMarch
+             : kind == SiegeKind.Bomber ? BomberMarch
              : kind == SiegeKind.Brute ? BruteMarch : CreeperMarch;
 
         /// <summary>Seconds between one spell and the next, for whichever boss this is.</summary>
@@ -1198,8 +1400,9 @@ namespace GlimmerGrove.Modes
         /// exception, and holding the middle is what it was changed back to.
         /// </summary>
         public static int BlowOf(SiegeKind kind)
-            => IsBoss(kind) || HoldsTheField(kind) ? 0
+            => IsBoss(kind) ? 0
              : kind == SiegeKind.Bulwark ? BulwarkBlow
+             : kind == SiegeKind.Bomber ? BomberBlow
              : kind == SiegeKind.Brute ? BruteBlow : CreeperBlow;
 
         /// <summary>How far down the hill this kind comes before it stops. A boss stops early.</summary>
@@ -1208,8 +1411,7 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Warbringer ? WarbringerHold
              : kind == SiegeKind.Boss ? BossHold
              : kind == SiegeKind.Blightcaller ? BlightHold
-             : kind == SiegeKind.Weaver ? WeaverHold
-             : kind == SiegeKind.Thief ? ThiefHold : 1f;
+             : 1f;
 
         /// <summary>
         /// Whether this boss can bring a ward down at all, given long enough.

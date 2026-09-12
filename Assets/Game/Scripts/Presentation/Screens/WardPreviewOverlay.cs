@@ -28,6 +28,12 @@ namespace GlimmerGrove
     /// worse than none.
     /// </para>
     /// <para>
+    /// <b>Everything here is asked about the seat that raised it.</b> A turret is bought for one
+    /// colour rather than for the line (<c>WardHolding</c>), so the same panel over the same
+    /// turret is a purchase on blue and an EQUIP on red — which is why <see cref="Colour"/> is
+    /// handed in rather than looked up, and why the stage behind the button fires in it.
+    /// </para>
+    /// <para>
     /// <b>The button says the game's own words rather than a new set.</b> This panel is one tap in
     /// front of a shelf whose cells already read "Stand here" and "On the line", so a second
     /// vocabulary for the same two actions would be the panel disagreeing with what raised it. An
@@ -58,7 +64,12 @@ namespace GlimmerGrove
         /// <summary>Raised after anything lands, so the shelf behind can repaint.</summary>
         public Action Changed { get; set; }
 
-        const float PanelW = 880f, PanelH = 1240f;
+        /// <summary>
+        /// <b>Its height is derived from the last band rather than typed</b>, so adding one is a
+        /// band and not two numbers that have to be kept in step — which is how a panel comes to
+        /// draw its own button off the bottom edge.
+        /// </summary>
+        const float PanelW = 880f, PanelH = ActTop + ActH + 118f;
 
         /// <summary>
         /// The stage's own box, and the cell its contents are multiples of.
@@ -86,7 +97,31 @@ namespace GlimmerGrove
         const float NoteTop = 120f, NoteH = 110f, NoteMid = NoteTop + NoteH * .5f;
         const float StatusTop = 240f, StatusH = 44f, StatusMid = StatusTop + StatusH * .5f;
         const float StageTop = 300f, StageMid = StageTop + StageH * .5f;
-        const float ActH = 124f, ActTop = 998f, ActMid = ActTop + ActH * .5f;
+
+        /// <summary>
+        /// What it hits for and what it can take, under the stage.
+        ///
+        /// <b>Below the thing firing rather than above it</b>, because the order a player reads
+        /// this panel in is what it looks like, then what it does, then what it costs — and the
+        /// figures are the last question, asked once the effect has been watched. The band is
+        /// <see cref="WardStatBars.Height"/> and never a number typed twice.
+        /// </summary>
+        const float StatTop = StageTop + StageH + 24f;
+        const float StatMid = StatTop + WardStatBars.Height * .5f;
+
+        /// <summary>
+        /// The upgrade ladder, under the figures it moves.
+        ///
+        /// <b>Directly under the bars on purpose.</b> A star is bought for what it does to those
+        /// two numbers, so the thing being paid for and the thing it changes are read in one
+        /// glance — a ladder above the description would be a decoration on a card instead.
+        /// </summary>
+        const float StarsH = 62f;
+        const float StarsTop = StatTop + WardStatBars.Height + 10f;
+        const float StarsMid = StarsTop + StarsH * .5f;
+
+        const float ActH = 124f, ActTop = StarsTop + StarsH + 22f;
+        const float ActMid = ActTop + ActH * .5f;
 
         // The panel is parchment, so it is written in ink rather than in the cream the board uses
         // — `WardBuyOverlay`'s note, and the same measured accents.
@@ -95,10 +130,14 @@ namespace GlimmerGrove
         static readonly Color Held = new Color(.18f, .42f, .21f);
 
         Text _status;
+        WardStatBars _bars;
+        RectTransform _ladder;
         Btn _act;
         Text _label;
         Image _coin;
+        Image _pill;
         float _lift;
+
 
         protected override void Build()
         {
@@ -121,6 +160,16 @@ namespace GlimmerGrove
                                   new Vector2(0f, -StatusMid));
 
             BuildStage(panel);
+
+            // What it hits for and what it can take. Built once: a turret's figures are its
+            // model's and do not move when a balance does, so this is deliberately not in
+            // `Paint`.
+            // **Kept rather than drawn and forgotten.** It was a one-shot builder, so the bars
+            // never carried a turret's stars and never moved when one was bought — `Paint` writes
+            // them now, which is also what makes an upgrade visible the instant it lands.
+            _bars = WardStatBars.Build(panel, StatMid, PanelW - 150f, Ink);
+
+            _ladder = UIKit.Node("Ladder", panel);
             BuildButton(panel);
             Paint();
 
@@ -131,6 +180,7 @@ namespace GlimmerGrove
             PlayerProgression.Changed += Paint;
             WardLedger.Changed += Paint;
             WardLoadout.Changed += Paint;
+            WardStarLedger.Changed += Paint;
         }
 
         void OnDestroy()
@@ -138,6 +188,7 @@ namespace GlimmerGrove
             PlayerProgression.Changed -= Paint;
             WardLedger.Changed -= Paint;
             WardLoadout.Changed -= Paint;
+            WardStarLedger.Changed -= Paint;
         }
 
         void BuildStage(RectTransform panel)
@@ -160,10 +211,13 @@ namespace GlimmerGrove
 
         void BuildButton(RectTransform panel)
         {
-            // Orange, which is this kit's "do the thing" pill (`Skins.Buy`) - the gold one it
-            // wore is the hub's battle key and reads as a different kind of control.
-            _act = UIKit.Button("Act", panel, Art.S("Ui/" + Skins.Buy), new Vector2(480f, ActH),
+            // Orange, which is this kit's price pill - the gold one it wore is the hub's battle
+            // key and reads as a different kind of control. `Paint` swaps it for `Skins.Settled`
+            // on the one state that is not an offer, so this is only the starting skin.
+            _act = UIKit.Button("Act", panel, Art.S("Ui/" + Skins.Affirm), new Vector2(480f, ActH),
                                 new Vector2(.5f, 1f), new Vector2(0f, -ActMid), Act);
+
+            _pill = _act.GetComponent<Image>();
 
             _lift = ActH * UIKit.PillFaceLift;
 
@@ -186,6 +240,78 @@ namespace GlimmerGrove
         /// </summary>
         const float PriceShift = 18f;
 
+        /// <summary>
+        /// Repaints the pill.
+        ///
+        /// <b><c>"Ui/"</c> because a skin name is a name, not an address.</b> `UIKit.Button` adds
+        /// the folder for its callers, so the bare names in <see cref="Skins"/> normally only ever
+        /// reach <c>Art.S</c> through it - and a name handed over without the prefix has no
+        /// location, so it resolves to nothing and the button draws as a **white rectangle**
+        /// rather than as a missing decoration (invariant 7b). `LeaderboardScreen.Skin` and
+        /// `StreakScreen.Skin` write it the same way, for the same reason and after the same bug.
+        /// </summary>
+        void Skin(string skin)
+        {
+            if (_pill != null) _pill.sprite = Art.S("Ui/" + skin);
+        }
+
+        /// <summary>
+        /// The glyph beside a price.
+        ///
+        /// <b>The coin is a reel, not a sprite</b> — credits have no still picture in this UI,
+        /// only the <c>Ui/Coin</c> flipbook, so clearing the sprite for a credit price would leave
+        /// an <c>Image</c> with none, which is a white rectangle rather than a coin (invariant 7b).
+        /// Said once because two branches draw a price now: buying the turret, and buying its next
+        /// star.
+        /// </summary>
+        void Coin(bool gems = false)
+        {
+            if (_coin == null) return;
+
+            if (gems) _coin.sprite = Art.S("Ui/ic_gem");
+            else Flipbook.Attach(_coin, "Ui/Coin", 11f);
+        }
+
+        /// <summary>
+        /// The upgrade ladder, rebuilt on every repaint.
+        ///
+        /// <b>Rebuilt rather than rebound</b>, which is the exception invariant 16k allows: it is
+        /// five images with no animation and no state of its own, so there is nothing for a bind
+        /// to restart and nothing for a player to see snap back. Anything that breathed or played
+        /// a reel would have to be adopted instead.
+        /// </summary>
+        /// <summary>The turret this panel is about, as it stands on this seat.</summary>
+        WardBuild Stood => WardStarLedger.BuildOf(Model, WardLine.Colours[Colour]);
+
+        void PaintLadder()
+        {
+            if (_ladder == null) return;
+
+            for (int i = _ladder.childCount - 1; i >= 0; i--)
+                Destroy(_ladder.GetChild(i).gameObject);
+
+            // Only for a turret this seat holds: a ladder over one that is still for sale reads as
+            // a promise about what buying it gives you.
+            if (!WardLedger.IsHeld(Model, WardLine.Colours[Colour])) return;
+
+            WardStarRow.Build(_ladder, new Vector2(0f, -StarsMid),
+                              WardStarLedger.StarsOf(Model, WardLine.Colours[Colour]), 44f);
+        }
+
+        /// <summary>
+        /// A turret's own name, from its id.
+        ///
+        /// Only ever asked about <see cref="WardOffer.Needs"/>, which carries an id because a name
+        /// is a loc key and Domain may not reach for one. An id the roster no longer knows draws
+        /// an empty name rather than the id itself, because an id is not player-facing text
+        /// (invariant 6).
+        /// </summary>
+        static string NameOf(string id)
+        {
+            var model = WardLedger.Catalog.Find(id);
+            return model == null ? string.Empty : Loc.Get(model.NameKey);
+        }
+
         /// <summary>Whether this turret is the one already standing on the colour that raised this.</summary>
         bool Standing
         {
@@ -200,14 +326,51 @@ namespace GlimmerGrove
         {
             if (this == null || Model == null || _act == null) return;
 
-            var offer = WardLedger.OfferFor(Model, PlayerProgression.Level.Level);
+            var offer = WardLedger.OfferFor(Model, Colour, PlayerProgression.Level.Level);
+            var rise = WardUpgrade.OfferFor(Model, Colour);
+
+            PaintLadder();
+
+            // The figures a player actually plays with, stars and all — and rewritten on every
+            // repaint, so buying a star moves them where the player is looking.
+            _bars?.Set(Stood, WardLedger.Catalog);
 
             _coin.enabled = false;
             Flipbook.Detach(_coin);
 
+            // Reset before the switch rather than in three of its four branches: `Paint` runs
+            // again after a purchase and after a turret is stood, so a skin left from the last
+            // pass is a live-looking key on the next turret opened.
+            //
+            // **The reset is the refusals' colour, not the affirmative's.** The three walls and
+            // the EQUIP key fall through to it, and a green wall reads as a key that will do
+            // something — so the branches that really do something say so (`Skins.Affirm`) and
+            // everything else keeps the orange it already had.
+            Skin(Skins.Buy);
+
             switch (offer.State)
             {
                 case WardPurchaseState.AlreadyHeld:
+                    // **A held turret's button sells the next star, and only falls back to
+                    // standing it when there is none left to sell.** The panel is one tap from the
+                    // shelf and the shelf already says which turret is on the line, so the useful
+                    // thing to offer somebody looking at a turret they own is the thing they can
+                    // still buy for it.
+                    if (rise.State == WardUpgradeState.Ready
+                        || rise.State == WardUpgradeState.Short)
+                    {
+                        // **The word rather than the price**, because this button no longer buys
+                        // anything: it opens the panel that shows what the star is worth, and a
+                        // key that reads as a price while it only opens a door is a key that has
+                        // charged somebody by the time they find out.
+                        _status.text = Loc.Format("ui.loadout.upgrade_note", rise.Star);
+                        _status.color = Held;
+
+                        _label.text = Loc.Get("ui.loadout.upgrade");
+                        Skin(Skins.Affirm);
+                        break;
+                    }
+
                     // **Two different answers, and the difference is the whole reason a held turret
                     // now opens a panel at all.** One is an action and one is a statement of where
                     // things already stand.
@@ -217,6 +380,22 @@ namespace GlimmerGrove
                     _status.color = Held;
 
                     _label.text = Loc.Get(Standing ? "ui.loadout.standing" : "ui.loadout.stand");
+
+                    // **The one state that is not an offer wears the one pill that is not one.**
+                    // EQUIPPED pays nothing, moves nothing and only closes the panel, so on the
+                    // price pill it shouted as loudly as a nine-thousand-credit turret and the
+                    // two states a player is really choosing between were drawn identically.
+                    if (Standing) Skin(Skins.Settled);
+                    break;
+
+                case WardPurchaseState.Sealed:
+                    // **The rung the shelf is standing on, named**, because it is the one refusal
+                    // of the three that a player can act on this minute — and the button says the
+                    // same thing rather than a price they cannot pay yet, since a live-looking key
+                    // over a wall is worse than a plain one.
+                    _status.text = Loc.Format("ui.loadout.sealed_note", NameOf(offer.Needs));
+                    _status.color = Short;
+                    _label.text = Loc.Get("ui.loadout.sealed");
                     break;
 
                 case WardPurchaseState.LevelLocked:
@@ -243,12 +422,8 @@ namespace GlimmerGrove
                     _label.text = offer.Cost.ToString("N0");
                     _coin.enabled = true;
 
-                    // **The coin is a reel, not a sprite** — credits have no still picture in this
-                    // UI, only the `Ui/Coin` flipbook, so clearing the sprite for a credit price
-                    // would leave an `Image` with none, which is a white rectangle rather than a
-                    // coin (invariant 7b).
-                    if (gems) _coin.sprite = Art.S("Ui/ic_gem");
-                    else Flipbook.Attach(_coin, "Ui/Coin", 11f);
+                    Skin(Skins.Affirm);
+                    Coin(gems);
                     break;
             }
 
@@ -267,10 +442,35 @@ namespace GlimmerGrove
         /// </summary>
         void Act()
         {
-            var offer = WardLedger.OfferFor(Model, PlayerProgression.Level.Level);
+            var offer = WardLedger.OfferFor(Model, Colour, PlayerProgression.Level.Level);
 
             if (offer.State == WardPurchaseState.AlreadyHeld)
             {
+                // **The star first, because that is what the button was offering.** `Paint` puts
+                // a price on this button whenever there is a star left to buy, so acting on
+                // anything else here would be the button doing something other than what it says.
+                var rise = WardUpgrade.OfferFor(Model, Colour);
+
+                if (rise.State == WardUpgradeState.Ready || rise.State == WardUpgradeState.Short)
+                {
+                    // **A panel of its own, because an upgrade is a decision with a number on
+                    // either side of it.** What a star costs is one figure and what it buys is
+                    // two more, and a player deciding needs all three at once — on this panel they
+                    // would be a fourth thing under a stage, a description and a status line.
+                    var turret = Model;
+                    int seat = Colour;
+                    var after = Changed;
+
+                    Flow.Modal<WardUpgradeOverlay>(v =>
+                    {
+                        v.Model = turret;
+                        v.Colour = seat;
+                        v.Changed = after;
+                    });
+
+                    return;
+                }
+
                 if (Standing) { Close(); return; }
 
                 // **A mechanism rather than a bell**, which is the shelf's own note: standing a
@@ -288,7 +488,8 @@ namespace GlimmerGrove
             }
 
             if (offer.State == WardPurchaseState.NotForSale
-                || offer.State == WardPurchaseState.LevelLocked)
+                || offer.State == WardPurchaseState.LevelLocked
+                || offer.State == WardPurchaseState.Sealed)
             {
                 Close();
                 return;
@@ -302,19 +503,50 @@ namespace GlimmerGrove
                 return;
             }
 
-            if (!WardLedger.TryBuy(Model, PlayerProgression.Level.Level))
+            if (!WardLedger.TryBuy(Model, Colour, PlayerProgression.Level.Level))
             {
                 Audio.Sfx("blocked", .45f);
                 return;
             }
 
-            // **Bought, and then still here.** The panel does not close on a purchase: what the
-            // player just paid for is the thing on the stage behind this button, and closing over
-            // it would hide the one moment it is worth watching. The button becomes STAND HERE,
-            // which is the next thing they want anyway.
-            Audio.Sfx("unlock", .6f);
+            // **Bought, and then it gets out of the way.** This panel used to stay open and
+            // celebrate in place — the price pill became EQUIP, waves left the turret, confetti
+            // fell — on the argument that what was paid for is the thing firing behind the
+            // button. Played, that read as a flourish on a shop panel rather than as an unlock,
+            // which is the note `CompanionUnlockOverlay` already carries about its own history:
+            // a transaction panel is the wrong place for a payoff, because it is still wearing
+            // the furniture of a decision the player has already made. `WardRevealOverlay` is
+            // the payoff, and it ends on EQUIP so nobody has to come back here for it.
+            //
+            // The coin is the money leaving; what the turret arriving sounds like belongs to the
+            // ceremony about to play it — `HomesteadBuyOverlay`'s split, for its reason.
+            Audio.Sfx("coin", .6f);
+
             Changed?.Invoke();
-            Paint();
+
+            var model = Model;
+            int colour = Colour;
+            var changed = Changed;
+
+            Close(() =>
+            {
+                // **The scope has to be given up by hand, here, and the ordering is why.**
+                // `Flow.Dismiss` calls `Object.Destroy`, which lands at the end of the frame —
+                // so this panel's `OnDestroy`, and with it `WardFiringStage`'s
+                // `ReleaseScope`, runs *after* the line below has already built the reveal and
+                // asked for the same turret. `EnsureScopeAsync` leaves an address another scope
+                // owns alone (invariant 7b), so the reveal would claim none of these and then
+                // watch them freed underneath it a moment later — a turret that draws for one
+                // frame of the loudest moment in the feature and then does not.
+                AssetLibrary.ReleaseScope(PreviewScope);
+
+                Flow.Modal<WardRevealOverlay>(v =>
+                {
+                    v.Model = model;
+                    v.Colour = colour;
+                    v.Changed = changed;
+                });
+            }, quiet: true);
         }
     }
 }

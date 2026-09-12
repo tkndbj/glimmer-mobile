@@ -192,7 +192,14 @@ namespace GlimmerGrove.EditorTools
             ("/Art/Companions/", 512),  // portraits, drawn at 320
             ("/Art/Critters/", 256),    // flipbook frames, drawn small and there are many
             ("/Art/Prism/", 512),       // Prismvale: its floor, its gems, its lanterns and its cast
-            ("/Art/Siege/", 512),       // Thornwatch: its hill, its ward line, its gems and the raid
+            // **The hill before the rest of the folder, because the loop takes the first match.**
+            // A ground is not a prop: it is the single biggest thing on a siege screen, drawn about
+            // 1190 across on a phone, and at the folder's own 512 it imported at 410x512 and was
+            // blown up 2.55x - which is half of what "the tiles look low quality" was (the other
+            // half was the stretch, see `SiegeView.Ground`). A chapter holds ten of these resident
+            // at once (`SiegeMode.ArtFor`), which is why this is 1024 and not a backdrop's 2048.
+            ("/Art/Siege/hill", 1024),
+            ("/Art/Siege/", 512),       // Thornwatch: its ward line, its gems and the raid
             ("/Art/Fx/", 512),          // explosions, drawn at ~2 cells and mostly soft
             ("/Art/Ui/", 1024),
         };

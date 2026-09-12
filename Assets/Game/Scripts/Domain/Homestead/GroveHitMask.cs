@@ -109,9 +109,12 @@ namespace GlimmerGrove.Homestead
         ///
         /// <para>
         /// <paramref name="u"/> runs 0 to 1 left to right and <paramref name="v"/> 0 to 1
-        /// <em>top to bottom</em>, matching the encoding. A mirrored piece is asked with
-        /// <paramref name="flipped"/> rather than with a second mask, because a flip is the
-        /// one transform this grove offers and it is exactly a reflection of <c>u</c>.
+        /// <em>top to bottom</em>, matching the encoding. There is no facing argument: a
+        /// facing is a different <em>picture</em> now rather than a reflection, so each one
+        /// carries a mask of its own and the caller asks the mask for the facing it is
+        /// drawing (<see cref="HomesteadPiece.Hit"/>). This used to take a `flipped` flag and
+        /// mirror <c>u</c>, which was exactly right while a flip was the only transform a flat
+        /// cut-out could survive.
         /// </para>
         /// <para>
         /// The tolerance is a distance in the same fractions — the caller converts a finger's
@@ -121,10 +124,9 @@ namespace GlimmerGrove.Homestead
         /// with no mask falls back to being its box.
         /// </para>
         /// </summary>
-        public bool Hits(float u, float v, bool flipped, float toleranceU = 0f, float toleranceV = 0f)
+        public bool Hits(float u, float v, float toleranceU = 0f, float toleranceV = 0f)
         {
             if (!IsSet) return true;
-            if (flipped) u = 1f - u;
 
             int x0 = (int)Math.Floor((u - toleranceU) * Cols), x1 = (int)Math.Floor((u + toleranceU) * Cols);
             int y0 = (int)Math.Floor((v - toleranceV) * Rows), y1 = (int)Math.Floor((v + toleranceV) * Rows);

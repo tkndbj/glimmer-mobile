@@ -1,0 +1,130 @@
+# The grove's pieces: which model each one is rendered from, and what it costs.
+#
+# columns, tab separated:
+#   model     pack:path/to/model   — no extension. Several parts joined by `+`;
+#                                    see grove_roster.Row.parts for why they are
+#                                    spelled out rather than inferred.
+#   id        the permanent piece id. It is written into save files twice over — into
+#             the stock and into every tile holding one — so it never changes
+#             (invariant 1). Re-pointing an id at a different model is fine and
+#             expected; renaming one empties the tiles of everybody who placed it.
+#   shelf     which tab of the shop sells it. One of HomesteadSlotKind's names.
+#   cost      credits. A piece a grove holds is worth this, and a grove's worth reaches
+#             a public leaderboard, so it is an economy number rather than a label.
+#   bundle    copies one purchase grants. Must divide `cost` exactly (invariant 16h).
+#   facings   1 or 4. Four for anything with a front — a house, a cart, a gate. One for
+#             anything a quarter turn would not change, because four facings is four
+#             times the download and a barrel does not need it.
+#   cols/rows tiles it OCCUPIES, as drawn. Not what it paints: a pine is wider than a
+#             cottage and stands on one tile, because a tree's footprint is its trunk
+#             (invariant 16i). Sides are 1..4 (GroveFootprint.MaxSide).
+#   name      the English string, written to loc/en.json as ui.piece.<id>.
+#
+# WHAT IS NOT HERE, AND MUST NOT BE. No `scale` and no `lift`. Both used to be typed
+# per piece because the art was cut from a flat sheet and nothing could know how big the
+# thing was or where its feet were. A rendered model knows both exactly, so both are
+# measured by make_grove_art.py and written into homestead.json by import_grove_art.py.
+# A number that can be measured is never typed.
+#
+# ONE PACK, ON PURPOSE. Everything here is the KayKit Medieval Hexagon Pack. The forest
+# and dungeon packs were surveyed and left out — not for quality but for register: their
+# trees are bright and round where these are dark and faceted, and a village furnished
+# from two hands reads as two games (invariant 7c, and the interface kit's own rule that
+# furniture and goods come from one hand). A second pack is a column here when one is
+# wanted, which is the whole point of the roster.
+#
+# THE HOME LADDER IS NOT IN THIS FILE. A dwelling is not decor — exactly one stands, on
+# the hall's own tile, and the best one owned is the one drawn — so it lives in
+# grove_roster.DWELLINGS where its tiers are visible in one place.
+# ----------------------------------------------------------------- structure
+hex:buildings/neutral/building_destroyed	ruin	structure	1200	1	4	4	3	Ruined House	1.00
+hex:buildings/green/building_home_A_green	house_small_green	structure	1400	1	4	2	2	Green Cottage	1.00
+hex:buildings/red/building_home_A_red	house_small_red	structure	1400	1	4	2	2	Red Cottage	1.00
+hex:buildings/yellow/building_home_A_yellow	house_small_yellow	structure	1400	1	4	2	2	Gold Cottage	1.00
+hex:buildings/neutral/building_scaffolding	scaffold	structure	1600	1	4	4	4	Scaffolding	1.00
+hex:buildings/blue/building_well_blue	village_well	structure	1800	1	4	2	2	Stone Well	1.00
+hex:buildings/green/building_home_B_green	house_large_green	structure	2200	1	4	2	3	Green Farmhouse	1.00
+hex:buildings/red/building_home_B_red	house_large_red	structure	2200	1	4	2	3	Red Farmhouse	1.00
+hex:buildings/yellow/building_home_B_yellow	house_large_yellow	structure	2200	1	4	2	3	Gold Farmhouse	1.00
+hex:buildings/neutral/building_stage_B	stage_long	structure	2400	1	4	3	3	Long Stage	1.00
+hex:buildings/neutral/building_stage_A	stage_round	structure	2400	1	4	3	2	Round Stage	1.00
+hex:buildings/neutral/building_stage_C	stage_tiered	structure	2600	1	4	3	3	Tiered Stage	1.00
+hex:buildings/green/building_tower_base_green	watchtower	structure	4000	1	4	2	3	Watchtower	1.00
+hex:buildings/red/building_tower_A_red+building_tower_A_red_building_tower_A_top_red	tower_stone	structure	5000	1	4	2	3	Stone Tower	1.0
+hex:buildings/yellow/building_tower_B_yellow+building_tower_B_yellow_building_tower_B_top_yellow	tower_round	structure	5000	1	4	2	3	Round Tower	1.0
+hex:buildings/green/building_lumbermill_green+building_lumbermill_green_building_lumbermill_saw_green+building_lumbermill_green_building_lumbermill_top_green	sawmill	structure	5500	1	4	3	3	Sawmill	1.00
+hex:buildings/green/building_blacksmith_green	smithy	structure	6000	1	4	3	3	Smithy	1.00
+hex:buildings/blue/building_watermill_blue+building_watermill_blue_building_watermill_wheel_blue	watermill	structure	6500	1	4	3	3	Watermill	1.00
+hex:buildings/red/building_windmill_red+building_windmill_red_building_windmill_top_red+building_windmill_red_building_windmill_top_red_building_windmill_top_fan_red	windmill	structure	6500	1	4	3	2	Windmill	1.00
+hex:buildings/yellow/building_market_yellow	market	structure	7000	1	4	4	3	Market Stalls	1.00
+hex:buildings/red/building_mine_red	mine	structure	7500	1	4	4	4	Mine Head	1.00
+hex:buildings/yellow/building_archeryrange_yellow	archery	structure	8000	1	4	4	4	Archery Range	1.00
+hex:buildings/blue/building_tavern_blue	tavern	structure	8500	1	4	3	3	Tavern	1.0
+hex:buildings/red/building_church_red	church	structure	9000	1	4	3	3	Chapel	1.00
+hex:buildings/yellow/building_tower_catapult_yellow+building_tower_catapult_yellow_catapult_turret_yellow+building_tower_catapult_yellow_catapult_turret_yellow_catapult_arm_yellow	catapult	structure	9500	1	4	2	3	Catapult Tower	1.00
+# -------------------------------------------------------------------- canopy
+hex:decoration/nature/tree_single_B_cut	fir_stump	canopy	200	10	4	1	1	Fir Stump	1.00
+hex:decoration/nature/tree_single_A_cut	pine_stump	canopy	200	10	4	1	1	Pine Stump	1.00
+hex:decoration/nature/tree_single_A	pine_tree	canopy	700	10	4	1	1	Pine	1.00
+hex:decoration/nature/tree_single_B	fir	canopy	800	10	4	1	1	Fir	1.00
+hex:decoration/nature/trees_B_cut	clearing_fir	canopy	900	1	4	4	4	Fir Clearing	1.00
+hex:decoration/nature/trees_A_cut	clearing_pine	canopy	900	1	4	4	4	Pine Clearing	1.00
+hex:decoration/nature/trees_B_small	fir_copse	canopy	1500	1	4	3	3	Fir Copse	1.00
+hex:decoration/nature/trees_A_small	pine_copse	canopy	1500	1	4	4	4	Pine Copse	1.00
+hex:decoration/nature/trees_B_medium	fir_stand	canopy	2400	1	4	4	4	Fir Stand	1.00
+hex:decoration/nature/trees_A_medium	pine_stand	canopy	2400	1	4	4	4	Pine Stand	1.00
+hex:decoration/nature/trees_B_large	fir_wood	canopy	3400	1	4	4	4	Fir Wood	1.00
+hex:decoration/nature/trees_A_large	pine_wood	canopy	3400	1	4	4	4	Pine Wood	1.00
+# ----------------------------------------------------------------------- bed
+hex:decoration/props/sack	grain_sack	bed	120	10	4	1	1	Grain Sack	1.00
+hex:decoration/props/pallet	pallet	bed	140	10	4	1	1	Pallet	1.00
+hex:decoration/nature/waterlily_A	lily_broad	bed	150	10	1	1	1	Broad Lily	1.00
+hex:decoration/nature/waterlily_B	lily_split	bed	150	10	1	1	1	Split Lily	1.00
+hex:decoration/nature/waterplant_A	reeds	bed	180	10	1	1	1	Reeds	1.00
+hex:decoration/nature/waterplant_B	rush	bed	180	10	1	1	1	Rush	1.00
+hex:decoration/nature/waterplant_C	cattails	bed	220	10	1	1	1	Cattails	1.00
+hex:decoration/props/resource_lumber	lumber_pile	bed	320	10	4	2	1	Lumber Pile	1.00
+hex:decoration/props/resource_stone	stone_pile	bed	320	10	4	1	1	Stone Pile	1.00
+# ---------------------------------------------------------------------- edge
+hex:decoration/props/flag_blue	pennant_blue	edge	250	10	4	1	1	Blue Banner	1.00
+hex:decoration/props/flag_green	pennant_green	edge	250	10	4	1	1	Green Banner	1.00
+hex:decoration/props/flag_red	pennant_red	edge	250	10	4	1	1	Red Banner	1.00
+hex:decoration/props/flag_yellow	pennant_gold	edge	250	10	4	1	1	Gold Banner	1.00
+hex:buildings/neutral/fence_wood_straight	fence_wood	edge	300	10	4	1	3	Timber Fence	1.00
+hex:buildings/neutral/fence_stone_straight	fence_stone	edge	400	10	4	1	3	Stone Fence	1.00
+hex:buildings/neutral/fence_wood_straight_gate+fence_wood_straight_gate_fence_wood_straight_door	fence_wood_gate	edge	400	10	4	1	3	Timber Gate	1.00
+hex:buildings/neutral/fence_stone_straight_gate+fence_stone_straight_gate_fence_stone_straight_door	fence_stone_gate	edge	500	10	4	1	3	Stone Gate	1.00
+hex:buildings/neutral/wall_straight	wall	edge	900	10	4	3	1	Curtain Wall	0.65
+hex:buildings/neutral/wall_corner_A_inside	wall_bend	edge	900	10	4	3	2	Wall Bend	0.65
+hex:buildings/neutral/wall_corner_A_outside	wall_corner	edge	900	10	4	3	2	Wall Corner	0.65
+hex:buildings/neutral/wall_corner_B_inside	wall_elbow	edge	900	10	4	2	2	Wall Elbow	0.65
+hex:buildings/neutral/wall_corner_B_outside	wall_turn	edge	900	10	4	2	2	Wall Turn	0.65
+hex:buildings/neutral/wall_straight_gate+wall_straight_gate_door_left+wall_straight_gate_door_right	wall_gate	edge	1200	10	4	3	1	Wall Gate	0.65
+hex:buildings/neutral/wall_corner_A_gate+wall_corner_A_gate_door_left+wall_corner_A_gate_door_right	wall_barbican	edge	1500	10	4	3	2	Barbican	0.65
+# ---------------------------------------------------------------------- path
+hex:buildings/neutral/building_bridge_B	bridge_span	path	3000	1	4	2	3	Arched Bridge	0.65
+hex:buildings/neutral/building_bridge_A	bridge_stone	path	3000	1	4	2	3	Stone Bridge	0.65
+# -------------------------------------------------------------------- ground
+hex:decoration/props/bucket_empty	bucket	ground	80	10	1	1	1	Bucket	1.00
+hex:decoration/props/bucket_water	bucket_water	ground	90	10	1	1	1	Water Bucket	1.00
+hex:decoration/props/crate_A_small	crate_small	ground	90	10	1	1	1	Small Crate	1.00
+hex:decoration/props/crate_B_small	chest_small	ground	100	10	1	1	1	Banded Box	1.00
+hex:decoration/nature/rock_single_D	fieldstone	ground	100	10	1	1	1	Field Stone	1.00
+hex:decoration/nature/rock_single_A	boulder	ground	110	10	1	1	1	Boulder	1.00
+hex:decoration/props/crate_long_empty	crate_empty	ground	110	10	4	1	1	Empty Crate	1.00
+hex:decoration/nature/rock_single_B	stone_slab	ground	110	10	1	1	1	Stone Slab	1.00
+hex:decoration/props/barrel	barrel	ground	120	10	1	1	1	Barrel	1.00
+hex:decoration/props/crate_A_big	crate_big	ground	120	10	1	1	1	Big Crate	1.00
+hex:decoration/nature/rock_single_C	crag	ground	130	10	1	1	1	Crag	1.00
+hex:decoration/props/crate_B_big	chest_big	ground	140	10	1	1	1	Banded Crate	1.00
+hex:decoration/nature/rock_single_E	twin_stones	ground	140	10	1	1	1	Twin Stones	1.00
+hex:decoration/props/ladder	step_ladder	ground	150	10	4	1	1	Ladder	1.00
+hex:decoration/props/crate_open	crate_open	ground	160	10	4	1	1	Open Crate	1.00
+hex:decoration/props/crate_long_C	crate_bread	ground	180	10	4	1	1	Baker's Crate	1.00
+hex:decoration/props/crate_long_B	crate_produce	ground	180	10	4	1	1	Crate of Produce	1.00
+hex:decoration/props/crate_long_A	crate_wares	ground	180	10	4	1	1	Crate of Wares	1.00
+hex:decoration/props/bucket_arrows	quiver	ground	200	10	1	1	1	Arrow Bucket	1.00
+hex:decoration/props/target	target	ground	300	10	4	1	1	Archery Butt	1.00
+hex:decoration/props/wheelbarrow	wheelbarrow	ground	350	10	4	1	1	Wheelbarrow	1.00
+hex:decoration/props/weaponrack	weapon_rack	ground	400	10	4	1	1	Weapon Rack	1.00
+hex:decoration/props/tent	market_table	ground	900	10	4	1	1	Market Table	1.00

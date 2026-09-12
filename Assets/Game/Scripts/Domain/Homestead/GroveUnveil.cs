@@ -116,9 +116,6 @@ namespace GlimmerGrove.Homestead
             /// </summary>
             public bool HasConfetti => Tier >= 4;
 
-            /// <summary>A struck seal on the name plate. See <see cref="HasConfetti"/>.</summary>
-            public bool HasSeal => Tier >= 4;
-
             public Fanfare(int tier, int rays, int aurora, int shockwaves, int sparks,
                            float flash, float hold)
             {
@@ -150,8 +147,19 @@ namespace GlimmerGrove.Homestead
         /// quietly wrong the first time somebody retunes a beat, which is <c>Cue</c>'s whole
         /// argument about absolute delays drifting apart.
         /// </para>
+        /// <para>
+        /// <b>The plate was at .62 and every hold was a fifth shorter, and playing it said
+        /// that was too quick.</b> The reasoning behind the short version was sound and is
+        /// still in the ceiling above — a ceremony seen a hundred and fifty times must not be
+        /// waited out — but it was reasoned about rather than watched, and what it produced was
+        /// a piece that landed .18s before its own name and a finished picture held for under a
+        /// second. The whole thing now sits between 2.2 and 2.8 seconds against a ceiling of
+        /// three, and the tap-to-leave that has always been there is what makes the longer hold
+        /// safe: a player who has seen it stops it, and one who has not gets to look at what
+        /// they bought.
+        /// </para>
         /// </summary>
-        public const float PlateAt = .62f, Outro = .24f;
+        public const float PlateAt = .88f, Outro = .24f;
 
         /// <summary>How long this tier's ceremony takes, start to finish.</summary>
         public static float Seconds(int tier) => PlateAt + FanfareOf(tier).Hold + Outro;
@@ -159,11 +167,11 @@ namespace GlimmerGrove.Homestead
         static readonly Fanfare[] Table =
         {
             //           tier rays aurora waves sparks flash hold
-            new Fanfare(  1,   8,    0,     1,    12,   .18f, .80f),
-            new Fanfare(  2,  10,    2,     1,    16,   .26f, 1.00f),
-            new Fanfare(  3,  12,    2,     2,    22,   .36f, 1.25f),
-            new Fanfare(  4,  14,    3,     2,    28,   .50f, 1.50f),
-            new Fanfare(  5,  18,    3,     3,    36,   .70f, 1.90f),
+            new Fanfare(  1,   8,    0,     1,    12,   .18f, 1.05f),
+            new Fanfare(  2,  10,    2,     1,    16,   .26f, 1.20f),
+            new Fanfare(  3,  12,    2,     2,    22,   .36f, 1.38f),
+            new Fanfare(  4,  14,    3,     2,    28,   .50f, 1.55f),
+            new Fanfare(  5,  18,    3,     3,    36,   .70f, 1.72f),
         };
 
         /// <summary>What this tier's ceremony is made of. Out-of-range tiers clamp.</summary>

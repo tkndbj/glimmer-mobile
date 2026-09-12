@@ -60,15 +60,24 @@ MOST_COGS = 3
 #: them, so a retune is one edit in each of two files and the vectors below would catch a drift.
 MIN_RUN = 3
 
-#: `SiegeTuning.FuelPerGemTenths` and `.FuelPerShotTenths` - two fuel a gem against a bolt's one.
+#: `SiegeTuning.FuelPerGemTenths` and `.FuelPerShotTenths` - one bolt a gem, out of two fuel each.
 #:
-#: **A gem buys two bolts, and it used to buy exactly one.** That identity was what let
-#: `PERFECT_MATCH` read as "gems x damage x 2"; the wards were asked to shoot more, so a gem is
+#: **A gem bought one bolt, then two, and now one again.** That first identity was what let
+#: `PERFECT_MATCH` read as "gems x damage x 2"; the wards were asked to shoot more, so a gem became
 #: worth twice the fuel and a bolt half the damage - the same match, the same damage, twice as many
-#: bolts. Subdividing the *fuel* rather than halving the *bolt* is what keeps `FUEL_SHOT_TENTHS`
-#: and the whole rank ladder bit-identical.
+#: bolts.
+#:
+#: **Then the mode came back as too fast paced, and a bolt got twice as heavy and twice as dear.**
+#: The cadence doubled with it (`SiegeTuning.FireEvery`), so the wards fire half as often for
+#: exactly the same output: same damage a match, same seconds a match, same par. Slowing the
+#: cadence *alone* is the version that is not available - it cuts the line's damage a second and
+#: loses the warbringer rung outright.
+#:
+#: **Both of these must be multiples of ten.** A rank is ten per cent off the bolt's fuel, so a
+#: base that is not a multiple of ten truncates and some of the four cogs a player spends buy
+#: nothing.
 FUEL_PER_GEM_TENTHS = 20
-FUEL_PER_SHOT_TENTHS = 10
+FUEL_PER_SHOT_TENTHS = 20
 
 FUEL_PER_GEM = FUEL_PER_GEM_TENTHS / 10.0
 
@@ -77,10 +86,16 @@ FUEL_PER_GEM = FUEL_PER_GEM_TENTHS / 10.0
 #: division scaled together. What the scale buys is a *ten per cent* step, which is what a ward's
 #: rank is worth and which two could not represent in integers.
 #:
-#: **Then ten, because the wards were asked to shoot more**: a gem now buys two bolts and each is
-#: worth half, so a match delivers what it always did over twice as many of them. Ten is the floor
-#: for the ten per cent step (10, 11, 12, 13, 14 is still exact and has nothing under it).
-SHOT_DAMAGE = 10
+#: **Then ten, because the wards were asked to shoot more**: a gem bought two bolts and each was
+#: worth half, so a match delivered what it always did over twice as many of them. Ten was the
+#: floor for the ten per cent step (10, 11, 12, 13, 14 is exact and has nothing under it).
+#:
+#: **And twenty again, because the mode came back as too fast paced.** A bolt is twice as heavy,
+#: costs twice the fuel and leaves at twice the interval, so the line's output is untouched and
+#: only the number of bolts moves. A bolt's weight and a bolt's cost have to move *together*:
+#: moving this one alone halves or doubles every par in the mode, which is the identity
+#: `PERFECT_MATCH` exists to say out loud.
+SHOT_DAMAGE = 20
 WEAK_MULTIPLIER = 2
 
 #: `SiegeTuning.MaxRank` - how many cogs one ward can take.
@@ -92,6 +107,12 @@ CREEPER_HEALTH = 200
 BRUTE_HEALTH = 480
 CREEPER_BLOW = 1
 BRUTE_BLOW = 2
+#: `SiegeTuning.WardHealth` - what the **starter** holds, which is what a level is authored
+#: against. A bought turret may now trade toughness for a heavier bolt (`WardModel.GuardTenths`),
+#: and this deliberately does not follow it: `threatens` asks whether the *level* can take a line
+#: down, and a level is judged against the line every player already has rather than against the
+#: flimsiest one somebody could choose. What measures a chosen line is the hold simulation in
+#: `SiegeRuleTests`, which plays both the starter and the flimsiest turret in the roster.
 WARD_HEALTH = 14
 
 #: `SiegeLayout.Shield` - written before a colour letter, it makes that raider a **bulwark**.
@@ -111,12 +132,17 @@ SHIELD = "#"
 WEB = "~"
 LOOT = "$"
 
+#: `SiegeLayout.Drop` - a bomber. It stands on the field like a weaver and a thief and drops
+#: bombs onto cells; what a bomb is worth is the player's, so nothing about it is read here
+#: beyond its health and the fact that it takes no ward health.
+DROP = "!"
+
 #: Every prefix a wave may carry, and the kind each one names - `SiegeLayout.Modifiers`.
 #:
 #: A table rather than three branches, which is what the third modifier bought: the shield shipped
 #: as a special case in four places and every one of them would have had to be extended twice more,
 #: in step, by hand.
-MODIFIERS = {SHIELD: "bulwark", WEB: "weaver", LOOT: "thief"}
+MODIFIERS = {SHIELD: "bulwark", DROP: "bomber"}
 
 WAVE_LETTERS = RAIDER_LETTERS + "".join(MODIFIERS)
 
@@ -136,8 +162,12 @@ SHIELD_SOAK_TENTHS = 5
 #: `SiegeTuning.WeaverHealth` / `ThiefHealth`. Between a creeper and a bulwark: every bolt spent on
 #: one is a bolt not spent on something that can bring a ward down, so their health *is* the price
 #: of answering them.
-WEAVER_HEALTH = 620
-THIEF_HEALTH = 540
+#: Retired with the weaver and the thief (invariant 40h). Kept as a note so a file carrying
+#: `~` or `$` is recognisably written against rules this build does not have.
+
+#: `SiegeTuning.BomberHealth`. Dearer than either, because a bomb is worth having and the answer
+#: to all three is the same single ward.
+BOMBER_HEALTH = 200
 
 #: `SiegeTuning`, one row per boss: health, what a spell takes off a ward, and what its spell
 #: *does*.
@@ -407,10 +437,8 @@ def health_of(kind):
         return BOSSES[kind]["health"]
     if kind == "bulwark":
         return BULWARK_HEALTH
-    if kind == "weaver":
-        return WEAVER_HEALTH
-    if kind == "thief":
-        return THIEF_HEALTH
+    if kind == "bomber":
+        return BOMBER_HEALTH
     return BRUTE_HEALTH if kind == "brute" else CREEPER_HEALTH
 
 
@@ -482,7 +510,7 @@ def blow_of(kind):
     on the *field*. Neither swings, which is why `threatens` cannot assume a hill full of raiders is
     a hill that can bring a ward down.
     """
-    if kind in BOSSES or kind in ("weaver", "thief"):
+    if kind in BOSSES:
         return 0
     if kind == "bulwark":
         return BULWARK_BLOW
@@ -572,7 +600,7 @@ BLOW_STEP_TENTHS = 4
 
 FIRST_WAVE, MOST_RAIDERS = 5, 22
 
-BRUTES_FROM, BULWARKS_FROM, WEAVERS_FROM, THIEVES_FROM = 3, 6, 9, 13
+BRUTES_FROM, BULWARKS_FROM, BOMBERS_FROM = 3, 6, 9
 
 
 def is_boss_wave(wave):
@@ -662,10 +690,8 @@ def _kind_at(wave, i, seed):
     """`SiegeEndless.KindAt`."""
     roll = _roll(seed, (wave * 131 + i * 17) & 0xFFFFFFFF)
 
-    if wave >= THIEVES_FROM and i == 0:
-        return "thief"
-    if wave >= WEAVERS_FROM and i == 1:
-        return "weaver"
+    if wave >= BOMBERS_FROM and i == 1:
+        return "bomber"
     if wave >= BULWARKS_FROM and roll % 100 < _share(wave, BULWARKS_FROM, 30):
         return "bulwark"
     if wave >= BRUTES_FROM and roll % 100 < _share(wave, BRUTES_FROM, 55):

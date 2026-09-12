@@ -24,20 +24,20 @@ namespace GlimmerGrove.Homestead
         public readonly int Col, Row;
         public readonly float CentreX, CentreY, HalfWidth, HalfHeight;
         public readonly int Depth;
+        /// <summary>The mask for the facing this stand is actually drawn at.</summary>
         public readonly GroveHitMask Mask;
-        public readonly bool Flipped;
 
         /// <summary>A single-tile box with no mask: what every piece was before masks existed. For tests.</summary>
         public GroveHit(int col, int row, float centreX, float centreY,
                         float halfWidth, float halfHeight)
             : this(col, row, centreX, centreY, halfWidth, halfHeight,
-                   GroveFootprint.Single.Depth(col, row), GroveHitMask.None, false)
+                   GroveFootprint.Single.Depth(col, row), GroveHitMask.None)
         {
         }
 
         public GroveHit(int col, int row, float centreX, float centreY,
                         float halfWidth, float halfHeight, int depth,
-                        GroveHitMask mask, bool flipped)
+                        GroveHitMask mask)
         {
             Col = col;
             Row = row;
@@ -47,7 +47,6 @@ namespace GlimmerGrove.Homestead
             HalfHeight = halfHeight < 0f ? 0f : halfHeight;
             Depth = depth;
             Mask = mask;
-            Flipped = flipped;
         }
 
         public bool IsDrawn => HalfWidth > 0f && HalfHeight > 0f;
@@ -71,7 +70,7 @@ namespace GlimmerGrove.Homestead
             float u = (x - (CentreX - HalfWidth)) / (HalfWidth * 2f);
             float v = ((CentreY + HalfHeight) - y) / (HalfHeight * 2f);
 
-            return Mask.Hits(u, v, Flipped,
+            return Mask.Hits(u, v,
                              GrovePick.TouchSlop / (HalfWidth * 2f),
                              GrovePick.TouchSlop / (HalfHeight * 2f));
         }

@@ -1393,6 +1393,56 @@ MAX_FOOTPRINT = 4
 #: One hit-mask cell every this many art pixels - GroveHitMask.CellPx.
 HIT_CELL = 16
 
+#: GroveFloor.TileWidth and HomesteadScreen.PieceScale, for the overhang reading below.
+TILE_WIDTH = 220.0
+PIECE_SCALE = 1.15
+
+def painted_width(piece):
+    """How wide a piece's *paint* is, in art pixels, at its widest facing.
+
+    Read off the hit mask rather than the art's rectangle, and that distinction is the whole
+    reason this reading is trustworthy. A piece with four facings is rendered into one square
+    box sized to the envelope its rotations sweep — so a fence, which stands at the edge of
+    its tile rather than in the middle, gets a box twice as wide as the fence with the rest
+    transparent. Measured by the box, every fence in the catalogue reported as painting twice
+    the ground it holds; measured by the ink, they paint 0.84 of it, which is correct and
+    always was.
+    """
+    w, h = int(piece.get("w") or 0), int(piece.get("h") or 0)
+    if w <= 0 or h <= 0:
+        return 0
+
+    cols = -(-w // HIT_CELL)
+    rows = -(-h // HIT_CELL)
+    masks = piece.get("hits") or ([piece.get("hit")] if piece.get("hit") else [])
+
+    widest = 0
+    for hexmask in masks:
+        if not hexmask:
+            continue
+        bits = "".join(bin(int(ch, 16))[2:].zfill(4) for ch in hexmask)
+        lo, hi = cols, -1
+        for r in range(rows):
+            row = bits[r * cols:(r + 1) * cols]
+            for c, bit in enumerate(row):
+                if bit == "1":
+                    if c < lo:
+                        lo = c
+                    if c > hi:
+                        hi = c
+        if hi >= lo:
+            widest = max(widest, (hi - lo + 1) * HIT_CELL)
+    return widest
+
+
+#: How much wider than its own footprint a piece may be drawn before it is worth saying so.
+#:
+#: Not 1.0: most pieces paint a little beyond the ground they hold and that is what makes a
+#: village look built rather than laid out on a grid - the median across the shipped
+#: catalogue is 0.88, and the largest honest ones sit near 1.2. This is the point past which
+#: a piece is covering tiles another piece can still be built on.
+FOOTPRINT_OVERHANG = 1.30
+
 
 def hit_length(w, h):
     """How long a hit mask is for a picture this size - GroveHitMask.HexLengthFor."""
@@ -1481,6 +1531,23 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None, 
     def art_exists(key, animated):
         full = os.path.join(art_root, key.replace("/", os.sep))
         return os.path.isdir(full) if animated else os.path.exists(full + ".png")
+
+    def art_paths(key, animated, facings=1):
+        """Every picture an art key stands for — `grove_art_facts.art_paths`'s three shapes.
+
+        A turnable piece is a folder of `f0..f3` and every one of them is a real picture
+        with a mask of its own; an animated one is a folder whose first frame speaks for
+        the reel; anything else is one PNG.
+        """
+        full = os.path.join(art_root, key.replace("/", os.sep))
+        if facings > 1:
+            out = [os.path.join(full, "f%d.png" % k) for k in range(facings)]
+            return out if all(os.path.isfile(f) for f in out) else []
+        if animated:
+            frames = sorted(f for f in os.listdir(full)
+                            if f.lower().endswith(".png")) if os.path.isdir(full) else []
+            return [os.path.join(full, frames[0])] if frames else []
+        return [full + ".png"] if os.path.isfile(full + ".png") else []
 
     cols = int(floor.get("cols") or 0)
     rows = int(floor.get("rows") or 0)
@@ -1717,25 +1784,52 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None, 
             piece_starters += 1
 
         art = piece.get("art") or f"Homestead/{pid}"
-        if not art_exists(art, piece.get("animated", False)):
+        animated = piece.get("animated", False)
+        facings = int(piece.get("facings") or 1)
+
+        # A piece drawn at four facings and one that animates both live in a folder, for
+        # different reasons, so a piece claiming both has two readings of one folder and the
+        # reader would silently take one. Refused rather than salvaged (HomesteadPiece.Facings).
+        if facings not in (1, 4):
+            errors.append(f"grove piece '{pid}' asks for {facings} facings; only 1 and 4 exist")
+        if facings > 1 and animated:
+            errors.append(f"grove piece '{pid}' is both animated and turnable, and both are "
+                          "drawn from the same frames; it can only be one")
+
+        found = art_paths(art, animated, facings)
+        if not found:
             errors.append(f"grove piece '{pid}' has no art at Art/{art}"
-                          f"{'/' if piece.get('animated') else '.png'}")
+                          f"{'/' if animated or facings > 1 else '.png'}"
+                          + (f" (it is turned {facings} ways, so it wants f0..f{facings - 1})"
+                             if facings > 1 else ""))
         else:
             # The picture's own facts, authored so the layout never waits for the sprite and a
             # tap tests paint rather than air (HomesteadPiece.ArtWidth, GroveHitMask). Written
-            # by grove_art_facts.py; the size is re-read off the PNG header here, and the mask's
-            # shape is checked - its content is the tool's own --check.
-            pw, ph = png_size(art_file(art, piece.get("animated", False)))
+            # by import_grove_art.py; the size is re-read off the PNG header here, and each
+            # mask's shape is checked - their content is the generator's own --check.
+            sizes = [png_size(f) for f in found]
+            pw, ph = sizes[0]
+            if len(set(sizes)) != 1:
+                errors.append(f"grove piece '{pid}' has facings of different sizes {sizes}; the "
+                              "catalogue carries one box for all of them, so three of the four "
+                              "would be drawn in the wrong one")
             if piece.get("w") != pw or piece.get("h") != ph:
                 errors.append(f"grove piece '{pid}' authors art size {piece.get('w')}x{piece.get('h')} "
-                              f"and the PNG is {pw}x{ph}; run Tools/grove_art_facts.py")
-            hit = piece.get("hit") or ""
-            if len(hit) != hit_length(pw, ph) or any(ch not in "0123456789abcdef" for ch in hit):
-                errors.append(f"grove piece '{pid}' has no {hit_length(pw, ph)}-character hit mask for "
-                              f"a {pw}x{ph} picture; run Tools/grove_art_facts.py")
-            elif set(hit) == {"0"}:
-                errors.append(f"grove piece '{pid}' has an empty hit mask, so nothing about it can "
-                              "be tapped; is the art blank?")
+                              f"and the PNG is {pw}x{ph}; run Tools/import_grove_art.py")
+
+            masks = piece.get("hits") if facings > 1 else [piece.get("hit") or ""]
+            masks = masks if isinstance(masks, list) else []
+            if len(masks) != facings:
+                errors.append(f"grove piece '{pid}' is turned {facings} ways and carries "
+                              f"{len(masks)} hit mask(s); run Tools/import_grove_art.py")
+            for k, hit in enumerate(masks):
+                where = f"grove piece '{pid}'" + (f" facing {k}" if facings > 1 else "")
+                if len(hit or "") != hit_length(pw, ph) or any(ch not in "0123456789abcdef" for ch in hit):
+                    errors.append(f"{where} has no {hit_length(pw, ph)}-character hit mask for "
+                                  f"a {pw}x{ph} picture; run Tools/import_grove_art.py")
+                elif set(hit) == {"0"}:
+                    errors.append(f"{where} has an empty hit mask, so nothing about it can "
+                                  "be tapped; is the art blank?")
 
         # What the piece stands on. A judgement, so only its shape is checked here; the hall's
         # is the floor's and every dwelling must agree with it (GroveFloor.HallFootprint).
@@ -1747,6 +1841,26 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None, 
         if kind == "dwelling" and (fcols, frows) != (hall_cols, hall_rows):
             errors.append(f"grove home '{pid}' is {fcols}x{frows} and the hall is "
                           f"{hall_cols}x{hall_rows}; buying it would take or leave ground")
+
+        # **How much of what a piece paints it actually occupies**, which is the one thing about
+        # a footprint that nothing else could report. A footprint is a judgement (invariant 16i)
+        # — a tree's is its trunk and it is *supposed* to overhang — so this warns rather than
+        # refusing, and the canopy shelf is exempt because overhang is that shelf's whole point.
+        #
+        # It exists because the alternative is an eye. Shipped once: a wall five tiles long was
+        # authored 3x1 and a three-tile fence gate 1x1, so they painted up to four times the
+        # ground they held. Every gate was green — the piece is valid, the art is on disk, the
+        # mask matches, the price divides — and what a player met was a starter plot with two
+        # objects lying across each other.
+        if piece.get("slot") != "canopy" and piece.get("w") and piece.get("scale"):
+            ink = painted_width(piece)
+            drawn = ink * piece["scale"] * PIECE_SCALE
+            span = (fcols + frows) / 2.0 * TILE_WIDTH
+            if ink and span > 0 and drawn / span > FOOTPRINT_OVERHANG:
+                warnings.append(
+                    f"grove piece '{pid}' paints {drawn:.0f} wide and occupies {span:.0f} "
+                    f"({drawn / span:.2f}x); it covers tiles it does not hold, so things can "
+                    "be built underneath it. Widen cols/rows, or say why not")
 
         if f"ui.piece.{pid}" not in keys:
             errors.append(f"grove piece '{pid}' missing string 'ui.piece.{pid}'")
@@ -1777,14 +1891,18 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None, 
     else:
         stale = 0
         for piece in pieces:
-            facts = grove_art_facts.facts_for(*grove_art_facts.piece_art(piece))
+            facings = int(piece.get("facings") or 1)
+            art, animated = grove_art_facts.piece_art(piece)
+            facts = grove_art_facts.facts_for(art, animated, facings)
             if facts is None:
                 continue
-            if (piece.get("w"), piece.get("h"), piece.get("hit")) != facts:
+            w, h, masks = facts
+            authored = piece.get("hits") if facings > 1 else [piece.get("hit")]
+            if (piece.get("w"), piece.get("h")) != (w, h) or list(authored or []) != masks:
                 stale += 1
                 if stale <= 3:
                     errors.append(f"grove piece '{piece.get('id')}' has art facts that differ from "
-                                  "its PNG; run Tools/grove_art_facts.py")
+                                  "its PNG; run Tools/import_grove_art.py")
         # A resident is a companion, and the grove draws its art too: the same facts live on
         # the manifest's companion entries (groveW / groveH / groveHit) under the same check.
         for companion in companion_rows or []:
@@ -1793,6 +1911,7 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None, 
             if facts is None:
                 errors.append(f"companion '{cid}' has no art for the grove to draw")
                 continue
+            facts = (facts[0], facts[1], facts[2][0])
             if (companion.get("groveW"), companion.get("groveH"), companion.get("groveHit")) != facts:
                 stale += 1
                 if stale <= 3:
@@ -2207,7 +2326,19 @@ WARD_COLOURS = "rgby"
 
 #: `WardModel.Elemental` - the one turret whose bolt is a different element on each
 #: colour. Named rather than derived; see the note in `check_wards`.
-WARD_ELEMENTAL = "rime"
+WARD_ELEMENTAL = "breaker"
+
+#: `WardModel.Baseline` - the tenths a turret neither tougher nor harder-hitting than the free one
+#: carries, and what an unauthored `power` or `guard` means.
+WARD_BASELINE = 10
+
+#: `SiegeTuning.LeastGuardTenths` - the least toughness a turret may be authored at.
+WARD_LEAST_GUARD = 7
+
+#: `WardTier.Count` and `WardStars.Steps` - how many bands the shelf is read in, and how many
+#: upgrades there are (one fewer than there are stars).
+WARD_TIERS = 3
+WARD_STAR_STEPS = 4
 
 
 def check_wards(progression, keys, warnings, art):
@@ -2224,8 +2355,15 @@ def check_wards(progression, keys, warnings, art):
       invisible to `loc.py` (invariant 30d's situation, and the utilities' own).
     * **One price or the other.** Two prices for one turret is two answers to what it costs, and
       the shelf can only draw one of them (`HomesteadRegion`'s rule, invariant 16j).
-    * **A keeper gate belongs to a credit price**, because gems ask for none - a gate beside a gem
-      price is a gate that never fires, which is the decoration invariant 5d names.
+    * **Every priced turret carries a keeper level, gems included, and the levels strictly
+      climb.** That is the owner's reversal of what shipped - a gate used to belong to a credit
+      price alone, so the dearest half of the shelf could be taken in any order by anybody holding
+      gems. The climb is not a second taste: a turret is sealed until the rung below it is bought
+      (`WardCatalog.Before`), so reaching a rung means having met every gate under it, and a rung
+      asking for a level an earlier one already demanded could never refuse anybody - the
+      decoration invariant 5d names.
+    * **An id may not contain `:`**, which separates a turret from the colour it was bought for
+      in `wardsOwned` (`WardHolding`). One that did would make every row about it ambiguous.
     * **At least one turret is free**, or a player who has bought nothing stands an empty line and
       a siege with no line cannot be played.
     """
@@ -2276,10 +2414,33 @@ def check_wards(progression, keys, warnings, art):
             errors.append(f"wards entry '{wid}' is priced in both gems and credits; a turret "
                           "carries one price or the other")
 
-        if level > 0 and coin <= 0:
-            errors.append(f"wards entry '{wid}' asks for keeper level {level} but is not priced "
-                          "in credits; the level gate is permission to spend credits and means "
-                          "nothing beside gems")
+        if level <= 0 and (gem > 0 or coin > 0):
+            errors.append(f"wards entry '{wid}' is priced but asks for no keeper level; every "
+                          "turret on the shelf is behind one, so nought is no longer how an "
+                          "entry says it is ungated")
+
+        if ":" in wid:
+            errors.append(f"wards entry '{wid}' contains ':', which separates a turret from the "
+                          "colour it was bought for in wardsOwned")
+
+        # **A bolt may never be lighter than the baseline, and toughness may.** Par is the hill's
+        # health over a match computed against the baseline bolt, so a turret that hit softer would
+        # need more matches than par assumes and push three stars out of reach of whoever bought it
+        # - a grade decided by a purchase, on a number that reaches a public board (19a). Health
+        # reaches nothing that is graded, so it is the half allowed to be a trade; what it may not
+        # do is make a rung impossible, which is what the floor is for.
+        power = int(entry.get("power") or 0)
+        guard = int(entry.get("guard") or 0)
+
+        if power and power < WARD_BASELINE:
+            errors.append(f"wards entry '{wid}' asks for power {power}, under the baseline "
+                          f"{WARD_BASELINE}; a turret that hits softer than the free one pushes "
+                          "three stars out of reach of whoever bought it")
+
+        if guard and guard < WARD_LEAST_GUARD:
+            errors.append(f"wards entry '{wid}' asks for guard {guard}, under the floor "
+                          f"{WARD_LEAST_GUARD}; a turret may be a fragile choice and may not be "
+                          "an impossible one")
 
         starter = starter or (gem <= 0 and coin <= 0)
 
@@ -2320,6 +2481,89 @@ def check_wards(progression, keys, warnings, art):
     if not starter:
         errors.append("wards lists no free turret; a player who has bought nothing would stand an "
                       "empty line, and a siege with no line cannot be played")
+
+    # **The upgrade ladder.** Three bands, four prices each, every one a real price - nought is how
+    # `WardStars.PriceOf` says a turret is already at the top, so an authored nought would silently
+    # top one out rather than make an upgrade free. It has to climb, too: a rung that costs no more
+    # than the one below it is a rung nobody chooses between, which is invariant 5d on a price.
+    ladder = (block.get("upgrades") or {}).get("tiers")
+
+    if ladder is None:
+        warnings.append("wards has no 'upgrades' block, so the built-in upgrade ladder stands - "
+                        "which works, and cannot be retuned without a store review")
+    elif len(ladder) != WARD_TIERS:
+        errors.append(f"wards.upgrades lists {len(ladder)} band(s); the shelf is read in "
+                      f"{WARD_TIERS}, so a missing row is a band nobody can upgrade")
+    else:
+        for band, row in enumerate(ladder, start=1):
+            prices = (row or {}).get("prices") or []
+
+            if len(prices) != WARD_STAR_STEPS:
+                errors.append(f"wards.upgrades band {band} needs {WARD_STAR_STEPS} prices, one per "
+                              f"upgrade, and lists {len(prices)}")
+                continue
+
+            for step, price in enumerate(prices):
+                if price <= 0:
+                    errors.append(f"wards.upgrades band {band} prices star {step + 2} at {price}; "
+                                  "nought is how the table says a turret is already at the top, "
+                                  "so it may not be a price")
+
+            climbs = all(b > a for a, b in zip(prices, prices[1:]))
+
+            if not climbs:
+                errors.append(f"wards.upgrades band {band} is {prices}; an upgrade that costs no "
+                              "more than the one below it is a rung nobody chooses")
+
+    # **No two rungs of the shelf are the same turret**, which is the one thing about this roster
+    # that reads as correct in every other gate. A magnitude nobody reads makes two rungs of one
+    # ability identical - `rend` and `prism` both shipped that way, so a thousand-gem breaker was
+    # exactly a four-thousand-credit cleaver and the dearer one bought nothing (invariant 5d, on
+    # the one thing a player pays for). Priced rungs only: the free turret is not a rung.
+    same = {}
+
+    for entry in models:
+        gem = int(entry.get("gemPrice") or 0)
+        coin = int(entry.get("coinPrice") or 0)
+
+        if gem <= 0 and coin <= 0:
+            continue
+
+        shape = (entry.get("ability") or "none",
+                 int(entry.get("magnitude") or 0),
+                 int(entry.get("extent") or 0),
+                 int(entry.get("power") or WARD_BASELINE),
+                 int(entry.get("guard") or WARD_BASELINE))
+
+        if shape in same:
+            errors.append(f"wards entries '{same[shape]}' and '{entry.get('id')}' are the same "
+                          f"turret - {shape[0]} at {shape[1]}/{shape[2]}, power {shape[3]}, guard "
+                          f"{shape[4]} - so whichever is dearer buys nothing at all")
+        else:
+            same[shape] = entry.get("id")
+
+    # The shelf read as one ladder. `WardCatalog.LadderProblem`, offline - and it is asked of the
+    # *sorted* roster rather than of the file's order, because what it is about is the shelf a
+    # player reads top to bottom.
+    highest, below = 0, None
+
+    for entry in sorted(models, key=lambda e: int(e.get("order") or 0)):
+        gem = int(entry.get("gemPrice") or 0)
+        coin = int(entry.get("coinPrice") or 0)
+
+        if gem <= 0 and coin <= 0:
+            continue
+
+        level = int(entry.get("minLevel") or 0)
+
+        if level <= highest:
+            errors.append(f"wards entry '{entry.get('id')}' asks for keeper level {level}, which "
+                          f"'{below}' below it on the shelf already asked for; a rung is sealed "
+                          "until the one before it is bought, so a gate that does not climb can "
+                          "never refuse anybody")
+            break
+
+        highest, below = level, entry.get("id")
 
     return errors, known
 

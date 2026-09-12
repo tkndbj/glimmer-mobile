@@ -158,7 +158,7 @@ namespace GlimmerGrove.Modes
         /// a weaver and a thief ask for the hill to be answered while the field is being taken
         /// away, which is the hardest thing this mode asks and so arrives last.
         /// </summary>
-        public const int BrutesFrom = 3, BulwarksFrom = 6, WeaversFrom = 9, ThievesFrom = 13;
+        public const int BrutesFrom = 3, BulwarksFrom = 6, BombersFrom = 9;
 
         /// <summary>
         /// The colours the hill wears. The level's own deal, so an endless lane on a three-colour
@@ -336,8 +336,10 @@ namespace GlimmerGrove.Modes
         {
             uint roll = Roll(seed, unchecked((uint)wave * 131u + (uint)index * 17u));
 
-            if (wave >= ThievesFrom && index == 0) return SiegeKind.Thief;
-            if (wave >= WeaversFrom && index == 1) return SiegeKind.Weaver;
+            // **A bomber where the weaver and the thief used to be.** Those two were withdrawn
+            // whole (invariant 40h); what the lane still wants at this depth is a raider that
+            // leaves something behind, and a bomb is the only one there is.
+            if (wave >= BombersFrom && index == 1) return SiegeKind.Bomber;
 
             if (wave >= BulwarksFrom && roll % 100u < Share(wave, BulwarksFrom, 30u))
                 return SiegeKind.Bulwark;

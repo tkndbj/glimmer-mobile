@@ -444,12 +444,14 @@ namespace GlimmerGrove.Homestead
                 w = h = 0;
             }
 
-            var hit = ReadHitMask(dto.hit, w, h, $"grove piece '{dto.id}'", problems);
+            int facings = ReadFacings(dto, $"grove piece '{dto.id}'", problems);
+            var hits = ReadHitMasks(dto, facings, w, h, $"grove piece '{dto.id}'", problems);
 
             piece = new HomesteadPiece(dto.id, art, dto.animated, kind, cost,
                                        requiresLevel, requiresChapter, dto.scale, dto.lift,
                                        ReadSlotKind(dto.slot, dto.id, problems), tier, bundle: bundle,
-                                       footprint: footprint, artWidth: w, artHeight: h, hit: hit);
+                                       footprint: footprint, artWidth: w, artHeight: h,
+                                       hits: hits, facings: facings);
             return true;
         }
 
@@ -462,6 +464,73 @@ namespace GlimmerGrove.Homestead
         /// player arranged, and ground is the safe half — it is the kind that accepts the
         /// ordinary catalog.
         /// </summary>
+        /// <summary>
+        /// How many facings a piece really has, salvaged rather than refused.
+        ///
+        /// <para>
+        /// Anything but 1 or 4 is read as 1, because a piece drawn at one facing is a piece
+        /// that cannot be turned and every other rule about it still holds — where refusing the
+        /// piece would punch a hole in a grove somebody arranged. The one combination that is
+        /// <em>reported</em> is animated and multi-facing together: both want the same frame
+        /// folder for different reasons, so a piece claiming both has had one of them written
+        /// by mistake and picking either silently would draw a facing as an animation frame.
+        /// </para>
+        /// </summary>
+        static int ReadFacings(HomesteadPieceDto dto, string owner, ICollection<string> problems)
+        {
+            int facings = dto.facings;
+            if (facings != 0 && facings != 1 && facings != GroveFootprint.Facings)
+            {
+                problems.Add($"{owner} asks for {facings} facings; only 1 and " +
+                             $"{GroveFootprint.Facings} exist, so it is drawn one way");
+                return 1;
+            }
+
+            if (facings == GroveFootprint.Facings && dto.animated)
+            {
+                problems.Add($"{owner} is both animated and turnable, and both are drawn from " +
+                             "the same frames; it is drawn one way");
+                return 1;
+            }
+
+            return facings == GroveFootprint.Facings ? GroveFootprint.Facings : 1;
+        }
+
+        /// <summary>
+        /// One hit mask per facing, in facing order.
+        ///
+        /// <para>
+        /// A catalogue written before facings existed carries a single <c>hit</c>, which is
+        /// facing 0's mask and the only one such a piece has. A short or absent <c>hits</c>
+        /// array is padded with <see cref="GroveHitMask.None"/> rather than refused — a missing
+        /// mask costs a tap the sharpness masks buy and nothing else, which is the same trade
+        /// <see cref="ReadHitMask"/> already makes for one that will not parse.
+        /// </para>
+        /// </summary>
+        static GroveHitMask[] ReadHitMasks(HomesteadPieceDto dto, int facings, int w, int h,
+                                           string owner, ICollection<string> problems)
+        {
+            var out_ = new GroveHitMask[facings];
+
+            if (dto.hits != null && dto.hits.Length > 0)
+            {
+                if (dto.hits.Length != facings)
+                    problems.Add($"{owner} carries {dto.hits.Length} hit mask(s) for {facings} " +
+                                 "facing(s); the ones that are missing are read as the whole box");
+
+                for (int i = 0; i < facings; i++)
+                    out_[i] = i < dto.hits.Length
+                        ? ReadHitMask(dto.hits[i], w, h, $"{owner} facing {i}", problems)
+                        : GroveHitMask.None;
+
+                return out_;
+            }
+
+            out_[0] = ReadHitMask(dto.hit, w, h, owner, problems);
+            for (int i = 1; i < facings; i++) out_[i] = GroveHitMask.None;
+            return out_;
+        }
+
         /// <summary>
         /// A hit mask beside the art size it was generated for.
         ///

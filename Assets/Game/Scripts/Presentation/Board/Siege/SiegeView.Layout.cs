@@ -16,6 +16,70 @@ namespace GlimmerGrove
     /// </summary>
     public sealed partial class SiegeView
     {
+        // ------------------------------------------------------------------ the three bands
+        /// <summary>
+        /// How the board's height divides between the hill, the ward line and the field.
+        ///
+        /// <para>
+        /// <b>A pure function, so the one thing a picture cannot answer can be pinned.</b> A
+        /// render says whether the hill reads and whether a fuel tube has fallen behind the
+        /// field's plate, and it says it one screen shape at a time — which is how the line band
+        /// came to be able to collapse on a 4:3 while every phone was fine. The shares are
+        /// arithmetic over three numbers, so they can be swept instead.
+        /// </para>
+        /// </summary>
+        public readonly struct Bands
+        {
+            /// <summary>Each band's share of the board's height. They sum to one.</summary>
+            public readonly float Gems, Hill, Line;
+
+            Bands(float gems, float hill, float line)
+            {
+                Gems = gems;
+                Hill = hill;
+                Line = line;
+            }
+
+            /// <summary>
+            /// The bands for a board <paramref name="span"/> tall drawing
+            /// <paramref name="rows"/> rows of <paramref name="cell"/>.
+            ///
+            /// <para>
+            /// <b>The field's height is a fact and the other two divide what is left.</b> The
+            /// field is laid out to the <em>width</em> (see <see cref="Fit"/>), so how much
+            /// height it needs is decided before this is asked; <c>HillBand</c> and
+            /// <c>LineBand</c> are a ratio over the remainder rather than two more shares, which
+            /// is what lets one of them move without the other having to.
+            /// </para>
+            /// <para>
+            /// <b>And the line has a floor measured in cells</b>, because what stands on it is
+            /// measured in cells: a plinth, a fuel tube, a health bar and a rank badge. A band
+            /// expressed only as a share gets squeezed under them on a short display, and what
+            /// that looks like is the tube drawn across the turret's own chassis (invariant 37y)
+            /// and the plinth behind the field's plate (37g).
+            /// </para>
+            /// </summary>
+            public static Bands Of(float span, float cell, int rows)
+            {
+                if (span <= 0f) return new Bands(0f, 0f, 0f);
+
+                float gems = Mathf.Clamp(cell * rows / span, .28f, MaxGemBand);
+                float rest = 1f - gems;
+
+                float hill = rest * (HillBand / (HillBand + LineBand));
+                float line = rest - hill;
+
+                float floor = Mathf.Min(rest, LineFloor * cell / span);
+                if (line < floor)
+                {
+                    line = floor;
+                    hill = rest - line;
+                }
+
+                return new Bands(gems, hill, line);
+            }
+        }
+
         // ------------------------------------------------------------------ geometry
         /// <summary>
         /// The cell, driven by the width and capped by what the hill can spare.

@@ -142,6 +142,11 @@ namespace GlimmerGrove.EditorTools
                                       "which the game requests; run Addressables ▸ Sync All Assets");
             }
 
+            var wanted = new HashSet<string>();
+            foreach (var request in expected)
+                if (request.Kind == AssetKind.SpriteSet) wanted.Add(request.Address);
+
+            CheckFramesAreLabelled(settings, wanted, result);
             CheckEntriesStillExist(settings, result);
             CheckGrouping(expected, bodies, groupOf, result);
             CheckUnreachable(addresses, expected, result);
@@ -214,6 +219,66 @@ namespace GlimmerGrove.EditorTools
                 $"{gone.Count} addressed asset(s) no longer exist and will fail the bundle " +
                 $"build with \"is not a valid Asset or Scene\": {names}{more}. " +
                 "Run Addressables ▸ Sync All Assets");
+        }
+
+        /// <summary>
+        /// Every frame of a reel must carry its folder's label, or the reel cannot be loaded.
+        ///
+        /// <para>
+        /// <b>This asks about what is <em>registered</em> rather than about what is requested, and
+        /// that is the whole point of it.</b> Everything else here walks the manifest and proves
+        /// the game's own requests resolve — which is exactly blind to a reel the manifest does not
+        /// happen to ask for in the Editor. A sprite set has no notion of a folder: it is loaded by
+        /// the <em>label</em> its frames share, so frames addressed with no label are addressed,
+        /// grouped, built into a bundle and completely unloadable.
+        /// </para>
+        /// <para>
+        /// Measured: the second siege cast came back labelless because the mode hands out a
+        /// different cast depending on which chapter asks and the Editor's catalog index had no
+        /// answer, so twelve reels shipped addressed, audited <b>green</b>, and reached a device as
+        /// raiders with no body and a health bar floating where each should have been —
+        /// <c>No Location found for Key=Art/Siege/kayBrute_b</c>, twelve times. The root was fixed
+        /// in <c>AddressableAddresses.FrameFolders</c>; this is what says so if it happens again.
+        /// </para>
+        /// </summary>
+        static void CheckFramesAreLabelled(AddressableAssetSettings settings,
+                                           HashSet<string> wanted, Result result)
+        {
+            var bare = new SortedSet<string>();
+
+            foreach (var group in settings.groups)
+            {
+                if (group == null || group.Name == Dev.VfxBench.GroupName) continue;
+
+                foreach (var entry in group.entries)
+                {
+                    if (entry == null || string.IsNullOrEmpty(entry.address)) continue;
+
+                    int cut = entry.address.LastIndexOf('/');
+                    if (cut <= 0) continue;
+
+                    string frame = entry.address.Substring(cut + 1);
+                    if (frame.Length != 3 || frame[0] != 'f'
+                        || !char.IsDigit(frame[1]) || !char.IsDigit(frame[2])) continue;
+
+                    string folder = entry.address.Substring(0, cut);
+                    if (!entry.labels.Contains(folder)) bare.Add(folder);
+                }
+            }
+
+            // **An error when the game asks for it and a warning when it does not**, which is the
+            // difference between a feature that cannot draw and a reel nobody deletes. The second
+            // is real and worth saying — an unloadable folder is still built into a bundle — but
+            // failing a build over art nothing requests would be obstructive.
+            foreach (var folder in bare)
+            {
+                string why = $"'{folder}' is addressed frame by frame but its frames carry no " +
+                             "label, so nothing can load it as a reel; it is missing from " +
+                             "AddressableAddresses.FrameFolders";
+
+                if (wanted.Contains(folder)) result.Errors.Add(why);
+                else result.Warnings.Add(why + " (nothing requests it, so it is dead weight)");
+            }
         }
 
         /// <summary>Whether a group's bundle is actually included in this build.</summary>

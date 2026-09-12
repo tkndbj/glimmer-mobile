@@ -133,7 +133,7 @@ namespace GlimmerGrove.AssetPipeline
                 }
 
                 // Its projectile, flash and impact, in all four ward colours. A model with no
-                // ability of its own throws the four elemental bolts instead, which the mode's own
+                // ability of its own throws the shared elemental reels instead, which the mode's own
                 // cast already names — asking for them here would be a second claim on an address
                 // the global set owns (invariant 7b).
                 if (!model.OwnShot) continue;
@@ -305,7 +305,7 @@ namespace GlimmerGrove.AssetPipeline
             "Hud/plate_blue", "Hud/plate_orange", "Hud/plate_violet",
             "ic_nav_home", "ic_nav_shop", "ic_nav_grove",
             "ic_nav_ranks", "ic_nav_profile", "ic_battle", "ic_chest_wood", "ic_streak", "ic_padlock",
-            "Hud/lander", "Hud/beam",
+            "Hud/lander", "Hud/beam", "Hud/room",
         };
 
         /// <summary>Map furniture used by every chapter, unlike the strips themselves.</summary>
@@ -351,8 +351,8 @@ namespace GlimmerGrove.AssetPipeline
             "click", "back", "menu", "tip", "enter", "poke", "wheel", "collect", "reward", "coin", "rotate_a", "rotate_b", "blocked",
             "unlock", "shatter", "burst", "free", "pop", "pop2", "whoosh", "chest", "win", "star",
             "tick", "tock", "bell", "lit", "chime", "chime2",
-            "boom", "mend", "snare", "pilfer",
-            "gem", "settle", "shot", "zap", "stand", "wear",
+            "boom", "mend", "land",
+            "gem", "settle", "shot", "zap", "stand", "wear", "arrive",
         };
 
         /// <summary>Everything the game needs before the menu appears.</summary>
@@ -670,7 +670,16 @@ namespace GlimmerGrove.AssetPipeline
             if (!piece.IsValid || string.IsNullOrEmpty(piece.Art)) return;
 
             string address = ArtRoot + piece.Art;
-            add(piece.Animated ? AssetRequest.SpriteSet(address) : AssetRequest.Sprite(address));
+
+            // A piece that can be *turned* draws its facings out of a folder, exactly as an
+            // animated one draws its frames — so it is a sprite set for the same reason and
+            // with a sharper edge: a folder of frames has no notion of being a folder, it is
+            // addressed by a label its frames share, and one that never gets that label is
+            // addressed, audited green and completely unloadable (invariant 37at, which cost a
+            // device build of raiders with no bodies). Asking here is what puts it in
+            // `AddressableAddresses.FrameFolders`.
+            bool folder = piece.Animated || piece.Facings > 1;
+            add(folder ? AssetRequest.SpriteSet(address) : AssetRequest.Sprite(address));
         }
 
         // --------------------------------------------------------------- chapter

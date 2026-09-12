@@ -79,6 +79,28 @@ namespace GlimmerGrove
         bool _paid, _buying;
 
         /// <summary>
+        /// Whether the last <c>+</c> was refused by the stop rather than obeyed.
+        ///
+        /// <para>
+        /// <b>A greyed key is a state, not an answer.</b> The stepper's upper stop is the lesser
+        /// of two completely different facts — the gems in hand and the room left
+        /// (<c>UtilityLedger.MaxQuantity</c>) — and both of them wore the same dimmed <c>+</c>,
+        /// with the status line underneath busy saying what the player was carrying. Reported
+        /// from a device as a <c>+</c> that "sometimes does not increment"; every gate was green,
+        /// because the clamp is correct and nothing here was wrong except that the panel never
+        /// said which wall had been hit.
+        /// </para>
+        /// <para>
+        /// It is latched on a refused tap rather than shown the moment the stop binds, because a
+        /// player who opens the panel able to afford exactly one has not asked for more yet and
+        /// does not need telling they cannot have it. It is dropped by any nudge that lands and
+        /// by the stop moving out from under it (a gem pack bought on the stacked shelf, a chest
+        /// opened elsewhere), so the line can never outlive the thing it is about.
+        /// </para>
+        /// </summary>
+        bool _capped;
+
+        /// <summary>
         /// How many this order is for. Starts at one and is clamped to
         /// <c>UtilityLedger.MaxQuantity</c> on every repaint, because the balance and the room
         /// both move under an open panel — a stepper left reading twelve over a button that will
@@ -190,8 +212,21 @@ namespace GlimmerGrove
 
             if (wanted < 1) wanted = 1;
             if (most >= 1 && wanted > most) wanted = most;
-            if (wanted == _quantity) return;
 
+            // A tap that changes nothing still owes the player a sentence when it was a tap
+            // *upward*: see <see cref="_capped"/>. Downward it is the floor of one, which is
+            // the one stop on this control nobody has to be told about.
+            if (wanted == _quantity)
+            {
+                if (delta <= 0) return;
+
+                _capped = true;
+                Audio.Sfx("blocked", .45f);
+                Repaint();
+                return;
+            }
+
+            _capped = false;
             _quantity = wanted;
             Audio.Sfx("click", .5f);
             Repaint();
@@ -268,6 +303,33 @@ namespace GlimmerGrove
 
             PaintStepper();
 
+            // The latch is dropped the moment the stop stops binding — gems landing from the
+            // stacked shelf, or a chest opened elsewhere raising the room — so a refusal can
+            // never outlive the thing it was about.
+            if (_capped && _quantity < most) _capped = false;
+
+            // **Why the `+` stopped, said instead of what the player is carrying.** The order
+            // itself is fine — the clamp saw to that — so without this the panel answers a
+            // refused tap with the cheerful holding line, which is what was reported.
+            //
+            // Which of the two walls it is comes from the ledger's own arithmetic:
+            // `MaxQuantity` is the lesser of what the gems cover and what there is room for, so
+            // whichever the count has reached is the one to name. **Room before gems**, which
+            // is `WhyNotBuy`'s own ordering and invariant 15a's reason: a player who is both
+            // full and short should hear about the wall money cannot climb, not be sent to a
+            // shop they would gain nothing from.
+            if (_capped && refusal == UtilityRefusal.None)
+            {
+                bool full = UtilityLedger.RoomFor(Item) <= _quantity;
+
+                _status.text = full ? Loc.Format("ui.utility.no_room", Item.MaxHeld)
+                                    : Loc.Get("ui.utility.no_gems");
+                _status.color = full ? Held : Short;
+
+                PaintAction(refusal);
+                return;
+            }
+
             switch (refusal)
             {
                 case UtilityRefusal.Poor:
@@ -301,6 +363,18 @@ namespace GlimmerGrove
                     break;
             }
 
+            PaintAction(refusal);
+        }
+
+        /// <summary>
+        /// Draws the paying button for an answer.
+        ///
+        /// Split out of <see cref="Repaint"/> so the capped branch can take its own early exit
+        /// without leaving the button behind — a status line that changes over a button that
+        /// does not is exactly the disagreement this panel exists not to have.
+        /// </summary>
+        void PaintAction(UtilityRefusal refusal)
+        {
             // The button swaps between paying and earning, so it is rebuilt rather than
             // relabelled when the answer changes — HomesteadBuyOverlay's shape, minus the
             // stepper it has to keep in step.

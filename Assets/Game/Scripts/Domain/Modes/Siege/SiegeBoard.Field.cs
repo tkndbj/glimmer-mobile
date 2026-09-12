@@ -41,7 +41,7 @@ namespace GlimmerGrove.Modes
             _cells[a] = keepB;
             _cells[b] = keepA;
 
-            bool any = SiegeLayout.Runs(_cells, Width, Height, _webbed).Count > 0;
+            bool any = SiegeLayout.Runs(_cells, Width, Height, null).Count > 0;
 
             _cells[a] = keepA;
             _cells[b] = keepB;
@@ -49,17 +49,57 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>Whether any swap on this field would line anything up.</summary>
-        public bool AnySwap()
-        {
-            for (int y = 0; y < Height; y++)
-                for (int x = 0; x < Width; x++)
-                {
-                    int here = IndexOf(x, y);
-                    if (x + 1 < Width && Lines(here, here + 1)) return true;
-                    if (y + 1 < Height && Lines(here, here + Width)) return true;
-                }
+        public bool AnySwap() => FindSwap(0).Found;
 
-            return false;
+        /// <summary>
+        /// A swap that would line something up, found by walking the field from
+        /// <paramref name="from"/> and wrapping.
+        ///
+        /// <para>
+        /// <b>Here rather than in the view, because "would this swap work" is already a rule.</b>
+        /// <see cref="Lines"/> is the one door every reader goes through — the drag,
+        /// <see cref="AnySwap"/>, <c>Settle</c>'s own proof that the field is playable, and the
+        /// offline mirror — and a hint that found its own answer would be a second opinion about
+        /// the only question this field asks. <see cref="AnySwap"/> is this, which is what keeps
+        /// them from being able to disagree: a field the shuffle believes is playable is a field a
+        /// hint can always point at.
+        /// </para>
+        /// <para>
+        /// <b><paramref name="from"/> is what stops a repeated nudge pointing at the same pair.</b>
+        /// The scan order is a fact rather than a preference — a <c>HashSet</c> walk is not
+        /// promised to enumerate the same way on two runtimes and neither is a shuffle, so the
+        /// pairs are numbered and walked in order, and a caller that wants the *next* answer hands
+        /// back <see cref="SiegeSwap.At"/> plus one. Nothing about a hint reaches the rules, so
+        /// this decides nothing about a run; it is deterministic because a reading that is not
+        /// cannot be pinned.
+        /// </para>
+        /// </summary>
+        public SiegeSwap FindSwap(int from)
+        {
+            int pairs = Count * 2;
+            if (pairs <= 0) return default;
+
+            int start = ((from % pairs) + pairs) % pairs;
+
+            for (int i = 0; i < pairs; i++)
+            {
+                int p = (start + i) % pairs;
+
+                // Two pairs per cell — the one to its right and the one below it — which between
+                // them name every adjacency on the field exactly once.
+                int here = p >> 1;
+                int x = here % Width, y = here / Width;
+
+                int other = (p & 1) == 0
+                    ? (x + 1 < Width ? here + 1 : -1)
+                    : (y + 1 < Height ? here + Width : -1);
+
+                if (other < 0 || !Lines(here, other)) continue;
+
+                return new SiegeSwap(here, other, p);
+            }
+
+            return default;
         }
 
         /// <summary>
@@ -82,7 +122,7 @@ namespace GlimmerGrove.Modes
             int depth = 0;
             while (true)
             {
-                var hit = SiegeLayout.Runs(_cells, Width, Height, _webbed);
+                var hit = SiegeLayout.Runs(_cells, Width, Height, null);
                 if (hit.Count == 0) break;
 
                 depth++;
@@ -215,40 +255,17 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// Whether a finger, or a shuffle, may move what is standing in this cell.
+        /// Whether the thing in this cell may be swapped.
         ///
-        /// <b>A cog may</b>, and that is deliberate rather than an oversight: a cog is a prize the
-        /// player is trying to reach, so dragging one into place is exactly the play the mechanic
-        /// wants. A web and a sack are what the hill has done <em>to</em> the field, so neither
-        /// moves until the thing that put it there is dead.
+        /// <b>Everything on this field is movable, and that is the point of what was removed.</b>
+        /// A weaver's lock and a thief's sack were the two things that could answer no; both were
+        /// withdrawn whole, and what the hill leaves on the board now is a bomb standing on the
+        /// <em>hill</em> rather than anything among the gems. Kept as a predicate rather than
+        /// inlined as `true`, because a cog is the next thing that will want to answer no.
         /// </summary>
         public bool Movable(int index)
-            => index >= 0 && index < _cells.Length
-            && !_webbed[index] && _cells[index] != SiegeLayout.Sack;
+            => index >= 0 && index < _cells.Length;
 
-        /// <summary>Whether a weaver has locked this cell.</summary>
-        public bool IsWebbed(int index)
-            => index >= 0 && index < _webbed.Length && _webbed[index];
-
-        /// <summary>Whether a thief has taken the gem that was standing here.</summary>
-        public bool IsSack(int index)
-            => index >= 0 && index < _cells.Length && _cells[index] == SiegeLayout.Sack;
-
-        /// <summary>How many of the field's cells a weaver has locked.</summary>
-        public int WebsStanding()
-        {
-            int n = 0;
-            for (int i = 0; i < _webbed.Length; i++) if (_webbed[i]) n++;
-            return n;
-        }
-
-        /// <summary>How many sacks are standing on the field.</summary>
-        public int SacksStanding()
-        {
-            int n = 0;
-            for (int i = 0; i < _cells.Length; i++) if (_cells[i] == SiegeLayout.Sack) n++;
-            return n;
-        }
 
         /// <summary>Whether this cell is holding a cog rather than a gem.</summary>
         public bool IsCog(int index)
@@ -257,25 +274,13 @@ namespace GlimmerGrove.Modes
         /// <summary>Whether this level ever deals a cog, authored or refilled.</summary>
         public bool Upgrades => Layout.Cogs > 0 || _seeded;
 
-        /// <summary>
-        /// Whether anything walking down this hill carries a shield.
-        ///
-        /// <b>Read off the muster rather than off the raiders standing now</b>, because a lesson
-        /// has to go up when the board opens and the first bulwark may be two waves away — and a
-        /// lesson is shown once in a player's life, so raising it on a rung that sends none would
-        /// spend it on something never on the screen.
-        /// </summary>
-        public bool Shielded
-        {
-            get
-            {
-                for (int w = 0; w < Layout.Coming.Length; w++)
-                    for (int i = 0; i < Layout.Coming[w].Length; i++)
-                        if (Layout.KindAt(w, i) == SiegeKind.Bulwark) return true;
-
-                return false;
-            }
-        }
+        // **`Shielded` went with the lesson it was written for.** It answered "does this hill
+        // ever send a bulwark", read off the muster rather than off the raiders standing now, and
+        // its only caller was `SiegeScreen.Lessons` deciding whether to raise `siege_shield`. With
+        // that lesson retired it had no reader at all, and a public reading on a Domain board with
+        // no caller is the shape somebody later reaches for to mean something it was never
+        // measured against. The rule itself is untouched: what a bulwark's shield does is
+        // `SiegeTuning.DamageTo`, and every rung that sent one still sends one.
 
         /// <summary>Gravity, then a refill, both written into the beat for the view to animate.</summary>
         void Collapse(SiegeBeat beat)
@@ -296,13 +301,6 @@ namespace GlimmerGrove.Modes
                         _cells[to] = c;
                         _cells[from] = Hole;
 
-                        // The web travels with the gem it is on. Anything parallel to the field
-                        // has to move here or it ends up describing a cell that is not the one it
-                        // was put on — which is invisible until a player wonders why a clean gem
-                        // will not move.
-                        _webbed[to] = _webbed[from];
-                        _webbed[from] = false;
-
                         beat.Drops.Add(new SiegeDrop(x, y, write, SiegeLayout.Letters.IndexOf(c)));
                     }
 
@@ -315,7 +313,6 @@ namespace GlimmerGrove.Modes
                 {
                     char c = Deal();
                     _cells[IndexOf(x, y)] = c;
-                    _webbed[IndexOf(x, y)] = false;
                     beat.Drops.Add(new SiegeDrop(x, -1 - fresh, y, SiegeLayout.Letters.IndexOf(c)));
                     fresh++;
                 }
@@ -352,7 +349,7 @@ namespace GlimmerGrove.Modes
 
                 // A shuffle that lands three alike together would go off with nobody having
                 // touched it, so it is dealt again rather than resolved.
-                if (SiegeLayout.Runs(_cells, Width, Height, _webbed).Count > 0) continue;
+                if (SiegeLayout.Runs(_cells, Width, Height, null).Count > 0) continue;
             }
         }
 

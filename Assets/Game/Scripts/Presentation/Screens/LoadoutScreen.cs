@@ -109,31 +109,44 @@ namespace GlimmerGrove
         /// always was, so the cell is what gives. Everything below the picture moved up by exactly
         /// what the picture lost, which is why <see cref="CellH"/> fell by the same 46.
         /// </para>
+        /// <para>
+        /// <b>And it is one structure again, which it briefly was not.</b> A kit cell used to be
+        /// 36 units taller than a turret's to carry a sentence about what the item does; the
+        /// turret shelf had already dropped its own for the reason below, and the kit's went the
+        /// same way on the owner's call. There is nothing left for the two to differ about, so
+        /// the ward-only numbers are gone rather than kept equal — two constants holding one
+        /// figure is the shape this project keeps recording as the thing that drifts.
+        /// </para>
+        /// <para>
+        /// <b>What a thing does is a sentence, and a sentence belongs on the panel.</b> Twenty
+        /// turrets or four utilities four across, each with a line of small print, is a wall of
+        /// prose on a screen whose job is a choice between pictures — and every one of those
+        /// sentences is already drawn one tap in, on the panel where somebody is deciding rather
+        /// than scanning. What the space buys is a price big enough to read at a glance, which is
+        /// the number a shelf is really about.
+        /// </para>
         /// </summary>
-        const float CellW = 236f, CellH = 298f;
+        const float CellW = 236f, CellH = 262f;
         const int CellRadius = 24;
         const float CellGapX = 20f, CellGapY = 22f;
 
         /// <summary>The picture: square, centred, a margin down from the cell's own top.</summary>
         const float IconTop = 18f, IconBox = CellW * .55f;
 
-        /// <summary>The name's middle and the note's middle, measured down from the cell's top.</summary>
-        const float NameY = 169f, NoteY = 215f;
+        /// <summary>The name's middle, measured down from the cell's top.</summary>
+        const float NameY = 172f;
 
         /// <summary>The price strip's middle, measured <em>up</em> from the cell's foot.</summary>
-        const float FootY = 28f;
-
         /// <summary>
-        /// A turret's cell, which is shorter than a utility's and says less.
+        /// Where a held turret's star ladder sits, measured down from the cell's top.
         ///
-        /// <b>It carries a name and a price and nothing else.</b> The one-line description of what
-        /// an ability does went with the height: twenty of them stacked four across is a wall of
-        /// small print on a screen whose job is a choice between pictures, and the sentence is
-        /// still there one tap in, on the panel where somebody is actually deciding. What the
-        /// space bought is a price big enough to read at a glance, which is the number the shelf
-        /// is really about.
+        /// <b>Between the name and the foot</b>, which is the band a for-sale card spends on its
+        /// price — so a cell is the same height whichever it is, and the eye finds one thing or
+        /// the other in the same place rather than in two.
         /// </summary>
-        const float WardCellH = 262f, WardNameY = 172f, WardFootY = 34f;
+        const float StarsY = 210f;
+
+        const float FootY = 34f;
 
         /// <summary>The parts of a slot that change when the line does.</summary>
         sealed class SlotView

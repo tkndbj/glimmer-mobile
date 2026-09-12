@@ -141,6 +141,19 @@ namespace GlimmerGrove.Persistence
             if (!SameSet(remote.groveLandOwned, merged.groveLandOwned)) return true;
             if (!SamePlacements(remote.homesteadPlaced, merged.homesteadPlaced)) return true;
 
+            // The generation of the catalogue the grove belongs to. It has to be compared
+            // even though the three sections above cover what is *in* the grove, because a
+            // device that cleared an old grove and has not placed anything since differs
+            // from the server in this field alone — and until it is pushed, the server's
+            // copy still claims the older epoch and will not lose the join.
+            if (remote.groveEpoch != merged.groveEpoch) return true;
+
+            // Where the house stands is a decision, and a device that has made one differs from
+            // the server in these three fields alone until it is pushed.
+            if (remote.groveHallSetUnix != merged.groveHallSetUnix) return true;
+            if (remote.groveHallFacing != merged.groveHallFacing) return true;
+            if ((remote.groveHall ?? string.Empty) != (merged.groveHall ?? string.Empty)) return true;
+
             // The utilities. These travel for the grove stock's reason with one addition: a
             // utility can be bought with gems, so a row that stayed on one phone is a purchase
             // the player made and cannot see on their other device — and *spent* has to travel
@@ -159,6 +172,7 @@ namespace GlimmerGrove.Persistence
             // How deep an endless run got. A floor, so a device that has just beaten its best has
             // something the server does not.
             if (!SameEndless(remote.endlessBest, merged.endlessBest)) return true;
+            if (!SameStars(remote.wardStars, merged.wardStars)) return true;
             if (!Same(remote.lastPlayedLevelId, merged.lastPlayedLevelId)) return true;
 
             var a = remote.settings ?? new SettingsDto();
@@ -327,6 +341,25 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>Whether two endless high-water lists agree. Ordered, for the reason above.</summary>
+        /// <summary>
+        /// Whether two ladders say the same thing. Rows are written sorted, so this is a walk.
+        /// </summary>
+        static bool SameStars(WardStarDto[] a, WardStarDto[] b)
+        {
+            int an = a == null ? 0 : a.Length;
+            int bn = b == null ? 0 : b.Length;
+
+            if (an != bn) return false;
+
+            for (int i = 0; i < an; i++)
+            {
+                if (a[i] == null || b[i] == null) return a[i] == b[i];
+                if (a[i].ward != b[i].ward || a[i].stars != b[i].stars) return false;
+            }
+
+            return true;
+        }
+
         static bool SameEndless(EndlessBestDto[] a, EndlessBestDto[] b)
         {
             int an = a?.Length ?? 0, bn = b?.Length ?? 0;
@@ -374,9 +407,9 @@ namespace GlimmerGrove.Persistence
                 if (!Same(x.piece, y.piece)) return false;
                 if (x.setUnix != y.setUnix) return false;
 
-                // Without this a flip on its own reads as "nothing changed" and is never
+                // Without this a turn on its own reads as "nothing changed" and is never
                 // pushed, so it survives until something else on the row moves.
-                if (x.flipped != y.flipped) return false;
+                if (x.facing != y.facing) return false;
             }
 
             return true;

@@ -31,7 +31,7 @@ namespace GlimmerGrove.Modes
         /// gem is still that colour — the player can see exactly what they are being denied, and
         /// the web comes off with the weaver — so it has to sit <em>beside</em> the cell rather
         /// than replace it. A sack is not a colour at all, so it is a glyph
-        /// (<see cref="SiegeLayout.Sack"/>) and every rule that walks the field is already
+        /// and every rule that walks the field is already
         /// correct about it.
         /// </para>
         /// <para>
@@ -41,7 +41,6 @@ namespace GlimmerGrove.Modes
         /// of the colour it took and simply bursts into a freshly dealt gem.
         /// </para>
         /// </summary>
-        readonly bool[] _webbed;
 
         readonly SiegeWard[] _wards;
         readonly List<SiegeRaider> _raiders = new List<SiegeRaider>(24);
@@ -117,7 +116,6 @@ namespace GlimmerGrove.Modes
         {
             Layout = layout;
             _cells = layout.Grid.Copy();
-            _webbed = new bool[_cells.Length];
             _rng = layout.Seed;
 
             // A different constant so the two streams cannot walk in step, and never nought,
@@ -134,7 +132,10 @@ namespace GlimmerGrove.Modes
             for (int i = 0; i < _wards.Length; i++)
             {
                 int colour = SiegeLayout.Letters.IndexOf(layout.Wards[i]);
-                _wards[i] = new SiegeWard(colour, Line.At(colour));
+                // **The build and not the model**, so the stars a player has bought reach the
+                // bolt and the chassis. Asked of the line rather than of a ledger, because a
+                // line is resolved once and a ledger can move under a run when a sync lands.
+                _wards[i] = new SiegeWard(colour, Line.BuildAt(colour));
             }
 
             _rest = SiegeTuning.FirstWaveAfter;
@@ -178,6 +179,34 @@ namespace GlimmerGrove.Modes
 
         /// <summary>The wave now on the hill, counting from one. Nought before the first.</summary>
         public int Wave => _wave;
+
+        /// <summary>
+        /// Seconds of the run's own clock left before the first wave steps out, and nought the
+        /// instant it has.
+        ///
+        /// <para>
+        /// <b>It exists so the count-in can be <em>derived</em> from the quiet it counts rather
+        /// than timed alongside it.</b> The view drew three, two, one and GO! from a coroutine on
+        /// the wall clock, on the reasoning that the two would agree because both were
+        /// <see cref="SiegeTuning.FirstWaveAfter"/> long — which is arithmetic held in step by
+        /// hand, and it came apart the first time anything held the run. A first-timer's tip
+        /// holds the board (<c>RunHold.Teaching</c>) and so does the pause menu, the action bar's
+        /// shop and the opening transition; none of them holds a wall clock, so the count ran out
+        /// behind the panel and the player was handed a hill with no count-in at all. Read off
+        /// this, the two cannot disagree on any frame, for any reason, without somebody changing
+        /// this line — which is invariant 33g's bargain (a fact derived from a shape can never
+        /// come apart from it), and 39j's about a cooldown that must not be payable by opening a
+        /// panel.
+        /// </para>
+        /// <para>
+        /// <b>Narrow on purpose: it is not "seconds until the next wave".</b> A hill the player
+        /// has cleared musters the next wave at once, whatever <c>_rest</c> says
+        /// (<see cref="Muster"/>, invariant 37k), so a general reading would be a number that
+        /// lies from the second wave onward. The first wave is the one case the shortcut is
+        /// explicitly guarded against, which is what makes this one honest.
+        /// </para>
+        /// </summary>
+        public float BeforeFirstWave => _wave > 0 ? 0f : (_rest > 0f ? _rest : 0f);
 
         /// <summary>How many waves this siege sends, the warlord's included.</summary>
         public int Waves => Layout.Waves.Length;

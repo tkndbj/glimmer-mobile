@@ -86,9 +86,9 @@
     "waves": [
      "rgbyRG",
      "rgbyRGby",
-     "RGBYrgby"
+     "RGBYRGby"
     ],
-    "boss": "blightcaller:b",
+    "boss": "",
     "cogs": 3
    }
   },
@@ -112,7 +112,7 @@
     "wards": "rgby",
     "waves": [
      "rrrgggbb",
-     "YYYYrrrr",
+     "YYYY!rrrr",
      "GGBBYY"
     ],
     "boss": "",
@@ -139,7 +139,7 @@
     "wards": "rgby",
     "waves": [
      "rgbyrg",
-     "rgbyRGby",
+     "rgby!bRGby",
      "RGbyRG"
     ],
     "boss": "warlord:r",
@@ -166,7 +166,7 @@
     "wards": "rgby",
     "waves": [
      "RGby#rby",
-     "RGbyRGby",
+     "RGby!yRGby",
      "RGBYRG#gRG"
     ],
     "boss": "",
@@ -193,7 +193,7 @@
     "wards": "rgby",
     "waves": [
      "#bgyRGby",
-     "RGBY#rG",
+     "RGBY#rG!g",
      "RGBYRG#y"
     ],
     "boss": "",
@@ -221,9 +221,9 @@
     "waves": [
      "rgbyRGby",
      "RGBYRGby",
-     "RGBYrg"
+     "RGBY#gRGby!y"
     ],
-    "boss": "warbringer:g",
+    "boss": "",
     "cogs": 3
    }
   },
@@ -248,7 +248,7 @@
     "waves": [
      "rgbyRGby",
      "RGBY#rGBY",
-     "RGBY#gRGB#b"
+     "RGBY#gRGB#b!r"
     ],
     "boss": "",
     "cogs": 3
@@ -273,7 +273,7 @@
     "gems": "rgby",
     "wards": "rgby",
     "waves": [
-     "rgbyRGby",
+     "rgby!bRGby",
      "RGB#rY#gG",
      "RGBYRGby"
     ],

@@ -60,8 +60,12 @@ namespace GlimmerGrove.Dev
         readonly List<Btn> _cells = new List<Btn>();
         readonly List<Btn> _chips = new List<Btn>();
 
-        static readonly Color[] Tints = { Pal.Poppy, Pal.Mint, Pal.Azure, Pal.Sun };
-        Color Tint => Tints[Mathf.Clamp(_colour, 0, Tints.Length - 1)];
+        // **Asked of the board rather than written out again.** This bench exists to judge a
+        // turret's effect against the colour it will really wear, so a second table of the four
+        // is a second answer to the question invariant 37f settles by there being exactly one —
+        // and a bench that flatters a bolt with a colour the board does not paint is worse than
+        // no bench. `SiegeView.TintOf` is public for exactly this and for `WardFiringStage`.
+        Color Tint => SiegeView.TintOf(Mathf.Clamp(_colour, 0, WardLine.Colours.Length - 1));
 
         // ----------------------------------------------------------------- build
         protected override void Build()
@@ -149,7 +153,7 @@ namespace GlimmerGrove.Dev
                                         Vector2.zero, () => Choose(at));
 
                 var img = chip.GetComponent<Image>();
-                if (img != null) img.color = Tints[i];
+                if (img != null) img.color = SiegeView.TintOf(i);
 
                 _chips.Add(chip);
             }
@@ -254,7 +258,8 @@ namespace GlimmerGrove.Dev
             for (int i = 0; i < _chips.Count; i++)
             {
                 var img = _chips[i].GetComponent<Image>();
-                if (img != null) img.color = i == _colour ? Tints[i] : Pal.A(Tints[i], .34f);
+                var tint = SiegeView.TintOf(i);
+                if (img != null) img.color = i == _colour ? tint : Pal.A(tint, .34f);
             }
 
             var models = WardLedger.Catalog.Models;

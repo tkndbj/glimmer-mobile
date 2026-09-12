@@ -125,10 +125,26 @@ namespace GlimmerGrove
         }
 
         /// <summary>A piece's still sprite. Null for an animated one, which has frames instead.</summary>
-        public static Sprite Still(HomesteadPiece piece)
-            => !piece.IsValid || piece.Animated
-                ? null
-                : AssetLibrary.Peek<Sprite>(AssetManifest.ArtRoot + piece.Art);
+        /// <summary>
+        /// A piece's still sprite at one facing. Null for an animated one, which has frames.
+        ///
+        /// <para>
+        /// A piece with one facing is one sprite at its own address, which is what every piece
+        /// in the grove was and what <c>AssetManifest</c> addresses. A piece with four is a
+        /// <em>frame folder</em> indexed by facing — the same machinery an animated piece uses,
+        /// for a different reason, which is why a piece may never be both (see
+        /// <see cref="HomesteadPiece.Facings"/>).
+        /// </para>
+        /// </summary>
+        public static Sprite Still(HomesteadPiece piece, int facing = 0)
+        {
+            if (!piece.IsValid || piece.Animated) return null;
+            if (piece.Facings <= 1) return AssetLibrary.Peek<Sprite>(AssetManifest.ArtRoot + piece.Art);
+
+            var frames = AssetLibrary.PeekFrames(AssetManifest.ArtRoot + piece.Art);
+            if (frames == null || frames.Length == 0) return null;
+            return frames[GroveFootprint.Quarter(facing) % frames.Length];
+        }
 
         /// <summary>
         /// Whether <see cref="Paint"/> would draw anything right now — that is, whether this
@@ -172,7 +188,7 @@ namespace GlimmerGrove
         /// white rectangles at once.
         /// </para>
         /// </summary>
-        public static void Paint(Image target, HomesteadPiece piece)
+        public static void Paint(Image target, HomesteadPiece piece, int facing = 0)
         {
             if (target == null) return;
 
@@ -209,7 +225,7 @@ namespace GlimmerGrove
                 return;
             }
 
-            var sprite = Still(piece);
+            var sprite = Still(piece, facing);
             target.sprite = sprite;
             target.color = Fade(target.color, sprite == null ? 0f : 1f);
         }

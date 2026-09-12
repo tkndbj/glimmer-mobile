@@ -100,16 +100,10 @@ namespace GlimmerGrove.Modes
         public const char Shield = '#';
 
         /// <summary>
-        /// Written before a colour letter, it makes that raider a <see cref="SiegeKind.Weaver"/>:
-        /// <c>"rg~b"</c> is two creepers and a blue weaver.
+        /// Written before a colour letter, it makes that raider a <see cref="SiegeKind.Bomber"/>:
+        /// <c>"rg!b"</c> is two creepers and a blue bomber.
         /// </summary>
-        public const char Web = '~';
-
-        /// <summary>
-        /// Written before a colour letter, it makes that raider a <see cref="SiegeKind.Thief"/>:
-        /// <c>"R$y"</c> is a red brute and a yellow thief.
-        /// </summary>
-        public const char Loot = '$';
+        public const char Drop = '!';
 
         /// <summary>
         /// Every prefix a wave may carry, and the kind each one names.
@@ -125,8 +119,7 @@ namespace GlimmerGrove.Modes
         public static readonly (char Mark, SiegeKind Kind)[] Modifiers =
         {
             (Shield, SiegeKind.Bulwark),
-            (Web,    SiegeKind.Weaver),
-            (Loot,   SiegeKind.Thief),
+            (Drop,   SiegeKind.Bomber),
         };
 
         /// <summary>Whether this character is a modifier rather than a raider.</summary>
@@ -158,23 +151,16 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// A cell holding a sack a thief has taken a gem into.
+        /// <b>Retired: nothing writes either of these and the two characters must never be
+        /// reused as a cell.</b>
         ///
-        /// <para>
-        /// <b>Never authored, and that is why it is not in <see cref="Cells"/>.</b> A level says
-        /// what is standing on the field when it opens; a sack only ever exists because something
-        /// on the hill put it there, so a file carrying one is a file written against rules this
-        /// build does not have (invariant 5f).
-        /// </para>
-        /// <para>
-        /// <b>A glyph rather than a flag, because it is not a colour.</b> A sack cannot line up
-        /// with anything, so <see cref="IsGem"/> answers false for it and every rule that walks
-        /// the field is correct about it unchanged — exactly what makes <see cref="Cog"/> cheap.
-        /// A web is the opposite case and is a flag, because a webbed gem <em>is</em> still that
-        /// colour and the player can still see what they are being denied.
-        /// </para>
+        /// <c>'%'</c> was a sack, left where a thief took a gem; <c>'!'</c> was a bomb standing on
+        /// the field. Both belonged to the withdrawn idea of the hill reaching into the gem board
+        /// (invariant 40h). A bomb now stands on the <em>hill</em> and is not a cell at all - see
+        /// <see cref="SiegeBomb"/>. Written down because a file carrying one is a file written
+        /// against rules this build does not have, which is the duskcap's reason (invariant 5f).
         /// </summary>
-        public const char Sack = '%';
+        public const char RetiredSack = '%', RetiredBomb = '!';
 
         /// <summary>
         /// How a level names its boss: <c>"warlord:r"</c> — a <b>kind</b> and the colour it wears.

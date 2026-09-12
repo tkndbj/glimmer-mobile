@@ -45,7 +45,7 @@ namespace GlimmerGrove
             // the sentence true if the lap is ever retuned.
             var beyond = ladder.Rung(rungs + 1).AsDrop();
             string beyondPay = beyond.IsValid
-                ? RewardArt.Amount(beyond) + " " + RewardArt.Name(beyond.Kind)
+                ? RewardArt.Amount(beyond) + " " + RewardArt.Name(beyond.Kind, beyond.Item)
                 : Loc.Get("ui.streak.info_cycle_nothing");
 
             Section(-208f, "ic_play", "ui.streak.info_earn_title",

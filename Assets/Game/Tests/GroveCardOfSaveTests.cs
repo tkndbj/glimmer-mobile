@@ -76,7 +76,7 @@ namespace GlimmerGrove.Tests
                 homesteadPlaced = new[]
                 {
                     new HomesteadPlacementDto { slot = T(2, 2), piece = "fence", setUnix = 10L },
-                    new HomesteadPlacementDto { slot = T(3, 3), piece = "oak", setUnix = 11L, flipped = true },
+                    new HomesteadPlacementDto { slot = T(3, 3), piece = "oak", setUnix = 11L, facing = 1 },
                 },
                 levels = new LevelRecordDto[0],
             };
@@ -94,9 +94,9 @@ namespace GlimmerGrove.Tests
             moved.homesteadPlaced[0].slot = T(2, 3);
             Assert.AreNotEqual(baseline, Print(moved), "a piece moved");
 
-            var flipped = Save();
-            flipped.homesteadPlaced[0].flipped = true;
-            Assert.AreNotEqual(baseline, Print(flipped), "a piece turned round");
+            var turned = Save();
+            turned.homesteadPlaced[0].facing = 2;
+            Assert.AreNotEqual(baseline, Print(turned), "a piece turned round");
 
             var cleared = Save();
             cleared.homesteadPlaced = new[] { cleared.homesteadPlaced[0] };
