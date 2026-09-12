@@ -33,16 +33,16 @@ namespace GlimmerGrove.Tests
         /// </summary>
         static readonly Rung[] Broodmarch =
         {
-            new Rung("s03_firstbrood", new[] { "grrgbybg", "brbygrgy", "gbyrbbyr", "rrggrrbr", "rggbbgrg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYrgby", "RGBYRGby" }, "", 3),
-            new Rung("s03_hollowshell", new[] { "ybrgbgyr", "yrbrrbrb", "gbrbyybg", "ybgbrgry", "bygygybr" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBY#rGby", "RGBY#gRGby" }, "", 3),
-            new Rung("s03_mirewalk", new[] { "gbyybrrb", "ybbrgbyy", "gygyrgrg", "bbybyyrb", "yygrrbyb" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY!rRGby", "RGBYRG!gBY!b" }, "", 3),
-            new Rung("s03_spinecrest", new[] { "gbygybbr", "rrggrrbr", "rgybyrgy", "ygbgrbyb", "brrgybyr" }, "rgby", "rgby", new[] { "RGBY#rRGby", "RGBY#gRGBY", "RGBY#bRGby" }, "", 3),
-            new Rung("s03_blightfen", new[] { "bbgygbbg", "grbgryry", "rgyrygyr", "brgbbrgr", "yrgbyrby" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRGby", "RGBY#rRGby" }, "blightcaller:b", 3),
-            new Rung("s03_stillmire", new[] { "rggybgrr", "yrybbrby", "ggbrggyg", "rryygybr", "bgbrrgrb" }, "rgby", "rgby", new[] { "RRRrrrrg", "GGG#gGGgb", "BBBbbbbYYy" }, "", 3),
-            new Rung("s03_thornbrood", new[] { "rbyrgrbb", "rryybgyg", "yggyybrg", "yybrrgyr", "bbggbyyr" }, "rgby", "rgby", new[] { "RGBYRGBY", "RGBYRGBYrg", "RGBY#yRGBYrg" }, "", 3),
-            new Rung("s03_gloamfield", new[] { "gygrybyb", "byrrbbrb", "brggygyy", "yybbyggb", "grbgrbby" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY!gRGby", "RGBY#bRGby" }, "", 3),
-            new Rung("s03_deepmire", new[] { "gygrbgbg", "yrybryyb", "gbgrgbyg", "ryybybbg", "bybbryry" }, "rgby", "rgby", new[] { "rgbyRGBY", "RGBYRGby", "RGby#rRGby#gby", "RGBYrgby" }, "", 3),
-            new Rung("s03_broodheart", new[] { "rrggrbgb", "ybgyryrg", "gybyggyy", "rgrbgrry", "rgrbybrr" }, "rgby", "rgby", new[] { "RGBYRGby", "RGBY#rRGby", "RGBYRG#gby" }, "warbringer:g", 3),
+            new Rung("s03_firstbrood", new[] { "grrgbybg", "brbygrgy", "gbyrbbyr", "rrggrrbr", "rggbbgrg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYrgby", "RGBYRGby" }, "", 25),
+            new Rung("s03_hollowshell", new[] { "ybrgbgyr", "yrbrrbrb", "gbrbyybg", "ybgbrgry", "bygygybr" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBY#rGby", "RGBY#gRGby" }, "", 25),
+            new Rung("s03_mirewalk", new[] { "gbyybrrb", "ybbrgbyy", "gygyrgrg", "bbybyyrb", "yygrrbyb" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY!rRGby", "RGBYRG!gBY!b" }, "", 25),
+            new Rung("s03_spinecrest", new[] { "gbygybbr", "rrggrrbr", "rgybyrgy", "ygbgrbyb", "brrgybyr" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGby#gRGby", "RGby#bRGby" }, "", 25),
+            new Rung("s03_blightfen", new[] { "bbgygbbg", "grbgryry", "rgyrygyr", "brgbbrgr", "yrgbyrby" }, "rgby", "rgby", new[] { "rgbyRGby", "RGbyRGby", "RGBY#rRGby" }, "blightcaller:b", 25),
+            new Rung("s03_stillmire", new[] { "rggybgrr", "yrybbrby", "ggbrggyg", "rryygybr", "bgbrrgrb" }, "rgby", "rgby", new[] { "RRRrrrrg", "GGG#gGGgb", "BBBbbbbYYy" }, "", 25),
+            new Rung("s03_thornbrood", new[] { "rbyrgrbb", "rryybgyg", "yggyybrg", "yybrrgyr", "bbggbyyr" }, "rgby", "rgby", new[] { "RGbyrgby", "RGbyRGbyrg", "RGBY#yRGbyrg" }, "", 25),
+            new Rung("s03_gloamfield", new[] { "gygrybyb", "byrrbbrb", "brggygyy", "yybbyggb", "grbgrbby" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY!gRGby", "RGBY#bRGby" }, "", 25),
+            new Rung("s03_deepmire", new[] { "gygrbgbg", "yrybryyb", "gbgrgbyg", "ryybybbg", "bybbryry" }, "rgby", "rgby", new[] { "rgbyRGby", "RGbyRGby", "RGby#rRGby#gby", "RGBYrgby" }, "", 25),
+            new Rung("s03_broodheart", new[] { "rrggrbgb", "ybgyryrg", "gybyggyy", "rgrbgrry", "rgrbybrr" }, "rgby", "rgby", new[] { "RGbyRGby", "RGby#rRGby", "RGBYRG#gby" }, "warbringer:g", 25),
         };
 
         // ------------------------------------------------------------------ the lines it plays
@@ -310,10 +310,12 @@ namespace GlimmerGrove.Tests
         {
             // Where this chapter stands, measured. Set below what was read, because a sweep of
             // ninety is steady and not exact.
-            // Measured 2026-09-11: 55 on the starter, 77 one rung up, against Thornwatch's 82 on
-            // the starter. The worst rung on the starter holds 3 of 9 and none holds none.
-            const int BareFloor = 50;       // hard, and nobody is walled out
-            const int KittedFloor = 72;     // comfortably clearable once the shelf is used
+            // Measured 2026-09-12, after the colour lock and the shorter wave gaps: 65 on the
+            // starter, 84 one rung up, against Thornwatch's 81 on the starter. The worst rung on
+            // the starter is the finale at 1 of 9, and the shelf is worth nineteen runs across the
+            // chapter - which is the whole story this chapter is meant to tell.
+            const int BareFloor = 60;       // hard, and nobody is walled out
+            const int KittedFloor = 78;     // comfortably clearable once the shelf is used
             const int Answers = 12;         // runs the first rung of the shelf is worth, at least
 
             var bare = Play(Broodmarch, Bare());

@@ -131,13 +131,9 @@ namespace GlimmerGrove.Modes
                 foreach (int cell in hit) beat.Cleared.Add(cell);
                 beat.Cleared.Sort();
 
-                // **Cogs are claimed before anything comes off the field, and in cell order.**
-                // Both halves matter: the colour that takes a cog has to be read off the board as
-                // it stands, and the order has to be an ordering rather than whichever way a hash
-                // set happened to enumerate — a `HashSet<int>` walk is not promised to be the same
-                // on two runtimes, and this decides which turret a player's upgrade went to.
-                Claim(beat);
-
+                // Sorted above rather than walked as a set: a `HashSet<int>` is not promised to
+                // enumerate the same way on two runtimes, and this loop decides the order the
+                // view lights cells in.
                 for (int i = 0; i < beat.Cleared.Count; i++)
                 {
                     int cell = beat.Cleared[i];
@@ -175,104 +171,18 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// Takes every cog standing beside something this beat cleared, and spends it on the ward
-        /// of the colour that took it.
+        /// Whether this level's line can be upgraded at all.
         ///
-        /// <para>
-        /// <b>The colour of the run decides the ward, which is the whole mechanic.</b> A cog is
-        /// not a colour and can never be lined up; what it is worth is a rank, and which turret
-        /// gets it is settled by what the player chose to match beside it. So the question a cog
-        /// asks is the mode's own question — <em>which colour is wanted</em> — asked about the
-        /// line rather than about the hill, and a player who answers it carelessly upgrades the
-        /// wrong turret and cannot take it back.
-        /// </para>
-        /// <para>
-        /// <b>First neighbour in cell order wins a cog with two colours beside it</b>, and that is
-        /// a rule rather than a tie-break: it is deterministic, it is the same on both runtimes,
-        /// and it is *stated* rather than emergent. A player who wants a particular colour to take
-        /// a cog can always arrange for that colour to be the only one touching it.
-        /// </para>
-        /// <para>
-        /// <b>The rank lands here rather than with the fuel</b>, unlike everything else this turn
-        /// books (invariant 37s). A rank is a property and not a hit: nothing about it is visible
-        /// until a bolt leaves, and a bolt costs fuel, which is still crossing the field — so
-        /// there is no moment where the player sees an effect arrive before its cause. Keeping it
-        /// here is what keeps <see cref="SiegeWard.Rank"/> a single source of truth for the badge,
-        /// the damage and the fuel cost at once.
-        /// </para>
+        /// <b>A fact about the level rather than about the field.</b> Cogs are dropped by felled
+        /// raiders now, so nothing about the board can be asked whether one is standing — what
+        /// decides it is the authored drop rate, and it is read here so that everything asking
+        /// "does this rung have the cog mechanic" keeps asking one question.
         /// </summary>
-        void Claim(SiegeBeat beat)
-        {
-            for (int i = 0; i < beat.Cleared.Count; i++)
-            {
-                int cell = beat.Cleared[i];
-                char colour = _cells[cell];
+        public bool Upgrades => Layout.Cogs > 0;
 
-                int x = cell % Width, y = cell / Width;
-
-                Take(x - 1, y, colour, beat);
-                Take(x + 1, y, colour, beat);
-                Take(x, y - 1, colour, beat);
-                Take(x, y + 1, colour, beat);
-            }
-        }
-
-        /// <summary>Takes the cog at this cell, if there is one, for this colour.</summary>
-        void Take(int x, int y, char colour, SiegeBeat beat)
-        {
-            if (x < 0 || y < 0 || x >= Width || y >= Height) return;
-
-            int cell = IndexOf(x, y);
-            if (_cells[cell] != SiegeLayout.Cog) return;
-
-            // Emptied here rather than left for the sweep below, so a cog with three cleared gems
-            // around it is taken once and by the first of them.
-            _cells[cell] = Hole;
-
-            int ward = Layout.WardOf(colour);
-
-            // A cog taken by a colour whose ward has fallen — or is already at the top of the
-            // ladder — is spent for nothing, and that is reported rather than hidden. It is the
-            // cost of the decision, and a mechanic whose wrong answer costs nothing is a mechanic
-            // with no decision in it (invariant 5d).
-            if (ward >= 0 && _wards[ward].Upgradable)
-            {
-                _wards[ward].Rank++;
-                beat.Rises.Add(new SiegeRise(cell, ward, _wards[ward].Rank,
-                                             SiegeLayout.Letters.IndexOf(colour)));
-                return;
-            }
-
-            beat.Rises.Add(new SiegeRise(cell, ward, 0, SiegeLayout.Letters.IndexOf(colour)));
-        }
-
-        /// <summary>How many cogs are standing on the field. Bounded by <c>MostCogs</c>.</summary>
-        public int CogsStanding()
-        {
-            int n = 0;
-            for (int i = 0; i < _cells.Length; i++) if (_cells[i] == SiegeLayout.Cog) n++;
-            return n;
-        }
-
-        /// <summary>
-        /// Whether the thing in this cell may be swapped.
-        ///
-        /// <b>Everything on this field is movable, and that is the point of what was removed.</b>
-        /// A weaver's lock and a thief's sack were the two things that could answer no; both were
-        /// withdrawn whole, and what the hill leaves on the board now is a bomb standing on the
-        /// <em>hill</em> rather than anything among the gems. Kept as a predicate rather than
-        /// inlined as `true`, because a cog is the next thing that will want to answer no.
-        /// </summary>
         public bool Movable(int index)
             => index >= 0 && index < _cells.Length;
 
-
-        /// <summary>Whether this cell is holding a cog rather than a gem.</summary>
-        public bool IsCog(int index)
-            => index >= 0 && index < _cells.Length && _cells[index] == SiegeLayout.Cog;
-
-        /// <summary>Whether this level ever deals a cog, authored or refilled.</summary>
-        public bool Upgrades => Layout.Cogs > 0 || _seeded;
 
         // **`Shielded` went with the lesson it was written for.** It answered "does this hill
         // ever send a bulwark", read off the muster rather than off the raiders standing now, and
@@ -363,14 +273,18 @@ namespace GlimmerGrove.Modes
         /// roll or neither does, and the gems that follow line up exactly.
         /// </para>
         /// </summary>
-        char Deal()
-        {
-            if (Layout.Cogs > 0 && CogsStanding() < SiegeTuning.MostCogs
-                && Next() % 100u < (uint)Layout.Cogs)
-                return SiegeLayout.Cog;
-
-            return Layout.Deal[(int)(Next() % (uint)Layout.Deal.Length)];
-        }
+        /// <summary>
+        /// One fresh gem for a column that has emptied.
+        ///
+        /// <b>Exactly one draw, which is what keeps every shipped seed honest.</b> It used to take
+        /// two on the draws that rolled a cog, so removing the cog from the field removes a draw —
+        /// and a stream drawn from a different number of times deals a different board from the
+        /// same seed, which re-rolls every field in the game with nothing in any file wrong
+        /// (invariant 41). The cog roll moved to the hill and takes the same one draw per felled
+        /// raider that a lane already took, so what changed is where a draw happens and never how
+        /// many there are.
+        /// </summary>
+        char Deal() => Layout.Deal[(int)(Next() % (uint)Layout.Deal.Length)];
 
         /// <summary>xorshift32. Thirty-two bit throughout so the Python mirror reaches the same field.</summary>
         uint Next()

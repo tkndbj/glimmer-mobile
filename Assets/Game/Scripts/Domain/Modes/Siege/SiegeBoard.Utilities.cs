@@ -166,12 +166,47 @@ namespace GlimmerGrove.Modes
         /// it buying a star. What a utility may sell is survival, never resurrection.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// Pours a mending into a ward, and raises it if it has fallen.
+        ///
+        /// <para>
+        /// <b>Raising a fallen turret is the half the colour lock made necessary.</b> While a bolt
+        /// merely preferred its own colour a dead ward cost the line a quarter of its output and
+        /// nothing else; under the lock its colour can never be hurt again by anything except a
+        /// splash, a chain or an overcharge — so a line that loses a turret early is a line
+        /// walking into a colour it cannot answer, and the run spirals for a reason the player can
+        /// do nothing about. A mending is the one thing in the game that can undo it, which is
+        /// exactly what invariant 23 says a purchase is allowed to sell: a finish, never a grade.
+        /// </para>
+        /// <para>
+        /// <b>It comes back with what the mending gave and no more</b>, so raising one is a real
+        /// cost rather than a free reset — a turret put back on a sixth of its health is a turret
+        /// the next wave can take down again.
+        /// </para>
+        /// <para>
+        /// <b>And it never touches the fuel.</b> A raised ward starts empty, because fuel is what
+        /// the player matched for and a mending is not a match (invariant 39's whole subject).
+        /// </para>
+        /// </summary>
         public int Mend(int ward, int health)
         {
             if (ward < 0 || ward >= _wards.Length || health <= 0) return 0;
 
             var post = _wards[ward];
-            if (!post.Alive) return 0;
+
+            if (!post.Alive)
+            {
+                int raised = health < post.Full ? health : post.Full;
+
+                post.Alive = true;
+                post.Health = raised;
+                post.Fuel = 0f;
+                post.Charges = 0;
+                post.Dark = 0f;
+                post.Cool = 0f;
+
+                return raised;
+            }
 
             int room = post.Full - post.Health;
             if (room <= 0) return 0;
@@ -216,9 +251,11 @@ namespace GlimmerGrove.Modes
             post.Dark = 0f;
 
             int given = tenths < room ? tenths : room;
-            post.Fuel += given / 10f;
 
-            if (post.Fuel > post.Capacity) post.Fuel = post.Capacity;
+            // Through `Fill`, so a surge that tops a tube up banks an overcharge exactly as a
+            // match would. Written as `Fuel +=` here it was the one way to fill a ward that could
+            // never arm one.
+            post.Fill(given / 10f);
 
             return given;
         }
@@ -267,6 +304,7 @@ namespace GlimmerGrove.Modes
                 post.Alive = true;
                 post.Health = post.Full;
                 post.Fuel = 0f;
+                post.Charges = 0;
                 post.Dark = 0f;
                 post.Cool = 0f;
 
@@ -290,6 +328,13 @@ namespace GlimmerGrove.Modes
         ///
         /// Floored, so an offer is never made on room that turns out not to be there.
         /// </summary>
+        /// <summary>
+        /// How much fuel this ward could take, in tenths.
+        ///
+        /// <b>A ward short of its charge cap has room for the charges it has not banked yet</b>, so
+        /// a surge poured into a nearly-full tube is not refused for having nowhere to go — what it
+        /// does there is bank an overcharge, which is worth more than the fuel was.
+        /// </summary>
         public int RoomForFuel(int ward)
         {
             if (ward < 0 || ward >= _wards.Length) return 0;
@@ -297,17 +342,27 @@ namespace GlimmerGrove.Modes
             var post = _wards[ward];
             if (!post.Alive) return 0;
 
-            float room = post.Capacity - post.Fuel;
+            float spare = (SiegeTuning.MostCharges - post.Charges) * post.Capacity;
+            float room = post.Capacity - post.Fuel + (spare > 0f ? spare : 0f);
+
             return room <= 0f ? 0 : (int)(room * 10f);
         }
 
         /// <summary>How much more health a ward could take. Nought for a fallen one.</summary>
+        /// <summary>
+        /// How much health a mending could put into this ward.
+        ///
+        /// <b>A fallen ward has room for all of it</b>, which is what lets one be raised: this is
+        /// the predicate <c>SiegeUtility.Would</c> asks before spending the item, so answering
+        /// nought for a turret that is down would refuse the mending on exactly the turret it is
+        /// now most worth spending on.
+        /// </summary>
         public int RoomForHealth(int ward)
         {
             if (ward < 0 || ward >= _wards.Length) return 0;
 
             var post = _wards[ward];
-            if (!post.Alive) return 0;
+            if (!post.Alive) return post.Full;
 
             int room = post.Full - post.Health;
             return room < 0 ? 0 : room;

@@ -8591,6 +8591,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_pyre_g
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4b6dbed2580c3bb43a4768e5a2425c65
+    m_Address: Art/Siege/charge
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4b7fa711390ccb14c9caad20fb5453c5
     m_Address: Art/Fx/Siege/muzzle_glacier_r/f04
     m_ReadOnly: 0

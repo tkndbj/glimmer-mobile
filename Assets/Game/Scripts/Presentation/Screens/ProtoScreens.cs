@@ -391,12 +391,17 @@ namespace GlimmerGrove
             _siege.Blew = Blew;
             _siege.Appeared = Met;
 
+            // The three moments this mode's remaining lessons hang on. Each fires once for the
+            // life of the screen; `RunLessons.Teach` is what refuses one already seen.
+            _siege.Rested = () => Teaching?.Teach(Mechanic.SiegeBank);
+            _siege.Brimmed = () => Teaching?.Teach(Mechanic.SiegeBrim);
+            _siege.Salvaged = () => Teaching?.Teach(Mechanic.SiegeSalvage);
+
             // **What a bomb hits for is the published firepot's number, not a constant.** The two
             // are the same blast and the player is told so; a second figure is a second thing a
             // content push can move half of.
             var pot = Firepot();
             if (pot != null && _siege.Siege != null) _siege.Siege.BombDamage = pot.Magnitude;
-            _siege.Appeared = Met;
 
             // The bar owns what is armed; the board only mirrors it. Without this the view
             // disarmed itself and the slot kept its ring, which read as an item stuck on.
@@ -711,13 +716,13 @@ namespace GlimmerGrove
 
             var anchor = _siege.WardAnchor;
 
-            // **The ring goes on a turret and the cog is drawn in the panel.** Ringing the cog
-            // itself was tried and taken back out: a cog is dealt at a rate rather than authored,
-            // so a rung can open with none standing - and a lesson is offered once in a player's
-            // life, so one that waits for a board that may never come may never be given. What a
-            // ring round a turret cannot say is what a cog *looks like*, so the panel says it.
-            if (board.Upgrades && anchor != null)
-                into.Add(Lesson.At(Mechanic.SiegeCog, anchor, icon: _siege.CogArt));
+            // **The cog's lesson is deferred now, because a cog is no longer on the board when
+            // the run opens.** It used to be dealt into the gem field, so a rung either had one
+            // standing or would refill one within seconds and a lesson pointed at a turret was
+            // the best that could be said about a thing that might not be there yet. It is
+            // dropped by a felled raider onto the hill, so there is a real moment to teach it at
+            // and a real object to point at - `SiegeView.Salvaged` raises it the first time one
+            // lands, which may be on the second rung of the chapter or never.
 
             // **Deferred, and pointed at the bomber itself.** There *is* something to ring here -
             // the raider whose death is about to hand the player a bomb - and it is exactly what

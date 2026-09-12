@@ -292,13 +292,56 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// Nothing on the field is a goal, which is the one thing a player arriving from any other
         /// jewel board in this game will get wrong. They will look for the biggest match; what
-        /// matters is which ward it feeds, and that a bolt is worth double against a raider of its
-        /// own colour. A board can show the second half — the bolts visibly go for their own
-        /// colour — and cannot show the first, because a match that feeds a full ward looks
-        /// exactly like a match that feeds an empty one.
+        /// matters is which ward it feeds - and a turret only ever fires at raiders of its own
+        /// colour, so a match of the wrong colour is not a smaller answer, it is an answer to a
+        /// different question.
+        /// </para>
+        /// <para>
+        /// <b>The id is kept and the words moved, which is the narrow case where that is
+        /// honest.</b> It used to say a bolt was worth <em>double</em> against its own colour, and
+        /// the rule it names is that same rule made absolute rather than a different one - so a
+        /// player who has already been shown it has not been told anything untrue. A lesson whose
+        /// <em>subject</em> changes is retired instead; see <see cref="SiegeCog"/>, which did.
         /// </para>
         /// </summary>
         public static readonly Mechanic SiegeFuel = new Mechanic("siege_fuel");
+
+        /// <summary>
+        /// That a turret with nothing of its colour on the hill <em>banks</em> what it is given,
+        /// and that the quiet between waves is what that is for.
+        ///
+        /// <para>
+        /// <b>The one rule in this mode a board cannot show.</b> A tube filling during a lull is
+        /// visible; that it was worth doing on purpose is not, because a player who does not know
+        /// it will spend the breather the way they spend the rest of the run - on whatever match
+        /// is biggest - and never find out that the wave they are about to meet could have been
+        /// answered before it arrived.
+        /// </para>
+        /// <para>
+        /// <b>Raised on the first breather rather than at the start of the run</b>, so the
+        /// sentence arrives with the thing it is about: the hill is empty, the forecast is up, and
+        /// there is something to be done about it.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic SiegeBank = new Mechanic("siege_bank");
+
+        /// <summary>
+        /// The overcharge: that a full tube can be tapped, and that what it throws hits anything.
+        ///
+        /// <para>
+        /// <b>A control nobody would find on their own.</b> Several rungs of this mode teach that
+        /// the finger goes in the gem field and the line looks after itself, so a turret that has
+        /// become a button is exactly the thing a player walks past - the same argument the
+        /// bomber's tip rests on, one band further down the screen.
+        /// </para>
+        /// <para>
+        /// <b>Raised the first time a tube fills</b>, which is the first moment it is true. It may
+        /// never happen on a rung where the player never banks, and that is correct: a lesson is
+        /// spent once in a player's life, and one shown over a tube that is not full is one shown
+        /// about nothing.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic SiegeBrim = new Mechanic("siege_brim");
 
         /// <summary>
         /// That fuel <em>fades</em>, and that the ward line is the run.
@@ -325,25 +368,36 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic SiegeLine = new Mechanic("siege_line");
 
         /// <summary>
-        /// The cog: that it is destroyed by the run <em>beside</em> it, and that the colour of
-        /// that run decides which turret goes up.
+        /// <b>Retired: no screen raises this and its id must never be reused.</b>
         ///
-        /// <para>
-        /// Deliberately two halves of one sentence, exactly as <see cref="SiegeLine"/> is. A player
-        /// who does not know a cog is taken by an adjacent match will spend the run trying to line
-        /// three of them up; one who does not know the colour decides the turret will take whatever
-        /// match is nearest and upgrade a ward at random. Both halves are the same fact — a cog is
-        /// the mode's own question asked about the <em>line</em> instead of about the hill — and
-        /// only the second half can be wrong, which is what makes it a decision at all.
-        /// </para>
-        /// <para>
-        /// <b>Declared per board rather than per mode</b> (see <c>SiegeScreen.Lessons</c>): the
-        /// first rung of the chapter deals no cogs, so a lesson about them there would be a lesson
-        /// about something that is not on the screen — and a lesson shown once can never be shown
-        /// again.
-        /// </para>
+        /// It taught that a cog standing on the gem field is destroyed by the run <em>beside</em>
+        /// it, and that the colour of that run decides which turret goes up. Cogs are dropped by
+        /// felled raiders onto the hill now and are taken with a finger, so every word of it
+        /// describes a rule that no longer exists - which is the one case where an id has to go
+        /// rather than have its strings rewritten (invariant 5f). <see cref="SiegeSalvage"/>
+        /// replaced it. Kept as a member because a lesson id travels in the save
+        /// (<c>tipsSeen</c>) exactly as a level id travels in the ledger.
         /// </summary>
         public static readonly Mechanic SiegeCog = new Mechanic("siege_cog");
+
+        /// <summary>
+        /// The cog: that a raider the line kills leaves one on the hill, and that tapping it ranks
+        /// up the turret whose colour it wore.
+        ///
+        /// <para>
+        /// <b>The second tip in this mode about an opportunity rather than a threat</b>, and it is
+        /// here for the same reason the bomber's is: everything else on that hill is to be shot
+        /// at, and a player who has learnt that the hill is not where their finger goes will walk
+        /// straight past a prize lying on it.
+        /// </para>
+        /// <para>
+        /// <b>Both halves of one sentence, because only one of them can be acted on.</b> A player
+        /// who does not know a cog is tapped will wait for it to be collected and watch it be
+        /// trampled; one who does not know it pays the colour it wore has no reason to care which
+        /// colours they are killing.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic SiegeSalvage = new Mechanic("siege_salvage");
 
         /// <summary>
         /// <b>Retired: no screen raises this and its id must never be reused.</b>
@@ -570,9 +624,9 @@ namespace GlimmerGrove.Progression
             BoundConduit,
             FallCook, FallSupply, FallBrim, FallLens, FallWhorl,
             ProtoMoves, PrismDrag, PrismVein,
-            // SiegeLine and SiegeShield are retired and deliberately absent. See the remarks
-            // above.
-            SiegeFuel, SiegeCog,
+            // SiegeLine, SiegeShield and SiegeCog are retired and deliberately absent. See the
+            // remarks above.
+            SiegeFuel, SiegeBank, SiegeBrim, SiegeSalvage,
             SiegeBomber,
             ModeSwitch, LuckySpin, Grove,
             GroveShop,
@@ -601,6 +655,7 @@ namespace GlimmerGrove.Progression
         {
             SiegeLine, SiegeShield,
             SiegeWeaver, SiegeThief,
+            SiegeCog,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);

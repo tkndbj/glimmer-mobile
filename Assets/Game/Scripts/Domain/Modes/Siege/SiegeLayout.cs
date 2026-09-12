@@ -35,34 +35,35 @@ namespace GlimmerGrove.Modes
         public const string Letters = "rgby";
 
         /// <summary>
-        /// Everything a cell of the field may hold: the four gems, and the cog.
+        /// Everything a cell of the field may hold: the four gems, and nothing else.
         ///
         /// <para>
-        /// <b>A second alphabet rather than a fifth letter in <see cref="Letters"/>, because a cog
-        /// is not a colour.</b> Every rule in this mode that reads a cell is asking one of two
-        /// questions — <em>what colour is this</em> (matching, fuelling, the deal) or <em>what is
-        /// standing here</em> (gravity, swapping, drawing) — and folding a cog into
-        /// <see cref="Letters"/> would answer the first with a thing that has no colour. It is the
-        /// same split <c>FallCell</c> was cut into for the same reason (invariant 26f): a
-        /// predicate about the <em>ground</em> must not answer a question about what is
-        /// <em>on</em> it.
+        /// <b>The field is gems again.</b> It used to carry the cog as a second alphabet, which
+        /// was the right shape for a cog that stood <em>on the field</em> — every rule that reads
+        /// a cell is asking either <em>what colour is this</em> or <em>what is standing here</em>,
+        /// and one alphabet answers the first with a thing that has no colour. A cog is dropped by
+        /// a raider now (<c>SiegeBoard.Drop</c>), so the second question has no second answer and
+        /// the split is gone with the thing that needed it.
+        /// </para>
+        /// <para>
+        /// It is kept as a name rather than folded into <see cref="Letters"/>, because every
+        /// caller asking "what may a cell hold" should keep asking this and not a constant that
+        /// happens to agree with it today.
         /// </para>
         /// </summary>
-        public const string Cells = "rgby*";
+        public const string Cells = Letters;
 
         /// <summary>
-        /// A cog: the thing a ward is upgraded with.
+        /// <b>Retired: <c>'*'</c> was a cog standing on the field and is refused by name.</b>
         ///
         /// <para>
-        /// It never matches, never falls out of the field and is never worth fuel. What it is
-        /// worth is a <em>rank</em> on one ward, and which ward is decided entirely by the colour
-        /// of the run that destroys it — so a cog is the one object on this field that asks the
-        /// player which colour to spend next rather than which match is biggest, and the one they
-        /// can be wrong about (invariant 26h's test: what does the player decide, and can they be
-        /// wrong).
+        /// A cog is dropped by a felled raider and lies on the hill; nothing puts one in a cell
+        /// any more. The letter is refused rather than ignored for the duskcap's reason
+        /// (invariant 5f): a chapter body carrying one was authored for a build that no longer
+        /// exists, and quietly reading it as a gem would ship a field nobody composed.
         /// </para>
         /// </summary>
-        public const char Cog = '*';
+        public const char RetiredCog = '*';
 
         /// <summary>What a ward may be. The same four, because a ward is fuelled by its own colour.</summary>
         public const string WardLetters = "rgby";
@@ -200,6 +201,28 @@ namespace GlimmerGrove.Modes
 
         /// <summary>How many wards a line may hold. Four colours, so four is the whole line.</summary>
         public const int MaxWards = 4;
+
+        /// <summary>
+        /// The fewest wards — and so the fewest gem colours — a siege may stand.
+        ///
+        /// <para>
+        /// <b>Three, and it is a measurement rather than a preference.</b> Under the colour lock a
+        /// field may only ever deal colours the line can burn (see <see cref="Check"/>), so the
+        /// ward count <em>is</em> the colour count — and a two-colour match-three is not a board.
+        /// Measured over twenty thousand dealt seeds: <b>not one</b> two-colour field is settled
+        /// (three alike are always already touching, so it would go off before anybody moved a
+        /// gem), and a match on one clears <b>202</b> gems against a four-colour field's 5.6 —
+        /// the refill lands beside its own kind so often that the board cascades until it runs out
+        /// of things to remove.
+        /// </para>
+        /// <para>
+        /// So an opening rung teaches the lock on <b>three</b>, which is the fewest that behaves
+        /// like a jewel board: 0.5% of seeds are settled and a match clears 9.5 gems. Par is
+        /// deliberately <em>not</em> corrected for that, and the reason is worth reading before
+        /// anybody corrects it — see the note beside <see cref="SiegeTuning.MatchGemsTenths"/>.
+        /// </para>
+        /// </summary>
+        public const int MinWards = 3;
 
         /// <summary>The most raiders one level may author. A bound on the run, not a taste.</summary>
         public const int MaxRaiders = 60;
@@ -434,19 +457,25 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// How often a fresh gem comes in as a cog, per hundred. Nought for a siege with none.
+        /// How often a felled raider leaves a cog on the hill, per hundred. Nought for a siege
+        /// with none.
         ///
         /// <para>
-        /// <b>A rate rather than a count, because the field refills.</b> A level cannot author
-        /// "three cogs" the way it authors three brutes — a cog is destroyed and the column fills
-        /// in behind it, so what a level really decides is how often one turns up. It is bounded
-        /// at both ends: <see cref="MaxCogRate"/> stops a field that is mostly cogs, and
+        /// <b>A rate rather than a count, and the denominator is now <em>kills</em>.</b> It used
+        /// to be dealt gems, because a cog stood in the gem field and the field refills. A cog is
+        /// dropped by a raider that died now (<c>SiegeBoard.Drop</c>), so what a level decides is
+        /// how often a kill pays — and the same field means something quite different: twenty to
+        /// thirty-six raiders rather than several hundred gems, so a rung that used to author 3
+        /// authors about 25 for the same handful of cogs a run.
+        /// </para>
+        /// <para>
+        /// It is bounded at both ends: <see cref="MaxCogRate"/> is the ceiling on the rate, and
         /// <see cref="SiegeTuning.MostCogs"/> stops however generous a rate from putting more than
-        /// a handful on the board at once.
+        /// a handful on the hill at once.
         /// </para>
         /// <para>
         /// <b>Nought is a real answer and is how the opening level says it.</b> The first rung of
-        /// this chapter teaches what a match is <em>for</em>; a second object on the field while
+        /// this chapter teaches what a match is <em>for</em>; a second thing to reach for while
         /// somebody is working that out is the mistake invariant 24 names about hearts, asked of
         /// attention rather than of money.
         /// </para>
@@ -454,13 +483,16 @@ namespace GlimmerGrove.Modes
         public readonly int Cogs;
 
         /// <summary>
-        /// The most cogs a level may ask for, per hundred.
+        /// The most cogs a level may ask for, per hundred kills.
         ///
-        /// A fifth of the deal is already a cog roughly every other column of a refill, which is
-        /// as far as a mechanic that upgrades the line can go before the line is upgraded whatever
-        /// the player does — and a mechanic that rejects no play is decoration (invariant 5d).
+        /// <b>A hundred, and that is the honest ceiling rather than a shrug.</b> When the
+        /// denominator was dealt gems a fifth was already a cog every other column, and past it
+        /// the line went up whatever the player did — the decoration invariant 5d names. Per kill
+        /// there is no such cliff: a level sends a few dozen raiders, so every one of them paying
+        /// is still fewer cogs than a full line has rungs, and what bounds the feature is
+        /// <see cref="SiegeTuning.MaxRank"/> and <see cref="SiegeTuning.MostCogs"/>.
         /// </summary>
-        public const int MaxCogRate = 20;
+        public const int MaxCogRate = 100;
 
         /// <summary>
         /// Where the refill stream starts, derived from the authored field rather than typed.
@@ -653,8 +685,11 @@ namespace GlimmerGrove.Modes
                      + "empty field is how a siege says it sends none";
             }
 
-            if (Wards.Length < 2 || Wards.Length > MaxWards)
-                return $"a ward line holds 2 to {MaxWards} wards; this one names {Wards.Length}";
+            if (Wards.Length < MinWards || Wards.Length > MaxWards)
+                return $"a ward line holds {MinWards} to {MaxWards} wards; this one names "
+                     + $"{Wards.Length}. Fewer than {MinWards} is a field of fewer than "
+                     + $"{MinWards} colours, which cascades without stopping and cannot be "
+                     + "authored settled at all";
 
             for (int i = 0; i < Wards.Length; i++)
                 for (int j = i + 1; j < Wards.Length; j++)
@@ -663,28 +698,31 @@ namespace GlimmerGrove.Modes
                                "never be the only thing a colour feeds and half the line is a "
                                + "spare part";
 
-            if (Deal.Length < 2)
-                return "the field refills from fewer than two colours, so every arrangement is a "
-                     + "match and nothing is ever decided";
+            if (Colours < MinWards)
+                return $"the field refills from {Colours} colour(s); {MinWards} is the fewest a "
+                     + "field can hold and still be a board";
 
             if (Cogs > MaxCogRate)
-                return $"this field deals a cog {Cogs} times in a hundred; {MaxCogRate} is the "
-                     + "most a level may ask for, and past it the line is upgraded whatever the "
-                     + "player does";
-
-            int standing = 0;
-            for (int i = 0; i < Grid.Count; i++) if (Grid.At(i) == Cog) standing++;
-
-            if (standing > SiegeTuning.MostCogs)
-                return $"this field is authored with {standing} cogs standing on it; "
-                     + $"{SiegeTuning.MostCogs} is the most that may ever be on the board at once, "
-                     + "so the rest could never be dealt back in";
+                return $"this hill drops a cog {Cogs} times in a hundred kills; {MaxCogRate} is "
+                     + "the most a level may ask for";
 
             // A ward nothing feeds is decoration standing where a ward should be (invariant 5d).
             for (int i = 0; i < Wards.Length; i++)
                 if (Deal.IndexOf(Wards[i]) < 0)
                     return $"the '{Wards[i]}' ward stands on a field that never deals a "
                          + $"'{Wards[i]}' gem, so nothing the player does could ever fuel it";
+
+            // **And the other way round, which only became a rule when the lock arrived.** A ward
+            // burns its own colour and nothing else, so a gem no ward carries is fuel with nowhere
+            // to go: every match of it is a move the player spent for nothing, and there is no
+            // reading anywhere that would report it. While a bolt merely preferred its own colour
+            // this was a tuning curiosity; under the lock it is a quarter of the board that does
+            // not work.
+            for (int i = 0; i < Deal.Length; i++)
+                if (Array.IndexOf(Wards, Deal[i]) < 0)
+                    return $"this field deals '{Deal[i]}' gems and no ward on the line burns "
+                         + $"'{Deal[i]}', so every match of that colour is a move spent on "
+                         + "nothing. A siege deals exactly the colours its line stands";
 
             // **An endless lane authors no waves, and that is the shape rather than an
             // omission.** What comes at wave n is a rule (`SiegeEndless`), so the list is empty by
@@ -746,12 +784,12 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// Whether this cell is a gem — something that can line up and is worth fuel.
         ///
-        /// <b>Neither a hole nor a cog</b>, and it is one predicate rather than two tests written
-        /// out at each of the four places that ask, because those four are exactly where a mode
-        /// with a second kind of cell goes quietly wrong (invariant 26f).
+        /// <b>Kept as a predicate now that a hole is the only thing it excludes</b>, because the
+        /// four places that ask it are exactly where a mode with a second kind of cell goes
+        /// quietly wrong (invariant 26f) — and this field has carried one twice.
         /// </summary>
         internal static bool IsGem(char cell)
-            => cell != SiegeBoard.Hole && cell != Cog && Letters.IndexOf(cell) >= 0;
+            => cell != SiegeBoard.Hole && Letters.IndexOf(cell) >= 0;
 
         /// <summary>
         /// Every cell standing in a run of three or more, as one set.
@@ -814,6 +852,32 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Which ward carries this colour, or -1.</summary>
         public int WardOf(char colour) => Array.IndexOf(Wards, colour);
+
+        /// <summary>
+        /// How many <em>distinct</em> colours this field deals.
+        ///
+        /// <b>Distinct rather than <c>Deal.Length</c></b>, because the deal is a bag and an author
+        /// may weight it by writing a letter twice. What par asks is how many kinds of gem can
+        /// land beside each other, which is the count of kinds and not the size of the bag.
+        /// </summary>
+        public int Colours
+        {
+            get
+            {
+                int seen = 0, mask = 0;
+
+                for (int i = 0; i < Deal.Length; i++)
+                {
+                    int bit = 1 << Letters.IndexOf(Deal[i]);
+                    if ((mask & bit) != 0) continue;
+
+                    mask |= bit;
+                    seen++;
+                }
+
+                return seen;
+            }
+        }
 
         /// <summary>Every raider this level sends, in the order they arrive.</summary>
         public int RaiderCount

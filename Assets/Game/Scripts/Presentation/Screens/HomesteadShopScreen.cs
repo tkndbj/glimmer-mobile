@@ -283,7 +283,7 @@ namespace GlimmerGrove
         /// </summary>
         void BuildTabs()
         {
-            var shelves = GroveShelves.All;
+            var shelves = GroveShelves.Tabs;
 
             float span = shelves.Length * TabStep;
             bool scrolls = span > Boot.RefWidth;
@@ -377,7 +377,7 @@ namespace GlimmerGrove
             float slack = (span - Boot.RefWidth) * .5f;
             if (slack <= 0f) return;
 
-            var shelves = GroveShelves.All;
+            var shelves = GroveShelves.Tabs;
             int at = System.Array.IndexOf(shelves, _shelf);
             if (at < 0) return;
 
@@ -452,16 +452,6 @@ namespace GlimmerGrove
                     return oa != ob ? (oa ? 1 : -1)
                                     : GroveLand.Rung(a).CompareTo(GroveLand.Rung(b));
                 });
-            }
-            else if (_shelf == GroveShelf.Home)
-            {
-                // The ladder collapses to one cell: the rung being offered, or the one the
-                // player lives in once they are at the top. Five cells drawing five names over
-                // one house read as a bug rather than as a ladder — the ladder belongs on the
-                // home panel, where the pips can show it.
-                var rung = HomesteadLedger.NextDwelling(catalog);
-                if (!rung.IsValid) rung = HomesteadLedger.BestDwelling(catalog);
-                if (rung.IsValid) items.Add(rung);
             }
             else
             {

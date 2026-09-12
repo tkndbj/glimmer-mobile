@@ -154,7 +154,19 @@ namespace GlimmerGrove
             public int Colour;
             public Image Seat, Edge, Icon, Glow;
             public Text Name;
+
+            /// <summary>The padlock over a seat the player has not reached yet.</summary>
+            public Image Lock;
         }
+
+        /// <summary>
+        /// How many levels of this mode's own ladder the player has cleared.
+        ///
+        /// <b>Read once per paint rather than per slot</b>, since it walks the mode's levels — and
+        /// held in a field rather than recomputed, because the line is painted on every repaint
+        /// and the answer cannot change while this screen is open.
+        /// </summary>
+        int _cleared;
 
         protected override void Build()
         {
@@ -372,17 +384,44 @@ namespace GlimmerGrove
                                        new Vector2(.5f, 0f), new Vector2(0f, 18f));
                 UIKit.Shrinkable(name, 14);
 
+                // **The padlock is drawn over the seat rather than instead of it**, so a player
+                // can still see which turret is standing there while they are told they cannot
+                // change it - a blank box would read as a seat with nothing in it, which is the
+                // opposite of true: the line always stands four.
+                var shut = UIKit.Img("Lock", box, Art.S("Ui/ic_lock"), Pal.A(Pal.Cream, .92f),
+                                     new Vector2(52f, 52f), new Vector2(.5f, 1f),
+                                     new Vector2(0f, -74f));
+                shut.preserveAspect = true;
+                shut.raycastTarget = false;
+                shut.enabled = false;
+
                 box.gameObject.AddComponent<Btn>().Setup(() => Choose(colour));
 
                 _slots.Add(new SlotView
                 {
-                    Colour = colour, Seat = seat, Edge = edge, Icon = icon, Name = name, Glow = glow,
+                    Colour = colour, Seat = seat, Edge = edge, Icon = icon, Name = name,
+                    Glow = glow, Lock = shut,
                 });
             }
         }
 
+        /// <summary>
+        /// Taps a seat, or says why it cannot be arranged yet.
+        ///
+        /// <b>It answers out loud rather than doing nothing.</b> A control that is live and
+        /// silently refuses is one nobody learns - and what a shut seat wants to say is a number
+        /// the player can act on, which is how many rungs are left before the line grows.
+        /// </summary>
         void Choose(int colour)
         {
+            if (!WardSeats.IsOpen(colour, _cleared))
+            {
+                int want = WardSeats.Needed(colour) - _cleared;
+                Scenery.Toast(Content, Loc.Format("ui.loadout.seat_shut",
+                                                  want < 1 ? 1 : want), Pal.Gold, 2.4f);
+                return;
+            }
+
             if (_slot == colour && _shelf == Shelf.Wards) return;
 
             _slot = colour;

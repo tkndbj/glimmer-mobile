@@ -107,19 +107,22 @@ namespace GlimmerGrove.Wards
         Ember,
 
         /// <summary>
-        /// Its bolts are worth double against its own colour <em>and the next few</em> — as many
-        /// as its magnitude names, and never all four.
+        /// It also fires at the <em>next</em> colour round the wheel, for a share of a full hit —
+        /// and its magnitude is that share, in tenths.
         ///
-        /// <b>The one model that widens the mode's central rule instead of adding to it.</b> The
-        /// elemental double is what makes the colour of a match matter; a prism turret makes one
-        /// slot of the line answer more of the hill, at the cost of that slot having no other
-        /// trick at all — and a turret strong against every colour would not be widening that rule
-        /// but deleting it, which is why <c>SiegeWard.Partners</c> caps below four.
+        /// <b>The one model that widens the mode's central rule instead of adding to it.</b> A
+        /// turret only ever fires at its own colour (<c>SiegeBoard.Aim</c>), so a prism is the one
+        /// thing on the shelf that can answer a lane the player has not fed — at the cost of that
+        /// slot having no other trick at all.
         ///
-        /// <b>The count is what tells its two rungs apart.</b> It was "its own colour and the
-        /// next" flat, so the magnitude was read by nothing and the two rungs were one turret at
-        /// two prices; an unauthored nought still means one, so an older file reads as it always
-        /// did.
+        /// <b>Two colours and never three.</b> Under the lock a third would not be a better rung,
+        /// it would be the lock coming off, so <c>SiegeWard.MostPartners</c> pins the count at one
+        /// and the family climbs on the share instead (<c>SiegeWard.PartnerShare</c>). That also
+        /// keeps the two rungs genuinely different, which invariant 37ax requires of any family.
+        ///
+        /// <b>It can never make a bolt weaker</b>, which is invariant 42's whole promise: the
+        /// partner is aimed at only when this ward's own colour has nothing left standing, so
+        /// every partner shot is one the turret would otherwise not have fired.
         /// </summary>
         Prism,
 

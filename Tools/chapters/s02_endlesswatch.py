@@ -59,15 +59,16 @@ WIDE, TALL = 8, 5
 #: **Nine opening swaps rather than the ten the first rung wants.** An endless lane is not a
 #: teaching rung: it is the thing a player comes back to once they can already play, so the field
 #: it opens on is a little tighter than the chapter's first one and a little looser than its last.
-SEED, SWAPS, STOOD = 12211, 9, 0
+SEED, SWAPS = 12211, 9
 
-#: How often a fresh gem falls in as a cog, per hundred.
+#: How often a felled raider leaves a cog on the hill, per hundred kills.
 #:
-#: **Four, which is the top of the band the shipped chapter uses**, because this lane is the one
-#: place a player is fighting a hill that never stops getting worse - the rank ladder is the only
-#: thing on their side that can climb with it, and it tops out at four. Above about four per
-#: hundred the whole line maxes inside a minute and the hill stops mattering (invariant 37w).
-COGS = 4
+#: **The top of the band the shipped chapters use**, because this lane is the one place a player
+#: is fighting a hill that never stops getting worse - the rank ladder is the only thing on their
+#: side that can climb with it, and it tops out at four rungs. What stops it being free is that a
+#: cog has to be *reached for* now: it lies on the hill for `SiegeTuning.CogLies` seconds and is
+#: then trampled, so a player deep in a wave pays for it with attention rather than with nothing.
+COGS = 30
 
 #: How far a three-star run reaches, and the fraction of it a two-star run does.
 #:
@@ -80,7 +81,7 @@ SILVER_FACTOR = 0.55
 
 def rows_of():
     """The field, re-derived from its seed rather than typed."""
-    cells = sweep.deal(SEED, WIDE, TALL, "rgby", STOOD)
+    cells = sweep.deal(SEED, WIDE, TALL, "rgby")
     return sweep.rows_of(cells, WIDE, TALL)
 
 

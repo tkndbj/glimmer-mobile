@@ -3635,11 +3635,11 @@
     },
     {
       "key": "ui.tip.siege_fuel.title",
-      "text": "MATCH THREE OF A COLOUR"
+      "text": "TURRETS ONLY SHOOT THEIR OWN COLOUR"
     },
     {
       "key": "ui.tip.siege_fuel.body",
-      "text": "Match three gems of a colour and that colour's turret opens fire.\n\nIts shots hurt raiders of its own colour twice as hard."
+      "text": "Match three gems of a colour and that colour's turret opens fire.\n\nIt only ever shoots raiders of its own colour, so match the colour that is coming."
     },
     {
       "key": "mode.siege.go",
@@ -3814,28 +3814,12 @@
       "text": "THE OVERLORD"
     },
     {
-      "key": "ui.tip.siege_cog.title",
-      "text": "COGS UPGRADE A TURRET"
-    },
-    {
       "key": "utility.stormcall.name",
       "text": "Stormcall"
     },
     {
       "key": "utility.stormcall.note",
       "text": "Lightning strikes every raider on the hill. It will not fell a boss."
-    },
-    {
-      "key": "ui.tip.siege_shield.title",
-      "text": "SHIELDS ONLY BREAK TO THEIR OWN COLOUR"
-    },
-    {
-      "key": "ui.tip.siege_shield.body",
-      "text": "Shielded raiders shrug off every colour but their own.\n\nThey walk slowly, so feed their colour before they arrive."
-    },
-    {
-      "key": "ui.tip.siege_cog.body",
-      "text": "A cog never lines up with anything.\n\nMatch a colour beside it and that colour's turret goes up a rank."
     },
     {
       "key": "chapter.s02_endlesswatch.name",
@@ -4620,6 +4604,42 @@
     {
       "key": "ui.piece.tavern",
       "text": "Tavern"
+    },
+    {
+      "key": "mode.siege.next",
+      "text": "NEXT WAVE"
+    },
+    {
+      "key": "ui.tip.siege_bank.title",
+      "text": "SAVE FUEL BETWEEN WAVES"
+    },
+    {
+      "key": "ui.tip.siege_bank.body",
+      "text": "A turret with nothing of its colour on the hill keeps its fuel instead of firing it.\n\nThe gems above show what the next wave is bringing. Fill those turrets before it arrives."
+    },
+    {
+      "key": "ui.tip.siege_brim.title",
+      "text": "TAP A FULL TURRET"
+    },
+    {
+      "key": "ui.tip.siege_brim.body",
+      "text": "A full fuel bar can be tapped to throw the whole lot at once.\n\nIt hits any colour, so it is how you answer a colour you could not feed."
+    },
+    {
+      "key": "ui.tip.siege_salvage.title",
+      "text": "TAP THE COGS THEY DROP"
+    },
+    {
+      "key": "ui.tip.siege_salvage.body",
+      "text": "Raiders you kill leave cogs on the hill. Tap one and the turret of that colour goes up a rank.\n\nThey do not lie there long."
+    },
+    {
+      "key": "ui.loadout.seat_at",
+      "text": "LOCKED - {0} LEVELS"
+    },
+    {
+      "key": "ui.loadout.seat_shut",
+      "text": "Clear {0} more Thornwatch level(s) to arrange this turret."
     }
   ]
 }

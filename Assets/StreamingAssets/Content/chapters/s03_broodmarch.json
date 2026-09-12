@@ -35,7 +35,7 @@
      "RGBYRGby"
     ],
     "boss": "",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -62,7 +62,7 @@
      "RGBY#gRGby"
     ],
     "boss": "",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -89,7 +89,7 @@
      "RGBYRG!gBY!b"
     ],
     "boss": "",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -111,12 +111,12 @@
     "gems": "rgby",
     "wards": "rgby",
     "waves": [
-     "RGBY#rRGby",
-     "RGBY#gRGBY",
-     "RGBY#bRGby"
+     "RGby#rRGby",
+     "RGby#gRGby",
+     "RGby#bRGby"
     ],
     "boss": "",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -139,11 +139,11 @@
     "wards": "rgby",
     "waves": [
      "rgbyRGby",
-     "RGBYRGby",
+     "RGbyRGby",
      "RGBY#rRGby"
     ],
     "boss": "blightcaller:b",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -170,7 +170,7 @@
      "BBBbbbbYYy"
     ],
     "boss": "",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -192,12 +192,12 @@
     "gems": "rgby",
     "wards": "rgby",
     "waves": [
-     "RGBYRGBY",
-     "RGBYRGBYrg",
-     "RGBY#yRGBYrg"
+     "RGbyrgby",
+     "RGbyRGbyrg",
+     "RGBY#yRGbyrg"
     ],
     "boss": "",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -224,7 +224,7 @@
      "RGBY#bRGby"
     ],
     "boss": "",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -246,13 +246,13 @@
     "gems": "rgby",
     "wards": "rgby",
     "waves": [
-     "rgbyRGBY",
-     "RGBYRGby",
+     "rgbyRGby",
+     "RGbyRGby",
      "RGby#rRGby#gby",
      "RGBYrgby"
     ],
     "boss": "",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -274,12 +274,12 @@
     "gems": "rgby",
     "wards": "rgby",
     "waves": [
-     "RGBYRGby",
-     "RGBY#rRGby",
+     "RGbyRGby",
+     "RGby#rRGby",
      "RGBYRG#gby"
     ],
     "boss": "warbringer:g",
-    "cogs": 3
+    "cogs": 25
    }
   }
  ]

@@ -461,17 +461,17 @@ namespace GlimmerGrove.Content
                     + "not a question - the whole decision in this mode is which colour is wanted "
                     + "next"));
 
-            // Invariant 5d asked of the cogs, and it is a *certainty* rather than a reading: a
-            // level that deals a cog on a line where every ward is already at the top of the
-            // ladder would be dealing an object that rejects nothing. It cannot happen today
-            // (a ward starts at rank nought), so what this really catches is the reverse — a
-            // level that never deals one and stands one on its opening field is fine, and a level
-            // that deals them onto a two-ward line is worth saying out loud.
-            if (layout.Cogs > 0 && layout.Wards.Length < 3)
+            // **Invariant 5d asked of the cogs, and what it asks moved with them.** A cog used to
+            // be dealt into the gem field and taken by a match beside it, so what this warned
+            // about was a line too short for "which colour takes it" to be a question. A cog is
+            // dropped by a felled raider now and pays the ward whose colour it wore, so the
+            // decision is *when to reach for it* - and the thing that could quietly make that
+            // decide nothing is a hill so short that no drop rate produces a cog at all.
+            if (layout.Cogs > 0 && !layout.IsEndless && layout.RaiderCount * layout.Cogs < 100)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"this siege deals cogs onto a line of {layout.Wards.Length} wards, so which "
-                    + "one an upgrade goes to is very nearly a coin toss - a cog asks the player "
-                    + "which colour to spend, and a short line is a short question"));
+                    $"this siege drops a cog {layout.Cogs} times in a hundred kills and sends "
+                    + $"{layout.RaiderCount} raiders, so a run expects fewer than one - the "
+                    + "mechanic, its art and its lesson all ship and most players never see one"));
 
             // Invariant 5d asked of each boss's own spell, which is the reading four bosses
             // needed and two would never have: each of the four takes a *different* thing, so
@@ -604,7 +604,7 @@ namespace GlimmerGrove.Content
                 // ranks on it, so the overlord's own half of its spell is decoration and what is
                 // left is a warlord with a bigger number - which is exactly the fault four bosses
                 // exist to fix.
-                case SiegeSpell.Sunder when layout.Cogs <= 0 && !Standing(layout):
+                case SiegeSpell.Sunder when layout.Cogs <= 0:
                     issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
                         $"this siege ends with an {who}, whose spell knocks a rank off the ward it "
                         + "hits, but nothing here ever deals a cog - so there is never a rank to "
@@ -635,15 +635,6 @@ namespace GlimmerGrove.Content
                         + "an empty hill and rally nothing"));
                     break;
             }
-        }
-
-        /// <summary>Whether a cog is standing on the authored field.</summary>
-        static bool Standing(SiegeLayout layout)
-        {
-            for (int i = 0; layout.Grid != null && i < layout.Grid.Count; i++)
-                if (layout.Grid.At(i) == SiegeLayout.Cog) return true;
-
-            return false;
         }
 
         /// <summary>

@@ -144,6 +144,7 @@ namespace GlimmerGrove.Modes
             _felled++;
 
             Drop(raider);
+            Cog(raider);
 
             return true;
         }

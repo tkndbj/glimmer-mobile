@@ -673,23 +673,68 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The rule that protects an existing invariant rather than adding one.
-        /// <c>SiegeBoard.Stranded</c> is a certainty that decides whether money changes hands
-        /// (invariant 28f), and it is only allowed to say "no purchase rescues this" because
-        /// nothing can put a ward back up.
+        /// <b>A mending raises a fallen ward, and the colour lock is what made that necessary.</b>
+        ///
+        /// <para>
+        /// It used to be refused, on the reasoning that <c>SiegeBoard.Stranded</c> is a certainty
+        /// deciding whether money changes hands (invariant 28f). That reasoning does not survive
+        /// reading which way round it points: <c>Stranded</c> is <em>false</em> here, so what it
+        /// says is "a purchase <em>would</em> rescue this" - and something that puts a ward back
+        /// up makes that more true rather than less. The continue has raised a whole line for
+        /// twenty gems since the mode shipped.
+        /// </para>
+        /// <para>
+        /// <b>What made it necessary is that a dead ward is now a dead colour.</b> While a bolt
+        /// merely preferred its own colour a fallen turret cost the line a quarter of its output;
+        /// under the lock its colour can never be hurt again except by a splash, a chain or an
+        /// overcharge - so a line that loses one early walks into a colour it cannot answer and
+        /// the run spirals for a reason the player can do nothing about.
+        /// </para>
+        /// <para>
+        /// <b>It does not make the continue redundant</b>, which is invariant 23a's split: a
+        /// mending raises <em>one</em> ward while others still stand, and a continue is offered
+        /// only when the last one has fallen and the run is already lost. Different moments, in a
+        /// fixed order, so nobody is ever quoted both at once.
+        /// </para>
         /// </summary>
         [Test]
-        public void AMendingCannotRaiseAFallenWard()
+        public void AMendingRaisesAFallenWardWithWhatItGives()
         {
             var board = Board();
             var ward = board.Wards[0];
 
             ward.Health = 0;
             ward.Alive = false;
+            ward.Fuel = 9f;
 
-            Assert.AreEqual(0, board.Mend(0, 5));
-            Assert.IsFalse(ward.Alive);
-            Assert.AreEqual(0, board.RoomForHealth(0));
+            Assert.AreEqual(ward.Full, board.RoomForHealth(0),
+                            "a fallen ward has room for a whole mending");
+
+            Assert.AreEqual(5, board.Mend(0, 5));
+
+            Assert.IsTrue(ward.Alive, "a mending left a fallen ward down");
+            Assert.AreEqual(5, ward.Health, "it came back with more than the mending gave");
+            Assert.AreEqual(0f, ward.Fuel, "a raised ward starts empty - fuel is matched for");
+
+            // And it is an ordinary heal from there on.
+            Assert.AreEqual(3, board.Mend(0, 3));
+            Assert.AreEqual(8, ward.Health);
+        }
+
+        /// <summary>A mending that would raise a ward is still charged the grade nothing.</summary>
+        [Test]
+        public void RaisingAWardChargesTheGradeNothing()
+        {
+            var board = Board();
+            board.Wards[0].Health = 0;
+            board.Wards[0].Alive = false;
+
+            var item = UtilityCatalog.Default.Find("mending");
+            var use = SiegeUtility.Apply(board, item, SiegeAim.AtWard(0), null);
+
+            Assert.IsTrue(use.Landed, "a mending was refused on a ward that had fallen");
+            Assert.AreEqual(0, use.Matches, "a mending delivers no damage, so it saves no matches");
+            Assert.IsTrue(board.Wards[0].Alive);
         }
 
         [Test]
@@ -735,17 +780,58 @@ namespace GlimmerGrove.Tests
         /// A ward with less than half a pour's room is refused, because an item spent for a
         /// tenth of its effect is an item spent for nothing — and the charge is the whole pour
         /// whatever lands, so it would also be over-charged.
+        ///
+        /// <para>
+        /// <b>"Full" means the tube <em>and</em> the charge rack</b>, which is what the overcharge
+        /// changed. A full tube with a charge still to bank has somewhere for a pour to go — and
+        /// what it buys there is worth more than the fuel was, so refusing it would refuse the item
+        /// at the one moment it is most valuable.
+        /// </para>
         /// </summary>
         [Test]
-        public void ASurgeIntoAFullWardIsRefused()
+        public void ASurgeIntoAWardWithNothingLeftToFillIsRefused()
         {
             var board = Board();
             var item = UtilityCatalog.Default.Find("surge");
 
-            board.Wards[0].Fuel = SiegeTuning.WardCapacity;
+            var ward = board.Wards[0];
+
+            // A full tube alone is not full: the next pour banks an overcharge.
+            ward.Fuel = ward.Capacity;
+
+            Assert.Greater(board.RoomForFuel(0), 0,
+                           "a full tube with a charge still to bank has somewhere to put a pour");
+            Assert.IsTrue(SiegeUtility.Would(board, item, SiegeAim.AtWard(0)));
+
+            // Tube full and every charge held: now there is nowhere for it to go.
+            ward.Charges = SiegeTuning.MostCharges;
 
             Assert.AreEqual(0, board.RoomForFuel(0));
             Assert.IsFalse(SiegeUtility.Would(board, item, SiegeAim.AtWard(0)));
+        }
+
+        /// <summary>
+        /// And a surge that tops a tube up banks an overcharge, exactly as a match would.
+        ///
+        /// <b>Both doors pour through <c>SiegeWard.Fill</c></b>, because a conversion written at
+        /// one of them is a ward that can never bank from the other.
+        /// </summary>
+        [Test]
+        public void ASurgeThatFillsATubeBanksAnOvercharge()
+        {
+            var board = Board();
+            var item = UtilityCatalog.Default.Find("surge");
+
+            var ward = board.Wards[0];
+            ward.Fuel = ward.Capacity - item.Magnitude / 20f;      // half a pour short of full
+
+            Assert.AreEqual(0, ward.Charges);
+
+            var use = SiegeUtility.Apply(board, item, SiegeAim.AtWard(0), null);
+
+            Assert.IsTrue(use.Landed);
+            Assert.AreEqual(1, ward.Charges, "a surge that filled the tube banked nothing");
+            Assert.IsTrue(ward.Armed);
         }
 
         [Test]

@@ -116,6 +116,10 @@ namespace GlimmerGrove.Content
             // ward can be upgraded with (`SiegeLayout.Cog`).
             AssetRequest.Sprite(AssetManifest.SiegeArt("gem_cog")),
 
+            // The overcharge glyph on a turret's chassis. Resident with the rest of the line's
+            // furniture rather than scoped, because every siege can bank one.
+            AssetRequest.Sprite(AssetManifest.SiegeArt("charge")),
+
             // **The ward line: five tiers times four colours, and the rank badge.** A ward carries
             // its rank in its silhouette and its colour in its hue, so both are baked (see
             // `Tools/make_siege_art.py`) and nothing here is tinted - which is the correction
@@ -634,6 +638,27 @@ namespace GlimmerGrove.Content
             return list;
         }
 
+        /// <summary>
+        /// Whether any authored row stands the retired cog cell, and which one.
+        ///
+        /// Its own method rather than a clause, because it is asked before the grid exists — a
+        /// refusal that has to run before the thing it is refusing can be parsed has nowhere else
+        /// to live.
+        /// </summary>
+        static bool Retired(string[] rows, out int row)
+        {
+            for (int i = 0; rows != null && i < rows.Length; i++)
+            {
+                if (rows[i] == null || rows[i].IndexOf(SiegeLayout.RetiredCog) < 0) continue;
+
+                row = i;
+                return true;
+            }
+
+            row = -1;
+            return false;
+        }
+
         public override bool TryRead(LevelDto dto, LevelId id, ICollection<string> problems,
                                      out ILevelRules rules)
         {
@@ -641,8 +666,22 @@ namespace GlimmerGrove.Content
 
             var block = dto.siege;
 
-            // `Cells` rather than `Letters`: a field may stand a cog on it, and a cog is not a
-            // colour (see `SiegeLayout.Cells`).
+            // **The retired cog cell is refused by name rather than by falling through.** A `*`
+            // was a cog standing on the field; cogs are dropped by felled raiders now, so a body
+            // carrying one was authored for a build that is gone. `ProtoGrid.TryRead` would
+            // refuse it anyway as an unknown cell — what a named refusal buys is that whoever
+            // meets it is told *why* rather than left to guess which of five letters is wrong
+            // (invariant 5f, the duskcap's rule).
+            if (Retired(block.rows, out int row))
+            {
+                problems.Add($"{id}: row {row + 1} stands a '{SiegeLayout.RetiredCog}' on the "
+                           + "field. A cog is no longer a cell - it is dropped by a raider the "
+                           + "line kills and lies on the hill until it is tapped, so a field "
+                           + "authors gems and nothing else. Drop the character and set 'cogs' "
+                           + "to a drop rate per hundred kills");
+                return false;
+            }
+
             if (!ProtoGrid.TryRead(block.rows, block.width, block.height, SiegeLayout.Cells,
                                    out var grid, out string error))
             {

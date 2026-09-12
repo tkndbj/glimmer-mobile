@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Deals Thornwatch fields and reports what is worth knowing about them.
 
-    python Tools/siege_sweep.py --seeds 4000 --w 8 --h 5 --gems rgby --cogs 1
+    python Tools/siege_sweep.py --seeds 4000 --w 8 --h 5 --gems rgby
 
 **What is designed and what is dealt.** Invariant 32d's split, read across to a siege: where the
 wards stand, what comes down the hill, in what order and how often a cog turns up are all things a
@@ -37,28 +37,19 @@ def xorshift(state):
     return x if x else 2463534242
 
 
-def deal(seed, w, h, gems, cogs):
-    """One field, dealt from a seed. `cogs` is how many are stood on it."""
+def deal(seed, w, h, gems):
+    """One field, dealt from a seed. Gems and nothing else.
+
+    **A field no longer stands anything but gems.** It could stand cogs, and the sweep placed them;
+    a cog is dropped by a felled raider onto the hill now (`SiegeBoard.Cog`), so what a level
+    authors about them is a drop rate and never a position.
+    """
     state = seed if seed else 1
     cells = []
 
     for _ in range(w * h):
         state = xorshift(state)
         cells.append(gems[state % len(gems)])
-
-    for _ in range(cogs):
-        for _ in range(200):
-            state = xorshift(state)
-            at = state % (w * h)
-
-            # Never on the bottom row, and never on top of another cog. The bottom row is the one
-            # place a cog can only be reached sideways - everything above it can be matched into
-            # from either direction - and the rung that teaches cogs should not be teaching a
-            # special case.
-            if at // w == h - 1 or cells[at] == "*":
-                continue
-            cells[at] = "*"
-            break
 
     return cells
 
@@ -117,7 +108,6 @@ def main():
     ap.add_argument("--w", type=int, default=8)
     ap.add_argument("--h", type=int, default=5)
     ap.add_argument("--gems", default="rgby")
-    ap.add_argument("--cogs", type=int, default=0)
     ap.add_argument("--from-seed", type=int, default=1)
     ap.add_argument("--show", type=int, default=6)
     ap.add_argument("--want", type=int, default=0,
@@ -127,7 +117,7 @@ def main():
     kept = []
 
     for seed in range(args.from_seed, args.from_seed + args.seeds):
-        cells = deal(seed, args.w, args.h, args.gems, args.cogs)
+        cells = deal(seed, args.w, args.h, args.gems)
         read = worth(cells, args.w, args.h, args.gems)
         if read is None:
             continue

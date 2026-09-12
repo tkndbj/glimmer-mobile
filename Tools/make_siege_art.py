@@ -71,6 +71,23 @@ TOWER = Path(r"C:\Users\Digikey\Downloads\to-assets")
 #: this one.
 ENEMIES = Path(r"C:\Users\Digikey\Downloads\topdownenemies")
 
+#: The fourth folder: a hundred RPG skill icons, of which this mode uses exactly one.
+#:
+#: **A fourth root rather than a copy, for the reason the second and third exist** - copying a
+#: licensed pack so one path works is a second copy nothing keeps in step. `--icons` moves it, and
+#: the tool passes when it is absent because the one PNG it cuts is committed.
+ICONS = Path(r"C:\Users\Digikey\Downloads\craftpix-net-629015-100-skill-icons-pack-for-rpg")
+
+#: Which of the hundred, and it is a decision a picture made.
+#:
+#: **The glyph sits on a turret's chassis at about half a cell, and at that size detail is mush.**
+#: Six candidates were cut and laid over all four ward colours (`Tools/charge_pick.png`): the busy
+#: ones - crackling fields, a fist, a burst - all collapsed into coloured noise, and the one that
+#: survived is the one with a *silhouette*, a single gold bolt. Its dark ground is what makes it
+#: read on red, green, blue and orange alike, which is the whole job: the ward under it is already
+#: one of the four.
+CHARGE_ICON = 70
+
 MATCH3 = "craftpix-net-298179-match-3-game-asset-set.zip"
 BLASTS = "craftpix-517297-explosions-sprite.zip"
 #: Where every enemy in this mode comes from, and the whole of what it may draw from.
@@ -1536,6 +1553,10 @@ def build():
     turrets, kit = zipped(TURRETS, TOWER), zipped(KIT, TOWER)
     monsters = zipped(MONSTERS, ENEMIES)
 
+    # The skill-icon pack, of which this mode uses exactly one. Absent is a checkout without it,
+    # so the one PNG it cuts is simply not offered and `--check` has nothing to hold it to.
+    icons = ICONS if ICONS.exists() else None
+
     if match3 is None or blasts is None or turrets is None or kit is None:
         return None
 
@@ -1661,6 +1682,10 @@ def build():
     # The cog: the one thing on the field that is not a jewel.
     made["Siege/gem_cog.png"] = cog()
 
+    charged = charge(icons)
+    if charged is not None:
+        made["Siege/charge.png"] = charged
+
     # The muzzle flash, drained to white so a ward's own colour can be put on it at run time.
     flashes = sorted(n for n in turrets.namelist()
                      if n.startswith("Png/Shoot Fx/") and n.endswith(".png"))
@@ -1724,6 +1749,54 @@ def build():
                 made["Siege/%s/f%02d.png" % (name, i)] = im
 
     return made
+
+
+#: How big the overcharge glyph is cut, and how round its corners are.
+#:
+#: Square, because the turret's chassis carries a square panel and a badge that fits it reads as
+#: part of the machine rather than as a sticker on one. 128 is twice what a phone draws it at.
+CHARGE_SIZE, CHARGE_ROUND = 128, 22
+
+
+def charge(root):
+    """The overcharge glyph: one of the pack's skill icons, squared and rounded.
+
+    **Kept as a tile rather than keyed out of its own background.** These icons are painted *on*
+    their ground - the glow round the bolt is most of what makes it read - so a flood or a colour
+    key takes the light with it and leaves a thin yellow scribble (the shop's own sheet-keying
+    lesson, met again). A rounded tile on the turret's square chassis panel is what the art is
+    already shaped like.
+    """
+    if root is None:
+        return None
+
+    source = root / "PNG" / ("skill icon %d.png" % CHARGE_ICON)
+    if not source.exists():
+        return None
+
+    im = Image.open(source).convert("RGBA")
+
+    side = min(im.width, im.height)
+    im = im.crop(((im.width - side) // 2, (im.height - side) // 2,
+                  (im.width - side) // 2 + side, (im.height - side) // 2 + side))
+    im = im.resize((CHARGE_SIZE, CHARGE_SIZE), Image.LANCZOS)
+
+    # A rounded mask, and a keyline in the interface kit's navy so it sits on a bright chassis the
+    # way every other badge in this game does (44h's rule about a flat render on a cartoon board).
+    mask = Image.new("L", (CHARGE_SIZE, CHARGE_SIZE), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([0, 0, CHARGE_SIZE - 1, CHARGE_SIZE - 1],
+                                           radius=CHARGE_ROUND, fill=255)
+
+    tile = Image.new("RGBA", (CHARGE_SIZE, CHARGE_SIZE), (0, 0, 0, 0))
+    tile.paste(im, (0, 0), mask)
+
+    edge = Image.new("RGBA", (CHARGE_SIZE, CHARGE_SIZE), (0, 0, 0, 0))
+    ImageDraw.Draw(edge).rounded_rectangle([2, 2, CHARGE_SIZE - 3, CHARGE_SIZE - 3],
+                                           radius=CHARGE_ROUND - 2, outline=(6, 24, 56, 255),
+                                           width=5)
+    tile.alpha_composite(edge)
+
+    return tile
 
 
 def raw(im):
@@ -1843,7 +1916,7 @@ def contact(made):
 
 
 def main():
-    global SOURCE, TOWER, ENEMIES
+    global SOURCE, TOWER, ENEMIES, ICONS
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true")
@@ -1852,11 +1925,13 @@ def main():
     ap.add_argument("--source", default=str(SOURCE))
     ap.add_argument("--tower", default=str(TOWER))
     ap.add_argument("--enemies", default=str(ENEMIES))
+    ap.add_argument("--icons", default=str(ICONS))
     args = ap.parse_args()
 
     SOURCE = Path(args.source)
     TOWER = Path(args.tower)
     ENEMIES = Path(args.enemies)
+    ICONS = Path(args.icons)
 
     made = build()
 

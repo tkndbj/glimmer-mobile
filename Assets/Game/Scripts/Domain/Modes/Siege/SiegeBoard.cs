@@ -67,6 +67,7 @@ namespace GlimmerGrove.Modes
         /// </summary>
         float _roar;
 
+
         uint _rng;
 
         /// <summary>
@@ -97,8 +98,6 @@ namespace GlimmerGrove.Modes
         int _felled;
         float _rest;
 
-        /// <summary>Whether the authored field stood a cog on it. See <see cref="Upgrades"/>.</summary>
-        readonly bool _seeded;
 
         /// <summary>
         /// The turrets the player stood on the line.
@@ -122,9 +121,6 @@ namespace GlimmerGrove.Modes
             // because xorshift32 is stuck there.
             _hill = layout.Seed * 2654435761u;
             if (_hill == 0u) _hill = 2463534242u;
-
-            for (int i = 0; i < _cells.Length; i++)
-                if (_cells[i] == SiegeLayout.Cog) { _seeded = true; break; }
 
             Line = line ?? WardLine.Starter(WardCatalog.Default);
 

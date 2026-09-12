@@ -42,6 +42,7 @@ namespace GlimmerGrove.Modes
             Conjure(dt);
             Smoulder(dt);
             Swing(dt);
+            Age(dt);
 
             for (int i = _raiders.Count - 1; i >= 0; i--)
                 if (!_raiders[i].Alive) _raiders.RemoveAt(i);
@@ -75,11 +76,11 @@ namespace GlimmerGrove.Modes
                 var ward = _wards[charge.Ward];
                 if (!ward.Alive) continue;
 
-                // **The ward's own capacity, not the mode's constant.** A beacon holds half again
-                // as much (`SiegeTuning.CapacityOf`), and clamping to the constant here would have
-                // been a turret that costs credits, says it banks a cascade, and does not - a
-                // whole ability that reads as broken with nothing anywhere to say why.
-                ward.Fuel = Math.Min(ward.Capacity, ward.Fuel + charge.Fuel);
+// **Through `Fill`, so a match that tops the tube up banks a charge.** The
+                // edge is what is reported rather than the state: a tube that has *just* banked one
+                // is the frame the overcharge can be announced on, where asking "is it armed" every
+                // frame would announce it for as long as nobody spent it.
+                if (ward.Fill(charge.Fuel)) _report.Brimmed.Add(charge.Ward);
             }
 
             Arrive(dt);
@@ -204,6 +205,15 @@ namespace GlimmerGrove.Modes
 
                 for (int i = 0; i < _raiders.Count; i++)
                     if (_raiders[i].Alive) return;
+
+                // **A cleared hill buys a breather rather than the next wave.** It used to muster
+                // at once, which rewarded playing well with more pressure and left the run with
+                // no moment in which anything could be planned - see `SiegeTuning.Breather`. This
+                // only ever *shortens* a quiet, so the clock still never lets up and being ahead
+                // is still worth something: the finding above kept, with the half that made the
+                // mode unthinkable taken out.
+                if (_rest > SiegeTuning.Breather) _rest = SiegeTuning.Breather;
+                return;
             }
 
             int size = Layout.SizeOf(_wave);
@@ -244,8 +254,16 @@ namespace GlimmerGrove.Modes
                 // side of it as a pair - said once so the view and the render can draw the hill
                 // the board is playing. A boss wave sends bosses and nothing else, so the wave's
                 // own size is how many of them there are.
-                int lane = boss ? SiegeTuning.BossLane(i, bosses)
-                                : (int)(Next() % SiegeTuning.Lanes);
+                // **A raider walks down its colour's lane, strayed by one.** The draw is taken
+                // whatever becomes of it - a boss stands where `BossLane` says - so the field's
+                // stream advances exactly the number of times it always did and every shipped
+                // seed still deals the board it dealt before (invariant 41). See `SiegeLanes`.
+                uint roll = Next();
+
+                int lane = boss
+                         ? SiegeTuning.BossLane(i, bosses)
+                         : SiegeLanes.Walk(Layout.WardOf(SiegeLayout.Letters[colour]),
+                                           Layout.Wards.Length, roll);
 
                 _raiders.Add(new SiegeRaider(_minted++, colour, kind, lane,
                                              i * SiegeTuning.RaiderSpacing, surge));
@@ -265,13 +283,25 @@ namespace GlimmerGrove.Modes
                   : SiegeTuning.BetweenWaves;
         }
 
+        /// <summary>
+        /// The hill walks.
+        ///
+        /// <para>
+        /// <b>It slides, and it was stepped for exactly one build.</b> The beat was a real finding
+        /// - a body moving continuously is a gradient and a gradient can only be *felt*, where a
+        /// body that steps can be *counted* - and the owner withdrew it on sight. What a drum buys
+        /// in legibility it spends on feel: a raid that ticks forward reads as a board game rather
+        /// than as something coming at you, which is the one thing this hill is for. The
+        /// observation survives and is worth having the next time a mode needs a readable clock;
+        /// the implementation does not.
+        /// </para>
+        /// </summary>
         void Walk(float dt)
         {
             // **The roar runs down on the board's own clock and lifts by itself.** A raider never
             // holds a copy of it, so nothing can be left charging after the warbringer that
-            // started it is dead — which is the same rule `Arrive` keeps for a spell whose caster
-            // has fallen, and for the same reason: a boss that goes on affecting the hill after it
-            // is destroyed reads as the game getting the last word.
+            // started it is dead - which is the same rule `Arrive` keeps for a spell whose caster
+            // has fallen, and for the same reason.
             if (_roar > 0f) _roar = Math.Max(0f, _roar - dt);
 
             float charge = _roar > 0f ? SiegeTuning.Rally : 1f;
@@ -294,7 +324,7 @@ namespace GlimmerGrove.Modes
                 // **A boss does not answer its own roar.** A warbringer that hurried itself into
                 // place would shorten the entrance the roar exists to make frightening, and a
                 // warlord hastened by somebody else's roar could reach its ground before the level
-                // meant it to — so the charge is the hill's, and the hill is what walks.
+                // meant it to - so the charge is the hill's, and the hill is what walks.
                 raider.March += dt * raider.Pace * (raider.Boss ? 1f : charge)
                               / SiegeTuning.MarchOf(raider.Kind);
 
@@ -330,7 +360,7 @@ namespace GlimmerGrove.Modes
                 ward.Cool -= dt;
                 if (ward.Cool > 0f) continue;
 
-                var target = Aim(ward.Colour);
+                var target = Aim(ward);
                 if (target == null) { ward.Cool = 0f; continue; }
 
                 ward.Cool = SiegeTuning.FireEvery;
@@ -346,8 +376,16 @@ namespace GlimmerGrove.Modes
                 // one ability that widens the mode's central rule instead of adding to it. It is
                 // asked of the ward rather than compared here, so nothing can end up with a
                 // second opinion about what "its own colour" means.
-                bool weak = ward.StrongAgainst(target.Colour);
-                int damage = SiegeTuning.DamageTo(target.Kind, ward.Rank, weak, ward.Build);
+                // **Full weight against its own colour, a share against a prism's partner.**
+                // Under the lock every primary bolt lands on something this ward is strong
+                // against, so `weak` is true on every ordinary shot and `SiegeTuning.PerfectMatch`
+                // — which has always assumed exactly that — stops being an optimistic reading and
+                // becomes an identity.
+                int share = ward.ReachTenths(target.Colour);
+                bool weak = share >= 10;
+
+                int damage = SiegeTuning.DamageTo(target.Kind, ward.Rank, true, ward.Build);
+                if (!weak) damage = Math.Max(1, damage * share / 10);
 
                 target.Health -= damage;
                 target.Flash = .18f;
@@ -371,37 +409,56 @@ namespace GlimmerGrove.Modes
         /// right ward sees the bolts go to the thing that colour hurts; one who has not sees them
         /// spread. Nothing has to be told about it.
         /// </summary>
-        SiegeRaider Aim(int colour)
+        /// <summary>
+        /// What a ward will shoot at: the furthest raider of its own colour, and — for a prism —
+        /// the furthest of its partner colour when its own has nothing left standing.
+        ///
+        /// <para>
+        /// <b>A turret only ever attacks its own colour, and that one line is the mode.</b> It
+        /// used to prefer its own colour and fall back to whatever was nearest, which meant the
+        /// elemental double was a bonus the player received for free: four wards firing at once
+        /// eventually landed everything on its own kind whatever anybody matched, so <em>which</em>
+        /// colour to feed decided nothing and "take the biggest match on the field" was correctly
+        /// the optimal play. <b>A bonus nobody has to earn cannot change behaviour.</b> A lock can.
+        /// </para>
+        /// <para>
+        /// <b>And it is what makes fuel a resource rather than a pass-through.</b> A ward with
+        /// nothing to fire at holds what it is given, so a colour matched while its raiders are
+        /// off the hill <em>banks</em> — which is the half of the loop this mode never had, and
+        /// the half a breather is worth having for. The caller arranges none of that: it simply
+        /// gets no target and leaves the tube alone.
+        /// </para>
+        /// <para>
+        /// <b>Own colour first, always.</b> A prism's partner is a shot it would otherwise not
+        /// have fired, so reaching for it only when its own colour is clear is what keeps the
+        /// ability strictly additive — see <see cref="SiegeWard.PartnerShare"/>. Picking the
+        /// furthest of either would let a partner at reduced weight displace an own-colour target
+        /// at full, which is a turret somebody paid for making their own bolt weaker (invariant
+        /// 42).
+        /// </para>
+        /// </summary>
+        SiegeRaider Aim(SiegeWard ward)
         {
-
-            SiegeRaider weak = null, near = null;
+            SiegeRaider own = null, partner = null;
 
             for (int i = 0; i < _raiders.Count; i++)
             {
                 var raider = _raiders[i];
                 if (!raider.Alive || !raider.OnTheHill) continue;
 
-                if (near == null || raider.March > near.March) near = raider;
+                if (raider.Colour == ward.Colour)
+                {
+                    if (own == null || raider.March > own.March) own = raider;
+                    continue;
+                }
 
-                if (raider.Colour != colour) continue;
-                if (weak == null || raider.March > weak.March) weak = raider;
+                if (ward.ReachTenths(raider.Colour) <= 0) continue;
+                if (partner == null || raider.March > partner.March) partner = raider;
             }
 
-            return weak ?? near;
+            return own ?? partner;
         }
 
-        /// <summary>
-        /// The warlord's spells: chosen, telegraphed, and thrown at the line from where it stands.
-        ///
-        /// <para>
-        /// <b>Nothing lands here.</b> A cast decides a target and books a
-        /// <see cref="Flight"/>; <see cref="Arrive"/> is what takes the ward's health, a whole
-        /// <see cref="SiegeTuning.BossTell"/> plus <see cref="SiegeTuning.BossFlight"/> later. That
-        /// split is invariant 37s — a move's effect may not land before its animation does, and on
-        /// a board whose clock never stops the only way to guarantee it is for the schedule to be
-        /// a rule the view reads rather than a duration the view invents.
-        /// </para>
-        /// </summary>
         void Conjure(float dt)
         {
             for (int i = 0; i < _raiders.Count; i++)

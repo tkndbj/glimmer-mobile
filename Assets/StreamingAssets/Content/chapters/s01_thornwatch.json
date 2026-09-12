@@ -23,17 +23,17 @@
     "width": 8,
     "height": 5,
     "rows": [
-     "ryybgyyg",
-     "bybgrgyy",
-     "rbryyggr",
-     "grgrgbbr",
-     "yybgrrbg"
+     "brbrgbgg",
+     "rrggbbrg",
+     "bbgrrggr",
+     "gbrbgrbr",
+     "rggrrbgb"
     ],
-    "gems": "rgby",
-    "wards": "rgby",
+    "gems": "rgb",
+    "wards": "rgb",
     "waves": [
-     "rgby",
-     "rgbyrgby"
+     "rgbrgb",
+     "rgbrgbrgb"
     ],
     "boss": ""
    }
@@ -48,21 +48,21 @@
     "width": 8,
     "height": 5,
     "rows": [
-     "brbybgrg",
-     "yggrbbry",
-     "r*byybgr",
-     "yygbbgby",
-     "bbryygyg"
+     "rrgbbgbg",
+     "bbgrbrbr",
+     "rbbgrrgb",
+     "grgbgbgr",
+     "rggrgbbg"
     ],
-    "gems": "rgby",
-    "wards": "rgby",
+    "gems": "rgb",
+    "wards": "rgb",
     "waves": [
-     "rgbyrg",
-     "rgbyrgby",
-     "rgByrgby"
+     "rgbrgb",
+     "rgbrgbrgb",
+     "rgBrgbrg"
     ],
     "boss": "",
-    "cogs": 4
+    "cogs": 25
    }
   },
   {
@@ -75,21 +75,21 @@
     "width": 8,
     "height": 5,
     "rows": [
-     "gbrrgbgy",
-     "rybbrbbr",
-     "grgryyrr",
-     "rbybybby",
-     "ryybgrby"
+     "rrggbggb",
+     "gbrbrbrb",
+     "bggrgbrr",
+     "rrgbrggb",
+     "rgrbrbgg"
     ],
-    "gems": "rgby",
-    "wards": "rgby",
+    "gems": "rgb",
+    "wards": "rgb",
     "waves": [
-     "rgbyRG",
-     "rgbyRGby",
-     "RGBYRGby"
+     "rgbrgB",
+     "rgbRGbrg",
+     "RGBRGbrgb"
     ],
     "boss": "",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -116,7 +116,7 @@
      "GGBBYY"
     ],
     "boss": "",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -143,7 +143,7 @@
      "RGbyRG"
     ],
     "boss": "warlord:r",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -166,11 +166,11 @@
     "wards": "rgby",
     "waves": [
      "RGby#rby",
-     "RGby!yRGby",
-     "RGBYRG#gRG"
+     "RGBY!yRGby",
+     "RGBYRG#gRGby"
     ],
     "boss": "",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -197,7 +197,7 @@
      "RGBYRG#y"
     ],
     "boss": "",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -224,7 +224,7 @@
      "RGBY#gRGby!y"
     ],
     "boss": "",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -251,7 +251,7 @@
      "RGBY#gRGB#b!r"
     ],
     "boss": "",
-    "cogs": 3
+    "cogs": 25
    }
   },
   {
@@ -275,10 +275,10 @@
     "waves": [
      "rgby!bRGby",
      "RGB#rY#gG",
-     "RGBYRGby"
+     "RGbyRGby"
     ],
     "boss": "overlord:y",
-    "cogs": 3
+    "cogs": 25
    }
   }
  ]

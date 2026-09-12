@@ -69,7 +69,7 @@ namespace GlimmerGrove
         /// band and not two numbers that have to be kept in step — which is how a panel comes to
         /// draw its own button off the bottom edge.
         /// </summary>
-        const float PanelW = 880f, PanelH = ActTop + ActH + 118f;
+        public const float PanelW = 880f, PanelH = ActTop + ActBand + 118f;
 
         /// <summary>
         /// The stage's own box, and the cell its contents are multiples of.
@@ -120,8 +120,33 @@ namespace GlimmerGrove
         const float StarsTop = StatTop + WardStatBars.Height + 10f;
         const float StarsMid = StarsTop + StarsH * .5f;
 
-        const float ActH = 124f, ActTop = StarsTop + StarsH + 22f;
-        const float ActMid = ActTop + ActH * .5f;
+        /// <summary>
+        /// The keys, and the band is <b>always</b> two of them tall.
+        ///
+        /// <para>
+        /// <b>A held turret needs two answers and the panel only ever offered one</b>, which is how
+        /// it came to be impossible to equip anything. A turret starts at one star, so there is
+        /// always a next star to sell — and the held branch offered that star and stopped, so every
+        /// turret a player owned and had not stood showed <c>UPGRADE</c> and nothing else. The
+        /// loadout's whole purpose was unreachable, and every gate was green, because each of the
+        /// two branches is correct and nothing anywhere asks whether their union covers the state.
+        /// </para>
+        /// <para>
+        /// <b>The band is reserved for two and a single key is centred in it</b>, rather than the
+        /// panel growing when a second is wanted. What a held turret offers changes while the panel
+        /// is open — buying it makes it held, upgrading it to the top takes the star away — so a
+        /// height derived from the state would be a modal that resizes under the finger.
+        /// </para>
+        /// </summary>
+        const float ActH = 124f, ActGap = 16f, ActTop = StarsTop + StarsH + 22f;
+        const float ActBand = ActH * 2f + ActGap;
+
+        /// <summary>Where one key sits when it is the only one: the middle of the band.</summary>
+        const float ActMid = ActTop + ActBand * .5f;
+
+        /// <summary>Where the two sit when both are shown.</summary>
+        const float ActUpper = ActTop + ActH * .5f;
+        const float ActLower = ActTop + ActH + ActGap + ActH * .5f;
 
         // The panel is parchment, so it is written in ink rather than in the cream the board uses
         // — `WardBuyOverlay`'s note, and the same measured accents.
@@ -133,6 +158,18 @@ namespace GlimmerGrove
         WardStatBars _bars;
         RectTransform _ladder;
         Btn _act;
+
+        /// <summary>
+        /// The equip key: the second answer a held turret owes, and the one that was missing.
+        ///
+        /// <b>Its own button rather than a caption the first one switches to</b>, because the two
+        /// are not alternatives — a turret a player owns and has not stood can be upgraded *and*
+        /// equipped, and offering one of those at a time is offering neither.
+        /// </summary>
+        Btn _stand;
+
+        Image _standPill;
+        Text _standLabel;
         Text _label;
         Image _coin;
         Image _pill;
@@ -220,6 +257,20 @@ namespace GlimmerGrove
             _pill = _act.GetComponent<Image>();
 
             _lift = ActH * UIKit.PillFaceLift;
+
+            // **Orange, which is this panel's own convention for a key that is not a price.** The
+            // upgrade key above it is the affirmative green, so the two read as *the thing that
+            // costs* and *the thing that does not* rather than as two of the same offer.
+            _stand = UIKit.Button("Stand", panel, Art.S("Ui/" + Skins.Buy),
+                                  new Vector2(480f, ActH), new Vector2(.5f, 1f),
+                                  new Vector2(0f, -ActLower), Stand);
+
+            _standPill = _stand.GetComponent<Image>();
+
+            _standLabel = UIKit.Titled("Label", _stand.transform, string.Empty, 38, Pal.Cream,
+                                       TextAnchor.MiddleCenter, new Vector2(320f, 62f),
+                                       new Vector2(.5f, .5f), new Vector2(0f, _lift), 0f, 3f);
+            UIKit.Shrinkable(_standLabel, 22);
 
             _label = UIKit.Titled("Label", _act.transform, string.Empty, 38, Pal.Cream,
                                   TextAnchor.MiddleCenter, new Vector2(320f, 62f),
@@ -348,16 +399,60 @@ namespace GlimmerGrove
             // everything else keeps the orange it already had.
             Skin(Skins.Buy);
 
+            bool held = offer.State == WardPurchaseState.AlreadyHeld;
+
+            bool rises = held && (rise.State == WardUpgradeState.Ready
+                                  || rise.State == WardUpgradeState.Short);
+
+            // **Which keys are offered is a rule with a name**, swept over every state a turret can
+            // be in (`WardPreviewTests`) — because what went wrong here was not a wrong branch, it
+            // was two correct branches whose union left a state with no answer at all.
+            var keys = WardPreviewKeys.For(held, Standing, rises);
+
+            // **The equip key is the second answer, and it is shown for every turret the player
+            // owns.** It is what says where this turret already stands, and it is the only way to
+            // move it — a held turret with a star left to sell used to offer the star and nothing
+            // else, which made the loadout unreachable.
+            //
+            // EQUIPPED pays nothing, moves nothing and only closes the panel, so it wears the one
+            // pill on this panel that is not an offer; EQUIP wears the orange, which keeps the
+            // affirmative green for the thing that costs.
+            if (_stand != null)
+            {
+                _stand.gameObject.SetActive(keys.Lower);
+
+                if (keys.Lower)
+                {
+                    _standLabel.text = Loc.Get(keys.Equipped ? "ui.loadout.standing"
+                                                             : "ui.loadout.stand");
+
+                    if (_standPill != null)
+                        _standPill.sprite =
+                            Art.S("Ui/" + (keys.Equipped ? Skins.Settled : Skins.Buy));
+                }
+            }
+
+            _act.gameObject.SetActive(keys.Upper);
+
+            // A lone key takes the middle of the band rather than sitting over a gap - see
+            // `ActBand`, which is always two keys tall so the panel never resizes under a finger.
+            if (keys.Upper)
+                _act.GetComponent<RectTransform>().anchoredPosition =
+                    new Vector2(0f, -(keys.Alone ? ActMid : ActUpper));
+
+            if (_stand != null)
+                _stand.GetComponent<RectTransform>().anchoredPosition =
+                    new Vector2(0f, -(keys.Alone ? ActMid : ActLower));
+
             switch (offer.State)
             {
                 case WardPurchaseState.AlreadyHeld:
-                    // **A held turret's button sells the next star, and only falls back to
-                    // standing it when there is none left to sell.** The panel is one tap from the
-                    // shelf and the shelf already says which turret is on the line, so the useful
-                    // thing to offer somebody looking at a turret they own is the thing they can
-                    // still buy for it.
-                    if (rise.State == WardUpgradeState.Ready
-                        || rise.State == WardUpgradeState.Short)
+                    // **A held turret's upper key sells the next star**, and the equip key under it
+                    // says where the turret stands. The panel is one tap from the shelf and the
+                    // shelf already says which turret is on the line, so the useful thing to offer
+                    // somebody looking at a turret they own is both of the things they can do to
+                    // it.
+                    if (rises)
                     {
                         // **The word rather than the price**, because this button no longer buys
                         // anything: it opens the panel that shows what the star is worth, and a
@@ -371,21 +466,8 @@ namespace GlimmerGrove
                         break;
                     }
 
-                    // **Two different answers, and the difference is the whole reason a held turret
-                    // now opens a panel at all.** One is an action and one is a statement of where
-                    // things already stand.
-                    _status.text = Standing
-                        ? Loc.Get("ui.loadout.held_one")
-                        : string.Empty;
+                    _status.text = Standing ? Loc.Get("ui.loadout.held_one") : string.Empty;
                     _status.color = Held;
-
-                    _label.text = Loc.Get(Standing ? "ui.loadout.standing" : "ui.loadout.stand");
-
-                    // **The one state that is not an offer wears the one pill that is not one.**
-                    // EQUIPPED pays nothing, moves nothing and only closes the panel, so on the
-                    // price pill it shouted as loudly as a nine-thousand-credit turret and the
-                    // two states a player is really choosing between were drawn identically.
-                    if (Standing) Skin(Skins.Settled);
                     break;
 
                 case WardPurchaseState.Sealed:
@@ -433,7 +515,31 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The one button: stand it, pay for it, or say why neither is on offer.
+        /// Stands this turret on its colour's seat, or closes when it is already standing.
+        ///
+        /// <b>Its own handler rather than a branch of the other one.</b> Equipping and upgrading
+        /// are two things a player can do to one turret, not two readings of one button — which is
+        /// the whole of what went wrong: the upgrade branch returned first, so a turret with a star
+        /// left to sell could never be stood, and every turret starts with one.
+        /// </summary>
+        void Stand()
+        {
+            if (Standing) { Close(); return; }
+
+            // **A mechanism rather than a bell**, which is the shelf's own note: standing a turret
+            // is an action a player takes several times in a row and one tap to undo, where
+            // `unlock` is what an earning sounds like.
+            if (WardLoadout.Choose(WardLine.Colours[Colour], Model.Id))
+            {
+                Audio.Sfx("stand", .5f);
+                Changed?.Invoke();
+                Close(quiet: true);
+            }
+            else Audio.Sfx("blocked", .4f);
+        }
+
+        /// <summary>
+        /// The upper button: buy the next star, pay for the turret, or say why neither is on offer.
         ///
         /// <b>A short balance is answered rather than refused</b> — the gem shelf stacks over this
         /// panel and steps out when the gems land, which is <c>GemShopOverlay</c>'s own rule. A
@@ -446,9 +552,10 @@ namespace GlimmerGrove
 
             if (offer.State == WardPurchaseState.AlreadyHeld)
             {
-                // **The star first, because that is what the button was offering.** `Paint` puts
-                // a price on this button whenever there is a star left to buy, so acting on
-                // anything else here would be the button doing something other than what it says.
+                // **This key only ever sells the star**, because that is the only thing it is ever
+                // drawn as: standing the turret is the key underneath it now (`Stand`), and a
+                // button that did one thing or the other depending on state is how the equip path
+                // came to be unreachable in the first place.
                 var rise = WardUpgrade.OfferFor(Model, Colour);
 
                 if (rise.State == WardUpgradeState.Ready || rise.State == WardUpgradeState.Short)
@@ -471,19 +578,9 @@ namespace GlimmerGrove
                     return;
                 }
 
-                if (Standing) { Close(); return; }
-
-                // **A mechanism rather than a bell**, which is the shelf's own note: standing a
-                // turret is an action a player takes several times in a row and one tap to undo,
-                // where `unlock` is what an earning sounds like.
-                if (WardLoadout.Choose(WardLine.Colours[Colour], Model.Id))
-                {
-                    Audio.Sfx("stand", .5f);
-                    Changed?.Invoke();
-                    Close(quiet: true);
-                }
-                else Audio.Sfx("blocked", .4f);
-
+                // Nothing left to sell, so this key is not drawn at all - see `Paint`. Closing is
+                // the honest answer to a tap that reached it anyway.
+                Close();
                 return;
             }
 

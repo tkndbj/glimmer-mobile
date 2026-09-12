@@ -69,6 +69,12 @@ namespace GlimmerGrove
             Depth();
             Charge();
 
+            // The two readouts that make the colour question answerable at a glance, and the
+            // pulse that says a tube may be spent. All three read the board and decide nothing.
+            Wanted();
+            Ready();
+            Foretell();
+
             // A boss is on the hill for far longer than it is casting, so something has to be
             // happening on it in between — see `SiegeView.Storm`. It draws nothing on a hill with
             // no boss on it, which is nine frames in ten.
@@ -84,16 +90,55 @@ namespace GlimmerGrove
             // shot that killed the thing carrying it rather than under it.
             for (int i = 0; i < report.Dropped.Count; i++) Dropped(report.Dropped[i]);
 
+            // And what a kill paid. After the bomb for the same reason the bomb is after the
+            // bolts: the prize arrives once the thing that dropped it has visibly gone.
+            for (int i = 0; i < report.Cogs.Count; i++) Dropped(report.Cogs[i]);
+
             for (int i = 0; i < report.Spells.Count; i++) Smite(report.Spells[i]);
             for (int i = 0; i < report.Blows.Count; i++) Blow(report.Blows[i]);
 
             Reap();
             Fuses();
+            Gears();
             Sighted();
+            Noticed(report);
 
             if (report.Any) Changed?.Invoke();
 
             Judge();
+        }
+
+        /// <summary>
+        /// Raises the three "first time this happened" hooks the lessons hang on.
+        ///
+        /// <para>
+        /// <b>Read off the board and the step's own report rather than latched where each thing is
+        /// drawn</b>, so a moment that happens while the view is mid-animation is still noticed —
+        /// and so every one of them is asked in the same place rather than three call sites
+        /// remembering to. Each fires once for the life of the screen, which is what a lesson
+        /// costs: <c>RunLessons.Teach</c> refuses one already seen, but it cannot refuse one
+        /// offered while a panel is up, so offering it repeatedly would be a panel arriving at an
+        /// arbitrary later moment.
+        /// </para>
+        /// </summary>
+        void Noticed(SiegeReport report)
+        {
+            // **Offered every time rather than once, and the latch that was here was a bug.**
+            // `RunLessons.Teach` already refuses a lesson that has been seen, that is mid-chain, or
+            // that arrives on a board which is not teachable — so latching *before* knowing whether
+            // it landed meant a tip offered while another was up was thrown away for ever. Which is
+            // what happened: the overcharge's tip was reported as never appearing. Offering again
+            // costs a refused call and buys the tip arriving on the next chance it has.
+            if (_board.Resting)
+            {
+                // The one of the three that is a *state* rather than an event, so it is edged per
+                // breather - otherwise it would be offered sixty times a second.
+                if (!_resting) { _resting = true; Rested?.Invoke(); }
+            }
+            else _resting = false;
+
+            if (report.Brimmed.Count > 0) Brimmed?.Invoke();
+            if (report.Cogs.Count > 0) Salvaged?.Invoke();
         }
 
         /// <summary>

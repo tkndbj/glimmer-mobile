@@ -693,13 +693,34 @@ def check_siege(lid, chapter_id, level, block):
     empty = dict(id=lid, chapter=chapter_id, w=0, h=0, par=0, budget=0,
                  gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
                  crossings=0, briars=0, mode='siege',
-                 ways=0, greedy=-1, nodes=0, goals=0, cogs=0, deal='')
+                 ways=0, greedy=-1, nodes=0, goals=0, cogs=0, deal='',
+                 # **`siege` is carried even on the refusal path.** The report loop reads it
+                 # unconditionally for any level of this mode, so a level refused before its
+                 # layout existed used to crash the gate on the way to printing the error it
+                 # had just found. An empty reading prints as a level that sends nothing,
+                 # which is exactly what a refused one is.
+                 siege=dict(raiders=0, waves=0, brutes=0, bulwarks=0, colours=0, wards=0,
+                            boss='', kind='', spell='', cogs=0, drops=0, threat=0, swap=0))
 
     w, h = block.get('width') or 0, block.get('height') or 0
 
+    # **The retired cog cell is refused by name rather than by falling through** (invariant 5f,
+    # the duskcap's rule). A `*` was a cog standing on the field; cogs are dropped by felled
+    # raiders now, so a body carrying one was authored for a build that is gone. `proto.Grid`
+    # would refuse it anyway as an unknown cell - what a named refusal buys is that whoever meets
+    # it is told why rather than left to guess which of five letters is wrong.
+    for row, line in enumerate(block.get('rows') or []):
+        if rules.RETIRED_COG not in (line or ''):
+            continue
+
+        errors.append("%s: row %d stands a '%s' on the field. A cog is no longer a cell - it is "
+                      "dropped by a raider the line kills and lies on the hill until it is "
+                      "tapped, so a field authors gems and nothing else. Drop the character and "
+                      "set 'cogs' to a drop rate per hundred kills"
+                      % (lid, row + 1, rules.RETIRED_COG))
+        return empty
+
     try:
-        # `CELLS` rather than `LETTERS`: a field may stand a cog on it, and a cog is not a
-        # colour (`SiegeLayout.Cells`).
         grid = proto.Grid(block.get('rows') or [], w, h, rules.CELLS)
     except ValueError as bad:
         errors.append("%s: %s" % (lid, bad))
@@ -771,11 +792,16 @@ def check_siege(lid, chapter_id, level, block):
         warnings.append("%s: everything coming down this hill wears one colour, so which ward to "
                         "feed is not a question" % lid)
 
-    # Invariant 5d asked of the cogs. A cog asks the player which colour to spend on the *line*
-    # rather than on the hill, and a short line is a short question.
-    if layout.cogs and read['wards'] < 3:
-        warnings.append("%s: this siege deals cogs onto a line of %d wards, so which one an "
-                        "upgrade goes to is very nearly a coin toss" % (lid, read['wards']))
+    # **Invariant 5d asked of the cogs, and what it asks moved with them.** It used to warn about
+    # a line too short for "which colour takes this" to be a question; a cog is dropped by a felled
+    # raider now and pays the ward whose colour it wore, so the decision is *when to reach for it*
+    # and the thing that would quietly make it decide nothing is a hill so short that no drop rate
+    # produces a cog at all.
+    if layout.cogs and read['drops'] < 1:
+        warnings.append("%s: this hill drops a cog %d times in a hundred kills and sends %d "
+                        "raiders, so a run expects fewer than one - the mechanic, its art and its "
+                        "lesson all ship and most players never see one"
+                        % (lid, layout.cogs, layout.raiders))
 
     if not read['threat']:
         warnings.append("%s: no wave here holds enough raiders to bring a ward down even if every "
@@ -811,7 +837,14 @@ def check_endless(lid, chapter_id, level, block, grid, layout, endless):
     empty = dict(id=lid, chapter=chapter_id, w=grid.w, h=grid.h, par=0, budget=0,
                  gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
                  crossings=0, briars=0, mode='siege',
-                 ways=0, greedy=-1, nodes=0, goals=0, cogs=0, deal='')
+                 ways=0, greedy=-1, nodes=0, goals=0, cogs=0, deal='',
+                 # **`siege` is carried even on the refusal path.** The report loop reads it
+                 # unconditionally for any level of this mode, so a level refused before its
+                 # layout existed used to crash the gate on the way to printing the error it
+                 # had just found. An empty reading prints as a level that sends nothing,
+                 # which is exactly what a refused one is.
+                 siege=dict(raiders=0, waves=0, brutes=0, bulwarks=0, colours=0, wards=0,
+                            boss='', kind='', spell='', cogs=0, drops=0, threat=0, swap=0))
 
     if block.get('waves') or block.get('boss'):
         errors.append("%s: this siege authors both an endless ramp and its own waves. A lane whose "

@@ -125,16 +125,16 @@ namespace GlimmerGrove.Tests
         /// </summary>
         static readonly Rung[] Chapter =
         {
-            new Rung("s01_firstwatch", new[] { "ryybgyyg", "bybgrgyy", "rbryyggr", "grgrgbbr", "yybgrrbg" }, "rgby", "rgby", new[] { "rgby", "rgbyrgby" }, "", 0),
-            new Rung("s01_ironward", new[] { "brbybgrg", "yggrbbry", "r*byybgr", "yygbbgby", "bbryygyg" }, "rgby", "rgby", new[] { "rgbyrg", "rgbyrgby", "rgByrgby" }, "", 4),
-            new Rung("s01_stonewatch", new[] { "gbrrgbgy", "rybbrbbr", "grgryyrr", "rbybybby", "ryybgrby" }, "rgby", "rgby", new[] { "rgbyRG", "rgbyRGby", "RGBYRGby" }, "", 3),
-            new Rung("s01_thornhollow", new[] { "gbrryrbb", "rygbrrbr", "bbgybggy", "ybygyybb", "gyrbbggr" }, "rgby", "rgby", new[] { "rrrgggbb", "YYYY!rrrr", "GGBBYY" }, "", 3),
-            new Rung("s01_warlordsgate", new[] { "ygrrbrgg", "ryyrgrrb", "bbggyyby", "brryrbyg", "ggrbggry" }, "rgby", "rgby", new[] { "rgbyrg", "rgby!bRGby", "RGbyRG" }, "warlord:r", 3),
-            new Rung("s01_bramblerun", new[] { "bbrgrbrg", "bggrbgyy", "rgyygrry", "brbybyyg", "yrbrgrrg" }, "rgby", "rgby", new[] { "RGby#rby", "RGby!yRGby", "RGBYRG#gRG" }, "", 3),
-            new Rung("s01_ashenfield", new[] { "yrbyrgyy", "brggrbby", "gbrgbyrr", "byrbgybg", "yrbbrrbg" }, "rgby", "rgby", new[] { "#bgyRGby", "RGBY#rG!g", "RGBYRG#y" }, "", 3),
-            new Rung("s01_blackmarch", new[] { "bggbggyr", "rbybgrby", "ybyybryb", "brrgybgr", "bybggybr" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRGby", "RGBY#gRGby!y" }, "", 3),
-            new Rung("s01_thornsiege", new[] { "gbyygryr", "rbgbrbry", "rgrbgybb", "yygryyrg", "bbrgyrgg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBY#rGBY", "RGBY#gRGB#b!r" }, "", 3),
-            new Rung("s01_lastlight", new[] { "bbrgbrry", "bbggbgyg", "ryybrgrr", "ryrgbyby", "ggyrgyry" }, "rgby", "rgby", new[] { "rgby!bRGby", "RGB#rY#gG", "RGBYRGby" }, "overlord:y", 3),
+            new Rung("s01_firstwatch", new[] { "brbrgbgg", "rrggbbrg", "bbgrrggr", "gbrbgrbr", "rggrrbgb" }, "rgb", "rgb", new[] { "rgbrgb", "rgbrgbrgb" }, "", 0),
+            new Rung("s01_ironward", new[] { "rrgbbgbg", "bbgrbrbr", "rbbgrrgb", "grgbgbgr", "rggrgbbg" }, "rgb", "rgb", new[] { "rgbrgb", "rgbrgbrgb", "rgBrgbrg" }, "", 25),
+            new Rung("s01_stonewatch", new[] { "rrggbggb", "gbrbrbrb", "bggrgbrr", "rrgbrggb", "rgrbrbgg" }, "rgb", "rgb", new[] { "rgbrgB", "rgbRGbrg", "RGBRGbrgb" }, "", 25),
+            new Rung("s01_thornhollow", new[] { "gbrryrbb", "rygbrrbr", "bbgybggy", "ybygyybb", "gyrbbggr" }, "rgby", "rgby", new[] { "rrrgggbb", "YYYY!rrrr", "GGBBYY" }, "", 25),
+            new Rung("s01_warlordsgate", new[] { "ygrrbrgg", "ryyrgrrb", "bbggyyby", "brryrbyg", "ggrbggry" }, "rgby", "rgby", new[] { "rgbyrg", "rgby!bRGby", "RGbyRG" }, "warlord:r", 25),
+            new Rung("s01_bramblerun", new[] { "bbrgrbrg", "bggrbgyy", "rgyygrry", "brbybyyg", "yrbrgrrg" }, "rgby", "rgby", new[] { "RGby#rby", "RGBY!yRGby", "RGBYRG#gRGby" }, "", 25),
+            new Rung("s01_ashenfield", new[] { "yrbyrgyy", "brggrbby", "gbrgbyrr", "byrbgybg", "yrbbrrbg" }, "rgby", "rgby", new[] { "#bgyRGby", "RGBY#rG!g", "RGBYRG#y" }, "", 25),
+            new Rung("s01_blackmarch", new[] { "bggbggyr", "rbybgrby", "ybyybryb", "brrgybgr", "bybggybr" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRGby", "RGBY#gRGby!y" }, "", 25),
+            new Rung("s01_thornsiege", new[] { "gbyygryr", "rbgbrbry", "rgrbgybb", "yygryyrg", "bbrgyrgg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBY#rGBY", "RGBY#gRGB#b!r" }, "", 25),
+            new Rung("s01_lastlight", new[] { "bbrgbrry", "bbggbgyg", "ryybrgrr", "ryrgbyby", "ggyrgyry" }, "rgby", "rgby", new[] { "rgby!bRGby", "RGB#rY#gG", "RGbyRGby" }, "overlord:y", 25),
         };
 
         /// <summary>
@@ -147,6 +147,23 @@ namespace GlimmerGrove.Tests
         /// finishes untouched is a fail state that rejects nothing (invariant 5d asked of a threat).
         /// </summary>
         const int TeachingRungs = 4;
+
+        /// <summary>
+        /// Every rung of the first chapter's ward line, in order.
+        ///
+        /// <b>Exposed rather than copied</b>, because <c>WardLoadoutTests</c> has to hold the
+        /// loadout's seat gate to the chapter that decides it — and a second copy of these ten
+        /// strings is a second thing to keep in step with the shipped body. The table above is
+        /// already held to <c>s01_thornwatch.json</c> by <c>Tools/verify/rungs.py</c>, so this is
+        /// the one that is checked.
+        /// </summary>
+        internal static IReadOnlyList<string> ShippedWardLines()
+        {
+            var lines = new List<string>(Chapter.Length);
+            for (int i = 0; i < Chapter.Length; i++) lines.Add(Chapter[i].Wards);
+
+            return lines;
+        }
 
         [Test]
         public void TheFixtureSiegeReads()
@@ -221,7 +238,7 @@ namespace GlimmerGrove.Tests
         {
             // A warlord carries the health of four brutes, so answering it at half rate is a duel
             // nobody could finish - the arithmetic par assumes it is not so.
-            var bad = Layout(Field, Gems, "rg", new[] { "rr" }, "warlord:b");
+            var bad = Layout(Field, "rgy", "rgy", new[] { "rr" }, "warlord:b");
 
             Assert.IsNotNull(bad.Fault);
             StringAssert.Contains("warlord", bad.Fault);
@@ -634,11 +651,11 @@ namespace GlimmerGrove.Tests
         {
             // Both are refusals in the reader rather than warnings, because a player's build runs
             // that reader and must not open a level that cannot be played.
-            var starved = Layout(Field, "rgb", Wards, Waves);
+            var starved = Layout(Field, "rgb", Wards, Waves);       // four wards, three colours
             Assert.IsNotNull(starved.Fault);
             StringAssert.Contains("never deals", starved.Fault);
 
-            var unanswerable = Layout(Field, Gems, "rg", Waves);
+            var unanswerable = Layout(Field, "rgy", "rgy", Waves);
             Assert.IsNotNull(unanswerable.Fault);
             StringAssert.Contains("strong against", unanswerable.Fault);
         }
@@ -1630,6 +1647,10 @@ namespace GlimmerGrove.Tests
             // random, so a failure is reproducible and a re-tune is read off the same ninety runs.
             float[] rhythms = { 2.20f, 2.25f, 2.30f, 2.35f, 2.40f, 2.45f, 2.50f, 2.55f, 2.60f };
 
+            // Measured 2026-09-12 at 81 of 90, after the colour lock and two cuts to the wave
+            // gaps (the breather went 8 -> 6 -> 4). Set a few under what was read: the sweep is
+            // deterministic, so this is a ratchet rather than a tolerance, and a floor one run
+            // below the reading would fail every honest re-tune.
             const int Floor = 78;
 
             var table = new System.Text.StringBuilder();
@@ -1730,43 +1751,96 @@ namespace GlimmerGrove.Tests
         /// beside it goes to that colour's ward and to no other.
         /// </summary>
         [Test]
-        public void ACogIsTakenByTheColourThatMatchesBesideIt()
+        public void ACogDroppedByARaiderRanksTheWardOfItsOwnColour()
         {
-            // A checkerboard - so nothing lines up by accident - with three reds arranged so
-            // that one vertical swap closes a run directly under the cog, and nothing else.
-            var layout = Layout(new[]
-            {
-                "by*ybyby",
-                "yrbrybyb",
-                "byrybyby",
-                "ybybybyb",
-            }, "rgby", "rgby", new[] { "rgby" }, null, 0);
+            var layout = Layout(Field, Gems, Wards, new[] { "r" }, null, 100);
 
             Assert.IsNull(layout.Fault, layout.Fault);
 
             var board = SiegeBoard.Build(layout);
-
             int red = layout.WardOf('r');
+
             Assert.AreEqual(0, board.Wards[red].Rank);
+            Assert.IsEmpty(board.Cogs, "a cog before anything has been killed");
 
-            int a = board.IndexOf(2, 1), b = board.IndexOf(2, 2);
-            Assert.IsTrue(board.Lines(a, b), "the fixture no longer lines a red run up");
+            // The one creeper this level sends, taken off the hill by something that is not a
+            // ward - a firepot's blast, which is the one kill this fixture can arrange without
+            // playing the board.
+            Frames(board, SiegeTuning.FirstWaveAfter + 1f);
+            Assert.AreEqual(1, board.OnTheHill, "the wave never walked on");
 
-            var turn = board.Swap(a, b);
-            Assert.IsNotNull(turn);
+            var raider = board.Raiders[0];
+            board.Blast(raider.Lane, SiegeTuning.RowOf(raider.March), 9999, null);
 
-            int rises = 0;
-            foreach (var beat in turn.Beats)
-                foreach (var rise in beat.Rises)
-                {
-                    rises++;
-                    Assert.AreEqual(red, rise.Ward, "a red run gave its cog to another ward");
-                    Assert.IsTrue(rise.Rose);
-                }
+            Assert.AreEqual(1, board.Cogs.Count, "a felled raider left no cog at a rate of 100");
 
-            Assert.AreEqual(1, rises, "the cog beside the run was not taken");
+            var cog = board.Cogs[0];
+
+            // **It pays the colour it wore, whatever killed it.** Under the lock only the red
+            // ward could ever have brought a red raider down, so the killer is derivable from the
+            // corpse - which is also what gives the right answer for a kill no ward made at all.
+            Assert.AreEqual(red, cog.Ward);
+
+            var took = board.Take(cog.Id);
+
+            Assert.IsTrue(took.Landed);
+            Assert.AreEqual(red, took.Ward);
+            Assert.AreEqual(1, took.Rank);
             Assert.AreEqual(1, board.Wards[red].Rank);
             Assert.AreEqual(2, board.Wards[red].Level, "the badge and the rank disagree");
+            Assert.IsEmpty(board.Cogs, "the cog was taken and is still lying there");
+
+            Assert.IsFalse(board.Take(cog.Id).Landed, "a cog was taken twice");
+        }
+
+        /// <summary>
+        /// A cog nobody reaches for is trampled, and that deadline is what makes taking one a
+        /// decision rather than a formality.
+        /// </summary>
+        [Test]
+        public void ACogNobodyTakesIsTrampled()
+        {
+            var layout = Layout(Field, Gems, Wards, new[] { "r" }, null, 100);
+            var board = SiegeBoard.Build(layout);
+
+            Frames(board, SiegeTuning.FirstWaveAfter + 1f);
+
+            var raider = board.Raiders[0];
+            board.Blast(raider.Lane, SiegeTuning.RowOf(raider.March), 9999, null);
+
+            Assert.AreEqual(1, board.Cogs.Count);
+
+            Frames(board, SiegeTuning.CogLies * .5f);
+            Assert.AreEqual(1, board.Cogs.Count, "it went before its time was up");
+
+            Frames(board, SiegeTuning.CogLies * .6f);
+            Assert.IsEmpty(board.Cogs, "a cog nobody took is still lying on the hill");
+        }
+
+        /// <summary>
+        /// Nothing is dropped for a ward that is already at the top of the ladder.
+        ///
+        /// <b>A prize the player reaches for and is not thanked for is worse than no prize</b>, and
+        /// there is no honest second thing to hand out instead: fuel from a kill would be damage
+        /// nobody matched for, which is exactly what invariant 39 prices and nothing here could.
+        /// </summary>
+        [Test]
+        public void AMaxedWardIsDroppedNoCog()
+        {
+            var layout = Layout(Field, Gems, Wards, new[] { "r" }, null, 100);
+            var board = SiegeBoard.Build(layout);
+
+            int red = layout.WardOf('r');
+            for (int i = 0; i < SiegeTuning.MaxRank; i++) board.Wards[red].Rank++;
+
+            Assert.IsFalse(board.Wards[red].Upgradable);
+
+            Frames(board, SiegeTuning.FirstWaveAfter + 1f);
+
+            var raider = board.Raiders[0];
+            board.Blast(raider.Lane, SiegeTuning.RowOf(raider.March), 9999, null);
+
+            Assert.IsEmpty(board.Cogs, "a cog was dropped for a ward that cannot use it");
         }
 
         /// <summary>
@@ -1814,23 +1888,25 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A cog never lines up with the cog beside it.
+        /// A field stands gems and nothing else, and the retired cog cell is refused by name.
         ///
-        /// The failure this refuses is the one every mirror of a match-three in this project has
-        /// met: a cell that is not a colour compared to another cell that is not a colour.
+        /// <b>Refused rather than ignored</b>, for the duskcap's reason (invariant 5f): a body
+        /// carrying one was authored for a build that no longer exists, so reading it as a gem
+        /// would ship a field nobody composed. `ProtoGrid` is what says so here; `SiegeMode.Read`
+        /// says it in words a level author can act on.
         /// </summary>
         [Test]
-        public void ThreeCogsInARowAreNotAMatch()
+        public void TheRetiredCogCellIsRefusedRatherThanRead()
         {
-            var layout = Layout(new[]
-            {
-                "***ybyby",
-                "yrbrybyb",
-                "byrybyby",
-                "ybybybyb",
-            }, "rgby", "rgby", new[] { "rgby" }, null, 0);
+            Assert.AreEqual(SiegeLayout.Letters, SiegeLayout.Cells,
+                            "a field stands gems and nothing else");
 
-            Assert.IsNull(layout.Fault, layout.Fault);
+            Assert.IsFalse(ProtoGrid.TryRead(new[] { "*rbybgrg", "yggrbbry", "rgbyybgr",
+                                                     "yygbbgby", "bbryygyg" },
+                                             8, 5, SiegeLayout.Cells, out _, out string error),
+                           "a field standing the retired cog cell has to be refused");
+
+            StringAssert.Contains("*", error);
         }
 
         /// <summary>An overlord is the greater warlord, and a level names it by kind.</summary>
@@ -1986,6 +2062,23 @@ namespace GlimmerGrove.Tests
                     if (absorbed > 0) matches += SiegeUtility.MatchesFor(absorbed);
                 }
 
+                // **And a cog the moment it lands**, for exactly the same reason: a cog left
+                // untaken is trampled (`SiegeTuning.CogLies`), so a model that never reaches for
+                // one reads every rung that drops them as pure added difficulty rather than as the
+                // reward they are. Eager rather than clever, which is the safe direction for a
+                // model to be wrong in — see invariant 40j, where this same omission moved a
+                // chapter by twenty runs in ninety.
+                for (int loot = board.Cogs.Count - 1; loot >= 0; loot--)
+                    board.Take(board.Cogs[loot].Id);
+
+                // **And a full tube, whenever there is anything to throw it at.** An overcharge
+                // delivers exactly what the tube would have delivered as ordinary bolts, so
+                // spending one is never worse than letting it burn - and a tube that is full is a
+                // tube that is about to waste the next thing matched into it. It charges the run
+                // nothing, which is why no matches are added here.
+                for (int w = 0; w < board.Wards.Count; w++)
+                    if (board.Wards[w].Armed) board.Overcharge(w, null);
+
                 since += Frame;
                 if (since < rhythm) continue;
 
@@ -2001,65 +2094,99 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A swap that feeds the ward the raider furthest down the hill is weak to, or any swap.
+        /// A swap that feeds a ward with something to shoot at, preferring the colour of the
+        /// raider furthest down the hill.
         ///
+        /// <para>
         /// The gem that lines something up is one of the two being swapped, so a swap that puts
         /// the wanted colour into a run is one whose own two cells carry it. Approximate, and
         /// deliberately so: this is a model of somebody glancing at the hill and finding a match,
         /// not of somebody solving the board.
+        /// </para>
+        /// <para>
+        /// <b>It walks the hill from the front rather than asking only about the leader, and that
+        /// is the colour lock reaching the model.</b> While a bolt merely preferred its own colour
+        /// a match into an absent one still delivered; under the lock it banks, so a player who
+        /// could not find the leader's colour and took any match at all would be modelled as
+        /// throwing the move away. A real player glances at the hill and feeds something that is
+        /// <em>on</em> it, which is what this does — and the fallback to any swap at all is kept
+        /// for the board that offers nothing else.
+        /// </para>
         /// </summary>
         static bool Aimed(SiegeBoard board, out int a, out int b)
         {
-            char want = '\0';
-            float furthest = -1f;
-
-            // Held in a local rather than reached through `board.Layout.` at the call site:
-            // the offline compile refuses that shape anywhere, because
-            // `LevelDefinition.Layout` is null on any level that is not a glade and the check
-            // is deliberately coarse about which `Layout` it is looking at.
+            // Held in a local rather than reached through `board.Layout.` at the call site: the
+            // offline compile refuses that shape anywhere, because `LevelDefinition.Layout` is
+            // null on any level that is not a glade and the check is deliberately coarse about
+            // which `Layout` it is looking at.
             var plan = board.Layout;
-
             var raiders = board.Raiders;
+
+            // Every colour standing on the hill whose ward is still up, furthest down the hill
+            // first. Sorted by insertion, because a line stands four at most.
+            var wanted = new List<char>(4);
+            var reach = new List<float>(4);
 
             for (int i = 0; i < raiders.Count; i++)
             {
                 var raider = raiders[i];
                 if (!raider.Alive || !raider.OnTheHill) continue;
-                if (raider.March <= furthest) continue;
 
-                // Only a colour whose ward is still up is worth aiming at.
                 char colour = SiegeLayout.Letters[raider.Colour];
+
                 int ward = plan.WardOf(colour);
                 if (ward < 0 || !board.Wards[ward].Alive) continue;
 
-                furthest = raider.March;
-                want = colour;
+                int at = wanted.IndexOf(colour);
+                if (at >= 0)
+                {
+                    if (raider.March > reach[at]) reach[at] = raider.March;
+                    continue;
+                }
+
+                wanted.Add(colour);
+                reach.Add(raider.March);
             }
+
+            for (int i = 1; i < wanted.Count; i++)
+                for (int j = i; j > 0 && reach[j] > reach[j - 1]; j--)
+                {
+                    (reach[j], reach[j - 1]) = (reach[j - 1], reach[j]);
+                    (wanted[j], wanted[j - 1]) = (wanted[j - 1], wanted[j]);
+                }
 
             int fallbackA = -1, fallbackB = -1;
 
-            for (int y = 0; y < board.Height; y++)
-                for (int x = 0; x < board.Width; x++)
-                {
-                    int here = board.IndexOf(x, y);
+            // One pass over the board per wanted colour, so the leader's colour is taken when it
+            // is there and the next one down the hill when it is not. The fallback is found on the
+            // first pass and kept, for the board that offers nothing anybody wants.
+            for (int pick = 0; pick <= wanted.Count; pick++)
+            {
+                char want = pick < wanted.Count ? wanted[pick] : '\0';
 
-                    for (int d = 0; d < 2; d++)
+                for (int y = 0; y < board.Height; y++)
+                    for (int x = 0; x < board.Width; x++)
                     {
-                        int other = d == 0 ? here + 1 : here + board.Width;
-                        if (d == 0 && x + 1 >= board.Width) continue;
-                        if (d == 1 && y + 1 >= board.Height) continue;
-                        if (!board.Lines(here, other)) continue;
+                        int here = board.IndexOf(x, y);
 
-                        if (fallbackA < 0) { fallbackA = here; fallbackB = other; }
+                        for (int d = 0; d < 2; d++)
+                        {
+                            int other = d == 0 ? here + 1 : here + board.Width;
+                            if (d == 0 && x + 1 >= board.Width) continue;
+                            if (d == 1 && y + 1 >= board.Height) continue;
+                            if (!board.Lines(here, other)) continue;
 
-                        if (want == '\0') continue;
-                        if (board.At(here) != want && board.At(other) != want) continue;
+                            if (fallbackA < 0) { fallbackA = here; fallbackB = other; }
 
-                        a = here;
-                        b = other;
-                        return true;
+                            if (want == '\0') continue;
+                            if (board.At(here) != want && board.At(other) != want) continue;
+
+                            a = here;
+                            b = other;
+                            return true;
+                        }
                     }
-                }
+            }
 
             a = fallbackA;
             b = fallbackB;

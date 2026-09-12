@@ -174,6 +174,32 @@ namespace GlimmerGrove.Modes
     }
 
     /// <summary>Everything that happened in one step of the clock.</summary>
+    /// <summary>
+    /// What an overcharge did: where it landed and what it was worth.
+    ///
+    /// <b>A reading rather than an int</b>, because the view has to draw the strike where the
+    /// model put it — and a caller handed only "it worked" would go back to the board for a
+    /// target that is, by then, very likely dead.
+    /// </summary>
+    public readonly struct SiegeUnleash
+    {
+        public readonly bool Landed;
+        public readonly int Ward, Damage, Lane, Row, Absorbed;
+
+        public SiegeUnleash(int ward, int damage, int lane, int row, int absorbed)
+        {
+            Landed = true;
+            Ward = ward;
+            Damage = damage;
+            Lane = lane;
+            Row = row;
+            Absorbed = absorbed;
+        }
+
+        /// <summary>The tube was not full, or there was nothing on the hill to throw it at.</summary>
+        public static SiegeUnleash Refused => default;
+    }
+
     public sealed class SiegeReport
     {
         public readonly List<SiegeBolt> Bolts = new List<SiegeBolt>(16);
@@ -191,6 +217,15 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly List<SiegeBomb> Dropped = new List<SiegeBomb>(2);
 
+        /// <summary>Cogs a kill left on the hill this step. See <c>SiegeBoard.Cog</c>.</summary>
+        public readonly List<SiegeCog> Cogs = new List<SiegeCog>(2);
+
+        /// <summary>Cogs that ran out of time this step, by id. See <c>SiegeBoard.Age</c>.</summary>
+        public readonly List<int> Trampled = new List<int>(2);
+
+        /// <summary>Tubes that filled this step, by ward. What arms the overcharge.</summary>
+        public readonly List<int> Brimmed = new List<int>(2);
+
         /// <summary>The wave that has just stepped out, or -1.</summary>
         public int Wave = -1;
 
@@ -202,11 +237,15 @@ namespace GlimmerGrove.Modes
             Spells.Clear();
             Arrived.Clear();
             Dropped.Clear();
+            Cogs.Clear();
+            Trampled.Clear();
+            Brimmed.Clear();
             Wave = -1;
         }
 
         public bool Any => Bolts.Count > 0 || Blows.Count > 0 || Casts.Count > 0
                         || Spells.Count > 0 || Arrived.Count > 0 || Dropped.Count > 0
+                        || Cogs.Count > 0 || Trampled.Count > 0 || Brimmed.Count > 0
                         || Wave >= 0;
     }
 

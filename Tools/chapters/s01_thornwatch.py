@@ -12,14 +12,17 @@ constants in code, one place, retuned for every level at once.
 
 **What each rung adds, in order.**
 
-  1. *First Watch* - the verb, and nothing else. Twelve creepers in two waves, four wards, no
-     brutes, no cogs and no warlord. It is the one rung with nothing on the field but gems.
-  2. *The Ironward* - the **cog**, standing on the field where it will be met. A cog never matches;
-     it is destroyed by a run of gems *beside* it, and the colour of that run decides which turret
-     goes up a rank. One brute, so the ramp adds a mechanic and a monster in different levels.
-  3. *Stonewatch* - brutes in numbers, and cogs from the deal rather than the author.
-  4. *Thornhollow* - **three wards and three colours**. Par dips here on purpose (par is length,
-     not difficulty), and what makes it hard is that a third of the line's answers are gone.
+  1. *First Watch* - the verb, and nothing else. Fifteen creepers in two waves, **three** wards and
+     three colours, no brutes, no cogs and no boss. It is the one rung with nothing on the hill but
+     raiders and nothing on the field but gems.
+  2. *The Ironward* - the **cog**. A raider the line kills leaves one lying on the hill and a
+     finger takes it, so what this rung teaches is that the hill is somewhere a finger goes. One
+     brute, so the ramp adds a mechanic and a monster in different levels.
+  3. *Stonewatch* - brutes in numbers, and the last rung before the line grows.
+  4. *Thornhollow* - **the fourth ward, and with it the fourth colour**. Par steps up here and it
+     is arithmetic rather than difficulty: a four-colour field cascades less than a three-colour
+     one, so a match delivers about two thirds of what it did and the same hill costs more matches
+     (`SiegeTuning.MatchGemsTenthsFor`).
   5. *The Warlord's Gate* - the **warlord**: it walks to the middle of the hill, stops, and throws
      at the line from where nothing can reach it.
   6. *Bramble Run* - the **bulwark**, written `#r`: it carries a shield, so it halves every bolt
@@ -82,10 +85,21 @@ WIDE, TALL = 8, 5
 
 #: The rungs.
 #:
-#: ``seed`` and ``stood`` deal the field (see `Tools/siege_sweep.py`); ``swaps`` is what that seed
-#: measured and is recorded so a re-sweep can be checked rather than trusted. ``cogs`` is the rate a
-#: fresh gem falls in as a cog, per hundred, and ``boss`` names one of the four bosses and the
-#: colour it wears (``"warlord:r"``) - or is empty for a siege that sends none.
+#: ``seed`` deals the field (see `Tools/siege_sweep.py`); ``swaps`` is what that seed
+#: measured and is recorded so a re-sweep can be checked rather than trusted. ``cogs`` is how often
+#: a felled raider leaves one on the hill, **per hundred kills**, and ``boss`` names one of the four
+#: bosses and the colour it wears (``"warlord:r"``) - or is empty for a siege that sends none.
+#:
+#: **The denominator moved with the cog.** It used to be dealt gems, of which a run clears several
+#: hundred, so 3 was a handful a run; it is kills now, of which a run has a couple of dozen, so 25
+#: is the same handful. A rung that authors the old number would drop about one cog a run and ship
+#: the mechanic, its art and its lesson to a player who never sees it - which `ModeValidator` warns
+#: about by name.
+#:
+#: **``wards`` and ``gems`` are the same string, always.** A turret burns its own colour and
+#: nothing else, so a gem no ward carries is a move spent on nothing - both content gates refuse a
+#: level whose two disagree. The opening rungs stand **three** of each, which is the fewest a jewel
+#: board can be dealt from at all (`SiegeLayout.MinWards` records the measurement).
 #:
 #: **Two bosses across ten rungs, on the fifth and the tenth, and the other two moved to the second
 #: chapter.** It shipped with four, one every two or three rungs, and that is too many for one
@@ -107,80 +121,72 @@ WIDE, TALL = 8, 5
 #: where they stood by `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine`, which is the only instrument
 #: that can see any of it (invariant 37j).
 LEVELS = (
-    dict(id="s01_firstwatch", seed=413, swaps=10, stood=0,
-         wards="rgby", gems="rgby", cogs=0, boss="",
-         waves=["rgby", "rgbyrgby"]),
+    dict(id="s01_firstwatch", seed=9753, swaps=14,
+         wards="rgb", gems="rgb", cogs=0, boss="",
+         waves=["rgbrgb", "rgbrgbrgb"]),
 
-    dict(id="s01_ironward", seed=159, swaps=10, stood=1,
-         wards="rgby", gems="rgby", cogs=4, boss="",
-         waves=["rgbyrg", "rgbyrgby", "rgByrgby"]),
+    # **The cog, on the rung where it can be met without anything else going on.** It is dropped by
+    # a raider the line kills and lies on the hill until it is tapped, so what this rung really
+    # teaches is that the hill is somewhere a finger goes. One brute, so a mechanic and a monster
+    # arrive on different rungs.
+    dict(id="s01_ironward", seed=419, swaps=15,
+         wards="rgb", gems="rgb", cogs=25, boss="",
+         waves=["rgbrgb", "rgbrgbrgb", "rgBrgbrg"]),
 
-    # **The rung that used to open with a boss, and now opens with brutes.** It is the third of ten
-    # and the first one past the teaching rungs' shelter, so what it is for is the brute - a raider
-    # that takes two matches rather than one - and a boss standing in front of that was answering
-    # the question the rung asks. The last wave carries the blightcaller's brutes instead of the
-    # blightcaller.
-    dict(id="s01_stonewatch", seed=1338, swaps=10, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="",
-         waves=["rgbyRG", "rgbyRGby", "RGBYRGby"]),
+    # Brutes in numbers, on the last rung before the line grows.
+    dict(id="s01_stonewatch", seed=10719, swaps=16,
+         wards="rgb", gems="rgb", cogs=25, boss="",
+         waves=["rgbrgB", "rgbRGbrg", "RGBRGbrgb"]),
 
-    dict(id="s01_thornhollow", seed=4176, swaps=9, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="",
+    # **The fourth ward, and with it the fourth colour.** The line has stood three since the first
+    # rung; this is where it grows, and everything after it is a four-colour field. A player who
+    # has learnt the lock on three meets the widest version of it here.
+    dict(id="s01_thornhollow", seed=4176, swaps=9,
+         wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["rrrgggbb", "YYYY!rrrr", "GGBBYY"]),
 
-    dict(id="s01_warlordsgate", seed=4510, swaps=9, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="warlord:r",
+    dict(id="s01_warlordsgate", seed=4510, swaps=9,
+         wards="rgby", gems="rgby", cogs=25, boss="warlord:r",
          waves=["rgbyrg", "rgby!bRGby", "RGbyRG"]),
 
-    # **The bulwark, on the rung that used to be "more brutes".** It is written `#r`: a raider
-    # that halves every bolt of the wrong colour, takes its own in full, and walks at half a
-    # creeper's pace. Two of them and no boss, so the one thing to work out here is that the
-    # biggest match on the field is not the answer - which is the mistake this whole mode is about,
-    # and the first rung that punishes it.
-    dict(id="s01_bramblerun", seed=3603, swaps=8, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="",
-         waves=["RGby#rby", "RGby!yRGby", "RGBYRG#gRG"]),
+    # **The bulwark**, written `#r`. Under the colour lock every raider takes its own colour in
+    # full, so what a shield means now is armour against everything a turret throws *sideways* - a
+    # splash, a chain, a lance and an overcharge are all blunted by it, and only the colour it
+    # wears is not. It is the one raider a relief valve does not answer.
+    dict(id="s01_bramblerun", seed=3603, swaps=8,
+         wards="rgby", gems="rgby", cogs=25, boss="",
+         waves=["RGby#rby", "RGBY!yRGby", "RGBYRG#gRGby"]),
 
     # Three bulwarks, and one of them in the opening wave, so the rung starts on the question
     # rather than working up to it.
-    dict(id="s01_ashenfield", seed=5206, swaps=8, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="",
+    dict(id="s01_ashenfield", seed=5206, swaps=8,
+         wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["#bgyRGby", "RGBY#rG!g", "RGBYRG#y"]),
 
-    # **The warbringer's rung without the warbringer, so its last wave went back to being heavy.**
-    # It was written *light* on purpose - four brutes and two creepers - because half a roar sets
-    # the hill charging and six all-brute raiders at 1.55x took the line apart with a raider left.
-    # Nothing charges here now, so the wave the roar could not afford is the wave this rung wants:
-    # it is the ninth-hardest hill in the chapter and the last one before the finale, and what it
-    # is about is armour arriving while brutes are still walking.
-    dict(id="s01_blackmarch", seed=1952, swaps=8, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="",
+    # The ninth-hardest hill in the chapter and the last one before the finale: armour arriving
+    # while brutes are still walking.
+    dict(id="s01_blackmarch", seed=1952, swaps=8,
+         wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["rgbyRGby", "RGBYRGby", "RGBY#gRGby!y"]),
 
     # The longest hill, and the one that sends bulwarks in a group - three of them across the
     # last two waves, so the slow armour piles up while the brutes behind it are still coming.
-    dict(id="s01_thornsiege", seed=7881, swaps=7, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="",
+    dict(id="s01_thornsiege", seed=7881, swaps=7,
+         wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["rgbyRGby", "RGBY#rGBY", "RGBY#gRGB#b!r"]),
 
-    dict(id="s01_lastlight", seed=11445, swaps=7, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="overlord:y",
-         # Two of the last wave's brutes became creepers when a bolt's damage halved and its
-         # cadence doubled (`SiegeTuning.FireEvery`). The totals are neutral by construction, but
-         # the *dynamics* are not - a line that kills faster empties the hill sooner, and an empty
-         # hill musters the next wave at once (37k), so the finale's waves stacked and it was lost
-         # with one raider left. The cliff is one brute wide: `RGBYRgby` still loses.
-         #
+    dict(id="s01_lastlight", seed=11445, swaps=7,
+         wards="rgby", gems="rgby", cogs=25, boss="overlord:y",
          # The middle wave's two bulwarks are the finale's own reason to keep reading the hill:
          # they are still walking when the overlord lands, so the player is answering armour and a
          # boss at the same time and neither is answered by the biggest match.
-         waves=["rgby!bRGby", "RGB#rY#gG", "RGBYRGby"]),
+         waves=["rgby!bRGby", "RGB#rY#gG", "RGbyRGby"]),
 )
 
 
 def rows_of(rung):
     """This rung's field, re-derived from its seed rather than typed."""
-    cells = sweep.deal(rung["seed"], WIDE, TALL, rung["gems"], rung["stood"])
+    cells = sweep.deal(rung["seed"], WIDE, TALL, rung["gems"])
     return sweep.rows_of(cells, WIDE, TALL)
 
 
@@ -255,12 +261,12 @@ def prove(written):
                      % (level_json["id"], rung["seed"], made, rung["swaps"]))
 
         print("%-18s par %-4d 3* %-4d 2* %-4d %2d raider(s) in %d wave(s), %2d brute(s), "
-              "%d shielded, %d colour(s) against %d ward(s), cogs %2d%%%s"
+              "%d shielded, %d colour(s) against %d ward(s), cogs %2d%% (~%d a run)%s"
               % (level_json["id"], par,
                  proto.over(par, proto.GOLD_HUNDREDTHS), proto.over(par, proto.SILVER_HUNDREDTHS),
                  read["raiders"], read["waves"], read["brutes"], read["bulwarks"],
                  read["colours"], read["wards"],
-                 read["cogs"],
+                 read["cogs"], read["drops"],
                  (", a '%s' %s (%s) last" % (read["boss"], read["kind"], read["spell"]))
                  if read["boss"] else ""))
 

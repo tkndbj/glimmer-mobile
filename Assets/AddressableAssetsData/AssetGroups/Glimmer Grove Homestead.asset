@@ -316,11 +316,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Homestead/bridge_stone
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 288fdf025e08c5040b2af469cc97f813
-    m_Address: Art/Homestead/tower_stone
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 28b1215261f60ca45b12e4d306584435
     m_Address: Art/Homestead/step_ladder/f2
     m_ReadOnly: 0
@@ -557,11 +552,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Homestead/market_table
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 458ed0cddb3d55c468ee3c377fe46aa8
-    m_Address: Art/Homestead/tower_round
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 45b60011a3c6d104fb1dbb5587d2686e
     m_Address: Art/Homestead/tavern/f1
@@ -1103,11 +1093,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 918fd8aeb4365fb48b180a4932be251c
     m_Address: Art/Grove/thumbs_bed
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9198b281a4a7ef247aee6c1406054650
-    m_Address: Art/Homestead/tavern
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

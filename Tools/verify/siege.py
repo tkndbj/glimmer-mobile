@@ -21,14 +21,17 @@ Read `SiegeBoard.cs` first; the names match deliberately.
 
 LETTERS = "rgby"
 
-#: `SiegeLayout.Cells` - everything a cell may hold, which is the four gems **and the cog**. A
-#: second alphabet rather than a fifth letter, because a cog is not a colour: every rule that reads
-#: a cell is asking either "what colour is this" or "what is standing here", and one alphabet would
-#: answer the first with a thing that has none.
-CELLS = "rgby*"
+#: `SiegeLayout.Cells` - everything a cell may hold, which is the four gems and nothing else.
+#:
+#: **The field is gems again.** It carried the cog as a second alphabet for as long as a cog stood
+#: *on the field*; a cog is dropped by a felled raider onto the hill now, so the question "what is
+#: standing here" has no second answer and the split went with the thing that needed it.
+CELLS = "rgby"
 
-#: `SiegeLayout.Cog`.
-COG = "*"
+#: `SiegeLayout.RetiredCog` - refused by name rather than ignored (invariant 5f). A body carrying
+#: one was authored for a build that no longer exists, and reading it as a gem would ship a field
+#: nobody composed.
+RETIRED_COG = "*"
 
 WARD_LETTERS = "rgby"
 RAIDER_LETTERS = "rgbyRGBY"
@@ -50,10 +53,20 @@ BOSS_NAMES = {
 #: The colour a boss may wear. Lower case only - case no longer means anything.
 BOSS_COLOURS = "rgby"
 
-#: `SiegeLayout.MaxWards`, `.MaxRaiders`, `.MaxCogRate` and `SiegeTuning.MostCogs`.
+#: `SiegeLayout.MaxWards`, `.MinWards`, `.MaxRaiders`, `.MaxCogRate` and `SiegeTuning.MostCogs`.
+#:
+#: **Three wards is the floor and it is a measurement.** Under the colour lock a field deals
+#: exactly the colours its line stands, so the ward count *is* the colour count - and a two-colour
+#: match-three is not a board: over twenty thousand dealt seeds not one two-colour field is
+#: settled, and a match on one clears 202 gems against a four-colour field's 5.6.
+#:
+#: **And the cog rate counts kills rather than dealt gems**, so a hundred is the honest ceiling:
+#: a level sends a few dozen raiders, and what bounds the mechanic is the rank ladder and
+#: `MOST_COGS` rather than this.
 MAX_WARDS = 4
+MIN_WARDS = 3
 MAX_RAIDERS = 60
-MAX_COG_RATE = 20
+MAX_COG_RATE = 100
 MOST_COGS = 3
 
 #: `SiegeTuning`. Every one of these is a constant on the C# side too - a level authors none of
@@ -313,9 +326,11 @@ class Layout(object):
                     "says it sends none"
                     % (boss, ", ".join("%s:<colour>" % n for n in BOSS_NAMES), BOSS_COLOURS))
 
-        if not (2 <= len(self.wards) <= MAX_WARDS):
-            return ("a ward line holds 2 to %d wards; this one names %d"
-                    % (MAX_WARDS, len(self.wards)))
+        if not (MIN_WARDS <= len(self.wards) <= MAX_WARDS):
+            return ("a ward line holds %d to %d wards; this one names %d. Fewer than %d is a "
+                    "field of fewer than %d colours, which cascades without stopping and cannot "
+                    "be authored settled at all"
+                    % (MIN_WARDS, MAX_WARDS, len(self.wards), MIN_WARDS, MIN_WARDS))
 
         for i in range(len(self.wards)):
             for j in range(i + 1, len(self.wards)):
@@ -324,25 +339,28 @@ class Layout(object):
                             "the only thing a colour feeds and half the line is a spare part"
                             % self.wards[i])
 
-        if len(self.deal) < 2:
-            return ("the field refills from fewer than two colours, so every arrangement is a "
-                    "match and nothing is ever decided")
+        if self.colours < MIN_WARDS:
+            return ("the field refills from %d colour(s); %d is the fewest a field can hold and "
+                    "still be a board" % (self.colours, MIN_WARDS))
 
         if self.cogs > MAX_COG_RATE:
-            return ("this field deals a cog %d times in a hundred; %d is the most a level may ask "
-                    "for, and past it the line is upgraded whatever the player does"
-                    % (self.cogs, MAX_COG_RATE))
-
-        standing = sum(1 for c in self.grid.cells if c == COG)
-        if standing > MOST_COGS:
-            return ("this field is authored with %d cogs standing on it; %d is the most that may "
-                    "ever be on the board at once, so the rest could never be dealt back in"
-                    % (standing, MOST_COGS))
+            return ("this hill drops a cog %d times in a hundred kills; %d is the most a level "
+                    "may ask for" % (self.cogs, MAX_COG_RATE))
 
         for ward in self.wards:
             if ward not in self.deal:
                 return ("the '%s' ward stands on a field that never deals a '%s' gem, so nothing "
                         "the player does could ever fuel it" % (ward, ward))
+
+        # **And the other way round, which only became a rule when the lock arrived.** A ward
+        # burns its own colour and nothing else, so a gem no ward carries is fuel with nowhere to
+        # go: every match of it is a move spent for nothing, and no reading anywhere would report
+        # it.
+        for gem in self.deal:
+            if gem not in self.wards:
+                return ("this field deals '%s' gems and no ward on the line burns '%s', so every "
+                        "match of that colour is a move spent on nothing. A siege deals exactly "
+                        "the colours its line stands" % (gem, gem))
 
         # An endless lane authors no waves - the muster is a rule (`endless_wave`) - so the two
         # clauses that walk the authored list have nothing to walk. The field is still proved
@@ -378,6 +396,11 @@ class Layout(object):
     @property
     def raiders(self):
         return sum(len(line) for line in self.coming)
+
+    @property
+    def colours(self):
+        """`SiegeLayout.Colours` - how many *distinct* colours this field deals."""
+        return len(set(self.deal))
 
 
 def sweep(wave):
@@ -532,8 +555,6 @@ def any_swap(layout):
         for x in range(grid.w):
             here = y * grid.w + x
 
-            # A cog may be *swapped* like any other cell - it simply never lines up itself, which
-            # `runs` already knows. Refusing to move one here would be a second opinion about that.
             for other in ((here + 1) if x + 1 < grid.w else None,
                           (here + grid.w) if y + 1 < grid.h else None):
                 if other is None or cells[here] == cells[other]:
@@ -562,8 +583,6 @@ def readings(layout):
             elif kind == "bulwark":
                 bulwarks += 1
 
-    standing = sum(1 for c in layout.grid.cells if c == COG)
-
     weavers = sum(1 for line in layout.coming for _, k in line if k == "weaver")
     thieves = sum(1 for line in layout.coming for _, k in line if k == "thief")
 
@@ -573,7 +592,7 @@ def readings(layout):
                 boss=layout.boss or "",
                 kind=layout.boss_kind or "",
                 spell=BOSSES[layout.boss_kind]["spell"] if layout.boss_kind else "",
-                cogs=layout.cogs, stood=standing,
+                cogs=layout.cogs, drops=layout.raiders * layout.cogs // 100,
                 threat=1 if threatens(layout) else 0,
                 swap=1 if any_swap(layout) else 0)
 

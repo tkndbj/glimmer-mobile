@@ -303,9 +303,14 @@ namespace GlimmerGrove.Tests
             else if (mode == GameMode.Siege)
                 dto.siege = new SiegeDto
                 {
-                    // The smallest siege that is still one: a field with four colours on it and
-                    // nothing already lined up, two wards, and one wave of two raiders they are
-                    // each strong against. Par 2.
+                    // The smallest siege that is still one: a field with three colours on it and
+                    // nothing already lined up, three wards, and one wave of three raiders they
+                    // are each strong against.
+                    //
+                    // **Three and not two, and the field deals exactly what the line stands.** A
+                    // turret burns its own colour and nothing else, so a gem no ward carries is a
+                    // move spent on nothing and a two-colour field cascades without stopping -
+                    // both are refusals in `SiegeLayout.Check`.
                     //
                     // Small on purpose: this case is about the registry reading its own block,
                     // not about a level being interesting. It does *not* have to be provable the
@@ -316,9 +321,9 @@ namespace GlimmerGrove.Tests
                     width = 3,
                     height = 3,
                     rows = new[] { "rgb", "gbr", "brg" },
-                    gems = "rgby",
-                    wards = "rg",
-                    waves = new[] { "rg" },
+                    gems = "rgb",
+                    wards = "rgb",
+                    waves = new[] { "rgb" },
                 };
             else
                 Assert.Fail($"ModeRegistryTests has no sample level for '{mode}'. A mode was "

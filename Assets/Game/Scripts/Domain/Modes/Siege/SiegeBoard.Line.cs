@@ -179,6 +179,13 @@ namespace GlimmerGrove.Modes
         /// </summary>
         void Splinter(SiegeWard ward, int index, SiegeRaider other, int damage)
         {
+            // **Plating blunts everything that is not the colour it answers to**, which is where
+            // the bulwark's shield went when the lock made it unreachable on a primary hit. A
+            // splash, a chain and a lance are the only things in this mode that can reach a colour
+            // the player has not fed, so the raider that is armour against exactly that is the one
+            // thing on the hill that must be met with its own colour. See `SiegeBoard.Through`.
+            damage = Through(ward, other, damage);
+
             if (damage < 1) damage = 1;
 
             other.Health -= damage;

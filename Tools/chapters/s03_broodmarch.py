@@ -79,10 +79,10 @@ WIDE, TALL = 8, 5
 
 #: Every rung, in order.
 #:
-#: ``seed`` and ``stood`` deal the field (see `Tools/siege_sweep.py`); ``swaps`` is what that seed
-#: measured and is recorded so a re-sweep can be checked rather than trusted. ``cogs`` is the rate a
-#: fresh gem falls in as a cog, per hundred, and ``boss`` names one of the four bosses and the
-#: colour it wears - or is empty for a siege that sends none.
+#: ``seed`` deals the field (see `Tools/siege_sweep.py`); ``swaps`` is what that seed
+#: measured and is recorded so a re-sweep can be checked rather than trusted. ``cogs`` is how often
+#: a felled raider leaves one on the hill, **per hundred kills**, and ``boss`` names one of the four
+#: bosses and the colour it wears - or is empty for a siege that sends none.
 #:
 #: **The fields tighten as the hill grows**, 9 legal opening swaps down to 6 against chapter one's
 #: 10 down to 7. That is the one lever here that is about the *board* rather than the hill, and it
@@ -92,29 +92,29 @@ LEVELS = (
     # **The brood arrives, and nothing else is new.** Three waves, no armour, no bombers: the rung
     # exists so that a player meets a hill that is simply *bigger* than the one they finished the
     # last chapter on, and finds out that the line they cleared it with is not obviously enough.
-    dict(id="s03_firstbrood", seed=4658, swaps=9, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="",
+    dict(id="s03_firstbrood", seed=4658, swaps=9,
+         wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["rgbyRGby", "RGBYrgby", "RGBYRGby"]),
 
     # The first armour of the chapter, one to a wave, so the question is asked three times before
     # anything else is asked with it.
-    dict(id="s03_hollowshell", seed=5289, swaps=9, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="",
+    dict(id="s03_hollowshell", seed=5289, swaps=9,
+         wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["rgbyRGby", "RGBY#rGby", "RGBY#gRGby"]),
 
     # Bombers, which are the one raider worth *more* to the player than it costs: each leaves a live
     # charge on the hill, and when to spend it is the decision. Three of them on a hill this heavy
     # is the rung that teaches holding one back for the wave rather than tapping it where it fell.
-    dict(id="s03_mirewalk", seed=2392, swaps=8, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="",
+    dict(id="s03_mirewalk", seed=2392, swaps=8,
+         wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RGbyRGby", "RGBY!rRGby", "RGBYRG!gBY!b"]),
 
     # Armour in a group rather than one at a time, and one of them in the opening wave - so the
     # slow shells are still walking when the brutes behind them arrive, which is the shape the
     # whole back half of this chapter is built on.
-    dict(id="s03_spinecrest", seed=5765, swaps=8, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="",
-         waves=["RGBY#rRGby", "RGBY#gRGBY", "RGBY#bRGby"]),
+    dict(id="s03_spinecrest", seed=5765, swaps=8,
+         wards="rgby", gems="rgby", cogs=25, boss="",
+         waves=["RGby#rRGby", "RGby#gRGby", "RGby#bRGby"]),
 
     # **The blightcaller, and it rides the head of this wave rather than walking on alone.** It
     # takes a ward's fire and never its health (`SiegeTuning.EndangersTheLine` is false for it), so
@@ -122,38 +122,38 @@ LEVELS = (
     # mechanic that rejects nothing, which is invariant 5d and was a real report from a device. The
     # last wave is therefore written to still be walking when the douse lands, and the answer is to
     # feed a different colour or pour a surge into the dark one.
-    dict(id="s03_blightfen", seed=7989, swaps=8, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="blightcaller:b",
-         waves=["rgbyRGby", "RGBYRGby", "RGBY#rRGby"]),
+    dict(id="s03_blightfen", seed=7989, swaps=8,
+         wards="rgby", gems="rgby", cogs=25, boss="blightcaller:b",
+         waves=["rgbyRGby", "RGbyRGby", "RGBY#rRGby"]),
 
     # **One colour at a time, which is the hardest thing this mode can ask without a new rule.** A
     # bolt is worth double against its own colour, so a wave that is all of one thing is a wave
     # three of the four wards can barely help with - and the match a player wants is the one the
     # field is least likely to be offering. Chapter one asked this once, early and gently; this is
     # the same question with armour in it.
-    dict(id="s03_stillmire", seed=5687, swaps=7, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="",
+    dict(id="s03_stillmire", seed=5687, swaps=7,
+         wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RRRrrrrg", "GGG#gGGgb", "BBBbbbbYYy"]),
 
     # The densest hill so far and the plainest: four brutes of every colour, twice over, and then a
     # third wave with armour in it. Nothing to work out, everything to keep up with.
-    dict(id="s03_thornbrood", seed=6417, swaps=7, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="",
-         waves=["RGBYRGBY", "RGBYRGBYrg", "RGBY#yRGBYrg"]),
+    dict(id="s03_thornbrood", seed=6417, swaps=7,
+         wards="rgby", gems="rgby", cogs=25, boss="",
+         waves=["RGbyrgby", "RGbyRGbyrg", "RGBY#yRGbyrg"]),
 
     # Armour and bombers together, which is the rung where a charge held back is worth a whole
     # wave: a bomber's blast takes a plus of five boxes, and a bulwark standing in it is the one
     # raider a colour match is slowest against.
-    dict(id="s03_gloamfield", seed=11465, swaps=7, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="",
+    dict(id="s03_gloamfield", seed=11465, swaps=7,
+         wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RGby#rRGby", "RGBY!gRGby", "RGBY#bRGby"]),
 
     # **The longest hill in the game**, four waves and no boss at the end of it, so what this rung
     # is about is attrition rather than a fight: the line has to be fed evenly for a minute and a
     # half, and a colour left dark for one wave too long is the colour that takes a ward down.
-    dict(id="s03_deepmire", seed=1112, swaps=6, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="",
-         waves=["rgbyRGBY", "RGBYRGby", "RGby#rRGby#gby", "RGBYrgby"]),
+    dict(id="s03_deepmire", seed=1112, swaps=6,
+         wards="rgby", gems="rgby", cogs=25, boss="",
+         waves=["rgbyRGby", "RGbyRGby", "RGby#rRGby#gby", "RGBYrgby"]),
 
     # **The warbringer, and its last authored wave is written light for the reason chapter one's
     # was.** Half a roar sets the hill charging, so a roar over an empty hill rejects nothing - the
@@ -161,15 +161,15 @@ LEVELS = (
     # apart. What makes this the chapter's finale rather than a repeat is that a roar cannot be
     # answered by protecting one turret: it takes a little off all four at once, so the answer is a
     # firepot into the hill before it comes.
-    dict(id="s03_broodheart", seed=1651, swaps=6, stood=0,
-         wards="rgby", gems="rgby", cogs=3, boss="warbringer:g",
-         waves=["RGBYRGby", "RGBY#rRGby", "RGBYRG#gby"]),
+    dict(id="s03_broodheart", seed=1651, swaps=6,
+         wards="rgby", gems="rgby", cogs=25, boss="warbringer:g",
+         waves=["RGbyRGby", "RGby#rRGby", "RGBYRG#gby"]),
 )
 
 
 def rows_of(rung):
     """This rung's field, re-derived from its seed rather than typed."""
-    cells = sweep.deal(rung["seed"], WIDE, TALL, rung["gems"], rung["stood"])
+    cells = sweep.deal(rung["seed"], WIDE, TALL, rung["gems"])
     return sweep.rows_of(cells, WIDE, TALL)
 
 
@@ -252,12 +252,12 @@ def prove(written):
                      % (level_json["id"], rung["seed"], made, rung["swaps"]))
 
         print("%-18s par %-4d 3* %-4d 2* %-4d %2d raider(s) in %d wave(s), %2d brute(s), "
-              "%d shielded, %d colour(s) against %d ward(s), cogs %2d%%%s"
+              "%d shielded, %d colour(s) against %d ward(s), cogs %2d%% (~%d a run)%s"
               % (level_json["id"], par,
                  proto.over(par, proto.GOLD_HUNDREDTHS), proto.over(par, proto.SILVER_HUNDREDTHS),
                  read["raiders"], read["waves"], read["brutes"], read["bulwarks"],
                  read["colours"], read["wards"],
-                 read["cogs"],
+                 read["cogs"], read["drops"],
                  (", a '%s' %s (%s) last" % (read["boss"], read["kind"], read["spell"]))
                  if read["boss"] else ""))
 

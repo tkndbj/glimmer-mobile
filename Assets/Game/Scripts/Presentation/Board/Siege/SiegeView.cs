@@ -122,6 +122,7 @@ namespace GlimmerGrove
             public float Height;
             public bool Falling;
 
+
             /// <summary>The warlord's, and null for everything else.</summary>
             public bool Boss;
 
@@ -199,6 +200,36 @@ namespace GlimmerGrove
             public Image Glow;
             public RectTransform Tube;
             public Image Juice;
+
+            /// <summary>
+            /// The demand light: how much of what is on the hill this turret is the answer to.
+            ///
+            /// <b>It sits behind the tube rather than on the chassis</b>, because the tube is
+            /// already the one thing on this line a player's eye passes on its way back to the
+            /// gems — see <c>SiegeView.Wanted</c>.
+            /// </summary>
+            public Image Want;
+
+            /// <summary>
+            /// The overcharge key: the glyph on the turret's own chassis, live only while a charge
+            /// is banked.
+            ///
+            /// <para>
+            /// <b>On the turret rather than on the fuel bar, which is where it started.</b> The bar
+            /// is a *meter* — it says how much, continuously, and it is already carrying the demand
+            /// light — so a control living on it was a button hidden inside a readout. The chassis
+            /// is the one part of a ward nothing else uses (the badge has the shoulder, the health
+            /// bar is above, the bar below) and it is what a finger goes for when it means "this
+            /// turret".
+            /// </para>
+            /// </summary>
+            public Image Dump;
+
+            /// <summary>The light behind the glyph, in the ward's own colour.</summary>
+            public Image Halo;
+
+            /// <summary>How many overcharges are banked, drawn only when it is more than one.</summary>
+            public Text Held;
             public RectTransform Bar;
             public Image Fill;
             public Color Coat;
@@ -236,7 +267,7 @@ namespace GlimmerGrove
         /// </summary>
         public SiegeBoard Siege => _board;
 
-        RectTransform _hill, _mobs, _fuseLayer, _wall, _field, _meters, _fx;
+        RectTransform _hill, _mobs, _fuseLayer, _cogLayer, _wall, _field, _meters, _fx;
 
         /// <summary>The effect layer that is clipped to the board — see <c>SiegeView.Build</c>.</summary>
         RectTransform _sky;
@@ -318,6 +349,24 @@ namespace GlimmerGrove
         /// one piece of news, and <c>RunLessons.Teach</c> would refuse the other two anyway.
         /// </summary>
         public System.Action<SiegeKind> Appeared { get; set; }
+
+        /// <summary>
+        /// Raised once, the first time the hill has been cleared and a wave is still to come.
+        ///
+        /// <b>Once per breather rather than once per screen</b>, and never latched past that:
+        /// <c>RunLessons.Teach</c> is what decides whether a lesson is owed, and a flag here that
+        /// decided it instead threw the tip away when it happened to arrive mid-chain.
+        /// </summary>
+        public System.Action Rested { get; set; }
+
+        /// <summary>Raised once, the first time any tube on the line fills.</summary>
+        public System.Action Brimmed { get; set; }
+
+        /// <summary>Raised once, the first time a felled raider leaves a cog on the hill.</summary>
+        public System.Action Salvaged { get; set; }
+
+        /// <summary>Whether the board is inside a breather already, so one is announced once.</summary>
+        bool _resting;
 
         readonly System.Collections.Generic.HashSet<SiegeKind> _met =
             new System.Collections.Generic.HashSet<SiegeKind>();

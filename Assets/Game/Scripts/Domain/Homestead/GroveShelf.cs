@@ -82,6 +82,42 @@ namespace GlimmerGrove.Homestead
         };
 
         /// <summary>
+        /// The shelves the shop draws a <em>tab</em> for, which is <see cref="All"/> without
+        /// the home ladder.
+        ///
+        /// <para>
+        /// <b>A shelf and a tab are two different things, and this is the first time they have
+        /// had to differ.</b> A home is bought from the town hall itself
+        /// (<c>HomesteadHomeOverlay</c>) — where the player is standing when they ask the
+        /// question, and the only place the ladder can be *shown* rather than listed — so the
+        /// shop's tab was a second door into one room, opening onto a page that collapsed to a
+        /// single cell.
+        /// </para>
+        /// <para>
+        /// <b>What must not follow is taking the shelf out of <see cref="All"/>.</b> That list
+        /// is read by four mechanisms that have to agree (invariant 16c) — the browse atlas,
+        /// the asset scope, the picker's preload and the build gate's audit — and a dwelling
+        /// still needs every one of them: <c>GroveUnveilOverlay</c> opens the home scope on
+        /// every upgrade and <c>HomesteadArt.Thumb</c> resolves a dwelling through the home
+        /// atlas. Removing it from <see cref="All"/> was tried and threw
+        /// <c>KeyNotFoundException: 'home'</c> out of <c>GroveBrowseAtlases.Plan</c> on the
+        /// first dwelling it tried to file — which is the cheap version of the same fault, and
+        /// the expensive version is a home-upgrade celebration drawing a white rectangle.
+        /// </para>
+        /// </summary>
+        public static readonly GroveShelf[] Tabs =
+        {
+            GroveShelf.Residents,
+            GroveShelf.Structure,
+            GroveShelf.Canopy,
+            GroveShelf.Bed,
+            GroveShelf.Edge,
+            GroveShelf.Path,
+            GroveShelf.Ground,
+            GroveShelf.Land,
+        };
+
+        /// <summary>
         /// The shelf a piece belongs on.
         ///
         /// Kind decides it for the two kinds that are not decor, and the slot kind decides it

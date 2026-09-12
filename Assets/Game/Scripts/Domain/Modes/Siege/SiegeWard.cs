@@ -132,39 +132,138 @@ namespace GlimmerGrove.Modes
         /// elemental double is what makes the colour of a match matter at all.
         /// </para>
         /// </summary>
-        public int Partners
+        /// <summary>
+        /// How far round the wheel this turret reaches: nought for a plain one, one for a prism.
+        ///
+        /// <para>
+        /// <b>Capped at one, which is a cap on <em>colours</em> and not on strength.</b> Under the
+        /// colour lock a turret that covers two colours is enormous — it is the only thing on the
+        /// shelf that can answer a lane the player has not fed — so a third would not be a better
+        /// rung, it would be the lock coming off. The prism family climbs on
+        /// <see cref="PartnerShare"/> instead.
+        /// </para>
+        /// </summary>
+        public const int MostPartners = 1;
+
+        /// <summary>Whether this turret reaches a second colour at all.</summary>
+        public bool Prisms => Ability == Wards.WardAbility.Prism && Model.Magnitude > 0;
+
+        /// <summary>
+        /// The second colour it reaches, or -1. The next letter round, so a line of four covers
+        /// the wheel when every seat carries one.
+        /// </summary>
+        public int Partner
+            => Prisms ? (Colour + 1) % SiegeLayout.Letters.Length : -1;
+
+        /// <summary>
+        /// What a bolt is worth against its partner colour, in tenths of a full hit.
+        ///
+        /// <para>
+        /// <b>This is the prism family's ladder, and it exists because the colour cap closed the
+        /// one it used to climb.</b> Two rungs of one ability have to differ in something
+        /// (invariant 37ax refuses a shelf where they do not), and with the colour count pinned at
+        /// two the only axis left is <em>how much</em> of a bolt survives the crossing.
+        /// </para>
+        /// <para>
+        /// <b>It can never exceed a full hit, and that is what keeps it out of par's way.</b> A
+        /// turret that made a bolt <em>weaker</em> would push three stars out of reach of whoever
+        /// bought it (invariant 42), so the partner is aimed at only when this ward's own colour
+        /// has nothing left on the hill — a shot it would otherwise not have fired at all. Strictly
+        /// additive, whatever the share.
+        /// </para>
+        /// </summary>
+        public int PartnerShare
         {
             get
             {
-                if (Ability != Wards.WardAbility.Prism) return 0;
+                if (!Prisms) return 0;
 
-                int want = Model.Magnitude <= 0 ? 1 : Model.Magnitude;
-                int most = SiegeLayout.Letters.Length - 1;
-
-                return want > most ? most : want;
+                int share = Model.Magnitude;
+                return share > 10 ? 10 : share;
             }
         }
 
         /// <summary>
-        /// The first colour this turret is strong against besides its own, or -1.
+        /// What a bolt from this ward is worth against <paramref name="colour"/>, in tenths.
+        /// Nought means it will not fire at it at all.
         ///
-        /// <b>The colour after its own, and it is arithmetic rather than authored.</b> A prism
-        /// answering an authored pairing would be a content field with one legal answer per
-        /// colour, and a pairing that could be retuned would move which half of a hill a player's
-        /// line answers without the line having changed.
+        /// <b>One predicate rather than two</b>, because "may I shoot this" and "for how much" are
+        /// one question under the lock and a caller that asked only the first would fire a prism's
+        /// partner shot at full weight.
         /// </summary>
-        public int Partner
-            => Partners > 0 ? (Colour + 1) % SiegeLayout.Letters.Length : -1;
-
-        /// <summary>Whether a bolt at this raider's colour counts as the strong one.</summary>
-        public bool StrongAgainst(int colour)
+        public int ReachTenths(int colour)
         {
-            if (colour == Colour) return true;
+            if (colour == Colour) return 10;
 
-            for (int step = 1; step <= Partners; step++)
-                if (colour == (Colour + step) % SiegeLayout.Letters.Length) return true;
+            return Prisms && colour == Partner ? PartnerShare : 0;
+        }
 
-            return false;
+        /// <summary>
+        /// Whether this ward can hurt <paramref name="colour"/> at all.
+        ///
+        /// <b>Kept for the bolt report and the preview bench, and deliberately narrow.</b> It used
+        /// to mean "is this a double", which under the lock is true of every primary bolt in the
+        /// mode and therefore says nothing. What it means now is <em>would this turret fire at
+        /// that</em>.
+        /// </summary>
+        public bool StrongAgainst(int colour) => ReachTenths(colour) > 0;
+
+        /// <summary>
+        /// Overcharges this ward is holding: full tubes it has banked and not yet thrown.
+        ///
+        /// <para>
+        /// <b>A stored charge rather than a full tube, and the difference is the whole feature.</b>
+        /// It shipped as "the tube is full" and was <em>unusable</em>: a ward fires the instant it
+        /// has fuel and a target, so the only way to reach the brim was for its colour to be off
+        /// the hill — and an overcharge over an empty hill has nothing to throw at. Reported after
+        /// one session as exactly that: <em>it is impossible to use</em>.
+        /// </para>
+        /// <para>
+        /// <b>So a full tube <em>converts</em>.</b> The fuel comes out of the tube and goes in here,
+        /// the tube carries on filling for ordinary bolts, and the charge waits until it is thrown.
+        /// That is what the owner asked for — <em>it stays even if the turret starts shooting</em> —
+        /// and it is also what keeps the thing free of par: the fuel that became a charge can never
+        /// also be fired as bolts, so an overcharge moves damage the player already matched for and
+        /// conjures none (invariant 39).
+        /// </para>
+        /// </summary>
+        public int Charges;
+
+        /// <summary>Whether an overcharge is ready to be thrown.</summary>
+        public bool Armed => Alive && Charges > 0;
+
+        /// <summary>
+        /// Pours fuel in, and banks a charge for every whole tube it fills.
+        ///
+        /// <para>
+        /// <b>One door, because there are two ways in.</b> Fuel arrives from a match landing
+        /// (<c>SiegeBoard.Land</c>) and from a surge being poured (<c>SiegeBoard.Surge</c>), and a
+        /// conversion written at one of them is a ward that can never bank from the other.
+        /// </para>
+        /// <para>
+        /// The overflow is <em>carried</em> rather than dropped, so a cascade that fills a tube and
+        /// a half leaves the half in the tube. At the cap the tube clamps exactly as it always did —
+        /// charges are bounded and fuel is not a leak.
+        /// </para>
+        /// </summary>
+        public bool Fill(float fuel)
+        {
+            if (fuel <= 0f) return false;
+
+            Fuel += fuel;
+
+            bool banked = false;
+
+            while (Fuel >= Capacity && Charges < SiegeTuning.MostCharges)
+            {
+                Fuel -= Capacity;
+                Charges++;
+                banked = true;
+            }
+
+            if (Fuel > Capacity) Fuel = Capacity;
+
+            return banked;
         }
 
         public float Charge => Capacity <= 0f ? 0f : Fuel / Capacity;

@@ -55,6 +55,16 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const float WardCapacity = 28f;
 
+        /// <summary>
+        /// The most overcharges a ward may be holding at once.
+        ///
+        /// <b>Two.</b> One would throw away everything a long quiet earned, which is exactly the
+        /// stretch the player is being asked to spend banking; many would let a whole level be
+        /// saved up and spent on the finale, which is a stockpile rather than a decision. Two is
+        /// a tube in hand and a tube in reserve.
+        /// </summary>
+        public const int MostCharges = 2;
+
         // **Fuel used to fade on a clock and no longer does.** The rule was that a standing
         // ward lost fuel every second whether or not it was shooting, so a colour matched early
         // was a colour wasted and the question was always which ward wanted feeding *now*. It was
@@ -494,13 +504,42 @@ namespace GlimmerGrove.Modes
         public static float FuelShot(int rank) => FuelShotTenths(rank) / 10f;
 
         /// <summary>
-        /// The most cogs that may stand on a field at once.
+        /// The most cogs that may be lying on the hill at once.
         ///
-        /// <b>A cap on the board rather than on the deal</b>, because the deal is a rate and a
-        /// rate has no upper bound over a long run. Three is enough for the player to have a
-        /// choice about which one to take next and few enough that the field is still a field.
+        /// <b>A cap on the board rather than on the drop</b>, because a drop is a rate and a rate
+        /// has no upper bound over a long run. Three is enough for the player to have a choice
+        /// about which one to reach for next and few enough that the hill is still a hill.
         /// </summary>
         public const int MostCogs = 3;
+
+        /// <summary>
+        /// Seconds a cog lies on the hill before it is trampled.
+        ///
+        /// <para>
+        /// <b>A cog is dropped by a raider that died rather than dealt into the field, and the
+        /// deadline is what makes taking one a decision.</b> On the field it was a blocker in the
+        /// player's own space, taken by a match beside it — which made it one more thing to solve
+        /// in the one place the player was already looking. On the hill it is treasure in the
+        /// enemy's space with a clock on it, so the one reliable pull there is (greed) points at
+        /// the half of the screen nobody was watching. It is the oldest answer in this genre:
+        /// the resource is collected <em>on the battlefield</em>.
+        /// </para>
+        /// <para>
+        /// <b>It expires rather than waiting, because an expiry is what makes it a decision.</b> A
+        /// cog that sits for ever is a cog taken when it is convenient, which is no decision at
+        /// all; twelve seconds is roughly five matches, so leaving one is a real thing to have
+        /// left.
+        /// </para>
+        /// </summary>
+        public const float CogLies = 12f;
+
+        /// <summary>
+        /// How much of a cog's life is left when it starts warning that it is going.
+        ///
+        /// A third, so the warning is a third of the window rather than a flicker at the end of
+        /// it — a player who looks up on the beat it starts blinking still has four seconds.
+        /// </summary>
+        public const float CogFading = CogLies / 3f;
 
         /// <summary>A creeper: the ordinary raider, and what most of a wave is.</summary>
         public const int CreeperHealth = 200;
@@ -1000,7 +1039,44 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// </summary>
         public const float FirstWaveAfter = 3.4f;
-        public const float BetweenWaves = 26f;
+        public const float BetweenWaves = 23f;
+
+        /// <summary>
+        /// The shortest a quiet may be once the hill has been cleared.
+        ///
+        /// <para>
+        /// <b>Clearing the hill buys a breather rather than the next wave, and that is the one
+        /// place in this mode a player is allowed to think.</b> The muster used to fire the
+        /// instant nothing was left walking, on the sound argument that a hill which waits is no
+        /// pressure at all — and the cost of it was that playing <em>well</em> was rewarded with
+        /// more pressure, immediately, for ever. A real-time game does not remove thinking time,
+        /// it schedules it: every game of this shape alternates a wave and a lull, and the lull is
+        /// where the next wave is prepared for. Without one there was no moment in which a
+        /// decision could be made, so the only affordable algorithm was "first match my eye lands
+        /// on" — which is exactly what the mode played as.
+        /// </para>
+        /// <para>
+        /// <b>It shortens a quiet and may never lengthen one.</b> <see cref="BetweenWaves"/> is
+        /// still the ceiling and the clock still never lets up, so being ahead is rewarded with a
+        /// short rest rather than a long one — 37k's finding kept, with the half that made it
+        /// unplayable taken out.
+        /// </para>
+        /// <para>
+        /// <b>Eight, then six, then four, cut twice from play.</b> Four is under two matches at an
+        /// ordinary rhythm — long enough to read the forecast and put one colour up, and short
+        /// enough that a cleared hill never reads as the game waiting. <see cref="BetweenWaves"/>
+        /// came down with the first cut (26 → 23) and stayed: a hill that still holds raiders is
+        /// not a quiet, so the two are paced separately.
+        /// </para>
+        /// <para>
+        /// <b>And what makes the rest worth having is that fuel banks in it.</b> A ward only ever
+        /// fires at a colour it is strong against (<c>SiegeBoard.Aim</c>), so an empty hill is a
+        /// line that holds everything it is given — which is what turns a lull into a stockpile
+        /// and the forecast (<see cref="SiegeForecast"/>) into something a player can act on.
+        /// </para>
+        /// </summary>
+        public const float Breather = 4f;
+
 
         /// <summary>Seconds between one raider of a wave stepping out and the next.</summary>
         public const float RaiderSpacing = 1.35f;
@@ -1517,6 +1593,26 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// </summary>
         public const int MatchGemsTenths = 55;
+
+        // **It is a property of a four-colour field, and a three-colour one was corrected for and
+        // should not have been.** Fewer colours means a refill lands beside its own kind far more
+        // often, so a three-colour field really does cascade further - measured over four thousand
+        // matches on a dealt field, 9.48 gems against 5.57. Feeding that into par was wrong, and
+        // the hold simulation is what said so: the opening rungs came out at par 8 to 18 against
+        // an unhurried player spending 17 to 27 matches, so three stars was unreachable on every
+        // one of them.
+        //
+        // **The reason is the colour lock, and it is worth stating because it is not obvious.**
+        // Par is the hill's health over what a match *delivers*, and this number is what a match
+        // *clears* - which were the same question while every gem became a bolt that landed. Under
+        // the lock a ward with nothing of its colour on the hill banks instead of firing, so the
+        // extra gems a three-colour cascade clears are extra *fuel* and not extra damage: much of
+        // it lands later, and some of it never lands at all. Measured across the chapter, an
+        // unhurried player delivers 165 to 253 a match on a four-colour rung and 176 to 253 on a
+        // three-colour one - the same number, not 1.7 times it.
+        //
+        // So there is one figure again. The measurement above is still true and is still the right
+        // thing to know about the *field*; it is simply not what par is asking.
 
         /// <summary>
         /// What one match delivers: the gems it clears, turned into bolts and every one of them

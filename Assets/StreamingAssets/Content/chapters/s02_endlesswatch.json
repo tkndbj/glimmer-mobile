@@ -31,7 +31,7 @@
     "wards": "rgby",
     "waves": [],
     "boss": "",
-    "cogs": 4,
+    "cogs": 30,
     "endless": {
      "goldWave": 20,
      "silverFactor": 0.55

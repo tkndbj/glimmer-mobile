@@ -982,6 +982,38 @@ def post_x(span, index, wards):
     return (index - (wards - 1) / 2) * wide
 
 
+#: `SiegeLanes.Stray` / `.Home` / `.Spread` - how far a raider may stray from its colour's own
+#: lane, and how often it does not. Three rolls in five keep it at home, so a colour reads as a
+#: column with stragglers rather than as a band three lanes wide.
+STRAY = 1
+HOME = 3
+SPREAD = HOME + STRAY * 2
+
+
+def lane_home(ward, wards):
+    """`SiegeLanes.HomeOf` - the lane a ward's own raiders walk down.
+
+    **Mirrored rather than approximated**, because a picture that draws a different hill from the
+    one being played is this mode's one diagnostic lying about its subject (invariant 44d). The
+    raiders used to be laid out at `(i * 2 + 1) % LANES`, which was as good as anything while a
+    lane was dealt and is simply wrong now that a lane is a raider's colour.
+    """
+    if wards <= 1:
+        return LANES // 2
+
+    at = max(0, min(wards - 1, ward))
+    return (at * (LANES - 1) * 2 + (wards - 1)) // ((wards - 1) * 2)
+
+
+def lane_walk(ward, wards, roll):
+    """`SiegeLanes.Walk` - its colour's lane, strayed by `roll`."""
+    home = lane_home(ward, wards)
+    pick = roll % SPREAD
+
+    lane = home if pick < HOME else home - STRAY if pick == HOME else home + STRAY
+    return max(0, min(LANES - 1, lane))
+
+
 def lane_x(span, lane):
     """`SiegeView.LaneX` - where a raider stands, inset so a wide reel stays on the plate.
 
@@ -989,6 +1021,68 @@ def lane_x(span, lane):
     stood every boss a little further out than the board does - and the raiders beside it were
     already drawn on the view's pitch, so the picture disagreed with itself."""
     return (lane - (LANES - 1) * 0.5) * (span[0] / (LANES + 0.6))
+
+
+#: `SiegeView.CogNudge` - how far a cog sits from the middle of its box, so a bomber dropping both
+#: does not stack two taps on one point.
+COG_NUDGE = 0.26
+
+
+def foretell(sheet, lay, wave, span, cell, hill_top, hill_foot, at):
+    """`SiegeView.Foretell` - the forecast band, drawn on the hill during a breather.
+
+    **The one moment the largest surface on the screen is empty**, which is what makes it free to
+    draw there: a breather is a cleared hill, so the forecast costs the board nothing and lands
+    exactly where the player has to look to use it.
+    """
+    draw_on = ImageDraw.Draw(sheet)
+
+    sent = coming(lay, wave)
+    if not sent:
+        return
+
+    owed = {}
+    for letter, _ in sent:
+        owed[letter] = owed.get(letter, 0) + 1
+
+    most = max(owed.values()) if owed else 1
+    seats = list(lay.wards)
+
+    mid = (hill_top + hill_foot) / 2
+    cx, cy = at(0, mid + cell * 0.85)
+
+    write(sheet, draw_on, "NEXT WAVE", face(int(cell * 0.34)), cx, cy, (242, 236, 220, 255))
+
+    step = cell * 1.35
+    first = -(len(seats) - 1) * step / 2
+
+    for i, ward in enumerate(seats):
+        many = owed.get(ward, 0)
+        size = cell * (0.54 + (many / most) * 0.30) if most else cell * 0.54
+
+        gx, gy = at(first + i * step, mid)
+
+        gem = sprite(GEM_ART[ward])
+        if gem is not None:
+            if not many:
+                gem = gem.copy()
+                gem.putalpha(gem.getchannel("A").point(lambda a: int(a * 0.38)))
+            put(sheet, gem, gx, gy, size, size)
+
+        tx, ty = at(first + i * step, mid - cell * 0.62)
+        write(sheet, draw_on, str(many) if many else "-", face(int(cell * 0.40)), tx, ty,
+              (242, 236, 220, 255) if many else (255, 255, 255, 86))
+
+    # Whole seconds, counted down: a number that ticks is a clock, and one that runs to two decimal
+    # places is a readout nobody can use.
+    sx, sy = at(0, mid - cell * 1.4)
+    write(sheet, draw_on, str(int(siege_breather())), face(int(cell * 0.54)), sx, sy,
+          (255, 199, 92, 255))
+
+
+def siege_breather():
+    """`SiegeTuning.Breather` - the shortest a quiet may be once the hill has been cleared."""
+    return 4
 
 
 def box_wide(span):
@@ -1104,7 +1198,7 @@ def ground(rung):
 
 
 def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, line=None,
-         burn=None, storm=0, bombs=None):
+         burn=None, storm=0, bombs=None, cogs=0, forecast=False, armed=()):
     lay = layout_of(level)
     grid = lay.grid
 
@@ -1164,7 +1258,12 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         colour = siege.LETTERS.index(letter)
         brute = kind == "brute"
         bulwark = kind == "bulwark"
-        lane = (i * 2 + 1) % LANES
+        # **Its colour's lane, strayed by one** - `SiegeLanes.Walk`. The stray is dealt from the
+        # raider's own index rather than from the board's stream, because this picture has no
+        # stream: what it has to be right about is that the hill reads as sorted by colour with
+        # mixing at the edges, which is the whole reason the lanes are coloured.
+        lane = lane_walk(lay.wards.index(letter) if letter in lay.wards else 0,
+                         len(lay.wards), i)
         march = 0.18 + 0.16 * i
 
         tall = cell * (1.85 if bulwark else 1.55 if brute else 1.15)
@@ -1364,6 +1463,33 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
 
         put(sheet, utility(BOMB_ART), cx, cy, cell * 0.92, cell * 0.92)
 
+    # ------------------------------------------------------------------ the cogs
+    # **What a kill pays, lying where it fell** (`SiegeView.Dropped`). A cog is the second thing on
+    # this hill a finger does anything to, so the question a picture answers is whether it can be
+    # picked out of a hill full of walking monsters - and whether the ring counting it down reads
+    # as a clock rather than as one more threat.
+    for i in range(cogs):
+        lane, row = (i * 2 + 1) % LANES, i % BLAST_ROWS
+        bx, by = box_at(span, hill_top, hill_foot, lane, row)
+        cx, cy = at(bx + cell * COG_NUDGE, by + cell * COG_NUDGE)
+
+        # The colour of the ward it will rank, which on a three-ward line is one of three.
+        tint = TINTS[siege.LETTERS.index(lay.wards[i % len(lay.wards)])]
+
+        glow = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+        ImageDraw.Draw(glow).ellipse([cx - cell * 0.9, cy - cell * 0.9,
+                                      cx + cell * 0.9, cy + cell * 0.9],
+                                     fill=tint + (48,))
+        sheet.alpha_composite(glow)
+
+        # The ring is the clock, in the ward's own colour rather than a warning red: what it counts
+        # down is a prize, and an alarm colour on a thing the player wants would read as a threat.
+        ring = cell * (0.35 + 0.225 * (1.0 - i / max(1, cogs)))
+        draw_on.ellipse([cx - ring, cy - ring, cx + ring, cy + ring],
+                        outline=tint + (216,), width=max(2, int(cell * 0.05)))
+
+        put(sheet, sprite("gem_cog"), cx, cy, cell * 0.86, cell * 0.86)
+
     # ------------------------------------------------------------------ the fuel tubes
     # **Drawn after the field, because the view draws them after the field** (`SiegeView.Compose`
     # gives them a layer of their own above it). They sit on the plate's own top edge, in the strip
@@ -1372,12 +1498,41 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
     plate_top = gem_centre + (cell * grid.h + cell * 0.34) / 2
     tube_y = plate_top + cell * 0.22
 
+    # What each colour on the hill is worth killing, as a share of the busiest - `SiegeBoard.
+    # DemandOf` over `SiegeBoard.Busiest`, counted in health because a brute is two matches and a
+    # creeper is one.
+    weight = {"creeper": siege.CREEPER_HEALTH, "brute": siege.BRUTE_HEALTH,
+              "bulwark": siege.BULWARK_HEALTH, "bomber": siege.BOMBER_HEALTH}
+
+    owed = {}
+    for letter, kind in [x for x in sent if x[1] not in BOSSES][:raiders]:
+        owed[letter] = owed.get(letter, 0) + weight.get(kind, siege.CREEPER_HEALTH)
+
+    most = max(owed.values()) if owed else 0
+    want = {k: v / most for k, v in owed.items()} if most else {}
+
     for i, ward in enumerate(lay.wards):
         wide = span[0] / (n + 0.6)
         wx = (i - (n - 1) / 2) * wide
         tint = TINTS[siege.LETTERS.index(ward)]
 
         cx, cy = at(wx, tube_y)
+
+        # **The demand light, behind the tube** - `SiegeView.Wanted`. How much of what is standing
+        # on the hill this turret is the answer to, squared so the busiest is unmistakably the
+        # busiest rather than merely a little brighter. It is the one readout that turns "which
+        # colour is coming" from a parse into a glance, and nothing but a picture can say whether
+        # it does.
+        share = want.get(ward, 0.0)
+        if share > 0.01:
+            lit = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+            grow = 0.9 + share * 0.22
+            ImageDraw.Draw(lit).ellipse(
+                [cx - cell * 0.71 * grow, cy - cell * 0.26 * grow,
+                 cx + cell * 0.71 * grow, cy + cell * 0.26 * grow],
+                fill=tint + (int(share * share * 224),))
+            sheet.alpha_composite(lit)
+
         draw_on.rounded_rectangle([cx - cell * 0.53, cy - cell * 0.115,
                                    cx + cell * 0.53, cy + cell * 0.115],
                                   radius=9, fill=(0, 0, 0, 178))
@@ -1385,6 +1540,29 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
                                    cx - cell * 0.53 + 2 + cell * 1.02 * 0.55,
                                    cy + cell * 0.115 - 2],
                                   radius=9, fill=tint + (255,))
+
+    if forecast:
+        foretell(sheet, lay, wave + 1, span, cell, hill_top, hill_foot, at)
+
+    # **The overcharge glyph, on the turret's own chassis** (`SiegeView.Ready`). Drawn on every
+    # ward the caller says is armed, because where it sits is the one thing about it a number
+    # cannot answer - it was on the fuel bar until a device circled the chassis instead.
+    for i in armed:
+        if i < 0 or i >= n:
+            continue
+
+        wx = (i - (n - 1) / 2) * (span[0] / (n + 0.6))
+        cx, cy = at(wx, line_y)
+
+        tint = TINTS[siege.LETTERS.index(lay.wards[i])]
+
+        glow = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+        ImageDraw.Draw(glow).ellipse([cx - cell * 0.6, cy - cell * 0.6,
+                                      cx + cell * 0.6, cy + cell * 0.6],
+                                     fill=tint + (128,))
+        sheet.alpha_composite(glow)
+
+        put(sheet, sprite("charge"), cx, cy, cell * 0.62, cell * 0.62)
 
     if aim == "hill":
         hill_grid(sheet, span, cell, hill_top, hill_foot, at, burn)
@@ -1736,6 +1914,20 @@ def main():
                     help="stand two live bombs on the hill where bombers died - the only picture "
                          "that says whether a bomb can be picked out of a hill full of walking "
                          "monsters, and whether it reads as a thing to tap")
+    ap.add_argument("--armed", default="", metavar="N,N",
+                    help="light the overcharge glyph on these wards (0-based), which is the only "
+                         "picture that says whether it reads as a thing to tap and whether it "
+                         "sits where a finger goes")
+    ap.add_argument("--cogs", type=int, default=0, metavar="N",
+                    help="lie N cogs on the hill, each with its own countdown ring - the only "
+                         "picture that says whether the prize a kill pays can be picked out of a "
+                         "hill full of walking monsters, and whether the ring reads as a clock "
+                         "rather than as one more threat")
+    ap.add_argument("--forecast", action="store_true",
+                    help="draw the breather's forecast band over the hill - what the next wave is "
+                         "bringing, by colour. The one readout that turns 'which colour is "
+                         "coming' from a parse into a glance, and nothing but a picture can say "
+                         "whether it does")
     ap.add_argument("--no-header", action="store_true",
                     help="leave off the header bar and its readouts, which since the row moved "
                          "up level with the two corner keys is the only picture that says "
@@ -1803,8 +1995,9 @@ def main():
         bombs = [(1, 2), (3, 1)] if args.stood else None
 
         shot = draw(lv, args.raiders, not args.no_bolts, aim=args.aim,
-                    boss=args.warlord, rung=rung, wave=args.wave, line=stood, burn=burn, storm=args.storm,
-                    bombs=bombs)
+                    boss=args.warlord, rung=rung, wave=args.wave, line=stood, burn=burn,
+                    storm=args.storm, bombs=bombs, cogs=args.cogs, forecast=args.forecast,
+                    armed=[int(x) for x in args.armed.split(",") if x.strip()])
         if not args.no_bar:
             bar(shot, held, cooling)
         if not args.no_header:

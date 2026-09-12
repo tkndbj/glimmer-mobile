@@ -57,6 +57,9 @@ namespace GlimmerGrove
             _wardAnchor = null;
             _meters = null;
             _fuseLayer = null;
+            _cogLayer = null;
+            _forecast = null;
+            _forecastGroup = null;
 
             // **The bands are derived from the cell, not the other way round**, and the
             // arithmetic lives in `Bands.Of` rather than here so a test can sweep the screen
@@ -84,6 +87,14 @@ namespace GlimmerGrove
             // raiders' layer would put a body between the finger and the only control on that half
             // of the screen, and the failure reads as a bomb that does not answer.
             _fuseLayer = Layer("Bombs");
+
+            // **Cogs above the bombs, for the same reason bombs are above the raiders.** Both are
+            // tapped, both are left where something died, and a bomber drops both - so they are
+            // given a stacking order rather than left to whichever widget happened to be written
+            // last. See `SiegeView.CogNudge` for the other half of not stacking two taps on one
+            // point.
+            _cogLayer = Layer("Cogs");
+
             _wall = Layer("Line");
             _field = Layer("Field");
 
@@ -116,6 +127,10 @@ namespace GlimmerGrove
             Deal();
             Targets();
             Banner();
+
+            // Built last of the hill's furniture and hidden: it is only ever shown in a breather,
+            // and a breather cannot happen before the first wave has been cleared.
+            Foresight();
 
             // A fresh board is a fresh count-in. It is not started here: it is read off the
             // board's own quiet every frame the run is allowed to advance. See `CountIn`.
@@ -315,6 +330,15 @@ namespace GlimmerGrove
                 // offset would be right on one phone.
                 post.Tube.anchoredPosition = new Vector2(PostX(i), TubeY);
 
+                // **The demand light, behind everything else on the tube.** It is what says
+                // which colour the hill is asking for, and it is here rather than on the chassis
+                // because this is the one widget in this mode a player's eye passes on the way
+                // back to the gems - see `SiegeView.Wanted`.
+                post.Want = UIKit.Img("Want", post.Tube, Art.Glow(96, 1.9f),
+                                      Pal.A(TintOf(ward.Colour), 0f),
+                                      new Vector2(Cell * 1.42f, Cell * .52f));
+                post.Want.raycastTarget = false;
+
                 var trough = UIKit.Img("Trough", post.Tube, Art.Round(12),
                                        new Color(0f, 0f, 0f, .62f), post.Tube.sizeDelta);
                 trough.raycastTarget = false;
@@ -351,6 +375,42 @@ namespace GlimmerGrove
                 post.Fill.rectTransform.anchorMax = new Vector2(0f, .5f);
                 post.Fill.rectTransform.anchoredPosition = new Vector2(2f, 0f);
 
+                // **The overcharge key, on the turret's own chassis.** It was a plate over the
+                // fuel bar, which is a *meter*: it says how much, continuously, and it already
+                // carries the demand light - so a control living on it was a button hidden inside
+                // a readout. The chassis is the one part of a ward nothing else uses, and it is
+                // what a finger goes for when it means "this turret". It is invisible and inert
+                // until a charge is banked - see `SiegeView.Ready`, which switches its raycast
+                // with its light, so a turret with nothing to throw cannot be tapped either.
+                int seat = i;
+
+                post.Halo = UIKit.Img("Halo", post.Node, Art.Glow(96, 2.1f),
+                                      Pal.A(TintOf(ward.Colour), 0f),
+                                      new Vector2(Cell * 1.3f, Cell * 1.3f));
+                post.Halo.raycastTarget = false;
+                post.Halo.rectTransform.anchoredPosition = new Vector2(0f, ChargeY);
+
+                post.Dump = UIKit.Img("Dump", post.Node, Piece("charge"),
+                                      Pal.A(Color.white, 0f),
+                                      new Vector2(Cell * ChargeSize, Cell * ChargeSize));
+                post.Dump.preserveAspect = true;
+                post.Dump.raycastTarget = false;
+                post.Dump.rectTransform.anchoredPosition = new Vector2(0f, ChargeY);
+
+                var key = post.Dump.gameObject.AddComponent<Btn>();
+                key.PressScale = .88f;
+                key.Setup(() => Unleashed(seat), silent: true);
+
+                // Hung off the turret rather than off the glyph, so it is not scaled by the
+                // glyph's own pulse - a number that breathes is a number that is hard to read.
+                post.Held = UIKit.Label("Held", post.Node, string.Empty,
+                                        Mathf.RoundToInt(Cell * .3f), Pal.Cream,
+                                        TextAnchor.MiddleCenter,
+                                        new Vector2(Cell * .44f, Cell * .44f));
+                post.Held.rectTransform.anchoredPosition =
+                    new Vector2(Cell * ChargeSize * .52f, ChargeY + Cell * ChargeSize * .46f);
+                post.Held.enabled = false;
+
                 Badge(post, ward);
 
                 _posts[i] = post;
@@ -373,6 +433,22 @@ namespace GlimmerGrove
         /// it, the fuel tube below it, and its own bolts leave from the middle.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// Where the overcharge glyph sits on a turret, and how big it is drawn.
+        ///
+        /// <b>The middle of the chassis, measured off the picture rather than guessed.</b> The body
+        /// is <c>BodyTall</c> cells tall and hung a little above the node, so its own middle is a
+        /// hair under the node's - which is the flat panel every turret in this pack carries, and
+        /// the spot a device circled.
+        ///
+        /// <b>It is a tile rather than a line glyph</b>, because the first cut was `Ui/ic_power` in
+        /// cream and came back from a device as simply not visible: a thin monochrome outline over
+        /// a saturated chassis has nothing to separate it from what it is drawn on. A colourful
+        /// badge with its own dark ground reads on all four ward colours at once - see
+        /// <c>make_siege_art.charge</c>, which is where six candidates were compared at this size.
+        /// </summary>
+        const float ChargeY = 0f, ChargeSize = .62f;
+
         void Badge(Post post, SiegeWard ward)
         {
             post.Crest = UIKit.Node("Crest", post.Node);

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
+using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -35,11 +36,24 @@ namespace GlimmerGrove
         {
             var line = WardLoadout.Line;
 
+            // **The line grows over a chapter, and a seat the player has not reached is shut.**
+            // Thornwatch's opening rungs stand three wards, so the fourth is a seat nothing has
+            // ever stood in - see `WardSeats`, and note that the board still stands whatever the
+            // *level* says: this is about what may be arranged, never about what fights.
+            _cleared = WardSeats.ClearedIn(GameContent.Index, GameMode.Siege,
+                                           PlayerProgress.IsCleared);
+
+            // A shut seat must never be the one being filled: a player who cleared a chapter,
+            // arranged the fourth seat and then had their save replaced by an older one would
+            // otherwise be left on a grid they cannot buy from.
+            if (!WardSeats.IsOpen(_slot, _cleared)) _slot = 0;
+
             for (int i = 0; i < _slots.Count; i++)
             {
                 var slot = _slots[i];
                 var model = line.At(slot.Colour);
-                bool picked = _shelf == Shelf.Wards && _slot == slot.Colour;
+                bool open = WardSeats.IsOpen(slot.Colour, _cleared);
+                bool picked = open && _shelf == Shelf.Wards && _slot == slot.Colour;
 
                 var accent = Pal.EnergyColour(1 << slot.Colour);
 
@@ -53,7 +67,16 @@ namespace GlimmerGrove
                 // line never showed it, and the four turrets met on the hill were four objects the
                 // player had never seen. The glow stays and stops being the only thing saying it.
                 slot.Icon.sprite = AssetLibrary.Sprite(AssetManifest.WardArt(model, slot.Colour));
-                slot.Name.text = Loc.Get(model.NameKey);
+                slot.Name.text = open
+                               ? Loc.Get(model.NameKey)
+                               : Loc.Format("ui.loadout.seat_at", WardSeats.Needed(slot.Colour));
+
+                // Dimmed rather than hidden, for the reason the padlock is drawn over the seat:
+                // the turret standing there is real and is fighting for them.
+                slot.Icon.color = open ? Color.white : new Color(1f, 1f, 1f, .34f);
+                slot.Lock.enabled = !open;
+
+                if (!open) slot.Glow.color = Pal.A(accent, .14f);
             }
         }
 

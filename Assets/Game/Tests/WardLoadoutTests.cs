@@ -149,6 +149,83 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
+        /// <b>The line grows over a chapter, and the seat gate has to agree with the chapter's
+        /// own ward lines.</b>
+        ///
+        /// <para>
+        /// <c>WardSeats.OpensAfter</c> is one integer that mirrors how many rungs stand three
+        /// wards, and a table that agrees with content by hand is a table that stops agreeing the
+        /// first time either moves. So it is held to the shipped chapter: a seat is open exactly
+        /// when a rung that stands it has been cleared, and a seat still shut while a level is
+        /// standing it would be a padlock over a turret that is already fighting.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ASeatOpensNoLaterThanTheRungThatStandsIt()
+        {
+            var rungs = SiegeRuleTests.ShippedWardLines();
+
+            Assert.AreEqual(10, rungs.Count, "the first chapter is ten rungs");
+
+            for (int seat = 0; seat < WardLine.Colours.Length; seat++)
+            {
+                char colour = WardLine.Colours[seat];
+
+                int first = -1;
+                for (int i = 0; i < rungs.Count && first < 0; i++)
+                    if (rungs[i].IndexOf(colour) >= 0) first = i;
+
+                Assert.GreaterOrEqual(first, 0,
+                                      $"no rung of the first chapter stands a '{colour}' ward, so "
+                                      + "a seat for it can never be met");
+
+                // A seat is open once the rung before the first one standing it has been cleared,
+                // and never later: `first` rungs cleared is exactly "the player has reached it".
+                Assert.LessOrEqual(WardSeats.Needed(seat), first,
+                                   $"the '{colour}' seat asks for {WardSeats.Needed(seat)} clears "
+                                   + $"and rung {first + 1} already stands it - a padlock over a "
+                                   + "turret that is fighting for them");
+
+                Assert.IsTrue(WardSeats.IsOpen(seat, first));
+                if (WardSeats.Needed(seat) > 0)
+                    Assert.IsFalse(WardSeats.IsOpen(seat, WardSeats.Needed(seat) - 1));
+            }
+        }
+
+        /// <summary>
+        /// At least one seat is shut at the start, and every seat opens eventually.
+        ///
+        /// <b>Both halves are the check.</b> A gate nothing ever closes is decoration (invariant
+        /// 5d) and a gate nothing ever opens is a turret nobody can ever buy.
+        /// </summary>
+        [Test]
+        public void TheGateShutsSomethingAndOpensEverything()
+        {
+            int shut = 0;
+
+            for (int seat = 0; seat < WardLine.Colours.Length; seat++)
+            {
+                if (WardSeats.Needed(seat) > 0) shut++;
+
+                Assert.IsTrue(WardSeats.IsOpen(seat, 999),
+                              $"the '{WardLine.Colours[seat]}' seat never opens");
+            }
+
+            Assert.Greater(shut, 0, "no seat is ever shut, so the gate decides nothing");
+            Assert.Less(shut, WardLine.Colours.Length,
+                        "every seat is shut at the start, so a new player has no line to arrange");
+        }
+
+        /// <summary>A seat this build has never heard of is open rather than shut for ever.</summary>
+        [Test]
+        public void ASeatOutsideTheTableIsOpen()
+        {
+            Assert.AreEqual(0, WardSeats.Needed(-1));
+            Assert.AreEqual(0, WardSeats.Needed(WardSeats.OpensAfter.Length));
+            Assert.IsTrue(WardSeats.IsOpen(99, 0));
+        }
+
+        /// <summary>
         /// <b>No two rungs of the shelf are the same turret.</b>
         ///
         /// <para>

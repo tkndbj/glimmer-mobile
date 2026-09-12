@@ -2408,9 +2408,12 @@ In practice:
     column.** A row of one sits in the middle (`ReadoutRow.XFor`), which is also the only slot a
     dynamic island can reach — so the row cannot be moved up any further than 37an put it.
 37w. **A ward can be upgraded, and the whole mechanic is one question asked about the *line*
-    instead of about the hill.** A **cog** falls into the field like a gem, never lines up with
-    anything, and is destroyed by a run of gems made **beside** it — and the colour of that run
-    decides which turret goes up a rank. Five tiers, four ranks above the one a ward stands up in;
+    instead of about the hill.** *(A cog **fell into the gem field** and was destroyed by a run of
+    gems made beside it, the colour of that run deciding the turret. It is dropped on the hill by a
+    felled raider and taken with a finger now — see 37bl. Everything below about what a rank is
+    worth, what it cost to make the ten per cent step exact, and what a cog rate does to a line is
+    unchanged; what moved is where a cog is and how it is taken.)*
+    Five tiers, four ranks above the one a ward stands up in;
     each is ten per cent more damage and ten per cent less fuel a bolt, which **multiply**, so a
     rank-four ward turns one match into 2.33 times what a fresh one does.
     <br>**It passes 26h's test, which is the only reason it exists.** A mirror and a wick were both
@@ -3328,6 +3331,211 @@ In practice:
     was never measured against — which is `AvatarCatalog.ReachedBy`'s lesson (15a) met before it
     could cost anything. **Withdrawing a lesson is three edits; check whether the board grew a
     reading that existed only to raise it.**
+
+37bl. **A turret only ever fires at its own colour, and every other rule in this entry is a
+    consequence of that one.** Reported after playing the mode: *most of the time I focus on the
+    bottom of the screen and barely look up.* The diagnosis is not that the player was ignoring the
+    hill, it is that the mode had made looking up worthless twice over. **The elemental double was a
+    bonus nobody had to earn** — four wards fire at once and each found its own colour, so every
+    raider was eventually hit by the ward it was weak to whatever anybody matched, and "take the
+    biggest match on the field" was *correctly* the optimal play. And **the clock punished
+    deliberation**: with two seconds to act, the right algorithm is the first match the eye lands
+    on, so the mode taught its own players not to think. A bonus that arrives for free cannot change
+    behaviour; a lock can.
+    <br>`SiegeBoard.Aim` takes a ward rather than a colour and returns the furthest raider that ward
+    is strong against, with **no fallback**. That is the whole of it. It cost the save file **no
+    schema version, no merge rule, no `firestore.rules` change and no server work** (20a), and
+    `SiegeTuning.PerfectMatch` did not move by a single point — every primary bolt now lands on a
+    colour its ward answers, so the identity par has always *assumed* of every gem stopped being an
+    optimistic reading and became true.
+    <br>**And it makes fuel a resource, which is the half that was actually missing.** Reported
+    separately and far more damning: *I have played this a hundred times and never once filled a
+    fuel tube.* A ward fired the instant it had anything, so fuel was a **pass-through** rather than
+    a store — nothing accumulated, so there was nothing to plan *with*, so `WardCapacity` was
+    decoration, the `beacon` turret ("banks a cascade") did nothing at all, and a nine-thousand
+    credit purchase was a lie. A ward with nothing of its colour standing now holds what it is
+    given, and the whole of the rhythm below is built on that.
+    <br>**Nine things follow, and they need each other — half of this shipped alone would be worse
+    than none of it.**
+    <br>**The breather** (`SiegeTuning.Breather`, 6s). A cleared hill used to muster the next wave
+    at once, which 37k is right about and which also meant *playing well was rewarded with more
+    pressure, immediately, for ever* — leaving no moment in a run where a decision could be made.
+    It only ever **shortens** a quiet and `BetweenWaves` is still the ceiling, so 37k's finding is
+    kept and the half that made the mode unthinkable is gone. Real-time games do not remove thinking
+    time, they schedule it.
+    <br>**Eight seconds, then six, then four — cut twice from play**, with `BetweenWaves` 26 → 23
+    on the first pass. Four is under two matches, which is long enough to read the forecast and put
+    one colour up and short enough that a cleared hill never reads as the game waiting. A hill that
+    still holds raiders is not a quiet, so the two are paced separately. Both are difficulty dials
+    and both went back through the hold simulation: the first cut cost each chapter's finale a few
+    runs and five rungs were lightened to pay for it.
+    <br>**The forecast** (`SiegeForecast`, `SiegeView.Foretell`). A gap with no information in it is
+    a pause; a gap that says *six blue, three red* is a decision. It is drawn on the hill, because a
+    breather is the one moment the largest surface on the screen is empty — so it costs the board
+    nothing and lands where the player has to look to use it.
+    <br>**The demand light** (`SiegeBoard.DemandOf`, `SiegeView.Wanted`), and it is the piece most
+    easily underrated. Even with the stakes fixed, *reading* the hill was too expensive: parsing a
+    dozen small moving bodies in four colours four hundred points away is two seconds of work under
+    a clock that gives none. The answer is on the **fuel tube**, directly above the gems, so the eye
+    never leaves the path it was already taking. Counted in health rather than heads, because a
+    brute is two matches and a creeper is one.
+    <br>**The overcharge** (`SiegeBoard.Overcharge`), and its key is a glyph on the turret's own
+    **chassis** rather than on the fuel bar. The bar is a *meter* — it says how much, continuously,
+    and it already carries the demand light — so a control living on it was a button hidden inside a
+    readout; a device circled the chassis instead, which is the one part of a ward nothing else uses
+    and what a finger goes for when it means *this turret*.
+    <br>**And the glyph is a colourful tile rather than a line icon, which took a device to say
+    too.** It was `Ui/ic_power` in cream, and a thin monochrome outline over a saturated chassis has
+    nothing to separate it from what it is drawn on — reported as simply *not visible*. It is a
+    skill-icon badge now (`make_siege_art.charge`): a gold bolt on its own dark ground, so it reads
+    on red, green, blue and orange alike. **Six candidates were cut and laid over all four ward
+    colours before one was kept** (`Tools/charge_pick.png`), and what separated them is not taste —
+    at half a cell every busy one collapsed into coloured noise and the only survivor was the one
+    with a *silhouette*. It is drawn at white, because a coloured badge asked to look lit through
+    `Image.color` comes out muddy (37l, met a fourth time). The lock's honest cost is fuel with nowhere to
+    go — a colour that never comes is a quarter of the board matched for nothing — and a fallen ward
+    is a colour that can never be hurt again. Tapping a banked charge throws a whole tube at
+    **anything**, so no match is ever dead and a neglected lane has an answer. **It is free of par by
+    construction**: it delivers exactly what that tube would have delivered as ordinary bolts, so the
+    player has moved damage they already matched for and 39's exchange rate has nothing to charge.
+    It can be wrong — a charge spent on a creeper is a charge not held for the brute behind it —
+    which is what makes it a decision (26h) rather than a button.
+    <br>**And it shipped unusable, which is the half worth writing down.** It read *is the tube
+    full*, and a ward fires the instant it has fuel and a target — so the only way to reach the brim
+    was for its colour to be off the hill, and an overcharge over an empty hill has nothing to throw
+    at. Reported after one session as exactly that: *it is impossible to use.* Every gate was green,
+    because every gate could see the rule and none of them could see that the rule's precondition and
+    the mode's own behaviour never coincide. **A predicate that is only true in a state the game
+    cannot be in is a feature that does not exist** — and the only instrument that could have caught
+    it is somebody playing, which is what did.
+    <br>The fix is a **stored charge** (`SiegeWard.Charges`, `Fill`): a full tube *converts* — the
+    fuel comes out, a charge goes in, the tube carries on filling for ordinary bolts and the charge
+    waits until it is thrown. That is what the owner asked for (*it stays even if the turret starts
+    shooting*) and it is also what keeps the arithmetic honest, because fuel that became a charge can
+    never also be fired as bolts. Two are held at most (`SiegeTuning.MostCharges`): one would throw
+    away what a long quiet earned, and many would let a whole level be banked and spent on the
+    finale. **Both doors pour through `Fill`** — a match landing and a surge being poured — because a
+    conversion written at one of them is a ward that can never bank from the other, and the surge was
+    exactly that in the first cut.
+    <br>**Cogs moved to the hill.** A cog was dealt into the gem field and taken by a match beside
+    it: a good mechanic in the wrong place, because it put one more thing to solve in the half of the
+    screen the player was already staring at. It is dropped by a felled raider now, lies there for
+    `CogLies` seconds and is taken with a finger — treasure in the enemy's half with a clock on it,
+    which is the genre's oldest answer to a two-halved screen and the one the bomber already used
+    (40i). **It pays the ward whose colour it wore**, derived from the corpse rather than threaded
+    through four call sites, which also gives the right answer for a kill no ward made. `cogs` now
+    counts **per hundred kills** rather than per dealt gem, so a rung authoring the old 3 would drop
+    about one cog a run and ship the mechanic, its art and its lesson to a player who never sees one
+    — `ModeValidator` warns on it by name.
+    <br>**Coloured lanes** (`SiegeLanes`). A raider walks its own colour's lane, strayed by one.
+    Sorting the hill puts the answer in the *shape* of the picture rather than in its detail — and
+    the stray is load-bearing, because strictly sorted lanes make a splash, a chain and a lance worth
+    nothing, which is the whole dear half of the shelf (37ax). **It costs the field's deal exactly
+    nothing**: the draw is taken whatever becomes of it, so the stream advances the same number of
+    times and every shipped seed deals the board it dealt before (41).
+    <br>**The stray is weighted three in five, and an even one was not a column.** The first cut
+    rolled the three lanes uniformly, so a colour stood in its own lane a third of the time — which
+    on five lanes and four colours means every lane holds every colour and the sorting says nothing
+    at a glance. Reported as *too spread apart*, which it was. `SiegeLanes.Home` is the bias, and it
+    is a bias rather than a rule for the reason above: what reads is a column with stragglers, not
+    four solid bars.
+    <br>**Beats — built, played, withdrawn on sight, and the observation is worth keeping.** A body
+    moving continuously is a gradient and a gradient can only be *felt*; a body that **steps** can be
+    counted, so "that brute is four beats from my line" becomes something to plan against. The
+    implementation was cheap and exact (one pulse, per-kind strides, every crossing time unmoved) and
+    the owner's verdict on seeing it was immediate: **put it back to sliding.** What a drum buys in
+    legibility it spends on feel — a raid that ticks forward reads as a board game rather than as
+    something coming at you, which is the one thing this hill is for. `SiegeTuning.BeatEvery`,
+    `SiegeBoard.Step` and the view's hop easing are all gone; the finding is not, and is the thing to
+    reach for the next time a mode needs a clock somebody can *read*.
+    <br>**The bulwark's shield had to go somewhere**, and where it went is a sharper identity than
+    the one it lost. "Only your own colour cuts me" became true of *every* raider, so the soak
+    stopped being reachable on a primary hit at all and the shield was decoration (5d) on the one
+    raider whose whole identity it was. It is armour against **area** damage now
+    (`SiegeBoard.Through`): a splash, a chain, a lance and an overcharge are the relief valve for a
+    colour the player has not fed, and a bulwark is the raider that valve does not answer. Rend is
+    the exception it always was.
+    <br>**And the prism is capped at two colours and climbs on *share* instead.** Under the lock a
+    turret covering two colours is enormous, so a third would not be a better rung — it would be the
+    lock coming off (`SiegeWard.MostPartners` is 1). That closed the axis its two rungs used to climb,
+    so `PartnerShare` is the new one: `prism` reaches the next colour at 60% and `spectrum` at full,
+    which keeps 37ax's rule that no two priced rungs share an `(ability, magnitude, extent)`. **Own
+    colour is always taken first**, so a partner shot is one the turret would otherwise not have
+    fired and the ability stays strictly additive — a turret that made a bolt weaker would push
+    three stars out of reach of whoever bought it (42).
+    <br>**The opening rungs stand three wards, and that is a measurement rather than a preference.**
+    The ask was two. Under the lock a field may only deal colours the line can burn (a gem no ward
+    carries is a move spent on nothing, and both content gates refuse it), so the ward count **is**
+    the colour count — and a two-colour match-three is not a board: over twenty thousand dealt seeds
+    **not one** two-colour field is settled, and a match on one clears **202** gems against a
+    four-colour field's 5.6, because the refill lands beside its own kind so often that it cascades
+    until it runs out of things to remove. Three is the fewest that behaves (0.5% settled, 9.5 gems a
+    match), so `SiegeLayout.MinWards` is 3 and rungs one to three stand `rgb`. The fourth ward
+    arrives on rung four, and `WardSeats` locks its **seat** on the loadout until three levels are
+    cleared — a table of one integer, held to the chapter's own ward lines by a fixture, because a
+    padlock over a turret that is already fighting is the failure.
+    <br>**Par was corrected for the colour count and should not have been, and the hold simulation is
+    what said so.** A three-colour field really does cascade further (9.48 gems a match against
+    5.57), so `MatchGemsTenthsFor(3)` looked obviously right — and it put the opening rungs at par 8
+    to 18 against an unhurried player spending 17 to 27 matches, so **three stars was unreachable on
+    every one of them**. The reason is the lock: par is the hill's health over what a match
+    *delivers*, and that number is what a match *clears*, which were the same question only while
+    every gem became a bolt that landed. Extra gems from a bigger cascade are extra **fuel**, much of
+    which lands later and some of which never lands. Measured across the chapter, an unhurried player
+    delivers 165–253 a match on four colours and 176–253 on three — **the same number, not 1.7 times
+    it.** There is one `PerfectMatch` again.
+    <br>**And the player model had to be taught the two new things it could do, which was worth forty
+    runs in ninety.** `AnUnhurriedPlayerHoldsThisLine` read **45 of 90** with the lock in and the
+    model still playing the old game; taught to take a cog the moment it lands and to spend a banked
+    charge whenever there is anything to throw it at, the same chapter reads **81 of 90** — a shade
+    under the 82 it stood at before any of this, and against a hill whose gaps are eight seconds
+    shorter (85 before the gaps were cut at all). That is invariant 40j for the second time, and the number
+    it moved by is larger than any re-tune in this mode's history. **When a mode grows a rule, ask
+    whether its player model knows it — before concluding the rule is too hard.** Its `Aimed` also
+    walks the hill from the front rather than asking only about the leader, because under the lock a
+    match into an absent colour banks rather than delivering.
+    <br>**Retired ids that must never be reused:** the lesson **`siege_cog`** — it taught that a cog
+    on the *field* is destroyed by the run beside it and that the colour of that run picks the
+    turret, and every word of that describes a rule that no longer exists, which is the one case
+    where an id has to go rather than have its strings rewritten (5f); and the cell letter **`*`** as
+    a cog (`SiegeLayout.RetiredCog`), refused **by name** in `SiegeMode.TryRead` and in
+    `content.py`. Three lessons are minted: **`siege_bank`** (a turret with nothing to shoot at saves
+    its fuel — the one rule here no board can show), **`siege_brim`** (a full tube can be tapped) and
+    **`siege_salvage`** (kills leave cogs on the hill). `siege_fuel` **keeps its id** and its words
+    moved, which is the narrow case where that is honest: the rule it names is the same rule made
+    absolute rather than a different one, so a player already shown it has not been told anything
+    untrue.
+    <br>**Nothing here has been played on a device**; that is owed, and it is the only thing that can
+    answer whether the eye now goes up. See the owed list.
+
+37bm. **Two correct branches whose union leaves a state with no answer, and it made the loadout
+    unreachable.** Reported from a device: *in the preview panel there is only an UPGRADE button —
+    I could not find any way to equip other turrets.* The panel offered **one** key and chose what
+    it said: for a turret the player owned it sold the next star, and only fell back to standing it
+    when there was none left to sell. **Every turret starts at one star**, so there was always one
+    left — which meant every turret somebody owned and had not stood offered `UPGRADE` and nothing
+    else, and the whole point of a twenty-turret shelf could not be reached at all.
+    <br>**Nothing offline could have caught it, and the reason is the interesting half.** Both
+    branches are individually correct. Every gate in this project reads a branch at a time — the
+    compile, the content gates, the art gates and 1,757 tests were green over it — and none of them
+    asks whether the branches' *union* covers the states the thing can be in. That is only visible
+    as a **property**, so it is one now: `WardPreviewKeys.For(held, standing, rises)` is the rule
+    with a name, and `WardPreviewTests` sweeps all eight combinations for the two that matter — a
+    key is always offered, and **a turret the player owns can always be put on the line**, whatever
+    a star happens to be doing.
+    <br>**Two keys, and the band is always two keys tall.** The upper one is the price, the star or
+    the wall; the lower one is where the turret stands — EQUIP in the orange, or EQUIPPED in the
+    settled pill, which is 42a's rule kept. A lone key takes the **middle** of the band rather than
+    sitting over a gap, which is what lets the panel keep a fixed height: what a held turret offers
+    changes while the panel is open (buying it makes it held, upgrading it to the top takes the star
+    away), so a height derived from the state would be a modal that resizes under a finger.
+    `WardPreviewTests.ThePanelFitsTheShortestCanvas` holds the new height to
+    `PanelStack.TallestPanel`, because a panel that just grew and is measured against nothing is a
+    panel that draws its own button off the bottom edge.
+    <br>**And the handlers are two now rather than one with a branch in it**, which is the same
+    lesson one layer down: equipping and upgrading are two things a player can do to one turret, not
+    two readings of one button, and a button that did one or the other depending on state is exactly
+    how the equip path came to be unreachable.
 
 37ai. **A turret's effect and the name over it may be swapped; its id may not.** The beacon and
     the chain flagship exchanged both after play — the body, the ability, the price and the id all
@@ -5511,9 +5719,11 @@ compile. Do not guess — verify offline:
   channels; `motes`, `headroom`, `ways`, `greedy`, and from the second chapter `lenses`, `whorls`,
   `fused`, `kindled`, `aim`, `reach`), and **Thornwatch**, which is the one mode it does *not*
   search, because there is nothing to search (invariant 37a): what is proved is the layout's own
-  refusals, the arithmetic par held to `SiegeTuning.Par` by being the same three lines, and the
-  readings a validator can act on (`waves`, `raiders`, `brutes`, `colours`, `wards`, `boss`,
-  `kind`, `spell`, `cogs`, `stood`, `threat`, `swap`). **`threat` counts two blows a raider, not one**, and the
+  refusals — including the two the colour lock added, that a line stands at least
+  `SiegeLayout.MinWards` and that a field deals **exactly** the colours its line stands (37bl) —
+  the arithmetic par held to `SiegeTuning.Par` by being the same three lines, and the readings a
+  validator can act on (`waves`, `raiders`, `brutes`, `colours`, `wards`, `boss`, `kind`, `spell`,
+  `cogs`, `drops`, `threat`, `swap`). **`threat` counts two blows a raider, not one**, and the
   correction is worth knowing: a raider that reaches the line goes on swinging until something kills
   it, so the single blow the first version counted named half a shipped chapter as unlosable when
   every one of those rungs bleeds the line in play. It is a floor on a floor; what measures the
@@ -5637,7 +5847,12 @@ compile. Do not guess — verify offline:
   cast|idle|storm` picks which of the boss's **two** reels it is wearing, or draws the frame
   its **volley leaves** (invariant 37ac), `--line a,b,c,d` stands a
   chosen loadout (42), `--wave N` reads the **Infinite** lane's hill at a wave number, and
-  `--aim hill` / `--aim wards` draw a utility's targeting, `--stood` stands two live bombs
+  `--aim hill` / `--aim wards` draw a utility's targeting, `--cogs N` lies cogs on the hill with
+  their countdown rings — the only picture that says whether the prize a kill pays can be picked
+  out of a hill full of walking monsters — `--forecast` draws the breather's forecast band, and
+  the **demand light** behind each fuel tube is always drawn, because it is the one readout that
+  turns "which colour is coming" from a parse into a glance and a render has already caught one
+  version of it reading as four coloured puddles (37bl). `--stood` stands two live bombs
   on the hill where bombers died — the only picture that says whether a bomb can be picked out of
   a hill full of walking monsters and whether it reads as a thing to tap (40i) — and
   `--burn LANE,ROW` lights the plus a firepot dropped there would take (39k) — the only picture that says whether the boxes
@@ -6165,7 +6380,10 @@ live in **Hard-won facts**.
   door by construction as well as by decision (38a): it is the only row `CatalogIndex.Modes`
   has, so it is what a map with nothing remembered opens on. It is the first mode here that runs
   on a **clock**: raiders walk down a hill at a line of coloured wards, and a match is worth only
-  the colour it was.
+  the colour it was - **a turret fires at raiders of its own colour and nothing else** (37bl), so
+  fuel banks while its colour is off the hill, a cleared hill buys a breather that says what is
+  coming next, a full tube can be tapped at anything, kills drop cogs on the hill to be reached
+  for, and the raiders walk down lanes sorted by colour.
   <br>**The classic glade (`c01_shallows` … `c04_nightbriar`), Lightfall (`f01_lightfall`,
   `f02_glasswater`, `f03_whorlwater`) and Prismvale (`p01_prismvale`) are *hidden*, not deleted**
   — `"disabled": true` in the manifest and nothing else, so every board, screen and mode class
@@ -6272,9 +6490,9 @@ live in **Hard-won facts**.
 | ~~`m01_hollowmarch`~~ | ~~march~~ | — | — | — | **deleted** (38) — Hollowmarch withdrawn; its ids are spent |
 | ~~`b02_tanglewood`~~ | ~~bud~~ | — | — | — | **deleted** (38) — Budburst's second chapter; its ids are spent |
 | ~~`k01_kindlewake`~~ | ~~kindle~~ | — | — | — | **retired** (35) — withdrawn after play: the verb was not the one commissioned and the animation followed from that. Its ids are spent |
-| `s01_thornwatch` | siege | 10 | 11–53 matches | none — the ward line is the fail state | raiders come down the hill at four coloured wards; match a colour and that ward fuels up and opens fire, and a bolt is worth double against a raider of its own colour. Fuel leaves a ward as a bolt and no other way (37c). Every rung is an 8x5 field with no move allowance (24); waves come on a clock, or early if the hill is cleared (37k). **The ramp is what is coming**: rung 1 is twelve creepers and nothing else, rung 2 brings the **cog** (37w), rung 3 the **blightcaller** (37z), rung 4 sends waves of one colour at a time, rung 5 the **warlord** (37t), rungs 6–9 turn the hill from creepers to brutes (0 → 18), rung 8 the **warbringer**, and rung 10 ends on the **overlord** (37x). **Four bosses and four different fights** — a douse, a smite, a rally and a sunder, in four colours, from four packs, at four sizes. All four hold the middle of the hill and walk on in 2.7–4.1 seconds. Cogs 3–4% from rung 2, which is where they stop maxing the line. Par is not monotonic — it dips at rung 5 — and an unhurried player clears every rung inside the three-star line with all four wards standing, the most-bled lines being the warlord's rung and the finale's at 46–47 of 56 (37j) |
-| `s03_broodmarch` | siege | 10 | 38-65 matches | none - the ward line is the fail state | **Broodmarch.** The same board and not one new rule: the brood is a second twelve-body cast (invariant 37bd) and what the chapter adds is a hill that no longer forgives a line standing at rank one. Par 38 -> 65 where Thornwatch is 11 -> 58, so it opens roughly where the first chapter ends. **Two bosses, and they are the two the first chapter does not send**: a **blightcaller** on rung 5, riding the head of its last authored wave because it takes a ward's fire and never its health (37ad), and a **warbringer** on rung 10, whose last wave is written light so the roar has a hill to charge. The ramp is what is coming - brutes, then armour, then bombers, then armour in groups, then one colour at a time (three wards idle), then density, then the longest hill in the game at 36 raiders across four waves. Cogs 3% throughout, matching the first chapter, so the *only* thing that moved is the hill. Measured: an unhurried player holds **55 of 90** runs on the free turret and **77 of 90** one rung up the shelf, against Thornwatch's 82 on the free turret (37be) |
-| `s02_endlesswatch` | siege *(infinite track)* | 1 | 3★ at wave 20 | none — the ward line is the fail state | **the Infinite Watch.** The same hill, the same wards, the same verb, and waves that never stop. What comes at wave *n* is a rule rather than a list (`SiegeEndless`): a boss every fourth wave to sixteen — blightcaller, warlord, warbringer, overlord — then every unordered **pair** of the four every fifth wave, which is thirty waves before anything repeats. Brutes from wave 3, bulwarks from 6, a weaver from 9, a thief from 13; health climbs 12 tenths a wave and a blow 4. Graded on how far it got rather than on what was spent (`LevelTuning.Climbs`), so three stars is wave 20 and two is wave 11 — **both guesses until somebody plays it** |
+| `s01_thornwatch` | siege | 10 | 14–58 matches | none — the ward line is the fail state | raiders come down the hill at a line of coloured wards; match a colour and that ward fuels up and opens fire, and **it only ever fires at raiders of its own colour** (37bl). Fuel banks while its colour is off the hill, so the quiet between waves is a stockpile; a full tube can be tapped to throw the lot at anything. Every rung is an 8x5 field with no move allowance (24); waves come on a clock, or after a **breather** once the hill is cleared. **The ramp is what is coming**: rungs 1–3 stand **three** wards and three colours (the fewest a jewel board can be dealt from at all), rung 2 brings the **cog** — dropped on the hill by a kill and taken with a finger — rung 3 brutes in numbers, rung 4 **the fourth ward and the fourth colour**, rung 5 the **warlord** (37t), rung 6 the **bulwark**, rungs 7–9 turn the hill from creepers to brutes, and rung 10 ends on the **overlord** (37x). Cogs 25% of kills from rung 2. Measured over nine player rhythms, the chapter holds **81 of 90** runs on the free turret (37j) |
+| `s03_broodmarch` | siege | 10 | 38-62 matches | none - the ward line is the fail state | **Broodmarch.** The same board and not one new rule: the brood is a second twelve-body cast (invariant 37bd) and what the chapter adds is a hill that no longer forgives a line standing at rank one. Par 38 -> 62 where Thornwatch is 14 -> 58, so it opens roughly where the first chapter ends. **Two bosses, and they are the two the first chapter does not send**: a **blightcaller** on rung 5, riding the head of its last authored wave because it takes a ward's fire and never its health (37ad), and a **warbringer** on rung 10, whose last wave is written light so the roar has a hill to charge. The ramp is what is coming - brutes, then armour, then bombers, then armour in groups, then one colour at a time (three wards idle), then density, then the longest hill in the game at 36 raiders across four waves. Cogs 25% of kills throughout, matching the first chapter, so the *only* thing that moved is the hill. Measured after the colour lock: an unhurried player holds **65 of 90** runs on the free turret and **84 of 90** one rung up the shelf, against Thornwatch's 81 on the free turret (37be, 37bl) |
+| `s02_endlesswatch` | siege *(infinite track)* | 1 | 3★ at wave 20 | none — the ward line is the fail state | **the Infinite Watch.** The same hill, the same wards, the same verb, and waves that never stop. What comes at wave *n* is a rule rather than a list (`SiegeEndless`): a boss every fourth wave to sixteen — blightcaller, warlord, warbringer, overlord — then every unordered **pair** of the four every fifth wave, which is thirty waves before anything repeats. Brutes from wave 3, bulwarks from 6, bombers from 9; health climbs 12 tenths a wave and a blow 4. Cogs drop from 30% of kills, which on a lane that never stops is the only thing on the player's side that climbs with it. Graded on how far it got rather than on what was spent (`LevelTuning.Climbs`), so three stars is wave 20 and two is wave 11 — **both guesses until somebody plays it** |
 | `p01_prismvale` | prism *(hidden)* | 2 | 3–4 swaps | none, then par + 3 | drag a gem onto its neighbour and the two change places; a lantern feeds the gems of its own colour touching it, that colour runs on through every matching gem beside them, and a critter standing against the vein wakes. Nothing is ever spent, so a vein can be **broken**. 6x6, critters 2 → 3, lanterns 2 → 3, `ways` 10 → 120, `dealt` 2 → 3 of 25, `used` 2 → 3, greed beaten on the second. The first rung cannot be lost (24) |
 | ~~`e01_emberforge`~~ | ~~ember~~ | — | — | — | **deleted** (38) — Emberforge withdrawn; its ids are spent |
 
@@ -6357,7 +6575,10 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   Neither costs the save file, the wire or the server anything.
 - **Turrets** — 20, one free (`bolt`), **9** priced 1,200 → 9,000 **credits** behind keeper
   levels 2 → 14, and 10 priced 600 → 2,000 **gems** behind keeper levels 15 → 24. Ten
-  abilities, two rungs each (chain three). **Both halves of the shelf run in one order, and
+  abilities, two rungs each (chain three). A **prism** reaches one colour further round the
+  wheel and never two, climbing on how much of a hit survives the crossing (60% then full,
+  37bl). The **fourth seat** of the line is locked until three Thornwatch levels are cleared,
+  because the opening rungs stand three wards (`WardSeats`). **Both halves of the shelf run in one order, and
   it is how much of the hill an ability reaches** (37ax): siphon, beacon, ember, frost, rend,
   prism, pierce, splash, chain — single target first, multi-target last, **with two named
   exceptions the owner made after playing** (37ay): the dearest earned rung banks fuel and the
@@ -6801,6 +7022,36 @@ changes nothing until that function is redeployed.
     build of the view over the two boards are all owed, and the art folder wants
     `Addressables ▸ Sync All Assets` because it was written while the Editor was closed (see
     *Hard-won facts*).
+19a. **Play the colour lock, which is the largest change this mode has ever had.** Everything
+    offline is green — the compile, 1,775 tests, `content.py`, `rungs.py`, `loc.py`, `artnames.py`,
+    the Editor's `Validate Content` and `Validate Art` and the addressable audit — and the boards
+    have been rendered and looked at. None of that can answer the one question it was built for:
+    **does the eye go up?** See 37bl for what was built and why. Six things to watch, in the order
+    a player meets them.
+    <br>**Does the lock read as a rule rather than as a bug?** A red turret ignoring a green raider
+    walking straight at it is the thing a player has to understand in the first thirty seconds, and
+    three wards on the opening rungs is the whole of the help they get.
+    <br>**Is the breather long enough to do anything in, and short enough not to be a wait?** Eight
+    seconds is roughly three matches. Too short and the forecast is decoration; too long and the
+    mode stops being a siege. `SiegeTuning.Breather` is the dial and the hold simulation is what
+    prices a move in it.
+    <br>**Is the forecast read?** It is the only thing in this mode that tells a player something
+    before it happens. If they never look at it the gap is wasted, and the fix is where it is drawn
+    rather than what it says.
+    <br>**Does the demand light do its job?** It is the piece meant to turn a two-second parse into
+    a quarter-second glance. The failure to watch for is the opposite of invisible: four coloured
+    halos that read as scenery — a render already caught one version of that and it was rebuilt
+    tighter.
+    <br>**Is the overcharge found, and is *when* to spend it a decision?** A control nobody finds is
+    the same as no control, and one always spent the instant it arms is a button rather than a
+    choice. **The figure worth an event is how long a full tube stands before it is tapped.**
+    <br>**And do the cogs pull the eye up?** That is the whole PvZ bargain — greed is the only
+    reliable way to make somebody look somewhere. If they are trampled more often than taken, the
+    dial is `SiegeTuning.CogLies`; if they are never noticed at all, the problem is the drawing.
+    <br>**One thing is knowingly unmeasured:** the **three-colour opening rungs** have never been
+    played. A 3-colour field cascades nearly twice as hard as a 4-colour one, which should feel
+    generous on a teaching rung and may simply feel noisy.
+
 20. **Judge Thornwatch by playing it, which is what its ten levels are for.** Built the way
     every mode since the five prototypes has been (invariant 29), so it can be taken back out for
     the price of a chapter body and six files. Five questions, in the order a player meets them.
