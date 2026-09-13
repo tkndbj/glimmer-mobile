@@ -202,7 +202,8 @@ ASSEMBLIES = [
         # AnalyticsSetup to call when no measurement platform is installed, and that both
         # partial-method calls compile away rather than failing to resolve. The vendor
         # halves are compiled by the Editor, and by nothing else.
-        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS + compiled("GlimmerGrove.Domain"),
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS
+             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud"),
     )),
     ("pres", dict(
         out="GlimmerGrove.Presentation",

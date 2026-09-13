@@ -1,8 +1,9 @@
-#if GLIMMER_ANALYTICS
+#if GLIMMER_ANALYTICS && GLIMMER_FIREBASE
 using System;
 using System.Threading.Tasks;
 using Firebase;
 using Firebase.Analytics;
+using GlimmerGrove.Cloud;
 using GlimmerGrove.Privacy;
 using UnityEngine;
 
@@ -19,18 +20,32 @@ namespace GlimmerGrove.Analytics
     /// which is the one failure here that cannot be repaired by deleting rows afterwards.
     /// </para>
     /// <para>
+    /// <b>Nothing here may touch the SDK until the dependency check has settled</b>, and that is
+    /// not a tidiness rule. Firebase refuses <em>any</em> call made while
+    /// <c>CheckAndFixDependenciesAsync</c> is in flight, and the refusal lands on whoever else
+    /// was starting up — this file once broke sign-in and leaderboards outright, and the error
+    /// it produced named the cloud backend. So the check is shared through
+    /// <see cref="FirebaseReady"/>, and the consent answer is <em>held</em> until it returns
+    /// rather than applied when it arrives.
+    /// </para>
+    /// <para>
     /// <b>The window this does not close.</b> Firebase enables collection itself the moment
-    /// the native SDK initialises, which can be marginally before this runs. Closing that
-    /// properly needs <c>firebase_analytics_collection_enabled=false</c> in the Android
-    /// manifest and <c>FIREBASE_ANALYTICS_COLLECTION_ENABLED</c> in the iOS plist, so the SDK
-    /// starts disabled and this only ever turns it on. Until those are set, treat EEA
-    /// measurement as unproven rather than as consented.
+    /// the native SDK initialises, which is before any of this runs. Closing that properly needs
+    /// <c>firebase_analytics_collection_enabled=false</c> in the Android manifest and
+    /// <c>FIREBASE_ANALYTICS_COLLECTION_ENABLED</c> in the iOS plist, so the SDK starts disabled
+    /// and this only ever turns it on. Until those are set, treat EEA measurement as unproven
+    /// rather than as consented.
     /// </para>
     /// </summary>
     public static partial class AnalyticsSetup
     {
         static FirebaseAnalyticsSink _firebase;
+
+        /// <summary>What the SDK has been told, and what it should be told.</summary>
         static bool _collecting;
+        static bool _wanted;
+        static bool _answered;
+        static bool _ready;
 
         static partial void InstallFirebase()
         {
@@ -49,19 +64,20 @@ namespace GlimmerGrove.Analytics
         {
             try
             {
-                // The same call the cloud backend makes. It is safe to make twice — it
-                // resolves once and every later caller is handed the settled answer — and
-                // making it here rather than waiting on the cloud is deliberate: analytics
-                // must not stop working on a device that has no Play Services for Firestore,
-                // and must not be ordered behind a sign-in that can fail.
-                var status = await FirebaseApp.CheckAndFixDependenciesAsync();
+                // Shared with the cloud backend rather than made again here. See FirebaseReady:
+                // two concurrent checks is not a wasted call, it is a failed initialisation for
+                // whichever subsystem asked second.
+                var status = await FirebaseReady.EnsureAsync();
                 if (status != DependencyStatus.Available)
                 {
                     Debug.LogWarning($"[Analytics] Firebase unavailable on this device ({status}); events go nowhere");
                     return;
                 }
 
-                if (AdPrivacy.IsResolved) ApplyConsent(AdPrivacy.Signals);
+                _ready = true;
+
+                // Whatever the player answered while the check was running, applied now.
+                Push();
                 _firebase.MarkReady();
             }
             catch (Exception e)
@@ -72,7 +88,7 @@ namespace GlimmerGrove.Analytics
         }
 
         /// <summary>
-        /// Turns collection on or off to match the current signals.
+        /// Records what the player has agreed to, and applies it if the SDK is ready.
         ///
         /// <para>
         /// Gated on personalisation rather than on a signal of its own, because this project
@@ -95,14 +111,30 @@ namespace GlimmerGrove.Analytics
         /// </summary>
         static void ApplyConsent(AdPrivacySignals signals)
         {
-            bool allowed = signals.AllowsPersonalisation;
-            if (allowed == _collecting) return;
+            _wanted = signals.AllowsPersonalisation;
+            _answered = true;
+
+            Push();
+        }
+
+        /// <summary>
+        /// Tells the SDK, once there is something to say and something to say it to.
+        ///
+        /// <para>
+        /// The guard on <see cref="_ready"/> is the load-bearing one: consent resolves on the
+        /// splash, which is squarely inside the dependency check, so this is called during it
+        /// on an ordinary launch rather than as a rare race.
+        /// </para>
+        /// </summary>
+        static void Push()
+        {
+            if (!_ready || !_answered || _wanted == _collecting) return;
 
             try
             {
-                FirebaseAnalytics.SetAnalyticsCollectionEnabled(allowed);
-                _collecting = allowed;
-                Debug.Log($"[Analytics] collection {(allowed ? "enabled" : "disabled")}");
+                FirebaseAnalytics.SetAnalyticsCollectionEnabled(_wanted);
+                _collecting = _wanted;
+                Debug.Log($"[Analytics] collection {(_wanted ? "enabled" : "disabled")}");
             }
             catch (Exception e)
             {

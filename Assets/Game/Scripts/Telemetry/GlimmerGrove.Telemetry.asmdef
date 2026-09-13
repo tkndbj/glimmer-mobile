@@ -3,6 +3,7 @@
     "rootNamespace": "GlimmerGrove.Analytics",
     "references": [
         "GlimmerGrove.Domain",
+        "GlimmerGrove.Cloud",
         "AppsFlyer"
     ],
     "includePlatforms": [],
@@ -22,6 +23,11 @@
             "name": "com.appsflyer.unity",
             "expression": "6.0",
             "define": "GLIMMER_APPSFLYER"
+        },
+        {
+            "name": "com.google.firebase.firestore",
+            "expression": "11.0",
+            "define": "GLIMMER_FIREBASE"
         }
     ],
     "noEngineReferences": false

@@ -109,7 +109,11 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var status = await FirebaseApp.CheckAndFixDependenciesAsync();
+                // Shared rather than made here, because analytics starts at the same moment
+                // and Firebase refuses any call made while a check is in flight. See
+                // FirebaseReady - the refusal lands on whoever asked second, which has
+                // already been this backend once, reported as a cloud fault.
+                var status = await FirebaseReady.EnsureAsync();
                 if (status != DependencyStatus.Available)
                 {
                     Debug.LogWarning($"[Cloud] Firebase unavailable on this device ({status}); staying local");
