@@ -37,7 +37,7 @@ namespace GlimmerGrove.Tests
             // A draft from stock asks whether the player holds a copy, because a picker is not
             // where a rule lives — so the fixture has to hold some. Three of each is more than
             // any case here places.
-            foreach (string id in new[] { "fence", "wall", "hut" })
+            foreach (string id in new[] { "fence", "wall", "hut", "cart" })
                 HomesteadLedger.GrantForTests(id, 3);
         }
 
@@ -48,11 +48,11 @@ namespace GlimmerGrove.Tests
             HomesteadLayout.ResetForTests();
         }
 
-        static HomesteadPiece Piece(string id, int cols = 1, int rows = 1)
+        static HomesteadPiece Piece(string id, int cols = 1, int rows = 1, int facings = 1)
             => new HomesteadPiece(id, "Homestead/" + id, false, HomesteadPieceKind.Decor, 100,
                                   LevelId.None, ChapterId.None, 1f, .4f,
                                   HomesteadSlotKind.Ground, bundle: 99,
-                                  footprint: new GroveFootprint(cols, rows));
+                                  footprint: new GroveFootprint(cols, rows), facings: facings);
 
         /// <summary>A 14x14 floor with room to drag a four-tile wall about: the hall on
         /// t_000_000 and the starter friend beside it, as every other grove fixture here.</summary>
@@ -60,7 +60,8 @@ namespace GlimmerGrove.Tests
             => new HomesteadCatalog(
                 new GroveFloor(14, 14, string.Empty, GroveFloor.TileId(0, 0), GroveFloor.TileId(1, 0),
                                new[] { new GroveRegion("all", 0, 0, 14, 14, 0) }),
-                new[] { Piece("fence"), Piece("wall", 4, 2), Piece("hut", 2, 2) });
+                new[] { Piece("fence"), Piece("wall", 4, 2), Piece("hut", 2, 2),
+                        Piece("cart", 2, 2, GroveFootprint.Facings) });
 
         static string T(int col, int row) => GroveFloor.TileId(col, row);
 
@@ -235,6 +236,44 @@ namespace GlimmerGrove.Tests
         }
 
         // ================================================================ turning
+        /// <summary>
+        /// A barrel, a boulder and a companion have nothing to turn, and the draft is where
+        /// that is known — the bar draws its TURN key off this, so what was a live control
+        /// doing nothing at all when pressed is now simply not there.
+        /// </summary>
+        [Test]
+        public void APieceWithOnePictureOnASquareFootprintCannotBeTurnedAtAll()
+        {
+            var grove = Grove();
+            var draft = GroveDraft.FromStock(grove, "fence", 4, 4);
+
+            Assert.IsFalse(draft.CanTurn, "one picture, one tile: a quarter is invisible");
+
+            draft.Turn();
+            Assert.AreEqual(0, draft.Facing, "so the facing it would write never moves either");
+        }
+
+        /// <summary>
+        /// The two clauses are separate facts and either alone is enough: a cart is square, so
+        /// nothing about the tiles it covers changes, and it still turns because four facings
+        /// is four pictures. The wall opposite is the other half — one picture, but an odd
+        /// quarter swaps the tiles it stands on.
+        /// </summary>
+        [Test]
+        public void FourPicturesEarnATurnEvenOnASquareFootprintAndASquashedFootprintEarnsOneWithout()
+        {
+            var grove = Grove();
+
+            var cart = GroveDraft.FromStock(grove, "cart", 4, 4);
+            Assert.IsTrue(cart.CanTurn, "four pictures");
+            cart.Turn();
+            Assert.AreEqual(1, cart.Facing);
+            Assert.AreEqual(new GroveFootprint(2, 2), cart.Footprint, "and it covers the same tiles");
+
+            var wall = GroveDraft.FromStock(grove, "wall", 4, 4);
+            Assert.IsTrue(wall.CanTurn, "one picture, but the tiles change");
+        }
+
         [Test]
         public void TurningExchangesTheFootprintsAxesAndFourTurnsComeBack()
         {

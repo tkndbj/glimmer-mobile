@@ -450,9 +450,23 @@ namespace GlimmerGrove
 
             _paid = true;
 
-            // The coin is the money leaving. What the piece arriving sounds like belongs to the
-            // ceremony that is about to play it — GroveLandOverlay's split, for its reason.
-            Audio.Sfx("coin", .6f);
+            // **The fanfare, asked for by the owner over the `coin` that used to be here.** What
+            // the piece arriving sounds like still belongs to the ceremony about to play it —
+            // GroveLandOverlay's split, for its reason — so this is the purchase and nothing else.
+            //
+            // **It is worth knowing what this spends.** `win` is the longest and loudest clip in
+            // the set (1.6s), and <c>GroveUnveilOverlay.Plate</c> plays it for a *dwelling* on the
+            // argument that a home is the one purchase that changes the whole island — "or the
+            // loudest sound in the game would play every time somebody bought a fence". That is
+            // now what happens, deliberately: the owner heard the `coin` and asked for this. Two
+            // consequences to watch on a device rather than argue about here — a fence and a
+            // castle now open the same way, and this clip is still ringing when the unveil's
+            // `arrive` lands a beat later.
+            //
+            // The other two shop purchases (a home, a region of land) still pay in `coin`; a home
+            // deliberately so, because its unveil already ends in `win` and two of those seconds
+            // apart is the flam invariant 37q names.
+            Audio.Sfx("win", .85f);
             Tween.Punch(_art.transform, .18f, .45f);
 
             if (_note)

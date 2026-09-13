@@ -221,6 +221,31 @@ namespace GlimmerGrove
     /// </summary>
     public sealed class SiegeScreen : ProtoScreen
     {
+        /// <summary>
+        /// A siege is fought in silence, and the bed does not merely change - it stops.
+        ///
+        /// <para>
+        /// <b>Asked for by the owner, and the mode is the one here with an argument for it.</b>
+        /// Every other screen in the game is something a player reads at their own pace; this one
+        /// runs on a clock nothing stops (invariant 37), and what it asks of a player is to hear
+        /// which colour they just fed, notice a tube filling and catch a wave arriving. A bed
+        /// under all of that is one more thing in a mix that is already the busiest in the game -
+        /// about eighteen bolts a second across four lit wards.
+        /// </para>
+        /// <para>
+        /// <b><see cref="WantsSilence"/> rather than <c>Track</c>, because null does not mean
+        /// quiet.</b> This screen inherits <c>ModeScreen</c>'s <c>mus_mode</c>; overriding that to
+        /// null would leave whatever the map was playing running underneath, which is the opposite
+        /// of the ask. See the property on <c>View</c>.
+        /// </para>
+        /// <para>
+        /// <b>It is a property of this screen and not of running a level.</b> The hidden modes
+        /// (invariant 38) are turn-based boards with no clock, and nothing about them asked for
+        /// this - putting it on <c>ModeScreen</c> would silence three modes nobody played it on.
+        /// </para>
+        /// </summary>
+        public override bool WantsSilence => true;
+
         SiegeView _siege;
         UtilityBar _bar;
 

@@ -155,6 +155,42 @@ namespace GlimmerGrove.Homestead
         /// <summary>The stand this would become. What the view draws the ghost from.</summary>
         public GroveStand Stand => new GroveStand(Col, Row, PieceId, Facing, Footprint);
 
+        /// <summary>
+        /// Whether turning this would change anything — the one thing the TURN key may be built
+        /// on, and the same answer <see cref="Turn"/> itself obeys.
+        ///
+        /// <para>
+        /// <b>It is two clauses because a facing is two different facts.</b> A piece with four
+        /// facings is four <em>pictures</em>, so turning one is visibly a turn; a piece with a
+        /// footprint that is not square covers different <em>tiles</em> at an odd quarter
+        /// (<see cref="GroveFootprint.Facing"/>), so turning one is a real move even where the
+        /// art never changes. Either alone is enough, and a piece with neither cannot be turned
+        /// in any sense a player could see: the roster gives a barrel, a boulder and sixteen
+        /// others one facing for exactly that reason, and a resident — a companion, drawn from
+        /// one flat portrait or flipbook — is the same case arrived at from the other direction
+        /// (<c>GroveResidents.From</c> mints them 1x1 at one facing).
+        /// </para>
+        /// <para>
+        /// <b>Why it is a rule rather than a button the view happens not to draw.</b> Invariant
+        /// 16o: what is lit, what will be written and whether the control is live are one
+        /// answer, here. A view that hid the key while <c>Turn</c> still turned would leave a
+        /// draft able to write a facing of 1 through 3 against a piece that has no second
+        /// picture — a row in the save that says something no screen can show, carried by the
+        /// merge for ever.
+        /// </para>
+        /// </summary>
+        public bool CanTurn
+        {
+            get
+            {
+                var piece = Piece;
+                if (!piece.IsValid) return false;
+
+                var drawn = piece.Footprint;
+                return piece.Facings > 1 || drawn.Cols != drawn.Rows;
+            }
+        }
+
         /// <summary>Where a lifted piece was standing, and nought for one out of the inventory.</summary>
         public int FromCol => _fromCol;
 
@@ -277,6 +313,12 @@ namespace GlimmerGrove.Homestead
         /// </summary>
         public void Turn()
         {
+            // Nothing to turn is not the same as a turn that does not fit: the second is the
+            // case the remarks above are about and still happens, while this one is a piece
+            // with one picture on a square footprint, where a quarter is invisible on the
+            // screen and a fact in the save. See CanTurn.
+            if (!CanTurn) return;
+
             Facing = GroveFootprint.Quarter(Facing + 1);
 
             var footprint = Footprint;

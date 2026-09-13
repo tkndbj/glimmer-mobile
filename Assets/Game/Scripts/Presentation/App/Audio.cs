@@ -198,9 +198,66 @@ namespace GlimmerGrove
             }, this, "music").OnDone(() => { if (from) from.Stop(); });
         }
 
+        /// <summary>
+        /// Fade the music out and leave nothing playing.
+        ///
+        /// <para>
+        /// <b>Its own entry point because <see cref="Music"/> cannot express it.</b> A null track
+        /// name means "keep whatever is playing" all the way up the stack - <c>View.Track</c> is
+        /// documented that way and <c>Flow</c> only calls <see cref="Music"/> when it is non-null -
+        /// so there was no way for a screen to ask for quiet. Handing <see cref="Music"/> a null
+        /// would not do it either: it resolves the address first and returns on a clip it cannot
+        /// find, which is the guard that stops a bad name stranding the decks.
+        /// </para>
+        /// <para>
+        /// <b><c>_currentTrack</c> is cleared, and that is the half a caller would forget.</b>
+        /// <see cref="SwapTrack"/> returns early when asked for the track it is already on, so a
+        /// deck stopped without clearing the name would refuse to start the same track again -
+        /// a player walking map -> battle -> map would get silence for the rest of the session,
+        /// and only on the way *back*, which is the shape of bug nothing here would catch.
+        /// </para>
+        /// <para>
+        /// <b>Both decks, not the live one.</b> A crossfade that is still running has two sources
+        /// up; stopping only the live one leaves the outgoing half audible and fading to a level
+        /// nothing will write again. The tween runs on the same <c>"music"</c> channel so it
+        /// cancels that crossfade rather than racing it.
+        /// </para>
+        /// </summary>
+        public static void Silence(float fade = .6f)
+        {
+            if (I == null) return;
+            I._currentTrack = null;
+
+            var a = I._deckA;
+            var b = I._deckB;
+            float fromA = a != null ? a.volume : 0f;
+            float fromB = b != null ? b.volume : 0f;
+
+            Tween.Run(fade, Ease.InOutSine, t =>
+            {
+                if (a) a.volume = fromA * (1f - t);
+                if (b) b.volume = fromB * (1f - t);
+            }, I, "music").OnDone(() =>
+            {
+                if (a) { a.Stop(); a.clip = null; }
+                if (b) { b.Stop(); b.clip = null; }
+            });
+        }
+
         public static void ApplyMusicSetting()
         {
             if (I == null) return;
+
+            // **Nothing playing is a state, not an absence, and this is where it has to be
+            // honoured.** A screen that asked for <see cref="Silence"/> holds no track, and both
+            // this and <see cref="Silence"/> tween on the <c>"music"</c> channel - so a player who
+            // opened settings during the fade-out would cancel it, skip its <c>OnDone</c> and have
+            // the deck ramped back up underneath a running siege. Checking the track rather than
+            // the deck is what makes that impossible rather than unlikely: the fade is still in
+            // flight at that moment, so the clip has not been cleared yet and a deck-level test
+            // would still say there is music to restore.
+            if (I._currentTrack == null) return;
+
             var live = I._onA ? I._deckA : I._deckB;
             if (GameSettings.MusicOn)
             {
@@ -219,7 +276,7 @@ namespace GlimmerGrove
         /// <summary>Duck the music briefly so a fanfare can breathe.</summary>
         public static void Duck(float amount = .35f, float hold = 1.4f)
         {
-            if (I == null || !GameSettings.MusicOn) return;
+            if (I == null || !GameSettings.MusicOn || I._currentTrack == null) return;
             var live = I._onA ? I._deckA : I._deckB;
             float full = I._level;
             Tween.Run(.18f, Ease.OutQuad, t => { if (live) live.volume = Mathf.Lerp(full, full * amount, t); }, I, "duck")

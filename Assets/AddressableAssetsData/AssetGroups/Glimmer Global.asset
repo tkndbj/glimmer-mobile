@@ -10373,6 +10373,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/Wards/bolt_b_fire
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5c3be8c29ef44feaab5f33edb2b10e11
+    m_Address: Audio/Sfx/chain
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5c429ab57351648438368e170ad7588a
     m_Address: Art/Fx/Siege/muzzle_beacon_y/f03
     m_ReadOnly: 0
@@ -18656,6 +18661,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_beacon_b
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a180c5ff8108484982966923d5311316
+    m_Address: Audio/Sfx/lift
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a1954f95f297ed2468876a81756d8690
     m_Address: Art/Fx/Siege/shot_prism_y/f08
     m_ReadOnly: 0
@@ -25410,6 +25420,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/Wards/ember_y_fire
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: de0054fb35f14cc88f1cefa0b78c43e5
+    m_Address: Audio/Sfx/stow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: de009192417329f43aefae7f58aa51ed
     m_Address: Art/Siege/fire4_r/f03

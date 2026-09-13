@@ -353,6 +353,7 @@ namespace GlimmerGrove.AssetPipeline
             "tick", "tock", "bell", "lit", "chime", "chime2",
             "boom", "mend", "land",
             "gem", "settle", "shot", "zap", "stand", "wear", "arrive",
+            "lift", "stow", "chain",
         };
 
         /// <summary>Everything the game needs before the menu appears.</summary>

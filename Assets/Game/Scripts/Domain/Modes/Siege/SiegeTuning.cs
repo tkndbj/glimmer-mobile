@@ -796,8 +796,15 @@ namespace GlimmerGrove.Modes
         /// unhurried player finishes on 16 of 56, and at 4.1 on 20. Two tenths of a second is the
         /// difference between a lost run and a comfortable one, which is itself the argument for
         /// measuring this rather than arguing about it.
+        /// <para>
+        /// <b>Halved to 2.0 with the other three</b> (<see cref="BossCastEvery"/>), because the
+        /// bosses played as too easy and too slow. The readings above are the cadence at the old
+        /// scale and are kept, because the <em>shape</em> they record has not changed: two tenths
+        /// of a second either side of this number is still the difference between a lost run and a
+        /// comfortable one, which is the argument for measuring it rather than arguing about it.
+        /// </para>
         /// </summary>
-        public const float OverlordCastEvery = 4.0f;
+        public const float OverlordCastEvery = 2.0f;
 
         public const int OverlordCast = 5;
 
@@ -831,8 +838,9 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// <b>Taking no health is what makes it the boss a chapter opens with.</b> It teaches the
-        /// tell — the ring closing over a ward, the second and a bit to react in — without the
-        /// punishment a warlord's version carries, so a player meets the shape of a boss fight
+        /// tell — the light gathering on it, the tether reaching for the ward it has chosen, the
+        /// second and a bit to react in — without the punishment a warlord's version carries, so a
+        /// player meets the shape of a boss fight
         /// before they meet its cost. It is also why <c>ModeValidator.Threatens</c> stopped
         /// counting "there is a boss" as a threat: a level whose only threat were this could not
         /// be lost, which is invariant 5d asked of a fail state.
@@ -842,7 +850,16 @@ namespace GlimmerGrove.Modes
 
         public const float BlightHold = .58f;
         public const float BlightMarch = 7f;
-        public const float BlightCastEvery = 4.5f;
+        /// <summary>
+        /// Seconds between one douse and the next. Halved with the other three
+        /// (<see cref="BossCastEvery"/>).
+        ///
+        /// <b>The one cadence that was already effectively shorter than it reads</b>, because a
+        /// douse that finds every ward already dark re-arms on <see cref="CastRetry"/> rather than
+        /// spending a full turn. What halving it changes is how fast a player has to answer the
+        /// constraint, which is the whole of what this boss asks.
+        /// </summary>
+        public const float BlightCastEvery = 2.25f;
 
         /// <summary>Seconds a doused ward stands dark. Long enough to notice, short enough to wait out.</summary>
         public const float Douse = 5f;
@@ -897,29 +914,47 @@ namespace GlimmerGrove.Modes
         public const float WarbringerMarch = 8f;
 
         /// <summary>
-        /// Seconds between one roar and the next, and it is the slowest cadence of the four.
+        /// Seconds between one roar and the next, and it is still the slowest cadence of the four.
         ///
         /// <b>Because a roar lands four times, the cadence is what prices it.</b> Four wards at
-        /// <see cref="WarbringerCast"/> every nine seconds is 0.89 health a second off the line,
-        /// which sits where the rung does: a warlord takes 0.60 and an overlord 1.25, so rungs 5,
-        /// 8 and 10 climb. It was 6, which is 1.33 — <em>more</em> than the finale, and measured
-        /// on the shipped rung it left an unhurried player on 6 of 56 (the chapter's bloodiest
-        /// line, one rung before its climax, which is the ramp inverted).
+        /// <see cref="WarbringerCast"/> every four and a half seconds is 0.89 health a second off
+        /// the line, which sits where the rung does: a warlord takes 1.20 and an overlord 2.50, so
+        /// rungs 5, 8 and 10 climb. <b>At the old scale</b> it was once 6 seconds for 2, which is
+        /// 1.33 — <em>more</em> than that scale's finale — and measured on the shipped rung it left
+        /// an unhurried player on 6 of 56 (the chapter's bloodiest line, one rung before its
+        /// climax, which is the ramp inverted).
         /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> is the only thing that can see any
         /// of that.
+        /// <para>
+        /// <b>It was 9 at a roar of 2, and it is 4.5 at a roar of 1: twice as often for half as
+        /// much, which is the identity <see cref="WarbringerCast"/> records.</b> The other three
+        /// bosses were halved and took twice the pressure with them; this one could not, and the
+        /// measurement says so exactly. At 4.5 seconds for 2 health a roar, <c>s03_broodheart</c>
+        /// (the finale, and already the chapter's worst rung at 1 of 9) held at <b>no rhythm at
+        /// all</b> on the starter line, which is the wall
+        /// <c>TheSecondChapterAsksForBetterTurrets</c> refuses outright. At 4.5 for 1 it reads 1 of
+        /// 9 bare and 4 of 9 one rung up: exactly where it stood. <b>A boss that hits the whole
+        /// line cannot be sped up and left as heavy</b>, because its cadence is multiplied by four.
+        /// </para>
         /// </summary>
-        public const float WarbringerCastEvery = 9f;
+        public const float WarbringerCastEvery = 4.5f;
 
         /// <summary>
         /// What one roar takes off <em>every</em> standing ward.
         ///
-        /// <b>Small, because it lands four times.</b> Two off a four-ward line is eight health a
+        /// <b>Small, because it lands four times.</b> One off a four-ward line is four health a
         /// roar against a warlord's three, which is more in total and much less per ward — so the
         /// line comes down flat rather than one turret at a time, and no single mending answers it.
         /// Spread damage is the weaker shape for the same total, which is the right side to err on
         /// for the rung before the finale.
+        ///
+        /// <b>It was 2 at a cadence of 9, and halving both left the line taking exactly what it
+        /// took before</b> (<see cref="WarbringerCastEvery"/>): four wards at 1 every 4.5 seconds
+        /// is the same 0.89 a second as four at 2 every 9. What the player meets is a boss acting
+        /// twice as often, which is what was asked for; what the finale meets is the arithmetic it
+        /// was tuned on.
         /// </summary>
-        public const int WarbringerCast = 2;
+        public const int WarbringerCast = 1;
 
         /// <summary>
         /// How much faster the hill walks while a warbringer's roar is on it.
@@ -933,8 +968,20 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const float Rally = 1.55f;
 
-        /// <summary>Seconds a roar lasts. Two roars never stack — the later one restarts it.</summary>
-        public const float RallyFor = 5f;
+        /// <summary>
+        /// Seconds a roar lasts. Two roars never stack — the later one restarts it.
+        ///
+        /// <b>It has to be shorter than <see cref="WarbringerCastEvery"/>, and that is a rule
+        /// rather than a preference.</b> At 5 seconds against the old cadence of 9 the hill charged
+        /// for a little over half the fight and walked for the rest, so a roar was an event with a
+        /// gap either side of it. Halving the cadence to 4.5 without halving this would have put
+        /// the next roar inside the last one for ever: the hill would charge from the first roar to
+        /// the end of the level, at which point <see cref="Rally"/> stops being a threat the boss
+        /// makes and becomes the speed raiders walk at (invariant 5d, a mechanic that is always on
+        /// rejects nothing). It moves with the cadence, so the share of the fight the hill spends
+        /// charging is what it always was.
+        /// </summary>
+        public const float RallyFor = 2.5f;
 
         /// <summary>
         /// Where the warlord stops, as a march reading.
@@ -1004,8 +1051,31 @@ namespace GlimmerGrove.Modes
         /// <summary>Quiet between the warlord reaching its ground and its first spell.</summary>
         public const float BossWakes = 3.4f;
 
-        /// <summary>Seconds between one spell and the next.</summary>
-        public const float BossCastEvery = 5f;
+        /// <summary>
+        /// Seconds between one spell and the next.
+        ///
+        /// <para>
+        /// <b>Halved from 5, along with the other three, because the bosses played as too easy and
+        /// too slow.</b> Three of the four now take twice as much off the line a second; the
+        /// fourth could not, and says why on <see cref="WarbringerCastEvery"/>. Par does not move:
+        /// it is the hill's health over what a match delivers (invariant 37a) and no boss's cadence
+        /// is in it, so what moved is only what the sweep can see.
+        /// </para>
+        /// <para>
+        /// <b>Measured 2026-09-13 through <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> and
+        /// <c>TheSecondChapterAsksForBetterTurrets</c></b>, which is the only instrument this mode
+        /// has (invariant 37j): Thornwatch 80 to 78 of 90 on the starter line, Broodmarch 66 to 63
+        /// bare and 81 to 79 one rung up, with no rung of either walled. The cost lands almost
+        /// entirely on the two finales, which is where a faster boss should be felt.
+        /// </para>
+        /// <para>
+        /// <b>The floor under this is <see cref="BossTell"/> plus <see cref="BossFlight"/>, 1.6
+        /// seconds.</b> A cadence at or under that is a boss whose next wind-up begins before the
+        /// last spell has landed, which reads as one continuous noise rather than as a rhythm of
+        /// blows, and leaves no window to pour a mending into the ward being aimed at.
+        /// </para>
+        /// </summary>
+        public const float BossCastEvery = 2.5f;
 
         /// <summary>
         /// How long a boss waits before asking again, having found nothing worth casting at.

@@ -166,6 +166,27 @@ namespace GlimmerGrove
         public virtual string Track => null;
 
         /// <summary>
+        /// Whether this screen wants no music at all, rather than a track of its own.
+        ///
+        /// <para>
+        /// <b>A second declaration rather than a sentinel in <see cref="Track"/>, because that
+        /// string is gated.</b> <c>Tools/verify/sfxnames.py</c> proves every <see cref="Track"/>
+        /// resolves to a clip and treats a declaration it cannot read as an <em>error</em> rather
+        /// than skipping it - the same rule invariant 6 imposes on loc keys. An empty string or a
+        /// magic name meaning "quiet" would be a track name no gate could check, on the one
+        /// property whose whole point is that a gate checks it.
+        /// </para>
+        /// <para>
+        /// <b>It wins over <see cref="Track"/>, and a screen declaring both is not a conflict.</b>
+        /// A subclass inherits its family's track - every mode screen inherits <c>mus_mode</c> -
+        /// so the only way to ask for quiet without this is to override the track to null, which
+        /// means "keep whatever the map was playing" and is the opposite. One property answered
+        /// in one place beats two that have to agree.
+        /// </para>
+        /// </summary>
+        public virtual bool WantsSilence => false;
+
+        /// <summary>
         /// True once this view has begun going away and is only finishing its exit animation.
         ///
         /// <para>
@@ -314,7 +335,8 @@ namespace GlimmerGrove
                 configure?.Invoke(screen);
                 screen.Init();
                 Current = screen;
-                if (screen.Track != null) Audio.Music(screen.Track);
+                if (screen.WantsSilence) Audio.Silence();
+                else if (screen.Track != null) Audio.Music(screen.Track);
 
                 // Applied on every swap rather than only when it changes, so the answer is
                 // always the incoming screen's own — see View.WantsMultiTouch.

@@ -19,11 +19,17 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Four beats a player can read, and the first three are the point.</b> The warlord
-        /// swings into its own attack frames; a violet light gathers on it; and a ring closes over
-        /// the ward it has chosen — so what is about to happen, and to whom, is on the board for
-        /// <c>SiegeTuning.BossTell</c> before it happens. That window is not decoration: it is
+        /// swings into its own attack frames; a violet light gathers on it; and a tether reaches
+        /// for the ward it has chosen — so what is about to happen, and to whom, is on the board
+        /// for <c>SiegeTuning.BossTell</c> before it happens. That window is not decoration: it is
         /// long enough to pour a <c>mending</c> into the ward that is about to be hit, which is
         /// the one thing on this board a player can do about a warlord other than shoot it.
+        ///
+        /// <b>The target is said by the tether and by nothing else on the line.</b> A ring used
+        /// to close over the chosen ward as well; it was withdrawn because a circle drawn around
+        /// the player's own turret reads as something being done *to* the turret rather than as a
+        /// warning. If the tell ever stops being read, the thing to strengthen is the reach from
+        /// the boss (`SiegeView.Storm`), not a mark on the line.
         /// </para>
         /// <para>
         /// <b>The schedule comes out of the rules and is never invented here</b> (invariant 37s).
@@ -67,11 +73,11 @@ namespace GlimmerGrove
 
             Gather(mob);
 
-            // The tell. A ward that is about to be hit gets a ring closing on it; a roar has no
-            // target, so what closes is a ring on the warbringer itself — the same grammar saying
-            // "something is about to happen *here*" rather than "*to that*".
-            if (aimed) Sigil(cast.Ward, mob.Kind);
-            else Brace(mob, from);
+            // The tell. **Nothing is ever drawn on the ward itself** — an aimed spell is announced
+            // from the caster's end, by the gather above and the tether below. A roar has no target
+            // at all, so what closes is a ring on the warbringer itself, which says "something is
+            // about to happen *here*" about the boss and never about the line.
+            if (!aimed) Brace(mob, from);
 
             // **The storm the wind-up is actually made of** (see `SiegeView.Storm`): crackle
             // accelerating over the whole window, motes dragged in off the hill, and — for a boss
@@ -131,52 +137,13 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The ring that closes over the ward a spell is coming for.
-        ///
-        /// <b>It closes rather than expanding</b>, which is the opposite of every other ring on
-        /// this board and is why: <c>Shockwave</c> grows outward and means <em>something has
-        /// happened here</em>, and this means <em>something is about to</em>. A countdown that
-        /// looks like an explosion is a warning nobody reads as one.
-        /// </summary>
-        void Sigil(int ward, SiegeKind kind)
-        {
-            var at = new Vector2(PostX(ward), _lineY + Cell * .3f);
-            bool greater = kind == SiegeKind.Overlord;
-
-            var ring = UIKit.Img("Sigil", _fx, Art.Ring(128, greater ? 13f : 10f),
-                                 Pal.A(Casting(kind), .95f),
-                                 new Vector2(Cell * (greater ? 1.25f : 1f), Cell));
-            ring.raycastTarget = false;
-            ring.rectTransform.anchoredPosition = at;
-
-            var rt = ring.rectTransform;
-
-            // **A hex turns the other way.** The two spells that take a ward's *health* close a
-            // ring clockwise; the one that takes its *fire* closes anticlockwise, so the two
-            // warnings are told apart at a glance by a player who has met both — which is the
-            // whole of what a tell is for, and the cheapest possible way to say it.
-            float spin = SiegeTuning.SpellOf(kind) == SiegeSpell.Douse ? -260f : 220f;
-
-            Tween.Run(SiegeTuning.BossTell, Ease.Linear, t =>
-            {
-                if (!rt) return;
-                rt.localScale = Vector3.one * Mathf.Lerp(4.4f, 1.5f, t);
-                rt.localRotation = Quaternion.Euler(0f, 0f, t * spin);
-            }, ring).OnDone(() =>
-            {
-                if (!ring) return;
-                Tween.Fade(ring, 0f, SiegeTuning.BossFlight)
-                     .OnDone(() => { if (ring) Destroy(ring.gameObject); });
-            });
-        }
-
-        /// <summary>
         /// The tell a warbringer wears, which is a ring closing on <em>itself</em>.
         ///
         /// A roar has no target, so the thing a player has to read is not "which ward" but "how
         /// long" — and the answer to it is not a mending, it is a firepot into whatever the roar
-        /// is about to set running. Same grammar as <see cref="Sigil"/> (a ring that closes means
-        /// something is about to happen), aimed at the boss rather than at the line.
+        /// is about to set running. <b>The one ring left on this board that belongs to a boss</b>,
+        /// and it is drawn on the boss: a ring that closes means something is about to happen
+        /// *here*, which is only ever honest over the thing doing it.
         /// </summary>
         void Brace(Mob mob, Vector2 at)
         {

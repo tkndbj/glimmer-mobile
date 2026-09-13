@@ -392,9 +392,11 @@ namespace GlimmerGrove
         /// <para>
         /// <b>And an aimed boss reaches for its target before it throws.</b> A tether — a thin
         /// bolt flickering between the caster and the ward it has chosen — is drawn over the last
-        /// two fifths of the tell, which says <em>who</em> as well as <em>when</em>. The closing
-        /// ring already says it; this says it in the boss's own colour and from the boss's own
-        /// hand, which is what a player looking at the hill rather than at the line will see.
+        /// two fifths of the tell, which says <em>who</em> as well as <em>when</em>. <b>It is the
+        /// only thing that says which ward</b> — a ring used to close over the chosen post and was
+        /// withdrawn, because a circle drawn around the player's own turret reads as something
+        /// being done to it. This says the same thing in the boss's own colour and from the boss's
+        /// own hand, which is where the threat actually is.
         /// </para>
         /// </summary>
         void Winding(Mob mob, Vector2 from, Vector2 to, bool aimed)

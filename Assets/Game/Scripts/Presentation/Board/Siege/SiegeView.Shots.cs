@@ -443,7 +443,10 @@ namespace GlimmerGrove
                 });
             }
 
-            // **One sound at one pitch for all four wards.** It used to be pitched per ward
+            // **One sound at one pitch for all four wards**, and since `sfx.tsv` moved this
+            // slot to `synth:turret` it is a built tone rather than a sampled impact - see that
+            // generator for why the most repeated sound in the game is the one place in this set
+            // synthesis beats a sample. It used to be pitched per ward
             // (1.18 / 1.07 / 0.96 / 0.85) so a player could hear which colour they had just fed
             // without looking away from the field. Withdrawn by the owner after playing it: four
             // pitches of one clip read as four different sound effects rather than as four
@@ -451,23 +454,35 @@ namespace GlimmerGrove
             // gone with it and that is accepted - what says which ward is firing is the board,
             // where the bolts visibly leave their own turret. Do not put the spread back without
             // asking; it has been heard and rejected.
-            // **`.20f`, and the number is about density rather than about one bolt.** A lit
-            // line fires about eighteen a second across four wards, so three or four copies
-            // are sounding at any instant - roughly +5 dB over a single one - which is why
-            // the turrets read as loud while every individual bolt sits at the same matched
-            // level as everything else in the set. It went .32 -> .20 -> .12, which is 8.5 dB
-            // below the rest of the set: a bolt is now deliberately *under* the matched level,
-            // because what a player hears is never one of them. To nudge further, .09 is another
-            // 2.5 dB down; below about .07 the four authored pitches stop being tellable apart,
-            // which is the reading this sound exists to carry.
+            // **The volume is about density rather than about one bolt.** A lit line fires
+            // about eighteen a second across four wards, so three or four copies are sounding
+            // at any instant - roughly +5 dB over a single one - which is why the turrets read
+            // as loud while every individual bolt sits under the matched level everything else
+            // in the set is cut to. It went .32 -> .20 -> .12 while a `chime2` was riding every
+            // shot with it; see below for why it is back at .20 now that nothing is.
             //
             // What must never be reached for instead is `SiegeTuning.FireEvery`. It is the
             // same density from the other end and it is a *rule* - .26 loses the ward line
             // outright (invariant 37k), and every number in this mode is held by
             // `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine`. A mixing complaint is fixed
             // in the mix.
-            Audio.Sfx("shot", .12f);
-            if (shot.Weak) Audio.SfxVaried("chime2", .2f);
+            // **One sound, and the second one was an accident of the colour lock.** A
+            // `chime2` used to ride every bolt whose `Weak` flag was set, authored back when
+            // `Weak` meant the occasional elemental double. Under the lock a ward only ever
+            // aims at its own colour, so `SiegeWard.Doubles` is true of *every* primary bolt
+            // in the mode - `SiegeWard.StrongAgainst` says so in as many words - and what was
+            // written as an accent became a second voice on all eighteen shots a second,
+            // louder than the shot it was accenting. That is invariant 26f exactly: a payoff
+            // every bolt gets for free is not a payoff, it is the floor.
+            //
+            // **`.20f`, and .40 was tried and reverted.** "Too soft" was read as a gain
+            // complaint first and it was not one: at twice the volume the owner's verdict was
+            // unchanged, because what was missing was the *attack*, not the level. That is the
+            // useful record here - a sound can be plainly loud enough and still not read as the
+            // thing it is drawing, and no reading in `--report` separates the two. The fix went
+            // into `sfx_dsp.turret`, which is where a character complaint belongs; this number
+            // is back where the density argument above puts it.
+            Audio.Sfx("shot", .20f);
         }
 
         /// <summary>

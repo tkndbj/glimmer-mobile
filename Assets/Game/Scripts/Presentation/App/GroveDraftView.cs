@@ -123,7 +123,14 @@ namespace GlimmerGrove.App
             _ghost.gameObject.SetActive(true);
             _bar.gameObject.SetActive(true);
             Tween.Pop(_bar, .6f, .22f);
-            Audio.SfxVaried("tick", .5f);
+            // **The sound of holding something, and it belongs here rather than in the two
+            // callers.** `Begin` takes a piece out of the inventory and `Lift` takes one off a
+            // tile, and what the player has done in both cases is the same: they are now
+            // carrying a piece and the floor is showing them where it would go. Two call sites
+            // would be two answers to one question. It was a `tick` - the driest and most
+            // repeated thing in the set, the wheel-peg sound - which said nothing about
+            // picking anything up. `stow` is its answer.
+            Audio.SfxVaried("lift", .6f);
 
             Settled?.Invoke();      // the screen hides the original while the ghost is up
         }
@@ -188,7 +195,7 @@ namespace GlimmerGrove.App
         // ------------------------------------------------------------------ deciding
         void OnTurn()
         {
-            if (_draft == null) return;
+            if (_draft == null || !_draft.CanTurn) return;
 
             _draft.Turn();
             Paint();
@@ -210,7 +217,20 @@ namespace GlimmerGrove.App
                 return;
             }
 
-            if (result == GrovePlaceResult.Placed) Audio.SfxVaried("pop", .85f);
+            // **`lift` again rather than a `pop`, and the repeat is the point.** Sucker 02 is the
+            // piece and the tile meeting — the same suction whether it is coming up off one or
+            // going down onto one — so picking up and putting down are one gesture bookended by
+            // one sound, and `stow` is left meaning the one thing that is not that: a piece
+            // leaving the grove. The `pop` it replaces is the credits-token clip that eight other
+            // things play, and it was the wrong news here for exactly `arrive`'s reason.
+            //
+            // **Louder than the pickup at .6, and that is not the same-clip-at-two-volumes fault
+            // this file fixed a few lines up.** That one was two *adjacent* actions — opening a
+            // draft and removing one — where the only difference was a couple of dB. These two
+            // are seconds apart with a drag between them, and one is a ghost appearing while the
+            // other is a piece landing on the floor; a landing is the bigger event, so it is the
+            // louder reading of the same sound.
+            if (result == GrovePlaceResult.Placed) Audio.SfxVaried("lift", .85f);
 
             Dismiss();          // committed, so there is nothing to cancel back to
         }
@@ -221,7 +241,11 @@ namespace GlimmerGrove.App
 
             _draft.Remove();
             Dismiss();
-            Audio.SfxVaried("tick", .7f);
+
+            // `lift`'s pair, from the same material. What it replaced was a `tick` at .7 against
+            // the `tick` at .5 that opened the draft - the same clip a shade louder, which is not
+            // a distinction anybody can hear, so taking a piece back sounded like picking it up.
+            Audio.SfxVaried("stow", .6f);
         }
 
         // ------------------------------------------------------------------ painting
@@ -304,17 +328,27 @@ namespace GlimmerGrove.App
             _bar = UIKit.Box("DraftBar", _parent, new Vector2(0f, BarHeight),
                              new Vector2(.5f, .5f), Vector2.zero);
 
-            // Laid out from the middle, so a bar of two buttons and a bar of three are both
-            // centred over the piece rather than one being offset.
+            // Laid out from the middle, so a bar of one key, two or three is centred over the
+            // piece rather than one of them being offset.
             _bar.gameObject.SetActive(false);
         }
 
         /// <summary>
         /// Rebuilds the row of buttons for the draft that is open.
         ///
+        /// <para>
         /// A lifted piece gets Remove and one from the inventory does not, because a piece that
         /// was never put down has nothing to take away — and a button that is present but dead
         /// is a button the player has to learn to ignore.
+        /// </para>
+        /// <para>
+        /// <b>Turn is the same argument, and it was the row's one broken key.</b> It asks
+        /// <see cref="GroveDraft.CanTurn"/> rather than naming residents, because "a companion
+        /// is flat" is one instance of "this has one picture and a square footprint" and the
+        /// roster holds eighteen more — a barrel, a boulder, a crate. Every one of them drew a
+        /// TURN that did nothing at all when pressed, which is the control 16o refuses: a key
+        /// that is live, animates and changes no pixel reads as the game having missed the tap.
+        /// </para>
         /// </summary>
         public void BuildBar()
         {
@@ -324,7 +358,9 @@ namespace GlimmerGrove.App
                 UnityEngine.Object.Destroy(_bar.GetChild(i).gameObject);
 
             _keys.Clear();
-            _keys.Add(Key("Turn", "btn_violet", "ui.grove.turn", OnTurn));
+
+            if (_draft.CanTurn)
+                _keys.Add(Key("Turn", "btn_violet", "ui.grove.turn", OnTurn));
 
             if (_draft.Source == GroveDraftSource.Floor)
                 _keys.Add(Key("Remove", "btn_red", "ui.grove.take_away", OnRemove));

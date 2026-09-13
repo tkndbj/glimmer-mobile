@@ -336,7 +336,97 @@ def bloop(rate=RATE):
     )
 
 
-SYNTH = {"bloop": bloop}
+def turret(rate=RATE):
+    """A ward firing in Thornwatch: a low synth bolt with a hard attack.
+
+    **Synthesised rather than cut, which is this file's own argument run backwards,
+    so it has to earn it.** The whole set was replaced because it was sine tones -
+    one partial, no body - and nine of twenty measured a spectral flatness of
+    0.0000. What was actually wrong there was *thinness*, not synthesis, and the
+    owner asked for a synth here for a reason no sample answers: this is the most
+    repeated sound in the game, about eighteen a second across four lit wards, and a
+    recorded impact carries a room and a noise floor that eighteen overlapping copies
+    turn into a wash. A built tone carries neither.
+
+    **The first cut of this was played and rejected as "too soft for a turret
+    attack", and the record of why is worth more than the parameters.** It was C4
+    with five harmonic partials and no noise, and it measured **0.0% in 2-5 kHz** -
+    which was written up here as a win, because that band is where the ear fatigues
+    and this is the sound the game plays most. It is also the band a sound is *heard
+    with*. Turning it up twice did nothing, because the complaint was never level:
+    **loudness-matched is not presence-matched**, and nothing `spectrum` reports
+    separates the two. A clip can sit at the set's exact perceived loudness and still
+    not read as the thing it is drawing.
+
+    **So bite was put back deliberately, and metered.** Three ingredients, none of
+    which moves the pitch:
+
+    * **Partials at 9, 12 and 15.** On a C4 fundamental those land at 2.4, 3.1 and
+      3.9 kHz - inside the band - so the energy is *sustained* rather than a
+      transient the spectrum cannot see. The first attempt added only a 6 ms noise
+      click and moved the reading from 0.0% to 0.3%, which is how it was established
+      that a click alone is not an attack.
+    * **A noise snap**, 18 ms, band-passed 1.5-7 kHz. Deterministic by
+      `RandomState` and not `default_rng`: NumPy guarantees stream compatibility for
+      the legacy MT19937 and explicitly declines to for `Generator`, and
+      `make_sfx.py --check` compares bytes.
+    * **`tanh` drive**, which folds odd harmonics out of the low partials and
+      flattens the peak - so the clip carries more average energy at the same matched
+      loudness, which is itself part of not sounding soft.
+
+    **The fundamental did not move, and that is the whole point of doing it this
+    way.** It still lands on C4 and the ear reads the landing rather than the sweep,
+    so this is no higher in pitch than the version the owner approved the pitch of -
+    it is louder in the band that carries attack. Centroid 833 Hz against the harp
+    impact's 1172, and **8.9% in 2-5 kHz against that harp's 15.5%**: about half the
+    fatigue for a sound that reads as a weapon.
+
+    **If it is still not hard enough, the dial is the amplitude of the 9/12/15 group
+    and nothing else** - it was swept at 0.25/0.45/0.70/1.00, giving 1.0/3.2/8.9/21.1
+    per cent. Past the harp's 15.5% is knowingly worse than what was replaced, on the
+    sound this game plays more than any other.
+
+    Measured: centroid 833 Hz, 8.9% in 2-5 kHz, nothing above 8 kHz, 44% below 500.
+    """
+    f0 = 261.63                          # C4 - where the fall lands, and what is heard
+    bite, decay = 0.70, 0.030            # the one dial; see the last paragraph
+
+    body = struck(
+        f0=f0,
+        seconds=0.18,                    # the table cuts it to 0.14
+        partials=(
+            (1.00, 1.00, 0.050),         # the body
+            (2.00, 0.95, 0.044),         # the octave: what a phone speaker actually gets
+            (3.00, 1.00, 0.034),         # the twelfth, carrying presence under the harsh band
+            (4.00, 0.70, 0.024),
+            (5.00, 0.55, 0.020),         # odd harmonics from here down: the buzz, not a bell
+            (7.00, 0.40, 0.016),
+            (9.00, bite, decay),               # 2.4 kHz             (12.00, bite * 0.80, decay * 0.85),  # 3.1 kHz  } the attack lives here
+            (15.00, bite * 0.50, decay * 0.70),  # 3.9 kHz /
+        ),
+        glide=2.60,                      # starts high and drops hard: it is fired, not struck
+        glide_ms=16.0,
+        attack_ms=0.4,                   # as sharp as the raised cosine allows without clicking
+        rate=rate,
+    )
+
+    n = body.size
+    t = np.arange(n) / float(rate)
+
+    snap = np.random.RandomState(20260913).standard_normal(n) * np.exp(-t / 0.018)
+    snap = highpass_fft(lowpass_fft(snap, 7000.0), 1500.0)
+    peak = np.max(np.abs(snap))
+    if peak > 0:
+        body = body + 0.70 * (snap / peak)
+
+    drive = 2.4
+    body = np.tanh(body * drive) / np.tanh(drive)
+
+    peak = np.max(np.abs(body))
+    return body / peak if peak > 0 else body
+
+
+SYNTH = {"bloop": bloop, "turret": turret}
 
 
 # ------------------------------------------------------------------ measuring

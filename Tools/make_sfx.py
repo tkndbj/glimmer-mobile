@@ -157,10 +157,13 @@ USE = {
     "mend":     ((1.00, 1.00), 0.00, "a mending poured into a ward"),
     "gem":      ((0.94, 1.06), 0.40, "a match going off in Thornwatch, once a cascade beat"),
     "settle":   ((0.94, 1.06), 0.40, "the refill landing, half a beat behind the match"),
+    "chain":    ((0.90, 1.60), 0.40, "a cascade beat in Thornwatch - the chain banner's voice"),
     "shot":     ((1.00, 1.00), 0.055, "a ward firing - four lit wards at .22s each, flat"),
     "zap":      ((0.94, 1.06), 0.22, "a ward's bolt killing what it hit"),
     "stand":    ((1.00, 1.00), 0.25, "standing a turret on a colour in the loadout"),
     "wear":     ((1.00, 1.00), 0.30, "wearing a companion, on the profile or the grid"),
+    "lift":     ((1.00, 1.00), 0.30, "picking a grove piece up - from the inventory, or off a tile"),
+    "stow":     ((1.00, 1.00), 0.30, "putting a grove piece back into stock"),
 }
 
 

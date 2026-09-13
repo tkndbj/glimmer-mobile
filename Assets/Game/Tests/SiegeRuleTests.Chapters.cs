@@ -310,14 +310,19 @@ namespace GlimmerGrove.Tests
         {
             // Where this chapter stands, measured. Set below what was read, because a sweep of
             // ninety is steady and not exact.
-            // Measured 2026-09-13, with every ward answering a boss (`SiegeTuning.EveryWardReaches`)
-            // and the four bosses fifteen per cent tougher for it: 66 on the starter, 81 one rung
-            // up, against Thornwatch's 80 on the starter. It read 65 and 84 before that pair. The
-            // worst rung on the starter is still the finale at 1 of 9, and the shelf is worth
-            // fifteen runs across the chapter - which is the whole story this chapter is meant to
-            // tell.
+            // Measured 2026-09-13, with the four boss cadences halved (`SiegeTuning.BossCastEvery`):
+            // 63 on the starter, 79 one rung up, against Thornwatch's 78 on the starter. It read
+            // 66 and 81 at the old cadence. The worst rung on the starter is still the finale at
+            // 1 of 9, and the shelf is worth sixteen runs across the chapter - which is the whole
+            // story this chapter is meant to tell.
+            //
+            // **The warbringer is why the finale still reads 1 of 9 rather than 0.** Halving its
+            // cadence and leaving its roar at 2 walled `s03_broodheart` at every rhythm, because a
+            // roar lands on all four wards and its cadence is therefore multiplied by four; it
+            // roars twice as often for half as much instead (`SiegeTuning.WarbringerCast`). This
+            // gate is what caught that, and it caught it as a wall rather than as a floor.
             const int BareFloor = 60;       // hard, and nobody is walled out
-            const int KittedFloor = 78;     // comfortably clearable once the shelf is used
+            const int KittedFloor = 76;     // comfortably clearable once the shelf is used
             const int Answers = 12;         // runs the first rung of the shelf is worth, at least
 
             var bare = Play(Broodmarch, Bare());

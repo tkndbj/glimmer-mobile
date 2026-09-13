@@ -199,7 +199,7 @@ BOMBER_HEALTH = 200
 BOSSES = {
     "blightcaller": {"health": 1250, "cast": 0, "spell": "douse"},
     "warlord": {"health": 2050, "cast": 3, "spell": "smite"},
-    "warbringer": {"health": 2750, "cast": 2, "spell": "rally"},
+    "warbringer": {"health": 2750, "cast": 1, "spell": "rally"},
     "overlord": {"health": 3650, "cast": 5, "spell": "sunder"},
 }
 

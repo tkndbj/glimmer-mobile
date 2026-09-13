@@ -1647,16 +1647,16 @@ namespace GlimmerGrove.Tests
             // random, so a failure is reproducible and a re-tune is read off the same ninety runs.
             float[] rhythms = { 2.20f, 2.25f, 2.30f, 2.35f, 2.40f, 2.45f, 2.50f, 2.55f, 2.60f };
 
-            // Measured 2026-09-13 at 80 of 90, with every ward answering a boss
-            // (`SiegeTuning.EveryWardReaches`) and the four bosses fifteen per cent tougher for
-            // it. It read 81 before that pair and 81 again with the rule alone, so what the health
-            // cost is one run in ninety — which is the sweep's own noise, and the reason the two
-            // were measured together rather than either being trusted on its own.
+            // Measured 2026-09-13 at 78 of 90, with the four boss cadences halved
+            // (`SiegeTuning.BossCastEvery`) because the bosses played as too easy and too slow.
+            // It read 80 before that, and 81 before the bosses grew fifteen per cent — so a
+            // doubled cadence costs this chapter two runs in ninety, both of them on the finale,
+            // which went from 5 of 9 to 3 of 9. That is the change being felt where it should be.
             //
             // Set a few under what was read: the sweep is deterministic, so this is a ratchet
             // rather than a tolerance, and a floor one run below the reading would fail every
             // honest re-tune.
-            const int Floor = 78;
+            const int Floor = 76;
 
             var table = new System.Text.StringBuilder();
             var faults = new System.Collections.Generic.List<string>();

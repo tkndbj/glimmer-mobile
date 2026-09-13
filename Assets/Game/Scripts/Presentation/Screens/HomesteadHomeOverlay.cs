@@ -80,11 +80,18 @@ namespace GlimmerGrove
             // picked up and turned now that its seat is the player's rather than the floor's —
             // and a gesture nobody is told about is a feature nobody has. This panel is what a
             // tap on the hall raises, so it is exactly where somebody who has just tried to move
-            // their house by tapping it is looking. Quiet type: it is an aside, not the news this
+            // their house by tapping it is looking. Small type: it is an aside, not the news this
             // panel is for, and the ladder above it is what a player came here to read.
+            //
+            // Green rather than dimmed cream, which is the owner's call. It is the one line on
+            // the panel that tells the player something they can *do*, and a thing to do is good
+            // news; `Pal.Mint` is the green for that on a dark plate, where `Pal.Moss` is the one
+            // for cream paper. It is said quietly by being 22pt under 31pt type rather than by
+            // being faded — an alpha this far down on a navy plate takes a colour toward the
+            // plate along its own hue, which is how the green would have stopped reading as one.
             UIKit.Shrinkable(
                 UIKit.Titled("Hint", Panel, Loc.Get("ui.grove.home_hold"), 22,
-                             Pal.A(Pal.Cream, .60f), TextAnchor.MiddleCenter,
+                             Pal.A(Pal.Mint, .92f), TextAnchor.MiddleCenter,
                              new Vector2(680f, 44f), new Vector2(.5f, .5f),
                              new Vector2(0f, -262f), 0f, 0f), 17);
 

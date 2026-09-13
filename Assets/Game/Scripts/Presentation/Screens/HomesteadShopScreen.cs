@@ -931,15 +931,23 @@ namespace GlimmerGrove
                         Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Sun, .95f) : Pal.A(Pal.Sun, .58f), 1);
             }
 
-            // Stock keeps its price on the cell, because a stocked piece is never finished
-            // being sold — "Yours" over something the player wants three more of is the cell
-            // refusing to answer the question they opened the shop with. The count leads,
-            // because how many they already have is what decides whether to buy again.
+            // **A stocked piece the player holds is priced exactly like one they do not**, which
+            // is the owner's call and the one the ledger was already making: `OfferFor` never
+            // answers `AlreadyHeld` for stock, because a player with three fences may want three
+            // more. The cell used to lead with the count — "3 yours · 1,500" — and the count was
+            // the half nobody was asking the shop about; what they came for is the price, and a
+            // shelf where owned cells are quoted differently reads as a shelf where owned cells
+            // are not for sale. Same colour as an ordinary price, deliberately: there is nothing
+            // different about this cell.
+            //
+            // The stock ceiling is `GroveStock.MaxCopies` at 9,999, so a price quoted here is
+            // never one the panel behind it will refuse.
             if (held && piece.IsStocked)
-                return (Loc.Format("ui.grove.owned_price", HomesteadLedger.Copies(piece),
-                                   Compact.Number(piece.Cost)),
-                        Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Mint, .95f) : Pal.A(Pal.Mint, .62f), 1);
+                return (Compact.Number(piece.Cost),
+                        Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Sun, .95f) : Pal.A(Pal.Sun, .58f), 1);
 
+            // Everything that is not stock genuinely is bought once — a resident, a home rung,
+            // anything earned — so "Yours" is the whole answer there (invariant 15).
             if (held) return (Loc.Get("ui.grove.yours"), Pal.A(Pal.Mint, .95f), 0);
 
             // The keeper gate leads whenever it is the refusal that binds, priced or not.
@@ -1008,11 +1016,17 @@ namespace GlimmerGrove
             // on the ladder", and that panel is the only thing that answers it.
             if (piece.IsDwelling) { Flow.Modal<HomesteadHomeOverlay>(); return; }
 
-            if (HomesteadLedger.IsHeld(piece))
-            {
-                Scenery.Toast(Content, Loc.Format("ui.grove.already", Loc.Get(piece.NameKey)), Pal.Mint);
-                return;
-            }
+            // **Holding one is not a reason to refuse the tap, and this guard was why stock
+            // could not be re-bought at all.** It toasted "{piece} is yours, tap a spot to place
+            // it" and returned, so the shop's own half of the catalog — which `HomesteadLedger`
+            // deliberately never marks `AlreadyHeld` — had no route to the panel that sells it.
+            // The screen was refusing what the rules allowed, which is the shape of fault that
+            // reads as a broken button rather than as a decision.
+            //
+            // Nothing is needed in its place: every path below lands on a panel that states the
+            // held case properly. A resident answers `CompanionPurchaseState.AlreadyHeld`, and
+            // anything else non-stocked reaches `HomesteadBuyOverlay`, whose `AlreadyHeld` branch
+            // says "Yours" with the buy button dead.
 
             // A resident is a companion, so it is offered by the companion's own panel — one
             // ceremony, one set of numbers, and a reveal the player has seen before. Wearing is

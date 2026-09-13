@@ -155,12 +155,16 @@ namespace GlimmerGrove
             // the line, so the drawing has to say those are one thing.
             for (int i = 0; i < beat.Rises.Count; i++) Forge(beat.Rises[i]);
 
-            // **`.68f` rather than `pop`'s `.42f`, and that is a measurement not a taste.**
-            // `gem` is a very peaky transient, so the loudness match is caught by the -1 dBFS
-            // ceiling about 4 dB under the rest of the set (`make_sfx.py --report` names it) -
-            // the volume here is what buys that back, so a match lands where the old wooden pop
-            // landed. The ramp with depth is unchanged in spirit: a deeper beat is louder.
-            Audio.SfxVaried("gem", .68f + Mathf.Min(.24f, beat.Depth * .07f));
+            // **`.45f`, and the number moved because the clip did.** This used to carry `.68f`,
+            // which was not a taste but a correction: the RPG-pack impact behind `gem` was so
+            // peaky that the -1 dBFS ceiling caught its loudness match about 4 dB under the rest
+            // of the set, and .68 was .42 plus that 4 dB. The owner replaced it with a GameBurp
+            // burst, which `--report` now shows at the full matched loudness and not ceiling-held
+            // - so the correction had to come off with the clip it was correcting for, or a match
+            // would have landed 4 dB over everything else in the game. **A call-site volume that
+            // is compensating for a sample is only true for that sample.** The ramp with depth is
+            // unchanged: a deeper beat is louder.
+            Audio.SfxVaried("gem", .45f + Mathf.Min(.24f, beat.Depth * .07f));
 
             if (beat.Depth > 1) Chain(beat.Depth);
 
@@ -204,9 +208,13 @@ namespace GlimmerGrove
             // the one moment the ten-voice pool is already carrying the match, the motes and a
             // cascade banner - and `Audio.PlayOne` stops a voice it reuses, so what that buys is
             // not a fuller sound but the match being cut off mid-tail. One sound for the fall says
-            // the same thing: the board filled back in. It is `gem`'s own clip a minor third below
-            // and trimmed under it, so the pair reads as burst-and-answer rather than as two events.
-            if (beat.Drops.Count > 0) Audio.SfxVaried("settle", .52f);
+            // the same thing: the board filled back in.
+            //
+            // It is no longer `gem`'s own clip a third below - the owner named a burst of its own
+            // for the fall - so what keeps it reading as the *answer* to the match rather than as
+            // a second event is this volume and its pitch in the table, not a shared sample. About
+            // 2 dB under the match, which is where the old pairing sat once its trim is counted.
+            if (beat.Drops.Count > 0) Audio.SfxVaried("settle", .36f);
 
             yield return new WaitForSecondsRealtime(SiegeTuning.BeatFor * .5f);
         }
@@ -422,7 +430,7 @@ namespace GlimmerGrove
             // never given up is the sound** — the news still arrives.
             if (_forecastGroup != null && _forecastGroup.alpha > .05f)
             {
-                Audio.Sfx("chime", .35f, Mathf.Min(1.6f, .9f + depth * .12f));
+                Audio.Sfx("chain", .35f, Mathf.Min(1.6f, .9f + depth * .12f));
                 return;
             }
 
@@ -491,7 +499,7 @@ namespace GlimmerGrove
                 if (_chain == banner) { _chain = null; _chainAura = null; }
             });
 
-            Audio.Sfx("chime", .35f, Mathf.Min(1.6f, .9f + depth * .12f));
+            Audio.Sfx("chain", .35f, Mathf.Min(1.6f, .9f + depth * .12f));
         }
 
         /// <summary>
