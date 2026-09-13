@@ -199,6 +199,44 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
+        /// What a bolt from this ward is worth against <paramref name="at"/>, in tenths. Nought
+        /// means it will not fire at it at all.
+        ///
+        /// <para>
+        /// <b>The raider rather than its colour, and this is the door every played bolt goes
+        /// through.</b> One rule on the hill is not a fact about a colour — a boss is answered by
+        /// the whole line whatever it wears (<see cref="SiegeTuning.EveryWardReaches"/>) — and a
+        /// caller that asked the colour overload would put that rule back in the one place it must
+        /// not be: spread across the two sites that aim and the one that fires.
+        /// </para>
+        /// <para>
+        /// <b>The better of the two readings, never their sum.</b> A prism whose partner is the
+        /// boss's colour reaches it at its own share rather than at a boss's baseline, and a prism
+        /// whose share is thin still lands the un-doubled bolt every other turret does — so no
+        /// turret is ever worse against a boss for having been bought (invariant 42).
+        /// </para>
+        /// </summary>
+        public int ReachTenths(SiegeRaider at)
+        {
+            if (at == null) return 0;
+
+            int share = ReachTenths(at.Colour);
+            if (!SiegeTuning.EveryWardReaches(at.Kind)) return share;
+
+            return share > SiegeTuning.OffColourTenths ? share : SiegeTuning.OffColourTenths;
+        }
+
+        /// <summary>
+        /// Whether a bolt from this ward lands on <paramref name="at"/> at its full doubled
+        /// weight — what the view draws in gold and what <c>SiegeTuning.PerfectMatch</c> counts.
+        ///
+        /// <b>Its own colour and nothing else</b>, which is what keeps the double the thing a
+        /// player is <em>told</em> about by the board: a duel answered with the wrong colour still
+        /// kills the boss, in white numbers, at half the rate.
+        /// </summary>
+        public bool Doubles(SiegeRaider at) => ReachTenths(at) >= 10;
+
+        /// <summary>
         /// Whether this ward can hurt <paramref name="colour"/> at all.
         ///
         /// <b>Kept for the bolt report and the preview bench, and deliberately narrow.</b> It used

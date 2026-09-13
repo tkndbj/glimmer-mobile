@@ -1734,6 +1734,10 @@
       "text": "INVENTORY"
     },
     {
+      "key": "ui.grove.loading_art",
+      "text": "Setting out your groove…"
+    },
+    {
       "key": "ui.grove.take_away",
       "text": "TAKE AWAY"
     },
@@ -1967,7 +1971,7 @@
     },
     {
       "key": "ui.home.at_rank",
-      "text": "opens at rank {0}"
+      "text": "unlocks at rank {0}"
     },
     {
       "key": "ui.home.bonuses",
@@ -3194,6 +3198,10 @@
       "text": "This groove is no longer on the boards."
     },
     {
+      "key": "ui.visit.loading",
+      "text": "Walking over to their groove…"
+    },
+    {
       "key": "ui.visit.report",
       "text": "Report name"
     },
@@ -3224,6 +3232,10 @@
     {
       "key": "ui.visit.report_sent",
       "text": "Reported"
+    },
+    {
+      "key": "ui.visit.updated",
+      "text": "groove updated {0}"
     },
     {
       "key": "ui.wheel.collect",
@@ -3264,6 +3276,22 @@
     {
       "key": "ui.wheel.won",
       "text": "You won {0} coins!"
+    },
+    {
+      "key": "ui.when.days",
+      "text": "{0}d ago"
+    },
+    {
+      "key": "ui.when.hours",
+      "text": "{0}h ago"
+    },
+    {
+      "key": "ui.when.minutes",
+      "text": "{0}m ago"
+    },
+    {
+      "key": "ui.when.now",
+      "text": "just now"
     },
     {
       "key": "ui.win.best_stamp",
@@ -3635,11 +3663,11 @@
     },
     {
       "key": "ui.tip.siege_fuel.title",
-      "text": "TURRETS ONLY SHOOT THEIR OWN COLOUR"
+      "text": "TURRETS SHOOT THEIR OWN COLOUR"
     },
     {
       "key": "ui.tip.siege_fuel.body",
-      "text": "Match three gems of a colour and that colour's turret opens fire.\n\nIt only ever shoots raiders of its own colour, so match the colour that is coming."
+      "text": "Match three gems of a colour and that colour's turret opens fire.\n\nIt goes for raiders of its own colour, so match the colour that is coming."
     },
     {
       "key": "mode.siege.go",
@@ -3691,7 +3719,7 @@
     },
     {
       "key": "ui.utility.no_gems",
-      "text": "Not enough gems"
+      "text": "Not enough gems for more."
     },
     {
       "key": "ui.utility.buy",
@@ -4111,11 +4139,11 @@
     },
     {
       "key": "ui.tip.siege_bomber.title",
-      "text": "KILL IT, THEN TAP WHAT IT DROPS"
+      "text": "TAP THE BOMB"
     },
     {
       "key": "ui.tip.siege_bomber.body",
-      "text": "A bomber leaves a live bomb on the hill where it dies.\n\nTap the bomb and it goes off at once, taking everything around it - the same blast as a firepot."
+      "text": "A bomber left this when it died.\n\nTap it and everything near it blows up."
     },
     {
       "key": "chapter.s03_broodmarch.name",
@@ -4406,22 +4434,6 @@
       "text": "Gold Banner"
     },
     {
-      "key": "ui.piece.fence_wood",
-      "text": "Timber Fence"
-    },
-    {
-      "key": "ui.piece.fence_stone",
-      "text": "Stone Fence"
-    },
-    {
-      "key": "ui.piece.fence_wood_gate",
-      "text": "Timber Gate"
-    },
-    {
-      "key": "ui.piece.fence_stone_gate",
-      "text": "Stone Gate"
-    },
-    {
       "key": "ui.piece.wall",
       "text": "Curtain Wall"
     },
@@ -4610,36 +4622,76 @@
       "text": "NEXT WAVE"
     },
     {
-      "key": "ui.tip.siege_bank.title",
-      "text": "SAVE FUEL BETWEEN WAVES"
-    },
-    {
-      "key": "ui.tip.siege_bank.body",
-      "text": "A turret with nothing of its colour on the hill keeps its fuel instead of firing it.\n\nThe gems above show what the next wave is bringing. Fill those turrets before it arrives."
-    },
-    {
       "key": "ui.tip.siege_brim.title",
       "text": "TAP A FULL TURRET"
     },
     {
       "key": "ui.tip.siege_brim.body",
-      "text": "A full fuel bar can be tapped to throw the whole lot at once.\n\nIt hits any colour, so it is how you answer a colour you could not feed."
+      "text": "This turret is full.\n\nTap the bolt on it to throw the whole lot at once. It hits any colour."
     },
     {
       "key": "ui.tip.siege_salvage.title",
-      "text": "TAP THE COGS THEY DROP"
+      "text": "TAP THE COG"
     },
     {
       "key": "ui.tip.siege_salvage.body",
-      "text": "Raiders you kill leave cogs on the hill. Tap one and the turret of that colour goes up a rank.\n\nThey do not lie there long."
+      "text": "A raider dropped this.\n\nTap it and the turret of that colour gets stronger. Be quick!"
     },
     {
       "key": "ui.loadout.seat_at",
-      "text": "LOCKED - {0} LEVELS"
+      "text": "LOCKED"
     },
     {
       "key": "ui.loadout.seat_shut",
       "text": "Clear {0} more Thornwatch level(s) to arrange this turret."
+    },
+    {
+      "key": "ui.grove.home_locked",
+      "text": "Next: {0}  ·  keeper level {1}"
+    },
+    {
+      "key": "ui.tip.map_kit.title",
+      "text": "YOUR LOADOUT"
+    },
+    {
+      "key": "ui.tip.map_kit.body",
+      "text": "This is what you take into a level.\n\nTap it to pick your turrets and kit."
+    },
+    {
+      "key": "ui.tip.map_track.title",
+      "text": "PLAY FOREVER"
+    },
+    {
+      "key": "ui.tip.map_track.body",
+      "text": "Tap here to play {0}.\n\nThe waves never stop."
+    },
+    {
+      "key": "ui.tip.map_gate.title",
+      "text": "OPEN THE NEXT CHAPTER"
+    },
+    {
+      "key": "ui.tip.map_gate.body",
+      "text": "Collect {0} stars here to open the next chapter."
+    },
+    {
+      "key": "ui.tip.loadout_seats.title",
+      "text": "PICK YOUR TURRETS"
+    },
+    {
+      "key": "ui.tip.loadout_seats.body",
+      "text": "Tap a colour, then pick its turret.\n\nYou buy each colour on its own."
+    },
+    {
+      "key": "ui.tip.loadout_kit.title",
+      "text": "YOUR KIT"
+    },
+    {
+      "key": "ui.tip.loadout_kit.body",
+      "text": "Tap here to see your kit.\n\nIt helps you when a battle gets hard."
+    },
+    {
+      "key": "ui.run.level",
+      "text": "LEVEL {0}"
     }
   ]
 }

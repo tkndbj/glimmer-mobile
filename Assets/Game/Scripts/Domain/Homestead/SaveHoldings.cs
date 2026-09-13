@@ -49,6 +49,19 @@ namespace GlimmerGrove.Homestead
                 return CompanionLedger.IsHeld(GroveResidents.CompanionOf(piece), _keeperLevel,
                                               _companions.Contains);
 
+            // A home rung above the level this save's own ledger reaches is not honestly held,
+            // which is the resident clause above said about the house — the ladder became
+            // keeper level *and* purchase, so a row claiming the citadel over a level-three
+            // ledger cannot have come about by playing. Dropped rather than cut down, which is
+            // strictly tighter than the bought half's clamp and is what `grove.ts` does with
+            // the same row (invariant 19a).
+            //
+            // **Only here, never in `HomesteadLedger.IsHeld`.** That one answers for the player
+            // in front of the device, where re-checking a gate would confiscate a home somebody
+            // paid for the day the gates are retuned — invariant 15a's `IsHeld` clause, and the
+            // difference between a save you believe and one you do not.
+            if (piece.IsDwelling && piece.RequiresKeeperLevel > _keeperLevel) return false;
+
             return _stock.Any(piece.Id) || HomesteadLedger.IsEarned(piece);
         }
 

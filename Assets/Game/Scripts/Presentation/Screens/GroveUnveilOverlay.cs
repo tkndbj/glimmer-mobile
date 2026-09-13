@@ -1,3 +1,4 @@
+using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Homestead;
 using GlimmerGrove.Localization;
 using UnityEngine;
@@ -45,6 +46,9 @@ namespace GlimmerGrove
         /// type earns a warning about serialisation that will never happen.
         /// </summary>
         public HomesteadPiece Piece { get; set; }
+
+        /// <summary>The art this panel draws, held for exactly as long as it is up.</summary>
+        AssetHold _held;
 
         // ------------------------------------------------------------------ shape
         const float ArtBox = 400f;
@@ -100,13 +104,19 @@ namespace GlimmerGrove
             // this was raised from — see PaintPiece. Neither is guaranteed to be in hand in the
             // frame this is built, and a ceremony that plays around an invisible object is the
             // one failure worse than no ceremony at all (invariant 7b).
-            HomesteadArt.OpenShelfAsync(GroveShelves.Of(Piece), PaintPiece);
-            HomesteadArt.Changed += PaintPiece;
+            // Its own hold on both, rather than hoping whichever screen raised this happens
+            // to be holding one of them. A ceremony playing around an invisible object is the
+            // one failure worse than no ceremony at all (invariant 7b), and the panel can be
+            // raised over the grove, the shop or a chest.
+            var wanted = new System.Collections.Generic.List<AssetRequest>(GroveArtLoader.Piece(Piece));
+            wanted.AddRange(GroveArtLoader.Shelf(GroveShelves.Of(Piece)));
+
+            _held = GroveArtLoader.Open("grove_unveil", wanted, this, PaintPiece);
 
             Play();
         }
 
-        void OnDestroy() => HomesteadArt.Changed -= PaintPiece;
+        void OnDestroy() => _held?.Dispose();
 
         // ------------------------------------------------------------------ stage
         /// <summary>

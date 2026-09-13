@@ -76,7 +76,13 @@
     "ladder had reached, back when reaching a gate granted one; the rule is level AND",
     "purchase now, so everything in a grove was bought and everything is clamped. The field",
     "stays because the clamp is expressed in terms of the split and because a future reward",
-    "that genuinely is handed over belongs in it."
+    "that genuinely is handed over belongs in it.",
+    "",
+    "A home rung is gated the same way a companion is, and for the same reason: the ladder",
+    "became keeper level AND purchase, so a save naming a rung its own star ledger cannot",
+    "reach did not come about by playing. Dropped outright rather than cut down, which is",
+    "strictly tighter than the clamp — and the two directions are both pinned, because a",
+    "gate that never lets go is as wrong as one that never bites."
   ],
   "worthCases": [
     {
@@ -229,6 +235,46 @@
       "serverOnly": false
     },
     {
+      "name": "a home rung claimed below its gate is dropped, not clamped",
+      "keeperLevel": 19,
+      "stock": [
+        {
+          "id": "hall",
+          "copies": 1
+        }
+      ],
+      "pieces": [],
+      "land": [],
+      "companions": [],
+      "affordable": 1000000,
+      "earned": 0,
+      "bought": 0,
+      "score": 0,
+      "stars": 0,
+      "clamped": false,
+      "serverOnly": false
+    },
+    {
+      "name": "and the same rung counts once that level is reached",
+      "keeperLevel": 20,
+      "stock": [
+        {
+          "id": "hall",
+          "copies": 1
+        }
+      ],
+      "pieces": [],
+      "land": [],
+      "companions": [],
+      "affordable": 1000000,
+      "earned": 0,
+      "bought": 9000,
+      "score": 9000,
+      "stars": 2,
+      "clamped": false,
+      "serverOnly": false
+    },
+    {
       "name": "the whole catalog, honestly afforded",
       "keeperLevel": 40,
       "pieces": [
@@ -261,7 +307,7 @@
       "serverOnly": false
     },
     {
-      "name": "a forged grove is clamped, and its impossible companions dropped first",
+      "name": "a forged grove is clamped, and its impossible rungs and companions dropped first",
       "keeperLevel": 1,
       "pieces": [
         "lodge",
@@ -280,7 +326,7 @@
       ],
       "affordable": 1250,
       "earned": 0,
-      "bought": 26700,
+      "bought": 15200,
       "score": 1250,
       "stars": 1,
       "clamped": true,
@@ -412,7 +458,7 @@
     },
     {
       "name": "a home rung is clamped to one however many copies a save claims",
-      "keeperLevel": 1,
+      "keeperLevel": 20,
       "stock": [
         {
           "id": "hall",

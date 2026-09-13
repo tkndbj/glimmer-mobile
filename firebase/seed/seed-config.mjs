@@ -132,6 +132,7 @@ function buildGroveConfig() {
   const pieces = {};
   const bundles = {};
   const dwellings = {};
+  const dwellingLevels = {};
 
   for (const piece of homestead.pieces ?? []) {
     if (!piece?.id) continue;
@@ -157,7 +158,31 @@ function buildGroveConfig() {
 
     // Every rung, priced or not: the first is free and still has to be findable, because
     // the hall draws the best rung *held* and a free one is held by everybody.
-    if (piece.kind === "dwelling") dwellings[piece.id] = Math.floor(piece.tier ?? 0);
+    if (piece.kind === "dwelling") {
+      dwellings[piece.id] = Math.floor(piece.tier ?? 0);
+
+      // And the keeper level that opens it, written only when there is one — `bundles`'
+      // rule, for its reason: an absent entry means "ungated", which is exactly what a
+      // config seeded before the ladder was gated already meant, so this stays additive in
+      // both directions and neither the server nor the seeder has to go first.
+      //
+      // A gated rung must also be *priced*, or reaching the level would be the only thing
+      // between a player and the home and nothing would ever grant it. `ContentValidation`
+      // and `content.py` both refuse that; this refuses it again, because the seeder sees
+      // the file first and a published table that disagreed with the game would be a home
+      // the server scores and the client cannot sell.
+      const level = Math.floor(piece.requiresKeeperLevel ?? 0);
+      if (level > 0) {
+        if (cost <= 0) {
+          throw new Error(
+            `grove home '${piece.id}' opens at keeper level ${level} and has no price — the ` +
+            "gate is permission to pay rather than a way of paying, so nothing would ever " +
+            "grant it and the ladder would end there"
+          );
+        }
+        dwellingLevels[piece.id] = level;
+      }
+    }
   }
 
   // Every region that is *sold*, at its worth in credits — which is nought for the ones
@@ -223,6 +248,7 @@ function buildGroveConfig() {
     regions,
     companions,
     dwellings,
+    dwellingLevels,
     stars,
   };
 }
@@ -1049,7 +1075,8 @@ console.log(
   `config/grove: v${grove.version} — ${Object.keys(grove.pieces).length} priced piece(s), ` +
   `${Object.keys(grove.regions).length} region(s), ` +
   `${Object.keys(grove.companions).length} companion(s), ` +
-  `${Object.keys(grove.dwellings).length} home rung(s), ` +
+  `${Object.keys(grove.dwellings).length} home rung(s) ` +
+  `(${Object.keys(grove.dwellingLevels).length} gated), ` +
   `${grove.stars.length} star(s) up to ${grove.stars[grove.stars.length - 1].toLocaleString()}, ` +
   `a complete grove worth ${groveTotal.toLocaleString()}`
 );

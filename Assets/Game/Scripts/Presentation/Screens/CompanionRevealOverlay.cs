@@ -1,3 +1,4 @@
+using GlimmerGrove.AssetPipeline;
 using System;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
@@ -79,6 +80,11 @@ namespace GlimmerGrove
 
         Image _sky, _vignette, _fan, _fan2, _glow, _flash, _rim;
         Image _disc, _face;
+
+        /// <summary>This one companion's portrait, held while the panel is up.</summary>
+        AssetHold _art;
+
+        void OnDestroy() => _art?.Dispose();
         RectTransform _discRt, _fanRt, _fan2Rt;
         Text _name, _sub;
         Image[] _stars;
@@ -348,9 +354,9 @@ namespace GlimmerGrove
             // not a blank one. Invariant 7b; CompanionArt.Paint hides the frame until it has
             // something to draw and the callback repaints when it arrives.
             CompanionArt.Paint(_face, Avatar);
-            CompanionArt.OpenAsync(() =>
+            _art = CompanionArt.OpenOne(this, Avatar, () =>
             {
-                if (!this || !_face) return;
+                if (!Living || !_face) return;
 
                 CompanionArt.Paint(_face, Avatar);
 

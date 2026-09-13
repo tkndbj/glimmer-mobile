@@ -71,6 +71,8 @@ namespace GlimmerGrove
                 bool many = ward.Charges > 1;
 
                 post.Held.enabled = many;
+                if (post.Pip != null) post.Pip.enabled = many;
+
                 if (many) post.Held.text = ward.Charges.ToString();
             }
         }
@@ -88,7 +90,7 @@ namespace GlimmerGrove
         /// </summary>
         void Unleashed(int ward)
         {
-            if (!Playable || _board == null) return;
+            if (!Tappable || _board == null) return;
 
             HideCoach();
             Stir();

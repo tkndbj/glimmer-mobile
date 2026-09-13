@@ -1,3 +1,4 @@
+using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Homestead;
 using GlimmerGrove.Localization;
@@ -33,6 +34,9 @@ namespace GlimmerGrove
     /// </summary>
     public sealed class HomesteadHomeOverlay : ModalView
     {
+
+        /// <summary>The art this panel draws, held for exactly as long as it is up.</summary>
+        AssetHold _held;
         const float PanelW = 860f;
         const float PanelH = 980f;
 
@@ -88,7 +92,11 @@ namespace GlimmerGrove
 
             // The catalog is a body and the art is a scope, so both can still be arriving when
             // this is opened from a grove that was itself opened a moment ago.
-            HomesteadArt.OpenAsync(() => { if (this) Paint(); });
+            // Just the home ladder, not the whole grove. This used to open the Grovement's
+            // entire set — every piece the player had placed — to draw one house, because a
+            // named scope was all or nothing and a second asker wanting less would have
+            // replaced the first.
+            _held = GroveArtLoader.Open("grove_homes", GroveArtLoader.Homes(), this, Paint);
 
             HomesteadLedger.Changed += Paint;
             HomesteadCatalog.Changed += Paint;
@@ -100,6 +108,8 @@ namespace GlimmerGrove
             HomesteadLedger.Changed -= Paint;
             HomesteadCatalog.Changed -= Paint;
             PlayerProgression.Changed -= Paint;
+
+            _held?.Dispose();
         }
 
         public override bool OnBack() { Close(); return true; }
@@ -141,6 +151,16 @@ namespace GlimmerGrove
                     _status.text = Loc.Get("ui.grove.home_best");
                     _status.color = Pal.A(Pal.Amber, .95f);
                 }
+                else if (offer.State == HomesteadPurchaseState.LevelLocked)
+                {
+                    // The gate leads whenever it binds, and the shortfall is not mentioned at
+                    // all — quoting a price a player cannot act on yet is the refusal invariant
+                    // 15a puts last. The rung is still named, because what a player is working
+                    // toward is the whole reason this panel exists.
+                    _status.text = Loc.Format("ui.grove.home_locked", Loc.Get(next.NameKey),
+                                              offer.RequiredLevel);
+                    _status.color = Pal.A(Pal.Amber, .95f);
+                }
                 else if (offer.State == HomesteadPurchaseState.TooExpensive)
                 {
                     // The next rung is named even when it cannot be afforded, which the shared
@@ -158,6 +178,7 @@ namespace GlimmerGrove
             }
 
             string wanted = !next.IsValid ? "None"
+                          : offer.State == HomesteadPurchaseState.LevelLocked ? "Gate"
                           : offer.State == HomesteadPurchaseState.TooExpensive ? "Earn"
                           : "Buy";
 
@@ -184,6 +205,18 @@ namespace GlimmerGrove
             {
                 case "None":
                     return;
+
+                // A closed gate names the level rather than offering the coin shelf, which is
+                // `CompanionUnlockOverlay`'s call and for its reason: credits cannot open this,
+                // and sending somebody to buy coins for a home they still could not buy is the
+                // refusal one screen over exists to prevent. It closes rather than doing
+                // nothing, so the control is honest about being a way out and not a purchase.
+                case "Gate":
+                    _action = UIKit.TextButton("Gate", Panel, "btn_blue",
+                                               Loc.Format("ui.companion.locked_button",
+                                                          offer.RequiredLevel), 40,
+                                               size, anchor, at, () => Close());
+                    break;
 
                 case "Earn":
                     _action = UIKit.TextButton("Earn", Panel, "btn_blue",

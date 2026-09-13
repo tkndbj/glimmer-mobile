@@ -106,13 +106,22 @@ def row_for(piece, prior):
     return out
 
 
-def dwelling_row(model, pid, tier, cost, floor):
+def dwelling_row(model, pid, tier, cost, level, floor):
     out = collections.OrderedDict()
     out["id"] = pid
     out["art"] = "Homestead/" + pid
     out["kind"] = "dwelling"
     out["tier"] = tier
     out["cost"] = cost
+
+    # The keeper level that opens the rung. Omitted when it is nought, which is what the
+    # reader assumes for an absent field - so the free first rung and a catalogue written
+    # before the ladder was gated are the same file, and a drop's diff shows only the rungs
+    # that really ask for something. A home is the only kind allowed to carry it
+    # (`HomesteadMapper` refuses it anywhere else), and a gated rung must also be priced or
+    # reaching the level would hand it over - both content gates prove that.
+    if level > 0:
+        out["requiresKeeperLevel"] = level
 
     # Every tier shares the floor's own hall footprint. Invariant 16i, and load-bearing: a
     # grander home that occupied more tiles would evict whatever stood beside the cabin.
@@ -145,8 +154,8 @@ def main():
     # ------------------------------------------------------------------ pieces
     pieces, problems = [], []
 
-    for model, pid, tier, cost, _name, _size in roster.DWELLINGS:
-        pieces.append(dwelling_row(model, pid, tier, cost, floor))
+    for model, pid, tier, cost, _name, _size, level in roster.DWELLINGS:
+        pieces.append(dwelling_row(model, pid, tier, cost, level, floor))
 
     for piece in rows:
         pieces.append(row_for(piece, before.get(piece.id)))

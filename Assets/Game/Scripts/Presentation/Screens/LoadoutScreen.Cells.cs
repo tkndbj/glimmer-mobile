@@ -67,9 +67,13 @@ namespace GlimmerGrove
                 // line never showed it, and the four turrets met on the hill were four objects the
                 // player had never seen. The glow stays and stops being the only thing saying it.
                 slot.Icon.sprite = AssetLibrary.Sprite(AssetManifest.WardArt(model, slot.Colour));
-                slot.Name.text = open
-                               ? Loc.Get(model.NameKey)
-                               : Loc.Format("ui.loadout.seat_at", WardSeats.Needed(slot.Colour));
+                // **One word, because the caption is as wide as a seat and no wider.** It read
+                // "LOCKED - 3 LEVELS" and overflowed its box, which a Unity `Text` does not clip
+                // (37n) - so the count printed over the seats either side of it. How many levels
+                // are owed is said at full length on the panel a tap opens
+                // (`ui.loadout.seat_shut`), which is where a player is asking the question; what
+                // this line owes is *that it is shut*, and that fits.
+                slot.Name.text = open ? Loc.Get(model.NameKey) : Loc.Get("ui.loadout.seat_at");
 
                 // Dimmed rather than hidden, for the reason the padlock is drawn over the seat:
                 // the turret standing there is real and is fighting for them.

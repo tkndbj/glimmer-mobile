@@ -13,7 +13,7 @@ namespace GlimmerGrove.Content
     ///
     /// Bodies are small — a chapter of twenty levels is a few hundred kilobytes of
     /// definitions — so this bounds parsed content by a constant instead of by the
-    /// size of the catalog, exactly as <c>AssetScope.Chapter</c> bounds texture memory.
+    /// size of the catalog, exactly as the chapter's own <c>AssetHold</c> bounds texture memory.
     ///
     /// Not thread safe, and deliberately so: every caller is the main thread.
     /// </summary>

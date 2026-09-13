@@ -96,7 +96,16 @@ namespace GlimmerGrove.Layout
 
         // ------------------------------------------------------------------ the seal
         /// <summary>How wide the badge's sprite is drawn, and the angle it is stuck on at.</summary>
-        public const float SealSize = 164f, SealTilt = 11f;
+        // **Positive is anticlockwise**, because that is what `Quaternion.Euler(0, 0, z)` means
+        // — so a badge that leans to the *right* is a negative number, and it was +11 (leaning
+        // left) until the owner asked for it the other way. Nine rather than twenty: the ask
+        // was a twenty-degree turn clockwise *from where it was*, which is where that lands.
+        //
+        // The tilt is free of every clearance rule on this page, and that is a property of the
+        // sprite rather than luck: `SealReach` measures the badge as the **disc** it is (see
+        // `SealDisc`), and a disc reaches the same distance at every angle. A mark measured as
+        // a rectangle — the ribbon — pays for its tilt in `RibbonReach`.
+        public const float SealSize = 164f, SealTilt = -9f;
 
         /// <summary>
         /// How much of that sprite is the disc itself, corner to corner of the texture being

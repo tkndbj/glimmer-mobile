@@ -103,7 +103,7 @@ namespace GlimmerGrove
         /// </summary>
         RectTransform _modes;
 
-        /// <summary>Whether this visit has already decided about the mode lesson.</summary>
+        /// <summary>Whether this visit has already decided about the map's lessons.</summary>
         bool _taught;
 
         /// <summary>Whether the incoming transition has finished. See <see cref="Teach"/>.</summary>
@@ -138,6 +138,21 @@ namespace GlimmerGrove
         /// </summary>
         public const float NodeSize = 196f;
         const float NodeFaceY = NodeSize * UIKit.NodeFaceLift;
+
+        /// <summary>
+        /// Where the glade disc stands above a node's centre, and how far under it its
+        /// contact shadow falls.
+        ///
+        /// <para>
+        /// Asked of the mode rather than typed, because it is a fact about the perch tile
+        /// (<see cref="ModeLook.PerchLift"/>) and the four tiles disagree by 30 units about
+        /// where their own top face is. Read in one place so the disc, the halo behind it,
+        /// the teaser's seal and the shadow under all of them cannot come apart — four
+        /// hand-written offsets is how the shadow came to stay put while the disc moved.
+        /// </para>
+        /// </summary>
+        float DiscY => ModeLooks.Of(Mode).PerchLift;
+        const float ContactDrop = 46f;
 
         /// <summary>
         /// A perch's rock and the name plate under it, and where each hangs from the node's
@@ -404,14 +419,12 @@ namespace GlimmerGrove
             {
                 ("palm",    0.14f, 0.055f, 190f, 6f),
                 ("boulder", 0.86f, 0.135f, 150f, 0f),
-                ("boat",    0.80f, 0.215f, 210f, 12f),
                 ("stump",   0.16f, 0.315f, 150f, 0f),
                 ("palm",    0.88f, 0.455f, 200f, 7f),
                 ("post",    0.46f, 0.505f, 120f, 0f),
                 ("boulder", 0.18f, 0.545f, 140f, 0f),
                 ("stump",   0.82f, 0.665f, 160f, 0f),
                 ("palm",    0.13f, 0.745f, 180f, 6f),
-                ("boat",    0.84f, 0.975f, 190f, 11f),
                 ("boulder", 0.30f, 0.945f, 130f, 0f),
             };
             foreach (var (art, x, y, size, bob) in props)
@@ -478,11 +491,12 @@ namespace GlimmerGrove
 
             string skin = !unlocked ? "node_lock" : (stars > 0 ? "node_s" + stars : "node_open");
             if (unlocked && stars == 0)
-                UIKit.Halo(node, level.Presentation.ResolveAccent(_body.Definition), 360f, .34f);
+                UIKit.Halo(node, level.Presentation.ResolveAccent(_body.Definition), 360f, .34f,
+                           new Vector2(0f, DiscY));
 
             var id = level.Id;
             var btn = UIKit.Button("Btn", node, Art.S("Map/" + skin), new Vector2(NodeSize, NodeSize),
-                                   new Vector2(.5f, .5f), new Vector2(0f, 2f), () => Open(id, unlocked));
+                                   new Vector2(.5f, .5f), new Vector2(0f, DiscY), () => Open(id, unlocked));
             btn.GetComponent<Image>().preserveAspect = true;
 
             // A glade has its own voice: Open() plays `unlock` when it lets you in, and
@@ -535,14 +549,14 @@ namespace GlimmerGrove
 
             var disc = UIKit.Img("Seal", node, Art.S("Map/" + (reachable ? "node_open" : "node_lock")),
                                  reachable ? Color.white : new Color(.88f, .90f, .94f, .95f),
-                                 new Vector2(NodeSize, NodeSize), new Vector2(.5f, .5f), new Vector2(0f, 2f));
+                                 new Vector2(NodeSize, NodeSize), new Vector2(.5f, .5f), new Vector2(0f, DiscY));
             disc.preserveAspect = true;
 
             if (reachable)
             {
                 var target = next.Id;
                 var btn = UIKit.Button("Btn", node, Art.S("Map/node_open"), new Vector2(NodeSize, NodeSize),
-                                       new Vector2(.5f, .5f), new Vector2(0f, 2f), () => GoToChapter(target));
+                                       new Vector2(.5f, .5f), new Vector2(0f, DiscY), () => GoToChapter(target));
                 btn.GetComponent<Image>().preserveAspect = true;
                 UIKit.Titled("Arrow", btn.transform, "»", 64, new Color(.30f, .21f, .13f),
                              TextAnchor.MiddleCenter, new Vector2(190f, 110f), new Vector2(.5f, .5f),
@@ -554,7 +568,7 @@ namespace GlimmerGrove
                 // hangs off the perch rather than the seal, so it carries the seal's own
                 // offset as well as the face lift
                 UIKit.Titled("Q", node, "?", 64, new Color(.36f, .38f, .44f), TextAnchor.MiddleCenter,
-                             new Vector2(190f, 110f), new Vector2(.5f, .5f), new Vector2(0f, 2f + NodeFaceY),
+                             new Vector2(190f, 110f), new Vector2(.5f, .5f), new Vector2(0f, DiscY + NodeFaceY),
                              0f, 2f);
                 // The gate, as a number rather than as an instruction. "Clear this chapter to
                 // go on" was true when the boundary was a chain and is now both wrong and
@@ -611,9 +625,12 @@ namespace GlimmerGrove
                                 new Vector2(0f, PerchRockY));
             img.preserveAspect = true;
 
-            // contact shadow, so the glade disc looks planted rather than floating
+            // Contact shadow, so the glade disc looks planted rather than floating — which
+            // means it hangs off the disc rather than off the node: a shadow at a fixed y is a
+            // smudge left behind on the tile the moment a perch stands its disc anywhere else.
             UIKit.Img("Contact", node, Art.Glow(96, 2.6f), new Color(.02f, .08f, .12f, .45f),
-                      new Vector2(232f, 74f), new Vector2(.5f, .5f), new Vector2(0f, -44f));
+                      new Vector2(232f, 74f), new Vector2(.5f, .5f),
+                      new Vector2(0f, DiscY - ContactDrop));
 
             Tween.Bob(node, 8f, 3.1f + (seed % 5) * .27f, seed * 1.1f);
             return node;
@@ -1117,10 +1134,16 @@ namespace GlimmerGrove
 
         static readonly Color BannerInk = new Color(.36f, .24f, .16f);
 
-        /// <summary>The plaque, kept so the chevrons can be carved into it.</summary>
+        /// <summary>
+        /// The plaque, kept so the chevrons can be carved into it - and so the chapter-gate
+        /// lesson can ring it. See <see cref="Lessons"/>.
+        /// </summary>
         Image _banner;
 
-        /// <summary>The track switcher, or null when this mode has one ladder.</summary>
+        /// <summary>
+        /// The track switcher, or null when this mode has one ladder. Kept for the same reason
+        /// <see cref="_modes"/> is: it is what a first-run lesson rings.
+        /// </summary>
         RectTransform _tracks;
 
         /// <summary>The name, kept so the chevrons can be set level with its lettering.</summary>
@@ -1289,30 +1312,43 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Points a first-timer at the mode switcher, once in their life.
+        /// Points a first-timer at the three pieces of this screen's chrome that say nothing
+        /// about themselves, once in their life.
         ///
         /// <para>
-        /// <b>Why this one control gets a lesson at all.</b> Every other way of playing in the
-        /// game is reached through the pill under this screen's header and through nothing else,
-        /// and that pill is a closed menu naming only the mode you are already in. A player who
-        /// never presses it never learns that the rest of the game is there. Everything else the
-        /// map does is either self-evident or costs nothing to miss. Moving it out of the bottom
-        /// corner and onto the header makes it far harder to miss and does not retire the
-        /// lesson: a closed drop-down still says nothing about what is inside it.
+        /// <b>What earns a lesson here, and what does not.</b> A map is a chain of glades and
+        /// most of it is self-evident: tap a node, drag to look around, read the stars on a disc.
+        /// What is not self-evident is the furniture round the edge, and every piece of it hides
+        /// something a player would otherwise never find. The <b>loadout bar</b> is a row of
+        /// pictures that looks like a status line and is the only way into the turret shelf
+        /// (<c>Mechanic.MapLoadout</c>). The <b>plaque</b> carries the chapter's name and not the
+        /// one rule this screen cannot draw - that stars, not clears, open the next chapter
+        /// (<c>Mechanic.MapChapterGate</c>, invariant 21). The <b>track pill</b> is a closed
+        /// drop-down naming only the ladder you are already on, and the Infinite lane is reached
+        /// through it and nothing else (<c>Mechanic.MapTrack</c>); the <b>mode pill</b> above it
+        /// is the same argument about the other half of the game
+        /// (<c>Mechanic.ModeSwitch</c>).
         /// </para>
         /// <para>
-        /// <b>Nothing is taught over a control that is not there.</b> <see cref="ModeSwitch"/>
-        /// draws no pill while the catalog holds one mode — a rolled-back client, a drop that
-        /// has not downloaded, or simply the day before a second mode ships — and
-        /// <see cref="TipLedger"/> is a once-in-a-lifetime record joined across every device the
-        /// player owns. Spending the lesson on an absent control would mean it can never be
-        /// shown again, on the very install that most needs it later. So an absent pill is not
-        /// a decision at all: nothing is marked, and the next map asks the same question.
+        /// <b>In the order a player meets them</b>, working down from the thing they are about to
+        /// use: what they are taking in, then what this chapter is worth, then where else there
+        /// is to go. They are chained rather than raised together by
+        /// <see cref="ScreenLessons"/>, which is also what keeps the beat between them the same
+        /// one the grove and every board uses.
         /// </para>
         /// <para>
-        /// It is marked seen by <see cref="TipOverlay"/> on the OK button rather than here, for
-        /// that overlay's reason: a player interrupted mid-tip — a call, a crash, the app swapped
-        /// out — is taught next time instead of never.
+        /// <b>Nothing is taught over a control that is not there</b>, and that rule now lives in
+        /// <see cref="ScreenLessons.Offer"/> rather than here. It matters more with four lessons
+        /// than it did with one: today this screen draws a track pill and no mode pill, a drop
+        /// that has not downloaded draws neither, and a mode with no line draws no bar - so every
+        /// one of these can legitimately be absent, and <see cref="TipLedger"/> is a
+        /// once-in-a-lifetime record joined across every device the player owns.
+        /// </para>
+        /// <para>
+        /// <b><see cref="_taught"/> is a latch on this visit and never on the lesson.</b> Only
+        /// <see cref="TipOverlay"/> writes the ledger, and only when the OK button is pressed - so
+        /// setting this having queued nothing costs the player nothing permanent, and a player
+        /// interrupted mid-tip is taught next time instead of never.
         /// </para>
         /// </summary>
         void Teach()
@@ -1320,38 +1356,100 @@ namespace GlimmerGrove
             if (_taught || !this || !_presented) return;
 
             // Never over an empty screen. This is the one screen in the game that can be
-            // presented before it has drawn anything — Flow gives up waiting on View.Ready
-            // after five seconds, and a chapter body that slow still arrives eventually — and
+            // presented before it has drawn anything - Flow gives up waiting on View.Ready
+            // after five seconds, and a chapter body that slow still arrives eventually - and
             // a lesson spent pointing at a blank map is spent for good. So the
             // map has to exist first, and the wait costs nothing because BuildChapter calls
             // this again the moment it does. Exactly the bargain HomesteadScreen makes with
             // its catalog, for exactly the same reason.
             if (_layout == null) return;
 
-            if (_modes == null) return;
-
-            if (TipLedger.HasSeen(Mechanic.ModeSwitch)) { _taught = true; return; }
-
-            // Something else is already speaking. Nothing on this screen raises a modal of its
-            // own, so this is a guard rather than a case — and giving up costs nothing here,
-            // because the map is the screen a player is returned to after every run.
-            if (Flow.HasModal) return;
-
             _taught = true;
 
+            var queue = Lessons();
+            if (queue.Count == 0) return;
+
+            // **Nothing here asks whether something else is speaking, and it used to twice.**
+            // A player is returned to this screen after every run, so the launch chest, the
+            // streak and an event card all greet them here — and giving up in front of one meant
+            // the lesson was skipped for that visit each time. `ScreenLessons.Show` waits for a
+            // clear screen instead, which is the rule `RunLessons.ShowLesson` already followed:
+            // the panel a player asked for goes first and the lesson follows it.
             Tween.After(TeachDelay, () =>
             {
-                if (!this || _modes == null || Flow.HasModal) return;
-
-                Flow.Modal<TipOverlay>(v =>
-                {
-                    v.Mechanic = Mechanic.ModeSwitch;
-
-                    // The pill itself, so the ring is cut around the real control on the real
-                    // screen rather than around a description of where it is.
-                    v.Target = _modes;
-                });
+                if (!this) return;
+                ScreenLessons.Show(this, queue);
             }, this);
+        }
+
+        /// <summary>
+        /// What this map has to teach that the player has never met, in reading order.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Every target is the <em>real</em> control, so the ring is cut around the thing on the
+        /// screen rather than around a description of where it is - which is <c>TipOverlay</c>'s
+        /// own bargain and the reason <c>ModeSwitch.Build</c> hands its pill back.
+        /// </para>
+        /// <para>
+        /// <b>The gate's number is derived and the other lane's name is looked up</b>, for
+        /// <c>TipOverlay.BodyArgs</c>' reason: both are content, and a figure or a proper noun
+        /// typed into a translated string is wrong the first time either is retuned with nothing
+        /// anywhere able to say so.
+        /// </para>
+        /// </remarks>
+        List<ScreenLesson> Lessons()
+        {
+            var queue = new List<ScreenLesson>(4);
+
+            // What you are taking in. First because it is the one piece of this chrome a player
+            // is about to act on: the next thing they do is open a level with it.
+            //
+            // **`Spotlight` rather than the bar's own transform**, which is the bar's rect and
+            // stops under the orange tab standing proud of it - so the ring was drawn round
+            // everything except the one part of that control that says it is a control. See
+            // `LoadoutBar.Overhang`.
+            ScreenLessons.Offer(queue, Mechanic.MapLoadout, _kit ? _kit.Spotlight : null);
+
+            // What this chapter is worth. Only where there is a gate to describe: the last
+            // chapter of a mode and a lane holding one chapter both answer `ChapterGate.Open`,
+            // and a lesson about a rule nothing is applying is spent for good.
+            if (_entry != null)
+            {
+                var gate = LevelUnlock.GateAfter(_index, _entry.Id);
+
+                if (gate.Exists)
+                    ScreenLessons.Offer(queue, Mechanic.MapChapterGate,
+                                        (RectTransform)_banner.transform, gate.Required);
+            }
+
+            // Where else there is to go, narrowest first: another ladder of this mode, then
+            // another mode. Both pills fold away when their own question has one answer, so on
+            // most days exactly one of these is queued.
+            ScreenLessons.Offer(queue, Mechanic.MapTrack, _tracks, Loc.Get(OtherLane().NameKey));
+            ScreenLessons.Offer(queue, Mechanic.ModeSwitch, _modes);
+
+            return queue;
+        }
+
+        /// <summary>
+        /// The ladder this mode has that the player is not on, for the track lesson to name.
+        ///
+        /// <b>The first one that is not this one</b>, rather than <c>GameTrack.Infinite</c> by
+        /// name: what the pill offers is whatever the catalog carries, and the lesson has to say
+        /// the same word the menu under it does. Falls back to this lane, which cannot be reached
+        /// - the lesson is only ever queued while the pill is drawn, and the pill is only drawn
+        /// for a mode holding two.
+        /// </summary>
+        GameTrack OtherLane()
+        {
+            var tracks = _index?.TracksIn(Mode);
+            if (tracks == null) return Lane;
+
+            for (int i = 0; i < tracks.Count; i++)
+                if (!tracks[i].Equals(Lane)) return tracks[i];
+
+            return Lane;
         }
 
         // -------------------------------------------------------------- focusing

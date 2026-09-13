@@ -1,4 +1,5 @@
 #if GLIMMER_ADS
+using GlimmerGrove.Async;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -253,26 +254,20 @@ namespace GlimmerGrove.Ads
         /// neither of which this client can see, so it has to keep asking — just not often.
         /// </para>
         /// </summary>
-        async void RetryLater(string placementId, int attempt)
+        void RetryLater(string placementId, int attempt)
+            => Fire.AndForget(() => RetryAsync(placementId, attempt), "LevelPlay.RetryLater");
+
+        async Task RetryAsync(string placementId, int attempt)
         {
             int seconds = attempt >= 6 ? MaxRetrySeconds : 1 << attempt;
             if (seconds > MaxRetrySeconds) seconds = MaxRetrySeconds;
 
-            try
-            {
-                await Task.Delay(TimeSpan.FromSeconds(seconds));
+            await Task.Delay(TimeSpan.FromSeconds(seconds));
 
-                // A load may have succeeded, or the unit been replaced, while we waited.
-                if (_failures.TryGetValue(placementId, out int held) && held == 0) return;
+            // A load may have succeeded, or the unit been replaced, while we waited.
+            if (_failures.TryGetValue(placementId, out int held) && held == 0) return;
 
-                Reload(placementId);
-            }
-            catch (Exception e)
-            {
-                // async void swallows exceptions, and an ad unit that silently stops
-                // retrying is a feature that silently stops existing.
-                Debug.LogException(e);
-            }
+            Reload(placementId);
         }
 
         const int MaxRetrySeconds = 120;

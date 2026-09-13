@@ -45,7 +45,7 @@ namespace GlimmerGrove.AssetPipeline
             // appeared again — invariant 7b's white rectangle, with nothing in the log.
             if (_handles.TryGetValue(address, out var existing))
             {
-                if (existing.IsValid()) return existing.Result as T;
+                if (existing.IsValid()) return Finished(existing).Result as T;
                 _handles.Remove(address);
             }
 
@@ -61,7 +61,7 @@ namespace GlimmerGrove.AssetPipeline
         public T[] LoadAll<T>(string address) where T : Object
         {
             if (_handles.TryGetValue(address, out var existing) && existing.IsValid())
-                return Sorted(existing.Result as IList<T>);
+                return Sorted(Finished(existing).Result as IList<T>);
 
             // Folder-shaped addresses map to Addressables labels: mark a frame folder
             // with a label matching its old Resources path.
@@ -73,12 +73,81 @@ namespace GlimmerGrove.AssetPipeline
         }
 
         /// <summary>
+        /// <see cref="LoadAsync{T}"/> for a whole folder, and it survives a release the same way.
+        ///
+        /// <para>
+        /// A set is warmed on behalf of a scope, and a scope can close while its art is still
+        /// arriving — a player who opens a visited grove and taps straight back out. Every
+        /// member of a released <c>AsyncOperationHandle</c> throws, <c>Status</c> included, so
+        /// the validity check comes first here exactly as it does there, and for the same
+        /// reason: a release and a cancellation are different events and only one of them trips
+        /// the token.
+        /// </para>
+        /// </summary>
+        public async Task<T[]> LoadAllAsync<T>(string address, CancellationToken cancellation)
+            where T : Object
+        {
+            if (_handles.TryGetValue(address, out var existing))
+            {
+                if (!existing.IsValid()) _handles.Remove(address);
+                else if (existing.IsDone) return Sorted(existing.Result as IList<T>);
+                else
+                {
+                    // Already in flight. Awaiting it rather than starting a second load, for
+                    // LoadAsync's reason: `Result` on an unfinished handle is null, so a second
+                    // asker would be handed an empty set and cache it.
+                    await existing.Task;
+                    return existing.IsValid() && existing.Status == AsyncOperationStatus.Succeeded
+                        ? Sorted(existing.Result as IList<T>)
+                        : null;
+                }
+            }
+
+            var handle = Addressables.LoadAssetsAsync<T>(address, null);
+            _handles[address] = handle;
+
+            var list = await handle.Task;
+
+            if (!handle.IsValid()) return null;
+            if (cancellation.IsCancellationRequested) return null;
+
+            if (handle.Status != AsyncOperationStatus.Succeeded)
+            {
+                Debug.LogWarning($"[Assets] addressables could not load the set {address}");
+                return null;
+            }
+
+            return Sorted(list);
+        }
+
+        /// <summary>
+        /// Blocks a handle that is still in flight, so a synchronous reader never sees a half
+        /// answer.
+        ///
+        /// <para>
+        /// <b>This is the poisoned-cache bug, at its source.</b> A valid handle is not a
+        /// finished one — <c>Result</c> on an unfinished operation is null — and both
+        /// synchronous paths above used to return it straight out. That only becomes reachable
+        /// once something warms addresses asynchronously, which is now every scope: a draw-time
+        /// <c>AssetLibrary.Get</c> or <c>Frames</c> landing on an address the scope's preload
+        /// had started but not finished was handed nothing, and <c>AssetLibrary</c> caches
+        /// misses — so the address stayed empty for the life of the process and the art was
+        /// simply never drawn again. Invariant 7b's white rectangle, with nothing in the log.
+        /// </para>
+        /// </summary>
+        static AsyncOperationHandle Finished(AsyncOperationHandle handle)
+        {
+            if (!handle.IsDone) handle.WaitForCompletion();
+            return handle;
+        }
+
+        /// <summary>
         /// Loads one address, and survives the scope being released underneath it.
         ///
         /// <para>
         /// <b>A handle can die while this method is awaiting it, and that is ordinary rather
         /// than exceptional.</b> A scope's load is started when a screen opens and released
-        /// when it closes (<c>AssetLibrary.ReleaseScope</c>), so opening a visited grove and
+        /// when it closes (<c>AssetHold.Dispose</c>), so opening a visited grove and
         /// going straight back — a tap and a tap — releases handles that are still in flight.
         /// Every member of a released <c>AsyncOperationHandle</c> throws, including
         /// <c>Status</c>, so reading it to decide whether the load worked threw

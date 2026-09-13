@@ -557,20 +557,20 @@ namespace GlimmerGrove
         /// still standing, and what to say if nothing was paid.
         /// </para>
         /// </summary>
-        async void Show()
+        void Show() => Run(async token =>
         {
             var payment = await RewardedVideo.Watch(PlacementId);
 
             // The overlay can be gone by now — a player who backgrounds the app during a video
             // may come back to a different screen entirely. The reward is still banked.
-            if (this == null) return;
+            if (!Living) return;
 
             if (payment.Paid) { _flight = payment.Flight; Paid(payment.Drop); return; }
 
             _watching = false;
             _status.text = RewardedVideo.Refusal(payment);
             Repaint();
-        }
+        });
 
         /// <summary>
         /// The reward landed. Small ceremony, then the button becomes the way out.

@@ -1,4 +1,10 @@
-﻿# Downloads the Firebase Unity SDK packages this project depends on.
+﻿# Downloads the third-party UPM packages this project depends on.
+#
+# Mostly Firebase, hence the folder's name, but not only: the ads plugin is here for the
+# UMP consent SDK inside it and AppsFlyer for attribution. What they have in common is
+# that they are large, versioned build inputs with a canonical download URL - which is
+# what makes vendoring them better than a scoped registry, since a resolve then needs
+# nothing to be reachable at build time.
 #
 #     pwsh GooglePackages/fetch.ps1
 #
@@ -23,6 +29,7 @@ $ErrorActionPreference = 'Stop'
 $FIREBASE = '13.15.0'
 $EDM      = '1.2.187'      # External Dependency Manager, versioned separately
 $ADS      = '11.4.0'       # Google Mobile Ads, for the UMP consent SDK inside it
+$APPSFLYER = '6.17.1'      # Attribution. Not Google's, and not on Google's registry.
 
 $GOOGLE  = 'https://dl.google.com/games/registry/unity'
 $OPENUPM = 'https://package.openupm.com'
@@ -36,7 +43,9 @@ $packages = @(
     @{ id = 'com.google.firebase.auth';               version = $FIREBASE; registry = $GOOGLE },
     @{ id = 'com.google.firebase.firestore';          version = $FIREBASE; registry = $GOOGLE },
     @{ id = 'com.google.firebase.functions';          version = $FIREBASE; registry = $GOOGLE },
-    @{ id = 'com.google.ads.mobile';                  version = $ADS;      registry = $OPENUPM }
+    @{ id = 'com.google.firebase.analytics';          version = $FIREBASE; registry = $GOOGLE },
+    @{ id = 'com.google.ads.mobile';                  version = $ADS;      registry = $OPENUPM },
+    @{ id = 'com.appsflyer.unity';                    version = $APPSFLYER; registry = $OPENUPM }
 )
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path

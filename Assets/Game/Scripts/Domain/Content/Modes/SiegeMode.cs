@@ -132,7 +132,7 @@ namespace GlimmerGrove.Content
             // nothing checks - and this mode has already paid for that once.
             // **The line is no longer a ladder of five turrets, it is whichever four the player
             // chose** - so what is resident here is the wreck and the badge, and nothing else.
-            // The turrets themselves arrive in a scope of four (`AssetLibrary.LineScope`,
+            // The turrets themselves arrive in a hold of four (`SiegeScreen`'s own,
             // invariant 7b), because the roster is twenty models in four colours and a run draws
             // four of them; the *rank* is the badge's own colour (`SiegeView.RankTint`), which
             // costs no art at all and is the one corner of a ward the field's plate does not
@@ -555,7 +555,7 @@ namespace GlimmerGrove.Content
         /// colours.
         ///
         /// <b>Resident rather than scoped, and it is the safety net rather than the feature.</b>
-        /// The player's own four arrive in <c>AssetLibrary.LineScope</c>, which is asynchronous —
+        /// The player's own four arrive in the screen's own hold, which is asynchronous —
         /// and an <c>Image</c> with a null sprite is a white rectangle rather than a blank
         /// (invariant 7b). So the fallback the line resolves to when anything at all is wrong is
         /// the one thing that can never be missing.
@@ -594,7 +594,7 @@ namespace GlimmerGrove.Content
                 // **Every cast, because this is the question about what *exists*.** It is what
                 // `AddressableAddresses.FrameFolders` walks to label frames, and a reel that is
                 // never named here ships addressed, grouped, built into a bundle and impossible to
-                // load (invariant 7at's `No Location found for Key=...`). Only `ArtFor` narrows.
+                // load (invariant 37at's `No Location found for Key=...`). Only `ArtFor` narrows.
                 for (int set = 0; set < CastSets; set++)
                     list.AddRange(CastArt(set));
 

@@ -249,7 +249,19 @@ namespace GlimmerGrove
         }
 
         /// <summary>How tall the header band is, and where the readout row sits under it.</summary>
-        const float BarHeight = 210f, ReadoutsY = 186f;
+        /// <remarks>
+        /// Public, and <see cref="KeyY"/> with it, because <c>RunScreen.TagFoot</c> is the
+        /// arithmetic that keeps the level tag off the readouts and <c>RunHeaderTests</c> is
+        /// what holds the two to each other — <c>LevelsScreen.PerchWidth</c>'s bargain, one
+        /// screen over.
+        /// </remarks>
+        public const float BarHeight = 210f, ReadoutsY = 186f;
+
+        /// <summary>
+        /// How far off the bar's own middle the two corner keys — and the level tag beside the
+        /// left one — are drawn. One number, so the tag cannot sit at a height the key does not.
+        /// </summary>
+        public const float KeyY = -4f;
 
         /// <summary>
         /// How tall the readout row is, and where its two lines sit inside it.
@@ -289,6 +301,13 @@ namespace GlimmerGrove
         /// </summary>
         const float RowHeight = 88f, ValueY = 14f, CaptionY = -29f;
         const int ValueSize = 56, ValueMinSize = 26, CaptionSize = 22, CaptionMinSize = 15;
+
+        /// <summary>
+        /// How far below the safe area's top edge the first thing under the header bar reaches,
+        /// which is the readout value's own box. What the level tag has to clear.
+        /// </summary>
+        public const float ReadoutTop = ReadoutsY - ValueY - ValueBox * .5f;
+        const float ValueBox = 58f;
 
         /// <summary>
         /// How far the header's shade reaches below the bar, in canvas units.
@@ -366,17 +385,22 @@ namespace GlimmerGrove
             ((RectTransform)shade.transform).localRotation = Quaternion.Euler(0, 0, 180f);
 
             UIKit.IconButton("Back", bar, Skins.Nav, "ic_left", new Vector2(118f, 118f),
-                             new Vector2(0f, .5f), new Vector2(102f, -4f), LeaveToMap);
+                             new Vector2(0f, .5f), new Vector2(102f, KeyY), LeaveToMap);
+
+            // Beside it, because the header stopped naming the level when the level's own name
+            // came off the top of the screen and a run has said nothing about which one it is
+            // since. See RunScreen.BuildLevelTag.
+            BuildLevelTag(bar, KeyY);
 
             var key = RightKey;
             UIKit.IconButton("RightKey", bar, Skins.Nav, key.Icon, new Vector2(118f, 118f),
-                             new Vector2(1f, .5f), new Vector2(-102f, -4f), key.Press);
+                             new Vector2(1f, .5f), new Vector2(-102f, KeyY), key.Press);
 
             // Beside the restart key. Built for every mode and shown only by the ones whose
             // board actually teaches something, which is RunScreen's to decide once the board
             // has been read — a mode that declares no lessons never sees it. See
             // RunLessons.BuildKey.
-            Teaching.BuildKey(bar, new Vector2(-102f, -4f));
+            Teaching.BuildKey(bar, new Vector2(-102f, KeyY));
         }
 
         /// <summary>

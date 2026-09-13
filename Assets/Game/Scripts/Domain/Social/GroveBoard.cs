@@ -390,6 +390,13 @@ namespace GlimmerGrove.Social
                     // to drop the caches than to patch a row into a list the server sorted.
                     _boards.Clear();
 
+                    // And so is our own card, if this device has ever visited itself through a
+                    // board. That is not a curiosity: a player's own row is lit in the list
+                    // precisely so they will tap it, and showing them a five-minute-old picture
+                    // of the grove they have just rearranged is the one staleness they can
+                    // recognise on sight.
+                    Forget(CloudState.UserId);
+
                     Raise();
                 }
                 else if (result.Failure == CloudFailure.Rejected)
@@ -523,7 +530,12 @@ namespace GlimmerGrove.Social
 
             var (result, card) = await Backend.ReadGroveCardAsync(ownerId, cancellation);
 
-            if (result.Ok && card != null && card.IsValid) Remember(ownerId, card);
+            // Remembered even when the answer is "there is no grove here", which it did not used
+            // to be. A row on a board whose owner has since opted out is a row a player taps,
+            // reads, backs out of and taps again — and each of those was a document read for an
+            // answer the client had already been given. A failure is a different thing and is
+            // not cached: that one is worth asking again.
+            if (result.Ok) Remember(ownerId, card ?? GroveCard.Empty);
 
             return (result, card ?? GroveCard.Empty);
         }
@@ -578,6 +590,25 @@ namespace GlimmerGrove.Social
                 _cards.Remove(_cardOrder[0]);
                 _cardOrder.RemoveAt(0);
             }
+        }
+
+        /// <summary>
+        /// Drops one keeper's remembered card, so the next visit reads a fresh one.
+        ///
+        /// <para>
+        /// Takes the id out of the order list as well, which is the whole reason this is a
+        /// method rather than a <c>Remove</c> at the call site: the two are one structure, and a
+        /// key left in the order after being dropped from the map is a duplicate the moment it
+        /// is fetched again — an eviction list that grows for the life of the session while
+        /// holding fewer cards than it thinks.
+        /// </para>
+        /// </summary>
+        static void Forget(string ownerId)
+        {
+            if (string.IsNullOrEmpty(ownerId)) return;
+
+            _cards.Remove(ownerId);
+            _cardOrder.Remove(ownerId);
         }
 
         /// <summary>The board this player's own grove is ranked on right now.</summary>

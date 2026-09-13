@@ -173,6 +173,39 @@ namespace GlimmerGrove
         /// </summary>
         readonly List<Lesson> _probe = new List<Lesson>(2);
 
+        /// <summary>
+        /// Lessons a mode has asked for and this has not been able to give yet, in the order
+        /// they were asked for.
+        ///
+        /// <para>
+        /// <b>A mid-run lesson is <em>owed</em> rather than offered, and the difference is the
+        /// whole of what was wrong with the three Thornwatch teaches.</b> Every one of them
+        /// hangs off a moment the board reports — a tube filling, a cog dropping, a bomb
+        /// landing — and every one of those moments happens <em>inside</em> a cascade, which is
+        /// exactly when the board is not teachable (<c>ProtoView.Busy</c>). So the offer was
+        /// refused at the only instant it was ever made and thrown away, and the tip then
+        /// waited for the next occurrence: an overcharge that never came back, and a cog tip
+        /// that landed on the fourth cog because the first three were felled mid-cascade.
+        /// Reported from a device as all three.
+        /// </para>
+        /// <para>
+        /// <b>So a refusal is now a wait rather than a loss.</b> The moment goes in here and is
+        /// given the first instant the board can take it — a beat after the cascade it was
+        /// caused by, rather than at whatever unrelated moment happened to be clear next. The
+        /// list is the queue's own rule said twice over: at most one panel at a time, in the
+        /// order the player made them happen.
+        /// </para>
+        /// <para>
+        /// Nothing here is ever dropped for a reason that can change — the only two exits are
+        /// being taught and the screen being destroyed — because every other reason to refuse
+        /// (mid-chain, mid-cascade, a panel above) stops being true within seconds.
+        /// </para>
+        /// </summary>
+        readonly List<Mechanic> _owed = new List<Mechanic>(2);
+
+        /// <summary>Whether a look at <see cref="_owed"/> is already scheduled. See <see cref="Retry"/>.</summary>
+        bool _waiting;
+
         int _taught;
 
         /// <summary>True while a lesson is pending or on screen, whoever raised it.</summary>
@@ -328,8 +361,8 @@ namespace GlimmerGrove
         /// </summary>
         // ------------------------------------------------------------------ mid-run
         /// <summary>
-        /// Raises one lesson now, over a board the player has just changed, if they have never
-        /// been shown it.
+        /// Says that a deferred lesson's moment has come. It goes up now, or the first instant
+        /// the board can take it.
         ///
         /// <para>
         /// The mode calls this at the moment a deferred lesson's subject comes to exist — a
@@ -337,9 +370,14 @@ namespace GlimmerGrove
         /// the player made rather than a rule recited before anything happened. It goes through
         /// the same hold, latch and queue as the opening, because a second way of putting a
         /// tip up is a second thing that can disagree about when the board is handed back.
-        /// Refused while a lesson is already up, while the board cannot be taught (mid-chain,
-        /// finished, closing), and for anything already seen — so a mode may call it on every
-        /// forge for the life of the run and it costs one showing.
+        /// </para>
+        /// <para>
+        /// <b>It announces a moment rather than requesting a panel</b>, which is the difference
+        /// between a tip that arrives and one that is thrown away: the moments these hang on
+        /// happen while the board is resolving, and a board that is resolving is a board that
+        /// cannot be taught on. See <see cref="_owed"/>. A lesson already seen is dropped here
+        /// and nowhere else, so a mode may call this on every forge for the life of the run and
+        /// it costs one showing.
         /// </para>
         /// <para>
         /// The lesson is resolved through <c>Lessons</c> like every other, so a mode that
@@ -349,8 +387,54 @@ namespace GlimmerGrove
         /// </summary>
         public void Teach(Mechanic mechanic)
         {
-            if (!_run || _teaching || !_run.Teachable) return;
+            if (!_run || !mechanic.IsValid) return;
             if (TipLedger.HasSeen(mechanic)) return;
+
+            // Asked for twice before it could be given once is still one lesson. A mode raises
+            // these from a report it reads every frame, so the same moment can be announced on
+            // several consecutive steps.
+            for (int i = 0; i < _owed.Count; i++)
+                if (_owed[i].Equals(mechanic)) return;
+
+            _owed.Add(mechanic);
+            Give();
+        }
+
+        /// <summary>
+        /// Gives the first lesson that is owed, or arranges to look again when it cannot.
+        ///
+        /// <para>
+        /// The three reasons a lesson cannot go up right now — a panel already being taught,
+        /// a board mid-cascade, a modal above it (which <see cref="ShowLesson"/> answers) — are
+        /// all states that end on their own within seconds, so waiting is always the right
+        /// answer and giving up never is. See <see cref="_owed"/>.
+        /// </para>
+        /// </summary>
+        void Give()
+        {
+            _waiting = false;
+
+            if (!_run || _owed.Count == 0) return;
+            if (_teaching || !_run.Teachable) { Retry(); return; }
+
+            // Anything met in between — the review key shows every lesson this board carries and
+            // marks each seen — is no longer owed.
+            Mechanic mechanic = default;
+            bool any = false;
+
+            while (_owed.Count > 0)
+            {
+                var next = _owed[0];
+                _owed.RemoveAt(0);
+
+                if (TipLedger.HasSeen(next)) continue;
+
+                mechanic = next;
+                any = true;
+                break;
+            }
+
+            if (!any) return;
 
             _queue.Clear();
             _taught = 0;
@@ -366,6 +450,24 @@ namespace GlimmerGrove
             // moving, and the pause is only so the tip does not land in the same frame as the
             // last thing the chain drew.
             Tween.After(BetweenLessons, ShowLesson, _run);
+        }
+
+        /// <summary>
+        /// Looks at <see cref="_owed"/> again shortly.
+        ///
+        /// <para>
+        /// One wait at a time, whatever asked for it, so a moment announced on every frame of a
+        /// cascade schedules one look rather than sixty. Bound to the screen like every other
+        /// wait here, so a run that ends with something still owed stops asking when the screen
+        /// goes rather than needing anybody to remember it.
+        /// </para>
+        /// </summary>
+        void Retry()
+        {
+            if (_waiting || !_run || _owed.Count == 0) return;
+
+            _waiting = true;
+            Tween.After(WhileCovered, Give, _run);
         }
 
         void ShowLesson()
@@ -445,6 +547,11 @@ namespace GlimmerGrove
             // swept away by a path that knows nothing about it.
             _hold.Release(RunHold.Teaching);
             Refresh();
+
+            // Whatever the board reported while this was up. Scheduled rather than given here,
+            // so the board is handed back for a beat in between rather than latched twice in
+            // one frame — which is the same beat two chained lessons already get.
+            Retry();
         }
 
         // ------------------------------------------------------------------ the review control

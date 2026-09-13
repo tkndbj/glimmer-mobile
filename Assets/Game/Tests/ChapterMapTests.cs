@@ -251,8 +251,15 @@ namespace GlimmerGrove.Tests
                                   "a perch is wider than the body");
             Assert.GreaterOrEqual(ChapterMap.BodyBelow, -LevelsScreen.PlateY + LevelsScreen.PlateHeight * .5f,
                                   "the name plate hangs below the body");
+            // The disc's stand is the perch's, so the tallest of them is what the body owes —
+            // reading one mode's would leave the body short on every other map, and the check
+            // would still pass.
+            float highestDisc = 0f;
+            foreach (var look in ModeLooks.All)
+                highestDisc = Mathf.Max(highestDisc, look.PerchLift);
+
             Assert.GreaterOrEqual(ChapterMap.BodyAbove,
-                                  Mathf.Max(LevelsScreen.NodeSize * .5f + 2f,
+                                  Mathf.Max(LevelsScreen.NodeSize * .5f + highestDisc,
                                             LevelsScreen.PerchRockY + LevelsScreen.PerchRockHeight * .5f),
                                   "the disc or the rock reaches above the body");
         }

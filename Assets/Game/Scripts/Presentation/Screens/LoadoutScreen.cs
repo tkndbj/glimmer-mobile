@@ -34,7 +34,7 @@ namespace GlimmerGrove
     /// turret has no colour of its own, and the colour is the seat. It is the real board sprite
     /// rather than a thumbnail, which is <em>not</em> invariant 16c being relaxed — a turret is cut
     /// at 192x240, smaller than the thumbnail it replaces, so the true picture costs no more than
-    /// the cheap one. It is still a scope (<c>AssetLibrary.WardShelfScope</c>) and still leaves
+    /// the cheap one. It is still held rather than global, and still leaves
     /// with the screen.
     /// </para>
     /// </summary>
@@ -58,6 +58,16 @@ namespace GlimmerGrove
         int _slot;
 
         RectTransform _viewport, _grid, _line, _tabRow;
+
+        /// <summary>
+        /// The KIT tab, kept so a lesson can ring the real control rather than a description of
+        /// where it is (<c>TipOverlay.Target</c>).
+        ///
+        /// <b>Re-taken on every <see cref="Rebuild"/></b>, because that throws the tab row away
+        /// and builds it again - a field holding the old one would by then be a destroyed object,
+        /// and <c>TipOverlay</c> answers a destroyed target by quietly drawing no ring at all.
+        /// </summary>
+        RectTransform _kitTab;
 
         readonly List<SlotView> _slots = new List<SlotView>();
 
@@ -201,22 +211,16 @@ namespace GlimmerGrove
         /// <b>`async void` with the exception caught</b>, which is <c>CompanionArt.Load</c>'s
         /// shape and for its reason: a scope that failed to load must not vanish silently.
         /// </summary>
-        async void Browse()
-        {
-            try
-            {
-                await AssetLibrary.EnsureScopeAsync(
-                    AssetLibrary.WardShelfScope,
-                    AssetManifest.WardShelfAssets(WardLedger.Catalog.Models));
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogException(e);
-                return;
-            }
+        AssetHold _shelfArt;
 
-            if (this != null) Dress();
-        }
+        void Browse() => Run(async token =>
+        {
+            _shelfArt = _shelfArt ?? AssetLibrary.Hold("ward_shelf");
+            await _shelfArt.LoadAsync(AssetManifest.WardShelfAssets(WardLedger.Catalog.Models),
+                                      null, token);
+
+            if (Living) Dress();
+        });
 
         /// <summary>
         /// Puts the art on what is already drawn, and moves nothing.
@@ -240,10 +244,10 @@ namespace GlimmerGrove
 
         void OnDestroy()
         {
-            // Released on the way out, which is the whole reason it is a scope: twenty pictures
-            // resident for the life of a session to draw one screen is memory bounded by how much
-            // content exists rather than by what is on the screen (invariant 7b).
-            AssetLibrary.ReleaseScope(AssetLibrary.WardShelfScope);
+            // Let go on the way out, which is the whole reason it is held rather than global:
+            // twenty pictures resident for the life of a session to draw one screen is memory
+            // bounded by how much content exists rather than by what is on the screen (7b).
+            _shelfArt?.Dispose();
 
             WardLedger.Changed -= Paint;
             WardLoadout.Changed -= Paint;
@@ -266,6 +270,18 @@ namespace GlimmerGrove
 
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, 1f), new Vector2(96f, -110f), () => Flow.Go<LevelsScreen>());
+
+            // The two lessons again, at the player's asking. Top-right, in the orange the info
+            // key is cut in on every other screen that has one (`Skins.Aside`), and mirrored on
+            // the back key so the header reads as a pair of corners with a ribbon between them.
+            //
+            // **It is here because this screen is one a player comes back to.** A board lesson is
+            // shown once in a lifetime and that is right - the board it is about will not be
+            // there next time. The shelf is furniture: somebody who bought their first turret
+            // months ago and is now spending gems on a second colour is entitled to re-read the
+            // rule about which is which, and `TipLedger` on its own can only ever say no.
+            UIKit.IconButton("Info", Safe, Skins.Aside, "ic_info", new Vector2(118f, 118f),
+                             new Vector2(1f, 1f), new Vector2(-96f, -110f), Review);
 
             var banner = Scenery.TitleRibbon(Safe, Loc.Get("ui.loadout.title").ToUpperInvariant(),
                                              new Vector2(520f, 140f), new Vector2(.5f, 1f),
@@ -311,6 +327,105 @@ namespace GlimmerGrove
         }
 
         public override bool OnBack() { Flow.Go<LevelsScreen>(); return true; }
+
+        // ----------------------------------------------------------------- tips
+        /// <summary>Whether the incoming transition has finished. See <see cref="Teach"/>.</summary>
+        bool _presented;
+
+        /// <summary>Whether this visit has already decided about the shelf's lessons.</summary>
+        bool _taught;
+
+        /// <summary>A beat after the iris, so the screen is read before somebody explains it.</summary>
+        const float TeachDelay = .45f;
+
+        public override void OnPresented()
+        {
+            _presented = true;
+            Teach();
+        }
+
+        /// <summary>
+        /// The two things a first visit has to be told, once, and then never unasked again.
+        ///
+        /// <para>
+        /// <b>Both are rules a player would otherwise learn by buying the wrong thing.</b> The
+        /// four boxes at the top are <em>colours</em> rather than positions and a turret is bought
+        /// for one colour at a time (<c>Mechanic.LoadoutSeats</c>, invariant 42c); the second tab
+        /// holds the half of a loadout that runs out (<c>Mechanic.LoadoutKit</c>). Neither is
+        /// visible until money has changed hands, which is the one time a lesson is worth a modal.
+        /// </para>
+        /// <para>
+        /// Ordinary lessons on the ordinary ledger, exactly as the grove's two are: a permanent
+        /// id, strings derived from it, and <c>TipLedger</c> recording that this player has met
+        /// them - so they are shown once in a lifetime rather than once per install, and it cost
+        /// no new field to say so. They are deliberately absent from <c>Mechanic.TeachingOrder</c>,
+        /// which is a board's queue: nothing about a siege implies the player has opened the
+        /// shelf.
+        /// </para>
+        /// <para>
+        /// <b>And once is not the end of them</b> - see the info key in <see cref="BuildHeader"/>
+        /// and <see cref="Review"/>.
+        /// </para>
+        /// </summary>
+        void Teach()
+        {
+            if (_taught || !this || !_presented) return;
+
+            _taught = true;
+
+            var queue = new List<ScreenLesson>(2);
+
+            ScreenLessons.Offer(queue, Mechanic.LoadoutSeats, _line);
+            ScreenLessons.Offer(queue, Mechanic.LoadoutKit, _kitTab);
+
+            if (queue.Count == 0) return;
+
+            // A turret panel left up across a navigation would put a lesson behind it, and a
+            // lesson nobody sees is one that can never be shown again - so `ScreenLessons.Show`
+            // waits for a clear screen rather than this giving up in front of one.
+            Tween.After(TeachDelay, () =>
+            {
+                if (!this) return;
+                ScreenLessons.Show(this, queue);
+            }, this);
+        }
+
+        /// <summary>
+        /// Puts both lessons back up, at the player's asking.
+        ///
+        /// <para>
+        /// <b>The same panels through the same chain</b>, which is <c>RunLessons.Review</c>'s rule
+        /// and for its reason: a second way of raising a tip is a second thing that can disagree
+        /// about how many are on screen at once. What differs is only the ledger - a player who
+        /// pressed a button has asked, so these are queued whether or not they have been met
+        /// (<c>ScreenLessons.Add</c>).
+        /// </para>
+        /// <para>
+        /// <b>The controls are re-read rather than remembered</b>, because <see cref="Rebuild"/>
+        /// destroys the tab row every time somebody swaps shelves - a queue built at
+        /// <c>Build</c> time and kept would by now be pointing at an object that no longer exists,
+        /// and <c>TipOverlay</c> answers that by silently drawing no ring.
+        /// </para>
+        /// <para>
+        /// Refused while anything else is up, rather than queued behind it: a lesson is a modal
+        /// about the screen underneath, and a panel over that screen is a state where the screen
+        /// is owned by something else.
+        /// </para>
+        /// </summary>
+        void Review()
+        {
+            if (!this || Flow.HasModal) return;
+
+            // A tip pointing at the KIT tab while the KIT shelf is open still reads correctly -
+            // the tab is where it always is, selected or not - so there is deliberately nothing
+            // here that changes what the player was looking at.
+            var queue = new List<ScreenLesson>(2);
+
+            ScreenLessons.Add(queue, Mechanic.LoadoutSeats, _line);
+            ScreenLessons.Add(queue, Mechanic.LoadoutKit, _kitTab);
+
+            ScreenLessons.Show(this, queue);
+        }
 
         // ----------------------------------------------------------------- the line
         /// <summary>
@@ -447,6 +562,8 @@ namespace GlimmerGrove
         {
             var box = UIKit.Box(id, parent, new Vector2(280f, 72f), new Vector2(.5f, .5f),
                                 new Vector2(x, -8f));
+
+            if (shelf == Shelf.Items) _kitTab = box;
 
             var hit = box.gameObject.AddComponent<Image>();
             hit.color = new Color(0f, 0f, 0f, 0f);

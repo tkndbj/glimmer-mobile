@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -98,11 +100,63 @@ namespace GlimmerGrove
         /// </summary>
         protected virtual SafeArea.Edges SafeEdges => SafeArea.Edges.All;
 
+        Lifeline _life;
+
+        /// <summary>
+        /// Cancelled the moment this screen is destroyed.
+        ///
+        /// <para>
+        /// Hand it to anything awaited on this screen's behalf. It is the difference between a
+        /// fetch that stops when the player leaves and one that goes on running against a screen
+        /// nobody is looking at — which, on a list of groves somebody is scrolling, is a document
+        /// read and a grove's worth of art per row they pass through.
+        /// </para>
+        /// </summary>
+        protected CancellationToken Lifetime => Lifeline.Of(this)?.Token ?? new CancellationToken(true);
+
+        /// <summary>
+        /// True while this screen is still here. The guard to use after an <c>await</c>, in
+        /// place of <c>if (this)</c>: it also catches a screen that is on its way out but has
+        /// not been collected yet.
+        /// </summary>
+        protected bool Living
+        {
+            get
+            {
+                var life = _life != null ? _life : (_life = Lifeline.Of(this));
+                return life != null && life.Living;
+            }
+        }
+
+        /// <summary>
+        /// Starts work on this screen's behalf: handed a token that trips when the screen goes,
+        /// and with anything it throws reported rather than swallowed.
+        ///
+        /// <para>
+        /// <b>The replacement for <c>async void</c>.</b> An <c>async void</c> method has no task
+        /// to observe, so an exception escaping it surfaces nowhere at all — which is why every
+        /// one in this project carried a hand-written <c>try/catch</c>, and why the two that
+        /// forgot were completely silent failures. Here the catch cannot be forgotten, because
+        /// it is not the caller's to write. See <see cref="Async.Fire"/>.
+        /// </para>
+        /// </summary>
+        protected void Run(Func<CancellationToken, Task> work,
+                           [System.Runtime.CompilerServices.CallerMemberName] string from = null)
+        {
+            var life = _life != null ? _life : (_life = Lifeline.Of(this));
+            life?.Run(work, GetType().Name + "." + (from ?? "Run"));
+        }
+
         internal void Init()
         {
             Root = (RectTransform)transform;
             Group = UIKit.Group(Root);
             Content = UIKit.Node("Content", Root);
+
+            // Attached before anything is built, so a screen that starts work inside Build has a
+            // token to hand it rather than creating one after the fact.
+            _life = Lifeline.Of(this);
+
             Build();
         }
 

@@ -68,9 +68,9 @@ MonoBehaviour:
   m_BuildAddressablesWithPlayerBuild: 1
   m_overridePlayerVersion: '[UnityEditor.PlayerSettings.bundleVersion]'
   m_GroupAssets:
-  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
   - {fileID: 11400000, guid: 47c46bda514740a4dbc05a44d4a23ac8, type: 2}
   - {fileID: 11400000, guid: 4d5a579f47b771f40be12597dc3a83b4, type: 2}
+  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
   - {fileID: 11400000, guid: 984a834b48cbf384482d9e2e9aebfe5d, type: 2}
   - {fileID: 11400000, guid: 82cde781aeb2b8c47a1f377b73392623, type: 2}
   - {fileID: 11400000, guid: b92e976ef28c68c42becd8a3e8622ca7, type: 2}
@@ -734,7 +734,6 @@ MonoBehaviour:
     - Art/Homestead/grain_sack
     - Art/Homestead/wheelbarrow
     - Art/Siege/broodBrute_g
-    - Art/Homestead/fence_stone
     - Art/Homestead/house_large_green
     - Art/Siege/broodMon_r
     - Art/Homestead/pine_copse
@@ -743,7 +742,6 @@ MonoBehaviour:
     - Art/Siege/broodMon_b
     - Art/Homestead/church
     - Art/Homestead/pine_stand
-    - Art/Homestead/fence_stone_gate
     - Art/Homestead/pine_wood
     - Art/Homestead/watchtower
     - Art/Homestead/stone_pile
@@ -774,8 +772,6 @@ MonoBehaviour:
     - Art/Homestead/pennant_gold
     - Art/Homestead/scaffold
     - Art/Homestead/pennant_red
-    - Art/Homestead/fence_wood
-    - Art/Homestead/fence_wood_gate
     - Art/Homestead/stage_round
     - Art/Homestead/bridge_stone
     - Art/Homestead/wall_turn

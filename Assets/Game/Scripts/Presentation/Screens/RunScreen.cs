@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using GlimmerGrove.Content;
+using GlimmerGrove.Localization;
+using GlimmerGrove.Modes;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using UnityEngine;
@@ -196,6 +198,79 @@ namespace GlimmerGrove
 
         /// <summary>The level this run is staked on, for <c>RunGuard</c>'s marker.</summary>
         protected internal abstract LevelId StakeLevel { get; }
+
+        // ------------------------------------------------------------ which level this is
+        /// <summary>
+        /// The level's number in the header's left corner, beside the way back.
+        ///
+        /// <para>
+        /// <b>Here rather than in each header, because there are two of them.</b> The glade
+        /// builds its own top bar and the other four share <c>ModeScreen.BuildHeader</c>, so a
+        /// tag written twice is two screens that can come to disagree about which number a run
+        /// is — which is the one thing it may not do, since the map draws the same number on the
+        /// node the player just tapped.
+        /// </para>
+        /// <para>
+        /// <b>And it is that number, not a new one.</b> <c>CatalogIndex.OrderOf</c> is a position
+        /// inside the level's own lane — its mode <em>and</em> its track — which is what the map's
+        /// node reads, so the second chapter of a mode carries on counting where the first left
+        /// off and an endless lane counts from one again. It is display only and is never
+        /// persisted (invariant 1); a level the catalog has never heard of draws nothing at all
+        /// rather than "level 0", because a run that names itself wrongly is worse than a run
+        /// that does not name itself.
+        /// </para>
+        /// <para>
+        /// <b>It sits at the key's own height, and that is what keeps it off the readouts.</b>
+        /// A header's middle is empty and its readout row is level with its keys (invariant 37an),
+        /// so there is no horizontal room here at all — a row of two reaches within 45 units of
+        /// where this tag ends, and a row of three overlaps it outright. What separates them is
+        /// the band: the tag is short and hangs from the key's centre, so its foot
+        /// (<see cref="TagFoot"/>) sits above the first thing drawn under the bar.
+        /// <c>RunHeaderTests</c> holds that to what the two screens actually draw, because the
+        /// readout type has been raised once already and would land on this if it were again.
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// The geometry is public and the type sizes are not, for <c>LevelsScreen.PerchWidth</c>'s
+        /// reason: <c>RunHeaderTests</c> is the only thing that can hold these to the two headers
+        /// they are drawn into, and how big the letters are is nobody else's business.
+        /// </remarks>
+        public const float TagGap = 14f, TagWidth = 250f, TagHeight = 46f;
+        protected const int TagSize = 34, TagMinSize = 20;
+
+        /// <summary>
+        /// How far below the safe area's top edge the tag's own box reaches, given the bar it
+        /// hangs in and the height its corner key is drawn at.
+        ///
+        /// Stated as arithmetic rather than as a number so a screen that moves its key moves
+        /// this with it, and so a test can ask the question at all.
+        /// </summary>
+        public static float TagFoot(float barHeight, float keyY)
+            => barHeight * .5f - keyY + TagHeight * .5f;
+
+        /// <summary>
+        /// Draws the tag into <paramref name="bar"/>, level with a corner key at
+        /// <paramref name="keyY"/>. Silent on a level the catalog does not hold.
+        /// </summary>
+        protected void BuildLevelTag(RectTransform bar, float keyY)
+        {
+            int order = GameContent.Index.OrderOf(StakeLevel);
+            if (order < 0) return;
+
+            // Left of the tag = how far a header key reaches in, plus air. `KeyReach` is already
+            // Domain's statement of that reach and is already held to the key's own 118 and 102,
+            // so taking it from there is one number rather than a third copy of two.
+            var tag = UIKit.Titled("Level", bar, Loc.Format("ui.run.level", order + 1), TagSize,
+                                   Pal.A(Pal.Cream, .82f), TextAnchor.MiddleLeft,
+                                   new Vector2(TagWidth, TagHeight), new Vector2(0f, .5f),
+                                   new Vector2(ReadoutRow.KeyReach + TagGap + TagWidth * .5f, keyY),
+                                   3f, 3f);
+
+            // A Unity Text that overflows is not clipped (invariant 37n), and a language whose
+            // word for "level" is longer than English's is the ordinary case rather than the odd
+            // one - so it shrinks inside its box instead of printing over the board.
+            UIKit.Shrinkable(tag, TagMinSize);
+        }
 
         /// <summary>
         /// Whether this run has already reached an ending, however it is spelled by the mode —

@@ -252,7 +252,15 @@ namespace GlimmerGrove.Tests
         static bool IsAbsentBlockNote(string problem)
             => problem == "daily block lists no chests; using the built-in table"
             || problem == "ads block lists no placements; using the built-in table"
-            || problem == "streak block lists no rungs; using the built-in ladder";
+            || problem == "streak block lists no rungs; using the built-in ladder"
+            // The same note for the two blocks added since: neither is part of the reward
+            // curve these vectors pin, and both have gates of their own — the content checks
+            // walk the utility catalog and the ward roster and error on an entry whose art or
+            // loc keys do not resolve. Carrying them here would be a second copy for a retune
+            // to put out of step with the first, which is the whole reason the daily, ad and
+            // streak blocks are absent too.
+            || problem == "utilities block lists no items; using the built-in catalog"
+            || problem == "wards block lists no models; using the built-in roster";
 
         static IChapterMap ChaptersFrom(VectorFile file)
         {

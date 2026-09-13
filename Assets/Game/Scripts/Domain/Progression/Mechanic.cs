@@ -21,7 +21,32 @@ namespace GlimmerGrove.Progression
     {
         public readonly string Id;
 
-        Mechanic(string id) => Id = id;
+        /// <summary>
+        /// How many values this lesson's sentence has to be told, and almost always none.
+        ///
+        /// <para>
+        /// <b>It is declared beside the id so that both ends of a composed sentence can be
+        /// checked against one number.</b> Two lessons about the map's chrome carry a figure that
+        /// is <em>content</em> — how many stars open the next chapter, and what the other ladder
+        /// of this mode is called — and invariant 21's whole argument is that such a number must
+        /// be printed rather than written into the prose. A string that then loses its
+        /// placeholder in translation, or a call site that forgets to supply one, draws a literal
+        /// "{0}" on a panel shown once in a player's life, and nothing anywhere would say so:
+        /// <c>Loc.Format</c> catches the mismatch and hands back the pattern.
+        /// </para>
+        /// <para>
+        /// So <c>ContentValidation</c> holds every body to this — each index below it present,
+        /// and none at or above it — and <c>ScreenLessons</c> holds every caller to it.
+        /// Zero is the ordinary answer and means the body is a plain sentence.
+        /// </para>
+        /// </summary>
+        public readonly int Args;
+
+        Mechanic(string id, int args = 0)
+        {
+            Id = id;
+            Args = args;
+        }
 
         public static readonly Mechanic FragileConduit = new Mechanic("fragile");
         public static readonly Mechanic MoveBudget = new Mechanic("moves");
@@ -292,9 +317,17 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// Nothing on the field is a goal, which is the one thing a player arriving from any other
         /// jewel board in this game will get wrong. They will look for the biggest match; what
-        /// matters is which ward it feeds - and a turret only ever fires at raiders of its own
-        /// colour, so a match of the wrong colour is not a smaller answer, it is an answer to a
-        /// different question.
+        /// matters is which ward it feeds - and a turret goes for raiders of its own colour, so a
+        /// match of the wrong colour is not a smaller answer, it is an answer to a different
+        /// question.
+        /// </para>
+        /// <para>
+        /// <b>It stopped saying <em>only</em> the day a boss stopped having a colour to hide
+        /// behind</b> (`SiegeTuning.EveryWardReaches`). The words are the narrowest they can be
+        /// and still teach the rule: what a lesson on the first rung of the game may not do is
+        /// state an absolute the fifth rung breaks, and what it equally may not do is teach an
+        /// exception to a board that has none on it (invariant 6b). The duel demonstrates itself
+        /// - four turrets firing at one raider is not a sentence anybody needs.
         /// </para>
         /// <para>
         /// <b>The id is kept and the words moved, which is the narrow case where that is
@@ -307,20 +340,21 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic SiegeFuel = new Mechanic("siege_fuel");
 
         /// <summary>
-        /// That a turret with nothing of its colour on the hill <em>banks</em> what it is given,
-        /// and that the quiet between waves is what that is for.
+        /// <b>Retired: no screen raises this and its id must never be reused.</b>
         ///
         /// <para>
-        /// <b>The one rule in this mode a board cannot show.</b> A tube filling during a lull is
-        /// visible; that it was worth doing on purpose is not, because a player who does not know
-        /// it will spend the breather the way they spend the rest of the run - on whatever match
-        /// is biggest - and never find out that the wave they are about to meet could have been
-        /// answered before it arrived.
+        /// It taught that a turret with nothing of its colour on the hill banks what it is given,
+        /// and that the quiet between waves is what that is for. Withdrawn by the owner as
+        /// unnecessary, which is the same call <see cref="SiegeLine"/> and
+        /// <see cref="SiegeShield"/> got: the breather already puts an empty hill and a forecast
+        /// in front of the player, and a panel in front of a picture somebody is looking at is a
+        /// panel explaining the obvious.
         /// </para>
         /// <para>
-        /// <b>Raised on the first breather rather than at the start of the run</b>, so the
-        /// sentence arrives with the thing it is about: the hill is empty, the forecast is up, and
-        /// there is something to be done about it.
+        /// Kept as a member rather than deleted because a lesson id travels in the save
+        /// (<c>tipsSeen</c>) exactly as a level id travels in the ledger, and re-pointing one at a
+        /// rule it never described would tell a player they have already been shown something they
+        /// never saw.
         /// </para>
         /// </summary>
         public static readonly Mechanic SiegeBank = new Mechanic("siege_bank");
@@ -549,6 +583,114 @@ namespace GlimmerGrove.Progression
         /// <summary>Where the things a grove is built from are bought.</summary>
         public static readonly Mechanic GroveShop = new Mechanic("grove_shop");
 
+        // ------------------------------------------------------------------ the map
+        // Five lessons about *controls* rather than about rules, and they earn their panels the
+        // way <see cref="ModeSwitch"/> does: every one of them is a piece of chrome that says
+        // nothing about what is behind it. Two of them are the reason `ScreenLessons` exists —
+        // a screen teaching several things needs the same chaining a board does, and a third
+        // copy of it was one copy too many.
+
+        /// <summary>
+        /// That the shelf along the foot of the map is what the player is taking into the next
+        /// siege, and that it is also the way in to changing it.
+        ///
+        /// <para>
+        /// <b>It is a readout that happens to be a door, which is exactly what has to be
+        /// taught.</b> The bar shows four turrets and five kit slots and looks like a status
+        /// line — nothing about a row of pictures says it answers a tap, and the LOADOUT button
+        /// that used to say so was removed when the bar replaced it (see <c>LoadoutBar</c>).
+        /// A player who never presses it never arranges a line, and the whole turret shelf is
+        /// reached through it and through nothing else.
+        /// </para>
+        /// <para>
+        /// <b>Taught only while the bar is actually drawn</b>, which is <see cref="ModeSwitch"/>'s
+        /// rule: a mode with no line never builds one, and a lesson spent on a control that is
+        /// not there can never be shown again.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic MapLoadout = new Mechanic("map_kit");
+
+        /// <summary>
+        /// What the chapter plaque is for: that stars earned here are what opens the chapter
+        /// after it.
+        ///
+        /// <para>
+        /// <b>The one rule on this screen a player cannot read off it.</b> The map draws a chain
+        /// of glades and a star count, and neither says that finishing every glade is not the
+        /// price of going on — invariant 21's whole point is that the gate is stars rather than
+        /// clears, so a player who three-stars nothing can clear ten glades and still find the
+        /// next chapter shut. The signpost at the end of the chain says so, and it is a screen's
+        /// length away from the plaque this lesson rings.
+        /// </para>
+        /// <para>
+        /// <b>Its number is derived, never written into the string.</b> The gate is content
+        /// (<c>ChapterGateTable</c>) and a chapter is not a fixed size, so the sentence takes
+        /// what <c>LevelUnlock.GateAfter</c> answers — see <c>TipOverlay.BodyArgs</c>. A typed
+        /// "20" would be wrong the first time either is retuned, in a string nothing can check.
+        /// </para>
+        /// <para>
+        /// <b>Not taught where there is no gate to describe</b>: the last chapter of a mode and
+        /// a lane holding one chapter both answer <c>ChapterGate.Open</c>, and a lesson about a
+        /// rule that is not being applied is spent for good.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic MapChapterGate = new Mechanic("map_gate", 1);
+
+        /// <summary>
+        /// That a mode may have a second ladder, and that the pill under the plaque is where it
+        /// is reached.
+        ///
+        /// <para>
+        /// <b><see cref="ModeSwitch"/>'s argument, one level finer.</b> <c>TrackSwitch</c> is a
+        /// closed drop-down naming only the ladder the player is already on, so nothing about it
+        /// says there is another — and the Infinite lane is reached through it and through
+        /// nothing else. It is a lesson of its own rather than a widened <see cref="ModeSwitch"/>
+        /// because the two controls answer different questions and each draws nothing when its
+        /// own question has one answer: today the map carries the track pill and no mode pill,
+        /// so one lesson wearing both hats would be a lesson that is never right.
+        /// </para>
+        /// <para>
+        /// <b>The other ladder is named by the catalog rather than by the string</b>, for
+        /// <see cref="MapChapterGate"/>'s reason: a track is content, and a sentence that has
+        /// "Infinite" typed into it is a sentence that is wrong the day a mode ships a third
+        /// lane.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic MapTrack = new Mechanic("map_track", 1);
+
+        // ------------------------------------------------------------------ the loadout
+        /// <summary>
+        /// That the four boxes at the top of the shelf are colours rather than positions, and
+        /// that a turret is bought for one colour at a time.
+        ///
+        /// <para>
+        /// <b>Two rules, and a player who guesses either of them wrongly buys the wrong
+        /// thing.</b> A row of four seats reads as "slot one through four" and they are the
+        /// board's four colours (<c>WardLine</c>); a shelf of twenty prices reads as twenty
+        /// purchases and it is twenty <em>per colour</em> (invariant 42c). Neither is visible
+        /// until money has already changed hands, which is the one time a lesson is worth a
+        /// modal.
+        /// </para>
+        /// <para>
+        /// Replayable from the screen's own info key — see <c>LoadoutScreen.Review</c> — which
+        /// is the one thing this lesson has that a board lesson does not: the shelf is a screen
+        /// a player comes back to, so the panel is worth re-reading rather than being spent once.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic LoadoutSeats = new Mechanic("loadout_seats");
+
+        /// <summary>
+        /// That the second tab holds what the player carries into a run, and is where it is
+        /// stocked up.
+        ///
+        /// <para>
+        /// A tab beside a selected one is the weakest affordance on the screen, and what is
+        /// behind this one is the only half of the loadout that <em>runs out</em>: a turret is
+        /// bought once and a kit is spent. Replayable with <see cref="LoadoutSeats"/>.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic LoadoutKit = new Mechanic("loadout_kit");
+
         /// <summary>
         /// Teaching order, most disruptive first.
         ///
@@ -626,10 +768,12 @@ namespace GlimmerGrove.Progression
             ProtoMoves, PrismDrag, PrismVein,
             // SiegeLine, SiegeShield and SiegeCog are retired and deliberately absent. See the
             // remarks above.
-            SiegeFuel, SiegeBank, SiegeBrim, SiegeSalvage,
+            SiegeFuel, SiegeBrim, SiegeSalvage,
             SiegeBomber,
             ModeSwitch, LuckySpin, Grove,
             GroveShop,
+            MapLoadout, MapChapterGate, MapTrack,
+            LoadoutSeats, LoadoutKit,
         };
 
         /// <summary>
@@ -653,7 +797,7 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static readonly Mechanic[] Retired =
         {
-            SiegeLine, SiegeShield,
+            SiegeLine, SiegeShield, SiegeBank,
             SiegeWeaver, SiegeThief,
             SiegeCog,
         };

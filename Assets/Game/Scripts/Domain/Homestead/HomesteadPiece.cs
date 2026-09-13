@@ -204,11 +204,24 @@ namespace GlimmerGrove.Homestead
         /// Keeper level that earns this piece, or 0 for none.
         ///
         /// <para>
-        /// The third earned half, and the only one a resident uses — because a resident is a
-        /// companion (see <see cref="GroveResidents"/>) and a companion's free route has always
-        /// been the keeper ladder. It is not authorable in <c>homestead.json</c> and never will
-        /// be: decor is earned by clearing a named thing, which a player can go and do, while a
-        /// level gate on a bench would be a wait with nothing to aim at.
+        /// Used by a resident — because a resident is a companion (see
+        /// <see cref="GroveResidents"/>) and a companion's route has always been the keeper
+        /// ladder — and by a <b>home rung</b>, which is the one thing in <c>homestead.json</c>
+        /// allowed to author it. Decor is not and never will be: decor is earned by clearing a
+        /// named thing, which a player can go and do, while a level gate on a bench would be a
+        /// wait with nothing to aim at. <c>HomesteadMapper</c> refuses it on anything but a
+        /// dwelling, so that promise is kept by the reader rather than by convention.
+        /// </para>
+        /// <para>
+        /// <b>A home is the exception because the ladder is meant to take years.</b> It is the
+        /// only purchase that changes the whole island, and a rung a new keeper can buy the day
+        /// they open the shop is a rung that was never a goal. What the gate is <em>not</em> is
+        /// a free route: it is permission to pay, exactly as invariant 15a settled for
+        /// companions, so a gated rung must also be priced — otherwise reaching the level would
+        /// hand the home over and the price would be unreachable code. Both content gates refuse
+        /// a gated rung with no price, which is what closes the hole rather than leaving
+        /// <see cref="IsStarter"/> and <see cref="HomesteadLedger.IsEarned"/> to disagree about
+        /// a piece nobody could ever hold.
         /// </para>
         /// <para>
         /// Derived like the other two — it is a question about the star ledger by way of

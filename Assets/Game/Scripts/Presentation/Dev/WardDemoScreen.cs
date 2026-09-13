@@ -85,7 +85,9 @@ namespace GlimmerGrove.Dev
             if (_stage != null) _stage.Show(_model, _colour);
         }
 
-        void OnDestroy() => AssetLibrary.ReleaseScope(AssetLibrary.WardShelfScope);
+        AssetHold _shelfArt;
+
+        void OnDestroy() => _shelfArt?.Dispose();
 
         public override bool OnBack() { Flow.Go<LoadoutScreen>(); return true; }
 
@@ -280,17 +282,13 @@ namespace GlimmerGrove.Dev
         /// <b><c>async void</c> with the exception caught</b>, which is <c>CompanionArt.Load</c>'s
         /// shape and for its reason: a scope that failed to load must not vanish silently.
         /// </summary>
-        async void Browse()
+        void Browse() => Run(async token =>
         {
-            try
-            {
-                await AssetLibrary.EnsureScopeAsync(
-                    AssetLibrary.WardShelfScope,
-                    AssetManifest.WardShelfAssets(WardLedger.Catalog.Models));
-            }
-            catch (Exception e) { Debug.LogException(e); return; }
+            _shelfArt = _shelfArt ?? AssetLibrary.Hold("ward_shelf");
+            await _shelfArt.LoadAsync(AssetManifest.WardShelfAssets(WardLedger.Catalog.Models),
+                                      null, token);
 
-            if (this != null) Paint();
-        }
+            if (Living) Paint();
+        });
     }
 }

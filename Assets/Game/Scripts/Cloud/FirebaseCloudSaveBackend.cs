@@ -458,7 +458,8 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var snapshot = await _db.Collection("config").Document("stats").GetSnapshotAsync();
+                var snapshot = await CloudCancel.OrGiveUp(
+                    _db.Collection("config").Document("stats").GetSnapshotAsync(), cancellation);
                 if (!snapshot.Exists) return (CloudResult.Success, empty);
 
                 var document = snapshot.ToDictionary();
@@ -540,7 +541,7 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var snapshot = await PlayerDoc(userId).GetSnapshotAsync();
+                var snapshot = await CloudCancel.OrGiveUp(PlayerDoc(userId).GetSnapshotAsync(), cancellation);
 
                 if (!snapshot.Exists)
                     return (CloudResult.Success, CloudSnapshot.Missing);   // a first sync, not a failure
@@ -895,7 +896,8 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var snapshot = await _db.Collection(NamesCollection).Document(nameKey).GetSnapshotAsync();
+                var snapshot = await CloudCancel.OrGiveUp(
+                    _db.Collection(NamesCollection).Document(nameKey).GetSnapshotAsync(), cancellation);
                 if (!snapshot.Exists) return (CloudResult.Success, string.Empty);
 
                 var data = snapshot.ToDictionary();
@@ -1049,7 +1051,8 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var snapshot = await _db.Collection(GrovesCollection).Document(ownerId).GetSnapshotAsync();
+                var snapshot = await CloudCancel.OrGiveUp(
+                    _db.Collection(GrovesCollection).Document(ownerId).GetSnapshotAsync(), cancellation);
                 if (!snapshot.Exists) return (CloudResult.Success, Social.GroveCard.Empty);
 
                 return (CloudResult.Success, ReadCard(ownerId, snapshot.ToDictionary()));
@@ -1074,7 +1077,8 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var snapshot = await _db.Collection(BoardsCollection).Document(boardId).GetSnapshotAsync();
+                var snapshot = await CloudCancel.OrGiveUp(
+                    _db.Collection(BoardsCollection).Document(boardId).GetSnapshotAsync(), cancellation);
                 if (!snapshot.Exists)
                     return (CloudResult.Success, new Social.LeaderboardBoard(boardId, null, 0L, 0));
 
@@ -1133,7 +1137,8 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var snapshot = await _db.Collection("config").Document("groveRanks").GetSnapshotAsync();
+                var snapshot = await CloudCancel.OrGiveUp(
+                    _db.Collection("config").Document("groveRanks").GetSnapshotAsync(), cancellation);
                 if (!snapshot.Exists)
                     return (CloudResult.Success, Social.GroveRankTable.None, noPopulation, 0L);
 
@@ -1505,6 +1510,14 @@ namespace GlimmerGrove.Cloud
         static CloudResult Classify(Exception e, string what)
         {
             var inner = e is AggregateException aggregate ? aggregate.Flatten().InnerException ?? e : e;
+
+            // Somebody walked away from a screen while its read was out — the ordinary end of
+            // work, not a fault. Reported as anything else it would reach a player as "the
+            // boards could not be reached", on a board they are no longer looking at, and it
+            // would teach whoever reads the log to ignore a class of message that also carries
+            // real network failures. See CloudCancel for what a token can and cannot do here.
+            if (inner is OperationCanceledException)
+                return CloudResult.Failed(CloudFailure.Cancelled, "the caller gave up");
 
             if (TryAuthError(inner, out var authError))
             {

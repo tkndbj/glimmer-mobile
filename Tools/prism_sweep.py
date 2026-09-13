@@ -11,7 +11,7 @@ What is *dealt* is the arrangement nobody can eyeball - which colour sits in whi
 that is exactly what a sweep is for.
 
 **A template plants what the board needs before the rest is dealt**, which is Kindlewake's own
-lesson (invariant 35e) and the general rule 20i states: grow what the board needs before the
+lesson (invariant 35b) and the general rule 20i states: grow what the board needs before the
 answer is carved, so a wall is winnable by construction rather than by rejection. Here that is
 one line - every critter is given a lantern in its own run of gem cells - and the sweep still
 rejects most seeds, because *cheaply* winnable is a different question from winnable.

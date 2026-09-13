@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "com.appsflyer.unity": {
+      "version": "file:../GooglePackages/com.appsflyer.unity-6.17.1.tgz",
+      "depth": 0,
+      "source": "local-tarball",
+      "dependencies": {}
+    },
     "com.coplaydev.unity-mcp": {
       "version": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#v10.1.2",
       "depth": 0,
@@ -31,6 +37,14 @@
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {}
+    },
+    "com.google.firebase.analytics": {
+      "version": "file:../GooglePackages/com.google.firebase.analytics-13.15.0.tgz",
+      "depth": 0,
+      "source": "local-tarball",
+      "dependencies": {
+        "com.google.firebase.app": "13.15.0"
+      }
     },
     "com.google.firebase.app": {
       "version": "file:../GooglePackages/com.google.firebase.app-13.15.0.tgz",

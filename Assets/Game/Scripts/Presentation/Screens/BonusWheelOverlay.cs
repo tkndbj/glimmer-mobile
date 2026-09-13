@@ -482,7 +482,7 @@ namespace GlimmerGrove
         /// <see cref="RewardedVideo.Watch"/>, one copy for the three panels that need it.
         /// </para>
         /// </summary>
-        async void Show()
+        void Show() => Run(async token =>
         {
             var payment = await RewardedVideo.Watch(PlacementId);
 
@@ -492,12 +492,12 @@ namespace GlimmerGrove
             // still gives up when this has gone.
             if (payment.Paid) { Paid(payment.Drop, payment.Flight); return; }
 
-            if (this == null) return;
+            if (!Living) return;
 
             _watching = false;
             if (_status) _status.text = RewardedVideo.Refusal(payment);
             Repaint();
-        }
+        });
 
         /// <summary>
         /// The video paid. Note what is handed on: the <em>wheel's</em> figure, not the drop's.

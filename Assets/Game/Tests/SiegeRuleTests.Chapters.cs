@@ -310,10 +310,12 @@ namespace GlimmerGrove.Tests
         {
             // Where this chapter stands, measured. Set below what was read, because a sweep of
             // ninety is steady and not exact.
-            // Measured 2026-09-12, after the colour lock and the shorter wave gaps: 65 on the
-            // starter, 84 one rung up, against Thornwatch's 81 on the starter. The worst rung on
-            // the starter is the finale at 1 of 9, and the shelf is worth nineteen runs across the
-            // chapter - which is the whole story this chapter is meant to tell.
+            // Measured 2026-09-13, with every ward answering a boss (`SiegeTuning.EveryWardReaches`)
+            // and the four bosses fifteen per cent tougher for it: 66 on the starter, 81 one rung
+            // up, against Thornwatch's 80 on the starter. It read 65 and 84 before that pair. The
+            // worst rung on the starter is still the finale at 1 of 9, and the shelf is worth
+            // fifteen runs across the chapter - which is the whole story this chapter is meant to
+            // tell.
             const int BareFloor = 60;       // hard, and nobody is walled out
             const int KittedFloor = 78;     // comfortably clearable once the shelf is used
             const int Answers = 12;         // runs the first rung of the shelf is worth, at least

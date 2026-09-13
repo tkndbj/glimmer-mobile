@@ -35,96 +35,150 @@ namespace GlimmerGrove
         /// </summary>
         public override int FriendCell => Width / 2;
 
-        RectTransform _wardAnchor;
-
         /// <summary>
-        /// The cog, as a picture for a lesson panel to draw.
+        /// The cog's own picture, for the widget one is drawn as.
         ///
         /// <para>
-        /// <b>A picture rather than a ring, and the ring was tried first.</b> Pointing at a cog on
-        /// the field is the obvious lesson and it cannot be relied on: a cog is dealt at a rate
-        /// rather than authored (<see cref="SiegeLayout.Cogs"/>), so a rung can legitimately open
-        /// with none standing - and a lesson is offered once in a player's life, so one that waits
-        /// for a board that may never come may never be given at all.
-        /// </para>
-        /// <para>
-        /// So the ring stays on a turret, which is always there and is what a cog is <em>for</em>,
-        /// and the thing a ring cannot say - what the object actually looks like - is said by
-        /// drawing it. See <c>Lesson.Icon</c>.
+        /// <b>It was public, and was a lesson's <c>Icon</c>.</b> Pointing at a cog was held to be
+        /// unreliable while one was dealt into the gem field at a rate — a rung could open with
+        /// none standing, and a lesson is offered once in a player's life — so the ring went on a
+        /// turret and the panel <em>drew</em> the cog instead. A cog is dropped by a felled raider
+        /// now, so the ring goes on the cog (<see cref="LiveCog"/>) and there is nothing left for a
+        /// picture in a panel to say.
         /// </para>
         /// </summary>
-        public Sprite CogArt => Piece("gem_cog");
+        Sprite CogArt => Piece("gem_cog");
 
         /// <summary>
-        /// The body of a raider of this kind on the hill, for a tip to ring, or null.
+        /// The live bomb a lesson rings, or null when none is standing.
         ///
+        /// <para>
+        /// <b>The bomb, not the bomber, and that is the whole of what was wrong.</b> This lesson
+        /// used to be raised when a bomber walked on and ringed the raider — so the one sentence
+        /// it exists to say, <em>tap this</em>, arrived while the thing to tap did not exist, and
+        /// the panel was long gone by the time one landed. Reported from a device exactly that
+        /// way. It is raised by <see cref="Bombed"/> now, on the drop.
+        /// </para>
         /// <para>
         /// <b>Asked at the moment the tip goes up rather than remembered</b>, because the two are
-        /// a beat apart and the raider may already be dead — a lesson is resolved through
-        /// <c>Lessons</c> every time one is offered, so a null here is a tip that teaches without
-        /// pointing rather than a ring drawn round bare hill.
+        /// a beat apart — a lesson is resolved through <c>Lessons</c> every time one is offered,
+        /// so a null here is a tip that teaches without pointing rather than a ring drawn round
+        /// bare hill. The run is held while a tip is up (<c>RunHold.Teaching</c>) and a bomb only
+        /// leaves when it is tapped, so in practice the one that raised this is still there.
         /// </para>
         /// <para>
-        /// <b>The one furthest down, not the one that arrived.</b> Two bombers is one lesson, and
-        /// ringing whichever is nearest the line is the only version that both points at a live
-        /// body and points at the one the player is about to have to deal with.
+        /// <b>The newest, and not the one nearest the line.</b> The lesson it serves says a
+        /// bomber left this when it died, so what it should ring is the thing the player's last
+        /// kill just handed them; ids are minted in order, so the largest is the one that
+        /// arrived. Asked of the board for what exists and of the view for whether it is drawn,
+        /// so a bomb mid-teardown is never ringed.
         /// </para>
         /// </summary>
-        public RectTransform Walking(SiegeKind kind)
+        public RectTransform LiveBomb()
         {
             if (_board == null) return null;
 
             RectTransform found = null;
-            float furthest = -1f;
+            int newest = -1;
 
-            var raiders = _board.Raiders;
+            var bombs = _board.Bombs;
 
-            for (int i = 0; i < raiders.Count; i++)
+            for (int i = 0; i < bombs.Count; i++)
             {
-                var raider = raiders[i];
-                if (!raider.Alive || raider.Kind != kind || !raider.OnTheHill) continue;
-                if (raider.March <= furthest) continue;
+                var bomb = bombs[i];
+                if (bomb.Id <= newest) continue;
 
-                var mob = MobOf(raider.Id);
-                if (mob == null || mob.Node == null) continue;
+                var fuse = FuseOf(bomb.Id);
+                if (fuse == null || fuse.Node == null) continue;
 
-                furthest = raider.March;
-                found = mob.Node;
+                newest = bomb.Id;
+                found = fuse.Node;
             }
 
             return found;
         }
 
         /// <summary>
-        /// Something for the cog lesson to ring, and it is the <em>line</em> rather than a cell.
+        /// The live cog a lesson rings, or null when none is lying on the hill.
         ///
         /// <para>
-        /// A cog is a thing on the field, so the obvious anchor is the cog — and it is wrong,
-        /// because a cog is dealt and may not be standing anywhere when the lesson goes up. What
-        /// the lesson is about is which turret an upgrade goes to, so the honest thing to point at
-        /// is the turret it would go to, and the middle of the line is the one place on it that is
-        /// on every board however many wards it holds.
+        /// <b>The cog itself, where this lesson used to ring the middle of the ward line.</b> That
+        /// anchor was the best that could be said while a cog was dealt into the gem field and a
+        /// rung might open with none standing — the lesson had to point at the thing a cog is
+        /// <em>for</em>, because the cog itself might not exist. A cog is dropped by a felled
+        /// raider now (invariant 37bl), so <see cref="Salvaged"/> raises this at the moment one
+        /// lands and there is a real object to ring.
         /// </para>
         /// <para>
-        /// Made once and kept, for <c>ProtoView.AnchorAt</c>'s reason: the lessons are asked again
-        /// on every readout change, and the node handed back is the one the tip is already ringing.
+        /// <b>The newest, and resolved when the tip goes up rather than remembered</b> — see
+        /// <see cref="LiveBomb"/>, whose two rules these are. A cog also runs out on its own clock,
+        /// which is the one way this differs from a bomb: it can be trampled while the panel is
+        /// still opening, and a null here is a tip that teaches without pointing rather than a ring
+        /// drawn round bare hill.
         /// </para>
         /// </summary>
-        public RectTransform WardAnchor
+        public RectTransform LiveCog()
         {
-            get
+            if (_board == null) return null;
+
+            RectTransform found = null;
+            int newest = -1;
+
+            var cogs = _board.Cogs;
+
+            for (int i = 0; i < cogs.Count; i++)
             {
-                if (_wardAnchor != null) return _wardAnchor;
-                if (_wall == null || _posts == null || _posts.Length == 0) return null;
+                var cog = cogs[i];
+                if (cog.Id <= newest) continue;
 
-                _wardAnchor = UIKit.Node("WardAnchor", _wall);
-                _wardAnchor.anchorMin = _wardAnchor.anchorMax = new Vector2(.5f, .5f);
-                _wardAnchor.sizeDelta = new Vector2(Cell * 1.8f, Cell * 2.3f);
-                _wardAnchor.anchoredPosition =
-                    new Vector2(PostX(_posts.Length / 2), _lineY);
+                var gear = GearOf(cog.Id);
+                if (gear == null || gear.Node == null) continue;
 
-                return _wardAnchor;
+                newest = cog.Id;
+                found = gear.Node;
             }
+
+            return found;
+        }
+
+        /// <summary>
+        /// A turret holding an overcharge, for a lesson to ring, or null when none is armed.
+        ///
+        /// <para>
+        /// <b>The turret rather than the glyph on it.</b> What the lesson has to say is <em>this
+        /// one is full</em>, and the chassis key is a small bright thing sitting inside the ring
+        /// that already pulses on its own — ringing the key alone would point at a control without
+        /// saying which turret it belongs to, on a line of four that differ only in colour.
+        /// </para>
+        /// <para>
+        /// <b>The real post, not a node made to stand in for one.</b> This used to be
+        /// <c>WardAnchor</c>: a rectangle built at the middle of the line, the same size and in the
+        /// same place as the post it was covering, because the thing it wanted to ring might not
+        /// exist. Both lessons that needed that now have something real to point at, so the stand-in
+        /// is gone rather than kept for a caller that no longer wants it.
+        /// </para>
+        /// <para>
+        /// <b>The first armed one, and asked when the tip goes up.</b> Which of four is arbitrary —
+        /// the sentence is about the rule and not about that turret — so a fixed order is worth
+        /// more than a cleverer choice, and a charge can be spent or a ward can fall between the
+        /// hook firing and the panel opening.
+        /// </para>
+        /// </summary>
+        public RectTransform ArmedWard()
+        {
+            if (_board == null || _posts == null) return null;
+
+            var wards = _board.Wards;
+
+            for (int i = 0; i < _posts.Length && i < wards.Count; i++)
+            {
+                if (!wards[i].Armed) continue;
+
+                var post = _posts[i];
+                if (post != null && post.Node != null) return post.Node;
+            }
+
+            return null;
         }
     }
 }

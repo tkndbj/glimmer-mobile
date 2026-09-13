@@ -664,3 +664,285 @@ Presentation and are invisible in a compile, a validator and a screenshot of the
   and **the rate gives way**, so a bigger board is never a longer wait. Motion is the one subsystem whose
   failures show up only in play, which is why the arithmetic has to be reachable without an Editor.
 
+
+## Baking, grading and framing — the art lore moved out of CLAUDE.md
+
+*Moved here on 2026-09-12, when CLAUDE.md was cut from 708k to fit its limit. These are craft rules
+about making pictures, not invariants about how the game works. The invariant numbers are kept so the
+code comments that cite them still resolve: CLAUDE.md keeps the one-line rule, and the detail is here.*
+
+**Baking a bought VFX pack (37k).** A 3D particle pack reaches a board here as a **bake**: not the
+prefabs (the canvas is `ScreenSpaceOverlay` and the only camera culls everything, so a particle system
+in the scene is never drawn) and not the pack's flat textures (what was bought is *motions*). Unity
+rasterises the motion offline and what ships is sprite reels, which is what a board firing twenty-eight
+bolts a second can afford. Six silent ways the first bake failed, all worth knowing:
+
+- `ParticleSystem.Simulate` with `restart: false` **continues** from where a system is, so a
+  stopped-and-cleared one bakes only the mesh renderers that draw whether or not anything is playing.
+- Its last argument quantises to `Time.fixedDeltaTime`, four times coarser than the substep, so a
+  *fixed* step bakes nothing or four times too much.
+- `Particle.GetCurrentSize` is a **mesh scale** for a mesh-rendering system — every extent came back as
+  the same suspiciously round number in all three directions. Measure `Renderer.bounds`.
+- A frame **shaped by a constant** pads a comet whose real proportions are eight to one until it is a
+  quarter of its own width, and since the view sizes a bolt by its frame's width that comes straight
+  off the board as a twelve-pixel sliver.
+- A **window** has two ends and neither is the effect's lifetime: one muzzle draws a ring inward before
+  it bursts and a lightning bolt builds for a third of a second, so a fixed window bakes the run-up and
+  throws away the event.
+- The grade's **white-core protection has to be capped**, because an icicle and a lightning bolt are
+  near-white nearly all over: uncapped, half a pack comes out colourless (0.18 median saturation on a
+  bolt fired by a blue turret).
+
+Nothing numeric found any of them — a contact sheet and `render_siege.py` did. **And the render has to
+show a reel at its loudest**, because these effects dip: drawn from a fixed frame index it caught two
+of four muzzles mid-dip and read as a bake that had failed, which is an instrument lying about the
+thing it exists to judge. Consequences: the far tail is **framed out and dissolved**, because a trail
+six times the head makes the sprite longer than the flight it has to cross; the reels are **pooled**,
+which is premature everywhere else in this project and not here; and **damage numbers are tallied per
+raider**, because a lit line lands about eighteen hits a second and eighteen figures a second is a wall
+nobody can read one number out of, which drawing each bigger makes worse.
+
+**Bloom, exposure and the grading ladder (37af, 37aj, 37ae).** Baked VFX are authored to be seen
+through bloom, so a bake that renders without any ships the geometry of an effect with the light it
+throws left out. A bloom is a **bright-pass blurred at two scales**, one channel and downsampled (the
+colour is already the recipe's hue and a bloom is low-frequency; three channels at full resolution
+across 253 reels is minutes of bake for a picture nobody could tell apart), added in **emission**
+(`rgb x alpha`) rather than in colour, because these reels composite with ordinary alpha blending and
+light that only changes a transparent pixel's colour changes nothing. Two things about the blur are
+load-bearing: a box pass must divide by the **whole kernel** and never by how much of it was in bounds
+(averaging only the samples that exist treats the frame's edge as a mirror and bakes a glowing
+rectangle around every effect, worst on small frames); and the wide scale's divisor has to be held to
+the frame's own size, or three passes cross the whole picture and the halo becomes a wash. A blur has
+no zero, so a floor is subtracted — a thousandth of an alpha over a rectangle is still a rectangle.
+
+Dividing every pixel by its own largest channel is what puts the brightness in the alpha and lets one
+render be graded four ways — and it means the colour left behind carries none, so a pixel with a tenth
+of the light and one with all of it come out the same. Every real renderer tonemaps that top rung to
+**white**; this camera runs with HDR off and nothing after it, so the recipe needs a third rung driven
+by *coverage* rather than by the source's paleness: **white core, hue body, warm haze — and the haze is
+a second colour**, because light reddens as it spreads, which is why anything incandescent photographs
+as a white middle in a warm glow and why a single-coloured bloom can only ever make the core bigger.
+
+**Grading constants are per-source, not global.** The lean toward a target hue was tuned on four
+elemental effects *chosen* for already wearing roughly the right hue; nothing in a bought roster is, so
+a teal arrow stays teal on a red ward at that lean. The white-keeping constant has almost nothing to
+bite on for art drawn pale, so an icicle grades to white-with-a-tinge. And a saturation **floor** is
+needed, because below it a pale source comes out pink whatever else moves. **Before reusing a grading
+constant on art chosen a different way, ask what the old art was chosen for.**
+
+**Bleached reels do not work here, and the reason is exact.** A white reel with all its brightness in
+coverage costs a quarter as much and can be worn in any colour by one `Image.color` multiply. Held up
+beside a real render it is a flat pink smear: a multiply can only vary **value**, and what makes these
+effects read is variation in **hue** — a yellow-hot head inside an orange body inside a red trail. A
+white-core overlay recovers nothing either, because these packs' hot cores are *saturated yellow*
+rather than white. That is invariant 37l met from a third direction, and the direction that matters:
+what a bought turret may not look is cheaper than the free one.
+
+**Framing.** A reel is framed with the prefab's own origin at a declared fraction of the way up, and
+**that number is declared in the view and read by the bake**, so the number that frames the render and
+the number that positions the sprite are one number. Trimming keeps the anchor row where it is — dead
+frame is invisible while a reel is only *drawn*, and stops being invisible the moment the board has to
+know where the bolt ends. A falling bolt is **clipped** rather than shrunk, because sizing it to the
+room above whatever it hit makes a strike on a raider half way up a four-cell hill a cell and a half
+long, which reads as a spark. **And before framing an effect, look at what it actually is**: framed as
+a comet (tall, room reserved for a trail), a round blast came out 112 x 512 with the whole effect in
+the top ninety rows and eighty per cent of the frame empty, which the view then draws as a violet
+sliver seven cells long crossing a hill four cells deep.
+
+**Flat quads and the camera (37aj, 37ba).** The rig looks straight along Z, because everything it had
+ever baked was a projectile and a projectile looks the same from any angle. A pack's ground cracks,
+splats, shockwaves and rings are **flat quads lying on the floor**, so every one of them bakes edge-on
+and collapses to a hairline — what shipped was the geometry of a lightning strike with the *strike*
+left out. The rig takes a tilt and orbits what it is aimed at, so at nought it is the old one to the
+pixel. The same fault has an opposite face: a flat shockwave *card* seen face-on bakes as a translucent
+**square the size of the frame**, which passes unnoticed when it is coloured and is a pane of glass
+over a quarter of the hill when it is white.
+
+**Procedural rather than baked, sometimes (37ac).** A bolt that is the *same* bolt twice reads as a
+stamp, and a chain has to reach two points the board decides at run time — so boss lightning is
+polylines built at run time, which also means no address to register, no group, no scope and no frame
+where a strike is a white rectangle (7b), and it works on a checkout with no licensed pack in it. Four
+things the render caught there and no number could: a white filament in a soft halo comes out **white**
+at the size a phone draws it (it takes a third bar, the boss's own colour at full strength and twice
+the filament's width, for the colour to survive over bright ground); bolts **left the plate**, because
+the effects layer is sized to the field and carries no mask, so every endpoint is clamped; a bow of
+half a cell is **invisible**, so three orbs on spread arcs were one orb drawn three times; and nine
+strikes over a hill read as **noise** rather than as six things being struck. And one that is not about
+looking: **a staggered storm constructed up front is several hundred `Image`s and a canvas rebuild
+inside one frame** — defer the construction past the delay, not just the fade.
+
+**Casting a top-down cast (37ar, 37as).** Nine monster packs on this machine hold ninety-six characters
+and not one insect; the only insects anywhere are fifteen in the same kit the turrets come from, and
+they are drawn **top-down**, which is the one view this board has. Sixteen kinds out of fifteen bodies
+is the arithmetic every consequence follows from.
+
+- Every insect is composited over a **baked ground shadow**, an ellipse wider than the body, so the
+  animation's bounding box is half as wide again and a third taller than the insect — and the view
+  sizes a body by its frame. It is separable *exactly*, and by something better than a threshold on
+  darkness: the shadow is **pure black at partial alpha** where a fly's wings are **white at partial
+  alpha**.
+- A hue rotation sets a pixel's hue and leaves its **value** alone, so the darkest beetle (mean 47
+  against a hybrid's 140) came out black in whatever colour it was asked for — on a board where the
+  colour of a raider is the whole mechanic. Every body is lifted onto one measured value. **The variety
+  a pack gives you is hue and material, never brightness, because brightness decides whether anything
+  can be read at all.**
+- A boss carries **two** reels rather than three, because a top-down insect's reel cycles its legs and
+  wings **in place** (2.3 pixels of drift across a 137-pixel frame), so standing and walking are one
+  picture and the board is the only thing that moves it. A boss that really walked would want the third
+  back. Three animations of one character need **one canvas**, or trimming each to its own box draws
+  the body at two different scales; their first frames are the same pose, so the offset is the
+  difference of their alpha centroids, exact to the pixel. The canvas is mirrored on **both** axes,
+  which only ever grows it, so nothing is ever clipped.
+- **A shadow's offset is a fact about what the body is.** 0.46 of the drawn height below the node is
+  right for a *biped seen from the side* and puts a top-down insect's shadow the better part of a
+  body-length clear of the thing casting it; measured off the pack's own baked shadows, a crawler's
+  sits 0.17–0.24 of its own height below its middle and runs 1.02–1.15 of its width. **And a soft
+  sprite's rectangle is not its shadow**: `(1 - distance)` raised to a cube is an eighth of its peak
+  half way out and invisible at this size, while a profile that ramps the whole way is a *haze* rather
+  than a shadow — a quarter-power holds near its peak most of the way out, and the width has to move
+  with the falloff, because a flat profile reaches almost to the edge of its rect where a steep one
+  dies two thirds of the way.
+
+**Baking a cast from 3D (37at).** The market has no more top-down casts and the reason is structural:
+"top-down" in an asset store nearly always means a three-quarter RPG view. So a second cast is rendered
+out of rigged CC0 models at this board's own camera — the oldest technique in the genre, and one step
+over from what the VFX bake already does. What ships is PNG reels; no model, rig or animator reaches a
+build, and the models live under an `Editor` folder, which Unity excludes from players.
+
+- **Edit mode does not skin.** `SampleAnimation` poses the bone **transforms**, and skinning is
+  dispatched by the player loop, which is not running — so a `Camera.Render()` driven from a menu item
+  draws every `SkinnedMeshRenderer` in its **bind pose** however the bones stand. Measured across two
+  poses: the foot bone travels 0.75 units, the leg mesh's skinned vertices 1.07, and the rendered legs
+  **0.000**. The fix is CPU skinning on demand — switch each skinned renderer off, stand a plain mesh
+  renderer under the same transform with the same materials, and `BakeMesh` it every frame. At one pose
+  the two render pixel-identically (0.076 of 255), so it buys the motion and changes nothing else.
+- **What disguised it is which parts of a body are not skinned**: a helmet, a hood, a hat and a cape
+  are plain meshes parented to a bone, so a transform moves them and they render perfectly — and every
+  one of them is on the head or the shoulders. A hood rocking above a body that never moves is
+  indistinguishable from a figure whose motion the projection has eaten. **The transform-level
+  measurements were all correct and told nobody anything.**
+- **Two metrics said the opposite of the truth.** Alpha change only sees the silhouette's outline and
+  is blind to a limb moving inside the body; RGB change reads *higher* for a swinging helmet than for
+  scissoring legs. On the strength of those two the models were written up as wrong, which was false.
+  **Pixel churn is not legibility.**
+- **What decides whether a model survives that camera is not the camera**: a hooded featureless dome
+  reads as a skittle at every angle and every tint, where a horned helm and a blade down the back read
+  instantly. **A silhouette has to be made of something that projects sideways.** And **the body thrown
+  out was the one with nothing to hide the bug behind** — a model with no static parts stood perfectly
+  still and was withdrawn as "will not animate, unexplained".
+- **Three faults of finish, none of them taste.** *Upscaled*, because the cut size was matched to the
+  smallest body on the board — the plainest "cheap" signal there is, and invisible in every gate.
+  *Keyline*: a flat-shaded render is visibly pasted onto a board of cartoon art inside heavy dark
+  outlines until it is given one, grown at supersample size so the line is soft rather than stepped, in
+  navy rather than black. *No rim light*: a key and a fill shade a body and leave its edge exactly as
+  bright as the hill, so one directional light from **behind and above** catches the helm and the
+  shoulders — and it **has to carry the camera's yaw**, or it lights the face and makes the whole cast
+  paler and flatter than before it was "improved".
+- **Pin the environment light for the bake and put it back.** It is otherwise inherited from whichever
+  scene somebody double-clicked, which a re-bake-and-compare verifier can never catch: it re-bakes in
+  the same session and so agrees with itself whatever the value was.
+- **Unity's convention is that a character faces `+Z`, and a camera built from `Euler(pitch, 0, 0)`
+  looks along `+Z`** — so the first bake shipped a hill of raiders advancing on the ward line with
+  their backs to it. The key and fill lights carry the yaw with the camera, or a body lit for one side
+  of itself is rendered from the other.
+- **Imported FBX materials may not answer `_Color`.** Measured, the material reads back as the colour
+  it was set to and the render comes out pixel-identical for all four — on some models and not others,
+  with no difference in shader, emission or texture setup. Shipping a cast where one body takes its
+  colour and another silently does not is the worse outcome, so the whole cast is coloured **one** way,
+  in post. Two related traps: `Renderer.material` does not instance in edit mode (it hands back the
+  *imported FBX's* material, so painting one body repaints every body sharing it and modifies the asset
+  on disk), and building copies from `sharedMaterial` each pass copies from a material the previous
+  pass destroyed, which lands Unity's missing-material **magenta** on three raiders in four with the
+  bake reporting success. Capture the originals once, before anything is painted.
+
+**Grounds (37ab, 37au, 37av, 37aw).** Which ground a rung draws is arithmetic on the level's place in
+its chapter (7c), so a second chapter costs no art. Five rounds of work went into this and the fifth
+was thrown away:
+
+- **An isometric pack is not a top-down pack and no amount of transforming makes it one.** Its ground
+  is drawn as diamonds with the side faces baked into the pixels, so a tile cannot be un-skewed into a
+  square — it comes back a rounded block lit from a corner nothing else agrees with, and laying a field
+  and cropping a rectangle out of it only hides the skirts, leaving a diagonal weave under a square
+  board.
+- **Value is the one thing a second ground may not change.** Every rung is normalised onto one measured
+  mean and spread, and chroma has a ceiling, because a saturated floor is the one thing on this board
+  competing with the cast walking over it. **A floor may carry a real colour; what it may not carry is
+  a *board* colour** — measured, the ten floors sit at 3.3–11.2 chroma and every one clears all four
+  gem hues by at least .04 of the wheel.
+- **Whenever two normalisations decide whether one thing reads against another, the invariant is the
+  gap.** The ground's mean stood a third *brighter* than the cast normalised to walk over it — the
+  plate rule exactly inverted, in a comment citing it — because the number had been recorded as "the
+  value the cast was judged against" when what it was measured off was one tileset's own brightness. It
+  is two thirds of the cast now, and **if the cast's value moves, this moves with it**.
+- **A tile sheet is cut from its own alpha box and never from its file size**, because several are
+  exported with a transparent margin: dividing the file puts every seam a few pixels out and slices a
+  strip of each tile onto its neighbour, which reads as a grubby grid rather than as an error.
+- **The row count is derived per sheet.** A tile is 231x214 on one sheet and 249x189 on another, so one
+  row count for all of them squashes some by a fifth to fit a cell that is not their shape. A tile is
+  square or it is not: a non-square cell stretches every tile before the view ever sees it, which one
+  canvas hid for two rounds by being square *by luck*.
+- **Staining overwrites hue and saturation; damping only turns a material's own colour down.** The
+  first is the only way to make one pack look like ten floors and can never make sandstone look like
+  ice; the second leaves every crack, speck and bevel where the artist drew it. **And a constant tuned
+  against one input is a constant nobody has tested**: a tint that *scales* saturation is fine while
+  every tile is nearly grey and turns a half-saturated brick vivid, so two floors meant to differ in
+  material differ in *loudness* instead.
+- **A rule about board colours is about every board colour, so grep the palette rather than the thing
+  that prompted it.** Crystals were rotated off two gem hues while moss and quarried stone sitting on
+  the other two were left for two chapters. They are **calmed rather than rotated**: a thing meant to
+  be looked at moves to a hue that means nothing and stays bright, and a thing meant to read as
+  material gives up the saturation that made it a signal.
+- **A thing lying on the floor is normalised onto the floor's band**, exactly as the cast and the floor
+  are onto theirs — two packs can disagree by a factor of three about brightness, and a scatter left at
+  its own value is a handful of white chips on a dark hill however carefully it is placed. That is the
+  difference between a thing on the ground and **litter**.
+- **Rotation is a fact about the object**: a rock, a plank and a crystal have no up; a barrel, a stump,
+  a gate and a fence do. Spun freely, fences come out lying at thirty-seven degrees. And square faces
+  can be turned for free where a rectangular tile lit from one side cannot — a quarter turn there is a
+  tile lying on its side.
+- **A gamma lift is the wrong tool for darkness** — it lifts the shadows with it and washes everything
+  to pastel. An affine grade is the right one.
+- **A zip entry test spelled with a folder in it** matched the pack that nests its folder and silently
+  not the one that puts it at the root, so both packs read as absent and the tool passed.
+
+**Twin barrels and bolt width (37az).** Before duplicating an effect to say "there are two of these",
+divide the gap by the width of what you are about to draw: barrels at ±0.097 of a sprite's width are a
+third of a cell apart against a muzzle flash drawn 2.7 cells wide, and two blobs whose centres are 12%
+of their own width apart are one blob at twice the brightness. Two fixes: each flash is drawn at .70 so
+the pair is twin-lobed rather than one bloom (*down* if it needs to read harder, never up), and each
+bolt lands **beside** the target rather than on it, so the pair stays parallel the whole way — an
+eighth of a cell off centre is invisible under a hit three cells wide, and two converging comets are
+not. And a bolt's width is a fact about its **frame**: scaling the object or the frustum feeds a
+narrower measurement back into the framing, which redraws the same bolt at the same width and merely
+makes it longer, so the finished frames are squeezed toward the middle column — **the bolt only**,
+because squeezing a radial burst makes an ellipse of it. **Before indexing a render buffer, check what
+the render target's size actually is**: handed the final frame's dimensions, a squeeze read a quarter
+of the supersampled buffer at half the stride and changed no picture while reporting success.
+
+**Art tools, and which need what.** Every art tool here is Python with a `--check` that proves the
+committed PNGs are what the tool writes, and `--contact` sheets that are the gate that actually matters
+— **`--check` proves reproducibility and says nothing about quality**. The exceptions are the particle
+bakes, which are Editor menu items because no Python can rasterise a particle system, and which need
+the gitignored packs; and the grove's renderer, which rasterises static meshes on the CPU from
+committed CC0 models and so runs on any checkout. Licensed packs are read from two or three roots and
+every tool **passes when they are absent**, because copying a pack so that one path works is a second
+copy nothing keeps in step.
+
+- `Tools/make_siege_art.py` — gems, cast, turrets, grounds (`--tower`, `--tiles`, `--enemies`).
+- `Tools/make_siege_ground.py` — the ten floors; authored at the hill band's real aspect, and `--check`
+  holds the PNGs to that canvas *and* to the one place C# writes the shape down.
+- `Tools/render_siege.py` — the eye for everything no number can see. `--phone` draws a 19.5:9 display
+  with a home-indicator strip, which is the one shape that shows the shelf's foot and the three bands'
+  real proportions. **Its insets are in the screen's own order (left, bottom, right, top)** and were
+  written the other way round for a long time, which drew the board 55 points high: a diagnostic that
+  is the only thing able to see a band in the wrong place must not itself put one there.
+- `Tools/render_perch.py`, `render_grove.py`, `render_prism.py`, `render_home.py`, `render_shop.py` —
+  the same job for the map, the grove, Prismvale and the two chrome screens. `hudkit.py` mirrors
+  `UIKit` and `Skins` for the last two.
+- `Glimmer Grove ▸ Art ▸ Bake Siege Projectiles` / `Bake Turret Projectiles` / `Bake Elemental
+  Projectiles` / `Bake Storm Strike` / `Bake Siege Cast (3D)`, each with a `Verify` that re-bakes and
+  compares within a tolerance (two GPUs are not obliged to rasterise a triangle identically), and
+  `Survey Projectile Pack` / `Survey Siege Cast Angles (3D)`, which are how one of these is *chosen* —
+  their names say a family and their thumbnails are grey cubes. **Re-run `Addressables ▸ Sync All
+  Assets` after a bake, and save**: the importer hook does not fire on files a tool wrote while the
+  Editor was busy.

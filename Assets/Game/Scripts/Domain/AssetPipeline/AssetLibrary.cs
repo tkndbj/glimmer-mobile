@@ -8,163 +8,133 @@ using UnityEngine;
 namespace GlimmerGrove.AssetPipeline
 {
     /// <summary>
-    /// The game's one way to get hold of an asset.
-    ///
-    /// It caches by address and remembers which <em>scope</em> each address belongs to.
-    /// Callers never say which — they ask for an address and the library knows, because
-    /// the scope's asset set was registered when that part of the game was entered.
-    /// That keeps every UI call site oblivious to memory management while still making
-    /// it possible to drop a whole screen's art in one call.
+    /// The game's one way to get hold of an asset, and the only thing that decides when one is
+    /// freed.
     ///
     /// <para>
-    /// Scopes are <b>named, and there can be any number of them</b>. That generality is
-    /// the point rather than speculative flexibility: chapters were the first thing that
-    /// needed loading and dropping as a unit, companions are the second, and a shop or a
-    /// seasonal event will be the third. When the only transient scope was hardcoded as
-    /// "the chapter", the second one had nowhere to go but a parallel copy of the same
-    /// four fields and the same release logic — which is exactly how two caches drift
-    /// until one of them leaks.
+    /// <b>One entry per address, and that is the whole of the bookkeeping.</b> This used to be
+    /// five dictionaries — a global cache for single assets, a global cache for frame sets, a
+    /// map of scope name to scope, a map of address to owning scope, and a map of atlas to the
+    /// sprites it had handed out — with the invariant "an address appears in exactly one of
+    /// these" maintained by hand at six call sites. It is not an invariant anybody can hold in
+    /// their head, and the bug it produced was the worst kind: a load finishing after its scope
+    /// had gone resolved its destination by address, found no owner, concluded "global", and
+    /// wrote a <c>null</c> there for the life of the process. That art was then never drawn
+    /// again, anywhere, with nothing in the log. There is now one place an address can be, so
+    /// the question cannot be asked wrongly.
     /// </para>
     /// <para>
-    /// An address already held globally stays global. A scope may ask for something the
-    /// boot preload already warmed, and it must not become that scope's property — the
-    /// scope would free it on exit and the chrome would vanish from a screen that never
-    /// asked for anything.
+    /// <b>Lifetime is a reference count, not a name.</b> Whoever wants art takes an
+    /// <see cref="AssetHold"/>; the art lives until the last holder lets go. See that type for
+    /// what the named-scope version could not express and the three workarounds it grew.
+    /// </para>
+    /// <para>
+    /// <b>A load knows where it belongs before it starts.</b> Every warm resolves its
+    /// <c>Entry</c> up front and writes into that object, checking only whether it is still
+    /// alive. Nothing is re-derived from global state after an <c>await</c>, which is the
+    /// property the old code lacked.
     /// </para>
     /// </summary>
     public static class AssetLibrary
     {
-        /// <summary>Art owned by the chapter currently being played.</summary>
-        public const string ChapterScope = "chapter";
-
         /// <summary>
-        /// The launch screen's picture. Its own scope rather than part of the global set,
-        /// because it is a full-screen texture for the one screen in the game that is shown
-        /// exactly once — see <see cref="Claim"/> for why it cannot use the ordinary path.
-        /// </summary>
-        public const string SplashScope = "splash";
-
-        /// <summary>Companion portraits, held only while a screen is showing them.</summary>
-        public const string CompanionScope = "companions";
-
-        /// <summary>
-        /// The grove's plots and decor, held only while the Grovement is open.
-        ///
-        /// The third caller of this mechanism, and the one it was predicted for. It is also
-        /// the one whose set genuinely grows without bound: a chapter's art is fixed by the
-        /// chapter, a roster's by the roster, but a shop gains pieces at every drop for the
-        /// life of the game. Residents cost this scope nothing — they draw the board's own
-        /// critter flipbooks, which are already global, and an address that is global stays
-        /// global.
-        /// </summary>
-        /// <summary>
-        /// The grove screen's art: the islands, the home ladder and whatever is placed.
-        /// Bounded by the size of the player's grove, never by the size of the shop.
-        /// </summary>
-        /// <summary>
-        /// The four turrets a siege draws, and only those four.
-        ///
-        /// <b>A scope rather than part of the mode's cast, which is invariant 7b's whole
-        /// bargain.</b> The roster holds twenty models in four colours each; a run puts four of
-        /// them on the board. Loading eighty would be memory bounded by how much content exists
-        /// rather than by what is on the screen — and the shelf that browses them reads
-        /// thumbnails instead (invariant 16c), so nothing anywhere ever loads the roster.
-        /// </summary>
-        public const string LineScope = "siege_line";
-
-        /// <summary>
-        /// The turret roster's shelf thumbnails: one uncoloured picture per model.
-        ///
-        /// <b>Its own scope rather than part of the global UI set</b>, which is invariant 16c's
-        /// rule: browsing a shelf costs the shelf and never the catalog, and twenty pictures
-        /// resident for the life of every session to draw one screen is memory bounded by how much
-        /// content exists. Released when the loadout closes.
-        /// </summary>
-        public const string WardShelfScope = "ward_shelf";
-
-        public const string HomesteadScope = "grove";
-
-        /// <summary>
-        /// One kind of piece at a time — a shop tab, or the picker's list for one slot.
-        ///
-        /// Separate from <see cref="HomesteadScope"/> so browsing cannot cost what the grove
-        /// costs: switching tabs replaces this and leaves the grove's own art alone. That is
-        /// what keeps a catalog of four hundred pieces from being four hundred textures the
-        /// moment somebody opens the shop.
-        /// </summary>
-        public const string HomesteadShopScope = "grove_shop";
-
-        /// <summary>
-        /// Somebody else's grove, while it is being visited.
+        /// How long an address nobody holds is kept before it is really freed.
         ///
         /// <para>
-        /// A third scope rather than a reuse of <see cref="HomesteadScope"/>, and invariant 7b
-        /// is the reason: a scope owns its addresses, so loading a stranger's grove into the
-        /// player's would mean leaving their visit frees art the player's own grove screen is
-        /// drawing — and coming back from a visit would land on a floor of white rectangles.
-        /// It is bounded by what is standing in one grove, which is the same bound
-        /// <see cref="HomesteadScope"/> has and for the same reason.
+        /// <b>Not a cache policy — a correctness one, which the count alone cannot supply.</b>
+        /// Navigation is full of round trips that leave and come straight back: the grove to its
+        /// shop and back, a level to its map, a visit to the board it was opened from. Freeing on
+        /// the exact frame the last hold goes makes every one of those a full reload, and the old
+        /// design's answer was a marker interface asking "does the screen replacing me draw this
+        /// too?" — a question nobody can keep answering correctly as screens are added. A few
+        /// seconds of grace answers it for every pair of screens at once, including ones that do
+        /// not exist yet.
+        /// </para>
+        /// <para>
+        /// Bounded on purpose: the window is short, it is measured on the unscaled clock, and
+        /// <see cref="FlushIdle"/> empties it outright at the moments memory actually matters.
         /// </para>
         /// </summary>
-        public const string GroveVisitScope = "grove_visit";
+        public const float GraceSeconds = 6f;
 
         /// <summary>
-        /// The shop's tab row: eight little emblems in one atlas, held for as long as the shop
-        /// is open rather than for as long as one shelf is.
+        /// Everything known about one address: what it is, what it holds, and who wants it.
         ///
-        /// <para>
-        /// <b>A fourth scope for one small atlas, and it is the flicker it was reported as.</b>
-        /// The emblems used to ride in <see cref="HomesteadShopScope"/>, once per shelf — which
-        /// is correct about what a tab <em>needs</em> and wrong about how long it needs it.
-        /// <see cref="EnsureScopeAsync"/> releases before it loads, so every tap on a tab
-        /// destroyed the atlas all eight tabs were drawing from and asked for the same file
-        /// back: the whole row blinked for the frame or two the load took, every time anybody
-        /// changed shelf.
-        /// </para>
-        /// <para>
-        /// The alternative was making it global, and that is the wrong trade — global is "what
-        /// the game needs before the menu appears", and this is one screen's furniture. A scope
-        /// bounded by <em>the shop being open</em> is the honest bound, which is invariant 7b's
-        /// whole question: not "is this small" but "what is it on screen for".
-        /// </para>
+        /// <b>The only place an address can be.</b> See the type's remarks.
         /// </summary>
-        public const string HomesteadTabScope = "grove_tabs";
-        sealed class Scope
+        sealed class Entry
         {
-            public readonly HashSet<string> Addresses = new HashSet<string>(StringComparer.Ordinal);
-            public readonly Dictionary<string, UnityEngine.Object> One = new Dictionary<string, UnityEngine.Object>();
-            public readonly Dictionary<string, Sprite[]> Sets = new Dictionary<string, Sprite[]>();
+            public readonly string Address;
+
+            public AssetKind Kind;
+
+            /// <summary>How many <see cref="AssetHold"/>s want this. Nought means idle.</summary>
+            public int Holds;
+
+            /// <summary>Never freed, whatever the count. Boot's art, and anything pinned.</summary>
+            public bool Pinned;
+
+            /// <summary>A load has completed — including one that found nothing.</summary>
+            public bool Loaded;
+
+            /// <summary>Still in the table. False the instant it is freed, which is what a load
+            /// finishing late checks before it writes anything.</summary>
+            public bool Alive = true;
+
+            public UnityEngine.Object One;
+            public Sprite[] Set;
+
+            /// <summary>Sprites this atlas has handed out, so they can be destroyed with it.</summary>
+            public Dictionary<string, Sprite> AtlasSprites;
+
+            /// <summary>Frame runs read out of this atlas, so a grid cell is not rebuilding one
+            /// on every rebind. See <see cref="AtlasRun"/>.</summary>
+            public Dictionary<string, Sprite[]> AtlasRuns;
+
+            /// <summary>The load in flight, so a second asker joins it rather than starting
+            /// a second.</summary>
+            public Task Loading;
+
+            /// <summary>When the last hold let go, on the library's own clock.</summary>
+            public float IdleSince;
+
+            public Entry(string address, AssetKind kind)
+            {
+                Address = address;
+                Kind = kind;
+            }
         }
 
         static IAssetProvider _provider = new ResourcesAssetProvider();
 
-        static readonly Dictionary<string, UnityEngine.Object> _globalOne = new Dictionary<string, UnityEngine.Object>();
-        static readonly Dictionary<string, Sprite[]> _globalSets = new Dictionary<string, Sprite[]>();
+        static readonly Dictionary<string, Entry> _entries =
+            new Dictionary<string, Entry>(StringComparer.Ordinal);
 
-        static readonly Dictionary<string, Scope> _scopes = new Dictionary<string, Scope>(StringComparer.Ordinal);
+        /// <summary>Addresses nobody holds, waiting out their grace. See <see cref="Tick"/>.</summary>
+        static readonly List<Entry> _idle = new List<Entry>();
 
-        /// <summary>Address to the scope holding it. Absent means global.</summary>
-        static readonly Dictionary<string, Scope> _owner = new Dictionary<string, Scope>(StringComparer.Ordinal);
+        static float _now;
 
         public static IAssetProvider Provider => _provider;
 
         public static ChapterId LoadedChapter { get; private set; } = ChapterId.None;
 
         /// <summary>
-        /// Swaps the backing provider. Call at boot, before anything loads — assets
-        /// already cached from the old provider are dropped rather than migrated.
+        /// Swaps the backing provider. Call at boot, before anything loads — assets already
+        /// cached from the old provider are dropped rather than migrated.
         /// </summary>
         public static void UseProvider(IAssetProvider provider)
         {
             if (provider == null || provider == _provider) return;
 
-            ReleaseAllScopes();
-            _globalOne.Clear();
-            _globalSets.Clear();
+            ReleaseAll();
             _provider = provider;
 
             Debug.Log($"[Assets] provider is now '{provider.Name}'");
         }
+
+        /// <summary>Opens a hold. Dispose it when whatever took it goes away.</summary>
+        public static AssetHold Hold(string name) => new AssetHold(name);
 
         // ------------------------------------------------------------- fetching
         public static Sprite Sprite(string address) => Get<Sprite>(address);
@@ -173,19 +143,35 @@ namespace GlimmerGrove.AssetPipeline
 
         public static Font Font(string address) => Get<Font>(address);
 
+        /// <summary>
+        /// The asset, loading it synchronously if it is not already in hand.
+        ///
+        /// <para>
+        /// An address fetched this way with nobody holding it is <em>global</em>: it is the boot
+        /// preload's path and the fallback for chrome, and it stays for the session. A hold that
+        /// wants to own something it fetches synchronously claims it first — see
+        /// <see cref="AssetHold.Claim"/>.
+        /// </para>
+        /// </summary>
         public static T Get<T>(string address) where T : UnityEngine.Object
         {
             if (string.IsNullOrEmpty(address)) return null;
 
-            var cache = OneCacheFor(address);
-            if (cache.TryGetValue(address, out var cached)) return cached as T;
+            var entry = Resolve(address, KindOf<T>());
+            if (entry.Loaded) return entry.One as T;
 
             var loaded = _provider.Load<T>(address);
             if (loaded == null) Debug.LogWarning($"[Assets] missing {address}");
 
-            // Misses are cached too, so a bad address costs one failed load rather
-            // than one per frame that asks for it.
-            cache[address] = loaded;
+            // Misses are cached too, so a bad address costs one failed load rather than one per
+            // frame that asks for it. Only a load that genuinely ran may do this — see
+            // WarmEntryAsync for the case that must not.
+            entry.One = loaded;
+            entry.Loaded = true;
+
+            // Nobody asked for this under a hold, so it is the game's own and never freed.
+            if (entry.Holds == 0) entry.Pinned = true;
+
             return loaded;
         }
 
@@ -194,87 +180,19 @@ namespace GlimmerGrove.AssetPipeline
         /// caching a miss.
         ///
         /// <para>
-        /// <b>For art that is legitimately not there yet.</b> A screen inside a scoped feature
-        /// is built in the frame it is asked for and paints before its scope has finished
-        /// loading — that is the bargain <c>EnsureScopeAsync</c> makes, and it is why every
-        /// such screen repaints on the callback. Asking through <see cref="Sprite"/> during
-        /// that window is not a mistake and must not read like one: it printed ten
-        /// "missing Art/Homestead/plot_*" warnings into the corner of the screen every time
-        /// the Grovement was opened, which is how a console stops being worth reading.
-        /// </para>
-        /// <para>
-        /// The genuine mistake — an address the content names and the build does not carry —
-        /// is caught where it should be, by <c>AddressableAudit</c> and <c>Validate Art</c>
-        /// walking the whole catalog at build time. A warning at runtime is a worse version of
-        /// a check that already exists.
+        /// <b>For art that is legitimately not there yet.</b> A screen is built in the frame it
+        /// is asked for and paints before its hold has finished loading — that is the bargain,
+        /// and it is why every such screen repaints on the callback. Asking through
+        /// <see cref="Get{T}"/> during that window is not a mistake and must not read like one:
+        /// it printed a screenful of warnings every time the Grovement was opened, which is how
+        /// a console stops being worth reading.
         /// </para>
         /// </summary>
         public static T Peek<T>(string address) where T : UnityEngine.Object
         {
             if (string.IsNullOrEmpty(address)) return null;
 
-            return OneCacheFor(address).TryGetValue(address, out var cached) ? cached as T : null;
-        }
-
-        // ---------------------------------------------------------------- atlases
-        /// <summary>
-        /// A named sprite out of an atlas that is <em>already</em> loaded, or null.
-        ///
-        /// <para>
-        /// <b>Why this is not just <see cref="Peek{T}"/> plus a call.</b>
-        /// <c>SpriteAtlas.GetSprite</c> builds a <em>new</em> <c>Sprite</c> object on every
-        /// call and hands ownership to the caller — a documented allocation that a grid
-        /// rebinding on every scroll frame would leak by the thousand. So each one is made once
-        /// and kept, and every one an atlas produced is destroyed when that atlas is released.
-        /// That bookkeeping has to live here, beside the release, because a screen cannot know
-        /// when its atlas is dropped.
-        /// </para>
-        /// <para>
-        /// Peeked rather than loaded, for <see cref="Peek{T}"/>'s reason: a browse screen paints
-        /// in the frame it is built and repaints when its atlas lands, so a null here is the
-        /// ordinary first answer rather than a fault worth logging.
-        /// </para>
-        /// </summary>
-        public static Sprite AtlasSprite(string atlasAddress, string name)
-        {
-            if (string.IsNullOrEmpty(atlasAddress) || string.IsNullOrEmpty(name)) return null;
-
-            if (_atlasSprites.TryGetValue(atlasAddress, out var made) &&
-                made.TryGetValue(name, out var cached))
-                return cached;
-
-            var atlas = Peek<UnityEngine.U2D.SpriteAtlas>(atlasAddress);
-            if (atlas == null) return null;
-
-            var sprite = atlas.GetSprite(name);
-            if (sprite == null) return null;
-
-            // Unity appends "(Clone)" to whatever GetSprite hands back, which would then reach
-            // anything reading sprite.name — including this project's own frame sorting.
-            sprite.name = name;
-
-            if (made == null) _atlasSprites[atlasAddress] = made = new Dictionary<string, Sprite>(StringComparer.Ordinal);
-            made[name] = sprite;
-            return sprite;
-        }
-
-        /// <summary>True once an atlas is in hand, so a screen can tell "empty" from "not yet".</summary>
-        public static bool IsAtlasLoaded(string atlasAddress)
-            => Peek<UnityEngine.U2D.SpriteAtlas>(atlasAddress) != null;
-
-        /// <summary>Sprites handed out by each atlas, so they can be destroyed with it.</summary>
-        static readonly Dictionary<string, Dictionary<string, Sprite>> _atlasSprites =
-            new Dictionary<string, Dictionary<string, Sprite>>(StringComparer.Ordinal);
-
-        static void DropAtlasSprites(string address)
-        {
-            if (!_atlasSprites.TryGetValue(address, out var made)) return;
-
-            foreach (var sprite in made.Values)
-                if (sprite != null) UnityEngine.Object.Destroy(sprite);
-
-            made.Clear();
-            _atlasSprites.Remove(address);
+            return _entries.TryGetValue(address, out var entry) ? entry.One as T : null;
         }
 
         /// <summary>Frames if they are already loaded. See <see cref="Peek{T}"/>.</summary>
@@ -282,18 +200,24 @@ namespace GlimmerGrove.AssetPipeline
         {
             if (string.IsNullOrEmpty(address)) return Array.Empty<Sprite>();
 
-            return SetCacheFor(address).TryGetValue(address, out var cached)
-                ? cached
+            return _entries.TryGetValue(address, out var entry) && entry.Set != null
+                ? entry.Set
                 : Array.Empty<Sprite>();
         }
 
-        /// <summary>Animation frames under a folder-like address, sorted by name.</summary>
+        /// <summary>
+        /// Animation frames under a folder-like address, sorted by name, loading them
+        /// synchronously if they are not in hand.
+        ///
+        /// <b>Prefer warming them through a hold.</b> This is the last resort for a draw-time
+        /// call site that genuinely cannot wait a frame.
+        /// </summary>
         public static Sprite[] Frames(string address)
         {
             if (string.IsNullOrEmpty(address)) return Array.Empty<Sprite>();
 
-            var cache = SetCacheFor(address);
-            if (cache.TryGetValue(address, out var cached)) return cached;
+            var entry = Resolve(address, AssetKind.SpriteSet);
+            if (entry.Set != null) return entry.Set;
 
             var loaded = _provider.LoadAll<Sprite>(address);
             if (loaded == null || loaded.Length == 0)
@@ -302,200 +226,420 @@ namespace GlimmerGrove.AssetPipeline
                 loaded = Array.Empty<Sprite>();
             }
 
-            cache[address] = loaded;
+            entry.Set = loaded;
+            entry.Loaded = true;
+            if (entry.Holds == 0) entry.Pinned = true;
+
             return loaded;
         }
 
-        // --------------------------------------------------------------- scopes
+        // ---------------------------------------------------------------- atlases
         /// <summary>
-        /// Makes <paramref name="requests"/> the contents of a named scope, releasing
-        /// whatever that scope held before. Loading the same set twice is not free —
-        /// callers that can be re-entered should check <see cref="IsScopeLoaded"/>.
+        /// A named sprite out of an atlas that is <em>already</em> loaded, or null.
+        ///
+        /// <para>
+        /// <b>Why this is not just <see cref="Peek{T}"/> plus a call.</b>
+        /// <c>SpriteAtlas.GetSprite</c> builds a <em>new</em> <c>Sprite</c> object on every call
+        /// and hands ownership to the caller — a documented allocation that a grid rebinding on
+        /// every scroll frame would leak by the thousand. So each one is made once and kept on
+        /// the atlas's own entry, and destroyed with it.
+        /// </para>
         /// </summary>
-        public static async Task EnsureScopeAsync(string key,
-                                                  IReadOnlyList<AssetRequest> requests,
-                                                  IProgress<float> progress = null,
-                                                  CancellationToken cancellation = default)
+        public static Sprite AtlasSprite(string atlasAddress, string name)
         {
-            if (string.IsNullOrEmpty(key)) { progress?.Report(1f); return; }
+            if (string.IsNullOrEmpty(atlasAddress) || string.IsNullOrEmpty(name)) return null;
 
-            ReleaseScope(key);
+            if (!_entries.TryGetValue(atlasAddress, out var entry)) return null;
 
+            return SpriteFrom(entry, name);
+        }
+
+        static Sprite SpriteFrom(Entry entry, string name)
+        {
+            if (entry.AtlasSprites != null && entry.AtlasSprites.TryGetValue(name, out var cached))
+                return cached;
+
+            if (!(entry.One is UnityEngine.U2D.SpriteAtlas atlas)) return null;
+
+            var sprite = atlas.GetSprite(name);
+            if (sprite == null) return null;
+
+            // Unity appends "(Clone)" to whatever GetSprite hands back, which would then reach
+            // anything reading sprite.name — including this project's own frame sorting.
+            sprite.name = name;
+
+            entry.AtlasSprites = entry.AtlasSprites
+                                 ?? new Dictionary<string, Sprite>(StringComparer.Ordinal);
+            entry.AtlasSprites[name] = sprite;
+            return sprite;
+        }
+
+        /// <summary>True once an atlas is in hand, so a screen can tell "empty" from "not yet".</summary>
+        public static bool IsAtlasLoaded(string atlasAddress)
+            => Peek<UnityEngine.U2D.SpriteAtlas>(atlasAddress) != null;
+
+        /// <summary>
+        /// A run of numbered frames out of one atlas, built once and kept.
+        ///
+        /// <para>
+        /// <b>This exists because the browse grid was allocating per rebind.</b> The caller used
+        /// to walk the frames itself: a <c>List</c>, a <c>ToArray</c>, and a fresh name string
+        /// per index — for an animated piece, a dozen allocations every time a cell scrolled
+        /// into view, on the one screen built around recycling cells so that it would not.
+        /// Counting by asking rather than being told is still right (a second number saying how
+        /// long a loop is would be a number for a regenerated flipbook to put out of step with
+        /// the atlas), so the walk is kept and the <em>answer</em> is cached against the atlas
+        /// that produced it — and goes when that atlas does, which is the half a caller-side
+        /// cache could not get right.
+        /// </para>
+        /// </summary>
+        /// <param name="frameName">Names frame <c>i</c> of <paramref name="key"/>. Hold it in a
+        /// static field: a method group converted inline allocates a delegate per call, which is
+        /// the cost this is here to remove.</param>
+        public static Sprite[] AtlasRun(string atlasAddress, string key,
+                                        Func<string, int, string> frameName, int maxFrames)
+        {
+            if (string.IsNullOrEmpty(atlasAddress) || string.IsNullOrEmpty(key) || frameName == null)
+                return Array.Empty<Sprite>();
+
+            if (!_entries.TryGetValue(atlasAddress, out var entry)) return Array.Empty<Sprite>();
+
+            if (entry.AtlasRuns != null && entry.AtlasRuns.TryGetValue(key, out var made)) return made;
+            if (!(entry.One is UnityEngine.U2D.SpriteAtlas)) return Array.Empty<Sprite>();
+
+            var found = new List<Sprite>(4);
+            for (int i = 0; i < maxFrames; i++)
+            {
+                var sprite = SpriteFrom(entry, frameName(key, i));
+                if (sprite == null) break;
+
+                found.Add(sprite);
+            }
+
+            var run = found.Count == 0 ? Array.Empty<Sprite>() : found.ToArray();
+
+            entry.AtlasRuns = entry.AtlasRuns ?? new Dictionary<string, Sprite[]>(StringComparer.Ordinal);
+            entry.AtlasRuns[key] = run;
+            return run;
+        }
+
+        // ------------------------------------------------------------------ holds
+        internal static void Acquire(string address, AssetKind kind)
+        {
+            var entry = Resolve(address, kind);
+
+            entry.Holds++;
+            if (entry.Holds == 1) _idle.Remove(entry);
+        }
+
+        internal static void Let(string address)
+        {
+            if (!_entries.TryGetValue(address, out var entry)) return;
+
+            if (entry.Holds > 0) entry.Holds--;
+            if (entry.Holds > 0 || entry.Pinned) return;
+
+            entry.IdleSince = _now;
+            if (!_idle.Contains(entry)) _idle.Add(entry);
+        }
+
+        /// <summary>
+        /// Fills a hold, warming anything it does not already have.
+        ///
+        /// <para>
+        /// The acquire happens <em>before</em> the warm and the release of what is no longer
+        /// wanted happens <em>after</em> it, which is not fussiness: doing it the other way round
+        /// would drop an address to nought holds and back again for a set that merely changed
+        /// shape, and an entry that reaches nought starts its grace clock.
+        /// </para>
+        /// </summary>
+        internal static async Task FillHoldAsync(AssetHold hold, IReadOnlyList<AssetRequest> requests,
+                                                 IProgress<float> progress, CancellationToken cancellation,
+                                                 bool replace)
+        {
+            if (hold == null) { progress?.Report(1f); return; }
+
+            requests = requests ?? Array.Empty<AssetRequest>();
+
+            var wanted = new HashSet<string>(StringComparer.Ordinal);
+
+            foreach (var request in requests)
+            {
+                if (string.IsNullOrEmpty(request.Address)) continue;
+                if (!wanted.Add(request.Address)) continue;
+
+                hold.Take(request.Address, request.Kind);
+            }
+
+            if (replace) hold.Trim(wanted);
+
+            await WarmAsync(requests, progress, cancellation);
+        }
+
+        // ------------------------------------------------------------ preloading
+        /// <summary>
+        /// How many addresses are in flight at once. Small enough that the frame drawing the
+        /// progress bar still gets to run between batches, large enough that a hold of forty
+        /// pieces is not forty round trips end to end.
+        /// </summary>
+        const int DefaultBatch = 8;
+
+        /// <summary>
+        /// Warms a batch of assets with nobody holding them — the boot preload's path, so
+        /// everything it touches is global for the session.
+        /// </summary>
+        public static Task PreloadAsync(IReadOnlyList<AssetRequest> requests,
+                                        IProgress<float> progress = null,
+                                        CancellationToken cancellation = default,
+                                        int batchSize = DefaultBatch)
+        {
+            if (requests != null)
+                foreach (var request in requests)
+                    if (!string.IsNullOrEmpty(request.Address))
+                        Resolve(request.Address, request.Kind).Pinned = true;
+
+            return WarmAsync(requests, progress, cancellation, batchSize);
+        }
+
+        /// <summary>
+        /// Warms every request, reporting 0..1 as it goes, in batches so the frame drawing a
+        /// readout still gets to run.
+        ///
+        /// <para>
+        /// <b>The caller's token governs the wait, never the load.</b> A load belongs to an
+        /// address rather than to whoever happened to ask for it first — two screens can want
+        /// the same sprite — so handing one caller's cancellation to the provider would let the
+        /// first to leave abort a fetch the second is waiting on, and the abort would come back
+        /// as a null and be cached as a miss. Cancelling therefore stops this walking the list;
+        /// what is already in flight finishes and is cached properly.
+        /// </para>
+        /// </summary>
+        static async Task WarmAsync(IReadOnlyList<AssetRequest> requests, IProgress<float> progress,
+                                    CancellationToken cancellation, int batchSize = DefaultBatch)
+        {
             if (requests == null || requests.Count == 0) { progress?.Report(1f); return; }
+            if (batchSize < 1) batchSize = DefaultBatch;
 
-            var scope = new Scope();
-            _scopes[key] = scope;
-
-            foreach (var request in requests)
+            for (int i = 0; i < requests.Count; i += batchSize)
             {
-                // Already global: leave it there. Claiming it would mean freeing the
-                // game's chrome the moment this scope closed. This is also what keeps
-                // the worn companion's portrait alive on the hub after the profile —
-                // which loaded the whole roster — is closed again.
-                if (_globalOne.ContainsKey(request.Address) || _globalSets.ContainsKey(request.Address))
-                    continue;
+                if (cancellation.IsCancellationRequested) return;
 
-                // Owned by a different scope: leave it there too. Two scopes sharing an
-                // address means whichever closed first would free it under the other.
-                if (_owner.ContainsKey(request.Address)) continue;
+                int end = Mathf.Min(i + batchSize, requests.Count);
+                List<Task> batch = null;
 
-                if (scope.Addresses.Add(request.Address)) _owner[request.Address] = scope;
+                for (int k = i; k < end; k++)
+                {
+                    var task = WarmOneAsync(requests[k]);
+                    if (task == null) continue;
+
+                    batch = batch ?? new List<Task>(end - i);
+                    batch.Add(task);
+                }
+
+                if (batch != null) await Task.WhenAll(batch);
+                progress?.Report(end / (float)requests.Count);
             }
 
-            await PreloadAsync(requests, progress, cancellation);
+            progress?.Report(1f);
         }
 
         /// <summary>
-        /// Adds to a scope without releasing what it already holds.
+        /// One address, or null when there is nothing to do.
+        ///
+        /// A load already in flight is <em>joined</em> rather than started again, which is the
+        /// only correct answer when two holds want one address: starting a second would leave
+        /// the provider holding two handles for one asset, and reading <c>Result</c> off an
+        /// unfinished handle yields null.
+        /// </summary>
+        static Task WarmOneAsync(AssetRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Address)) return null;
+
+            var entry = Resolve(request.Address, request.Kind);
+
+            if (request.Kind == AssetKind.SpriteSet ? entry.Set != null : entry.Loaded) return null;
+            if (entry.Loading != null) return entry.Loading;
+
+            return entry.Loading = WarmEntryAsync(entry);
+        }
+
+        /// <summary>
+        /// Loads one entry and writes the answer into <em>that entry</em>.
         ///
         /// <para>
-        /// <b>Why this exists and <see cref="EnsureScopeAsync"/> is not enough.</b> A scope
-        /// that is the answer to "what is on screen" grows while the screen is open: the
-        /// grove holds the art of the pieces the player has placed, and placing one more must
-        /// not tear down and rebuild the other twenty — that is a stall and a visible blink
-        /// for the sake of one sprite. It also has to <em>claim</em> the new address, because
-        /// the panel it was chosen from owns it right now and is about to close.
-        /// </para>
-        /// <para>
-        /// A scope that does not exist yet is created, so a caller never has to check. The
-        /// two ownership rules are the same ones <see cref="EnsureScopeAsync"/> applies, for
-        /// the same reasons: global stays global, and another scope's address is left alone.
+        /// <b>The entry is resolved before the await and never looked up again, which is the
+        /// fix.</b> The old code re-derived its destination from a global map after awaiting,
+        /// so a hold released mid-load resolved to "nobody owns this, therefore global" and wrote
+        /// the <c>null</c> that a released Addressables handle hands back. That null then
+        /// answered every later request for the address, for the life of the process: the art
+        /// was silently never drawn again. Here a late load can only write into the object it
+        /// was started for, and only while that object is still in the table.
         /// </para>
         /// </summary>
-        public static async Task AddToScopeAsync(string key,
-                                                 IReadOnlyList<AssetRequest> requests,
-                                                 CancellationToken cancellation = default)
+        static async Task WarmEntryAsync(Entry entry)
         {
-            if (string.IsNullOrEmpty(key) || requests == null || requests.Count == 0) return;
-
-            if (!_scopes.TryGetValue(key, out var scope))
+            try
             {
-                scope = new Scope();
-                _scopes[key] = scope;
+                if (entry.Kind == AssetKind.SpriteSet)
+                {
+                    var set = await _provider.LoadAllAsync<Sprite>(entry.Address, CancellationToken.None);
+
+                    if (!entry.Alive) return;
+
+                    if (set == null || set.Length == 0)
+                    {
+                        Debug.LogWarning($"[Assets] missing frames {entry.Address}");
+                        set = Array.Empty<Sprite>();
+                    }
+
+                    entry.Set = set;
+                    entry.Loaded = true;
+                    return;
+                }
+
+                UnityEngine.Object loaded;
+
+                switch (entry.Kind)
+                {
+                    case AssetKind.AudioClip:
+                        loaded = await _provider.LoadAsync<AudioClip>(entry.Address, CancellationToken.None);
+                        break;
+
+                    case AssetKind.Font:
+                        loaded = await _provider.LoadAsync<Font>(entry.Address, CancellationToken.None);
+                        break;
+
+                    case AssetKind.Atlas:
+                        loaded = await _provider.LoadAsync<UnityEngine.U2D.SpriteAtlas>(
+                            entry.Address, CancellationToken.None);
+                        break;
+
+                    default:
+                        loaded = await _provider.LoadAsync<Sprite>(entry.Address, CancellationToken.None);
+                        break;
+                }
+
+                if (!entry.Alive) return;
+
+                if (loaded == null) Debug.LogWarning($"[Assets] missing {entry.Address}");
+
+                entry.One = loaded;
+                entry.Loaded = true;
             }
-
-            foreach (var request in requests)
+            finally
             {
-                if (_globalOne.ContainsKey(request.Address) || _globalSets.ContainsKey(request.Address))
+                entry.Loading = null;
+            }
+        }
+
+        // --------------------------------------------------------------- freeing
+        /// <summary>
+        /// Ages the idle list and frees whatever has waited out its grace.
+        ///
+        /// <para>
+        /// Handed the elapsed time rather than reading a clock, for <c>GroveBoard.Tick</c>'s
+        /// reason: a device clock can jump, and a grace measured against one would either never
+        /// expire or expire on every frame. Called from <c>Boot</c>.
+        /// </para>
+        /// </summary>
+        public static void Tick(float deltaSeconds)
+        {
+            if (deltaSeconds > 0f) _now += deltaSeconds;
+            if (_idle.Count == 0) return;
+
+            for (int i = _idle.Count - 1; i >= 0; i--)
+            {
+                var entry = _idle[i];
+
+                if (entry.Holds > 0 || entry.Pinned || !entry.Alive)
+                {
+                    _idle.RemoveAt(i);
                     continue;
+                }
 
-                if (_owner.ContainsKey(request.Address)) continue;
+                if (_now - entry.IdleSince < GraceSeconds) continue;
 
-                if (scope.Addresses.Add(request.Address)) _owner[request.Address] = scope;
+                _idle.RemoveAt(i);
+                Free(entry);
             }
-
-            await PreloadAsync(requests, null, cancellation);
         }
-
-        /// <summary>Drops a scope's assets. Safe when it was never loaded.</summary>
-        public static void ReleaseScope(string key)
-        {
-            if (string.IsNullOrEmpty(key) || !_scopes.TryGetValue(key, out var scope)) return;
-
-            _scopes.Remove(key);
-            foreach (var address in scope.Addresses)
-            {
-                // Before the owner mapping goes, because that is what tells a sprite which
-                // cache it came out of. An atlas leaves behind every sprite it was asked for.
-                DropAtlasSprites(address);
-                _owner.Remove(address);
-            }
-
-            scope.One.Clear();
-            scope.Sets.Clear();
-            _provider.Release(scope.Addresses);
-            scope.Addresses.Clear();
-        }
-
-        public static bool IsScopeLoaded(string key)
-            => !string.IsNullOrEmpty(key) && _scopes.ContainsKey(key);
 
         /// <summary>
-        /// Promotes an address out of whatever scope owns it and into the global set,
-        /// keeping whatever is already cached.
+        /// Frees everything idle right now, without waiting out the grace.
         ///
-        /// This exists for art that a screen loaded but the game goes on showing after
-        /// that screen closes. The concrete case is choosing a companion: the picker
-        /// loaded every portrait into its own scope, and the one just chosen is now
-        /// wanted on the hub — without this, closing the picker would release the
-        /// portrait the hub is about to draw, and the player's new companion would
-        /// simply not appear.
+        /// For the moments memory genuinely matters — entering a chapter is the one that exists —
+        /// where holding a previous screen's art for a few more seconds is the wrong trade.
+        /// </summary>
+        public static void FlushIdle()
+        {
+            for (int i = _idle.Count - 1; i >= 0; i--)
+            {
+                var entry = _idle[i];
+                _idle.RemoveAt(i);
+
+                if (entry.Holds == 0 && !entry.Pinned && entry.Alive) Free(entry);
+            }
+        }
+
+        static void Free(Entry entry)
+        {
+            entry.Alive = false;
+            _entries.Remove(entry.Address);
+
+            if (entry.AtlasSprites != null)
+            {
+                foreach (var sprite in entry.AtlasSprites.Values)
+                    if (sprite != null) UnityEngine.Object.Destroy(sprite);
+
+                entry.AtlasSprites.Clear();
+            }
+
+            entry.AtlasRuns?.Clear();
+            entry.One = null;
+            entry.Set = null;
+
+            // A fresh array rather than a shared buffer: freeing is rare, and a provider is
+            // entitled to hold on to what it is handed.
+            _provider.Release(new[] { entry.Address });
+        }
+
+        /// <summary>
+        /// Promotes an address to global, so nothing frees it however many holds come and go.
         ///
-        /// Cheap and safe to call for an address that is already global, or one nothing
-        /// has loaded yet; the caller warms it afterwards either way.
+        /// This exists for art that a screen loaded but the game goes on showing after that
+        /// screen closes. The concrete case is choosing a companion: the picker loaded every
+        /// portrait, and the one just chosen is now wanted on the hub.
         /// </summary>
         public static void Pin(string address)
         {
             if (string.IsNullOrEmpty(address)) return;
-            if (!_owner.TryGetValue(address, out var scope)) return;
+            if (!_entries.TryGetValue(address, out var entry)) return;
 
-            if (scope.One.TryGetValue(address, out var one))
-            {
-                _globalOne[address] = one;
-                scope.One.Remove(address);
-            }
-
-            if (scope.Sets.TryGetValue(address, out var set))
-            {
-                _globalSets[address] = set;
-                scope.Sets.Remove(address);
-            }
-
-            // Dropped from the scope's address list as well, so releasing that scope no
-            // longer tells the provider to free it.
-            scope.Addresses.Remove(address);
-            _owner.Remove(address);
+            entry.Pinned = true;
+            _idle.Remove(entry);
         }
 
-        /// <summary>
-        /// Puts an address into a scope <em>before</em> anything has loaded it, so that a
-        /// later synchronous <see cref="Get{T}"/> lands in that scope's cache rather than in
-        /// the global one — and is therefore freed by <see cref="ReleaseScope"/>.
-        ///
-        /// <para>
-        /// <b>This is the one case <see cref="EnsureScopeAsync"/> cannot serve.</b> A scope is
-        /// normally claimed and warmed in the same call, which is right for everything that can
-        /// wait a frame for its art. The launch screen cannot: it draws in the frame it is
-        /// built, before the loader it is about to start has run at all, so its picture is
-        /// fetched synchronously. Without this it would land in the global cache and stay
-        /// resident for the life of the process — a full-screen texture for a screen that is
-        /// shown once and never again.
-        /// </para>
-        /// <para>
-        /// The two ownership rules are <see cref="EnsureScopeAsync"/>'s, for its reasons:
-        /// something already global stays global, and an address another scope owns is left
-        /// alone. Claiming an address that is <em>already loaded</em> globally would be worse
-        /// than useless — the cached copy would be orphaned in a cache nothing reads again —
-        /// so it is refused rather than honoured.
-        /// </para>
-        /// </summary>
-        public static void Claim(string key, string address)
+        /// <summary>Frees everything, held or not. For the provider swap and for tests.</summary>
+        public static void ReleaseAll()
         {
-            if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(address)) return;
-            if (_globalOne.ContainsKey(address) || _globalSets.ContainsKey(address)) return;
-            if (_owner.ContainsKey(address)) return;
+            var all = new List<Entry>(_entries.Values);
 
-            if (!_scopes.TryGetValue(key, out var scope))
-            {
-                scope = new Scope();
-                _scopes[key] = scope;
-            }
+            _entries.Clear();
+            _idle.Clear();
 
-            if (scope.Addresses.Add(address)) _owner[address] = scope;
-        }
+            foreach (var entry in all) Free(entry);
 
-        public static void ReleaseAllScopes()
-        {
-            var keys = new List<string>(_scopes.Keys);
-            foreach (var key in keys) ReleaseScope(key);
+            _entries.Clear();
             LoadedChapter = ChapterId.None;
         }
 
         // ------------------------------------------------------------- chapters
+        static AssetHold _chapter;
+
         /// <summary>
-        /// Makes <paramref name="chapter"/> the resident one, loading its art and
-        /// releasing the previous chapter's. Returns immediately when it is already
-        /// resident, which is the common case of replaying a level.
+        /// Makes <paramref name="chapter"/> the resident one, loading its art and letting the
+        /// previous chapter's go. Returns immediately when it is already resident, which is the
+        /// common case of replaying a level.
         /// </summary>
         public static async Task EnsureChapterAsync(ChapterBody chapter,
                                                     IProgress<float> progress = null,
@@ -505,110 +649,67 @@ namespace GlimmerGrove.AssetPipeline
             if (LoadedChapter == chapter.Id) { progress?.Report(1f); return; }
 
             LoadedChapter = chapter.Id;
-            await EnsureScopeAsync(ChapterScope, AssetManifest.ChapterAssets(chapter), progress, cancellation);
+
+            _chapter = _chapter ?? Hold("chapter");
+            await _chapter.LoadAsync(AssetManifest.ChapterAssets(chapter), progress, cancellation);
+
+            // Entering a chapter is the moment this game is closest to its memory ceiling — a
+            // board, its cast and its effects all at once — so the previous screen's art gives
+            // up its grace here rather than lingering into the run.
+            FlushIdle();
         }
 
-        /// <summary>Drops the resident chapter's art. Safe when none is loaded.</summary>
+        /// <summary>Lets the resident chapter's art go. Safe when none is loaded.</summary>
         public static void ReleaseChapter()
         {
-            ReleaseScope(ChapterScope);
+            _chapter?.Dispose();
+            _chapter = null;
             LoadedChapter = ChapterId.None;
         }
 
-        // ------------------------------------------------------------ preloading
-        /// <summary>
-        /// Warms a batch of assets, reporting 0..1 as it goes. Work is done in small
-        /// batches so the frame drawing the progress bar still gets to run.
-        /// </summary>
-        public static async Task PreloadAsync(IReadOnlyList<AssetRequest> requests,
-                                              IProgress<float> progress = null,
-                                              CancellationToken cancellation = default,
-                                              int batchSize = 8)
-        {
-            if (requests == null || requests.Count == 0) { progress?.Report(1f); return; }
-
-            for (int i = 0; i < requests.Count; i += batchSize)
-            {
-                if (cancellation.IsCancellationRequested) return;
-
-                int end = Mathf.Min(i + batchSize, requests.Count);
-                var batch = new List<Task>(end - i);
-
-                for (int k = i; k < end; k++)
-                {
-                    var request = requests[k];
-                    if (AlreadyCached(request)) continue;
-                    batch.Add(WarmAsync(request, cancellation));
-                }
-
-                if (batch.Count > 0) await Task.WhenAll(batch);
-                progress?.Report(end / (float)requests.Count);
-            }
-
-            progress?.Report(1f);
-        }
-
-        static bool AlreadyCached(AssetRequest request)
-            => request.Kind == AssetKind.SpriteSet
-                ? SetCacheFor(request.Address).ContainsKey(request.Address)
-                : OneCacheFor(request.Address).ContainsKey(request.Address);
-
-        /// <summary>
-        /// Loads one request into the right cache under its real type. Sprite sets go
-        /// through the synchronous path because loading a whole folder has no
-        /// streaming equivalent in either provider.
-        /// </summary>
-        static async Task WarmAsync(AssetRequest request, CancellationToken cancellation)
-        {
-            switch (request.Kind)
-            {
-                case AssetKind.SpriteSet:
-                    Frames(request.Address);
-                    return;
-
-                case AssetKind.AudioClip:
-                    await WarmOneAsync<AudioClip>(request.Address, cancellation);
-                    return;
-
-                case AssetKind.Font:
-                    await WarmOneAsync<Font>(request.Address, cancellation);
-                    return;
-
-                case AssetKind.Atlas:
-                    await WarmOneAsync<UnityEngine.U2D.SpriteAtlas>(request.Address, cancellation);
-                    return;
-
-                default:
-                    await WarmOneAsync<Sprite>(request.Address, cancellation);
-                    return;
-            }
-        }
-
-        static async Task WarmOneAsync<T>(string address, CancellationToken cancellation)
-            where T : UnityEngine.Object
-        {
-            var loaded = await _provider.LoadAsync<T>(address, cancellation);
-            if (cancellation.IsCancellationRequested) return;
-
-            if (loaded == null) Debug.LogWarning($"[Assets] missing {address}");
-            OneCacheFor(address)[address] = loaded;
-        }
-
         // ------------------------------------------------------------- internals
-        static Dictionary<string, UnityEngine.Object> OneCacheFor(string address)
-            => _owner.TryGetValue(address, out var scope) ? scope.One : _globalOne;
+        static Entry Resolve(string address, AssetKind kind)
+        {
+            if (_entries.TryGetValue(address, out var entry))
+            {
+                // Two requests for one address disagreeing about what lives there is a content
+                // fault, and a silent one: the second kind would load the wrong type and hand
+                // back null. The first answer stands, because something may already be drawing it.
+                if (entry.Kind != kind && entry.Loaded)
+                    Debug.LogWarning($"[Assets] {address} was loaded as {entry.Kind}, now asked for as {kind}");
+                else if (entry.Kind != kind)
+                    entry.Kind = kind;
 
-        static Dictionary<string, Sprite[]> SetCacheFor(string address)
-            => _owner.TryGetValue(address, out var scope) ? scope.Sets : _globalSets;
+                return entry;
+            }
+
+            entry = new Entry(address, kind);
+            _entries[address] = entry;
+            return entry;
+        }
+
+        static AssetKind KindOf<T>() where T : UnityEngine.Object
+        {
+            if (typeof(T) == typeof(AudioClip)) return AssetKind.AudioClip;
+            if (typeof(T) == typeof(Font)) return AssetKind.Font;
+            if (typeof(T) == typeof(UnityEngine.U2D.SpriteAtlas)) return AssetKind.Atlas;
+
+            return AssetKind.Sprite;
+        }
 
         /// <summary>Diagnostics for the profiler and the dev overlay.</summary>
         public static string Describe()
         {
-            int scoped = 0;
-            foreach (var scope in _scopes.Values) scoped += scope.One.Count + scope.Sets.Count;
+            int held = 0, pinned = 0;
 
-            return $"provider={_provider.Name} global={_globalOne.Count + _globalSets.Count} " +
-                   $"scoped={scoped} in {_scopes.Count} scope(s) (chapter={LoadedChapter})";
+            foreach (var entry in _entries.Values)
+            {
+                if (entry.Pinned) pinned++;
+                else if (entry.Holds > 0) held++;
+            }
+
+            return $"provider={_provider.Name} addresses={_entries.Count} " +
+                   $"(global={pinned} held={held} idle={_idle.Count}) chapter={LoadedChapter}";
         }
     }
 }

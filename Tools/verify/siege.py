@@ -189,11 +189,18 @@ BOMBER_HEALTH = 200
 #: A `smite` takes a ward's health, a `douse` takes its fire, a `rally` takes the player's clock and
 #: a `sunder` takes a rank they earned - so two of the four take no health at all, which is why
 #: `threatens` stopped answering True for any siege that sends a boss.
+#:
+#: **All four went up fifteen per cent when the bosses stopped having a colour to hide behind**
+#: (`SiegeTuning.EveryWardReaches`): every ward answers a boss now, and a part-weight bolt costs a
+#: part of the fuel, so a duel converts a match at the same rate a wave does and par is as honest
+#: over one as over the other. They were 1100, 1800, 2400 and 3200, scaled together so the
+#: relationships they were tuned on survive. **This table is a mirror**: it moves in the same
+#: change as the C# or every par printed here is a different game's.
 BOSSES = {
-    "blightcaller": {"health": 1100, "cast": 0, "spell": "douse"},
-    "warlord": {"health": 1800, "cast": 3, "spell": "smite"},
-    "warbringer": {"health": 2400, "cast": 2, "spell": "rally"},
-    "overlord": {"health": 3200, "cast": 5, "spell": "sunder"},
+    "blightcaller": {"health": 1250, "cast": 0, "spell": "douse"},
+    "warlord": {"health": 2050, "cast": 3, "spell": "smite"},
+    "warbringer": {"health": 2750, "cast": 2, "spell": "rally"},
+    "overlord": {"health": 3650, "cast": 5, "spell": "sunder"},
 }
 
 BOSS_HEALTH = BOSSES["warlord"]["health"]
@@ -376,6 +383,11 @@ class Layout(object):
             return ("this level sends %d raiders; %d is the most a run may hold"
                     % (raiders, MAX_RAIDERS))
 
+        # A raider no ward on the line is strong against is one the player cannot answer properly.
+        # **For a boss the reason changed and the rule did not**: every ward answers a boss now
+        # (`SiegeTuning.EveryWardReaches`), so one wearing a colour nobody carries is killable - it
+        # is simply never *doubled*, which is a duel fought at half rate from the first bolt to the
+        # last with nothing anywhere saying so.
         for w, line in enumerate(self.coming):
             for colour, kind in line:
                 if colour in self.wards:

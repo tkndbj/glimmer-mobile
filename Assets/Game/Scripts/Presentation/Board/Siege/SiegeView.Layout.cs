@@ -33,11 +33,30 @@ namespace GlimmerGrove
             /// <summary>Each band's share of the board's height. They sum to one.</summary>
             public readonly float Gems, Hill, Line;
 
-            Bands(float gems, float hill, float line)
+            /// <summary>
+            /// The three lines those shares put on the board, in the field's own coordinates:
+            /// the top of the hill, its foot, and where a turret stands.
+            ///
+            /// <para>
+            /// <b>Here rather than in <c>Compose</c>, so that anything measured against them can
+            /// be swept.</b> They were three statements inside the build, which is where the
+            /// shares used to be too — and the reason those moved is the reason these follow:
+            /// a render draws one screen shape at a time, so nothing could see a band collapse
+            /// on a 4:3 or two captions sharing a row on all of them. A number a fixture cannot
+            /// reach is a number only a picture can check.
+            /// </para>
+            /// </summary>
+            public readonly float HillTop, HillFoot, LineY;
+
+            Bands(float gems, float hill, float line,
+                  float hillTop, float hillFoot, float lineY)
             {
                 Gems = gems;
                 Hill = hill;
                 Line = line;
+                HillTop = hillTop;
+                HillFoot = hillFoot;
+                LineY = lineY;
             }
 
             /// <summary>
@@ -61,7 +80,7 @@ namespace GlimmerGrove
             /// </summary>
             public static Bands Of(float span, float cell, int rows)
             {
-                if (span <= 0f) return new Bands(0f, 0f, 0f);
+                if (span <= 0f) return new Bands(0f, 0f, 0f, 0f, 0f, 0f);
 
                 float gems = Mathf.Clamp(cell * rows / span, .28f, MaxGemBand);
                 float rest = 1f - gems;
@@ -76,9 +95,112 @@ namespace GlimmerGrove
                     hill = rest - line;
                 }
 
-                return new Bands(gems, hill, line);
+                // The wards stand *high* on the line, so their heads break into the grass rather
+                // than tucking under the field's plate. A render is why: at the middle of the
+                // band they were half-hidden behind the plate and read as small.
+                float lineY = span * (.5f - hill) - span * line * WardStand;
+
+                return new Bands(gems, hill, line,
+                                 span * .5f - cell * .35f, span * (.5f - hill), lineY);
             }
         }
+
+        /// <summary>How far down its own band a turret stands. See <see cref="Bands.LineY"/>.</summary>
+        const float WardStand = .30f;
+
+        // ------------------------------------------------------------------ the hill's captions
+        /// <summary>
+        /// Where the hill's two announcements sit: a cascade, and a wave arriving.
+        ///
+        /// <para>
+        /// <b>A ladder rather than two placements, because whether two things on a screen overlap
+        /// is arithmetic</b> — and arithmetic inside a <c>MonoBehaviour</c> is arithmetic nothing
+        /// can check (invariant 8a, and <c>ProductCardBadges</c> for the same fault on a shop
+        /// card). These two were placed independently and against <em>different anchors</em>: the
+        /// chain against the ward line and the wave banner against the hill's foot, which sit
+        /// between .45 and .71 of a cell apart depending on the display. Each number was
+        /// reasonable and the pair was wrong on every shape — measured, the wave banner floated
+        /// up through the chain banner and shared about 1.4 cells with it on a 19.5:9 phone, a
+        /// 16:9 sheet and a tablet alike, which is what came back from play as "CHAIN x2" and
+        /// "WAVE 1 OF 3" drawn on top of each other.
+        /// </para>
+        /// <para>
+        /// <b>Both are anchored to the ward line</b>, so the air between them is a fixed number
+        /// of cells rather than something a band ratio can close. The chain keeps the place it
+        /// was given (invariant 37k: the empty run of hill just above the turrets, where the eye
+        /// is already going to see what they are shooting) and the wave banner is stacked clear
+        /// above it — which is also the right way round to read, since a wave arrives from the
+        /// top of the hill and a cascade happened on the field.
+        /// </para>
+        /// <para>
+        /// <b>The ladder may reach above the hill on a short board, and that is stated rather
+        /// than clamped.</b> A 4:3 tablet leaves the hill 1.46 cells tall — less than one of
+        /// these captions, let alone two — so no arrangement fits, and clamping would put them
+        /// back on top of each other, which is the one thing this exists to stop.
+        /// <c>SiegeCaptionTests</c> holds the separation at every shape and the fit at the shapes
+        /// a phone really produces, which is the same split <c>SiegeBandTests</c> already makes.
+        /// </para>
+        /// </summary>
+        public readonly struct Captions
+        {
+            /// <summary>Where a caption is drawn, and how far its box reaches from there.</summary>
+            public readonly float Chain, ChainLow, ChainHigh;
+            public readonly float Wave, WaveLow, WaveHigh;
+
+            Captions(float chain, float chainLow, float chainHigh,
+                     float wave, float waveLow, float waveHigh)
+            {
+                Chain = chain;
+                ChainLow = chainLow;
+                ChainHigh = chainHigh;
+                Wave = wave;
+                WaveLow = waveLow;
+                WaveHigh = waveHigh;
+            }
+
+            /// <summary>
+            /// The ladder for a board whose ward line stands at <paramref name="lineY"/> and
+            /// whose cell is <paramref name="cell"/>.
+            ///
+            /// <para>
+            /// Each caption's reach counts the drift it is drawn with as well as its box: both
+            /// of them rise over their life, so a gap measured between two resting positions is
+            /// a gap that closes while the player is watching.
+            /// </para>
+            /// </summary>
+            public static Captions Of(float lineY, float cell)
+            {
+                float chain = lineY + ChainRise * cell;
+                float chainLow = chain - ChainBox * .5f * cell;
+                float chainHigh = chain + (ChainBox * .5f + ChainDrift) * cell;
+
+                // Half of the *swollen* box, because a boss arrives at `WaveSwell` and shrinks
+                // into place: measuring the settled size would clear the chain a beat after the
+                // one frame the banner is at its largest.
+                float half = WaveBox * WaveSwell * .5f * cell;
+
+                float wave = chainHigh + CaptionClear * cell + half;
+
+                return new Captions(chain, chainLow, chainHigh,
+                                    wave, wave - half, wave + WaveFloat * cell + half);
+            }
+        }
+
+        /// <summary>Where the chain banner sits above the ward line, its box, and its drift.</summary>
+        // The box is a quarter wider than the largest font a chain is ever drawn at (`Chain`
+        // ramps it to 1.02 cells at depth six), which is what a single centred line needs and no
+        // more. It was 1.6 — harmless on its own, and a third of a cell of nothing that the
+        // banner above it would have had to be lifted clear of.
+        const float ChainRise = 2.35f, ChainBox = 1.25f, ChainDrift = .30f;
+
+        /// <summary>The wave banner's box, how far a boss swells it, and how far it floats.</summary>
+        const float WaveBox = .90f, WaveSwell = 1.6f, WaveFloat = .80f;
+
+        /// <summary>Clear air between one hill caption and the next.</summary>
+        const float CaptionClear = .22f;
+
+        /// <summary>This board's caption ladder. A struct of floats, so it is built on demand.</summary>
+        Captions Caption => Captions.Of(_lineY, Cell);
 
         // ------------------------------------------------------------------ geometry
         /// <summary>

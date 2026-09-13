@@ -102,7 +102,7 @@ namespace GlimmerGrove
         /// </summary>
         void Grabbed(int id)
         {
-            if (!Playable || _board == null) return;
+            if (!Tappable || _board == null) return;
 
             HideCoach();
             Stir();

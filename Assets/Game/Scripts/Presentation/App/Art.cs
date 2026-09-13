@@ -287,6 +287,49 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// A tapered arc of a ring: the one shape in this file whose whole job is to be spun.
+        ///
+        /// <para>
+        /// <b>Generated for <see cref="IsoTile"/>'s reason, at its sharpest.</b> A busy
+        /// indicator is what a screen shows when its art has <em>not arrived</em>, so it is the
+        /// one graphic in the game that may never itself be an address: an <c>Image</c> waiting
+        /// on a sprite draws a white rectangle (invariant 7b), and a white rectangle where the
+        /// spinner should be is the failure it exists to explain.
+        /// </para>
+        /// <para>
+        /// It tapers to nothing along its length rather than ending square. A square end reads
+        /// as a broken ring at rest; a taper reads as motion even in a still frame, which is
+        /// what tells a player the screen is working rather than stuck.
+        /// </para>
+        /// </summary>
+        /// <param name="sweep">How much of the circle the arc covers, 0..1.</param>
+        public static Sprite Arc(int size = 96, float thickness = 8f, float sweep = .72f)
+        {
+            float h = size * .5f;
+            float r = h - thickness * .5f - 1f;
+            float span = Mathf.Clamp(sweep, .05f, 1f) * Mathf.PI * 2f;
+
+            return Make($"arc{size}_{thickness}_{sweep}", size, size, (x, y) =>
+            {
+                float dx = x - h, dy = y - h;
+
+                float ring = Cover(Mathf.Abs(Mathf.Sqrt(dx * dx + dy * dy) - r) - thickness * .5f);
+                if (ring <= 0f) return 0f;
+
+                // Clockwise from twelve o'clock, so the head of the arc is where a reader
+                // expects a clock hand to start.
+                float turn = Mathf.Atan2(dx, dy);
+                if (turn < 0f) turn += Mathf.PI * 2f;
+                if (turn > span) return 0f;
+
+                // Opaque at the head, gone at the tail, with the last few degrees eased so the
+                // join is not a visible step once it is turning.
+                float along = turn / span;
+                return ring * Mathf.SmoothStep(1f, 0f, along * along);
+            });
+        }
+
+        /// <summary>
         /// A hexagonal ring: the silhouette a Lightweave bead wears.
         ///
         /// <para>

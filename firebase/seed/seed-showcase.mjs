@@ -38,12 +38,16 @@
  * composed. They were re-measured when the whole catalogue was replaced, and every one of
  * them changed:
  *
- *   * **A line is a run of a multi-tile piece, not a row of one-tile ones.** `fence_wood`,
- *     `fence_stone` and their gates are 1x3 and `wall`, `wall_gate` and `wall_barbican`
- *     3x1, so a fence laid at facing 0 runs along **+row** and a wall along **+col** — and
- *     a quarter turn swaps that, because an odd facing swaps the footprint's axes. Laid
- *     nose to tail they **join seamlessly**, which is what lets a plan enclose a yard.
+ *   * **A line is a run of a multi-tile piece, not a row of one-tile ones.** `wall`,
+ *     `wall_gate` and `wall_barbican` are 3x1, so one laid at facing 0 runs along **+col**
+ *     and at facing 1 along **+row**, because an odd facing swaps the footprint's axes.
+ *     Laid nose to tail they **join seamlessly**, which is what lets a plan enclose a yard.
  *     Nothing 1x1 tiles into a line any more; there is no paving piece at all.
+ *
+ *     The four small fences were 1x3 and came off the shelf on 2026-09-12 (16t). Every
+ *     `fence_wood`/`fence_stone` in these plans became `["wall", 1]` — the same tiles, since
+ *     a turned wall is 1x3 — which is why eight of the ten villages have a turned wall in
+ *     their legend and not one plan character moved.
  *   * **A building's picture is far taller than its footprint.** Stood shoulder to
  *     shoulder the big ones pile into one mass — a 4x4 mine or citadel needs a clear
  *     tile or two of ground in front of it to read as a separate object.
@@ -162,12 +166,17 @@ const GROVE_CONFIG = (() => {
   const pieces = {};
   const bundles = {};
   const dwellings = {};
+  const dwellingLevels = {};
   for (const piece of homestead.pieces) {
     const cost = Math.floor(piece.cost ?? 0);
     if (cost > 0) pieces[piece.id] = cost;
     const bundle = Math.floor(piece.bundle ?? 1);
     if (cost > 0 && bundle > 1) bundles[piece.id] = bundle;
-    if (piece.kind === "dwelling") dwellings[piece.id] = Math.floor(piece.tier ?? 0);
+    if (piece.kind === "dwelling") {
+      dwellings[piece.id] = Math.floor(piece.tier ?? 0);
+      const gate = Math.floor(piece.requiresKeeperLevel ?? 0);
+      if (gate > 0) dwellingLevels[piece.id] = gate;
+    }
   }
   const regions = {};
   for (const region of FLOOR.regions) {
@@ -179,7 +188,7 @@ const GROVE_CONFIG = (() => {
   }
   return {
     version: Math.floor(manifest.groveVersion ?? 1),
-    pieces, bundles, regions, companions, dwellings,
+    pieces, bundles, regions, companions, dwellings, dwellingLevels,
     stars: (homestead.score?.stars ?? []).slice().sort((a, b) => a - b),
   };
 })();
@@ -403,8 +412,24 @@ function holdings(village, placements, level) {
     stock.set(id, Math.ceil(count / bundle) * bundle);
   }
 
-  const tier = GROVE_CONFIG.dwellings[village.home];
-  if (tier === undefined) throw new Error(`${village.id}: '${village.home}' is not a dwelling`);
+  // The home ladder up to this keeper's rung — and **clamped to what their own level
+  // opens**, which is the companion rule above said about the house rather than the friends.
+  // A rung is keeper level *and* purchase since the ladder was gated, so a village standing
+  // in a citadel its own star ledger cannot reach is a grove no player could have: the
+  // server drops the rung from its worth and `buildCard` draws the one below it, so the card
+  // would disagree with its own score. Clamped rather than refused, because which home a
+  // village is composed around is an authoring decision and where the gates sit is a tuning
+  // one — a retune must not make ten hand-drawn plans unseedable.
+  const wanted = GROVE_CONFIG.dwellings[village.home];
+  if (wanted === undefined) throw new Error(`${village.id}: '${village.home}' is not a dwelling`);
+
+  let tier = -1;
+  for (const [id, t] of Object.entries(GROVE_CONFIG.dwellings)) {
+    if (t > wanted) continue;
+    if (level < (GROVE_CONFIG.dwellingLevels[id] ?? 0)) continue;
+    if (t > tier) tier = t;
+  }
+
   for (const [id, t] of Object.entries(GROVE_CONFIG.dwellings)) {
     if (t <= tier && id in GROVE_CONFIG.pieces) stock.set(id, 1);
   }
@@ -669,7 +694,15 @@ for (const village of VILLAGES) {
     `  ${card.score.toLocaleString()} worth · ${card.stars}★ ${leagueOf(card.stars)} · level ${play.level} · ` +
     `${placements.length} piece(s) on ${tiles} tile(s) (${Math.round(placements.length / tiles * 100)}%) · ` +
     `${held.land.length + 1} region(s) · ${held.stock.length} stock row(s) · ` +
-    `${held.companions.length} companion(s) · home ${card.dwelling}`
+    `${held.companions.length} companion(s) · home ${card.dwelling}` +
+    // A clamped home is said out loud rather than swapped quietly. It means the ladder's
+    // gates are above what the content can pay for, which is a tuning fact about the whole
+    // game rather than a fault in this plan — and a silent clamp is how ten hand-drawn
+    // villages come to stand in a home nobody chose for them.
+    (card.dwelling === village.home ? "" :
+      `
+  NOTE  composed around '${village.home}', which keeper level ${play.level} does ` +
+      `not open — standing in '${card.dwelling}' instead`)
   );
 
   if (DUMP) {

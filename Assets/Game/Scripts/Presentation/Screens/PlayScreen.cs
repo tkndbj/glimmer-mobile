@@ -278,10 +278,22 @@ namespace GlimmerGrove
 
         // -------------------------------------------------------------- chrome
         /// <summary>How tall the header band is. The clock and the two nav buttons live in it.</summary>
-        const float BarHeight = 230f;
+        /// <summary>
+        /// Public for <c>RunHeaderTests</c>' sake — see <c>ModeScreen.BarHeight</c>, which
+        /// carries the reasoning. <see cref="KeyY"/> is where the bar's keys and the level tag
+        /// beside them hang, stated once so the tag cannot drift off the key it sits with.
+        /// </summary>
+        public const float BarHeight = 230f;
+        public const float KeyY = -6f;
 
         /// <summary>Where the counter row sits, measured down from the safe area's top edge.</summary>
-        const float StatusY = 308f;
+        /// <summary>
+        /// Where the glade's own status row sits, and how tall it is. Public for the same
+        /// reason as <see cref="BarHeight"/>: it is the first thing under the bar, so it is
+        /// what the level tag has to clear.
+        /// </summary>
+        public const float StatusY = 308f, StatusHeight = 96f;
+        public const float StatusTop = StatusY - StatusHeight * .5f;
 
         /// <summary>Where the blending chart sits, when the board has one.</summary>
         const float ColourKeyY = 392f;
@@ -321,21 +333,26 @@ namespace GlimmerGrove
             ((RectTransform)shade.transform).localRotation = Quaternion.Euler(0, 0, 180f);
 
             UIKit.IconButton("Back", bar, Skins.Nav, "ic_left", new Vector2(118f, 118f),
-                             new Vector2(0f, .5f), new Vector2(102f, -6f), LeaveToMap);
+                             new Vector2(0f, .5f), new Vector2(102f, KeyY), LeaveToMap);
+
+            // Beside it, and the same tag the other four modes draw — see
+            // RunScreen.BuildLevelTag for why it is not written twice.
+            BuildLevelTag(bar, KeyY);
+
             UIKit.IconButton("Pause", bar, Skins.Nav, "ic_pause", new Vector2(118f, 118f),
-                             new Vector2(1f, .5f), new Vector2(-102f, -6f), Pause);
+                             new Vector2(1f, .5f), new Vector2(-102f, KeyY), Pause);
 
             // Beside the pause key, and only on a glade that actually teaches something —
             // RunLessons decides that once the board has been read. See its BuildKey.
-            Teaching.BuildKey(bar, new Vector2(-102f, -6f));
+            Teaching.BuildKey(bar, new Vector2(-102f, KeyY));
         }
 
         void BuildStatus()
         {
-            var row = UIKit.Box("Status", Safe, new Vector2(0f, 96f), new Vector2(.5f, 1f),
+            var row = UIKit.Box("Status", Safe, new Vector2(0f, StatusHeight), new Vector2(.5f, 1f),
                                 new Vector2(0f, -StatusY));
             row.anchorMin = new Vector2(0f, 1f); row.anchorMax = new Vector2(1f, 1f);
-            row.sizeDelta = new Vector2(0f, 96f);
+            row.sizeDelta = new Vector2(0f, StatusHeight);
 
             _moves = Scenery.Pill(row, "0", 40, new Vector2(230f, 84f), new Vector2(0f, .5f),
                                   new Vector2(160f, 0f), null, "ic_restart");

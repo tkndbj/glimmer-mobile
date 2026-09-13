@@ -418,6 +418,28 @@ namespace GlimmerGrove.Homestead
                 tier = 1;
             }
 
+            // The home ladder's gate, and the one place in this file a keeper level is read.
+            //
+            // **Refused on anything else rather than ignored**, because dropping it silently is
+            // how a catalogue comes to describe a rule the game does not run: a bench authored
+            // with a gate would sit in the shop reading as free, and the author would have no
+            // way to find out. See `HomesteadPiece.RequiresKeeperLevel` for why a home may have
+            // one and decor may not.
+            int requiresKeeperLevel = dto.requiresKeeperLevel;
+            if (requiresKeeperLevel < 0)
+            {
+                problems.Add($"grove piece '{dto.id}' is gated at keeper level " +
+                             $"{requiresKeeperLevel}, which is not a level; it is read as ungated");
+                requiresKeeperLevel = 0;
+            }
+            else if (requiresKeeperLevel > 0 && kind != HomesteadPieceKind.Dwelling)
+            {
+                problems.Add($"grove piece '{dto.id}' is gated at keeper level " +
+                             $"{requiresKeeperLevel}, and only a home may be; decor is earned by " +
+                             "clearing a named thing. The gate is dropped");
+                requiresKeeperLevel = 0;
+            }
+
             string art = string.IsNullOrEmpty(dto.art) ? DefaultArt(dto.id) : dto.art;
 
             // A bundle is clamped rather than reported unless it is nonsense: the build gate
@@ -449,7 +471,8 @@ namespace GlimmerGrove.Homestead
 
             piece = new HomesteadPiece(dto.id, art, dto.animated, kind, cost,
                                        requiresLevel, requiresChapter, dto.scale, dto.lift,
-                                       ReadSlotKind(dto.slot, dto.id, problems), tier, bundle: bundle,
+                                       ReadSlotKind(dto.slot, dto.id, problems), tier,
+                                       requiresKeeperLevel: requiresKeeperLevel, bundle: bundle,
                                        footprint: footprint, artWidth: w, artHeight: h,
                                        hits: hits, facings: facings);
             return true;

@@ -40,10 +40,24 @@ PERCH_W, PERCH_H = 360, 420
 ROCK_BOX = (360, 290)          # the rock's box; the art fits inside it, aspect kept
 ROCK_Y = -50                   # ...centred this far below the node's centre
 SHADOW = (370, 150, 0, -150)   # w, h, x, y  — Art.Glow(96, 2.2) at (.03,.10,.16,.38)
-CONTACT = (232, 74, 0, -44)    # w, h, x, y  — Art.Glow(96, 2.6) at (.02,.08,.12,.45)
+CONTACT = (232, 74)            # w, h  — Art.Glow(96, 2.6) at (.02,.08,.12,.45)
 NODE_SIZE = 196                # LevelsScreen.NodeSize
-NODE_Y = 2                     # the disc sits this far above the node's centre
 NODE_FACE_LIFT = 0.165         # UIKit.NodeFaceLift — where the number sits on the face
+CONTACT_DROP = 46              # LevelsScreen.ContactDrop — the shadow hangs under the disc
+
+#: `ModeLook.PerchLift`: how far above a node's centre the disc stands, per mode.
+#:
+#: It is a fact about the *tile* rather than one number for the map, because a perch is fitted
+#: into a fixed box with its aspect kept — so a tall sprite lands smaller and higher than a
+#: squat one, and the four shipped tiles disagree by 30 units about where their own top face
+#: is. There is no way to derive it and no gate that can see it wrong; `--lift` is how a
+#: candidate tile's number is found, by looking.
+LIFTS = {
+    "glade": 14,
+    "fall": 10,
+    "prism": 18,
+    "siege": 20,
+}
 
 SHADOW_RGBA = (8, 26, 41, 97)
 CONTACT_RGBA = (5, 20, 31, 115)
@@ -54,9 +68,8 @@ CONTACT_RGBA = (5, 20, 31, 115)
 WASHES = {
     "glade": (255, 255, 255),
     "fall": (255, 255, 255),     # no Wash override; see FallLook's note about ice
-    "topple": (255, 247, 230),
-    "bud": (255, 245, 204),
-    "nova": (232, 226, 255),
+    "prism": (230, 255, 240),
+    "siege": (255, 230, 224),
 }
 
 
@@ -99,8 +112,8 @@ def paste(canvas: Image.Image, sprite: Image.Image, x: float, y: float) -> None:
                                     round(cy - sprite.size[1] / 2)))
 
 
-def perch(rock: Path, wash, number: str = "7", stars: int = 0) -> Image.Image:
-    """One perch with a glade disc on it, on a transparent 360x420 canvas."""
+def perch(rock: Path, wash, lift: float, number: str = "7", stars: int = 0) -> Image.Image:
+    """One perch with a glade disc standing `lift` above its centre, on a 360x420 canvas."""
     canvas = Image.new("RGBA", (PERCH_W, PERCH_H), (0, 0, 0, 0))
 
     paste(canvas, glow(96, 2.2, SHADOW_RGBA).resize(SHADOW[:2], Image.LANCZOS),
@@ -109,15 +122,16 @@ def perch(rock: Path, wash, number: str = "7", stars: int = 0) -> Image.Image:
     art = fit(Image.open(rock).convert("RGBA"), ROCK_BOX)
     paste(canvas, tint(art, wash), 0, ROCK_Y)
 
-    paste(canvas, glow(96, 2.6, CONTACT_RGBA).resize(CONTACT[:2], Image.LANCZOS),
-          CONTACT[2], CONTACT[3])
+    # under the disc rather than under the node — see LevelsScreen.MakePerch
+    paste(canvas, glow(96, 2.6, CONTACT_RGBA).resize(CONTACT, Image.LANCZOS),
+          0, lift - CONTACT_DROP)
 
     skin = "node_s%d" % stars if stars else "node_open"
     disc = fit(Image.open(MAP_ART / (skin + ".png")).convert("RGBA"), (NODE_SIZE, NODE_SIZE))
-    paste(canvas, disc, 0, NODE_Y)
+    paste(canvas, disc, 0, lift)
 
     draw = ImageDraw.Draw(canvas)
-    face_y = canvas.size[1] / 2 - NODE_Y - NODE_SIZE * NODE_FACE_LIFT
+    face_y = canvas.size[1] / 2 - lift - NODE_SIZE * NODE_FACE_LIFT
     draw.text((canvas.size[0] / 2, face_y), number, fill=(77, 54, 33, 255),
               anchor="mm", font=_font(62))
     return canvas
@@ -141,11 +155,11 @@ def backdrop(strip: str, box) -> Image.Image:
     return src.crop((left, top, left + box[0], top + box[1]))
 
 
-def card(rock: Path, wash, strip: str, pad: int = 14) -> Image.Image:
+def card(rock: Path, wash, strip: str, lift: float, pad: int = 14) -> Image.Image:
     """A perch on its map, cropped to a card."""
     box = (PERCH_W + pad * 2, PERCH_H + pad * 2)
     out = backdrop(strip, box)
-    out.alpha_composite(perch(rock, wash), (pad, pad))
+    out.alpha_composite(perch(rock, wash, lift), (pad, pad))
     return out
 
 
@@ -155,7 +169,12 @@ def main() -> int:
     ap.add_argument("--mode", default="glade", choices=sorted(WASHES))
     ap.add_argument("--strip", default="map2_strip1")
     ap.add_argument("--out", default="out/perches")
+    ap.add_argument("--lift", type=float, default=None,
+                    help="override ModeLook.PerchLift — how far above the node's centre the "
+                         "disc stands. Sweep it to find a candidate tile's own number.")
     args = ap.parse_args()
+
+    lift = LIFTS[args.mode] if args.lift is None else args.lift
 
     rocks = [Path(r) for r in args.rocks] or sorted(MAP_ART.glob("rock_*.png"))
     out = Path(args.out)
@@ -165,7 +184,7 @@ def main() -> int:
         if not source.exists():
             print(f"  missing {source}", file=sys.stderr)
             continue
-        image = card(source, WASHES[args.mode], args.strip)
+        image = card(source, WASHES[args.mode], args.strip, lift)
         target = out / (source.stem + ".png")
         image.convert("RGB").save(target)
         print(f"  {target}")

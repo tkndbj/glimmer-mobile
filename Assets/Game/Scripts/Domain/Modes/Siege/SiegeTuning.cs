@@ -230,6 +230,52 @@ namespace GlimmerGrove.Modes
         /// <summary>What a bolt is worth against a raider of its own colour.</summary>
         public const int WeakMultiplier = 2;
 
+        // ------------------------------------------------------------------ the boss
+        /// <summary>
+        /// Whether every ward on the line answers <paramref name="kind"/>, whatever colour it
+        /// wears. True of the four bosses and of nothing else.
+        ///
+        /// <para>
+        /// <b>The colour lock has one shape it cannot hold, and it is the finale.</b> A boss is
+        /// one raider wearing one colour standing alone on the hill, so under the lock exactly one
+        /// ward on the line could fire at it and the other three banked fuel they would never
+        /// spend: a duel was fought by a quarter of the player's loadout, at a quarter of what a
+        /// match delivers, against the biggest number in the mode. Reported as the fight being a
+        /// grind, and it is the same arithmetic <see cref="BossHealth"/> has always warned about
+        /// from the other end — every point of boss pushes the three-star line further from real
+        /// play, because par assumes a match lands in full and a duel could not.
+        /// </para>
+        /// <para>
+        /// <b>So a boss is answered by the whole line, and its colour decides the <em>double</em>
+        /// rather than the permission.</b> A ward of its own colour still hits it twice as hard
+        /// (<see cref="WeakMultiplier"/>) and every other ward lands
+        /// <see cref="OffColourTenths"/> — the un-doubled bolt, which is what a wrong-colour hit
+        /// has been worth everywhere in this mode since before the lock. Which colour to feed a
+        /// duel is therefore still a decision with a wrong answer (invariant 26h), and the player
+        /// reads it off the board rather than out of a panel: the right colour's numbers come up
+        /// gold and everybody else's come up white.
+        /// </para>
+        /// <para>
+        /// <b>Bosses and nothing else, because the lock is what makes the rest of the hill a
+        /// question.</b> A wave wears four colours at once and the player picks which of them to
+        /// answer; a duel offers no such choice, so there is nothing for the lock to protect and
+        /// three idle turrets is all it buys.
+        /// </para>
+        /// </summary>
+        public static bool EveryWardReaches(SiegeKind kind) => IsBoss(kind);
+
+        /// <summary>
+        /// What a bolt of the wrong colour is worth against a boss, in tenths of a full hit.
+        ///
+        /// <b>Derived from <see cref="WeakMultiplier"/> rather than typed, because it is not a
+        /// second number.</b> A full hit is the doubled one, so five tenths of it is exactly the
+        /// ordinary un-doubled bolt — the same thing a wrong-colour bolt was worth against
+        /// everything on the hill before the lock arrived. Written as the division so the two can
+        /// never come apart: a mode that doubled by three would want a third of a hit here, and a
+        /// hard-coded five would silently become a buff.
+        /// </summary>
+        public const int OffColourTenths = 10 / WeakMultiplier;
+
         // ------------------------------------------------------------------ the bulwark
         /// <summary>
         /// What a bolt of the <em>wrong</em> colour is worth against a shield, in tenths.
@@ -504,6 +550,44 @@ namespace GlimmerGrove.Modes
         public static float FuelShot(int rank) => FuelShotTenths(rank) / 10f;
 
         /// <summary>
+        /// What one bolt costs when it lands at <paramref name="share"/> tenths of a full hit —
+        /// a prism reaching its partner, or any ward answering a boss of another colour.
+        ///
+        /// <para>
+        /// <b>A part-weight bolt costs a part of the fuel, and that is what makes "strictly
+        /// additive" true rather than nearly true.</b> A ward with nothing of its own on the hill
+        /// does not lose the fuel it is holding — it <em>banks</em> it, which is the half of this
+        /// loop the breather exists for. So a half-weight shot at full price is not a free extra
+        /// hit at all: it is the player's fuel converted at half the rate it would have been worth
+        /// a few seconds later, and the line spends it on their behalf. Measured on the shipped
+        /// chapters, that is exactly what it cost — firing at a boss for half a hit at full price
+        /// took Thornwatch from 81 held runs of 90 to 78 and Broodmarch on a kitted line from 84
+        /// to 81, on a change meant to <em>help</em>.
+        /// </para>
+        /// <para>
+        /// <b>And it is what keeps <see cref="PerfectMatch"/> an identity.</b> Par is the hill's
+        /// health over what one match delivers, computed as though every gem burned as a
+        /// full-weight bolt. Proportional cost makes that true of every bolt this mode fires
+        /// whatever it is aimed at: a unit of fuel is always worth the same damage, so no
+        /// arrangement of targets can make a match deliver less than par assumes and par stays the
+        /// floor invariant 37a says it is.
+        /// </para>
+        /// <para>
+        /// <b>What the share still decides is the <em>rate</em>, which is the only currency a mode
+        /// on a clock has.</b> A ward fires on <see cref="FireEvery"/> whatever it is holding, so
+        /// the right colour takes a boss down twice as fast as a wrong one — the decision survives
+        /// in full, and it is the half a player under a clock actually feels.
+        /// </para>
+        /// </summary>
+        public static float FuelShot(int rank, int share)
+        {
+            if (share >= 10) return FuelShot(rank);
+            if (share < 1) share = 1;
+
+            return FuelShot(rank) * share / 10f;
+        }
+
+        /// <summary>
         /// The most cogs that may be lying on the hill at once.
         ///
         /// <b>A cap on the board rather than on the drop</b>, because a drop is a rate and a rate
@@ -644,28 +728,34 @@ namespace GlimmerGrove.Modes
         /// The warlord's health, and it is deliberately under a quarter of the whole hill's.
         ///
         /// <para>
-        /// <b>A boss has to be worth a fight rather than a raider with a bigger number.</b> At a
-        /// hundred and eighty it is nearly four brutes standing still, which under the ordinary
-        /// play <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> models is about thirteen
-        /// matches of nothing else and twenty-five seconds of clock — long enough that the player
-        /// has to keep choosing the right colour under fire, short enough that the last stretch of
-        /// a two-minute level is not a grind.
+        /// <b>A boss has to be worth a fight rather than a raider with a bigger number.</b> At two
+        /// thousand it is four brutes standing still, which under the ordinary play
+        /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> models is a duel of a little under
+        /// half a minute — long enough that the player has to keep choosing the right colour under
+        /// fire, short enough that the last stretch of a two-minute level is not a grind.
         /// </para>
         /// <para>
-        /// <b>And the ceiling on it is arithmetic rather than taste, which is the half worth
-        /// knowing before anybody makes a warlord bigger.</b> <see cref="PerfectMatch"/> assumes
-        /// every gem a match clears is spent as a bolt that lands <em>double</em> — which a hill
-        /// wearing all four colours very nearly allows, because each ward finds its own. A duel
-        /// cannot: the warlord is one colour, so one ward doubles and three do not, and a match
-        /// therefore delivers about 13.75 rather than 22. Par is still a genuine floor (no run of
-        /// fewer matches could destroy this), it is simply a <b>looser</b> one over a duel, so
-        /// every point of warlord pushes the three-star line further from real play. Measured on
-        /// the shipped level: at 180 an unhurried player needs 44 matches against a three-star line
-        /// of 44, and at 200 it is 47 against 46 and the ladder's top rung is gone. <b>Health moved
-        /// from the hill to the warlord makes three stars harder without par saying so.</b>
+        /// <b>The ceiling on it used to be arithmetic about the lock, and that is what
+        /// <see cref="EveryWardReaches"/> bought back.</b> <see cref="PerfectMatch"/> assumes every
+        /// gem a match clears burns as a full-weight bolt, which a hill wearing four colours very
+        /// nearly allows because each ward finds its own. A duel could not: the warlord wears one
+        /// colour, so under the lock one ward fired and three banked fuel they would never spend,
+        /// and every point of warlord pushed the three-star line further from real play. Now the
+        /// whole line answers a boss and a part-weight bolt costs a part of the fuel
+        /// (<see cref="FuelShot(int,int)"/>), so a unit of fuel is worth the same damage whoever
+        /// burns it and par is as honest over a duel as it is over a wave.
+        /// </para>
+        /// <para>
+        /// <b>Which is what paid for the fifteen per cent these four went up by</b> — 1800, 1100,
+        /// 2400 and 3200 before it, scaled together so every relationship the four were tuned on
+        /// survives to the point. Measured over the ninety-run sweep at the health below:
+        /// Thornwatch holds 80 of 90 against a floor of 78, Broodmarch 66 on the starter line and
+        /// 81 one rung up, and the two mid-chapter bosses are held at 7 of 9 — the same readings
+        /// the smaller bosses gave, which is the whole claim. <b>There is no more room than that:
+        /// at a quarter more the finale fell from 5 of 9 to 3.</b>
         /// </para>
         /// </summary>
-        public const int BossHealth = 1800;
+        public const int BossHealth = 2050;
 
         /// <summary>
         /// The overlord: the thing the last rung of a chapter ends on.
@@ -680,15 +770,16 @@ namespace GlimmerGrove.Modes
         /// everything above.
         /// </para>
         /// <para>
-        /// Its ceiling is <see cref="BossHealth"/>'s ceiling, and the same arithmetic: a duel is
-        /// fought against <em>one</em> colour, so one ward doubles and three do not and a match
-        /// really delivers about 62% of <see cref="PerfectMatch"/>. Every point of overlord
-        /// therefore pushes the three-star line further from real play without par saying so, and
-        /// the only instrument that can see it is
-        /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>.
+        /// <b>Its ceiling is <see cref="BossHealth"/>'s ceiling and it is the tighter of the
+        /// two.</b> Par is honest over a duel now that the whole line answers one
+        /// (<see cref="EveryWardReaches"/>), so what bounds this is not the arithmetic any more —
+        /// it is the sweep. The finale is the rung this chapter is already hardest at: at 3650 an
+        /// unhurried player holds it at 5 of 9 rhythms, and at 4000 that falls to 3.
+        /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> is the only instrument that can
+        /// see either number.
         /// </para>
         /// </summary>
-        public const int OverlordHealth = 3200;
+        public const int OverlordHealth = 3650;
 
         public const float OverlordHold = .38f;
         public const float OverlordMarch = 8f;
@@ -747,7 +838,7 @@ namespace GlimmerGrove.Modes
         /// be lost, which is invariant 5d asked of a fail state.
         /// </para>
         /// </summary>
-        public const int BlightHealth = 1100;
+        public const int BlightHealth = 1250;
 
         public const float BlightHold = .58f;
         public const float BlightMarch = 7f;
@@ -793,7 +884,7 @@ namespace GlimmerGrove.Modes
         /// is too strong shows up there as a line that falls and nowhere else at all.
         /// </para>
         /// </summary>
-        public const int WarbringerHealth = 2400;
+        public const int WarbringerHealth = 2750;
 
         /// <summary>
         /// Where it stops, and it stays there.

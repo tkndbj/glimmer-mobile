@@ -627,16 +627,13 @@ namespace GlimmerGrove
 
             Close(() =>
             {
-                // **The scope has to be given up by hand, here, and the ordering is why.**
-                // `Flow.Dismiss` calls `Object.Destroy`, which lands at the end of the frame —
-                // so this panel's `OnDestroy`, and with it `WardFiringStage`'s
-                // `ReleaseScope`, runs *after* the line below has already built the reveal and
-                // asked for the same turret. `EnsureScopeAsync` leaves an address another scope
-                // owns alone (invariant 7b), so the reveal would claim none of these and then
-                // watch them freed underneath it a moment later — a turret that draws for one
-                // frame of the loudest moment in the feature and then does not.
-                AssetLibrary.ReleaseScope(PreviewScope);
-
+                // Nothing to give up by hand any more, and the deletion is the point. This
+                // used to release the preview's scope here, by name, because `Object.Destroy`
+                // lands at the end of the frame — so this panel's own release ran *after* the
+                // reveal below had already asked for the same turret, and a scope claimed
+                // nothing another scope owned, so the reveal watched its art freed underneath
+                // it. Counting makes the ordering irrelevant: the reveal takes its own hold
+                // before this panel lets go, so the count never reaches nought.
                 Flow.Modal<WardRevealOverlay>(v =>
                 {
                     v.Model = model;

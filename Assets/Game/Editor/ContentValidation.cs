@@ -2332,6 +2332,8 @@ namespace GlimmerGrove.EditorTools
                 result.Errors.Add($"the first home '{first.Id}' is not free; a new grove would open " +
                                   "with nothing on its hearth");
 
+            ValidateHomeLadderGates(dwellings, result);
+
             // The hall's footprint is the floor's, and every rung of the ladder has to author
             // the same one — a manor that covered more ground than the cabin would evict
             // whatever the player had planted beside their door the moment they bought it.
@@ -2523,6 +2525,63 @@ namespace GlimmerGrove.EditorTools
                 result.Errors.Add($"grove piece '{piece.Id}' authors art size " +
                                   $"{piece.ArtWidth}x{piece.ArtHeight} and the file is {w}x{h}; " +
                                   "run Tools/grove_art_facts.py");
+        }
+
+        /// <summary>
+        /// The home ladder's keeper gates: they climb with the tier, and a gated rung is priced.
+        ///
+        /// <para>
+        /// <b>Climbing is the half that is invisible.</b> A rung asking for a level an earlier
+        /// rung already demanded can never refuse anybody — it parses, it validates, it draws a
+        /// price and it is simply not a gate, which is invariant 5d's decoration arriving on the
+        /// one purchase the whole grove is composed around. The same property the ward shelf and
+        /// the land ladder are both held to, asked of the third ladder in the game.
+        /// </para>
+        /// <para>
+        /// <b>And a gated rung has to be priced</b>, because the gate is permission to pay
+        /// rather than a route of its own (invariant 15a). Unpriced, the level would be the only
+        /// thing between a player and the home — and nothing grants it there, since
+        /// <c>HomesteadLedger.IsEarned</c> reads only a glade or a chapter. What ships is a rung
+        /// that can never be held by anybody, and the ladder silently ends one step early.
+        /// </para>
+        /// </summary>
+        static void ValidateHomeLadderGates(List<HomesteadPiece> dwellings,
+                                            ContentValidationResult result)
+        {
+            var ladder = new List<HomesteadPiece>(dwellings);
+            ladder.Sort((a, b) => a.Tier.CompareTo(b.Tier));
+
+            int below = 0;
+            string under = null;
+
+            foreach (var piece in ladder)
+            {
+                if (piece.RequiresKeeperLevel > 0 && !piece.IsForSale)
+                    result.Errors.Add($"grove home '{piece.Id}' opens at keeper level " +
+                                      $"{piece.RequiresKeeperLevel} and has no price; the gate is " +
+                                      "permission to pay rather than a way of paying, so nothing " +
+                                      "would ever grant it and the ladder would end here");
+
+                if (piece.RequiresKeeperLevel <= 0)
+                {
+                    // An ungated rung above a gated one is legal and is worth saying: the ladder
+                    // stops asking for anything part way up, which is almost always a row that
+                    // lost its gate rather than a decision.
+                    if (below > 0)
+                        result.Warnings.Add($"grove home '{piece.Id}' is tier {piece.Tier} and " +
+                                            $"opens at no keeper level, while '{under}' below it " +
+                                            $"asks for {below}; the ladder stops climbing here");
+                    continue;
+                }
+
+                if (piece.RequiresKeeperLevel <= below)
+                    result.Errors.Add($"grove home '{piece.Id}' opens at keeper level " +
+                                      $"{piece.RequiresKeeperLevel}, which '{under}' below it has " +
+                                      "already passed; a gate that refuses nobody is not a gate");
+
+                below = piece.RequiresKeeperLevel;
+                under = piece.Id;
+            }
         }
 
         static void ValidateGroveBundle(HomesteadPiece piece, ContentValidationResult result)
@@ -2917,6 +2976,8 @@ namespace GlimmerGrove.EditorTools
             {
                 Require(table, mechanic.TitleKey, $"mechanic '{mechanic.Id}'", result);
                 Require(table, mechanic.BodyKey, $"mechanic '{mechanic.Id}'", result);
+
+                RequireTipArgs(table, mechanic, result);
             }
 
             // And a utility's two, derived from its id like everything above (invariant 5a) and
@@ -3011,6 +3072,47 @@ namespace GlimmerGrove.EditorTools
         {
             if (!table.TryGet(key, out _))
                 result.Errors.Add($"{owner} references missing string '{key}'");
+        }
+
+        /// <summary>
+        /// Holds a lesson's body to the number of values it says it has to be told
+        /// (<see cref="Mechanic.Args"/>): every index below it present, and none at or above it.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The only place either half of a composed lesson can be checked.</b> Two of these
+        /// sentences carry a figure that is content — how many stars open the next chapter — and
+        /// invariant 21 is the reason it is printed rather than typed into the prose. What that
+        /// buys has to be protected at both ends: a body that <em>lost</em> its placeholder is a
+        /// lesson that silently stops naming the number, and a body that <em>gained</em> one is a
+        /// literal "{1}" drawn on a panel a player is shown once in their life. Neither fails
+        /// anywhere else, because <c>Loc.Format</c> catches the mismatch and hands back the
+        /// pattern — which is right at run time and is exactly what makes it invisible.
+        /// </para>
+        /// <para>
+        /// It is the string side that this is really for: a body is translated, and a translator
+        /// rearranging a sentence is the likeliest way a placeholder goes missing.
+        /// <c>ScreenLessons</c> holds the call sites to the same number.
+        /// </para>
+        /// </remarks>
+        static void RequireTipArgs(LocTable table, Mechanic mechanic, ContentValidationResult result)
+        {
+            if (!table.TryGet(mechanic.BodyKey, out var body) || string.IsNullOrEmpty(body)) return;
+
+            for (int i = 0; i < mechanic.Args; i++)
+                if (!body.Contains("{" + i + "}"))
+                    result.Errors.Add(
+                        $"mechanic '{mechanic.Id}' is composed with {mechanic.Args} value(s) and "
+                        + $"its body never writes '{{{i}}}', so that value is dropped silently");
+
+            // One past the end is enough: a body is written against a declaration, so the first
+            // index nobody supplies is where a gap shows, and reporting every one of them would
+            // bury the line that matters under a run of identical ones.
+            if (body.Contains("{" + mechanic.Args + "}"))
+                result.Errors.Add(
+                    $"mechanic '{mechanic.Id}' is composed with {mechanic.Args} value(s) and its "
+                    + $"body writes '{{{mechanic.Args}}}', which is drawn to the player as those "
+                    + "four characters");
         }
 
         /// <summary>

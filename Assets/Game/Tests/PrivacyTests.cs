@@ -229,6 +229,89 @@ namespace GlimmerGrove.Tests
         }
 
         // ------------------------------------------------------------- fixtures
+        // ------------------------------------------------- what a subscriber is handed
+        /// <summary>
+        /// <b>A <c>Changed</c> handler must read the signals it is given, never
+        /// <see cref="AdPrivacy.Signals"/> or <see cref="AdPrivacy.IsResolved"/>.</b>
+        ///
+        /// <para>
+        /// <c>ResolveAsync</c> raises the event and sets <c>IsResolved</c> on the line after
+        /// it, so for the duration of the one callback that carries the answer the flag still
+        /// says the answer has not arrived. A handler that asks it returns early and is never
+        /// called again, because consent is answered once.
+        /// </para>
+        /// <para>
+        /// That is not a bug to be fixed here — moving the assignment would make <c>Commit</c>'s
+        /// own early-out swallow the event whenever a player's real answer happens to equal the
+        /// restrictive default, which is exactly the answer that matters most. So the ordering
+        /// is pinned instead, and this test is the warning: both measurement SDKs were wired
+        /// against the flag and both silently did nothing on a device, with healthy-looking
+        /// startup logs either way.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AChangedHandlerIsGivenTheAnswerTheFlagDoesNotYetCarry()
+        {
+            AdPrivacy.Install(new FakeGateway(Granted));
+
+            AdPrivacySignals handed = AdPrivacySignals.Restricted;
+            bool flagDuringCallback = true;
+            int calls = 0;
+
+            System.Action<AdPrivacySignals> handler = signals =>
+            {
+                handed = signals;
+                flagDuringCallback = AdPrivacy.IsResolved;
+                calls++;
+            };
+
+            AdPrivacy.Changed += handler;
+            try
+            {
+                AdPrivacy.ResolveAsync().GetAwaiter().GetResult();
+            }
+            finally
+            {
+                AdPrivacy.Changed -= handler;
+            }
+
+            Assert.AreEqual(1, calls, "consent is answered once, so there is no second chance");
+            Assert.IsTrue(handed.AllowsPersonalisation,
+                          "the event argument carries the real answer");
+            Assert.IsFalse(flagDuringCallback,
+                           "IsResolved is still false inside the callback - a handler that reads "
+                           + "it instead of its argument does nothing, for ever");
+            Assert.IsTrue(AdPrivacy.IsResolved, "and is true once the call returns");
+        }
+
+        /// <summary>
+        /// The case that stops the ordering being "fixed" by moving one line: a player whose
+        /// real answer equals the restrictive default must still produce an event, or every
+        /// refusal in the EEA would be indistinguishable from never having been asked.
+        /// </summary>
+        [Test]
+        public void ARefusalStillRaisesTheEventEvenThoughItMatchesTheDefault()
+        {
+            AdPrivacy.Install(new FakeGateway(AdPrivacySignals.Restricted));
+
+            int calls = 0;
+            System.Action<AdPrivacySignals> handler = _ => calls++;
+
+            AdPrivacy.Changed += handler;
+            try
+            {
+                AdPrivacy.ResolveAsync().GetAwaiter().GetResult();
+            }
+            finally
+            {
+                AdPrivacy.Changed -= handler;
+            }
+
+            Assert.AreEqual(1, calls,
+                            "the restrictive answer is an answer; it must not be swallowed as "
+                            + "'nothing changed'");
+        }
+
         static AdPrivacySignals Granted => new AdPrivacySignals(
             true, ConsentStatus.Granted, false, false, TrackingStatus.NotSupported);
 

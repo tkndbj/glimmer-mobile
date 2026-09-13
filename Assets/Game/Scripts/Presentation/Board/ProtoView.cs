@@ -76,6 +76,30 @@ namespace GlimmerGrove
         /// <summary>As <see cref="TakingInput"/>, and the screen has let the run begin.</summary>
         public bool Playable => TakingInput && !Held;
 
+        /// <summary>
+        /// Whether a tap that is <em>not</em> on the board would mean anything.
+        ///
+        /// <para>
+        /// <b><see cref="Playable"/> minus <see cref="Busy"/>, and the difference is the whole
+        /// point.</b> <c>Busy</c> means "the board is resolving" — gems are falling, a cascade is
+        /// running — which is a fact about the <em>field</em> and a perfectly good reason to refuse
+        /// a swap. It is no reason at all to refuse a finger that has gone somewhere else: a cog
+        /// lying on the hill and a bomb standing on it are not on the board, and the model resolved
+        /// them the instant the swap landed. Only the drawing is still catching up.
+        /// </para>
+        /// <para>
+        /// <b>Reported from play as exactly that</b> — <em>I cannot collect cogs or press bombs
+        /// while chain reactions are happening.</em> A cascade is half a second and the biggest
+        /// ones are longer, so a mode whose hill is walking the whole time was taking the player's
+        /// hands away at the moment most worth acting in.
+        /// </para>
+        /// <para>
+        /// Everything else it refuses is still refused: a run that has not begun, one that is over,
+        /// and a board held by a lesson, the pause menu or a panel over it.
+        /// </para>
+        /// </summary>
+        public bool Tappable => Run != null && !Locked && !Over && !Held;
+
         bool _committed;
 
         // ------------------------------------------------------------------ geometry

@@ -174,12 +174,28 @@ namespace GlimmerGrove
         /// how a player finds their colour: a chip that comes and goes would move the other three
         /// under a finger that had learnt where they were.
         /// </para>
+        /// <para>
+        /// <b>Before a boss the row comes off entirely and the band names the boss instead.</b>
+        /// Reported from play as confusing, and it is: the forecast answers <em>which colour do I
+        /// bank</em>, and before a boss the answer is not a colour — it is that a boss is coming,
+        /// which is different news and the loudest this mode has. A blightcaller and a warbringer
+        /// ride the head of their last authored wave (invariant 37ad), so such a wave really does
+        /// carry ordinary raiders whose counts are given up; that is the trade, taken deliberately,
+        /// because a player who reads four gem counts and then meets a warlord has been told the
+        /// wrong thing rather than half of the right one.
+        /// </para>
         /// </summary>
         void Foretell()
         {
             if (_forecastGroup == null || _board == null) return;
 
-            bool show = _board.Resting && !Over;
+            // **And never while a chain banner is standing** — the other half of `Chain`'s rule,
+            // which is that the hill holds one wide caption at a time and whichever is already up
+            // keeps it. The case this half covers is a cascade that runs on into the breather it
+            // started before: without it the band would fade in underneath a banner that has a
+            // second still to go. Asked of the banner itself rather than of a flag, so there is
+            // nothing to clear — it nulls its own field when it is destroyed.
+            bool show = _board.Resting && !Over && _chain == null;
 
             _forecastGroup.alpha = Mathf.MoveTowards(_forecastGroup.alpha, show ? 1f : 0f,
                                                      Time.unscaledDeltaTime * 5f);
@@ -188,8 +204,33 @@ namespace GlimmerGrove
 
             var coming = _board.Coming;
 
+            // **A boss wave is announced as itself and never as a row of gem counts.** Reported
+            // from play as confusing, and it is: the forecast's whole job is to say which colour
+            // to bank, and the answer before a boss is not a colour at all - it is *that a boss is
+            // coming*, which is a different kind of news and the loudest thing this mode has. A
+            // blightcaller and a warbringer ride the head of their last authored wave (invariant
+            // 37ad), so such a wave really does carry ordinary raiders too; their colours are what
+            // is given up, and the trade is deliberate.
+            bool boss = coming.HasBoss;
+
+            _forecastTitle.text = Loc.Get(boss ? BossKey(coming.Boss) : "mode.siege.next");
+            _forecastTitle.color = boss ? Casting(coming.Boss) : Pal.Cream;
+            _forecastTitle.fontSize = Mathf.RoundToInt(Cell * (boss ? .52f : .34f));
+
+            // **The name stands where the chips were**, rather than staying up at the caption's
+            // height with a hole under it: with the row hidden the band would otherwise read as a
+            // title, a gap and a clock. One thing in the middle over a countdown is the shape this
+            // moment actually is.
+            _forecastTitle.rectTransform.anchoredPosition =
+                new Vector2(0f, boss ? Cell * .2f : Cell * .85f);
+
             for (int i = 0; i < _forecastChips.Length; i++)
             {
+                _forecastChips[i].enabled = !boss;
+                _forecastCounts[i].enabled = !boss;
+
+                if (boss) continue;
+
                 int colour = SiegeLayout.Letters.IndexOf(_layout.Wards[i]);
                 int many = coming.Of(colour);
 
@@ -216,9 +257,9 @@ namespace GlimmerGrove
 
             _forecastClock.text = left.ToString();
 
-            // Gold until the last three, then the boss's own colour if one is riding this wave -
-            // which is the only warning a player gets that the next thing out is not a wave.
-            _forecastClock.color = coming.HasBoss ? Casting(coming.Boss)
+            // The boss's own colour when one is coming, which is what the title is wearing too -
+            // one thing said in two places rather than two things.
+            _forecastClock.color = boss ? Casting(coming.Boss)
                                  : left <= 3 ? Pal.Ember : Pal.Gold;
         }
     }

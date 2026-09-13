@@ -1,20 +1,23 @@
-#
-#
-#
-# CraftPix isometric sheets went and a village rendered from KayKit models took their
 # Every grove piece id that has ever shipped, and may never be used again.
-# Ids in the replacement catalogue were chosen around this list; where one collided it
-# It is the same rule, and the same list, that content.py keeps as RETIRED_BLOCKS and
+#
 # WHY THIS FILE EXISTS. On 2026-09-11 the whole grove catalogue was replaced: the
+# CraftPix isometric sheets went and a village rendered from KayKit models took their
+# place, and every player's grove was reset with it. None of that makes an id safe to
+# reuse. A piece id is written into save files twice over — into the stock and into
+# every tile holding one — so a rolled-back client, a device that has not synced, or a
 # backup restored next year can still name one of these, and an id pointed at a
 # different object resolves to a thing nobody bought and nobody placed.
-# every tile holding one — so a rolled-back client, a device that has not synced, or a
+#
+# Ids in the replacement catalogue were chosen around this list; where one collided it
+# was renamed (well -> village_well, pine -> pine_tree, and six others). A reused
 # id here is refused by grove_roster.read() rather than reported, because there is no
-# place, and every player's grove was reset with it. None of that makes an id safe to
-# reading of it that is correct.
-# reuse. A piece id is written into save files twice over — into the stock and into
-# that CLAUDE.md keeps for every retired mode, chapter, level and lesson id. A reused
-# was renamed (well -> village_well, pine -> pine_tree, and six others).
+# reading of it that is correct. It is the same rule, and the same list, that content.py
+# keeps as RETIRED_BLOCKS and that CLAUDE.md keeps for every retired mode, chapter,
+# level and lesson id.
+#
+# THE IDS BELOW ARE SORTED AND THE HEADER IS NOT PART OF THAT. This file is maintained
+# by hand, and a past edit sorted the whole of it — which left these sixteen lines in
+# alphabetical order and the explanation unreadable. Sort the ids, never the file.
 arrow_sign
 bamboo
 banner_crimson
@@ -56,9 +59,13 @@ fence_picket_end
 fence_rail
 fence_rail_end
 fence_short
+fence_stone
+fence_stone_gate
 fence_timber
 fence_timber_end
 fence_wide
+fence_wood
+fence_wood_gate
 field_stone
 fish_trap
 flag_red

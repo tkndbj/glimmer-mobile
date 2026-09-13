@@ -365,27 +365,37 @@ namespace GlimmerGrove.Modes
 
                 ward.Cool = SiegeTuning.FireEvery;
 
+                // **What this bolt is worth is asked of the ward, about the raider.** A prism
+                // widens the mode's central rule to a second colour and a boss is answered by the
+                // whole line whatever it wears (`SiegeTuning.EveryWardReaches`), and both of those
+                // are one question — may this ward fire at this, and for how much — so they are
+                // asked in one place. A call site comparing colours here would be a second opinion
+                // about what "its own colour" means.
+                //
+                // **`weak` is the double and nothing else.** Under the lock every primary bolt at
+                // an ordinary raider lands in full, so it is true on every ordinary shot and
+                // `SiegeTuning.PerfectMatch` — which has always assumed exactly that — stops being
+                // an optimistic reading and becomes an identity. A duel answered with the wrong
+                // colour is the one place it is false, which is exactly what the view draws in
+                // white rather than gold.
+                int share = ward.ReachTenths(target);
+                bool weak = ward.Doubles(target);
+
+                int damage = SiegeTuning.DamageTo(target.Kind, ward.Rank, true, ward.Build);
+                if (!weak) damage = Math.Max(1, damage * share / 10);
+
                 // **Both halves of a rank are spent here**, and they are the reason a cog is worth
                 // more than the sum of its parts: an upgraded ward hits harder *and* gets more
                 // bolts out of the same match, so a rank-four turret turns one match into 2.33
                 // times the damage a fresh one would.
-                ward.Fuel = Math.Max(0f, ward.Fuel - SiegeTuning.FuelShot(ward.Rank));
+                //
+                // **And a part-weight bolt costs a part of the fuel**, which is what makes a shot
+                // this ward would not otherwise have fired genuinely free rather than the player's
+                // fuel converted at half rate on their behalf — see `SiegeTuning.FuelShot`. It is
+                // spent after the share is known and before anything is reported, so the two can
+                // never be read from different answers.
+                ward.Fuel = Math.Max(0f, ward.Fuel - SiegeTuning.FuelShot(ward.Rank, share));
                 ward.Shots++;
-
-                // **A prism turret is strong against two colours rather than one**, which is the
-                // one ability that widens the mode's central rule instead of adding to it. It is
-                // asked of the ward rather than compared here, so nothing can end up with a
-                // second opinion about what "its own colour" means.
-                // **Full weight against its own colour, a share against a prism's partner.**
-                // Under the lock every primary bolt lands on something this ward is strong
-                // against, so `weak` is true on every ordinary shot and `SiegeTuning.PerfectMatch`
-                // — which has always assumed exactly that — stops being an optimistic reading and
-                // becomes an identity.
-                int share = ward.ReachTenths(target.Colour);
-                bool weak = share >= 10;
-
-                int damage = SiegeTuning.DamageTo(target.Kind, ward.Rank, true, ward.Build);
-                if (!weak) damage = Math.Max(1, damage * share / 10);
 
                 target.Health -= damage;
                 target.Flash = .18f;
@@ -402,16 +412,9 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// What a ward shoots at: the raider of its own colour that is furthest down the hill,
-        /// and otherwise whichever raider is furthest down.
-        ///
-        /// <b>Its own colour first, so the rule is visible in play.</b> A player who has fed the
-        /// right ward sees the bolts go to the thing that colour hurts; one who has not sees them
-        /// spread. Nothing has to be told about it.
-        /// </summary>
-        /// <summary>
-        /// What a ward will shoot at: the furthest raider of its own colour, and — for a prism —
-        /// the furthest of its partner colour when its own has nothing left standing.
+        /// What a ward will shoot at: the furthest raider of its own colour, then — for a prism —
+        /// the furthest of its partner colour, and then a boss, each only when the one before it
+        /// has nothing left standing.
         ///
         /// <para>
         /// <b>A turret only ever attacks its own colour, and that one line is the mode.</b> It
@@ -420,6 +423,13 @@ namespace GlimmerGrove.Modes
         /// eventually landed everything on its own kind whatever anybody matched, so <em>which</em>
         /// colour to feed decided nothing and "take the biggest match on the field" was correctly
         /// the optimal play. <b>A bonus nobody has to earn cannot change behaviour.</b> A lock can.
+        /// </para>
+        /// <para>
+        /// <b>A boss is the one thing the lock does not hold, and the reason is that a duel offers
+        /// no choice for it to protect.</b> One raider wearing one colour means three of the four
+        /// turrets a player chose have nothing to fire at, so the finale was answered by a quarter
+        /// of the line at a quarter of what a match delivers — see
+        /// <see cref="SiegeTuning.EveryWardReaches"/>, which owns the rule.
         /// </para>
         /// <para>
         /// <b>And it is what makes fuel a resource rather than a pass-through.</b> A ward with
@@ -436,10 +446,21 @@ namespace GlimmerGrove.Modes
         /// at full, which is a turret somebody paid for making their own bolt weaker (invariant
         /// 42).
         /// </para>
+        /// <para>
+        /// <b>And a boss last of the three, for the same reason and it is the stronger half of
+        /// it.</b> Every ward answers a boss whatever colour it wears
+        /// (<see cref="SiegeTuning.EveryWardReaches"/>), so a duel is fought by the whole line
+        /// rather than by the one turret that happened to match — but a boss holds the middle of
+        /// the hill while its escort walks to the wards, and a line that turned to face the boss
+        /// would be a line taken apart by the wave standing in front of it. So a boss is what a
+        /// ward shoots when it has nothing of its own left to shoot: strictly a bolt it would
+        /// otherwise not have fired at all, which is what keeps it out of par's way exactly as a
+        /// partner shot is.
+        /// </para>
         /// </summary>
         SiegeRaider Aim(SiegeWard ward)
         {
-            SiegeRaider own = null, partner = null;
+            SiegeRaider own = null, partner = null, boss = null;
 
             for (int i = 0; i < _raiders.Count; i++)
             {
@@ -452,11 +473,17 @@ namespace GlimmerGrove.Modes
                     continue;
                 }
 
-                if (ward.ReachTenths(raider.Colour) <= 0) continue;
-                if (partner == null || raider.March > partner.March) partner = raider;
+                if (ward.ReachTenths(raider.Colour) > 0)
+                {
+                    if (partner == null || raider.March > partner.March) partner = raider;
+                    continue;
+                }
+
+                if (!SiegeTuning.EveryWardReaches(raider.Kind)) continue;
+                if (boss == null || raider.March > boss.March) boss = raider;
             }
 
-            return own ?? partner;
+            return own ?? partner ?? boss;
         }
 
         void Conjure(float dt)

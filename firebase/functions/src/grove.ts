@@ -43,7 +43,7 @@
  * piece of free text is the name, and `publicName` is what stands in front of it.
  */
 
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, FieldPath } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 
 import {
@@ -103,6 +103,23 @@ export interface GroveConfig {
    * held by everybody without appearing in anyone's save.
    */
   dwellings: Record<string, number>;
+
+  /**
+   * Dwelling id → the keeper level that opens that rung. Absent means ungated.
+   *
+   * <b>A second map rather than widening `dwellings` into an object</b>, which is `bundles`'
+   * bargain for its reason: it keeps the field additive in both directions. A function
+   * deployed before the ladder was gated ignores it and scores exactly as it did; a function
+   * reading a config seeded before it sees no gates and does the same. Widening the existing
+   * map would make either of those a crash, and neither side can be redeployed first.
+   *
+   * What it buys is the home half of invariant 19a. A home rung stopped being something
+   * credits alone could reach, so a save naming one whose gate its own star ledger has not
+   * passed cannot have come about honestly — exactly as a save naming an unreachable
+   * companion cannot — and without this the citadel is the one 30,000-credit entry on a
+   * public score that a forged `homesteadStock` row buys for nothing.
+   */
+  dwellingLevels?: Record<string, number>;
 
   /** The star ladder, ascending. Doubles as the league boundaries — see `leagueOf`. */
   stars: number[];
@@ -370,7 +387,12 @@ export function groveWorth(
     if (typeof cost !== "number" || cost <= 0) continue;
 
     if (id in (grove.dwellings ?? {})) {
-      bought += cost;
+      // The gate is asked before the clamp, which is the companion clause below said about
+      // the home ladder and is strictly tighter than clamping: a level-3 save claiming the
+      // 30,000-credit citadel scores nothing for it rather than scoring what it could
+      // afford. An ungated rung, and a config seeded before the ladder was gated, both read
+      // as level 0 and are unaffected.
+      if (level >= Math.floor(grove.dwellingLevels?.[id] ?? 0)) bought += cost;
       continue;
     }
 
@@ -701,6 +723,11 @@ export function buildCard(
     const priced = typeof grove.pieces[id] === "number" && grove.pieces[id] > 0;
     if (priced && !owned.has(id)) continue;
 
+    // And the gate, for the same reason the worth drops such a rung: a card drawing a
+    // citadel over a ledger that cannot reach one is the inconsistency a visitor could
+    // actually catch, and it would draw it on every board this grove appears on.
+    if (level < Math.floor(grove.dwellingLevels?.[id] ?? 0)) continue;
+
     const tier = Math.floor(rawTier ?? 0);
     if (tier > dwellingTier) {
       dwelling = id;
@@ -832,65 +859,88 @@ export function deciles(sorted: number[]): number[] {
   return out;
 }
 
+/** Every board this job writes: the global hundred and one per league. */
+export const BOARD_IDS = ["global", ...Array.from({ length: 9 }, (_, i) => `l${i}`)];
+
+/** The alphabet a Firebase uid is drawn from, for the sampling cursor. See `randomCursor`. */
+const UID_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
 /**
- * Turns a sample of published cards into the boards and the distribution.
+ * A random point in document-id space, so the decile sample is a fresh window every run.
  *
- * <b>Sampled rather than exhaustive, and read from the cards rather than from the saves.</b>
- * Cards are the small documents — a couple of kilobytes against a full save ledger — and
- * only players who asked to be ranked have one, so the sample is already the population the
- * boards are about. Reading saves instead would be the same job over documents ten times
- * the size, most of which are not on the board at all.
- *
- * The global board is exact for the top of the sample and the sample is bounded, so with
- * more than `RANK_SAMPLE_SIZE` participants the global hundred becomes the best hundred
- * *seen*, not the best hundred alive. That is a deliberate trade and the reason the screen
- * leads with a percentile: a percentile from a bounded sample is accurate to well under the
- * point it is rounded to, whereas an exact global top hundred needs an ordering nothing
- * here maintains. When that day comes, the fix is a scored index and a query — and it is a
- * change to this function alone.
+ * **Without it the sample is a fixed panel.** `limit(n)` with no cursor returns the *n lowest
+ * document ids*, which is an unbiased sample of score - a uid is random and knows nothing
+ * about how good somebody's grove is - but it is the same players every day for ever. That is
+ * fine for the arithmetic and wrong for the game: a keeper whose uid sorts late could never
+ * contribute to a decile, and nobody could ever tell, because the numbers would look
+ * completely reasonable. Three characters is about a quarter of a million starting points,
+ * far finer than the sample is wide.
  */
-export function summarise(sample: RankedGrove[]): {
-  boards: Record<string, RankedGrove[]>;
-  distribution: { samples: number; deciles: number[] };
-  population: Record<string, number>;
-} {
-  const scored = sample.filter((g) => g.score > 0);
-  scored.sort((a, b) => (b.score - a.score) || a.uid.localeCompare(b.uid));
-
-  const boards: Record<string, RankedGrove[]> = { global: scored.slice(0, BOARD_ROWS) };
-  const population: Record<string, number> = {};
-
-  for (const grove of scored) {
-    population[grove.league] = (population[grove.league] ?? 0) + 1;
-
-    const board = boards[grove.league] ?? (boards[grove.league] = []);
-    if (board.length < BOARD_ROWS) board.push(grove);
+function randomCursor(): string {
+  let out = "";
+  for (let i = 0; i < 3; i++) {
+    out += UID_ALPHABET[Math.floor(Math.random() * UID_ALPHABET.length)];
   }
-
-  const ascending = scored.map((g) => g.score).sort((a, b) => a - b);
-
-  return {
-    boards,
-    distribution: { samples: ascending.length, deciles: deciles(ascending) },
-    population,
-  };
+  return out;
 }
 
 /**
- * Reads a bounded sample of published cards and rewrites the boards.
+ * The scores of a bounded random sample of cards, for the deciles and nothing else.
  *
- * Every board is written whether or not anything is on it, so a league that emptied stops
- * showing yesterday's rows rather than keeping them for ever. `config/groveRanks` is
- * written last: it is what the client reads to decide whether to draw a percentile at all,
- * so publishing it before the boards it describes would open a window where the two
- * disagree.
+ * **Projected to one field.** `select("score")` still costs one read per document - Firestore
+ * bills the index entry rather than the payload - but it is the difference between pulling
+ * five thousand whole cards into a function's memory and pulling five thousand numbers. A
+ * card carries every placement in somebody's grove.
+ *
+ * **The window wraps, and it wraps with `endBefore`.** A cursor landing near the end of the
+ * id space would otherwise return a short sample, and a short sample taken from the end of
+ * the alphabet is exactly the bias the cursor exists to remove. The remainder has to be taken
+ * from *before* the cursor rather than from the start of the collection: with a population
+ * smaller than the sample size the second query would otherwise return documents the first
+ * one already returned, and every card from the cursor to the end would be counted twice.
+ * That is not a rounding error — it double-weights the tail of the id space in a distribution
+ * players are shown as a percentile. It was caught by a live run reporting 29 samples against
+ * a population of 15.
  */
-export async function rebuildGroveRanks(): Promise<{ ranked: number; boards: number }> {
-  const db = getFirestore();
+async function sampleScores(db: FirebaseFirestore.Firestore): Promise<number[]> {
+  const groves = db.collection("groves");
+  const byId = FieldPath.documentId();
+  const cursor = randomCursor();
 
-  const snapshot = await db.collection("groves").limit(RANK_SAMPLE_SIZE).get();
+  const first = await groves.orderBy(byId).startAt(cursor)
+                            .limit(RANK_SAMPLE_SIZE).select("score").get();
 
-  const sample: RankedGrove[] = [];
+  const scores: number[] = [];
+
+  const take = (snap: FirebaseFirestore.QuerySnapshot) => {
+    for (const doc of snap.docs) {
+      const score = Math.floor(Number(doc.get("score") ?? 0));
+      if (Number.isFinite(score) && score > 0) scores.push(score);
+    }
+  };
+
+  take(first);
+
+  if (first.size < RANK_SAMPLE_SIZE) {
+    const rest = await groves.orderBy(byId).endBefore(cursor)
+                             .limit(RANK_SAMPLE_SIZE - first.size).select("score").get();
+    take(rest);
+  }
+
+  return scores;
+}
+
+/** The top rows of one board, straight out of the index. */
+async function topOf(db: FirebaseFirestore.Firestore, boardId: string): Promise<RankedGrove[]> {
+  const groves = db.collection("groves");
+
+  const query = boardId === "global"
+    ? groves.orderBy("score", "desc").limit(BOARD_ROWS)
+    : groves.where("league", "==", boardId).orderBy("score", "desc").limit(BOARD_ROWS);
+
+  const snapshot = await query.get();
+  const rows: RankedGrove[] = [];
+
   for (const doc of snapshot.docs) {
     const data = doc.data() as Partial<GroveCardDoc>;
     const score = typeof data.score === "number" ? Math.floor(data.score) : 0;
@@ -898,48 +948,113 @@ export async function rebuildGroveRanks(): Promise<{ ranked: number; boards: num
 
     const stars = typeof data.stars === "number" ? Math.floor(data.stars) : 0;
 
-    sample.push({
+    rows.push({
       uid: doc.id,
       name: typeof data.name === "string" ? data.name : "",
       avatar: typeof data.avatar === "string" ? data.avatar : "",
       level: typeof data.level === "number" ? Math.floor(data.level) : 1,
       score,
       stars,
+
+      // Recomputed from the stars rather than read off the document, exactly as it always
+      // was. The stored `league` is what the query selected on and `buildCard` writes it from
+      // these same stars, so the two cannot disagree - but the row a player reads is derived
+      // from the figure printed beside it rather than from a field that merely ought to match.
       league: leagueOf(stars),
     });
   }
 
-  const { boards, distribution, population } = summarise(sample);
+  return rows;
+}
+
+/** How many keepers are on one board, counted rather than sampled. */
+async function countOf(db: FirebaseFirestore.Firestore, boardId: string): Promise<number> {
+  const groves = db.collection("groves");
+
+  const query = boardId === "global"
+    ? groves.where("score", ">", 0)
+    : groves.where("league", "==", boardId).where("score", ">", 0);
+
+  const snapshot = await query.count().get();
+  return snapshot.data().count;
+}
+
+/**
+ * Rewrites every board, the population counts and the distribution.
+ *
+ * **Three kinds of question, three kinds of query, and that split is the whole design.** It
+ * used to be one: read a bounded slab of cards and derive all three from it. That is exactly
+ * right for a decile and exactly wrong for a leaderboard - past `RANK_SAMPLE_SIZE` published
+ * groves the "finest groves" board stopped being the finest and became the best of an
+ * arbitrary five thousand, with no symptom anybody could see. A top hundred has to be a
+ * *query*, because it is the one number here where approximately right is wrong.
+ *
+ * - **Boards** come from `orderBy("score","desc").limit(100)`: exact at any population, and a
+ *   hundred reads each whether the game has a thousand players or ten million.
+ * - **Populations** come from a `count()` aggregation, which Firestore bills at one read per
+ *   thousand matches rather than one per document. "The finest of N keepers" is now N rather
+ *   than the size of a sample.
+ * - **Deciles** stay sampled, because a percentile from a few thousand draws is accurate to
+ *   far under the point it is rounded to, and an exact one would mean reading every card in
+ *   the game every day to tell somebody they are in the top 12%.
+ *
+ * **What it costs at ten million players:** eleven board queries at a hundred rows (1,100),
+ * eleven counts (Firestore bills an aggregation at one read per thousand index entries, so
+ * the global count is 10,000 and the nine leagues sum to another 10,000), and the sample
+ * (5,000). Call it twenty-six thousand reads a day for the entire game, once, at four in the
+ * morning - under a penny. The old job cost five thousand and was wrong. Nothing here grows
+ * with the player count except the counts, and those grow at a thousandth of it.
+ *
+ * Every board is written whether or not anything is on it, so a league that emptied stops
+ * showing yesterday's rows rather than keeping them for ever. `config/groveRanks` is written
+ * last: it is what the client reads to decide whether to draw a percentile at all, so
+ * publishing it before the boards it describes would open a window where the two disagree.
+ */
+export async function rebuildGroveRanks(): Promise<{ ranked: number; boards: number }> {
+  const db = getFirestore();
+
+  // Asked for together rather than one after another: they are independent reads against one
+  // collection, and a scheduled job should not spend twenty-three round trips in series to
+  // learn what it could have learned in one.
+  const [tops, counts, scores] = await Promise.all([
+    Promise.all(BOARD_IDS.map((id) => topOf(db, id))),
+    Promise.all(BOARD_IDS.map((id) => countOf(db, id))),
+    sampleScores(db),
+  ]);
+
+  const population: Record<string, number> = {};
+  BOARD_IDS.forEach((id, i) => { population[id] = counts[i]; });
+
+  const ascending = scores.slice().sort((a, b) => a - b);
   const builtUnix = Math.floor(Date.now() / 1000);
 
-  // Every league gets a document, including the empty ones — see the remarks above.
-  const ids = ["global", ...Array.from({ length: 9 }, (_, i) => `l${i}`)];
   const batch = db.batch();
 
-  for (const boardId of ids) {
-    const entries = boards[boardId] ?? [];
+  BOARD_IDS.forEach((boardId, i) => {
     batch.set(db.doc(GROVE_PATHS.board(boardId)), {
-      entries,
-      population: boardId === "global" ? distribution.samples : (population[boardId] ?? 0),
+      entries: tops[i],
+      population: population[boardId] ?? 0,
       builtUnix,
     });
-  }
+  });
 
   await batch.commit();
 
   await db.doc(GROVE_PATHS.ranksConfig).set({
-    samples: distribution.samples,
-    deciles: distribution.deciles,
+    samples: ascending.length,
+    deciles: deciles(ascending),
     population,
     builtUnix,
     builtAt: new Date().toISOString(),
   });
 
   logger.info("published grove ranks", {
-    ranked: distribution.samples, read: snapshot.size, boards: ids.length,
+    ranked: population.global ?? 0,
+    sampled: ascending.length,
+    boards: BOARD_IDS.length,
   });
 
-  return { ranked: distribution.samples, boards: ids.length };
+  return { ranked: population.global ?? 0, boards: BOARD_IDS.length };
 }
 
 /**

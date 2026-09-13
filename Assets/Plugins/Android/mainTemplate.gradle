@@ -9,12 +9,17 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4' // Packages/com.google.ads.mobile/GoogleMobileAds/Editor/GoogleMobileAdsDependencies.xml:12
     implementation 'androidx.fragment:fragment:1.7.1' // Packages/com.google.ads.mobile/GoogleMobileAds/Editor/GoogleMobileAdsDependencies.xml:22
     implementation 'androidx.lifecycle:lifecycle-process:2.6.2' // Packages/com.google.ads.mobile/GoogleMobileAds/Editor/GoogleMobileAdsDependencies.xml:17
+    implementation 'com.android.installreferrer:installreferrer:2.1' // Packages/com.appsflyer.unity/Editor/AppsFlyerDependencies.xml:7
+    implementation 'com.appsflyer:af-android-sdk:6.17.0' // Packages/com.appsflyer.unity/Editor/AppsFlyerDependencies.xml:5
+    implementation 'com.appsflyer:purchase-connector:2.1.0' // Packages/com.appsflyer.unity/Editor/AppsFlyerDependencies.xml:8
+    implementation 'com.appsflyer:unity-wrapper:6.17.0' // Packages/com.appsflyer.unity/Editor/AppsFlyerDependencies.xml:6
     // implementation 'com.google.android.gms:play-services-ads:25.3.0' // Assets/LevelPlay/Editor/ISAdMobAdapterDependencies.xml:8
     implementation 'com.google.android.gms:play-services-ads:25.4.0' // Packages/com.google.ads.mobile/GoogleMobileAds/Editor/GoogleMobileAdsDependencies.xml:7
     implementation 'com.google.android.gms:play-services-ads-identifier:18.1.0' // Assets/LevelPlay/Editor/IronSourceSDKDependencies.xml:12
     implementation 'com.google.android.gms:play-services-base:18.10.0' // Packages/com.google.firebase.app/Firebase/Editor/AppDependencies.xml:20
     implementation 'com.google.android.ump:user-messaging-platform:4.0.0' // Packages/com.google.ads.mobile/GoogleMobileAds/Editor/GoogleUmpDependencies.xml:7
-    implementation 'com.google.firebase:firebase-analytics:23.2.0' // Packages/com.google.firebase.auth/Firebase/Editor/AuthDependencies.xml:18
+    implementation 'com.google.firebase:firebase-analytics:23.2.0' // Packages/com.google.firebase.analytics/Firebase/Editor/AnalyticsDependencies.xml:16
+    implementation 'com.google.firebase:firebase-analytics-unity:13.15.0' // Packages/com.google.firebase.analytics/Firebase/Editor/AnalyticsDependencies.xml:21
     implementation 'com.google.firebase:firebase-app-unity:13.15.0' // Packages/com.google.firebase.app/Firebase/Editor/AppDependencies.xml:25
     implementation 'com.google.firebase:firebase-auth:24.2.0' // Packages/com.google.firebase.auth/Firebase/Editor/AuthDependencies.xml:16
     implementation 'com.google.firebase:firebase-auth-unity:13.15.0' // Packages/com.google.firebase.auth/Firebase/Editor/AuthDependencies.xml:23
@@ -40,6 +45,33 @@ android {
   }
 }
 // Android Resolver Exclusions End
+
+// AppsFlyer's Unity package declares its SDK and its purchase connector together, and both
+// Android libraries declare the namespace `com.appsflyer`. Unity 6000.5 builds with AGP 9,
+// which made a namespace shared by two modules a hard error where AGP 8 only warned - so the
+// build dies at `:launcher:processDebugMainManifest` with "Manifest merger failed", which
+// reads as a manifest problem and is really a dependency one. Every published version of both
+// libraries declares the same namespace, so there is nothing to upgrade to.
+//
+// <b>The connector cannot simply be dropped, though nothing here uses it.</b> That was tried:
+// `AppsFlyerAndroidWrapper` declares `private static Store mappingEnum(int)`, and Unity's
+// reflection helper calls getDeclaredMethods() on that class to find any method by name -
+// which resolves every signature on it. So the first call into AppsFlyer throws
+// NoClassDefFoundError for `com.appsflyer.api.Store`, attribution never starts, and Gradle is
+// perfectly happy about it.
+//
+// So the Maven coordinate is excluded and a re-namespaced copy of the same AAR is vendored
+// into this folder instead - see Tools/make_appsflyer_connector.py, which explains why that
+// is safe (the library ships no resources, so its namespace is nominal) and proves the
+// vendored file is what it produces. Exactly one copy reaches the build either way.
+//
+// This lives outside the resolver's own markers on purpose: the Android Resolver rewrites
+// everything between `Dependencies Start`/`End` and `Exclusions Start`/`End` on every
+// resolve, so an edit made in there is gone the next time anybody opens the project.
+configurations.all {
+    exclude group: 'com.appsflyer', module: 'purchase-connector'
+}
+
 android {
     namespace "com.unity3d.player"
     ndkPath "**NDKPATH**"

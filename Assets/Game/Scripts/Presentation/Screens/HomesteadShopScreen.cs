@@ -1,3 +1,4 @@
+using GlimmerGrove.AssetPipeline;
 using System;
 using System.Collections.Generic;
 using GlimmerGrove.Content;
@@ -42,8 +43,14 @@ namespace GlimmerGrove
     /// a video and the worst to teach them a control is dead.
     /// </para>
     /// </summary>
-    public sealed class HomesteadShopScreen : View, IDrawsGroveArt, IDrawsCompanionArt
+    public sealed class HomesteadShopScreen : View
     {
+
+        /// <summary>The tab row's emblems, which outlive every shelf shown in the row.</summary>
+        AssetHold _tabArt;
+
+        /// <summary>The shelf on show. Refilled as the player changes tab, never replaced.</summary>
+        AssetHold _shelfArt;
         public override string Track => "mus_menu";
 
         const float HeaderHeight = 268f;
@@ -155,21 +162,19 @@ namespace GlimmerGrove
             // about to ask for again — the bargain CompanionScreen makes with the profile. The
             // check itself lives in HomesteadArt, because this screen having it and the grove
             // screen not having it is exactly how the grid ended up empty.
-            HomesteadArt.CloseUnlessWanted();
-            CompanionArt.CloseUnlessWanted();
+            _tabArt?.Dispose();
+            _shelfArt?.Dispose();
         }
 
         public override bool OnBack() { Flow.Go<HomesteadScreen>(); return true; }
 
         void OnRecord(LevelRecord record) => Repaint();
 
-        async void Warm()
+        void Warm() => Run(async token =>
         {
             await HomesteadService.EnsureAsync();
-            if (!this) return;
-
-            Reload();
-        }
+            if (Living) Reload();
+        });
 
         /// <summary>
         /// Switches shelf: the grid takes the new list at once, and the art follows.
@@ -343,9 +348,9 @@ namespace GlimmerGrove
             RevealTab();
 
             // The emblems, in a scope of their own that survives every shelf change — see
-            // HomesteadArt.OpenTabsAsync. Asked for once here rather than on every shelf,
+            // its own hold. Asked for once here rather than on every shelf,
             // which is the whole point of it having a lifetime of its own.
-            HomesteadArt.OpenTabsAsync(() => { if (this) PaintTabs(); });
+            _tabArt = GroveArtLoader.Open("grove_tabs", GroveArtLoader.Tabs(), this, PaintTabs);
         }
 
         void PaintTabs()
@@ -483,7 +488,13 @@ namespace GlimmerGrove
 
             // The atlas last, so the grid is on screen before the pictures are. The callback
             // rebinds rather than refilling, so nothing plays its entrance twice.
-            HomesteadArt.OpenShelfAsync(_shelf, () => { if (this) Repaint(); });
+            // The same hold, refilled. Flicking through tabs therefore lets go of the shelf
+            // being left as it takes the next one, rather than destroying the atlas the row
+            // above is drawing from and asking for it straight back.
+            if (_shelfArt == null)
+                _shelfArt = GroveArtLoader.Open("grove_shelf", GroveArtLoader.Shelf(_shelf), this, Repaint);
+            else
+                GroveArtLoader.Fill(_shelfArt, GroveArtLoader.Shelf(_shelf), this, Repaint);
         }
 
         /// <summary>
@@ -905,10 +916,20 @@ namespace GlimmerGrove
             // A home is never "yours" in the sense the rest of the grid means it — the player
             // always has one. What the cell has to say is whether this is the next one up.
             if (piece.IsDwelling)
-                return held
-                    ? (Loc.Get("ui.grove.home_best"), Pal.A(Pal.Gold, .95f), 0)
-                    : (Compact.Number(piece.Cost),
-                       Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Sun, .95f) : Pal.A(Pal.Sun, .58f), 1);
+            {
+                if (held) return (Loc.Get("ui.grove.home_best"), Pal.A(Pal.Gold, .95f), 0);
+
+                // The gate leads when it binds, for the same reason the general branch below
+                // does it: a cell quoting the price alone would show the half a player can act
+                // on and hide the half stopping them. It is said here rather than falling
+                // through, because a home never reaches that branch — it answers first.
+                if (piece.RequiresKeeperLevel > 0 && Profile.Rank < piece.RequiresKeeperLevel)
+                    return (Loc.Format("ui.grove.needs_level", piece.RequiresKeeperLevel),
+                            Pal.A(Pal.Aqua, .95f), 0);
+
+                return (Compact.Number(piece.Cost),
+                        Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Sun, .95f) : Pal.A(Pal.Sun, .58f), 1);
+            }
 
             // Stock keeps its price on the cell, because a stocked piece is never finished
             // being sold — "Yours" over something the player wants three more of is the cell

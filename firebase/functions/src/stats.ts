@@ -29,7 +29,7 @@
  * enough data" and "the job has not run", which are different problems.
  */
 
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, FieldPath } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 
 /** How many saves one run reads. Bounded so the cost never grows with the player count. */
@@ -112,20 +112,72 @@ export function summarise(collected: Map<string, number[]>): Record<string, Leve
   return levels;
 }
 
+/** The alphabet a Firebase uid is drawn from. See `rebuildStats`. */
+const UID_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
 /**
- * Reads a bounded sample of saves and republishes `config/stats`.
+ * A random point in document-id space, so the sample is a fresh window every run.
  *
- * The sample is whatever Firestore returns first, which is document-id order — and a
- * Firebase uid is random, so id order is as good as random for this purpose. It is not a
- * uniform sample of *play*: a player who has cleared more glades contributes to more of
- * them, which is exactly the population the line is about ("keepers who have finished this
- * glade"), so the bias is the one that was wanted.
+ * Deliberately duplicated from `grove.ts` rather than shared: the two jobs sample different
+ * collections for different reasons and neither should acquire a dependency on the other to
+ * say so. Three characters is about a quarter of a million starting points, far finer than
+ * either sample is wide.
+ */
+function randomCursor(): string {
+  let out = "";
+  for (let i = 0; i < 3; i++) {
+    out += UID_ALPHABET[Math.floor(Math.random() * UID_ALPHABET.length)];
+  }
+  return out;
+}
+
+/**
+ * Reads a bounded random sample of saves and republishes `config/stats`.
+ *
+ * **The sample is a random window, not the first N.** A Firebase uid is random, so id order
+ * is as good as random for picking *who* — but `limit(n)` with no cursor returns the n
+ * lowest ids, which is the same players every day for ever. A keeper whose uid sorts late
+ * could never contribute to a decile and nobody could tell, because the numbers would look
+ * entirely reasonable. `rebuildGroveRanks` has the same cursor for the same reason.
+ *
+ * It is deliberately not a uniform sample of *play*: a player who has cleared more glades
+ * contributes to more of them, which is exactly the population the line is about ("keepers
+ * who have finished this glade"), so that bias is the one that was wanted.
+ *
+ * **Projected to one field.** A save is the largest document this game writes — every level
+ * record, every ledger, the whole event history — and all this job wants is `levels`.
+ * `select` costs the same reads (Firestore bills the index entry, not the payload) and is
+ * the difference between pulling five thousand whole saves into a function's memory and
+ * pulling five thousand small maps. At a million players that is the ceiling this job would
+ * have hit first.
  */
 export async function rebuildStats(): Promise<{ levels: number; saves: number }> {
   const db = getFirestore();
 
-  const snapshot = await db.collection("players").limit(SAMPLE_SIZE).get();
-  const collected = collect(snapshot.docs.map((doc) => doc.data() as { levels?: unknown }));
+  const players = db.collection("players");
+  const byId = FieldPath.documentId();
+  const cursor = randomCursor();
+
+  const first = await players.orderBy(byId).startAt(cursor)
+                             .limit(SAMPLE_SIZE).select("levels").get();
+
+  const docs = [...first.docs];
+
+  // The window wraps, and it wraps with `endBefore`. A cursor landing near the end of the id
+  // space would otherwise return a short sample, and a short sample taken from the end of the
+  // alphabet is exactly the bias the cursor exists to remove. The remainder must come from
+  // *before* the cursor: with fewer players than the sample size, starting again at the
+  // beginning returns saves the first query already returned, and every one from the cursor
+  // onwards is counted twice. `rebuildGroveRanks` shipped that mistake and a live run caught
+  // it — 29 samples against a population of 15.
+  if (first.size < SAMPLE_SIZE) {
+    const rest = await players.orderBy(byId).endBefore(cursor)
+                              .limit(SAMPLE_SIZE - first.size).select("levels").get();
+    docs.push(...rest.docs);
+  }
+
+  const snapshot = { size: docs.length };
+  const collected = collect(docs.map((doc) => doc.data() as { levels?: unknown }));
   const levels = summarise(collected);
 
   await db.doc("config/stats").set({

@@ -146,6 +146,13 @@ namespace GlimmerGrove
             // first scene has loaded — the splash starts that, through RewardedAds.StartAsync.
             Privacy.PrivacySetup.Install();
 
+            // Measurement, installed immediately after the consent platform and before
+            // anything that raises an event. It starts with collection off and turns it on
+            // only once the gateway has answered, so the ordering here is the rule rather
+            // than a convention: privacy first, then the thing that would measure somebody
+            // who had not been asked. The sinks hold events until the native SDK resolves.
+            AnalyticsSetup.Install();
+
 #if GLIMMER_ADS
             if (AdConfig.IsConfigured)
             {
@@ -192,10 +199,6 @@ namespace GlimmerGrove
             // sheet would be a dialog talking somebody out of the purchase it exists to protect.
             ReceiptQueue.WhenSettled = () => AccountPrompts.Offer(AccountPromptTrigger.Purchase);
             StoreService.Granted += ReceiptQueue.Show;
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Telemetry.AddSink(new DebugAnalyticsSink());
-#endif
 
             Audio.Boot(root.transform);
             Flow.Init(canvas);
@@ -299,6 +302,13 @@ namespace GlimmerGrove
                 // player who is owed gems is quite often not standing in the shop, and on
                 // Google an unacknowledged purchase is refunded after three days.
                 StoreService.Tick(Time.unscaledDeltaTime, online);
+
+                // Art nobody holds any more is freed a few seconds later rather than on the
+                // frame the last screen let go, so a player who leaves a screen and comes
+                // straight back does not pay for the round trip — see AssetLibrary.GraceSeconds.
+                // Nothing else drives that clock, so without this line the game would never free
+                // a texture at all.
+                AssetLibrary.Tick(Time.unscaledDeltaTime);
             }
 
             void OnApplicationPause(bool paused)

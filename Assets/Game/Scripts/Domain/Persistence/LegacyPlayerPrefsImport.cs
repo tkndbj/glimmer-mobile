@@ -168,5 +168,32 @@ namespace GlimmerGrove.Persistence
                 if (!LevelId.TryParse(raw, out var id, out _) || index == null || !index.Contains(id))
                     yield return raw;
         }
+
+        /// <summary>
+        /// The same net against every level the manifest <em>names</em>, live or not.
+        ///
+        /// <para>
+        /// <b>A hidden chapter is not a deleted one, and only this overload can tell the
+        /// difference.</b> <see cref="MissingFromCatalog"/> asks the catalog index, which is
+        /// built from the manifest with disabled chapters skipped whole — so the day a mode
+        /// was hidden behind one boolean (invariant 38), every level it holds left the index
+        /// and this frozen table started naming levels nothing could find. The file is still
+        /// on disk, still listed, still parseable; turning the boolean back makes those stars
+        /// land again.
+        /// </para>
+        /// <para>
+        /// What the check is actually protecting is unchanged: a pre-1.0 player's stars are
+        /// keyed on these ids, so one may never be <em>renamed or removed</em>. Hiding a
+        /// chapter is neither. Asking the manifest rather than the index is what keeps the
+        /// guard pointed at the thing invariant 2 forbids instead of at the thing invariant
+        /// 38 permits.
+        /// </para>
+        /// </summary>
+        public static IEnumerable<string> MissingFrom(ICollection<string> shippedIds)
+        {
+            foreach (var raw in LegacyIndexOrder)
+                if (shippedIds == null || !shippedIds.Contains(raw))
+                    yield return raw;
+        }
     }
 }

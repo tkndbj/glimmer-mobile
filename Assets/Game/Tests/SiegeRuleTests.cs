@@ -182,12 +182,12 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void TheFixtureSiegeIsParThirtySeven()
+        public void TheFixtureSiegeIsParThirtyEight()
         {
-            // 12 creepers at 200, 8 brutes at 480 and one warlord at 1800 is 8040, over what a
+            // 12 creepers at 200, 8 brutes at 480 and one warlord at 2050 is 8290, over what a
             // match delivers (220). `Tools/verify/siege.py` prints the same number from the same
             // arithmetic; if these two ever disagree, one of the constants moved in one file only.
-            Assert.AreEqual(37, SiegeTuning.Par(Shipped()));
+            Assert.AreEqual(38, SiegeTuning.Par(Shipped()));
         }
 
         [Test]
@@ -1647,10 +1647,15 @@ namespace GlimmerGrove.Tests
             // random, so a failure is reproducible and a re-tune is read off the same ninety runs.
             float[] rhythms = { 2.20f, 2.25f, 2.30f, 2.35f, 2.40f, 2.45f, 2.50f, 2.55f, 2.60f };
 
-            // Measured 2026-09-12 at 81 of 90, after the colour lock and two cuts to the wave
-            // gaps (the breather went 8 -> 6 -> 4). Set a few under what was read: the sweep is
-            // deterministic, so this is a ratchet rather than a tolerance, and a floor one run
-            // below the reading would fail every honest re-tune.
+            // Measured 2026-09-13 at 80 of 90, with every ward answering a boss
+            // (`SiegeTuning.EveryWardReaches`) and the four bosses fifteen per cent tougher for
+            // it. It read 81 before that pair and 81 again with the rule alone, so what the health
+            // cost is one run in ninety — which is the sweep's own noise, and the reason the two
+            // were measured together rather than either being trusted on its own.
+            //
+            // Set a few under what was read: the sweep is deterministic, so this is a ratchet
+            // rather than a tolerance, and a floor one run below the reading would fail every
+            // honest re-tune.
             const int Floor = 78;
 
             var table = new System.Text.StringBuilder();

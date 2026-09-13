@@ -1,3 +1,4 @@
+using GlimmerGrove.AssetPipeline;
 using System;
 using System.Collections.Generic;
 using GlimmerGrove.Homestead;
@@ -46,6 +47,9 @@ namespace GlimmerGrove
     /// </summary>
     public sealed class HomesteadPickerOverlay : ModalView
     {
+
+        /// <summary>The art this panel draws, held for exactly as long as it is up.</summary>
+        AssetHold _held;
         /// <summary>
         /// What to do with the piece the player picks. Set by the caller before Build runs.
         ///
@@ -142,7 +146,7 @@ namespace GlimmerGrove
             // Every shelf, because every tile takes everything. The art may still be arriving:
             // this panel can be opened in the same second the screen behind it was, and an
             // Image with no sprite is a white rectangle.
-            HomesteadArt.OpenPickerAsync(() => { if (this) Repaint(); });
+            _held = GroveArtLoader.Open("grove_picker", GroveArtLoader.Picker(), this, Repaint);
 
             // A purchase made through the shop cannot reach here (the shop is a screen and
             // this closes first), but a piece earned by a run finishing elsewhere can, and a
@@ -155,6 +159,8 @@ namespace GlimmerGrove
         {
             HomesteadLedger.Changed -= Reload;
             HomesteadCatalog.Changed -= Reload;
+
+            _held?.Dispose();
         }
 
         public override bool OnBack() { Close(); return true; }
@@ -414,11 +420,10 @@ namespace GlimmerGrove
                 return;
             }
 
-            // The piece's own art, loaded into the grove's scope before the ghost asks for it —
-            // this panel draws thumbnails and the floor draws the real thing, so without the
-            // claim the ghost would be a white rectangle until the grove was reloaded.
-            HomesteadArt.Claim(piece);
-
+            // The full-size art the ghost needs is asked for by the *screen*, out of the hold
+            // it owns — see HomesteadScreen.Take. This panel used to reach into a global scope
+            // and raise an event to tell the grove about it, which is one object writing into
+            // another's memory and hoping it noticed.
             string id = piece.Id;
             Close(() => Chosen?.Invoke(id));
         }

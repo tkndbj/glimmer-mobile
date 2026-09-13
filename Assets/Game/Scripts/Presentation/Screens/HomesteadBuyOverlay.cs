@@ -1,3 +1,4 @@
+using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Homestead;
 using GlimmerGrove.Localization;
@@ -51,6 +52,9 @@ namespace GlimmerGrove
         /// type earns a UAC1001 warning about serialisation that will never happen.
         /// </summary>
         public HomesteadPiece Piece { get; set; }
+
+        /// <summary>The art this panel draws, held for exactly as long as it is up.</summary>
+        AssetHold _held;
 
         const float PanelW = 820f;
 
@@ -159,15 +163,19 @@ namespace GlimmerGrove
             // thumbnail is cut at 256 and this frame is 280, so the difference is a hair of
             // softness — against loading a 512-pixel texture, and its whole bundle, for one
             // picture on a panel that is dismissed in two seconds.
-            HomesteadArt.OpenShelfAsync(GroveShelves.Of(Piece),
-                                        () => { if (this) HomesteadArt.PaintThumb(_art, Piece); });
+            _held = GroveArtLoader.Open("grove_shelf", GroveArtLoader.Shelf(GroveShelves.Of(Piece)),
+                                       this, () => HomesteadArt.PaintThumb(_art, Piece));
 
             // A balance can move under an open panel: a chest opened elsewhere, a sync landing
             // the server's figure, an ad paying out through the offer this panel opened.
             PlayerProgression.Changed += Repaint;
         }
 
-        void OnDestroy() => PlayerProgression.Changed -= Repaint;
+        void OnDestroy()
+        {
+            PlayerProgression.Changed -= Repaint;
+            _held?.Dispose();
+        }
 
         public override bool OnBack() { Close(); return true; }
 

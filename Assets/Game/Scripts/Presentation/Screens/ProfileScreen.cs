@@ -1,3 +1,4 @@
+using GlimmerGrove.AssetPipeline;
 using System;
 using System.Collections.Generic;
 using GlimmerGrove.Cloud;
@@ -28,9 +29,12 @@ namespace GlimmerGrove
     /// without anything here being migrated.
     /// </para>
     /// </summary>
-    public sealed class ProfileScreen : View, IDrawsCompanionArt
+    public sealed class ProfileScreen : View
     {
         public override string Track => "mus_menu";
+
+        /// <summary>The roster's portraits, kept alive for exactly as long as this screen is.</summary>
+        AssetHold _portraits;
 
         const float CardWidth = 980f;
 
@@ -88,7 +92,7 @@ namespace GlimmerGrove
             // The preview row draws a handful of portraits, so the roster's art is
             // wanted here too — and released the moment this screen goes away. Requested
             // after the row exists so the repaint has something to paint.
-            CompanionArt.OpenAsync(() => { if (this) PaintCompanions(); });
+            _portraits = CompanionArt.Open(this, () => { if (Living) PaintCompanions(); });
 
             // See CompanionScreen for why this is an event and not a callback: the unlock
             // panel has three exits and only one of them used to report a purchase.
@@ -137,8 +141,7 @@ namespace GlimmerGrove
             AvatarCatalog.Changed -= RepaintCompanions;
             CloudSaveService.IdentityChanged -= BuildBody;
 
-            if (Flow.Current is CompanionScreen) return;
-            CompanionArt.CloseUnlessWanted();
+            _portraits?.Dispose();
         }
 
         // -------------------------------------------------------------- scroller

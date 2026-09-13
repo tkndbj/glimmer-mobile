@@ -75,12 +75,22 @@ namespace GlimmerGrove.Homestead
         /// Loads and publishes the catalog if it has not been already. Returns immediately
         /// once loaded, so a screen may call it in <c>Build</c> without checking.
         /// </summary>
-        public static Task<HomesteadLoadResult> EnsureAsync(CancellationToken cancellation = default)
+        /// <remarks>
+        /// <b>It takes no cancellation token, and that is the point rather than an omission.</b>
+        /// Concurrent callers share one load, so a token would be one caller's opinion applied
+        /// to everybody's: a visitor tapping back out of a stranger's grove would cancel the
+        /// read the Grovement behind them is waiting on, and the screen that did wait would be
+        /// left holding a task that never publishes. A shared, cached, once-per-session load has
+        /// no owner, so there is nobody entitled to cancel it — and it is a local file read
+        /// measured in milliseconds, which is what makes that the cheap answer rather than a
+        /// concession.
+        /// </remarks>
+        public static Task<HomesteadLoadResult> EnsureAsync()
         {
             if (HomesteadCatalog.IsLoaded)
                 return Task.FromResult(new HomesteadLoadResult(HomesteadCatalog.Current, Problems));
 
-            return _running ?? (_running = LoadAsync(cancellation));
+            return _running ?? (_running = LoadAsync(CancellationToken.None));
         }
 
         static async Task<HomesteadLoadResult> LoadAsync(CancellationToken cancellation)

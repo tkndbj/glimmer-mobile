@@ -1344,7 +1344,7 @@ TEASER_GAP, TEASER_HEADROOM, TEASER_X = 0.22, 700.0, 0.66
 # what any perch - a glade's or the marker's - hangs below and above its own centre. The disc
 # distance above is not what collides; these are.
 CROWN_HALF_WIDTH, CROWN_BOTTOM, CROWN_TOP = 204.0, 106.0, 302.0
-BODY_HALF_WIDTH, BODY_BELOW, BODY_ABOVE = 180.0, 227.0, 100.0
+BODY_HALF_WIDTH, BODY_BELOW, BODY_ABOVE = 180.0, 227.0, 118.0
 
 
 def check_chapter_map(chapter, cid, ordered):
@@ -1768,7 +1768,8 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None, 
                           "row is ignored by the game — delete it")
 
         if kind == "dwelling":
-            dwellings.append((piece.get("tier", 0), pid, cost))
+            dwellings.append((piece.get("tier", 0), pid, cost,
+                              int(piece.get("requiresKeeperLevel", 0) or 0)))
         elif kind != "resident":
             slot_kind = piece.get("slot") or "ground"
             if slot_kind not in SLOT_KINDS or slot_kind == "hearth":
@@ -1987,7 +1988,7 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None, 
                         "draws on every one of them")
 
     tiers = {}
-    for tier, pid, _cost in dwellings:
+    for tier, pid, _cost, _level in dwellings:
         if tier <= 0:
             errors.append(f"grove home '{pid}' has no tier; the ladder cannot be ordered")
         if tier in tiers:
@@ -1997,9 +1998,33 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None, 
     if dwellings:
         first = min(dwellings)
         first_rows = [p for p in pieces if p.get("id") == first[1]]
-        if first[2] > 0 or (first_rows and (first_rows[0].get("requiresLevel") or first_rows[0].get("requiresChapter"))):
+        if first[2] > 0 or first[3] > 0 or (first_rows and (first_rows[0].get("requiresLevel") or first_rows[0].get("requiresChapter"))):
             errors.append(f"the first home '{first[1]}' is not free; a new grove would open "
                           "with nothing on its hearth")
+
+    # The keeper gates up the home ladder. Both failures below are invisible in the game.
+    #
+    # A rung asking for a level an earlier rung already demanded parses, validates, draws a
+    # price and simply refuses nobody - invariant 5d's decoration arriving on the one purchase
+    # the whole grove is composed around. And a gated rung with no price can never be held at
+    # all: the gate is permission to pay rather than a route of its own (invariant 15a), so
+    # nothing grants it, and the ladder silently ends one step early with every file correct.
+    below, under = 0, None
+    for tier, pid, cost, level in sorted(dwellings):
+        if level > 0 and cost <= 0:
+            errors.append(f"grove home '{pid}' opens at keeper level {level} and has no price; "
+                          "the gate is permission to pay rather than a way of paying, so nothing "
+                          "would ever grant it and the ladder would end there")
+        if level <= 0:
+            if below > 0:
+                warnings.append(f"grove home '{pid}' is tier {tier} and opens at no keeper "
+                                f"level, while '{under}' below it asks for {below}; the ladder "
+                                "stops climbing there")
+            continue
+        if level <= below:
+            errors.append(f"grove home '{pid}' opens at keeper level {level}, which '{under}' "
+                          "below it has already passed; a gate that refuses nobody is not a gate")
+        below, under = level, pid
 
     # ---------------------------------------------------------------- star ladder
     # What a grove has to be worth to earn each star. Content rather than constants
@@ -2054,7 +2079,8 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None, 
                         f"catalog is worth {everything}; nobody can ever win it")
 
     return {
-        "homes": len(dwellings), "ladder": sum(c for _t, _p, c in dwellings),
+        "homes": len(dwellings), "ladder": sum(c for _t, _p, c, _l in dwellings),
+        "home_rungs": [(p, c, l) for _t, p, c, l in sorted(dwellings)],
         "cols": cols, "rows": rows, "regions": len(regions), "free_regions": starters,
         "owned_tiles": len(owner), "land": land_total, "land_gems": land_gems,
         "ladder_names": " -> ".join(rungs[r] for r in sorted(rungs)),
@@ -3275,6 +3301,13 @@ def main():
                   "the credits' worth of what is held (16g) and the server's clamp is "
                   "denominated in credits (19a)")
         print(f"       home ladder: {grove['homes']} rung(s), {grove['ladder']} credits to the top")
+        # The rungs written out, because a gate is the half of this ladder that no other line
+        # reports and the half most likely to be wrong: a level and a price together are what
+        # make a rung a goal rather than a shelf (15a), and only the two side by side say so.
+        for pid, cost, level in grove["home_rungs"]:
+            gate = f"keeper level {level}" if level > 0 else "no gate"
+            price = f"{cost} credits" if cost > 0 else "free"
+            print(f"           {pid:<16} {price:>14}, {gate}")
         if grove["bundled"]:
             shelves = ", ".join(f"{k} x{n}" for k, n in sorted(grove["bundle_kinds"].items()))
             print(f"       bundles: {grove['bundled']} of {grove['for_sale']} priced piece(s) "

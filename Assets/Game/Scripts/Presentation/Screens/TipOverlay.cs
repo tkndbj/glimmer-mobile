@@ -1,3 +1,4 @@
+using GlimmerGrove.Analytics;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -43,6 +44,25 @@ namespace GlimmerGrove
 
         /// <summary>One object drawn above the body, or null. See <c>Lesson.Icon</c>.</summary>
         public Sprite Icon;
+
+        /// <summary>
+        /// What the body's placeholders stand for, or null for a sentence with none.
+        ///
+        /// <para>
+        /// <b>It exists so that a number in a lesson can be derived rather than typed.</b> The
+        /// chapter-gate lesson says how many stars open the next chapter, and that figure is
+        /// content — <c>ChapterGateTable</c> is retunable from a config push and a chapter is not
+        /// a fixed size — so writing it into the string would put a number nothing can check in
+        /// the one place nothing ever reads again. It is the same bargain
+        /// <c>ui.levels.chapter_gate</c> already strikes at the end of the chain, and it is why
+        /// invariant 21 made every screen print the count instead of the old sentence.
+        /// </para>
+        /// <para>
+        /// The title deliberately takes none: a heading that has to be composed is a heading a
+        /// translator cannot rearrange, and no lesson here has wanted one.
+        /// </para>
+        /// </summary>
+        public object[] BodyArgs;
 
         /// <summary>
         /// Anything else the lesson names, ringed and lit exactly as <see cref="Target"/> is.
@@ -126,6 +146,26 @@ namespace GlimmerGrove
 
         bool _reported;
 
+        /// <summary>
+        /// What the teaching funnel needs, captured where it is still true.
+        ///
+        /// <para>
+        /// <see cref="_repeat"/> has to be read before <see cref="Accept"/> writes the ledger,
+        /// or every lesson reports itself as one the player had already met. <see cref="_shownAt"/>
+        /// is on the unscaled clock because a modal sets <c>Time.timeScale</c> to nought
+        /// (invariant 30h) — the scaled one would report nought seconds on every tip in the game
+        /// and nothing about the figure would look wrong.
+        /// </para>
+        /// <para>
+        /// <see cref="_exit"/> defaults to the unexplained outcome, so a way out that nobody
+        /// thought to name is counted as one rather than quietly as a completion.
+        /// </para>
+        /// </summary>
+        bool _repeat;
+        float _shownAt;
+        string _screen;
+        string _exit = LessonAnalytics.ByNavigation;
+
         const float Dim = .78f;
         const float Pad = 18f;
 
@@ -140,6 +180,16 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
+            // Before anything: Accept writes the ledger, so asking afterwards would report
+            // every first showing as a repeat.
+            _repeat = TipLedger.HasSeen(Mechanic);
+            _shownAt = Time.unscaledTime;
+
+            // Flow.Current names the screen underneath rather than this panel — a modal is
+            // never assigned to it — so this is who is doing the teaching. Domain cannot see
+            // Flow, which is why the name is passed rather than looked up there.
+            _screen = Flow.Current != null ? Flow.Current.GetType().Name : null;
+
             var rings = Rings();
             var spot = SpotlightRect(rings);
 
@@ -362,7 +412,11 @@ namespace GlimmerGrove
 
             // Near-black on white, not the warm brown the wooden panels use — on a plain
             // white bubble that brown reads as washed out rather than as ink.
-            var body = UIKit.Titled("Body", Content, Loc.Get(Mechanic.BodyKey), BodySize,
+            string words = BodyArgs == null || BodyArgs.Length == 0
+                ? Loc.Get(Mechanic.BodyKey)
+                : Loc.Format(Mechanic.BodyKey, BodyArgs);
+
+            var body = UIKit.Titled("Body", Content, words, BodySize,
                                     new Color(.29f, .33f, .38f), TextAnchor.UpperCenter,
                                     new Vector2(BodyWidth, 10f), new Vector2(.5f, 1f), Vector2.zero,
                                     outline: 0f, shadow: 0f, wrap: true);
@@ -481,7 +535,8 @@ namespace GlimmerGrove
 
             UIKit.TextButton("Ok", rt, "btn_green", Loc.Get("ui.common.got_it"), 46,
                              new Vector2(420f, ButtonHeight), new Vector2(.5f, 0f),
-                             new Vector2(0f, ButtonBottom + ButtonHeight * .5f), Accept);
+                             new Vector2(0f, ButtonBottom + ButtonHeight * .5f),
+                             () => Accept(LessonAnalytics.ByButton));
 
             rt.localScale = Vector3.zero;
             Tween.Scale(rt, 1f, .5f, Ease.OutBack).Delay(.12f);
@@ -491,6 +546,10 @@ namespace GlimmerGrove
             // for the lessons key in a run's header, which is a button like any other.
             Audio.Hush("click");
             Audio.Sfx("tip", .5f);
+
+            // Raised at the end of the build rather than the start, so a panel that threw on
+            // the way up is not counted as one the player was shown.
+            LessonAnalytics.TrackShown(Mechanic, _screen, _repeat, Target != null);
         }
 
         /// <summary>
@@ -527,8 +586,17 @@ namespace GlimmerGrove
                 line.fontSize--;
         }
 
-        void Accept()
+        /// <param name="how">
+        /// Which way out was taken. The game treats the back gesture as the OK button on
+        /// purpose — a lesson shown once in a life must not be skippable in silence — so the
+        /// two are one outcome here and deliberately two in a report: a player who backs out
+        /// of every tip has read none of them, and counted together that is indistinguishable
+        /// from a player who read them all.
+        /// </param>
+        void Accept(string how)
         {
+            _exit = how;
+
             // Marked here rather than on show, so a player who is interrupted mid-tip
             // — a call, a crash, the app swapped out — still gets taught next time.
             TipLedger.MarkSeen(Mechanic);
@@ -541,6 +609,11 @@ namespace GlimmerGrove
         {
             if (_reported) return;
             _reported = true;
+
+            // Before the callback, because Dismissed is what advances a chain and the next
+            // lesson's own "shown" must not be able to land first.
+            LessonAnalytics.TrackFinished(Mechanic, _screen, _exit,
+                                          Time.unscaledTime - _shownAt, _repeat);
 
             Dismissed?.Invoke();
         }
@@ -555,7 +628,7 @@ namespace GlimmerGrove
         /// <summary>The back gesture must not skip a lesson silently; treat it as OK.</summary>
         public override bool OnBack()
         {
-            Accept();
+            Accept(LessonAnalytics.ByBack);
             return true;
         }
     }

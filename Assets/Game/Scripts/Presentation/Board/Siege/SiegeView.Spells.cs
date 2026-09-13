@@ -650,6 +650,25 @@ namespace GlimmerGrove
             ShakeBoard(12f);
         }
 
+        /// <summary>
+        /// What a boss of this kind is announced as.
+        ///
+        /// <b>One place, because two things say it now</b>: the banner when it walks on, and the
+        /// forecast that warns it is coming. Written out rather than keyed off the kind's own name,
+        /// for invariant 6's reason - a loc key built by concatenation is a key the build gate
+        /// cannot see.
+        /// </summary>
+        static string BossKey(SiegeKind kind)
+        {
+            switch (kind)
+            {
+                case SiegeKind.Overlord: return "mode.siege.overlord";
+                case SiegeKind.Warbringer: return "mode.siege.warbringer";
+                case SiegeKind.Blightcaller: return "mode.siege.blightcaller";
+                default: return "mode.siege.boss";
+            }
+        }
+
         void Arrival(int wave)
         {
             _wave = wave + 1;
@@ -668,14 +687,7 @@ namespace GlimmerGrove
             // say "this is not the thing you fought last time" was spent saying "a boss".
             // Written out rather than keyed off the kind's name, for invariant 6's reason — a loc
             // key built by concatenation is a key the build gate cannot see.
-            string banner;
-            switch (kind)
-            {
-                case SiegeKind.Overlord: banner = "mode.siege.overlord"; break;
-                case SiegeKind.Warbringer: banner = "mode.siege.warbringer"; break;
-                case SiegeKind.Blightcaller: banner = "mode.siege.blightcaller"; break;
-                default: banner = "mode.siege.boss"; break;
-            }
+            string banner = BossKey(kind);
 
             _waveLabel.text = boss ? Loc.Get(banner)
                                    : Loc.Format("mode.siege.wave", _wave, _board.Waves);
@@ -683,18 +695,24 @@ namespace GlimmerGrove
             _waveLabel.color = boss ? Casting(kind) : Pal.Cream;
             _waveLabel.fontSize = Mathf.RoundToInt(Cell * (boss ? .78f : .46f));
 
+            // **Stacked clear above the chain banner, from the ward line rather than from the
+            // hill's foot.** Those two anchors sit between .45 and .71 of a cell apart depending
+            // on the display, so measuring one caption from each is what let them share a row on
+            // every shape. See `SiegeView.Captions`.
+            var ladder = Caption;
+
             var group = UIKit.Group(_waveLabel.rectTransform);
             var rt = _waveLabel.rectTransform;
 
             Tween.KillAll(_waveLabel);
-            rt.anchoredPosition = new Vector2(0f, _hillFoot + Cell * 1.1f);
-            rt.localScale = Vector3.one * (boss ? 1.6f : 1f);
+            rt.anchoredPosition = new Vector2(0f, ladder.Wave);
+            rt.localScale = Vector3.one * (boss ? WaveSwell : 1f);
             group.alpha = 0f;
 
             Tween.Fade(group, 1f, .22f);
             if (boss) Tween.Scale(rt, 1f, .5f, Ease.OutBack);
 
-            Tween.Move(rt, new Vector2(0f, _hillFoot + Cell * 1.9f), boss ? 2.4f : 1.5f,
+            Tween.Move(rt, new Vector2(0f, ladder.Wave + Cell * WaveFloat), boss ? 2.4f : 1.5f,
                        Ease.OutCubic)
                  .OnDone(() => Tween.Fade(group, 0f, .4f));
 

@@ -64,8 +64,17 @@ namespace GlimmerGrove.Content
         /// A perch's own body — rock, disc and the name plate under it — as the rectangle
         /// another node's crown must stay out of: <see cref="BodyHalfWidth"/> either side,
         /// <see cref="BodyBelow"/> under the centre and <see cref="BodyAbove"/> over it.
+        ///
+        /// <para>
+        /// <see cref="BodyAbove"/> covers the <em>highest</em> a disc stands on any perch, not
+        /// the one number the disc used to be drawn at: where it stands is a fact about the
+        /// tile (<c>ModeLook.PerchLift</c>) and the four shipped tiles disagree by 30 units
+        /// about it, so a body sized for the shallowest of them would stop covering the disc on
+        /// every other mode's map. <c>ChapterMapTests</c> reads the looks and names this number
+        /// when a tile outgrows it.
+        /// </para>
         /// </summary>
-        public const float BodyHalfWidth = 180f, BodyBelow = 227f, BodyAbove = 100f;
+        public const float BodyHalfWidth = 180f, BodyBelow = 227f, BodyAbove = 118f;
 
         /// <summary>How far above the highest glade the end-of-chapter marker floats.</summary>
         public const float TeaserGap = 0.22f;

@@ -114,6 +114,11 @@ namespace GlimmerGrove.Tests
         /// Every bolt an ordinary turret lands is an own-colour hit, so <c>PerfectMatch</c> — which
         /// has always assumed exactly that of every gem — stops being an optimistic reading and
         /// becomes an identity.
+        ///
+        /// <b>A boss is the one thing on the hill this is not true of</b>, which is why there is no
+        /// boss in this fixture: every ward answers one and only its own colour doubles — see
+        /// <see cref="EveryWardOnTheLineAnswersABossWhateverColourItWears"/>. The identity survives
+        /// it, because a part-weight bolt costs a part of the fuel.
         /// </summary>
         [Test]
         public void EveryOrdinaryBoltLandsAtFullWeight()
@@ -645,6 +650,242 @@ namespace GlimmerGrove.Tests
 
             var thin = new SiegeLayout(grid, "rg", "rg", new[] { "rg" }, null);
             Assert.IsNotNull(thin.Fault, "a two-colour field is not a board");
+        }
+
+        // ------------------------------------------------------------------ the duel
+        /// <summary>A siege whose only wave is its boss. The boss is appended, never authored.</summary>
+        static SiegeLayout Duel(string boss) => Layout(new string[0], boss: boss);
+
+        /// <summary>Walks the clock until this board's boss is standing on its ground.</summary>
+        static SiegeRaider Standing(SiegeBoard board)
+        {
+            for (int i = 0; i < 60 * 180; i++)
+            {
+                board.Advance(1f / 60f);
+
+                var boss = board.Warlord;
+                if (boss != null && boss.InPlace) return boss;
+            }
+
+            Assert.Fail("the boss never reached its ground");
+            return null;
+        }
+
+        /// <summary>
+        /// <b>Every ward answers a boss, whatever colour it wears.</b>
+        ///
+        /// <para>
+        /// The one shape the lock cannot hold. A boss is one raider wearing one colour standing
+        /// alone on the hill, so under the lock exactly one of the four turrets a player chose
+        /// could fire at the finale and the other three banked fuel they would never spend — a
+        /// duel fought by a quarter of the loadout, against the biggest number in the mode.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryWardOnTheLineAnswersABossWhateverColourItWears()
+        {
+            var board = SiegeBoard.Build(Duel("warlord:r"));
+            var boss = Standing(board);
+
+            Assert.AreEqual(0, boss.Colour, "the fixture boss is no longer red");
+
+            for (int w = 0; w < board.Wards.Count; w++) Feed(board, w, 20f);
+
+            var fired = new HashSet<int>();
+
+            for (int i = 0; i < 60 * 6; i++)
+                foreach (var bolt in board.Advance(1f / 60f).Bolts)
+                {
+                    Assert.AreEqual(boss.Id, bolt.Raider, "a bolt found something that is not the boss");
+                    fired.Add(bolt.Ward);
+                }
+
+            Assert.AreEqual(board.Wards.Count, fired.Count,
+                            "a duel was fought by " + fired.Count + " of "
+                            + board.Wards.Count + " turrets");
+
+            Assert.Less(boss.Health, boss.MaxHealth, "the whole line fired and the boss is whole");
+        }
+
+        /// <summary>
+        /// <b>And its colour still decides the double, which is what keeps it a decision.</b>
+        ///
+        /// A boss answered by the colour it wears comes down twice as fast as one answered with
+        /// anything else — so which colour to feed a duel has a right answer and a wrong one
+        /// (invariant 26h), and the player reads it off the board rather than out of a panel: the
+        /// right colour's numbers come up gold and everybody else's come up white.
+        /// </summary>
+        [Test]
+        public void OnlyABosssOwnColourDoublesAgainstIt()
+        {
+            var board = SiegeBoard.Build(Duel("warlord:r"));
+            var boss = Standing(board);
+
+            int own = Plan(board).WardOf('r');
+
+            for (int w = 0; w < board.Wards.Count; w++) Feed(board, w, 20f);
+
+            int owned = 0, other = 0;
+
+            for (int i = 0; i < 60 * 6; i++)
+                foreach (var bolt in board.Advance(1f / 60f).Bolts)
+                {
+                    if (bolt.Extra) continue;
+
+                    if (bolt.Ward == own)
+                    {
+                        Assert.IsTrue(bolt.Weak, "the boss's own colour did not land a double");
+                        owned = bolt.Damage;
+                        continue;
+                    }
+
+                    Assert.IsFalse(bolt.Weak, "a wrong-colour bolt landed as a double");
+                    other = bolt.Damage;
+                }
+
+            Assert.Greater(owned, 0, "the ward of the boss's colour never fired");
+            Assert.Greater(other, 0, "no other ward fired");
+            Assert.AreEqual(SiegeTuning.WeakMultiplier * other, owned,
+                            "the boss's own colour is not worth double against it");
+
+            Assert.AreEqual(0, boss.Colour);
+        }
+
+        /// <summary>
+        /// <b>A part-weight bolt costs a part of the fuel, and that is what makes "strictly
+        /// additive" true rather than nearly true.</b>
+        ///
+        /// <para>
+        /// A ward with nothing of its own on the hill <em>banks</em> what it is holding, so a
+        /// half-weight shot at full price is not a free extra hit — it is the player's fuel
+        /// converted at half the rate it would have been worth a few seconds later, spent on their
+        /// behalf. Measured when it was: firing at a boss for half a hit at full price took
+        /// Thornwatch from 81 held runs of 90 to 78, on a change meant to help.
+        /// </para>
+        /// <para>
+        /// It is also what keeps <c>PerfectMatch</c> an identity over a duel: a unit of fuel is
+        /// worth the same damage whoever burns it, so no arrangement of targets can make a match
+        /// deliver less than par assumes.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void APartWeightBoltCostsAPartOfTheFuel()
+        {
+            Assert.AreEqual(SiegeTuning.FuelShot(0), SiegeTuning.FuelShot(0, 10), .0001f,
+                            "a full-weight bolt costs what a bolt costs");
+            Assert.AreEqual(SiegeTuning.FuelShot(0) / 2f,
+                            SiegeTuning.FuelShot(0, SiegeTuning.OffColourTenths), .0001f,
+                            "a half-weight bolt does not cost half the fuel");
+            Assert.AreEqual(10 / SiegeTuning.WeakMultiplier, SiegeTuning.OffColourTenths,
+                            "the wrong colour is worth the un-doubled bolt and nothing else");
+
+            var board = SiegeBoard.Build(Duel("warlord:r"));
+            Standing(board);
+
+            int own = Plan(board).WardOf('r');
+            int away = Plan(board).WardOf('b');
+
+            Feed(board, own, 20f);
+            Feed(board, away, 20f);
+
+            float ownFuel = board.Wards[own].Fuel, awayFuel = board.Wards[away].Fuel;
+            int ownShots = 0, awayShots = 0;
+
+            for (int i = 0; i < 60 * 6; i++)
+                foreach (var bolt in board.Advance(1f / 60f).Bolts)
+                {
+                    if (bolt.Extra) continue;
+                    if (bolt.Ward == own) ownShots++;
+                    if (bolt.Ward == away) awayShots++;
+                }
+
+            Assert.Greater(ownShots, 0);
+            Assert.Greater(awayShots, 0);
+
+            Assert.AreEqual(ownShots * SiegeTuning.FuelShot(0),
+                            ownFuel - board.Wards[own].Fuel, .0001f,
+                            "the boss's own colour did not pay the full price");
+            Assert.AreEqual(awayShots * SiegeTuning.FuelShot(0) / 2f,
+                            awayFuel - board.Wards[away].Fuel, .0001f,
+                            "a wrong-colour bolt cost more fuel than it was worth");
+        }
+
+        /// <summary>
+        /// <b>A boss is what a ward shoots when it has nothing of its own left to shoot.</b>
+        ///
+        /// Strictly a bolt it would otherwise not have fired, exactly as a prism's partner is. A
+        /// boss holds the middle of the hill while its escort walks at the wards, so a line that
+        /// turned to face the boss would be a line taken apart by the wave standing in front of
+        /// it.
+        /// </summary>
+        [Test]
+        public void AWardTakesItsOwnColourBeforeTheBoss()
+        {
+            // A blue boss and a red creeper, so the red ward is offered both at once.
+            var board = SiegeBoard.Build(Layout(new[] { "r" }, boss: "warlord:b"));
+            var boss = Standing(board);
+
+            int red = Plan(board).WardOf('r');
+
+            SiegeRaider creeper = null;
+
+            foreach (var raider in board.Raiders)
+                if (raider.Alive && raider.OnTheHill && raider.Colour == 0 && !raider.Boss)
+                    creeper = raider;
+
+            Assert.IsNotNull(creeper, "the red creeper never reached the hill, or died on the way");
+
+            Feed(board, red, 20f);
+
+            int fired = 0;
+
+            for (int i = 0; i < 60 * 4 && creeper.Alive; i++)
+                foreach (var bolt in board.Advance(1f / 60f).Bolts)
+                {
+                    if (bolt.Ward != red || bolt.Extra) continue;
+
+                    fired++;
+                    Assert.AreEqual(creeper.Id, bolt.Raider,
+                                    "a ward took the boss while its own colour was standing");
+                }
+
+            Assert.Greater(fired, 0, "the red ward never fired");
+            Assert.AreEqual(boss.MaxHealth, boss.Health, "the boss was shot at instead");
+        }
+
+        /// <summary>
+        /// <b>The demand light says a boss is everybody's, and loudest on the colour it wears.</b>
+        ///
+        /// Counted as whole health it would light all four wards identically and say the thing
+        /// that is not true — that it does not matter which one is fed. Counted at the share a
+        /// bolt from that ward is really worth, it says both halves of the rule at once.
+        /// </summary>
+        [Test]
+        public void ABossIsDemandOnEveryWardAndLoudestOnItsOwn()
+        {
+            var board = SiegeBoard.Build(Duel("warlord:r"));
+            var boss = Standing(board);
+
+            int own = Plan(board).WardOf('r');
+
+            for (int w = 0; w < board.Wards.Count; w++)
+                Assert.Greater(board.DemandOf(w), 0,
+                               "a boss is no demand at all on the '"
+                               + SiegeLayout.Letters[board.Wards[w].Colour] + "' ward");
+
+            Assert.AreEqual(boss.Health, board.DemandOf(own),
+                            "the boss's own ward is asked for less than the whole of it");
+
+            for (int w = 0; w < board.Wards.Count; w++)
+            {
+                if (w == own) continue;
+
+                Assert.AreEqual(board.DemandOf(own) / SiegeTuning.WeakMultiplier,
+                                board.DemandOf(w),
+                                "a wrong-colour ward reads as loud as the right one");
+            }
+
+            Assert.AreEqual(board.DemandOf(own), board.Busiest);
         }
     }
 }

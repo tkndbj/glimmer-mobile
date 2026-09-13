@@ -1,3 +1,4 @@
+using GlimmerGrove.AssetPipeline;
 using System;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Daily;
@@ -79,6 +80,9 @@ namespace GlimmerGrove
         Btn _buy;
         Text _status;
         Image _portrait;
+
+        /// <summary>This one companion's portrait, held while the panel is up.</summary>
+        AssetHold _art;
         RectTransform _disc;
         bool _paid;
 
@@ -147,7 +151,11 @@ namespace GlimmerGrove
             Repaint();
         }
 
-        void OnDestroy() => PlayerProgression.Changed -= Repaint;
+        void OnDestroy()
+        {
+            PlayerProgression.Changed -= Repaint;
+            _art?.Dispose();
+        }
 
         // ------------------------------------------------------------- the friend
         /// <summary>
@@ -175,9 +183,9 @@ namespace GlimmerGrove
             // Companion art loads into a scope, so it may not be resident when this opens
             // from anywhere but the picker. Repaint on arrival — an Image with no sprite is
             // a white disc, not a blank one. See invariant 7b.
-            CompanionArt.OpenAsync(() =>
+            _art = CompanionArt.OpenOne(this, Avatar, () =>
             {
-                if (this && _portrait) CompanionArt.Paint(_portrait, Avatar);
+                if (Living && _portrait) CompanionArt.Paint(_portrait, Avatar);
             });
             CompanionArt.Paint(_portrait, Avatar);
 

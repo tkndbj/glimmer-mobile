@@ -38,6 +38,15 @@ namespace GlimmerGrove.AssetPipeline
             return all;
         }
 
+        /// <summary>
+        /// Resources has no asynchronous folder API, and it does not need one: everything
+        /// under <c>Resources/</c> is already in the build's serialised blob by the time the
+        /// game runs, so this is a lookup rather than a read. Completed rather than queued so
+        /// a caller awaiting it does not lose a frame for nothing.
+        /// </summary>
+        public Task<T[]> LoadAllAsync<T>(string address, CancellationToken cancellation) where T : Object
+            => Task.FromResult(LoadAll<T>(address));
+
         public Task<T> LoadAsync<T>(string address, CancellationToken cancellation) where T : Object
         {
             var tcs = new TaskCompletionSource<T>();

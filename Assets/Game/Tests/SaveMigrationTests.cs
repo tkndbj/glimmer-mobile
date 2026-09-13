@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Threading;
 using GlimmerGrove.Content;
 using GlimmerGrove.Persistence;
 using NUnit.Framework;
@@ -119,12 +121,56 @@ namespace GlimmerGrove.Tests
         {
             // If this fails, a level that shipped in the original build has been
             // removed or renamed, and updating players' stars would land nowhere.
-            var index = LoadBundledIndex();
-            if (index.IsEmpty) Assert.Ignore("no bundled content available in this run");
+            //
+            // Asked of the manifest rather than the index, because a chapter hidden behind
+            // `disabled` is not a chapter deleted: its levels are still listed and still on
+            // disk, and flipping the boolean back makes those stars land again. The index
+            // drops a disabled chapter whole, so reading it turned invariant 38 into a
+            // violation of invariant 2 the day the glade was hidden.
+            var shipped = EveryManifestLevelId();
+            if (shipped.Count == 0) Assert.Ignore("no bundled content available in this run");
 
             CollectionAssert.IsEmpty(
-                LegacyPlayerPrefsImport.MissingFromCatalog(index),
+                LegacyPlayerPrefsImport.MissingFrom(shipped),
                 "LegacyIndexOrder is frozen; a level it names must never leave the catalog");
+        }
+
+        /// <summary>
+        /// The manifest exactly as it ships, disabled chapters and all.
+        ///
+        /// <para>
+        /// Deliberately not <see cref="LoadBundledIndex"/>, which drops a disabled chapter
+        /// whole. Anything asking "does this still exist" rather than "can this be played
+        /// today" has to read the manifest, or hiding a mode behind one boolean reads as
+        /// content having been deleted.
+        /// </para>
+        /// </summary>
+        internal static ManifestDto LoadBundledManifest()
+        {
+            var source = new Content.Sources.BundledContentSource();
+            var fetch = source.FetchAsync(ContentPaths.Manifest, CancellationToken.None)
+                              .GetAwaiter().GetResult();
+            if (!fetch.Success) return null;
+
+            return ContentMapper.ReadManifest(fetch.Text, out _);
+        }
+
+        /// <summary>Every level id the manifest names, in every chapter, hidden or not.</summary>
+        internal static HashSet<string> EveryManifestLevelId()
+        {
+            var ids = new HashSet<string>(System.StringComparer.Ordinal);
+
+            var manifest = LoadBundledManifest();
+            if (manifest?.chapters == null) return ids;
+
+            foreach (var chapter in manifest.chapters)
+            {
+                if (chapter?.levels == null) continue;
+                foreach (var id in chapter.levels)
+                    if (!string.IsNullOrEmpty(id)) ids.Add(id);
+            }
+
+            return ids;
         }
 
         /// <summary>

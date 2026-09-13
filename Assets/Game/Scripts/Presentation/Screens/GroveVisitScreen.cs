@@ -1,3 +1,6 @@
+using GlimmerGrove.AssetPipeline;
+using System.Threading;
+using System.Threading.Tasks;
 using GlimmerGrove.Homestead;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Localization;
@@ -36,14 +39,19 @@ namespace GlimmerGrove
     /// and it costs nothing to arrange.
     /// </para>
     /// </summary>
-    public sealed class GroveVisitScreen : View, IDrawsGroveArt
+    public sealed class GroveVisitScreen : View
     {
         public override string Track => "mus_menu";
 
         /// <summary>The grove is panned and pinched exactly as the player's own is.</summary>
         public override bool WantsMultiTouch => true;
 
-        const float HeaderHeight = 230f;
+        /// <summary>
+        /// Everything above the floor. It grew by the height of one small line when the card's
+        /// age was added under the stars — the field begins where this ends, so the two move
+        /// together or the grove is drawn under its own header.
+        /// </summary>
+        const float HeaderHeight = 248f;
 
         string _ownerId;
         string _knownName;
@@ -54,8 +62,24 @@ namespace GlimmerGrove
 
         RectTransform _viewport;
         GroveFieldView _field;
-        Text _name, _worth, _status;
+        Text _name, _worth, _age, _status;
         StarRow _stars;
+
+        /// <summary>
+        /// Says the screen is still fetching, and goes as soon as it is not.
+        ///
+        /// <para>
+        /// A visit is the slowest door in the game — a network round trip for the card and then
+        /// the art for whatever that card turned out to be standing on — and until this existed
+        /// the whole of it was drawn as an empty floor. An empty floor is also what a keeper
+        /// with nothing in their grove looks like, so the screen was saying two completely
+        /// different things with one picture.
+        /// </para>
+        /// </summary>
+        BusyVeil _busy;
+
+        /// <summary>This keeper's art, held only while their grove is on screen.</summary>
+        AssetHold _art;
 
         Btn _report;
         bool _reporting;
@@ -76,65 +100,92 @@ namespace GlimmerGrove
             BuildField();
             BuildHeader();
 
-            // The catalog is a body and a visitor may have arrived here without ever opening
-            // their own grove, so it cannot be assumed to be in hand.
-            Warm();
+            // Built last so it draws over the field and the header, and so both of the states
+            // it describes are already on screen underneath it.
+            _busy = BusyVeil.Attach(Safe, Loc.Get("ui.visit.loading"));
+
+            Open();
 
             // A visited grove's art lands after the floor does, exactly as the player's own
             // does, so the tiles have to be repainted when it arrives (invariant 7b).
-            HomesteadArt.Changed += Repaint;
             HomesteadCatalog.Changed += Reload;
         }
 
         void OnDestroy()
         {
-            HomesteadArt.Changed -= Repaint;
             HomesteadCatalog.Changed -= Reload;
 
-            // The visitor's own grove keeps its art; this drops only the stranger's. Two scopes
-            // is what makes that possible — see AssetLibrary.GroveVisitScope. Unconditional
-            // rather than guarded, because nothing else in the game draws this scope, so there
-            // is no incoming screen that could want it.
-            HomesteadArt.CloseVisit();
-
-            // The player's own grove art is a different question, and one this screen must not
-            // answer wrongly: leaving a visit for anything that is not a grove screen should
-            // free it, and CloseUnlessWanted is what already knows that.
-            HomesteadArt.CloseUnlessWanted();
+            // Lets go of this keeper's art and of nothing else. The visitor's own grove, if
+            // they have one open behind this, is holding its own — which is what a count buys
+            // over a scope: two groves' worth of pieces can overlap completely and neither
+            // screen has to know the other exists.
+            _art?.Dispose();
         }
 
-        async void Warm()
+        /// <summary>
+        /// Everything this screen has to fetch before it can draw, in the fewest round trips
+        /// it can be done in.
+        ///
+        /// <para>
+        /// <b>The catalog and the card are asked for at the same time, and that is the change
+        /// worth naming.</b> They used to run in series — read the grove body off disk, and
+        /// only then open the network — which put a file read and a JSON parse in front of the
+        /// slowest thing on the screen for no reason at all: neither answer feeds the other.
+        /// The card is a network round trip and the catalog is local, so the wait is now the
+        /// longer of the two rather than the sum.
+        /// </para>
+        /// <para>
+        /// <b>The art can only be asked for afterwards</b>, and that is not an oversight: what
+        /// a visit loads is a function of what is standing in <em>this</em> grove, which is the
+        /// whole reason a visit costs one grove rather than one shop (invariant 7b). So the two
+        /// phases are genuinely serial, and the readout says so by staying up across both.
+        /// </para>
+        /// </summary>
+        void Open() => Run(async token =>
         {
-            await HomesteadService.EnsureAsync();
-            if (!this) return;
-
-            Reload();
-            Fetch();
-        }
-
-        async void Fetch()
-        {
-            if (_fetching || string.IsNullOrEmpty(_ownerId)) return;
-
             _fetching = true;
             _failed = false;
             PaintHeader();
 
-            var (result, card) = await GroveBoard.FetchCardAsync(_ownerId);
+            // Deliberately not given this screen's token: the catalog is shared, and a visitor
+            // tapping back out must not cancel a read the Grovement behind them is waiting on.
+            var catalog = HomesteadService.EnsureAsync();
+            var fetch = FetchCardAsync(token);
+
+            await Task.WhenAll(catalog, fetch);
 
             _fetching = false;
-            if (!this) return;
-
-            _failed = !result.Ok || card == null || !card.IsValid;
-            _card = card ?? GroveCard.Empty;
-
-            // The art has to be asked for before the tiles are painted, and it is asked for
-            // with *this* grove's pieces rather than the catalog's — the whole reason a visit
-            // costs one grove and not one shop.
-            HomesteadArt.OpenVisitAsync(PlacedPieceIds(), () => { if (this) Repaint(); });
+            if (!Living) return;
 
             Reload();
             PaintHeader();
+
+            // Nothing to draw and nothing to load. The header already says which of the two
+            // reasons it is, so the readout has no more work to do.
+            if (!_card.IsValid) { _busy?.Done(); return; }
+
+            _art = GroveArtLoader.Open("grove_visit", GroveArtLoader.Visit(PlacedPieceIds()),
+                                       this, OnArtReady, _busy);
+        });
+
+        /// <summary>
+        /// The card, or an empty one and a reason. Separated from <see cref="Open"/> so the two
+        /// fetches can be awaited together without the result-tuple gymnastics that needs.
+        /// </summary>
+        async Task FetchCardAsync(CancellationToken cancellation)
+        {
+            var (result, card) = await GroveBoard.FetchCardAsync(_ownerId, cancellation);
+
+            _failed = !result.Ok || card == null || !card.IsValid;
+            _card = card ?? GroveCard.Empty;
+        }
+
+        void OnArtReady()
+        {
+            if (!Living) return;
+
+            _busy?.Done();
+            Repaint();
         }
 
         System.Collections.Generic.List<string> PlacedPieceIds()
@@ -254,6 +305,20 @@ namespace GlimmerGrove
             _stars = StarRow.Create(chrome, new Vector2(.5f, 1f), new Vector2(0f, -186f),
                                     30f, 36f, 0, false, rungs);
 
+            // When the picture was taken.
+            //
+            // A visited grove is drawn from a card the server rebuilt the last time its owner's
+            // device synced, so it is never "now" and sometimes days old — and a visitor with
+            // no way to tell cannot separate "this keeper has not played since Tuesday" from
+            // "this game is showing me the wrong grove". The second reading was the one that
+            // arrived, and it is the expensive one: a player who has decided a feature is
+            // broken stops opening it. Small and dim on purpose — it is an answer to a question
+            // somebody has, not a thing to look at.
+            _age = UIKit.Shrinkable(
+                UIKit.Titled("Age", chrome, string.Empty, 20, new Color(1f, .96f, .88f, .62f),
+                             TextAnchor.MiddleCenter, new Vector2(640f, 26f),
+                             new Vector2(.5f, 1f), new Vector2(0f, -218f), 2f, 0f), 14);
+
             // Small, quiet, and in the corner opposite Back. A report control is not something
             // a screen should invite — it is something a player has to be able to find once
             // they have already decided. So it is sized and coloured like chrome rather than
@@ -293,6 +358,16 @@ namespace GlimmerGrove
                     : string.Empty;
 
             if (_stars) _stars.SetInstant(_card.IsValid ? Mathf.Min(_card.Stars, _stars.Count) : 0);
+
+            if (_age)
+            {
+                // Empty rather than guessed for a card with no stamp on it — see Since.Describe.
+                string when = _card.IsValid
+                    ? Since.Describe(_card.PublishedUnix, SaveSchema.NowUnix())
+                    : string.Empty;
+
+                _age.text = when.Length > 0 ? Loc.Format("ui.visit.updated", when) : string.Empty;
+            }
 
             PaintReport();
 
@@ -349,7 +424,7 @@ namespace GlimmerGrove
             Flow.Modal<ReportNameOverlay>(v => v.OnConfirm = Send);
         }
 
-        async void Send()
+        void Send() => Run(async token =>
         {
             if (_reporting) return;
 
@@ -364,13 +439,13 @@ namespace GlimmerGrove
             // leaving one line away.
             string owner = _ownerId;
 
-            var (result, outcome) = await GroveBoard.ReportNameAsync(owner);
+            var (result, outcome) = await GroveBoard.ReportNameAsync(owner, token);
 
             _reporting = false;
 
             // The screen can be gone: a report is the one call here a player can start and then
             // immediately walk away from, because the panel that raised it has already closed.
-            if (!this) return;
+            if (!Living) return;
 
             PaintReport();
 
@@ -384,7 +459,7 @@ namespace GlimmerGrove
                 : "ui.visit.report_done";
 
             Scenery.Toast(Content, Loc.Get(line), Pal.Cream, 2.6f, new Vector2(.5f, 0f), 320f);
-        }
+        });
 
         // ------------------------------------------------------------------ tile
         /// <summary>

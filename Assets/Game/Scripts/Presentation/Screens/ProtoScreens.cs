@@ -224,6 +224,16 @@ namespace GlimmerGrove
         SiegeView _siege;
         UtilityBar _bar;
 
+        /// <summary>
+        /// The four turrets this run draws, held for the length of the run.
+        ///
+        /// Four of the eighty the roster holds — the bound invariant 7b asks for, and the reason
+        /// the shelf that browses them reads thumbnails instead.
+        /// </summary>
+        AssetHold _line;
+
+        void OnDestroy() => _line?.Dispose();
+
         protected override ProtoView Attach(GameObject host)
         {
             _siege = host.AddComponent<SiegeView>();
@@ -262,23 +272,13 @@ namespace GlimmerGrove
         /// shape and for its reason: a scope that failed to load must not vanish silently, and
         /// the board behind it is already drawing a working line.
         /// </summary>
-        async void Line()
+        void Line() => Run(async token =>
         {
-            var line = WardLoadout.Line;
-
-            try
-            {
-                await AssetLibrary.EnsureScopeAsync(AssetLibrary.LineScope,
-                                                    line.Art());
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-                return;
-            }
+            _line = _line ?? AssetLibrary.Hold("siege_line");
+            await _line.LoadAsync(WardLoadout.Line.Art(), null, token);
 
             if (_siege != null) _siege.Redress();
-        }
+        });
 
         /// <summary>Whether this rung's waves never stop.</summary>
         bool Endless
@@ -389,13 +389,12 @@ namespace GlimmerGrove
             // for its targeting layer and its magnitude - and pays for it in matches through a
             // path of its own, because nothing about it is owned. See `SiegeView.Salvo`.
             _siege.Blew = Blew;
-            _siege.Appeared = Met;
 
             // The three moments this mode's remaining lessons hang on. Each fires once for the
             // life of the screen; `RunLessons.Teach` is what refuses one already seen.
-            _siege.Rested = () => Teaching?.Teach(Mechanic.SiegeBank);
             _siege.Brimmed = () => Teaching?.Teach(Mechanic.SiegeBrim);
             _siege.Salvaged = () => Teaching?.Teach(Mechanic.SiegeSalvage);
+            _siege.Bombed = () => Teaching?.Teach(Mechanic.SiegeBomber);
 
             // **What a bomb hits for is the published firepot's number, not a constant.** The two
             // are the same blast and the player is told so; a second figure is a second thing a
@@ -510,27 +509,6 @@ namespace GlimmerGrove
         /// thing a wasted firepot costs minus the firepot.
         /// </para>
         /// </summary>
-        /// <summary>
-        /// Teaches whichever field raider has just stepped onto the board, once ever.
-        ///
-        /// <para>
-        /// <b>The tip holds the raid, and that costs nothing to arrange.</b> `RunLessons.Teach`
-        /// takes `RunHold.Teaching`, and a held run is one whose hill stops walking - so a player
-        /// meeting a weaver for the first time reads about it over a board that is not being
-        /// overrun while they read (invariant 39i, from the other end).
-        /// </para>
-        /// <para>
-        /// <b>Refused for anything already seen, mid-chain, or on a board that cannot be taught</b>
-        /// - all three inside `Teach`, so this is a hook rather than a rule.
-        /// </para>
-        /// </summary>
-        void Met(SiegeKind kind)
-        {
-            if (Teaching == null) return;
-
-            if (kind == SiegeKind.Bomber) Teaching.Teach(Mechanic.SiegeBomber);
-        }
-
         /// <summary>
         /// The firepot in the published catalog, whatever it is called there.
         ///
@@ -714,22 +692,28 @@ namespace GlimmerGrove
             var board = _siege != null ? _siege.Siege : null;
             if (board == null) return;
 
-            var anchor = _siege.WardAnchor;
+            // **The cog's lesson is deferred, and it rings the cog.** It used to be dealt into
+            // the gem field, so a rung either had one standing or would refill one within seconds
+            // and a ring on the middle of the ward line was the best that could be said about a
+            // thing that might not be there yet. It is dropped by a felled raider onto the hill
+            // now, so `SiegeView.Salvaged` raises it at the moment one lands and there is a real
+            // object to point at - which may be on the second rung of the chapter or never.
+            into.Add(Lesson.Later(Mechanic.SiegeSalvage, _siege.LiveCog()));
 
-            // **The cog's lesson is deferred now, because a cog is no longer on the board when
-            // the run opens.** It used to be dealt into the gem field, so a rung either had one
-            // standing or would refill one within seconds and a lesson pointed at a turret was
-            // the best that could be said about a thing that might not be there yet. It is
-            // dropped by a felled raider onto the hill, so there is a real moment to teach it at
-            // and a real object to point at - `SiegeView.Salvaged` raises it the first time one
-            // lands, which may be on the second rung of the chapter or never.
+            // **And the overcharge rings the turret holding one.** Same shape and same reason: the
+            // charge is banked by play rather than dealt by the level, so there is no moment at
+            // the opening when a full tube exists to ring - `SiegeView.Brimmed` raises it the
+            // first time one fills.
+            into.Add(Lesson.Later(Mechanic.SiegeBrim, _siege.ArmedWard()));
 
-            // **Deferred, and pointed at the bomber itself.** There *is* something to ring here -
-            // the raider whose death is about to hand the player a bomb - and it is exactly what
-            // the tip is about. `Later` keeps it out of the opening chain;
-            // `SiegeView` raises it the first time one walks on, which may be on the fourth rung
-            // of the chapter or never.
-            into.Add(Lesson.Later(Mechanic.SiegeBomber, _siege.Walking(SiegeKind.Bomber)));
+            // **Deferred, and pointed at the bomb rather than at the bomber that left it.** It
+            // used to ring the raider and go up the moment one walked on, which put the panel in
+            // front of a player seconds before the thing it tells them to tap existed - reported
+            // from a device as the tip highlighting the wrong unit. `SiegeView.Bombed` raises it
+            // on the *drop*, so the ring is round a live bomb and the sentence is something to
+            // act on; `Later` keeps it out of the opening chain, and a player who never kills a
+            // bomber is never told about a bomb they do not have.
+            into.Add(Lesson.Later(Mechanic.SiegeBomber, _siege.LiveBomb()));
         }
 
         /// <summary>

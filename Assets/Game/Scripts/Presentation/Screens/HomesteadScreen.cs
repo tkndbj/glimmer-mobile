@@ -1,3 +1,4 @@
+using GlimmerGrove.AssetPipeline;
 using System;
 using System.Collections.Generic;
 using GlimmerGrove.App;
@@ -41,7 +42,7 @@ namespace GlimmerGrove
     /// <see cref="GroveFieldView"/>, which is <c>GridView</c>'s bargain in two dimensions.
     /// </para>
     /// </summary>
-    public sealed class HomesteadScreen : View, IDrawsGroveArt
+    public sealed partial class HomesteadScreen : View
     {
         public override string Track => "mus_menu";
 
@@ -111,21 +112,24 @@ namespace GlimmerGrove
         GroveFieldView _field;
         Text _summary;
 
-        RectTransform _shop;
-        Text _scoreValue, _scoreNext;
-        StarRow _scoreStars;
+        /// <summary>
+        /// The "still fetching" readout, up from the first frame and gone the moment the floor
+        /// can be drawn properly. See <see cref="Build"/> for the two waits it covers.
+        /// </summary>
+        BusyVeil _busy;
 
         /// <summary>
-        /// Stars drawn last, so a star won while the player is standing here arrives as
-        /// something rather than as a number that was already different.
+        /// The art this grove is standing on, held for exactly as long as the screen is.
         ///
-        /// Session-local and deliberately not stored: the save already knows everything the
-        /// score is derived from, and a "stars last seen" field would be a stored count of
-        /// exactly the shape invariant 11b forbids — merged across devices it could only ever
-        /// re-celebrate or silently swallow. -1 means nothing has been drawn yet, which is
-        /// what makes the first paint of a screen quiet.
+        /// Refilled rather than reloaded whenever the floor's contents change — see
+        /// <see cref="OnLayoutChanged"/>.
         /// </summary>
-        int _starsShown = -1;
+        AssetHold _art;
+
+        RectTransform _shop;
+
+        /// <summary>What the grove is worth, in the corner. Owns its own celebration rule.</summary>
+        GroveScoreBox _score;
 
         bool _presented, _teaching, _taught;
 
@@ -159,18 +163,29 @@ namespace GlimmerGrove
             BuildField();
             BuildHeader();
 
-            // The catalog is a body, read on entering the feature. Both this and the art load
+            // Says the screen is still fetching, and goes as soon as it is not. Built last so
+            // it draws over the field and the header.
+            //
+            // The two waits it covers are a body read off disk and then the art for whatever
+            // that body says is standing on the floor, and the second is much the larger:
+            // sixty-eight of the eighty-six pieces are frame folders, so a decorated grove is
+            // dozens of addresses. Before this, all of it was drawn as an empty floor — which
+            // is also exactly what an *undecorated* grove looks like, so the screen was saying
+            // two different things with one picture.
+            _busy = BusyVeil.Attach(Safe, Loc.Get("ui.grove.loading"));
+
+            // The catalog is a body, read on entering the feature. Both it and the art load
             // asynchronously and both repaint, because a screen is built in the frame it is
             // asked for and the first paint would otherwise be the only one.
             Warm();
-            HomesteadArt.OpenAsync(() => { if (this) Repaint(); });
 
             HomesteadCatalog.Changed += Reload;
             HomesteadLedger.Changed += Repaint;
-            HomesteadLayout.Changed += Repaint;
-            // Art claimed for a piece the player has just placed lands a moment after the
-            // placement does, and until it does the tile draws nothing (invariant 7b).
-            HomesteadArt.Changed += Repaint;
+            // A placement changes what this screen draws *and* what art it needs, so the
+            // hold is refilled and the tiles repainted when the new piece lands. That used to
+            // be a static claim made by the picker plus a global event this screen listened to;
+            // it is now the screen keeping its own hold in step with its own contents.
+            HomesteadLayout.Changed += OnLayoutChanged;
             // Buying land adds ground, which is a different set of tiles rather than a different
             // look on the same ones — so it re-measures and refills rather than rebinding.
             GroveLand.Changed += Regrow;
@@ -186,19 +201,27 @@ namespace GlimmerGrove
         {
             HomesteadCatalog.Changed -= Reload;
             HomesteadLedger.Changed -= Repaint;
-            HomesteadLayout.Changed -= Repaint;
-            HomesteadArt.Changed -= Repaint;
+            HomesteadLayout.Changed -= OnLayoutChanged;
             GroveLand.Changed -= Regrow;
             PlayerProgression.Changed -= Repaint;
             PlayerProgress.Reloaded -= Repaint;
             PlayerProgress.RecordChanged -= OnRecord;
 
-            // Unless the shop is what replaced this screen, which is not a special case so much
-            // as the general one: Destroy lands at the end of the frame, so the incoming screen
-            // has already built *and painted* by the time this runs. Releasing here pulled every
-            // sprite out from under a shop that had already drawn it, and nothing repaints.
-            // HomesteadArt owns the rule so a third screen cannot forget half of it.
-            HomesteadArt.CloseUnlessWanted();
+            // Simply let go. Whether anything is actually freed is the library's question,
+            // not this screen's: a shop or a panel that draws the same pieces has already taken
+            // its own hold by the time this runs, and an address that does reach nought holds is
+            // kept for a few seconds in case the player comes straight back.
+            _art?.Dispose();
+        }
+
+        /// <summary>
+        /// A piece placed, moved or taken away: redraw, and bring the hold in line with what is
+        /// standing on the floor now.
+        /// </summary>
+        void OnLayoutChanged()
+        {
+            Repaint();
+            GroveArtLoader.Fill(_art, GroveArtLoader.Grove(), this, Repaint);
         }
 
         void OnRecord(LevelRecord record) => Repaint();
@@ -223,15 +246,26 @@ namespace GlimmerGrove
             Repaint();
         }
 
-        async void Warm()
+        void Warm() => Run(async token =>
         {
             await HomesteadService.EnsureAsync();
-            if (!this) return;
+            if (!Living) return;
+
+            Reload();
 
             // The art set is derived from the catalog, so it can only be asked for once the
-            // catalog is in hand. Asking twice is free — the scope reports itself loaded.
-            HomesteadArt.OpenAsync(() => { if (this) Repaint(); });
-            Reload();
+            // catalog is in hand — the two waits are genuinely serial, which is why one readout
+            // stays up across both and only changes what it says.
+            _busy?.Say(Loc.Get("ui.grove.loading_art"));
+            _art = GroveArtLoader.Open("grove", GroveArtLoader.Grove(), this, OnArtReady, _busy);
+        });
+
+        void OnArtReady()
+        {
+            if (!Living) return;
+
+            _busy?.Done();
+            Repaint();
         }
 
         // ----------------------------------------------------------------- field
@@ -313,7 +347,26 @@ namespace GlimmerGrove
         void OpenInventory()
         {
             _draft?.Close();
-            Flow.Modal<HomesteadPickerOverlay>(v => v.Chosen = id => _draft?.Begin(id));
+            Flow.Modal<HomesteadPickerOverlay>(v => v.Chosen = Take);
+        }
+
+        /// <summary>
+        /// A piece picked up out of the inventory: its full-size art is added to this screen's
+        /// hold, and the ghost starts following the finger.
+        ///
+        /// <para>
+        /// <b>The art has to be asked for here rather than when the piece is put down.</b> The
+        /// panel it was chosen from draws thumbnails and the floor draws the real thing, so a
+        /// ghost drawn before the piece's own art has arrived is invisible — and it is being
+        /// dragged, which is the one moment the player is looking straight at it.
+        /// </para>
+        /// </summary>
+        void Take(string id)
+        {
+            _draft?.Begin(id);
+
+            var piece = HomesteadCatalog.Current.Find(id);
+            if (piece.IsValid) GroveArtLoader.Add(_art, GroveArtLoader.Piece(piece), this, Repaint);
         }
 
         /// <summary>
@@ -379,116 +432,6 @@ namespace GlimmerGrove
             Teach();
         }
 
-        // -------------------------------------------------------------- arriving
-        /// <summary>
-        /// Stages the ceremony for ground bought a moment ago, if there is any. True once
-        /// something is framing the camera, so the ordinary opening shot stands aside.
-        /// </summary>
-        bool OpenRise(GroveFloor floor)
-        {
-            if (_rise != null) return true;
-            if (_pending == null) return false;
-
-            // The catalog is a body and may have been republished between the purchase and
-            // this screen, so the region is looked up again rather than trusted. A region that
-            // is no longer on the floor is simply not celebrated; the land is still owned.
-            var region = _pending;
-            if (floor.IsEmpty || floor.Region(region.Id) == null)
-            {
-                _pending = null;
-                return false;
-            }
-
-            _rise = GroveRise.Play(Content, _field, floor, region,
-                                   (col, row) => GroveLand.IsOwned(floor, col, row)
-                                              && !region.Holds(col, row),
-                                   OnRiseDone);
-
-            return _rise != null;
-        }
-
-        /// <summary>
-        /// Starts the ceremony once there is both a staged one and a screen the player can
-        /// see. Does nothing twice — <c>GroveRise.Begin</c> holds that rule rather than a flag
-        /// here, so a second caller cannot get it wrong.
-        /// </summary>
-        void StartRise()
-        {
-            if (_presented) _rise?.Begin();
-        }
-
-        /// <summary>
-        /// Hands the ground back. The withholding stops, the field is re-tested, and whatever
-        /// the ceremony was standing in front of happens now: the star the purchase earned,
-        /// and the first-visit lessons it was holding up.
-        /// </summary>
-        void OnRiseDone()
-        {
-            _rise = null;
-            _pending = null;
-
-            if (_field != null)
-            {
-                ShowOwned();
-                _field.Revisit();
-            }
-
-            Repaint();
-            CelebrateArrival();
-            Teach();
-        }
-
-        /// <summary>
-        /// A star won by the purchase, landed now rather than while the player was in the shop.
-        ///
-        /// <para>
-        /// Measured against the reading taken before the money was spent (see
-        /// <see cref="ArrivingStars"/>) rather than against <see cref="_starsShown"/>, which
-        /// this screen's first paint has already moved to the new figure — quietly, and
-        /// deliberately, because a baseline taken on a blank grove is how a celebration comes
-        /// to mean nothing.
-        /// </para>
-        /// </summary>
-        void CelebrateArrival()
-        {
-            if (ArrivingStars < 0 || _scoreStars == null) return;
-
-            int before = ArrivingStars;
-            ArrivingStars = -1;
-
-            if (!HomesteadCatalog.IsLoaded) return;
-
-            int stars = Mathf.Min(GroveScore.Of(HomesteadCatalog.Current).Stars, _scoreStars.Count);
-            if (stars > before) _scoreStars.Reveal(stars, .12f, .32f);
-        }
-
-        /// <summary>
-        /// Which ground exists. Unowned land is not drawn at all — see
-        /// <c>GroveFieldView.SetVisible</c> for why a field of padlocks was the wrong screen.
-        ///
-        /// <para>
-        /// Ground bought a moment ago is owned and still withheld, which is the one place
-        /// those two come apart. Kept as an <c>and</c> of two questions rather than folded
-        /// into one predicate: what the player owns is <c>GroveLand</c>'s answer and never
-        /// this screen's, and a ceremony that could make land look unowned is a ceremony one
-        /// bug away from selling it twice.
-        /// </para>
-        /// </summary>
-        bool Owned(int col, int row)
-            => GroveLand.IsOwned(HomesteadCatalog.Current.Floor, col, row)
-            && !Withheld(col, row);
-
-        bool Withheld(int col, int row)
-            => _rise != null
-                ? _rise.Hides(col, row)
-                : _pending != null && _pending.Holds(col, row);
-
-        /// <summary>
-        /// True exactly once per tile of arriving ground, on the bind that first draws it.
-        /// The cell's signal to rise into place rather than appear — see <c>GroveRise</c>.
-        /// </summary>
-        bool TakeArrival(int col, int row) => _rise != null && _rise.TakeArrival(col, row);
-
         /// <summary>
         /// Tells the field which ground exists and how far it reaches.
         ///
@@ -516,410 +459,8 @@ namespace GlimmerGrove
 
             _field.Refresh();
             PaintSummary();
-            PaintScore();
+            _score?.Paint();
         }
 
-        // ---------------------------------------------------------------- header
-        void BuildHeader()
-        {
-            var fade = UIKit.Img("TopFade", Content, Art.FadeUp(64), new Color(.02f, .06f, .09f, .82f));
-            var frt = (RectTransform)fade.transform;
-            frt.anchorMin = new Vector2(0f, 1f); frt.anchorMax = new Vector2(1f, 1f);
-            frt.pivot = new Vector2(.5f, 1f);
-            // Grown by whatever the system has taken from the top, because the fade is what
-            // the banner and the summary are read against and both have just moved down by
-            // that much. It is the one piece of the header that stays full-bleed — a gradient
-            // that stopped at the safe edge would draw a visible horizontal seam across the
-            // sky, which is worse than the cutout it was avoiding. Zero on a plain display.
-            frt.sizeDelta = new Vector2(0f, 268f + SafeArea.Top);
-            frt.anchoredPosition = Vector2.zero;
-            frt.localRotation = Quaternion.Euler(0, 0, 180f);
-
-            // Everything from here down is chrome, so it lives in the safe layer: on a phone
-            // with a camera cutout the back arrow, the banner and the shop button all sat
-            // under it, which is what this screen was reported for. Content stays full-bleed
-            // and keeps the sky and the fade above — see View.Safe.
-            var chrome = Safe;
-
-            var banner = Scenery.TitleRibbon(chrome, Loc.Get("ui.grove.title").ToUpperInvariant(),
-                                             new Vector2(470f, 128f), new Vector2(.5f, 1f),
-                                             new Vector2(0f, -106f), 38, 20f);
-            banner.transform.localScale = Vector3.zero;
-            Tween.Pop(banner.transform, 0f, .6f, .1f);
-
-            // The way out, where the balance used to be. The nav bar is gone from this screen
-            // (see BuildField), so the corner needs an exit rather than a readout — and the
-            // balance was the wrong thing to put here anyway: nothing on this screen is bought.
-            // Land and decor are both bought in the shop, which shows the balance itself.
-            UIKit.IconButton("Back", chrome, Skins.Nav, "ic_left", NavSize,
-                             new Vector2(0f, 1f), new Vector2(NavX, NavY),
-                             () => Flow.Go<HomeScreen>());
-
-            // The line under the banner, and it is silent unless it has news. It used to
-            // count what is standing, how much floor is owned and how many kinds are on it —
-            // three numbers a player reads off the grove itself by looking at it, on the one
-            // screen whose whole surface *is* that answer. What is left are the two states the
-            // field cannot draw, because in both of them there is no field yet.
-            _summary = UIKit.Shrinkable(
-                UIKit.Titled("Summary", chrome, string.Empty, 26, Pal.Cream,
-                             TextAnchor.MiddleCenter, new Vector2(720f, 34f),
-                             new Vector2(.5f, 1f), new Vector2(0f, -176f), 3f, 0f), 18);
-
-            // The shop is a screen of its own rather than a panel over this one, for
-            // CompanionScreen's reason: what it lists is unbounded, and a grid that scrolls
-            // inside a scrim is a worse place to browse than a page that owns the display.
-            // Placed through UIKit.Corner because Box pivots at centre: passing the margin
-            // straight in put half the button past the right edge of the screen.
-            var shopSize = new Vector2(230f, 96f);
-            var shopAnchor = new Vector2(1f, 1f);
-            var shop = UIKit.TextButton("Shop", chrome, "btn_orange", Loc.Get("ui.grove.shop"), 28,
-                                        shopSize, shopAnchor,
-                                        UIKit.Corner(shopSize, shopAnchor, 28f, 62f),
-                                        () => Flow.Go<HomesteadShopScreen>());
-            UIKit.Shrinkable(shop.Label, 18);
-            UIKit.FitLabel(shop);
-
-            // Kept so the shop lesson can ring the real button rather than describe where it is.
-            _shop = (RectTransform)shop.transform;
-
-            // The way to the boards, beside the way out and the same size as it. The two are a
-            // pair — both are "leave this screen" — so they read as a row rather than as a
-            // control and a smaller afterthought stacked under it.
-            //
-            // It is deliberately *not* the score box in the corner: that box is a readout with
-            // every raycast target switched off, because this screen is panned and pinched and
-            // a control there would swallow a drag begun where a right thumb rests. A separate
-            // button costs one glyph and leaves the gesture alone.
-            UIKit.IconButton("Boards", chrome, Skins.Nav, "ic_trophy", NavSize,
-                             new Vector2(0f, 1f), new Vector2(NavX + NavSize.x + NavGap, NavY),
-                             () => Flow.Go<LeaderboardScreen>());
-
-            BuildScore(chrome);
-        }
-
-        void PaintSummary()
-        {
-            if (!_summary) return;
-
-            var catalog = HomesteadCatalog.Current;
-
-            if (!HomesteadCatalog.IsLoaded)
-            {
-                _summary.text = Loc.Get("ui.grove.loading");
-                return;
-            }
-
-            if (catalog.Floor.IsEmpty)
-            {
-                _summary.text = Loc.Get("ui.grove.unavailable");
-                return;
-            }
-
-            _summary.text = string.Empty;
-        }
-
-        // ----------------------------------------------------------------- score
-        /// <summary>Widest the star row may grow before it is packed tighter.</summary>
-        const float StarsWidth = 292f;
-
-        /// <summary>
-        /// What this grove is worth, and the stars that has earned.
-        ///
-        /// <para>
-        /// <b>It is a readout and not a control, and every graphic in it is non-interactive.</b>
-        /// This screen is panned and pinched, so a box in the corner that swallowed a drag
-        /// would break the one gesture the whole page is built on — and the corner it sits in
-        /// is where a right thumb rests. <see cref="UIKit.Img"/> and <see cref="UIKit.Label"/>
-        /// both leave <c>raycastTarget</c> off, so a drag begun on top of this reaches the
-        /// field exactly as if the box were not there.
-        /// </para>
-        /// <para>
-        /// The star row's size comes from the ladder's length rather than from a constant,
-        /// because the ladder is content (<c>GroveScoreTable</c>) and a drop may lengthen it.
-        /// Five stars at the shipped spacing, eight packed a little tighter, and neither draws
-        /// off the side of the box.
-        /// </para>
-        /// </summary>
-        void BuildScore(Transform parent)
-        {
-            var size = new Vector2(340f, 196f);
-            var anchor = new Vector2(1f, 0f);
-
-            var box = UIKit.Img("Score", parent, Art.Round(28), new Color(.06f, .12f, .17f, .74f),
-                                size, anchor, UIKit.Corner(size, anchor, 28f, 28f));
-            var rt = (RectTransform)box.transform;
-
-            var edge = UIKit.Img("Edge", rt, Art.RoundOutline(28, 3f), new Color(1f, 1f, 1f, .13f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
-
-            UIKit.Shrinkable(
-                UIKit.Titled("Label", rt, Loc.Get("ui.grove.score").ToUpperInvariant(), 22,
-                             new Color(1f, .96f, .88f, .70f), TextAnchor.MiddleCenter,
-                             new Vector2(300f, 30f), new Vector2(.5f, 1f), new Vector2(0f, -26f),
-                             outline: 3f, shadow: 0f), 16);
-
-            _scoreValue = UIKit.Shrinkable(
-                UIKit.Titled("Value", rt, string.Empty, 44, Pal.Gold, TextAnchor.MiddleCenter,
-                             new Vector2(300f, 56f), new Vector2(.5f, 1f), new Vector2(0f, -74f),
-                             outline: 4f, shadow: 4f), 26);
-
-            int rungs = Mathf.Max(1, HomesteadCatalog.Current.Scores.StarCount);
-            float spacing = Mathf.Min(40f, StarsWidth / rungs);
-
-            _scoreStars = StarRow.Create(rt, new Vector2(.5f, 1f), new Vector2(0f, -128f),
-                                         spacing * .82f, spacing, 0, false, rungs);
-
-            _scoreNext = UIKit.Shrinkable(
-                UIKit.Titled("Next", rt, string.Empty, 22, new Color(1f, .96f, .88f, .58f),
-                             TextAnchor.MiddleCenter, new Vector2(310f, 28f), new Vector2(.5f, 1f),
-                             new Vector2(0f, -168f), outline: 3f, shadow: 0f), 15);
-
-            rt.localScale = Vector3.zero;
-            Tween.Pop(rt, 0f, .5f, .18f);
-
-            // Drawn once here so the box never appears blank. The catalog is a body and may
-            // not have arrived, in which case this is an honest zero that the first Repaint
-            // replaces — see PaintScore for why that first real reading does not celebrate.
-            PaintScore();
-        }
-
-        /// <summary>
-        /// Redraws the standing, and celebrates a star that was not there a moment ago.
-        ///
-        /// <para>
-        /// The whole reading is taken in one call (<see cref="GroveScore.Of"/>) so the number
-        /// and the stars can never come from two different moments — the mistake the victory
-        /// panel's separately derived reward row spent a version proving is real.
-        /// </para>
-        /// <para>
-        /// A star gained while this screen is open re-runs the row's fanfare rather than
-        /// appearing. That is the point of drawing this here at all: buying land or a companion
-        /// happens in the shop, so without it the reward for a purchase would be a number that
-        /// had quietly changed by the time the player came back.
-        /// </para>
-        /// </summary>
-        void PaintScore()
-        {
-            if (!_scoreValue) return;
-
-            var standing = GroveScore.Of(HomesteadCatalog.Current);
-
-            _scoreValue.text = Compact.Number(standing.Score);
-
-            if (_scoreNext)
-                _scoreNext.text = standing.IsTopped
-                    ? Loc.Get("ui.grove.score_top")
-                    : Loc.Format("ui.grove.score_next", Compact.Number(standing.ToNext));
-
-            if (!_scoreStars) return;
-
-            // A ladder can be re-published under an open screen — the catalog is a body and a
-            // content refresh swaps it whole — so a row built for five rungs may be looking at
-            // six. Rebuilding it is not worth a frame's work; drawing what it can hold is
-            // honest, and the next visit builds the right row.
-            int stars = Mathf.Min(standing.Stars, _scoreStars.Count);
-
-            // The baseline is only taken once there is a real catalog to compare against.
-            // Without that the empty grove drawn before the body arrives would be the
-            // baseline, and every visit would open with a fanfare for stars the player won
-            // weeks ago — which is the fastest way to make a celebration mean nothing.
-            bool settled = HomesteadCatalog.IsLoaded;
-
-            if (settled && _starsShown >= 0 && stars > _starsShown) _scoreStars.Reveal(stars, .1f, .3f);
-            else _scoreStars.SetInstant(stars);
-
-            if (settled) _starsShown = stars;
-        }
-
-        // ------------------------------------------------------------ what is drawn
-        /// <summary>The stand covering a tile — anchored on it or reaching over it — or an invalid one.</summary>
-        static bool StandAt(int col, int row, out GroveStand stand)
-            => HomesteadLayout.TryStandAt(HomesteadCatalog.Current, col, row, out stand);
-
-        readonly Dictionary<long, GroveHit> _hits = new Dictionary<long, GroveHit>();
-
-        /// <summary>
-        /// The box and mask of the art drawn from a tile, in field space — what
-        /// <see cref="GrovePick"/> tests a tap against. Answers for an anchor only; a tile a
-        /// footprint reaches over draws nothing of its own.
-        ///
-        /// <para>
-        /// Cached per tile because this is asked for every live tile on every tap <em>and</em>
-        /// on every frame of a move drag. Sixty tiles a frame under a moving thumb is exactly
-        /// the continuous garbage the field's depth comparer is held as a field to avoid. The
-        /// cache is cleared by <see cref="Repaint"/>, which is the one door every change to
-        /// the picture comes through.
-        /// </para>
-        /// </summary>
-        GroveHit Hit(int col, int row)
-        {
-            long key = GroveOccupancy.Key(col, row);
-            if (_hits.TryGetValue(key, out var cached)) return cached;
-
-            var catalog = HomesteadCatalog.Current;
-            var hit = new GroveHit(col, row, 0f, 0f, 0f, 0f);
-
-            if (HomesteadLayout.Occupancy(catalog).TryAnchored(col, row, out var stand))
-                hit = GroveTileArt.Hit(GroveTileArt.PieceOf(catalog, stand), stand);
-
-            _hits[key] = hit;
-            return hit;
-        }
-
-        // ------------------------------------------------------------- placing
-        //
-        // Everything about putting something down lives in GroveDraftView and GroveDraft, which
-        // is the whole of this rework. What used to be here was a state machine in loose fields
-        // — an _editing flag, a _dragging flag, a ghost, two mark sets, a cached plan and four
-        // coordinates — so "what is lit", "what will be written" and "is the button live" were
-        // three answers kept in step by hand. They are one object now and this screen composes
-        // it rather than being it.
-
-        GroveDraftView _draft;
-
-        /// <summary>
-        /// Says that what was asked for does not fit. Kept public because the draft view raises
-        /// its refusals as loc keys rather than drawing them: a toast belongs to the screen that
-        /// owns the safe area, not to a control floating over a floor.
-        /// </summary>
-        public void SayNoRoom() => Scenery.Toast(Content, Loc.Get("ui.grove.no_room"));
-
-
-        // ------------------------------------------------------------------- tap
-        void Tap(int col, int row)
-        {
-            // A tap while something is being placed puts it away and does nothing else. One
-            // tap to dismiss is what every panel here does, and answering the dismissing tap by
-            // lifting something else as well would be two responses to one gesture.
-            if (_draft != null && _draft.Active) { _draft.Close(); return; }
-
-            // No land branch: ground the player does not own is not drawn, so there is nothing
-            // here to tap. Expanding is done in the shop, where the other things they buy are.
-
-            if (!StandAt(col, row, out var stand)) return;      // bare ground; the button is the way in
-
-            // A home goes to the home panel in every state — the question at a house is
-            // almost always "where am I on the ladder" rather than "shall I move this", and a
-            // tap is the gesture that asks it. Moving one is a **hold** (see `Hold`), which is
-            // the split every other tile makes too: a tap asks about a thing, a press picks it
-            // up. Reaching the ladder would otherwise cost a trip through a menu on the one
-            // object a player looks at most.
-            if (stand.IsHall) { Flow.Modal<HomesteadHomeOverlay>(); return; }
-
-            // Whatever covers the tile is what was tapped, so touching the far end of a bridge
-            // lifts the bridge. The draft resolves that itself, from the stand.
-            _draft?.Lift(col, row);
-        }
-
-        /// <summary>
-        /// A finger resting on a tile lifts whatever is standing there, the hall included.
-        ///
-        /// <para>
-        /// <b>It is the same verb on every tile rather than a gesture the hall alone answers.</b>
-        /// A control that works in one place and nowhere else is one nobody finds twice, and the
-        /// hold is already how the rest of this floor behaves — a piece a tap lifts is a piece a
-        /// press lifts, so there is nothing new to learn and the hall is simply no longer the
-        /// exception. What it buys is the home: a tap there opens the ladder (see
-        /// <see cref="Tap"/>), so without this there would be no gesture left that could move a
-        /// house.
-        /// </para>
-        /// <para>
-        /// The hold cancels the tap that press would have produced (`GroveFieldView.Hold`), so
-        /// a player who holds the hall gets the draft and never the panel behind it.
-        /// </para>
-        /// </summary>
-        void Hold(int col, int row)
-        {
-            if (_draft != null && _draft.Active) return;   // already holding something
-            _draft?.Lift(col, row);
-        }
-
-        // ------------------------------------------------------------------ tips
-        public override void OnPresented()
-        {
-            _presented = true;
-            StartRise();
-            Teach();
-        }
-
-        /// <summary>
-        /// The two things a first visit has to be told: what this place is, and where the
-        /// things it is built from come from.
-        ///
-        /// <para>
-        /// <b>They are ordinary lessons, on the ordinary ledger.</b> A grove tip is a
-        /// <c>Mechanic</c> like a crossing is — a permanent id, strings derived from it, and
-        /// <c>TipLedger</c> recording that this player has met it. That is what makes them
-        /// shown once in a lifetime rather than once per install: the ledger is a union-joined
-        /// set in the save file, so a second device does not re-teach what the first one
-        /// taught, and it cost no new field to say so. They are deliberately not in
-        /// <c>Mechanic.TeachingOrder</c>, which is the board scan's queue — nothing about a
-        /// glade implies the player has opened the Grovement.
-        /// </para>
-        /// <para>
-        /// <b>Nothing is taught over an empty screen.</b> The catalog is a body read on
-        /// entering the feature, so on a cold start it can land after the transition has
-        /// finished — and a welcome tip spent while the grove behind it is still blank is
-        /// spent for good. So this is attempted from both <see cref="OnPresented"/> and
-        /// <see cref="Reload"/>, does nothing until there is a grove to point at, and does
-        /// nothing twice.
-        /// </para>
-        /// </summary>
-        void Teach()
-        {
-            if (_taught || _teaching || !_presented) return;
-            if (!HomesteadCatalog.IsLoaded || HomesteadCatalog.Current.Floor.IsEmpty) return;
-
-            // Ground arriving takes the screen, and a lesson raised over it would be a modal
-            // in front of the thing the player just paid to watch. The ceremony calls this
-            // itself when it hands the screen back, so nothing is lost by waiting — and a
-            // first visit cannot be one of these anyway, since land costs credits.
-            if (_pending != null || _rise != null) return;
-
-            var queue = new List<Mechanic>(2);
-
-            if (!TipLedger.HasSeen(Mechanic.Grove)) queue.Add(Mechanic.Grove);
-            if (!TipLedger.HasSeen(Mechanic.GroveShop)) queue.Add(Mechanic.GroveShop);
-
-            _taught = true;
-            if (queue.Count == 0) return;
-
-            _teaching = true;
-
-            // A beat after the iris, so the first thing the player sees is their own grove
-            // and the second is somebody explaining it.
-            Tween.After(.45f, () => ShowTip(queue, 0), this);
-        }
-
-        /// <summary>
-        /// Shows one tip and, when it is dismissed, the next.
-        ///
-        /// Chained on dismissal rather than raised together, which is <c>PlayScreen</c>'s rule
-        /// and for its reason: two modals at once means meeting the second before reading the
-        /// first. The editing controls are put away first because the second tip cuts a hole
-        /// around the shop button, and a bar floating over the field inside that hole would be
-        /// lit by a lesson that is not about it.
-        /// </summary>
-        void ShowTip(List<Mechanic> queue, int index)
-        {
-            if (!this) return;
-
-            if (index >= queue.Count) { _teaching = false; return; }
-
-            _draft?.Close();
-
-            var mechanic = queue[index];
-
-            Flow.Modal<TipOverlay>(v =>
-            {
-                v.Mechanic = mechanic;
-
-                // The welcome has nothing to ring: it is about the whole screen, and a hole
-                // cut around one tile would say it is about that tile.
-                v.Target = mechanic.Equals(Mechanic.GroveShop) ? _shop : null;
-
-                v.Dismissed = () => Tween.After(.18f, () => ShowTip(queue, index + 1), this);
-            });
-        }
     }
 }

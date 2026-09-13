@@ -193,12 +193,23 @@ ASSEMBLIES = [
         # contents are compiled by the Editor, and by nothing else.
         refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS + compiled("GlimmerGrove.Domain"),
     )),
+    ("telemetry", dict(
+        out="GlimmerGrove.Telemetry",
+        src=sources("Assets/Game/Scripts/Telemetry"),
+        # Neither vendor define here, for the reason the iap and privacy entries give:
+        # neither package is on disk until the Editor resolves it. What this proves is the
+        # property that keeps a fresh clone compiling — that the boot path still has an
+        # AnalyticsSetup to call when no measurement platform is installed, and that both
+        # partial-method calls compile away rather than failing to resolve. The vendor
+        # halves are compiled by the Editor, and by nothing else.
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS + compiled("GlimmerGrove.Domain"),
+    )),
     ("pres", dict(
         out="GlimmerGrove.Presentation",
         src=sources("Assets/Game/Scripts/Presentation"),
         refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS
              + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud", "GlimmerGrove.Ads",
-                        "GlimmerGrove.Privacy"),
+                        "GlimmerGrove.Privacy", "GlimmerGrove.Telemetry"),
     )),
     ("authoring", dict(
         out="GlimmerGrove.Authoring",

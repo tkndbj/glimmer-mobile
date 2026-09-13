@@ -1,5 +1,6 @@
 using System;
 using GlimmerGrove.AssetPipeline;
+using GlimmerGrove.Async;
 using GlimmerGrove.Progression;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,9 +17,9 @@ namespace GlimmerGrove
     /// Thirty flipbooks is thirty folders of forty frames; thirty portraits is 1.4 MB.
     /// </para>
     /// <para>
-    /// Screens showing the whole roster bracket themselves with <see cref="OpenAsync"/>
-    /// and <see cref="Close"/> so the portraits live exactly as long as they are on
-    /// screen. The worn companion is deliberately outside that bargain — see
+    /// Screens showing the whole roster take a hold through <see cref="Open"/> and dispose it
+    /// when they go, so the portraits live exactly as long as somebody is drawing them. The
+    /// worn companion is deliberately outside that bargain — see
     /// <see cref="Profile.WarmWornAvatar"/>.
     /// </para>
     /// </summary>
@@ -60,71 +61,60 @@ namespace GlimmerGrove
         static Color Colour(Color c, float alpha) { c.a = alpha; return c; }
 
         /// <summary>
-        /// Loads every portrait into the companion scope, then calls back so the screen
-        /// can redraw with the art in hand.
-        ///
-        /// The callback is the whole point: the load is asynchronous, a screen is built
-        /// in the same frame it is asked for, and without a repaint the first paint is
-        /// the only one — which is exactly how a picker ends up showing blanks for
-        /// every companion but the one the boot preload happened to warm.
-        /// </summary>
-        public static void OpenAsync(Action onReady = null)
-        {
-            if (AssetLibrary.IsScopeLoaded(AssetLibrary.CompanionScope))
-            {
-                onReady?.Invoke();
-                return;
-            }
-
-            Load(onReady);
-        }
-
-        static async void Load(Action onReady)
-        {
-            try
-            {
-                await AssetLibrary.EnsureScopeAsync(AssetLibrary.CompanionScope,
-                                                    AssetManifest.CompanionAssets(AvatarCatalog.All));
-                onReady?.Invoke();
-            }
-            catch (Exception e)
-            {
-                // async void swallows exceptions; a roster that failed to load must not
-                // vanish silently.
-                Debug.LogException(e);
-            }
-        }
-
-        /// <summary>Drops the roster's portraits. The worn one is global and survives.</summary>
-        public static void Close() => AssetLibrary.ReleaseScope(AssetLibrary.CompanionScope);
-
-        /// <summary>
-        /// Drops the roster's portraits unless the screen that just took over draws them too.
+        /// Takes a hold on every portrait in the roster. Dispose it when the screen goes.
         ///
         /// <para>
-        /// <c>HomesteadArt.CloseUnlessWanted</c>'s rule, brought here because the roster
-        /// stopped belonging to one part of the game: the grove's shop sells companions now, so
-        /// the panel that offers one can be raised from the profile or from the village and
-        /// must not free portraits either of them is still drawing. <c>Destroy</c> lands at the
-        /// end of the frame, so a leaving screen's <c>OnDestroy</c> runs <em>after</em> the
-        /// incoming one has painted — which is why an unconditional close leaves a fully drawn
-        /// screen with no art and nothing to repaint it.
+        /// <b>A hold rather than a named scope, and the marker interface is gone with it.</b>
+        /// Three screens draw the roster and any of them can hand over to any other, so a
+        /// leaving screen used to ask "does the one replacing me draw these too?" by reading
+        /// <c>Flow.Current</c> against an <c>IDrawsCompanionArt</c> marker — a question that has
+        /// to be re-answered every time a screen is added, and that was wrong twice. Counting
+        /// answers it for every pair at once, including pairs nobody has written yet: the
+        /// incoming screen has already taken its hold by the time the outgoing one lets go.
+        /// </para>
+        /// <para>
+        /// The caller repaints from <paramref name="onReady"/>, which is the whole point of the
+        /// shape: the load is asynchronous, a screen is built in the frame it is asked for, and
+        /// without a repaint the first paint is the only one — exactly how a picker ends up
+        /// showing blanks for every companion but the one the boot preload happened to warm.
         /// </para>
         /// </summary>
-        public static void CloseUnlessWanted()
-        {
-            if (Flow.Current is IDrawsCompanionArt) return;
+        public static AssetHold Open(MonoBehaviour host, Action onReady = null)
+            => Take("companions", AssetManifest.CompanionAssets(AvatarCatalog.All), host, onReady);
 
-            Close();
+        /// <summary>
+        /// A hold on <em>one</em> companion's portrait, for a panel that draws exactly one.
+        ///
+        /// <para>
+        /// The reveal and the unlock panels used to open the whole roster to draw a single face
+        /// — thirty portraits for one, on a panel that can be raised over any screen in the
+        /// game. Nothing about a hold made that necessary; it was the only shape the named scope
+        /// offered, because a scope was all-or-nothing and a second one asking for less would
+        /// have replaced the first.
+        /// </para>
+        /// </summary>
+        public static AssetHold OpenOne(MonoBehaviour host, AvatarDefinition avatar,
+                                        Action onReady = null)
+            => Take("companion", AssetManifest.CompanionAssets(new[] { avatar }), host, onReady);
+
+        static AssetHold Take(string name, System.Collections.Generic.List<AssetRequest> requests,
+                              MonoBehaviour host, Action onReady)
+        {
+            var hold = AssetLibrary.Hold(name);
+
+            Fire.AndForget(
+                async () =>
+                {
+                    await hold.LoadAsync(requests);
+
+                    // The host can be gone: these panels are raised over screens the player is
+                    // free to leave, and a callback into a destroyed object is a null reference
+                    // in whichever field it touches first.
+                    if (host != null) onReady?.Invoke();
+                },
+                "CompanionArt." + name);
+
+            return hold;
         }
     }
-
-    /// <summary>
-    /// Declared by any screen that draws companion portraits from the roster's scope.
-    ///
-    /// Read by <see cref="CompanionArt.CloseUnlessWanted"/>. Adding a fourth such screen means
-    /// adding this and nothing else — which is the point, because the alternative is a check
-    /// each screen has to remember and this project has watched the third one forget twice.
-    /// </summary>
-    public interface IDrawsCompanionArt { }
 }

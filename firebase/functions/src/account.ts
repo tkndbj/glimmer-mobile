@@ -62,7 +62,7 @@ import { getFirestore, Firestore, Transaction } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 
 import { PATHS } from "./config";
-import { GROVE_PATHS, BOARD_ROWS } from "./grove";
+import { GROVE_PATHS, BOARD_ROWS, BOARD_IDS } from "./grove";
 import { NAME_PATHS, NameDoc, heldName, isDenied } from "./names";
 import { REPORT_PATHS } from "./reports";
 
@@ -76,9 +76,6 @@ import { REPORT_PATHS } from "./reports";
  * cope with an absent one is a reader somebody will forget to write.
  */
 export const TOMBSTONE_UID = "__deleted__";
-
-/** Every board `rebuildGroveRanks` publishes. Mirrored here so the scrub can name them. */
-const BOARD_IDS = ["global", ...Array.from({ length: 9 }, (_, i) => `l${i}`)];
 
 /** What one deletion actually did. Every field is a fact, so a support case is answerable. */
 export interface DeletionReport {

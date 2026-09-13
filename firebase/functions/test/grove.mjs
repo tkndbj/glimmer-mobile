@@ -35,7 +35,7 @@ if (!existsSync(compiled)) {
 const {
   groveWorth, keeperLevel, leagueOf, starsFor,
   sanitiseName, isNameAllowed, publicName, boardName, fallbackName,
-  summarise, deciles, optedIn, saveRevision,
+  BOARD_IDS, deciles, optedIn, saveRevision,
 } = await import(pathToFileURL(compiled).href);
 
 const namesModule = join(REPO, "firebase", "functions", "lib", "names.js");
@@ -71,10 +71,17 @@ function groveConfig() {
   const pieces = {};
   const bundles = {};
   const dwellings = {};
+  const dwellingLevels = {};
   for (const piece of catalog.pieces) {
     if ((piece.cost ?? 0) > 0) pieces[piece.id] = piece.cost;
     if ((piece.cost ?? 0) > 0 && (piece.bundle ?? 1) > 1) bundles[piece.id] = piece.bundle;
-    if (piece.kind === "dwelling") dwellings[piece.id] = piece.tier ?? 0;
+    if (piece.kind === "dwelling") {
+      dwellings[piece.id] = piece.tier ?? 0;
+      // Written only when there is a gate, which is what `seed-config.mjs` publishes and what
+      // keeps the field additive — an absent entry means ungated in both directions.
+      const gate = Math.floor(piece.requiresKeeperLevel ?? 0);
+      if (gate > 0) dwellingLevels[piece.id] = gate;
+    }
   }
 
   const regions = {};
@@ -89,7 +96,10 @@ function groveConfig() {
     }
   }
 
-  return { version: 1, pieces, bundles, regions, companions, dwellings, stars: catalog.score.stars };
+  return {
+    version: 1, pieces, bundles, regions, companions, dwellings, dwellingLevels,
+    stars: catalog.score.stars,
+  };
 }
 
 // ------------------------------------------------------------------- grove worth
@@ -332,30 +342,15 @@ console.log("\nopting out");
 // ---------------------------------------------------------------------- the boards
 console.log("\nranking");
 {
-  const grove = (uid, score, stars) => ({ uid, name: uid, avatar: "", level: 1, score, stars,
-                                          league: leagueOf(stars) });
+  // `summarise` is gone, and with it the test that drove it. Boards are a query now
+  // (`orderBy("score","desc").limit(100)`) and populations are a `count()`, because the top
+  // hundred of a bounded sample stopped being the top hundred the day this game had more
+  // than RANK_SAMPLE_SIZE published groves. Neither can be exercised without Firestore, so
+  // what is pinned here is everything around them that still can be — and the writability
+  // check below is the one that has already cost a live run.
 
-  const sample = [
-    grove("a", 50000, 3), grove("b", 100, 0), grove("c", 9000, 2),
-    grove("d", 0, 0), grove("e", 9000, 2),
-  ];
-
-  const { boards, distribution, population } = summarise(sample);
-
-  equal("a grove worth nothing is not ranked", distribution.samples, 4);
-  equal("the global board leads with the best", boards.global[0].uid, "a");
-  equal("the global board holds everybody scored", boards.global.length, 4);
-  equal("a league board holds only its own", boards.l2.length, 2);
-  equal("league populations are counted", population.l2, 2);
-  equal("an empty league is absent rather than zero", population.l5, undefined);
-
-  // Ties break on uid so two runs over the same population produce the same board. A sort
-  // that left them in fetch order would reshuffle equal groves every day, and a player
-  // would watch themselves swap places with a stranger for no reason.
-  equal("ties break on account id", boards.l2[0].uid, "c");
-
-  // Deciles of a known list, so the shape of the distribution is pinned rather than
-  // assumed. Nearest-rank, the definition stats.ts already uses.
+  // Deciles of a known list, so the shape of the distribution is pinned rather than assumed.
+  // Nearest-rank, the definition stats.ts already uses.
   const ten = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
   equal("nine deciles", deciles(ten).length, 9);
   equal("the first decile is the tenth value", deciles(ten)[0], 10);
@@ -363,24 +358,35 @@ console.log("\nranking");
 
   equal("an empty list has no deciles", JSON.stringify(deciles([])), "[]");
 
-  const none = summarise([]);
-  equal("an empty population ranks nobody", none.distribution.samples, 0);
-  equal("and still produces a global board", none.boards.global.length, 0);
-
   // The assertion that was missing, and it cost a live run: the old test checked the sample
   // count and never that the result could be *written*. `deciles([])` returned nine
   // `undefined`s, Firestore refuses those as document values, and the job threw after it had
   // already published ten board documents — leaving the boards up and the distribution
   // absent, which is precisely the state the feature's first day is in. Anything a scheduled
   // job writes has to be checked for writability, not only for arithmetic.
-  check("every value the ranks document carries is writable", writable(none.distribution),
-        JSON.stringify(none.distribution));
+  const empty = { samples: 0, deciles: deciles([]) };
+  check("every value the ranks document carries is writable", writable(empty),
+        JSON.stringify(empty));
   check("every value a board document carries is writable",
-        writable({ entries: none.boards.global, population: 0, builtUnix: 0 }));
+        writable({ entries: [], population: 0, builtUnix: 0 }));
 
-  const one = summarise([grove("z", 4200, 1)]);
-  equal("a population of one still produces nine deciles", one.distribution.deciles.length, 9);
-  check("and they are writable", writable(one.distribution));
+  const one = { samples: 1, deciles: deciles([4200]) };
+  equal("a population of one still produces nine deciles", one.deciles.length, 9);
+  check("and they are writable", writable(one));
+
+  // Every board the job publishes, and there is now exactly one list of them. `account.ts`
+  // imports this rather than mirroring it, which is invariant 27's business rather than
+  // tidiness: a board the deletion scrub cannot name is a board a deleted keeper's name
+  // survives on, where a stranger can read it.
+  equal("a board per league, and the global one", BOARD_IDS.length, 10);
+  equal("the global board is named first", BOARD_IDS[0], "global");
+  equal("every league has a board", BOARD_IDS.filter((id) => id !== "global").join(","),
+        Array.from({ length: 9 }, (_, i) => leagueOf(i)).join(","));
+
+  // A league id is what the board query selects on, so a star rating that folded to an id
+  // outside this list would be a keeper who is on no board at all.
+  check("every reachable star rating names a board this job writes",
+        [0, 1, 5, 8, 9, 40, -3].every((stars) => BOARD_IDS.includes(leagueOf(stars))));
 }
 
 /** True when nothing in this value is undefined — what Firestore actually demands. */

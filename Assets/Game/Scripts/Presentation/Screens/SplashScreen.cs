@@ -173,11 +173,12 @@ namespace GlimmerGrove
             // launch that looks dim for a moment and one that flashes white.
             UIKit.Img("Sky", Content, Art.Gradient(SkyJoin, SkyMid, SkyTop, 256), Color.white);
 
-            // Claimed before it is fetched, so the synchronous load lands in this screen's own
-            // scope rather than in the global cache — see AssetLibrary.Claim. Without it a
+            // Claimed before it is fetched, so the synchronous load lands in something this
+            // screen holds rather than in the global set — see AssetHold.Claim. Without it a
             // full-screen texture stays resident for the life of the process, for a screen
             // nobody sees twice.
-            AssetLibrary.Claim(AssetLibrary.SplashScope, AssetManifest.SplashBackdrop);
+            _art = AssetLibrary.Hold("splash");
+            _art.Claim(AssetManifest.SplashBackdrop);
 
             var sprite = AssetLibrary.Sprite(AssetManifest.SplashBackdrop);
             if (sprite == null) return;
@@ -312,10 +313,12 @@ namespace GlimmerGrove
         /// also the one whose art would otherwise sit in memory for the whole session. Both
         /// halves of it go here: the decoder, and the scope holding the picture.
         /// </summary>
+        AssetHold _art;
+
         void OnDestroy()
         {
             ReleaseVideo();
-            AssetLibrary.ReleaseScope(AssetLibrary.SplashScope);
+            _art?.Dispose();
         }
 
         // ------------------------------------------------------------------- bar

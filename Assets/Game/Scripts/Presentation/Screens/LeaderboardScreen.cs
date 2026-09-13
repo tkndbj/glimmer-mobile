@@ -1,3 +1,4 @@
+using GlimmerGrove.AssetPipeline;
 using System.Collections.Generic;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
@@ -34,9 +35,12 @@ namespace GlimmerGrove
     /// the feature is broken.
     /// </para>
     /// </summary>
-    public sealed class LeaderboardScreen : View, IDrawsCompanionArt
+    public sealed class LeaderboardScreen : View
     {
         public override string Track => "mus_menu";
+
+        /// <summary>The roster's portraits, kept alive for exactly as long as this screen is.</summary>
+        AssetHold _portraits;
 
         /// <summary>
         /// Everything above the list: the banner, the two tabs and the board caption. It was
@@ -83,7 +87,7 @@ namespace GlimmerGrove
 
             // Portraits, for the row avatars. Arriving from the profile or the roster the
             // scope is usually warm and this repaints immediately.
-            CompanionArt.OpenAsync(() => { if (this) Repaint(); });
+            _portraits = CompanionArt.Open(this, () => { if (Living) Repaint(); });
 
             // Asked for on arrival rather than at boot, so a player who never opens this
             // screen never pays for the read. Nothing here draws it any more — the profile is
@@ -100,8 +104,7 @@ namespace GlimmerGrove
         {
             GroveBoard.Published -= OnPublished;
 
-            if (Flow.Current is ProfileScreen || Flow.Current is CompanionScreen) return;
-            CompanionArt.CloseUnlessWanted();
+            _portraits?.Dispose();
         }
 
         /// <summary>Opens straight onto a particular board. Used by nothing yet; kept for a deep link.</summary>
@@ -221,7 +224,7 @@ namespace GlimmerGrove
             _empty.horizontalOverflow = HorizontalWrapMode.Wrap;
         }
 
-        async void Fetch()
+        void Fetch() => Run(async token =>
         {
             if (_fetching) return;
 
@@ -229,10 +232,10 @@ namespace GlimmerGrove
             _failed = false;
             PaintEmpty();
 
-            var (result, board) = await GroveBoard.FetchBoardAsync(_boardId);
+            var (result, board) = await GroveBoard.FetchBoardAsync(_boardId, token);
 
             _fetching = false;
-            if (!this) return;                       // the screen went away while we waited
+            if (!Living) return;                     // the screen went away while we waited
 
             _failed = !result.Ok;
             _board = board ?? LeaderboardBoard.None;
@@ -241,7 +244,7 @@ namespace GlimmerGrove
             // GridView exists to keep, and the reason the shop stopped flickering.
             _grid?.Show(_board.Entries.Count);
             PaintEmpty();
-        }
+        });
 
         void OnPublished()
         {

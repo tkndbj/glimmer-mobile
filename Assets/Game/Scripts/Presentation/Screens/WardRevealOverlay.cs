@@ -101,7 +101,7 @@ namespace GlimmerGrove
         const float VignetteAlpha = .70f, FanAlpha = .32f, Fan2Alpha = .22f, GlowAlpha = .44f;
 
         /// <summary>
-        /// Its own scope, never <c>AssetLibrary.LineScope</c> — <see cref="WardFiringStage"/>'s
+        /// Its own hold, never the board's — <see cref="WardFiringStage"/>'s
         /// rule, and its reason: a live board's four turrets must not be released because a
         /// celebration closed.
         /// </summary>

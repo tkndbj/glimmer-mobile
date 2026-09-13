@@ -406,8 +406,28 @@ namespace GlimmerGrove
         /// </summary>
         void Chain(int depth)
         {
+            // **The hill holds one wide caption at a time, and whichever is already standing
+            // keeps it.** This banner and the forecast band are the only two, and neither is
+            // small: the forecast is 2.95 cells tall and this 1.9, against a hill that is 6.15
+            // cells on a 19.5:9 phone and 3.54 on the sheet the render draws — so unlike the
+            // wave banner (`SiegeView.Captions`) there is no arrangement that stacks them, and
+            // they were sharing a row on every shape with this landing squarely on the
+            // countdown. A breather is exactly when a player keeps matching, so it is not a rare
+            // pairing.
+            //
+            // Held rather than resolved by priority, because priority would have to be wrong one
+            // way or the other: a countdown that blinks out mid-count reads as broken, and a
+            // banner that appears half way through its own life reads as a glitch. `Foretell`
+            // asks the mirror of this question and the pair of them is the whole rule. **What is
+            // never given up is the sound** — the news still arrives.
+            if (_forecastGroup != null && _forecastGroup.alpha > .05f)
+            {
+                Audio.Sfx("chime", .35f, Mathf.Min(1.6f, .9f + depth * .12f));
+                return;
+            }
+
             var heat = ChainHeat(depth);
-            float y = _lineY + Cell * 2.35f;
+            float y = Caption.Chain;
 
             if (_chain == null)
             {
@@ -419,7 +439,7 @@ namespace GlimmerGrove
                 _chainAura.raycastTarget = false;
 
                 _chain = UIKit.Titled("Text", host, "", 24, heat, TextAnchor.MiddleCenter,
-                                      new Vector2(Span.x, Cell * 1.6f), default, default,
+                                      new Vector2(Span.x, Cell * ChainBox), default, default,
                                       Cell * .07f, Cell * .07f);
             }
 
@@ -464,7 +484,7 @@ namespace GlimmerGrove
 
                 if (aura) aura.color = Under(fade);
 
-                group.anchoredPosition = new Vector2(0f, y + Cell * .3f * k);
+                group.anchoredPosition = new Vector2(0f, y + Cell * ChainDrift * k);
             }, banner, "fade").OnDone(() =>
             {
                 if (group) Destroy(group.gameObject);

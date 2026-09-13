@@ -1942,6 +1942,27 @@ namespace GlimmerGrove.Content
         /// <summary>A glade whose clear earns this piece, or empty.</summary>
         public string requiresLevel;
 
+        /// <summary>
+        /// The keeper level that opens this rung of the home ladder, or 0 for none.
+        ///
+        /// <para>
+        /// <b>Dwellings only, and the reader refuses it anywhere else.</b> Decor is earned by
+        /// clearing a named thing, which a player can go and do; a level gate on a bench would
+        /// be a wait with nothing to aim at, so <c>HomesteadPiece.RequiresKeeperLevel</c> has
+        /// said for a year that this is not authorable. A home is the exception and the reason
+        /// is that it is the one purchase the whole grove is composed around: the ladder is
+        /// meant to take years, and a rung a new keeper can buy the day they open the shop is a
+        /// rung that was never a goal.
+        /// </para>
+        /// <para>
+        /// <b>It is permission to pay, never a route of its own</b> — invariant 15a, which
+        /// companions learned the hard way: if reaching the gate handed the home over, the
+        /// price would be unreachable code. So a gated rung must also be priced, and the build
+        /// gate refuses one that is not rather than shipping a home nobody can ever hold.
+        /// </para>
+        /// </summary>
+        public int requiresKeeperLevel;
+
         /// <summary>A chapter whose completion earns this piece, or empty.</summary>
         public string requiresChapter;
 

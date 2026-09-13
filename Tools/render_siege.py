@@ -536,6 +536,49 @@ def damage(sheet, cx, cy, total, weak, cell):
     sheet.alpha_composite(layer)
 
 
+#: `SiegeView.Captions` - the hill's two captions, as cells above the ward line. Both are
+#: measured from the *same* anchor, which is the whole of that class: they were a cell apart on
+#: paper and shared about 1.4 cells of row on every screen shape, because one was measured from
+#: the ward line and the other from the hill's foot and those two move apart as the board changes
+#: shape. This picture could not see it, because it drew the chain and never the wave banner.
+CHAIN_RISE, CHAIN_BOX, CHAIN_DRIFT = 2.35, 1.25, 0.30
+WAVE_BOX, WAVE_SWELL, WAVE_FLOAT = 0.90, 1.6, 0.80
+CAPTION_CLEAR = 0.22
+
+
+def captions(line_y, cell):
+    """Where the chain banner and the wave banner sit. `SiegeView.Captions.Of`."""
+    chain = line_y + CHAIN_RISE * cell
+    chain_high = chain + (CHAIN_BOX / 2 + CHAIN_DRIFT) * cell
+    half = WAVE_BOX * WAVE_SWELL / 2 * cell
+
+    return chain, chain_high + CAPTION_CLEAR * cell + half
+
+
+def wave_banner(sheet, cx, cy, text, cell, fill=(242, 236, 220, 255), swell=1.0):
+    """`SiegeView.Arrival` - what the hill says when a wave walks on.
+
+    **Drawn beside the chain banner rather than alone**, because the one thing a picture is needed
+    for here is whether the two share a row - and a cascade during a wave's arrival is ordinary.
+    """
+    font = face(int(cell * 0.46 * swell))
+    if font is None:
+        return
+
+    layer = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(layer)
+    ring = max(2, int(cell * 0.05))
+
+    for dx in range(-ring, ring + 1):
+        for dy in range(-ring, ring + 1):
+            if dx * dx + dy * dy > ring * ring:
+                continue
+            pen.text((cx + dx, cy + dy), text, font=font, fill=(23, 36, 51, 250), anchor="mm")
+
+    pen.text((cx, cy), text, font=font, fill=fill, anchor="mm")
+    sheet.alpha_composite(layer)
+
+
 def banner(sheet, cx, cy, depth, cell, span):
     """`SiegeView.Chain` - a cascade announced over the ward line.
 
@@ -1028,6 +1071,16 @@ def lane_x(span, lane):
 COG_NUDGE = 0.26
 
 
+#: `SiegeView.BossKey` through `loc/en.json` - what each boss is announced as, on the banner when
+#: it walks on and on the forecast that warns it is coming.
+BOSS_BANNER = {
+    "blightcaller": "THE BLIGHTCALLER",
+    "warlord": "THE WARLORD",
+    "warbringer": "THE WARBRINGER",
+    "overlord": "THE OVERLORD",
+}
+
+
 def foretell(sheet, lay, wave, span, cell, hill_top, hill_foot, at):
     """`SiegeView.Foretell` - the forecast band, drawn on the hill during a breather.
 
@@ -1048,15 +1101,29 @@ def foretell(sheet, lay, wave, span, cell, hill_top, hill_foot, at):
     most = max(owed.values()) if owed else 1
     seats = list(lay.wards)
 
-    mid = (hill_top + hill_foot) / 2
-    cx, cy = at(0, mid + cell * 0.85)
+    # **A boss wave is announced as itself and the gem row comes off.** The forecast's whole job is
+    # to say which colour to bank, and the answer before a boss is not a colour - it is *that a
+    # boss is coming*. Reported from play as confusing: a blightcaller and a warbringer ride the
+    # head of their last authored wave (37ad), so the row really did have counts to show, and they
+    # were the wrong news.
+    kinds = [k for _, k in sent if k in BOSSES]
+    if not kinds and not lay.endless and lay.boss_wave >= 0:
+        kinds = [lay.boss_kind]
 
-    write(sheet, draw_on, "NEXT WAVE", face(int(cell * 0.34)), cx, cy, (242, 236, 220, 255))
+    facing = kinds[0] if kinds else None
+
+    mid = (hill_top + hill_foot) / 2
+    cx, cy = at(0, mid + (cell * 0.2 if facing else cell * 0.85))
+
+    write(sheet, draw_on,
+          BOSS_BANNER.get(facing, "THE WARLORD") if facing else "NEXT WAVE",
+          face(int(cell * (0.52 if facing else 0.34))), cx, cy,
+          BOSSES[facing]["fire"] + (255,) if facing else (242, 236, 220, 255))
 
     step = cell * 1.35
     first = -(len(seats) - 1) * step / 2
 
-    for i, ward in enumerate(seats):
+    for i, ward in enumerate(() if facing else seats):
         many = owed.get(ward, 0)
         size = cell * (0.54 + (many / most) * 0.30) if most else cell * 0.54
 
@@ -1077,7 +1144,7 @@ def foretell(sheet, lay, wave, span, cell, hill_top, hill_foot, at):
     # places is a readout nobody can use.
     sx, sy = at(0, mid - cell * 1.4)
     write(sheet, draw_on, str(int(siege_breather())), face(int(cell * 0.54)), sx, sy,
-          (255, 199, 92, 255))
+          BOSSES[facing]["fire"] + (255,) if facing else (255, 199, 92, 255))
 
 
 def siege_breather():
@@ -1423,10 +1490,28 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
             # kind of number rather than as a bigger one.
             damage(sheet, tx, ty - cell * 0.7, (14, 6, 22, 8)[i % 4], i % 2 == 0, cell)
 
-    # The chain banner, over the ward line where the view now puts it.
-    if bolts:
-        bx, by = at(0, line_y + cell * 2.35)
+    # **Both of the hill's captions, together, because apart they say nothing.** Each was
+    # individually well placed and the pair overlapped on every shape; drawing only the chain is
+    # what let that ship. A cascade while a wave walks on is ordinary, so this is the real worst
+    # case rather than a contrived one.
+    # **And never with the forecast**, which is the rule `SiegeView.Chain` and `Foretell` make
+    # between them: the hill holds one wide caption at a time and whichever is already standing
+    # keeps it. Drawing all three at once would be a mirror showing a screen the game cannot
+    # produce, which is worse than drawing none of them (44d).
+    if bolts and not forecast:
+        chain_y, wave_y = captions(line_y, cell)
+
+        bx, by = at(0, chain_y)
         banner(sheet, bx, by, 3, cell, span[0])
+
+        boss_here = [k for _, k in coming(lay, wave) if k in BOSSES]
+        wx, wy = at(0, wave_y)
+
+        if boss_here:
+            wave_banner(sheet, wx, wy, BOSS_BANNER.get(boss_here[0], "THE WARLORD"), cell,
+                        BOSSES[boss_here[0]]["fire"] + (255,), WAVE_SWELL * 0.78 / 0.46)
+        else:
+            wave_banner(sheet, wx, wy, "WAVE %d OF %d" % (wave, max(wave, len(lay.waves))), cell)
 
     # ------------------------------------------------------------------ the field
     cx, cy = at(0, gem_centre)
@@ -1671,8 +1756,17 @@ BAR_H, READOUTS_Y, ROW_H = 210, 186, 88
 VALUE_Y, CAPTION_Y, VALUE_PT, CAPTION_PT = 14, -29, 56, 22
 SLOT_W, TRIPLE_STEP, KEY_REACH, KEY_SIZE = 220, 250, 161, 118
 
+#: `RunScreen`'s level tag, beside the way back: the air after the key, its box, and its type.
+#:
+#: **It is drawn here for the same reason the readouts are.** The tag has no horizontal room at
+#: all - a row of two reaches within forty units of where it ends and a row of three runs through
+#: it - so what keeps them apart is that the tag is short and hangs from the key's own centre,
+#: and whether that reads is a picture's question rather than a number's. `RunHeaderTests` holds
+#: the arithmetic; this says whether a run's number looks like it belongs in the corner.
+TAG_GAP, TAG_W, TAG_H, TAG_PT, KEY_Y = 14, 250, 46, 34, -4
 
-def header(sheet, readouts):
+
+def header(sheet, readouts, level=None):
     """`ModeScreen.BuildHeader` and `BuildReadouts`, at the size a phone draws them.
 
     <p>Only what can collide: the shade, the two keys where they really sit, and the row of
@@ -1689,7 +1783,7 @@ def header(sheet, readouts):
 
     # The two corner keys, 118 square with their centres 102 in from each edge.
     for cx in (102, CANVAS[0] - 102):
-        cy = BAR_H / 2 + 4
+        cy = BAR_H / 2 - KEY_Y
         draw_on.rounded_rectangle([cx - KEY_SIZE / 2, cy - KEY_SIZE / 2,
                                    cx + KEY_SIZE / 2, cy + KEY_SIZE / 2],
                                   radius=26, fill=(38, 58, 96, 255), outline=(96, 130, 190, 255),
@@ -1699,6 +1793,17 @@ def header(sheet, readouts):
     # it to be eyeballed.
     for x in (KEY_REACH, CANVAS[0] - KEY_REACH):
         draw_on.line([(x, 0), (x, BAR_H + drop)], fill=(240, 90, 90, 90), width=2)
+
+    # The level's number, beside the way back and level with it. Its box is drawn as well as
+    # its words, because what is being judged is whether it clears the row under it.
+    if level is not None:
+        cy = BAR_H / 2 - KEY_Y
+        left = KEY_REACH + TAG_GAP
+        draw_on.rectangle([left, cy - TAG_H / 2, left + TAG_W, cy + TAG_H / 2],
+                          outline=(120, 200, 255, 70))
+        font = face(TAG_PT)
+        write(sheet, draw_on, level, font,
+              left + draw_on.textlength(level, font=font) / 2, cy, (242, 236, 220, 209))
 
     n = len(readouts)
     for i, (value, caption) in enumerate(readouts):
@@ -1928,6 +2033,9 @@ def main():
                          "bringing, by colour. The one readout that turns 'which colour is "
                          "coming' from a parse into a glance, and nothing but a picture can say "
                          "whether it does")
+    ap.add_argument("--level-tag", default="LEVEL 2",
+                    help="what the header's level tag says, beside the way back. Empty leaves "
+                         "it off.")
     ap.add_argument("--no-header", action="store_true",
                     help="leave off the header bar and its readouts, which since the row moved "
                          "up level with the two corner keys is the only picture that says "
@@ -2004,7 +2112,7 @@ def main():
             # **The siege's own one.** How far through the raid this is, and nothing else: the
             # raiders left and the matches spent both came off the header after a device said so
             # (invariant 37v's rule applied twice more), and a row of one sits in the middle.
-            header(shot, [("3/8", "WAVE")])
+            header(shot, [("3/8", "WAVE")], level=args.level_tag)
         shots.append((lv["id"], shot))
 
     pad = 24

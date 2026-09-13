@@ -52,9 +52,6 @@ namespace GlimmerGrove
             _arming = null;
             _aim = null;
 
-            // Hangs off `_wall`, which this rebuild is about to replace - a kept one would be a
-            // destroyed node handed to a lesson as a live one.
-            _wardAnchor = null;
             _meters = null;
             _fuseLayer = null;
             _cogLayer = null;
@@ -70,12 +67,9 @@ namespace GlimmerGrove
 
             _lineBand = line;
 
-            _hillTop = h * .5f - Cell * .35f;
-            _hillFoot = h * (.5f - hill);
-            // The wards stand *high* on the line, so their heads break into the grass rather
-            // than tucking under the field's plate. A render is why: at the middle of the band
-            // they were half-hidden behind the plate and read as small.
-            _lineY = _hillFoot - h * line * .30f;
+            _hillTop = bands.HillTop;
+            _hillFoot = bands.HillFoot;
+            _lineY = bands.LineY;
             _gemCentre = (h * (.5f - hill - line) - h * .5f) * .5f;
 
             _hill = Layer("Hill");
@@ -403,12 +397,20 @@ namespace GlimmerGrove
 
                 // Hung off the turret rather than off the glyph, so it is not scaled by the
                 // glyph's own pulse - a number that breathes is a number that is hard to read.
+                var pipAt = new Vector2(Cell * ChargeSize * .54f,
+                                        ChargeY + Cell * ChargeSize * .48f);
+
+                post.Pip = UIKit.Img("Pip", post.Node, Art.Disc(64), new Color(.05f, .09f, .16f, 1f),
+                                     new Vector2(Cell * .36f, Cell * .36f));
+                post.Pip.raycastTarget = false;
+                post.Pip.rectTransform.anchoredPosition = pipAt;
+                post.Pip.enabled = false;
+
                 post.Held = UIKit.Label("Held", post.Node, string.Empty,
-                                        Mathf.RoundToInt(Cell * .3f), Pal.Cream,
+                                        Mathf.RoundToInt(Cell * .27f), Pal.Cream,
                                         TextAnchor.MiddleCenter,
-                                        new Vector2(Cell * .44f, Cell * .44f));
-                post.Held.rectTransform.anchoredPosition =
-                    new Vector2(Cell * ChargeSize * .52f, ChargeY + Cell * ChargeSize * .46f);
+                                        new Vector2(Cell * .36f, Cell * .36f));
+                post.Held.rectTransform.anchoredPosition = pipAt;
                 post.Held.enabled = false;
 
                 Badge(post, ward);

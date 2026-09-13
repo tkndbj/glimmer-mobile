@@ -7,7 +7,8 @@
         "GlimmerGrove.Ads",
         "GlimmerGrove.Iap",
         "UnityEngine.UI",
-        "GlimmerGrove.Privacy"
+        "GlimmerGrove.Privacy",
+        "GlimmerGrove.Telemetry"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

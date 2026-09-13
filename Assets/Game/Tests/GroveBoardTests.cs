@@ -258,6 +258,26 @@ namespace GlimmerGrove.Tests
                     return piece.Cost <= 0 && _level >= piece.RequiresKeeperLevel;
                 }
 
+                // <b>A home is an entitlement, so it is never <c>IsStocked</c> — and a v20
+                // save writes it into <c>homesteadStock</c> regardless.</b> That is where the
+                // server finds it (<c>grove.ts</c> reads the stock rows and then applies
+                // <c>dwellingLevels</c>), so a double that looked only in <c>_pieces</c>
+                // answered false for every dwelling a stock-shaped case named, and
+                // <c>GroveScore.Value</c> was handed a grove with no home in it.
+                //
+                // It cost the one piece in the catalog that carries a gate, which is the one
+                // worth pinning: the client draws a grove's worth over the player's own grove
+                // and the server puts it beside their name on a board (invariant 19a), so a
+                // home counted by one and not the other is two numbers for one grove.
+                //
+                // The gate is asked here rather than in GroveScore.Value for that method's
+                // stated reason: which pieces count is a fact about the catalog, and whether
+                // this player holds one is the half the two sides answer with different
+                // evidence. Mirrors the server's `level >= dwellingLevels[id]`.
+                if (piece.IsDwelling)
+                    return (_stock.ContainsKey(piece.Id) || _pieces.Contains(piece.Id))
+                           && _level >= piece.RequiresKeeperLevel;
+
                 if (_stock.Count > 0 && piece.IsStocked)
                     return _stock.ContainsKey(piece.Id);
 

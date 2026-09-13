@@ -51,7 +51,12 @@ PLATEW, PLATEH = CELLW - PLATE_X, CELLH - PLATE_Y
 ART, ART_DROP = 300.0, 168.0
 AMOUNT_RISE, SUB_RISE, FACE_RISE = 196.0, 150.0, 74.0
 FACEW, FACEH = CELLW - 110.0, 96.0
-SEAL, SEAL_DISC, SEAL_TILT = 164.0, .86, -11.0
+# `SEAL_TILT` carries `ProductCardBadges.SealTilt`'s **own sign**, and is rotated by without
+# negation: PIL turns a picture anticlockwise for a positive angle and so does
+# `Quaternion.Euler(0, 0, z)`, so the two agree as written. It was stored negated and
+# negated again at the call, which drew the right badge for the wrong reason — the trap
+# invariant 37aj names, where a mirror re-derives a sign in an axis that runs the other way.
+SEAL, SEAL_DISC, SEAL_TILT = 164.0, .86, -9.0
 RIBBONW, RIBBONH, RIBBON_INSET, RIBBON_DROP = 268.0, 76.0, 96.0, 34.0
 RIBBON_TILT = 6.0
 CLEARANCE, MARGIN = 10.0, 6.0
@@ -112,9 +117,14 @@ def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, l
 
     if badge:
         seal = K.tint(K.fit(K.load("Hud/burst")[0], (SEAL, SEAL)), K.ROSE)
-        seal = seal.rotate(-SEAL_TILT, Image.BICUBIC, expand=True)
+        # The caption is a *child* of the seal on the screen, so it turns with it. Drawn flat
+        # here it said the badge was upright however far the disc had been leant over, which
+        # is the one thing this picture is being asked about.
+        face = Image.new("RGBA", (int(SEAL), int(SEAL)), (0, 0, 0, 0))
+        K.text(face, badge, SEAL / 2, SEAL / 2, 22, outline=2)
+        seal.alpha_composite(face)
+        seal = seal.rotate(SEAL_TILT, Image.BICUBIC, expand=True)
         K.paste(sheet, seal, plate_cx + PLATEW / 2 - SEAL_INSET, ptop + SEAL_DROP)
-        K.text(sheet, badge, plate_cx + PLATEW / 2 - SEAL_INSET, ptop + SEAL_DROP, 22, outline=2)
 
 
 # --------------------------------------------------------------------------- the screen

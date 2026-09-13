@@ -11267,11 +11267,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/Wards/ember_g_fire
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 634b89fcabcab04ec1ea1e25d7a7a3cb
-    m_Address: Art/Map/boat
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6353b7d977058113f2d1017989333de1
     m_Address: Audio/Sfx/pop2
     m_ReadOnly: 0

@@ -199,7 +199,7 @@ namespace GlimmerGrove.AssetPipeline
         /// <b>Deliberately not in <see cref="GlobalAssets"/>.</b> That list is what the game
         /// must hold for the whole session; this is a full-screen texture for the one screen
         /// nobody ever returns to, so the launch screen claims it into a scope of its own and
-        /// drops it on the way out (<c>AssetLibrary.SplashScope</c>). It is named here anyway
+        /// drops it on the way out (<c>AssetHold.Claim</c>). It is named here anyway
         /// because this is the one place that knows what the game loads — an address the
         /// manifest does not name is one the audit calls dead weight, and one the build gate
         /// cannot prove resolves.
@@ -314,7 +314,7 @@ namespace GlimmerGrove.AssetPipeline
             "node_open", "node_lock", "node_s0", "node_s1", "node_s2", "node_s3", "pointer",
             "rock_grass", "rock_tall", "rock_wide", "rock_chip", "rock_plain",
             "rock_sand", "rock_palm", "rock_wood", "rock_lumen", "rock_basin",
-            "palm", "boulder", "stump", "boat", "post",
+            "palm", "boulder", "stump", "post",
         };
 
         /// <summary>
@@ -403,7 +403,7 @@ namespace GlimmerGrove.AssetPipeline
         /// Deliberately <em>not</em> part of <see cref="GlobalAssets"/>. A portrait is
         /// about 45 KB, which is nothing until the roster is a hundred strong and every
         /// one of them is decoded at every launch to be looked at on one screen. Loaded
-        /// into <see cref="AssetLibrary.CompanionScope"/> when a roster screen opens and
+        /// into a hold when a roster screen opens and
         /// dropped when it closes, which is the same bargain chapter art makes.
         ///
         /// Derived from the roster, never hand-listed — a companion added by a content
@@ -454,7 +454,7 @@ namespace GlimmerGrove.AssetPipeline
         /// <para>
         /// Residents are included and cost nothing: their art keys point at
         /// <c>Art/Critters/</c>, which <see cref="GlobalAssets"/> already warmed, and
-        /// <see cref="AssetLibrary.EnsureScopeAsync"/> leaves an address that is already
+        /// <see cref="AssetHold.LoadAsync"/> leaves an address that is already
         /// global exactly where it is. Asking for them anyway is what keeps this method a
         /// statement about the catalog rather than a statement about which folder a piece's
         /// art happens to sit in today.
@@ -578,7 +578,7 @@ namespace GlimmerGrove.AssetPipeline
         /// <b>Its own request list rather than a line in <see cref="GroveShelfAssets"/>, which
         /// is where it used to be.</b> A shelf's assets are swapped whenever the shelf changes
         /// and the emblems are not — they belong to the row, which outlives every shelf shown
-        /// in it. See <c>AssetLibrary.HomesteadTabScope</c> for what that cost when the two
+        /// in it. See <c>GroveArtLoader.Tabs</c> for what that cost when the two
         /// shared a lifetime.
         /// </para>
         /// </summary>

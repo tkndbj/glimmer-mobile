@@ -37,6 +37,29 @@ namespace GlimmerGrove
         /// </summary>
         public abstract string Perch { get; }
 
+        /// <summary>
+        /// How far above a node's centre the glade disc stands, so that it sits on
+        /// <see cref="Perch"/>'s own top face.
+        ///
+        /// <para>
+        /// <b>A fact about the tile, never one number for every tile.</b> A perch is fitted
+        /// into a fixed box with its aspect kept, so a sprite that is taller than it is wide
+        /// lands smaller and higher than a squat one: measured on the four shipped tiles, the
+        /// top face's middle sits anywhere from 16 units below a node's centre to 18 above it.
+        /// One offset for all of them therefore plants the disc differently on every mode's
+        /// map — it shipped at 2 for a year, which stood the siege's disc over the front edge
+        /// of its tile and left the disc hanging in the air below the wood's planks. Nothing
+        /// offline can see it, because no gate in this project opens a PNG.
+        /// </para>
+        /// <para>
+        /// Chosen by eye against the real tile (<c>python Tools/render_perch.py --lift N</c>),
+        /// which is the only instrument there is, and abstract rather than defaulted because
+        /// a mode that picks a new tile has to answer this again — a default would be silently
+        /// wrong for exactly the tile nobody has looked at yet.
+        /// </para>
+        /// </summary>
+        public abstract float PerchLift { get; }
+
         /// <summary>The mode's colour: its trail, its switcher row, the wash over its perches.</summary>
         public abstract Color Accent { get; }
 
@@ -90,6 +113,7 @@ namespace GlimmerGrove
 
         /// <summary>Grassy stone: the grove the game opens in and the one everything else is read against.</summary>
         public override string Perch => "rock_grass";
+        public override float PerchLift => 14f;
 
         public override Color Accent => Pal.Gold;
     }
@@ -105,6 +129,13 @@ namespace GlimmerGrove
         /// apart from the weave's ice without relying on colour.
         /// </summary>
         public override string Perch => "rock_basin";
+
+        /// <summary>
+        /// The shallowest lift of the four, and that is the font rather than a rounding: the
+        /// disc is meant to sit <em>in</em> the water, so anything more stands it on the far
+        /// rim and the tile stops reading as concave.
+        /// </summary>
+        public override float PerchLift => 10f;
 
         public override Color Accent => Pal.Ember;
 
@@ -134,6 +165,7 @@ namespace GlimmerGrove
         public override GameMode Mode => GameMode.Prism;
         public override Type Screen => typeof(PrismScreen);
         public override string Perch => "rock_wood";
+        public override float PerchLift => 18f;
         public override Color Accent => Pal.Verdant;
         public override Color Wash => new Color(.90f, 1f, .94f, 1f);
     }
@@ -156,6 +188,7 @@ namespace GlimmerGrove
         public override GameMode Mode => GameMode.Siege;
         public override Type Screen => typeof(SiegeScreen);
         public override string Perch => "rock_sand";
+        public override float PerchLift => 20f;
         public override Color Accent => Pal.Rose;
         public override Color Wash => new Color(1f, .90f, .88f, 1f);
     }

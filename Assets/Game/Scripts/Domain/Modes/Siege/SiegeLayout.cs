@@ -750,8 +750,13 @@ namespace GlimmerGrove.Modes
                     char colour = Coming[w][i].Colour;
                     if (Array.IndexOf(Wards, colour) >= 0) continue;
 
-                    // The boss is the one this really matters for: it has the health of a whole
-                    // wave, so answering it at half rate is a duel nobody can finish.
+                    // **The boss is the one this really matters for, and for a different reason
+                    // than it used to be.** Every ward answers a boss now
+                    // (`SiegeTuning.EveryWardReaches`), so a boss of a colour nobody carries is
+                    // killable — it is the one raider on the hill that always is. What it is not
+                    // is *doubleable*: its colour is what decides where the double lands, so a
+                    // line with no ward wearing it is a duel fought at half rate from the first
+                    // bolt to the last, with nothing anywhere saying so.
                     string what = w == BossWave && i == 0
                                 ? $"a '{colour}' {SiegeTuning.NameOf(BossKind)}"
                                 : "a '" + colour + "' raider";

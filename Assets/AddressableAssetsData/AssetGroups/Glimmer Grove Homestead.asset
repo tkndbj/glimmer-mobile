@@ -197,12 +197,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Homestead/wall_bend
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 18d3902d35216f64782406780cbc3a3e
-    m_Address: Art/Homestead/fence_stone_gate/f0
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_stone_gate
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1b7faa88e44c66c4b85a679d64b8b2de
     m_Address: Art/Homestead/wall_barbican/f0
     m_ReadOnly: 0
@@ -322,12 +316,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Homestead/step_ladder
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 29431e7e9d3a2cf449418119ede4e07e
-    m_Address: Art/Homestead/fence_wood_gate/f0
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_wood_gate
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 294afcaf4e5e305418b94594d93c954c
     m_Address: Art/Homestead/fir/f1
     m_ReadOnly: 0
@@ -339,12 +327,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Homestead/home_citadel
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2a923287b7a36574faef62a1f163d045
-    m_Address: Art/Homestead/fence_stone/f1
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_stone
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2d9c8fbaf5e9b87468d907419b7b8af2
     m_Address: Art/Homestead/crate_produce/f0
@@ -583,12 +565,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Homestead/archery
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4d1ad9d395d651a449870f17a3df3350
-    m_Address: Art/Homestead/fence_wood_gate/f2
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_wood_gate
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4d218346e57b8d14294b81e93c3f647d
     m_Address: Art/Homestead/crate_wares/f1
     m_ReadOnly: 0
@@ -606,12 +582,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Homestead/wall_gate
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5077141c3b538ef4a9e21c2d9724ec7b
-    m_Address: Art/Homestead/fence_stone_gate/f1
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_stone_gate
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 511a72e71ff23904daf93d178970d805
     m_Address: Art/Homestead/church/f0
@@ -814,12 +784,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Homestead/house_small_yellow
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6c49b843f9303394a85a1660a95e7978
-    m_Address: Art/Homestead/fence_stone_gate/f2
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_stone_gate
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6c7e79552fd7c1a43a23dab931421b64
     m_Address: Art/Homestead/target/f1
     m_ReadOnly: 0
@@ -831,12 +795,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Homestead/stage_round
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6d5f975feaf03ce40b4340c4fdd50c8f
-    m_Address: Art/Homestead/fence_wood/f2
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_wood
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6ebb356508b19b2458b031100bfebaae
     m_Address: Art/Homestead/catapult/f2
@@ -927,12 +885,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7708925829fab0a4684f7fe46f0377aa
-    m_Address: Art/Homestead/fence_stone/f2
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_stone
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 77cb3f0fdaa26134f842143c2aff4e32
     m_Address: Art/Homestead/grain_sack/f2
     m_ReadOnly: 0
@@ -978,12 +930,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Homestead/ruin
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7c658cf83d5447046bf5ffffaa15f7be
-    m_Address: Art/Homestead/fence_stone/f0
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_stone
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7ee79256c6a45b8449fb7dbee1106aeb
     m_Address: Art/Homestead/pennant_green/f0
@@ -1079,12 +1025,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Homestead/wall_elbow
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9131ed7fb27c0ae4dbb006b96bdae590
-    m_Address: Art/Homestead/fence_stone/f3
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_stone
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 91605a083399c3c4483e183825500985
     m_Address: Art/Homestead/archery/f1
     m_ReadOnly: 0
@@ -1107,18 +1047,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Homestead/target
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 934fb0b46e051a44c8c767b09a718f25
-    m_Address: Art/Homestead/fence_wood_gate/f1
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_wood_gate
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 935deee4a781b574aaabebc5c94033ea
-    m_Address: Art/Homestead/fence_wood/f3
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_wood
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9376ddb0f30401a4a82bb284e9442186
     m_Address: Art/Homestead/fir_stand/f1
@@ -1257,12 +1185,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Homestead/pine_stump
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a70fccbe2a4bdd04487a69dc2fe02370
-    m_Address: Art/Homestead/fence_wood/f0
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_wood
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a8b5e898084f7c64db0f818fb73a8ac8
     m_Address: Art/Homestead/village_well/f0
     m_ReadOnly: 0
@@ -1393,12 +1315,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: bbdd57550d82c944b8e1d17521513d54
-    m_Address: Art/Homestead/fence_stone_gate/f3
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_stone_gate
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bbf6f07e67f19d04c889a5df560a22f1
     m_Address: Art/Homestead/home_farmhouse/f0
     m_ReadOnly: 0
@@ -1469,12 +1385,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Homestead/stage_tiered
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c4a78857fb5fade47841d4aaae1a426f
-    m_Address: Art/Homestead/fence_wood_gate/f3
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_wood_gate
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c4b5866d2e23a204bbaab76714b763f1
     m_Address: Art/Homestead/sawmill/f2
@@ -1771,12 +1681,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Homestead/watermill
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ed74c77d4f829ca4189382bd5b4802a1
-    m_Address: Art/Homestead/fence_wood/f1
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Homestead/fence_wood
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ede0aa1a1c24f984b9051f262caf3bed
     m_Address: Art/Grove/thumbs_tabs

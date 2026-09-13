@@ -109,7 +109,7 @@ namespace GlimmerGrove
         const float VignetteAlpha = .72f, FanAlpha = .30f, Fan2Alpha = .20f, GlowAlpha = .40f;
 
         /// <summary>
-        /// Its own scope, never <c>AssetLibrary.LineScope</c> — <see cref="WardFiringStage"/>'s
+        /// Its own hold, never the board's — <see cref="WardFiringStage"/>'s
         /// rule and its reason: a live board's four turrets must not be released because a
         /// celebration closed. Its own name and not the unlock's, so the two can never be up at
         /// once and release each other's art.

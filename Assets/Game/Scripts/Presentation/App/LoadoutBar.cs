@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
@@ -63,6 +65,24 @@ namespace GlimmerGrove
         /// <summary>The tab on the top edge, which is what says the shelf is a way in.</summary>
         const float TabW = 300f, TabH = 66f;
 
+        /// <summary>How far the tab is let down into the shelf, so the two read as joined.</summary>
+        const float TabLift = 8f;
+
+        /// <summary>
+        /// How far the tab stands above the shelf's own rectangle.
+        ///
+        /// <para>
+        /// <b>Named because something other than the tab needs it.</b> The bar's rect is the
+        /// shelf, and the tab is a child hung off its top edge and drawn outside it — so
+        /// anything that wants the bar's <em>outline</em> rather than its rect (a lesson's ring,
+        /// invariant 44d's mirror) gets a box with the one part of this control that says it is
+        /// a control cut off the top. Reported from a device exactly that way: the tip pointing
+        /// at the loadout drew its ring under the orange tab. <see cref="Spotlight"/> is the
+        /// answer and this is its arithmetic, kept beside the placement it has to agree with.
+        /// </para>
+        /// </summary>
+        const float Overhang = TabH - TabLift;
+
         /// <summary>What the bar is, before the display's own foot is added to it.</summary>
         const float Bare = Pad + TurretCell + Gap + KitCell + Pad;
 
@@ -99,6 +119,19 @@ namespace GlimmerGrove
         }
 
         readonly List<Kit> _kits = new List<Kit>(Kits);
+
+        /// <summary>
+        /// The whole control, tab included: what to ring when pointing at this bar.
+        ///
+        /// <para>
+        /// <b>A rectangle rather than a number, because the caller must not do this arithmetic.</b>
+        /// A screen handed <c>Overhang</c> would have to add it to a rect it did not build, in
+        /// the space of an overlay it does not own, and a second caller would have to get the
+        /// same sum right again. This is an empty node — no graphic, so no raycast — stretched
+        /// over the shelf and up past the tab, and it moves with the bar for free.
+        /// </para>
+        /// </summary>
+        public RectTransform Spotlight { get; private set; }
 
         /// <summary>
         /// Builds the bar along the bottom of <paramref name="host"/>.
@@ -157,7 +190,7 @@ namespace GlimmerGrove
             // not a drawing. Left as an image it was the one part of the bar that looked most like
             // a control and was the only part that answered nothing.
             var tab = UIKit.Button("Tab", rt, Art.S("Ui/" + Skins.Buy), new Vector2(TabW, TabH),
-                                   new Vector2(.5f, 1f), new Vector2(0f, TabH * .5f - 8f), tapped);
+                                   new Vector2(.5f, 1f), new Vector2(0f, TabH * .5f - TabLift), tapped);
 
             UIKit.Titled("Caption", tab.transform,
                          Loc.Get("ui.loadout.title").ToUpperInvariant(), 30, Pal.Cream,
@@ -172,6 +205,12 @@ namespace GlimmerGrove
 
             BuildTurrets(rt, turretMid);
             BuildKits(rt, kitMid);
+
+            // The shelf plus the tab standing proud of it. Built last so it is the top sibling
+            // and empty so it draws and catches nothing; see `Spotlight`.
+            Spotlight = UIKit.Node("Spotlight", rt);
+            Spotlight.offsetMin = Vector2.zero;
+            Spotlight.offsetMax = new Vector2(0f, Overhang);
 
             // Both ledgers, and the loadout as well: a turret bought elsewhere, a kit spent in a
             // run and a line re-stood on the shelf all change what this says. Detached first,
@@ -190,17 +229,20 @@ namespace GlimmerGrove
         {
             WardLoadout.Changed -= Paint;
             UtilityLedger.Changed -= Paint;
-            AssetLibrary.ReleaseScope(BarScope);
+            _art?.Dispose();
         }
 
         /// <summary>
         /// Its own scope for the four turret bodies.
         ///
-        /// <b>Never <c>AssetLibrary.LineScope</c></b>, which belongs to whichever board is up:
+        /// <b>Never the board's own hold</b>, which belongs to whichever run is up:
         /// taking it here would release a live run's turrets when the map was left (invariant 7b's
         /// second rule — an address owned by another scope is never re-claimed).
         /// </summary>
         const string BarScope = "map_loadout";
+
+        /// <summary>The four turret bodies this bar draws, held while the bar is on screen.</summary>
+        AssetHold _art;
 
         // ------------------------------------------------------------------ the rows
         void BuildTurrets(RectTransform rt, float mid)
@@ -333,7 +375,9 @@ namespace GlimmerGrove
         /// shape and for its reason: a scope that failed to load must not vanish silently, and the
         /// bar behind it is already drawn.
         /// </summary>
-        public async void Load()
+        public void Load() => Lifeline.Of(this)?.Run(LoadAsync, "LoadoutBar.Load");
+
+        async Task LoadAsync(CancellationToken cancellation)
         {
             var line = WardLoadout.Line;
             var wanted = new List<AssetRequest>(WardLine.Colours.Length);
@@ -344,8 +388,8 @@ namespace GlimmerGrove
                 if (model != null) wanted.Add(AssetRequest.Sprite(AssetManifest.WardArt(model, i)));
             }
 
-            try { await AssetLibrary.EnsureScopeAsync(BarScope, wanted); }
-            catch (Exception e) { Debug.LogException(e); return; }
+            _art = _art ?? AssetLibrary.Hold(BarScope);
+            await _art.LoadAsync(wanted, null, cancellation);
 
             if (this != null) Dress();
         }

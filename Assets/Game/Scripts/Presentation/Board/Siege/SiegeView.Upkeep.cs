@@ -72,6 +72,22 @@ namespace GlimmerGrove
         {
             if (Over || Run == null) return;
 
+            // **A run may not be told it is over while the field is still coming apart**, which
+            // is the same rule `_felling` makes about a death, one layer out. A swap resolves in
+            // the model the instant it lands — every beat of the cascade, all of its fuel and
+            // every bolt that fuel will ever buy — while the drawing of it runs for a second or
+            // more, and the hill keeps walking underneath (`Advancing` deliberately ignores
+            // `Busy`, see `SiegeView.Clock`). So a cascade whose third beat empties the hill was
+            // winning the run with two beats still to play, and what a player met was the
+            // victory panel with gems bursting behind it. Reported from a device as exactly
+            // that.
+            //
+            // It cannot strand the run: `Busy` is cleared by the coroutine that set it, which
+            // then asks this again in the same frame, and a rebuild clears it outright
+            // (`ProtoView.Begin`). Both endings are held, because a ward line that falls mid
+            // cascade is the same picture with a different panel on it.
+            if (Busy) return;
+
             var verdict = Run.Verdict;
 
             if (verdict.IsWon)

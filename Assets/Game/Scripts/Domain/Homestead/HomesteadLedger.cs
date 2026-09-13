@@ -22,13 +22,16 @@ namespace GlimmerGrove.Homestead
         TooExpensive,
 
         /// <summary>
-        /// A resident whose keeper gate the player has not reached. Credits cannot answer it.
+        /// A piece whose keeper gate the player has not reached. Credits cannot answer it.
         ///
-        /// Only residents can be in this state — <c>CompanionPurchaseState.LevelLocked</c>
-        /// under the grove's own name. Mapping it onto <see cref="NotForSale"/> instead would
-        /// tell a player a friend "can only be earned by playing" when it is for sale and they
-        /// are four keeper levels away, which is the class of refusal this enum exists to keep
-        /// apart.
+        /// <para>
+        /// Two things reach it: a <b>resident</b> — <c>CompanionPurchaseState.LevelLocked</c>
+        /// under the grove's own name — and a <b>home rung</b>, whose ladder is gated so that
+        /// it stays a goal rather than a shelf (see <c>HomesteadPiece.RequiresKeeperLevel</c>).
+        /// Mapping it onto <see cref="NotForSale"/> instead would tell a player a friend or a
+        /// house "can only be earned by playing" when it is for sale and they are four keeper
+        /// levels away, which is the class of refusal this enum exists to keep apart.
+        /// </para>
         /// </summary>
         LevelLocked,
 
@@ -78,7 +81,10 @@ namespace GlimmerGrove.Homestead
         /// <summary>Credits the player is holding, for a panel that shows the gap.</summary>
         public readonly long Balance;
 
-        /// <summary>The keeper level a resident is gated behind. Zero for everything else.</summary>
+        /// <summary>
+        /// The keeper level this piece is gated behind — a resident's, or a home rung's. Zero
+        /// for everything else.
+        /// </summary>
         public readonly int RequiredLevel;
 
         public HomesteadOffer(HomesteadPurchaseState state, long cost, long balance,
@@ -248,7 +254,13 @@ namespace GlimmerGrove.Homestead
             if (!piece.IsValid) return false;
             if (piece.IsResident) return !GroveResidents.CompanionOf(piece).IsForSale;
 
-            return piece.HasRequirement || !piece.IsForSale;
+            // A keeper gate is deliberately not one of the routes counted here, and that is
+            // the resident clause above said once more for the home ladder: a gate on a priced
+            // piece is *permission to pay* rather than a way through without paying (invariant
+            // 15a). Reading `HasRequirement` — which a keeper level satisfies — would hang the
+            // shop's "playing can get this" leaf on a home rung that will still cost 13,000
+            // credits when the level arrives.
+            return piece.RequiresLevel.IsValid || piece.RequiresChapter.IsValid || !piece.IsForSale;
         }
 
         /// <summary>
@@ -437,8 +449,18 @@ namespace GlimmerGrove.Homestead
         /// <summary>
         /// The next rung of the home ladder: the lowest tier above the best one held.
         ///
+        /// <para>
         /// Invalid when the player is at the top, which is what the panel renders as "this is
         /// the finest home in the grove" rather than as a dead button.
+        /// </para>
+        /// <para>
+        /// <b>A rung the keeper level has not opened is still the next one</b>, deliberately —
+        /// this answers what comes next, never what can be bought this minute, and
+        /// <see cref="OfferFor(HomesteadPiece)"/> is where that second question is asked.
+        /// Skipping a locked rung would make the panel offer the <em>citadel</em> to a keeper
+        /// who cannot yet buy the farmhouse, which is a ladder read as a shelf; and hiding it
+        /// would take the one long-term goal in the grove off the only screen that shows it.
+        /// </para>
         /// </summary>
         public static HomesteadPiece NextDwelling(HomesteadCatalog catalog)
         {
@@ -532,11 +554,21 @@ namespace GlimmerGrove.Homestead
                 if (!piece.IsForSale)
                     return new HomesteadOffer(HomesteadPurchaseState.NotForSale, 0L, balance);
 
+                // The gate is asked **before** the price, which is invariant 15a's ordering and
+                // the ordering `CompanionLedger.OfferFor` and `GroveLand.OfferFor` both use:
+                // when both refusals apply, the one to say is the one credits cannot answer.
+                // Leading with the price would send somebody to the coin shelf for a house the
+                // coins could not buy — `HintPrompt`'s mistake, one screen over.
+                if (piece.RequiresKeeperLevel > KeeperLevel)
+                    return new HomesteadOffer(HomesteadPurchaseState.LevelLocked, piece.Cost,
+                                              balance, piece.RequiresKeeperLevel);
+
                 var once = balance >= piece.Cost
                     ? HomesteadPurchaseState.Ready
                     : HomesteadPurchaseState.TooExpensive;
 
-                return new HomesteadOffer(once, piece.Cost, balance, 0, 1, 1);
+                return new HomesteadOffer(once, piece.Cost, balance,
+                                          piece.RequiresKeeperLevel, 1, 1);
             }
 
             int wanted = Clamp(quantity, 1, MaxPerPurchase);

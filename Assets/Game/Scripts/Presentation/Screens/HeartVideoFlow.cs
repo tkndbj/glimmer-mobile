@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+using GlimmerGrove.Async;
 using System;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Localization;
@@ -191,7 +193,9 @@ namespace GlimmerGrove
         /// is news about a button that no longer exists.
         /// </para>
         /// </summary>
-        async void Show()
+        void Show() => Fire.AndForget(ShowAsync, "HeartVideoFlow.Show");
+
+        async Task ShowAsync()
         {
             var payment = await RewardedVideo.Watch(AdPlacement.HeartRefill);
 

@@ -57,7 +57,6 @@ namespace GlimmerGrove
         /// the continuation here runs on the main thread where that distinction is exactly the
         /// one that produces a <c>MissingReferenceException</c> two frames later.
         /// </summary>
-        CancellationTokenSource _alive = new CancellationTokenSource();
 
         InputField _field;
         Text _status;
@@ -168,28 +167,22 @@ namespace GlimmerGrove
         /// <c>async void</c> has no caller to reach and is raised on the synchronisation
         /// context, where in a player build it is simply lost.
         /// </summary>
-        async void BeginCheck(string key)
+        void BeginCheck(string key) => Run(async token =>
         {
-            var token = _alive.Token;
-
             try
             {
                 var (result, taken, mine) = await KeeperNames.CheckAsync(key, token);
 
-                if (token.IsCancellationRequested) return;
+                if (!Living) return;
 
                 if (result.Ok) _names.Answered(key, taken, mine);
                 else _names.Failed(key);
 
                 PaintStatus();
             }
-            catch (OperationCanceledException)
+            catch (Exception e) when (!(e is OperationCanceledException))
             {
-                // The panel closed while the read was out. Not a fault.
-            }
-            catch (Exception e)
-            {
-                if (token.IsCancellationRequested) return;
+                if (!Living) return;
 
                 // A hint is the one thing here allowed to fail quietly: the claim still
                 // adjudicates, so the player loses a line of text and nothing else.
@@ -197,7 +190,7 @@ namespace GlimmerGrove
                 _names.Failed(key);
                 PaintStatus();
             }
-        }
+        });
 
         void PaintStatus()
         {
@@ -249,7 +242,7 @@ namespace GlimmerGrove
         /// throw that left <c>_claiming</c> set would leave the save button dead for as long as
         /// the panel was open, with nothing on screen to explain it.
         /// </summary>
-        async void Commit()
+        void Commit() => Run(async token =>
         {
             if (_claiming) return;
 
@@ -270,8 +263,6 @@ namespace GlimmerGrove
                 Apply(chosen);
                 return;
             }
-
-            var token = _alive.Token;
 
             _claiming = true;
             Say(Loc.Get("ui.profile.name_saving"), Muted);
@@ -299,7 +290,7 @@ namespace GlimmerGrove
                 _claiming = false;
             }
 
-            if (token.IsCancellationRequested) return;
+            if (!Living) return;
 
             var step = RenameRules.ResolveClaim(claim.Outcome);
 
@@ -332,7 +323,7 @@ namespace GlimmerGrove
             // toast belongs to the view that raises it, and this view is closing.
             if (step.MessageKey.Length > 0) Tween.After(1.6f, () => { if (this != null) Dismiss(); });
             else Dismiss();
-        }
+        });
 
         void Apply(string chosen)
         {
@@ -376,12 +367,7 @@ namespace GlimmerGrove
             return true;
         }
 
-        void OnDestroy()
-        {
-            // Cancelled before disposal, so a continuation already queued reads cancellation
-            // rather than racing a disposed source.
-            _alive.Cancel();
-            _alive.Dispose();
-        }
+        // No OnDestroy. Cancelling what this panel started is View.Lifetime's job, and it is
+        // a component rather than a field precisely so it cannot be forgotten — see Lifeline.
     }
 }

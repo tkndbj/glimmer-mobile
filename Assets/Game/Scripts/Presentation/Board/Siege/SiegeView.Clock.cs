@@ -100,7 +100,6 @@ namespace GlimmerGrove
             Reap();
             Fuses();
             Gears();
-            Sighted();
             Noticed(report);
 
             if (report.Any) Changed?.Invoke();
@@ -124,44 +123,25 @@ namespace GlimmerGrove
         void Noticed(SiegeReport report)
         {
             // **Offered every time rather than once, and the latch that was here was a bug.**
-            // `RunLessons.Teach` already refuses a lesson that has been seen, that is mid-chain, or
-            // that arrives on a board which is not teachable — so latching *before* knowing whether
-            // it landed meant a tip offered while another was up was thrown away for ever. Which is
-            // what happened: the overcharge's tip was reported as never appearing. Offering again
-            // costs a refused call and buys the tip arriving on the next chance it has.
-            if (_board.Resting)
-            {
-                // The one of the three that is a *state* rather than an event, so it is edged per
-                // breather - otherwise it would be offered sixty times a second.
-                if (!_resting) { _resting = true; Rested?.Invoke(); }
-            }
-            else _resting = false;
-
+            // Latching *before* knowing whether the offer landed meant one made while another tip
+            // was up was thrown away for ever — which is what happened: the overcharge's tip was
+            // reported as never appearing. Offering again costs nothing.
+            //
+            // **And the other half of that fault is not here.** Every one of these three moments
+            // happens *inside* a cascade — a tube fills from a match, a cog and a bomb are left by
+            // a raider a bolt felled — and a cascade is exactly when `ProtoView.Busy` says the
+            // board cannot be taught on. So the offer was refused at the only instant it was ever
+            // made. `RunLessons.Teach` now takes these as moments that are *owed* and gives each
+            // the first instant the board can take it, which is a beat after the cascade that
+            // caused it. See `RunLessons._owed`.
             if (report.Brimmed.Count > 0) Brimmed?.Invoke();
             if (report.Cogs.Count > 0) Salvaged?.Invoke();
-        }
 
-        /// <summary>
-        /// Raises <see cref="Appeared"/> the first time each kind of raider walks on.
-        ///
-        /// <b>Asked of the hill rather than of the wave</b>, because what the tip is about is a
-        /// thing the player can see — a wave that has been mustered but whose raiders are still
-        /// waiting their spacing would ring a body that is not there yet.
-        /// </summary>
-        void Sighted()
-        {
-            if (Appeared == null) return;
-
-            var raiders = _board.Raiders;
-
-            for (int i = 0; i < raiders.Count; i++)
-            {
-                var raider = raiders[i];
-                if (!raider.Alive || !raider.OnTheHill) continue;
-                if (raider.Kind != SiegeKind.Bomber) continue;
-
-                if (_met.Add(raider.Kind)) Appeared(raider.Kind);
-            }
+            // **And the bomb, which used to be announced by the bomber walking on.** It is here
+            // with the other two rather than inside `Dropped` for this method's own reason: a
+            // moment that happens while the view is mid-animation is still noticed, and all three
+            // are asked in one place rather than three call sites remembering to.
+            if (report.Dropped.Count > 0) Bombed?.Invoke();
         }
 
         /// <summary>Puts every raider widget where the model says it is.</summary>

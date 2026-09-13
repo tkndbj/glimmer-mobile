@@ -1,3 +1,4 @@
+using GlimmerGrove.Async;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -586,7 +587,9 @@ namespace GlimmerGrove.Store
             if (_pending.Count > 0) Drain();
         }
 
-        static async void Drain()
+        static void Drain() => Fire.AndForget(DrainAsync, "StoreService.Drain");
+
+        static async Task DrainAsync()
         {
             // Nothing owed: settle the policy so a later network change does not fire a
             // pointless attempt.

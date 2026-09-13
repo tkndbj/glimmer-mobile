@@ -230,6 +230,15 @@ namespace GlimmerGrove
 
             /// <summary>How many overcharges are banked, drawn only when it is more than one.</summary>
             public Text Held;
+
+            /// <summary>
+            /// The disc behind that number.
+            ///
+            /// <b>A bare digit over a saturated chassis is a digit nobody reads</b>, which is the
+            /// same finding the glyph itself cost: a player who had banked two charges asked
+            /// whether they stacked at all. A count needs its own ground.
+            /// </summary>
+            public Image Pip;
             public RectTransform Bar;
             public Image Fill;
             public Color Coat;
@@ -340,36 +349,34 @@ namespace GlimmerGrove
         /// </summary>
         public System.Action Done { get; set; }
 
-        /// <summary>
-        /// A kind of raider the player has just met for the first time this run.
-        ///
-        /// <b>The view raises it and the screen decides whether to teach</b>, because whether a
-        /// player has seen a lesson before is a fact about the save (<c>TipLedger</c>) and a board
-        /// has no business reading one. Raised once per kind per run: three bombers in a wave is
-        /// one piece of news, and <c>RunLessons.Teach</c> would refuse the other two anyway.
-        /// </summary>
-        public System.Action<SiegeKind> Appeared { get; set; }
-
-        /// <summary>
-        /// Raised once, the first time the hill has been cleared and a wave is still to come.
-        ///
-        /// <b>Once per breather rather than once per screen</b>, and never latched past that:
-        /// <c>RunLessons.Teach</c> is what decides whether a lesson is owed, and a flag here that
-        /// decided it instead threw the tip away when it happened to arrive mid-chain.
-        /// </summary>
-        public System.Action Rested { get; set; }
-
         /// <summary>Raised once, the first time any tube on the line fills.</summary>
         public System.Action Brimmed { get; set; }
 
         /// <summary>Raised once, the first time a felled raider leaves a cog on the hill.</summary>
         public System.Action Salvaged { get; set; }
 
-        /// <summary>Whether the board is inside a breather already, so one is announced once.</summary>
-        bool _resting;
-
-        readonly System.Collections.Generic.HashSet<SiegeKind> _met =
-            new System.Collections.Generic.HashSet<SiegeKind>();
+        /// <summary>
+        /// Raised once, the first time a felled bomber leaves a live bomb on the hill.
+        ///
+        /// <para>
+        /// <b>It replaced a hook that fired when a bomber <em>walked on</em>, and the difference
+        /// is the whole lesson.</b> What the tip has to say is "tap this" — so it was arriving
+        /// while the thing to tap did not exist, ringing the raider instead and being long gone by
+        /// the time a bomb landed. Reported from a device as the tip highlighting the wrong thing,
+        /// and it is invariant 20m's rule about a payoff being something the player <em>made</em>,
+        /// asked of a lesson: the bomb is theirs because they killed for it, and the panel belongs
+        /// over it.
+        /// </para>
+        /// <para>
+        /// <b>The view raises it and the screen decides whether to teach</b>, because whether a
+        /// player has seen a lesson before is a fact about the save (<c>TipLedger</c>) and a board
+        /// has no business reading one. Raised on every drop rather than latched here, which is
+        /// <see cref="Salvaged"/>'s own hard-won rule: <c>RunLessons.Teach</c> refuses a lesson
+        /// already seen or mid-chain, and a latch that decided it first threw the tip away for ever
+        /// when it happened to arrive while another panel was up.
+        /// </para>
+        /// </summary>
+        public System.Action Bombed { get; set; }
 
         /// <summary>
         /// Which utility is being aimed, or null.

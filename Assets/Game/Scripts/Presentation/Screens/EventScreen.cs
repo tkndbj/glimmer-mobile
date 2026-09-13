@@ -101,7 +101,8 @@ namespace GlimmerGrove
         Btn _collect, _offerBtn;
         Image _collectBadge;
         Text _collectBadgeText;
-        CancellationTokenSource _lifetime;
+        /// <summary>Set once this screen has an event to draw. See <see cref="Build"/>.</summary>
+        bool _ready;
         bool _requesting, _claiming, _retreat, _refreshPending;
         float _width, _visible, _nextClock, _header;
         int _first = -1, _generation;
@@ -144,7 +145,7 @@ namespace GlimmerGrove
             _event = GroveEvents.Featured;
             if (_event == null) { _retreat = true; return; }
 
-            _lifetime = new CancellationTokenSource();
+            _ready = true;
             _width = Mathf.Min(1000f, Flow.Size.x - 64f);
 
             BuildBackdrop();
@@ -669,9 +670,6 @@ namespace GlimmerGrove
             CloudSaveService.Synced -= OnSynced;
             PlayerProgression.Changed -= OnWallet;
             _generation++;
-            _lifetime?.Cancel();
-            _lifetime?.Dispose();
-            _lifetime = null;
         }
 
         public override void OnPresented() { if (_retreat) Flow.Go<HomeScreen>(); else ReadPass(); }
@@ -939,16 +937,16 @@ namespace GlimmerGrove
         }
 
         // ----------------------------------------------------------------- pass state
-        async void ReadPass()
+        void ReadPass() => Run(async token =>
         {
-            if (_event == null || !_event.HasPremium || _requesting || _lifetime == null) return;
+            if (_event == null || !_event.HasPremium || _requesting || !_ready) return;
 
             _requesting = true;
             int generation = _generation;
             RefreshOffer();
             try
             {
-                var (result, state) = await CloudSaveService.EventPassAsync(_event.Id, 0, _lifetime.Token);
+                var (result, state) = await CloudSaveService.EventPassAsync(_event.Id, 0, token);
                 if (this && generation == _generation) _pass = result.Ok ? state : null;
             }
             catch (OperationCanceledException) { }
@@ -962,7 +960,7 @@ namespace GlimmerGrove
                     if (_refreshPending) { _refreshPending = false; ReadPass(); }
                 }
             }
-        }
+        });
 
         /// <summary>
         /// Opens the payment sheet, or says why it cannot.
@@ -1031,9 +1029,9 @@ namespace GlimmerGrove
             else if (!collected) Scenery.Toast(Content, Loc.Get("ui.pass.up_to_date"), Mint);
         }
 
-        async void ClaimPremium(int goal, Card card)
+        void ClaimPremium(int goal, Card card) => Run(async token =>
         {
-            if (_claiming || _lifetime == null) return;
+            if (_claiming || !_ready) return;
 
             _claiming = true;
             int generation = _generation;
@@ -1041,7 +1039,7 @@ namespace GlimmerGrove
             Refresh();
             try
             {
-                var (result, state) = await CloudSaveService.EventPassAsync(_event.Id, goal, _lifetime.Token);
+                var (result, state) = await CloudSaveService.EventPassAsync(_event.Id, goal, token);
                 if (!this || generation != _generation) return;
 
                 if (result.Ok)
@@ -1067,7 +1065,7 @@ namespace GlimmerGrove
                 if (this) Scenery.Toast(Content, Loc.Get("ui.pass.retry"), Gold);
             }
             finally { if (this && generation == _generation) { _claiming = false; Refresh(); } }
-        }
+        });
 
         /// <summary>What the free track still owes up to and including <paramref name="goal"/>.</summary>
         long FreeWorth(int goal)

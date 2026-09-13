@@ -315,11 +315,21 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(fetch.Success);
 
             var table = Read(fetch.Text);
-            var index = SaveMigrationTests.LoadBundledIndex();
+
+            // Read off the manifest rather than the index, for the reason
+            // SaveMigrationTests.EveryManifestLevelId gives: a chapter hidden behind
+            // `disabled` leaves the index entirely (invariant 38), and this check is about
+            // whether a declared override *parses* — a question about the reader, not about
+            // what is playable today. Asking the index made it fail the day the only chapter
+            // carrying an override was hidden, and the sentence it printed then sent the
+            // reader hunting for a deserialisation bug that was not there.
+            var manifest = SaveMigrationTests.LoadBundledManifest();
+            if (manifest?.chapters == null) Assert.Ignore("no bundled content available in this run");
 
             bool anyOverride = false;
-            foreach (var chapter in index.Chapters)
-                anyOverride |= table.HasOverrideFor(chapter.Id);
+            foreach (var entry in manifest.chapters)
+                if (ChapterId.TryParse(entry?.id, out var chapterId, out _))
+                    anyOverride |= table.HasOverrideFor(chapterId);
 
             Assert.IsTrue(anyOverride,
                           "the shipped file declares a chapter override; if none is visible here, " +

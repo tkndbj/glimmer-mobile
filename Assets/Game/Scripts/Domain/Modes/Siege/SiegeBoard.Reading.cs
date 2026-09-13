@@ -30,10 +30,18 @@ namespace GlimmerGrove.Modes
         /// so what has to be honest is the ordering.
         /// </para>
         /// <para>
-        /// <b>Everything this ward would fire at, which folds a prism's partner in.</b> The
-        /// question is "is this turret worth feeding", and for a prism the answer includes the
-        /// colour it can reach — asking only about its own would under-report the one turret on
-        /// the shelf bought for covering two.
+        /// <b>Everything this ward would fire at, at what a bolt from it is really worth.</b> The
+        /// question is "is this turret worth feeding", and the honest answer is not a head of
+        /// health — it is the share of that health this ward can take. A prism's partner is folded
+        /// in at its share, and a boss at every ward's, because every ward answers one
+        /// (<see cref="SiegeTuning.EveryWardReaches"/>).
+        /// </para>
+        /// <para>
+        /// <b>Which is what makes the readout teach the duel rather than flatten it.</b> Counted
+        /// as whole health, a boss would light all four wards identically and say the thing that
+        /// is not true — that it does not matter which one is fed. Counted at the share, the
+        /// boss's own colour reads twice as loud as the other three and the player is told, in the
+        /// one place they are already looking, exactly what the gold numbers will confirm.
         /// </para>
         /// </summary>
         public int DemandOf(int ward)
@@ -47,9 +55,11 @@ namespace GlimmerGrove.Modes
             {
                 var raider = _raiders[i];
                 if (!raider.Alive || !raider.OnTheHill) continue;
-                if (post.ReachTenths(raider.Colour) <= 0) continue;
 
-                wanted += raider.Health;
+                int share = post.ReachTenths(raider);
+                if (share <= 0) continue;
+
+                wanted += raider.Health * share / 10;
             }
 
             return wanted;

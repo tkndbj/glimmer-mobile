@@ -237,11 +237,44 @@ namespace GlimmerGrove
                     return false;
             }
 
-            for (int i = 0; i < _strikes.Count; i++) Hurt(_strikes[i]);
+            Landed(_strikes);
+            return true;
+        }
 
+        /// <summary>
+        /// Draws what a blow struck from outside <c>SiegeBoard.Advance</c> did, and puts the hill
+        /// back in step with the model. Everything but a storm lands all at once, so this is it.
+        /// </summary>
+        void Landed(List<SiegeStrike> hits)
+        {
+            for (int i = 0; i < hits.Count; i++) Hurt(hits[i]);
+
+            Settled();
+        }
+
+        /// <summary>
+        /// What a kill made outside <c>Advance</c> owes the hill before the run may be judged.
+        ///
+        /// <para>
+        /// <b>A method rather than something each door remembers, because a door forgot.</b>
+        /// <c>Hurt</c> draws the damage and nothing else; what takes a dead raider's widget down
+        /// is <see cref="Reap"/>, which otherwise runs once a frame from the clock — and a
+        /// killing blow ends the run in the same call, so <c>Advancing</c> goes false and that
+        /// next frame never comes. Invariant 37ac fixed exactly this for a firepot and a storm
+        /// and the bomb was written afterwards, so it shipped killing the last raiders of a level
+        /// and leaving them standing under the victory panel. Three call sites keeping one rule
+        /// by hand is the rule missing from whichever is written last.
+        /// </para>
+        /// <para>
+        /// It also arms the hold as a side effect worth stating: <see cref="Reap"/> fells through
+        /// <c>Die</c>, which takes <c>_felling</c>, so the <see cref="Judge"/> that follows sees
+        /// the burst it has to wait for rather than a hill that is already empty.
+        /// </para>
+        /// </summary>
+        void Settled()
+        {
             Reap();
             Changed?.Invoke();
-            return true;
         }
 
         /// <summary>Air between one box of the aiming grid and the next, in units.</summary>
@@ -433,9 +466,10 @@ namespace GlimmerGrove
             _striking.Clear();
 
             // Anything the strikes did not account for, then the verdict - held to here so a
-            // victory panel cannot arrive over a hill that is still being struck.
-            Reap();
-            Changed?.Invoke();
+            // victory panel cannot arrive over a hill that is still being struck. `Settled`
+            // rather than the two calls, for the reason that method exists; the hurting is not
+            // shared, because a storm draws one bolt at a time.
+            Settled();
             Judge();
         }
 
@@ -719,8 +753,8 @@ namespace GlimmerGrove
         {
             _waveLabel = UIKit.Label("Wave", _fx, string.Empty, Mathf.RoundToInt(Cell * .46f),
                                      Pal.Cream, TextAnchor.MiddleCenter,
-                                     new Vector2(Span.x, Cell * .9f));
-            _waveLabel.rectTransform.anchoredPosition = new Vector2(0f, _hillFoot + Cell * 1.5f);
+                                     new Vector2(Span.x, Cell * WaveBox));
+            _waveLabel.rectTransform.anchoredPosition = new Vector2(0f, Caption.Wave);
 
             var group = UIKit.Group(_waveLabel.rectTransform);
             group.alpha = 0f;

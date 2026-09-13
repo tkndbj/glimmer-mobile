@@ -134,17 +134,29 @@ SHELVES = ("structure", "canopy", "bed", "edge", "path", "ground")
 DWELLING_FACINGS = 4
 
 DWELLINGS = [
-    # model                      id              tier  cost   name          size
+    # model                      id              tier  cost   name          size  level
     #
     # `size` is the hall's plot rather than the model's own: every rung stands on the floor's
     # `hallCols` x `hallRows` (invariant 16i), which is four tiles, and the pack draws a
     # cottage for one. So the two small rungs are scaled up to sit on the land they reserve,
     # and the two big ones are already drawn at that size and are left alone — which is what
     # made the barracks and the castle usable as homes at all.
-    ("hex:buildings/blue/building_home_A_blue", "home_cottage", 1, 0, "Cottage", 1.30),
-    ("hex:buildings/blue/building_home_B_blue", "home_farmhouse", 2, 2500, "Farmhouse", 1.35),
-    ("hex:buildings/blue/building_barracks_blue", "home_barracks", 3, 13000, "Barracks", 1.00),
-    ("hex:buildings/blue/building_castle_blue", "home_citadel", 4, 30000, "Citadel", 1.00),
+    #
+    # `level` is the keeper level that *opens* the rung, and it is the one thing in this file
+    # that is not about the drawing. The ladder is the longest goal in the game and money alone
+    # is a poor clock for it — credits accumulate, so a saver could stand in a citadel having
+    # played a fraction of it, and the rung would have been a shelf rather than a goal. So a
+    # rung asks for a level **and** a price, which is invariant 15a's rule for companions read
+    # across: the level is permission to pay and never a way of paying. The cottage is ungated
+    # and free, because it is what a new grove opens with.
+    #
+    # It climbs strictly, and both content gates prove it does — a rung asking for a level an
+    # earlier rung already demanded can never refuse anybody, which is invariant 5d's
+    # decoration arriving on the one purchase the whole grove is composed around.
+    ("hex:buildings/blue/building_home_A_blue", "home_cottage", 1, 0, "Cottage", 1.30, 0),
+    ("hex:buildings/blue/building_home_B_blue", "home_farmhouse", 2, 2500, "Farmhouse", 1.35, 10),
+    ("hex:buildings/blue/building_barracks_blue", "home_barracks", 3, 13000, "Barracks", 1.00, 20),
+    ("hex:buildings/blue/building_castle_blue", "home_citadel", 4, 30000, "Citadel", 1.00, 40),
 ]
 
 
@@ -219,7 +231,7 @@ def dwellings():
     """
     return [Row(model=model, id=pid, shelf="structure", cost=cost, bundle=1,
                 facings=DWELLING_FACINGS, cols=1, rows=1, name=name, size=size, line=0)
-            for model, pid, _tier, cost, name, size in DWELLINGS]
+            for model, pid, _tier, cost, name, size, _level in DWELLINGS]
 
 
 def everything(path=TSV):

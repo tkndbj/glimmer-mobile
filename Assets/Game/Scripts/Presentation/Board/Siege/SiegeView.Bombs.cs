@@ -112,7 +112,7 @@ namespace GlimmerGrove
         /// </summary>
         void Tapped(int id)
         {
-            if (!Playable || Blew == null) return;
+            if (!Tappable || Blew == null) return;
 
             HideCoach();
             Stir();
@@ -153,7 +153,12 @@ namespace GlimmerGrove
             // thing to learn about something they already know.
             Firepot(SiegeAim.OnTheHill(lane, row));
 
-            for (int i = 0; i < _strikes.Count; i++) Hurt(_strikes[i]);
+            // **The same door a firepot goes through**, which is what it was missing: `Hurt`
+            // draws the damage and `Landed` is what takes the dead off the hill. Reported from a
+            // device — tap the bomb that kills the last raiders of a level and they stand there
+            // under the victory panel — and see `Settled` for why that is a method rather than
+            // three lines each of these call sites remembers.
+            Landed(_strikes);
 
             Judge();
         }

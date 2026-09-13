@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Threading.Tasks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -45,7 +47,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Its own asset scope, released when the object goes.</b> A turret's body, its recoil and
     /// its three reels are what a run loads for the four it stands (invariant 7b); a panel that
-    /// took <c>AssetLibrary.LineScope</c> would release a live board's line when it closed.
+    /// shared a live board's hold would release its line when it closed.
     /// </para>
     /// </summary>
     public sealed class WardFiringStage : MonoBehaviour
@@ -106,7 +108,8 @@ namespace GlimmerGrove
         RectTransform _node;
         Image _turret, _shadow;
         float _cell;
-        string _scope;
+        AssetHold _art;
+        string _name;
 
         WardModel _model;
         int _colour;
@@ -178,7 +181,7 @@ namespace GlimmerGrove
             var stage = node.gameObject.AddComponent<WardFiringStage>();
             stage._node = node;
             stage._cell = cell;
-            stage._scope = scope;
+            stage._name = scope;
 
             stage._shadow = UIKit.Img("Shadow", node, Art.Glow(64, 3f), new Color(0f, 0f, 0f, .40f),
                                       new Vector2(cell * 1.3f, cell * .34f), new Vector2(.5f, 0f),
@@ -224,7 +227,7 @@ namespace GlimmerGrove
         void OnDestroy()
         {
             Stop();
-            AssetLibrary.ReleaseScope(_scope);
+            _art?.Dispose();
         }
 
         void Stop()
@@ -432,7 +435,10 @@ namespace GlimmerGrove
         /// shape and for its reason: a scope that failed to load must not vanish silently, and what
         /// is behind it is already drawn.
         /// </summary>
-        async void Load(int generation)
+        void Load(int generation)
+            => Lifeline.Of(this)?.Run(token => LoadAsync(generation, token), "WardFiringStage.Load");
+
+        async Task LoadAsync(int generation, CancellationToken cancellation)
         {
             if (_model == null) return;
 
@@ -455,8 +461,8 @@ namespace GlimmerGrove
                 if (seen.Add(mark.Reel))
                     wanted.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt(mark.Reel)));
 
-            try { await AssetLibrary.EnsureScopeAsync(_scope, wanted); }
-            catch (Exception e) { Debug.LogException(e); return; }
+            _art = _art ?? AssetLibrary.Hold(_name);
+            await _art.LoadAsync(wanted, null, cancellation);
 
             if (this == null || generation != _generation) return;
 

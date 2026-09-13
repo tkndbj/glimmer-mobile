@@ -1,3 +1,4 @@
+using GlimmerGrove.AssetPipeline;
 using System;
 using System.Collections.Generic;
 using GlimmerGrove.Localization;
@@ -23,9 +24,12 @@ namespace GlimmerGrove
     /// have decoded a hundred flipbooks to show a hundred faces.
     /// </para>
     /// </summary>
-    public sealed class CompanionScreen : View, IDrawsCompanionArt
+    public sealed class CompanionScreen : View
     {
         public override string Track => "mus_menu";
+
+        /// <summary>The roster's portraits, kept alive for exactly as long as this screen is.</summary>
+        AssetHold _portraits;
 
         const float HeaderHeight = 250f;
         const int Columns = 3;
@@ -81,7 +85,7 @@ namespace GlimmerGrove
             // Arriving from the profile the scope is usually already warm and this
             // repaints immediately; arriving any other way it is the load that fills
             // the screen.
-            CompanionArt.OpenAsync(() => { if (this) Paint(); });
+            _portraits = CompanionArt.Open(this, () => { if (Living) Paint(); });
 
             // Repainted on the ledger's own event rather than on a callback from whatever
             // opened the unlock panel. A callback has to be threaded through every exit that
@@ -107,10 +111,10 @@ namespace GlimmerGrove
             Profile.AvatarChanged -= PaintWorn;
             AvatarCatalog.Changed -= Paint;
 
-            // The profile shows a preview row from the same set, so going back does not
-            // free it only to load it again a frame later.
-            if (Flow.Current is ProfileScreen) return;
-            CompanionArt.CloseUnlessWanted();
+            // Let go, rather than deciding whether to. The profile shows a preview row from
+            // the same set and has already taken its own hold by now, so the portraits simply
+            // do not reach nought — and one that does is kept for a few seconds anyway.
+            _portraits?.Dispose();
         }
 
         // ----------------------------------------------------------------- grid
