@@ -35,6 +35,10 @@ namespace GlimmerGrove.Modes
             if (dt <= 0f) return _report;
             if (dt > .25f) dt = .25f;      // a resumed app must not teleport a wave into the line
 
+            // After the clamp, so the run's own clock is the one the board actually played on
+            // rather than the wall clock a backgrounded app came back holding.
+            Attention.Tick(dt);
+
             Land(dt);
             Muster(dt);
             Walk(dt);
@@ -267,6 +271,15 @@ namespace GlimmerGrove.Modes
 
                 _raiders.Add(new SiegeRaider(_minted++, colour, kind, lane,
                                              i * SiegeTuning.RaiderSpacing, surge));
+
+                // Asked here, at the muster, because the question is whether the player banked
+                // the boss's colour *ahead* of the duel rather than whether they reacted once it
+                // was standing there. Recorded only; nothing below reads it.
+                if (boss)
+                {
+                    var own = colour >= 0 && colour < _wards.Length ? _wards[colour] : null;
+                    Attention.BossMet(own != null && own.Fuelled);
+                }
             }
 
             _report.Wave = _wave;

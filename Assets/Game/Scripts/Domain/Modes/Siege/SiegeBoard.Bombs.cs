@@ -75,6 +75,8 @@ namespace GlimmerGrove.Modes
 
             _bombs.Add(bomb);
             _report.Dropped.Add(bomb);
+
+            Attention.BombDropped(bomb.Id);
         }
 
         /// <summary>
@@ -107,6 +109,11 @@ namespace GlimmerGrove.Modes
             if (absorbed <= 0) return 0;
 
             _bombs.RemoveAt(at);
+
+            // After the refusal above, so a tap that caught nothing is not counted as one the
+            // player made — the bomb is still standing and the decision has not been taken.
+            Attention.BombTapped(id);
+
             return absorbed;
         }
 

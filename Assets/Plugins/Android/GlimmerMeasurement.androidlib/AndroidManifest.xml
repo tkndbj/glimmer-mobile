@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Starts Firebase Analytics with collection OFF, so that nothing is measured before the
+    consent gateway has answered.
+
+    WHY THIS FILE EXISTS
+    Firebase enables collection the moment its native SDK initialises, which is earlier than
+    any managed code in this project can run - earlier than Boot, and long before UMP has been
+    asked anything. So `AnalyticsSetup` calling SetAnalyticsCollectionEnabled(false) at start-up
+    cannot close the window; it can only close it after the fact, which for a regulator is not
+    closing it. The only thing that starts the SDK disabled is this flag, read out of the
+    manifest before any of our code exists.
+
+    WHAT IT COSTS
+    Collection now depends entirely on AnalyticsSetup.Push() running - if that path ever breaks,
+    the app measures nothing at all rather than measuring too much. That is the right way round
+    for a consent gate and the wrong way round for a retention test, so the enable path is
+    verified on a device rather than assumed: look for "[Analytics] collection enabled" in
+    logcat on any launch where consent is granted.
+
+    WHY AN ANDROIDLIB OF OUR OWN
+    Not FirebaseApp.androidlib beside it, which the Firebase editor tooling generates from
+    google-services.json and may rewrite. Not Assets/Plugins/Android/AndroidManifest.xml, which
+    replaces Unity's launcher manifest rather than merging into it. A library manifest is merged,
+    is ours, and is the smallest thing that can carry one flag.
+
+    The package is a namespace rather than code: AGP 9 refuses a namespace shared by two modules
+    (see Tools/make_appsflyer_connector.py for what that costs), so it must be unique.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.tekoworld.glimmergroove.measurement"
+          android:versionCode="1"
+          android:versionName="1.0">
+
+    <application>
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
+            android:value="false" />
+    </application>
+</manifest>

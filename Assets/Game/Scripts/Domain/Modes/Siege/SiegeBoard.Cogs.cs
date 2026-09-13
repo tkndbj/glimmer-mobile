@@ -63,6 +63,8 @@ namespace GlimmerGrove.Modes
 
             _cogs.Add(cog);
             _report.Cogs.Add(cog);
+
+            Attention.CogDropped();
         }
 
         /// <summary>
@@ -83,6 +85,8 @@ namespace GlimmerGrove.Modes
 
                 _cogs.RemoveAt(i);
                 _report.Trampled.Add(cog.Id);
+
+                Attention.CogTrampled();
             }
         }
 
@@ -108,6 +112,10 @@ namespace GlimmerGrove.Modes
 
             ward.Rank++;
             _cogs.RemoveAt(at);
+
+            // After the Upgradable refusal, for the reason Detonate gives: a cog a maxed ward
+            // would not take is still lying there and is still a decision nobody has made.
+            Attention.CogTaken();
 
             return new SiegeTaken(cog.Ward, ward.Rank, cog.Colour, cog.Lane, cog.Row);
         }

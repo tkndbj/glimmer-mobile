@@ -159,6 +159,16 @@ namespace GlimmerGrove.Modes
 
         public IReadOnlyList<SiegeWard> Wards => _wards;
 
+        /// <summary>
+        /// What this run can say about whether the player ever looked at the hill.
+        ///
+        /// <para>
+        /// Recorded, never read by any rule: nothing on this board may branch on it, so a
+        /// measurement cannot become a mechanic by accident. See <see cref="SiegeAttention"/>.
+        /// </para>
+        /// </summary>
+        public SiegeAttention Attention { get; } = new SiegeAttention();
+
         /// <summary>Fuel booked and still crossing the field. Nothing grades on it.</summary>
         public IReadOnlyList<SiegeCharge> Flying => _flying;
         public IReadOnlyList<SiegeRaider> Raiders => _raiders;

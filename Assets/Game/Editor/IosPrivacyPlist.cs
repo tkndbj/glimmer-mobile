@@ -107,10 +107,26 @@ namespace GlimmerGrove.EditorTools
             // to a regulator rather than a convenience.
             plist.root.SetBoolean("ITSAppUsesNonExemptEncryption", false);
 
+            // Firebase Analytics starts with collection OFF, so nothing is measured before the
+            // consent gateway has answered.
+            //
+            // The iOS twin of the meta-data in GlimmerMeasurement.androidlib, and it exists for
+            // the same reason: Firebase enables collection the instant its native SDK
+            // initialises, which is earlier than any managed code here can run. AnalyticsSetup
+            // disabling it at start-up would be closing the window after the fact, which for a
+            // regulator is not closing it. This is the only thing that starts the SDK disabled.
+            //
+            // What it costs: collection then depends entirely on AnalyticsSetup.Push() running,
+            // so a break there measures nothing rather than measuring too much. That is the
+            // right way round for a consent gate and the wrong way round for a retention test,
+            // which is why the enable path is checked on a device — "[Analytics] collection
+            // enabled" in the log on any launch where consent is granted.
+            plist.root.SetBoolean("FIREBASE_ANALYTICS_COLLECTION_ENABLED", false);
+
             plist.WriteToFile(plistPath);
 
-            Debug.Log("[Privacy] NSUserTrackingUsageDescription and ITSAppUsesNonExemptEncryption " +
-                      "written into Info.plist");
+            Debug.Log("[Privacy] NSUserTrackingUsageDescription, ITSAppUsesNonExemptEncryption " +
+                      "and FIREBASE_ANALYTICS_COLLECTION_ENABLED written into Info.plist");
 
             LinkTrackingFramework(pathToBuiltProject);
         }

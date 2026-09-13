@@ -280,6 +280,23 @@ namespace GlimmerGrove
             if (_siege != null) _siege.Redress();
         });
 
+        /// <summary>
+        /// Records what this run can say about whether the hill was ever looked at.
+        ///
+        /// <para>
+        /// Here rather than in <c>RunLedger</c> for the reason every mode-specific reading is:
+        /// the ledger is mode-blind (invariant 20a), and a siege is the only board in this game
+        /// with somewhere else to look.
+        /// </para>
+        /// </summary>
+        protected override void RunEnded(bool won)
+        {
+            var board = _siege != null ? _siege.Siege : null;
+            if (board == null || Level == null) return;
+
+            LevelAnalytics.TrackSiegeAttention(Level, board.Attention, won);
+        }
+
         /// <summary>Whether this rung's waves never stop.</summary>
         bool Endless
         {

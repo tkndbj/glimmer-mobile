@@ -64,6 +64,24 @@ namespace GlimmerGrove.Analytics
         public const string HeartRescueOffered = "heart_rescue_offered";
         public const string HeartRescueBought = "heart_rescue_bought";
 
+        /// <summary>
+        /// What a siege can say about whether the player ever looked at the hill.
+        ///
+        /// <para>
+        /// <b>One event a run, not one an incident.</b> The question it answers is an attention
+        /// one — a mode with two things competing for one pair of eyes came back as "I barely
+        /// look up" (invariant 37bl) — and every other instrument this project owns reads the
+        /// model, which cannot see where a person is looking. What is wanted is a figure per
+        /// run; a row per bomb would be a stream nobody reads whose cost grows with play.
+        /// </para>
+        /// <para>
+        /// Raised on <em>both</em> endings, because a run that was lost is exactly the run
+        /// worth asking this about: a line that fell while three bombs stood untouched on the
+        /// hill is a different failure from one that was simply outpaced.
+        /// </para>
+        /// </summary>
+        public const string SiegeAttention = "siege_attention";
+
         public static void TrackStarted(LevelDefinition level, int attempt)
         {
             if (level == null) return;
@@ -249,6 +267,40 @@ namespace GlimmerGrove.Analytics
                 "where", where == HeartRescueWhere.Restart ? "restart" : "defeat",
                 "choice", offer.Choice == GemChoice.Spend ? "spend" : "buy_gems");
         }
+
+        /// <summary>
+        /// Records one siege run's attention readings. See <see cref="SiegeAttention"/>.
+        /// </summary>
+        /// <param name="won">
+        /// Which ending this was. Carried as a parameter rather than split into two events,
+        /// because unlike the continue funnel there is no ratio here that needs both halves
+        /// counted independently — every run raises exactly one of these, so a filter answers
+        /// it and a second event name would only divide the rows.
+        /// </param>
+        public static void TrackSiegeAttention(LevelDefinition level, Modes.SiegeAttention seen,
+                                               bool won)
+        {
+            if (level == null || seen == null) return;
+
+            Telemetry.Track(SiegeAttention,
+                "level_id", level.Id.Value,
+                "chapter_id", level.Chapter.Value,
+                "won", won,
+                "bombs_dropped", seen.BombsDropped,
+                "bombs_tapped", seen.BombsTapped,
+                // Whole seconds: the question is "was there time to notice", and a tenth of a
+                // second is precision about nothing. Floored for Seconds()'s reason.
+                "bomb_wait_mean", Whole(seen.MeanWait),
+                "bomb_wait_longest", Whole(seen.LongestWait),
+                "cogs_dropped", seen.CogsDropped,
+                "cogs_taken", seen.CogsTaken,
+                "cogs_trampled", seen.CogsTrampled,
+                "bosses_met", seen.BossesMet,
+                "bosses_met_fuelled", seen.BossesMetFuelled,
+                "seconds", Round(seen.Elapsed));
+        }
+
+        static int Whole(float seconds) => seconds > 0f ? (int)seconds : 0;
 
         static float Round(float seconds) => UnityEngine.Mathf.Round(seconds * 10f) / 10f;
     }

@@ -312,6 +312,17 @@ namespace GlimmerGrove
         protected virtual void Finished(int count) { }
 
         /// <summary>
+        /// Called once however the run ended, after the latch and before anything is recorded.
+        ///
+        /// <para>
+        /// Separate from <see cref="Finished"/>, which a win alone reaches and which is handed
+        /// the graded count. What a mode wants here is the other ending too — a reading taken
+        /// only from runs that were won is a reading of the players who did not need it.
+        /// </para>
+        /// </summary>
+        protected virtual void RunEnded(bool won) { }
+
+        /// <summary>
         /// How much allowance has to be restored before a bought move is a usable move.
         ///
         /// Nought whenever an offer is honest at all, and that is not the same as "always nought".
@@ -351,6 +362,8 @@ namespace GlimmerGrove
         {
             if (_finished || Level == null) return;
             _finished = true;
+
+            RunEnded(won: true);
 
             Resolve();
             if (_view != null) _view.Locked = true;
@@ -423,6 +436,8 @@ namespace GlimmerGrove
         {
             if (_finished || Level == null) return null;
             _finished = true;
+
+            RunEnded(won: false);
 
             Resolve();
             if (_view != null) _view.Locked = true;
