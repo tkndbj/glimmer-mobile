@@ -1864,39 +1864,54 @@ changed** (5f).
    licence saying in its own `name` table that any use outside a Microsoft product *"is
    prohibited"*. **No gate here could ever have seen it**: the filename hid the identity and
    nothing in this repo opens a font, which is 32b's blind spot on a file type nobody thought
-   of. It is **Fredoka Bold** now, SIL OFL, cut by `Tools/make_game_font.py`.
+   of. It is **Titan One** now — SIL OFL, renamed **Gemfire Display**, cut by
+   `Tools/make_game_font.py`.
    <br>**A variable font is not a drop-in** — Unity's legacy `Font` renders one at its
-   *default* instance, so shipping `Fredoka[wdth,wght].ttf` as-is would have set the whole game
-   in Light, with nothing failing; the axes are pinned at authoring time. **A missing glyph
-   draws as nothing at all**, no box and no log line, so the tool refuses to write a font that
-   cannot draw every character in `en.json` — it caught `U+2192` in
-   `ui.shop.capacity_upgrade`, on a **real-money** card, which would have shipped a gap in a
-   price promise. <br>**Whatever replaces it must keep the address.** `Fonts/GameFont` is a
-   **role**, exactly as `btn_green` is (44), which is why this was one file on disk and no
-   call sites at all.
-46b. **A face is a drawing and a coverage, and only the first can be judged from a contact
-   sheet.** **Nunito Black** was cut first on the strength of its metrics — cap height 0.705 em
-   against Segoe's 0.700, the closest match available — and the owner rejected it on sight for
-   reading as a *UI* font rather than a game one. Fredoka is the register this game is actually
-   aimed at and its cap height is **0.700 em exactly**, so **the measurement decided nothing
-   and the picture decided everything**; what the measurement was good for was knowing the swap
-   moved no layout. <br>**The cost of a display face is its coverage, and it is paid in other
-   people's names.** Fredoka ships 320 code points to Segoe's 2,192, and what falls in that gap
-   is `ş ğ İ ć ę ł ń ś ź ż č ď ě ř ť ů ő ű` and their capitals — Turkish, Polish, Czech,
-   Hungarian, Baltic. A keeper name reaches a public board (19), so **243 of them are built out
-   of Fredoka's own base letters and own marks**, which keeps them in the face's hand rather
-   than bolting a second typeface alongside. <br>**Three faults in that build, and the render
-   caught all three where every numeric reading was happy**: placement has to be learned in
-   **y** as well as x (this face raises an above-mark ~190–214 units on a capital, and leaving
-   y at nought buried every accented capital inside its own letter); the `.case` marks are
-   *not* the capital forms despite the name (`uni0307.case` is 97 units **lower**, which put
-   the Turkish dotted capital's dot inside the stem); and the set has to be **enumerated over
-   Unicode ranges, never listed by hand**, because a hand list written off a coverage test
-   inherits whatever that test happened to exercise — here, lowercase only. **Read what the
-   designer did, not what the glyph is called.** <br>What it still cannot draw is stated rather
-   than discovered: Vietnamese, Romanian `ș`/`ț`, Greek and Cyrillic. Segoe had Greek and
-   Cyrillic; no face here has ever had Arabic, Hebrew or CJK. The repair, if a name ever needs
-   it, is `fallbackFontReferences` in the `.meta` — not another face.
+   *default* instance, so a variable file dropped in unpinned sets the whole game in Light with
+   nothing failing; the axes are pinned at authoring time, and a static source is refused if
+   `AXES` asks for an instance. **A missing glyph draws as nothing at all**, no box and no log
+   line, so the tool refuses to write a font that cannot draw every character in `en.json` — it
+   caught `U+2192` in `ui.shop.capacity_upgrade`, on a **real-money** card, which would have
+   shipped a gap in a price promise. **And an OFL face may carry a Reserved Font Name**, which
+   forbids a *modified* version from using it: adding a composed glyph is a modification, so
+   Titan One ships under a name of ours while its copyright and licence records are left
+   exactly as the designer wrote them. Nunito and Fredoka declared none and kept theirs — so it
+   is checked per face, never assumed. <br>**Whatever replaces it must keep the address.**
+   `Fonts/GameFont` is a **role**, exactly as `btn_green` is (44), which is why three face
+   swaps in one day were one file on disk each and no call sites at all.
+46b. **A face is chosen by looking, so put ten in front of the owner rather than one.**
+   **Nunito Black** was cut first on metrics — cap height 0.705 em against Segoe's 0.700, the
+   closest match available — and rejected on sight for reading as a *UI* font. **Fredoka Bold**
+   was cut second, is squarely the genre's register, and was also rejected. Each round cost a
+   full cut, install, render and write-up to learn one bit. The third round drew **ten** display
+   faces in the game's own strings at the sizes the game draws them, plus the hub and tasks
+   pages for every one, and was settled in a single message. **A specimen of ten decides in one
+   message what ten rounds of one decide in ten** — and the loop is cheap precisely because
+   `Tools/hudkit.py` reads `GameFont.ttf`, so swapping the file and re-rendering is the whole
+   instrument. <br>**What the measurements were good for was knowing the swap moved no layout**,
+   and nothing else: Fredoka's cap height is 0.700 em *exactly* and it was still wrong.
+46c. **The cost of a display face is its coverage, and it is paid in other people's names.**
+   Titan One ships 451 code points to Segoe's 2,192. A keeper name reaches a public board (19)
+   and a glyph Unity cannot find draws as **nothing**, so **172 are built out of the face's own
+   base letters and own marks**, which keeps them in its hand rather than bolting a second
+   typeface alongside. **The report is printed on every build and is not a gate** — a face that
+   cannot spell a language is a decision, not an error, but it must never be silent.
+   <br>**Four faults in that builder, every one invisible to the numbers and caught by the
+   proof sheet** (`--proof`, which is this tool's `--contact`): placement has to be learned in
+   **y** as well as x, or every accented capital is buried inside its own letter; the `.case`
+   marks are **not** the capital forms despite the name; the set must be **enumerated over
+   Unicode ranges**, never listed by hand off a coverage test that happened to exercise
+   lowercase; and **a mark has three possible spellings** — the combining form, the historic
+   name, the **spacing accent** — so a font that ships only the last built *nothing at all*
+   until one resolver answered for both the builder and its donor search. **Read what the
+   designer did, not what the glyph is called.** <br>Where a face draws its accents as single
+   outlines there is no composite to copy, and the answer is still in the font: `Zdotaccent` is
+   `Z` with a dot on it, so the difference between them says where a dot goes. That is how the
+   Turkish **İ** got built, which is the one character in this whole exercise the owner's own
+   language cannot do without. <br>Still absent, stated rather than discovered: Vietnamese,
+   Romanian `ș`/`ț`, Greek and Cyrillic. Segoe had Greek and Cyrillic; no face here has ever
+   had Arabic, Hebrew or CJK. The repair if a name needs it is `fallbackFontReferences` in the
+   `.meta` — not another face.
 
 ## Layout
 
@@ -2407,8 +2422,8 @@ while every other gate stays green, and new art written with the Editor closed i
 draws as a white rectangle. **`▸ Addressables ▸ Sync All Assets` has been run and saved** (249
 registered, 175 removed, all 1,234 requested addresses resolve) and `AddressableAudit` is clean.
 Re-run both if anything under `Art/Siege/` or `Art/Fx/Siege/` is written again.
-<br>**Owed on the font drop (2026-09-14):** one look, on a device. `GameFont.ttf` is **Fredoka
-Bold** now and Segoe UI Black is gone (46a, 46b). **Addressables needs nothing** — the `.meta` guid
+<br>**Owed on the font drop (2026-09-14):** one look, on a device. `GameFont.ttf` is **Titan
+One** now, shipped as **Gemfire Display**, and Segoe UI Black is gone (46a–46c). **Addressables needs nothing** — the `.meta` guid
 was kept, so the address, the entry and the group are untouched and there is no white-rectangle
 half of 7b here; what Unity owes is an ordinary **reimport**, which is a click on the Editor
 window. The render mirror reads the same TTF, so `render_home.py`, `render_shop.py` and

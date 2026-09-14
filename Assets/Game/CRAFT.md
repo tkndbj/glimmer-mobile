@@ -1086,19 +1086,22 @@ copy nothing keeps in step.
   chest pack's zip in Downloads — no licensed source in the tree — and `--check` passes without it.
   Which pack chest is which tier is written down once, at the top of the tool; the jade one is
   left on the shelf because nothing pays a fifth tier (8d).
-- `Tools/make_game_font.py` — the one font: **Fredoka Bold**, instanced out of the variable file at
-  `wght=700, wdth=100`, plus **243 accented letters built from Fredoka's own bases and marks**.
-  **The axes are pinned here rather than left to the file**, because Unity's legacy `Font` draws a
-  variable TTF at its *default* instance: shipping `Fredoka[wdth,wght].ttf` as-is would have set the
-  whole game in Light with nothing failing anywhere. `--coverage` looks up every character in
-  `en.json` in the cut font's own cmap and the writer **refuses** a font that cannot draw one — a
-  glyph Unity cannot find is drawn as *nothing*, which is the white-rectangle class of fault (7b) on
-  a typeface. **`--proof` is the gate that matters** and is this tool's `--contact` sheet: it draws
-  Turkish, Polish, Czech, Hungarian and Nordic names, and it caught three composition faults that
-  every numeric reading here was happy with (46b). `--check` proves the shipped TTF reproduces,
-  which needs `recalcTimestamp=False` on the load or fontTools stamps `head.modified` with the wall
-  clock and every run disagrees with the last. It replaced **Segoe UI Black**, which could not
-  legally ship (46a), by way of Nunito Black, which was cut, rendered and rejected on sight.
+- `Tools/make_game_font.py` — the one font: **Titan One**, shipped as **Gemfire Display**
+  (the source carries a Reserved Font Name, and OFL condition 3 forbids a *modified* version
+  from using it — adding a composed glyph is a modification), plus **172 accented letters built
+  from the face's own bases and marks**. `--coverage` looks up every character in `en.json` in
+  the cut font's own cmap and the writer **refuses** a font that cannot draw one — a glyph Unity
+  cannot find is drawn as *nothing*, the white-rectangle class of fault (7b) on a typeface — and
+  it prints what the face can spell per language on every build, which is a report rather than a
+  gate. **`--proof` is the gate that matters** and is this tool's `--contact` sheet: it draws
+  Turkish, Polish, Czech, Hungarian and Nordic names, and has caught four composition faults
+  that every numeric reading here was happy with (46c). `--check` proves the shipped TTF
+  reproduces, which needs `recalcTimestamp=False` on the load or fontTools stamps
+  `head.modified` with the wall clock and every run disagrees with the last. <br>**The face was
+  chosen by looking at ten at once** (46b): `Tools/hudkit.py` reads `GameFont.ttf`, so copying a
+  candidate over it and re-rendering `render_home.py` / `render_tasks.py` is the whole
+  instrument, and a ten-face contact sheet costs about a minute. Nunito Black and Fredoka Bold
+  were each cut, installed and rejected on sight before that.
 - `Tools/render_siege.py` — the eye for everything no number can see. `--phone` draws a 19.5:9 display
   with a home-indicator strip, which is the one shape that shows the shelf's foot and the three bands'
   real proportions. **Its insets are in the screen's own order (left, bottom, right, top)** and were
