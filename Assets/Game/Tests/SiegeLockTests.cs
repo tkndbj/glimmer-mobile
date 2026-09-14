@@ -143,104 +143,175 @@ namespace GlimmerGrove.Tests
             }
         }
 
-        // ------------------------------------------------------------------ the prism
+        // ------------------------------------------------------------------ the stun
         /// <summary>
-        /// A prism reaches the next colour round, for a share of a full hit — and never a third.
+        /// <b>No turret on the shelf reaches a colour that is not its own.</b>
         ///
-        /// <b>The cap is on colours and not on strength</b>: under the lock a turret covering two
-        /// colours is the only thing on the shelf that can answer a lane the player has not fed, so
-        /// a third would not be a better rung, it would be the lock coming off.
+        /// <para>
+        /// The roster carried one that did — a prism, on both its rungs — and under the lock what
+        /// it bought was the moments its own colour happened to be clear, which the seat beside it
+        /// was already answering at full weight. Withdrawn on the owner's reading (invariant 5d,
+        /// asked of a purchase) and this is what stops it coming back by accident: the lock is a
+        /// property of <em>every</em> model, so a new ability that widened it would be a rule
+        /// nothing else in this file could see.
+        /// </para>
         /// </summary>
         [Test]
-        public void APrismReachesOneMoreColourAndNeverTwo()
+        public void NoTurretOnTheShelfReachesASecondColour()
         {
-            var ward = new SiegeWard(0, new WardModel("t", WardAbility.Prism, 6, 0, 0, 0, 1, 1,
-                                                      10, 10));
+            foreach (var model in WardCatalog.Default.Models)
+            {
+                var ward = new SiegeWard(0, model);
 
-            Assert.AreEqual(10, ward.ReachTenths(0), "its own colour is never a share");
-            Assert.AreEqual(6, ward.ReachTenths(1), "the next colour round is its magnitude");
-            Assert.AreEqual(0, ward.ReachTenths(2));
-            Assert.AreEqual(0, ward.ReachTenths(3));
+                Assert.AreEqual(10, ward.ReachTenths(0), model.Id);
 
-            var greedy = new SiegeWard(0, new WardModel("g", WardAbility.Prism, 40, 0, 0, 0, 1, 1,
-                                                        10, 10));
-
-            Assert.AreEqual(10, greedy.ReachTenths(1), "a share may never exceed a full hit");
-            Assert.AreEqual(0, greedy.ReachTenths(2), "a prism reached a third colour");
-
-            Assert.AreEqual(1, SiegeWard.MostPartners);
+                for (int colour = 1; colour < SiegeLayout.Letters.Length; colour++)
+                    Assert.AreEqual(0, ward.ReachTenths(colour),
+                                    $"'{model.Id}' fires at a colour it was not bought for");
+            }
         }
 
         /// <summary>
-        /// <b>Own colour first, always</b>, which is what keeps the ability strictly additive: a
-        /// partner shot is one this turret would otherwise not have fired, so it can never displace
-        /// a full-weight hit and can never make a bolt weaker (invariant 42).
+        /// <b>A stun takes a raider out of the raid: it does not walk, it does not swing and it
+        /// does not cast — and then it walks again.</b>
+        ///
+        /// Stopping the march alone would be a stun worth nothing against the half of the hill it
+        /// matters most against — a raider already at the line, where a second of quiet is a blow
+        /// the line did not take. <b>The second half is driven through the board</b>, because the
+        /// countdown lives in <c>SiegeBoard.Smoulder</c> with the chill and the burn, and a stun
+        /// that was applied and never aged would read exactly like one that worked.
         /// </summary>
         [Test]
-        public void APrismTakesItsPartnerOnlyWhenItsOwnColourIsClear()
+        public void AStunStopsARaiderAndThenLetsItWalkAgain()
         {
-            // The roster's own prism rather than a synthetic one: what is being checked is the
-            // shipped turret, and a fixture that built its own would pass over a roster whose
-            // magnitude had been retuned to nought.
-            var prism = WardCatalog.Default.Find("prism");
+            var raider = new SiegeRaider(1, 0, SiegeKind.Creeper, 0, 0f);
 
-            Assert.IsNotNull(prism, "the roster no longer carries a prism");
-            Assert.AreEqual(WardAbility.Prism, prism.Ability);
-            Assert.Greater(prism.Magnitude, 0, "a prism with no share reaches nothing");
+            Assert.AreEqual(1f, raider.Pace, .0001f, "an unhurt raider walks at its own pace");
+
+            raider.Stagger(1f);
+
+            Assert.IsTrue(raider.Stunned);
+            Assert.AreEqual(0f, raider.Pace, .0001f, "a stunned raider is still walking");
+
+            // A chill under a stun is the stun, not the sum: being stopped is not a rate.
+            raider.Freeze(4, 2f);
+            Assert.AreEqual(0f, raider.Pace, .0001f);
+
+            // **No fuel is poured in**, so the line never fires and the raider under test lives
+            // for the length of the measurement.
+            var board = SiegeBoard.Build(Layout(new[] { "r" }));
+
+            Frames(board, SiegeTuning.FirstWaveAfter + 1f);
+
+            var walking = board.Raiders[0];
+
+            Assert.IsTrue(walking.OnTheHill, "the wave never came out");
+            Assert.Greater(walking.March, 0f, "the raider never started walking");
+
+            float held = walking.March;
+
+            walking.Stagger(.5f);
+            Frames(board, .4f);
+
+            Assert.AreEqual(held, walking.March, .0001f, "a stunned raider walked on");
+
+            Frames(board, .6f);
+
+            Assert.Greater(walking.March, held, "a stun never ran out");
+        }
+
+        /// <summary>
+        /// <b>A stun can never hold a raider in place, and that bound is what makes the ability
+        /// safe to sell.</b>
+        ///
+        /// <para>
+        /// A fuelled ward gets a bolt away every <c>SiegeTuning.FireEvery</c> seconds, which is
+        /// shorter than either stun on the shelf — so a stun that refreshed the way a chill and a
+        /// burn do would stop its own colour for the whole run, and a raid that cannot reach the
+        /// line is a fail state that rejects nothing (invariant 5d, from the other side).
+        /// </para>
+        /// <para>
+        /// <b>Played rather than reasoned about</b>: a stun turret is stood on red, the tube is
+        /// kept full, and the hill is asked how far it got. The share is what a player feels, and
+        /// it is the arithmetic the family's ladder rests on.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AStunCanNeverHoldTheHillWhereItStands()
+        {
+            var stunner = WardCatalog.Default.Find("spectrum");
+
+            Assert.IsNotNull(stunner);
+            Assert.AreEqual(WardAbility.Stun, stunner.Ability);
 
             var line = WardLine.Resolve(WardCatalog.Default,
-                                        new[] { new WardSlot('r', prism.Id) }, (_, __) => true);
+                                        new[] { new WardSlot('r', stunner.Id) }, (_, __) => true);
 
-            Assert.AreEqual(prism, line.At(0), "the red seat did not take the prism");
-
-            // A hill of nothing but the colour the red seat reaches *into*: its own has nothing on
-            // it, so every shot it fires is a shot it would otherwise not have fired at all.
-            var board = SiegeBoard.Build(Layout(new[] { "gggg" }), line);
-
+            // A brute, so it survives long enough to be measured, and a plain line for the other
+            // seats - nothing but the red ward is fed, so nothing but the red ward fires.
+            var board = SiegeBoard.Build(Layout(new[] { "R" }), line);
             int red = Plan(board).WardOf('r');
-            Assert.AreEqual(WardAbility.Prism, board.Wards[red].Ability);
 
-            Feed(board, red, 20f);
-            Frames(board, SiegeTuning.FirstWaveAfter + 4f);
+            Assert.AreEqual(WardAbility.Stun, board.Wards[red].Ability);
 
-            Assert.Less(board.Wards[red].Fuel, 20f,
-                        "a prism never reached the colour it was bought to reach");
+            Frames(board, SiegeTuning.FirstWaveAfter + .5f);
 
-            // And its own colour comes first: on a hill carrying both, nothing green is touched
-            // while a red is standing.
-            var mixed = SiegeBoard.Build(Layout(new[] { "rg" }), line);
+            var brute = board.Raiders[0];
+            Assert.IsTrue(brute.OnTheHill, "the wave never came out");
 
-            Feed(mixed, red, 20f);
+            int frames = 0, stunned = 0;
 
-            // **Asked frame by frame, because the answer changes.** Collecting the bolts and
-            // reading them afterwards would ask "was a red standing" long after the prism had
-            // killed it - which is exactly the bolt this is supposed to allow.
-            int fired = 0;
-
-            for (int i = 0; i < 60 * 8; i++)
+            for (int i = 0; i < 60 * 6; i++)
             {
-                bool anyRed = false;
+                // Topped up every frame, so this is the most stunning the mode can ever do.
+                Feed(board, red, board.Wards[red].Capacity);
+                board.Advance(1f / 60f);
 
-                foreach (var raider in mixed.Raiders)
-                    if (raider.Alive && raider.OnTheHill && raider.Colour == 0) anyRed = true;
+                if (!brute.Alive) break;
 
-                foreach (var bolt in mixed.Advance(1f / 60f).Bolts)
-                {
-                    if (bolt.Ward != red || bolt.Extra) continue;
-
-                    fired++;
-
-                    var at = mixed.Find(bolt.Raider);
-                    int colour = at != null ? at.Colour : 0;
-
-                    if (!anyRed) continue;
-
-                    Assert.AreEqual(0, colour,
-                                    "a prism took its partner while its own colour was standing");
-                }
+                frames++;
+                if (brute.Stunned) stunned++;
             }
 
-            Assert.Greater(fired, 0, "the prism never fired");
+            Assert.Greater(frames, 60, "the brute died before the measurement meant anything");
+            Assert.Greater(stunned, 0, "the stun turret never stunned anything");
+
+            float share = stunned / (float)frames;
+            float most = stunner.Extent / 10f / (stunner.Extent / 10f + SiegeTuning.StunRest);
+
+            Assert.LessOrEqual(share, most + .05f,
+                               $"a stun held {share:P0} of the clock against a ceiling of "
+                               + $"{most:P0} - a raid that cannot reach the line is a fail state "
+                               + "that rejects nothing");
+
+            Assert.Greater(brute.March, 0f, "the brute never moved at all");
+        }
+
+        /// <summary>
+        /// <b>The two stun rungs differ in the number the ability actually reads.</b>
+        ///
+        /// A magnitude nobody reads is what made a thousand-gem breaker exactly a
+        /// four-thousand-credit cleaver, and a stun reads its <c>Extent</c> alone — so a shelf
+        /// whose two stun rungs differed in magnitude would pass every gate and sell one turret at
+        /// two prices (invariant 5d, on the one thing a player pays for).
+        /// </summary>
+        [Test]
+        public void TheDearerStunHoldsForLonger()
+        {
+            var cheap = WardCatalog.Default.Find("prism");
+            var dear = WardCatalog.Default.Find("spectrum");
+
+            Assert.IsNotNull(cheap, "the roster no longer carries the earned stun rung");
+            Assert.IsNotNull(dear, "the roster no longer carries the bought stun rung");
+
+            Assert.AreEqual(WardAbility.Stun, cheap.Ability);
+            Assert.AreEqual(WardAbility.Stun, dear.Ability);
+
+            Assert.Greater(cheap.Extent, 0, "a stun with no seconds stops nothing");
+            Assert.Greater(dear.Extent, cheap.Extent,
+                           "the dearer stun holds no longer than the one below it");
+
+            Assert.Less(cheap.Order, dear.Order, "the cheaper rung sits above the dearer one");
         }
 
         // ------------------------------------------------------------------ the breather
@@ -813,7 +884,8 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// <b>A boss is what a ward shoots when it has nothing of its own left to shoot.</b>
         ///
-        /// Strictly a bolt it would otherwise not have fired, exactly as a prism's partner is. A
+        /// Strictly a bolt it would otherwise not have fired, which is the only shape in which
+        /// anything may reach past the lock at all. A
         /// boss holds the middle of the hill while its escort walks at the wards, so a line that
         /// turned to face the boss would be a line taken apart by the wave standing in front of
         /// it.

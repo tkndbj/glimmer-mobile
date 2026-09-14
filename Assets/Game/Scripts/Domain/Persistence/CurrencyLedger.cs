@@ -131,6 +131,20 @@ namespace GlimmerGrove.Persistence
         /// <summary>What every streak night grant records as its cause.</summary>
         public const string StreakNightReason = "streak_night";
 
+        /// <summary>
+        /// A task's chest: <c>task:{period}:{key}:{taskId}:{currency}</c>.
+        ///
+        /// Derived from what earned it, for <see cref="DailyChestId"/>'s reason, and parsed
+        /// back by <c>functions/src/tasks.ts</c>, which re-rolls the chest from the same three
+        /// facts. The period is spelt out rather than inferred from the key's size, because a
+        /// day key and a week key are both small integers and a database key must not depend
+        /// on which decade it is.
+        /// </summary>
+        public static string TaskChestId(Tasks.TaskPeriod period, int key, string taskId, string currency)
+            => $"task:{Tasks.TaskPeriods.Id(period)}:{key}:{taskId}:{currency}";
+
+        public const string TaskChestReason = "task_chest";
+
         public GrantEntryDto ToDto()
             => new GrantEntryDto { id = Id, amount = Amount, unix = Unix, reason = Reason };
 
@@ -325,8 +339,18 @@ namespace GlimmerGrove.Persistence
         public void ApplyServerState(long grantedBaseline, long spentBaseline,
                                      ICollection<string> confirmedSpendIds, long confirmedThroughUnix,
                                      long earnedFloor = 0,
-                                     ICollection<string> confirmedGrantIds = null)
+                                     ICollection<string> confirmedGrantIds = null,
+                                     ICollection<string> rejectedGrantIds = null)
         {
+            // A claim the server refused is dropped, and the balance it was inflating goes
+            // with it. Before the confirmed ids, so an id that somehow appears in both lists
+            // is dropped either way — a refusal is the stronger answer.
+            if (rejectedGrantIds != null && rejectedGrantIds.Count > 0)
+            {
+                for (int i = _pendingGrants.Count - 1; i >= 0; i--)
+                    if (rejectedGrantIds.Contains(_pendingGrants[i].Id)) _pendingGrants.RemoveAt(i);
+            }
+
             GrantedBaseline = grantedBaseline < 0 ? 0 : grantedBaseline;
             SpentBaseline = spentBaseline < 0 ? 0 : spentBaseline;
 

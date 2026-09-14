@@ -280,6 +280,16 @@ namespace GlimmerGrove.Homestead
         static HomesteadLayout()
         {
             HomesteadLedger.Changed += () => _version++;
+
+            // A catalog arriving is the first moment the rows can be read against a hall
+            // plot at all, and the moment a plot that *grew* is first seen by a save written
+            // against the smaller one — see Settle. Committed rather than merely written,
+            // because a copy handed back to the inventory is a change to the card every
+            // board draws (invariant 19j), so it has to reach the file and the sync.
+            HomesteadCatalog.Changed += () =>
+            {
+                if (Settle(HomesteadCatalog.Current)) Commit();
+            };
         }
 
         /// <summary>
@@ -434,6 +444,65 @@ namespace GlimmerGrove.Homestead
         /// </summary>
         public static bool TryStandAt(HomesteadCatalog catalog, int col, int row, out GroveStand stand)
             => Occupancy(catalog).TryStandAt(col, row, out stand);
+
+        /// <summary>
+        /// Hands back to the inventory anything standing on the hall's plot, and says whether
+        /// it had to.
+        ///
+        /// <para>
+        /// <b>Nothing a player does can put a piece there, and two things nobody does can.</b>
+        /// <see cref="TryPlace"/> refuses the plot and <see cref="MoveHall"/> refuses occupied
+        /// ground, so a live device never writes an overlap. A <em>content drop</em> can: the
+        /// plot went from two tiles to four (invariant 16p) and every piece that had stood
+        /// beside the smaller hall was suddenly inside the bigger one, drawn through it on
+        /// every board — the owner's own second account showed a town hall buried under a
+        /// tavern. A <em>merge</em> can too: one device moves the hall, the other builds on
+        /// the ground it moved to, and the join keeps both because both are the later fact
+        /// about their own slot (invariant 11c). Neither is visible to any gate, because a
+        /// row standing on the hall parses, validates, publishes and scores exactly like one
+        /// that does not.
+        /// </para>
+        /// <para>
+        /// <b>The hall wins, and the piece goes back into the inventory rather than into the
+        /// bin.</b> An emptied row is a real instruction (invariant 16), stamped now, so it
+        /// carries to the other device by recency and the copy is placeable again on both —
+        /// where a row silently skipped by the index would be a copy that is neither standing
+        /// nor in hand, and would spring back the day the hall moved off it. The index is what
+        /// decides which rows: it refuses them (<see cref="GroveOccupancy.Displaced"/>), and
+        /// this writes down what it refused. Deterministic on every device that loads the
+        /// same rows, which is what makes it a resolution rather than a fight.
+        /// </para>
+        /// <para>
+        /// Called when a catalog is published and when a save is read while one is current —
+        /// the two moments a row can first meet a plot. It writes nothing when there is
+        /// nothing to settle, which is every load on every grove that never met either fault.
+        /// </para>
+        /// </summary>
+        public static bool Settle(HomesteadCatalog catalog)
+        {
+            if (catalog == null || catalog.IsEmpty) return false;
+
+            var displaced = Occupancy(catalog).Displaced;
+            if (displaced.Count == 0) return false;
+
+            long now = GameClock.NowUnix();
+            int emptied = 0;
+
+            foreach (var stand in displaced)
+            {
+                // The starter companion is shown, never stored (invariant 16f), so it can be
+                // displaced by a hall standing on its tile and there is no row to empty.
+                if (!_placed.TryGetValue(stand.AnchorId, out var row) || !row.IsOccupied) continue;
+
+                Write(stand.AnchorId, new Placement(string.Empty, now, 0));
+                emptied++;
+            }
+
+            if (emptied == 0) return false;
+
+            Telemetry.Track("grove_settled", "returned", emptied, "hall", HallSlot);
+            return true;
+        }
 
         /// <summary>Whether the player may build on a tile: owned land that the hall does not cover.</summary>
         static Func<int, int, bool> Buildable(HomesteadCatalog catalog)
@@ -1019,6 +1088,13 @@ namespace GlimmerGrove.Homestead
                     _placed[row.slot] = new Placement(GroveResidents.Rename(row.piece), row.setUnix,
                                                       row.facing);
                 }
+
+            // A merge can land a row under the hall (see Settle), and this is the one door a
+            // merge comes through. Written, not committed: the file is being *read*, so the
+            // save layer is only told it is dirty and nothing hung on Edited fires — the same
+            // rule as the Raise below. When no catalog is current yet, the catalog's own
+            // arrival settles it instead.
+            if (Settle(HomesteadCatalog.Current)) SaveService.MarkDirty();
 
             Raise();
         }

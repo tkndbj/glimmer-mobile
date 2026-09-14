@@ -75,13 +75,14 @@ namespace GlimmerGrove.Tests
         static SiegeLayout Shipped() => Layout(Field, Gems, Wards, Waves, Boss, Cogs);
 
         static SiegeLayout Layout(string[] rows, string gems, string wards, string[] waves,
-                                  string boss = null, int cogs = 0)
+                                  string boss = null, int cogs = 0, int tough = 0,
+                                  string charms = "")
         {
             Assert.IsTrue(ProtoGrid.TryRead(rows, rows[0].Length, rows.Length,
                                             SiegeLayout.Cells, out var grid, out string error),
                           error);
 
-            return new SiegeLayout(grid, gems, wards, waves, boss, cogs);
+            return new SiegeLayout(grid, gems, wards, waves, boss, cogs, null, tough, charms);
         }
 
         // ------------------------------------------------------------------ the whole chapter
@@ -90,11 +91,35 @@ namespace GlimmerGrove.Tests
         {
             public readonly string Id, Gems, Wards, Boss;
             public readonly string[] Rows, Waves;
-            public readonly int Cogs;
+            public readonly int Cogs, Tough;
+
+            /// <summary>
+            /// Which charms this rung's refill deals, as letters. See <c>SiegeDto.charms</c>.
+            ///
+            /// <b>Carried here for <see cref="Tough"/>'s reason, and it is the same reason.</b>
+            /// A chapter deals the first <em>n</em> charms of the roster, derived from its own
+            /// ordinal — and nothing in this fixture has a catalog, so a set that came from the
+            /// chapter index would be empty in every run played here. Ninety runs a chapter,
+            /// silently against a board nobody ships. <c>Tools/verify/rungs.py</c> compares this
+            /// field against the body too.
+            /// </summary>
+            public readonly string Charms;
+
+            /// <summary>
+            /// This chapter's star lines, in hundredths of par.
+            ///
+            /// <b>Carried here for <see cref="Tough"/>'s reason</b>: a siege authors its own
+            /// because its par overstates what a run really spends, and they differ per chapter -
+            /// so a sweep that graded against <c>LevelTuning.DefaultGoldFactor</c> would report a
+            /// ladder this mode does not ship.
+            /// </summary>
+            public readonly int Gold = 75, Silver = 92;
 
             public Rung(string id, string[] rows, string gems, string wards, string[] waves,
-                        string boss, int cogs)
+                        string boss, int cogs, int tough = 0, int gold = 75, int silver = 92,
+                        string charms = "")
             {
+                Charms = charms;
                 Id = id;
                 Rows = rows;
                 Gems = gems;
@@ -102,9 +127,20 @@ namespace GlimmerGrove.Tests
                 Waves = waves;
                 Boss = boss;
                 Cogs = cogs;
+                Tough = tough;
+                Gold = gold;
+                Silver = silver;
             }
 
-            public SiegeLayout Built() => Layout(Rows, Gems, Wards, Waves, Boss, Cogs);
+            /// <summary>
+            /// <b>Carried on the rung rather than looked up</b>, and it is the whole reason the
+            /// surge lives on the board (see <c>SiegeDto.tough</c>). Nothing here has a catalog: a
+            /// figure that came from the chapter index would be the plain one in every run this
+            /// fixture plays, so the sweep would report on a hill nobody ships — which is the fault
+            /// <c>Tools/verify/rungs.py</c> exists to catch, and that gate compares this field too.
+            /// </summary>
+            public SiegeLayout Built()
+                => Layout(Rows, Gems, Wards, Waves, Boss, Cogs, Tough, Charms);
         }
 
         /// <summary>
@@ -125,16 +161,16 @@ namespace GlimmerGrove.Tests
         /// </summary>
         static readonly Rung[] Chapter =
         {
-            new Rung("s01_firstwatch", new[] { "brbrgbgg", "rrggbbrg", "bbgrrggr", "gbrbgrbr", "rggrrbgb" }, "rgb", "rgb", new[] { "rgbrgb", "rgbrgbrgb" }, "", 0),
-            new Rung("s01_ironward", new[] { "rrgbbgbg", "bbgrbrbr", "rbbgrrgb", "grgbgbgr", "rggrgbbg" }, "rgb", "rgb", new[] { "rgbrgb", "rgbrgbrgb", "rgBrgbrg" }, "", 25),
-            new Rung("s01_stonewatch", new[] { "rrggbggb", "gbrbrbrb", "bggrgbrr", "rrgbrggb", "rgrbrbgg" }, "rgb", "rgb", new[] { "rgbrgB", "rgbRGbrg", "RGBRGbrgb" }, "", 25),
-            new Rung("s01_thornhollow", new[] { "gbrryrbb", "rygbrrbr", "bbgybggy", "ybygyybb", "gyrbbggr" }, "rgby", "rgby", new[] { "rrrgggbb", "YYYY!rrrr", "GGBBYY" }, "", 25),
-            new Rung("s01_warlordsgate", new[] { "ygrrbrgg", "ryyrgrrb", "bbggyyby", "brryrbyg", "ggrbggry" }, "rgby", "rgby", new[] { "rgbyrg", "rgby!bRGby", "RGbyRG" }, "warlord:r", 25),
-            new Rung("s01_bramblerun", new[] { "bbrgrbrg", "bggrbgyy", "rgyygrry", "brbybyyg", "yrbrgrrg" }, "rgby", "rgby", new[] { "RGby#rby", "RGBY!yRGby", "RGBYRG#gRGby" }, "", 25),
-            new Rung("s01_ashenfield", new[] { "yrbyrgyy", "brggrbby", "gbrgbyrr", "byrbgybg", "yrbbrrbg" }, "rgby", "rgby", new[] { "#bgyRGby", "RGBY#rG!g", "RGBYRG#y" }, "", 25),
-            new Rung("s01_blackmarch", new[] { "bggbggyr", "rbybgrby", "ybyybryb", "brrgybgr", "bybggybr" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRGby", "RGBY#gRGby!y" }, "", 25),
-            new Rung("s01_thornsiege", new[] { "gbyygryr", "rbgbrbry", "rgrbgybb", "yygryyrg", "bbrgyrgg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBY#rGBY", "RGBY#gRGB#b!r" }, "", 25),
-            new Rung("s01_lastlight", new[] { "bbrgbrry", "bbggbgyg", "ryybrgrr", "ryrgbyby", "ggyrgyry" }, "rgby", "rgby", new[] { "rgby!bRGby", "RGB#rY#gG", "RGbyRGby" }, "overlord:y", 25),
+            new Rung("s01_firstwatch", new[] { "brbrgbgg", "rrggbbrg", "bbgrrggr", "gbrbgrbr", "rggrrbgb" }, "rgb", "rgb", new[] { "rgbrgb", "rgbrgbrgb" }, "", 0, 0, 75, 92, ""),
+            new Rung("s01_ironward", new[] { "rrgbbgbg", "bbgrbrbr", "rbbgrrgb", "grgbgbgr", "rggrgbbg" }, "rgb", "rgb", new[] { "rgbrgb", "rgbrgbrgb", "rgBrgbrg" }, "", 25, 0, 75, 92, ""),
+            new Rung("s01_stonewatch", new[] { "rrggbggb", "gbrbrbrb", "bggrgbrr", "rrgbrggb", "rgrbrbgg" }, "rgb", "rgb", new[] { "rgbrgB", "rgbRGbrg", "RGBRGbrgb" }, "", 25, 0, 75, 92, "p"),
+            new Rung("s01_thornhollow", new[] { "gbrryrbb", "rygbrrbr", "bbgybggy", "ybygyybb", "gyrbbggr" }, "rgby", "rgby", new[] { "rrrgggbb", "YYYY!rrrr", "GGBBYY" }, "", 25, 0, 75, 92, "p"),
+            new Rung("s01_warlordsgate", new[] { "ygrrbrgg", "ryyrgrrb", "bbggyyby", "brryrbyg", "ggrbggry" }, "rgby", "rgby", new[] { "rgbyrg", "rgby!bRGby", "RGbyRG" }, "warlord:r", 25, 0, 75, 92, "p"),
+            new Rung("s01_bramblerun", new[] { "bbrgrbrg", "bggrbgyy", "rgyygrry", "brbybyyg", "yrbrgrrg" }, "rgby", "rgby", new[] { "RGby#rby", "RGBY!yRGby", "RGBYRG#gRGby" }, "", 25, 0, 75, 92, "p"),
+            new Rung("s01_ashenfield", new[] { "yrbyrgyy", "brggrbby", "gbrgbyrr", "byrbgybg", "yrbbrrbg" }, "rgby", "rgby", new[] { "#bgyRGby", "RGBY#rG!g", "RGBYRG#y" }, "", 25, 0, 75, 92, "p"),
+            new Rung("s01_blackmarch", new[] { "bggbggyr", "rbybgrby", "ybyybryb", "brrgybgr", "bybggybr" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYRGby", "RGBY#gRGby!y" }, "", 25, 0, 75, 92, "p"),
+            new Rung("s01_thornsiege", new[] { "gbyygryr", "rbgbrbry", "rgrbgybb", "yygryyrg", "bbrgyrgg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBY#rGBY", "RGBY#gRGB#b!r" }, "", 25, 0, 75, 92, "p"),
+            new Rung("s01_lastlight", new[] { "bbrgbrry", "bbggbgyg", "ryybrgrr", "ryrgbyby", "ggyrgyry" }, "rgby", "rgby", new[] { "rgby!bRGby", "RGB#rY#gG", "RGbyRGby" }, "overlord:y", 25, 0, 75, 92, "p"),
         };
 
         /// <summary>
@@ -1429,6 +1465,90 @@ namespace GlimmerGrove.Tests
 
             Warlord(duel);
             Assert.IsFalse(duel.IsFinished, "a warlord standing on the hill is a goal left");
+        }
+
+        /// <summary>
+        /// A raised body is one more raider, never one fewer goal.
+        ///
+        /// <para>
+        /// <b>The ending was an equality on a tally of kills, and a bonecaller makes raiders that
+        /// tally has never heard of.</b> <c>GoalsLeft</c> was the authored raider count less
+        /// everything that had died, which is exact on every board whose raiders are all authored
+        /// — and on the one that raises twelve more, the count of the dead crossed the authored 27
+        /// <em>while the boss was standing</em> and then went straight past it. Both sides of that
+        /// are bugs: the model declares a rung cleared mid-fight, and the view — which is not
+        /// allowed to ask while something is dying (<c>SiegeView.Judge</c>) — misses the crossing
+        /// and never ends the run at all. Reported from play as the second.
+        /// </para>
+        /// <para>
+        /// <b>It was invisible to every gate in this file, and worse than invisible: it was
+        /// holding one of them up.</b> Measured under the old rule at the sweep's own nine
+        /// rhythms, <c>s04_barrowheart</c> read <b>3 of 9 held — and all three ended with the boss
+        /// alive</b>. The chapter gate was therefore scoring a rung on runs that stopped when 27
+        /// things had died, so the reading it published for the chapter's finale was of a fight
+        /// nobody had had.
+        /// </para>
+        /// <para>
+        /// <b>Played rather than staged</b>, because what is being pinned is a race between two
+        /// counters and a staged board would have to choose the moment the old rule got wrong.
+        /// The bar is asked on every frame of a real run: the reading may never go negative, and
+        /// the frame it says the run is over there must be nothing alive on the hill.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ARaisedBodyIsOneMoreRaiderAndNotOneFewerGoal()
+        {
+            var layout = Barrowfell[Barrowfell.Length - 1].Built();
+            var board = SiegeBoard.Build(layout);
+
+            int raised = 0;
+            float since = Unhurried;
+
+            for (int i = 0; i < 60 * 900; i++)
+            {
+                var report = board.Advance(1f / 60f);
+
+                for (int s = 0; s < report.Spells.Count; s++)
+                    if (report.Spells[s].Craft == SiegeSpell.Raise)
+                        raised += report.Spells[s].Damage;
+
+                Assert.GreaterOrEqual(board.GoalsLeft, 0,
+                                      "the reading the ending is taken off went negative, so the "
+                                      + "run can no longer reach it");
+
+                if (board.IsFinished)
+                {
+                    Assert.IsNull(board.Warlord,
+                                  "the run was declared over with the boss still standing");
+                    Assert.AreEqual(0, board.OnTheHill,
+                                    "the run was declared over with raiders still walking");
+                    break;
+                }
+
+                if (board.WardsStanding == 0) break;
+
+                for (int fuse = board.Bombs.Count - 1; fuse >= 0; fuse--)
+                    board.Detonate(board.Bombs[fuse].Id, null);
+
+                for (int loot = board.Cogs.Count - 1; loot >= 0; loot--)
+                    board.Take(board.Cogs[loot].Id);
+
+                for (int w = 0; w < board.Wards.Count; w++)
+                    if (board.Wards[w].Armed) board.Overcharge(w, null);
+
+                since += 1f / 60f;
+                if (since < Unhurried) continue;
+                if (!Aimed(board, out int a, out int b)) continue;
+
+                board.Swap(a, b);
+                since = 0f;
+            }
+
+            // Invariant 5d, asked of a fixture: a run that never met a raise proves nothing about
+            // what a raise does to the ending, and would go on passing if the boss stopped casting.
+            Assert.Greater(raised, 0,
+                           "the bonecaller never raised anything on this run, so nothing here was "
+                           + "tested - the rung, the rhythm or the spell has moved");
         }
 
 

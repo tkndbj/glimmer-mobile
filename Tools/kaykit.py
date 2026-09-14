@@ -242,7 +242,8 @@ def cullable(mesh, tex, pitch, yaws, probe=96):
 
 
 def render(mesh, tex, pitch, yaw, px, extent, super_sample=4,
-           light=(-0.40, 0.85, -0.50), ambient=0.55, rim=0.0, cull=None):
+           light=(-0.40, 0.85, -0.50), ambient=0.55, rim=0.0, cull=None,
+           sun=None, shadow=None):
     """One facing, as a straight-alpha RGBA float array of shape (px, px, 4), 0..255.
 
     Pure numpy and free of any randomness, so two runs on two machines agree byte for
@@ -250,6 +251,19 @@ def render(mesh, tex, pitch, yaw, px, extent, super_sample=4,
 
     `cull` drops back faces. It defaults to off; :func:`cullable` is what decides
     whether a given model may have it turned on.
+
+    **The light is two colours, and by default they are the two greys it always was.**
+    A face is lit by ``shadow + n.key * (sun - shadow)``, so `sun` is what a fully lit
+    face is multiplied by and `shadow` is what a face turned away from the key gets. Leave both
+    out and they are ``(1,1,1)`` and ``(ambient,)*3``, which is exactly the scalar
+    ``ambient + (1 - ambient) * n.key`` this used to compute — so nothing that does not
+    ask for a colour can move. Ask for one and the key becomes a *sun*: warm where it
+    lands, cool where it does not, which is the one thing a single grey cannot say and
+    the reason a flat-shaded pack renders as a diagram rather than as a place.
+
+    The pack's author drew no such light (see the module docstring), and this is the
+    deliberate exception to that: the grove is a screen rather than a spritesheet, and it
+    was asked to look like somewhere the sun reaches.
     """
     right, up, view = basis(pitch, yaw)
     verts = mesh.verts
@@ -270,6 +284,14 @@ def render(mesh, tex, pitch, yaw, px, extent, super_sample=4,
 
     key = np.asarray(light, np.float64)
     key = key / np.linalg.norm(key)
+
+    # The two ends of the light, always a colour and by default two greys — see above.
+    # float32 because they are about to multiply a float32 texture sample per pixel and a
+    # float64 scalar promotes the whole buffer (the NEP 50 trap this project has already
+    # paid for once).
+    lit = np.asarray(sun if sun is not None else (1.0, 1.0, 1.0), np.float32)
+    dark = np.asarray(shadow if shadow is not None else (ambient,) * 3, np.float32)
+    swing = lit - dark
     tex_h, tex_w = tex.shape[:2]
     has_uv, has_n = len(mesh.uvs) > 0, len(mesh.norms) > 0
 
@@ -307,8 +329,8 @@ def render(mesh, tex, pitch, yaw, px, extent, super_sample=4,
         if not win.any():
             continue
 
-        # Shading. **A flat triangle is shaded by one number, not by an array**, and that
-        # is not a micro-optimisation: a low-poly pack is flat-shaded almost everywhere,
+        # Shading. **A flat triangle is shaded by one colour, not by a buffer of them**,
+        # and that is not a micro-optimisation: a low-poly pack is flat-shaded almost everywhere,
         # and one wall of a church covers a quarter of a 2048-square frame — so the
         # per-pixel normal buffer for a single triangle ran to tens of megabytes and the
         # bake died of it on a machine with seven gigabytes free. Interpolating is kept
@@ -320,22 +342,26 @@ def render(mesh, tex, pitch, yaw, px, extent, super_sample=4,
             n0 = n1 = n2 = np.cross(verts[ib] - verts[ia], verts[ic] - verts[ia])
             smooth = False
 
+        # Both branches end holding a **colour** per shaded point rather than a number:
+        # `(..., 3)` where the normals are interpolated and `(3,)` where the triangle is
+        # flat. The rim is added as white to all three channels, because a rim is the sky
+        # behind the object and not the sun.
         if smooth:
             n = (w0[..., None] * n0 + w1[..., None] * n1 + w2[..., None] * n2)
             n /= np.maximum(np.linalg.norm(n, axis=-1, keepdims=True), 1e-12)
-            shade = ambient + (1.0 - ambient) * np.clip(n @ key, 0.0, 1.0)
+            ndl = np.clip(n @ key, 0.0, 1.0).astype(np.float32)
+            shade = dark + ndl[..., None] * swing
             if rim > 0.0:
-                shade = shade + rim * (1.0 - np.abs(n @ view)) ** 3
-            shade = shade.astype(np.float32)
+                shade = shade + (rim * (1.0 - np.abs(n @ view)) ** 3).astype(np.float32)[..., None]
         else:
             n = n0 / max(float(np.linalg.norm(n0)), 1e-12)
-            flat = ambient + (1.0 - ambient) * min(max(float(n @ key), 0.0), 1.0)
+            ndl = np.float32(min(max(float(n @ key), 0.0), 1.0))
+            shade = dark + ndl * swing
             if rim > 0.0:
                 # Light along the view axis falls off toward a silhouette, so `1 - |n.view|`
                 # is brightest exactly at the rim. It lifts an edge off the ground behind it
                 # without the keyline a flat render otherwise needs.
-                flat += rim * (1.0 - abs(float(n @ view))) ** 3
-            shade = np.float32(flat)
+                shade = shade + np.float32(rim * (1.0 - abs(float(n @ view))) ** 3)
 
         # Sample and shade **only the pixels that won the depth test**. Doing the whole
         # bounding box and then selecting is the same picture and several times the
@@ -353,7 +379,7 @@ def render(mesh, tex, pitch, yaw, px, extent, super_sample=4,
         else:
             rgb = np.full((a0.shape[0], 3), 180.0, np.float32)
 
-        rgb *= shade[win][:, None] if smooth else shade
+        rgb *= shade[win] if smooth else shade
 
         colour[y_lo:y_hi + 1, x_lo:x_hi + 1][win] = rgb
         alpha[y_lo:y_hi + 1, x_lo:x_hi + 1][win] = 1.0

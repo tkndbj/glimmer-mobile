@@ -20,11 +20,12 @@ namespace GlimmerGrove.Privacy
     /// network, which is exactly when a player is most likely to be looking for support.
     /// </para>
     /// <para>
-    /// <b>The host is <c>www</c>, deliberately.</b> Vercel serves www and 308-redirects the
-    /// apex to it, so the apex would work and would spend a redirect on every open — and the
-    /// same www host is what belongs in the Developer website field of both store listings, so
-    /// that ad crawlers fetch <c>app-ads.txt</c> directly rather than through the hop. One
-    /// spelling everywhere is the point.
+    /// <b>The host is <c>www</c>, deliberately.</b> The site is the publisher's own
+    /// (Tekoworld) and Vercel serves www and 308-redirects the apex to it, so the apex would
+    /// work and would spend a redirect on every open — and the same www host is what belongs
+    /// in the Developer website field of both store listings, so that ad crawlers fetch
+    /// <c>app-ads.txt</c> directly rather than through the hop. One spelling everywhere is
+    /// the point; the website's <c>site.url</c> carries the same value.
     /// </para>
     /// <para>
     /// Deliberately <b>not</b> a link to <c>/delete-account</c>. That page exists because Google
@@ -37,7 +38,7 @@ namespace GlimmerGrove.Privacy
     public static class LegalLinks
     {
         /// <summary>The canonical origin. Every link below is built from it.</summary>
-        public const string Site = "https://www.glimmergroove.app";
+        public const string Site = "https://www.tekoworld.com";
 
         /// <summary>Required in the app by 5.1.1(i), and on both store listings.</summary>
         public const string Privacy = Site + "/privacy";

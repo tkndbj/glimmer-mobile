@@ -568,6 +568,28 @@ namespace GlimmerGrove.Content
         public string wards;
 
         /// <summary>
+        /// How much health every raider on this hill carries, in <b>tenths</b> of what its kind
+        /// ordinarily has. Absent or nought means ten, which is the plain figure.
+        ///
+        /// <para>
+        /// <b>Derived and written down, never invented</b> — the same bargain <c>backdrop</c> and
+        /// <c>mapStrips</c> strike (invariant 7c): a chapter's raiders are a step tougher than the
+        /// one before it (<c>SiegeTuning.ToughnessFor</c>), the chapter tool computes that from its
+        /// ordinal, and the number lands in the body so the board <em>says</em> what it is. A level
+        /// still authors no numbers (37d); a generator does.
+        /// </para>
+        /// <para>
+        /// <b>In the body rather than looked up at run time, and that is the load-bearing part.</b>
+        /// The hold simulation — this mode's only instrument (37j) — builds its layouts from an
+        /// inline table with no catalog anywhere near it, so a surge that came from the chapter
+        /// index would be <c>None</c> in every measurement this mode has: ninety runs a chapter,
+        /// silently against a hill nobody ships. Carried on the board, it travels into every gate
+        /// that reads one.
+        /// </para>
+        /// </summary>
+        public int tough;
+
+        /// <summary>
         /// The waves, in the order they come. One letter per raider — lower case a creeper, upper
         /// case a brute — so a wave's shape is visible in the file. A wave steps out on a clock, or
         /// the moment the hill is empty, whichever comes first.
@@ -612,6 +634,42 @@ namespace GlimmerGrove.Content
         /// </para>
         /// </summary>
         public int cogs;
+
+        /// <summary>
+        /// Which charms this field's refill may deal, as letters — <c>"p"</c>, <c>"pl"</c>,
+        /// <c>"pls"</c> — or absent for a level that deals none.
+        ///
+        /// <para>
+        /// <b>A charm is a power riding on an ordinary gem</b> (<c>SiegeCharm</c>): the cell is
+        /// still that colour and still worth that fuel, and what it adds happens at the moment it
+        /// goes. A prism joins a run of any colour; a lance takes its whole row and column with
+        /// it; a stormglass throws a bolt at every raider on the hill and two at everything wearing
+        /// its own colour.
+        /// </para>
+        /// <para>
+        /// <b>Which, and never how often.</b> How rare a charm is belongs to the mode
+        /// (<c>SiegeTuning.CharmWithin</c>), because a level that could tune its own rarity
+        /// would be a second place this mode's difficulty is decided and the two would drift the
+        /// first time either was retuned. What a level says is whether its board has met this
+        /// mechanic yet — which is content, and is why the opening rung of the first chapter
+        /// authors none at all (invariant 24).
+        /// </para>
+        /// <para>
+        /// <b>Derived from the chapter's ordinal and written down, never invented</b> — the same
+        /// bargain <c>tough</c> and <c>backdrop</c> strike (invariants 37by, 7c). A chapter at
+        /// ordinal <em>n</em> deals the first <em>n</em> charms of the roster, so a player meets
+        /// one new one a chapter; the chapter tool computes that and the body carries the answer,
+        /// because the hold simulation builds its layouts from an inline table with no catalog
+        /// anywhere near it and a set that came from the index would be empty in every measurement
+        /// this mode has.
+        /// </para>
+        /// <para>
+        /// <b>Never written into <see cref="rows"/>.</b> A field is authored settled and dealt with
+        /// nothing on it; a charm standing in an authored cell would be a payoff its author placed
+        /// rather than one the player was dealt (invariant 20m).
+        /// </para>
+        /// </summary>
+        public string charms;
 
         /// <summary>
         /// The ramp, for a lane whose waves never stop, or absent for an ordinary siege.
@@ -897,6 +955,9 @@ namespace GlimmerGrove.Content
         /// </para>
         /// </summary>
         public WardsDto wards;
+
+        /// <summary>The task slates and their chest ladder. Optional; see <see cref="TaskTableDto"/>.</summary>
+        public TaskTableDto tasks;
     }
 
     /// <summary>
@@ -1456,6 +1517,69 @@ namespace GlimmerGrove.Content
 
         /// <summary>Exactly one of these is picked, by weight. May be empty.</summary>
         public DailyOptionDto[] options;
+
+        /// <summary>
+        /// Whether the file wrote this chest at all. <c>JsonUtility</c> instantiates a class
+        /// field the file never mentioned, so a null test says nothing; an entry with neither
+        /// array is a value a real chest cannot hold.
+        /// </summary>
+        public bool IsAuthored => guaranteed != null || options != null;
+    }
+
+    /// <summary>
+    /// The task rules: the chest ladder, the two slates and how many of each are dealt at a
+    /// time. See <c>TaskTable</c>.
+    ///
+    /// <para>
+    /// Every reward here is a chest, and a chest is a <see cref="TaskTierDto"/> — so a task
+    /// authors no amounts, only which rung of the ladder it pays. Optional and not its own
+    /// schema version, for <see cref="DailyChestDto"/>'s reason: a client that predates it
+    /// keeps its built-in slate.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class TaskTableDto
+    {
+        /// <summary>How many of each slate are dealt per period. Unwritten reads as -1 and inherits.</summary>
+        public int activePerPeriod = -1;
+
+        /// <summary>The chest ladder, humblest first. Position is the rank.</summary>
+        public TaskTierDto[] tiers;
+
+        /// <summary>Dealt again every day. Order is the rotation.</summary>
+        public TaskEntryDto[] daily;
+
+        /// <summary>Dealt again every week. Order is the rotation.</summary>
+        public TaskEntryDto[] weekly;
+
+        /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
+        public bool IsAuthored => tiers != null || daily != null || weekly != null;
+    }
+
+    /// <summary>One rung of the chest ladder. <c>id</c> is permanent: it names art and copy.</summary>
+    [Serializable]
+    public sealed class TaskTierDto
+    {
+        public string id;
+
+        /// <summary>What opening one pays, in the daily chest's own shape.</summary>
+        public DailyChestEntryDto chest;
+    }
+
+    /// <summary>
+    /// One task. <c>id</c> is permanent — it is written into save files and claim ids —
+    /// <c>goal</c> is a <c>TaskGoals</c> id, <c>target</c> how many, <c>tier</c> a
+    /// <see cref="TaskTierDto.id"/>, and <c>retired</c> takes it out of the rotation while
+    /// keeping it priced, so a claim already in flight still resolves.
+    /// </summary>
+    [Serializable]
+    public sealed class TaskEntryDto
+    {
+        public string id;
+        public string goal;
+        public int target;
+        public string tier;
+        public bool retired;
     }
 
     /// <summary>

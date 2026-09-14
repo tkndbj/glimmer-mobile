@@ -46,10 +46,16 @@ namespace GlimmerGrove
             Vector2 from = mob.Node.anchoredPosition + new Vector2(0f, mob.Height * .10f);
 
             // **A roar is thrown at the ground it is standing on**, so it has no ward and its
-            // "flight" is an expanding ring rather than something crossing the hill. Everything
-            // below asks the craft rather than testing the ward index, which is the rule the board
-            // keeps too (`SiegeTuning.AimsAtAWard`).
-            bool aimed = cast.Craft != SiegeSpell.Rally && cast.Ward >= 0;
+            // "flight" is an expanding ring rather than something crossing the hill.
+            //
+            // **It asks the rule rather than restating half of it**, which its own comment already
+            // claimed and the code did not: this read `Craft != Rally && Ward >= 0`, naming one of
+            // the three unaimed crafts and leaving the other two to be caught by an index nobody
+            // set. That happened to work and it is the shape invariant 5d warns about — a clause
+            // carrying a rule that has moved twice since, under a comment pointing at the rule it
+            // was supposed to be. The index test is kept as well because a -1 here would be a lane
+            // position on the ward line, not a refusal.
+            bool aimed = SiegeTuning.AimsAtAWard(mob.Kind) && cast.Ward >= 0;
 
             Vector2 to = aimed ? new Vector2(PostX(cast.Ward), _lineY + Cell * .3f) : from;
 
@@ -77,7 +83,21 @@ namespace GlimmerGrove
             // from the caster's end, by the gather above and the tether below. A roar has no target
             // at all, so what closes is a ring on the warbringer itself, which says "something is
             // about to happen *here*" about the boss and never about the line.
-            if (!aimed) Brace(mob, from);
+            //
+            // **It belongs to the roar, not to "everything that is not aimed", and that
+            // distinction was bought by two bosses shipping wearing it.** A ring was drawn for the
+            // one spell in the mode that has nothing else to say — a warbringer's rally throws no
+            // object, lights no tether and lands on the whole line at once — and `!aimed` then
+            // silently collected the two crafts added after it. A devour and a raise both throw
+            // something the player can watch (the cogs going, the bodies arriving), both have a
+            // fourteen-frame cast reel of their own on top of the gather and the storm, and
+            // neither needs a seven-cell circle closing over the hill to say a spell is coming.
+            // Reported from play on the bonecaller, in one sentence: *what the hell is that*.
+            //
+            // It was worse than redundant on those two, in the way invariant 37z predicts: the
+            // ring took `Casting(Warbringer)` rather than the caster's own colour, so a boss with
+            // a palette of its own was announcing itself in another boss's.
+            if (cast.Craft == SiegeSpell.Rally) Brace(mob, from);
 
             // **The storm the wind-up is actually made of** (see `SiegeView.Storm`): crackle
             // accelerating over the whole window, motes dragged in off the hill, and — for a boss
@@ -144,11 +164,20 @@ namespace GlimmerGrove
         /// is about to set running. <b>The one ring left on this board that belongs to a boss</b>,
         /// and it is drawn on the boss: a ring that closes means something is about to happen
         /// *here*, which is only ever honest over the thing doing it.
+        ///
+        /// <para>
+        /// <b>The roar's alone.</b> See the one call site for the two bosses that wore it for a
+        /// chapter each by standing on the wrong side of a <c>!aimed</c>.
+        /// </para>
         /// </summary>
         void Brace(Mob mob, Vector2 at)
         {
+            // The caster's own fire, rather than the warbringer's written out. It is the same
+            // colour today, because a warbringer is the only thing that calls this — and a
+            // constant that is right only because of where it happens to be called from is what
+            // put another boss's colour on the bonecaller.
             var ring = UIKit.Img("Brace", _fx, Art.Ring(128, 12f),
-                                 Pal.A(Casting(SiegeKind.Warbringer), .9f),
+                                 Pal.A(Casting(mob.Kind), .9f),
                                  new Vector2(Cell * 1.4f, Cell * 1.4f));
             ring.raycastTarget = false;
             ring.rectTransform.anchoredPosition = at;
@@ -355,6 +384,12 @@ namespace GlimmerGrove
                 Aftermath(SiegeKind.Warbringer, -1, default, fire);
             }
 
+            // **Two spells that land on the hill rather than on the line**, so they are drawn
+            // where the boss is standing rather than at a post - and neither has a ward to come
+            // back to, which is why they answer here rather than falling through the guard below.
+            if (spell.Craft == SiegeSpell.Devour) { Feed(caster, fire); return; }
+            if (spell.Craft == SiegeSpell.Raise) { Rise(caster, fire); return; }
+
             if (spell.Ward < 0) return;
 
             var at = new Vector2(PostX(spell.Ward), _lineY + Cell * .3f);
@@ -395,6 +430,134 @@ namespace GlimmerGrove
             Audio.Sfx("boom", spell.Felled ? .8f : .6f, spell.Felled ? .8f : greater ? .82f : 1f);
 
             if (spell.Felled) Flow.Flash(new Color(1f, .32f, .30f), .34f, .3f);
+        }
+
+        /// <summary>
+        /// A gravemaw feeding: the ring it opens, drawn where it stands.
+        ///
+        /// <b>Quiet, for the douse's reason</b> - it takes no ward health at all, so a drawing
+        /// that shook the board would be the picture overstating the rule. What has to be noticed
+        /// is the loose things on the ground leaving, which <see cref="Swallowed"/> draws and this
+        /// only announces.
+        /// </summary>
+        void Feed(Mob caster, Color fire)
+        {
+            if (caster == null || caster.Node == null) return;
+
+            var at = caster.Node.anchoredPosition;
+
+            // Inward rather than outward, which is the whole difference between this and a roar:
+            // a ring that closes on the thing casting it is a pull, and a ring that opens off it
+            // is a push. Nothing here travels anywhere, so the direction is the sentence.
+            Pop(at, fire, 3.2f, .32f);
+            Burst.Sparks(_fx, at, fire, 14, Cell * 2.6f, Cell * .22f, .5f);
+
+            Audio.Sfx("boom", .5f, .62f);
+        }
+
+        /// <summary>
+        /// A bonecaller raising: a pale light at the caster, and one at the top of the hill where
+        /// the dead come up.
+        ///
+        /// <b>Drawn in two places because it happens in two places</b>, and the second is the one
+        /// that matters: the raiders themselves appear at the top of the hill and walk down like
+        /// any other wave, so what has to link them to the boss is a light in both places at the
+        /// same instant. The bodies are hatched by the ordinary raider path a frame later, which
+        /// is what keeps a raised creeper identical in every way to a mustered one.
+        /// </summary>
+        void Rise(Mob caster, Color fire)
+        {
+            if (caster != null && caster.Node != null)
+            {
+                var at = caster.Node.anchoredPosition;
+                Pop(at, fire, 3.4f, .34f);
+                Shockwave(at, fire, 4.2f, .40f);
+            }
+
+            // The top of the hill, which is where `SiegeTuning.RaiseAt` puts them.
+            var crest = new Vector2(0f, MarchY(SiegeTuning.RaiseAt));
+
+            Shockwave(crest, fire, 7.5f, .55f);
+            Burst.Sparks(_fx, crest, fire, 22, Cell * 5f, Cell * .28f, .7f);
+
+            ShakeBoard(12f);
+            Audio.Sfx("boom", .62f, 1.25f);
+        }
+
+        /// <summary>
+        /// Loose things a gravemaw ate, taken off the hill toward the thing that ate them.
+        ///
+        /// <para>
+        /// <b>This owns the widgets rather than letting the poll notice them gone.</b> Both
+        /// <c>Gears</c> and <c>Fuses</c> reconcile against the board every frame, so a devoured cog
+        /// would sink and a devoured bomb would simply vanish - which is what a cog running out of
+        /// time and a bomb being tapped already look like. A player whose ranks and firepots
+        /// disappeared for no visible reason has met a bug, not a boss (invariant 5f).
+        /// </para>
+        /// <para>
+        /// <b>Called from the clock rather than from <see cref="Smite"/></b>, because what was
+        /// eaten is a list on the report and a spell record carries one ward. It runs after the
+        /// spell loop, so the ring is already open, and before the two polls, so they find nothing
+        /// left to tidy.
+        /// </para>
+        /// </summary>
+        void Swallowed(IReadOnlyList<int> ids)
+        {
+            var maw = _mob.Count > 0 ? MawNode() : null;
+
+            for (int i = 0; i < ids.Count; i++)
+            {
+                int id = ids[i];
+
+                var gear = GearOf(id);
+                if (gear != null)
+                {
+                    _gears.Remove(gear);
+                    Drawn(gear.Node, maw);
+                    continue;
+                }
+
+                var fuse = FuseOf(id);
+                if (fuse == null) continue;
+
+                _fuses.Remove(fuse);
+                Drawn(fuse.Node, maw);
+            }
+        }
+
+        /// <summary>Where the thing doing the eating is, or null when it is already dead.</summary>
+        RectTransform MawNode()
+        {
+            for (int i = 0; i < _mob.Count; i++)
+                if (_mob[i].Kind == SiegeKind.Gravemaw) return _mob[i].Node;
+
+            return null;
+        }
+
+        /// <summary>
+        /// One loose thing pulled off the hill and swallowed.
+        ///
+        /// <b>It goes to the maw rather than simply away</b>, which is the only thing that says
+        /// what took it. With nothing to go to - a gravemaw killed on the frame its spell landed -
+        /// it sinks where it stands, which is the trampled drawing and is honest: it is gone and
+        /// nothing is there to have taken it.
+        /// </summary>
+        void Drawn(RectTransform node, RectTransform maw)
+        {
+            if (node == null) return;
+
+            var from = node.anchoredPosition;
+            var to = maw != null ? maw.anchoredPosition : from + new Vector2(0f, -Cell * .35f);
+
+            Tween.KillAll(node);
+
+            Tween.Run(.34f, Ease.InQuad, t =>
+            {
+                if (!node) return;
+
+                node.anchoredPosition = Vector2.Lerp(from, to, t);
+                node.localScale = Vector3.one * (1f - t * .85f);
+            }, node, "eaten").OnDone(() => { if (node) Destroy(node.gameObject); });
         }
 
         /// <summary>
@@ -624,14 +787,26 @@ namespace GlimmerGrove
         /// forecast that warns it is coming. Written out rather than keyed off the kind's own name,
         /// for invariant 6's reason - a loc key built by concatenation is a key the build gate
         /// cannot see.
+        ///
+        /// <b>Public so a fixture can walk every kind through it</b>, which is what stops the
+        /// `default` arm below being a real answer for a boss nobody thought about - see
+        /// <c>SiegeCaptionTests.EveryBossIsAnnouncedAsItself</c>.
         /// </summary>
-        static string BossKey(SiegeKind kind)
+        public static string BossKey(SiegeKind kind)
         {
             switch (kind)
             {
                 case SiegeKind.Overlord: return "mode.siege.overlord";
                 case SiegeKind.Warbringer: return "mode.siege.warbringer";
                 case SiegeKind.Blightcaller: return "mode.siege.blightcaller";
+                case SiegeKind.Gravemaw: return "mode.siege.gravemaw";
+                case SiegeKind.Bonecaller: return "mode.siege.bonecaller";
+
+                // **The warlord, and it is the only kind that may fall through here.** Invariant
+                // 44e's rule: a `default` that is a real answer hides the case nobody is looking
+                // at, and a boss announced under another boss's name is exactly the moment this
+                // switch exists to get right. `SiegeCaptionTests` holds every kind to a key of its
+                // own, so a seventh boss fails here rather than arriving as a warlord.
                 default: return "mode.siege.boss";
             }
         }

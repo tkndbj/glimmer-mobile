@@ -381,6 +381,9 @@ namespace GlimmerGrove.Daily
                 if (IsCollected(k)) continue;
                 swept++;
 
+                // A night taken is a thing that happened, whatever the rung paid.
+                Tasks.TaskLedger.Note(Tasks.TaskGoal.Streak);
+
                 // The floor moves *before* the reward is handed over, one night at a time,
                 // and the ordering is load-bearing rather than tidy. Applying a currency
                 // rung writes the save — an award has to be durable the moment the player

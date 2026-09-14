@@ -192,6 +192,26 @@
       ]
     },
     {
+      "id": "s04_barrowfell",
+      "version": 1,
+      "order": 147,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s04_firstbone",
+        "s04_palerow",
+        "s04_shieldwall",
+        "s04_scytheway",
+        "s04_hollowgrave",
+        "s04_boneyard",
+        "s04_deadmarch",
+        "s04_lichgate",
+        "s04_longbarrow",
+        "s04_barrowheart"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,

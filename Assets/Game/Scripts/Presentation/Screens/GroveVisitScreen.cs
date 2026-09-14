@@ -94,7 +94,14 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            Scenery.Cover(Content, "home_sky", .05f, .42f);
+            // **A daylight sky is darkened by nothing.** This carried a flat shade and a
+            // near-black vignette that cost the corners .42 — the numbers a screen whose
+            // backdrop is only a *ground* can afford — and over a village lit by a sun they
+            // were most of "dark and dead": the brightest thing on the screen was being
+            // dimmed before anything was drawn over it. What is left is the little that
+            // still has a job, which is keeping the corners off the header's text.
+            var sky = Scenery.Cover(Content, "home_sky", 0f, .14f);
+            Scenery.Sun(sky);
             Fireflies.Spawn(Content, 16, new Color(1f, .93f, .70f), 6f, 20f);
 
             BuildField();
@@ -254,13 +261,19 @@ namespace GlimmerGrove
 
             _field.SetFloor(floor);
 
-            GroveTileArt.Reach(catalog, out float up, out float side);
-            _field.SetReach(up, side);
+            GroveTileArt.Reach(catalog, out float up, out float side, out float down);
+            _field.SetReach(up, side, down);
 
             ShowOwned();
             _field.Rebuild();
 
-            if (GroveFloor.TryParse(floor.HallTile, out int col, out int row))
+            // Opened on *this keeper's* hall — the seat on the card, not the floor's
+            // constant. The constant is where every hall stood before a home could be moved
+            // (invariant 16q), and a reader left pointing at it opens a visitor on the empty
+            // ground a keeper moved their house away from, which reads as a grove with no
+            // town hall. The card's own accessor carries the fallback, so a card that never
+            // moved its hall still opens where the floor says.
+            if (_card.HallSeat(floor, out int col, out int row))
                 _field.CentreOn(floor.HallFootprint.CentreCol(col), floor.HallFootprint.CentreRow(row));
             else
                 _field.CentreOn(floor.Cols / 2, floor.Rows / 2);
@@ -277,7 +290,12 @@ namespace GlimmerGrove
         // ---------------------------------------------------------------- header
         void BuildHeader()
         {
-            var fade = UIKit.Img("TopFade", Content, Art.FadeUp(64), new Color(.02f, .06f, .09f, .82f));
+            // **.42, where it was .82.** A gradient this deep is a black bar across the top
+            // of a daylight sky, and it was holding up nothing: the banner is a ribbon, the
+            // two corner controls are skinned buttons and the summary carries a 3-unit
+            // outline, so every element under it already earns its own contrast. What is left
+            // is enough to seat the ribbon against the sky and not enough to say night.
+            var fade = UIKit.Img("TopFade", Content, Art.FadeUp(64), new Color(.02f, .06f, .09f, .42f));
             var frt = (RectTransform)fade.transform;
             frt.anchorMin = new Vector2(0f, 1f); frt.anchorMax = new Vector2(1f, 1f);
             frt.pivot = new Vector2(.5f, 1f);

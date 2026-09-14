@@ -32,24 +32,13 @@ namespace GlimmerGrove.Wards
         /// <b>It reaches a gem price too</b>, which is the owner's reversal of what shipped: a
         /// gate used to belong to a credit price alone, so half the shelf could be taken in any
         /// order by anybody holding gems.
+        ///
+        /// <b>And it is now the <em>only</em> wall.</b> There was a fourth state here — a rung was
+        /// sealed until the one below it on the shelf was held — and it is gone at the owner's
+        /// decision (<c>WardCatalog.LadderProblem</c>): reaching the level is the whole of what
+        /// opens a turret, so a player buys what they have earned in whatever order they like.
         /// </summary>
         LevelLocked,
-
-        /// <summary>
-        /// For sale and unheld, and the turret before it on the shelf is not held on this colour.
-        ///
-        /// <para>
-        /// <b>Asked before the level and before the price</b>, which is the coarsest-first reading
-        /// of invariant 15a's ordering: a player three rungs down the ladder cannot act on the
-        /// keeper level of a rung they have not reached, and the rung in front of them will state
-        /// its own gate when they get to it. It is also the only one of the three refusals that
-        /// names something to <em>do</em>.
-        /// </para>
-        /// <para>
-        /// Carries the id of the turret that has to come first, in <see cref="WardOffer.Needs"/>.
-        /// </para>
-        /// </summary>
-        Sealed,
     }
 
     /// <summary>What a turret costs this player right now, and whether they can pay it.</summary>
@@ -69,23 +58,14 @@ namespace GlimmerGrove.Wards
         /// <summary>The keeper level this price is gated behind. Nought when ungated.</summary>
         public readonly int RequiredLevel;
 
-        /// <summary>
-        /// The turret that has to be bought on this colour first, or empty.
-        ///
-        /// Only ever set on <see cref="WardPurchaseState.Sealed"/>. An id rather than a name,
-        /// because a name is a loc key the caller resolves and this type may not reach for one.
-        /// </summary>
-        public readonly string Needs;
-
         public WardOffer(WardPurchaseState state, long cost, string currency, long balance,
-                         int requiredLevel = 0, string needs = null)
+                         int requiredLevel = 0)
         {
             State = state;
             Cost = cost;
             Currency = currency;
             Balance = balance;
             RequiredLevel = requiredLevel;
-            Needs = needs ?? string.Empty;
         }
 
         public bool CanBuy => State == WardPurchaseState.Ready;
@@ -211,26 +191,18 @@ namespace GlimmerGrove.Wards
         }
 
         /// <summary>
-        /// The rung this turret is sealed behind on this colour, or null once it is open.
-        ///
-        /// <b>One rung rather than the whole prefix</b> - see <see cref="WardCatalog.Before"/>.
-        /// </summary>
-        public static WardModel SealedBehind(WardModel model, char colour)
-        {
-            var before = Catalog.Before(model);
-            return before != null && !IsHeld(before, colour) ? before : null;
-        }
-
-        /// <summary>
         /// What this turret costs the player on this colour right now.
         ///
         /// <para>
-        /// <b>Three refusals in coarsest-first order: the rung, then the gate, then the price.</b>
-        /// That is invariant 15a's ordering with one more wall in front of it - when several
-        /// apply, the one to say is the one furthest from money, because leading with a price
-        /// offers somebody a way to spend that could not have worked. A player two rungs down is
-        /// told to buy the rung in front of them rather than the keeper level of something they
-        /// cannot reach yet, which is also the only one of the three that names an action.
+        /// <b>Two refusals in coarsest-first order: the gate, then the price.</b> That is
+        /// invariant 15a's ordering exactly - when both apply, the one to say is the one money
+        /// cannot answer, because leading with a price offers somebody a way to spend that could
+        /// not have worked.
+        /// </para>
+        /// <para>
+        /// <b>There were three</b>, and the coarsest of them was the rung below this one on the
+        /// shelf. It is gone with the sequential unlock (<c>WardCatalog.LadderProblem</c>), which
+        /// is why this is the one place in the file that used to name another turret at all.
         /// </para>
         /// </summary>
         public static WardOffer OfferFor(WardModel model, char colour, int keeperLevel)
@@ -248,12 +220,6 @@ namespace GlimmerGrove.Wards
 
             if (cost <= 0)
                 return new WardOffer(WardPurchaseState.NotForSale, 0L, currency, balance);
-
-            var behind = SealedBehind(model, colour);
-
-            if (behind != null)
-                return new WardOffer(WardPurchaseState.Sealed, cost, currency, balance,
-                                     model.MinLevel, behind.Id);
 
             if (keeperLevel < model.MinLevel)
                 return new WardOffer(WardPurchaseState.LevelLocked, cost, currency, balance,

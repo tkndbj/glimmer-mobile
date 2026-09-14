@@ -297,6 +297,18 @@ namespace GlimmerGrove.Analytics
                 "cogs_trampled", seen.CogsTrampled,
                 "bosses_met", seen.BossesMet,
                 "bosses_met_fuelled", seen.BossesMetFuelled,
+
+                // **The charms, and the one figure that says whether the stormglass was
+                // understood.** A stormglass is worth what is standing on the hill when it goes,
+                // so *when* to match it is the whole decision — and a run where they are sprung
+                // the instant they land is a run by somebody who has not met the mechanic. It is
+                // the bomb's own question asked on the player's own board, which is why it is
+                // reported in the same event and in the same unit.
+                "charms_dealt", seen.CharmsDealt,
+                "charms_sprung", seen.CharmsSprung,
+                "charm_held_mean", Whole(seen.MeanHeld),
+                "charm_held_longest", Whole(seen.LongestHeld),
+
                 "seconds", Round(seen.Elapsed));
         }
 

@@ -79,6 +79,38 @@ namespace GlimmerGrove.Content
         public bool IsMain => Equals(Main);
 
         /// <summary>
+        /// Whether this lane is a <em>chain</em> of levels to walk, or a single run with no end.
+        ///
+        /// <para>
+        /// <b>The one fact the map needs and could not derive.</b> A map is a painting of a
+        /// chapter's island chain — strips, trails, a disc per level and a teaser capping it —
+        /// and the Infinite lane has one level, no chain and nothing after it, so all of that
+        /// machinery drew a column of scenery with a single node loose on it. What that lane
+        /// wants instead is a <em>hub</em>: what the mode is, what it is worth, and a way in.
+        /// </para>
+        /// <para>
+        /// <b>Declared rather than counted, and that is deliberate.</b> The obvious derivation —
+        /// "a lane holding one chapter of one level" — is true of this lane today and is also
+        /// true of the first chapter of a mode whose second has not shipped yet, which would
+        /// swap a real map for a hub on the day a drop was being prepared. What decides this is
+        /// what the lane <em>is</em>, so the lane says so.
+        /// </para>
+        /// </summary>
+        public bool Laddered => !Equals(Infinite);
+
+        /// <summary>
+        /// The loc key for one of the short lines a hub says about this lane, counting from one.
+        ///
+        /// <b>Derived from the id like every other key here</b> (invariant 5a), so a lane names
+        /// its own copy without anything reading a chapter body — and so adding a lane is a
+        /// content change rather than a call site. Out-of-range indices answer the first key
+        /// rather than building a name nothing can resolve, because a key built out of a bad
+        /// number is a missing string on a screen rather than a fault anybody can see.
+        /// </summary>
+        public string PointKey(int index)
+            => "track." + Value + ".point" + (index < 1 ? 1 : index);
+
+        /// <summary>
         /// Reads an authored track name.
         ///
         /// <para>

@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using System.Text;
+using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Progression;
+using GlimmerGrove.Tasks;
 using GlimmerGrove.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
@@ -275,7 +278,7 @@ namespace GlimmerGrove
     }
 
     /// <summary>
-    /// Opening a daily chest.
+    /// The chest opening: a task's chest tapped on the tasks page.
     ///
     /// <para>
     /// The whole overlay exists for about four seconds and does one job: make a number
@@ -286,14 +289,24 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// The reward is applied to the save at the <em>start</em>, not when the animation
-    /// finishes. A player who kills the app mid-burst has still opened the chest, and a
+    /// finishes. A player who kills the app mid-burst has still claimed the chest, and a
     /// grant that depended on an animation completing would be a grant that a slow phone
     /// could lose. What is on screen is a report of something that has already happened.
+    /// </para>
+    /// <para>
+    /// <b>The lid is a reel, not a sprite swap.</b> Each tier's chest opens in seventeen
+    /// baked frames (<c>Tools/make_chest_art.py</c>), held in the <c>chests</c> scope the
+    /// tasks page opens on arrival. The overlay holds the scope again rather than trusting
+    /// the page to, because a scope is released when its holder closes and this panel can
+    /// outlive a screen change by a frame; and if the reel has not arrived by the burst it
+    /// falls back to the closed icon with the punch, because a ceremony that waits on a
+    /// bundle is a player wondering whether the game has hung.
     /// </para>
     /// </summary>
     public sealed class ChestOverlay : ModalView
     {
-        public int ChestIndex;
+        /// <summary>The task whose chest this opens. Set by the caller before Build.</summary>
+        [System.NonSerialized] public TaskDefinition Task;
 
         Image _chest;
         Image _seam;
@@ -301,6 +314,7 @@ namespace GlimmerGrove
         RectTransform _rewardRow;
         List<ChestDrop> _drops;
         bool _heartsWereWasted;
+        AssetHold _art;
 
         /// <summary>Each prize's card, in drop order, so collecting can throw it.</summary>
         RectTransform[] _cards;
@@ -331,32 +345,31 @@ namespace GlimmerGrove
         const float RevealAt = BurstAt + 0.30f;
         const float RevealGap = 0.34f;
 
+        /// <summary>The reel's rate. Seventeen frames at this is the lid swinging in seven tenths.</summary>
+        const float ReelFps = 24f;
+
+        /// <summary>The chest's box, at the reel's own aspect (285:395). See make_chest_art.py.</summary>
+        static readonly Vector2 ChestSize = new Vector2(300f, 416f);
+
         protected override void Build()
         {
             _scrim = UIKit.Scrim(Content, .86f);
 
             // Hearts are read before the grant so the panel can say the honest thing when a
             // heart drop lands somewhere it cannot go. Asking afterwards would always say
-            // so, because the grant is what put them there.
-            //
-            // The test is the ceiling rather than the refill cap: a chest opened at a full
-            // bar now keeps its hearts, so the old apology would have been a lie told to
-            // most of the players who saw it.
+            // so, because the grant is what put them there. The test is the ceiling rather
+            // than the refill cap: a chest opened at a full bar keeps its hearts.
             _heartsWereWasted = Profile.HeartState.IsAtCeiling;
 
             // What each pill reads before the chest is granted, captured rather than derived.
-            //
-            // Deriving it at collect time — take today's balance, subtract what the chest
-            // said — is wrong in exactly the case the line above is about: a heart drop that
-            // lands at the ceiling grants nothing, so subtracting its amount would rewind the
-            // pill below where it ever was and then count it up to a gain the player did not
-            // receive. The same is true of any prize a rule may clamp later. Reading the
-            // balance before the grant cannot be wrong about it.
+            // A heart drop that lands at the ceiling grants nothing, so subtracting its
+            // amount at collect time would rewind the pill below where it ever was. Reading
+            // the balance before the grant cannot be wrong about it.
             _flight = RewardFlight.Begin();
 
-            if (!DailyChests.TryOpen(ChestIndex, out _drops))
+            if (Task == null || !TaskLedger.TryClaim(Task, out _drops))
             {
-                // Beaten to it — another device synced the claim in, or the day rolled
+                // Beaten to it — another device synced the claim in, or the period rolled
                 // over between the tap and this frame. Nothing to show and nothing lost.
                 //
                 // Dismissed next frame rather than here: Build() runs inside Flow.Modal
@@ -366,10 +379,11 @@ namespace GlimmerGrove
                 return;
             }
 
+            HoldReel();
             BuildTitle();
             BuildChest();
 
-            Panel = (RectTransform)_chest.transform;   // what ModalView.Close() scales out
+            Panel = (RectTransform)_chest.transform.parent;   // what ModalView.Close() scales out
 
             ScheduleThumps();
             Tween.After(BurstAt, OpenLid, this);
@@ -379,12 +393,26 @@ namespace GlimmerGrove
             Audio.Duck(.4f, 3.2f);
         }
 
+        void HoldReel() => Run(async token =>
+        {
+            _art = _art ?? AssetLibrary.Hold("chests");
+            await _art.LoadAsync(AssetManifest.ChestAssets(ProgressionRules.Table.Tasks), null, token);
+        });
+
+        void OnDestroy()
+        {
+            _art?.Dispose();
+            _art = null;
+        }
+
         void BuildTitle()
         {
             var ribbon = UIKit.Img("Ribbon", Content, Art.S("Ui/ribbon_orange"), Color.white,
                                    new Vector2(620f, 132f), new Vector2(.5f, 1f), new Vector2(0f, -300f));
-            UIKit.Titled("T", ribbon.transform, Loc.Get("ui.daily.chest_title"), 50, Pal.Cream,
-                         TextAnchor.MiddleCenter, outline: 4f, shadow: 4f);
+            UIKit.Shrinkable(
+                UIKit.Titled("T", ribbon.transform, Loc.Get(Task.Tier.NameKey).ToUpperInvariant(), 50,
+                             Pal.Cream, TextAnchor.MiddleCenter, new Vector2(540f, 80f),
+                             new Vector2(.5f, .5f), Vector2.zero, 4f, 4f), 28);
             ribbon.transform.localRotation = Quaternion.Euler(0, 0, -1.6f);
 
             ribbon.transform.localScale = Vector3.zero;
@@ -418,8 +446,10 @@ namespace GlimmerGrove
                                  new Vector2(300f, 300f), new Vector2(.5f, .5f), new Vector2(0f, 20f));
             seam.name = "Seam";
 
-            _chest = UIKit.Img("Chest", host, Art.S("Ui/ic_chest"), Color.white,
-                               new Vector2(340f, 340f), new Vector2(.5f, .5f), Vector2.zero);
+            // The closed icon, global and therefore always here, at the reel's own aspect so
+            // the first frame of the reel lands exactly over it.
+            _chest = UIKit.Img("Chest", host, Art.S(Task.Tier.Icon), Color.white,
+                               ChestSize, new Vector2(.5f, .5f), new Vector2(0f, -10f));
             _chest.preserveAspect = true;
             _chest.transform.localScale = Vector3.zero;
             Tween.Scale(_chest.transform, 1f, .55f, Ease.OutBack).Delay(.05f);
@@ -468,13 +498,17 @@ namespace GlimmerGrove
         {
             if (this == null || !_chest) return;
 
-            _chest.sprite = Art.S("Ui/ic_chest_open");
+            // The reel, if the scope has arrived; the icon with a punch if it has not. Not
+            // looped: a lid is an event, and the last frame holds it open (Flipbook's rule).
+            var frames = AssetLibrary.PeekFrames(AssetManifest.ArtRoot + Task.Tier.Reel);
+            if (frames != null && frames.Length > 0)
+                Flipbook.Attach(_chest, frames, ReelFps, loop: false);
 
             Flow.Flash(Pal.Radiance, .85f, .55f);
             Audio.Sfx("chest", .85f);
             Audio.Sfx("win", .5f, 1f, .06f);
 
-            Tween.Scale(_chest.transform, 1.22f, .16f, Ease.OutQuad)
+            Tween.Scale(_chest.transform, 1.18f, .16f, Ease.OutQuad)
                  .OnDone(() => { if (_chest) Tween.Scale(_chest.transform, 1f, .5f, Ease.OutBack); });
 
             if (_seam)
@@ -511,10 +545,12 @@ namespace GlimmerGrove
             if (this == null) return;
 
             _rewardRow = UIKit.Box("Rewards", Content, new Vector2(900f, 260f),
-                                   new Vector2(.5f, .5f), new Vector2(0f, -230f));
+                                   new Vector2(.5f, .5f), new Vector2(0f, -250f));
             _cards = new RectTransform[_drops.Count];
 
-            const float step = 250f;
+            // Four cards fit the row at the full step; a royal chest can carry five, so the
+            // step gives way before the cards run off the sides.
+            float step = Mathf.Min(250f, 900f / Mathf.Max(1, _drops.Count));
             float left = -(_drops.Count - 1) * step * .5f;
 
             for (int i = 0; i < _drops.Count; i++)
@@ -524,18 +560,19 @@ namespace GlimmerGrove
                 float x = left + i * step;
                 float at = i * RevealGap;
 
-                Tween.After(at, () => { if (this != null) RevealOne(index, drop, x); }, this);
+                Tween.After(at, () => { if (this != null) RevealOne(index, drop, x, step); }, this);
             }
         }
 
-        void RevealOne(int index, ChestDrop drop, float x)
+        void RevealOne(int index, ChestDrop drop, float x, float step)
         {
             if (!_rewardRow) return;
 
             var tint = RewardArt.Tint(drop.Kind, drop.Item);
+            float w = Mathf.Min(206f, step - 12f);
 
             var card = UIKit.Img("R", _rewardRow, Art.Round(26), new Color(.04f, .09f, .12f, .82f),
-                                 new Vector2(206f, 236f), new Vector2(.5f, .5f), new Vector2(x, 0f));
+                                 new Vector2(w, 236f), new Vector2(.5f, .5f), new Vector2(x, 0f));
             var edge = UIKit.Img("Edge", card.transform, Art.RoundOutline(26, 3f), Pal.A(tint, .55f));
             UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
 
@@ -550,17 +587,18 @@ namespace GlimmerGrove
             if (drop.Kind == ChestDropKind.HeartBoost) icon.color = tint;
 
             UIKit.Titled("Amount", card.transform, RewardArt.Amount(drop), 46, Pal.Cream,
-                         TextAnchor.MiddleCenter, new Vector2(190f, 56f), new Vector2(.5f, 1f),
+                         TextAnchor.MiddleCenter, new Vector2(w - 16f, 56f), new Vector2(.5f, 1f),
                          new Vector2(0f, -148f), 3f, 3f);
-            UIKit.Titled("Name", card.transform, RewardArt.Name(drop.Kind, drop.Item), 24, Pal.A(tint, .92f),
-                         TextAnchor.MiddleCenter, new Vector2(190f, 34f), new Vector2(.5f, 1f),
-                         new Vector2(0f, -198f), 0f, 0f);
+            UIKit.Shrinkable(
+                UIKit.Titled("Name", card.transform, RewardArt.Name(drop.Kind, drop.Item), 24, Pal.A(tint, .92f),
+                             TextAnchor.MiddleCenter, new Vector2(w - 16f, 34f), new Vector2(.5f, 1f),
+                             new Vector2(0f, -198f), 0f, 0f), 14);
 
             // Out of the chest, over the top, and down into place.
             var rt = (RectTransform)card.transform;
             _cards[index] = rt;
             var home = rt.anchoredPosition;
-            var from = new Vector2(x * .18f, 300f);
+            var from = new Vector2(x * .18f, 320f);
 
             rt.anchoredPosition = from;
             rt.localScale = Vector3.zero;
@@ -600,7 +638,7 @@ namespace GlimmerGrove
             {
                 _chrome.Add((RectTransform)
                     UIKit.Titled("Note", Content, note, 26, Pal.A(Pal.Cream, .78f), TextAnchor.MiddleCenter,
-                                 new Vector2(860f, 40f), new Vector2(.5f, .5f), new Vector2(0f, -400f),
+                                 new Vector2(860f, 40f), new Vector2(.5f, .5f), new Vector2(0f, -420f),
                                  0f, 0f, wrap: true).transform);
             }
 
@@ -608,11 +646,12 @@ namespace GlimmerGrove
             // translation, and it is a disclosure — a disclosure that runs off the side
             // of the screen is not one.
             _chrome.Add((RectTransform)UIKit.Shrinkable(
-                UIKit.Titled("Odds", Content, OddsLine(), 21, new Color(1f, .96f, .86f, .42f),
+                UIKit.Titled("Odds", Content, ChestOddsOverlay.OddsLine(Task.Tier.Chest), 21,
+                             new Color(1f, .96f, .86f, .42f),
                              TextAnchor.MiddleCenter, new Vector2(940f, 34f), new Vector2(.5f, 0f),
                              new Vector2(0f, 168f), 0f, 0f), 14).transform);
 
-            var collect = UIKit.TextButton("Collect", Content, "btn_green", Loc.Get("ui.daily.collect"), 52,
+            var collect = UIKit.TextButton("Collect", Content, "btn_green", Loc.Get("ui.chest.collect"), 52,
                                            new Vector2(560f, 148f), new Vector2(.5f, 0f),
                                            new Vector2(0f, 250f), Collect);
             _chrome.Add((RectTransform)collect.transform);
@@ -629,25 +668,11 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------- collecting
         /// <summary>
-        /// Pays the chest into the hub: every prize breaks into a handful of tokens, they
-        /// arc into their own resource pill, and each landing steps that pill's number.
-        ///
-        /// <para>
-        /// The cascade itself is <see cref="RewardFlight"/>, which is where the rhythm, the
-        /// rewind and the promise that this panel closes all live. It was written here and
-        /// lifted out when the rewarded ad needed the same thing — see that class for why a
-        /// second copy would have been a second chance to strand a player on a panel with no
-        /// button on it.
-        /// </para>
-        /// <para>
-        /// What stays here is what belongs to a chest: the chrome that has to get out of the
-        /// way, and the row the tokens fall back to once the cards have gone.
-        /// </para>
-        /// <para>
-        /// If no pill can be resolved — the hub is not the screen underneath, or it has been
-        /// torn down — this degrades to the old behaviour and just closes. A reward that has
-        /// already been banked must never depend on an animation being able to run.
-        /// </para>
+        /// Pays the chest into the screen underneath: every prize breaks into a handful of
+        /// tokens, they arc into their own resource pill, and each landing steps that pill's
+        /// number. The cascade itself is <see cref="RewardFlight"/>. If no pill can be
+        /// resolved this degrades to closing — a reward already banked must never depend on
+        /// an animation being able to run.
         /// </summary>
         void Collect()
         {
@@ -658,9 +683,6 @@ namespace GlimmerGrove
 
             for (int i = 0; i < _drops.Count; i++) _flight.Add(_drops[i], _cards[i]);
 
-            // Every prize was a kind with no pill, or the hub is gone. Cannot happen with
-            // today's drop table on the screen a chest is opened from, and closing is still
-            // the right answer if it ever can.
             if (!_flight.Any) { Close(); return; }
 
             _flight.Fallback = _rewardRow;
@@ -670,7 +692,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Clears everything that is not a prize, the scrim included — the hub's pills are
+        /// Clears everything that is not a prize, the scrim included — the page's pills are
         /// under it, and a token cannot be seen landing on something that is not visible.
         /// </summary>
         void FadeChrome()
@@ -687,51 +709,27 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The one thing a player might otherwise be confused by: a heart drop that hit
-        /// the cap, or a boost that is now running.
+        /// the ceiling, or a boost that is now running.
         /// </summary>
         string FootNote()
         {
             for (int i = 0; i < _drops.Count; i++)
             {
                 if (_drops[i].Kind == ChestDropKind.HeartBoost)
-                    return Loc.Format("ui.daily.boost_on",
+                    return Loc.Format("ui.chest.boost_on",
                                       Profile.Countdown(Wallet.HeartBoostSecondsLeft));
 
                 if (_drops[i].Kind == ChestDropKind.Hearts && _heartsWereWasted)
-                    return Loc.Format("ui.daily.hearts_ceiling", Profile.HeartCeiling);
+                    return Loc.Format("ui.chest.hearts_ceiling", Profile.HeartCeiling);
             }
             return string.Empty;
-        }
-
-        /// <summary>
-        /// The published odds for this chest's variable slot, read from the same table the
-        /// roll used. Generated rather than written, so it cannot drift from the weights.
-        /// </summary>
-        string OddsLine()
-        {
-            var definition = DailyChests.Definition(ChestIndex);
-            if (definition == null || definition.Options.Count == 0) return string.Empty;
-
-            var text = new StringBuilder(Loc.Get("ui.daily.odds"));
-
-            for (int i = 0; i < definition.Options.Count; i++)
-            {
-                text.Append("  ·  ")
-                    .Append(RewardArt.Name(definition.Options[i].Band.Kind,
-                                           definition.Options[i].Band.Item))
-                    .Append(' ')
-                    .Append(Mathf.RoundToInt(definition.ChanceOf(i)))
-                    .Append('%');
-            }
-
-            return text.ToString();
         }
 
         /// <summary>
         /// Swallowed once the payout has started. Everything is already banked, so leaving
         /// early costs the player nothing — but <see cref="ModalView.Close"/> fades the whole
         /// content group, and the tokens are in it, so the back key would delete the animation
-        /// mid-flight and leave the pills rewound to their old figures until the hub next
+        /// mid-flight and leave the pills rewound to their old figures until the page next
         /// rebuilt them.
         /// </summary>
         public override bool OnBack()

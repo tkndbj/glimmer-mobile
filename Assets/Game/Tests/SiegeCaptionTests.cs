@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using GlimmerGrove.Modes;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -102,11 +104,19 @@ namespace GlimmerGrove.Tests
         /// On the shape this mode is actually played at, both of them are on the hill.
         ///
         /// <para>
-        /// <b>Tall only, and deliberately so.</b> A 4:3 board leaves the hill 1.46 cells tall —
-        /// less than one of these captions, let alone two — so no arrangement fits there and
+        /// <b>Tall only, and deliberately so.</b> A short board leaves the hill less room than
+        /// one of these captions needs, let alone two — so no arrangement fits there and
         /// clamping would only put them back on top of each other, which is what the sweep above
         /// exists to stop. Stated the same way <c>SiegeBandTests</c> states the hill being the
         /// biggest band, so the next person to read a wide render is not surprised by it.
+        /// </para>
+        /// <para>
+        /// <b>Which display that is has moved, and it is the opposite of where anybody would
+        /// look.</b> It was the 4:3 tablet, at 3.15 cells of hill; capping the field to a phone's
+        /// width (invariant 37cc) gives a tablet 5.6 cells and both banners fit there now. What
+        /// is left is the squarest <em>phone</em> — the 16:9 iPhone SE at 4.0 cells, which this
+        /// change did not touch and which no cap can help, because its hill is short for the
+        /// honest reason that its display is.
         /// </para>
         /// </summary>
         [Test]
@@ -125,5 +135,50 @@ namespace GlimmerGrove.Tests
                                       $"the chain banner is drawn below the hill at span {span}");
             }
         }
+
+        /// <summary>
+        /// **Every boss this mode sends is announced as itself**, and no two share a banner.
+        ///
+        /// <para>
+        /// <b>Invariant 44e, on the one moment that exists to say "this is not the thing you
+        /// fought last time".</b> <c>SiegeView.BossKey</c> ends in a <c>default</c> arm that
+        /// returns the warlord's key, which is a real answer — so a boss added without a key of
+        /// its own walks on under another boss's name, in the right colour, at the right size,
+        /// with every other gate green. Two of them shared one banner once already, while the mode
+        /// had two bosses, and the entry that fixed it is the one this checks.
+        /// </para>
+        /// <para>
+        /// It asks about <b>keys</b> rather than about text, for <c>SkinsTests</c>' reason: no
+        /// strings are loaded in an offline run, so a lookup would answer the key back whatever the
+        /// table says and a check that cannot fail is not a check. That every key here resolves is
+        /// <c>Tools/verify/loc.py</c>'s job.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryBossIsAnnouncedAsItself()
+        {
+            var bosses = new List<SiegeKind>();
+
+            foreach (SiegeKind kind in System.Enum.GetValues(typeof(SiegeKind)))
+                if (SiegeTuning.IsBoss(kind)) bosses.Add(kind);
+
+            Assert.IsNotEmpty(bosses, "this mode sends no bosses at all any more");
+
+            var seen = new Dictionary<string, SiegeKind>();
+
+            foreach (var kind in bosses)
+            {
+                string key = SiegeView.BossKey(kind);
+
+                Assert.IsNotEmpty(key, $"a {kind} is announced under no key at all");
+
+                if (seen.TryGetValue(key, out var already))
+                    Assert.Fail($"a {kind} and a {already} are both announced as '{key}', so one "
+                                + "of them walks on under the other's name");
+
+                seen[key] = kind;
+            }
+        }
+
     }
 }

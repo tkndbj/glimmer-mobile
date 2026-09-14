@@ -16,6 +16,8 @@
    "mapX": 0.7,
    "mapY": 0.065,
    "budgetFactor": -1.0,
+   "goldFactor": 0.75,
+   "silverFactor": 0.92,
    "backdrop": "sky_10",
    "siege": {
     "width": 8,
@@ -35,7 +37,8 @@
      "RGBYRGby"
     ],
     "boss": "",
-    "cogs": 25
+    "cogs": 25,
+    "charms": "pl"
    }
   },
   {
@@ -43,6 +46,8 @@
    "mapX": 0.28,
    "mapY": 0.145,
    "budgetFactor": -1.0,
+   "goldFactor": 0.75,
+   "silverFactor": 0.92,
    "backdrop": "sky_11",
    "siege": {
     "width": 8,
@@ -62,7 +67,8 @@
      "RGBY#gRGby"
     ],
     "boss": "",
-    "cogs": 25
+    "cogs": 25,
+    "charms": "pl"
    }
   },
   {
@@ -70,6 +76,8 @@
    "mapX": 0.74,
    "mapY": 0.22,
    "budgetFactor": -1.0,
+   "goldFactor": 0.75,
+   "silverFactor": 0.92,
    "backdrop": "sky_12",
    "siege": {
     "width": 8,
@@ -89,7 +97,8 @@
      "RGBYRG!gBY!b"
     ],
     "boss": "",
-    "cogs": 25
+    "cogs": 25,
+    "charms": "pl"
    }
   },
   {
@@ -97,6 +106,8 @@
    "mapX": 0.3,
    "mapY": 0.3,
    "budgetFactor": -1.0,
+   "goldFactor": 0.75,
+   "silverFactor": 0.92,
    "backdrop": "sky_13",
    "siege": {
     "width": 8,
@@ -116,7 +127,8 @@
      "RGby#bRGby"
     ],
     "boss": "",
-    "cogs": 25
+    "cogs": 25,
+    "charms": "pl"
    }
   },
   {
@@ -124,6 +136,8 @@
    "mapX": 0.72,
    "mapY": 0.39,
    "budgetFactor": -1.0,
+   "goldFactor": 0.75,
+   "silverFactor": 0.92,
    "backdrop": "sky_14",
    "siege": {
     "width": 8,
@@ -143,7 +157,8 @@
      "RGBY#rRGby"
     ],
     "boss": "blightcaller:b",
-    "cogs": 25
+    "cogs": 25,
+    "charms": "pl"
    }
   },
   {
@@ -151,6 +166,8 @@
    "mapX": 0.26,
    "mapY": 0.485,
    "budgetFactor": -1.0,
+   "goldFactor": 0.75,
+   "silverFactor": 0.92,
    "backdrop": "sky_15",
    "siege": {
     "width": 8,
@@ -170,7 +187,8 @@
      "BBBbbbbYYy"
     ],
     "boss": "",
-    "cogs": 25
+    "cogs": 25,
+    "charms": "pl"
    }
   },
   {
@@ -178,6 +196,8 @@
    "mapX": 0.7,
    "mapY": 0.56,
    "budgetFactor": -1.0,
+   "goldFactor": 0.75,
+   "silverFactor": 0.92,
    "backdrop": "sky_16",
    "siege": {
     "width": 8,
@@ -197,7 +217,8 @@
      "RGBY#yRGbyrg"
     ],
     "boss": "",
-    "cogs": 25
+    "cogs": 25,
+    "charms": "pl"
    }
   },
   {
@@ -205,6 +226,8 @@
    "mapX": 0.32,
    "mapY": 0.65,
    "budgetFactor": -1.0,
+   "goldFactor": 0.75,
+   "silverFactor": 0.92,
    "backdrop": "sky_17",
    "siege": {
     "width": 8,
@@ -224,7 +247,8 @@
      "RGBY#bRGby"
     ],
     "boss": "",
-    "cogs": 25
+    "cogs": 25,
+    "charms": "pl"
    }
   },
   {
@@ -232,6 +256,8 @@
    "mapX": 0.74,
    "mapY": 0.73,
    "budgetFactor": -1.0,
+   "goldFactor": 0.75,
+   "silverFactor": 0.92,
    "backdrop": "sky_18",
    "siege": {
     "width": 8,
@@ -252,7 +278,8 @@
      "RGBYrgby"
     ],
     "boss": "",
-    "cogs": 25
+    "cogs": 25,
+    "charms": "pl"
    }
   },
   {
@@ -260,6 +287,8 @@
    "mapX": 0.28,
    "mapY": 0.83,
    "budgetFactor": -1.0,
+   "goldFactor": 0.75,
+   "silverFactor": 0.92,
    "backdrop": "sky_19",
    "siege": {
     "width": 8,
@@ -279,7 +308,8 @@
      "RGBYRG#gby"
     ],
     "boss": "warbringer:g",
-    "cogs": 25
+    "cogs": 25,
+    "charms": "pl"
    }
   }
  ]

@@ -194,6 +194,8 @@ namespace GlimmerGrove.Modes
             ("warlord", SiegeKind.Boss),
             ("warbringer", SiegeKind.Warbringer),
             ("overlord", SiegeKind.Overlord),
+            ("gravemaw", SiegeKind.Gravemaw),
+            ("bonecaller", SiegeKind.Bonecaller),
         };
 
         /// <summary>The colour a boss may wear. Lower case only — case no longer means anything.</summary>
@@ -404,7 +406,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>How much tougher this wave is than the first. Nothing at all, unless endless.</summary>
         public SiegeSurge SurgeOf(int wave)
-            => IsEndless ? SiegeEndless.SurgeAt(wave + 1) : SiegeSurge.None;
+            => IsEndless ? SiegeEndless.SurgeAt(wave + 1) : Tough;
 
         /// <summary>
         /// The raiders of one endless wave, dealt on demand.
@@ -506,11 +508,58 @@ namespace GlimmerGrove.Modes
         /// <summary>What is wrong with this level, or null.</summary>
         public readonly string Fault;
 
+        /// <summary>
+        /// How much health every raider on this hill carries, in tenths. See <c>SiegeDto.tough</c>.
+        ///
+        /// <b>Last in the constructor rather than beside <c>cogs</c> where it belongs</b>, because
+        /// <c>endless</c> is already passed positionally by three fixtures and moving it would
+        /// change what they mean without changing what they say.
+        /// </summary>
+        public readonly SiegeSurge Tough;
+
+        /// <summary>
+        /// The charms this field's refill may carry, in the order the chapter introduces them, or
+        /// empty for a level that deals none. See <see cref="SiegeCharms"/>.
+        ///
+        /// <para>
+        /// <b>Charms rather than a charm, because a rung deals the whole of its chapter's set.</b>
+        /// A chapter at ordinal <em>n</em> deals the first <em>n</em> of the roster
+        /// (<see cref="SiegeCharms.Upto"/>), so the third chapter's boards hold three kinds at the
+        /// same rarity between them rather than three times as many charms — which is what keeps
+        /// "rare" a fact about the mode rather than about the chapter.
+        /// </para>
+        /// <para>
+        /// <b>Carried here and never in <see cref="Grid"/>.</b> A charm is dealt into a refill and
+        /// is never authored into a cell: a field is authored settled, and a charm standing in one
+        /// would be a payoff its author placed (invariant 20m) as well as one more thing the
+        /// settled proof would have to know about.
+        /// </para>
+        /// <para>
+        /// <b>Last in the constructor for <see cref="Tough"/>'s reason</b> — three fixtures pass
+        /// <c>endless</c> positionally, and a parameter inserted before it would change what they
+        /// mean without changing what they say.
+        /// </para>
+        /// </summary>
+        public readonly SiegeCharm[] Charms;
+
         public SiegeLayout(ProtoGrid grid, string deal, string wards, string[] waves, string boss,
-                           int cogs = 0, SiegeEndless endless = null)
+                           int cogs = 0, SiegeEndless endless = null, int tough = 0,
+                           string charms = null)
         {
             Grid = grid;
             Endless = endless;
+
+            // **Refused by name rather than salvaged**, which is `Tidy`'s opposite and invariant
+            // 5f's rule: a body naming a charm this build does not have was written against rules
+            // that are not these, and reading it as "the charms I recognise" would ship a field
+            // the author did not compose. `Check` is what says so out loud; this only has to leave
+            // the evidence, which is `null` against a non-empty string.
+            Charms = Charmed(charms);
+
+            // Health only; a blow is never surged (see `SiegeTuning.ChapterToughStep`). Nought is
+            // what an older body and every fixture that does not care about this pass, and it is
+            // the plain figure rather than a raider with no health at all.
+            Tough = new SiegeSurge(tough <= 0 ? 10 : tough, 10);
             Deal = Tidy(deal, Letters);
             Wards = Tidy(wards, WardLetters).ToCharArray();
             Cogs = cogs < 0 ? 0 : cogs;
@@ -565,7 +614,7 @@ namespace GlimmerGrove.Modes
                 Coming[i] = Read(Waves[i], BossKind, i == BossWave);
 
             Seed = Hash(grid);
-            Fault = Check(boss);
+            Fault = Check(boss, charms);
         }
 
         /// <summary>
@@ -600,6 +649,47 @@ namespace GlimmerGrove.Modes
 
             return false;
         }
+
+        /// <summary>
+        /// Reads a <c>charms</c> field, and answers <b>null</b> for anything holding a letter this
+        /// build does not know.
+        ///
+        /// <para>
+        /// <b>Null rather than "the ones I recognised", which is the whole difference between this
+        /// and <see cref="Tidy"/>.</b> A body naming a retired or unknown charm was written for a
+        /// build that is not this one, and salvaging what is left of it ships a field its author
+        /// never composed — invariant 5f, and the same clause that refuses a boss token this mode
+        /// cannot draw. <see cref="Check"/> turns the null into a sentence; nothing here guesses.
+        /// </para>
+        /// <para>
+        /// Empty is the ordinary case and is not a fault: the opening rung of the first chapter
+        /// deals no charms at all, which is invariant 24's rule about the one moment a player is
+        /// still working out what the verb is.
+        /// </para>
+        /// </summary>
+        static SiegeCharm[] Charmed(string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) return Nothing;
+
+            var kept = new List<SiegeCharm>(raw.Length);
+
+            for (int i = 0; i < raw.Length; i++)
+            {
+                if (raw[i] == ' ') continue;
+
+                var charm = SiegeCharms.Named(raw[i]);
+                if (charm == SiegeCharm.None) return null;
+
+                // A letter written twice is an author saying one thing twice, not two charms: the
+                // deal picks uniformly from this array, so keeping the repeat would silently
+                // weight one charm double with nothing in the file saying so.
+                if (!kept.Contains(charm)) kept.Add(charm);
+            }
+
+            return kept.Count == 0 ? Nothing : kept.ToArray();
+        }
+
+        static readonly SiegeCharm[] Nothing = new SiegeCharm[0];
 
         static string Tidy(string raw, string legal)
         {
@@ -666,9 +756,17 @@ namespace GlimmerGrove.Modes
             return h == 0u ? 1u : h;
         }
 
-        string Check(string boss)
+        string Check(string boss, string charms)
         {
             if (Grid == null) return "no field";
+
+            // Refused by name, for the boss token's reason one line down: a body naming a charm
+            // this build does not have would otherwise deal the ones it recognised and ship a
+            // field nobody composed, with every other gate green (invariant 5f).
+            if (Charms == null)
+                return $"'{charms}' names a charm this mode does not have; a charm is one of "
+                     + $"'{SiegeCharms.Letters}' and an empty field is how a level says it deals "
+                     + "none";
 
             // Refused by name rather than ignored, which is invariant 5f's rule for a token a
             // build no longer knows read the other way round: a level that names a warlord this
@@ -797,58 +895,93 @@ namespace GlimmerGrove.Modes
             => cell != SiegeBoard.Hole && Letters.IndexOf(cell) >= 0;
 
         /// <summary>
-        /// Every cell standing in a run of three or more, as one set.
+        /// Every cell standing in a run of three or more, as one set — and, optionally, the colour
+        /// each of them is <em>paid</em> as.
         ///
         /// <para>
-        /// <b><paramref name="locked"/> is a wall rather than a filter</b>, which is the whole of
-        /// what a weaver's web does: a locked cell does not merely fail to join a run, it
-        /// <em>breaks</em> one that would otherwise pass through it. Written as a filter instead,
-        /// a webbed red between two reds either side would still clear them both and the web would
-        /// cost the player nothing.
+        /// <b>Scanned once per colour rather than once per row, and the prism is the whole reason.</b>
+        /// It used to compare each cell with the one before it, which is exactly right while every
+        /// gem is its own colour and cannot survive a wild: <c>"r P r"</c> has no two neighbours
+        /// alike in it and is a run, and <c>"r r P g g"</c> is <em>two</em> runs sharing one cell.
+        /// A neighbour comparison cannot express either, and every repair of it that keeps the
+        /// shape ("treat a wild as whatever came before") quietly answers a different question at
+        /// each end of the row. So a run of colour <em>c</em> is defined instead as a maximal block
+        /// of cells that are <em>c</em>-or-wild holding at least one real <em>c</em>, and the four
+        /// colours are walked in turn. On an eight-by-five field that is four times thirteen short
+        /// scans, which is nothing, and it is a definition rather than a procedure.
         /// </para>
         /// <para>
-        /// Null is the ordinary case and every offline mirror passes it, so a field with nothing
-        /// on it costs no allocation and no branch worth naming.
+        /// <b>A block of wilds alone is not a run</b>, which is what "at least one real
+        /// <em>c</em>" buys: without it three prisms falling into a column would clear themselves
+        /// and pay a colour nobody chose.
+        /// </para>
+        /// <para>
+        /// <b><paramref name="paid"/> is what a cleared cell is worth, and for a wild it is not
+        /// the letter underneath.</b> A prism is drawn colourless because it <em>is</em> colourless
+        /// — the letter it carries is only what the deal happened to hand it — so paying it as that
+        /// letter would be a payoff the player could neither see nor aim. It is paid as the colour
+        /// of the run it completed, and a prism completing two runs at once is paid as the first of
+        /// them in scan order (rows before columns, <see cref="Letters"/> in order): arbitrary, and
+        /// <em>stated</em> rather than emergent, for <c>SiegeBoard</c>'s reason about contested
+        /// cogs — a rule nobody wrote down is a rule two runtimes may answer differently.
+        /// </para>
+        /// <para>
+        /// Both trailing arguments are null on every reading that only asks <em>whether</em>
+        /// anything lines up — <c>Lines</c>, <c>AnySwap</c>, the settled proof and both offline
+        /// mirrors' cheap paths — so a field with no charms on it costs no allocation and no branch
+        /// worth naming.
         /// </para>
         /// </summary>
         internal static HashSet<int> Runs(char[] cells, int width, int height,
-                                          bool[] locked = null)
+                                          SiegeCharm[] charms = null, char[] paid = null)
         {
             var hit = new HashSet<int>();
 
-            bool Free(int i) => IsGem(cells[i]) && (locked == null || !locked[i]);
+            bool Wild(int i) => charms != null && SiegeCharms.IsWild(charms[i]);
 
-            for (int y = 0; y < height; y++)
+            // Written into `paid` only the first time a cell is claimed, which is what makes the
+            // scan order above a rule rather than a coincidence.
+            void Take(int i, char colour)
             {
-                int run = 1;
-                for (int x = 1; x <= width; x++)
-                {
-                    bool same = x < width && Free(y * width + x)
-                             && cells[y * width + x] == cells[y * width + x - 1];
-
-                    if (same) { run++; continue; }
-
-                    if (run >= SiegeTuning.MinRun)
-                        for (int k = x - run; k < x; k++) hit.Add(y * width + k);
-
-                    run = 1;
-                }
+                hit.Add(i);
+                if (paid == null) return;
+                if (paid[i] == '\0') paid[i] = Wild(i) ? colour : cells[i];
             }
 
-            for (int x = 0; x < width; x++)
+            for (int c = 0; c < Letters.Length; c++)
             {
-                int run = 1;
-                for (int y = 1; y <= height; y++)
+                char colour = Letters[c];
+
+                for (int y = 0; y < height; y++) Scan(y * width, 1, width);
+                for (int x = 0; x < width; x++) Scan(x, width, height);
+
+                // One line of a field, walked in whichever direction `step` names. A block ends at
+                // the first cell that is neither this colour nor a wild, which is also what a hole
+                // is, so nothing needs a second test for one.
+                void Scan(int from, int step, int span)
                 {
-                    bool same = y < height && Free(y * width + x)
-                             && cells[y * width + x] == cells[(y - 1) * width + x];
+                    int run = 0, real = 0;
 
-                    if (same) { run++; continue; }
+                    for (int k = 0; k <= span; k++)
+                    {
+                        int i = from + k * step;
 
-                    if (run >= SiegeTuning.MinRun)
-                        for (int k = y - run; k < y; k++) hit.Add(k * width + x);
+                        bool joins = k < span && IsGem(cells[i]) && (Wild(i) || cells[i] == colour);
+                        bool solid = joins && !Wild(i);
 
-                    run = 1;
+                        if (joins)
+                        {
+                            run++;
+                            if (solid) real++;
+                            continue;
+                        }
+
+                        if (run >= SiegeTuning.MinRun && real > 0)
+                            for (int back = k - run; back < k; back++) Take(from + back * step, colour);
+
+                        run = 0;
+                        real = 0;
+                    }
                 }
             }
 

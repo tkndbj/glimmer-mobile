@@ -78,6 +78,21 @@ ENEMIES = Path(r"C:\Users\Digikey\Downloads\topdownenemies")
 #: the tool passes when it is absent because the one PNG it cuts is committed.
 ICONS = Path(r"C:\Users\Digikey\Downloads\craftpix-net-629015-100-skill-icons-pack-for-rpg")
 
+#: The fifth folder: the survival-wizard pack the **third** chapter is cast out of.
+#:
+#: **A fifth root rather than a copy, for the reason the second, third and fourth exist** - copying
+#: a licensed pack so one path works is a second copy nothing keeps in step. It is the downloads
+#: folder itself rather than a folder inside it, because this pack ships as a bare zip; `--survival`
+#: moves it, and the tool passes when it is absent exactly as it does for the others.
+SURVIVAL = Path(r"C:\Users\Digikey\Downloads")
+
+#: The sixth folder: a hundred RPG gem icons, which is where the two *charmed* gems are cut from.
+#:
+#: **A sixth root rather than a copy, for the reason the second through fifth exist** - copying a
+#: licensed pack so one path works is a second copy nothing keeps in step. `--gems` moves it, and
+#: the tool passes when it is absent exactly as it does for the others.
+GEMPACK = Path(r"C:\Users\Digikey\Downloads\craftpix-net-668473-rpg-gems-icons-pack")
+
 #: Which of the hundred, and it is a decision a picture made.
 #:
 #: **The glyph sits on a turret's chassis at about half a cell, and at that size detail is mush.**
@@ -156,6 +171,38 @@ MONSTERS = "craftpix-net-377044-top-down-monsters-asset-pack-for-merge-shooter.z
 #: Where the two families live inside it. The pack spells "Bos", not "Boss".
 BROOD = "Png/Monster%02d"
 WARLORDS = "Png/Bos%02d"
+
+#: The survival-wizard pack: **five skeletons and the caster that raises them**, and the third
+#: chapter's whole cast.
+#:
+#: <b>Five bodies against twelve slots, which is a smaller budget than either cast before it and
+#: changes what the cast says.</b> The insects had fifteen bodies and the brood fifteen, so both
+#: could give every kind four distinct silhouettes and let the shape carry the colour as well as
+#: the kind. Five cannot, and pretending otherwise would mean cutting one body four times and
+#: calling it four - so this cast says the two things it can say <em>plainly</em> instead: a
+#: <b>bare rib cage creeps</b>, a <b>helm and a long weapon</b> is a brute, and a <b>shield or a
+#: closed visor</b> is a bulwark. Three silhouettes on the hill rather than twelve, each one
+#: unmistakable at a cell and a bit.
+#:
+#: <b>What pays for it is that the colour is still said three times</b> (invariant 37f): the body
+#: is hue-rotated, the view tints it and the view rings it. None of those was ever the silhouette's
+#: job - the twelve-body casts gave it a fourth reading for free, and five bodies buy the first
+#: three back at full strength by making the kind readable instead.
+#:
+#: <b>It is drawn head-on, which is the one view this board has</b> (37ar). The skeletons face the
+#: camera and stand upright, exactly as the brood's blobs do, so the hill still reads as one place.
+#:
+#: <b>And it is the first pack here whose raiders carry a second animation worth drawing.</b> Every
+#: body ships a walk and an <em>attack</em>; see `BONE_SWING`.
+#:
+#: <b>Only its five enemies are read.</b> Its wizard was this chapter's boss for one draft and was
+#: withdrawn by the owner; see `BOSS_SET`.
+WIZARD = "graphicriver-wPfi16JK-survival-wizard.zip"
+
+#: Where the pack keeps its five skeletons. **Its wizard is deliberately not read**: it was this
+#: chapter's boss for one draft and the owner's verdict on it was one line - wrong, use something
+#: else - so the bonecaller is rendered out of rigged 3D instead (`SiegeCastBake`). See `BOSS_SET`.
+BONES = "Survival Wizard/Png/Enemies/E%d"
 
 #: The ten small monsters in `KIT`, which is the same zip the gem debris comes from. They are the
 #: other half of the second chapter's cast and they are drawn by the same hand as `MONSTERS` -
@@ -281,6 +328,56 @@ GEMS = {
     "gem_b": ("PNG/7.png", "a blue rhombus"),
     "gem_y": ("PNG/6.png", "an amber emerald-cut"),
 }
+
+#: The prism, which is the one charm that is a gem of its own rather than a mark worn by one.
+#:
+#: **The pack's own rainbow jewel, cut exactly as the four are.** A prism has no colour - it joins
+#: a run of whatever is beside it (`SiegeCharm.Prism`) - so it is the one charm that cannot ride a
+#: coloured gem, and the one that needs a picture the player reads as *a gem, and not one of the
+#: four*. The pack draws a faceted stone shot through with every hue at once, by the same hand and
+#: at the same size as the other eight; approximating one would be invariant 32b's fault paid for
+#: nothing, when the exact picture is sitting in the same zip.
+#:
+#: Cut untouched, like the four: `Pal` never sees it, because a prism is not a colour and has
+#: nothing to agree with.
+PRISM_GEM = ("PNG/3.png", "a rainbow brilliant")
+
+#: The other two charms, as **gems of their own** rather than as a mark worn over an ordinary one.
+#:
+#: **What was wrong before is that a charmed gem was an ordinary gem with a sticker on it.** The
+#: first cut drew a white glyph over the four jewels (`charm_mark`, now gone) on the argument that
+#: the colour underneath has to keep reading - which is true, and is answered by *cutting a
+#: different jewel in the same colour* rather than by leaving the jewel alone and printing on it.
+#: Reported in one sentence: *I told him to use new type of gems and he literally used the existing
+#: gems and put icon on them.* A mark is also the weaker reading of the two on its own terms: it is
+#: forty pixels of drawing over a saturated stone, where a silhouette is what the eye separates at
+#: a glance on a board that also has a hill walking down it (invariant 37f's three readings, and
+#: 34f's rule that pieces differ in silhouette as well as in hue).
+#:
+#: **Hue-rotated into each of the four rather than cut in one colour**, so a charm is still worth
+#: the colour it is and a player can still see which ward it feeds. The pull is higher than a
+#: raider's: these two stand *beside* the four gems the colour rule is defined by, so a lance that
+#: came out pink where the gem beside it is poppy would be inventing a fifth colour on the one
+#: board that cannot have one.
+#:
+#: **Which two, and why these shapes** (invariant 37z asked of a forty-pixel picture). A **lance**
+#: takes a whole row and a whole column, and a star is the genre's own word for exactly that - so
+#: it is a sharp stellated star, the only thing in the pack whose silhouette is all points. A
+#: **stormglass** makes the line fire at everything on the hill, so it is a *vortex orb*: round,
+#: which none of the four are, with a spiral drawn into it that says something is turning. Neither
+#: can be mistaken for a heart, a cabochon, a rhombus or an emerald-cut, which is the whole test.
+CHARM_GEMS = {
+    "lance": ("92.png", "a stellated star"),
+    "storm": ("23.png", "a vortex orb"),
+}
+
+#: How far a charmed gem is carried onto the ward colour, and how hard its colour is pushed.
+#:
+#: **Measured rather than typed** - four rows of both charms in all four colours were cut at .80,
+#: .95 and 1.0 and looked at beside the four plain gems. At .80 the red reads *pink*, which on a
+#: board where the colour is the whole decision is a fifth colour; at 1.0 the pack's own warm and
+#: cool notes collapse and the stone goes flat (invariant 37p). .95 is where both are true at once.
+CHARM_PULL, CHARM_SAT, CHARM_FLOOR = 0.95, 0.55, 0.58
 
 #: The two explosions, and which of the pack's seven each is cut from. A raider comes apart in fire
 #: and a ward comes down in smoke, which is the difference between something being destroyed and
@@ -475,6 +572,14 @@ OVERLORD = 400
 BLIGHT = 290
 WARBRINGER = 360
 
+#: How tall the gravemaw is cut, and it is the height `SiegeView.TallOf` draws it so nothing here
+#: is ever upscaled. 3.2 cells, which puts it between the warlord and the warbringer on the ladder
+#: a player reads first.
+#:
+#: **The bonecaller has no entry here**, because it is the one boss in this mode this tool does not
+#: cut - see `BOSS_SET`.
+GRAVEMAW = 350
+
 #: The four bosses: a body reel, a cast reel, and how tall each is cut.
 #:
 #: <b>Not insects, and that is the whole of what this table is for.</b> They were four insects out
@@ -515,12 +620,41 @@ WARBRINGER = 360
 #: four cast reels are `pulse`'s synthesised rear-up rather than three of four. That is a real loss
 #: and it is priced: a bought gesture beats a generated one, and what it buys back is four bosses
 #: that do not look like the wave behind them.
+#: <b>The two the third chapter brings, and they are the first pair here that had to be chosen
+#: against a cast rather than against each other.</b> The bone cast is white, so a boss standing in
+#: front of it may be anything except white: the <b>gravemaw</b> is the fifth blob this table
+#: always held in reserve ("a fifth verb one day gets a body without a purchase"), a green barrel
+#: with one eye and a mouth, which is what a thing that <em>eats what the hill drops</em> should
+#: look like; the <b>bonecaller</b> is the survival pack's own caster, and a robed figure with a
+#: staff standing at the head of a skeleton horde needs no explaining at all.
+#:
+#: <b>The bonecaller is not in this table, and that is the whole of what the sixth boss cost.</b>
+#: It was the survival pack's own robed caster for one draft; the owner's verdict was one line -
+#: wrong, use something else - and there is nothing else. Surveyed: the five 2D boss bodies on this
+#: machine are all four chapters' worth already, the monster packs hold eighty-odd small cartoon
+#: blobs and none of them is boss-shaped, and the only unused bodies in the two packs these bosses
+#: come from are two plain eggs and a money bag. So it is <b>rendered out of rigged 3D</b> at this
+#: board's own camera by `SiegeCastBake`, which is invariant 37at's answer arriving a second time
+#: for the same structural reason - the market has no more of these.
 BOSS_SET = {
-    "blight":  (WARLORDS % 2, None, BLIGHT),
-    "boss":    (WARLORDS % 3, None, BOSS),
-    "bringer": (WARLORDS % 5, None, WARBRINGER),
-    "over":    (WARLORDS % 4, None, OVERLORD),
+    "blight":  dict(pack=MONSTERS, body=WARLORDS % 2, cast=None, tall=BLIGHT),
+    "boss":    dict(pack=MONSTERS, body=WARLORDS % 3, cast=None, tall=BOSS),
+    "bringer": dict(pack=MONSTERS, body=WARLORDS % 5, cast=None, tall=WARBRINGER),
+    "over":    dict(pack=MONSTERS, body=WARLORDS % 4, cast=None, tall=OVERLORD),
+
+    "maw":     dict(pack=MONSTERS, body=WARLORDS % 1, cast=None, tall=GRAVEMAW),
 }
+
+# **The bonecaller is not here, and that is the one boss in this mode this tool does not cut.** It
+# was the survival pack's own robed caster and the owner's verdict was one line: wrong, use
+# something else. There is nothing else on this machine - surveyed, the 2D character packs hold
+# eighty-odd small cartoon monsters and ten neighbourhood zombies, none of them boss-shaped, and
+# the five blob bosses take every body the top-down monster pack has. So it is **rendered out of
+# rigged 3D** at this board's own camera by `SiegeCastBake`, which is invariant 37at's answer
+# arriving a second time for the same structural reason: the market has no more of these.
+#
+# **Its reels are therefore owned by the Editor bake and must not be cut here**, or two tools write
+# one folder and `--check` fails against whichever ran last.
 
 #: The second chapter's twelve raiders: which pack a body comes from, and where in it.
 #:
@@ -565,6 +699,75 @@ BROOD_SET = {
     "broodBulwark_b": (KIT, KIT_BROOD % 8),
     "broodBulwark_y": (KIT, KIT_BROOD % 4),
 }
+
+#: The third chapter's twelve raiders: five skeletons over three kinds. See `WIZARD` for why five
+#: bodies is a different bargain from fifteen and what this cast says instead.
+#:
+#: <b>Which body is which kind is the pack's own drawing and needed no interpretation.</b> One of
+#: the five wears nothing at all - a bare rib cage and a bone in its hand - so it is the creeper,
+#: and four of it is a swarm. Two carry a long weapon over a helm, a <b>flail</b> and a
+#: <b>scythe</b>, so they are the brutes. Two are <b>plated</b>: one holds a round wooden
+#: <b>shield</b> and one has a closed visor over a mailed body, so they are the bulwarks - and the
+#: shield is the more literal of the two on purpose, because the one thing a player has to read
+#: about a bulwark before it is in range is that it is carrying something (`SiegeTuning.TallOf`).
+#:
+#: <b>Where a body is worn twice, the two colours it wears are opposite ones.</b> The flail is red
+#: and blue and the scythe green and amber; the shield red and blue and the visor green and amber.
+#: Pairing them as red-and-amber would put one silhouette on the two hues this mode's palette
+#: already keeps closest together (37ak's 32 degrees), which is the one place a doubled body could
+#: actually cost a reading.
+BONE_SET = {
+    # creepers - the one bare skeleton in the pack, four times, which is what a swarm of bones is
+    "boneMon_r":     BONES % 2,
+    "boneMon_g":     BONES % 2,
+    "boneMon_b":     BONES % 2,
+    "boneMon_y":     BONES % 2,
+
+    # brutes - the two carrying a long weapon: a spiked flail and a scythe
+    "boneBrute_r":   BONES % 3,
+    "boneBrute_g":   BONES % 5,
+    "boneBrute_b":   BONES % 3,
+    "boneBrute_y":   BONES % 5,
+
+    # bulwarks - the two wearing plate: a round shield, and a closed visor over mail
+    "boneBulwark_r": BONES % 1,
+    "boneBulwark_g": BONES % 4,
+    "boneBulwark_b": BONES % 1,
+    "boneBulwark_y": BONES % 4,
+}
+
+#: Which animation of a body is its walk, and which is its swing at the line.
+#:
+#: <b>The swing is the first second reel any raider in this mode has had, and it is here because
+#: this is the first pack that drew one.</b> Every raider that reaches the ward line stands there
+#: hitting it every `SiegeTuning.BlowEvery` until something kills it - and for two chapters what
+#: that looked like was a walk cycle looping in place against a turret, which is invariant 37u's
+#: complaint (a body doing the wrong thing where it stands) arriving through the art.
+#:
+#: <b>Short on purpose.</b> A swing is six frames against a walk's twelve: it is played at the
+#: line, where a body is at its smallest and there are up to five of them, and every frame is a
+#: texture that is resident for the whole run. The insects and the brood have no swing at all and
+#: fall back to their walk (`SiegeMode.CastSwing` answers an empty address), which is exactly what
+#: they do today - so this costs those two chapters nothing.
+BONE_WALK, BONE_SWING = "/Walk", "/Attack"
+
+#: How hard this cast's saturation is floored, against `CAST_SAT_FLOOR`'s 0.30 for the other two.
+#:
+#: <b>A fact about what the pack paints rather than a preference, and it is the first cast here
+#: that needed one.</b> `hued` pushes saturation rather than setting it - a pixel that was grey
+#: metal stays greyish and a coloured one becomes strongly coloured - which is exactly right for a
+#: monster drawn in two or three colours of its own. These bodies are <b>bone white</b>: they carry
+#: no hue at all, so the floor <em>is</em> the colour, and at 0.30 a red skeleton and an amber one
+#: are two pale creams half a hue apart. On a board where the colour of a raider is the whole
+#: mechanic that is not a look, it is a rule that cannot be read.
+#:
+#: <b>0.60, rendered against 0.30, 0.45 and 0.75 to pick it.</b> Below it the creepers - the only
+#: body in the pack wearing nothing but bone - stay washed; above it the skull stops having a skull
+#: in it, which is the flattening `CAST_PULL`'s note is about arriving through saturation instead.
+BONE_SAT_FLOOR = 0.60
+
+#: How many frames a swing keeps. See `BONE_SWING`.
+SWING_FRAMES = 6
 
 #: How far a synthesised cast reel surges, and how far down the hill it leans.
 #:
@@ -970,6 +1173,189 @@ def web():
     return out
 
 
+def charm_gem(im, hue):
+    """One charmed gem: a jewel of its own, cut at the size the four are and painted one colour.
+
+    **A different stone rather than a sticker on the same one**, which is the whole of what was
+    wrong with the first cut - see `CHARM_GEMS`. The colour is carried nearly all the way, because
+    these stand beside the four gems the colour rule is defined by; the *shape* is the pack's own
+    and is what the player separates at a glance.
+
+    Cut a shade larger than a plain gem (0.94 against 0.88): both of these are pointed or round
+    where the four are broad, so fitted to the same box they draw visibly smaller than the stones
+    beside them - which would say a charm is a lesser gem, and it is the opposite.
+    """
+    return fit(hued(im, hue, pull=CHARM_PULL, sat_gain=CHARM_SAT, sat_floor=CHARM_FLOOR),
+               TILE, 0.94)
+
+
+def charm_ring():
+    """The soft light a charmed gem stands in, drawn behind it and tinted at run time.
+
+    **The second way a charm is said, and it exists because the first one is small.** A mark on the
+    face of a jewel is forty pixels of drawing on a board that also has a hill walking down it; a
+    halo is what makes the eye go there at all. Invariant 37f is about a raider saying its colour
+    three times, and this is the same argument about a gem saying it is not an ordinary gem.
+
+    White, so the view can put the charm's own colour on it - and a *ring* rather than a filled
+    disc, because a disc behind a jewel washes the jewel out and the one thing this may not do is
+    make the colour underneath harder to read.
+    """
+    size = TILE
+    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+
+    wide = glow(size, size, size / 2, size / 2, size * 0.50, (255, 255, 255), 1.0, power=2.4)
+    hole = glow(size, size, size / 2, size / 2, size * 0.34, (255, 255, 255), 1.0, power=2.4)
+
+    a = np.asarray(wide).astype(np.float32)
+    b = np.asarray(hole).astype(np.float32)
+    a[..., 3] = np.clip(a[..., 3] - b[..., 3] * 0.92, 0, 255)
+
+    out.alpha_composite(Image.fromarray(a.astype(np.uint8), "RGBA"))
+    return out
+
+
+#: Frames a lance's beam is drawn over. Ten at 30fps is a third of a second of crackle, which is
+#: about as long as the stroke is at full brightness before it starts going out.
+BEAM_FRAMES = 10
+
+
+def beam():
+    """The stroke a lance draws down its row and its column, as a **reel** rather than a bar.
+
+    **A still bar is the whole of why the old one read as nothing.** It was one white gradient
+    stretched across the row and faded out: it has no event in it, so what the player saw was a
+    highlighter line appear and vanish over gems that were disappearing anyway. Reported as
+    *horrendous*, and correctly. A beam is light under pressure - it has to flicker, it has to have
+    filaments in it that move, and the core has to be hotter than the body.
+
+    **Still white, still with no edge along its length**, because the view tints it to the charm's
+    own colour and stretches it to whatever a field is wide (invariant 37au is about a picture of a
+    *place*, which this is not; a beam is a thing of variable length and its sprite is drawn with
+    no end along that axis precisely so it may be stretched).
+
+    **Cut at half the old resolution on purpose.** `ArtImportRules` caps `/Art/Siege/` at 512, so a
+    1536-wide strip imported at 512 and was blown back up by the view - ten frames of that is ten
+    textures paying for detail the importer had already thrown away. This is cut at the size it
+    ships at, which is the same rule the hill's ground learned the hard way.
+
+    The crackle is a pair of counter-running sine sums rather than noise, for one reason: noise
+    reseeded per frame boils, and what a beam does is *travel*. Two waves running opposite ways at
+    different rates give a filament that moves along the beam and never repeats inside the reel.
+    """
+    long, thick = 512, 64
+    y, x = np.mgrid[0:thick, 0:long].astype(np.float32)
+
+    # Along: full for the middle and feathered into nothing at both ends, so two strokes crossing
+    # at the charm do not show a seam and a stroke that overruns the field has no visible end.
+    fade = long * 0.06
+    along = np.clip(np.minimum(x, long - 1 - x) / fade, 0.0, 1.0)
+
+    mid = thick / 2.0
+    frames = []
+
+    for f in range(BEAM_FRAMES):
+        phase = math.tau * f / BEAM_FRAMES
+
+        # The filament: where the hot thread of the beam actually lies, which is not the middle.
+        # Two waves running opposite ways, so the thread crawls along the stroke.
+        thread = (np.sin(x / 26.0 - phase * 2.0) * 3.4
+                  + np.sin(x / 11.0 + phase * 3.0) * 2.1
+                  + np.sin(x / 61.0 - phase) * 2.8)
+
+        off = np.abs(y - mid - thread)
+
+        # Three rungs, far apart, which is what makes a thing look *made of* light rather than
+        # painted it (the strike's own ladder, invariant 37af): a white filament, a bright body,
+        # and a wide haze the board can see the colour in.
+        core = np.clip(1.0 - off / 2.6, 0.0, 1.0) ** 1.3
+        body = np.clip(1.0 - np.abs(y - mid) / (thick * 0.21), 0.0, 1.0) ** 1.7
+        haze = np.clip(1.0 - np.abs(y - mid) / (thick * 0.46), 0.0, 1.0) ** 2.4
+
+        # The whole stroke breathes, so a beam held for a third of a second is never still.
+        pulse = 0.86 + 0.14 * math.sin(phase * 2.0)
+
+        a = np.zeros((thick, long, 4), np.float32)
+
+        # White at the filament and a shade off it in the haze, so the run-time tint has something
+        # to colour: a wholly white sprite multiplied by a hue is that hue everywhere, and the
+        # thing that says "hot" is the part the tint cannot reach.
+        lit = np.clip(core * 1.15, 0.0, 1.0)
+        a[..., 0] = 255.0
+        a[..., 1] = 255.0
+        a[..., 2] = 255.0
+        a[..., 3] = np.clip((core * 1.0 + body * 0.62 + haze * 0.34) * pulse, 0.0, 1.0) * along * 255.0
+
+        # The core written back over the top, so the middle of the stroke is solid white whatever
+        # the alpha sum came to - a beam whose brightest pixel is 80% is a beam with no filament.
+        a[..., 3] = np.maximum(a[..., 3], lit * along * 255.0)
+
+        frames.append(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA"))
+
+    return frames
+
+
+#: Frames a stormglass's beam is drawn over. Eight at 30fps is a quarter of a second of ripple,
+#: which is about as long as one beam stands at full width before it starts closing.
+LASER_FRAMES = 8
+
+
+def laser():
+    """The beam a stormglass fires, as a reel — and a **different material** from `beam`.
+
+    **Two beams, because one sprite cannot be both.** A lance's stroke is a thin plasma thread
+    stretched across a whole row at two thirds of a cell: what makes that read is a hot wandering
+    filament with a long soft tail. Drawn at the size a laser wants it is the same thread with the
+    tail spread out, which disappears against a hill — scaled up to two and a half cells it still
+    read as a coloured hair, because the sprite's brightness is concentrated in about a sixth of
+    its height whatever that height is. Reported as *more visible, more dense, more thick, more
+    bright — like a pure laser*, and it is a fact about the alpha profile rather than about a
+    number in the view.
+
+    **So this one is a bar with an edge, not a filament with a tail**: flat at full alpha across
+    the middle third, then a short smooth falloff to nothing. Stretched to any thickness it stays a
+    solid band, because what scales is the band rather than the fade.
+
+    **Straight, too.** `beam`'s filament wanders, which is right for something arcing across a
+    board and wrong for a laser: a beam that is not straight is not a beam. What moves here instead
+    is *brightness along its length* — a ripple running outward — so it is alive without bending.
+
+    White, like everything else the view tints (invariant 37l: `Image.color` is a multiply, so a
+    coloured sprite could only ever be darkened).
+    """
+    long, thick = 512, 96
+    y, x = np.mgrid[0:thick, 0:long].astype(np.float32)
+
+    # Across: flat for the middle third, then a smooth shoulder. `u` is -1..1 over the height.
+    u = np.abs(y - (thick - 1) / 2.0) / ((thick - 1) / 2.0)
+
+    flat = 0.34
+    edge = np.clip((u - flat) / (1.0 - flat), 0.0, 1.0)
+    across = np.where(u <= flat, 1.0, 1.0 - (edge * edge * (3.0 - 2.0 * edge)))
+
+    # Along: feathered into nothing at both ends, so a beam has no drawn end to read as a cut.
+    fade = long * 0.04
+    along = np.clip(np.minimum(x, long - 1 - x) / fade, 0.0, 1.0)
+
+    frames = []
+
+    for f in range(LASER_FRAMES):
+        phase = math.tau * f / LASER_FRAMES
+
+        # A ripple of brightness running along the beam - what makes it alive without bending it.
+        run = (np.sin(x / 34.0 - phase * 2.0) * 0.5
+               + np.sin(x / 13.0 - phase * 3.0) * 0.5)
+        lit = np.clip(0.88 + run * 0.12, 0.0, 1.0)
+
+        a = np.zeros((thick, long, 4), np.float32)
+        a[..., 0] = a[..., 1] = a[..., 2] = 255.0
+        a[..., 3] = across * along * lit * 255.0
+
+        frames.append(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA"))
+
+    return frames
+
+
 def sack():
     """What a thief leaves where a gem was.
 
@@ -1279,37 +1665,6 @@ def spaced(names, count):
     return [names[min(len(names) - 1, int(i * step))] for i in range(count)]
 
 
-def cast_frames(z, folder, count=FRAMES, tall=CAST, ink=(0, 0, 0)):
-    names = spaced(ordered(z, folder), count)
-    if not names:
-        return []
-
-    frames = deshadow([read(z, n) for n in names], ink)
-
-    box = box_of(frames)
-    if box is None:
-        return []
-
-    frames = [im.crop(box) for im in frames]
-
-    width, height = frames[0].size
-    ratio = tall / float(height)
-    size = (max(1, int(width * ratio)), tall)
-
-    return [im.resize(size, Image.LANCZOS) for im in frames]
-
-
-def centroid(im):
-    """The alpha-weighted middle of a frame, in its own pixels."""
-    a = np.asarray(im)[..., 3].astype(np.float64)
-    mass = a.sum()
-    if mass <= 0:
-        return 0.0, 0.0
-
-    ys, xs = np.mgrid[0:a.shape[0], 0:a.shape[1]]
-    return float((xs * a).sum() / mass), float((ys * a).sum() / mass)
-
-
 #: What a baked ground shadow is made of, measured: <b>pure black at partial alpha</b>. The pack
 #: composites every insect over a soft ellipse drawn at alpha 87 and RGB (0, 0, 0); the body is at
 #: alpha 255, and the one other thing drawn see-through is a fly's <em>wings</em>, which are white.
@@ -1329,6 +1684,118 @@ SHADOW_ALPHA, SHADOW_INK = 200, 24
 #: buys that a darkness test cannot: these bodies carry a <b>very thick dark outline</b>, so
 #: "anything dark and see-through" would eat the drawing's own line.
 SHADE_VIOLET = (85, 63, 136)
+
+#: What each pack bakes under a body, as (ink, tolerance), so one table decides what `deshadow`
+#: cuts out of each rather than every call site remembering.
+#:
+#: <b>A tolerance of nought means "this pack bakes no shadow", and it is a value rather than a
+#: branch.</b> The test is "within `tol` of the ink on every channel", which nothing satisfies at
+#: nought - so those frames come through untouched, by the rule rather than around it. The
+#: survival pack is the one: measured across its five bodies, every translucent pixel in it is the
+#: drawing's own antialiased outline plus about fourteen rows of contact shading under the feet,
+#: and there is no ellipse at all. Cutting "anything dark and see-through" out of bodies drawn
+#: with a very thick black line would eat the line, which is the fault `SHADE_VIOLET`'s note is
+#: about met from the other side.
+PACK_SHADE = {
+    MONSTERS: (SHADE_VIOLET, SHADOW_INK),
+    KIT: (SHADE_VIOLET, SHADOW_INK),
+    MERGE: ((0, 0, 0), SHADOW_INK),
+    WIZARD: ((0, 0, 0), 0),
+}
+
+
+def cast_frames(z, folder, count=FRAMES, tall=CAST, ink=(0, 0, 0), tol=SHADOW_INK):
+    names = spaced(ordered(z, folder), count)
+    if not names:
+        return []
+
+    frames = deshadow([read(z, n) for n in names], ink, tol)
+
+    box = box_of(frames)
+    if box is None:
+        return []
+
+    frames = [im.crop(box) for im in frames]
+
+    width, height = frames[0].size
+    ratio = tall / float(height)
+    size = (max(1, int(width * ratio)), tall)
+
+    return [im.resize(size, Image.LANCZOS) for im in frames]
+
+
+def walk_and_swing(z, folder, tall, ink, tol):
+    """A raider's two reels: what it walks in, and what it swings in at the ward line.
+
+    <b>The swing is cut on a bigger canvas at the <em>walk's</em> scale, which is the whole of what
+    is difficult here.</b> A boss's two reels share one canvas and are fitted to it together
+    (`one_canvas`), because a boss stands still and the canvas costs it nothing. A raider cannot
+    pay that: measured across these five bodies, the attack swings the weapon so far outside the
+    walk's box that a shared canvas fitted to `CAST` would draw every skeleton at <b>59% to 73%</b>
+    of its size <em>for the whole run</em>, for the sake of six frames at the line.
+
+    So the walk is cut tight, exactly as every other cast in this mode is, and the swing is cut on
+    the union of the two - mirrored about the walk body's own middle on both axes, so the body sits
+    in the same place in both - and scaled by the <b>walk's</b> ratio rather than its own. What
+    comes out is a taller, wider frame with the body drawn at identical pixels inside it, and
+    `SiegeView.Wear` draws it at that same ratio bigger. The body therefore does not move or change
+    size when a raider reaches the line, and nothing is clipped.
+
+    <b>A body with no attack animation gets one reel and no swing</b>, which is what the insects and
+    the brood do - `SiegeMode.CastSwing` answers an empty address for them and the view keeps
+    walking, exactly as it does today.
+    """
+    walk = deshadow([read(z, n) for n in spaced(ordered(z, folder + BONE_WALK), FRAMES)], ink, tol)
+    if not walk:
+        return [], []
+
+    home = box_of(walk)
+    if home is None:
+        return [], []
+
+    ratio = tall / float(home[3] - home[1])
+
+    def cut(frames, box, high=None):
+        wide = int(box[2] - box[0])
+        size = (max(1, int(wide * ratio)),
+                tall if high is None else max(1, int(high * ratio)))
+        return [im.crop(box).resize(size, Image.LANCZOS) for im in frames]
+
+    swing = deshadow([read(z, n) for n in spaced(ordered(z, folder + BONE_SWING), SWING_FRAMES)],
+                     ink, tol)
+
+    if not swing:
+        return cut(walk, home), []
+
+    whole = box_of(walk + swing)
+
+    across, down = (home[0] + home[2]) / 2.0, (home[1] + home[3]) / 2.0
+    reach = max(across - whole[0], whole[2] - across, across - home[0], home[2] - across)
+    fall = max(down - whole[1], whole[3] - down, down - home[1], home[3] - down)
+
+    box = (math.floor(across - reach), math.floor(down - fall),
+           math.ceil(across + reach), math.ceil(down + fall))
+
+    # `one_canvas`'s promise, asserted here for the same reason: a clipped weapon imports,
+    # addresses, audits and draws, and the only symptom is a flail losing its head for two frames
+    # of a swing nobody is looking at closely.
+    if not (box[0] <= whole[0] and box[2] >= whole[2]
+            and box[1] <= whole[1] and box[3] >= whole[3]):
+        raise SystemExit("a swing reel's canvas does not contain every frame of it")
+
+    return cut(walk, home), cut(swing, box, box[3] - box[1])
+
+
+def centroid(im):
+    """The alpha-weighted middle of a frame, in its own pixels."""
+    a = np.asarray(im)[..., 3].astype(np.float64)
+    mass = a.sum()
+    if mass <= 0:
+        return 0.0, 0.0
+
+    ys, xs = np.mgrid[0:a.shape[0], 0:a.shape[1]]
+    return float((xs * a).sum() / mass), float((ys * a).sum() / mass)
+
 
 
 def value_gain(frames):
@@ -1510,22 +1977,29 @@ def one_canvas(reels, body, count, tall):
     return out
 
 
-def boss_reels(z, body, cast, tall, ink=(0, 0, 0)):
+def boss_reels(z, body, cast, tall, ink=(0, 0, 0), tol=SHADOW_INK):
     """A boss's two reels: the one it stands and walks in, and the one it throws in.
 
     The cast reel is a <b>there-and-back</b> whichever way it is come by - the pack's own take-off
     played forward and then reversed, or `pulse`'s sine - so it always begins and ends on the
     standing pose and there is no frame anywhere on which the boss snaps.
+
+    <b>Every boss in this table comes by its cast reel through `pulse`</b>, because the pack drew
+    each of them exactly one animation - see `BOSS_SET`. The `cast` branch below is what a pack
+    that drew two would take, and the fraction it keeps is the one lesson worth carrying if one
+    ever does: the canvas is shared, so whatever the gesture reaches sets the frame, and the view
+    sizes a body by its frame - a reel that flings something far out draws the boss *smaller for
+    its whole life* in exchange for a few frames of reach.
     """
-    stand = deshadow([read(z, n) for n in ordered(z, body)], ink)
+    stand = deshadow([read(z, n) for n in ordered(z, body)], ink, tol)
     if not stand:
         return None
 
     if cast is None:
         thrown = pulse(stand, BOSS_CAST_FRAMES, BOSS_RISE, BOSS_LEAN)
     else:
-        gesture = deshadow([read(z, n) for n in ordered(z, cast)], ink)
-        if not gesture:
+        swung = deshadow([read(z, n) for n in ordered(z, cast)], ink, tol)
+        if not swung:
             return None
 
         # **Only the first part of it**, and the reason is the shared canvas rather than the
@@ -1534,8 +2008,8 @@ def boss_reels(z, body, cast, tall, ink=(0, 0, 0)):
         # the frame's height and the body would be drawn a quarter smaller in *both* reels for
         # the sake of a rise nobody is looking at. Cut to a rear-up it costs nothing and reads
         # better: the overlord lifts, hurls, and settles.
-        gesture = gesture[:max(2, int(len(gesture) * BOSS_GESTURE))]
-        thrown = gesture + gesture[::-1]
+        swung = swung[:max(2, int(len(swung) * BOSS_GESTURE))]
+        thrown = swung + swung[::-1]
 
     reels = one_canvas([stand, thrown], 0, max(BOSS_FRAMES, BOSS_CAST_FRAMES), tall)
     if reels is None:
@@ -1553,6 +2027,10 @@ def build():
     turrets, kit = zipped(TURRETS, TOWER), zipped(KIT, TOWER)
     monsters = zipped(MONSTERS, ENEMIES)
 
+    # The gem-icon pack, which the two charmed gems are cut from. Absent is a checkout without it,
+    # so the eight PNGs it cuts are simply not offered - the same bargain `icons` strikes.
+    gems = (GEMPACK / "PNG") if (GEMPACK / "PNG").is_dir() else None
+
     # The skill-icon pack, of which this mode uses exactly one. Absent is a checkout without it,
     # so the one PNG it cuts is simply not offered and `--check` has nothing to hold it to.
     icons = ICONS if ICONS.exists() else None
@@ -1560,10 +2038,13 @@ def build():
     if match3 is None or blasts is None or turrets is None or kit is None:
         return None
 
+    # The third chapter's twelve raiders and the boss that raises them.
+    wizard = zipped(WIZARD, SURVIVAL)
+
     # The bosses and half the second chapter's cast live here. Absent, this is a checkout without
     # the pack rather than a mistake - the same bargain every art tool in this project strikes -
     # so it is answered by cutting neither, and `--check` then has nothing to hold them to.
-    if monsters is None:
+    if monsters is None or wizard is None:
         return None
 
     #: Which zip a `BROOD_SET` row names. A table of bodies has to say which pack each is in, and
@@ -1682,9 +2163,37 @@ def build():
     # The cog: the one thing on the field that is not a jewel.
     made["Siege/gem_cog.png"] = cog()
 
+    # **The charms, and every one of the three is now a gem of its own.** A prism is cut from the
+    # same pack as the four and left its own colours; a lance and a stormglass are cut from the gem
+    # icon pack and hue-rotated into each of the four, so the stone is a *different stone* and still
+    # says what the cell is worth. See `CHARM_GEMS` for what replaced the mark and why.
+    made["Siege/gem_prism.png"] = fit(read(match3, PRISM_GEM[0]), TILE, 0.88)
+
+    # Absent is a checkout without the gem pack, which is the same bargain every other root here
+    # strikes: the eight PNGs are simply not offered and `--check` has nothing to hold them to.
+    if gems is not None:
+        for charm, (src, _) in CHARM_GEMS.items():
+            face = Image.open(gems / src).convert("RGBA")
+
+            for letter, hue in WARD_HUES:
+                made["Siege/gem_%s_%s.png" % (charm, letter)] = charm_gem(face, hue)
+
+    made["Siege/charm_ring.png"] = charm_ring()
+
+    for i, frame in enumerate(beam()):
+        made["Siege/beam/f%02d.png" % i] = frame
+
+    # **A second beam, because a lance's thread and a stormglass's laser are different
+    # materials** - see `laser`.
+    for i, frame in enumerate(laser()):
+        made["Siege/laser/f%02d.png" % i] = frame
+
     charged = charge(icons)
     if charged is not None:
         made["Siege/charge.png"] = charged
+
+    # The Infinite lane's hub reads its three lines against these. See `HUB_ICONS`.
+    made.update(hub_marks(icons))
 
     # The muzzle flash, drained to white so a ward's own colour can be put on it at run time.
     flashes = sorted(n for n in turrets.namelist()
@@ -1736,14 +2245,43 @@ def build():
                 im, hue, pull=CAST_PULL, sat_gain=CAST_SAT_GAIN, sat_floor=CAST_SAT_FLOOR,
                 val_gain=gain, val_lift=CAST_VAL_LIFT)
 
-    # The four bosses: two reels each, both off one canvas so none of them jumps or changes size
+    # The third chapter's cast, out of the survival pack, and a **second reel per body**: what a
+    # skeleton walks in, and what it swings in when it reaches the line. The same three lines the
+    # other two casts are cut with, which is `BROOD_SET`'s claim holding a second time.
+    ink, tol = PACK_SHADE[WIZARD]
+
+    for key, folder in BONE_SET.items():
+        hue = hues.get(key[-1])
+        walk, swing = walk_and_swing(wizard, folder, CAST, ink, tol)
+
+        # **One gain for both reels, measured off the walk.** `value_gain` reads how bright a body
+        # is drawn and lifts it onto `CAST_VALUE`; measured per reel it would answer two different
+        # numbers for one skeleton - a swing hides half the rib cage behind a shield - and a raider
+        # that changed brightness the moment it reached the line is this file's own complaint about
+        # a body that changes size, one channel over.
+        gain = value_gain(walk)
+
+        for suffix, frames in (("", walk), ("_swing", swing)):
+            for i, im in enumerate(frames):
+                made["Siege/%s%s/f%02d.png" % (key, suffix, i)] = im if hue is None else hued(
+                    im, hue, pull=CAST_PULL, sat_gain=CAST_SAT_GAIN, sat_floor=BONE_SAT_FLOOR,
+                    val_gain=gain, val_lift=CAST_VAL_LIFT)
+
+    # The six bosses: two reels each, both off one canvas so none of them jumps or changes size
     # when it throws. One loop rather than one block per boss, which is what stopped a third and a
     # fourth being expensive - and what makes the *set* something a reader can see at once.
-    for key, (body, cast, tall) in BOSS_SET.items():
-        reels = boss_reels(monsters, body, cast, tall, ink=SHADE_VIOLET)
+    packs[WIZARD] = wizard
+
+    for key, row in BOSS_SET.items():
+        ink, tol = PACK_SHADE[row["pack"]]
+
+        reels = boss_reels(packs[row["pack"]], row["body"], row["cast"], row["tall"],
+                           ink=ink, tol=tol)
         if reels is None:
             continue
 
+        # **Nothing here is hue-rotated**: a raider's colour is a rule and a boss's is not (37f),
+        # so every one of these keeps what its pack painted.
         for name, frames in ((key, reels[0]), (key + "_cast", reels[1])):
             for i, im in enumerate(frames):
                 made["Siege/%s/f%02d.png" % (name, i)] = im
@@ -1758,6 +2296,36 @@ def build():
 CHARGE_SIZE, CHARGE_ROUND = 128, 22
 
 
+#: The three marks the Infinite lane's hub reads its lines against, and what each is for.
+#:
+#: **They are the one place in this game a bought icon carries a sentence rather than a control**,
+#: and they were chosen by laying candidates in the kit's own seat and looking (`Tools/icons.png`):
+#: a **phoenix** for a fight with no end, **rising bolts** for a hill that gets harder every wave,
+#: and a **medal** for a place on the boards. Cut to `Ui/` rather than to `Siege/` because the hub
+#: is drawn on the map screen, whose chapter scope is not loaded when its own art is asked for -
+#: and an `Image` with no sprite is a white rectangle rather than a blank (invariant 7b).
+HUB_ICONS = (("ic_endless", 90), ("ic_surge", 84), ("ic_rank", 27))
+
+#: The hub's seats are smaller than a turret's chassis glyph, so its marks are cut smaller and
+#: rounded tighter. `EndlessHubLayout.IconSize` is what they are drawn at.
+HUB_SIZE, HUB_ROUND = 96, 16
+
+
+def hub_marks(root):
+    """The hub's three marks, cut exactly as the overcharge glyph is. See `HUB_ICONS`."""
+    if root is None:
+        return {}
+
+    made = {}
+
+    for name, number in HUB_ICONS:
+        tile = tile_of(root, number, HUB_SIZE, HUB_ROUND)
+        if tile is not None:
+            made["Ui/%s.png" % name] = tile
+
+    return made
+
+
 def charge(root):
     """The overcharge glyph: one of the pack's skill icons, squared and rounded.
 
@@ -1767,10 +2335,20 @@ def charge(root):
     lesson, met again). A rounded tile on the turret's square chassis panel is what the art is
     already shaped like.
     """
+    return tile_of(root, CHARGE_ICON, CHARGE_SIZE, CHARGE_ROUND)
+
+
+def tile_of(root, number, size, round_to):
+    """One of the pack's skill icons, squared, rounded and keylined.
+
+    **One cutter for every caller**, because the overcharge glyph and the hub's three marks are the
+    same shape at two sizes - and two copies of a rounding is two answers to how a bought icon is
+    seated in this kit.
+    """
     if root is None:
         return None
 
-    source = root / "PNG" / ("skill icon %d.png" % CHARGE_ICON)
+    source = root / "PNG" / ("skill icon %d.png" % number)
     if not source.exists():
         return None
 
@@ -1779,21 +2357,19 @@ def charge(root):
     side = min(im.width, im.height)
     im = im.crop(((im.width - side) // 2, (im.height - side) // 2,
                   (im.width - side) // 2 + side, (im.height - side) // 2 + side))
-    im = im.resize((CHARGE_SIZE, CHARGE_SIZE), Image.LANCZOS)
+    im = im.resize((size, size), Image.LANCZOS)
 
     # A rounded mask, and a keyline in the interface kit's navy so it sits on a bright chassis the
     # way every other badge in this game does (44h's rule about a flat render on a cartoon board).
-    mask = Image.new("L", (CHARGE_SIZE, CHARGE_SIZE), 0)
-    ImageDraw.Draw(mask).rounded_rectangle([0, 0, CHARGE_SIZE - 1, CHARGE_SIZE - 1],
-                                           radius=CHARGE_ROUND, fill=255)
+    mask = Image.new("L", (size, size), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([0, 0, size - 1, size - 1], radius=round_to, fill=255)
 
-    tile = Image.new("RGBA", (CHARGE_SIZE, CHARGE_SIZE), (0, 0, 0, 0))
+    tile = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     tile.paste(im, (0, 0), mask)
 
-    edge = Image.new("RGBA", (CHARGE_SIZE, CHARGE_SIZE), (0, 0, 0, 0))
-    ImageDraw.Draw(edge).rounded_rectangle([2, 2, CHARGE_SIZE - 3, CHARGE_SIZE - 3],
-                                           radius=CHARGE_ROUND - 2, outline=(6, 24, 56, 255),
-                                           width=5)
+    edge = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    ImageDraw.Draw(edge).rounded_rectangle([2, 2, size - 3, size - 3], radius=round_to - 2,
+                                           outline=(6, 24, 56, 255), width=5)
     tile.alpha_composite(edge)
 
     return tile
@@ -1916,7 +2492,7 @@ def contact(made):
 
 
 def main():
-    global SOURCE, TOWER, ENEMIES, ICONS
+    global SOURCE, TOWER, ENEMIES, ICONS, SURVIVAL, GEMPACK
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true")
@@ -1926,12 +2502,16 @@ def main():
     ap.add_argument("--tower", default=str(TOWER))
     ap.add_argument("--enemies", default=str(ENEMIES))
     ap.add_argument("--icons", default=str(ICONS))
+    ap.add_argument("--survival", default=str(SURVIVAL))
+    ap.add_argument("--gems", default=str(GEMPACK))
     args = ap.parse_args()
 
     SOURCE = Path(args.source)
     TOWER = Path(args.tower)
     ENEMIES = Path(args.enemies)
     ICONS = Path(args.icons)
+    SURVIVAL = Path(args.survival)
+    GEMPACK = Path(args.gems)
 
     made = build()
 

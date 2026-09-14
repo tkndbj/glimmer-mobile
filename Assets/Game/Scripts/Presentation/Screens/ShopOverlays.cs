@@ -357,7 +357,7 @@ namespace GlimmerGrove
             // — it simply closes, and calling that "collect" would promise something the
             // player then does not see happen.
             _done = UIKit.TextButton("Done", panel, "btn_green",
-                                     Loc.Get(CanFly() ? "ui.daily.collect" : "ui.common.ok"), 36,
+                                     Loc.Get(CanFly() ? "ui.chest.collect" : "ui.common.ok"), 36,
                                      new Vector2(480f, ButtonH), new Vector2(.5f, 1f),
                                      new Vector2(0f, -buttonY), OnCollect);
 

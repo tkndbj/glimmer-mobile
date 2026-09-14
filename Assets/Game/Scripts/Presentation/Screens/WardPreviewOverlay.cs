@@ -349,20 +349,6 @@ namespace GlimmerGrove
                               WardStarLedger.StarsOf(Model, WardLine.Colours[Colour]), 44f);
         }
 
-        /// <summary>
-        /// A turret's own name, from its id.
-        ///
-        /// Only ever asked about <see cref="WardOffer.Needs"/>, which carries an id because a name
-        /// is a loc key and Domain may not reach for one. An id the roster no longer knows draws
-        /// an empty name rather than the id itself, because an id is not player-facing text
-        /// (invariant 6).
-        /// </summary>
-        static string NameOf(string id)
-        {
-            var model = WardLedger.Catalog.Find(id);
-            return model == null ? string.Empty : Loc.Get(model.NameKey);
-        }
-
         /// <summary>Whether this turret is the one already standing on the colour that raised this.</summary>
         bool Standing
         {
@@ -470,17 +456,12 @@ namespace GlimmerGrove
                     _status.color = Held;
                     break;
 
-                case WardPurchaseState.Sealed:
-                    // **The rung the shelf is standing on, named**, because it is the one refusal
-                    // of the three that a player can act on this minute — and the button says the
-                    // same thing rather than a price they cannot pay yet, since a live-looking key
-                    // over a wall is worse than a plain one.
-                    _status.text = Loc.Format("ui.loadout.sealed_note", NameOf(offer.Needs));
-                    _status.color = Short;
-                    _label.text = Loc.Get("ui.loadout.sealed");
-                    break;
-
                 case WardPurchaseState.LevelLocked:
+                    // **The one wall left, and the key says the level rather than LOCKED.** There
+                    // was a second refusal above this — the rung below it on the shelf, named in
+                    // a sentence — and it is gone with the sequential unlock (`WardLedger`). A
+                    // live-looking key over a wall is worse than a plain one, so this keeps the
+                    // orange the reset gave it.
                     _status.text = Loc.Format("ui.loadout.level_note", offer.RequiredLevel);
                     _status.color = Short;
                     _label.text = Loc.Format("ui.loadout.level", offer.RequiredLevel);
@@ -585,8 +566,7 @@ namespace GlimmerGrove
             }
 
             if (offer.State == WardPurchaseState.NotForSale
-                || offer.State == WardPurchaseState.LevelLocked
-                || offer.State == WardPurchaseState.Sealed)
+                || offer.State == WardPurchaseState.LevelLocked)
             {
                 Close();
                 return;

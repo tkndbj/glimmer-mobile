@@ -92,27 +92,27 @@ LEVELS = (
     # **The brood arrives, and nothing else is new.** Three waves, no armour, no bombers: the rung
     # exists so that a player meets a hill that is simply *bigger* than the one they finished the
     # last chapter on, and finds out that the line they cleared it with is not obviously enough.
-    dict(id="s03_firstbrood", seed=4658, swaps=9,
+    dict(id="s03_firstbrood", seed=4658, swaps=9, charms="pl",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["rgbyRGby", "RGBYrgby", "RGBYRGby"]),
 
     # The first armour of the chapter, one to a wave, so the question is asked three times before
     # anything else is asked with it.
-    dict(id="s03_hollowshell", seed=5289, swaps=9,
+    dict(id="s03_hollowshell", seed=5289, swaps=9, charms="pl",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["rgbyRGby", "RGBY#rGby", "RGBY#gRGby"]),
 
     # Bombers, which are the one raider worth *more* to the player than it costs: each leaves a live
     # charge on the hill, and when to spend it is the decision. Three of them on a hill this heavy
     # is the rung that teaches holding one back for the wave rather than tapping it where it fell.
-    dict(id="s03_mirewalk", seed=2392, swaps=8,
+    dict(id="s03_mirewalk", seed=2392, swaps=8, charms="pl",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RGbyRGby", "RGBY!rRGby", "RGBYRG!gBY!b"]),
 
     # Armour in a group rather than one at a time, and one of them in the opening wave - so the
     # slow shells are still walking when the brutes behind them arrive, which is the shape the
     # whole back half of this chapter is built on.
-    dict(id="s03_spinecrest", seed=5765, swaps=8,
+    dict(id="s03_spinecrest", seed=5765, swaps=8, charms="pl",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RGby#rRGby", "RGby#gRGby", "RGby#bRGby"]),
 
@@ -122,7 +122,7 @@ LEVELS = (
     # mechanic that rejects nothing, which is invariant 5d and was a real report from a device. The
     # last wave is therefore written to still be walking when the douse lands, and the answer is to
     # feed a different colour or pour a surge into the dark one.
-    dict(id="s03_blightfen", seed=7989, swaps=8,
+    dict(id="s03_blightfen", seed=7989, swaps=8, charms="pl",
          wards="rgby", gems="rgby", cogs=25, boss="blightcaller:b",
          waves=["rgbyRGby", "RGbyRGby", "RGBY#rRGby"]),
 
@@ -131,27 +131,27 @@ LEVELS = (
     # three of the four wards can barely help with - and the match a player wants is the one the
     # field is least likely to be offering. Chapter one asked this once, early and gently; this is
     # the same question with armour in it.
-    dict(id="s03_stillmire", seed=5687, swaps=7,
+    dict(id="s03_stillmire", seed=5687, swaps=7, charms="pl",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RRRrrrrg", "GGG#gGGgb", "BBBbbbbYYy"]),
 
     # The densest hill so far and the plainest: four brutes of every colour, twice over, and then a
     # third wave with armour in it. Nothing to work out, everything to keep up with.
-    dict(id="s03_thornbrood", seed=6417, swaps=7,
+    dict(id="s03_thornbrood", seed=6417, swaps=7, charms="pl",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RGbyrgby", "RGbyRGbyrg", "RGBY#yRGbyrg"]),
 
     # Armour and bombers together, which is the rung where a charge held back is worth a whole
     # wave: a bomber's blast takes a plus of five boxes, and a bulwark standing in it is the one
     # raider a colour match is slowest against.
-    dict(id="s03_gloamfield", seed=11465, swaps=7,
+    dict(id="s03_gloamfield", seed=11465, swaps=7, charms="pl",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RGby#rRGby", "RGBY!gRGby", "RGBY#bRGby"]),
 
     # **The longest hill in the game**, four waves and no boss at the end of it, so what this rung
     # is about is attrition rather than a fight: the line has to be fed evenly for a minute and a
     # half, and a colour left dark for one wave too long is the colour that takes a ward down.
-    dict(id="s03_deepmire", seed=1112, swaps=6,
+    dict(id="s03_deepmire", seed=1112, swaps=6, charms="pl",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["rgbyRGby", "RGbyRGby", "RGby#rRGby#gby", "RGBYrgby"]),
 
@@ -161,7 +161,7 @@ LEVELS = (
     # apart. What makes this the chapter's finale rather than a repeat is that a roar cannot be
     # answered by protecting one turret: it takes a little off all four at once, so the answer is a
     # firepot into the hill before it comes.
-    dict(id="s03_broodheart", seed=1651, swaps=6,
+    dict(id="s03_broodheart", seed=1651, swaps=6, charms="pl",
          wards="rgby", gems="rgby", cogs=25, boss="warbringer:g",
          waves=["RGbyRGby", "RGby#rRGby", "RGBYRG#gby"]),
 )
@@ -191,6 +191,11 @@ def level(index, rung):
     if rung["cogs"] > 0:
         block["cogs"] = rung["cogs"]
 
+    # And the same for the charms, for the same reason - an absent field and an empty string are
+    # one fact, so only one of them is written down.
+    if rung["charms"]:
+        block["charms"] = rung["charms"]
+
     return {
         "id": rung["id"],
         "mapX": round(x, 3),
@@ -199,6 +204,11 @@ def level(index, rung):
         # No allowance, on every rung. A siege is lost when the last ward falls (invariant 24, and
         # the mode) - and both gates *error* on a siege that authors one.
         "budgetFactor": -1.0,
+        # **This mode authors its own star lines**, because its par overstates what a run really
+        # spends - see `siege.GOLD_FACTOR`. Every other mode derives par by search and takes the
+        # shared 1.20 / 1.40.
+        "goldFactor": siege.star_factors(ORDINAL)[0],
+        "silverFactor": siege.star_factors(ORDINAL)[1],
         "backdrop": mapart.sky(ORDINAL, index, "siege"),
 
         "siege": block,
@@ -237,10 +247,21 @@ def prove(written):
 
         grid = proto.Grid(block["rows"], block["width"], block["height"], siege.CELLS)
         layout = siege.Layout(grid, block["gems"], block["wards"], block["waves"],
-                              block.get("boss"), block.get("cogs", 0))
+                              block.get("boss"), block.get("cogs", 0),
+                              tough=block.get("tough", 0),
+                              charms=block.get("charms", ""))
 
         if layout.fault:
             sys.exit("%s: %s" % (level_json["id"], layout.fault))
+
+        # **The ladder is derived and then proved against the body, never read out of it.** A
+        # chapter deals the first `ORDINAL` charms of the roster (`SiegeCharms.Upto`), so a rung
+        # that quietly authored a different set would be a chapter teaching two new things at once
+        # with nothing anywhere saying so.
+        want = siege.charms_upto(ORDINAL) if rung["charms"] else ""
+        if rung["charms"] != want:
+            sys.exit("%s: deals charms '%s'; a chapter at ordinal %d deals '%s'"
+                     % (level_json["id"], rung["charms"], ORDINAL, want))
 
         par = siege.par(layout)
         read = siege.readings(layout)
@@ -251,15 +272,20 @@ def prove(written):
             sys.exit("%s: seed %d now deals %d opening swaps, not the %d recorded"
                      % (level_json["id"], rung["seed"], made, rung["swaps"]))
 
+        tail = ""
+        if read["charms"]:
+            tail += ", charms '%s' (~%d a run)" % (read["charms"], read["sparks"])
+        if read["boss"]:
+            tail += ", a '%s' %s (%s) last" % (read["boss"], read["kind"], read["spell"])
+
         print("%-18s par %-4d 3* %-4d 2* %-4d %2d raider(s) in %d wave(s), %2d brute(s), "
               "%d shielded, %d colour(s) against %d ward(s), cogs %2d%% (~%d a run)%s"
               % (level_json["id"], par,
-                 proto.over(par, proto.GOLD_HUNDREDTHS), proto.over(par, proto.SILVER_HUNDREDTHS),
+                 proto.over(par, round(siege.star_factors(ORDINAL)[0] * 100)),
+                 proto.over(par, round(siege.star_factors(ORDINAL)[1] * 100)),
                  read["raiders"], read["waves"], read["brutes"], read["bulwarks"],
                  read["colours"], read["wards"],
-                 read["cogs"], read["drops"],
-                 (", a '%s' %s (%s) last" % (read["boss"], read["kind"], read["spell"]))
-                 if read["boss"] else ""))
+                 read["cogs"], read["drops"], tail))
 
         # A floor on a floor - see the note on the same line in `s01_thornwatch.py`. What proves a
         # rung is a siege is the hold simulation, not this.

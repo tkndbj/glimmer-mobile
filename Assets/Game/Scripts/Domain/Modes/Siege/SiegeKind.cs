@@ -94,5 +94,53 @@ namespace GlimmerGrove.Modes
         /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
         /// </summary>
         Bomber,
+
+        /// <summary>
+        /// The gravemaw: it eats what the hill owes the player.
+        ///
+        /// <para>
+        /// <b>The first boss whose spell is answered by a tap on the hill rather than by the gem
+        /// field.</b> A felled raider leaves a cog and a felled bomber leaves a live bomb, and both
+        /// lie where they fell until somebody reaches for them — which invariant 40i made the whole
+        /// point of the bomber ("the decision is <em>when</em>"). A gravemaw puts a clock on that
+        /// decision: every loose thing still lying on the hill when it casts is gone.
+        /// </para>
+        /// <para>
+        /// <b>It takes no ward health at all</b>, so it is the second of the six that cannot bring
+        /// the line down on its own and the second that rides the last authored wave rather than
+        /// walking on alone (<see cref="SiegeTuning.EndangersTheLine"/>).
+        /// </para>
+        /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
+        /// </summary>
+        Gravemaw,
+
+        /// <summary>
+        /// The bonecaller: it raises the dead, and what it takes is the hill the player has already
+        /// cleared.
+        ///
+        /// <para>
+        /// <b>The one boss in this mode that puts raiders <em>on</em> the board.</b> Everything
+        /// else a boss does is subtraction — health, fire, rank, a clock, and now the loose things
+        /// on the ground. A raise is addition, and it is the only verb left that a player answers
+        /// by having got <em>ahead</em>: a hill somebody has cleared is a hill that gets refilled,
+        /// and a hill they are behind on is one the raise makes very much worse.
+        /// </para>
+        /// <para>
+        /// <b>It is capped, and the cap is what lets par stay arithmetic.</b> Par is the hill's
+        /// health over the most one match could deliver (invariant 37a), so a boss that could add
+        /// bodies for as long as it lived would make par a number nothing could compute. It raises
+        /// <see cref="SiegeTuning.RaiseSize"/> creepers at most <see cref="SiegeTuning.Raises"/>
+        /// times, and par counts every one of them whether they are ever raised or not — which
+        /// overstates a run that kills it early, and invariant 22 says that is the direction to err
+        /// in.
+        /// </para>
+        /// <para>
+        /// <b>It does endanger the line, and not by swinging.</b> What it raises walks and swings,
+        /// so a run can be lost to a bonecaller that never touches a ward itself — which is why
+        /// <see cref="SiegeTuning.EndangersTheLine"/> stopped being "does its spell take health".
+        /// </para>
+        /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
+        /// </summary>
+        Bonecaller,
     }
 }

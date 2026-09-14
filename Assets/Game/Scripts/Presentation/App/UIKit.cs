@@ -658,12 +658,39 @@ namespace GlimmerGrove
         /// it was asked for — so in practice the text shrinks first and only folds once it
         /// has hit <paramref name="minSize"/>. Short chrome — a coin count, a day number —
         /// reaches neither case and is unaffected.
+        /// <para>
+        /// <b>And the vertical mode is set here too, because the paragraph above was one
+        /// setting short of true and this shrank nothing for as long as it has existed.</b>
+        /// "Fails to fit vertically" is measured against the box only while
+        /// <see cref="VerticalWrapMode.Truncate"/> is on; under <see cref="VerticalWrapMode.Overflow"/>
+        /// — which <see cref="Label"/> gives every label it builds — a fold has somewhere to
+        /// go, so the fold does not fail the test either and best-fit keeps the size the
+        /// caller asked for. Measured on the shop's price face, 348x56 at 34 down to 18: the
+        /// gem-boost refusal came out at <b>34pt over three lines, 119 units tall</b>, which
+        /// is taller than the box it is in and taller than the pill the box sits on — the
+        /// sentence drew clean across the card below it. With Truncate it comes out at 21pt
+        /// over two, 47 units, inside both. <b>The tell that this was the fault and not the
+        /// string is that every other shrinkable label reported the same 34</b>, however long
+        /// it was; two screens had already worked around it by hand
+        /// (<see cref="OneLineLabel"/>, and the title ribbon's note about captions standing
+        /// off the cloth) without anybody finding what it was.
+        /// </para>
+        /// <para>
+        /// The trade Truncate brings is that text which cannot fit even at
+        /// <paramref name="minSize"/> is clipped rather than spilled. That is the right way
+        /// round for a helper whose whole promise is "stays inside the box": a spill draws
+        /// over whatever is beside it and says nothing (invariant 37n), where a clip is
+        /// bounded, and the case only arises where a box is genuinely too small for its
+        /// content — which is a fault either way, and today's spill is not a way of noticing
+        /// it. Every caller asked to be shrunk; none asked to be allowed out.
+        /// </para>
         /// </remarks>
         public static Text Shrinkable(Text text, int minSize = 16)
         {
             if (text == null) return null;
 
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
             text.resizeTextMaxSize = text.fontSize;
             text.resizeTextMinSize = Mathf.Clamp(minSize, 1, text.fontSize);
             text.resizeTextForBestFit = true;

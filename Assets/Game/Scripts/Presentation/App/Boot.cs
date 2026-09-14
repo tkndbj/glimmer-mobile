@@ -200,6 +200,14 @@ namespace GlimmerGrove
             ReceiptQueue.WhenSettled = () => AccountPrompts.Offer(AccountPromptTrigger.Purchase);
             StoreService.Granted += ReceiptQueue.Show;
 
+            // And the beat before that one: a transaction has landed, the money has moved, and
+            // the server has not finished honouring it yet. Hung here rather than on the shop
+            // for the very reason the receipt is — the sheet outlives the screen that opened it
+            // — and scoped by StoreService to a checkout this process opened, so a re-delivery
+            // arriving out of the store's own queue at launch says nothing. See
+            // ShopArrivalOverlay, which owes the player a way out rather than a wait.
+            StoreService.CheckoutLanded += ShopArrivalOverlay.Show;
+
             Audio.Boot(root.transform);
             Flow.Init(canvas);
             root.AddComponent<Pump>();

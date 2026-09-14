@@ -563,6 +563,67 @@ namespace GlimmerGrove.EditorTools
         static readonly Shot Roar =
             new Shot { Key = "roar", Prefab = "vfx_Projectile_Wind01", Hue = Pal.Radiance };
 
+        /// <summary>
+        /// What a <b>charm</b> goes off in: one big radial detonation, in each of the four gem
+        /// colours.
+        ///
+        /// <para>
+        /// <b>Its own reel because the one it was borrowing is cut for something a hundred times
+        /// more frequent, and that is the whole fault.</b> A charm used to detonate in
+        /// <c>hit_{c}</c> — a ward's *impact*, framed at <see cref="BurstSide"/> because a lit line
+        /// lands about eighteen of them a second — drawn by the view at four and a half cells. So
+        /// the biggest moment on the field was a small reel blown up two and a half times, which is
+        /// exactly what "the animations are horrendous" is when it is measured rather than argued
+        /// about. It is the <see cref="Storm"/> argument arriving a second time: <em>sharing a reel
+        /// with something that happens constantly means tuning the biggest moment in the mode by
+        /// the smallest</em>.
+        /// </para>
+        /// <para>
+        /// <b>A sun rather than a firework</b>, which is what the survey said
+        /// (<c>Tools/charm_candidates.png</c>): the pack's three fireworks are small sparse rings
+        /// that read at a cell and vanish at four, and the only things in it that hold a *body* at
+        /// that size are the three suns. <c>Sun02</c> is the one none of the bosses took — the
+        /// warlord throws <c>Sun01</c> and the overlord <c>Sun03</c> — and what keeps the three
+        /// apart on a board is the colour rather than the mesh: a boss's spell is graded to one of
+        /// the four <c>Pal</c> entries that is <em>not</em> a gem colour, and a charm is graded to
+        /// the gem colour it was paid. Nothing else on this field wears a board colour at that
+        /// size, so a charm cannot be read as a boss landing.
+        /// </para>
+        /// <para>
+        /// <b>Graded with the roster's constants and not the elemental pair.</b> <c>Sun02</c> is
+        /// painted violet, so it is a source being carried the whole way onto a hue it does not
+        /// have — which is the case <see cref="RosterToward"/> exists for, and the case
+        /// <see cref="Toward"/>'s third-of-the-way lean is explicitly not (see <see cref="Shots"/>).
+        /// </para>
+        /// </summary>
+        static readonly Shot[] Charms =
+        {
+            new Shot { Key = "r", Prefab = "vfx_Hit_Sun02", Hue = Pal.Poppy },
+            new Shot { Key = "g", Prefab = "vfx_Hit_Sun02", Hue = Pal.Mint  },
+            new Shot { Key = "b", Prefab = "vfx_Hit_Sun02", Hue = Pal.Azure },
+            new Shot { Key = "y", Prefab = "vfx_Hit_Sun02", Hue = Pal.Amber },
+        };
+
+        /// <summary>
+        /// How a charm's detonation is cut: half again as wide as an impact and two frames longer.
+        ///
+        /// <para>
+        /// <b>320 because that is the size it is drawn at, and 512 because that is the cap.</b>
+        /// <c>SiegeView.Sprung</c> draws this at four to five cells; a cell is about 124 units on a
+        /// phone, so the reel is drawn around 560 units across and every pixel over about 320 is
+        /// paid for and thrown away by <c>ArtImportRules</c> anyway. Under the cap and over the
+        /// draw size is the band, and this sits in it.
+        /// </para>
+        /// <para>
+        /// <b>Fourteen frames, which is two more than an impact and six fewer than a storm.</b> A
+        /// charm holds the fall and slows the run's own clock while it plays
+        /// (<c>SiegeView.Dilate</c>) — long enough to be watched, which is the whole of what was
+        /// asked for — so a twelve-frame reel at 30fps would be over in four tenths of a second
+        /// with two thirds of the window still to run.
+        /// </para>
+        /// </summary>
+        const int CharmSide = 320, CharmFrames = 14;
+
 
         /// <summary>
         /// How much bigger the warlord's three reels are than a ward's.
@@ -780,7 +841,8 @@ namespace GlimmerGrove.EditorTools
             Elemental = 1,      // the starter's four, and the four spells the bosses throw
             Roster = 2,         // one effect per bought turret
             Strike = 4,         // the stormcall, out of a different pack and graded its own way
-            All = Elemental | Roster | Strike,
+            Charm = 8,          // the one detonation a charm goes off in, in four gem colours
+            All = Elemental | Roster | Strike | Charm,
         }
 
         [MenuItem("Glimmer Grove/Art/Bake Siege Projectiles", false, 30)]
@@ -819,6 +881,17 @@ namespace GlimmerGrove.EditorTools
         /// </summary>
         [MenuItem("Glimmer Grove/Art/Bake Storm Strike", false, 35)]
         public static void BakeStrikeOnly() => Run(write: true, contact: false, parts: Parts.Strike);
+
+        /// <summary>
+        /// Bakes only the four charm detonations — see <see cref="Charms"/>.
+        ///
+        /// <b>Its own item for <see cref="BakeStrikeOnly"/>'s reason.</b> These are four reels cut
+        /// bigger and longer than anything else on the field and they are the ones being looked at;
+        /// re-baking the roster's 228 to see one of them rewrites art nobody asked to change and
+        /// leaves <see cref="Verify"/> comparing a fresh bake against a fresh bake.
+        /// </summary>
+        [MenuItem("Glimmer Grove/Art/Bake Charm Blasts", false, 36)]
+        public static void BakeCharms() => Run(write: true, contact: false, parts: Parts.Charm);
 
         /// <summary>
         /// Bakes one turret's three reels and nothing else.
@@ -866,6 +939,7 @@ namespace GlimmerGrove.EditorTools
                 if ((parts & Parts.Roster) != 0) RunRoster(stage.transform, cam, made, only);
                 if ((parts & Parts.Elemental) != 0) RunElemental(stage.transform, cam, made);
                 if ((parts & Parts.Strike) != 0) RunStrike(stage.transform, cam, made);
+                if ((parts & Parts.Charm) != 0) RunCharms(stage.transform, cam, made);
 
                 Finish(made, write, contact);
             }
@@ -946,6 +1020,39 @@ namespace GlimmerGrove.EditorTools
                 Debug.LogWarning($"[siege shots] {PathOf(Storm)} is not in this project — skipped.");
             else
                 BakeStorm(stage, cam, storm, made);
+        }
+
+        /// <summary>
+        /// The four charm detonations — see <see cref="Charms"/>.
+        ///
+        /// <b>Captured standing still, like a strike and unlike a bolt.</b> There is nothing to
+        /// fly: a charm goes off in the cell it stood in, so what is wanted is the burst fully
+        /// drawn and framed square about the point it happened at. It is the impact half of
+        /// <see cref="BakeOne"/> with its own size and its own frame count, which is the whole of
+        /// what a bespoke reel buys.
+        /// </summary>
+        static void RunCharms(Transform stage, Camera cam, Dictionary<string, Book> made)
+        {
+            for (int i = 0; i < Charms.Length; i++)
+            {
+                var shot = Charms[i];
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(shot.Prefab));
+
+                if (prefab == null)
+                {
+                    // The pack is a bought asset and a checkout may not have it: say which one is
+                    // missing and carry on, exactly as every other part of this bake does.
+                    Debug.LogWarning($"[siege shots] {shot.Prefab} is not in this project — " +
+                                     $"charm_blast_{shot.Key} skipped.");
+                    continue;
+                }
+
+                var recipes = new[] { Ward(shot.Hue, RosterToward, RosterWhite, RosterMuted) };
+
+                made["charm_blast_" + shot.Key] =
+                    CaptureAll(stage, cam, prefab, recipes, CharmFrames, Burst(prefab), 0f, 0f,
+                               .5f, CharmSide, CharmSide, CharmSide, 1f, 1f, comet: false)[0];
+            }
         }
 
         /// <summary>Writes, compares or lays out whatever was baked. Reports rather than throws.</summary>

@@ -359,6 +359,9 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ChestsAreEarnedAtRisingMultiplesOfTheRunCount()
         {
+            // The ladder is retired on this build (see DailyChests), but the table still
+            // ships and the server still prices an older client's claim off it, so the
+            // arithmetic a rolled-back client relies on is still pinned.
             var table = DailyChestTable.Default;
 
             Assert.AreEqual(table.RunsPerChest, table.RunsFor(0));
@@ -426,7 +429,7 @@ namespace GlimmerGrove.Tests
         /// A backend that claims to exist and nothing else. Enough to put
         /// <see cref="DailyChests.CanOpen"/> into the branch that matters.
         /// </summary>
-        sealed class PresentBackend : Cloud.ICloudSaveBackend
+        internal sealed class PresentBackend : Cloud.ICloudSaveBackend
         {
             public bool IsAvailable => true;
             public Cloud.CloudIdentity CurrentIdentity => Cloud.CloudIdentity.None;
@@ -515,7 +518,7 @@ namespace GlimmerGrove.Tests
             CloudState.Reset();
             Cloud.CloudSaveService.UseBackend(new PresentBackend());
 
-            Assert.IsFalse(DailyChests.CanOpen,
+            Assert.IsFalse(Progression.RewardSeed.IsAdjudicable,
                            "a chest rolled without an account id is one the server would " +
                            "re-roll differently");
         }
@@ -527,7 +530,7 @@ namespace GlimmerGrove.Tests
             Cloud.CloudSaveService.UseBackend(new PresentBackend());
             CloudState.SignIn("uid_abc123");
 
-            Assert.IsTrue(DailyChests.CanOpen,
+            Assert.IsTrue(Progression.RewardSeed.IsAdjudicable,
                           "the id is stored in the save, so every later session opens " +
                           "chests offline quite happily");
         }
@@ -538,7 +541,7 @@ namespace GlimmerGrove.Tests
             CloudState.Reset();
             Cloud.CloudSaveService.UseBackend(null);
 
-            Assert.IsTrue(DailyChests.CanOpen,
+            Assert.IsTrue(Progression.RewardSeed.IsAdjudicable,
                           "nothing is adjudicated without a backend, so there is no second " +
                           "opinion for the client's roll to disagree with");
         }

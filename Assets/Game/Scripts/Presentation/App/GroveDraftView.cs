@@ -250,6 +250,25 @@ namespace GlimmerGrove.App
 
         // ------------------------------------------------------------------ painting
         /// <summary>
+        /// Redraws the ghost and its marks from the draft, if one is open.
+        ///
+        /// <para>
+        /// For the screen to call from its own repaint, so the ghost hears about everything a
+        /// tile hears about — above all its own art landing. A piece taken from the inventory
+        /// was chosen off a thumbnail atlas and its full-size sprite is fetched only then
+        /// (<c>HomesteadScreen.Take</c>), so the paint that opens the draft usually runs
+        /// before the sprite exists and <see cref="HomesteadArt.Paint"/> hides the image.
+        /// Nothing repainted it until the first drag, so the player saw a lit footprint with
+        /// no piece in it and read the inventory as having done nothing.
+        /// </para>
+        /// </summary>
+        public void Repaint()
+        {
+            if (_draft == null) return;
+            Paint();
+        }
+
+        /// <summary>
         /// Redraws everything from the draft. Cheap enough to call on every frame of a drag: it
         /// moves four transforms and asks one predicate.
         /// </summary>

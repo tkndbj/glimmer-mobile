@@ -384,8 +384,27 @@ namespace GlimmerGrove.Persistence
         ///      part of it. The money half is defended where money always is, by
         ///      <c>submitSpends</c> refusing a debit the derived balance cannot cover.
         ///      </para>
+        /// v27 — the tasks (<see cref="SaveFileDto.tasks"/>): what has been done this day and
+        ///      this week, and which dealt tasks were paid.
+        ///      <para>
+        ///      <b>Counters per goal, never progress per task.</b> A task's progress is derived
+        ///      from the period's count for its goal, so a slate retuned by a content push
+        ///      cannot leave a task starting from nothing on a device that had already done the
+        ///      thing it asks for — and a counter of things that happened only ever rises, so
+        ///      the join is a per-goal <c>max</c> (invariant 11b). The claims are a set of task
+        ///      ids joined by union, because claiming cannot be undone. The period key is the
+        ///      later one outright, for <see cref="DailyStateDto"/>'s reason.
+        ///      </para>
+        ///      <para>
+        ///      <b>Absent is a period with key zero</b>, which no live player has counters for,
+        ///      so a v26 file needs no migration and no sentinel: it reads as "nothing done yet"
+        ///      and the first read rolls it into today. The daily chest ladder this replaces
+        ///      keeps its section on the wire (<see cref="SaveFileDto.daily"/>), unread, because
+        ///      a rolled-back client still writes it and the rules' allow-list cannot lose a key
+        ///      without losing every save write (12a).
+        ///      </para>
         /// </summary>
-        public const int Version = 26;
+        public const int Version = 27;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -828,10 +847,53 @@ namespace GlimmerGrove.Persistence
         public WardStarDto[] wardStars;
 
         /// <summary>
+        /// What has been done this day and this week, and which tasks have been paid for it.
+        /// Added in v27. See <see cref="TaskStateDto"/> and <c>Tasks.TaskLedger</c>.
+        /// </summary>
+        public TaskStateDto tasks;
+
+        /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before
         /// checksums existed, which are accepted and gain one on the next write.
         /// </summary>
         public string checksum;
+    }
+
+    /// <summary>
+    /// The task section: one <see cref="TaskPeriodDto"/> per cadence. See <c>Tasks.TaskLedger</c>.
+    /// </summary>
+    [Serializable]
+    public sealed class TaskStateDto
+    {
+        public TaskPeriodDto daily;
+        public TaskPeriodDto weekly;
+    }
+
+    /// <summary>
+    /// One period's counters and claims.
+    ///
+    /// <para>
+    /// <c>key</c> is the day or week these describe, zero for none. <c>counts</c> is one row
+    /// per <c>TaskGoals</c> id with a non-zero count, sorted by goal; <c>claimed</c> the task
+    /// ids paid this period, sorted. Both are id-keyed arrays on the wire and maps everywhere
+    /// else (invariant 11a), and both are written sorted so <c>SaveDelta</c> can compare them
+    /// by walking.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class TaskPeriodDto
+    {
+        public int key;
+        public TaskCountDto[] counts;
+        public string[] claimed;
+    }
+
+    /// <summary>How much of one goal happened in the period. Never written at zero.</summary>
+    [Serializable]
+    public sealed class TaskCountDto
+    {
+        public string goal;
+        public int count;
     }
 
     [Serializable]

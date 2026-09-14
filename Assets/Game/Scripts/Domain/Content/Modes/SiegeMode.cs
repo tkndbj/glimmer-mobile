@@ -116,6 +116,69 @@ namespace GlimmerGrove.Content
             // ward can be upgraded with (`SiegeLayout.Cog`).
             AssetRequest.Sprite(AssetManifest.SiegeArt("gem_cog")),
 
+            // **The charms** (`SiegeCharm`), and every one of the three is a **gem of its own**.
+            //
+            // **That is a correction and the reason is worth keeping.** A lance and a stormglass
+            // used to be *marks* - a white glyph drawn over one of the four jewels - on the
+            // argument that the colour underneath has to keep reading, which is true and is
+            // answered by cutting a *different jewel in the same colour* rather than by leaving
+            // the jewel alone and printing on it. The owner's verdict was one sentence: the charms
+            // were the existing gems with an icon put on them. It is also the weaker reading on
+            // its own terms - a mark is forty pixels of drawing over a saturated stone, where a
+            // silhouette is what the eye separates at a glance on a board that also has a hill
+            // walking down it (invariant 34f). So a lance is a stellated star and a stormglass a
+            // vortex orb, each hue-rotated into all four gem colours, and a prism is what it
+            // always was: the one gem here that is not a colour at all.
+            //
+            // The halo behind them and the beam a lance draws are white and tinted where they are
+            // used, for the muzzle flash's reason: one reel serves four colours and four painted
+            // copies are four chances for one of them to stop matching `Pal`.
+            //
+            // **Loaded with the rest of the field rather than scoped to the chapters that deal
+            // them**, which is the same call the cog's art gets: the set a level deals is a
+            // per-level fact rather than a per-chapter one, and a scope that changed mid-chapter
+            // would be a screen repainting itself for a handful of sprites (invariant 7b's rule is
+            // about what is *big*).
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_prism")),
+
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_lance_r")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_lance_g")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_lance_b")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_lance_y")),
+
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_storm_r")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_storm_g")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_storm_b")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_storm_y")),
+
+            AssetRequest.Sprite(AssetManifest.SiegeArt("charm_ring")),
+
+            // **The beam is a reel now and not a bar.** A still gradient stretched across the row
+            // has no event in it, so what a lance read as was a highlighter line appearing over
+            // gems that were going anyway; ten frames of a crawling filament is light under
+            // pressure. See `make_siege_art.beam`.
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("beam")),
+
+            // **And a second beam, because a lance's thread and a stormglass's laser are
+            // different materials.** `beam` is a hot wandering filament with a long soft tail,
+            // which is what reads when it is stretched across a whole row at two thirds of a
+            // cell; a laser is a *bar* - flat at full alpha across its middle third with a short
+            // shoulder - so that stretched to any thickness it stays a solid band. Scaling one to
+            // do the other's job was measured and does not work: the thread's brightness sits in
+            // about a sixth of its height whatever that height is, so at two and a half cells it
+            // was still a coloured hair. See `make_siege_art.laser`.
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("laser")),
+
+            // **What a charm goes off in, one reel per gem colour.** Its own bake rather than the
+            // ward impact it used to borrow: that one is framed small because a lit line lands
+            // eighteen a second, and a charm drew it at four and a half cells - the biggest moment
+            // on the field as a small reel blown up two and a half times. See
+            // `SiegeShotBake.Charms`.
+            AssetRequest.SpriteSet(AssetManifest.SiegeFx("charm_blast_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeFx("charm_blast_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeFx("charm_blast_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeFx("charm_blast_y")),
+
             // The overcharge glyph on a turret's chassis. Resident with the rest of the line's
             // furniture rather than scoped, because every siege can bank one.
             AssetRequest.Sprite(AssetManifest.SiegeArt("charge")),
@@ -269,6 +332,33 @@ namespace GlimmerGrove.Content
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("omen")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("omen_muzzle")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("omen_hit")));
+                    break;
+
+                // **Two of its three reels, for the warbringer's reason**: a devour is thrown at
+                // the ground the player has been killing over rather than at a ward, so it has no
+                // flight and nothing crosses the hill.
+                case SiegeKind.Gravemaw:
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("maw")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("maw_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("roar_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("roar_hit")));
+                    break;
+
+                // The same two, for the same reason: a raise puts bodies at the top of the hill.
+                //
+                // **And a third body reel, which this is the one boss in the mode to have.** It
+                // is the only one rendered out of 3D (invariant 37bx), so it is the only one that
+                // really stands still when it reaches its ground rather than cycling in place —
+                // which makes it the only one for which walking on and holding the hill are two
+                // pictures. See `SiegeView.WalkReel`. Named here as well as there because a reel
+                // `SiegeMode.Art` never asks for is one that ships addressed, grouped, built into
+                // a bundle and impossible to load (`SiegeCastTests`, invariant 37at).
+                case SiegeKind.Bonecaller:
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("caller")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("caller_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("caller_walk")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("roar_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("roar_hit")));
                     break;
             }
         }
@@ -439,6 +529,81 @@ namespace GlimmerGrove.Content
             AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_y")),
         };
 
+        /// <summary>
+        /// The bone cast: the twelve bodies the <b>third</b> chapter draws.
+        ///
+        /// <para>
+        /// <b>Five bodies over twelve slots, which is a smaller budget than either cast before it
+        /// and changes what the cast says.</b> The insects and the brood each had fifteen to draw
+        /// from, so every kind could have four distinct silhouettes and the shape carried the
+        /// colour as well as the kind. This pack draws five, so the kind is carried plainly and
+        /// nothing else is pretended: a bare rib cage creeps, a helm over a long weapon is a
+        /// brute, and a shield or a closed visor is a bulwark. The colour is still said three
+        /// times — the body is hue-rotated, the view tints it and the view rings it (invariant
+        /// 37f) — and none of those was ever the silhouette's job.
+        /// </para>
+        /// <para>
+        /// <b>It is the first cast with a second reel per body</b>: see <see cref="BoneSwings"/>.
+        /// </para>
+        /// </summary>
+        static readonly AssetRequest[] BoneCast =
+        {
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneMon_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneMon_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneMon_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneMon_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBrute_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBrute_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBrute_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBrute_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBulwark_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBulwark_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBulwark_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBulwark_y")),
+        };
+
+        /// <summary>
+        /// What the bone cast swings at the ward line, in <see cref="CastArt"/>'s own order.
+        ///
+        /// <para>
+        /// <b>A raider that reaches the line stands there hitting it</b> every
+        /// <c>SiegeTuning.BlowEvery</c> until something kills it, and for two chapters what that
+        /// looked like was a walk cycle looping in place against a turret — invariant 37u's
+        /// complaint (a body doing the wrong thing where it stands) arriving through the art
+        /// rather than through the framing. This pack is the first one bought here that drew an
+        /// attack, so this is the first cast that can answer it.
+        /// </para>
+        /// <para>
+        /// <b>A cast with no swing answers null and the view keeps walking</b>, which is exactly
+        /// what the insects and the brood do today. Nothing about either of them moves.
+        /// </para>
+        /// <para>
+        /// <b>Cut on a bigger canvas at the walk's own scale</b>, because a shared one fitted to
+        /// the walk's height would draw every skeleton at 59–73% of its size for the whole run for
+        /// the sake of six frames at the line — see <c>make_siege_art.walk_and_swing</c>, and
+        /// <c>SiegeView.Wear</c> for the half that reads the ratio back.
+        /// </para>
+        /// </summary>
+        static readonly AssetRequest[] BoneSwings =
+        {
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneMon_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneMon_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneMon_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneMon_y_swing")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBrute_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBrute_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBrute_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBrute_y_swing")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBulwark_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBulwark_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBulwark_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBulwark_y_swing")),
+        };
+
         /// <summary>The insects, which are what a siege draws unless something says otherwise.</summary>
         public const int Insects = 0;
 
@@ -448,8 +613,11 @@ namespace GlimmerGrove.Content
         /// <summary>The blob brood. See <see cref="BroodCast"/>.</summary>
         public const int Brood = 2;
 
+        /// <summary>The skeletons. See <see cref="BoneCast"/>.</summary>
+        public const int Bones = 3;
+
         /// <summary>How many casts this mode ships.</summary>
-        public const int CastSets = 3;
+        public const int CastSets = 4;
 
         /// <summary>
         /// The casts the <b>main ladder</b> draws from, in the order its chapters meet them.
@@ -460,7 +628,17 @@ namespace GlimmerGrove.Content
         /// year costs no cast at all</b>, and no chapter can ship drawing bodies nobody chose. A
         /// third pack lengthens this array and changes nothing else.
         /// </summary>
-        static readonly int[] MainCasts = { Insects, Brood };
+        static readonly int[] MainCasts = { Insects, Brood, Bones };
+
+        /// <summary>
+        /// How many casts the main ladder draws from before it starts again.
+        ///
+        /// <b>Exposed so a fixture can check the wrap without writing the number down</b> - the
+        /// first one said "the third chapter wraps onto the first", which was true of two casts and
+        /// stopped being true the day there were three: green, and about arithmetic this mode no
+        /// longer does.
+        /// </summary>
+        public static int MainCastCount => MainCasts.Length;
 
         /// <summary>
         /// Which cast a chapter draws.
@@ -507,8 +685,39 @@ namespace GlimmerGrove.Content
             {
                 case Baked: return SecondCast;
                 case Brood: return BroodCast;
+                case Bones: return BoneCast;
                 default: return InsectCast;
             }
+        }
+
+        /// <summary>
+        /// The reels one cast swings at the line, in <see cref="CastArt"/>'s own order, or
+        /// <b>null</b> for a cast whose pack drew none.
+        ///
+        /// <b>Null rather than a fallback to the walk</b>, because the view has to be able to tell
+        /// "this cast has no swing" from "this cast has a swing and it failed to load": the first
+        /// keeps walking and the second would be an <c>Image</c> with no sprite, which is a white
+        /// rectangle over every raider at the line (invariant 7b).
+        /// </summary>
+        public static IReadOnlyList<AssetRequest> CastSwingArt(int set)
+            => set == Bones ? BoneSwings : null;
+
+        /// <summary>
+        /// The address one raider's swing reel is at, or <b>empty</b> when this cast has none.
+        ///
+        /// Indexed into <see cref="CastSwingArt"/> exactly as <see cref="CastAddress"/> is indexed
+        /// into <see cref="CastArt"/>, and for the same reason: one copy of the names.
+        /// </summary>
+        public static string CastSwing(int set, SiegeKind kind, int colour)
+        {
+            var art = CastSwingArt(set);
+            if (art == null || art.Count < CastBodies) return string.Empty;
+
+            int colours = Wards.WardLine.Colours.Length;
+            int row = kind == SiegeKind.Bulwark ? 2 : kind == SiegeKind.Brute ? 1 : 0;
+            int at = colour < 0 || colour >= colours ? 0 : colour;
+
+            return art[row * colours + at].Address;
         }
 
         /// <summary>How many bodies a cast holds: three kinds in four colours.</summary>
@@ -596,7 +805,15 @@ namespace GlimmerGrove.Content
                 // never named here ships addressed, grouped, built into a bundle and impossible to
                 // load (invariant 37at's `No Location found for Key=...`). Only `ArtFor` narrows.
                 for (int set = 0; set < CastSets; set++)
+                {
                     list.AddRange(CastArt(set));
+
+                    // **And every swing reel**, for the same reason: this is the question about
+                    // what *exists*, and a reel never named here ships addressed, grouped, built
+                    // into a bundle and impossible to load (invariant 37at).
+                    var swings = CastSwingArt(set);
+                    if (swings != null) list.AddRange(swings);
+                }
 
                 return list;
             }
@@ -615,8 +832,13 @@ namespace GlimmerGrove.Content
 
             // One cast, chosen by where this chapter sits and which lane it is in - and by the same
             // function the view asks when it draws a body, so the two cannot disagree.
-            list.AddRange(CastArt(CastFor(GameContent.Index.TrackOf(chapter.Id),
-                                          GameContent.Index.ChapterOrderOf(chapter.Id))));
+            int cast = CastFor(GameContent.Index.TrackOf(chapter.Id),
+                               GameContent.Index.ChapterOrderOf(chapter.Id));
+
+            list.AddRange(CastArt(cast));
+
+            var swing = CastSwingArt(cast);
+            if (swing != null) list.AddRange(swing);
 
             var seen = new HashSet<SiegeKind>();
 
@@ -711,8 +933,22 @@ namespace GlimmerGrove.Content
                                            block.endless.goldWave, block.endless.silverFactor);
             }
 
+            // **Refused here rather than clamped**, for the retired cog cell's reason: a body
+            // carrying a figure this mode cannot mean was written against different rules, and
+            // silently reading it as something else ships a hill nobody composed. Nought is the
+            // plain figure and is what every body before this field existed says.
+            if (block.tough != 0 && (block.tough < 10 || block.tough > SiegeTuning.MostTough))
+            {
+                problems.Add($"{id}: this siege deals raiders at {block.tough} tenths of their "
+                           + $"ordinary health. A surge is written in tenths, is never below 10 "
+                           + $"(the plain figure) and is capped at {SiegeTuning.MostTough} - and it "
+                           + "is derived from the chapter's ordinal by the chapter tool rather than "
+                           + "typed (SiegeTuning.ToughnessFor)");
+                return false;
+            }
+
             var layout = new SiegeLayout(grid, block.gems, block.wards, block.waves, block.boss,
-                                         block.cogs, endless);
+                                         block.cogs, endless, block.tough, block.charms);
 
             if (layout.Fault != null)
             {

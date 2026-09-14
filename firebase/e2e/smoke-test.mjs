@@ -189,6 +189,21 @@ const save = {
     streak: { mapValue: { fields: { startDay: { integerValue: "20310" },
                                     lastPlayedDay: { integerValue: "20315" },
                                     collectedThroughDay: { integerValue: "20314" } } } },
+    // The tasks: both periods' counters and claims, here for the reason every block above
+    // is. Nothing on the server pays on these — a task chest is bounded by the wallet's own
+    // allowance — but the mapper sends them, so a PERMISSION_DENIED here would stop the save
+    // pushing and a task done on one phone would read half done on the other.
+    tasks: { mapValue: { fields: {
+      daily: { mapValue: { fields: { key: { integerValue: "20315" },
+                                     counts: { arrayValue: { values: [
+                                       { mapValue: { fields: { goal: { stringValue: "runs" },
+                                                               count: { integerValue: "2" } } } },
+                                     ] } },
+                                     claimed: { arrayValue: { values: [ { stringValue: "d_play" } ] } } } } },
+      weekly: { mapValue: { fields: { key: { integerValue: "2902" },
+                                      counts: { arrayValue: { values: [] } },
+                                      claimed: { arrayValue: { values: [] } } } } },
+    } } },
     // How much of each event's reward track has been taken, here for the reason the three
     // blocks above are and one sharper than any of them: `eventCredits` *pays* on this, so
     // a PERMISSION_DENIED here would stop the save pushing and the server would go on
@@ -595,6 +610,85 @@ check(creditsOf(preFarmed.body)?.grantedBaseline === creditsBefore + rungOne,
       `credits -> ${creditsOf(preFarmed.body)?.grantedBaseline}`);
 check(rejectedBy(preFarmed.body).includes(`streak:${today + 7}:8:credits`),
       "and is refused rather than left pending");
+
+// ---------------------------------------------------------------- task chests
+console.log("task chests");
+
+// The published slate, read live for the reason the streak's ladder is: the suite signs in
+// as a fresh account and hard-codes nothing the catalog decides — and a task chest cannot
+// be read as a flat amount, so it is re-rolled with the server's own compiled roller.
+const taskConfig = await (async () => {
+  const body = await publishedConfig.clone().json().catch(() => null);
+  const fields = body?.fields?.tasks?.mapValue?.fields;
+  if (!fields) { check(false, "config/progression carries a tasks block"); return null; }
+
+  const decode = (v) => {
+    if (v.integerValue !== undefined) return Number(v.integerValue);
+    if (v.doubleValue !== undefined) return Number(v.doubleValue);
+    if (v.stringValue !== undefined) return v.stringValue;
+    if (v.booleanValue !== undefined) return v.booleanValue;
+    if (v.arrayValue) return (v.arrayValue.values ?? []).map(decode);
+    if (v.mapValue) return Object.fromEntries(Object.entries(v.mapValue.fields ?? {}).map(([k, x]) => [k, decode(x)]));
+    return null;
+  };
+  return decode({ mapValue: { fields } });
+})();
+
+if (taskConfig) {
+  const { pathToFileURL } = await import("node:url");
+  const { dirname, join } = await import("node:path");
+  const { fileURLToPath } = await import("node:url");
+  const here = dirname(fileURLToPath(import.meta.url));
+  const { rollTaskChest, dealt, weekOfDay } = await import(
+    pathToFileURL(join(here, "..", "functions", "lib", "tasks.js")).href);
+
+  const dailyDealt = dealt(taskConfig, "daily", today);
+  const first = dailyDealt[0];
+  const tier = taskConfig.tiers.find((t) => t.id === first.tier);
+  const expected = rollTaskChest(tier.chest, uid, "daily", today, first.id)
+    .filter((d) => d.kind === "credits").reduce((sum, d) => sum + d.amount, 0);
+
+  const taskClaim = (period, key, id, currency) => ({
+    id: `task:${period}:${key}:${id}:${currency}`, claimedAmount: 1, unix: 1700000004, reason: "task_chest",
+  });
+
+  const before = creditsOf(preFarmed.body)?.grantedBaseline ?? 0;
+  const paidTask = await call("claimAwards", { awards: [taskClaim("daily", today, first.id, "credits")] });
+  check(creditsOf(paidTask.body)?.grantedBaseline === before + expected,
+        "a task chest pays the server's own roll of it, not the client's figure",
+        `credits ${before} -> ${creditsOf(paidTask.body)?.grantedBaseline}, expected +${expected}`);
+
+  const again = await call("claimAwards", { awards: [taskClaim("daily", today, first.id, "credits")] });
+  check(creditsOf(again.body)?.grantedBaseline === before + expected,
+        "resubmitting that chest does not pay twice");
+
+  const bogus = await call("claimAwards", { awards: [taskClaim("daily", today, "no_such_task", "credits")] });
+  check(!rejectedBy(bogus.body).includes(`task:daily:${today}:no_such_task:credits`) &&
+        creditsOf(bogus.body)?.grantedBaseline === before + expected,
+        "a task the slate has never held is left unconfirmed and pays nothing");
+
+  // Three is the allowance; a fourth distinct task in one day is refused.
+  const slate = taskConfig.daily.map((t) => t.id).filter((id) => id !== first.id);
+  const extra = slate.slice(0, taskConfig.activePerPeriod);
+  const flood = await call("claimAwards", {
+    awards: extra.map((id) => taskClaim("daily", today, id, "credits")),
+  });
+  const refused = rejectedBy(flood.body);
+  check(refused.length >= 1 && refused.includes(`task:daily:${today}:${extra[extra.length - 1]}:credits`),
+        "a day pays no more chests than the slate deals",
+        `rejected ${JSON.stringify(refused)}`);
+
+  const stale = await call("claimAwards", { awards: [taskClaim("daily", today - 400, first.id, "credits")] });
+  check(rejectedBy(stale.body).includes(`task:daily:${today - 400}:${first.id}:credits`),
+        "a chest dated outside the window is refused rather than left pending");
+
+  const future = await call("claimAwards", {
+    awards: [taskClaim("weekly", weekOfDay(today) + 5, taskConfig.weekly[0].id, "gems")],
+  });
+  check(rejectedBy(future.body).includes(`task:weekly:${weekOfDay(today) + 5}:${taskConfig.weekly[0].id}:gems`),
+        "a chest dated weeks ahead is refused");
+
+}
 
 
 // ------------------------------------------------------------------ the boards

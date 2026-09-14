@@ -123,6 +123,12 @@ namespace GlimmerGrove.EditorTools
             // tall on the object a player looks at for a whole run.
             expected.AddRange(AssetManifest.AllWardAssets(ProgressionRules.Table.Wards));
 
+            // The chest reels, requested by the screens that open one and by nothing at boot,
+            // so an audit built without them would call sixty-eight frames unused and then say
+            // nothing when a tier's reel went missing — which is a white rectangle over the
+            // one ceremony in the game that is entirely a picture.
+            expected.AddRange(AssetManifest.ChestAssets(ProgressionRules.Table.Tasks));
+
             // The browse atlases, which are generated rather than authored — so the failure
             // they guard against is not a missing file but a step nobody ran. A shop whose
             // atlas was never rebuilt draws a grid of nothing, and it draws it only on the

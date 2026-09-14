@@ -47,5 +47,25 @@ namespace GlimmerGrove.Progression
 
         /// <summary>True when a reward that has to be reproducible may be computed at all.</summary>
         public static bool IsReady => !string.IsNullOrEmpty(PlayerKey);
+
+        /// <summary>
+        /// Whether a reward the server recomputes may be rolled yet.
+        ///
+        /// <para>
+        /// A chest's contents are seeded from the account id, because that is the one
+        /// identifier the server can also compute from. Before the first sign-in there is no
+        /// account id, so the client would roll against the device id while the server
+        /// re-rolled against the uid — and the player would be shown one reward and given
+        /// another. So the chest waits instead of lying. In practice this is invisible:
+        /// anonymous sign-in fires from the splash screen, so an account id exists within
+        /// seconds of a first launch that has any connection at all, and it is stored in the
+        /// save from then on.
+        /// </para>
+        /// <para>
+        /// When no cloud backend is configured at all the gate lifts, because then nothing is
+        /// ever adjudicated: there is no second opinion for the client's roll to disagree with.
+        /// </para>
+        /// </summary>
+        public static bool IsAdjudicable => CloudState.IsSignedIn || !CloudSaveService.IsAvailable;
     }
 }

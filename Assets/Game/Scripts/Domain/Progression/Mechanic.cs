@@ -434,6 +434,46 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic SiegeSalvage = new Mechanic("siege_salvage");
 
         /// <summary>
+        /// The prism: that a rainbow gem joins a run of <em>any</em> colour, and is worth the
+        /// colour it joined.
+        ///
+        /// <para>
+        /// <b>One lesson per charm rather than one about charms</b>, because the three do
+        /// different things and a panel that said all three would be three sentences about things
+        /// two of which are not on this board yet. A chapter introduces one charm
+        /// (<c>SiegeCharms.Upto</c>), so a player meets one panel a chapter — which is the same
+        /// cadence the bosses are dealt at and for the same reason (invariant 37bd).
+        /// </para>
+        /// <para>
+        /// <b>Raised when one is dealt and ringed on the gem itself</b>, which is invariant 6b:
+        /// a charm arrives on its own schedule rather than at a moment the level chooses, so a
+        /// lesson offered at the opening would be a panel about a thing that is not on the screen.
+        /// </para>
+        /// <para>
+        /// <b>And raised when the board <em>settles</em>, not when the charm is minted.</b> A
+        /// refill is built above the field and slides into its socket over the next third of a
+        /// second, so a lesson raised at the mint rings a cell that does not hold the gem yet —
+        /// the bomber's tip paid for exactly this once already, ringing the bomber rather than the
+        /// bomb. It is the repaint that announces it (<c>SiegeView.Flush</c>), and a kind with
+        /// nothing standing to ring is <em>held over</em> rather than spent.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic SiegePrism = new Mechanic("siege_prism");
+
+        /// <summary>The lance: that matching it takes its whole row and its whole column.</summary>
+        public static readonly Mechanic SiegeLance = new Mechanic("siege_lance");
+
+        /// <summary>
+        /// The stormglass: that matching it makes the whole line fire at everything on the hill,
+        /// and twice at whatever wears its own colour.
+        ///
+        /// <b>Both halves, because only one of them can be acted on</b> — the salvage lesson's own
+        /// rule. A player who does not know it reaches the hill has no reason to hold it; one who
+        /// does not know the colour doubles has no reason to care which one they were dealt.
+        /// </summary>
+        public static readonly Mechanic SiegeStorm = new Mechanic("siege_storm");
+
+        /// <summary>
         /// <b>Retired: no screen raises this and its id must never be reused.</b>
         ///
         /// It taught that a bulwark's shield shrugs off every colour but its own, and was
@@ -770,6 +810,7 @@ namespace GlimmerGrove.Progression
             // remarks above.
             SiegeFuel, SiegeBrim, SiegeSalvage,
             SiegeBomber,
+            SiegePrism, SiegeLance, SiegeStorm,
             ModeSwitch, LuckySpin, Grove,
             GroveShop,
             MapLoadout, MapChapterGate, MapTrack,

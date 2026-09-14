@@ -84,6 +84,20 @@ namespace GlimmerGrove.Homestead
     /// the eye sees; an anchor tile always answers with the stand anchored there. Nothing new
     /// can be placed into an overlap, and moving either piece away resolves it.
     /// </para>
+    /// <para>
+    /// <b>Except on the hall's plot, where nothing else ever stands.</b> The hall is the one
+    /// stand that is not a placement — never picked up, never cleared, drawn from the best
+    /// home held — so an overlap with it cannot be "moved away" by lifting the hall, and a
+    /// piece standing inside its plot is a piece drawn <em>through</em> a house. Two things
+    /// put one there and neither is a player's mistake: the plot <em>grew</em> (two tiles to
+    /// four on 2026-09-12, invariant 16p) over pieces that had stood beside the smaller hall
+    /// for weeks; and a merge, where one device moved the hall onto ground the other had
+    /// just built on. Visitors met the first as a town hall buried under a tavern and an
+    /// archery range, with every gate green. So a stand whose footprint touches the hall's is
+    /// not indexed at all — it is reported in <see cref="Displaced"/> instead, which is what
+    /// <c>HomesteadLayout.Settle</c> reads to hand the copy back to the inventory, and what a
+    /// visitor's card reads to draw the house and not the thing standing in it.
+    /// </para>
     /// </summary>
     public sealed class GroveOccupancy
     {
@@ -92,6 +106,7 @@ namespace GlimmerGrove.Homestead
         readonly Dictionary<long, GroveStand> _byAnchor = new Dictionary<long, GroveStand>();
         readonly Dictionary<long, long> _anchorOf = new Dictionary<long, long>();
         readonly List<GroveStand> _stands = new List<GroveStand>();
+        readonly List<GroveStand> _displaced = new List<GroveStand>();
 
         public GroveOccupancy(IEnumerable<GroveStand> stands)
         {
@@ -99,6 +114,11 @@ namespace GlimmerGrove.Homestead
 
             foreach (var stand in stands)
                 if (stand.IsValid) _stands.Add(stand);
+
+            // The hall's plot is cleared before anything is indexed, so a displaced stand
+            // neither covers a tile nor owns its anchor — a reader asking either question
+            // gets the hall, which is the only honest answer about ground the hall is on.
+            Displace();
 
             // Back to front, so that where two stands cover one tile the nearer — the one
             // painted on top — is the one the tile answers with.
@@ -121,6 +141,43 @@ namespace GlimmerGrove.Homestead
         public IReadOnlyList<GroveStand> Stands => _stands;
 
         public int Count => _stands.Count;
+
+        /// <summary>
+        /// The stands that were handed in and refused because they touch the hall's plot.
+        /// Empty on every grove that has never had its plot grown or its hall merged onto
+        /// something. See the type's remarks for why the hall wins.
+        /// </summary>
+        public IReadOnlyList<GroveStand> Displaced => _displaced;
+
+        /// <summary>
+        /// Moves every non-hall stand that overlaps a hall stand out of the index and into
+        /// <see cref="Displaced"/>. Quadratic in the number of halls, which is one.
+        /// </summary>
+        void Displace()
+        {
+            for (int h = 0; h < _stands.Count; h++)
+            {
+                var hall = _stands[h];
+                if (!hall.IsHall) continue;
+
+                for (int i = _stands.Count - 1; i >= 0; i--)
+                {
+                    var stand = _stands[i];
+                    if (stand.IsHall || !Overlaps(hall, stand)) continue;
+
+                    _displaced.Add(stand);
+                    _stands.RemoveAt(i);
+                    if (i < h) h--;
+                }
+            }
+        }
+
+        /// <summary>Whether two anchored footprints share at least one tile.</summary>
+        public static bool Overlaps(GroveStand a, GroveStand b)
+            => a.AnchorCol < b.AnchorCol + b.Footprint.Cols
+            && b.AnchorCol < a.AnchorCol + a.Footprint.Cols
+            && a.AnchorRow < b.AnchorRow + b.Footprint.Rows
+            && b.AnchorRow < a.AnchorRow + a.Footprint.Rows;
 
         /// <summary>The stand anchored exactly on this tile, if any.</summary>
         public bool TryAnchored(int col, int row, out GroveStand stand)

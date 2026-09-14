@@ -7,12 +7,12 @@ using NUnit.Framework;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// The three casts a siege can draw, and the ways a cast can silently stop being drawable.
+    /// The four casts a siege can draw, and the ways a cast can silently stop being drawable.
     ///
     /// <para>
     /// <b>This is <c>SiegeGroundTests</c>'s question asked of the raiders.</b> A rung's ground is
     /// named twice and a test holds the two names together; a cast is worse, because it is twelve
-    /// bodies rather than one and there are three of them. What that fixture records applies here
+    /// bodies rather than one and there are four of them. What that fixture records applies here
     /// unchanged: if what a chapter <em>loads</em> and what the board <em>draws</em> come apart, an
     /// <c>Image</c> with a null sprite is a <b>white rectangle</b> rather than a blank (invariant
     /// 7b) — over every raider on the hill, on one chapter, with every other gate green. The
@@ -36,7 +36,10 @@ namespace GlimmerGrove.Tests
     /// </summary>
     public sealed class SiegeCastTests
     {
-        static readonly int[] Sets = { SiegeMode.Insects, SiegeMode.Baked, SiegeMode.Brood };
+        static readonly int[] Sets =
+        {
+            SiegeMode.Insects, SiegeMode.Baked, SiegeMode.Brood, SiegeMode.Bones,
+        };
 
         static readonly SiegeKind[] Bodies =
         {
@@ -154,18 +157,23 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AChapterPastTheLastCastWrapsRatherThanDrawingNothing()
         {
-            Assert.AreEqual(SiegeMode.CastFor(GameTrack.Main, 0),
-                            SiegeMode.CastFor(GameTrack.Main, 2),
-                            "the third main chapter does not wrap back onto the first cast");
+            // **Written against the number of main casts rather than against three**, because the
+            // first cut said "the third chapter wraps onto the first" and stopped being true the
+            // day a third cast was cut - green, and about arithmetic the mode no longer does.
+            int casts = SiegeMode.MainCastCount;
 
-            Assert.AreEqual(SiegeMode.CastFor(GameTrack.Main, 1),
-                            SiegeMode.CastFor(GameTrack.Main, 3),
-                            "the fourth main chapter does not wrap back onto the second cast");
+            Assert.Greater(casts, 0, "the main ladder draws from no casts at all");
+
+            for (int ordinal = 0; ordinal < casts; ordinal++)
+                Assert.AreEqual(SiegeMode.CastFor(GameTrack.Main, ordinal),
+                                SiegeMode.CastFor(GameTrack.Main, ordinal + casts),
+                                $"chapter {ordinal + casts + 1} does not wrap back onto the cast "
+                                + $"chapter {ordinal + 1} draws");
         }
 
         /// <summary>
-        /// The two chapters this game ships draw <b>different</b> casts, and the Infinite lane draws
-        /// the baked one.
+        /// The three chapters this game ships draw <b>different</b> casts, and the Infinite lane
+        /// draws the baked one.
         ///
         /// <b>The fact, not the arithmetic</b> — the arithmetic is checked above, and this is what a
         /// reader actually wants to know. It is also what catches a re-ordered
@@ -179,6 +187,9 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(SiegeMode.Brood, SiegeMode.CastFor(GameTrack.Main, 1),
                             "Broodmarch does not draw the brood");
+
+            Assert.AreEqual(SiegeMode.Bones, SiegeMode.CastFor(GameTrack.Main, 2),
+                            "Barrowfell does not draw the bone cast");
 
             Assert.AreEqual(SiegeMode.Baked, SiegeMode.CastFor(GameTrack.Infinite, 0),
                             "the Infinite lane does not draw the baked cast");
@@ -196,6 +207,114 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SiegeMode.Insects, SiegeMode.CastFor(GameTrack.Main, -1));
             Assert.IsNotEmpty(SiegeMode.CastAddress(SiegeMode.CastFor(GameTrack.Main, -1),
                                                     SiegeKind.Creeper, 0));
+        }
+
+        /// <summary>
+        /// **A cast that swings names one reel per body, in the same order it names its walks** —
+        /// or names none at all, which is what two of the four do.
+        ///
+        /// <para>
+        /// <b>Null and a full twelve are the only two legal answers</b>, and that is the whole of
+        /// what this checks. A partial table would index correctly for the rows it had and answer
+        /// an address that is not on disk for the rest — which loads as nothing, and an
+        /// <c>Image</c> with a null sprite is a white rectangle over a raider standing at the ward
+        /// line (invariant 7b), on the rungs where the line is already being lost.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ACastEitherSwingsWithEveryBodyOrWithNone()
+        {
+            foreach (int set in Sets)
+            {
+                var swings = SiegeMode.CastSwingArt(set);
+
+                if (swings == null)
+                {
+                    foreach (var kind in Bodies)
+                        for (int colour = 0; colour < Wards.WardLine.Colours.Length; colour++)
+                            Assert.IsEmpty(SiegeMode.CastSwing(set, kind, colour),
+                                           $"cast {set} has no swing reels and still names one "
+                                           + $"for a {kind}");
+                    continue;
+                }
+
+                Assert.AreEqual(SiegeMode.CastBodies, swings.Count,
+                                $"cast {set} holds {swings.Count} swing reels rather than "
+                                + $"{SiegeMode.CastBodies}, so the index CastSwing rests on is off");
+
+                var loaded = new HashSet<string>();
+                foreach (var request in swings) loaded.Add(request.Address);
+
+                var seen = new HashSet<string>();
+
+                foreach (var kind in Bodies)
+                    for (int colour = 0; colour < Wards.WardLine.Colours.Length; colour++)
+                    {
+                        string address = SiegeMode.CastSwing(set, kind, colour);
+
+                        Assert.IsNotEmpty(address,
+                                          $"cast {set} swings nothing for a {kind} in colour "
+                                          + $"{Wards.WardLine.Colours[colour]}");
+
+                        Assert.That(loaded.Contains(address), Is.True,
+                                    $"cast {set} swings {address} and never loads it");
+
+                        seen.Add(address);
+                    }
+
+                Assert.AreEqual(SiegeMode.CastBodies, seen.Count,
+                                $"cast {set} swings {seen.Count} distinct reels for "
+                                + $"{SiegeMode.CastBodies} slots, so the array is not in the order "
+                                + "CastSwing assumes");
+            }
+        }
+
+        /// <summary>
+        /// A swing reel is never one of the walk reels.
+        ///
+        /// <b>The one way this could be wrong and still pass everything above</b>: a swing table
+        /// pointed at the walks would index, load and draw, and what it would look like is the
+        /// cast that <em>has</em> an attack animation not playing it — the exact fault the reels
+        /// were cut to fix, shipped green.
+        /// </summary>
+        [Test]
+        public void NoSwingReelIsAWalkReel()
+        {
+            foreach (int set in Sets)
+            {
+                var swings = SiegeMode.CastSwingArt(set);
+                if (swings == null) continue;
+
+                var walks = new HashSet<string>();
+                foreach (var request in SiegeMode.CastArt(set)) walks.Add(request.Address);
+
+                foreach (var request in swings)
+                    Assert.That(walks.Contains(request.Address), Is.False,
+                                $"cast {set} swings {request.Address}, which is one of its walks");
+            }
+        }
+
+        /// <summary>
+        /// A boss never swings: it stands in the middle of the hill and casts from there.
+        ///
+        /// <b>Asked here rather than left to the view</b>, because <c>CastSwing</c> takes a kind
+        /// and the row it indexes for anything that is not a brute or a bulwark is the creeper's -
+        /// so a caller that handed it a boss would get a creeper's swing reel at three cells tall.
+        /// The view refuses first (<c>SiegeView.Swing</c>); this is what stops that refusal being
+        /// the only thing standing between a boss and a beetle's animation.
+        /// </summary>
+        [Test]
+        public void ABossNeverSwings()
+        {
+            var bosses = new[]
+            {
+                SiegeKind.Boss, SiegeKind.Overlord, SiegeKind.Blightcaller,
+                SiegeKind.Warbringer, SiegeKind.Gravemaw, SiegeKind.Bonecaller,
+            };
+
+            foreach (var kind in bosses)
+                Assert.That(SiegeTuning.IsBoss(kind), Is.True,
+                            $"{kind} is not one of this mode's bosses any more");
         }
 
         /// <summary>

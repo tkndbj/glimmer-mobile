@@ -126,6 +126,29 @@ namespace GlimmerGrove
         /// </summary>
         bool _built;
 
+        /// <summary>
+        /// Whether this screen has actually put something under the header yet — a map or a hub.
+        ///
+        /// <b>Separate from <see cref="_built"/>, which means "stop holding the transition".</b>
+        /// Every way out of <see cref="BuildChapter"/> sets that, including the two that give up,
+        /// because a chapter that failed to load must still be shown; this one says there is
+        /// something worth teaching over. <see cref="Teach"/> used to ask <see cref="_layout"/>,
+        /// which was the same question for as long as the only thing this screen could draw was a
+        /// map — and would have silently stopped teaching the loadout and the track pill on the
+        /// one lane where the track pill is the only way back.
+        /// </summary>
+        bool _drawn;
+
+        /// <summary>
+        /// How far the header column reaches into the safe layer, as drawn.
+        ///
+        /// <see cref="HeaderUnderside"/> is the constant version and is what Domain's map geometry
+        /// is held to; this is the measured one, and the two differ by a whole pill whenever both
+        /// switchers are shown. Only <see cref="BuildHub"/> reads it — the map does not care,
+        /// because it scrolls underneath.
+        /// </summary>
+        float _headerFoot = HeaderUnderside;
+
         public override bool Ready => _built;
 
 
@@ -272,7 +295,10 @@ namespace GlimmerGrove
             _body = bodyTask.Result;
             if (_body == null || !this) { _built = true; yield break; }
 
-            _layout = MapLayout.Build(_body, _entry.LevelIds);
+            // **A lane with no chain gets no map**, and the layout is not even built for one: a
+            // `MapLayout` is a chapter's island chain resolved into positions, and the hub has no
+            // positions to resolve. See `BuildHub`.
+            if (Lane.Laddered) _layout = MapLayout.Build(_body, _entry.LevelIds);
 
             // Swapping chapters swaps their art; this is where the previous chapter's
             // backdrops and strips are actually released.
@@ -298,11 +324,21 @@ namespace GlimmerGrove
             // player than a screen with nothing on it at all.
             if (art.IsFaulted) Debug.LogException(art.Exception);
 
+            if (!Lane.Laddered)
+            {
+                BuildHub();
+                _drawn = true;
+                _built = true;
+                Teach();
+                yield break;
+            }
+
             BuildScroller();
             BuildMapArt();
             BuildTrails();
             BuildNodes();
             BuildChapterEnd();
+            _drawn = true;
 
             // Ready the moment the map exists, not once it has finished arriving. The nodes
             // pop in over about a second and that entrance is the point — it should play
@@ -317,6 +353,38 @@ namespace GlimmerGrove
             Teach();
 
             yield return FocusCurrent();
+        }
+
+        // ----------------------------------------------------------------- the hub
+        /// <summary>
+        /// What this screen draws for a lane that is a single endless run rather than a chain:
+        /// <see cref="EndlessHub"/>, in place of everything below.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The chrome above and below it is unchanged, and that is the whole shape of the
+        /// change.</b> The back key, the plaque, the star count, the "i", the two switchers and
+        /// the loadout shelf are all still what they were — a player has arrived at the same
+        /// screen and switched which ladder it is showing, so the furniture has to stay put. What
+        /// is swapped is the middle: the scroller, the painting, the trails, the discs and the
+        /// teaser, none of which have anything to say about a lane holding one level.
+        /// </para>
+        /// <para>
+        /// <b>The level is the lane's first and the gate is asked exactly as a node asks it</b>,
+        /// so the key on the hub and a disc on a map refuse for the same reasons and with the
+        /// same sentence — <see cref="Open"/> owns both.
+        /// </para>
+        /// </remarks>
+        void BuildHub()
+        {
+            var level = _body != null && _body.Levels.Count > 0 ? _body.Levels[0] : null;
+            if (level == null) return;
+
+            var id = level.Id;
+            bool unlocked = LevelUnlock.IsUnlocked(_index, id);
+
+            EndlessHub.Build(Safe, Content, this, Mode, Lane, level, _headerFoot, unlocked,
+                             () => Open(id, unlocked));
         }
 
         // ------------------------------------------------------------- scroller
@@ -981,6 +1049,14 @@ namespace GlimmerGrove
 
             _tracks = TrackSwitch.Build(Safe, _index, Mode, Lane, SwitchLane, laneY);
 
+            // **What the header column actually spent, which `HeaderUnderside` does not say.**
+            // That constant is the bottom of the *mode* switcher's slot; the track switcher is
+            // drawn under it when both are shown, 136 units further down. A map never noticed,
+            // because a map scrolls under its own header — the hub's column is placed against it
+            // and would be drawn through the pill on any catalog carrying two modes.
+            _headerFoot = _tracks != null ? -laneY + TrackSwitch.PillHeight * .5f
+                                          : HeaderUnderside;
+
             // **The line, reachable from the map and from nowhere else.** It is set once and used
             // by every rung (`WardLoadout`), so it does not belong on a board — and the map is
             // where somebody is about to choose a level, which is the moment they would want to
@@ -999,7 +1075,10 @@ namespace GlimmerGrove
             }
 
             // Above the bar when there is one, because the hint is about the map and the bar is
-            // not part of it.
+            // not part of it — and not drawn at all on a lane that has no map, where "swipe to
+            // see more" is an instruction pointing at nothing.
+            if (!Lane.Laddered) return;
+
             var swipe = UIKit.Titled("Swipe", Safe, Loc.Get("ui.levels.swipe"), 26,
                                      new Color(1f, .96f, .88f, .5f), TextAnchor.MiddleCenter,
                                      new Vector2(700f, 36f), new Vector2(.5f, 0f),
@@ -1117,6 +1196,18 @@ namespace GlimmerGrove
         const float ModesY = BannerY - BannerHeight * .5f - ModesGap - ModeSwitch.PillHeight * .5f;
 
         /// <summary>
+        /// The air between the two switcher pills, for whoever has to work out how deep the header
+        /// column goes when both are drawn.
+        ///
+        /// <b>Public because <see cref="HeaderUnderside"/> answers a different question.</b> That
+        /// is the bottom of the mode switcher's slot and is what Domain's map geometry is held to;
+        /// a screen placing something under a header carrying <em>both</em> pills has to add a
+        /// pill and this gap to it. <c>EndlessHubTests</c> is the caller, and it asks about the
+        /// case the shipped catalog does not draw.
+        /// </summary>
+        public const float SwitcherGap = ModesGap;
+
+        /// <summary>
         /// How far the header column reaches down the screen, measured from the top of the
         /// safe area. The switcher is the last thing in it, so this is its lower edge.
         /// </summary>
@@ -1132,7 +1223,14 @@ namespace GlimmerGrove
         /// </remarks>
         public const float HeaderUnderside = -ModesY + ModeSwitch.PillHeight * .5f;
 
-        static readonly Color BannerInk = new Color(.36f, .24f, .16f);
+        /// <summary>
+        /// The ink the chapter chevrons are cut in. White, at the owner's direction: the
+        /// ribbon is orange cloth since the kit restyle (44) and the name on it is cream over a
+        /// dark outline, so the wood-brown these were carved in read as a stain on the cloth
+        /// rather than a mark beside the lettering. The name does not read this — it is
+        /// coloured by <see cref="Scenery.TitleRibbon"/>.
+        /// </summary>
+        static readonly Color BannerInk = Color.white;
 
         /// <summary>
         /// The plaque, kept so the chevrons can be carved into it - and so the chapter-gate
@@ -1362,7 +1460,7 @@ namespace GlimmerGrove
             // map has to exist first, and the wait costs nothing because BuildChapter calls
             // this again the moment it does. Exactly the bargain HomesteadScreen makes with
             // its catalog, for exactly the same reason.
-            if (_layout == null) return;
+            if (!_drawn) return;
 
             _taught = true;
 

@@ -444,6 +444,26 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
+        /// The least a raider walks free between one stun and the next.
+        ///
+        /// <para>
+        /// <b>The bound that makes <see cref="Wards.WardAbility.Stun"/> an ability rather than a
+        /// lock.</b> A fuelled ward gets a bolt away every <see cref="FireEvery"/> seconds, which
+        /// is shorter than either stun on the shelf — so without a rest a stun turret would stop
+        /// its own colour for the whole run, and a raid that cannot reach the line is a fail state
+        /// that rejects nothing (invariant 5d).
+        /// </para>
+        /// <para>
+        /// <b>Measured from the moment a stun lands, so the rest is always the walking it
+        /// interrupts plus this.</b> That is what keeps the duration the family's ladder — half a
+        /// second buys a third of the clock and a whole one buys half — where a rest measured any
+        /// other way would hand both rungs the same share and leave the dearer one buying nothing
+        /// (invariant 37ax).
+        /// </para>
+        /// </summary>
+        public const float StunRest = 1f;
+
+        /// <summary>
         /// Whether this kind stops on the hill and works on the <em>field</em> rather than on the
         /// line.
         ///
@@ -624,6 +644,168 @@ namespace GlimmerGrove.Modes
         /// it — a player who looks up on the beat it starts blinking still has four seconds.
         /// </summary>
         public const float CogFading = CogLies / 3f;
+
+        // ------------------------------------------------------------------ charms
+        /// <summary>
+        /// The most gems that may pass between one charm and the next.
+        ///
+        /// <para>
+        /// <b>A window rather than a chance, and the difference is the whole of why this number
+        /// exists in this shape.</b> It shipped as a rate — twelve in a thousand, rolled per dealt
+        /// gem — which is uniform in aggregate and useless here, because <em>this stream is
+        /// deterministic</em>. A rate means a geometric gap, a geometric gap is sometimes long, and
+        /// a long one on a shipped board is not bad luck that evens out: it is the same board
+        /// dealing the same nothing to every player who ever opens it. Measured, that is exactly
+        /// what happened — <c>s01_stonewatch</c>, the rung that <em>introduces</em> the prism, put
+        /// its first charm at deal 351 against a run that ends at about 324, so the mechanic, its
+        /// picture and its lesson shipped to a player who could never meet them (invariant 40a).
+        /// It was reported as "I only saw one".
+        /// </para>
+        /// <para>
+        /// <b>So the roll picks the <em>gap</em> rather than taking a chance</b>: after a charm,
+        /// the next one falls somewhere in the next <see cref="CharmWithin"/> gems. The gap is then
+        /// bounded rather than merely averaged, and what a run meets is a function of how long the
+        /// run is rather than of which board it happens to be. It still costs exactly one draw, so
+        /// invariant 41 is untouched.
+        /// </para>
+        /// <para>
+        /// <b>It is named for the bound and not the average, because they are a factor of two
+        /// apart and only one of them may be gated on.</b> A gap anywhere in 1..<em>n</em> averages
+        /// half of <em>n</em>, so a run clearing a whole window's worth of gems is dealt <b>at
+        /// least</b> one and meets about <b>two</b>. Both content gates refuse on the floor; the
+        /// fixture measures the mean and the bound separately.
+        /// </para>
+        /// <para>
+        /// <b>A hundred and twenty-eight, measured against the one thing it trades with.</b> More
+        /// charms is an easier mode, and the hold simulation prices that exactly: at 64 a chapter
+        /// deals five to thirteen a run, <c>s01_bramblerun</c> finishes with the line
+        /// <em>untouched</em> at every rhythm — a fail state that rejects nothing (invariant 5d) —
+        /// and Broodmarch pulls level with Thornwatch, which is two chapters that stop being two
+        /// chapters. At 96 the untouched rung is still untouched. At 128 nothing is unlosable,
+        /// the chapters stay a chapter apart, every gate holds, and a cleared run is dealt
+        /// <b>two to eight charms, mean three and a half, and never fewer than two</b>.
+        /// </para>
+        /// <para>
+        /// <b>A hundred and twelve, and it is the floor rather than a preference.</b> The owner
+        /// played it and said the charms were too rare — <em>I think they are super rare, or I'm
+        /// just unlucky and haven't seen them much</em> — which is a reading rather than a rate,
+        /// and it had <em>two</em> causes. The first was the drawing: a charmed gem was one of the
+        /// four with a white glyph printed on it, and a charm went off in a reel borrowed from
+        /// something that happens eighteen times a second, so a player could meet three in a run
+        /// and register none of them. That half is answered in the art and costs the mode nothing
+        /// (see <c>SiegeView.Charms</c>).
+        /// </para>
+        /// <para>
+        /// <b>This half is the rate, and it was swept rather than picked.</b> Every step was run
+        /// through the chapter gates — the only instrument this mode has (invariant 37j) — and the
+        /// wall is sharp: at <b>96</b> <c>s01_blackmarch</c> finishes with the line
+        /// <em>untouched</em> at all nine rhythms, which is a fail state that rejects nothing
+        /// (invariant 5d), <em>and</em> both shelf gates fall under their authored floor, because
+        /// three free payoffs a run that do not scale with the line flatten the one ladder anybody
+        /// pays for (invariant 37cg). At <b>104</b> Broodmarch stops being harder than Thornwatch
+        /// — 88 of 90 against 84 — which is two chapters that stop being two chapters. At
+        /// <b>112</b> every gate holds, and a cleared run is dealt <b>two to nine, mean four, and
+        /// never fewer than two</b>.
+        /// </para>
+        /// <para>
+        /// <b>So this is as many as the mode can carry without being retuned</b>, and the honest
+        /// next move if it is still not enough is not this number: it is to pay for the charms
+        /// somewhere — a wave, a health surge, a star line — rather than to let a gate go red.
+        /// </para>
+        /// </summary>
+        public const int CharmWithin = 112;
+
+        /// <summary>
+        /// How many gems may pass before the <b>first</b> charm of a run, as a share of
+        /// <see cref="CharmWithin"/>.
+        ///
+        /// <para>
+        /// <b>The window bounded the gap between two charms and left the gap before the first one
+        /// exactly as long, which is the half of invariant 37ci that was not fixed.</b> The first
+        /// charm falls at <c>Avalanche(seed) % CharmWithin</c>, so a run can be a whole window old
+        /// before it meets one — and that window is measured in <em>gems</em>, where an early rung
+        /// deals very few: <c>s01_firstwatch</c> is par 14, which is about 77 gems for the whole
+        /// run, so most of its seeds deal their first charm after the level has ended. The rate
+        /// over a long stream was right the whole time; what was wrong is that a <em>run</em> is
+        /// not a long stream, and the part of it a player forms an opinion during is the first ten
+        /// seconds.
+        /// </para>
+        /// <para>
+        /// <b>Reported as "too rare" twice, at two different rates</b>, which is the tell that the
+        /// number being moved was not the one at fault: raising the rate makes the <em>middle</em>
+        /// of a run denser and leaves the opening exactly as empty, because the opening gap is
+        /// drawn from the same window whatever that window is.
+        /// </para>
+        /// <para>
+        /// <b>A half, and it is the floor rather than a preference — the same wall
+        /// <see cref="CharmWithin"/> hit.</b> A gap uniform in 1..<em>n</em> averages <em>n</em>/2,
+        /// so this moves the expected first charm from 56 gems to 28 — about ten matches earlier —
+        /// and bounds it at 56 where it was 112. Every gap after it is unchanged, which is why it
+        /// costs a fraction of what the same felt increase costs on the rate.
+        /// <b>Swept, like everything else in this mode</b> (invariant 37j): at a <b>third</b>
+        /// <c>s01_ashenfield</c> finishes with the line untouched at all nine rhythms (5d) and
+        /// Broodmarch stops being harder than Thornwatch; at a <b>quarter</b> the same two, harder.
+        /// A half holds every gate.
+        /// <b>And it is worth most exactly where the shortfall was worst</b>: the shorter the rung,
+        /// the larger a share of it the opening gap was.
+        /// </para>
+        /// <para>
+        /// <b>Still out of the seed and never out of the stream</b> (invariant 41): this changes
+        /// what the opening draw is reduced by and not how many draws are taken, so every gem dealt
+        /// on every shipped board is the gem it was before.
+        /// </para>
+        /// </summary>
+        public const int CharmOpening = 2;
+
+        /// <summary>The window the first charm of a run falls in — see <see cref="CharmOpening"/>.</summary>
+        public static int CharmFirstWithin => CharmWithin / CharmOpening < 1 ? 1 : CharmWithin / CharmOpening;
+
+        /// <summary>
+        /// How many bolts a ward throws into a stormglass's volley, and how many the ward wearing
+        /// the charm's own colour throws.
+        ///
+        /// <para>
+        /// <b>There is no damage figure here, and its absence is the design.</b> A stormglass is
+        /// fired by the <em>line</em> — every standing ward at every raider, at each ward's own
+        /// bolt weight (see <c>SiegeBoard.Volley</c>) — so what it is worth is decided by the
+        /// turrets a player bought, the ranks their cogs paid for and how much of the line is still
+        /// standing. A flat figure was the first shape and is quietly corrosive: damage that does
+        /// not scale with the shelf flattens the one ladder in this mode anybody pays for
+        /// (invariant 42), and measured over ninety runs a chapter it did exactly that.
+        /// </para>
+        /// <para>
+        /// <b>Two rather than a doubled bolt, because they are the same arithmetic and very
+        /// different pictures.</b> What the player has to read off a stormglass is <em>that ward
+        /// answered</em>, and one ward firing twice says it where one bigger number does not.
+        /// </para>
+        /// </summary>
+        public const int CharmVolley = 1, CharmVolleyOwn = 2;
+
+        /// <summary>
+        /// <b>How long a charm is drawn for is not a number, and that is the correction.</b>
+        ///
+        /// <para>
+        /// This used to be <c>CharmFor</c>, a single figure the view was "given" — and its own
+        /// remarks claimed the beat that took a charm was <em>held</em> for it, which nothing
+        /// anywhere did. As well: this clock does not stop for a cascade, so a beat held on the
+        /// view's side is a beat of free hill, and every chapter's difficulty would have become a
+        /// function of an animation constant.
+        /// </para>
+        /// <para>
+        /// <b>What replaced it is a hold and a slowdown taken together</b> — <c>SiegeView.Dilate</c>
+        /// scales the seconds handed to <see cref="SiegeBoard.Advance"/> for exactly the window the
+        /// fall is held for, so the board waits and the hill waits with it. The model is handed
+        /// fewer seconds rather than the same seconds later, which is what makes it free: a run
+        /// played half in slow motion is the same run over more wall-clock.
+        /// </para>
+        /// <para>
+        /// <b>And the window is measured off its own parts rather than typed</b>
+        /// (<c>SiegeView.LanceFor</c>, <c>StormVolleyFor</c>), because the three charms take very
+        /// different lengths and a shared figure would be wrong for two of them: a lance's cross
+        /// takes as long as the widest arm of the field, a stormglass's volley as long as the
+        /// barrage, and a prism has nothing that travels at all.
+        /// </para>
+        /// </summary>
 
         /// <summary>A creeper: the ordinary raider, and what most of a wave is.</summary>
         public const int CreeperHealth = 200;
@@ -982,6 +1164,113 @@ namespace GlimmerGrove.Modes
         /// charging is what it always was.
         /// </summary>
         public const float RallyFor = 2.5f;
+
+        // ------------------------------------------------------------------ the gravemaw
+        /// <summary>
+        /// The gravemaw, which eats what the hill owes the player.
+        ///
+        /// <para>
+        /// <b>Between the blightcaller and the warlord, and for the blightcaller's reason.</b> It
+        /// takes no ward health at all, so it rides the last authored wave rather than walking on
+        /// alone (<see cref="EndangersTheLine"/>) — and a boss riding a wave is fought while its
+        /// escort is still walking, so it cannot carry a duel's health without turning its rung
+        /// into one. 1,500 is a fifth over a blightcaller's, which is the room a chapter three rung
+        /// wants over a chapter two one.
+        /// </para>
+        /// <para>
+        /// <b>It walks further down the hill than any other boss</b>, and that is the mechanic
+        /// rather than a tuning knob: what it eats is lying on the ground behind the wave, so a
+        /// gravemaw that stopped where a warlord stops would be eating an empty stretch of hill.
+        /// 0.62 puts it among the things the player has been killing.
+        /// </para>
+        /// </summary>
+        public const int GravemawHealth = 1500;
+
+        public const float GravemawHold = .62f;
+        public const float GravemawMarch = 7.5f;
+
+        /// <summary>
+        /// Seconds between one feed and the next.
+        ///
+        /// <b>Slower than every other boss, because what it takes has to have time to accumulate.</b>
+        /// A cog drops on a kill and a bomb on a bomber's kill, so the thing this spell is aimed at
+        /// is produced by play at a few a wave — at a warlord's 2.5 seconds it would eat an empty
+        /// hill nine times out of ten, which is invariant 5d's decoration wearing a boss's body.
+        /// At six it lands about four times over a rung and each one has something to take.
+        /// </summary>
+        public const float GravemawCastEvery = 6f;
+
+        /// <summary>What one feed takes off a ward: nothing. See <see cref="SiegeSpell.Devour"/>.</summary>
+        public const int GravemawCast = 0;
+
+        // ------------------------------------------------------------------ the bonecaller
+        /// <summary>
+        /// The bonecaller, which is what the third chapter ends on.
+        ///
+        /// <para>
+        /// <b>Dearer than an overlord, and it has to be read together with what it raises.</b> A
+        /// duel against this one is 4,000 of boss plus <see cref="Raises"/> x
+        /// <see cref="RaiseSize"/> creepers, which par counts in full — so the rung is priced at
+        /// what the whole fight costs rather than at what the body does, and a player who kills it
+        /// early is paid for it by a par that overstated them.
+        /// </para>
+        /// <para>
+        /// <b>It walks like an overlord and stands where one stands</b>, because what it does is
+        /// the same shape: it holds the middle and the line has to come to it.
+        /// </para>
+        /// </summary>
+        public const int BonecallerHealth = 3000;
+
+        public const float BonecallerHold = .40f;
+        public const float BonecallerMarch = 8f;
+
+        /// <summary>
+        /// Seconds between one raise and the next.
+        ///
+        /// <b>The slowest cadence of the six and the only one that is a pacing decision rather than
+        /// a damage one.</b> Everything else a boss throws lands on the line in an instant; a raise
+        /// puts a group of bodies at the top of the hill and they take the better part of ten
+        /// seconds to walk down. Raising faster than they arrive would stack three groups into one
+        /// wave nobody authored, which is the fail state arriving from a direction no level can see.
+        /// </summary>
+        public const float BonecallerCastEvery = 8f;
+
+        /// <summary>What one raise takes off a ward: nothing. See <see cref="SiegeSpell.Raise"/>.</summary>
+        public const int BonecallerCast = 0;
+
+        /// <summary>
+        /// How many raiders one raise puts on the hill, and how many times a bonecaller may do it.
+        ///
+        /// <para>
+        /// <b>The cap is what keeps par arithmetic, and it is the load-bearing half of this
+        /// mechanic.</b> Par in this mode is the hill's health over the most one match could
+        /// deliver (invariant 37a) — a number that can be computed off the file. A boss that could
+        /// add bodies for as long as it lived would make the hill's health a function of how the
+        /// player played, which is not a thing a level can be graded against: three stars would
+        /// mean something different for every run. So the total is fixed, the level's par counts
+        /// every one of the twelve whether they are raised or not, and a run that kills the
+        /// bonecaller before its third raise is a run par overstated — which is the direction
+        /// invariant 22 says to err in.
+        /// </para>
+        /// <para>
+        /// <b>Creepers rather than anything heavier, and they wear the bonecaller's own colour.</b>
+        /// What a raise asks is "can you clear a fresh group while still fighting this", which is a
+        /// question about quantity; brutes would make it a question about damage, which is the one
+        /// the boss's own health already asks. One colour so the answer is one ward, which is what
+        /// makes a duel against it a decision about where the fuel goes rather than a scramble.
+        /// </para>
+        /// </summary>
+        public const int RaiseSize = 4, Raises = 3;
+
+        /// <summary>
+        /// Where the raised come up, as a march reading.
+        ///
+        /// <b>At the top of the hill, exactly where a wave musters</b> — not beside the boss. A
+        /// group that appeared at the bonecaller's feet would be four creepers already halfway to
+        /// the line with no time to answer them, which reads as the game placing raiders rather
+        /// than sending them. Nought is where every wave in this mode starts.
+        /// </summary>
+        public const float RaiseAt = 0f;
 
         /// <summary>
         /// Where the warlord stops, as a march reading.
@@ -1382,8 +1671,21 @@ namespace GlimmerGrove.Modes
         public static float TallOf(SiegeKind kind)
             => kind == SiegeKind.Overlord ? 3.5f
              : kind == SiegeKind.Warbringer ? 3.3f
+             : kind == SiegeKind.Gravemaw ? 3.2f
              : kind == SiegeKind.Boss ? 3.1f
              : kind == SiegeKind.Blightcaller ? 3.0f
+             // **The odd one out, and the number is about the *body* rather than the frame.**
+             // Every other row here is a reel cut from a 2D pack, where the shared canvas leaves
+             // about a third of the frame empty - measured, those five bodies fill 0.65 to 0.69 of
+             // their own frames, so a ladder of frame heights is a ladder of drawn sizes as well.
+             // A bonecaller is rendered out of 3D (`SiegeCastBake`) and trimmed to its own alpha,
+             // so it fills **0.93**: at 3.6 it would be drawn half again as tall as an overlord.
+             // 3.0 puts its body at 2.82 cells against an overlord's 2.35, which is the ladder this
+             // comment is really about - and the margin is deliberate, because it is a *slim*
+             // body among wide ones: at equal drawn height a robed humanoid has half the visual
+             // mass of a barrel with arms, and the finale has to be the biggest thing on the hill
+             // rather than merely the tallest number in this switch.
+             : kind == SiegeKind.Bonecaller ? 3.0f
              : kind == SiegeKind.Bulwark ? 1.85f
              : kind == SiegeKind.Bomber ? 1.30f
              : kind == SiegeKind.Brute ? 1.55f : 1.15f;
@@ -1438,11 +1740,15 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>A boss spans the hill and everything else fits its own lane</b>, and both halves are
         /// facts about the art rather than opinions. The cast reels are cut to a fixed height and
-        /// whatever width the animation's box came out as, and every boss frame is wider than it is
-        /// tall — measured on the shipped art, between 1.27 and 1.91 — so a warlord drawn three
-        /// cells tall is drawn close to six cells <em>wide</em>, which at five lanes across the
-        /// board is four of them. Tapping the arm of a thing that fills the screen and being told
-        /// nothing is there is the loudest form of this bug, and it was the reported one.
+        /// whatever width the animation's box came out as, so how wide a boss draws is a property
+        /// of the pack rather than a decision — measured across the six shipped reels, a frame runs
+        /// from 0.61 of its own height to 1.17 of it, which at three and a half cells tall is
+        /// anywhere between two and four cells <em>wide</em>. Tapping the arm of a thing that fills
+        /// the screen and being told nothing is there is the loudest form of this bug, and it was
+        /// the reported one.
+        /// <br/><b>The spread is why this is a lane count and not a measurement</b>: the narrowest
+        /// of the six is a robed caster and the widest a barrel with arms, and a rule read off
+        /// whichever one happened to be on the hill would be two different rules.
         /// </para>
         /// <para>
         /// <b>Stated in lanes rather than measured off the sprite</b>, for invariant 16i's reason:
@@ -1536,10 +1842,57 @@ namespace GlimmerGrove.Modes
         /// <summary>When a cascade's <paramref name="beat"/>th wave of fuel reaches the line.</summary>
         public static float FuelLands(int beat) => SwapFor + beat * BeatFor + FuelFlight;
 
-        /// <summary>Whether this kind is one of the four bosses — the things that stand and cast.</summary>
+        /// <summary>
+        /// How much tougher each chapter's raiders are than the chapter before it, in tenths, and
+        /// which chapter the ladder starts on.
+        ///
+        /// <para>
+        /// <b>This is the one lever a fourth, fifth and sixth chapter has, and it is health rather
+        /// than headcount because the hill fills up.</b> Everything else a chapter can vary is
+        /// composition — more raiders, more brutes, more shields, more waves — and by the third
+        /// chapter that is already four-wave rungs with two shields in them. Counts stop being
+        /// available long before difficulty does.
+        /// </para>
+        /// <para>
+        /// <b>What it really costs the player is the clock, which is why it works here.</b> A hill
+        /// with half again the health walks the same distance in the same time, so the line has to
+        /// kill faster to hold the same ground — and killing faster is exactly what a bought
+        /// turret does. It does <em>not</em> make three stars harder: par is the hill's health over
+        /// what a match delivers, so par rises with it and the star lines rise with par. Stars are
+        /// a separate decision and a separate number (invariant 22).
+        /// </para>
+        /// <para>
+        /// <b>Health only — a blow is left alone.</b> Surging what a swing costs would shorten the
+        /// line's life at the same time as lengthening the hill's, which is two pressures wearing
+        /// one number and would make a chapter step feel like a cliff.
+        /// </para>
+        /// <para>
+        /// <b>The first two chapters are the baseline and do not move</b>, which is the whole
+        /// reason this is derived per chapter rather than added to the constants above: a retune
+        /// of <c>SiegeTuning</c> is a retune of every chapter at once, and the shipped two have
+        /// been played and tuned (37aq).
+        /// </para>
+        /// </summary>
+        public const int ChapterToughStep = 1, ToughFrom = 2;
+
+        /// <summary>
+        /// What a chapter at this ordinal deals, in tenths of the plain figure.
+        ///
+        /// <b>Mirrored by <c>Tools/verify/siege.py</c> and written into each body by the chapter
+        /// tool</b>, which is what lets the board carry it — see <c>SiegeDto.tough</c>.
+        /// </summary>
+        public static int ToughnessFor(int ordinal)
+            => ordinal < ToughFrom ? 10
+             : 10 + (ordinal - ToughFrom + 1) * ChapterToughStep;
+
+        /// <summary>The most a body may be surged, so a mistyped body cannot ship an unkillable hill.</summary>
+        public const int MostTough = 40;
+
+        /// <summary>Whether this kind is one of the six bosses — the things that stand and cast.</summary>
         public static bool IsBoss(SiegeKind kind)
             => kind == SiegeKind.Boss || kind == SiegeKind.Overlord
-            || kind == SiegeKind.Blightcaller || kind == SiegeKind.Warbringer;
+            || kind == SiegeKind.Blightcaller || kind == SiegeKind.Warbringer
+            || kind == SiegeKind.Gravemaw || kind == SiegeKind.Bonecaller;
 
         /// <summary>
         /// What each of the four bosses does when its spell lands.
@@ -1565,6 +1918,8 @@ namespace GlimmerGrove.Modes
             => kind == SiegeKind.Overlord ? SiegeSpell.Sunder
              : kind == SiegeKind.Blightcaller ? SiegeSpell.Douse
              : kind == SiegeKind.Warbringer ? SiegeSpell.Rally
+             : kind == SiegeKind.Gravemaw ? SiegeSpell.Devour
+             : kind == SiegeKind.Bonecaller ? SiegeSpell.Raise
              : SiegeSpell.Smite;
 
         /// <summary>
@@ -1578,7 +1933,15 @@ namespace GlimmerGrove.Modes
         public static bool AimsAtAWard(SiegeKind kind)
         {
             var craft = SpellOf(kind);
-            return craft != SiegeSpell.Rally;
+
+            // **Three of the six are aimed at the hill rather than at the line**, and the third
+            // and fourth are why this is a list rather than one comparison: a devour takes what is
+            // lying on the ground and a raise puts bodies on it, so neither has a ward to pick and
+            // everything downstream - the tell, `Arrive`, the view's ring - has to ask rather than
+            // index a slot nobody set.
+            return craft != SiegeSpell.Rally
+                && craft != SiegeSpell.Devour
+                && craft != SiegeSpell.Raise;
         }
 
         /// <summary>What a boss is called, for a message. Never shown to a player.</summary>
@@ -1596,6 +1959,8 @@ namespace GlimmerGrove.Modes
             => kind == SiegeKind.Overlord ? OverlordHealth
              : kind == SiegeKind.Warbringer ? WarbringerHealth
              : kind == SiegeKind.Boss ? BossHealth
+             : kind == SiegeKind.Bonecaller ? BonecallerHealth
+             : kind == SiegeKind.Gravemaw ? GravemawHealth
              : kind == SiegeKind.Blightcaller ? BlightHealth
              : kind == SiegeKind.Bulwark ? BulwarkHealth
              : kind == SiegeKind.Bomber ? BomberHealth
@@ -1605,6 +1970,8 @@ namespace GlimmerGrove.Modes
             => kind == SiegeKind.Overlord ? OverlordMarch
              : kind == SiegeKind.Warbringer ? WarbringerMarch
              : kind == SiegeKind.Boss ? BossMarch
+             : kind == SiegeKind.Bonecaller ? BonecallerMarch
+             : kind == SiegeKind.Gravemaw ? GravemawMarch
              : kind == SiegeKind.Blightcaller ? BlightMarch
              : kind == SiegeKind.Bulwark ? BulwarkMarch
              : kind == SiegeKind.Bomber ? BomberMarch
@@ -1614,6 +1981,8 @@ namespace GlimmerGrove.Modes
         public static float CastEveryFor(SiegeKind kind)
             => kind == SiegeKind.Overlord ? OverlordCastEvery
              : kind == SiegeKind.Warbringer ? WarbringerCastEvery
+             : kind == SiegeKind.Bonecaller ? BonecallerCastEvery
+             : kind == SiegeKind.Gravemaw ? GravemawCastEvery
              : kind == SiegeKind.Blightcaller ? BlightCastEvery : BossCastEvery;
 
         /// <summary>
@@ -1628,6 +1997,25 @@ namespace GlimmerGrove.Modes
             => kind == SiegeKind.Overlord ? OverlordCast
              : kind == SiegeKind.Warbringer ? WarbringerCast
              : kind == SiegeKind.Boss ? BossCast : 0;
+
+        /// <summary>
+        /// Whether this boss puts raiders on the hill.
+        ///
+        /// <b>Its own predicate rather than a comparison at the call sites, and there are four of
+        /// them</b> - the board raises, par prices, the validator asks whether there is anything
+        /// worth raising into, and <see cref="EndangersTheLine"/> asks whether a boss that never
+        /// touches a ward can still lose the run. Written out four times it would be four places
+        /// that can come to disagree about what a bonecaller is, which is invariant 5b.
+        /// </summary>
+        public static bool Summons(SiegeKind kind) => SpellOf(kind) == SiegeSpell.Raise;
+
+        /// <summary>
+        /// Every raider this boss will ever add to the hill, raised or not.
+        ///
+        /// <b>Counted in full by par, which is the whole reason the cap exists</b> - see
+        /// <see cref="RaiseSize"/>.
+        /// </summary>
+        public static int RaisesInAll(SiegeKind kind) => Summons(kind) ? RaiseSize * Raises : 0;
 
         /// <summary>
         /// What one swing at the line costs a ward.
@@ -1647,6 +2035,8 @@ namespace GlimmerGrove.Modes
             => kind == SiegeKind.Overlord ? OverlordHold
              : kind == SiegeKind.Warbringer ? WarbringerHold
              : kind == SiegeKind.Boss ? BossHold
+             : kind == SiegeKind.Bonecaller ? BonecallerHold
+             : kind == SiegeKind.Gravemaw ? GravemawHold
              : kind == SiegeKind.Blightcaller ? BlightHold
              : 1f;
 
@@ -1658,7 +2048,7 @@ namespace GlimmerGrove.Modes
         /// <c>ModeValidator.Threatens</c> asks rather than assuming that a boss is by definition
         /// dangerous. It was two while the warbringer took ground instead of health.
         /// </summary>
-        public static bool EndangersTheLine(SiegeKind kind) => CastOf(kind) > 0;
+        public static bool EndangersTheLine(SiegeKind kind) => CastOf(kind) > 0 || Summons(kind);
 
         /// <summary>
         /// Whether this boss's spell is worth less on an empty hill than on a full one.
@@ -1684,7 +2074,19 @@ namespace GlimmerGrove.Modes
         public static bool WantsACrowd(SiegeKind kind)
         {
             var craft = SpellOf(kind);
-            return craft == SiegeSpell.Rally || craft == SiegeSpell.Douse;
+
+            // **A devour wants one for a reason of its own**, and it is the plainest case in this
+            // predicate: what it eats is what a felled raider <em>leaves</em>, so a gravemaw
+            // arriving onto a hill somebody has already cleared has taken everything there was to
+            // take before it opened its mouth. That is invariant 5d's reading exactly - a spell
+            // that lands on an empty hill rejects nothing - and it is also why one rides the last
+            // authored wave rather than walking on alone.
+            //
+            // **A raise wants the opposite and gets it**: it brings its own crowd, and stacking one
+            // on a wave still swinging is two fail states arriving together (invariant 37t).
+            return craft == SiegeSpell.Rally
+                || craft == SiegeSpell.Douse
+                || craft == SiegeSpell.Devour;
         }
 
         /// <summary>
@@ -1833,7 +2235,26 @@ namespace GlimmerGrove.Modes
             int health = 0;
             for (int w = 0; w < layout.Coming.Length; w++)
                 for (int i = 0; i < layout.Coming[w].Length; i++)
-                    health += HealthOf(layout.KindAt(w, i));
+                {
+                    var kind = layout.KindAt(w, i);
+
+                    // **Surged, because the hill really is.** Par is what the level sends over what
+                    // one match delivers, so a chapter whose raiders carry half again the health
+                    // and whose par did not move would grade every run against a hill it is not
+                    // fighting — three stars unreachable for the whole chapter, with every number
+                    // in the file plausible.
+                    var surge = layout.SurgeOf(w);
+                    health += surge.Health(HealthOf(kind));
+
+                    // **What a bonecaller will raise, counted in full and whether it ever does.**
+                    // Par is the hill's health over the most one match could deliver, and a raise
+                    // adds health to the hill - so leaving it out would price a duel at the body
+                    // alone and make three stars unreachable on the one rung a chapter is
+                    // remembered for. Counting it in full overstates a run that kills the boss
+                    // early, which is the direction invariant 22 says to err in and the same
+                    // direction every cog rung already errs.
+                    health += surge.Health(RaisesInAll(kind) * CreeperHealth);
+                }
 
             int par = (health + PerfectMatch - 1) / PerfectMatch;
             return par < 1 ? 1 : par;

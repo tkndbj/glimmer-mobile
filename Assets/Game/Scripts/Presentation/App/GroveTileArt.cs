@@ -146,10 +146,11 @@ namespace GlimmerGrove
         /// changes when the player places something and the window must already be wide
         /// enough when it does.
         /// </summary>
-        public static void Reach(HomesteadCatalog catalog, out float up, out float side)
+        public static void Reach(HomesteadCatalog catalog, out float up, out float side, out float down)
         {
             up = GroveFloor.TileHeight;
             side = GroveFloor.TileWidth * .5f;
+            down = GroveFloor.TileHeight;
             if (catalog == null) return;
 
             foreach (var piece in catalog.Pieces)
@@ -157,16 +158,31 @@ namespace GlimmerGrove
                 if (!piece.IsValid) continue;
 
                 var size = HomesteadArt.SizeOnFloor(piece, PieceScale);
-                float lift = piece.Lift;
+                var footprint = piece.Footprint;
 
-                // The top of the art above the anchor, plus the width of the widest footprint's
-                // centre offset; a two-deep piece is drawn a tile further down than its anchor.
-                float top = size.y * lift + size.y * .5f
-                          + GroveFloor.TileHeight * (piece.Footprint.Cols + piece.Footprint.Rows - 2) * .5f;
+                // Where the art's centre sits against its anchor tile, in floor pixels with
+                // y downward — the same two numbers Offset lays the picture out with, so the
+                // window and the drawing cannot disagree. A footprint's centre is *forward*
+                // of its anchor (the anchor is the back corner), which drops the picture down
+                // the screen; the lift raises it back. Symmetric in cols and rows, so a
+                // turned piece needs no second pass.
+                float drop = GroveFloor.TileY(footprint.CentreCol(0), footprint.CentreRow(0))
+                           - size.y * piece.Lift;
+
+                // Above the anchor: how far the top edge climbs. Below it: how far the
+                // bottom edge hangs. The second is the one this used to leave out — the
+                // window was grown only by how far art reaches *up*, so a hall whose back
+                // corner had scrolled one tile past the top edge was culled with two thirds
+                // of the house still on the screen, and popped back in when the floor was
+                // dragged the other way. Invisible to every gate, because every gate reads
+                // the model; reported as a visited grove with no town hall.
+                float top = size.y * .5f - drop;
+                float bottom = size.y * .5f + drop;
                 float half = size.x * .5f
-                           + GroveFloor.TileWidth * (Mathf.Max(piece.Footprint.Cols, piece.Footprint.Rows) - 1) * .5f;
+                           + GroveFloor.TileWidth * (Mathf.Max(footprint.Cols, footprint.Rows) - 1) * .5f;
 
                 if (top > up) up = top;
+                if (bottom > down) down = bottom;
                 if (half > side) side = half;
             }
         }

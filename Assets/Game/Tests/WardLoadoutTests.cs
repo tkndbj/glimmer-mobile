@@ -106,7 +106,7 @@ namespace GlimmerGrove.Tests
                      {
                          WardAbility.Splash, WardAbility.Chain, WardAbility.Frost,
                          WardAbility.Pierce, WardAbility.Siphon, WardAbility.Ember,
-                         WardAbility.Prism, WardAbility.Beacon,
+                         WardAbility.Stun, WardAbility.Beacon,
                      })
                 Assert.AreEqual(plain,
                                 SiegeTuning.DamageTo(SiegeKind.Bulwark, 0, false, ability),
@@ -133,19 +133,26 @@ namespace GlimmerGrove.Tests
             }
         }
 
-        /// <summary>A prism turret is strong against two colours; nothing else is.</summary>
+        /// <summary>
+        /// A turret is strong against the colour it was bought for and no other, whatever it cost.
+        ///
+        /// <b>The roster used to carry an exception and does not.</b> A prism reached the next
+        /// colour round for a share of a hit; under the colour lock that was worth something only
+        /// while its own colour was clear, which the seat beside it was already answering at full
+        /// weight — so both its rungs now carry a stun instead (invariant 5d, asked of a purchase).
+        /// </summary>
         [Test]
-        public void OnlyAPrismTurretIsStrongAgainstTwoColours()
+        public void ATurretIsStrongAgainstOneColourAndNoOther()
         {
-            var plain = new SiegeWard(0, WardCatalog.Default.Find("bolt"));
-            Assert.IsTrue(plain.StrongAgainst(0));
-            Assert.IsFalse(plain.StrongAgainst(1));
-            Assert.AreEqual(-1, plain.Partner);
+            foreach (string id in new[] { "bolt", "prism", "spectrum", "breaker", "apex" })
+            {
+                var ward = new SiegeWard(0, WardCatalog.Default.Find(id));
 
-            var prism = new SiegeWard(0, WardCatalog.Default.Find("prism"));
-            Assert.IsTrue(prism.StrongAgainst(0));
-            Assert.IsTrue(prism.StrongAgainst(prism.Partner));
-            Assert.AreNotEqual(prism.Colour, prism.Partner);
+                Assert.IsTrue(ward.StrongAgainst(0), id);
+                Assert.IsFalse(ward.StrongAgainst(1), id);
+                Assert.IsFalse(ward.StrongAgainst(2), id);
+                Assert.IsFalse(ward.StrongAgainst(3), id);
+            }
         }
 
         /// <summary>
@@ -799,54 +806,73 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// <b>The shelf is one ladder and every rung is sealed behind the one below it.</b>
+        /// <b>Every wall refuses somebody, none of them asks for more than the shelf's ceiling,
+        /// and the ceiling is a number the shelf actually reaches.</b>
         ///
         /// <para>
-        /// Stated as the property rather than checked on the four rungs somebody wrote down, for
-        /// <c>SkinsTests.NoTwoShelvesShareAnAccent</c>'s reason: the roster is content and can
-        /// grow, and a table of cases covers the shelf that existed the day it was typed.
+        /// Invariant 5d asked of the one rule that is left. The shelf used to be climbed a rung
+        /// at a time — a turret sealed until the one below it was held — so the walls were the
+        /// second of two conditions and a slack one cost nothing. With the seal gone at the
+        /// owner's decision, a keeper level is the whole of what opens a rung: a wall of nought
+        /// would hand a turret to a player on their first launch, and the reader refuses one, but
+        /// nothing in the build said the other end had a limit at all.
         /// </para>
         /// <para>
-        /// The free turret is not a rung — it is held from a first launch, so it can never be the
-        /// thing another rung is waiting on — and the first priced turret is sealed behind
-        /// nothing, or the shelf could never be started.
+        /// <b>Both ends are the check.</b> A ceiling nothing reaches is a number nobody is
+        /// tuning against; a rung above it is a padlock no amount of play opens, which is the
+        /// same fault the home ladder's gates are watched for.
         /// </para>
         /// </summary>
         [Test]
-        public void EveryPricedRungIsSealedBehindTheOneBelowIt()
+        public void EveryWallRefusesSomebodyAndTheShelfReachesItsCeiling()
         {
-            var catalog = WardCatalog.Default;
-            WardModel previous = null;
+            int top = 0;
 
-            foreach (var model in catalog.Models)
+            foreach (var model in WardCatalog.Default.Models)
             {
-                var before = catalog.Before(model);
-
                 if (model.IsStarter)
                 {
-                    Assert.IsNull(before, model.Id + " is free and waiting on something");
+                    Assert.AreEqual(0, model.MinLevel,
+                                    model.Id + " is free and behind a wall, which is a turret "
+                                    + "handed over and withheld at once");
                     continue;
                 }
 
-                Assert.AreSame(previous, before,
-                               model.Id + " is not sealed behind the rung below it");
+                Assert.Greater(model.MinLevel, 0,
+                               model.Id + " is priced and asks for no keeper level, so a player "
+                               + "on their first launch is offered it");
 
-                previous = model;
+                Assert.LessOrEqual(model.MinLevel, WardTier.TopLevel,
+                                   model.Id + " asks for keeper level " + model.MinLevel
+                                   + ", above the shelf's ceiling of " + WardTier.TopLevel);
+
+                if (model.MinLevel > top) top = model.MinLevel;
             }
 
-            // The first priced rung waits on nothing, or nobody could ever start the shelf.
-            Assert.IsNull(catalog.Before(catalog.Models[1]));
+            Assert.AreEqual(WardTier.TopLevel, top,
+                            "no rung of the shelf reaches the ceiling, so it is a number nothing "
+                            + "is being tuned against");
         }
 
         /// <summary>
-        /// <b>A ladder whose keeper gate does not climb is refused.</b>
+        /// <b>A wall that falls as the shelf climbs is refused; two rungs sharing one is not.</b>
         ///
-        /// A rung is sealed until the one below it is bought, so reaching it means having met
-        /// every gate under it — and a rung asking for a level an earlier one already demanded
-        /// could therefore never refuse anybody, which is the decoration invariant 5d names.
+        /// <para>
+        /// Both halves are the check, and both of them moved when the seal went. A tie used to be
+        /// refused because a rung was sealed until the one below it was bought — so reaching it
+        /// meant having met every wall under it, and a level an earlier rung had already asked
+        /// for could never refuse anybody (invariant 5d). With no seal, twenty refuses everybody
+        /// under twenty whatever stands beside it, so a tie is legal content and refusing it
+        /// would be a gate turning away a file that is right.
+        /// </para>
+        /// <para>
+        /// A fall is still refused, on the plainer ground: the shelf is ordered by how much of the
+        /// hill an ability reaches and its prices climb with it (invariant 37ax), so a wall that
+        /// drops opens the dearer, further-reaching turret first.
+        /// </para>
         /// </summary>
         [Test]
-        public void ALadderWhoseGateDoesNotClimbIsRefused()
+        public void AWallThatFallsIsRefusedAndATieIsNot()
         {
             var problems = new List<string>();
 
@@ -855,22 +881,74 @@ namespace GlimmerGrove.Tests
                 models = new[]
                 {
                     Entry("free", 0, 0, 0, 1),
-                    Entry("first", 0, 1000, 5, 2),
-                    Entry("second", 600, 0, 5, 3),
+                    Entry("first", 0, 1000, 6, 2),
+                    Entry("second", 0, 2000, 5, 3),
                 },
             };
 
-            // Level five twice: the second rung's gate could never fire, so the whole file is
-            // refused and the built-in roster stands.
+            // Six then five: the shelf climbs and its wall does not, so the whole file is refused
+            // and the built-in roster stands.
             Assert.AreSame(WardCatalog.Default, WardCatalog.Resolve(dto, problems));
             Assert.IsNotEmpty(problems);
 
+            // The same wall twice, which the old rule refused and this one allows.
             problems.Clear();
-            dto.models[2] = Entry("second", 600, 0, 6, 3);
+            dto.models[2] = Entry("second", 0, 2000, 6, 3);
 
-            var climbed = WardCatalog.Resolve(dto, problems);
-            Assert.AreNotSame(WardCatalog.Default, climbed, string.Join("; ", problems));
-            Assert.AreEqual(3, climbed.Count);
+            var tied = WardCatalog.Resolve(dto, problems);
+            Assert.AreNotSame(WardCatalog.Default, tied, string.Join("; ", problems));
+            Assert.AreEqual(3, tied.Count);
+        }
+
+        /// <summary>
+        /// <b>A wall outside the band whose header it is drawn under is refused.</b>
+        ///
+        /// <para>
+        /// The rule the removal of the seal left uncovered, and the reason <c>WardTier</c> stopped
+        /// being a caption. With nothing forcing the order, the three headers are all a player has
+        /// to go on: TIER II means "this stretch opens between keeper level twenty and
+        /// twenty-nine" and nothing else in the build says so. A rung authored outside its band
+        /// parses, prices, validates and plays — what it does is put a lie in a header, which is
+        /// exactly the class of fault no numeric gate can see.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AWallOutsideItsOwnBandIsRefused()
+        {
+            // The shipped roster, with the first rung of the second band dropped into the first
+            // band's stretch. It still climbs and it is still under the rung above it, so nothing
+            // but the band can see it.
+            var models = new List<GlimmerGrove.Content.WardModelDto>();
+
+            foreach (var model in WardCatalog.Default.Models)
+                models.Add(Entry(model.Id, model.GemPrice, model.CoinPrice,
+                                 model.MinLevel, model.Order));
+
+            int band = WardTier.OpensAt(2);
+            var offender = models.Find(m => m.order == band);
+
+            Assert.IsNotNull(offender, "the second band opens at rung " + band);
+
+            offender.minLevel = WardTier.ClosesAtLevel(1);
+
+            var problems = new List<string>();
+            var dto = new GlimmerGrove.Content.WardsDto { models = models.ToArray() };
+
+            Assert.AreSame(WardCatalog.Default, WardCatalog.Resolve(dto, problems),
+                           "a rung standing below its own band's opening level was accepted");
+            Assert.IsNotEmpty(problems);
+
+            // And the shipped roster itself stands in its bands, which is the half that catches a
+            // retune rather than a typo.
+            foreach (var model in WardCatalog.Default.Models)
+            {
+                if (model.IsStarter) continue;
+
+                int tier = WardTier.Of(model);
+
+                Assert.GreaterOrEqual(model.MinLevel, WardTier.OpensAtLevel(tier), model.Id);
+                Assert.LessOrEqual(model.MinLevel, WardTier.ClosesAtLevel(tier), model.Id);
+            }
         }
 
         /// <summary>

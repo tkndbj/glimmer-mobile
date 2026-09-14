@@ -153,6 +153,13 @@ namespace GlimmerGrove
                 case 2: return Piece("gem_b");
                 case 3: return Piece("gem_y");
 
+                // A prism: a gem of no colour at all, which joins a run of any colour and is
+                // paid as the colour it joined (`SiegeCharm.Prism`). It is a *face* rather than a
+                // mark worn over one, because it is the one charm whose whole sentence is "this
+                // is not one of the four" - and a mark on a coloured jewel would be saying the
+                // opposite of that.
+                case PrismColour: return Piece("gem_prism");
+
                 // A thief's sack: not a colour, and deliberately the dullest thing on the field.
                 case SackColour: return Piece("sack");
 
@@ -167,8 +174,94 @@ namespace GlimmerGrove
             }
         }
 
+        /// <summary>
+        /// The face a gem carrying a charm wears, or null for a charm that has no face of its own.
+        ///
+        /// <para>
+        /// <b>A gem of its own rather than a mark worn over one</b>, which is the correction this
+        /// pair exists for — see <c>SiegeMode.Cast</c> for the sentence that bought it. A lance is
+        /// a stellated star and a stormglass a vortex orb, each cut in all four gem colours, so a
+        /// charmed cell is a <em>different stone</em> and is still unmistakably the colour it is
+        /// worth (invariant 37f, and 34f's rule that pieces differ in silhouette as well as hue).
+        /// </para>
+        /// <para>
+        /// <b>Null for the prism and for no charm at all, and that is the right shape rather than
+        /// a gap in one.</b> A prism is not a colour, so it has no per-colour face to pick: it is
+        /// already a face in <see cref="GemArt"/>, reached through <c>PrismColour</c>. A
+        /// <c>default</c> that answered one of these would be invariant 44e's fault exactly — the
+        /// next charm added would fall through it and ship wearing somebody else's stone.
+        /// </para>
+        /// <para>
+        /// <b>Every name is a literal at the point it is looked up</b>, which is invariant 6's
+        /// rule for loc keys read across to art: <c>Tools/verify/artnames.py</c> reads the string
+        /// off the call site, so a name built from a charm and a colour would be eight pictures
+        /// nothing checks — and a white rectangle two cells wide is where that ends (7b).
+        /// </para>
+        /// </summary>
+        static Sprite CharmFace(int colour, SiegeCharm charm)
+        {
+            switch (charm)
+            {
+                case SiegeCharm.Lance:
+                    switch (colour)
+                    {
+                        case 0: return Piece("gem_lance_r");
+                        case 1: return Piece("gem_lance_g");
+                        case 2: return Piece("gem_lance_b");
+                        case 3: return Piece("gem_lance_y");
+                        default: return null;
+                    }
+
+                case SiegeCharm.Storm:
+                    switch (colour)
+                    {
+                        case 0: return Piece("gem_storm_r");
+                        case 1: return Piece("gem_storm_g");
+                        case 2: return Piece("gem_storm_b");
+                        case 3: return Piece("gem_storm_y");
+                        default: return null;
+                    }
+
+                case SiegeCharm.Prism:
+                case SiegeCharm.None:
+                default: return null;
+            }
+        }
+
+        /// <summary>
+        /// The reel a charm detonates in, in the colour it was <b>paid</b>.
+        ///
+        /// <b>Its own bake rather than the ward impact it used to borrow</b> — see
+        /// <c>SiegeShotBake.Charms</c> for the measurement. Keyed on the colour it was paid and
+        /// never on the letter underneath, which is what makes it the payoff rather than
+        /// decoration: a prism is drawn colourless and is worth the run it completed, so the burst
+        /// is the one moment its choice is visible.
+        /// </summary>
+        static Sprite[] CharmBlast(int colour)
+        {
+            switch (colour)
+            {
+                case 0: return Blast("charm_blast_r");
+                case 1: return Blast("charm_blast_g");
+                case 2: return Blast("charm_blast_b");
+                case 3: return Blast("charm_blast_y");
+                default: return null;
+            }
+        }
+
         /// <summary>What a cell holding a cog answers when it is asked its colour.</summary>
         const int CogColour = -1;
+
+        /// <summary>
+        /// What a cell carrying a prism is drawn as.
+        ///
+        /// <b>Its own number for <see cref="SackColour"/>'s reason.</b> A prism has a letter
+        /// underneath it - the deal had to hand it something - and that letter is not what the
+        /// cell is worth, so a view that drew the letter would be showing a red gem that pays
+        /// green and reading as a bug. It is <em>not</em> the cog's -1 either: the two are
+        /// opposite things, one is a gem that joins everything and the other is not a gem at all.
+        /// </summary>
+        const int PrismColour = -4;
 
         /// <summary>
         /// What a cell holding a thief's sack answers.
@@ -448,6 +541,8 @@ namespace GlimmerGrove
                 case SiegeKind.Warbringer: return Reel("bringer");
                 case SiegeKind.Boss: return Reel("boss");
                 case SiegeKind.Blightcaller: return Reel("blight");
+                case SiegeKind.Gravemaw: return Reel("maw");
+                case SiegeKind.Bonecaller: return Reel("caller");
             }
 
             // **A body per colour, which is what removing the tint bought.** It used to be
@@ -494,6 +589,23 @@ namespace GlimmerGrove
             // once to draw - which is `SiegeGroundTests`' fault waiting to happen on thirty-six
             // names instead of ten. `SiegeMode.CastAddress` is the one copy.
             return AssetLibrary.Frames(SiegeMode.CastAddress(CastSet, raider.Kind, raider.Colour));
+        }
+
+        /// <summary>
+        /// What this raider swings at the ward line, or <b>null</b> when its cast drew none.
+        ///
+        /// <b>Null is the answer for two of the three casts and it is not a failure</b> — the
+        /// insects and the brood have no attack animation, so their bodies keep walking where they
+        /// stand exactly as they always have. Asking the address first and the library second is
+        /// what keeps a cast with no swing from ever requesting a reel that is not on disk: an
+        /// <c>Image</c> with no sprite is a white rectangle over a raider (invariant 7b).
+        /// </summary>
+        Sprite[] Swing(SiegeRaider raider)
+        {
+            if (raider == null || raider.Boss) return null;
+
+            string at = SiegeMode.CastSwing(CastSet, raider.Kind, raider.Colour);
+            return string.IsNullOrEmpty(at) ? null : AssetLibrary.Frames(at);
         }
 
         /// <summary>
@@ -610,7 +722,15 @@ namespace GlimmerGrove
             {
                 case SiegeKind.Overlord: return Blast("omen");
                 case SiegeKind.Blightcaller: return Blast("hex");
-                case SiegeKind.Warbringer: return null;
+
+                // **Three of the six throw nothing across the hill.** A roar is aimed at the line
+                // from where the boss stands, a devour is aimed at the ground it is standing on,
+                // and a raise puts bodies at the top of the hill - so none of the three has a
+                // flight, and none of their flight reels is ever scoped in (`SiegeMode.Bosses`).
+                case SiegeKind.Warbringer:
+                case SiegeKind.Gravemaw:
+                case SiegeKind.Bonecaller: return null;
+
                 default: return Blast("spell");
             }
         }
@@ -621,7 +741,9 @@ namespace GlimmerGrove
             {
                 case SiegeKind.Overlord: return Blast("omen_muzzle");
                 case SiegeKind.Blightcaller: return Blast("hex_muzzle");
-                case SiegeKind.Warbringer: return Blast("roar_muzzle");
+                case SiegeKind.Warbringer:
+                case SiegeKind.Gravemaw:
+                case SiegeKind.Bonecaller: return Blast("roar_muzzle");
                 default: return Blast("spell_muzzle");
             }
         }
@@ -632,7 +754,9 @@ namespace GlimmerGrove
             {
                 case SiegeKind.Overlord: return Blast("omen_hit");
                 case SiegeKind.Blightcaller: return Blast("hex_hit");
-                case SiegeKind.Warbringer: return Blast("roar_hit");
+                case SiegeKind.Warbringer:
+                case SiegeKind.Gravemaw:
+                case SiegeKind.Bonecaller: return Blast("roar_hit");
                 default: return Blast("spell_hit");
             }
         }
@@ -664,6 +788,18 @@ namespace GlimmerGrove
                 case SiegeKind.Overlord: return Pal.Bloom;
                 case SiegeKind.Blightcaller: return Pal.Aqua;
                 case SiegeKind.Warbringer: return Pal.Radiance;
+
+                // **The two that land on the hill rather than on the line**, which is what lets
+                // them take the two colours left. A devour is `Verdant` and a raise is `Glass`,
+                // and neither can be read as "this hurts the green ward more" for the reason the
+                // paragraph above gives from the other side: the confusion this rule is about is
+                // a spell in a ward's colour arriving *at that ward*, and nothing either of these
+                // does ever reaches the line. `Verdant` is the sicklier of the two greens on the
+                // wheel and sits on a mouth; `Glass` is the field's own ice white against the
+                // roar's warm `Radiance`, and it comes up out of the ground.
+                case SiegeKind.Gravemaw: return Pal.Verdant;
+                case SiegeKind.Bonecaller: return Pal.Glass;
+
                 default: return Pal.Foxglove;
             }
         }

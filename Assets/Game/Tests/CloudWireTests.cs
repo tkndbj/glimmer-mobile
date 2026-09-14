@@ -74,6 +74,29 @@ namespace GlimmerGrove.Tests
                 {
                     startDay = 20_310, lastPlayedDay = 20_315, collectedThroughDay = 20_314,
                 },
+
+                // Both periods, each with a count and a claim, because the pair is what the
+                // join is: a fixture carrying only counters would prove half the wire and the
+                // half it left out is the one that pays a chest twice.
+                tasks = new TaskStateDto
+                {
+                    daily = new TaskPeriodDto
+                    {
+                        key = 20_315,
+                        counts = new[]
+                        {
+                            new TaskCountDto { goal = "raiders", count = 12 },
+                            new TaskCountDto { goal = "runs", count = 2 },
+                        },
+                        claimed = new[] { "d_play" },
+                    },
+                    weekly = new TaskPeriodDto
+                    {
+                        key = 2_902,
+                        counts = new[] { new TaskCountDto { goal = "wins", count = 3 } },
+                        claimed = new string[0],
+                    },
+                },
                 progression = new ProgressionStateDto { xpHighWater = 4200, levelHighWater = 9 },
                 cloud = new CloudStateDto
                 {
@@ -156,6 +179,38 @@ namespace GlimmerGrove.Tests
         /// fact as "granted none" — so the join takes the local side whole and nothing has to
         /// detect the upgrade. The bargain every id-keyed section in this file makes.
         /// </summary>
+        [Test]
+        public void ADocumentWithNoTasksBlockReadsAsNothingDoneYet()
+        {
+            var doc = FirestoreSaveMapper.ToDocument(Populated());
+            doc.Remove("tasks");
+
+            var restored = FirestoreSaveMapper.FromDocument(doc);
+
+            Assert.IsNotNull(restored.tasks);
+            Assert.AreEqual(0, restored.tasks.daily.key, "key zero is what the join treats as knowing nothing");
+            Assert.AreEqual(0, restored.tasks.weekly.key);
+            Assert.IsEmpty(restored.tasks.daily.counts);
+            Assert.IsEmpty(restored.tasks.daily.claimed);
+        }
+
+        /// <summary>
+        /// The round trip is a fixed point: what the writer drops the reader never invents,
+        /// or SaveDelta reads every launch as changed and pushes a write for ever.
+        /// </summary>
+        [Test]
+        public void AnEmptyTaskPeriodSurvivesTheRoundTripUnchanged()
+        {
+            var original = Populated();
+            original.tasks.weekly = new TaskPeriodDto();
+
+            var restored = FirestoreSaveMapper.FromDocument(FirestoreSaveMapper.ToDocument(original));
+
+            Assert.AreEqual(0, restored.tasks.weekly.key);
+            Assert.IsEmpty(restored.tasks.weekly.counts);
+            Assert.IsEmpty(restored.tasks.weekly.claimed);
+        }
+
         [Test]
         public void ADocumentWithNoUtilitiesReadsAsHavingBeenGrantedNone()
         {
@@ -319,6 +374,18 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(20_310, restored.streak.startDay);
             Assert.AreEqual(20_315, restored.streak.lastPlayedDay);
             Assert.AreEqual(20_314, restored.streak.collectedThroughDay);
+
+            // The tasks: both periods, counters and claims. A counter that stayed on one
+            // phone is a task that reads half done on the other, and a claim that stayed is a
+            // chest the other device would pay a second time.
+            Assert.AreEqual(20_315, restored.tasks.daily.key);
+            Assert.AreEqual(2, restored.tasks.daily.counts.Length);
+            Assert.AreEqual("raiders", restored.tasks.daily.counts[0].goal);
+            Assert.AreEqual(12, restored.tasks.daily.counts[0].count);
+            CollectionAssert.AreEqual(new[] { "d_play" }, restored.tasks.daily.claimed);
+            Assert.AreEqual(2_902, restored.tasks.weekly.key);
+            Assert.AreEqual(3, restored.tasks.weekly.counts[0].count);
+            Assert.IsEmpty(restored.tasks.weekly.claimed);
 
             // The event floors, which the server pays on: `eventCredits` counts a milestone
             // only once the floor has reached it, so a floor that did not make the trip is a

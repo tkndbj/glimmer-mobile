@@ -40,8 +40,19 @@ namespace GlimmerGrove.Modes
         /// <summary>Seconds until its next blow, once it has arrived.</summary>
         public float Blow;
 
-        /// <summary>Seconds until its next spell. A warlord's only, and only once it is in place.</summary>
+        /// <summary>Seconds until its next spell. A boss's only, and only once it is in place.</summary>
         public float Spell;
+
+        /// <summary>
+        /// How many times this boss has raised, which is the one boss counter the rules cap.
+        ///
+        /// <b>On the raider rather than on the board, because the cap is a fact about the
+        /// caster.</b> A lane could stand two bonecallers (<c>SiegeEndless</c> pairs bosses), and a
+        /// board-wide count would give the pair between them the allowance one was priced at —
+        /// which is the half of invariant 5d par could not see: the hill would hold bodies the
+        /// level's own par never counted.
+        /// </summary>
+        public int Raised;
 
         /// <summary>Set for one frame after it has been hit, so the view can flash it.</summary>
         public float Flash;
@@ -60,6 +71,27 @@ namespace GlimmerGrove.Modes
         public float Chill;
 
         public int ChillTenths;
+
+        /// <summary>
+        /// Seconds left of a stun: this one is standing still, swinging at nothing and casting
+        /// nothing.
+        ///
+        /// <b>Its own counter rather than a chill of ten tenths</b>, and the reason is what it
+        /// stops. A chill is a rate on the march and nothing else — a slowed raider still swings
+        /// and a slowed boss still casts — where a stun takes the raider out of the raid, which is
+        /// three rules in three different files (<c>SiegeBoard.Walk</c>, <c>Swing</c> and
+        /// <c>Conjure</c>) rather than a number the march multiplies by.
+        /// </summary>
+        public float Stun;
+
+        /// <summary>
+        /// Seconds until another stun can take hold. See <see cref="Stagger"/>.
+        ///
+        /// <b>One field for both halves</b>: it is set past the end of the stun that armed it, so
+        /// "still held" and "not yet stunnable again" are one countdown rather than two that could
+        /// disagree.
+        /// </summary>
+        public float Steady;
 
         /// <summary>
         /// Seconds left of a burn, what it takes per second, and which ward lit it.
@@ -108,8 +140,19 @@ namespace GlimmerGrove.Modes
 
         public bool Brute => Kind == SiegeKind.Brute;
 
-        /// <summary>How fast it walks right now, as a fraction of its ordinary pace.</summary>
-        public float Pace => Chill > 0f ? (10 - ChillTenths) / 10f : 1f;
+        /// <summary>Whether it is held where it stands. See <see cref="Stun"/>.</summary>
+        public bool Stunned => Alive && Stun > 0f;
+
+        /// <summary>
+        /// How fast it walks right now, as a fraction of its ordinary pace.
+        ///
+        /// <b>A stun is nought rather than a tenth of a chill</b>, which is what keeps the two
+        /// from ever having to be combined: the strongest chill this mode can author is nine
+        /// tenths, deliberately, because a chill is refreshable and a tenth of a pace that never
+        /// arrives is a raid that rejects nothing.
+        /// </summary>
+        public float Pace => Stun > 0f ? 0f
+                           : Chill > 0f ? (10 - ChillTenths) / 10f : 1f;
 
         /// <summary>
         /// Puts a frost on it, keeping the stronger of what it already had.
@@ -123,6 +166,31 @@ namespace GlimmerGrove.Modes
 
             ChillTenths = tenths > 9 ? 9 : tenths;
             Chill = Math.Max(Chill, seconds);
+        }
+
+        /// <summary>
+        /// Stops it where it stands for <paramref name="seconds"/>, if it is not still recovering
+        /// from the last one.
+        ///
+        /// <para>
+        /// <b>Refused rather than refreshed, which is the opposite of every other lasting state
+        /// here and is the whole of what makes a stun safe.</b> A chill and a burn keep the
+        /// stronger of what is offered because a raider under either is still walking at the line;
+        /// a stun that took the longer of two would be renewed by a ward firing every
+        /// <c>SiegeTuning.FireEvery</c> seconds and would never end.
+        /// </para>
+        /// <para>
+        /// <b>The rest is measured from the moment it lands</b> (<c>SiegeTuning.StunRest</c>), so
+        /// what a rung buys is the share of the clock it takes: half a second in every second and
+        /// a half, or a whole one in every two.
+        /// </para>
+        /// </summary>
+        public void Stagger(float seconds)
+        {
+            if (!Alive || seconds <= 0f || Steady > 0f) return;
+
+            Stun = seconds;
+            Steady = seconds + SiegeTuning.StunRest;
         }
 
         /// <summary>Sets it burning, keeping the fiercer of what it already had.</summary>

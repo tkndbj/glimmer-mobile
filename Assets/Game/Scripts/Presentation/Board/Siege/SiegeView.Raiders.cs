@@ -102,14 +102,18 @@ namespace GlimmerGrove
             }
 
             mob.Idle = Skin(raider);
+            mob.Swinging = Swing(raider);
 
             // Written out per kind rather than built from a name, for `GemArt`'s reason: a reel
             // whose key is assembled is a reel `Tools/verify/artnames.py` cannot hold to disk.
             mob.Casting = CastReel(raider.Kind);
+            mob.Walking = WalkReel(raider.Kind);
 
             // A warlord comes on *walking* and stands still once it is in place; everything else
-            // is walking for its whole life, so its one reel is both.
-            mob.Playing = mob.Idle;
+            // is walking for its whole life, so its one reel is both. **A boss that has a walk of
+            // its own opens in it**, because the first thing it ever does is the walk on — see
+            // `Mob.Walking` for the three seconds this was drawing standing still.
+            mob.Playing = mob.Walking ?? mob.Idle;
 
             mob.Body = Book(mob.Playing, "Body", mob.Node, new Vector2(tall, tall),
                             raider.Boss ? BossFps : raider.Brute ? 10f : 13f);
@@ -131,9 +135,28 @@ namespace GlimmerGrove
                 // This pack draws its insects head-down already, which is the way this hill runs,
                 // so nothing here is turned.
                 mob.Body.rectTransform.anchoredPosition = new Vector2(0f, BodyLift * tall);
-                Tween.Bob(mob.Body.rectTransform, tall * .035f,
-                          raider.Boss ? 1.6f : raider.Brute ? 1.1f : .72f,
-                          raider.Id * .37f);
+
+                // **The bob is a gait, so it belongs to a body that has none of its own.**
+                //
+                // Every other cast in this mode is a pack's single cycle, and the sine is what
+                // stops a row of them reading as stickers sliding down a hill. A boss that walks
+                // on in a real walk cycle and then *stops* is the one body here for which both
+                // halves of that are wrong: while it walks the sine is a second gait fighting the
+                // baked one, and while it holds the middle of the hill it is a three-cell figure
+                // standing perfectly still and bouncing — which is what "when he is standing
+                // still, it moves up and down" was, and it was the only vertical motion in the
+                // picture. Measured on the shipped reels: the stand's frames differ from each
+                // other by 2.2 mean pixel levels against 30-37 for every other body reel, so the
+                // art was holding still and the tween was doing all of it.
+                //
+                // Keyed on having a walk reel rather than on being a boss, because that is the
+                // property the argument actually rests on: the four 2D bosses have one reel that
+                // is their walk and their stand together, they never hold still in it, and they
+                // keep the bob they have always had.
+                if (mob.Walking == null)
+                    Tween.Bob(mob.Body.rectTransform, tall * .035f,
+                              raider.Boss ? 1.6f : raider.Brute ? 1.1f : .72f,
+                              raider.Id * .37f);
             }
 
             // A warlord's readouts hang off the top of the board rather than off its body.
@@ -208,11 +231,60 @@ namespace GlimmerGrove
                 case SiegeKind.Warbringer: return Reel("bringer_cast");
                 case SiegeKind.Boss: return Reel("boss_cast");
                 case SiegeKind.Blightcaller: return Reel("blight_cast");
+                case SiegeKind.Gravemaw: return Reel("maw_cast");
+
+                // **The one bought gesture in this mode.** The other four rear up on a sine the
+                // bake synthesises, because their pack drew them one animation each; this one
+                // raises its staff and lowers it again, which is why `make_siege_art.boss_reels`
+                // grew a `whole` flag rather than cutting it to a rear-up.
+                case SiegeKind.Bonecaller: return Reel("caller_cast");
+
+                default: return null;
+            }
+        }
+
+        /// <summary>
+        /// The reel a boss walks on in, and <b>null</b> for a boss whose cast drew only one.
+        ///
+        /// <para>
+        /// <b>One case, and the shape is the interesting part.</b> The four bosses cut from 2D
+        /// packs have a single reel that is their walk and their stand at once — they never stop
+        /// cycling, so nothing about them wants a second — where the one boss rendered out of 3D
+        /// (invariant 37bx) genuinely stands still when it arrives and therefore needs both.
+        /// Answering null for the rest is what keeps this a fact about the art rather than a
+        /// rule everything has to satisfy.
+        /// </para>
+        /// <para>
+        /// Written out per kind rather than assembled from <see cref="CastReel"/>'s key plus a
+        /// suffix, for the reason every reel name in this file is: a name built at its call site
+        /// is a name <c>Tools/verify/artnames.py</c> cannot hold to disk, and an <c>Image</c> with
+        /// no sprite is a white rectangle three cells tall over the hill (invariant 7b).
+        /// </para>
+        /// </summary>
+        static Sprite[] WalkReel(SiegeKind kind)
+        {
+            switch (kind)
+            {
+                case SiegeKind.Bonecaller: return Reel("caller_walk");
                 default: return null;
             }
         }
 
         /// <summary>How fast a warlord's own frames run. Slow, because it is a heavy thing.</summary>
+        ///
+        /// <para>
+        /// <b>And it is the walk's cadence too, which is a decision rather than an oversight.</b>
+        /// The obvious thing is to derive the step rate from the ground speed so the feet cannot
+        /// slip — and the arithmetic says not to: this hill is about seven cells deep and a boss
+        /// crosses the whole of it in <c>SiegeTuning.BossMarch</c> seconds, which is a shade under
+        /// one cell a second, while the body walking it is drawn <em>three and a half cells
+        /// tall</em>. A human stride carries about nine tenths of its own height, so a foot-locked
+        /// cadence here is one cycle every three and a third seconds — <b>3.6 frames a second</b>,
+        /// which does not read as a heavy walk, it reads as slow motion. The board draws its cast
+        /// far larger than their speed implies and every game of this shape does; the genre's own
+        /// answer is a natural cadence and some slip, and the complaint this is fixing was that
+        /// the legs were not moving <em>at all</em>.
+        /// </para>
         const float BossFps = 11f;
 
         /// <summary>How far a body is lifted off its node, as a share of the drawn height.</summary>
@@ -318,10 +390,17 @@ namespace GlimmerGrove
             mob.Playing = reel;
             Flipbook.Attach(mob.Body, reel, BossFps, loop);
 
-            // The frame's shape is a fact about the picture (see `Frame`), and a warlord's three
-            // reels are cut onto one canvas so that this never actually changes - which is exactly
-            // why it is worth setting rather than assuming.
-            mob.Body.rectTransform.sizeDelta = new Vector2(Frame(reel, mob.Height), mob.Height);
+            // **A reel may be cut on a bigger canvas than the one this body walks in, and the body
+            // must not change size when it is.** A boss's reels share one canvas, so this has
+            // always been a no-op for them and was worth setting rather than assuming. A skeleton's
+            // swing does not: the attack throws the weapon so far outside the walk's box that a
+            // shared canvas fitted to the walk's height would draw every raider in the chapter at
+            // 59-73% of its size for the whole run, for the sake of six frames at the line
+            // (`make_siege_art.walk_and_swing`). So the bake keeps the *body* at one scale and
+            // lets the swing's frame be bigger, and this reads the ratio straight off the two
+            // sprites - which needs no number written down anywhere and cannot drift from the art.
+            float tall = mob.Height * Grown(mob.Idle, reel);
+            mob.Body.rectTransform.sizeDelta = new Vector2(Frame(reel, tall), tall);
         }
 
         /// <summary>
@@ -335,6 +414,22 @@ namespace GlimmerGrove
         /// <c>ModeScreen.Prepare</c> was renamed to avoid.
         /// </summary>
         static bool Throwing(Mob mob) => mob.Casting != null && mob.Playing == mob.Casting;
+
+        /// <summary>
+        /// How much bigger this reel's frame is than the one the body walks in.
+        ///
+        /// <b>Read off the sprites rather than written down</b>, which is the whole point: the
+        /// bake decides how much room a swing needs and this cannot come to disagree with it. One
+        /// for every reel cut on the body's own canvas, which is every reel of every other cast.
+        /// </summary>
+        static float Grown(Sprite[] home, Sprite[] reel)
+        {
+            if (home == null || home.Length == 0 || home[0] == null) return 1f;
+            if (reel == null || reel.Length == 0 || reel[0] == null) return 1f;
+
+            float walk = home[0].rect.height;
+            return walk > 0f ? reel[0].rect.height / walk : 1f;
+        }
 
         /// <summary>
         /// Takes down the widgets of raiders that are dead.
@@ -367,8 +462,10 @@ namespace GlimmerGrove
                 var raider = _board.Find(mob.Id);
                 if (raider != null && raider.Alive) continue;
 
-                // Unless a storm has claimed it and not yet struck it. See `_striking`.
+                // Unless a storm or a stormglass has claimed it and not yet struck it. See
+                // `_striking` and `_volleying`.
                 if (_striking.Contains(mob.Id)) continue;
+                if (_volleying.Contains(mob.Id)) continue;
 
                 mob.Falling = true;
                 Die(mob);

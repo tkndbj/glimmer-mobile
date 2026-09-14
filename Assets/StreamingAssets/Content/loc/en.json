@@ -30,6 +30,58 @@
       "text": "Whorlwater"
     },
     {
+      "key": "chapter.p01_prismvale.name",
+      "text": "Prismvale"
+    },
+    {
+      "key": "chapter.s01_thornwatch.name",
+      "text": "Thornwatch"
+    },
+    {
+      "key": "chapter.s02_endlesswatch.name",
+      "text": "The Endless Watch"
+    },
+    {
+      "key": "chapter.s03_broodmarch.name",
+      "text": "Broodmarch"
+    },
+    {
+      "key": "chapter.s04_barrowfell.name",
+      "text": "Barrowfell"
+    },
+    {
+      "key": "chest.gold.name",
+      "text": "Golden Chest"
+    },
+    {
+      "key": "chest.royal.name",
+      "text": "Royal Chest"
+    },
+    {
+      "key": "chest.silver.name",
+      "text": "Silver Chest"
+    },
+    {
+      "key": "chest.wood.name",
+      "text": "Wooden Chest"
+    },
+    {
+      "key": "lesson.siege_thief.body",
+      "text": "It hovers over the field and takes gems away, leaving a sack that is no colour at all. Kill it and the whole field comes back."
+    },
+    {
+      "key": "lesson.siege_thief.title",
+      "text": "The thief"
+    },
+    {
+      "key": "lesson.siege_weaver.body",
+      "text": "It stops on the hill and locks your gems. A locked gem cannot be moved and cannot line up — kill the weaver and every web burns off."
+    },
+    {
+      "key": "lesson.siege_weaver.title",
+      "text": "The weaver"
+    },
+    {
       "key": "level.c01_bound_roots.name",
       "text": "Bound Roots"
     },
@@ -350,6 +402,22 @@
       "text": "A blend to make, a shadow to leave alone"
     },
     {
+      "key": "level.f01_brimming.name",
+      "text": "Brimming"
+    },
+    {
+      "key": "level.f01_brimming.tagline",
+      "text": "The line at the top is the one that ends you."
+    },
+    {
+      "key": "level.f01_deep_cistern.name",
+      "text": "The Cistern"
+    },
+    {
+      "key": "level.f01_deep_cistern.tagline",
+      "text": "What is buried is reached from beside it."
+    },
+    {
       "key": "level.f01_first_fall.name",
       "text": "First Fall"
     },
@@ -358,12 +426,28 @@
       "text": "Never match. Cook."
     },
     {
-      "key": "level.f01_two_lights.name",
-      "text": "Two Lights"
+      "key": "level.f01_last_ember.name",
+      "text": "Last Ember"
     },
     {
-      "key": "level.f01_two_lights.tagline",
-      "text": "Blue is the one thing orange lacks."
+      "key": "level.f01_last_ember.tagline",
+      "text": "Count what is still to come."
+    },
+    {
+      "key": "level.f01_narrow_water.name",
+      "text": "Narrow Water"
+    },
+    {
+      "key": "level.f01_narrow_water.tagline",
+      "text": "A colour it already holds is a wasted mote."
+    },
+    {
+      "key": "level.f01_the_deep_well.name",
+      "text": "The Deep Well"
+    },
+    {
+      "key": "level.f01_the_deep_well.tagline",
+      "text": "Every mote, or none."
     },
     {
       "key": "level.f01_the_kindling.name",
@@ -390,76 +474,20 @@
       "text": "Clear the floor and the rest comes down."
     },
     {
-      "key": "level.f01_the_deep_well.name",
-      "text": "The Deep Well"
+      "key": "level.f01_two_lights.name",
+      "text": "Two Lights"
     },
     {
-      "key": "level.f01_the_deep_well.tagline",
-      "text": "Every mote, or none."
+      "key": "level.f01_two_lights.tagline",
+      "text": "Blue is the one thing orange lacks."
     },
     {
-      "key": "level.f01_narrow_water.name",
-      "text": "Narrow Water"
+      "key": "level.f02_far_shore.name",
+      "text": "Far Shore"
     },
     {
-      "key": "level.f01_narrow_water.tagline",
-      "text": "A colour it already holds is a wasted mote."
-    },
-    {
-      "key": "level.f01_deep_cistern.name",
-      "text": "The Cistern"
-    },
-    {
-      "key": "level.f01_deep_cistern.tagline",
-      "text": "What is buried is reached from beside it."
-    },
-    {
-      "key": "level.f01_brimming.name",
-      "text": "Brimming"
-    },
-    {
-      "key": "level.f01_brimming.tagline",
-      "text": "The line at the top is the one that ends you."
-    },
-    {
-      "key": "level.f01_last_ember.name",
-      "text": "Last Ember"
-    },
-    {
-      "key": "level.f01_last_ember.tagline",
-      "text": "Count what is still to come."
-    },
-    {
-      "key": "level.f02_the_glass.name",
-      "text": "The Glass"
-    },
-    {
-      "key": "level.f02_the_glass.tagline",
-      "text": "Fill it, and it fires."
-    },
-    {
-      "key": "level.f02_the_glasswater.name",
-      "text": "Glasswater"
-    },
-    {
-      "key": "level.f02_the_glasswater.tagline",
-      "text": "Every mote, and every pane."
-    },
-    {
-      "key": "level.f02_the_crossing.name",
-      "text": "The Crossing"
-    },
-    {
-      "key": "level.f02_the_crossing.tagline",
-      "text": "Three colours, three drops, one shot."
-    },
-    {
-      "key": "level.f02_two_panes.name",
-      "text": "Two Panes"
-    },
-    {
-      "key": "level.f02_two_panes.tagline",
-      "text": "One lens can fill another."
+      "key": "level.f02_far_shore.tagline",
+      "text": "Where no wash could ever reach."
     },
     {
       "key": "level.f02_lantern_row.name",
@@ -478,14 +506,6 @@
       "text": "Aim it while the valley is open."
     },
     {
-      "key": "level.f02_stillwater.name",
-      "text": "Stillwater"
-    },
-    {
-      "key": "level.f02_stillwater.tagline",
-      "text": "A colour it already holds is a wall."
-    },
-    {
       "key": "level.f02_slack_water.name",
       "text": "Slack Water"
     },
@@ -494,12 +514,44 @@
       "text": "One pane starts empty. Plan for it."
     },
     {
-      "key": "level.f02_far_shore.name",
-      "text": "Far Shore"
+      "key": "level.f02_stillwater.name",
+      "text": "Stillwater"
     },
     {
-      "key": "level.f02_far_shore.tagline",
-      "text": "Where no wash could ever reach."
+      "key": "level.f02_stillwater.tagline",
+      "text": "A colour it already holds is a wall."
+    },
+    {
+      "key": "level.f02_the_crossing.name",
+      "text": "The Crossing"
+    },
+    {
+      "key": "level.f02_the_crossing.tagline",
+      "text": "Three colours, three drops, one shot."
+    },
+    {
+      "key": "level.f02_the_glass.name",
+      "text": "The Glass"
+    },
+    {
+      "key": "level.f02_the_glass.tagline",
+      "text": "Fill it, and it fires."
+    },
+    {
+      "key": "level.f02_the_glasswater.name",
+      "text": "Glasswater"
+    },
+    {
+      "key": "level.f02_the_glasswater.tagline",
+      "text": "Every mote, and every pane."
+    },
+    {
+      "key": "level.f02_two_panes.name",
+      "text": "Two Panes"
+    },
+    {
+      "key": "level.f02_two_panes.tagline",
+      "text": "One lens can fill another."
     },
     {
       "key": "level.f02_underglass.name",
@@ -508,70 +560,6 @@
     {
       "key": "level.f02_underglass.tagline",
       "text": "The line at the top has not moved."
-    },
-    {
-      "key": "level.f03_first_whorl.name",
-      "text": "First Whorl"
-    },
-    {
-      "key": "level.f03_first_whorl.tagline",
-      "text": "It takes whatever stands either side of it."
-    },
-    {
-      "key": "level.f03_the_span.name",
-      "text": "The Span"
-    },
-    {
-      "key": "level.f03_the_span.tagline",
-      "text": "A wash stops at the gap. This does not."
-    },
-    {
-      "key": "level.f03_the_deep_draw.name",
-      "text": "The Deep Draw"
-    },
-    {
-      "key": "level.f03_the_deep_draw.tagline",
-      "text": "Little room, and a long way down."
-    },
-    {
-      "key": "level.f03_through_the_glass.name",
-      "text": "Through the Glass"
-    },
-    {
-      "key": "level.f03_through_the_glass.tagline",
-      "text": "A beam is the third way in."
-    },
-    {
-      "key": "level.f03_two_shores.name",
-      "text": "Two Shores"
-    },
-    {
-      "key": "level.f03_two_shores.tagline",
-      "text": "Nothing crosses but what you arrange."
-    },
-    {
-      "key": "level.f03_twin_mouths.name",
-      "text": "Twin Mouths"
-    },
-    {
-      "key": "level.f03_twin_mouths.tagline",
-      "text": "Two of them, and one deal to feed both."
-    },
-    {
-      "key": "level.f03_whorlwater.name",
-      "text": "Whorlwater"
-    },
-    {
-      "key": "level.f03_whorlwater.tagline",
-      "text": "Two mouths, and everything you have learnt."
-    },
-    {
-      "key": "level.f03_make_the_pair.name",
-      "text": "Make the Pair"
-    },
-    {
-      "key": "level.f03_make_the_pair.tagline",
-      "text": "Cook one side before you open it."
     },
     {
       "key": "level.f03_buried.name",
@@ -590,8 +578,348 @@
       "text": "Glass, mouths, and one procession."
     },
     {
+      "key": "level.f03_first_whorl.name",
+      "text": "First Whorl"
+    },
+    {
+      "key": "level.f03_first_whorl.tagline",
+      "text": "It takes whatever stands either side of it."
+    },
+    {
+      "key": "level.f03_make_the_pair.name",
+      "text": "Make the Pair"
+    },
+    {
+      "key": "level.f03_make_the_pair.tagline",
+      "text": "Cook one side before you open it."
+    },
+    {
+      "key": "level.f03_the_deep_draw.name",
+      "text": "The Deep Draw"
+    },
+    {
+      "key": "level.f03_the_deep_draw.tagline",
+      "text": "Little room, and a long way down."
+    },
+    {
+      "key": "level.f03_the_span.name",
+      "text": "The Span"
+    },
+    {
+      "key": "level.f03_the_span.tagline",
+      "text": "A wash stops at the gap. This does not."
+    },
+    {
+      "key": "level.f03_through_the_glass.name",
+      "text": "Through the Glass"
+    },
+    {
+      "key": "level.f03_through_the_glass.tagline",
+      "text": "A beam is the third way in."
+    },
+    {
+      "key": "level.f03_twin_mouths.name",
+      "text": "Twin Mouths"
+    },
+    {
+      "key": "level.f03_twin_mouths.tagline",
+      "text": "Two of them, and one deal to feed both."
+    },
+    {
+      "key": "level.f03_two_shores.name",
+      "text": "Two Shores"
+    },
+    {
+      "key": "level.f03_two_shores.tagline",
+      "text": "Nothing crosses but what you arrange."
+    },
+    {
+      "key": "level.f03_whorlwater.name",
+      "text": "Whorlwater"
+    },
+    {
+      "key": "level.f03_whorlwater.tagline",
+      "text": "Two mouths, and everything you have learnt."
+    },
+    {
+      "key": "level.p01_firstvein.name",
+      "text": "First Vein"
+    },
+    {
+      "key": "level.p01_firstvein.tagline",
+      "text": "Line them up to the light"
+    },
+    {
+      "key": "level.p01_twinlight.name",
+      "text": "Twin Light"
+    },
+    {
+      "key": "level.p01_twinlight.tagline",
+      "text": "Every colour is wanted somewhere"
+    },
+    {
+      "key": "level.s01_ashenfield.name",
+      "text": "Ashenfield"
+    },
+    {
+      "key": "level.s01_ashenfield.tagline",
+      "text": "Spend the cogs where the hill hurts"
+    },
+    {
+      "key": "level.s01_blackmarch.name",
+      "text": "Black March"
+    },
+    {
+      "key": "level.s01_blackmarch.tagline",
+      "text": "Armour arrives while the brutes are still walking"
+    },
+    {
+      "key": "level.s01_bramblerun.name",
+      "text": "Bramble Run"
+    },
+    {
+      "key": "level.s01_bramblerun.tagline",
+      "text": "Every wave is armour now"
+    },
+    {
+      "key": "level.s01_firstwatch.name",
+      "text": "First Watch"
+    },
+    {
+      "key": "level.s01_firstwatch.tagline",
+      "text": "Feed the colour that is coming"
+    },
+    {
+      "key": "level.s01_ironward.name",
+      "text": "The Ironward"
+    },
+    {
+      "key": "level.s01_ironward.tagline",
+      "text": "Match beside the cog to upgrade that turret"
+    },
+    {
+      "key": "level.s01_lastlight.name",
+      "text": "Last Light"
+    },
+    {
+      "key": "level.s01_lastlight.tagline",
+      "text": "The overlord comes for the grove"
+    },
+    {
+      "key": "level.s01_stonewatch.name",
+      "text": "Stonewatch"
+    },
+    {
+      "key": "level.s01_stonewatch.tagline",
+      "text": "Brutes take twice the killing"
+    },
+    {
+      "key": "level.s01_thornhollow.name",
+      "text": "Thornhollow"
+    },
+    {
+      "key": "level.s01_thornhollow.tagline",
+      "text": "One colour at a time, and the rest is waiting"
+    },
+    {
+      "key": "level.s01_thornsiege.name",
+      "text": "The Long Siege"
+    },
+    {
+      "key": "level.s01_thornsiege.tagline",
+      "text": "Sixteen brutes and no quiet"
+    },
+    {
+      "key": "level.s01_warlordsgate.name",
+      "text": "The Warlord's Gate"
+    },
+    {
+      "key": "level.s01_warlordsgate.tagline",
+      "text": "It stops halfway and throws from there"
+    },
+    {
+      "key": "level.s02_endless.name",
+      "text": "The Endless Watch"
+    },
+    {
+      "key": "level.s02_endless.tagline",
+      "text": "The waves never stop. Hold as long as you can."
+    },
+    {
+      "key": "level.s03_blightfen.name",
+      "text": "Blightfen"
+    },
+    {
+      "key": "level.s03_blightfen.tagline",
+      "text": "It puts a turret out, not down"
+    },
+    {
+      "key": "level.s03_broodheart.name",
+      "text": "Broodheart"
+    },
+    {
+      "key": "level.s03_broodheart.tagline",
+      "text": "It roars, and the whole line feels it"
+    },
+    {
+      "key": "level.s03_deepmire.name",
+      "text": "Deepmire"
+    },
+    {
+      "key": "level.s03_deepmire.tagline",
+      "text": "Four waves, and no colour may go dark"
+    },
+    {
+      "key": "level.s03_firstbrood.name",
+      "text": "First Brood"
+    },
+    {
+      "key": "level.s03_firstbrood.tagline",
+      "text": "A bigger hill, and the same four turrets"
+    },
+    {
+      "key": "level.s03_gloamfield.name",
+      "text": "Gloamfield"
+    },
+    {
+      "key": "level.s03_gloamfield.tagline",
+      "text": "Drop a charge where the armour is"
+    },
+    {
+      "key": "level.s03_hollowshell.name",
+      "text": "Hollowshell"
+    },
+    {
+      "key": "level.s03_hollowshell.tagline",
+      "text": "Armour in every wave now"
+    },
+    {
+      "key": "level.s03_mirewalk.name",
+      "text": "Mirewalk"
+    },
+    {
+      "key": "level.s03_mirewalk.tagline",
+      "text": "Keep a charge back for the wave"
+    },
+    {
+      "key": "level.s03_spinecrest.name",
+      "text": "Spinecrest"
+    },
+    {
+      "key": "level.s03_spinecrest.tagline",
+      "text": "Shells first, and the brutes right behind them"
+    },
+    {
+      "key": "level.s03_stillmire.name",
+      "text": "Stillmire"
+    },
+    {
+      "key": "level.s03_stillmire.tagline",
+      "text": "One colour at a time, and three wards idle"
+    },
+    {
+      "key": "level.s03_thornbrood.name",
+      "text": "Thornbrood"
+    },
+    {
+      "key": "level.s03_thornbrood.tagline",
+      "text": "Nothing to work out, everything to keep up with"
+    },
+    {
+      "key": "level.s04_barrowheart.name",
+      "text": "Barrowheart"
+    },
+    {
+      "key": "level.s04_barrowheart.tagline",
+      "text": "Kill it before it raises them all"
+    },
+    {
+      "key": "level.s04_boneyard.name",
+      "text": "Boneyard"
+    },
+    {
+      "key": "level.s04_boneyard.tagline",
+      "text": "Four waves, nothing clever, no let up"
+    },
+    {
+      "key": "level.s04_deadmarch.name",
+      "text": "Dead March"
+    },
+    {
+      "key": "level.s04_deadmarch.tagline",
+      "text": "One colour at a time, and each one shielded"
+    },
+    {
+      "key": "level.s04_firstbone.name",
+      "text": "First Bone"
+    },
+    {
+      "key": "level.s04_firstbone.tagline",
+      "text": "The dead walk, and they walk in fours"
+    },
+    {
+      "key": "level.s04_hollowgrave.name",
+      "text": "Hollow Grave"
+    },
+    {
+      "key": "level.s04_hollowgrave.tagline",
+      "text": "It eats what you leave lying there"
+    },
+    {
+      "key": "level.s04_lichgate.name",
+      "text": "Lichgate"
+    },
+    {
+      "key": "level.s04_lichgate.tagline",
+      "text": "Save a bomb for the armour"
+    },
+    {
+      "key": "level.s04_longbarrow.name",
+      "text": "Long Barrow"
+    },
+    {
+      "key": "level.s04_longbarrow.tagline",
+      "text": "No colour may go dark for a whole wave"
+    },
+    {
+      "key": "level.s04_palerow.name",
+      "text": "Pale Row"
+    },
+    {
+      "key": "level.s04_palerow.tagline",
+      "text": "Two shields a wave from here on"
+    },
+    {
+      "key": "level.s04_scytheway.name",
+      "text": "Scytheway"
+    },
+    {
+      "key": "level.s04_scytheway.tagline",
+      "text": "Three bombs, and when is the whole question"
+    },
+    {
+      "key": "level.s04_shieldwall.name",
+      "text": "Shieldwall"
+    },
+    {
+      "key": "level.s04_shieldwall.tagline",
+      "text": "Answer each shield in its own colour"
+    },
+    {
+      "key": "mode.cap.asleep",
+      "text": "still asleep"
+    },
+    {
       "key": "mode.cap.best",
       "text": "best chain"
+    },
+    {
+      "key": "mode.cap.chain",
+      "text": "best chain"
+    },
+    {
+      "key": "mode.cap.critters",
+      "text": "still shut in"
     },
     {
       "key": "mode.cap.height",
@@ -600,6 +928,22 @@
     {
       "key": "mode.cap.lives",
       "text": "lives"
+    },
+    {
+      "key": "mode.cap.matches",
+      "text": "matches"
+    },
+    {
+      "key": "mode.cap.motes",
+      "text": "motes left"
+    },
+    {
+      "key": "mode.cap.moves",
+      "text": "moves left"
+    },
+    {
+      "key": "mode.cap.raid",
+      "text": "left to clear"
     },
     {
       "key": "mode.cap.served",
@@ -618,32 +962,8 @@
       "text": "taps left"
     },
     {
-      "key": "mode.cap.motes",
-      "text": "motes left"
-    },
-    {
-      "key": "mode.cap.chain",
-      "text": "best chain"
-    },
-    {
-      "key": "mode.cap.critters",
-      "text": "still shut in"
-    },
-    {
-      "key": "mode.fall.name",
-      "text": "Lightfall"
-    },
-    {
-      "key": "mode.fall.tagline",
-      "text": "Cook the light. Empty the well."
-    },
-    {
-      "key": "mode.fall.supply",
-      "text": "LEFT"
-    },
-    {
-      "key": "mode.fall.supply_free",
-      "text": "free"
+      "key": "mode.cap.wave",
+      "text": "wave"
     },
     {
       "key": "mode.fall.chain_amazing",
@@ -666,12 +986,96 @@
       "text": "x{0}"
     },
     {
+      "key": "mode.fall.name",
+      "text": "Lightfall"
+    },
+    {
+      "key": "mode.fall.supply",
+      "text": "LEFT"
+    },
+    {
+      "key": "mode.fall.supply_free",
+      "text": "free"
+    },
+    {
+      "key": "mode.fall.tagline",
+      "text": "Cook the light. Empty the well."
+    },
+    {
       "key": "mode.glade.name",
       "text": "Glades"
     },
     {
       "key": "mode.glade.tagline",
       "text": "Turn the conduits until every critter wakes."
+    },
+    {
+      "key": "mode.prism.name",
+      "text": "Prismvale"
+    },
+    {
+      "key": "mode.prism.nodrag",
+      "text": "Lanterns and sleeping critters do not move — <b>gems</b> do. Drag one onto the gem beside it and the two trade places."
+    },
+    {
+      "key": "mode.prism.tagline",
+      "text": "Line the gems up. Let the light through."
+    },
+    {
+      "key": "mode.proto.moves_free",
+      "text": "free"
+    },
+    {
+      "key": "mode.siege.blightcaller",
+      "text": "THE BLIGHTCALLER"
+    },
+    {
+      "key": "mode.siege.bonecaller",
+      "text": "THE BONECALLER"
+    },
+    {
+      "key": "mode.siege.boss",
+      "text": "THE WARLORD"
+    },
+    {
+      "key": "mode.siege.chain",
+      "text": "CHAIN x{0}"
+    },
+    {
+      "key": "mode.siege.go",
+      "text": "GO!"
+    },
+    {
+      "key": "mode.siege.gravemaw",
+      "text": "THE GRAVEMAW"
+    },
+    {
+      "key": "mode.siege.name",
+      "text": "Thornwatch"
+    },
+    {
+      "key": "mode.siege.next",
+      "text": "NEXT WAVE"
+    },
+    {
+      "key": "mode.siege.nodrag",
+      "text": "Gems are dragged, not tapped — pull one onto the gem beside it. Line three of a colour up and that ward opens fire."
+    },
+    {
+      "key": "mode.siege.overlord",
+      "text": "THE OVERLORD"
+    },
+    {
+      "key": "mode.siege.tagline",
+      "text": "Feed the wards. Hold the line."
+    },
+    {
+      "key": "mode.siege.warbringer",
+      "text": "THE WARBRINGER"
+    },
+    {
+      "key": "mode.siege.wave",
+      "text": "WAVE {0} OF {1}"
     },
     {
       "key": "store.good.boost_day",
@@ -722,6 +1126,10 @@
       "text": "Coin Vault"
     },
     {
+      "key": "store.product.gg_first_bloom_pass",
+      "text": "First Bloom Pass"
+    },
+    {
       "key": "store.product.gg_gems_1",
       "text": "A Handful"
     },
@@ -756,6 +1164,150 @@
     {
       "key": "store.product.gg_heart_vessel_3",
       "text": "Heart Wellspring"
+    },
+    {
+      "key": "story.who.bolt",
+      "text": "BOLT"
+    },
+    {
+      "key": "story.who.collector",
+      "text": "THE COLLECTOR"
+    },
+    {
+      "key": "story.who.mon1",
+      "text": "BLOOP"
+    },
+    {
+      "key": "story.who.mon2",
+      "text": "FIG"
+    },
+    {
+      "key": "story.who.mon3",
+      "text": "RUMBLE"
+    },
+    {
+      "key": "task.d_bombs.name",
+      "text": "Set off {0} bombs"
+    },
+    {
+      "key": "task.d_bombs.name_one",
+      "text": "Set off a bomb"
+    },
+    {
+      "key": "task.d_charms.name",
+      "text": "Set off {0} charms"
+    },
+    {
+      "key": "task.d_cogs.name",
+      "text": "Collect {0} cogs"
+    },
+    {
+      "key": "task.d_matches.name",
+      "text": "Make {0} matches"
+    },
+    {
+      "key": "task.d_play.name",
+      "text": "Play {0} battles"
+    },
+    {
+      "key": "task.d_raiders.name",
+      "text": "Defeat {0} raiders"
+    },
+    {
+      "key": "task.d_stars.name",
+      "text": "Earn {0} stars"
+    },
+    {
+      "key": "task.d_three.name",
+      "text": "Win {0} battles with three stars"
+    },
+    {
+      "key": "task.d_three.name_one",
+      "text": "Win a battle with three stars"
+    },
+    {
+      "key": "task.d_utility.name",
+      "text": "Use {0} utilities"
+    },
+    {
+      "key": "task.d_utility.name_one",
+      "text": "Use a utility"
+    },
+    {
+      "key": "task.d_win.name",
+      "text": "Win {0} battles"
+    },
+    {
+      "key": "task.d_win.name_one",
+      "text": "Win a battle"
+    },
+    {
+      "key": "task.w_bosses.name",
+      "text": "Defeat {0} bosses"
+    },
+    {
+      "key": "task.w_charms.name",
+      "text": "Set off {0} charms"
+    },
+    {
+      "key": "task.w_cogs.name",
+      "text": "Collect {0} cogs"
+    },
+    {
+      "key": "task.w_play.name",
+      "text": "Play {0} battles"
+    },
+    {
+      "key": "task.w_raiders.name",
+      "text": "Defeat {0} raiders"
+    },
+    {
+      "key": "task.w_stars.name",
+      "text": "Earn {0} stars"
+    },
+    {
+      "key": "task.w_streak.name",
+      "text": "Collect {0} streak nights"
+    },
+    {
+      "key": "task.w_three.name",
+      "text": "Win {0} battles with three stars"
+    },
+    {
+      "key": "task.w_waves.name",
+      "text": "Hold the line through {0} waves"
+    },
+    {
+      "key": "task.w_win.name",
+      "text": "Win {0} battles"
+    },
+    {
+      "key": "track.infinite.name",
+      "text": "Infinite"
+    },
+    {
+      "key": "track.infinite.point1",
+      "text": "The fight never stops."
+    },
+    {
+      "key": "track.infinite.point2",
+      "text": "Enemies get harder every wave."
+    },
+    {
+      "key": "track.infinite.point3",
+      "text": "Earn your spot on the boards."
+    },
+    {
+      "key": "track.infinite.tagline",
+      "text": "the waves never stop — how far can you hold?"
+    },
+    {
+      "key": "track.main.name",
+      "text": "Normal"
+    },
+    {
+      "key": "track.main.tagline",
+      "text": "the chapters, one glade at a time"
     },
     {
       "key": "ui.account.adopt",
@@ -1222,6 +1774,38 @@
       "text": "Paid on top of what this glade earned."
     },
     {
+      "key": "ui.chest.always",
+      "text": "Always"
+    },
+    {
+      "key": "ui.chest.boost_on",
+      "text": "hearts return twice as fast for {0}"
+    },
+    {
+      "key": "ui.chest.collect",
+      "text": "COLLECT"
+    },
+    {
+      "key": "ui.chest.hearts_ceiling",
+      "text": "you already hold {0} hearts, so the extra ones could not fit"
+    },
+    {
+      "key": "ui.chest.needs_connection",
+      "text": "connect once to open your first chest"
+    },
+    {
+      "key": "ui.chest.odds",
+      "text": "bonus odds:"
+    },
+    {
+      "key": "ui.chest.one_of",
+      "text": "And one of"
+    },
+    {
+      "key": "ui.chest.rank",
+      "text": "Chest {0} of {1}"
+    },
+    {
       "key": "ui.coins.from_glades",
       "text": "Every glade you clear pays coins."
     },
@@ -1314,40 +1898,16 @@
       "text": "WAKE FOR {0}"
     },
     {
+      "key": "ui.continue.defeat",
+      "text": "DEFEAT"
+    },
+    {
       "key": "ui.continue.get_gems",
       "text": "Get gems"
     },
     {
       "key": "ui.continue.give_up",
       "text": "No thanks"
-    },
-    {
-      "key": "ui.continue.short",
-      "text": "You need {0} gems for this"
-    },
-    {
-      "key": "ui.continue.turns_title",
-      "text": "Out of turns"
-    },
-    {
-      "key": "ui.continue.turns_unit",
-      "text": "more turns"
-    },
-    {
-      "key": "ui.continue.title",
-      "text": "Carry on?"
-    },
-    {
-      "key": "ui.continue.taps_title",
-      "text": "Out of taps"
-    },
-    {
-      "key": "ui.continue.taps_unit",
-      "text": "more taps"
-    },
-    {
-      "key": "ui.continue.defeat",
-      "text": "DEFEAT"
     },
     {
       "key": "ui.continue.motes_title",
@@ -1358,64 +1918,68 @@
       "text": "more motes"
     },
     {
+      "key": "ui.continue.moves_title",
+      "text": "Out of moves"
+    },
+    {
+      "key": "ui.continue.moves_unit",
+      "text": "more moves"
+    },
+    {
       "key": "ui.continue.offer",
       "text": "You can get +{0} {1} and continue where you left off"
     },
     {
-      "key": "ui.daily.all_open",
-      "text": "every chest is open  ·  more tomorrow"
+      "key": "ui.continue.short",
+      "text": "You need {0} gems for this"
     },
     {
-      "key": "ui.daily.boost_on",
-      "text": "hearts return twice as fast for {0}"
+      "key": "ui.continue.taps_title",
+      "text": "Out of taps"
     },
     {
-      "key": "ui.daily.chest_title",
-      "text": "DAILY CHEST"
+      "key": "ui.continue.taps_unit",
+      "text": "more taps"
     },
     {
-      "key": "ui.daily.collect",
-      "text": "COLLECT"
+      "key": "ui.continue.title",
+      "text": "Carry on?"
     },
     {
-      "key": "ui.daily.hearts_ceiling",
-      "text": "you were already holding all {0} hearts"
+      "key": "ui.continue.turns_title",
+      "text": "Out of turns"
     },
     {
-      "key": "ui.daily.needs_connection",
-      "text": "go online once to unlock your daily bonuses"
+      "key": "ui.continue.turns_unit",
+      "text": "more turns"
     },
     {
-      "key": "ui.daily.next_chest",
-      "text": "play {0} more to earn the next chest"
+      "key": "ui.continue.wards_title",
+      "text": "The line has fallen"
     },
     {
-      "key": "ui.daily.odds",
-      "text": "bonus chances"
-    },
-    {
-      "key": "ui.daily.played",
-      "text": "{0} / {1} played"
-    },
-    {
-      "key": "ui.daily.ready",
-      "text": "a chest is waiting  ·  tap to open"
-    },
-    {
-      "key": "ui.daily.resets_in",
-      "text": "resets in {0}"
-    },
-    {
-      "key": "ui.defeat.buy_hearts",
-      "text": "+{0} hearts for {1} gems"
+      "key": "ui.continue.wards_unit",
+      "text": "wards, back at full strength,"
     },
     {
       "key": "ui.defeat.barren_title",
       "text": "NOTHING LEFT TO TAP"
     },
     {
+      "key": "ui.defeat.buy_hearts",
+      "text": "+{0} hearts for {1} gems"
+    },
+    {
       "key": "ui.defeat.conduit_title",
       "text": "IT GAVE WAY"
+    },
+    {
+      "key": "ui.defeat.flood_reason",
+      "text": "A mote came to rest above the line. A colour a stack already holds has nowhere to go but upward."
+    },
+    {
+      "key": "ui.defeat.flood_title",
+      "text": "THE WELL BRIMMED OVER"
     },
     {
       "key": "ui.defeat.free_glade",
@@ -1426,28 +1990,20 @@
       "text": "You have finished this level before, so replaying it is free — no heart, however it goes."
     },
     {
-      "key": "ui.defeat.flood_title",
-      "text": "THE WELL BRIMMED OVER"
-    },
-    {
-      "key": "ui.defeat.flood_reason",
-      "text": "A mote came to rest above the line. A colour a stack already holds has nowhere to go but upward."
-    },
-    {
       "key": "ui.defeat.get_gems",
       "text": "Get gems"
     },
     {
-      "key": "ui.defeat.moves_title",
-      "text": "OUT OF TURNS"
+      "key": "ui.defeat.motes_reason",
+      "text": "Nothing left to drop, and the well is not empty. Spend each mote where it finishes something."
     },
     {
       "key": "ui.defeat.motes_title",
       "text": "THE LIGHT RAN OUT"
     },
     {
-      "key": "ui.defeat.motes_reason",
-      "text": "Nothing left to drop, and the well is not empty. Spend each mote where it finishes something."
+      "key": "ui.defeat.moves_title",
+      "text": "OUT OF TURNS"
     },
     {
       "key": "ui.defeat.near_one",
@@ -1466,6 +2022,14 @@
       "text": "The light touched a thornstone and the glade went dark."
     },
     {
+      "key": "ui.defeat.stuck_title",
+      "text": "NOTHING LEFT TO DO"
+    },
+    {
+      "key": "ui.defeat.taps_title",
+      "text": "OUT OF TAPS"
+    },
+    {
       "key": "ui.defeat.time_title",
       "text": "Out of Time"
     },
@@ -1478,8 +2042,12 @@
       "text": "TRY AGAIN"
     },
     {
-      "key": "ui.defeat.taps_title",
-      "text": "OUT OF TAPS"
+      "key": "ui.defeat.wards_reason",
+      "text": "Every ward is down, so nothing a match feeds is still standing. Feed the colour that is furthest down the hill."
+    },
+    {
+      "key": "ui.defeat.wards_title",
+      "text": "THE LINE HAS FALLEN"
     },
     {
       "key": "ui.defeat.watch_for_hearts",
@@ -1548,6 +2116,30 @@
     {
       "key": "ui.delete.wrong_account",
       "text": "That is a different account. Nothing has been deleted."
+    },
+    {
+      "key": "ui.endless.battle",
+      "text": "BATTLE"
+    },
+    {
+      "key": "ui.endless.best",
+      "text": "Best wave {0}"
+    },
+    {
+      "key": "ui.endless.best_label",
+      "text": "Best wave"
+    },
+    {
+      "key": "ui.endless.reached",
+      "text": "You held to wave {0}."
+    },
+    {
+      "key": "ui.endless.unplayed",
+      "text": "No run yet"
+    },
+    {
+      "key": "ui.endless.wave",
+      "text": "Wave {0}"
     },
     {
       "key": "ui.event.all_taken",
@@ -1730,40 +2322,24 @@
       "text": "PLACE"
     },
     {
-      "key": "ui.grove.inventory",
-      "text": "INVENTORY"
-    },
-    {
-      "key": "ui.grove.loading_art",
-      "text": "Setting out your groove…"
-    },
-    {
-      "key": "ui.grove.take_away",
-      "text": "TAKE AWAY"
-    },
-    {
       "key": "ui.grove.fits_ground",
       "text": "Rocks, logs and odds and ends stand here. Have a look in the shop."
-    },
-    {
-      "key": "ui.grove.turn",
-      "text": "TURN"
-    },
-    {
-      "key": "ui.grove.town_hall",
-      "text": "TOWN HALL"
     },
     {
       "key": "ui.grove.home",
       "text": "your home"
     },
     {
+      "key": "ui.grove.home_best",
+      "text": "The finest home in the groove."
+    },
+    {
       "key": "ui.grove.home_hold",
       "text": "Hold to move or turn it."
     },
     {
-      "key": "ui.grove.home_best",
-      "text": "The finest home in the groove."
+      "key": "ui.grove.home_locked",
+      "text": "Next: {0}  ·  keeper level {1}"
     },
     {
       "key": "ui.grove.home_moved",
@@ -1778,8 +2354,16 @@
       "text": "Next: {0}  ·  {1} coins to go"
     },
     {
+      "key": "ui.grove.inventory",
+      "text": "INVENTORY"
+    },
+    {
       "key": "ui.grove.loading",
       "text": "Waking your groove…"
+    },
+    {
+      "key": "ui.grove.loading_art",
+      "text": "Setting out your groove…"
     },
     {
       "key": "ui.grove.move",
@@ -1788,10 +2372,6 @@
     {
       "key": "ui.grove.move_hint",
       "text": "Hold MOVE and drag it to another tile."
-    },
-    {
-      "key": "ui.grove.no_room",
-      "text": "There's no room for that here."
     },
     {
       "key": "ui.grove.needs_chapter",
@@ -1804,6 +2384,10 @@
     {
       "key": "ui.grove.needs_level",
       "text": "Reach keeper level {0}"
+    },
+    {
+      "key": "ui.grove.no_room",
+      "text": "There's no room for that here."
     },
     {
       "key": "ui.grove.not_for_sale",
@@ -1882,8 +2466,20 @@
       "text": "{0} placed · {1} tiles · {2} kinds"
     },
     {
+      "key": "ui.grove.take_away",
+      "text": "TAKE AWAY"
+    },
+    {
       "key": "ui.grove.title",
       "text": "groovement"
+    },
+    {
+      "key": "ui.grove.town_hall",
+      "text": "TOWN HALL"
+    },
+    {
+      "key": "ui.grove.turn",
+      "text": "TURN"
     },
     {
       "key": "ui.grove.unavailable",
@@ -1974,10 +2570,6 @@
       "text": "unlocks at rank {0}"
     },
     {
-      "key": "ui.home.bonuses",
-      "text": "DAILY BONUSES"
-    },
-    {
       "key": "ui.home.event_waiting",
       "text": "tap to collect"
     },
@@ -2022,10 +2614,6 @@
       "text": "tap to collect"
     },
     {
-      "key": "ui.howto.purple",
-      "text": "purple"
-    },
-    {
       "key": "ui.howto.blue",
       "text": "blue"
     },
@@ -2052,6 +2640,10 @@
     {
       "key": "ui.howto.line6",
       "text": "Spend coins on your grove: land, homes, decor and friends."
+    },
+    {
+      "key": "ui.howto.purple",
+      "text": "purple"
     },
     {
       "key": "ui.howto.red",
@@ -2270,6 +2862,98 @@
       "text": "CHOOSE A GLADE"
     },
     {
+      "key": "ui.loadout.chest_only",
+      "text": "From chests"
+    },
+    {
+      "key": "ui.loadout.held",
+      "text": "{0} of {1} on this colour"
+    },
+    {
+      "key": "ui.loadout.held_one",
+      "text": "Already standing on this colour."
+    },
+    {
+      "key": "ui.loadout.items",
+      "text": "Kit"
+    },
+    {
+      "key": "ui.loadout.items_note",
+      "text": "Carried into every siege. Chests drop them; gems buy them."
+    },
+    {
+      "key": "ui.loadout.joined",
+      "text": "joined your line"
+    },
+    {
+      "key": "ui.loadout.level",
+      "text": "Level {0}"
+    },
+    {
+      "key": "ui.loadout.level_note",
+      "text": "Reach keeper level {0} to buy this."
+    },
+    {
+      "key": "ui.loadout.locked",
+      "text": "Not for sale"
+    },
+    {
+      "key": "ui.loadout.seat_at",
+      "text": "LOCKED"
+    },
+    {
+      "key": "ui.loadout.seat_shut",
+      "text": "Clear {0} more Thornwatch level(s) to arrange this turret."
+    },
+    {
+      "key": "ui.loadout.stand",
+      "text": "Equip"
+    },
+    {
+      "key": "ui.loadout.standing",
+      "text": "Equipped"
+    },
+    {
+      "key": "ui.loadout.tier1",
+      "text": "TIER I"
+    },
+    {
+      "key": "ui.loadout.tier2",
+      "text": "TIER II"
+    },
+    {
+      "key": "ui.loadout.tier3",
+      "text": "TIER III"
+    },
+    {
+      "key": "ui.loadout.title",
+      "text": "Loadout"
+    },
+    {
+      "key": "ui.loadout.upgrade",
+      "text": "UPGRADE"
+    },
+    {
+      "key": "ui.loadout.upgrade_done",
+      "text": "STRONGER!"
+    },
+    {
+      "key": "ui.loadout.upgrade_note",
+      "text": "Upgrade to {0} stars"
+    },
+    {
+      "key": "ui.loadout.upgrade_to",
+      "text": "Upgrade to {0} stars"
+    },
+    {
+      "key": "ui.loadout.upgrade_top",
+      "text": "Fully upgraded."
+    },
+    {
+      "key": "ui.loadout.wards",
+      "text": "Turrets"
+    },
+    {
       "key": "ui.nav.grovement",
       "text": "groovement"
     },
@@ -2298,6 +2982,138 @@
       "text": "K"
     },
     {
+      "key": "ui.ok.done",
+      "text": "DONE"
+    },
+    {
+      "key": "ui.pass.buy",
+      "text": "Unlock • {0}"
+    },
+    {
+      "key": "ui.pass.cache",
+      "text": "MILESTONE CACHE"
+    },
+    {
+      "key": "ui.pass.claim",
+      "text": "TAP TO COLLECT"
+    },
+    {
+      "key": "ui.pass.claim_all",
+      "text": "Collect all"
+    },
+    {
+      "key": "ui.pass.claimed",
+      "text": "COLLECTED"
+    },
+    {
+      "key": "ui.pass.claiming",
+      "text": "Collecting…"
+    },
+    {
+      "key": "ui.pass.closed_hint",
+      "text": "Season ended. Earned rewards remain yours to collect."
+    },
+    {
+      "key": "ui.pass.coins",
+      "text": "GROVE COINS"
+    },
+    {
+      "key": "ui.pass.collected",
+      "text": "Rewards collected!"
+    },
+    {
+      "key": "ui.pass.connecting",
+      "text": "Connecting…"
+    },
+    {
+      "key": "ui.pass.eyebrow",
+      "text": "GROVE ADVENTURES"
+    },
+    {
+      "key": "ui.pass.free",
+      "text": "FREE TRAIL"
+    },
+    {
+      "key": "ui.pass.gems",
+      "text": "GEM CACHE"
+    },
+    {
+      "key": "ui.pass.hero_detail",
+      "text": "{0} tiers • One shared adventure"
+    },
+    {
+      "key": "ui.pass.hero_kicker",
+      "text": "A LITTLE PLAY. A LOT TO DISCOVER."
+    },
+    {
+      "key": "ui.pass.hero_title",
+      "text": "Let your rewards blossom"
+    },
+    {
+      "key": "ui.pass.keep_playing",
+      "text": "KEEP EXPLORING"
+    },
+    {
+      "key": "ui.pass.no_glades",
+      "text": "No new event glades are available right now."
+    },
+    {
+      "key": "ui.pass.online",
+      "text": "Connect to check your pass and current store price."
+    },
+    {
+      "key": "ui.pass.owned_hint",
+      "text": "Your premium trail is open. Play to earn both rewards."
+    },
+    {
+      "key": "ui.pass.pair",
+      "text": "{0} coins\n{1} gems"
+    },
+    {
+      "key": "ui.pass.pass_required",
+      "text": "BLOOM PASS REQUIRED"
+    },
+    {
+      "key": "ui.pass.premium",
+      "text": "BLOOM PASS"
+    },
+    {
+      "key": "ui.pass.progress",
+      "text": "{0} / {1} glades • First clears grow your trail"
+    },
+    {
+      "key": "ui.pass.purchase_hint",
+      "text": "One purchase. No subscription. Includes earlier earned tiers."
+    },
+    {
+      "key": "ui.pass.restore",
+      "text": "Restore purchases"
+    },
+    {
+      "key": "ui.pass.restoring",
+      "text": "Checking your store purchases…"
+    },
+    {
+      "key": "ui.pass.retry",
+      "text": "Could not collect yet. Reconnect and try again."
+    },
+    {
+      "key": "ui.pass.time",
+      "text": "SEASON ENDS IN {0}d {1}h"
+    },
+    {
+      "key": "ui.pass.unlocked",
+      "text": "Pass unlocked"
+    },
+    {
+      "key": "ui.pass.up_to_date",
+      "text": "Your premium rewards are up to date."
+    },
+    {
+      "key": "ui.pass.upgrade",
+      "text": "Unlock Bloom Pass"
+    },
+    {
       "key": "ui.pause.glades",
       "text": "LEVELS"
     },
@@ -2316,6 +3132,350 @@
     {
       "key": "ui.pause.title",
       "text": "PAUSED"
+    },
+    {
+      "key": "ui.piece.archery",
+      "text": "Archery Range"
+    },
+    {
+      "key": "ui.piece.barrel",
+      "text": "Barrel"
+    },
+    {
+      "key": "ui.piece.boulder",
+      "text": "Boulder"
+    },
+    {
+      "key": "ui.piece.bridge_span",
+      "text": "Arched Bridge"
+    },
+    {
+      "key": "ui.piece.bridge_stone",
+      "text": "Stone Bridge"
+    },
+    {
+      "key": "ui.piece.bucket",
+      "text": "Bucket"
+    },
+    {
+      "key": "ui.piece.bucket_water",
+      "text": "Water Bucket"
+    },
+    {
+      "key": "ui.piece.catapult",
+      "text": "Catapult Tower"
+    },
+    {
+      "key": "ui.piece.cattails",
+      "text": "Cattails"
+    },
+    {
+      "key": "ui.piece.chest_big",
+      "text": "Banded Crate"
+    },
+    {
+      "key": "ui.piece.chest_small",
+      "text": "Banded Box"
+    },
+    {
+      "key": "ui.piece.church",
+      "text": "Chapel"
+    },
+    {
+      "key": "ui.piece.clearing_fir",
+      "text": "Fir Clearing"
+    },
+    {
+      "key": "ui.piece.clearing_pine",
+      "text": "Pine Clearing"
+    },
+    {
+      "key": "ui.piece.crag",
+      "text": "Crag"
+    },
+    {
+      "key": "ui.piece.crate_big",
+      "text": "Big Crate"
+    },
+    {
+      "key": "ui.piece.crate_bread",
+      "text": "Baker's Crate"
+    },
+    {
+      "key": "ui.piece.crate_empty",
+      "text": "Empty Crate"
+    },
+    {
+      "key": "ui.piece.crate_open",
+      "text": "Open Crate"
+    },
+    {
+      "key": "ui.piece.crate_produce",
+      "text": "Crate of Produce"
+    },
+    {
+      "key": "ui.piece.crate_small",
+      "text": "Small Crate"
+    },
+    {
+      "key": "ui.piece.crate_wares",
+      "text": "Crate of Wares"
+    },
+    {
+      "key": "ui.piece.fieldstone",
+      "text": "Field Stone"
+    },
+    {
+      "key": "ui.piece.fir",
+      "text": "Fir"
+    },
+    {
+      "key": "ui.piece.fir_copse",
+      "text": "Fir Copse"
+    },
+    {
+      "key": "ui.piece.fir_stand",
+      "text": "Fir Stand"
+    },
+    {
+      "key": "ui.piece.fir_stump",
+      "text": "Fir Stump"
+    },
+    {
+      "key": "ui.piece.fir_wood",
+      "text": "Fir Wood"
+    },
+    {
+      "key": "ui.piece.grain_sack",
+      "text": "Grain Sack"
+    },
+    {
+      "key": "ui.piece.home_barracks",
+      "text": "Barracks"
+    },
+    {
+      "key": "ui.piece.home_citadel",
+      "text": "Citadel"
+    },
+    {
+      "key": "ui.piece.home_cottage",
+      "text": "Cottage"
+    },
+    {
+      "key": "ui.piece.home_farmhouse",
+      "text": "Farmhouse"
+    },
+    {
+      "key": "ui.piece.house_large_green",
+      "text": "Green Farmhouse"
+    },
+    {
+      "key": "ui.piece.house_large_red",
+      "text": "Red Farmhouse"
+    },
+    {
+      "key": "ui.piece.house_large_yellow",
+      "text": "Gold Farmhouse"
+    },
+    {
+      "key": "ui.piece.house_small_green",
+      "text": "Green Cottage"
+    },
+    {
+      "key": "ui.piece.house_small_red",
+      "text": "Red Cottage"
+    },
+    {
+      "key": "ui.piece.house_small_yellow",
+      "text": "Gold Cottage"
+    },
+    {
+      "key": "ui.piece.lily_broad",
+      "text": "Broad Lily"
+    },
+    {
+      "key": "ui.piece.lily_split",
+      "text": "Split Lily"
+    },
+    {
+      "key": "ui.piece.lumber_pile",
+      "text": "Lumber Pile"
+    },
+    {
+      "key": "ui.piece.market",
+      "text": "Market Stalls"
+    },
+    {
+      "key": "ui.piece.market_table",
+      "text": "Market Table"
+    },
+    {
+      "key": "ui.piece.mine",
+      "text": "Mine Head"
+    },
+    {
+      "key": "ui.piece.pallet",
+      "text": "Pallet"
+    },
+    {
+      "key": "ui.piece.pennant_blue",
+      "text": "Blue Banner"
+    },
+    {
+      "key": "ui.piece.pennant_gold",
+      "text": "Gold Banner"
+    },
+    {
+      "key": "ui.piece.pennant_green",
+      "text": "Green Banner"
+    },
+    {
+      "key": "ui.piece.pennant_red",
+      "text": "Red Banner"
+    },
+    {
+      "key": "ui.piece.pine_copse",
+      "text": "Pine Copse"
+    },
+    {
+      "key": "ui.piece.pine_stand",
+      "text": "Pine Stand"
+    },
+    {
+      "key": "ui.piece.pine_stump",
+      "text": "Pine Stump"
+    },
+    {
+      "key": "ui.piece.pine_tree",
+      "text": "Pine"
+    },
+    {
+      "key": "ui.piece.pine_wood",
+      "text": "Pine Wood"
+    },
+    {
+      "key": "ui.piece.quiver",
+      "text": "Arrow Bucket"
+    },
+    {
+      "key": "ui.piece.reeds",
+      "text": "Reeds"
+    },
+    {
+      "key": "ui.piece.ruin",
+      "text": "Ruined House"
+    },
+    {
+      "key": "ui.piece.rush",
+      "text": "Rush"
+    },
+    {
+      "key": "ui.piece.sawmill",
+      "text": "Sawmill"
+    },
+    {
+      "key": "ui.piece.scaffold",
+      "text": "Scaffolding"
+    },
+    {
+      "key": "ui.piece.smithy",
+      "text": "Smithy"
+    },
+    {
+      "key": "ui.piece.stage_long",
+      "text": "Long Stage"
+    },
+    {
+      "key": "ui.piece.stage_round",
+      "text": "Round Stage"
+    },
+    {
+      "key": "ui.piece.stage_tiered",
+      "text": "Tiered Stage"
+    },
+    {
+      "key": "ui.piece.step_ladder",
+      "text": "Ladder"
+    },
+    {
+      "key": "ui.piece.stone_pile",
+      "text": "Stone Pile"
+    },
+    {
+      "key": "ui.piece.stone_slab",
+      "text": "Stone Slab"
+    },
+    {
+      "key": "ui.piece.target",
+      "text": "Archery Butt"
+    },
+    {
+      "key": "ui.piece.tavern",
+      "text": "Tavern"
+    },
+    {
+      "key": "ui.piece.tower_round",
+      "text": "Round Tower"
+    },
+    {
+      "key": "ui.piece.tower_stone",
+      "text": "Stone Tower"
+    },
+    {
+      "key": "ui.piece.twin_stones",
+      "text": "Twin Stones"
+    },
+    {
+      "key": "ui.piece.village_well",
+      "text": "Stone Well"
+    },
+    {
+      "key": "ui.piece.wall",
+      "text": "Curtain Wall"
+    },
+    {
+      "key": "ui.piece.wall_barbican",
+      "text": "Barbican"
+    },
+    {
+      "key": "ui.piece.wall_bend",
+      "text": "Wall Bend"
+    },
+    {
+      "key": "ui.piece.wall_corner",
+      "text": "Wall Corner"
+    },
+    {
+      "key": "ui.piece.wall_elbow",
+      "text": "Wall Elbow"
+    },
+    {
+      "key": "ui.piece.wall_gate",
+      "text": "Wall Gate"
+    },
+    {
+      "key": "ui.piece.wall_turn",
+      "text": "Wall Turn"
+    },
+    {
+      "key": "ui.piece.watchtower",
+      "text": "Watchtower"
+    },
+    {
+      "key": "ui.piece.watermill",
+      "text": "Watermill"
+    },
+    {
+      "key": "ui.piece.weapon_rack",
+      "text": "Weapon Rack"
+    },
+    {
+      "key": "ui.piece.wheelbarrow",
+      "text": "Wheelbarrow"
+    },
+    {
+      "key": "ui.piece.windmill",
+      "text": "Windmill"
     },
     {
       "key": "ui.play.hint_none",
@@ -2498,6 +3658,22 @@
       "text": "every keeper level earned"
     },
     {
+      "key": "ui.rank.motes",
+      "text": "{0} motes"
+    },
+    {
+      "key": "ui.rank.motes_one",
+      "text": "{0} mote"
+    },
+    {
+      "key": "ui.rank.moves",
+      "text": "{0} moves"
+    },
+    {
+      "key": "ui.rank.moves_one",
+      "text": "{0} move"
+    },
+    {
       "key": "ui.rank.points",
       "text": "{0} points"
     },
@@ -2524,14 +3700,6 @@
     {
       "key": "ui.rank.top50",
       "text": "You are in the top 50%"
-    },
-    {
-      "key": "ui.rank.motes",
-      "text": "{0} motes"
-    },
-    {
-      "key": "ui.rank.motes_one",
-      "text": "{0} mote"
     },
     {
       "key": "ui.reward.credits",
@@ -2578,12 +3746,12 @@
       "text": "a turn shorter than the groove knew"
     },
     {
-      "key": "ui.settings.buzz",
-      "text": "buzz"
+      "key": "ui.run.level",
+      "text": "LEVEL {0}"
     },
     {
-      "key": "ui.settings.credit",
-      "text": "art & audio by CraftPix · shop art designed by Freepik"
+      "key": "ui.settings.buzz",
+      "text": "buzz"
     },
     {
       "key": "ui.settings.music",
@@ -2619,7 +3787,7 @@
     },
     {
       "key": "ui.settings.version",
-      "text": "Glimmer Groove  v{0}"
+      "text": "Gemfire  v{0}"
     },
     {
       "key": "ui.shelf.bed",
@@ -2664,6 +3832,18 @@
     {
       "key": "ui.shop.already_owned",
       "text": "You already have this one"
+    },
+    {
+      "key": "ui.shop.arriving",
+      "text": "Arriving"
+    },
+    {
+      "key": "ui.shop.arriving_many",
+      "text": "{0} purchases"
+    },
+    {
+      "key": "ui.shop.arriving_note",
+      "text": "Paid for. It is being delivered now."
     },
     {
       "key": "ui.shop.awaiting",
@@ -2727,7 +3907,7 @@
     },
     {
       "key": "ui.shop.capacity_upgrade",
-      "text": "{0} → {1} hearts"
+      "text": "{0} to {1} hearts"
     },
     {
       "key": "ui.shop.coins",
@@ -2790,6 +3970,10 @@
       "text": "Not enough gems yet"
     },
     {
+      "key": "ui.shop.no_coins",
+      "text": "Not enough credits"
+    },
+    {
       "key": "ui.shop.offline",
       "text": "The store cannot be reached right now"
     },
@@ -2822,26 +4006,6 @@
       "text": "Checking for anything not yet delivered..."
     },
     {
-      "key": "ui.shop.tab_gems",
-      "text": "Gems"
-    },
-    {
-      "key": "ui.shop.tab_coins",
-      "text": "Coins"
-    },
-    {
-      "key": "ui.shop.tab_bundles",
-      "text": "Bundles"
-    },
-    {
-      "key": "ui.shop.tab_supplies",
-      "text": "Supplies"
-    },
-    {
-      "key": "ui.shop.tab_utilities",
-      "text": "Kit"
-    },
-    {
       "key": "ui.shop.shelf_bundles",
       "text": "Everything at once, for less than the parts"
     },
@@ -2854,20 +4018,40 @@
       "text": "Gems buy hearts, boosts and time"
     },
     {
+      "key": "ui.shop.shelf_supplies",
+      "text": "Hearts, faster hearts, and a bigger limit"
+    },
+    {
       "key": "ui.shop.shelf_utilities",
       "text": "Firepots, mendings and surges for the raid"
     },
     {
-      "key": "ui.shop.utility_held",
-      "text": "Carrying {0} of {1}"
+      "key": "ui.shop.short_coins",
+      "text": "{0} more credits needed"
     },
     {
-      "key": "ui.shop.utility_full",
-      "text": "PACK FULL"
+      "key": "ui.shop.short_gems",
+      "text": "{0} more gems needed"
     },
     {
-      "key": "ui.shop.shelf_supplies",
-      "text": "Hearts, faster hearts, and a bigger limit"
+      "key": "ui.shop.tab_bundles",
+      "text": "Bundles"
+    },
+    {
+      "key": "ui.shop.tab_coins",
+      "text": "Coins"
+    },
+    {
+      "key": "ui.shop.tab_gems",
+      "text": "Gems"
+    },
+    {
+      "key": "ui.shop.tab_supplies",
+      "text": "Supplies"
+    },
+    {
+      "key": "ui.shop.tab_utilities",
+      "text": "Kit"
     },
     {
       "key": "ui.shop.thanks",
@@ -2880,6 +4064,14 @@
     {
       "key": "ui.shop.unknown_product",
       "text": "This offer is not available in your store"
+    },
+    {
+      "key": "ui.shop.utility_full",
+      "text": "PACK FULL"
+    },
+    {
+      "key": "ui.shop.utility_held",
+      "text": "Carrying {0} of {1}"
     },
     {
       "key": "ui.soon.ranks",
@@ -3014,6 +4206,70 @@
       "text": "a night is waiting — tap it to collect"
     },
     {
+      "key": "ui.tasks.claimed",
+      "text": "chest opened  ·  next time"
+    },
+    {
+      "key": "ui.tasks.daily",
+      "text": "Daily tasks"
+    },
+    {
+      "key": "ui.tasks.fraction",
+      "text": "{0} / {1}"
+    },
+    {
+      "key": "ui.tasks.ladder_hint",
+      "text": "Tap a chest to see what it holds"
+    },
+    {
+      "key": "ui.tasks.info_chest_body",
+      "text": "There are {0} kinds of chest, and the harder the task the better the chest. Tap a chest on the shelf to see what it always holds and what it might. Chests are earned by playing and can never be bought."
+    },
+    {
+      "key": "ui.tasks.info_chest_title",
+      "text": "Chests"
+    },
+    {
+      "key": "ui.tasks.info_reset_body",
+      "text": "Daily tasks change every day at midnight. Weekly tasks change every Monday. A chest you have not opened is gone when its tasks change, so open them while they shine."
+    },
+    {
+      "key": "ui.tasks.info_reset_title",
+      "text": "New tasks"
+    },
+    {
+      "key": "ui.tasks.info_tasks_body",
+      "text": "Every day you get {0} tasks and every week you get {1}. Play the game and the bars fill up on their own. Finish one and tap it to open its chest."
+    },
+    {
+      "key": "ui.tasks.info_tasks_title",
+      "text": "Tasks"
+    },
+    {
+      "key": "ui.tasks.info_title",
+      "text": "TASKS"
+    },
+    {
+      "key": "ui.tasks.resets_in",
+      "text": "resets in {0}"
+    },
+    {
+      "key": "ui.tasks.subtitle",
+      "text": "Finish a task, open its chest. New tasks every day and every week."
+    },
+    {
+      "key": "ui.tasks.tap_to_claim",
+      "text": "tap to open your chest"
+    },
+    {
+      "key": "ui.tasks.title",
+      "text": "Tasks & Bonuses"
+    },
+    {
+      "key": "ui.tasks.weekly",
+      "text": "Weekly tasks"
+    },
+    {
       "key": "ui.time.adds",
       "text": "Adds {0} seconds to this glade's clock."
     },
@@ -3070,52 +4326,52 @@
       "text": "DUSKCAP"
     },
     {
-      "key": "ui.tip.fragile.body",
-      "text": "This tile breaks after a few turns. The number shows how many are left.\n\nUndo does not fix it."
-    },
-    {
-      "key": "ui.tip.fragile.title",
-      "text": "BRITTLE TILE"
-    },
-    {
-      "key": "ui.tip.fall_cook.title",
-      "text": "MIX, DO NOT MATCH"
-    },
-    {
-      "key": "ui.tip.fall_cook.body",
-      "text": "Drop a colour onto a mote to mix them. Red on yellow makes orange.\n\nA mote with all three colours bursts and shares its colour with its neighbours."
-    },
-    {
-      "key": "ui.tip.fall_supply.title",
-      "text": "COUNT YOUR MOTES"
-    },
-    {
-      "key": "ui.tip.fall_supply.body",
-      "text": "You only get this many motes. There is no undo.\n\nLook at the ring under your finger before you let go."
+      "key": "ui.tip.fall_brim.body",
+      "text": "A mote that stops above the line ends the run.\n\nThe ring turns red when a drop would go too high."
     },
     {
       "key": "ui.tip.fall_brim.title",
       "text": "MIND THE LINE"
     },
     {
-      "key": "ui.tip.fall_brim.body",
-      "text": "A mote that stops above the line ends the run.\n\nThe ring turns red when a drop would go too high."
+      "key": "ui.tip.fall_cook.body",
+      "text": "Drop a colour onto a mote to mix them. Red on yellow makes orange.\n\nA mote with all three colours bursts and shares its colour with its neighbours."
     },
     {
-      "key": "ui.tip.fall_lens.title",
-      "text": "FILL THE GLASS"
+      "key": "ui.tip.fall_cook.title",
+      "text": "MIX, DO NOT MATCH"
     },
     {
       "key": "ui.tip.fall_lens.body",
       "text": "The glass fills with colour from bursts next to it, or from a mote dropped on it.\n\nFill all three colours and it shoots light left and right. Hit it with another lens and it shoots every way!"
     },
     {
-      "key": "ui.tip.fall_whorl.title",
-      "text": "OPEN THE WHORL"
+      "key": "ui.tip.fall_lens.title",
+      "text": "FILL THE GLASS"
+    },
+    {
+      "key": "ui.tip.fall_supply.body",
+      "text": "You only get this many motes. There is no undo.\n\nLook at the ring under your finger before you let go."
+    },
+    {
+      "key": "ui.tip.fall_supply.title",
+      "text": "COUNT YOUR MOTES"
     },
     {
       "key": "ui.tip.fall_whorl.body",
       "text": "Any light opens the whorl. It then pulls in the two motes beside it and mixes them into one.\n\nPut the right pair beside it first, then open it."
+    },
+    {
+      "key": "ui.tip.fall_whorl.title",
+      "text": "OPEN THE WHORL"
+    },
+    {
+      "key": "ui.tip.fragile.body",
+      "text": "This tile breaks after a few turns. The number shows how many are left.\n\nUndo does not fix it."
+    },
+    {
+      "key": "ui.tip.fragile.title",
+      "text": "BRITTLE TILE"
     },
     {
       "key": "ui.tip.grove.body",
@@ -3134,12 +4390,52 @@
       "text": "THE SHOP"
     },
     {
+      "key": "ui.tip.loadout_kit.body",
+      "text": "Tap here to see your kit.\n\nIt helps you when a battle gets hard."
+    },
+    {
+      "key": "ui.tip.loadout_kit.title",
+      "text": "YOUR KIT"
+    },
+    {
+      "key": "ui.tip.loadout_seats.body",
+      "text": "Tap a colour, then pick its turret.\n\nYou buy each colour on its own."
+    },
+    {
+      "key": "ui.tip.loadout_seats.title",
+      "text": "PICK YOUR TURRETS"
+    },
+    {
       "key": "ui.tip.lucky_spin.body",
       "text": "This button spins a wheel of fortune for extra coins on top of what the glade paid. Spinning costs nothing and every slice is equally likely - the best one is worth five times the rest. It is here after every glade you earn coins on."
     },
     {
       "key": "ui.tip.lucky_spin.title",
       "text": "FEELING LUCKY?"
+    },
+    {
+      "key": "ui.tip.map_gate.body",
+      "text": "Collect {0} stars here to open the next chapter."
+    },
+    {
+      "key": "ui.tip.map_gate.title",
+      "text": "OPEN THE NEXT CHAPTER"
+    },
+    {
+      "key": "ui.tip.map_kit.body",
+      "text": "This is what you take into a level.\n\nTap it to pick your turrets and kit."
+    },
+    {
+      "key": "ui.tip.map_kit.title",
+      "text": "YOUR LOADOUT"
+    },
+    {
+      "key": "ui.tip.map_track.body",
+      "text": "Tap here to play {0}.\n\nThe waves never stop."
+    },
+    {
+      "key": "ui.tip.map_track.title",
+      "text": "PLAY FOREVER"
     },
     {
       "key": "ui.tip.mixing.body",
@@ -3166,12 +4462,92 @@
       "text": "TURNS"
     },
     {
+      "key": "ui.tip.prism_drag.body",
+      "text": "Drag a gem onto the one next to it and the two <b>trade places</b>.\n\nA lantern lights only the gems of <b>its own colour</b> that are touching it — and that colour runs on through every matching gem beside them. Line one up all the way to a sleeping critter and it wakes."
+    },
+    {
+      "key": "ui.tip.prism_drag.title",
+      "text": "DRAG A GEM"
+    },
+    {
+      "key": "ui.tip.prism_vein.body",
+      "text": "Nothing is ever used up here. Gems do not burst and do not fall — the board you are dealt is the board you finish on.\n\nSo the light is not stored: it is wherever the matching gems happen to be <b>right now</b>. Pull a gem out of a lit line and that line goes out again."
+    },
+    {
+      "key": "ui.tip.prism_vein.title",
+      "text": "LIGHT FOLLOWS THE GEMS"
+    },
+    {
+      "key": "ui.tip.proto_moves.body",
+      "text": "This board gives you a set number of moves, and nothing here can be taken back.\n\nLook before you tap."
+    },
+    {
+      "key": "ui.tip.proto_moves.title",
+      "text": "EVERY MOVE IS FOR KEEPS"
+    },
+    {
       "key": "ui.tip.rooted.body",
       "text": "This tile cannot turn. Build the path around it."
     },
     {
       "key": "ui.tip.rooted.title",
       "text": "ROOTED"
+    },
+    {
+      "key": "ui.tip.siege_bomber.body",
+      "text": "A bomber left this when it died.\n\nTap it and everything near it blows up."
+    },
+    {
+      "key": "ui.tip.siege_bomber.title",
+      "text": "TAP THE BOMB"
+    },
+    {
+      "key": "ui.tip.siege_brim.body",
+      "text": "This turret is full.\n\nTap the bolt on it to throw the whole lot at once. It hits any colour."
+    },
+    {
+      "key": "ui.tip.siege_brim.title",
+      "text": "TAP A FULL TURRET"
+    },
+    {
+      "key": "ui.tip.siege_fuel.body",
+      "text": "Match three gems of a colour and that colour's turret opens fire.\n\nIt goes for raiders of its own colour, so match the colour that is coming."
+    },
+    {
+      "key": "ui.tip.siege_fuel.title",
+      "text": "TURRETS SHOOT THEIR OWN COLOUR"
+    },
+    {
+      "key": "ui.tip.siege_lance.body",
+      "text": "Match this one and it takes its whole row and its whole column with it.\n\nEvery gem it clears still feeds its own turret — so spring it where the colours you want are lined up."
+    },
+    {
+      "key": "ui.tip.siege_lance.title",
+      "text": "THE LANCE"
+    },
+    {
+      "key": "ui.tip.siege_prism.body",
+      "text": "A rainbow gem has no colour of its own.\n\nMatch it with any three and it counts as that colour — so you choose which turret gets fed."
+    },
+    {
+      "key": "ui.tip.siege_prism.title",
+      "text": "THE PRISM"
+    },
+    {
+      "key": "ui.tip.siege_salvage.body",
+      "text": "A raider dropped this.\n\nTap it and the turret of that colour gets stronger. Be quick!"
+    },
+    {
+      "key": "ui.tip.siege_salvage.title",
+      "text": "TAP THE COG"
+    },
+    {
+      "key": "ui.tip.siege_storm.body",
+      "text": "Match this one and your whole line fires at everything on the hill at once — twice at whatever wears its colour.\n\nIt is worth what is standing there, so wait for a crowd."
+    },
+    {
+      "key": "ui.tip.siege_storm.title",
+      "text": "THE STORMGLASS"
     },
     {
       "key": "ui.title.elder",
@@ -3192,6 +4568,50 @@
     {
       "key": "ui.title.warden",
       "text": "Lightwarden"
+    },
+    {
+      "key": "ui.utility.bought",
+      "text": "In your pack."
+    },
+    {
+      "key": "ui.utility.buy",
+      "text": "BUY  {0}"
+    },
+    {
+      "key": "ui.utility.chest_only",
+      "text": "This one comes out of daily chests."
+    },
+    {
+      "key": "ui.utility.full",
+      "text": "You are carrying all {0} you can."
+    },
+    {
+      "key": "ui.utility.get_gems",
+      "text": "GET GEMS"
+    },
+    {
+      "key": "ui.utility.holding",
+      "text": "You are carrying {0} of {1}."
+    },
+    {
+      "key": "ui.utility.no_gems",
+      "text": "Not enough gems for more."
+    },
+    {
+      "key": "ui.utility.no_room",
+      "text": "No room for more — {0} is the most you can carry."
+    },
+    {
+      "key": "ui.utility.no_target",
+      "text": "Nothing there to use it on."
+    },
+    {
+      "key": "ui.utility.short",
+      "text": "{0} more gems needed. You have {1}."
+    },
+    {
+      "key": "ui.utility.tap_to_buy",
+      "text": "TAP TO BUY"
     },
     {
       "key": "ui.visit.gone",
@@ -3236,6 +4656,14 @@
     {
       "key": "ui.visit.updated",
       "text": "groove updated {0}"
+    },
+    {
+      "key": "ui.ward.damage",
+      "text": "DAMAGE"
+    },
+    {
+      "key": "ui.ward.health",
+      "text": "HEALTH"
     },
     {
       "key": "ui.wheel.collect",
@@ -3358,328 +4786,12 @@
       "text": "+{0} XP"
     },
     {
-      "key": "ui.pass.eyebrow",
-      "text": "GROVE ADVENTURES"
+      "key": "utility.aim.hill",
+      "text": "Tap a square on the hill"
     },
     {
-      "key": "ui.pass.hero_kicker",
-      "text": "A LITTLE PLAY. A LOT TO DISCOVER."
-    },
-    {
-      "key": "ui.pass.hero_title",
-      "text": "Let your rewards blossom"
-    },
-    {
-      "key": "ui.pass.hero_detail",
-      "text": "{0} tiers • One shared adventure"
-    },
-    {
-      "key": "ui.pass.free",
-      "text": "FREE TRAIL"
-    },
-    {
-      "key": "ui.pass.premium",
-      "text": "BLOOM PASS"
-    },
-    {
-      "key": "ui.pass.cache",
-      "text": "MILESTONE CACHE"
-    },
-    {
-      "key": "ui.pass.gems",
-      "text": "GEM CACHE"
-    },
-    {
-      "key": "ui.pass.coins",
-      "text": "GROVE COINS"
-    },
-    {
-      "key": "ui.pass.pair",
-      "text": "{0} coins\n{1} gems"
-    },
-    {
-      "key": "ui.pass.claimed",
-      "text": "COLLECTED"
-    },
-    {
-      "key": "ui.pass.claim",
-      "text": "TAP TO COLLECT"
-    },
-    {
-      "key": "ui.pass.pass_required",
-      "text": "BLOOM PASS REQUIRED"
-    },
-    {
-      "key": "ui.pass.keep_playing",
-      "text": "KEEP EXPLORING"
-    },
-    {
-      "key": "ui.pass.claim_all",
-      "text": "Collect all"
-    },
-    {
-      "key": "ui.pass.restore",
-      "text": "Restore purchases"
-    },
-    {
-      "key": "ui.pass.progress",
-      "text": "{0} / {1} glades • First clears grow your trail"
-    },
-    {
-      "key": "ui.pass.time",
-      "text": "SEASON ENDS IN {0}d {1}h"
-    },
-    {
-      "key": "ui.pass.unlocked",
-      "text": "Pass unlocked"
-    },
-    {
-      "key": "ui.pass.connecting",
-      "text": "Connecting…"
-    },
-    {
-      "key": "ui.pass.upgrade",
-      "text": "Unlock Bloom Pass"
-    },
-    {
-      "key": "ui.pass.buy",
-      "text": "Unlock • {0}"
-    },
-    {
-      "key": "ui.pass.owned_hint",
-      "text": "Your premium trail is open. Play to earn both rewards."
-    },
-    {
-      "key": "ui.pass.closed_hint",
-      "text": "Season ended. Earned rewards remain yours to collect."
-    },
-    {
-      "key": "ui.pass.purchase_hint",
-      "text": "One purchase. No subscription. Includes earlier earned tiers."
-    },
-    {
-      "key": "ui.pass.claiming",
-      "text": "Collecting…"
-    },
-    {
-      "key": "ui.pass.online",
-      "text": "Connect to check your pass and current store price."
-    },
-    {
-      "key": "ui.pass.restoring",
-      "text": "Checking your store purchases…"
-    },
-    {
-      "key": "ui.pass.no_glades",
-      "text": "No new event glades are available right now."
-    },
-    {
-      "key": "ui.pass.up_to_date",
-      "text": "Your premium rewards are up to date."
-    },
-    {
-      "key": "ui.pass.retry",
-      "text": "Could not collect yet. Reconnect and try again."
-    },
-    {
-      "key": "ui.pass.collected",
-      "text": "Rewards collected!"
-    },
-    {
-      "key": "store.product.gg_first_bloom_pass",
-      "text": "First Bloom Pass"
-    },
-    {
-      "key": "story.who.bolt",
-      "text": "BOLT"
-    },
-    {
-      "key": "story.who.collector",
-      "text": "THE COLLECTOR"
-    },
-    {
-      "key": "story.who.mon1",
-      "text": "BLOOP"
-    },
-    {
-      "key": "story.who.mon2",
-      "text": "FIG"
-    },
-    {
-      "key": "story.who.mon3",
-      "text": "RUMBLE"
-    },
-    {
-      "key": "mode.cap.moves",
-      "text": "moves left"
-    },
-    {
-      "key": "mode.cap.raid",
-      "text": "left to clear"
-    },
-    {
-      "key": "mode.proto.moves_free",
-      "text": "free"
-    },
-    {
-      "key": "ui.rank.moves",
-      "text": "{0} moves"
-    },
-    {
-      "key": "ui.rank.moves_one",
-      "text": "{0} move"
-    },
-    {
-      "key": "ui.continue.moves_title",
-      "text": "Out of moves"
-    },
-    {
-      "key": "ui.continue.moves_unit",
-      "text": "more moves"
-    },
-    {
-      "key": "ui.continue.wards_title",
-      "text": "The line has fallen"
-    },
-    {
-      "key": "ui.continue.wards_unit",
-      "text": "wards, back at full strength,"
-    },
-    {
-      "key": "ui.defeat.stuck_title",
-      "text": "NOTHING LEFT TO DO"
-    },
-    {
-      "key": "ui.tip.proto_moves.title",
-      "text": "EVERY MOVE IS FOR KEEPS"
-    },
-    {
-      "key": "ui.tip.proto_moves.body",
-      "text": "This board gives you a set number of moves, and nothing here can be taken back.\n\nLook before you tap."
-    },
-    {
-      "key": "mode.cap.asleep",
-      "text": "still asleep"
-    },
-    {
-      "key": "mode.prism.name",
-      "text": "Prismvale"
-    },
-    {
-      "key": "mode.prism.tagline",
-      "text": "Line the gems up. Let the light through."
-    },
-    {
-      "key": "mode.prism.nodrag",
-      "text": "Lanterns and sleeping critters do not move — <b>gems</b> do. Drag one onto the gem beside it and the two trade places."
-    },
-    {
-      "key": "ui.tip.prism_drag.title",
-      "text": "DRAG A GEM"
-    },
-    {
-      "key": "ui.tip.prism_drag.body",
-      "text": "Drag a gem onto the one next to it and the two <b>trade places</b>.\n\nA lantern lights only the gems of <b>its own colour</b> that are touching it — and that colour runs on through every matching gem beside them. Line one up all the way to a sleeping critter and it wakes."
-    },
-    {
-      "key": "ui.tip.prism_vein.title",
-      "text": "LIGHT FOLLOWS THE GEMS"
-    },
-    {
-      "key": "ui.tip.prism_vein.body",
-      "text": "Nothing is ever used up here. Gems do not burst and do not fall — the board you are dealt is the board you finish on.\n\nSo the light is not stored: it is wherever the matching gems happen to be <b>right now</b>. Pull a gem out of a lit line and that line goes out again."
-    },
-    {
-      "key": "chapter.p01_prismvale.name",
-      "text": "Prismvale"
-    },
-    {
-      "key": "level.p01_firstvein.name",
-      "text": "First Vein"
-    },
-    {
-      "key": "level.p01_twinlight.name",
-      "text": "Twin Light"
-    },
-    {
-      "key": "level.p01_firstvein.tagline",
-      "text": "Line them up to the light"
-    },
-    {
-      "key": "level.p01_twinlight.tagline",
-      "text": "Every colour is wanted somewhere"
-    },
-    {
-      "key": "mode.siege.name",
-      "text": "Thornwatch"
-    },
-    {
-      "key": "mode.siege.tagline",
-      "text": "Feed the wards. Hold the line."
-    },
-    {
-      "key": "mode.siege.nodrag",
-      "text": "Gems are dragged, not tapped — pull one onto the gem beside it. Line three of a colour up and that ward opens fire."
-    },
-    {
-      "key": "mode.siege.wave",
-      "text": "WAVE {0} OF {1}"
-    },
-    {
-      "key": "mode.siege.chain",
-      "text": "CHAIN x{0}"
-    },
-    {
-      "key": "mode.siege.boss",
-      "text": "THE WARLORD"
-    },
-    {
-      "key": "mode.siege.blightcaller",
-      "text": "THE BLIGHTCALLER"
-    },
-    {
-      "key": "mode.siege.warbringer",
-      "text": "THE WARBRINGER"
-    },
-    {
-      "key": "mode.cap.wave",
-      "text": "wave"
-    },
-    {
-      "key": "mode.cap.matches",
-      "text": "matches"
-    },
-    {
-      "key": "chapter.s01_thornwatch.name",
-      "text": "Thornwatch"
-    },
-    {
-      "key": "level.s01_firstwatch.name",
-      "text": "First Watch"
-    },
-    {
-      "key": "level.s01_firstwatch.tagline",
-      "text": "Feed the colour that is coming"
-    },
-    {
-      "key": "ui.tip.siege_fuel.title",
-      "text": "TURRETS SHOOT THEIR OWN COLOUR"
-    },
-    {
-      "key": "ui.tip.siege_fuel.body",
-      "text": "Match three gems of a colour and that colour's turret opens fire.\n\nIt goes for raiders of its own colour, so match the colour that is coming."
-    },
-    {
-      "key": "mode.siege.go",
-      "text": "GO!"
-    },
-    {
-      "key": "ui.defeat.wards_title",
-      "text": "THE LINE HAS FALLEN"
-    },
-    {
-      "key": "ui.defeat.wards_reason",
-      "text": "Every ward is down, so nothing a match feeds is still standing. Feed the colour that is furthest down the hill."
+      "key": "utility.aim.ward",
+      "text": "Tap a ward"
     },
     {
       "key": "utility.firepot.name",
@@ -3698,150 +4810,6 @@
       "text": "Pours into one ward and puts its stones back. It cannot raise a fallen one."
     },
     {
-      "key": "utility.surge.name",
-      "text": "Surge"
-    },
-    {
-      "key": "utility.surge.note",
-      "text": "Fills one ward with fuel, so it opens fire whatever colour you have matched."
-    },
-    {
-      "key": "utility.aim.hill",
-      "text": "Tap a square on the hill"
-    },
-    {
-      "key": "utility.aim.ward",
-      "text": "Tap a ward"
-    },
-    {
-      "key": "ui.utility.tap_to_buy",
-      "text": "TAP TO BUY"
-    },
-    {
-      "key": "ui.utility.no_gems",
-      "text": "Not enough gems for more."
-    },
-    {
-      "key": "ui.utility.buy",
-      "text": "BUY  {0}"
-    },
-    {
-      "key": "ui.utility.get_gems",
-      "text": "GET GEMS"
-    },
-    {
-      "key": "ui.utility.short",
-      "text": "{0} more gems needed. You have {1}."
-    },
-    {
-      "key": "ui.utility.holding",
-      "text": "You are carrying {0} of {1}."
-    },
-    {
-      "key": "ui.utility.full",
-      "text": "You are carrying all {0} you can."
-    },
-    {
-      "key": "ui.utility.no_gems",
-      "text": "Not enough gems for more."
-    },
-    {
-      "key": "ui.utility.no_room",
-      "text": "No room for more — {0} is the most you can carry."
-    },
-    {
-      "key": "ui.utility.tap_to_buy",
-      "text": "TAP TO BUY"
-    },
-    {
-      "key": "ui.utility.chest_only",
-      "text": "This one comes out of daily chests."
-    },
-    {
-      "key": "ui.utility.bought",
-      "text": "In your pack."
-    },
-    {
-      "key": "ui.utility.no_target",
-      "text": "Nothing there to use it on."
-    },
-    {
-      "key": "level.s01_ironward.name",
-      "text": "The Ironward"
-    },
-    {
-      "key": "level.s01_ironward.tagline",
-      "text": "Match beside the cog to upgrade that turret"
-    },
-    {
-      "key": "level.s01_stonewatch.name",
-      "text": "Stonewatch"
-    },
-    {
-      "key": "level.s01_stonewatch.tagline",
-      "text": "Brutes take twice the killing"
-    },
-    {
-      "key": "level.s01_thornhollow.name",
-      "text": "Thornhollow"
-    },
-    {
-      "key": "level.s01_thornhollow.tagline",
-      "text": "One colour at a time, and the rest is waiting"
-    },
-    {
-      "key": "level.s01_warlordsgate.name",
-      "text": "The Warlord's Gate"
-    },
-    {
-      "key": "level.s01_warlordsgate.tagline",
-      "text": "It stops halfway and throws from there"
-    },
-    {
-      "key": "level.s01_bramblerun.name",
-      "text": "Bramble Run"
-    },
-    {
-      "key": "level.s01_bramblerun.tagline",
-      "text": "Every wave is armour now"
-    },
-    {
-      "key": "level.s01_ashenfield.name",
-      "text": "Ashenfield"
-    },
-    {
-      "key": "level.s01_ashenfield.tagline",
-      "text": "Spend the cogs where the hill hurts"
-    },
-    {
-      "key": "level.s01_blackmarch.name",
-      "text": "Black March"
-    },
-    {
-      "key": "level.s01_blackmarch.tagline",
-      "text": "Armour arrives while the brutes are still walking"
-    },
-    {
-      "key": "level.s01_thornsiege.name",
-      "text": "The Long Siege"
-    },
-    {
-      "key": "level.s01_thornsiege.tagline",
-      "text": "Sixteen brutes and no quiet"
-    },
-    {
-      "key": "level.s01_lastlight.name",
-      "text": "Last Light"
-    },
-    {
-      "key": "level.s01_lastlight.tagline",
-      "text": "The overlord comes for the grove"
-    },
-    {
-      "key": "mode.siege.overlord",
-      "text": "THE OVERLORD"
-    },
-    {
       "key": "utility.stormcall.name",
       "text": "Stormcall"
     },
@@ -3850,132 +4818,12 @@
       "text": "Lightning strikes every raider on the hill. It will not fell a boss."
     },
     {
-      "key": "chapter.s02_endlesswatch.name",
-      "text": "The Endless Watch"
+      "key": "utility.surge.name",
+      "text": "Surge"
     },
     {
-      "key": "lesson.siege_thief.body",
-      "text": "It hovers over the field and takes gems away, leaving a sack that is no colour at all. Kill it and the whole field comes back."
-    },
-    {
-      "key": "lesson.siege_thief.title",
-      "text": "The thief"
-    },
-    {
-      "key": "lesson.siege_weaver.body",
-      "text": "It stops on the hill and locks your gems. A locked gem cannot be moved and cannot line up — kill the weaver and every web burns off."
-    },
-    {
-      "key": "lesson.siege_weaver.title",
-      "text": "The weaver"
-    },
-    {
-      "key": "level.s02_endless.name",
-      "text": "The Endless Watch"
-    },
-    {
-      "key": "level.s02_endless.tagline",
-      "text": "The waves never stop. Hold as long as you can."
-    },
-    {
-      "key": "track.infinite.name",
-      "text": "Infinite"
-    },
-    {
-      "key": "track.infinite.tagline",
-      "text": "the waves never stop — how far can you hold?"
-    },
-    {
-      "key": "track.main.name",
-      "text": "Normal"
-    },
-    {
-      "key": "track.main.tagline",
-      "text": "the chapters, one glade at a time"
-    },
-    {
-      "key": "ui.endless.best",
-      "text": "Best wave {0}"
-    },
-    {
-      "key": "ui.endless.reached",
-      "text": "You held to wave {0}."
-    },
-    {
-      "key": "ui.endless.wave",
-      "text": "Wave {0}"
-    },
-    {
-      "key": "ui.loadout.chest_only",
-      "text": "From chests"
-    },
-    {
-      "key": "ui.loadout.held",
-      "text": "{0} of {1} on this colour"
-    },
-    {
-      "key": "ui.loadout.held_one",
-      "text": "Already standing on this colour."
-    },
-    {
-      "key": "ui.loadout.items",
-      "text": "Kit"
-    },
-    {
-      "key": "ui.loadout.items_note",
-      "text": "Carried into every siege. Chests drop them; gems buy them."
-    },
-    {
-      "key": "ui.loadout.joined",
-      "text": "joined your line"
-    },
-    {
-      "key": "ui.loadout.level",
-      "text": "Level {0}"
-    },
-    {
-      "key": "ui.loadout.level_note",
-      "text": "Reach keeper level {0} to buy this."
-    },
-    {
-      "key": "ui.loadout.locked",
-      "text": "Not for sale"
-    },
-    {
-      "key": "ui.loadout.sealed",
-      "text": "Locked"
-    },
-    {
-      "key": "ui.loadout.sealed_note",
-      "text": "Buy {0} on this colour first."
-    },
-    {
-      "key": "ui.loadout.stand",
-      "text": "Equip"
-    },
-    {
-      "key": "ui.loadout.standing",
-      "text": "Equipped"
-    },
-    {
-      "key": "ui.loadout.title",
-      "text": "Loadout"
-    },
-    {
-      "key": "ui.loadout.wards",
-      "text": "Turrets"
-    },
-    {
-      "key": "ui.shop.short_coins",
-      "text": "{0} more credits needed"
-    },
-    {
-      "key": "ui.shop.no_coins",
-      "text": "Not enough credits"
-    },
-    {
-      "key": "ui.shop.short_gems",
-      "text": "{0} more gems needed"
+      "key": "utility.surge.note",
+      "text": "Fills one ward with fuel, so it opens fire whatever colour you have matched."
     },
     {
       "key": "ward.apex.name",
@@ -4095,7 +4943,7 @@
     },
     {
       "key": "ward.prism.note",
-      "text": "Double damage to 2 colours, not 1."
+      "text": "Stuns the target for 0.5s."
     },
     {
       "key": "ward.pyre.name",
@@ -4135,563 +4983,7 @@
     },
     {
       "key": "ward.spectrum.note",
-      "text": "Double damage to 3 colours, not 1."
-    },
-    {
-      "key": "ui.tip.siege_bomber.title",
-      "text": "TAP THE BOMB"
-    },
-    {
-      "key": "ui.tip.siege_bomber.body",
-      "text": "A bomber left this when it died.\n\nTap it and everything near it blows up."
-    },
-    {
-      "key": "chapter.s03_broodmarch.name",
-      "text": "Broodmarch"
-    },
-    {
-      "key": "level.s03_firstbrood.name",
-      "text": "First Brood"
-    },
-    {
-      "key": "level.s03_firstbrood.tagline",
-      "text": "A bigger hill, and the same four turrets"
-    },
-    {
-      "key": "level.s03_hollowshell.name",
-      "text": "Hollowshell"
-    },
-    {
-      "key": "level.s03_hollowshell.tagline",
-      "text": "Armour in every wave now"
-    },
-    {
-      "key": "level.s03_mirewalk.name",
-      "text": "Mirewalk"
-    },
-    {
-      "key": "level.s03_mirewalk.tagline",
-      "text": "Keep a charge back for the wave"
-    },
-    {
-      "key": "level.s03_spinecrest.name",
-      "text": "Spinecrest"
-    },
-    {
-      "key": "level.s03_spinecrest.tagline",
-      "text": "Shells first, and the brutes right behind them"
-    },
-    {
-      "key": "level.s03_blightfen.name",
-      "text": "Blightfen"
-    },
-    {
-      "key": "level.s03_blightfen.tagline",
-      "text": "It puts a turret out, not down"
-    },
-    {
-      "key": "level.s03_stillmire.name",
-      "text": "Stillmire"
-    },
-    {
-      "key": "level.s03_stillmire.tagline",
-      "text": "One colour at a time, and three wards idle"
-    },
-    {
-      "key": "level.s03_thornbrood.name",
-      "text": "Thornbrood"
-    },
-    {
-      "key": "level.s03_thornbrood.tagline",
-      "text": "Nothing to work out, everything to keep up with"
-    },
-    {
-      "key": "level.s03_gloamfield.name",
-      "text": "Gloamfield"
-    },
-    {
-      "key": "level.s03_gloamfield.tagline",
-      "text": "Drop a charge where the armour is"
-    },
-    {
-      "key": "level.s03_deepmire.name",
-      "text": "Deepmire"
-    },
-    {
-      "key": "level.s03_deepmire.tagline",
-      "text": "Four waves, and no colour may go dark"
-    },
-    {
-      "key": "level.s03_broodheart.name",
-      "text": "Broodheart"
-    },
-    {
-      "key": "level.s03_broodheart.tagline",
-      "text": "It roars, and the whole line feels it"
-    },
-    {
-      "key": "ui.ward.damage",
-      "text": "DAMAGE"
-    },
-    {
-      "key": "ui.ward.health",
-      "text": "HEALTH"
-    },
-    {
-      "key": "ui.piece.home_cottage",
-      "text": "Cottage"
-    },
-    {
-      "key": "ui.piece.home_farmhouse",
-      "text": "Farmhouse"
-    },
-    {
-      "key": "ui.piece.ruin",
-      "text": "Ruined House"
-    },
-    {
-      "key": "ui.piece.house_small_green",
-      "text": "Green Cottage"
-    },
-    {
-      "key": "ui.piece.house_small_red",
-      "text": "Red Cottage"
-    },
-    {
-      "key": "ui.piece.house_small_yellow",
-      "text": "Gold Cottage"
-    },
-    {
-      "key": "ui.piece.scaffold",
-      "text": "Scaffolding"
-    },
-    {
-      "key": "ui.piece.village_well",
-      "text": "Stone Well"
-    },
-    {
-      "key": "ui.piece.house_large_green",
-      "text": "Green Farmhouse"
-    },
-    {
-      "key": "ui.piece.house_large_red",
-      "text": "Red Farmhouse"
-    },
-    {
-      "key": "ui.piece.house_large_yellow",
-      "text": "Gold Farmhouse"
-    },
-    {
-      "key": "ui.piece.stage_long",
-      "text": "Long Stage"
-    },
-    {
-      "key": "ui.piece.stage_round",
-      "text": "Round Stage"
-    },
-    {
-      "key": "ui.piece.stage_tiered",
-      "text": "Tiered Stage"
-    },
-    {
-      "key": "ui.piece.watchtower",
-      "text": "Watchtower"
-    },
-    {
-      "key": "ui.piece.sawmill",
-      "text": "Sawmill"
-    },
-    {
-      "key": "ui.piece.smithy",
-      "text": "Smithy"
-    },
-    {
-      "key": "ui.piece.watermill",
-      "text": "Watermill"
-    },
-    {
-      "key": "ui.piece.windmill",
-      "text": "Windmill"
-    },
-    {
-      "key": "ui.piece.market",
-      "text": "Market Stalls"
-    },
-    {
-      "key": "ui.piece.mine",
-      "text": "Mine Head"
-    },
-    {
-      "key": "ui.piece.archery",
-      "text": "Archery Range"
-    },
-    {
-      "key": "ui.piece.church",
-      "text": "Chapel"
-    },
-    {
-      "key": "ui.piece.catapult",
-      "text": "Catapult Tower"
-    },
-    {
-      "key": "ui.piece.fir_stump",
-      "text": "Fir Stump"
-    },
-    {
-      "key": "ui.piece.pine_stump",
-      "text": "Pine Stump"
-    },
-    {
-      "key": "ui.piece.pine_tree",
-      "text": "Pine"
-    },
-    {
-      "key": "ui.piece.fir",
-      "text": "Fir"
-    },
-    {
-      "key": "ui.piece.clearing_fir",
-      "text": "Fir Clearing"
-    },
-    {
-      "key": "ui.piece.clearing_pine",
-      "text": "Pine Clearing"
-    },
-    {
-      "key": "ui.piece.fir_copse",
-      "text": "Fir Copse"
-    },
-    {
-      "key": "ui.piece.pine_copse",
-      "text": "Pine Copse"
-    },
-    {
-      "key": "ui.piece.fir_stand",
-      "text": "Fir Stand"
-    },
-    {
-      "key": "ui.piece.pine_stand",
-      "text": "Pine Stand"
-    },
-    {
-      "key": "ui.piece.fir_wood",
-      "text": "Fir Wood"
-    },
-    {
-      "key": "ui.piece.pine_wood",
-      "text": "Pine Wood"
-    },
-    {
-      "key": "ui.piece.grain_sack",
-      "text": "Grain Sack"
-    },
-    {
-      "key": "ui.piece.pallet",
-      "text": "Pallet"
-    },
-    {
-      "key": "ui.piece.lily_broad",
-      "text": "Broad Lily"
-    },
-    {
-      "key": "ui.piece.lily_split",
-      "text": "Split Lily"
-    },
-    {
-      "key": "ui.piece.reeds",
-      "text": "Reeds"
-    },
-    {
-      "key": "ui.piece.rush",
-      "text": "Rush"
-    },
-    {
-      "key": "ui.piece.cattails",
-      "text": "Cattails"
-    },
-    {
-      "key": "ui.piece.lumber_pile",
-      "text": "Lumber Pile"
-    },
-    {
-      "key": "ui.piece.stone_pile",
-      "text": "Stone Pile"
-    },
-    {
-      "key": "ui.piece.pennant_blue",
-      "text": "Blue Banner"
-    },
-    {
-      "key": "ui.piece.pennant_green",
-      "text": "Green Banner"
-    },
-    {
-      "key": "ui.piece.pennant_red",
-      "text": "Red Banner"
-    },
-    {
-      "key": "ui.piece.pennant_gold",
-      "text": "Gold Banner"
-    },
-    {
-      "key": "ui.piece.wall",
-      "text": "Curtain Wall"
-    },
-    {
-      "key": "ui.piece.wall_bend",
-      "text": "Wall Bend"
-    },
-    {
-      "key": "ui.piece.wall_corner",
-      "text": "Wall Corner"
-    },
-    {
-      "key": "ui.piece.wall_elbow",
-      "text": "Wall Elbow"
-    },
-    {
-      "key": "ui.piece.wall_turn",
-      "text": "Wall Turn"
-    },
-    {
-      "key": "ui.piece.wall_gate",
-      "text": "Wall Gate"
-    },
-    {
-      "key": "ui.piece.wall_barbican",
-      "text": "Barbican"
-    },
-    {
-      "key": "ui.piece.bridge_span",
-      "text": "Arched Bridge"
-    },
-    {
-      "key": "ui.piece.bridge_stone",
-      "text": "Stone Bridge"
-    },
-    {
-      "key": "ui.piece.bucket",
-      "text": "Bucket"
-    },
-    {
-      "key": "ui.piece.bucket_water",
-      "text": "Water Bucket"
-    },
-    {
-      "key": "ui.piece.crate_small",
-      "text": "Small Crate"
-    },
-    {
-      "key": "ui.piece.chest_small",
-      "text": "Banded Box"
-    },
-    {
-      "key": "ui.piece.fieldstone",
-      "text": "Field Stone"
-    },
-    {
-      "key": "ui.piece.boulder",
-      "text": "Boulder"
-    },
-    {
-      "key": "ui.piece.crate_empty",
-      "text": "Empty Crate"
-    },
-    {
-      "key": "ui.piece.stone_slab",
-      "text": "Stone Slab"
-    },
-    {
-      "key": "ui.piece.barrel",
-      "text": "Barrel"
-    },
-    {
-      "key": "ui.piece.crate_big",
-      "text": "Big Crate"
-    },
-    {
-      "key": "ui.piece.crag",
-      "text": "Crag"
-    },
-    {
-      "key": "ui.piece.chest_big",
-      "text": "Banded Crate"
-    },
-    {
-      "key": "ui.piece.twin_stones",
-      "text": "Twin Stones"
-    },
-    {
-      "key": "ui.piece.step_ladder",
-      "text": "Ladder"
-    },
-    {
-      "key": "ui.piece.crate_open",
-      "text": "Open Crate"
-    },
-    {
-      "key": "ui.piece.crate_bread",
-      "text": "Baker's Crate"
-    },
-    {
-      "key": "ui.piece.crate_produce",
-      "text": "Crate of Produce"
-    },
-    {
-      "key": "ui.piece.crate_wares",
-      "text": "Crate of Wares"
-    },
-    {
-      "key": "ui.piece.quiver",
-      "text": "Arrow Bucket"
-    },
-    {
-      "key": "ui.piece.target",
-      "text": "Archery Butt"
-    },
-    {
-      "key": "ui.piece.wheelbarrow",
-      "text": "Wheelbarrow"
-    },
-    {
-      "key": "ui.piece.weapon_rack",
-      "text": "Weapon Rack"
-    },
-    {
-      "key": "ui.piece.market_table",
-      "text": "Market Table"
-    },
-    {
-      "key": "ui.loadout.tier1",
-      "text": "TIER I"
-    },
-    {
-      "key": "ui.loadout.tier2",
-      "text": "TIER II"
-    },
-    {
-      "key": "ui.loadout.tier3",
-      "text": "TIER III"
-    },
-    {
-      "key": "ui.loadout.upgrade_note",
-      "text": "Upgrade to {0} stars"
-    },
-    {
-      "key": "ui.loadout.upgrade",
-      "text": "UPGRADE"
-    },
-    {
-      "key": "ui.loadout.upgrade_to",
-      "text": "Upgrade to {0} stars"
-    },
-    {
-      "key": "ui.loadout.upgrade_top",
-      "text": "Fully upgraded."
-    },
-    {
-      "key": "ui.loadout.upgrade_done",
-      "text": "STRONGER!"
-    },
-    {
-      "key": "ui.ok.done",
-      "text": "DONE"
-    },
-    {
-      "key": "ui.piece.home_barracks",
-      "text": "Barracks"
-    },
-    {
-      "key": "ui.piece.home_citadel",
-      "text": "Citadel"
-    },
-    {
-      "key": "ui.piece.tower_stone",
-      "text": "Stone Tower"
-    },
-    {
-      "key": "ui.piece.tower_round",
-      "text": "Round Tower"
-    },
-    {
-      "key": "ui.piece.tavern",
-      "text": "Tavern"
-    },
-    {
-      "key": "mode.siege.next",
-      "text": "NEXT WAVE"
-    },
-    {
-      "key": "ui.tip.siege_brim.title",
-      "text": "TAP A FULL TURRET"
-    },
-    {
-      "key": "ui.tip.siege_brim.body",
-      "text": "This turret is full.\n\nTap the bolt on it to throw the whole lot at once. It hits any colour."
-    },
-    {
-      "key": "ui.tip.siege_salvage.title",
-      "text": "TAP THE COG"
-    },
-    {
-      "key": "ui.tip.siege_salvage.body",
-      "text": "A raider dropped this.\n\nTap it and the turret of that colour gets stronger. Be quick!"
-    },
-    {
-      "key": "ui.loadout.seat_at",
-      "text": "LOCKED"
-    },
-    {
-      "key": "ui.loadout.seat_shut",
-      "text": "Clear {0} more Thornwatch level(s) to arrange this turret."
-    },
-    {
-      "key": "ui.grove.home_locked",
-      "text": "Next: {0}  ·  keeper level {1}"
-    },
-    {
-      "key": "ui.tip.map_kit.title",
-      "text": "YOUR LOADOUT"
-    },
-    {
-      "key": "ui.tip.map_kit.body",
-      "text": "This is what you take into a level.\n\nTap it to pick your turrets and kit."
-    },
-    {
-      "key": "ui.tip.map_track.title",
-      "text": "PLAY FOREVER"
-    },
-    {
-      "key": "ui.tip.map_track.body",
-      "text": "Tap here to play {0}.\n\nThe waves never stop."
-    },
-    {
-      "key": "ui.tip.map_gate.title",
-      "text": "OPEN THE NEXT CHAPTER"
-    },
-    {
-      "key": "ui.tip.map_gate.body",
-      "text": "Collect {0} stars here to open the next chapter."
-    },
-    {
-      "key": "ui.tip.loadout_seats.title",
-      "text": "PICK YOUR TURRETS"
-    },
-    {
-      "key": "ui.tip.loadout_seats.body",
-      "text": "Tap a colour, then pick its turret.\n\nYou buy each colour on its own."
-    },
-    {
-      "key": "ui.tip.loadout_kit.title",
-      "text": "YOUR KIT"
-    },
-    {
-      "key": "ui.tip.loadout_kit.body",
-      "text": "Tap here to see your kit.\n\nIt helps you when a battle gets hard."
-    },
-    {
-      "key": "ui.run.level",
-      "text": "LEVEL {0}"
+      "text": "Stuns the target for 1s."
     }
   ]
 }

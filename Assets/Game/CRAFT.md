@@ -38,9 +38,26 @@ Everything here runs without Unity unless it says otherwise.
 - `Tools/grove_art_facts.py` — writes each grove piece's `w`/`h` and its `hit` mask (a cell per sixteen
   art pixels) into `homestead.json`, and each companion's into `manifest.json`, from the shipped PNGs;
   `--check` proves the content still describes the art it ships, and `content.py` runs it. Run it after
-  any re-cut of grove or companion art. `Tools/render_grove.py` draws a grove exactly as the game does —
-  ground layer under piece layer, footprints, authored sizes — and is the fast loop for anything judged
-  by eye; re-verify it against a play-mode screenshot after touching `GroveTileArt` or `GroveFieldView`.
+  any re-cut of grove or companion art. **It took `facings` everywhere except in the one caller that
+  had to pass it**, so for a year every turnable piece was reported as having no art at all and the
+  writer left its `hits` alone — `--check` red over a perfectly correct catalogue, hidden because
+  `content.py` is the gate that actually runs and reads the row's facings itself. A repair tool is run
+  exactly when something is already wrong, which is the worst moment for it to be the thing that is.
+  `Tools/render_grove.py` draws a grove exactly as the game does — ground layer under piece layer,
+  footprints, authored sizes — and is the fast loop for anything judged by eye; re-verify it against a
+  play-mode screenshot after touching `GroveTileArt` or `GroveFieldView`. **`--screen` draws the
+  Grovement rather than the grove**: `home_sky` enveloped at `Cover`'s own 1.06, the vignette as the
+  *ellipse* a square sprite stretched over a phone really becomes, `Scenery.Sun`'s three layers to the
+  pixel, and the header fade over all of it, with `--notch` adding what a cutout takes. Without the
+  fade it would be drawing a screen this game does not have, and the number it settles — is the sun
+  under the banner — is exactly the one that needs it.
+- `Tools/make_grove_art.py` — the catalogue itself, rendered from the committed CC0 models.
+  **The light is a sun and a sky rather than one grey** (invariant 16u): `SUN` is over-unity so a lit
+  face is drawn brighter than the pack painted it, `SHADE` is three per cent cool and no more, and
+  `PIECE_CHROMA` pays for the lift in saturation. The ground is **turned** toward grass by `FLOOR_HUE`
+  / `FLOOR_TURN` before it is lifted, because the pack's green is a yellow one and brightness cannot
+  answer a hue. Every one of those touches the three colour channels and never alpha, so a full re-cut
+  moves no size, no footing and no hit mask — which `Tools/grove_art_facts.py --check` is what proves.
 - `Tools/grove_art.tsv` + `import_grove_art.py` — one row per grove piece (source, permanent id, slot kind,
   price, scale, lift, name). Copies the art, writes the loc string, regenerates the catalog, bumps
   `groveVersion`. It **refuses to remove an id it imported before**, because a piece id is in save files.
@@ -234,6 +251,49 @@ validators, art and offline mirrors went with them. What survives is everything 
 prototype level shape, `StoryScreen` and the story band (30d), the village world of backdrops (30e), the
 cast and explosion art's lesson about inheritance, and the rules below — which were paid for by playing
 those modes and are the reason this section exists at all.
+
+**A charm is dealt on a *window*, not on a chance, and that is a drawing fact as much as a rule.**
+Everything a player is shown about the charms — the halo, the mark, the lesson that rings one — is
+worth nothing on a board that never deals one, and a rate rolled per gem does exactly that on some
+board, for ever, because this stream is deterministic (CLAUDE.md 37ci). The rung that *introduces*
+the prism was such a board. **The presentation rule that falls out of it: before tuning how a rare
+thing looks, check how often it is actually seen — on the boards that ship, not on average.**
+
+**The charms, and the one drawing rule they are all built on: a charm has to say two things at
+once.** A charmed gem is still worth its colour — that is the whole of what a match is for in this
+mode — so a mark that hid the jewel would be a gem the player could no longer aim (invariant 37f).
+Three things follow and each was a decision. The marks are **white with a dark keyline and a hole
+cut in the middle**: white because nothing saturated reads over four saturated jewels; the keyline
+because white on the amber gem is otherwise a smudge, which is the worst pairing this board can
+produce and the one `render_siege.py --charms 27=lance` exists to look at; and the hole because a
+solid mark in the face of a jewel is a jewel with its face painted out. The **halo behind** is the
+second reading, tinted to the gem's own colour and never white, and it is what makes a charm
+findable from across a board that also has a hill walking down it — a mark is forty pixels of
+drawing and a halo is the only part visible in peripheral vision, which is why it is the one thing
+on this field that *breathes* while nobody is playing. And the **prism is a face rather than a
+mark**, because its whole sentence is "this is not one of the four" and a mark on a coloured jewel
+would be saying the opposite.
+<br>**What each one looks like going off is the pack's own impact reel in the colour it was paid**,
+which cost no bake at all: four elemental impacts are already cut from `UniqueProjectilesVol5` for
+the bolts that land, already addressed and already resident on every siege, so a charm going off in
+fire, venom, ice or lightning is the real motion for the price of four literals. A fifth reel baked
+for this would have been twelve more textures saying what these already say. **The colour is the
+payoff** — a prism is drawn colourless and is worth the run it completed, so its burst is the one
+moment the player's choice is visible, and drawing it in a fifth colour nothing else wears would say
+the opposite.
+<br>**A lance's cross is stretched along its own length, which is the one place in this project
+stretching is right.** Invariant 37au forbids scaling a picture of a *place* in x and y
+independently; a beam is not a place, it is a thing of variable length, and `beam.png` is drawn with
+a hot core across and no edge at all along its length precisely so it can be. A bar with hard ends
+reads as a plank. It opens from the middle out rather than fading in, because what a lance does is
+*go* somewhere, and a head runs out along each of the four arms so the row does not simply appear.
+<br>**A stormglass is two moments and they are two moments in the model as well** (invariant 37s):
+the gathering, drawn where the gem was, and the volley, which arrives a beat later off the board's
+own report because the bolts are booked exactly as a match's fuel is. Up to fifty of them land
+inside half a second, so each ward **kicks once** whatever it threw, the two bolts the charm's own
+colour fires are **gathered into one ray** (two rays down one line a frame apart are one ray at
+twice the brightness), and only a *kill* gets the full impact — a flipbook, a ring and sparks fifty
+times over is the busiest moment in the mode drawn forty times too many.
 
 **The classic glade and Lightfall are *hidden* rather than deleted** — `"disabled": true` on their
 manifest entries and nothing else. Their screens, views and blurbs above are all still true and still
@@ -525,21 +585,59 @@ Presentation and are invisible in a compile, a validator and a screenshot of the
   texture treated as a rotated square overstates its reach by a sixth), and a caption is sized against the
   **field it is read on**, not the sprite carrying it.
   <br>`SplashCover` is the seventh and the one with the least else to catch it: **the thing the layout must
-  not collide with is painted into a texture.** The launch screen is the key art with the wordmark baked in —
-  a looping clip over a still that is its own first frame, so the handover has nothing to blend and a device
-  that cannot decode keeps the picture — with a loading bar under the word, and where the lettering ends is
-  not a rect anything can measure at runtime. The fit is cover and the crop comes off the **top**, because
-  everything the screen is for is in the bottom tenth. The bar's clearance is bounded from both sides: it
-  takes the gap the design wants, is raised to clear a home indicator where there is room, and is finally
-  capped so it can never come closer than `MinGap` to the lettering — because on a short canvas with a
-  navigation bar those two wants are not both satisfiable, and the honest answer is to give up the inset
-  rather than the word. Anything that re-cuts the cover must re-measure `WordFootUv`: a wrong value puts the
-  bar through the logo on every device at once, with nothing to say so. **It is also the one screen whose art
-  has to be given back** — the `VideoPlayer` is stopped before it is destroyed (a player left playing keeps a
-  hardware decoder alive through teardown on some Android drivers) and the poster is claimed into
-  `AssetLibrary.SplashScope` and released. That claim is why `AssetLibrary.Claim` exists: a screen that draws
-  in the frame it is built fetches synchronously, so the address has to belong to a scope *before* it is asked
-  for.
+  not collide with is painted into a texture.** The launch screen is the key art with the wordmark baked in,
+  with a loading bar under it, and where the lettering ends is not a rect anything can measure at runtime.
+  Anything that re-cuts the cover must re-measure `WordFootUv`, `WordHeadUv` and the side pair: a wrong value
+  puts the bar through the logo on every device at once, with nothing to say so. **It is also the one screen
+  whose art has to be given back** — the poster is claimed into `AssetLibrary.SplashScope` and released.
+  That claim is why `AssetLibrary.Claim` exists: a screen that draws in the frame it is built fetches
+  synchronously, so the address has to belong to a scope *before* it is asked for.
+  <br>**And the fit rule is a fact about the cover rather than about launch screens**, which the second cover
+  is what proved. The first put its mark in the bottom tenth, so standing the picture on the canvas floor and
+  taking the crop off the top was free — what it ate was sky — and "hang the bar under the word" and "put the
+  bar at the foot" were the same instruction. The Gemfire cover carries its mark across the **middle** with
+  three turrets under it: bottom-aligned, every canvas squarer than about 5:4 crops through the logo, and the
+  bar's own rule would draw it across a muzzle flash. So the picture is hung on `MarkOnCanvas` and clamped to
+  the edges, the bar is placed from the **foot** and `MinGap` is demoted to a ceiling that never binds, and
+  the bar carries a **scrim** of its own — invisible on a phone, where it draws over near-black shadow, and
+  load-bearing on a 1:1 canvas where the crop needed to keep the mark puts lit rock under it. **A bar that
+  relies on the art behind it being dark is a bar that breaks the next time the art changes.**
+  <br>Two instruments, and the split is the point. `SplashCoverTests` proves the arithmetic and **cannot open
+  the PNG**; `python Tools/render_splash.py` draws it. `--contact` is every canvas shape `CanvasFit` can
+  produce and is the one that matters — the fixture's canvas list had **no widened ones in it**, which is
+  exactly how a cropped wordmark would have shipped. `--ident` draws the publisher card as a filmstrip.
+- **The publisher card is a hole, not a word, and getting that wrong cost two cuts.** TEKOWORLD is the first
+  thing a player ever sees. `Tools/make_ident_art.py` bakes the mark from **Orbitron Black** (SIL OFL; the
+  font and its licence live in `Tools/IconSource/`) into one white-on-transparent PNG, so no second typeface
+  reaches the build — the game ships one font, a warm rounded face for a puzzle game's chrome, which is the
+  opposite of what an ident wants. That PNG is a Unity `Mask` with **`showMaskGraphic` false**: nothing is
+  ever painted in the shape of the word. It is a sheet of black with the letters cut out of it, and what is
+  seen through them is a spectrum band travelling behind.
+  <br>**The two rejected cuts were both the same mistake — lighting an object instead of opening a hole.**
+  The first drew *white* lettering with a coloured band passed over it. Over white, a saturated colour is a
+  colour mixed with white, so the brightest the card could ever be was pastel; and the letters stayed exactly
+  as legible whether the light was on them or not, which is what stops it reading as light at all. Adding a
+  bloom around the word made it worse in the same direction — **an opaque sheet does not leak**, so a glow
+  outside the letters is a lit object, which is the thing this is not. Owner's verdict on the first:
+  *the neon lights should go inside the text*.
+  <br>**Three things the cut-out model then decides for you.** The fade is of the **light**, never of the
+  sheet: a `Mask` clips on its own graphic's alpha, so fading the cut-out fades the thing deciding where the
+  hole *is*. The ramp is a **plateau, not a peak** — a band only opaque in its middle shows only its middle
+  stops, and an earlier cut faded its pink and its yellow to nothing and read as a blue-green glint on a card
+  asked for in colour. And an **ambient** fill sits behind the whole cut-out, because a light narrow enough
+  to travel leaves most letters unlit, and unlit here means *invisible* rather than dim — without it the card
+  spells out three letters at a time.
+  <br>**The heavy weight is a decision the effect forced.** A light face has almost no hole to see the light
+  through: the colour reads as a fringe on the edges of the strokes rather than as light behind them.
+  <br>**A missing mark leaves black, never a white rectangle** (7b): nothing is built when the sprite comes
+  back null, and the card holds its beat on black.
+  <br>**It is the curtain, not a screen**, so it costs the launch nothing: the black plate the splash already
+  used to cover its settling frames now carries the card, and the content loader runs underneath it.
+  `MinimumShow` is counted from the moment the curtain **lifts** rather than from the build, or on a warm
+  device the loading screen would appear and be gone inside half a second.
+  <br>**Judge it at size.** `render_splash.py --ident` draws the strip at 22% and the effect is invisible
+  there — the card has to be looked at on a full-size crop, which is how the blue-green cut survived a
+  contact sheet.
 - **A row's position is a centre, so a paragraph in one must be centred too — and a slot that is reserved and
   not filled belongs to the row below it.** Both halves were reported about the defeat panel's "no heart was
   spent" line: `Body` anchored its text to the *top* of the room a centre had handed it, and its centre was
@@ -803,6 +901,55 @@ is the arithmetic every consequence follows from.
   with the falloff, because a flat profile reaches almost to the edge of its rect where a steep one
   dies two thirds of the way.
 
+**Casting a third chapter out of five bodies (37bu, 37bv).** The survival pack draws five skeletons
+head-on, which is the same view the brood's blobs are drawn at and therefore the one this board has. What
+it does *not* have is fifteen bodies, and five against twelve slots changes what the cast is allowed to
+say.
+
+- **The kind is the silhouette and the colour is the hue, and nothing pretends otherwise.** With fifteen
+  bodies each kind gets four shapes and the shape carries the colour as a fourth reading on top of 37f's
+  three; with five it cannot, and cutting one body four times and calling it four would be the pretence.
+  So one bare rib cage creeps, two bodies carrying a long weapon over a helm are the brutes, and the two
+  wearing plate are the bulwarks — the shield is the more literal of that pair on purpose, because the
+  one thing a player has to read about a bulwark before it is in range is that it is carrying something.
+  **Where a body is worn twice the two colours are opposite ones**, never red and amber, which is the one
+  pair this palette already keeps closest together (37ak).
+- **A bone-white pack needs a saturation floor of its own.** `hued` *pushes* saturation rather than
+  setting it, which is right for a monster painted in two or three colours and wrong for a body that
+  carries no hue at all: at the floor the other two casts use, a red skeleton and an amber one are two
+  pale creams half a hue apart. Rendered at four floors, and the one where the skull still has a skull in
+  it is the highest that works. **A per-pack constant, because it is a fact about what the pack paints.**
+- **This is the first pack bought here that drew an attack, and what a second reel costs is a *frame*.**
+  A raider that reaches the ward line stands there hitting it until something kills it, and for two
+  chapters that was a walk cycle looping in place — 37u's complaint arriving through the art. Measured
+  across the five, the attack throws the weapon so far outside the walk's box that one shared canvas
+  fitted to the walk's height would draw **every skeleton at 59–73% of its size for the whole run** for
+  the sake of six frames at the line. So the walk is cut tight as every other cast is, the swing is cut
+  on the union at the **walk's own scale**, and the view multiplies the drawn height by the ratio it
+  reads off the two sprites — no number written down, nothing to drift.
+- **Its wizard is not the chapter's boss, and finding a replacement is the finding.** It shipped that
+  way for one draft; the owner's verdict was one line, and there was nothing else on the machine to
+  swap in — see **Picking a boss body when the packs are empty** below.
+
+**Picking a boss body when the packs are empty (37bx).** Five 2D boss bodies exist on this machine and
+three chapters have taken one each; the character packs beyond them hold eighty-odd small cartoon blobs
+and ten neighbourhood zombies, and the only unused bodies in the two packs the bosses come from are two
+plain eggs and a money bag. So the sixth boss is **baked**, and choosing it taught three things worth
+more than the body.
+
+- **Survey at the camera, then survey on the hill.** Five candidates were rendered at the board's own
+  pitch and the winner on silhouette was obvious — the **druid**, whose antlers are the one thing in
+  the set that projects sideways, which is 37ar's entire rule. Put on the hill at true relative scale it
+  reads as a *friendly RPG mascot*. **Projecting sideways is necessary and is not sufficient**, and the
+  second half is only ever visible on the board.
+- **A bake and a cut pack frame a body completely differently.** These 2D packs leave about a third of
+  the frame empty (their bodies fill 0.65–0.69 of it); `SiegeCastBake` trims to its own alpha and fills
+  0.93. The view sizes a body by its *frame*, so the same `TallOf` draws a baked body half again as
+  tall. **Measure a new reel's fill against the set before trusting that number.**
+- **And a slim body needs a bigger number than a wide one.** At a drawn height that already made it the
+  tallest of the six, a robed humanoid still read as slighter than the barrels with arms beside it. Mass
+  is not height, and only the board says which one you have.
+
 **Baking a cast from 3D (37at).** The market has no more top-down casts and the reason is structural:
 "top-down" in an asset store nearly always means a three-quarter RPG view. So a second cast is rendered
 out of rigged CC0 models at this board's own camera — the oldest technique in the genre, and one step
@@ -928,17 +1075,104 @@ committed CC0 models and so runs on any checkout. Licensed packs are read from t
 every tool **passes when they are absent**, because copying a pack so that one path works is a second
 copy nothing keeps in step.
 
-- `Tools/make_siege_art.py` — gems, cast, turrets, grounds (`--tower`, `--tiles`, `--enemies`).
+- `Tools/make_siege_art.py` — gems, casts, turrets, grounds (`--tower`, `--tiles`, `--enemies`,
+  `--icons`, `--survival`). Five source roots, one per place a licensed pack was downloaded to, because
+  copying one so a single path works is a second copy nothing keeps in step.
 - `Tools/make_siege_ground.py` — the ten floors; authored at the hill band's real aspect, and `--check`
   holds the PNGs to that canvas *and* to the one place C# writes the shape down.
+- `Tools/make_chest_art.py` — the four task chests: a seventeen-frame opening reel per tier under
+  `Chests/{tier}/` (scoped), the closed icon under `Ui/Chest/` (global), and the five goal glyphs
+  under `Ui/Task/` cut from siege art already in the repo. Read straight out of the GraphicRiver
+  chest pack's zip in Downloads — no licensed source in the tree — and `--check` passes without it.
+  Which pack chest is which tier is written down once, at the top of the tool; the jade one is
+  left on the shelf because nothing pays a fifth tier (8d).
+- `Tools/make_game_font.py` — the one font: **Fredoka Bold**, instanced out of the variable file at
+  `wght=700, wdth=100`, plus **243 accented letters built from Fredoka's own bases and marks**.
+  **The axes are pinned here rather than left to the file**, because Unity's legacy `Font` draws a
+  variable TTF at its *default* instance: shipping `Fredoka[wdth,wght].ttf` as-is would have set the
+  whole game in Light with nothing failing anywhere. `--coverage` looks up every character in
+  `en.json` in the cut font's own cmap and the writer **refuses** a font that cannot draw one — a
+  glyph Unity cannot find is drawn as *nothing*, which is the white-rectangle class of fault (7b) on
+  a typeface. **`--proof` is the gate that matters** and is this tool's `--contact` sheet: it draws
+  Turkish, Polish, Czech, Hungarian and Nordic names, and it caught three composition faults that
+  every numeric reading here was happy with (46b). `--check` proves the shipped TTF reproduces,
+  which needs `recalcTimestamp=False` on the load or fontTools stamps `head.modified` with the wall
+  clock and every run disagrees with the last. It replaced **Segoe UI Black**, which could not
+  legally ship (46a), by way of Nunito Black, which was cut, rendered and rejected on sight.
 - `Tools/render_siege.py` — the eye for everything no number can see. `--phone` draws a 19.5:9 display
   with a home-indicator strip, which is the one shape that shows the shelf's foot and the three bands'
   real proportions. **Its insets are in the screen's own order (left, bottom, right, top)** and were
   written the other way round for a long time, which drew the board 55 points high: a diagnostic that
   is the only thing able to see a band in the wrong place must not itself put one there.
+  <br>**`--tablet` draws the canvas a squarer display is really given, and every picture before it was
+  1080 units across.** `CanvasFit` widens a tablet's canvas to 1620x2160 rather than scaling a phone's,
+  so a board laid out to the width asks for a cell a third bigger there — which no render could say,
+  because none of them drew that shape (invariant 37cc). **A flag per display is not the lesson; the
+  lesson is that a tool whose whole job is proportions must be able to draw every canvas the game
+  produces**, and this one could draw exactly one.
+  <br>**`--charms` stands one of each charm on the middle row, and it is the only way to look at one
+  at all.** Charms are dealt rather than authored (one a window, `SiegeTuning.CharmWithin`), so no
+  shipped field carries one and no other tool in this project can put one on a board. Two questions,
+  both of them invariant 32b's: does a mark read over a saturated jewel at forty pixels, and does the
+  **colour underneath still read with the mark on** — because a charm is still worth its colour and a
+  gem whose colour cannot be read is a gem that cannot be aimed. `--charms 27=lance` is for the worst
+  pairing, which is white on amber.
 - `Tools/render_perch.py`, `render_grove.py`, `render_prism.py`, `render_home.py`, `render_shop.py` —
   the same job for the map, the grove, Prismvale and the two chrome screens. `hudkit.py` mirrors
   `UIKit` and `Skins` for the last two.
+  <br>**`render_home.py` is the only instrument the hub's chest pack has** (45g). The pack is four
+  chests packed until they overlap, and every question about it is a picture: is the arch visible,
+  is the grandest chest the biggest thing on the plate, does anything collide with the countdown
+  that sits above the row's short end, and is "big and close" what actually lands rather than four
+  icons on a wide plate. It lays the row out with the screen's own arithmetic — a cosine for the
+  heights, a cursor for the positions — and it **measures the chest sprite's headroom off the PNG
+  and prints it** (`fill`, `wide`, `lift`, `aspect`, and how much of the plate the row fills), where
+  `HomeScreen` can only carry those as constants. A re-cut of `Ui/Chest/*` that moves them shows up
+  as a printed line that no longer matches the source (44b), and nothing else in this project can
+  see it. <br>Two things it has already caught: a row at 57% of the plate that read as an inventory
+  rather than a pack, and the royal chest — the thing the card exists to sell — drawn smallest and
+  half behind its neighbour, which is what the crest rule fixed.
+- `Tools/render_tasks.py` — the Tasks &amp; Bonuses page and, with `--odds <tier>`, the panel a
+  chest on its ladder opens; `--contact` puts the page and all four panels side by side, which is
+  the only way to see that the short panels do not carry a hole where a royal chest's prizes are.
+  It reads the shipped slates, targets, bands and weights out of `progression.json`, so a retune
+  redraws rather than going stale, and it lays the ladder's pack out with `ChestPack`'s own
+  arithmetic.
+  <br>**It is also where a colour gets settled.** "The bar is a dead yellow" is answerable by
+  neither argument nor a number: the swatch sheet that answered it — tints crossed with fill
+  heights, drawn at the size a bar is really drawn — is what showed that every
+  pre-divided-tint-plus-gloss version read *worse* than the dull one, and that what the bar was
+  missing was saturation and **height in its trough**.
+  <br>Three more it has caught, none of which any gate here can reach: the per-chest names on the
+  rebuilt ladder overlapping into one run of letters, the odds panel's chest drawn **behind its own
+  title ribbon** (a ribbon covers the first 108 units of a panel's face), and the prize rows' icons
+  sitting a third of a panel away from the words they belong to.
+- `Tools/render_arrival.py` — the panel that stands between paying and being thanked
+  (`ShopArrivalOverlay`). **It is a render for a panel with two heights**: a wait, and — once
+  `ArrivalWatch.Patience` has gone by — the same panel grown to hold a way out, which is the one
+  thing `StoreArrivalTests` cannot look at. `--relaxed`, `--many` (two purchases in flight, so it
+  names neither) and `--contact` for all three side by side.
+  <br>**It has caught three things, and every numeric gate was happy with all of them.** A product
+  drawn at a fraction of its ring, because these sprites are square with a good deal of air baked in
+  and a box fitted to the hole leaves the picture floating in the middle of it (the same measurement
+  `ShopArt.Paint` already makes on a card). A button seated 48 units off the foot, which is what
+  `ShopGrantOverlay` and `ShopSupplyOverlay` both do and which puts it **on `panel_main`'s own
+  60-unit rim** rather than on its face. And a third of the panel left empty for a button that had
+  not arrived yet — the reason it has two heights rather than reserved room.
+- `Tools/render_endless.py` — the Infinite lane's hub (the screen that replaced its map), and it
+  draws the **furniture around the column as well as the column**: the plaque, the switcher pills,
+  the star count and the loadout shelf. That is the whole point of it — the column is nailed between
+  two pieces of chrome that were sized without it, so drawing it alone would answer the easy half.
+  `--short` draws `CanvasFit.ShortestCanvas`, `--unplayed` the state before anybody has held a wave,
+  and **`--modeswitch` the case the shipped catalog does not draw** — a second mode puts a second
+  pill in the header and takes 136 units out of the band, which is the tightest this layout ever
+  gets (8 units of air) and is the case the fixture pins.
+  <br>**It has caught six things no gate here can reach**: a sentence running off the right edge; an
+  emblem ring drawn past its own box and touching the track pill; a record printed in the mode's
+  accent on a near-black pill, the dimmest thing on the screen; the kit's `ribbon_orange` fitted to
+  a caption plate and drawn at a *third* of the width asked for, because that sprite is taller than
+  it is wide; a band that had understated the header by a whole pill; and the whole first cut of the
+  screen, which was text and loose icons on a flat ground and was rejected on sight (43b).
 - `Glimmer Grove ▸ Art ▸ Bake Siege Projectiles` / `Bake Turret Projectiles` / `Bake Elemental
   Projectiles` / `Bake Storm Strike` / `Bake Siege Cast (3D)`, each with a `Verify` that re-bakes and
   compares within a tolerance (two GPUs are not obliged to rasterise a triangle identically), and
@@ -946,3 +1180,14 @@ copy nothing keeps in step.
   their names say a family and their thumbnails are grey cubes. **Re-run `Addressables ▸ Sync All
   Assets` after a bake, and save**: the importer hook does not fire on files a tool wrote while the
   Editor was busy.
+  <br>**Two bars on a baked body, and they ask different questions.** `Moves` asks whether the reel
+  differs from a photograph — the guard against a clip that bound to nothing, which renders twelve
+  identical frames of a bind pose. `Strides` asks whether a *walk* reads as one, and it exists
+  because the first question cannot see the second: the bonecaller's `Walking_A` changed 78% of its
+  own pixels and still slid, because a robe swaying on the spot moves every pixel it owns while the
+  feet stay put. The measurement is **vertical** — a foot-locked cycle has to raise and drop the
+  pelvis, and that projects at any pitch, where a stride's forward travel is along the body's own
+  occluded axis. Against its own drawn height, every running body in this cast bobs 3.9–7.7% and
+  swings its feet 16–36%; the walk that shipped bobbed **0.80%**. The bar is two per cent, and it
+  is still only the difference between a gait and a sway — whether a gait is any *good* needs
+  `render_siege.py --warlord walk` and somebody looking at it (37cu).

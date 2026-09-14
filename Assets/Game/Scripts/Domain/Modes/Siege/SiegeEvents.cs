@@ -223,8 +223,34 @@ namespace GlimmerGrove.Modes
         /// <summary>Cogs that ran out of time this step, by id. See <c>SiegeBoard.Age</c>.</summary>
         public readonly List<int> Trampled = new List<int>(2);
 
+        /// <summary>
+        /// Loose things a gravemaw ate this step, by id — cogs and bombs together.
+        ///
+        /// <b>One list rather than two, because both id spaces are one</b>: a cog, a bomb and a
+        /// raider are all minted from <c>SiegeBoard._minted</c>, so an id names exactly one thing
+        /// on the hill and the view can look for it in either of its own lists.
+        /// </summary>
+        public readonly List<int> Devoured = new List<int>(4);
+
         /// <summary>Tubes that filled this step, by ward. What arms the overcharge.</summary>
         public readonly List<int> Brimmed = new List<int>(2);
+
+        /// <summary>
+        /// The volley a stormglass loosed this step. See <c>SiegeBoard.Volley</c>.
+        ///
+        /// <para>
+        /// <b><see cref="SiegeBolt"/>, because that is exactly what these are</b> — a bolt from a
+        /// named ward at a named raider, worth double against its own colour. A record of its own
+        /// would have been a second way of saying the one thing the view already knows how to draw.
+        /// </para>
+        /// <para>
+        /// <b>Its own list rather than <see cref="Bolts"/>, all the same.</b> A stormglass is drawn
+        /// as one volley rather than as nine unrelated shots, so the view has to be handed it
+        /// whole — and a funnel that could not separate a free charm from a bought firepot would
+        /// price the shelf against something the board hands out.
+        /// </para>
+        /// </summary>
+        public readonly List<SiegeBolt> Charmed = new List<SiegeBolt>(16);
 
         /// <summary>The wave that has just stepped out, or -1.</summary>
         public int Wave = -1;
@@ -239,14 +265,16 @@ namespace GlimmerGrove.Modes
             Dropped.Clear();
             Cogs.Clear();
             Trampled.Clear();
+            Devoured.Clear();
             Brimmed.Clear();
+            Charmed.Clear();
             Wave = -1;
         }
 
         public bool Any => Bolts.Count > 0 || Blows.Count > 0 || Casts.Count > 0
                         || Spells.Count > 0 || Arrived.Count > 0 || Dropped.Count > 0
-                        || Cogs.Count > 0 || Trampled.Count > 0 || Brimmed.Count > 0
-                        || Wave >= 0;
+                        || Cogs.Count > 0 || Trampled.Count > 0 || Devoured.Count > 0
+                        || Brimmed.Count > 0 || Charmed.Count > 0 || Wave >= 0;
     }
 
     /// <summary>Fuel a match has earned that has not reached its ward yet.</summary>
@@ -262,15 +290,58 @@ namespace GlimmerGrove.Modes
     {
         public readonly int Column, From, To, Colour;
 
-        public SiegeDrop(int column, int from, int to, int colour)
+        /// <summary>
+        /// What this gem is carrying, or <see cref="SiegeCharm.None"/>.
+        ///
+        /// <b>On the drop rather than looked up when it lands</b>, because the view animates a
+        /// fall over a third of a second and the board has moved on: a picture that asked the
+        /// model what it was carrying would be asking about whatever ended up in that cell after
+        /// the next beat.
+        /// </summary>
+        public readonly SiegeCharm Charm;
+
+        public SiegeDrop(int column, int from, int to, int colour,
+                         SiegeCharm charm = SiegeCharm.None)
         {
             Column = column;
             From = from;
             To = to;
             Colour = colour;
+            Charm = charm;
         }
 
         public bool IsNew => From < 0;
+    }
+
+    /// <summary>
+    /// A charm going off: where it stood, which one it was, and the colour it was paid as.
+    ///
+    /// <para>
+    /// <b>Recorded rather than left for the view to work out, which is invariant 30i's rule.</b>
+    /// A lance's cross and the cells an ordinary run took arrive in <see cref="SiegeBeat.Cleared"/>
+    /// as one list, so a drawing handed only that could not say which of twenty gems was the one
+    /// the player aimed — and the whole of what a charm has to read as is <em>this gem did that</em>.
+    /// </para>
+    /// <para>
+    /// <see cref="Colour"/> is the colour it was <em>paid</em> as and not the letter it was
+    /// carrying: a prism is drawn colourless and is worth the run it completed, so the burst that
+    /// says what it bought has to be in that colour or it says nothing.
+    /// </para>
+    /// </summary>
+    public readonly struct SiegeSpark
+    {
+        public readonly int Cell;
+        public readonly SiegeCharm Charm;
+
+        /// <summary>Which of <see cref="SiegeLayout.Letters"/> it paid, or -1.</summary>
+        public readonly int Colour;
+
+        public SiegeSpark(int cell, SiegeCharm charm, int colour)
+        {
+            Cell = cell;
+            Charm = charm;
+            Colour = colour;
+        }
     }
 
     /// <summary>One beat of a cascade: what went, what it fuelled, and what fell into the gap.</summary>
@@ -281,6 +352,28 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Every cog this beat took, and what each was worth.</summary>
         public readonly List<SiegeRise> Rises = new List<SiegeRise>(2);
+
+        /// <summary>Every charm this beat set off, in the order they went.</summary>
+        public readonly List<SiegeSpark> Sprung = new List<SiegeSpark>(2);
+
+        /// <summary>
+        /// What each cell of <see cref="Cleared"/> was paid as, as an index into
+        /// <see cref="SiegeLayout.Letters"/>. Parallel to it, and the same length.
+        ///
+        /// <para>
+        /// <b>Recorded rather than read back off the board, which is invariant 30i's rule.</b> The
+        /// cell is a hole by the time the view draws it and a fresh gem by the time the animation
+        /// ends, so a drawing that asked the model what colour it had just taken would be asking
+        /// about whatever fell into it. That was survivable while every cell was worth its own
+        /// letter; a prism is worth the colour of the run it joined and nothing on the board
+        /// remembers which that was.
+        /// </para>
+        /// <para>
+        /// It is what decides the tint of the burst and which ward a mote crosses to, so a wrong
+        /// answer here is a match that visibly pays the wrong turret.
+        /// </para>
+        /// </summary>
+        public readonly List<int> Paid = new List<int>(12);
 
         /// <summary>Fuel this beat put into each ward, in ward order.</summary>
         public float[] Fuel;

@@ -116,87 +116,25 @@ namespace GlimmerGrove.Modes
         public Wards.WardAbility Ability => Model.Ability;
 
         /// <summary>
-        /// How many colours besides its own this turret is strong against.
-        ///
-        /// <para>
-        /// <b>The ability's magnitude, and it is what tells a prism's two rungs apart.</b> The
-        /// field was read by nothing for as long as a prism meant "its own colour and the next",
-        /// so a sixteen-hundred-gem spectrum and a nine-thousand-credit prism were one turret at
-        /// two prices - the decoration invariant 5d names, on the one thing a player pays for.
-        /// An unauthored nought still means one, so an older file and a rolled-back client both
-        /// read a prism as the pair they have always drawn.
-        /// </para>
-        /// <para>
-        /// <b>Capped below the number of colours there are</b>, because a turret strong against
-        /// all four would not be widening the mode's central rule, it would be deleting it: the
-        /// elemental double is what makes the colour of a match matter at all.
-        /// </para>
-        /// </summary>
-        /// <summary>
-        /// How far round the wheel this turret reaches: nought for a plain one, one for a prism.
-        ///
-        /// <para>
-        /// <b>Capped at one, which is a cap on <em>colours</em> and not on strength.</b> Under the
-        /// colour lock a turret that covers two colours is enormous — it is the only thing on the
-        /// shelf that can answer a lane the player has not fed — so a third would not be a better
-        /// rung, it would be the lock coming off. The prism family climbs on
-        /// <see cref="PartnerShare"/> instead.
-        /// </para>
-        /// </summary>
-        public const int MostPartners = 1;
-
-        /// <summary>Whether this turret reaches a second colour at all.</summary>
-        public bool Prisms => Ability == Wards.WardAbility.Prism && Model.Magnitude > 0;
-
-        /// <summary>
-        /// The second colour it reaches, or -1. The next letter round, so a line of four covers
-        /// the wheel when every seat carries one.
-        /// </summary>
-        public int Partner
-            => Prisms ? (Colour + 1) % SiegeLayout.Letters.Length : -1;
-
-        /// <summary>
-        /// What a bolt is worth against its partner colour, in tenths of a full hit.
-        ///
-        /// <para>
-        /// <b>This is the prism family's ladder, and it exists because the colour cap closed the
-        /// one it used to climb.</b> Two rungs of one ability have to differ in something
-        /// (invariant 37ax refuses a shelf where they do not), and with the colour count pinned at
-        /// two the only axis left is <em>how much</em> of a bolt survives the crossing.
-        /// </para>
-        /// <para>
-        /// <b>It can never exceed a full hit, and that is what keeps it out of par's way.</b> A
-        /// turret that made a bolt <em>weaker</em> would push three stars out of reach of whoever
-        /// bought it (invariant 42), so the partner is aimed at only when this ward's own colour
-        /// has nothing left on the hill — a shot it would otherwise not have fired at all. Strictly
-        /// additive, whatever the share.
-        /// </para>
-        /// </summary>
-        public int PartnerShare
-        {
-            get
-            {
-                if (!Prisms) return 0;
-
-                int share = Model.Magnitude;
-                return share > 10 ? 10 : share;
-            }
-        }
-
-        /// <summary>
         /// What a bolt from this ward is worth against <paramref name="colour"/>, in tenths.
         /// Nought means it will not fire at it at all.
         ///
+        /// <para>
         /// <b>One predicate rather than two</b>, because "may I shoot this" and "for how much" are
-        /// one question under the lock and a caller that asked only the first would fire a prism's
-        /// partner shot at full weight.
+        /// one question under the lock — and the raider overload below is where the one exception
+        /// to it lives.
+        /// </para>
+        /// <para>
+        /// <b>It is its own colour and nothing else, and the shelf no longer has a way to widen
+        /// that.</b> A prism used to reach the next colour round for a share of a hit; with a line
+        /// standing one turret per colour, the seat beside it was already answering that colour at
+        /// full weight, so what the ability bought was the moments its own colour happened to be
+        /// clear. Withdrawn on the owner's reading and replaced by
+        /// <see cref="Wards.WardAbility.Stun"/> on both its rungs (invariant 5d, asked of a
+        /// purchase).
+        /// </para>
         /// </summary>
-        public int ReachTenths(int colour)
-        {
-            if (colour == Colour) return 10;
-
-            return Prisms && colour == Partner ? PartnerShare : 0;
-        }
+        public int ReachTenths(int colour) => colour == Colour ? 10 : 0;
 
         /// <summary>
         /// What a bolt from this ward is worth against <paramref name="at"/>, in tenths. Nought
@@ -210,10 +148,10 @@ namespace GlimmerGrove.Modes
         /// not be: spread across the two sites that aim and the one that fires.
         /// </para>
         /// <para>
-        /// <b>The better of the two readings, never their sum.</b> A prism whose partner is the
-        /// boss's colour reaches it at its own share rather than at a boss's baseline, and a prism
-        /// whose share is thin still lands the un-doubled bolt every other turret does — so no
-        /// turret is ever worse against a boss for having been bought (invariant 42).
+        /// <b>The better of the two readings, never their sum.</b> A ward whose own colour the
+        /// boss happens to be wearing reaches it in full rather than at a boss's baseline, and
+        /// every other ward still lands the un-doubled bolt — so no turret is ever worse against a
+        /// boss than the free one (invariant 42).
         /// </para>
         /// </summary>
         public int ReachTenths(SiegeRaider at)

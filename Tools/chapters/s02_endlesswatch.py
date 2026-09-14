@@ -70,6 +70,21 @@ SEED, SWAPS = 12211, 9
 #: then trampled, so a player deep in a wave pays for it with attention rather than with nothing.
 COGS = 30
 
+#: Which charms this lane's refill may deal, and it is the **whole roster** rather than this
+#: chapter's ordinal share of it.
+#:
+#: **An endless lane is not a rung of a ladder, which is the whole reason it is a track rather than
+#: a chapter** (invariant 43). The authored chapters introduce one charm each so a player meets one
+#: new thing at a time; this is the lane they come back to once they can already play, and it is
+#: gated behind having done so - so dealing them the set they have already been taught is the
+#: honest reading of "everything this mode has", and holding one back would be the ladder's rule
+#: applied where there is no ladder.
+#:
+#: It is written out rather than derived from `ORDINAL` on purpose: this lane's ordinal is two,
+#: which is a fact about which map and which skies it draws (invariant 7c) and says nothing at all
+#: about how far through the mode a player is when they reach it.
+CHARMS = siege.CHARM_LETTERS
+
 #: How far a three-star run reaches, and the fraction of it a two-star run does.
 #:
 #: **Both are guesses until somebody plays it**, and they are the only two numbers in this file
@@ -110,6 +125,7 @@ def level():
             "waves": [],
             "boss": "",
             "cogs": COGS,
+            "charms": CHARMS,
 
             "endless": {
                 "goldWave": GOLD_WAVE,
@@ -139,7 +155,8 @@ def prove(written):
 
     grid = proto.Grid(block["rows"], block["width"], block["height"], siege.CELLS)
     layout = siege.Layout(grid, block["gems"], block["wards"], block["waves"],
-                          block.get("boss"), block.get("cogs", 0), endless=True)
+                          block.get("boss"), block.get("cogs", 0), endless=True,
+                          charms=block.get("charms", ""))
 
     if layout.fault:
         sys.exit("s02_endless: %s" % layout.fault)

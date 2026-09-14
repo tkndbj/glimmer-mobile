@@ -48,6 +48,8 @@ BOSS_NAMES = {
     "warlord": "warlord",
     "warbringer": "warbringer",
     "overlord": "overlord",
+    "gravemaw": "gravemaw",
+    "bonecaller": "bonecaller",
 }
 
 #: The colour a boss may wear. Lower case only - case no longer means anything.
@@ -196,12 +198,51 @@ BOMBER_HEALTH = 200
 #: over one as over the other. They were 1100, 1800, 2400 and 3200, scaled together so the
 #: relationships they were tuned on survive. **This table is a mirror**: it moves in the same
 #: change as the C# or every par printed here is a different game's.
+#: **Six verbs now, and the two new ones take neither health nor fire.** A `devour` takes the cogs
+#: and bombs lying on the hill and a `raise` puts fresh creepers on it - so `cast` is nought for
+#: both, exactly as it is for a douse, and `endangers` can no longer be read off that column alone
+#: (see below).
 BOSSES = {
     "blightcaller": {"health": 1250, "cast": 0, "spell": "douse"},
     "warlord": {"health": 2050, "cast": 3, "spell": "smite"},
     "warbringer": {"health": 2750, "cast": 1, "spell": "rally"},
     "overlord": {"health": 3650, "cast": 5, "spell": "sunder"},
+    "gravemaw": {"health": 1500, "cast": 0, "spell": "devour"},
+    "bonecaller": {"health": 3000, "cast": 0, "spell": "raise"},
 }
+
+#: `SiegeTuning.RaiseSize` and `.Raises` - how many creepers one raise puts on the hill, and how
+#: many times a bonecaller may do it.
+#:
+#: **The cap is what lets this mode keep a par at all.** Par is the hill's health over the most one
+#: match could deliver, so a boss that could add bodies for as long as it lived would make par a
+#: function of how the player played. `par` counts every one of the twelve whether it is ever
+#: raised or not, which overstates a run that kills the boss early - the direction invariant 22
+#: says to err in.
+RAISE_SIZE, RAISES = 4, 3
+
+#: `SiegeTuning.ChapterToughStep`, `.ToughFrom` and `.MostTough` - how much tougher each chapter's
+#: raiders are than the chapter before it, in tenths.
+#:
+#: **The one lever a fourth, fifth and sixth chapter has**, because the hill fills up long before
+#: difficulty runs out: everything else a chapter can vary is composition, and by the third it is
+#: already four-wave rungs with two shields in them. What it costs the player is the clock - a hill
+#: with more health walks the same distance in the same time, so the line has to kill faster, which
+#: is what a bought turret does. It does **not** make three stars harder: par rises with it and the
+#: star lines rise with par.
+#:
+#: **Health only; a blow is never surged**, and **the first two chapters are the baseline**.
+CHAPTER_TOUGH_STEP, TOUGH_FROM, MOST_TOUGH = 1, 2, 40
+
+
+def toughness_for(ordinal):
+    """`SiegeTuning.ToughnessFor` - what a chapter at this ordinal deals, in tenths."""
+    return 10 if ordinal < TOUGH_FROM else 10 + (ordinal - TOUGH_FROM + 1) * CHAPTER_TOUGH_STEP
+
+
+def surged(health, tenths):
+    """`SiegeSurge.Health` - this kind's health, surged."""
+    return health * (10 if tenths < 10 else tenths) // 10
 
 BOSS_HEALTH = BOSSES["warlord"]["health"]
 BOSS_CAST = BOSSES["warlord"]["cast"]
@@ -222,6 +263,130 @@ PERFECT_MATCH = (MATCH_GEMS_TENTHS * FUEL_PER_GEM_TENTHS * SHOT_DAMAGE * WEAK_MU
                  // (FUEL_PER_SHOT_TENTHS * 10))
 
 
+#: What a siege authors as its three-star and two-star lines, as factors on par.
+#:
+#: **Under one, which no other mode in this game needs, and it is a measurement rather than a
+#: taste.** Everywhere else par is a *search* - the shortest solution - so a run cannot beat it and
+#: a gold line above one is the only shape that makes sense. A siege has nothing to search
+#: (invariant 37a), so its par is arithmetic: the hill's health over what one match could ideally
+#: be worth. That is not a floor. Bombs, cogs, an overcharge and the elemental double all deliver
+#: more than the formula credits, so real runs come in **under** it - measured across 270 swept
+#: runs of all three chapters, every finished one spent between **49% and 100% of par**, and the
+#: shipped three-star line sat at 120%.
+#:
+#: What that produced is a ladder with one rung: every run that was held was also three-starred, on
+#: every chapter, on both lines. Two whole bands of the grade rejected nothing, which is invariant
+#: 5d asked of the star ladder.
+#:
+#: **Authored per level rather than retuned globally**, because `LevelTuning.DefaultGoldFactor` is
+#: shared by every mode in the game and the glade, the fall and the prism all derive par by search
+#: where 1.20 is correct. A siege is the only mode whose par overstates, so it is the only one that
+#: should carry its own.
+#:
+#: **Per chapter, because par overstates by a different amount on each one.** A surge raises par in
+#: proportion to the hill's health, and a run's *matches* do not rise with it in proportion - bombs,
+#: cogs and an overcharge deliver a flat amount that does not scale - so a tougher chapter's runs
+#: come in at a lower share of par than a gentler one's. Measured: chapter two's clears land between
+#: 58% and 100% of par and chapter three's between 49% and 93%, on the same sweep. One pair for the
+#: mode would grade the two nothing alike.
+#:
+#: Set from each chapter's own sweep so that most clears land on two stars, a good run takes three
+#: and a scrappy one takes one.
+STAR_FACTORS = {
+    1: (0.75, 0.92),
+    2: (0.75, 0.92),
+    3: (0.67, 0.84),
+}
+
+
+def star_factors(ordinal):
+    """The two lines a chapter at this 1-based ordinal authors."""
+    return STAR_FACTORS.get(ordinal, STAR_FACTORS[max(STAR_FACTORS)])
+
+
+#: `SiegeCharm`, and the letter a chapter body names each one by. In the order they are
+#: introduced, which is a fact rather than a convenience: a chapter deals the first *n* of these,
+#: so this order *is* the ladder and `charms_upto` is the only thing that reads it.
+PRISM, LANCE, STORM = "prism", "lance", "storm"
+
+CHARM_ROSTER = (("p", PRISM), ("l", LANCE), ("s", STORM))
+
+CHARM_LETTERS = "".join(letter for letter, _ in CHARM_ROSTER)
+
+#: `SiegeTuning.CharmWithin` - the **most** gems that may pass between one charm and the next.
+#:
+#: **A window rather than a chance**, because this stream is deterministic: a rate means a
+#: geometric gap, and a long gap on a shipped board is not bad luck that evens out, it is the same
+#: board dealing the same nothing to every player who ever opens it. Held here so both gates can
+#: say how many a run expects and refuse a level too short to deal one.
+CHARM_WITHIN = 112
+
+#: `SiegeTuning.CharmOpening` - the first charm of a run falls in the first `CHARM_WITHIN` / this
+#: gems, rather than anywhere in a whole window.
+#:
+#: **The window bounded the gap between two charms and left the opening gap exactly as long**,
+#: which on a short rung is longer than the run: `s01_firstwatch` is par 14, about 77 gems, against
+#: an opening gap that could be 112. What a gate can say about it is the floor - a run is now
+#: guaranteed one charm inside its first quarter-window and one per window after that.
+CHARM_OPENING = 2
+
+#: `SiegeTuning.CharmStorm` and its double against its own colour.
+CHARM_STORM = 300
+CHARM_STORM_OWN_TENTHS = 10 * WEAK_MULTIPLIER
+
+
+def charm_floor(par_moves):
+    """`SiegeBoard`'s two windows - the least charms a run of this par is dealt.
+
+    The first falls inside `CHARM_WITHIN // CHARM_OPENING` gems and each one after it inside a whole
+    `CHARM_WITHIN`, so a run that deals fewer gems than the opening window is the only one that can
+    honestly be said to be guaranteed none.
+    """
+    gems = par_moves * MATCH_GEMS_TENTHS // 10
+    opening = max(1, CHARM_WITHIN // CHARM_OPENING)
+
+    if gems < opening:
+        return 0
+
+    return 1 + (gems - opening) // CHARM_WITHIN
+
+
+def charms_upto(ordinal):
+    """`SiegeCharms.Upto` - the charms a chapter at this 1-based ordinal deals."""
+    if ordinal <= 0:
+        return ""
+
+    return CHARM_LETTERS[:min(ordinal, len(CHARM_ROSTER))]
+
+
+def charmed(raw):
+    """`SiegeLayout.Charmed` - the charms a body names, or **None** for a letter this build has
+    never heard of.
+
+    None rather than "the ones I recognised", which is the whole difference between this and
+    `tidy`: a body naming a retired or unknown charm was written for a build that is not this one,
+    and salvaging what is left of it ships a field its author never composed (invariant 5f).
+    """
+    if not raw:
+        return []
+
+    kept = []
+    for c in raw:
+        if c == " ":
+            continue
+
+        named = dict(CHARM_ROSTER).get(c)
+        if named is None:
+            return None
+
+        # A letter written twice is an author saying one thing twice, not two charms: the deal
+        # picks uniformly from this list, so keeping the repeat would weight one charm double.
+        if named not in kept:
+            kept.append(named)
+
+    return kept
+
+
 def tidy(raw, legal):
     return "".join(c for c in (raw or "") if c != " " and c in legal)
 
@@ -237,35 +402,57 @@ def is_gem(cell):
     return cell in LETTERS and cell != ""
 
 
-def runs(cells, width, height):
-    """Every cell standing in a run of three or more. Mirrors `SiegeLayout.Runs`."""
+def runs(cells, width, height, charms=None, paid=None):
+    """Every cell standing in a run of three or more. Mirrors `SiegeLayout.Runs`.
+
+    **Scanned once per colour rather than once per row, and the prism is the whole reason.** It
+    used to compare each cell with the one before it, which is exactly right while every gem is its
+    own colour and cannot survive a wild: ``"r P r"`` has no two neighbours alike in it and is a
+    run, and ``"r r P g g"`` is *two* runs sharing one cell. So a run of colour *c* is defined
+    instead as a maximal block of cells that are *c*-or-wild holding at least one real *c*, and the
+    four colours are walked in turn.
+
+    ``paid`` is a list the length of the field, written with the colour each cleared cell is worth
+    - which for a prism is the colour of the run it joined and never the letter underneath. First
+    claim wins, so the scan order (rows before columns, `LETTERS` in order) is a stated rule rather
+    than an accident; `SiegeLayout.Runs` says the same thing in the same words.
+    """
     hit = set()
 
-    for y in range(height):
-        run = 1
-        for x in range(1, width + 1):
-            same = (x < width and is_gem(cells[y * width + x])
-                    and cells[y * width + x] == cells[y * width + x - 1])
-            if same:
-                run += 1
-                continue
-            if run >= MIN_RUN:
-                for k in range(x - run, x):
-                    hit.add(y * width + k)
-            run = 1
+    def wild(i):
+        return charms is not None and charms[i] == PRISM
 
-    for x in range(width):
-        run = 1
-        for y in range(1, height + 1):
-            same = (y < height and is_gem(cells[y * width + x])
-                    and cells[y * width + x] == cells[(y - 1) * width + x])
-            if same:
+    def take(i, colour):
+        hit.add(i)
+        if paid is not None and not paid[i]:
+            paid[i] = colour if wild(i) else cells[i]
+
+    def scan(colour, first, step, span):
+        run = real = 0
+
+        for k in range(span + 1):
+            i = first + k * step
+
+            joins = (k < span and is_gem(cells[i])
+                     and (wild(i) or cells[i] == colour))
+
+            if joins:
                 run += 1
+                if not wild(i):
+                    real += 1
                 continue
-            if run >= MIN_RUN:
-                for k in range(y - run, y):
-                    hit.add(k * width + x)
-            run = 1
+
+            if run >= MIN_RUN and real > 0:
+                for back in range(k - run, k):
+                    take(first + back * step, colour)
+
+            run = real = 0
+
+    for colour in LETTERS:
+        for y in range(height):
+            scan(colour, y * width, 1, width)
+        for x in range(width):
+            scan(colour, x, width, height)
 
     return hit
 
@@ -273,9 +460,14 @@ def runs(cells, width, height):
 class Layout(object):
     """`SiegeLayout`. `fault` is None when the level is readable, and the sentence when it is not."""
 
-    def __init__(self, grid, deal, wards, waves, boss=None, cogs=0, endless=False):
+    def __init__(self, grid, deal, wards, waves, boss=None, cogs=0, endless=False, tough=0,
+                 charms=None):
         self.grid = grid
         self.endless = bool(endless)
+
+        # `SiegeLayout.Charms`. None is a body naming a charm this build does not have, which
+        # `_check` turns into a sentence rather than guessing at.
+        self.charms = charmed(charms)
         self.deal = tidy(deal, LETTERS)
         self.cogs = max(0, int(cogs or 0))
         self.wards = list(tidy(wards, WARD_LETTERS))
@@ -284,6 +476,10 @@ class Layout(object):
         # Exactly one legal name and one legal colour, or nothing - never `tidy`, which would
         # salvage an 'r' out of "dragon:r" and ship a warlord nobody authored. See `SiegeLayout`'s
         # constructor; the same clause refuses the retired one-letter form.
+        # `SiegeLayout.Tough`. Nought is what every body written before the field existed says,
+        # and it means the plain figure.
+        self.tough = 10 if not tough else tough
+
         self.boss_kind, self.boss = named_boss(boss)
         self.boss_wave = -1
 
@@ -321,11 +517,18 @@ class Layout(object):
             h = ((h ^ ord(c)) * 16777619) & 0xFFFFFFFF
         self.seed = h or 1
 
-        self.fault = self._check(boss)
+        self.fault = self._check(boss, charms)
 
-    def _check(self, boss):
+    def _check(self, boss, charms):
         if self.grid is None:
             return "no field"
+
+        # Refused by name, for the boss token's reason below: a body naming a charm this build does
+        # not have would otherwise deal the ones it recognised and ship a field nobody composed,
+        # with every other gate green (invariant 5f).
+        if self.charms is None:
+            return ("'%s' names a charm this mode does not have; a charm is one of '%s' and an "
+                    "empty field is how a level says it deals none" % (charms, CHARM_LETTERS))
 
         if boss and boss.strip() and not self.boss:
             return ("'%s' is not a boss this mode knows; a boss is written as a kind and the "
@@ -494,11 +697,20 @@ def kind_at(layout, wave, index):
 
 
 def par(layout):
-    """`SiegeTuning.Par` - what the level sends, over the most one match could ever be worth."""
+    """`SiegeTuning.Par` - what the level sends, over the most one match could ever be worth.
+
+    **What a bonecaller will raise is counted in full and whether it ever does** - see `RAISE_SIZE`.
+    """
     health = 0
     for w, line in enumerate(layout.coming):
         for i in range(len(line)):
-            health += health_of(kind_at(layout, w, i))
+            kind = kind_at(layout, w, i)
+
+            # Surged, because the hill really is - see `toughness_for`. A chapter whose raiders
+            # carry more health and whose par did not move would put three stars out of reach for
+            # the whole chapter, with every number in the file plausible.
+            health += surged(health_of(kind), layout.tough)
+            health += surged(raises_in_all(kind) * CREEPER_HEALTH, layout.tough)
 
     return max(1, -(-health // PERFECT_MATCH))
 
@@ -514,12 +726,23 @@ SWINGS_BEFORE_ANSWERED = 2
 def endangers(kind):
     """`SiegeTuning.EndangersTheLine` - whether this boss can bring a ward down, given long enough.
 
-    **One of the four cannot.** A blightcaller takes a ward's fire rather than its health, so a
-    level whose only threat were one could not be lost. It was two while the warbringer took ground
-    instead of health, which was withdrawn after play.
+    **Two of the six cannot.** A blightcaller takes a ward's fire rather than its health and a
+    gravemaw takes what is lying on the ground, so a level whose only threat were either could not
+    be lost. It was one while the warbringer took ground instead of health, which was withdrawn
+    after play.
+
+    **And it stopped being readable off the damage column**, which is what the bonecaller bought:
+    a raise takes no ward health at all and what it raises *walks and swings*, so a run can be lost
+    to a boss that never touches a ward itself.
     """
     row = BOSSES.get(kind)
-    return bool(row) and row["cast"] > 0
+    return bool(row) and (row["cast"] > 0 or row["spell"] == "raise")
+
+
+def raises_in_all(kind):
+    """`SiegeTuning.RaisesInAll` - every raider this boss will ever add, raised or not."""
+    row = BOSSES.get(kind)
+    return RAISE_SIZE * RAISES if row and row["spell"] == "raise" else 0
 
 
 def threatens(layout):
@@ -605,6 +828,21 @@ def readings(layout):
                 kind=layout.boss_kind or "",
                 spell=BOSSES[layout.boss_kind]["spell"] if layout.boss_kind else "",
                 cogs=layout.cogs, drops=layout.raiders * layout.cogs // 100,
+                tough=layout.tough,
+                charms="".join(dict((c, l) for l, c in CHARM_ROSTER)[c]
+                               for c in (layout.charms or ())),
+                # **How many charms a run is *guaranteed*, which is the only reading that can say
+                # a level has shipped one nobody will ever see** (invariant 5d, the same question
+                # the cog's drop rate is asked). The count it *expects* is about twice this,
+                # because a gap inside a window averages half of it. The floor is what a gate may
+                # refuse on.
+                #
+                # **The opening gap is its own, narrower window** (`CHARM_OPENING`), which is what
+                # makes this floor honest on a short rung: the first charm falls inside
+                # `CHARM_WITHIN / CHARM_OPENING` gems and every one after it inside a whole window.
+                # Counted as one window each would have said a rung too short for a full window
+                # deals none, which stopped being true the day the opening was bounded separately.
+                sparks=charm_floor(par(layout)),
                 threat=1 if threatens(layout) else 0,
                 swap=1 if any_swap(layout) else 0)
 

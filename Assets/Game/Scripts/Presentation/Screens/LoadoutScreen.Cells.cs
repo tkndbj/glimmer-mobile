@@ -267,18 +267,27 @@ namespace GlimmerGrove
                 UIKit.StretchTo((RectTransform)veil.transform, 0, 0, 0, 0);
                 veil.raycastTarget = false;
 
-                // Over the turret rather than beside it, and drawn at white — the same lock on
-                // the same decision the profile and the companion shelf make. `held` rather
-                // than a narrower state on purpose: what the padlock says is "this one is not
-                // yours", which is true of a turret you could buy this second as much as of one
-                // behind a keeper level. Which of the two it is, the footer says in words.
+                // **The padlock is the keeper wall and nothing else, which is the owner's
+                // decision and a narrowing.** It used to be drawn on `held`, on the argument that
+                // what it says is "this one is not yours" — true of a turret behind a wall and of
+                // one a player could buy this second. Played, that is a shelf of padlocks on a
+                // screen whose whole job is selling: a turret they have earned and can afford
+                // wears the same picture as one they cannot reach for thirty levels, so the lock
+                // stops meaning anything and the price under it is read as decoration too.
+                //
+                // So a wall gets the lock and everything else gets the veil alone — the veil is
+                // what says "not yours yet", and the lock is what says "and not for money".
                 //
                 // Built after the picture, so it draws over it: uGUI paints in sibling order.
-                var padlock = UIKit.Img("Lock", cell, Art.S("Ui/ic_padlock"), Color.white,
-                                        new Vector2(IconBox * .62f, IconBox * .62f),
-                                        new Vector2(.5f, 1f), new Vector2(0f, -(IconTop + IconBox * .5f)));
-                padlock.preserveAspect = true;
-                padlock.raycastTarget = false;
+                if (offer.State == WardPurchaseState.LevelLocked)
+                {
+                    var padlock = UIKit.Img("Lock", cell, Art.S("Ui/ic_padlock"), Color.white,
+                                            new Vector2(IconBox * .62f, IconBox * .62f),
+                                            new Vector2(.5f, 1f),
+                                            new Vector2(0f, -(IconTop + IconBox * .5f)));
+                    padlock.preserveAspect = true;
+                    padlock.raycastTarget = false;
+                }
             }
 
             // The name and the price, and nothing else - see `CellH`.
@@ -325,25 +334,13 @@ namespace GlimmerGrove
                 case WardPurchaseState.AlreadyHeld:
                     return;
 
-                case WardPurchaseState.Sealed:
-                    // **One word, and the same word the panel behind this cell uses.** It read
-                    // "After Lighthouse" — the rung named, on the argument that it is the only
-                    // one of the three refusals that names something to do. What that produced
-                    // on a shelf is a row of cells each naming a different turret, so the line a
-                    // player scans reads as twenty unrelated conditions rather than as one state
-                    // repeated; and the name is the *other* turret's, which is the one thing on
-                    // the cell not about the turret it is drawn on.
-                    //
-                    // What is lost is which turret unlocks it, and that is one tap away and
-                    // fuller: `ui.loadout.sealed_note` says "Buy {0} on this colour first" on the
-                    // panel, where there is room for a sentence. Same key as that panel's own
-                    // button, so the shelf and the thing it opens cannot come to disagree about
-                    // what this state is called.
-                    text = Loc.Get("ui.loadout.sealed");
-                    ink = Pal.A(Pal.Cream, .55f);
-                    break;
-
                 case WardPurchaseState.LevelLocked:
+                    // **The level, never the word LOCKED**, which is the owner's rule and the
+                    // same one the padlock above follows. There were two refusals here and the
+                    // coarser of them read "Locked" — one word over a cell, which says a player
+                    // cannot have this and not what would change that. "Level 26" is the same
+                    // length, is the actual condition, and reads against its neighbours as a
+                    // ladder rather than as a row of identical walls.
                     text = Loc.Format("ui.loadout.level", offer.RequiredLevel);
                     ink = Pal.A(Pal.Cream, .55f);
                     break;
@@ -380,10 +377,11 @@ namespace GlimmerGrove
                                      new Vector2(CellW - 66f, 48f), new Vector2(.5f, .5f),
                                      new Vector2(shift, 0f), 0f, 2f);
 
-            // **Down to 14 rather than 20, because this strip now sometimes holds a sentence.** A
-            // price is four characters and a sealed rung is "After Lighthouse"; a `UIKit.Label`
-            // that overflows is not clipped by anything (invariant 37n), so the floor is what
-            // stops it being drawn over the plate's own edge.
+            // **Down to 14 rather than 20, because this strip now sometimes holds words.** A price
+            // is four characters and a wall is "Level 26"; a `UIKit.Label` that overflows is not
+            // clipped by anything (invariant 37n), so the floor is what stops it being drawn over
+            // the plate's own edge. It was lowered for a longer caption still — a sealed rung read
+            // "After Lighthouse" — and it stays low, because the strip has held a sentence once.
             UIKit.Shrinkable(label, 14);
 
             if (!coin) return;

@@ -20,6 +20,15 @@ namespace GlimmerGrove
     /// </summary>
     public sealed partial class SiegeView
     {
+        /// <summary>
+        /// What a raider held by a stun is drawn in.
+        ///
+        /// <b>Darker and flatter, never brighter</b>, because <c>Image.color</c> is a multiply and
+        /// cannot do anything else (invariant 37l) — so what says "this one has been stopped" is
+        /// the colour draining out of it rather than a light coming on.
+        /// </summary>
+        static readonly Color Stunned = new Color(.56f, .60f, .72f);
+
         // ------------------------------------------------------------------ the clock
         /// <summary>
         /// Whether this run is under way at all, ignoring whether an animation is playing.
@@ -50,9 +59,26 @@ namespace GlimmerGrove
             // `Playable` rather than as `Live`. See `SiegeView.Hint`.
             Idle(Time.unscaledDeltaTime);
 
+            // **Before the gate too, and for the same reason.** A charm standing on a held board
+            // is the one thing on this field that is meant to catch the eye, and a halo that
+            // stopped breathing the moment a panel opened would tell a player the board had gone
+            // dead. It draws nothing on a field carrying no charm, which is most frames.
+            Breathe(Time.unscaledDeltaTime);
+
+            // **Before the gate, with `Idle` and `Breathe`, and for their reason.** A dilation is
+            // seconds of real time and has to expire whether or not the run is advancing - a panel
+            // raised over a charm would otherwise park the slowdown at full and hand it back to a
+            // board that had finished with it, which is a run that crawls for no reason anybody
+            // can see. Nothing is lost by counting it down behind a panel, because the clock it
+            // scales is not being read while the run is held.
+            Pacing(Time.unscaledDeltaTime);
+
             if (!Live) return;
 
-            var report = _board.Advance(Time.unscaledDeltaTime);
+            // **The run's own clock, which is the only place in this mode it may be bent.**
+            // Everything below is driven by what `Advance` is handed, so slowing this is slowing
+            // the hill, the wards, the muster and the fuel together - see `Dilate`.
+            var report = _board.Advance(Time.unscaledDeltaTime * _pace);
 
             // **The count-in is part of the run, so it is paced by the run.** Read off the
             // board's own quiet rather than timed beside it, which is what stops it running out
@@ -84,6 +110,12 @@ namespace GlimmerGrove
 
             if (report.Wave >= 0) Arrival(report.Wave);
             for (int i = 0; i < report.Bolts.Count; i++) Bolt(report.Bolts[i]);
+
+            // **The volley a stormglass loosed, as one event.** It is drawn here rather than with
+            // the beat that sprang it because the model books it exactly as it books a match's
+            // fuel (invariant 37s): the bolts land when the motes do, and the one thing this may
+            // not do is kill a raider before the gem that paid for it has finished bursting.
+            Volley(report.Charmed);
             for (int i = 0; i < report.Casts.Count; i++) Cast(report.Casts[i]);
 
             // What a bomber left behind. Drawn after the bolts, so the bomb arrives after the
@@ -95,6 +127,12 @@ namespace GlimmerGrove
             for (int i = 0; i < report.Cogs.Count; i++) Dropped(report.Cogs[i]);
 
             for (int i = 0; i < report.Spells.Count; i++) Smite(report.Spells[i]);
+
+            // **What a gravemaw ate.** After the spells, so the ring it opens is already there to
+            // be pulled into, and before `Fuses` and `Gears` below, so this owns the widgets
+            // rather than racing the polls that would otherwise sink them without saying why.
+            if (report.Devoured.Count > 0) Swallowed(report.Devoured);
+
             for (int i = 0; i < report.Blows.Count; i++) Blow(report.Blows[i]);
 
             Reap();
@@ -169,6 +207,83 @@ namespace GlimmerGrove
             }
         }
 
+        // ------------------------------------------------------------------ how fast time runs
+        /// <summary>
+        /// How fast the run's clock is running, as a share of real time.
+        ///
+        /// <para>
+        /// <b>One seam, because there is one clock.</b> Everything about a siege that moves on its
+        /// own — the hill walking, the wards firing, the muster, a boss's cadence, fuel crossing —
+        /// is a consequence of what <c>SiegeBoard.Advance</c> is handed, so scaling that one number
+        /// is the whole of what "slow motion" can mean here. Anything that tried to slow the
+        /// raiders alone would be a second opinion about time, and two of those disagree.
+        /// </para>
+        /// <para>
+        /// <b>It is difficulty-neutral by construction, which is why it is allowed to exist.</b>
+        /// The model advances by delivered seconds and by nothing else, so a run played half in
+        /// slow motion is the same run over more wall-clock: the hill has walked exactly as far
+        /// per second of ward fire as it always did. <b>That is not true of a hold that only stops
+        /// the drawing</b> — an earlier cut of the charms documented a hold that was never
+        /// implemented, and had it been, every chapter's difficulty would have become a function
+        /// of an animation constant. What a player does gain is time to <em>look</em>, which is
+        /// the point, and time to think, which a lesson and a panel already hand them.
+        /// </para>
+        /// <para>
+        /// <b>Invisible to every gate, and that is a fact rather than a loophole.</b>
+        /// <c>SiegeRuleTests</c> steps the board itself and never builds a view, so nothing here
+        /// reaches the hold simulation — because nothing here changes what the board is told.
+        /// </para>
+        /// </summary>
+        float _pace = 1f;
+
+        /// <summary>Seconds of real time left at <see cref="_slow"/>, and what it is.</summary>
+        float _paceLeft, _slow = 1f;
+
+        /// <summary>
+        /// How long the clock takes to come back up to speed.
+        ///
+        /// <b>Back rather than snapped, because a hill that jumps from a crawl to full speed reads
+        /// as a dropped frame.</b> Short enough not to be a second effect of its own.
+        /// </summary>
+        const float PaceBack = .28f;
+
+        /// <summary>
+        /// Runs the clock at <paramref name="pace"/> of real time for <paramref name="seconds"/>,
+        /// then eases it back.
+        ///
+        /// <b>The slower of two running dilations wins, and the longer end time wins</b> — a
+        /// cascade can spring two charms, and a stormglass's full stop must not be cut short by a
+        /// lance's crawl starting a beat later. That is <see cref="Felling"/>'s rule about two
+        /// deaths, said about time.
+        /// </summary>
+        void Dilate(float pace, float seconds)
+        {
+            if (seconds <= 0f) return;
+
+            _slow = Mathf.Min(_pace, Mathf.Clamp01(pace));
+            _pace = _slow;
+            _paceLeft = Mathf.Max(_paceLeft, seconds);
+        }
+
+        /// <summary>How much longer a drawing that wants to keep step with the clock should take.</summary>
+        float Stretched(float seconds) => seconds / Mathf.Max(_pace, .18f);
+
+        /// <summary>Counts a dilation down and eases the clock back up. Real seconds, always.</summary>
+        void Pacing(float dt)
+        {
+            if (_paceLeft > 0f)
+            {
+                _paceLeft -= dt;
+                _pace = _slow;
+                return;
+            }
+
+            if (_pace >= 1f) return;
+
+            _pace = Mathf.Min(1f, _pace + dt / PaceBack);
+            if (_pace >= 1f) _slow = 1f;
+        }
+
         void Follow()
         {
             var raiders = _board.Raiders;
@@ -202,17 +317,43 @@ namespace GlimmerGrove
 
                 // **White, not a coat** — the body carries its own colour now, so a hit is
                 // drawn by washing it out toward cream and letting it come back.
+                //
+                // **A stunned raider is drawn cold, and that is not decoration.** It stops where
+                // it stands while its walk cycle carries on playing, which on its own reads as the
+                // hill having jammed rather than as something the player's turret did — the class
+                // of fault invariant 20g is about, met on a purchase. The flash wins while it is
+                // running, because a hit landing is the newer piece of news.
                 if (mob.Body != null)
                     mob.Body.color = raider.Flash > 0f
                                    ? Color.Lerp(Color.white, Pal.Cream, raider.Flash * 5f)
-                                   : Color.white;
+                                   : raider.Stunned ? Stunned : Color.white;
 
-                // **A boss goes back to its own body the frame after a spell finishes.** There
-                // is nothing to choose between any more - an insect stands in the reel it walks in
-                // (see `Mob.Idle`) - so all this has to do is take the cast reel off, which `Wear`
-                // answers once however often it is asked.
+                // **A boss goes back to its own body the frame after a spell finishes, and which
+                // body that is depends on whether it has arrived.**
+                //
+                // There used to be nothing to choose between — an insect stands in the reel it
+                // walks in (see `Mob.Idle`) — so this only had to take the cast reel off. A boss
+                // rendered out of 3D has a real walk and a real stand (`Mob.Walking`), and the
+                // model already answers which one it is doing: `InPlace` is `March >= Hold`, the
+                // same predicate the rules use to decide when it may start casting, so the
+                // drawing and the fight cannot come to disagree about when it stopped.
+                //
+                // **A stunned one stands rather than walking on the spot.** Everything else on
+                // this hill keeps its cycle running through a stun and says so with the cold tint
+                // above, because an insect cycling in place is what it looks like standing
+                // anyway; a boss with a stride would be visibly walking while going nowhere,
+                // which reads as the hill having jammed (invariant 20g) rather than as something
+                // the player's turret did.
                 if (mob.Boss && !Throwing(mob))
-                    Wear(mob, mob.Idle);
+                    Wear(mob, mob.Walking != null && !raider.InPlace && !raider.Stunned
+                              ? mob.Walking : mob.Idle);
+
+                // **A raider that has arrived swings, and goes back to walking if it is ever
+                // moved off the line.** Every cast but the bone one answers null here and keeps
+                // walking exactly as it always has (`SiegeMode.CastSwingArt`). `Wear` is asked
+                // every frame and answers once, which is what it exists for.
+                if (!mob.Boss && mob.Swinging != null)
+                    Wear(mob, raider.AtTheLine ? mob.Swinging : mob.Idle);
             }
         }
 

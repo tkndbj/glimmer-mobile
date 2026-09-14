@@ -12,6 +12,7 @@ disagrees with one of these pictures, the picture is the one that is wrong.
 """
 from __future__ import annotations
 
+import math
 import sys
 from pathlib import Path
 
@@ -146,6 +147,34 @@ def glow(size, power, colour, alpha):
     return im
 
 
+def rays(size, count):
+    """`Art.Rays(size, count)` — the fan of wedges, out of the same arithmetic.
+
+    Here rather than in a screen's own mirror because two of them draw a chest pack over one
+    (invariant 44d: two screens made of the same furniture get one mirror). It is the whole of
+    what makes a row of pictures read as treasure, so a render that leaves it out says the
+    plate is emptier than it is.
+    """
+    im = Image.new("L", (size, size), 0)
+    px = im.load()
+    h = size * .5
+
+    def smooth(t):
+        t = min(1.0, max(0.0, t))
+        return t * t * (3 - 2 * t)
+
+    for y in range(size):
+        dy = (y - h) / h
+        for x in range(size):
+            dx = (x - h) / h
+            d = math.hypot(dx, dy)
+            if d >= 1.0:
+                continue
+            wedge = smooth((.5 + .5 * math.cos(math.atan2(dy, dx) * count) - .42) / .38)
+            px[x, y] = int(255 * wedge * smooth((d - .16) / .22) * smooth((1 - d) / .42))
+    return im
+
+
 # --------------------------------------------------------------------------- text
 def font(size):
     return ImageFont.truetype(str(FONT), int(size))
@@ -189,6 +218,18 @@ def room(sheet):
         d.ellipse([-W * .25 + inset, -H * .12 + inset, W * 1.25 - inset, H * 1.12 - inset],
                   outline=(*GROUND, int(255 * .52 / steps * 3)), width=max(2, int(H / steps)))
     sheet.alpha_composite(vig)
+
+
+def plain(sheet):
+    """`Scenery.Plain` — one uniform pattern, enveloped, with no shade and no vignette.
+
+    Deliberately neither: the pattern is uniform, so drifting it says nothing and darkening its
+    corners darkens a colour somebody chose.
+    """
+    im = Image.open(REPO / "Assets" / "Game" / "Art" / "Bg" / "plain.png").convert("RGBA")
+    s = max(W / im.width, H / im.height)
+    im = im.resize((int(im.width * s), int(im.height * s)), Image.LANCZOS)
+    sheet.alpha_composite(im, ((W - im.width) // 2, (H - im.height) // 2))
 
 
 def rail(sheet, top):

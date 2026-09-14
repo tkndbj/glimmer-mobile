@@ -218,7 +218,21 @@ def run(check: bool) -> int:
 
     for piece in catalog["pieces"]:
         art, animated = piece_art(piece)
-        changed, problem = apply(piece, art, animated)
+        # **A turnable piece is four pictures and one of them is not `<id>.png`.** This
+        # asked for one facing and the default field names whatever the row said, so for
+        # every one of the sixty-eight turnable pieces it looked for a plain PNG that has
+        # not existed since they became folders, found nothing, and reported the piece as
+        # having no art — `--check` red on a catalogue that was perfectly correct, and the
+        # writer silently leaving `hits` alone. `facts_for` and `apply` both took `facings`
+        # the whole time; the one caller that had to pass it did not.
+        #
+        # `content.py` is the gate that actually runs on the way past and it reads the row's
+        # facings itself, which is why this stayed hidden: the real check was green and only
+        # the repair tool was broken, and a repair tool is run exactly when something is
+        # already wrong.
+        facings = int(piece.get("facings") or 1)
+        fields = ("w", "h", "hits" if facings > 1 else "hit")
+        changed, problem = apply(piece, art, animated, fields, facings)
         if problem:
             problems.append(problem)
         elif changed:

@@ -157,7 +157,14 @@ namespace GlimmerGrove
             // The hub's own sky and nothing else from it. The grove here is the content, so
             // laying the hub's ground and decoration behind it would be two groves in one
             // picture — and this one is supposed to be the player's.
-            Scenery.Cover(Content, "home_sky", .05f, .42f);
+            // **A daylight sky is darkened by nothing.** This carried a flat shade and a
+            // near-black vignette that cost the corners .42 — the numbers a screen whose
+            // backdrop is only a *ground* can afford — and over a village lit by a sun they
+            // were most of "dark and dead": the brightest thing on the screen was being
+            // dimmed before anything was drawn over it. What is left is the little that
+            // still has a job, which is keeping the corners off the header's text.
+            var sky = Scenery.Cover(Content, "home_sky", 0f, .14f);
+            Scenery.Sun(sky);
             Fireflies.Spawn(Content, 16, new Color(1f, .93f, .70f), 6f, 20f);
 
             BuildField();
@@ -363,10 +370,16 @@ namespace GlimmerGrove
         /// </summary>
         void Take(string id)
         {
-            _draft?.Begin(id);
-
+            // The art is asked for before the ghost is opened, and the callback is the
+            // screen's ordinary Repaint — which repaints the ghost too (see Repaint). The
+            // first cut had the order the other way and a Repaint that only rebound the
+            // tiles, so the ghost was painted once, before its sprite existed, and stayed
+            // invisible until the first drag repainted it: the footprint lit and nothing in
+            // it, which is invariant 7b's white rectangle with the alpha turned down.
             var piece = HomesteadCatalog.Current.Find(id);
             if (piece.IsValid) GroveArtLoader.Add(_art, GroveArtLoader.Piece(piece), this, Repaint);
+
+            _draft?.Begin(id);
         }
 
         /// <summary>
@@ -402,8 +415,8 @@ namespace GlimmerGrove
 
             // How far the tallest and widest piece in the catalog reaches beyond its tile, so
             // the culling window keeps a tile alive while its picture is on screen.
-            GroveTileArt.Reach(catalog, out float up, out float side);
-            _field.SetReach(up, side);
+            GroveTileArt.Reach(catalog, out float up, out float side, out float down);
+            _field.SetReach(up, side, down);
 
             ShowOwned();
             _field.Rebuild();
@@ -413,9 +426,12 @@ namespace GlimmerGrove
             if (!OpenRise(floor))
             {
                 // Opened on the hall rather than on the field's origin, which is the corner of
-                // a diamond and therefore the emptiest place on the screen. The hall is two
-                // tiles deep, so its centre rather than its anchor.
-                if (GroveFloor.TryParse(floor.HallTile, out int col, out int row))
+                // a diamond and therefore the emptiest place on the screen. The hall is four
+                // tiles deep, so its centre rather than its anchor — and it is the seat the
+                // player moved it to, through the one accessor invariant 16q names, not the
+                // floor's constant. This read the constant, so a player who had moved their
+                // house opened every visit to their own grove on the ground it used to stand on.
+                if (HomesteadLayout.HallSeat(floor, out int col, out int row))
                     _field.CentreOn(floor.HallFootprint.CentreCol(col), floor.HallFootprint.CentreRow(row));
                 else
                     _field.CentreOn(floor.Cols / 2, floor.Rows / 2);
@@ -458,6 +474,13 @@ namespace GlimmerGrove
             _hits.Clear();
 
             _field.Refresh();
+
+            // The ghost is drawn from the same art the tiles are, and arrives the same way
+            // — asynchronously, after the frame that asked for it — so it repaints on every
+            // reason a tile does (invariant 7b). Left out, a piece taken from the inventory
+            // was a lit footprint with nothing standing in it until the first drag.
+            _draft?.Repaint();
+
             PaintSummary();
             _score?.Paint();
         }

@@ -61,10 +61,11 @@ namespace GlimmerGrove.Wards
         /// <summary>
         /// What it hits walks slower for a while.
         ///
-        /// <b>The only ability that buys time rather than damage</b>, which is why it is the one
-        /// that changes how a rung is played rather than how fast it ends: a frozen brute is a
-        /// brute the rest of the line gets a second pass at, and a frozen boss is a tell the
-        /// player can answer.
+        /// <b>One of the two abilities that buy time rather than damage</b> (<see cref="Stun"/> is
+        /// the other), which is why it changes how a rung is played rather than how fast it ends: a
+        /// frozen brute is a brute the rest of the line gets a second pass at, and a frozen boss is
+        /// a tell the player can answer. <b>What tells the two apart is that a chill is a rate and
+        /// a stun is a stop</b>: a slowed raider still walks, still swings and still casts.
         /// </summary>
         Frost,
 
@@ -107,24 +108,38 @@ namespace GlimmerGrove.Wards
         Ember,
 
         /// <summary>
-        /// It also fires at the <em>next</em> colour round the wheel, for a share of a full hit —
-        /// and its magnitude is that share, in tenths.
+        /// What it hits stops dead for a few seconds: it does not walk, it does not swing at the
+        /// line, and it does not cast. The seconds are its <c>Extent</c>, in tenths.
         ///
-        /// <b>The one model that widens the mode's central rule instead of adding to it.</b> A
-        /// turret only ever fires at its own colour (<c>SiegeBoard.Aim</c>), so a prism is the one
-        /// thing on the shelf that can answer a lane the player has not fed — at the cost of that
-        /// slot having no other trick at all.
-        ///
-        /// <b>Two colours and never three.</b> Under the lock a third would not be a better rung,
-        /// it would be the lock coming off, so <c>SiegeWard.MostPartners</c> pins the count at one
-        /// and the family climbs on the share instead (<c>SiegeWard.PartnerShare</c>). That also
-        /// keeps the two rungs genuinely different, which invariant 37ax requires of any family.
-        ///
-        /// <b>It can never make a bolt weaker</b>, which is invariant 42's whole promise: the
-        /// partner is aimed at only when this ward's own colour has nothing left standing, so
-        /// every partner shot is one the turret would otherwise not have fired.
+        /// <para>
+        /// <b>It replaced the prism, and the colour lock is why.</b> A prism fired at a second
+        /// colour for a share of a hit, which was worth something only in the moments a ward's own
+        /// colour was clear — and with a line holding one turret per colour that is a trick the
+        /// seat beside it was already doing at full weight. Withdrawn on the owner's reading:
+        /// invariant 5d, asked of a purchase.
+        /// </para>
+        /// <para>
+        /// <b>Its reach is the whole line even though it hits one raider</b>, which is why it
+        /// stands above armour on a shelf ordered by reach (invariant 37ax). A frost slows what one
+        /// ward was shooting at; a stun takes a raider out of the raid — every other turret gets
+        /// the same seconds, and so does the ward it was walking at.
+        /// </para>
+        /// <para>
+        /// <b>It can never lock a raider in place, and that bound is a rule rather than a
+        /// tuning.</b> A ward fires every <c>SiegeTuning.FireEvery</c> seconds, so a stun that
+        /// simply refreshed would stop its colour for the whole run — a fail state that rejects
+        /// nothing (invariant 5d) from the other side. <c>SiegeRaider.Stagger</c> makes a raider
+        /// walk free for <c>SiegeTuning.StunRest</c> seconds before another one takes hold, so the
+        /// duration is what the family climbs on and half the clock is the most it can ever buy.
+        /// </para>
+        /// <para>
+        /// <b>Its magnitude is not read.</b> Being stopped is not a thing there can be more or
+        /// less of, so the one number this ability has is how long — which lives in
+        /// <c>Extent</c>, where <see cref="Frost"/> and <see cref="Ember"/> already keep their
+        /// seconds.
+        /// </para>
         /// </summary>
-        Prism,
+        Stun,
 
         /// <summary>
         /// It holds more fuel, so a big match banks rather than spills.
@@ -155,7 +170,7 @@ namespace GlimmerGrove.Wards
             ("rend",   WardAbility.Rend),
             ("siphon", WardAbility.Siphon),
             ("ember",  WardAbility.Ember),
-            ("prism",  WardAbility.Prism),
+            ("stun",   WardAbility.Stun),
             ("beacon", WardAbility.Beacon),
         };
 

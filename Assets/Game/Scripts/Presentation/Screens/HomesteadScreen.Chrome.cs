@@ -22,7 +22,12 @@ namespace GlimmerGrove
         // ---------------------------------------------------------------- header
         void BuildHeader()
         {
-            var fade = UIKit.Img("TopFade", Content, Art.FadeUp(64), new Color(.02f, .06f, .09f, .82f));
+            // **.42, where it was .82.** A gradient this deep is a black bar across the top
+            // of a daylight sky, and it was holding up nothing: the banner is a ribbon, the
+            // two corner controls are skinned buttons and the summary carries a 3-unit
+            // outline, so every element under it already earns its own contrast. What is left
+            // is enough to seat the ribbon against the sky and not enough to say night.
+            var fade = UIKit.Img("TopFade", Content, Art.FadeUp(64), new Color(.02f, .06f, .09f, .42f));
             var frt = (RectTransform)fade.transform;
             frt.anchorMin = new Vector2(0f, 1f); frt.anchorMax = new Vector2(1f, 1f);
             frt.pivot = new Vector2(.5f, 1f);

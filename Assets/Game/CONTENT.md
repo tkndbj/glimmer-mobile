@@ -1536,7 +1536,56 @@ mean two things.
 Same channel caveat as the heart gate: hints are applied by the client and never
 adjudicated, so nothing here is published to `config/progression`.
 
+### Tasks and the chest ladder
+
+The optional `tasks` block: the four chest tiers, the daily slate and the weekly slate.
+Every reward in it is a chest, and a task names a tier rather than a prize (invariant 45).
+
+```json
+"tasks": {
+  "activePerPeriod": 3,
+  "tiers": [
+    { "id": "wood", "chest": { "guaranteed": [ { "kind": "credits", "min": 70, "max": 110 } ],
+                               "options": [ { "kind": "hearts", "min": 1, "max": 1, "weight": 25 }, "..." ] } },
+    "... silver, gold, royal — humblest first; the order is the rank"
+  ],
+  "daily":  [ { "id": "d_play",  "goal": "runs",    "target": 2,  "tier": "wood" },  "..." ],
+  "weekly": [ { "id": "w_bosses", "goal": "bosses", "target": 2,  "tier": "royal" }, "..." ]
+}
+```
+
+- **A tier's chest is a daily chest's shape** (`guaranteed` + one weighted pick) read by the same
+  reader, so every rule below about a daily chest's bands holds here. A tier id is permanent: it
+  names `Ui/Chest/{id}` (the closed icon, global), `Chests/{id}/` (the opening reel, scoped) and
+  `chest.{id}.name`. Add a tier and `Tools/make_chest_art.py` has to cut its pictures.
+- **A task id is permanent** — it is written into the save's claim set and into the claim id the
+  server keys a grant on. Retire one with `"retired": true` rather than deleting it: it leaves the
+  rotation and keeps its tier, so a claim already in flight still pays. Its title is
+  `task.{id}.name` with `{0}` the target, and `task.{id}.name_one` when the target can be one.
+- **A goal is code.** `runs`, `wins`, `stars`, `three_stars`, `matches`, `raiders`, `bosses`,
+  `charms`, `cogs`, `bombs`, `utilities`, `waves`, `streak`. Content may not invent one; an unknown
+  goal is skipped by name and the gate says so.
+- **The slate order is the rotation**: period `k` deals entries `k·n … k·n+n-1` of the live slate,
+  wrapping, identically on every device and on the server. Ten entries dealt three at a time show
+  every task in ten periods with no repeat between neighbours. Reordering or inserting re-deals
+  every period after the change; the server logs and pays a claim the new order would not have
+  dealt, inside the per-period allowance.
+- **Both gates check** that every tier's two pictures and every id's loc key exist, that the ladder
+  rises, that a utility a chest names exists, and that each slate holds at least `activePerPeriod`
+  live tasks. `Validate Content` prints the slates and what a day of tasks pays.
+
+**Re-run the seed script when you change the block.** `claimAwards` leaves a task claim
+unconfirmed if `config/progression` has no usable tasks block, so a retune that is not seeded
+stops the chests paying out rather than paying the wrong amount. The generator exists **three**
+times for this block — `ChestSeed.cs`, `functions/src/tasks.ts` and `Tools/make_task_vectors.py`,
+which writes the `taskChestCases` vectors both harnesses run.
+
 ### Daily chests
+
+**Retired in place** on 2026-09-14: the ladder is a daily task now (invariant 45). The block
+below is still authored and still seeded, because a client on an older build still opens these
+chests and the server still prices its claims from this table. Nothing on the current build
+counts a run into it or opens one from it.
 
 The optional `daily` block. Three chests, earned by finishing runs and opened by hand
 from the home screen.
@@ -1903,7 +1952,7 @@ into an Addressables group; the icon is consumed by the build pipeline instead a
 is never loaded at runtime. It lives in `Assets/Game/Branding/Icons/`.
 
 The five files there are generated, not authored. One artwork
-(`Tools/IconSource/glimmer_launcher.jpeg`) is the master; `make_launcher_icons.py`
+(`Tools/IconSource/glimmer_launcher.png`) is the master; `make_launcher_icons.py`
 derives every shape the two stores want:
 
 ```
@@ -1920,23 +1969,36 @@ Glimmer Grove ▸ Validate Launcher Icons      # 37 slots, all assigned
 
 Three things about that script are worth knowing before changing the artwork:
 
-- **The master is a rounded badge on black.** Every platform masks the icon itself,
-  so shipping the black field would draw a black frame around the real icon. The
-  script finds the badge, insets past the glass rim the artist drew along its edge,
-  and extends the nearest real pixel outward into the corners. The result is a
-  true full-bleed square.
+- **The subject is found by flooding the background, never by colour.** The artwork
+  is three turrets firing over a radial burst of blue, and the cyan turret reads
+  (20, 240, 253) against a background that reads (76, 233, 253) near the burst's
+  centre — the same colour to any threshold that would also keep the blue plate.
+  What separates them is the near-black outline the artist drew round every turret,
+  so the script floods inward from the border across everything that is neither
+  outline nor flame and keeps what the flood cannot reach. **Excluding the flames
+  from the flood is the load-bearing half**: a flame leaves the muzzle without an
+  outline, so with them passable the fill walks up the barrel and hollows out the
+  turret behind it — which is exactly how the cyan turret was lost on the first cut,
+  with nothing else about the run looking wrong.
 - **The iOS master is written as RGB, deliberately.** App Store Connect rejects a
   1024 icon that carries an alpha channel.
-- **The adaptive background is a fitted gradient, not a blurred plate.** An adaptive
-  icon's background layer has to cover the area the character stands in front of.
-  Erasing him and blurring leaves a ghost of the silhouette that peeks out from
-  behind the foreground layer, so the script fits a cubic polynomial per channel to
-  the pixels that *are* background and evaluates it everywhere. The sparkles are
-  composited back on top; the light rays are not, because they radiate from behind
-  him and would end abruptly.
+- **The adaptive background is a fitted burst, not a blurred plate.** An adaptive
+  icon's background layer has to cover the area the turrets stand in front of.
+  Erasing them and blurring leaves a ghost of the silhouette that peeks out from
+  behind the foreground layer, and extending each ray inward from the last pixel it
+  can be seen at smears the plinths' ground shadow into a cone down the plate. So
+  the burst is *fitted* as the one thing it is — brightness that varies with radius
+  (a hot centre, a vignette at the corners) times a colour that varies with angle
+  (the rays) — separable, in the log of each channel, three passes with the outliers
+  thrown out so the sparkles and the shadow do not drag it. **The bins are read back
+  by interpolation rather than by bin**, because a piecewise-constant radial profile
+  draws visible rings across the plate. The sparkles are composited back on top; the
+  ground shadow is not, because it belongs to the turrets rather than to the plate
+  they stand on. The burst's centre is searched for, not typed: the right centre is
+  the one that leaves the background's brightness depending on angle and little else.
 
 The subject in the foreground layer is fitted to 286 px of the 432 px canvas — just
-under the 72 dp every launcher mask keeps — so the crown and the plinth survive a
+under the 72 dp every launcher mask keeps — so the outermost flame tips survive a
 circular mask.
 
 ## Sound

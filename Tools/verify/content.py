@@ -700,7 +700,8 @@ def check_siege(lid, chapter_id, level, block):
                  # had just found. An empty reading prints as a level that sends nothing,
                  # which is exactly what a refused one is.
                  siege=dict(raiders=0, waves=0, brutes=0, bulwarks=0, colours=0, wards=0,
-                            boss='', kind='', spell='', cogs=0, drops=0, threat=0, swap=0))
+                            boss='', kind='', spell='', cogs=0, drops=0, threat=0, swap=0,
+                            charms='', sparks=0))
 
     w, h = block.get('width') or 0, block.get('height') or 0
 
@@ -730,7 +731,9 @@ def check_siege(lid, chapter_id, level, block):
 
     layout = rules.Layout(grid, block.get('gems'), block.get('wards'), block.get('waves'),
                           block.get('boss'), block.get('cogs') or 0,
-                          endless=bool(endless_block.get('goldWave')))
+                          endless=bool(endless_block.get('goldWave')),
+                          tough=block.get('tough') or 0,
+                          charms=block.get('charms') or '')
 
     if layout.fault:
         errors.append("%s: %s" % (lid, layout.fault))
@@ -803,6 +806,39 @@ def check_siege(lid, chapter_id, level, block):
                         "lesson all ship and most players never see one"
                         % (lid, layout.cogs, layout.raiders))
 
+    # **Invariant 5d asked of the charms, and it is the cog's question with a different
+    # denominator.** A charm is dealt into a *refill* rather than dropped by a kill, so what
+    # decides whether a player ever meets one is how many gems the level clears - which is par
+    # times what a match takes. A rung that authors a charm its own length can never deal ships the
+    # rule, its picture and its lesson to somebody who will never see any of them, which is
+    # precisely what happened to two whole raider kinds (invariant 40a).
+    # **One window, because that is what the mechanism guarantees.** A charm falls once a window at
+    # a place inside it the roll picks, so a run that clears a whole window's worth of gems is
+    # dealt at least one and a shorter run can be dealt none - which is the failure this is for,
+    # and it is not hypothetical: the first version of this was a *rate*, and `s01_stonewatch`, the
+    # rung that introduces the prism, put its first charm at deal 351 against a run that ends at
+    # about 324. Dealt none, at every rhythm, for ever (invariant 37ci).
+    #
+    # **A floor and not an expectation.** What a run of these levels really meets is about twice
+    # this, because the gap inside a window averages half of it - measured, the warned rungs deal
+    # two to four. A gate may only refuse on the guarantee.
+    if layout.charms and read['sparks'] < 1:
+        warnings.append("%s: this field deals charms '%s' and clears about %d gems over a run at "
+                        "par %d, which is under the %d-gem window a charm falls in - so a run can "
+                        "be dealt none, and the mechanic, its art and its lesson all ship to "
+                        "somebody who never sees one"
+                        % (lid, read['charms'],
+                           par * rules.MATCH_GEMS_TENTHS // 10, par,
+                           rules.CHARM_WITHIN))
+
+    # Certain. A stormglass throws at every raider standing on the hill and at nothing else, so a
+    # field dealing one onto a hill nobody has to fight is a payoff that rejects nothing (5d) - and
+    # the same is true of a level so short the charm arrives after the last wave is down.
+    if rules.STORM in (layout.charms or ()) and layout.raiders < 4:
+        errors.append("%s: this field deals a stormglass and sends %d raider(s). A stormglass is "
+                      "worth what is standing on the hill when it goes, so on a hill this short "
+                      "there is nothing for it to be worth" % (lid, layout.raiders))
+
     if not read['threat']:
         warnings.append("%s: no wave here holds enough raiders to bring a ward down even if every "
                         "one of them reached the line, so this siege cannot be lost" % lid)
@@ -844,7 +880,8 @@ def check_endless(lid, chapter_id, level, block, grid, layout, endless):
                  # had just found. An empty reading prints as a level that sends nothing,
                  # which is exactly what a refused one is.
                  siege=dict(raiders=0, waves=0, brutes=0, bulwarks=0, colours=0, wards=0,
-                            boss='', kind='', spell='', cogs=0, drops=0, threat=0, swap=0))
+                            boss='', kind='', spell='', cogs=0, drops=0, threat=0, swap=0,
+                            charms='', sparks=0))
 
     if block.get('waves') or block.get('boss'):
         errors.append("%s: this siege authors both an endless ramp and its own waves. A lane whose "
@@ -2371,13 +2408,154 @@ def check_utilities(progression, keys, warnings):
     return errors, known
 
 
+#: The goals a task may name. Mirrors `TaskGoals`. A goal is a verb the game counts, so
+#: content may not invent one: an entry naming an unknown goal is skipped by the reader
+#: exactly as a chapter naming an unknown mode is (invariant 20), and reported here.
+TASK_GOALS = {"runs", "wins", "stars", "three_stars", "matches", "raiders", "bosses",
+              "charms", "cogs", "bombs", "utilities", "waves", "streak"}
+
+#: A task or tier id: written into save files, claim ids and loc keys, so it is the same
+#: alphabet a level id is. Mirrors `TaskDefinition.IsValidId`.
+TASK_ID = __import__("re").compile(r"^[a-z0-9_]{1,32}$")
+
+
+def check_tasks(progression, keys, utilities, art, warnings):
+    """The task slates and their chest ladder. `ContentValidation.ValidateTasks`, offline.
+
+    What the reader on the phone refuses is refused here too (a tier nobody defined, a
+    duplicated id, a target of nought). What only a gate can see:
+
+    * **Every tier has its two pictures in this build** - the closed icon (`Ui/Chest/{id}`)
+      and the opening reel (`Chests/{id}`). Both are *built* from the id, so `artnames.py`
+      cannot see either, and a missing one is a white rectangle on the hub or over the one
+      ceremony in the game that is entirely a picture (invariant 7b).
+    * **Every task and tier resolves its derived loc key** (`task.{id}.name`,
+      `chest.{id}.name`); `loc.py` cannot see a derived key at all (invariant 5a).
+    * **The ladder rises**: a dearer tier guarantees more than the one below it, or the harder
+      task reads as the game punishing the player for taking it.
+    * **A utility a chest names exists**, the daily chests' own cross-check.
+    * **A slate deals what it says**: at least `activePerPeriod` live tasks, or the page shows
+      fewer rows than the copy promises.
+    """
+    errors = []
+    block = progression.get("tasks")
+    if not block:
+        warnings.append("progression.json has no 'tasks' block; the built-in slate ships")
+        return errors, {}
+
+    per = block.get("activePerPeriod", 3)
+    tiers = block.get("tiers") or []
+    if not tiers:
+        errors.append("tasks block lists no chest tiers")
+        return errors, {}
+
+    tier_ids = []
+    floors = []
+    for index, tier in enumerate(tiers):
+        tid = tier.get("id") or ""
+        if not TASK_ID.match(tid):
+            errors.append(f"tasks tier {index} has a bad id '{tid}'")
+            continue
+        if tid in tier_ids:
+            errors.append(f"tasks tier '{tid}' is listed twice")
+        tier_ids.append(tid)
+
+        for address in (f"Ui/Chest/{tid}", f"Chests/{tid}"):
+            if address not in art:
+                errors.append(f"tasks tier '{tid}' draws '{address}', which is not on disk; "
+                              "run Tools/make_chest_art.py - a picture is not content")
+
+        key = f"chest.{tid}.name"
+        if key not in keys:
+            errors.append(f"tasks tier '{tid}' needs loc key '{key}'")
+
+        chest = tier.get("chest") or {}
+        guaranteed = chest.get("guaranteed") or []
+        if not guaranteed:
+            errors.append(f"tasks tier '{tid}' guarantees nothing; every chest must pay something")
+        floors.append(sum(max(1, b.get("min", 0)) for b in guaranteed))
+
+        for role in ("guaranteed", "options"):
+            for band in chest.get(role) or []:
+                kind = band.get("kind")
+                if kind == "run_time":
+                    errors.append(f"tasks tier '{tid}' {role} pays 'run_time', which is spent "
+                                  "inside a run; a chest is opened where there is no run")
+                if role == "options" and band.get("weight", 1) < 1:
+                    errors.append(f"tasks tier '{tid}' option '{kind}' has weight "
+                                  f"{band.get('weight')}; an option that can never be picked is "
+                                  "an odds table that lies about itself")
+                if kind != "utility":
+                    continue
+                item = band.get("item") or ""
+                if not item:
+                    errors.append(f"tasks tier '{tid}' {role} pays 'utility' and names no item")
+                elif item not in utilities:
+                    errors.append(f"tasks tier '{tid}' {role} pays utility '{item}', which the "
+                                  "utilities block does not define")
+
+    for i in range(1, len(floors)):
+        if floors[i] <= floors[i - 1]:
+            errors.append(f"tasks tier '{tier_ids[i]}' guarantees {floors[i]}, not more than "
+                          f"'{tier_ids[i - 1]}' at {floors[i - 1]}; a dearer chest must pay more")
+
+    ids = set()
+    slates = {}
+    for period in ("daily", "weekly"):
+        entries = block.get(period) or []
+        if not entries:
+            errors.append(f"tasks block lists no {period} tasks")
+            continue
+
+        live = 0
+        for index, entry in enumerate(entries):
+            tid = entry.get("id") or ""
+            if not TASK_ID.match(tid):
+                errors.append(f"{period} task {index} has a bad id '{tid}'")
+                continue
+            if tid in ids:
+                errors.append(f"task id '{tid}' is listed twice; it is written into the save "
+                              "and a claim, so two tasks sharing one would pay as one")
+            ids.add(tid)
+
+            goal = entry.get("goal")
+            if goal not in TASK_GOALS:
+                errors.append(f"{period} task '{tid}' names unknown goal '{goal}'; the reader "
+                              "skips it and the slate is one short")
+            if entry.get("target", 0) < 1:
+                errors.append(f"{period} task '{tid}' has target {entry.get('target')}")
+            if entry.get("tier") not in tier_ids:
+                errors.append(f"{period} task '{tid}' pays tier '{entry.get('tier')}', which "
+                              "the block does not define")
+
+            key = f"task.{tid}.name"
+            if key not in keys:
+                errors.append(f"{period} task '{tid}' needs loc key '{key}'")
+            if entry.get("target") == 1 and f"task.{tid}.name_one" not in keys:
+                warnings.append(f"{period} task '{tid}' has a target of one and no "
+                                f"'task.{tid}.name_one'; the sentence reads '1 battles'")
+
+            if not entry.get("retired"):
+                live += 1
+
+        if live < per:
+            errors.append(f"the {period} slate has {live} live task(s) and deals {per}; the "
+                          "page would show fewer rows than the copy promises")
+        elif live < per * 2:
+            warnings.append(f"the {period} slate has only {live} live task(s) for {per} a "
+                            "period, so consecutive periods repeat tasks")
+        slates[period] = live
+
+    return errors, {"tiers": tier_ids, "per": per, "slates": slates}
+
+
 #: The abilities a turret may name. Mirrors `WardAbilities`.
 #:
 #: An ability is a rule the board runs, so an entry naming one this build has never heard of still
 #: stands and simply fires a plain bolt (invariant 20, one level down) - which is a warning here
 #: rather than an error, exactly as an unknown chest kind is.
 WARD_ABILITIES = {"none", "splash", "chain", "frost", "pierce", "rend", "siphon", "ember",
-                  "prism", "beacon"}
+                  "stun", "beacon"}
 
 #: The four colours a turret is cut in. `WardLine.Colours`.
 WARD_COLOURS = "rgby"
@@ -2398,6 +2576,65 @@ WARD_LEAST_GUARD = 7
 #: upgrades there are (one fewer than there are stars).
 WARD_TIERS = 3
 WARD_STAR_STEPS = 4
+
+#: `WardTier.Opens` - the shelf rung each band starts at, lowest first.
+WARD_TIER_OPENS = (1, 11, 18)
+
+#: `WardTier.Gates` and `WardTier.TopLevel` - the keeper level each band's rungs stand at or
+#: above, and the highest level the top band may ask for.
+#:
+#: **The bands are the ladder now.** A turret used to be sealed until the rung below it on the
+#: shelf was bought, so the three headers were a caption over an order that was already forced;
+#: with the seal gone at the owner's decision, a keeper level is the whole of what opens a rung
+#: and the header is the only thing saying when a stretch of the shelf opens. A rung authored
+#: outside its band parses, prices, validates and plays - what it does is put a lie in a header.
+WARD_TIER_GATES = (1, 20, 30)
+WARD_TOP_LEVEL = 40
+
+
+#: `EndlessHubLayout.Points` - how many short lines a hub says about the lane it draws.
+HUB_POINTS = 3
+
+#: `GameTrack.Laddered` - the lanes that are a chain of levels to walk. Everything else is a
+#: single endless run and draws a hub instead of a map (`EndlessHub`), which is what needs the
+#: extra strings below.
+LADDERED_TRACKS = {"main"}
+
+
+def check_tracks(manifest, keys):
+    """Every lane a chapter names can draw its own screen. `ContentValidation.ValidateTracks`.
+
+    **Here because nothing else can see these keys.** A lane's name, its tagline and - for a lane
+    with no ladder - the three lines its hub says are all *derived* from the track id
+    (`GameTrack.NameKey`, `TaglineKey`, `PointKey`), exactly as a turret's name is derived from
+    its own. `loc.py` reads literals off call sites and there is no literal to read, so a
+    mistyped or forgotten string is a blank row on a screen with every other gate green - which
+    is the failure invariant 6 exists to make impossible.
+
+    **Asked of the lanes the manifest actually names**, not of every lane this build knows: a
+    track whose chapters are all disabled draws nothing and owes no copy.
+    """
+    errors = []
+
+    lanes = sorted({(c.get("track") or "main") for c in manifest.get("chapters", [])})
+
+    for track in lanes:
+        for key in (f"track.{track}.name", f"track.{track}.tagline"):
+            if key not in keys:
+                errors.append(f"track '{track}' needs loc key '{key}'")
+
+        if track in LADDERED_TRACKS:
+            continue
+
+        # A lane with no ladder draws a hub, and a hub says exactly this many lines.
+        for i in range(1, HUB_POINTS + 1):
+            key = f"track.{track}.point{i}"
+            if key not in keys:
+                errors.append(f"track '{track}' draws a hub rather than a map, so it needs loc "
+                              f"key '{key}' - a hub says {HUB_POINTS} lines and an absent one "
+                              "is a blank row")
+
+    return errors
 
 
 def check_wards(progression, keys, warnings, art):
@@ -2576,9 +2813,10 @@ def check_wards(progression, keys, warnings, art):
 
     # **No two rungs of the shelf are the same turret**, which is the one thing about this roster
     # that reads as correct in every other gate. A magnitude nobody reads makes two rungs of one
-    # ability identical - `rend` and `prism` both shipped that way, so a thousand-gem breaker was
-    # exactly a four-thousand-credit cleaver and the dearer one bought nothing (invariant 5d, on
-    # the one thing a player pays for). Priced rungs only: the free turret is not a rung.
+    # ability identical - `rend` and the withdrawn `prism` both shipped that way, so a
+    # thousand-gem breaker was exactly a four-thousand-credit cleaver and the dearer one bought
+    # nothing (invariant 5d, on the one thing a player pays for). Priced rungs only: the free
+    # turret is not a rung.
     same = {}
 
     for entry in models:
@@ -2604,6 +2842,17 @@ def check_wards(progression, keys, warnings, art):
     # The shelf read as one ladder. `WardCatalog.LadderProblem`, offline - and it is asked of the
     # *sorted* roster rather than of the file's order, because what it is about is the shelf a
     # player reads top to bottom.
+    #
+    # **Two rules, and both of them moved when the sequential unlock went.** A wall used to have
+    # to climb *strictly*, because a rung was sealed until the one below it was held: reaching it
+    # meant having met every wall under it, so a level a lower rung had already asked for could
+    # never refuse anybody (invariant 5d). That argument went with the seal - a level of twenty
+    # refuses everybody under twenty whatever stands beside it - so ties are legal now and only a
+    # *fall* is refused, on the plainer ground that the shelf climbs by reach and by price, so a
+    # wall that drops opens the dearer, further-reaching turret first (37ax).
+    #
+    # What replaces the strictness is the band: every wall has to stand in the stretch its own
+    # header promises, which is the rule the removal left uncovered.
     highest, below = 0, None
 
     for entry in sorted(models, key=lambda e: int(e.get("order") or 0)):
@@ -2614,12 +2863,29 @@ def check_wards(progression, keys, warnings, art):
             continue
 
         level = int(entry.get("minLevel") or 0)
+        order = int(entry.get("order") or 0)
 
-        if level <= highest:
-            errors.append(f"wards entry '{entry.get('id')}' asks for keeper level {level}, which "
-                          f"'{below}' below it on the shelf already asked for; a rung is sealed "
-                          "until the one before it is bought, so a gate that does not climb can "
-                          "never refuse anybody")
+        if level < highest:
+            errors.append(f"wards entry '{entry.get('id')}' asks for keeper level {level}, under "
+                          f"the {highest} that '{below}' below it on the shelf asks for; the shelf "
+                          "climbs by reach and by price, so a wall that falls opens the dearer "
+                          "turret first")
+            break
+
+        band = 1
+        for i, opens in enumerate(WARD_TIER_OPENS):
+            if order >= opens:
+                band = i + 1
+
+        opens = WARD_TIER_GATES[band - 1]
+        closes = (WARD_TOP_LEVEL if band == WARD_TIERS
+                  else WARD_TIER_GATES[band] - 1)
+
+        if level < opens or level > closes:
+            errors.append(f"wards entry '{entry.get('id')}' stands in band {band}, which opens "
+                          f"between keeper level {opens} and {closes}, and asks for {level}; a "
+                          "band is the only thing saying when a stretch of the shelf opens now "
+                          "that no rung is sealed behind another")
             break
 
         highest, below = level, entry.get("id")
@@ -2888,30 +3154,53 @@ def daily_income(progression):
     """
     credits = gems = 0.0
 
-    daily = progression.get("daily") or {}
-    for chest in daily.get("chests") or []:
-        for band in chest.get("guaranteed") or []:
-            mid = (band.get("min", 0) + band.get("max", 0)) * 0.5
-            if band.get("kind") == "credits":
-                credits += mid
-            elif band.get("kind") == "gems":
-                gems += mid
-
-        options = chest.get("options") or []
-        total = sum(max(1, o.get("weight", 1)) for o in options) or 1
-
-        for option in options:
-            mid = (option.get("min", 0) + option.get("max", 0)) * 0.5
-            share = max(1, option.get("weight", 1)) / total
-            if option.get("kind") == "credits":
-                credits += mid * share
-            elif option.get("kind") == "gems":
-                gems += mid * share
+    # The daily chest ladder is not counted: it is retired in place on this build (see
+    # DailyChests), still seeded so an older client's claims are priced, and paid to nobody
+    # on the build this gate proves. Its successor is the tasks block below.
 
     rungs = ((progression.get("streak") or {}).get("rungs")) or []
     if rungs:
         credits += sum(r.get("amount", 0) for r in rungs if r.get("kind") == "credits") / len(rungs)
         gems += sum(r.get("amount", 0) for r in rungs if r.get("kind") == "gems") / len(rungs)
+
+    # The tasks: every dealt task's chest at its tier's expectation, the daily slate over a
+    # day and the weekly over seven. Averaged over the whole slate rather than one period's
+    # deal, because which three are dealt rotates and the income is a figure about a player,
+    # not about a Tuesday.
+    tasks = progression.get("tasks") or {}
+    tiers = {t.get("id"): t.get("chest") or {} for t in tasks.get("tiers") or []}
+    per = tasks.get("activePerPeriod", 3)
+
+    def expected(chest):
+        c = g = 0.0
+        for band in chest.get("guaranteed") or []:
+            mid = (band.get("min", 0) + band.get("max", 0)) * 0.5
+            if band.get("kind") == "credits":
+                c += mid
+            elif band.get("kind") == "gems":
+                g += mid
+        options = chest.get("options") or []
+        total = sum(max(1, o.get("weight", 1)) for o in options) or 1
+        for option in options:
+            mid = (option.get("min", 0) + option.get("max", 0)) * 0.5
+            share = max(1, option.get("weight", 1)) / total
+            if option.get("kind") == "credits":
+                c += mid * share
+            elif option.get("kind") == "gems":
+                g += mid * share
+        return c, g
+
+    for period, days in (("daily", 1), ("weekly", 7)):
+        live = [t for t in tasks.get(period) or [] if not t.get("retired")]
+        if not live:
+            continue
+        c = g = 0.0
+        for task in live:
+            tc, tg = expected(tiers.get(task.get("tier"), {}))
+            c += tc
+            g += tg
+        credits += c / len(live) * min(per, len(live)) / days
+        gems += g / len(live) * min(per, len(live)) / days
 
     return int(credits), int(gems)
 
@@ -3335,11 +3624,21 @@ def main():
     utility_errors, utilities = check_utilities(progression, keys, warnings)
     errors.extend(utility_errors)
 
+    # The task slates. Their art and copy are derived from ids (a tier's icon and reel, a
+    # task's title), so neither artnames.py nor loc.py can see them - and a chest naming a
+    # utility that does not exist rolls, seeds and grants nothing.
+    task_errors, tasks = check_tasks(progression, keys, utilities, art_on_disk(), warnings)
+    errors.extend(task_errors)
+
     # The turret roster. Checked here rather than nowhere: its art addresses are *built* from an
     # id (`WardModel.ArtFor`), so `artnames.py` cannot see them, and its loc keys are derived from
     # one, so `loc.py` cannot either.
     ward_errors, wards = check_wards(progression, keys, warnings, art_on_disk())
     errors.extend(ward_errors)
+
+    # The lanes. Their copy is derived from the track id, so `loc.py` cannot see it either - and
+    # a lane with no ladder draws a whole screen out of strings nothing else names.
+    errors.extend(check_tracks(manifest, keys))
 
     if utilities:
         # Printed rather than merely checked, because a cooldown is a number nobody can read off
@@ -3361,6 +3660,12 @@ def main():
         print("")
         print(f"turrets: {len(wards)} on the shelf, four colours each - "
               "a run loads the four a player stood on the line")
+
+    if tasks:
+        slates = ", ".join(f"{n} {period}" for period, n in sorted(tasks["slates"].items()))
+        print("")
+        print(f"tasks: {slates} on the slate, {tasks['per']} of each dealt a period, paying "
+              f"{len(tasks['tiers'])} chest tier(s) ({', '.join(tasks['tiers'])})")
 
     if shop:
         shelves = ", ".join(f"{n} {shelf}" for shelf, n in sorted(shop["shelves"].items()))

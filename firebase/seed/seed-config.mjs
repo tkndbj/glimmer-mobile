@@ -295,6 +295,7 @@ function buildProgressionConfig() {
       golden: readGolden(progression),
       events: readEvents(manifest, levelChapters),
       keeper: readKeeperCurve(progression),
+      tasks: readTasks(progression),
     },
     products: readStore(progression),
     levelCount,
@@ -860,6 +861,68 @@ const KINDS_NEEDING_ITEM = new Set(["utility"]);
  * because a seeder that published a figure the server would clamp differently is a seeder
  * that publishes a disagreement.</p>
  */
+/**
+ * The task slates and their chest ladder, published verbatim so the server can re-roll a
+ * task's chest and bound a period's claims. Refused whole on anything malformed, for
+ * `readDaily`'s reason: a config document without a usable block leaves every task claim
+ * unconfirmed, deliberately, so it is validated here rather than discovered in production.
+ */
+function readTasks(progression) {
+  const tasks = progression.tasks;
+
+  if (!tasks || !Array.isArray(tasks.tiers) || tasks.tiers.length === 0) {
+    throw new Error(
+      "progression.json has no 'tasks' block. The server re-rolls each task chest to decide " +
+      "what it pays, so seeding without one would leave every task claim unconfirmed."
+    );
+  }
+
+  const ID = /^[a-z0-9_]{1,32}$/;
+  const tierIds = new Set();
+
+  const tiers = tasks.tiers.map((tier, index) => {
+    if (!tier || !ID.test(tier.id ?? "")) throw new Error(`tasks tier ${index} has a bad id '${tier?.id}'`);
+    if (tierIds.has(tier.id)) throw new Error(`tasks tier '${tier.id}' is listed twice`);
+    tierIds.add(tier.id);
+
+    const chest = tier.chest ?? {};
+    const guaranteed = (chest.guaranteed ?? []).map((band) => band8(band, `tier ${tier.id}`, "guaranteed"));
+    if (guaranteed.length === 0) throw new Error(`tasks tier '${tier.id}' guarantees nothing`);
+
+    const options = (chest.options ?? []).map((option) => ({
+      ...band8(option, `tier ${tier.id}`, "option"),
+      weight: Math.max(1, Math.floor(option.weight ?? 1)),
+    }));
+
+    return { id: tier.id, chest: { guaranteed, options } };
+  });
+
+  const ids = new Set();
+  const slate = (entries, period) => {
+    if (!Array.isArray(entries) || entries.length === 0) throw new Error(`tasks block lists no ${period} tasks`);
+
+    return entries.map((entry, index) => {
+      if (!entry || !ID.test(entry.id ?? "")) throw new Error(`${period} task ${index} has a bad id '${entry?.id}'`);
+      if (ids.has(entry.id)) throw new Error(`task id '${entry.id}' is listed twice`);
+      ids.add(entry.id);
+
+      if (!tierIds.has(entry.tier)) throw new Error(`${period} task '${entry.id}' pays unknown tier '${entry.tier}'`);
+      const target = Math.floor(entry.target ?? 0);
+      if (target < 1) throw new Error(`${period} task '${entry.id}' has target ${target}`);
+
+      const row = { id: entry.id, goal: String(entry.goal ?? ""), target, tier: entry.tier };
+      return entry.retired ? { ...row, retired: true } : row;
+    });
+  };
+
+  return {
+    activePerPeriod: Math.max(1, Math.floor(tasks.activePerPeriod ?? 3)),
+    tiers,
+    daily: slate(tasks.daily, "daily"),
+    weekly: slate(tasks.weekly, "weekly"),
+  };
+}
+
 function readStreak(progression) {
   const streak = progression.streak;
 
@@ -926,15 +989,18 @@ function maxStreakAmount(kind) {
 }
 
 function band8(band, chestIndex, role) {
+  // A daily chest is named by its index and a task tier by a label; both read as "chest ...".
+  const where = typeof chestIndex === "number" ? `daily chest ${chestIndex}` : `chest ${chestIndex}`;
+
   if (!band || !CHEST_KINDS.has(band.kind)) {
-    throw new Error(`daily chest ${chestIndex} ${role} names unknown reward kind '${band?.kind}'`);
+    throw new Error(`${where} ${role} names unknown reward kind '${band?.kind}'`);
   }
 
   const min = Math.floor(band.min ?? 0);
   const max = Math.floor(band.max ?? 0);
 
   if (min < 1 || max < min) {
-    throw new Error(`daily chest ${chestIndex} ${role} '${band.kind}' has band ${min}..${max}`);
+    throw new Error(`${where} ${role} '${band.kind}' has band ${min}..${max}`);
   }
 
   // A kind that names a thing and does not name one would be drawn on the panel as a prize
@@ -943,7 +1009,7 @@ function band8(band, chestIndex, role) {
 
   if (KINDS_NEEDING_ITEM.has(band.kind) && !item) {
     throw new Error(
-      `daily chest ${chestIndex} ${role} pays '${band.kind}' and names no item; a chest ` +
+      `${where} ${role} pays '${band.kind}' and names no item; a chest ` +
       "cannot hand over a utility without saying which"
     );
   }
@@ -1034,6 +1100,8 @@ console.log(
   `config/progression: ${levelCount} level(s), ` +
   `${Object.keys(config.chapterRewards).length} chapter override(s), ` +
   `${config.daily.chests.length} daily chest(s) every ${config.daily.runsPerChest} run(s), ` +
+  `${config.tasks.daily.length} daily / ${config.tasks.weekly.length} weekly task(s) over ` +
+  `${config.tasks.tiers.length} chest tier(s), ` +
   `${config.ads ? Object.keys(config.ads.placements).length : 0} ad placement(s), ` +
   `seeds ${config.seeds.credits} credits / ${config.seeds.gems} gems`
 );

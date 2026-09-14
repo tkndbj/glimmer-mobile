@@ -1,0 +1,436 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chests
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chests
+  m_GUID: e4bf754274a69fd4abe565eefa7c0f09
+  m_SerializeEntries:
+  - m_GUID: 01f8ad0afee6c76babe4c39d694cce1c
+    m_Address: Art/Chests/silver/f16
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 07ba7a7ddc5b5f8eada8c93ae4267623
+    m_Address: Art/Chests/royal/f13
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 07e28875753b3ce9dbff20483263135f
+    m_Address: Art/Chests/silver/f11
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 11873356ec69415fcd1abcd0478704e7
+    m_Address: Art/Chests/silver/f07
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 12c274a6293a6925de3d17dc40111d02
+    m_Address: Art/Chests/royal/f05
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 181b825ad6202baabe7468cfa96917c6
+    m_Address: Art/Chests/silver/f09
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1ae5af10587a546cd474c973822f92f4
+    m_Address: Art/Chests/gold/f00
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1d7ef20da3198ea5e7fe2369593cae7e
+    m_Address: Art/Chests/gold/f16
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1def89f10dfe398d24bfb2d8446103ad
+    m_Address: Art/Chests/silver/f02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 223d3b959678d2ea0a77471f698bfa11
+    m_Address: Art/Chests/silver/f13
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 22451aaec7780a15d5d014e51fffb735
+    m_Address: Art/Chests/wood/f00
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2416cfbcdadab1b809a29c4438fe3746
+    m_Address: Art/Chests/gold/f02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 248b968cfc381859fa8bba3e02e68034
+    m_Address: Art/Chests/gold/f01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2fd37d22a03d1507ed3568845964086b
+    m_Address: Art/Chests/royal/f10
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 31ecce269752618fe731864c20871b5d
+    m_Address: Art/Chests/wood/f07
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3236e7f1a610cd1229998b2926ec0019
+    m_Address: Art/Chests/gold/f11
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3a2922766bfdb291a0212a791744f034
+    m_Address: Art/Chests/gold/f10
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4129267c302adf7aadb72accf7d99c4c
+    m_Address: Art/Chests/silver/f10
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 422b67731a8b061941c41c1641f43fae
+    m_Address: Art/Chests/royal/f11
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 46304649ba0f5b66b8801ba8c9145690
+    m_Address: Art/Chests/wood/f10
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4ee078daf1a3d0eff2cdd4801665f065
+    m_Address: Art/Chests/silver/f12
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4f3d763b9657843f9d8288096317e533
+    m_Address: Art/Chests/silver/f08
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 500c8ef1907bcbbc3d0f54f7e7e832e2
+    m_Address: Art/Chests/silver/f04
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 50f1cfd4924f3400bf62a6ccb88be04a
+    m_Address: Art/Chests/silver/f03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 512629721d2b7f867e6f7690a84c778d
+    m_Address: Art/Chests/gold/f07
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5783f872c933c0ac5a4a574a8ef18270
+    m_Address: Art/Chests/royal/f02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5bc05bd92e995ad67c55ab9306cb8222
+    m_Address: Art/Chests/wood/f16
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5c3798a378cf9dfaea8d8ec07f4b7c0c
+    m_Address: Art/Chests/wood/f06
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 629b3ef5d01b01f80a6e782db4afb355
+    m_Address: Art/Chests/royal/f01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 672aa59652d59fd98f6ae613ccdcd130
+    m_Address: Art/Chests/royal/f16
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6ae73ca2ffc87ed3715e8808bec1a428
+    m_Address: Art/Chests/gold/f05
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6cd28143f8edcac5aa9e4fd712b45f29
+    m_Address: Art/Chests/wood/f04
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7640fd8dcb11f885e2b1016397dd78b4
+    m_Address: Art/Chests/gold/f13
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7764b2f0eb5a3ded4ccae3f9d9ad63ad
+    m_Address: Art/Chests/royal/f07
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 78b91d22708275ca32819d6dc6d48ac1
+    m_Address: Art/Chests/royal/f09
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7bcfbc4ba0f7c9e08309b4f88ccaabd2
+    m_Address: Art/Chests/royal/f08
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7c527b0411e10f2dc2a3131dcba387a6
+    m_Address: Art/Chests/gold/f06
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 817e29151d65eb344a3c3f5bfd51fd2d
+    m_Address: Art/Chests/wood/f11
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 833c12d39393ecdf9db5e5eef022e367
+    m_Address: Art/Chests/wood/f02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8e0d68f9c117597acaa5635667e4a5e0
+    m_Address: Art/Chests/royal/f14
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 90fdc4377ddb991f06f9ad494e2c26ec
+    m_Address: Art/Chests/royal/f00
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 954f475debe5791ccd8d3bed2369ab6d
+    m_Address: Art/Chests/wood/f08
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9558a36b2cf5c32fb3cb6d2b5a51cf29
+    m_Address: Art/Chests/royal/f15
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 96aaa37dde78f2cd783931abd5463a9c
+    m_Address: Art/Chests/silver/f15
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9b1da3c472ad0f1cb6f9cf96218564fa
+    m_Address: Art/Chests/wood/f15
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a10d421b08283c45e4e2bada7b1cf35e
+    m_Address: Art/Chests/silver/f05
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a985f9487abe01371deb158cf38cfa34
+    m_Address: Art/Chests/gold/f12
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac1042b4fd670736bcacdfef07643d8c
+    m_Address: Art/Chests/royal/f04
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aff3e7c69e5c6eb8bc85937b218b0bcb
+    m_Address: Art/Chests/wood/f03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aff7637bcbb3cec8be9ab18a41d1cd1c
+    m_Address: Art/Chests/royal/f03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bd1c90ec16e19218e00cc7dc54c68976
+    m_Address: Art/Chests/royal/f12
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: beb58e5316ce59d758b34e9df6d219ee
+    m_Address: Art/Chests/wood/f05
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf4e6858271c01f9810f3a891528ff50
+    m_Address: Art/Chests/wood/f13
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c021992ee7894a9a570d1738539bd015
+    m_Address: Art/Chests/gold/f15
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c086b89bf80ae7288361a4d9eab4f912
+    m_Address: Art/Chests/silver/f06
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c4f180e15094048f7926ed6e6fec7ab1
+    m_Address: Art/Chests/wood/f14
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c67d6d90363bb08176ea9ed2c8a34ebe
+    m_Address: Art/Chests/gold/f08
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c7a89f05c24a1b8b1734ba4ea93a5ea1
+    m_Address: Art/Chests/royal/f06
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/royal
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c990dab73a5f9cfbf4c6da3dcf69640f
+    m_Address: Art/Chests/gold/f09
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc74101226a6ae0de11e1b38e5c93804
+    m_Address: Art/Chests/silver/f01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: db05f3b55618dd5ce638562626a68022
+    m_Address: Art/Chests/gold/f03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e17e5a3d9114b07149473debae2f5caf
+    m_Address: Art/Chests/silver/f00
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e75bf03b9c958508dd1588600bc2586b
+    m_Address: Art/Chests/wood/f09
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f140d260779056bf2b6cf76f04d9f7da
+    m_Address: Art/Chests/wood/f12
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f9f0d902e37b0fe2d26e3725a55051f1
+    m_Address: Art/Chests/wood/f01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/wood
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fa4aebf0feff6fdc3a5bb1ee9390cb27
+    m_Address: Art/Chests/silver/f14
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/silver
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fd61b4b8266d73fca83ee4e982faa528
+    m_Address: Art/Chests/gold/f04
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff4def46c275b76869f785cd826f8470
+    m_Address: Art/Chests/gold/f14
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Chests/gold
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 3b8e849ba6d9079429446598db0e9688, type: 2}
+    - {fileID: 11400000, guid: 328504f27e23d7a48b668d6a1b4b0a08, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chests_BundledAssetGroupSchema
+    - Glimmer Chests_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

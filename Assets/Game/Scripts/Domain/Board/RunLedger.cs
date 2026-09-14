@@ -171,7 +171,7 @@ namespace GlimmerGrove
             // PlayerProgress hears about wins only — a defeat is not a worse clear, it simply
             // did not happen — so there is no single hook further down to hang this on, and
             // pretending otherwise would silently stop counting losses.
-            DailyChests.RecordRun();
+            Tasks.TaskLedger.RecordRun(run);
             var streak = Record();
 
             var reward = PlayerProgression.RewardFor(before, PlayerProgress.Record(level.Id));
@@ -237,7 +237,7 @@ namespace GlimmerGrove
             bool charged = price == HeartPrice.Charged && Wallet.TrySpendHeart();
             int left = Wallet.Hearts.Count;
 
-            DailyChests.RecordRun();
+            Tasks.TaskLedger.RecordRun(run);
             var streak = Record();
 
             LevelAnalytics.TrackDefeated(level, run.Moves, run.Seconds, left, reason.ToString());

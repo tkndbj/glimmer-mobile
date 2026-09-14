@@ -116,7 +116,8 @@ namespace GlimmerGrove
         float _zoomStart;
 
         /// <summary>How far a piece's art can reach beyond its tile, in floor pixels. See <see cref="SetReach"/>.</summary>
-        float _reachUp = GroveFloor.TileHeight * 2f, _reachSide = GroveFloor.TileWidth;
+        float _reachUp = GroveFloor.TileHeight * 2f, _reachSide = GroveFloor.TileWidth,
+              _reachDown = GroveFloor.TileHeight;
 
         /// <summary>Raised when a tile is tapped. Never fires for a drag, or after a hold.</summary>
         public Action<int, int> TileTapped;
@@ -217,11 +218,20 @@ namespace GlimmerGrove
         /// oak. The screen reads the number off the catalog once (<c>GroveTileArt.Reach</c>);
         /// the price is a row or two of extra cells at the bottom of the screen.
         /// </para>
+        /// <para>
+        /// <paramref name="down"/> is the same argument at the other edge, and it was missing
+        /// for as long as every piece stood on one tile. A piece is drawn from its anchor,
+        /// which for a footprint is the <em>back</em> corner, so a four-by-four house hangs
+        /// most of its picture below its anchor's row — and a window padded by one tile at
+        /// the top culled the hall with two thirds of it in view the moment its back corner
+        /// scrolled past the edge. A visitor met it as a grove with no town hall.
+        /// </para>
         /// </summary>
-        public void SetReach(float up, float side)
+        public void SetReach(float up, float side, float down)
         {
             _reachUp = Mathf.Max(GroveFloor.TileHeight, up);
             _reachSide = Mathf.Max(GroveFloor.TileWidth * .5f, side);
+            _reachDown = Mathf.Max(GroveFloor.TileHeight, down);
             Revisit();
         }
 
@@ -706,9 +716,10 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// The rectangle is the viewport grown by <see cref="SetReach"/>: downward by how far
-        /// a piece's art reaches up, sideways by how far it reaches out. A piece is drawn from
-        /// its anchor tile, so a tile whose art is in view must be live even when its ground
-        /// is off the bottom of the screen.
+        /// a piece's art reaches up, upward by how far it hangs down, sideways by how far it
+        /// reaches out. A piece is drawn from its anchor tile, so a tile whose art is in view
+        /// must be live even when its ground is off the bottom — or, for a footprint whose
+        /// anchor is its back corner, off the top — of the screen.
         /// </para>
         /// </summary>
         void Cull()
@@ -719,7 +730,7 @@ namespace GlimmerGrove
             float halfH = _viewport.rect.height * .5f / Mathf.Max(.01f, _zoom);
 
             float left = -_pan.x - halfW - _reachSide, right = -_pan.x + halfW + _reachSide;
-            float top = _pan.y - halfH - GroveFloor.TileHeight, bottom = _pan.y + halfH + _reachUp;
+            float top = _pan.y - halfH - _reachDown, bottom = _pan.y + halfH + _reachUp;
 
             int minCol = int.MaxValue, maxCol = int.MinValue;
             int minRow = int.MaxValue, maxRow = int.MinValue;

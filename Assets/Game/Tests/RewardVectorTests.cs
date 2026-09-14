@@ -46,6 +46,15 @@ namespace GlimmerGrove.Tests
             public DailyVectorCase[] dailyChestCases;
 
             /// <summary>
+            /// The task chest's own tiers and cases — a chest seeded from a subject rather
+            /// than a day. Synthetic for <see cref="dailyChestConfig"/>'s reason: what is under
+            /// contract is the seeding, not this season's ladder.
+            /// </summary>
+            public TaskTierDto[] taskChestTiers;
+
+            public TaskVectorCase[] taskChestCases;
+
+            /// <summary>
             /// The golden picker's own vectors: (account, level) to a percentage. The
             /// bands live inside <see cref="progression"/> rather than beside them,
             /// because unlike a chest's drop table the multiplier is part of the credit
@@ -125,6 +134,21 @@ namespace GlimmerGrove.Tests
         {
             public string kind;
             public int amount;
+
+            /// <summary>Which thing, for a utility drop. Empty otherwise.</summary>
+            public string item;
+        }
+
+        [Serializable]
+        public sealed class TaskVectorCase
+        {
+            public string name;
+            public string playerKey;
+            public string period;
+            public int key;
+            public string taskId;
+            public string tier;
+            public DropVector[] drops;
         }
 
         /// <summary>
@@ -719,17 +743,88 @@ namespace GlimmerGrove.Tests
                           "half of what the server grants");
         }
 
+        /// <summary>
+        /// The task chest's own contract: a chest seeded from a subject. Rolled here through
+        /// <see cref="ChestSeed.ForSubject"/> exactly as <c>TaskLedger.SeedFor</c> rolls it,
+        /// and again in <c>functions/src/tasks.ts</c>. The cases were produced by a third copy
+        /// of the generator (<c>Tools/make_task_vectors.py</c>), so a disagreement here says
+        /// which side moved.
+        /// </summary>
+        [Test]
+        public void EveryTaskChestVectorMatches()
+        {
+            var file = Load();
+
+            Assert.IsNotNull(file.taskChestTiers, "the vector file has no task chest tiers");
+            Assert.IsNotNull(file.taskChestCases, "the vector file has no task chest cases");
+            Assert.Greater(file.taskChestCases.Length, 0);
+
+            var tiers = new Dictionary<string, ChestDefinition>();
+            foreach (var tier in file.taskChestTiers)
+            {
+                var problems = new List<string>();
+                var chest = DailyChestTable.ReadChest(tier.chest, "vector tier " + tier.id, problems);
+                Assert.IsEmpty(problems, string.Join("; ", problems));
+                tiers[tier.id] = chest;
+            }
+
+            var failures = new List<string>();
+
+            foreach (var test in file.taskChestCases)
+            {
+                Assert.IsTrue(Tasks.TaskPeriods.TryParse(test.period, out var period), test.period);
+                var seed = ChestSeed.ForSubject(test.playerKey, Tasks.TaskLedger.SeedTag,
+                                                Tasks.TaskLedger.Subject(period, test.key, test.taskId));
+
+                string got = Describe(tiers[test.tier].Roll(seed));
+                string want = Describe(test.drops);
+
+                if (got != want)
+                    failures.Add($"'{test.name}': expected {want}, got {got}");
+            }
+
+            Assert.IsEmpty(failures,
+                           "the client no longer rolls task chests the way the server does. If this " +
+                           "change was intended, regenerate firebase/shared/reward-vectors.json with " +
+                           "Tools/make_task_vectors.py and make the same change in " +
+                           "firebase/functions/src/tasks.ts — otherwise the server will grant a " +
+                           "different amount than the game showed.\n" + string.Join("\n", failures));
+        }
+
+        /// <summary>
+        /// The task vectors have to keep covering the two cases a naive seeding gets wrong:
+        /// one id in two periods, and a day key equal to a week key, are different chests.
+        /// </summary>
+        [Test]
+        public void TheTaskVectorsCoverTheSeedingTraps()
+        {
+            var file = Load();
+            var names = new List<string>();
+            foreach (var test in file.taskChestCases ?? new TaskVectorCase[0]) names.Add(test.name);
+            string joined = string.Join(" | ", names);
+
+            Assert.IsTrue(joined.Contains("@weekly:2901:d_play#"), "a daily id claimed in the weekly period");
+            Assert.IsTrue(joined.Contains("@daily:2901:w_win#"), "a day key that equals a week key");
+            Assert.IsTrue(joined.Contains("(Ünïcödé)@"), "a non-ASCII player key, hashed per code unit");
+        }
+
         static string Describe(IEnumerable<ChestDrop> drops)
         {
             var parts = new List<string>();
-            foreach (var drop in drops) parts.Add($"{ChestDropKinds.Id(drop.Kind)}={drop.Amount}");
+            foreach (var drop in drops)
+                parts.Add(drop.Item.Length > 0
+                    ? $"{ChestDropKinds.Id(drop.Kind)}:{drop.Item}={drop.Amount}"
+                    : $"{ChestDropKinds.Id(drop.Kind)}={drop.Amount}");
             return parts.Count == 0 ? "(nothing)" : string.Join(",", parts);
         }
 
         static string Describe(DropVector[] drops)
         {
             var parts = new List<string>();
-            foreach (var drop in drops ?? new DropVector[0]) parts.Add($"{drop.kind}={drop.amount}");
+            foreach (var drop in drops ?? new DropVector[0])
+                parts.Add(string.IsNullOrEmpty(drop.item)
+                    ? $"{drop.kind}={drop.amount}"
+                    : $"{drop.kind}:{drop.item}={drop.amount}");
             return parts.Count == 0 ? "(nothing)" : string.Join(",", parts);
         }
 

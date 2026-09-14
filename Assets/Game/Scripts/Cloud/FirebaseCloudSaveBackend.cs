@@ -700,8 +700,13 @@ namespace GlimmerGrove.Cloud
                 var reply = await CallAsync("claimAwards",
                                             new Dictionary<string, object> { { "awards", payload } });
 
-                WarnAboutRejections(reply);
-                return (CloudResult.Success, ReadWalletStates(reply));
+                // A refused claim is handed back on every row rather than warned about and
+                // forgotten: the ledger drops it, or it is resubmitted and refused for ever.
+                var states = ReadWalletStates(reply);
+                var refused = Rejected(reply);
+                foreach (var state in states) state.RejectedGrantIds.AddRange(refused);
+
+                return (CloudResult.Success, states);
             }
             catch (Exception e)
             {
@@ -1497,6 +1502,19 @@ namespace GlimmerGrove.Cloud
         /// A debit the server refused is a bug or an attack, never routine — the client
         /// checks affordability before recording one. Worth a loud log either way.
         /// </summary>
+        /// <summary>The ids a reply's top-level <c>rejected</c> list names. Empty when it names none.</summary>
+        static List<string> Rejected(IDictionary<string, object> reply)
+        {
+            var ids = new List<string>();
+            if (reply == null) return ids;
+            if (!reply.TryGetValue("rejected", out object raw) || !(raw is IEnumerable<object> list)) return ids;
+
+            foreach (var id in list)
+                if (id is string s && s.Length > 0) ids.Add(s);
+
+            return ids;
+        }
+
         static void WarnAboutRejections(IDictionary<string, object> reply)
         {
             if (reply == null) return;

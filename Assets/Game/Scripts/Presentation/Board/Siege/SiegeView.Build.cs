@@ -28,6 +28,11 @@ namespace GlimmerGrove
             // A storm still falling over a board that has just been dealt again owns nothing:
             // the widgets it claimed went with `_mob`. See `_striking`.
             _striking.Clear();
+            _volleying.Clear();
+
+            // A board dealt again mid-charm must not hand the next beat a hold taken for a stone
+            // that no longer exists.
+            _holdUntil = 0f;
 
             _tally.Clear();
             _chain = null;
@@ -481,11 +486,24 @@ namespace GlimmerGrove
             post.Tier.rectTransform.anchoredPosition = new Vector2(0f, Cell * .06f);
         }
 
-        /// <summary>The dark sockets a gem stands in, drawn once and never taken away.</summary>
+        /// <summary>
+        /// The dark sockets a gem stands in, drawn once and never taken away.
+        ///
+        /// <para>
+        /// <b>The plate under them runs to the edge of the board, exactly as the ground and the
+        /// rampart do</b> (see <see cref="PlateWide"/>). On a phone it always did, by arithmetic
+        /// rather than by rule — the field is laid out to the width, so eight cells and a
+        /// third of one is the plate's own width to within six units. On a tablet the field is
+        /// laid out to the width a <em>phone</em> would have given it (invariant 37cc,
+        /// <see cref="CellFor"/>), so the two part by a couple of hundred units and a plate cut
+        /// to the cells would leave a strip of bare board down each side of the one band that is
+        /// meant to read as a surface. A floor is not a widget on the board; it is the board.
+        /// </para>
+        /// </summary>
         void Sockets()
         {
             var plate = UIKit.Img("Plate", _field, Piece("plate"), Color.white,
-                                  new Vector2(Cell * Width + Cell * .34f,
+                                  new Vector2(Mathf.Max(Cell * Width + Cell * .34f, PlateWide),
                                               Cell * Height + Cell * .34f));
             plate.raycastTarget = false;
             plate.type = Image.Type.Sliced;
@@ -506,7 +524,7 @@ namespace GlimmerGrove
         {
             for (int i = 0; i < Width * Height; i++)
             {
-                var gem = Mint(Face(i));
+                var gem = Mint(Face(i), _board.CharmAt(i));
                 gem.Img.rectTransform.anchoredPosition = CentreOf(i);
                 _gems.Add(gem);
 

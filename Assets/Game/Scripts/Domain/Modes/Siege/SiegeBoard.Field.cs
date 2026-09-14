@@ -29,7 +29,15 @@ namespace GlimmerGrove.Modes
         public bool Lines(int a, int b)
         {
             if (!Adjacent(a, b)) return false;
-            if (_cells[a] == _cells[b]) return false;
+
+            // **Identical means the same colour <em>and</em> the same charm, and the second half
+            // arrived with the prism.** This used to be the letters alone, which is a correct
+            // shortcut for exactly as long as two gems of one colour are interchangeable: a prism
+            // swapped with an ordinary gem of the letter it happens to be carrying underneath is a
+            // real move — it puts a wild somewhere it can join something — and refusing it here
+            // would have been a swap the drag rejected, the hint never offered and the shuffle
+            // believed impossible, all with nothing in any file wrong.
+            if (_cells[a] == _cells[b] && _charms[a] == _charms[b]) return false;
 
             // **A web and a sack are both refused here rather than by the caller**, because
             // `Lines` is the one question every door asks — the drag, `AnySwap`, `Settle`'s own
@@ -37,15 +45,35 @@ namespace GlimmerGrove.Modes
             // drag alone would be a rule the shuffle could break.
             if (!Movable(a) || !Movable(b)) return false;
 
-            char keepA = _cells[a], keepB = _cells[b];
-            _cells[a] = keepB;
-            _cells[b] = keepA;
+            Trade(a, b);
+            bool any = SiegeLayout.Runs(_cells, Width, Height, _charms).Count > 0;
+            Trade(a, b);
 
-            bool any = SiegeLayout.Runs(_cells, Width, Height, null).Count > 0;
-
-            _cells[a] = keepA;
-            _cells[b] = keepB;
             return any;
+        }
+
+        /// <summary>
+        /// Swaps two cells and everything standing on them.
+        ///
+        /// <b>One place, because a parallel array is only ever wrong in the move somebody
+        /// forgot.</b> Three readers exchange two cells — the trial inside <see cref="Lines"/>,
+        /// the real swap, and <see cref="Settle"/>'s shuffle — and a charm left behind by any one
+        /// of them is a gem whose picture and whose rule disagree.
+        /// </summary>
+        void Trade(int a, int b)
+        {
+            char cell = _cells[a];
+            _cells[a] = _cells[b];
+            _cells[b] = cell;
+
+            var charm = _charms[a];
+            _charms[a] = _charms[b];
+            _charms[b] = charm;
+
+            // Recorded, never read by any rule - see `SiegeAttention`. It is here rather than at
+            // the three call sites for the reason this method exists at all: a parallel fact is
+            // only ever wrong in the move somebody forgot.
+            Attention.CharmSwapped(a, b);
         }
 
         /// <summary>Whether any swap on this field would line anything up.</summary>
@@ -113,20 +141,28 @@ namespace GlimmerGrove.Modes
         {
             if (!Lines(a, b)) return null;
 
-            char keep = _cells[a];
-            _cells[a] = _cells[b];
-            _cells[b] = keep;
+            Trade(a, b);
 
             var turn = new SiegeTurn { A = a, B = b };
 
             int depth = 0;
             while (true)
             {
-                var hit = SiegeLayout.Runs(_cells, Width, Height, null);
+                for (int i = 0; i < _paid.Length; i++) _paid[i] = '\0';
+
+                var hit = SiegeLayout.Runs(_cells, Width, Height, _charms, _paid);
                 if (hit.Count == 0) break;
 
                 depth++;
                 var beat = new SiegeBeat { Depth = depth, Fuel = new float[_wards.Length] };
+
+                // **Everything a charm adds is folded into the beat that set it off, before a
+                // single cell is taken away.** A lance that takes its row and column has not
+                // started a cascade — a cascade is what falls in afterwards — so its cells clear
+                // on the same beat, pay on the same beat and are drawn going in one picture. The
+                // alternative, resolving it as a beat of its own, would have shown the row going
+                // a fifth of a second after the match that caused it and read as two events.
+                Spring(hit, beat);
 
                 foreach (int cell in hit) beat.Cleared.Add(cell);
                 beat.Cleared.Sort();
@@ -138,10 +174,19 @@ namespace GlimmerGrove.Modes
                 {
                     int cell = beat.Cleared[i];
 
-                    int ward = Layout.WardOf(_cells[cell]);
+                    // **Paid as what the run made it, never as the letter underneath.** For every
+                    // ordinary gem those are the same character; for a prism they are not, and
+                    // that difference is the whole of what a wild is worth (`SiegeLayout.Runs`).
+                    // A cell a lance took that was in no run of its own is paid as its own colour,
+                    // which is what the fallback says.
+                    char worth = _paid[cell] != '\0' ? _paid[cell] : _cells[cell];
+                    beat.Paid.Add(SiegeLayout.Letters.IndexOf(worth));
+
+                    int ward = Layout.WardOf(worth);
                     if (ward >= 0) beat.Fuel[ward] += SiegeTuning.FuelPerGem;
 
                     _cells[cell] = Hole;
+                    _charms[cell] = SiegeCharm.None;
                 }
 
                 turn.Worth += beat.Cleared.Count;
@@ -211,7 +256,15 @@ namespace GlimmerGrove.Modes
                         _cells[to] = c;
                         _cells[from] = Hole;
 
-                        beat.Drops.Add(new SiegeDrop(x, y, write, SiegeLayout.Letters.IndexOf(c)));
+                        // A charm falls with the gem it is riding. Cleared rather than left
+                        // behind, because a stale entry above the write head would be picked up
+                        // by the next thing to land on it.
+                        _charms[to] = _charms[from];
+                        _charms[from] = SiegeCharm.None;
+                        Attention.CharmMoved(from, to);
+
+                        beat.Drops.Add(new SiegeDrop(x, y, write, SiegeLayout.Letters.IndexOf(c),
+                                                     _charms[to]));
                     }
 
                     write--;
@@ -221,9 +274,16 @@ namespace GlimmerGrove.Modes
                 int fresh = 0;
                 for (int y = write; y >= 0; y--)
                 {
-                    char c = Deal();
-                    _cells[IndexOf(x, y)] = c;
-                    beat.Drops.Add(new SiegeDrop(x, -1 - fresh, y, SiegeLayout.Letters.IndexOf(c)));
+                    char c = Deal(out var charm);
+                    int to = IndexOf(x, y);
+
+                    _cells[to] = c;
+                    _charms[to] = charm;
+
+                    if (charm != SiegeCharm.None) Attention.CharmDealt(charm, to);
+
+                    beat.Drops.Add(new SiegeDrop(x, -1 - fresh, y, SiegeLayout.Letters.IndexOf(c),
+                                                 charm));
                     fresh++;
                 }
             }
@@ -252,14 +312,12 @@ namespace GlimmerGrove.Modes
                 for (int i = free.Count - 1; i > 0; i--)
                 {
                     int j = (int)(Next() % (uint)(i + 1));
-                    char keep = _cells[free[i]];
-                    _cells[free[i]] = _cells[free[j]];
-                    _cells[free[j]] = keep;
+                    Trade(free[i], free[j]);
                 }
 
                 // A shuffle that lands three alike together would go off with nobody having
                 // touched it, so it is dealt again rather than resolved.
-                if (SiegeLayout.Runs(_cells, Width, Height, null).Count > 0) continue;
+                if (SiegeLayout.Runs(_cells, Width, Height, _charms).Count > 0) continue;
             }
         }
 
@@ -284,7 +342,96 @@ namespace GlimmerGrove.Modes
         /// raider that a lane already took, so what changed is where a draw happens and never how
         /// many there are.
         /// </summary>
-        char Deal() => Layout.Deal[(int)(Next() % (uint)Layout.Deal.Length)];
+        /// <summary>
+        /// <b>Still exactly one draw, and that is what let charms ship without re-rolling every
+        /// board in the mode.</b> A stream drawn from a different number of times deals a
+        /// different field from the same seed, so a second <see cref="Next"/> here would have
+        /// changed every refill on every shipped rung with nothing in any file wrong (invariant
+        /// 41) — three of the first chapter's ten became unholdable the last time that happened.
+        /// The charm is read out of the <em>same</em> word, and the letter is read out of it
+        /// exactly as before, so every gem this mode has ever dealt is still the gem it was.
+        ///
+        /// <para>
+        /// <b>Avalanched rather than multiplied, and the difference between those two is a bug this
+        /// shipped with for a day.</b> The first version was one multiply by Knuth's constant and
+        /// then the <em>low</em> sixteen bits of the product — which mixes nothing at all, because
+        /// the low half of a product depends only on the low halves of its operands. So the roll
+        /// was a relabelling of the same low bits the letter is picked from, and xorshift32's low
+        /// bits are its weakest: two of the first chapter's rungs dealt <b>no charm in any run at
+        /// any rhythm</b>, and the rest dealt between a third and twice what the rate asks for.
+        /// Every gate was green — the rate is right when the roll is fed a clean stream, which is
+        /// exactly what a fixture calling this in a tight loop does — and what found it was
+        /// somebody playing the game and saying they had seen one.
+        /// </para>
+        /// <para>
+        /// <b>The rule is that a multiply mixes <em>upward</em>, so a slice of a product is only
+        /// safe at the top.</b> What is used instead is a full avalanche (the lowbias32 finaliser:
+        /// shift, multiply, shift, multiply, shift), after which every output bit depends on every
+        /// input bit and the two halves can be taken as two independent decisions. Thirty-two bit
+        /// throughout, for <see cref="Next"/>'s reason: the offline mirror has to reach the same
+        /// field.
+        /// </para>
+        /// <para>
+        /// The rate is a fraction of 65,536 rather than a clean thousandth, which biases a charm
+        /// by about one part in two thousand of itself. That is immaterial to a rarity roll and it
+        /// is <em>exactly</em> reproducible in Python, which a rejection loop would not be without
+        /// costing a draw.
+        /// </para>
+        /// </summary>
+        internal char Deal(out SiegeCharm charm)
+        {
+            uint drawn = Next();
+            char cell = Layout.Deal[(int)(drawn % (uint)Layout.Deal.Length)];
+
+            charm = SiegeCharm.None;
+
+            var charms = Layout.Charms;
+            if (charms == null || charms.Length == 0) return cell;
+
+            uint mixed = Avalanche(drawn);
+
+            // **One charm a window, at a place inside it the roll picks** — see
+            // `SiegeTuning.CharmWithin` for why this is a window rather than a chance. The counter
+            // only advances on a field that deals charms, so a level authoring none leaves no
+            // state behind and nothing to reason about.
+            //
+            // **What this guarantees and what it averages are two numbers, and only the first may
+            // be gated on.** The gap between two charms is somewhere in 1..`CharmWithin`, so a run
+            // clearing a whole window's worth of gems is dealt *at least* one — and, because the
+            // gap averages half a window, it meets about *two*. Both gates refuse on the floor.
+            if (_sinceCharm++ == _charmAt)
+            {
+                charm = charms[(int)((mixed >> 16) % (uint)charms.Length)];
+
+                _sinceCharm = 0;
+                _charmAt = (int)((mixed & 0xFFFFu) % SiegeTuning.CharmWithin);
+            }
+
+            return cell;
+        }
+
+        /// <summary>
+        /// Scatters one word so that every bit of the answer depends on every bit of the question.
+        ///
+        /// <b>The lowbias32 finaliser, written out</b> — two multiplies with an xor-shift either
+        /// side of each. It is here rather than inline because what it is for is a rule rather than
+        /// an arithmetic convenience: <em>a slice of this is a fair coin, and a slice of an
+        /// xorshift word is not</em>. Anything else in this mode that ever needs a second
+        /// independent decision out of one draw goes through it.
+        /// </summary>
+        static uint Avalanche(uint x)
+        {
+            unchecked
+            {
+                x ^= x >> 16;
+                x *= 0x7feb352du;
+                x ^= x >> 15;
+                x *= 0x846ca68bu;
+                x ^= x >> 16;
+            }
+
+            return x;
+        }
 
         /// <summary>xorshift32. Thirty-two bit throughout so the Python mirror reaches the same field.</summary>
         uint Next()

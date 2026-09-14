@@ -249,10 +249,58 @@ namespace GlimmerGrove.Store
         /// <summary>Raised when a purchase attempt ended without a transaction.</summary>
         public static event Action<string, StoreFailure, string> Failed;
 
+        /// <summary>
+        /// Raised when a transaction lands for a payment sheet <em>this process opened</em>,
+        /// carrying its key and the product it is for.
+        ///
+        /// <para>
+        /// <b>It is not the same news as <see cref="Granted"/>, and the gap between them is the
+        /// whole reason it exists.</b> A transaction arriving means the money has moved and the
+        /// store is holding an unfinished purchase; the grant is the server honouring it, which
+        /// is a round trip away and on a bad connection is several minutes and a backoff away.
+        /// Between the two the player has paid and been told nothing, and the only thing that
+        /// was ever said about it was a word on the face of the button they tapped.
+        /// </para>
+        /// <para>
+        /// <b>Scoped to a checkout this session opened, which is the half that stops it being a
+        /// nuisance.</b> Both stores re-deliver an unfinished transaction on every launch for
+        /// ever (invariant 18a), and a receipt the server will not honour — a product missing
+        /// from <c>config/products</c>, say — is deliberately retried for the life of the
+        /// install. Raised on every pending purchase this would put a panel in front of such a
+        /// player at every single launch, which is the shape of bug that gets an app deleted.
+        /// <see cref="_checkout"/> is the only thing in this class that knows the difference
+        /// between "somebody just paid for this" and "the store is still telling us about
+        /// something from last week", and it is already exact: it is set by <see cref="Buy"/>
+        /// and cleared by every other outcome.
+        /// </para>
+        /// <para>
+        /// A re-delivery therefore says nothing here and is reported the way it always was —
+        /// the card's own <see cref="StoreOfferState.AwaitingGrant"/> face and the shop's
+        /// summary line, both of which are still the right reporting for something the player
+        /// did not just do.
+        /// </para>
+        /// </summary>
+        public static event Action<string, StoreProduct> CheckoutLanded;
+
         public static bool IsAvailable => _backend != null && _backend.IsAvailable;
 
         /// <summary>True while a purchase is bought and not yet credited.</summary>
         public static bool HasUnredeemed => _pending.Count > 0;
+
+        /// <summary>
+        /// Whether one transaction is still owed to the server, asked by its key.
+        ///
+        /// <para>
+        /// The counterpart to <see cref="CheckoutLanded"/> and the only thing anything watching
+        /// one needs: the key leaves this dictionary on <em>every</em> ending — granted,
+        /// refused-and-closed-out (invariant 18a's one exception), and a
+        /// <see cref="Reset"/> — so a caller that waits on this cannot be left waiting by an
+        /// outcome nobody thought to announce. That is a stronger promise than an event pair
+        /// makes, and it is the promise a panel standing over a paid-for purchase needs.
+        /// </para>
+        /// </summary>
+        public static bool IsPending(string transactionKey)
+            => !string.IsNullOrEmpty(transactionKey) && _pending.ContainsKey(transactionKey);
 
         public static StoreStatus Status
         {
@@ -527,17 +575,35 @@ namespace GlimmerGrove.Store
         {
             if (purchase == null || !purchase.IsValid) return;
 
+            // Read before the checkout is cleared, and it is the whole of what tells a
+            // purchase somebody is standing in front of from one the store is re-delivering
+            // out of its own queue. See CheckoutLanded.
+            bool justPaid = string.Equals(_checkout, purchase.ProductId, StringComparison.Ordinal);
+
             // Keyed by store and transaction, so a re-delivery of something already queued
             // replaces it rather than queuing a second copy — which is what an app resumed
             // twice while offline would otherwise accumulate.
             _pending[purchase.Key] = purchase;
-            if (string.Equals(_checkout, purchase.ProductId, StringComparison.Ordinal))
-                _checkout = string.Empty;
+            if (justPaid) _checkout = string.Empty;
 
             Telemetry.Track("store_purchase_pending",
                             "product", purchase.ProductId, "store", purchase.Store);
 
+            // Before the announcement, so anything the announcement raises is drawn over cards
+            // that already read AwaitingGrant rather than over a shelf still offering to sell
+            // what has just been bought.
             Raise();
+
+            if (justPaid)
+            {
+                try { CheckoutLanded?.Invoke(purchase.Key, StoreRules.Find(purchase.ProductId)); }
+                catch (Exception e) { Debug.LogException(e); }
+            }
+
+            // Last, and it has to be: the redemption can finish inside this call — the cloud
+            // double in the test suite answers synchronously, and a warm connection is not far
+            // off it — so anything wanting to hear that the purchase landed has to have been
+            // told before the thing that can finish it starts.
             Drain();
         }
 

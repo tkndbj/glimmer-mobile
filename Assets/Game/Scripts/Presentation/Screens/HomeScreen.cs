@@ -6,6 +6,7 @@ using GlimmerGrove.Events;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
+using GlimmerGrove.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -45,12 +46,10 @@ namespace GlimmerGrove
         const float RowGap = 24f;
 
         Image _hero;
-        RectTransform _dailyPanel;
+        RectTransform _tasksPanel;
         RectTransform _resourceRow;
         RectTransform _streakBox;
         RectTransform _focusBox;
-        Text _resetClock;
-        float _clockTick;
 
         // The shortest gap between two pokes that both get a spray. Above the rate a poke is
         // deliberately given at, below the rate a held finger produces. See Poke.
@@ -62,15 +61,15 @@ namespace GlimmerGrove
             BuildBackdrop();
             BuildTopBar();
             BuildResources();
-            BuildDaily();
+            BuildTasks();
             BuildFeature();
             BuildHero();
             BuildPlay();
             NavBar.Build(Content, NavBar.Tab.Home);
 
             // Midnight arrives while a screen is open exactly as often as it arrives while
-            // it is not, and opening a chest changes both panels from under themselves.
-            DailyChests.Changed += OnDailyChanged;
+            // it is not, and a run finishing changes the box from under itself.
+            TaskLedger.Changed += OnTasksChanged;
             DailyStreak.Changed += OnStreakChanged;
             PlayerProgression.Changed += OnWalletChanged;
             Wallet.HeartsChanged += OnHeartsChanged;
@@ -78,24 +77,24 @@ namespace GlimmerGrove
 
         void OnDestroy()
         {
-            DailyChests.Changed -= OnDailyChanged;
+            TaskLedger.Changed -= OnTasksChanged;
             DailyStreak.Changed -= OnStreakChanged;
             PlayerProgression.Changed -= OnWalletChanged;
             Wallet.HeartsChanged -= OnHeartsChanged;
         }
 
-        void OnDailyChanged()
+        void OnTasksChanged()
         {
             // Guarded because the event can arrive from a save load during teardown, and
-            // rebuilding a panel onto a destroyed screen throws where nobody is looking.
-            if (this == null || !_dailyPanel) return;
-            BuildDaily();
+            // painting onto a destroyed screen throws where nobody is looking.
+            if (this == null || !_tasksPanel) return;
+            PaintTasks();
         }
 
         void OnStreakChanged()
         {
             if (this == null || !_streakBox) return;
-            BuildStreakBox();
+            PaintStreak();
         }
 
         void OnHeartsChanged(Hearts hearts) => OnWalletChanged();
@@ -175,22 +174,6 @@ namespace GlimmerGrove
             ResourceSlots.Repaint(ResourceSlots.Kind.Hearts, Profile.Hearts);
             ResourceSlots.Repaint(ResourceSlots.Kind.Credits, Profile.Coins);
             ResourceSlots.Repaint(ResourceSlots.Kind.Gems, Profile.Gems);
-        }
-
-        /// <summary>
-        /// Ticks the reset clock once a second.
-        ///
-        /// Only the one label, and only when it would actually change. Rebuilding the
-        /// panel every second would restart every tween on it, which is how a shine
-        /// becomes a stutter.
-        /// </summary>
-        void Update()
-        {
-            _clockTick += Time.unscaledDeltaTime;
-            if (_clockTick < 1f) return;
-
-            _clockTick = 0f;
-            if (_resetClock) _resetClock.text = ResetLine();
         }
 
         // ------------------------------------------------------------- backdrop
@@ -383,220 +366,310 @@ namespace GlimmerGrove
             Tween.Pop(bg.transform, 0f, .55f, .18f + Mathf.Abs(x) * .0004f);
         }
 
-        // -------------------------------------------------------- daily bonuses
+        // ------------------------------------------------------ tasks & bonuses
+        /// <summary>One chest on the hub's ladder, kept so a repaint can light it.</summary>
+        sealed class HubChest
+        {
+            public string TierId;
+            public Image Img;
+            public RectTransform Halo, Shine;
+            public bool Lit;
+        }
+
+        Btn _taskCard;
+        Beacon _taskBeacon;
+        Badge _taskBadge;
+        readonly System.Collections.Generic.List<HubChest> _taskChests = new System.Collections.Generic.List<HubChest>();
+
         /// <summary>
-        /// The daily chests: how much has been played today, and the chests that has
-        /// earned.
+        /// The Tasks &amp; Bonuses box, drawn as a chest pack: a burst of light behind one row
+        /// of big chests packed until they overlap, a starburst counting what is ready, and a
+        /// countdown. The whole card is the door.
         ///
         /// <para>
-        /// This panel used to show lifetime stars, which was a fine thing to show and the
-        /// wrong thing to put chests on — a bar that moves three times in a player's whole
-        /// history cannot carry a daily loop, and the chests on it opened themselves. The
-        /// grove total still lives on the profile screen, where a record belongs.
+        /// The first cut of this box was a plate with four small icons on it and a line of
+        /// text, and the owner's verdict was that it was not creative — the reference was a
+        /// store's chest-pack card, which sells a pack by making the chests the picture. So
+        /// the chests are the picture here, and everything else on the card is furniture
+        /// around that.
         /// </para>
         /// <para>
-        /// Rebuilt rather than repainted when the day rolls over or a chest is opened.
-        /// It is a dozen images built once a navigation, and a repaint path would be a
-        /// second description of the same panel that has to be kept in step with this one.
+        /// <b>The second cut took the furniture away again.</b> The card carried a ribbon
+        /// naming it, a caption saying how many tasks were on the slate and a green OPEN pill,
+        /// and against the reference the owner's verdict was that the chests had to be
+        /// <em>bigger and closer</em>: a title, a sentence and a button between them had
+        /// pushed the pack down to a third of the plate, so the one thing the box is about was
+        /// the smallest thing on it. All three are gone, which leaves the row the whole 240 to
+        /// stand in — <see cref="BuildChestRow"/>. Two of them cost nothing to lose (the card
+        /// has always been the door, and the badge already counts what is ready); the third
+        /// is the only thing worth stating plainly: <b>nothing on this card says the word
+        /// "tasks" any more.</b> What is left saying it is the chests themselves, the clock,
+        /// and the hub's own place for it.
+        /// </para>
+        /// <para>
+        /// <b>Built once, painted from the ledger</b> (<see cref="PaintTasks"/>): the clock,
+        /// the starburst, the beacon and which chests are lit exist from the first frame and
+        /// are switched, so a counter moving behind the hub redraws a line rather than popping
+        /// the card in again. The rays and the shelf live in a clipped child, because they
+        /// reach past the plate; the chests and the starburst hang over its edges on purpose
+        /// and are not clipped.
         /// </para>
         /// </summary>
-        void BuildDaily()
+        void BuildTasks()
         {
-            int sibling = _dailyPanel ? _dailyPanel.GetSiblingIndex() : -1;
-            if (_dailyPanel) Hide(_dailyPanel.gameObject);
+            const float H = 240f;
+            const float Margin = 40f;
 
-            int runs = DailyChests.Runs, target = DailyChests.RunsForAll;
+            var card = UIKit.Button("Tasks", Safe, Art.S("Ui/" + Skins.PlateViolet),
+                                    new Vector2(RowWidth, H), new Vector2(.5f, 1f),
+                                    new Vector2(0f, -436f), OpenTasks);
+            card.PressScale = .985f;
+            _taskCard = card;
+            _tasksPanel = (RectTransform)card.transform;
 
-            // Sits straight under the resources row. It used to leave a gap for the 56-high
-            // focus strip, which has become the second box on the row below; the panel takes
-            // that space rather than leaving it, because everything under it is now taller.
-            // Moved rather than shrunk: the panel's internals are laid out from its own
-            // edges, so its height is load-bearing and its position is not.
-            // 240 rather than 208. The kit's panel carries a bracket on each corner and a
-            // notch out of its top edge, so its usable interior is smaller than its box — and
-            // the first chest sits under the title rather than beside it, which a render showed
-            // as a treasure chest drawn through the word BONUSES.
-            var panel = UIKit.Img("Daily", Safe, Art.S("Ui/" + Skins.PlateBlue), Color.white,
-                                  new Vector2(RowWidth, 240f), new Vector2(.5f, 1f), new Vector2(0f, -436f));
-            _dailyPanel = (RectTransform)panel.transform;
-            if (sibling >= 0) _dailyPanel.SetSiblingIndex(sibling);
+            // Straight after the card, so the lit rim and the ring sit under everything else.
+            _taskBeacon = FeatureBeacon(_tasksPanel);
 
-            // The header is two labels sharing one 900-wide row, so both are placed from
-            // the panel edges rather than by eye. A box anchored to the right edge has its
-            // *centre* at the anchored position, so the offset has to be
-            // -(margin + width/2) — anything less hangs the box off the end of the panel,
-            // and nothing clips it, so it simply draws over the screen edge.
-            const float Margin = 40f, TitleW = 370f, ClockW = 320f;
+            // Everything that reaches past the plate's edge is clipped here: the rays, the
+            // shelf's light, the sparks. The plate's own rounded corners are the mask's, near
+            // enough — the rays are far dimmer than the keyline at that radius.
+            var clip = UIKit.Node("Clip", card.transform);
+            UIKit.StretchTo(clip, 6f, 6f, 6f, 6f);
+            clip.gameObject.AddComponent<RectMask2D>();
 
+            // A burst of rays turning slowly behind the chests, which is what makes a row of
+            // pictures read as treasure rather than as an inventory. Warm on the violet, and
+            // low: it is a light source, not a pattern. Centred on the pack rather than on the
+            // plate, because it is the pack's own light.
+            var rays = UIKit.Img("Rays", clip, Art.Rays(512, 14), Pal.A(Pal.Sun, .22f),
+                                 new Vector2(860f, 860f), new Vector2(.5f, .5f), new Vector2(0f, -34f));
+            Tween.Run(36f, Ease.Linear,
+                      t => { if (rays) rays.transform.localRotation = Quaternion.Euler(0, 0, t * 360f); },
+                      rays, "spin").Loop(-1, false);
+
+            // The shelf: the pool the chests stand in, so they read as placed rather than
+            // floating on the plate. **It is a shadow rather than a light, and that is the
+            // plate's fault rather than a preference** — the violet is saturated enough that a
+            // warm glow over it is invisible at any alpha worth using (44g from the other
+            // end: you cannot light a bright colour, you can only darken it), while a pool
+            // under the feet reads immediately.
+            UIKit.Img("Shelf", clip, Art.Glow(128, 1.7f), new Color(.16f, .02f, .24f, .34f),
+                      new Vector2(840f, 170f), new Vector2(.5f, .5f), new Vector2(0f, -84f));
+
+            Fireflies.Spawn(clip, 10, new Color(1f, .92f, .62f), 3f, 9f);
+
+            BuildChestRow(card.transform, ProgressionRules.Table.Tasks.Tiers);
+
+            // The name, across the top. **The whole title, not a corner label** — it is the one
+            // thing on the card that says the pack is a feature rather than a shop shelf, and
+            // it is the page's own `ui.tasks.title` rather than a key of its own, because the
+            // words are the same words and one string cannot come to disagree with itself.
             UIKit.Shrinkable(
-                UIKit.Titled("Title", panel.transform, Loc.Get("ui.home.bonuses"), 32, Pal.Gold,
-                             TextAnchor.MiddleLeft, new Vector2(TitleW, 40f), new Vector2(0f, 1f),
-                             new Vector2(148f + TitleW * .5f, -38f), 3f, 3f), 20);
+                UIKit.Titled("Name", card.transform, Loc.Get("ui.tasks.title").ToUpperInvariant(), 27,
+                             Pal.Gold, TextAnchor.MiddleCenter, new Vector2(RowWidth - 2f * Margin, 36f),
+                             new Vector2(.5f, 1f), new Vector2(0f, -26f), 3f, 3f), 17);
 
-            // The reset clock, ticking. An expiry a player cannot see is an expiry that
-            // reads as the game having eaten their chest.
-            //
-            // Shrinkable because this is the one label here whose width is not under our
-            // control: "resets in 10h 21m" is the short case, and a translation of it
-            // plus a two-digit hour is the long one.
-            _resetClock = UIKit.Shrinkable(
-                UIKit.Titled("Reset", panel.transform, ResetLine(), 26,
-                             Pal.Cream, TextAnchor.MiddleRight,
-                             new Vector2(ClockW, 36f), new Vector2(1f, 1f),
-                             new Vector2(-(Margin + ClockW * .5f), -38f), 0f, 0f), 17);
+            // The starburst, top left, counting what is ready. Built last so it sits over
+            // the card's own tap area.
+            _taskBadge = BurstBadge(card.transform);
 
-            // The kit's trough and the kit's fill, for `BuildTopBar`'s reason: one sprite for
-            // every bar in the app, so the chest track and the rank bar cannot come to draw two
-            // different ideas of what a progress bar is.
-            var track = UIKit.Img("Track", panel.transform, Art.S("Ui/" + Skins.Trough), Color.white,
-                                  new Vector2(816f, 42f), new Vector2(.5f, .5f), new Vector2(0f, -4f));
-            var fill = UIKit.Img("Fill", track.transform, Art.S("Ui/" + Skins.Fill), Pal.Gold,
-                                 new Vector2(0f, 32f), new Vector2(0f, .5f), new Vector2(5f, 0f));
-            var fillRT = (RectTransform)fill.transform;
-            fillRT.pivot = new Vector2(0f, .5f);
+            PaintTasks();
 
-            float full = 806f * (target <= 0 ? 0f : Mathf.Clamp01(runs / (float)target));
-            Tween.Run(.9f, Ease.OutCubic, t =>
+            _tasksPanel.localScale = Vector3.zero;
+            Tween.Pop(_tasksPanel, 0f, .6f, .3f).OnDone(() =>
             {
-                if (!fillRT) return;
-                fillRT.sizeDelta = new Vector2(full * t, 32f);
-                fill.color = Color.Lerp(Pal.Sun, Pal.Gold, t);
-            }, fill).Delay(.35f);
-
-            int count = Mathf.Max(1, DailyChests.ChestCount);
-            for (int i = 0; i < count; i++) BuildChest(track.transform, i, count);
-
-            // Inset from the panel rather than filling it, and allowed to shrink: this is
-            // a whole sentence, and it is the line most likely to grow in translation.
-            UIKit.Shrinkable(
-                UIKit.Titled("Hint", panel.transform, HintLine(), 24, Pal.Cream,
-                             TextAnchor.MiddleCenter, new Vector2(820f, 34f), new Vector2(.5f, 0f),
-                             new Vector2(0f, 24f), 0f, 0f), 16);
-
-            var icon = UIKit.Img("Gift", panel.transform, Art.S("Ui/ic_gift"), Color.white,
-                                 new Vector2(72f, 72f), new Vector2(0f, 1f), new Vector2(62f, -42f));
-            icon.preserveAspect = true;
-            Tween.Breathe(icon.transform, .07f, 2.1f);
-
-            if (sibling < 0)
-            {
-                panel.transform.localScale = Vector3.zero;
-                Tween.Pop(panel.transform, 0f, .6f, .3f);
-            }
+                if (card) card.Rehome();
+            });
         }
 
         /// <summary>
-        /// One chest on the bar.
+        /// The pack itself: one row of chests, humblest to grandest left to right, drawn as a
+        /// symmetric arch — biggest in the middle, standing on a floor that dips with it, each
+        /// pushed into its neighbour until they overlap.
         ///
-        /// A ready chest is a button and shines; the other two are images and do not.
-        /// That distinction is the entire interaction, so it is drawn as loudly as the
-        /// panel can afford — a chest that is tappable and looks like scenery is a reward
-        /// most players never collect.
+        /// <para>
+        /// <b>The shape is the ask.</b> Four chests spread evenly across a 960-wide plate at a
+        /// size that fits under a title read as an inventory of four icons; the reference the
+        /// owner gave is a pack — chests big enough to fill the plate's height, touching, with
+        /// the tallest in the middle so the row's top arches and its feet dip. Both readings of
+        /// "a V" are the same drawing.
+        /// </para>
+        /// <para>
+        /// <b>The arithmetic is <see cref="ChestPack"/>'s</b>, because the tasks page draws this
+        /// row too and a pack is a shape rather than a picture. What is here is the five numbers
+        /// this plate has room for and the widgets a hub card wants — a contact shadow under
+        /// each chest, and a halo that lights when a chest can be taken.
+        /// </para>
+        /// <para>
+        /// <b>The middles are drawn last.</b> An arch where the far end overlaps the crest is an
+        /// arch drawn back to front — and a lit chest still steps to the front of it
+        /// (<see cref="PaintTasks"/>).
+        /// </para>
         /// </summary>
-        void BuildChest(Transform track, int index, int count)
+        void BuildChestRow(Transform host, System.Collections.Generic.IReadOnlyList<ChestTier> tiers)
         {
-            var state = DailyChests.StateOf(index);
-            float px = -408f + 816f * ((index + 1) / (float)count);
+            const float Tall = 188f;     // the drawn height of the chest at the crest
+            const float Short = 130f;    // ... and of the two on the ends
+            const float Dip = 20f;       // how much lower than the ends the crest stands
+            const float Floor = -92f;    // where an end chest's feet are — the title is the ceiling
+            const float Overlap = .07f;  // of the narrower of two neighbours
 
-            if (state != ChestState.Ready)
+            _taskChests.Clear();
+
+            var seats = ChestPack.Lay(tiers, Tall, Short, Dip, Floor, Overlap);
+            if (seats.Length == 0) return;
+
+            // The contact shadows go down first, all of them, because a shadow is a sibling
+            // rather than a child: a child of the chest draws *over* it, which is what the
+            // halo does on purpose and what a shadow must never do.
+            foreach (var seat in seats)
+                UIKit.Img("S_" + seat.Tier.Id, host, Art.Glow(128, 1.9f), new Color(.10f, .02f, .16f, .42f),
+                          new Vector2(seat.Width * 1.30f, seat.Tall * .22f), new Vector2(.5f, .5f),
+                          new Vector2(seat.X, seat.Foot - 2f));
+
+            foreach (var seat in ChestPack.InDrawOrder(seats))
+                _taskChests.Add(BuildHubChest(host, seat.Tier, seat.Middle, seat.Tall, seat.Index));
+        }
+
+        /// <summary>
+        /// One chest of the pack: the closed icon, with its light built dark. A lit chest is
+        /// drawn over its neighbours, which the row's overlap makes matter.
+        ///
+        /// <para>
+        /// <paramref name="at"/> is where the <em>drawn</em> chest's middle goes and
+        /// <paramref name="tall"/> is how tall it is drawn; the sprite is hung higher and
+        /// larger than both (see <see cref="ChestPack.Fill"/>). The halo and the shine are children
+        /// of the sprite and so are pushed back down by hand — a glow centred on a box a
+        /// quarter of which is empty is a glow that lights the air above a chest.
+        /// </para>
+        /// </summary>
+        HubChest BuildHubChest(Transform host, ChestTier tier, Vector2 at, float tall, int index)
+        {
+            float box = tall / ChestPack.Fill;
+
+            var img = UIKit.Img("C_" + tier.Id, host, Art.S(tier.Icon), Color.white,
+                                new Vector2(box * ChestPack.Aspect, box), new Vector2(.5f, .5f),
+                                at + new Vector2(0f, tall * ChestPack.Lift));
+            img.preserveAspect = true;
+
+            var halo = UIKit.Halo(img.transform, Pal.Gold, tall * 1.9f, .55f);
+            var shine = Shine(img.transform, tall * 1.6f, index * .6f);
+            ((RectTransform)halo.transform).anchoredPosition = new Vector2(0f, -tall * ChestPack.Lift);
+            shine.anchoredPosition = new Vector2(0f, -tall * ChestPack.Lift);
+            halo.gameObject.SetActive(false);
+            shine.gameObject.SetActive(false);
+
+            Tween.Bob((RectTransform)img.transform, 2f, 3.4f + index * .35f, index * .8f);
+
+            return new HubChest
             {
-                bool opened = state == ChestState.Opened;
-                var img = UIKit.Img("C" + index, track,
-                                    Art.S(opened ? "Ui/ic_chest_open" : "Ui/ic_chest_wood"),
-                                    opened ? new Color(1f, 1f, 1f, .72f) : new Color(.5f, .54f, .58f, .92f),
-                                    new Vector2(78f, 78f), new Vector2(.5f, .5f), new Vector2(px, 8f));
-                img.preserveAspect = true;
+                TierId = tier.Id, Img = img,
+                Halo = (RectTransform)halo.transform, Shine = shine, Lit = false,
+            };
+        }
 
-                if (!opened)
+        /// <summary>
+        /// The kit's starburst with a count on it, built dark and painted like the disc badge.
+        /// A starburst rather than a disc here because the card is a pack, and a pack's corner
+        /// says "+N" the way a store's does.
+        /// </summary>
+        static Badge BurstBadge(Transform card)
+        {
+            var burst = UIKit.Img("Waiting", card, Art.S("Ui/" + Skins.Badge), Pal.Gold,
+                                  new Vector2(104f, 104f), new Vector2(0f, 1f), new Vector2(46f, -44f));
+
+            var count = UIKit.Shrinkable(
+                UIKit.Titled("N", burst.transform, "+0", 30, new Color(.17f, .11f, .02f),
+                             TextAnchor.MiddleCenter, new Vector2(80f, 50f),
+                             new Vector2(.5f, .5f), new Vector2(0f, 2f), 0f, 0f), 18);
+
+            UIKit.Halo(burst.transform, Pal.Gold, 190f, .40f);
+            burst.transform.localRotation = Quaternion.Euler(0f, 0f, 8f);
+            burst.gameObject.SetActive(false);
+
+            return new Badge { Root = (RectTransform)burst.transform, Count = count, Prefix = "+" };
+        }
+
+        /// <summary>
+        /// Writes the ledger onto the card: the clock, the starburst, the beacon and which
+        /// chests are lit. Only a chest that <em>changed</em> starts or stops breathing —
+        /// a breathe restarted on every repaint is a chest that jumps each time a counter moves.
+        /// </summary>
+        void PaintTasks()
+        {
+            if (!_tasksPanel) return;
+
+            int ready = TaskLedger.ReadyCount;
+            var lit = ReadyTiers();
+
+            _taskBeacon?.Show(ready > 0);
+            _taskBadge?.Paint(ready);
+
+            for (int i = 0; i < _taskChests.Count; i++)
+            {
+                var chest = _taskChests[i];
+                bool on = lit.Contains(chest.TierId);
+                if (on == chest.Lit || !chest.Img) continue;
+
+                chest.Lit = on;
+                chest.Halo.gameObject.SetActive(on);
+                chest.Shine.gameObject.SetActive(on);
+                chest.Img.color = on ? Color.white : new Color(.90f, .92f, .96f, 1f);
+
+                Tween.KillChannel(chest.Img.transform, "breathe");
+                chest.Img.transform.localScale = Vector3.one;
+                if (on)
                 {
-                    // How many more runs this one needs, so the bar reads as a plan
-                    // rather than as three identical grey boxes.
-                    int needed = DailyChests.RunsFor(index) - DailyChests.Runs;
-                    if (needed > 0)
-                        UIKit.Titled("N" + index, img.transform, needed.ToString(), 24, Pal.Cream,
-                                     TextAnchor.MiddleCenter, new Vector2(40f, 30f),
-                                     new Vector2(.5f, 0f), new Vector2(0f, -12f), 3f, 0f);
+                    chest.Img.transform.SetAsLastSibling();
+                    Tween.Breathe(chest.Img.transform, .075f, 1.5f, i * .4f);
                 }
-                return;
             }
+        }
 
-            int chestIndex = index;
-            var btn = UIKit.Button("C" + index, track, Art.S("Ui/ic_chest_wood"),
-                                   new Vector2(96f, 96f), new Vector2(.5f, .5f), new Vector2(px, 8f),
-                                   () => OpenChest(chestIndex));
-
-            var face = btn.GetComponent<Image>();
-            face.preserveAspect = true;
-
-            UIKit.Halo(btn.transform, Pal.Gold, 168f, .55f);
-            Shine(btn.transform, 150f, index * .6f);
-            Tween.Breathe(btn.transform, .075f, 1.5f, index * .4f);
-            btn.Rehome();
+        /// <summary>Which tiers have a finished, unclaimed task on them right now.</summary>
+        static System.Collections.Generic.HashSet<string> ReadyTiers()
+        {
+            var lit = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
+            foreach (var period in TaskPeriods.All)
+                foreach (var task in TaskLedger.Active(period))
+                    if (TaskLedger.StateOf(task) == TaskState.Ready) lit.Add(task.Tier.Id);
+            return lit;
         }
 
         /// <summary>
-        /// The rotating star of light behind a chest that is ready to open.
-        ///
-        /// Four soft capsules turning slowly. Cheaper than a particle system, works in a
-        /// uGUI hierarchy without a second canvas, and reads at a glance on a phone in
-        /// daylight — which is the only test that matters for a call to action.
+        /// Four soft capsules turning behind a lit chest. Cheap, and it reads as light
+        /// coming off the thing rather than a ring drawn round it.
         /// </summary>
-        static void Shine(Transform parent, float size, float phase)
+        static RectTransform Shine(Transform parent, float size, float phase)
         {
-            var host = UIKit.Box("Shine", parent, Vector2.one * size, new Vector2(.5f, .5f), Vector2.zero);
-            host.SetAsFirstSibling();
+            var rays = UIKit.Box("Shine", parent, Vector2.one * size, new Vector2(.5f, .5f), Vector2.zero);
+            rays.SetAsFirstSibling();
 
             for (int i = 0; i < 4; i++)
             {
-                var ray = UIKit.Img("r" + i, host, Art.SoftCapsule(28, 160), Pal.A(Pal.Sun, .34f),
-                                    new Vector2(20f, size * 1.28f), new Vector2(.5f, .5f), Vector2.zero);
+                var ray = UIKit.Img("r" + i, rays, Art.SoftCapsule(40, 200), Pal.A(Pal.Sun, .22f),
+                                    new Vector2(size * .16f, size * 1.15f), new Vector2(.5f, .5f), Vector2.zero);
                 ray.transform.localRotation = Quaternion.Euler(0, 0, i * 45f);
             }
 
-            Tween.Run(7f, Ease.Linear,
-                      t => { if (host) host.localRotation = Quaternion.Euler(0, 0, t * 360f); },
-                      host.gameObject, "spin").Loop(-1, false).Delay(phase);
+            Tween.Run(9f, Ease.Linear,
+                      t => { if (rays) rays.localRotation = Quaternion.Euler(0, 0, t * 360f + phase * 40f); },
+                      rays.gameObject, "spin").Loop(-1, false);
 
-            Tween.Run(1.7f, Ease.InOutSine,
-                      t => { if (host) host.localScale = Vector3.one * Mathf.Lerp(.86f, 1.06f, t); },
-                      host.gameObject, "pulse").Loop(-1, true).Delay(phase);
+            return rays;
         }
 
-        void OpenChest(int index)
+        /// <summary>
+        /// Opens the tasks page. A page rather than a panel over the hub, because the page
+        /// has two slates, a ladder and a ceremony on it, and a panel that grew all three
+        /// would be a screen wearing a modal's name.
+        /// </summary>
+        void OpenTasks()
         {
             if (Flow.HasModal) return;
-
-            // Only reachable on a first launch that has never had a connection: a chest
-            // rolled before the account exists is one the server would recompute
-            // differently, so it waits rather than showing a reward it cannot honour.
-            // One connection lifts this permanently — see DailyChests.CanOpen.
-            if (!DailyChests.CanOpen)
-            {
-                Scenery.Toast(Content, Loc.Get("ui.daily.needs_connection"), Pal.Rose, 3f);
-                return;
-            }
-
-            Flow.Modal<ChestOverlay>(v => v.ChestIndex = index);
+            Flow.Go<TasksScreen>();
         }
 
-        string ResetLine() => Loc.Format("ui.daily.resets_in",
-                                         Profile.Countdown(DailyChests.SecondsUntilReset));
-
-        string HintLine()
-        {
-            // Said on the panel rather than only in a toast, so a player who has never
-            // been online understands the chest is waiting for them and not broken.
-            if (DailyChests.HasReadyChest && !DailyChests.CanOpen)
-                return Loc.Get("ui.daily.needs_connection");
-
-            if (DailyChests.HasReadyChest) return Loc.Get("ui.daily.ready");
-            if (DailyChests.DayComplete) return Loc.Get("ui.daily.all_open");
-
-            int needed = DailyChests.RunsToNextChest;
-            return needed > 0
-                ? Loc.Format("ui.daily.next_chest", needed)
-                : Loc.Format("ui.daily.played", DailyChests.Runs, DailyChests.RunsForAll);
-        }
 
         // ------------------------------------------------------- the feature row
         /// <summary>
@@ -725,20 +798,22 @@ namespace GlimmerGrove
         /// the end of the ladder, and the caption under it is the shortest string on the
         /// screen in English and one of the longest in German.
         /// </summary>
-        void FeatureValue(Transform card, float w, string value, Color colour,
-                          string caption, Color tint)
+        (Text value, Text caption) FeatureValue(Transform card, float w, string value, Color colour,
+                                                string caption, Color tint)
         {
             float vx = -w * .5f + 299f;
 
-            UIKit.Shrinkable(
+            var v = UIKit.Shrinkable(
                 UIKit.Titled("V", card, value, 62, colour, TextAnchor.MiddleCenter,
                              new Vector2(200f, 74f), new Vector2(.5f, .5f), new Vector2(vx, 20f),
                              3f, 4f), 30);
 
-            UIKit.Shrinkable(
+            var cap = UIKit.Shrinkable(
                 UIKit.Titled("Cap", card, caption, 22, tint, TextAnchor.MiddleCenter,
                              new Vector2(210f, 30f), new Vector2(.5f, .5f), new Vector2(vx, -32f),
                              0f, 0f), 15);
+
+            return (v, cap);
         }
 
         /// <summary>The inset that runs along the bottom of a box, holding its one live detail.</summary>
@@ -783,8 +858,26 @@ namespace GlimmerGrove
         /// gap between the boxes would allow a solid shape, and it can be, because the ring is
         /// down to a tenth of its alpha before it gets there.
         /// </para>
+        /// <para>
+        /// Built once and <em>switched</em>: a box lights and goes dark as counters move, and
+        /// a beacon rebuilt on every event would replay its pulse from the start each time.
+        /// The tweens keep running while it is hidden, which costs three interpolations a
+        /// frame and buys a light that is mid-pulse the instant it is shown.
+        /// </para>
         /// </summary>
-        static void FeatureBeacon(RectTransform card)
+        sealed class Beacon
+        {
+            public Image Seat, Lit, Ring;
+
+            public void Show(bool on)
+            {
+                if (Seat) Seat.gameObject.SetActive(on);
+                if (Lit) Lit.gameObject.SetActive(on);
+                if (Ring) Ring.gameObject.SetActive(on);
+            }
+        }
+
+        static Beacon FeatureBeacon(RectTransform card)
         {
             const float Reach = 18f;
 
@@ -823,6 +916,64 @@ namespace GlimmerGrove
                 // first frame is what made the previous ring read as a flicker.
                 ring.color = Pal.A(Pal.Cream, .75f * Mathf.Clamp01((1f - k) * 1.6f) * (k < 1f ? 1f : 0f));
             }, ring, "ring").Loop(-1, false);
+
+            return new Beacon { Seat = seat, Lit = lit, Ring = ring };
+        }
+
+        /// <summary>
+        /// A count on the corner of a box, built once and painted. Pops the first time it is
+        /// shown and breathes after; a badge rebuilt on every event would pop every time.
+        /// </summary>
+        sealed class Badge
+        {
+            public RectTransform Root;
+            public Text Count;
+            public string Prefix = string.Empty;
+            bool _shown;
+
+            public void Paint(int n)
+            {
+                if (!Root) return;
+
+                if (n <= 0)
+                {
+                    Root.gameObject.SetActive(false);
+                    _shown = false;
+                    return;
+                }
+
+                if (Count) Count.text = Prefix + n;
+                if (_shown) return;
+
+                _shown = true;
+                Root.gameObject.SetActive(true);
+                Tween.KillChannel(Root, "breathe");
+                Root.localScale = Vector3.zero;
+                var root = Root;
+                Tween.Pop(root, 0f, .5f, .18f)
+                     .OnDone(() => { if (root) Tween.Breathe(root, .10f, 1.3f); });
+            }
+        }
+
+        static Badge CornerBadge(Transform card)
+        {
+            var badge = UIKit.Img("Waiting", card, Art.Disc(64), Pal.Gold,
+                                  new Vector2(66f, 66f), new Vector2(1f, 1f), new Vector2(-30f, -28f));
+
+            var rim = UIKit.Img("Rim", badge.transform, Art.Ring(64, 7f), new Color(.16f, .12f, .04f, .95f));
+            UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
+
+            // Shrinkable, because this is not a one-digit field: a player who is away for a
+            // fortnight comes back to two figures.
+            var count = UIKit.Shrinkable(
+                UIKit.Titled("N", badge.transform, "0", 36, new Color(.17f, .11f, .02f),
+                             TextAnchor.MiddleCenter, new Vector2(50f, 50f),
+                             new Vector2(.5f, .5f), Vector2.zero, 0f, 0f), 22);
+
+            UIKit.Halo(badge.transform, Pal.Gold, 146f, .45f);
+            badge.gameObject.SetActive(false);
+
+            return new Badge { Root = (RectTransform)badge.transform, Count = count };
         }
 
         /// <summary>A bar inside a strip. Returns the track, so a caller can pin things to it.</summary>
@@ -847,6 +998,12 @@ namespace GlimmerGrove
         }
 
         // -------------------------------------------------------------- streak
+        Image _streakLamp, _streakGlow, _streakFlame, _streakStripIcon;
+        Text _streakValue, _streakCaption, _streakLine;
+        Beacon _streakBeacon;
+        Badge _streakBadge;
+        bool _streakRiskPulse;
+
         /// <summary>
         /// The flame, the number of days behind it, and what tomorrow is worth.
         ///
@@ -857,30 +1014,25 @@ namespace GlimmerGrove
         /// settings gear.
         /// </para>
         /// <para>
-        /// Three states, drawn differently on purpose. Held and fed today: a lit flame,
-        /// flickering. Held but not yet fed: the same flame, dimmed and pulsing, with the
-        /// hours left in place of the caption — the only moment in the game where the screen
-        /// says "this is going to be taken away", and it earns that by being true. Not held
-        /// at all: a grey flame and an invitation, so a new player learns the thing exists
-        /// before they have one to lose.
+        /// Three states, drawn differently on purpose. Held and fed today: a lit flame. Held
+        /// but not yet fed: the same flame, dimmed and pulsing, with the hours left in place
+        /// of the caption — the only moment in the game where the screen says "this is going
+        /// to be taken away", and it earns that by being true. Not held at all: a grey flame
+        /// and an invitation, so a new player learns the thing exists before they have one
+        /// to lose.
         /// </para>
         /// <para>
-        /// Rebuilt rather than repainted, like the panels around it: the three states differ
-        /// in what exists, not just in what colour it is, and a repaint path would be a
-        /// second description of the same box to keep in step with this one.
+        /// <b>Built once, painted from the ledger</b> (<see cref="PaintStreak"/>). The three
+        /// states differ in what is lit, what the words say and whether the corner carries a
+        /// count — all of which exist from the first frame and are switched, so a run
+        /// finishing behind the hub changes a number rather than popping the box in again.
         /// </para>
         /// </summary>
         void BuildStreakBox()
         {
             if (!_streakBox) return;
-            for (int i = _streakBox.childCount - 1; i >= 0; i--)
-                Hide(_streakBox.GetChild(i).gameObject);
 
             float w = _streakBox.sizeDelta.x;
-            int days = DailyStreak.Days;
-            int pending = DailyStreak.Pending;
-            bool atRisk = DailyStreak.AtRisk;
-            bool lit = days > 0 && !atRisk;
 
             // **The streak's orange moved from the words to the plate.** It was asked for as
             // the settings key's own orange on the title and the countdown; the box is now
@@ -890,37 +1042,92 @@ namespace GlimmerGrove
             var tint = Pal.Cream;
             float gx = -w * .5f + 115f;
 
-            var card = FeatureCard(_streakBox, w, Skins.PlateOrange, tint, lit ? .52f : .30f, OpenStreak);
+            var card = FeatureCard(_streakBox, w, Skins.PlateOrange, tint, .30f, OpenStreak);
+            _streakLamp = card.Find("Lamp")?.GetComponent<Image>();
 
             // Straight after the card, so the lit rim and the ring sit under everything the
             // box draws. They live at the border, where nothing else does.
-            if (pending > 0) FeatureBeacon(card);
+            _streakBeacon = FeatureBeacon(card);
 
             FeatureHeader(card, w, Loc.Get("ui.home.streak"), tint, null);
 
-            if (lit) UIKit.Img("Glow", card, Art.Glow(128, 2f), Pal.A(Pal.Sun, .32f),
-                               new Vector2(200f, 200f), new Vector2(.5f, .5f), new Vector2(gx, 4f));
+            _streakGlow = UIKit.Img("Glow", card, Art.Glow(128, 2f), Pal.A(Pal.Sun, .32f),
+                                    new Vector2(200f, 200f), new Vector2(.5f, .5f), new Vector2(gx, 4f));
 
             // **A calendar, still, in place of the flipbook flame.** What the number under it
             // counts is nights in a row, which a calendar says without being taught; and the
             // flame was the one animated thing on a screen of still ones, which is a lot of
             // motion to spend on a readout. The three states are still told apart — by the
             // number, by the caption, and by the pulse below when the flame is at risk.
-            var flame = UIKit.Img("Flame", card, Art.S("Ui/ic_streak"),
-                                  days > 0 ? Color.white : new Color(.78f, .82f, .88f, 1f),
-                                  new Vector2(130f, 130f), new Vector2(.5f, .5f), new Vector2(gx, 4f));
-            flame.preserveAspect = true;
+            _streakFlame = UIKit.Img("Flame", card, Art.S("Ui/ic_streak"), Color.white,
+                                     new Vector2(130f, 130f), new Vector2(.5f, .5f), new Vector2(gx, 4f));
+            _streakFlame.preserveAspect = true;
 
-            if (atRisk) Tween.Run(1.1f, Ease.InOutSine,
+            (_streakValue, _streakCaption) = FeatureValue(card, w, "—", Pal.Cream, string.Empty, tint);
+
+            var strip = FeatureStrip(card, w);
+            float sw = w - 72f;
+            float lw = sw - 90f;
+
+            _streakStripIcon = UIKit.Img("M", strip, Art.S("Ui/ic_gift"), Color.white,
+                                         new Vector2(40f, 40f), new Vector2(0f, .5f), new Vector2(38f, 0f));
+            _streakStripIcon.preserveAspect = true;
+
+            _streakLine = UIKit.Shrinkable(
+                UIKit.Titled("L", strip, string.Empty, 24, Pal.Cream,
+                             TextAnchor.MiddleLeft, new Vector2(lw, 34f), new Vector2(0f, .5f),
+                             new Vector2(70f + lw * .5f, 0f), 0f, 0f), 15);
+
+            // Built last so it sits over the card's own tap area, and drawn as a number rather
+            // than a dot because "3" is a reason to go and a dot is only a hint that there
+            // might be one. FeatureHeader keeps its title clear of that corner.
+            _streakBadge = CornerBadge(card);
+
+            PaintStreak();
+        }
+
+        /// <summary>
+        /// Writes the streak onto the box. The at-risk pulse is started only on the paint
+        /// that made the flame at risk and killed on the one that fed it, so a repaint in
+        /// the middle of a pulse leaves it running rather than snapping it back to full.
+        /// </summary>
+        void PaintStreak()
+        {
+            if (!_streakBox) return;
+
+            int days = DailyStreak.Days;
+            int pending = DailyStreak.Pending;
+            bool atRisk = DailyStreak.AtRisk;
+            bool lit = days > 0 && !atRisk;
+
+            if (_streakLamp) _streakLamp.color = Pal.A(Color.white, (lit ? .52f : .30f) * .55f);
+            _streakBeacon?.Show(pending > 0);
+            if (_streakGlow) _streakGlow.gameObject.SetActive(lit);
+
+            if (_streakFlame)
+            {
+                if (atRisk != _streakRiskPulse)
+                {
+                    _streakRiskPulse = atRisk;
+                    Tween.KillChannel(_streakFlame, "risk");
+                    if (atRisk)
+                    {
+                        var flame = _streakFlame;
+                        Tween.Run(1.1f, Ease.InOutSine,
                                   t => { if (flame) flame.color = Color.Lerp(new Color(1f, 1f, 1f, .45f), Color.white, t); },
                                   flame, "risk").Loop(-1, true);
+                    }
+                }
 
-            FeatureValue(card, w, days > 0 ? days.ToString() : "—",
-                         Pal.Cream,
-                         StreakCaption(days, atRisk), tint);
+                if (!atRisk)
+                    _streakFlame.color = days > 0 ? Color.white : new Color(.78f, .82f, .88f, 1f);
+            }
 
-            StreakStrip(FeatureStrip(card, w), w, pending);
-            StreakBadge(card, pending);
+            if (_streakValue) _streakValue.text = days > 0 ? days.ToString() : "—";
+            if (_streakCaption) _streakCaption.text = StreakCaption(days, atRisk);
+
+            PaintStreakStrip(pending);
+            _streakBadge?.Paint(pending);
         }
 
         /// <summary>
@@ -938,76 +1145,26 @@ namespace GlimmerGrove
         /// nothing, which the shipped ladder never does but a retuned one could.
         /// </para>
         /// </summary>
-        void StreakStrip(Transform strip, float w, int pending)
+        void PaintStreakStrip(int pending)
         {
-            float sw = w - 72f;
-            float lw = sw - 90f;
-
             var drop = DailyStreak.NextReward;
             bool plain = pending > 0 || drop.Kind == ChestDropKind.None;
 
-            var icon = UIKit.Img("M", strip,
-                                 plain ? Art.S("Ui/ic_gift") : RewardArt.Icon(drop.Kind, drop.Item),
-                                 Color.white, new Vector2(40f, 40f), new Vector2(0f, .5f),
-                                 new Vector2(38f, 0f));
-            icon.preserveAspect = true;
-            if (!plain) RewardArt.Glyph(icon, drop.Kind, 10f);
+            if (_streakStripIcon)
+            {
+                // A coin is a flipbook and everything else is a still, so the reel comes off
+                // before the sprite is swapped — Glyph attaches one, and a still drawn over a
+                // running reel is a still for one frame.
+                Flipbook.Detach(_streakStripIcon);
+                _streakStripIcon.sprite = plain ? Art.S("Ui/ic_gift") : RewardArt.Icon(drop.Kind, drop.Item);
+                _streakStripIcon.color = Color.white;
+                if (!plain) RewardArt.Glyph(_streakStripIcon, drop.Kind, 10f);
+            }
 
-            string line = pending > 0 ? Loc.Get("ui.home.streak_waiting")
-                        : plain ? Loc.Get("ui.home.streak_keep")
-                        : Loc.Format("ui.home.streak_next", RewardArt.Amount(drop));
-
-            UIKit.Shrinkable(
-                UIKit.Titled("L", strip, line, 24, Pal.Cream,
-                             TextAnchor.MiddleLeft, new Vector2(lw, 34f), new Vector2(0f, .5f),
-                             new Vector2(70f + lw * .5f, 0f), 0f, 0f), 15);
-        }
-
-        /// <summary>
-        /// The count of streak nights with a reward still on them, on the corner of the box.
-        ///
-        /// <para>
-        /// Load-bearing rather than decorative. A rung used to be applied silently when a
-        /// run ended; it now waits on the streak page to be tapped, which is a better moment
-        /// but only if the player knows it is there. The hub is the screen they return to,
-        /// so this is the one place that can tell them — without it the change trades a
-        /// reward they did not notice for a reward they never take.
-        /// </para>
-        /// <para>
-        /// Built last so it sits over the card's own tap area, and drawn as a number rather
-        /// than a dot because "3" is a reason to go and a dot is only a hint that there
-        /// might be one.
-        /// </para>
-        /// <para>
-        /// 66px, sized off the corner rather than off the number: it hangs 3px past the right
-        /// edge and 5px past the top, which is what makes it read as pinned <em>to</em> the
-        /// box instead of drawn inside it. <see cref="FeatureHeader"/> keeps its title clear
-        /// of that corner, so the two cannot collide however long a translation runs.
-        /// </para>
-        /// </summary>
-        void StreakBadge(Transform card, int pending)
-        {
-            if (pending <= 0) return;
-
-            var badge = UIKit.Img("Waiting", card, Art.Disc(64), Pal.Gold,
-                                  new Vector2(66f, 66f), new Vector2(1f, 1f), new Vector2(-30f, -28f));
-
-            var rim = UIKit.Img("Rim", badge.transform, Art.Ring(64, 7f), new Color(.16f, .12f, .04f, .95f));
-            UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
-
-            // Shrinkable, because this is not a one-digit field: a player who is away for a
-            // fortnight comes back to two figures, and the count is over *nights*, which the
-            // ladder no longer caps.
-            UIKit.Shrinkable(
-                UIKit.Titled("N", badge.transform, pending.ToString(), 36, new Color(.17f, .11f, .02f),
-                             TextAnchor.MiddleCenter, new Vector2(50f, 50f),
-                             new Vector2(.5f, .5f), Vector2.zero, 0f, 0f), 22);
-
-            UIKit.Halo(badge.transform, Pal.Gold, 146f, .45f);
-
-            badge.transform.localScale = Vector3.zero;
-            Tween.Pop(badge.transform, 0f, .5f, .18f)
-                 .OnDone(() => { if (badge) Tween.Breathe(badge.transform, .10f, 1.3f); });
+            if (_streakLine)
+                _streakLine.text = pending > 0 ? Loc.Get("ui.home.streak_waiting")
+                                 : plain ? Loc.Get("ui.home.streak_keep")
+                                 : Loc.Format("ui.home.streak_next", RewardArt.Amount(drop));
         }
 
         static string StreakCaption(int days, bool atRisk)
@@ -1113,7 +1270,7 @@ namespace GlimmerGrove
             Milestones(FeatureBar(FeatureStrip(card, w), w, done, Pal.Bloom),
                        w, live, progress.Finished, goal);
 
-            EventBadge(card, progress.Waiting);
+            CornerBadge(card).Paint(progress.Waiting);
 
             Sheen.Attach(card, 4.6f);
         }
@@ -1125,35 +1282,6 @@ namespace GlimmerGrove
         /// feature box means one thing across this screen. Not redundant with the beacon
         /// either, for the reason stated there — the lit border is what is visible from
         /// across the room, the badge is what says how much once you are looking.
-        /// </summary>
-        void EventBadge(Transform card, int waiting)
-        {
-            if (waiting <= 0) return;
-
-            var badge = UIKit.Img("Waiting", card, Art.Disc(64), Pal.Gold,
-                                  new Vector2(66f, 66f), new Vector2(1f, 1f), new Vector2(-30f, -28f));
-
-            var rim = UIKit.Img("Rim", badge.transform, Art.Ring(64, 7f), new Color(.16f, .12f, .04f, .95f));
-            UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
-
-            UIKit.Shrinkable(
-                UIKit.Titled("N", badge.transform, waiting.ToString(), 36, new Color(.17f, .11f, .02f),
-                             TextAnchor.MiddleCenter, new Vector2(50f, 50f),
-                             new Vector2(.5f, .5f), Vector2.zero, 0f, 0f), 22);
-
-            UIKit.Halo(badge.transform, Pal.Gold, 146f, .45f);
-
-            badge.transform.localScale = Vector3.zero;
-            Tween.Pop(badge.transform, 0f, .5f, .22f)
-                 .OnDone(() => { if (badge) Tween.Breathe(badge.transform, .10f, 1.3f); });
-        }
-
-        /// <summary>
-        /// Opens the event page.
-        ///
-        /// A page rather than the panel this used to raise, and the reason is the same one
-        /// that turned the streak's toast into a screen: the box reports, and there is now
-        /// something on the other side of it to <em>do</em>.
         /// </summary>
         void OpenEvent()
         {

@@ -1166,7 +1166,8 @@ namespace GlimmerGrove.Cloud
                     state.ConfirmedSpendIds,
                     state.ConfirmedThroughUnix,
                     state.EarnedFloor,
-                    state.ConfirmedGrantIds);
+                    state.ConfirmedGrantIds,
+                    state.RejectedGrantIds);
 
                 // Refunded heart containers. Applied from whichever rows carry them — the
                 // list is an account fact repeated per currency row, and the ledger's own

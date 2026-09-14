@@ -108,6 +108,34 @@ namespace GlimmerGrove
             /// </b>
             /// </summary>
             public Image Web;
+
+            /// <summary>
+            /// What this gem is carrying.
+            ///
+            /// <b>The picture that says so is the gem's own face</b> — a lance is a stellated star
+            /// and a stormglass a vortex orb, each cut in all four gem colours (<c>CharmFace</c>),
+            /// so a charmed cell is a <em>different stone</em> rather than one of the four with a
+            /// glyph printed on it. That is a correction: the glyph was the first cut and the
+            /// owner's verdict on it was that the charms were the existing gems with an icon put
+            /// on them. See <c>SiegeMode.Cast</c> for the whole argument.
+            /// </summary>
+            public SiegeCharm Charm;
+
+            /// <summary>
+            /// The halo behind it, or null.
+            ///
+            /// <b>A child of the gem for <see cref="Web"/>'s reason</b>: it falls with the gem,
+            /// swaps with it and is destroyed with it, so nothing has to keep a second list of
+            /// forty cells in step with this one.
+            ///
+            /// <para>
+            /// <b>It survived the face going in because it is the reading at a distance.</b> A
+            /// silhouette is what separates a charm from the gem beside it; a halo is what makes
+            /// the eye go there at all on a board that also has a hill walking down it (invariant
+            /// 37f, asked of a gem). Every charm wears one, the prism included.
+            /// </para>
+            /// </summary>
+            public Image Ring;
         }
 
         sealed class Mob
@@ -153,7 +181,46 @@ namespace GlimmerGrove
             /// <em>floating</em>).
             public Sprite[] Idle, Casting;
 
-            /// <summary>Which of the two its body is wearing now. See <see cref="SiegeView.Wear"/>.</summary>
+            /// <summary>
+            /// What a <b>boss</b> walks on in, and <b>null</b> for everything that walks for its
+            /// whole life.
+            ///
+            /// <para>
+            /// <b>A boss is the only body on this hill that ever stops, so it is the only one for
+            /// which "standing" and "walking" are two pictures.</b> <see cref="Idle"/>'s note
+            /// above is about an insect, whose legs cycle in place — the picture of one standing
+            /// and one walking really are the same picture. A boss rendered out of 3D is the case
+            /// that note says would want two, arriving: it walks to
+            /// <c>SiegeTuning.HoldOf</c> and holds the middle of the hill from there (37t), and
+            /// the reel it shipped with was the <em>stand</em>, so for the three seconds of its
+            /// entrance a standing figure was translated down the hill. Reported from play as
+            /// sliding rather than walking, which is what it was.
+            /// </para>
+            /// <para>
+            /// <b>Null is an answer and not a failure</b>, exactly as it is for
+            /// <see cref="Swinging"/>: the four bosses cut from 2D packs have one reel that is
+            /// their walk and their stand together (<c>make_siege_art.boss_reels</c>), so they
+            /// keep every frame of the behaviour they have always had. Asking for the reel and
+            /// falling back to <see cref="Idle"/> is also what keeps a boss whose walk failed to
+            /// load off an <c>Image</c> with no sprite, which is a white rectangle three cells
+            /// tall rather than a blank (invariant 7b).
+            /// </para>
+            /// </summary>
+            public Sprite[] Walking;
+
+            /// <summary>
+            /// What it swings at the ward line, and <b>null for every cast whose pack drew no
+            /// attack</b> — which is the insects and the brood, so nothing about either of them
+            /// changes.
+            ///
+            /// <b>Its frame is bigger than the walk's and its body is not</b>, which is
+            /// <see cref="SiegeView.Wear"/>'s whole job: a swing throws the weapon far outside the
+            /// box the body walks in, and paying for that on the walk reel would draw every raider
+            /// in the chapter two-thirds size for the whole run.
+            /// </summary>
+            public Sprite[] Swinging;
+
+            /// <summary>Which of them its body is wearing now. See <see cref="SiegeView.Wear"/>.</summary>
             public Sprite[] Playing;
 
             /// <summary>The light it gathers before a spell leaves. Only a warlord has one.</summary>
@@ -320,6 +387,25 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         readonly List<int> _striking = new List<int>(16);
+
+        /// <summary>
+        /// Raiders a <b>stormglass</b>'s volley has claimed and not yet landed a bolt on.
+        ///
+        /// <para>
+        /// <b>The same problem as <see cref="_striking"/> and a list of its own rather than a
+        /// share of it.</b> Both are "the model killed a dozen things in one instant and the
+        /// drawing runs on for a second and a half", and both need <c>Reap</c> to leave the bodies
+        /// standing until their bolt arrives — but a stormcall clears its whole claim when its
+        /// sequence ends, so sharing one list would let either of them drop the other's corpses
+        /// mid-flight. Two lists cost a second <c>Contains</c> per mob per frame and cannot
+        /// interfere.
+        /// </para>
+        /// <para>
+        /// Cleared by <c>Compose</c> with the other, because a board dealt again mid-volley must
+        /// not leave a claim standing over widgets that no longer exist.
+        /// </para>
+        /// </summary>
+        readonly List<int> _volleying = new List<int>(16);
 
         /// <summary>
         /// What the screen does when a target is chosen: apply it, charge for it and spend it.

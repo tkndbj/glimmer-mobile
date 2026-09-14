@@ -149,6 +149,7 @@ namespace GlimmerGrove.Modes
 
             raider.Alive = false;
             _felled++;
+            Attention.RaiderFelled(raider.Boss);
 
             Drop(raider);
             Cog(raider);

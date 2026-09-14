@@ -242,6 +242,12 @@ namespace GlimmerGrove.Persistence
             if (streakA.lastPlayedDay != streakB.lastPlayedDay) return true;
             if (streakA.collectedThroughDay != streakB.collectedThroughDay) return true;
 
+            // The tasks. Both periods' counters and claims have to travel: a counter that stays
+            // on one phone is a task that reads half done on the other, and a claim that stays
+            // is a chest the other device would pay a second time. Compared by walking, so the
+            // writer sorts — see TaskLedger.Write.
+            if (!SameTasks(remote.tasks, merged.tasks)) return true;
+
             // The event floors. These have to travel, and for a stronger reason than the
             // streak's dates do: the server re-derives what a save is worth, and a floor it
             // has not been told about is a milestone it will not pay for. A collect that
@@ -455,6 +461,32 @@ namespace GlimmerGrove.Persistence
                 if (!Same(x.id, y.id)) return false;
                 if (x.collectedGoal != y.collectedGoal) return false;
             }
+
+            return true;
+        }
+
+        static bool SameTasks(TaskStateDto a, TaskStateDto b)
+            => SamePeriod(a?.daily, b?.daily) && SamePeriod(a?.weekly, b?.weekly);
+
+        static bool SamePeriod(TaskPeriodDto a, TaskPeriodDto b)
+        {
+            var x = a ?? new TaskPeriodDto();
+            var y = b ?? new TaskPeriodDto();
+            if (x.key != y.key) return false;
+
+            int na = x.counts?.Length ?? 0, nb = y.counts?.Length ?? 0;
+            if (na != nb) return false;
+            for (int i = 0; i < na; i++)
+            {
+                var p = x.counts[i] ?? new TaskCountDto();
+                var q = y.counts[i] ?? new TaskCountDto();
+                if (!Same(p.goal, q.goal) || p.count != q.count) return false;
+            }
+
+            int ca = x.claimed?.Length ?? 0, cb = y.claimed?.Length ?? 0;
+            if (ca != cb) return false;
+            for (int i = 0; i < ca; i++)
+                if (!Same(x.claimed[i], y.claimed[i])) return false;
 
             return true;
         }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using GlimmerGrove.AssetPipeline;
+using GlimmerGrove.Progression;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -107,6 +108,7 @@ namespace GlimmerGrove.EditorTools
             expected.AddRange(AssetManifest.AllChapterAssets(content.Bodies));
             expected.AddRange(AssetManifest.CompanionAssets(content.Index.Companions));
             expected.AddRange(AssetManifest.AllGroveAssets(content.Homestead));
+            expected.AddRange(AssetManifest.ChestAssets(ProgressionRules.Table.Tasks));
 
             var present = IndexAssetsByAddress();
             var missing = new List<string>();

@@ -38,7 +38,7 @@ namespace GlimmerGrove.EditorTools
     {
         // ------------------------------------------------------------------ the roster
 
-        /// <summary>One body: which model, which walk, and which reel it becomes.</summary>
+        /// <summary>One body: which model, which clips, and which reel it becomes.</summary>
         struct Body
         {
             public string Key;        // the reel prefix — `SiegeView.Skin` names these
@@ -46,6 +46,50 @@ namespace GlimmerGrove.EditorTools
             public string Clip;       // the animation to run through
             public string Rig;        // the animation file whose bone paths this body matches
             public float Lean;        // degrees of camera pitch, if this one wants its own
+
+            /// <summary>
+            /// A second clip: what a <b>boss</b> throws in. Null for a raider, which has one reel.
+            ///
+            /// Its presence is what makes a row a boss — see <see cref="Bosses"/> — because every
+            /// other difference follows from it: three reels on one canvas, no ward colour, and a
+            /// height of its own.
+            /// </summary>
+            public string Cast;
+
+            /// <summary>
+            /// A third clip: what a <b>boss</b> walks on in. Null for a raider, whose one reel is
+            /// its walk already.
+            ///
+            /// <para>
+            /// <b>A boss is the only body on this hill that ever stops, which is why it is the
+            /// only one that needs two.</b> A raider walks for its whole life, so the reel it
+            /// walks in is also the reel it stands in and nothing has to choose. A boss comes
+            /// down to <c>SiegeTuning.HoldOf</c> and then holds the middle of the hill for the
+            /// rest of the fight (37t) — so one reel has to be wrong at one end of that, and the
+            /// one it shipped with was the idle: a <em>standing</em> clip played over a widget
+            /// the view was translating down the hill, which is a figure sliding rather than
+            /// walking. Reported from play in exactly those words, and measurable after the fact:
+            /// across the twelve frames of the shipped <c>caller</c> reel the mean pixel
+            /// difference from the first frame is <b>2.2</b>, against 30 to 37 for every other
+            /// body reel this mode draws. It was a photograph.
+            /// </para>
+            /// <para>
+            /// <b>It comes out of a different animation file from <see cref="Cast"/>, which is
+            /// why <see cref="WalkRig"/> exists</b> — the movement library holds no idle and the
+            /// general library holds no walk, so a boss genuinely needs both and a single
+            /// <see cref="Rig"/> cannot name them. That is the one place this pack will bite: a
+            /// clip binds by transform <em>path</em>, so the wrong file misses every binding
+            /// silently (see <see cref="AdventurerClips"/>), which is why <see cref="Moves"/> is
+            /// now asked of this reel as well as of the stand.
+            /// </para>
+            /// </summary>
+            public string Walk;
+
+            /// <summary>The animation file <see cref="Walk"/> lives in. See that field.</summary>
+            public string WalkRig;
+
+            /// <summary>The height this body is cut at, or nought for <see cref="Tall"/>.</summary>
+            public int Height;
         }
 
         const string Source = "Assets/Game/Editor/Art/KayKit";
@@ -116,6 +160,106 @@ namespace GlimmerGrove.EditorTools
             new Body { Key = "kayBulwark", Model = "Knight",           Clip = "Running_A",
                        Rig = Clips },
         };
+
+        /// <summary>
+        /// The bosses baked here, which today is the one the third chapter ends on.
+        ///
+        /// <para>
+        /// <b>A separate roster rather than a flag on <see cref="Roster"/>, because almost nothing
+        /// about the two is the same.</b> A raider is one reel, tinted four ways, cut at the cast's
+        /// own height and drawn at a cell and a bit. A boss is <em>two</em> reels on one canvas so
+        /// it cannot change size when it throws, in the colours the pack painted, cut at the height
+        /// the view really draws it, and there is exactly one of it on the hill.
+        /// </para>
+        /// <para>
+        /// <b>Why the bonecaller is baked at all, when the other five bosses are cut from 2D
+        /// packs.</b> It was the survival pack's own robed caster and the owner's verdict on it was
+        /// one line: wrong, use something else. There is nothing else — surveyed, the 2D character
+        /// packs on this machine hold eighty-odd small cartoon monsters and ten neighbourhood
+        /// zombies, none of them boss-shaped, and the four blob bosses and the gravemaw already
+        /// take every body the top-down monster pack has. That is invariant 37at arriving for the
+        /// second time and for the same structural reason: the market has no more of these, so the
+        /// answer is to render one.
+        /// </para>
+        /// <para>
+        /// <b>The skeleton mage, and it was chosen on the board rather than on a contact sheet.</b>
+        /// Five candidates were rendered at this camera and then <em>on the hill at true relative
+        /// scale</em>, which is the only comparison that answers anything: the hooded rogue is the
+        /// minion's fault again (a featureless dome), the large barbarian reads as a lump, the mage
+        /// as a girl in a hat, and the <b>druid</b> — which wins the silhouette test outright, its
+        /// antlers being the one thing in the set that projects sideways — reads on the hill as a
+        /// <em>friendly RPG mascot</em>. That is the finding worth keeping: <b>projecting sideways
+        /// is necessary and is not sufficient, and the second half is only visible on the board.</b>
+        /// </para>
+        /// <para>
+        /// <b>It is a skeleton in front of skeletons, which is the one thing that had to be argued
+        /// rather than assumed</b> (invariant 37z: a boss may not be the wave behind it drawn
+        /// bigger). Three things separate them and all three are visible in one frame: the raiders
+        /// are <em>flat</em> 2D cartoon bone, hue-rotated into the four ward colours, at a cell and
+        /// a bit; this is shaded, plum-robed, and drawn three cells tall. What it reads as is the
+        /// thing that raised them, which is exactly what its spell does.
+        /// </para>
+        /// <para>
+        /// <b>It stands <em>and</em> walks, and shipping only the first half of that was the
+        /// fault.</b> A boss walks to the middle of the hill and then holds it, so what it is
+        /// drawn doing for most of the fight is standing — which is why the stand is the reel it
+        /// was given, and a run cycle looping under a body that has stopped is invariant 37u's
+        /// fault in one word. The half nobody wrote down is that the other three seconds are a
+        /// walk, and a stand played over them is the same fault pointing the other way: a figure
+        /// sliding down a hill. **Two reels rather than a compromise between them**, chosen by
+        /// <c>SiegeRaider.InPlace</c>, which is the model's own answer to "has it arrived".
+        /// See <see cref="Body.Walk"/>.
+        /// </para>
+        /// </summary>
+        static readonly Body[] Bosses =
+        {
+            // **The walk is `Running_A`, and that is <see cref="Clips"/>'s own finding applied to
+            // the one body that was exempted from it by accident.** That doc has said since the
+            // cast was built that a humanoid's walk does not survive this camera — the limbs swing
+            // along the body's own axis, straight into the occluded direction, so `Walking_A` and
+            // `Walking_C` are almost indistinguishable at any pitch. Every raider here therefore
+            // runs. The boss then authored `Walking_A` because the field is called `Walk`, and
+            // what shipped is exactly what that doc predicts: measured on the reel, its silhouette
+            // bobbed **0.80%** of its own height across the cycle and its feet swung **0.8%** of
+            // their spread, against 3.9-7.7% and 16-36% for every running body on this hill. A
+            // figure swaying on the spot while it is translated down a slope is a figure sliding,
+            // and it was reported from play as exactly that. <see cref="Strides"/> is the gate.
+            new Body { Key = "caller", Model = "Skeleton_Mage", Clip = "Idle_A", Cast = "Throw",
+                       Walk = "Running_A", WalkRig = Clips,
+                       Rig = SkeletonGeneral, Height = BossTall },
+        };
+
+        /// <summary>
+        /// The Skeletons pack's general animations — idles, throws, hits.
+        ///
+        /// <b>A third animation file, and it is here because the movement library has no idle in
+        /// it at all.</b> Every raider above runs, so <see cref="Clips"/> was enough; a boss walks
+        /// to the middle of the hill and then holds it, so what it is drawn doing for most of the
+        /// fight is standing still. <c>Idle_A</c> and <c>Throw</c> both live here.
+        ///
+        /// <b>The Adventurers pack's copy of this file is deliberately not imported.</b> It would
+        /// be needed by a boss taken from that pack and there is not one — see
+        /// <see cref="AdventurerClips"/> for why the two cannot be shared: a clip binds by
+        /// transform path, so the wrong file misses every binding <em>silently</em>.
+        /// </summary>
+        const string SkeletonGeneral = Source + "/Rig_Medium_General.fbx";
+
+        /// <summary>
+        /// How tall a boss is cut, against a raider's <see cref="Tall"/>.
+        ///
+        /// <b>The height the view really draws it at, so nothing is ever upscaled</b>, and it is
+        /// the same number every 2D boss in this mode is cut at: `SiegeTuning.TallOf` gives a
+        /// bonecaller 3.6 cells, and the cut heights of the six run about 110 pixels a cell.
+        /// A raider's 384 is far denser because a raider is drawn at a cell and a bit.
+        /// </summary>
+        const int BossTall = 400;
+
+        /// <summary>Frames kept from a boss's stand, from its throw, and from its walk.</summary>
+        ///
+        /// <b>The walk takes the cast's own <see cref="Frames"/>, because it is the same kind of
+        /// thing</b> — a cycle that has to loop seamlessly — where the stand and the throw are cut
+        /// at whatever their gesture needs.
+        const int BossFrames = 12, BossCastFrames = 14, BossWalkFrames = 12;
 
         // ------------------------------------------------------------------ the camera
 
@@ -261,10 +405,23 @@ namespace GlimmerGrove.EditorTools
         [MenuItem("Glimmer Grove/Art/Bake Siege Cast (3D)", false, 40)]
         public static void Bake() => Run(write: true, contact: false);
 
-        [MenuItem("Glimmer Grove/Art/Verify Siege Cast (3D)", false, 41)]
+        /// <summary>
+        /// The same, for the <see cref="Bosses"/> alone.
+        ///
+        /// <b>Because the two rosters are baked for different reasons and a fix to one should not
+        /// rewrite the other.</b> A GPU is not obliged to rasterise a triangle the same way twice
+        /// (see <see cref="Check"/>, which is why that holds a tolerance rather than bytes), so a
+        /// full bake run to change one boss writes a hundred and forty-four raider PNGs that
+        /// differ from the committed ones by a level here and there — a diff nobody can read, over
+        /// art nobody touched. This writes the three reels the boss roster owns and nothing else.
+        /// </summary>
+        [MenuItem("Glimmer Grove/Art/Bake Siege Bosses (3D)", false, 41)]
+        public static void BakeBosses() => Run(write: true, contact: false, raiders: false);
+
+        [MenuItem("Glimmer Grove/Art/Verify Siege Cast (3D)", false, 42)]
         public static void Verify() => Run(write: false, contact: false);
 
-        [MenuItem("Glimmer Grove/Art/Siege Cast Contact Sheet (3D)", false, 42)]
+        [MenuItem("Glimmer Grove/Art/Siege Cast Contact Sheet (3D)", false, 43)]
         public static void Contact() => Run(write: false, contact: true);
 
         /// <summary>
@@ -275,7 +432,7 @@ namespace GlimmerGrove.EditorTools
         /// and one that reads as a skull is not a number — it is a picture, looked at, on this
         /// board's own floor.
         /// </summary>
-        [MenuItem("Glimmer Grove/Art/Survey Siege Cast Angles (3D)", false, 43)]
+        [MenuItem("Glimmer Grove/Art/Survey Siege Cast Angles (3D)", false, 44)]
         public static void Angles()
         {
             GameObject stage = null;
@@ -316,7 +473,10 @@ namespace GlimmerGrove.EditorTools
 
         // ------------------------------------------------------------------ the run
 
-        static void Run(bool write, bool contact)
+        /// <summary>An empty roster, so a partial run is a different list rather than a branch.</summary>
+        static readonly Body[] NoBodies = new Body[0];
+
+        static void Run(bool write, bool contact, bool raiders = true, bool bosses = true)
         {
             GameObject stage = null;
             var made = new Dictionary<string, Texture2D[]>();
@@ -326,7 +486,7 @@ namespace GlimmerGrove.EditorTools
             {
                 stage = BuildStage(out var cam, out var key);
 
-                foreach (var body in Roster)
+                foreach (var body in raiders ? Roster : NoBodies)
                 {
                     var reels = Reels(stage.transform, cam, key, body);
                     if (reels == null)
@@ -337,6 +497,26 @@ namespace GlimmerGrove.EditorTools
 
                     for (int i = 0; i < Letters.Length; i++)
                         made[body.Key + "_" + Letters[i]] = reels[i];
+                }
+
+                // **The bosses, which are the same stage and nothing else the same.** See
+                // `Bosses`. Three reels, one canvas, no ward colour, and a height of their own.
+                foreach (var body in bosses ? Bosses : NoBodies)
+                {
+                    var reels = BossReels(stage.transform, cam, key, body);
+                    if (reels == null)
+                    {
+                        Debug.LogError("SiegeCastBake: could not build boss " + body.Model);
+                        continue;
+                    }
+
+                    made[body.Key] = reels[0];
+                    made[body.Key + "_cast"] = reels[1];
+
+                    // The suffix is `SiegeView.BossWalk`'s literal, written out at both ends for
+                    // `Tools/verify/artnames.py`'s reason: a name assembled at the call site is a
+                    // name that gate cannot hold to disk.
+                    if (reels.Length > 2) made[body.Key + "_walk"] = reels[2];
                 }
 
                 if (made.Count == 0) { Debug.LogError("SiegeCastBake: nothing baked."); return; }
@@ -407,6 +587,125 @@ namespace GlimmerGrove.EditorTools
         }
 
         /// <summary>
+        /// A boss's three reels: the one it walks on in, the one it stands in, and the one it
+        /// throws in.
+        ///
+        /// <para>
+        /// <b>All measured and trimmed together, which is the whole reason this is not three calls
+        /// to <see cref="Reels"/>.</b> Framing each animation to its own box draws the body at
+        /// three different sizes, so on screen the boss shrinks by a quarter every time it casts
+        /// and grows back — the fault <c>make_siege_art.one_canvas</c> exists to stop, met here
+        /// from the 3D side. <see cref="Extent"/> is taken over the union of the clips and
+        /// <see cref="Trim"/> is handed every reel at once, so the frame is shared by
+        /// construction. <b>Sharing it is what makes the arrival invisible</b>: the body has to be
+        /// the same size and standing in the same place in the frame on the last step of the walk
+        /// and the first frame of the stand, or a boss that has reached its ground jumps.
+        /// <c>SiegeView.Wear</c>'s <c>Grown</c> can rescue the <em>size</em> of a reel cut on its
+        /// own canvas and cannot rescue where the body sits inside it, which is why a raider's
+        /// swing is centred by hand (<c>make_siege_art.walk_and_swing</c>) and a boss simply
+        /// shares.
+        /// </para>
+        /// <para>
+        /// <b>No ward colour, because a boss has none.</b> A raider's colour is a rule — it decides
+        /// which ward answers it (37f) — and a boss's is not, so it keeps what the pack painted.
+        /// That is the same call every 2D boss in this mode gets (<c>make_siege_art.BOSS_SET</c>),
+        /// and it is why <see cref="Finish"/> had to learn to skip the tint rather than be handed
+        /// some hue that means "leave it alone", which no hue does.
+        /// </para>
+        /// <para>
+        /// <b>And <see cref="Moves"/> is asked of the stand and of the walk, not of the throw.</b>
+        /// An idle is the quietest clip in the library and is exactly the one a mis-bound rig would
+        /// leave looking plausible — see that method for the session this cost. The walk is asked
+        /// for a second reason on top of that one: it is the only clip here that comes out of a
+        /// <em>different animation file</em> from the rest of its body's, which is precisely the
+        /// binding this pack loses silently.
+        /// </para>
+        /// <para>
+        /// <b>A boss with no <see cref="Body.Walk"/> still bakes, and gets two reels.</b> Nothing
+        /// downstream is obliged to have one — <c>SiegeView</c> falls back to the stand for a boss
+        /// whose walk reel is absent, exactly as it falls back to the walk for a cast that drew no
+        /// swing — so a future boss taken from a pack with no walk cycle costs a null here and no
+        /// branch anywhere else.
+        /// </para>
+        /// </summary>
+        static Texture2D[][] BossReels(Transform stage, Camera cam, Light key, Body body)
+        {
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(Source + "/" + body.Model + ".fbx");
+            var stand = ClipNamed(body.Rig, body.Clip);
+            var cast = ClipNamed(body.Rig, body.Cast);
+            if (model == null || stand == null || cast == null) return null;
+
+            // Null when this body authored no walk; refused when it authored one this rig has
+            // never heard of, which is a typo rather than a decision and must not silently ship
+            // the boss that slid.
+            AnimationClip walk = null;
+            if (!string.IsNullOrEmpty(body.Walk))
+            {
+                walk = ClipNamed(body.WalkRig ?? Clips, body.Walk);
+                if (walk == null)
+                {
+                    Debug.LogError(string.Format(
+                        "SiegeCastBake: '{0}' asks for the walk clip '{1}', which is not in {2}.",
+                        body.Key, body.Walk, body.WalkRig ?? Clips));
+                    return null;
+                }
+            }
+
+            var inst = (GameObject)PrefabUtility.InstantiatePrefab(model);
+            inst.transform.SetParent(stage, false);
+            var skin = new Skin(inst);
+
+            try
+            {
+                var box = Extent(skin, stand);
+                box.Encapsulate(Extent(skin, cast));
+                if (walk != null) box.Encapsulate(Extent(skin, walk));
+
+                float pitch = body.Lean > 0f ? body.Lean : Pitch;
+                int tall = body.Height > 0 ? body.Height : Tall;
+
+                var clips = walk == null
+                          ? new[] { stand, cast }
+                          : new[] { stand, cast, walk };
+
+                var counts = walk == null
+                           ? new[] { BossFrames, BossCastFrames }
+                           : new[] { BossFrames, BossCastFrames, BossWalkFrames };
+
+                var reels = new Texture2D[clips.Length][];
+
+                for (int r = 0; r < clips.Length; r++)
+                {
+                    var clip = clips[r];
+                    int frames = counts[r];
+
+                    reels[r] = new Texture2D[frames];
+
+                    for (int f = 0; f < frames; f++)
+                    {
+                        skin.Pose(clip, clip.length * f / frames);
+
+                        var raw = Render(cam, key, box, pitch);
+                        reels[r][f] = Finish(raw, default, tall, tint: false);
+                        Object.DestroyImmediate(raw);
+                    }
+                }
+
+                Trim(reels);
+                Moves(body, reels[0]);
+
+                if (walk != null)
+                {
+                    Moves(body, reels[2], body.Walk);
+                    Strides(body, reels[2]);
+                }
+
+                return reels;
+            }
+            finally { skin.Dispose(); Object.DestroyImmediate(inst); }
+        }
+
+        /// <summary>
         /// Refuses a reel whose frames are all the same picture.
         ///
         /// <para>
@@ -433,8 +732,10 @@ namespace GlimmerGrove.EditorTools
         /// a photograph — but it is a bar no hat can clear on a body's behalf.
         /// </para>
         /// </summary>
-        static void Moves(Body body, Texture2D[] reel)
+        static void Moves(Body body, Texture2D[] reel, string clip = null)
         {
+            clip = clip ?? body.Clip;
+
             if (reel == null || reel.Length < 2) return;
 
             int w = reel[0].width, h = reel[0].height;
@@ -470,8 +771,90 @@ namespace GlimmerGrove.EditorTools
                 : string.Format(
                     "SiegeCastBake: every frame of '{0}' is identical — '{1}' does not bind to "
                     + "{2}. A clip binds by transform path, so a body needs its own pack's "
-                    + "animation file (see Body.Rig).", body.Key, body.Clip, body.Model));
+                    + "animation file (see Body.Rig).", body.Key, clip, body.Model));
         }
+
+        /// <summary>
+        /// Refuses a walk reel whose body never rises and falls — a sway rather than a gait.
+        ///
+        /// <para>
+        /// <b><see cref="Moves"/> asks whether a reel differs from a photograph; this asks whether
+        /// it reads as walking, and the gap between those two questions shipped a sliding
+        /// boss.</b> A clip that rocks a robed body from side to side lights up almost every pixel
+        /// it owns — the reel that shipped changed 78% of its body across the cycle and cleared
+        /// <see cref="Moves"/> in its lower half without trouble — while the feet stayed where
+        /// they were and the hips never moved. What a player sees then is a picture being
+        /// translated down a slope, which is the one thing the second reel exists to prevent.
+        /// </para>
+        /// <para>
+        /// <b>Vertical, because that is what survives this camera.</b> A stride's horizontal
+        /// travel is along the body's own axis and is therefore mostly occluded (see
+        /// <see cref="Clips"/>), but a foot-locked cycle has to raise and drop the pelvis to take
+        /// a step, and that rise projects at any pitch. Measured as the silhouette's centroid
+        /// against the body's own drawn height, so it is a fact about the animation rather than
+        /// about the canvas or the cut size.
+        /// </para>
+        /// <para>
+        /// <b>The bar is set from the shipped cast rather than chosen.</b> Every running body on
+        /// this hill reads 3.9-7.7%; the walk that was reported reads 0.80%; a stand reads 0.16%.
+        /// Two per cent sits in the middle of that gap with roughly a factor of two either side,
+        /// which is the most a measurement of six reels can honestly claim — this is the
+        /// difference between a gait and a sway, not a judgement about how good a gait is. That
+        /// judgement needs <c>render_siege.py --warlord walk</c> and somebody looking at it.
+        /// </para>
+        /// </summary>
+        static void Strides(Body body, Texture2D[] reel)
+        {
+            if (reel == null || reel.Length < 2) return;
+
+            int w = reel[0].width, h = reel[0].height;
+
+            float low = float.MaxValue, high = float.MinValue;
+            int top = int.MaxValue, foot = int.MinValue;
+
+            for (int f = 0; f < reel.Length; f++)
+            {
+                var px = reel[f].GetPixels32();
+
+                double sum = 0d;
+                int seen = 0;
+
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                    {
+                        if (px[y * w + x].a < 8) continue;
+
+                        sum += y;
+                        seen++;
+
+                        if (y < top) top = y;
+                        if (y > foot) foot = y;
+                    }
+
+                if (seen == 0) continue;
+
+                float mid = (float)(sum / seen);
+                if (mid < low) low = mid;
+                if (mid > high) high = mid;
+            }
+
+            int tall = foot - top + 1;
+            if (tall <= 1 || low > high) return;
+
+            float bob = (high - low) / tall;
+            if (bob >= WalkBob) return;
+
+            Debug.LogError(string.Format(
+                "SiegeCastBake: '{0}' walks on '{1}', whose body rises and falls {2:0.00}% of its "
+                + "own height across the cycle — under the {3:0.0}% a gait reads at, so this is a "
+                + "sway and what ships is a figure sliding down the hill. Every running body in "
+                + "this cast reads 3.9-7.7%. See Clips: a humanoid's walk does not survive this "
+                + "camera and a run is the most one gives you from it.",
+                body.Key, body.Walk, bob * 100f, WalkBob * 100f));
+        }
+
+        /// <summary>How far a walking body must rise and fall to read as one. See <see cref="Strides"/>.</summary>
+        const float WalkBob = .02f;
 
         // ------------------------------------------------------------------ the stage
 
@@ -786,13 +1169,22 @@ namespace GlimmerGrove.EditorTools
         /// frame and the outline turns red on the red raider, which reads as a glow rather than as
         /// ink.
         /// </summary>
-        static Texture2D Finish(Texture2D raw, Color hue)
-        {
-            var tinted = Tint(raw, hue);
-            var lined = Outline(tinted);
-            Object.DestroyImmediate(tinted);
+        static Texture2D Finish(Texture2D raw, Color hue) => Finish(raw, hue, Tall, tint: true);
 
-            var small = Shrink(lined, Tall);
+        /// <summary>
+        /// The same, for a body that is cut at its own height and may keep its own colours.
+        ///
+        /// <b><c>tint: false</c> rather than a hue that means "leave it alone"</b>, because no hue
+        /// does: <see cref="Tint"/> pushes saturation up from a floor whatever it is handed, so the
+        /// nearest thing to an identity still repaints every grey pixel.
+        /// </summary>
+        static Texture2D Finish(Texture2D raw, Color hue, int tall, bool tint)
+        {
+            var painted = tint ? Tint(raw, hue) : Copy(raw);
+            var lined = Outline(painted);
+            Object.DestroyImmediate(painted);
+
+            var small = Shrink(lined, tall);
             Object.DestroyImmediate(lined);
             return small;
         }

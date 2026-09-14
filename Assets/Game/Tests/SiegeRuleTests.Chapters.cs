@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine;
 using GlimmerGrove.Modes;
 using GlimmerGrove.Wards;
 using NUnit.Framework;
@@ -33,16 +34,37 @@ namespace GlimmerGrove.Tests
         /// </summary>
         static readonly Rung[] Broodmarch =
         {
-            new Rung("s03_firstbrood", new[] { "grrgbybg", "brbygrgy", "gbyrbbyr", "rrggrrbr", "rggbbgrg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYrgby", "RGBYRGby" }, "", 25),
-            new Rung("s03_hollowshell", new[] { "ybrgbgyr", "yrbrrbrb", "gbrbyybg", "ybgbrgry", "bygygybr" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBY#rGby", "RGBY#gRGby" }, "", 25),
-            new Rung("s03_mirewalk", new[] { "gbyybrrb", "ybbrgbyy", "gygyrgrg", "bbybyyrb", "yygrrbyb" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY!rRGby", "RGBYRG!gBY!b" }, "", 25),
-            new Rung("s03_spinecrest", new[] { "gbygybbr", "rrggrrbr", "rgybyrgy", "ygbgrbyb", "brrgybyr" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGby#gRGby", "RGby#bRGby" }, "", 25),
-            new Rung("s03_blightfen", new[] { "bbgygbbg", "grbgryry", "rgyrygyr", "brgbbrgr", "yrgbyrby" }, "rgby", "rgby", new[] { "rgbyRGby", "RGbyRGby", "RGBY#rRGby" }, "blightcaller:b", 25),
-            new Rung("s03_stillmire", new[] { "rggybgrr", "yrybbrby", "ggbrggyg", "rryygybr", "bgbrrgrb" }, "rgby", "rgby", new[] { "RRRrrrrg", "GGG#gGGgb", "BBBbbbbYYy" }, "", 25),
-            new Rung("s03_thornbrood", new[] { "rbyrgrbb", "rryybgyg", "yggyybrg", "yybrrgyr", "bbggbyyr" }, "rgby", "rgby", new[] { "RGbyrgby", "RGbyRGbyrg", "RGBY#yRGbyrg" }, "", 25),
-            new Rung("s03_gloamfield", new[] { "gygrybyb", "byrrbbrb", "brggygyy", "yybbyggb", "grbgrbby" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY!gRGby", "RGBY#bRGby" }, "", 25),
-            new Rung("s03_deepmire", new[] { "gygrbgbg", "yrybryyb", "gbgrgbyg", "ryybybbg", "bybbryry" }, "rgby", "rgby", new[] { "rgbyRGby", "RGbyRGby", "RGby#rRGby#gby", "RGBYrgby" }, "", 25),
-            new Rung("s03_broodheart", new[] { "rrggrbgb", "ybgyryrg", "gybyggyy", "rgrbgrry", "rgrbybrr" }, "rgby", "rgby", new[] { "RGbyRGby", "RGby#rRGby", "RGBYRG#gby" }, "warbringer:g", 25),
+            new Rung("s03_firstbrood", new[] { "grrgbybg", "brbygrgy", "gbyrbbyr", "rrggrrbr", "rggbbgrg" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBYrgby", "RGBYRGby" }, "", 25, 0, 75, 92, "pl"),
+            new Rung("s03_hollowshell", new[] { "ybrgbgyr", "yrbrrbrb", "gbrbyybg", "ybgbrgry", "bygygybr" }, "rgby", "rgby", new[] { "rgbyRGby", "RGBY#rGby", "RGBY#gRGby" }, "", 25, 0, 75, 92, "pl"),
+            new Rung("s03_mirewalk", new[] { "gbyybrrb", "ybbrgbyy", "gygyrgrg", "bbybyyrb", "yygrrbyb" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY!rRGby", "RGBYRG!gBY!b" }, "", 25, 0, 75, 92, "pl"),
+            new Rung("s03_spinecrest", new[] { "gbygybbr", "rrggrrbr", "rgybyrgy", "ygbgrbyb", "brrgybyr" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGby#gRGby", "RGby#bRGby" }, "", 25, 0, 75, 92, "pl"),
+            new Rung("s03_blightfen", new[] { "bbgygbbg", "grbgryry", "rgyrygyr", "brgbbrgr", "yrgbyrby" }, "rgby", "rgby", new[] { "rgbyRGby", "RGbyRGby", "RGBY#rRGby" }, "blightcaller:b", 25, 0, 75, 92, "pl"),
+            new Rung("s03_stillmire", new[] { "rggybgrr", "yrybbrby", "ggbrggyg", "rryygybr", "bgbrrgrb" }, "rgby", "rgby", new[] { "RRRrrrrg", "GGG#gGGgb", "BBBbbbbYYy" }, "", 25, 0, 75, 92, "pl"),
+            new Rung("s03_thornbrood", new[] { "rbyrgrbb", "rryybgyg", "yggyybrg", "yybrrgyr", "bbggbyyr" }, "rgby", "rgby", new[] { "RGbyrgby", "RGbyRGbyrg", "RGBY#yRGbyrg" }, "", 25, 0, 75, 92, "pl"),
+            new Rung("s03_gloamfield", new[] { "gygrybyb", "byrrbbrb", "brggygyy", "yybbyggb", "grbgrbby" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY!gRGby", "RGBY#bRGby" }, "", 25, 0, 75, 92, "pl"),
+            new Rung("s03_deepmire", new[] { "gygrbgbg", "yrybryyb", "gbgrgbyg", "ryybybbg", "bybbryry" }, "rgby", "rgby", new[] { "rgbyRGby", "RGbyRGby", "RGby#rRGby#gby", "RGBYrgby" }, "", 25, 0, 75, 92, "pl"),
+            new Rung("s03_broodheart", new[] { "rrggrbgb", "ybgyryrg", "gybyggyy", "rgrbgrry", "rgrbybrr" }, "rgby", "rgby", new[] { "RGbyRGby", "RGby#rRGby", "RGBYRG#gby" }, "warbringer:g", 25, 0, 75, 92, "pl"),
+        };
+
+        // ------------------------------------------------------------------ the third chapter
+        /// <summary>
+        /// Every rung of Barrowfell, held inline exactly as `Tools/chapters/s04_barrowfell.py`
+        /// writes it, and held to the shipped body by `Tools/verify/rungs.py`.
+        ///
+        /// See <see cref="Broodmarch"/> for why a hand copy exists and what keeps it honest.
+        /// </summary>
+        static readonly Rung[] Barrowfell =
+        {
+            new Rung("s04_firstbone", new[] { "byrrggyr", "ggbyrgby", "ybbgrbgb", "rygbybry", "bgyryrrb" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBYRGby", "RGBYRGbyrg" }, "", 25, 11, 67, 84, "pls"),
+            new Rung("s04_palerow", new[] { "ybryyggb", "gybgrbrg", "yggybrby", "ybrrbygy", "gbbrggrb" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY#rRGby", "RGBY#gRGbyrg" }, "", 25, 11, 67, 84, "pls"),
+            new Rung("s04_shieldwall", new[] { "yrgbygyr", "rgbgrbrg", "bbryrgby", "yggryrrg", "rgybbgyy" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGby#g#bRGby", "RGBY#y#rRGby" }, "", 25, 11, 67, 84, "pls"),
+            new Rung("s04_scytheway", new[] { "grbyrygb", "rgygrgby", "byyrbryb", "rrgbrbyy", "bbggrbgg" }, "rgby", "rgby", new[] { "RGBYRGBy", "RGBY#gRG!gby", "RGBY!bRG#yRGby" }, "", 25, 11, 67, 84, "pls"),
+            new Rung("s04_hollowgrave", new[] { "bgrryggy", "gyyrybrb", "rbygrgyg", "rrgrbgrb", "yygbyygr" }, "rgby", "rgby", new[] { "RGBYRGBy", "RGBY!rRG#bby", "RGBY#r#gRG!gby" }, "gravemaw:r", 25, 11, 67, 84, "pls"),
+            new Rung("s04_boneyard", new[] { "yrrgbrgr", "bbyybrgy", "yggbrbyr", "ybyrgyry", "bgrybgrg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBYRGby", "RGBY#rRGbyrg" }, "", 25, 11, 67, 84, "pls"),
+            new Rung("s04_deadmarch", new[] { "gbbyygrg", "yrggbbyr", "ryyrbryg", "yggrggby", "rrybyrbb" }, "rgby", "rgby", new[] { "RGBYRGBy", "RGBYRGBY", "RGBY#rRGBy" }, "", 25, 11, 67, 84, "pls"),
+            new Rung("s04_lichgate", new[] { "bgybgryb", "rybbybrg", "rbyrgbyr", "ggrgrrgg", "gyybyryr" }, "rgby", "rgby", new[] { "RGby#rRGBY", "RGBY!gRGBy", "RGBY#b#yRGBy" }, "", 25, 11, 67, 84, "pls"),
+            new Rung("s04_longbarrow", new[] { "bgrbgbgy", "ybryrybg", "grgbrgyb", "gygrgbrr", "ryyryyrg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGbyRGby", "RGby#rRGby#gby", "RGBY!yRGBY" }, "", 25, 11, 67, 84, "pls"),
+            new Rung("s04_barrowheart", new[] { "brgbgybr", "bybrrbgg", "rgyggybr", "rygbrryb", "bgyygbgy" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY#rRGby", "RGBYRG#gby" }, "bonecaller:b", 25, 11, 67, 84, "pls"),
         };
 
         // ------------------------------------------------------------------ the lines it plays
@@ -55,9 +77,11 @@ namespace GlimmerGrove.Tests
         /// The four turrets a player who has bought <em>one rung</em> of the shelf stands.
         ///
         /// <para>
-        /// <b>The first credit rung on every colour, and nothing above it.</b> The shelf is one
-        /// ladder climbed a rung at a time per colour (invariant 42c), so this is the cheapest
-        /// four-turret line that exists at all - and at the roster's own prices it is about twice
+        /// <b>The first credit rung on every colour, and nothing above it.</b> It is the cheapest
+        /// four-turret line that exists at all, and it is what a player meets first whether or not
+        /// they have to (the sequential unlock is gone, invariant 42c, so this is now the line
+        /// somebody buys rather than the only one they are offered) - and at the roster's own
+        /// prices it is about twice
         /// what a chapter of three-star clears pays, which is the honest reading of "a little
         /// higher turrets": a player who spent their first chapter's earnings on the line rather
         /// than on the grove.
@@ -69,21 +93,25 @@ namespace GlimmerGrove.Tests
         /// </summary>
         const string FirstRung = "siphon";
 
-        static WardLine Kitted()
+
+        static WardLine Kitted() => Standing(FirstRung);
+
+        /// <summary>Four of one turret, whichever rung of the shelf it is.</summary>
+        static WardLine Standing(string id)
         {
             var catalog = WardCatalog.Default;
-            Assert.IsNotNull(catalog.Find(FirstRung),
-                             $"'{FirstRung}' is not on the roster any more, so this test is "
+            Assert.IsNotNull(catalog.Find(id),
+                             $"'{id}' is not on the roster any more, so this test is "
                              + "measuring the starter twice");
 
             var chosen = new List<WardSlot>();
             for (int i = 0; i < WardLine.Colours.Length; i++)
-                chosen.Add(new WardSlot(WardLine.Colours[i], FirstRung));
+                chosen.Add(new WardSlot(WardLine.Colours[i], id));
 
             var line = WardLine.Resolve(catalog, chosen, (model, colour) => true);
 
             for (int i = 0; i < WardLine.Colours.Length; i++)
-                Assert.AreEqual(FirstRung, line.At(i).Id,
+                Assert.AreEqual(id, line.At(i).Id,
                                 "the kitted line did not resolve to what it asked for");
 
             return line;
@@ -95,6 +123,8 @@ namespace GlimmerGrove.Tests
         {
             public int Held;            // runs finished with two wards or more standing
             public int Starred;         // runs finished inside the three-star line
+            public int Silvered;        // ... inside the two-star line
+            public int Bronzed;         // ... and outside it
             public int Runs;            // rhythms times rungs
             public int Walled;          // rungs held at no rhythm at all
             public string Table;
@@ -108,6 +138,26 @@ namespace GlimmerGrove.Tests
         /// out completely differently - so one sample of this is a coin toss and a green tick was
         /// once a coin landing the right way up.
         /// </summary>
+        /// <summary>
+        /// Every authored siege chapter, in the order a player meets them.
+        ///
+        /// <b>One list rather than a literal at each call site</b>, because the two structural
+        /// gates below both walk it and a fourth chapter added to one and not the other is a
+        /// chapter nothing checked - which is the shape of fault this file exists to catch.
+        /// </summary>
+        /// <b>A property rather than a static field</b>, and that is not style. These tables are
+        /// spread across two files of one partial class, and the order static field initialisers
+        /// run in across the parts of a partial type is the compiler's business - so a `readonly`
+        /// array built from them read `Chapter` as **null** and both gates below failed with a
+        /// null reference rather than with anything about a chapter. Evaluated on use, there is no
+        /// order to get wrong.
+        static (string Name, Rung[] Rungs)[] Ladder => new[]
+        {
+            ("Thornwatch", Chapter),
+            ("Broodmarch", Broodmarch),
+            ("Barrowfell", Barrowfell),
+        };
+
         static Sweep Play(Rung[] chapter, WardLine line)
         {
             float[] rhythms = { 2.20f, 2.25f, 2.30f, 2.35f, 2.40f, 2.45f, 2.50f, 2.55f, 2.60f };
@@ -119,10 +169,22 @@ namespace GlimmerGrove.Tests
             {
                 var layout = chapter[i].Built();
                 int par = SiegeTuning.Par(layout);
-                int gold = (par * 120 + 99) / 100;
 
-                int held = 0, starred = 0, touched = 0;
+                // **The chapter's own lines, not the shared 1.20 / 1.40.** A siege authors its own
+                // because its par overstates what a run really spends - see `siege.GOLD_FACTOR` -
+                // and a sweep that graded against the default would report a ladder this mode does
+                // not ship.
+                int gold = (par * chapter[i].Gold + 99) / 100;
+                int silver = (par * chapter[i].Silver + 99) / 100;
+
+                int held = 0, starred = 0, touched = 0, silvered = 0, bronzed = 0;
                 int worstLine = int.MaxValue, whole = 0;
+
+                // **What a finished run really spent, as a percentage of par**, which is the one
+                // reading that says whether the star ladder is doing any work. The grade is a
+                // multiple of par (invariant 22), so a chapter where every clear lands under 120
+                // is a chapter where three stars is what clearing is called.
+                int leanest = int.MaxValue, fattest = 0;
 
                 foreach (float rhythm in rhythms)
                 {
@@ -134,23 +196,78 @@ namespace GlimmerGrove.Tests
 
                     if (board.IsFinished && board.WardsStanding >= 2) held++;
                     if (board.IsFinished && matches <= gold) starred++;
+                    else if (board.IsFinished && matches <= silver) silvered++;
+                    else if (board.IsFinished) bronzed++;
                     if (standing < whole) touched++;
                     if (standing < worstLine) worstLine = standing;
+
+                    if (!board.IsFinished) continue;
+
+                    int spent = matches * 100 / Mathf.Max(1, par);
+                    if (spent < leanest) leanest = spent;
+                    if (spent > fattest) fattest = spent;
                 }
+
+                if (leanest == int.MaxValue) leanest = 0;
 
                 swept.Held += held;
                 swept.Starred += starred;
-                if (held == 0) swept.Walled++;
+                swept.Silvered += silvered;
+                swept.Bronzed += bronzed;
+
+                // **A wall is asked again, finer, and only then believed.** `held` is a *rate* and
+                // nine samples measure a rate perfectly well; `walled` is a *universal* — held at
+                // no rhythm at all — and no nine samples can establish one. This mode is chaotic
+                // at a finer scale than the sweep steps in (invariant 37aq): a match changes the
+                // field and the field decides the next match, so two rhythms twenty milliseconds
+                // apart play out completely differently. Measured, `s04_deadmarch` read 0 of these
+                // nine and **10 of twenty-five** — the gate called a wall on a rung an ordinary
+                // player holds two times in five. It was green by luck once and red by luck here,
+                // and both are the same fault.
+                //
+                // Only a suspected wall pays for the second sweep, so the common path is unchanged.
+                if (held == 0 && Walled(layout, line)) swept.Walled++;
 
                 table.AppendLine($"  {chapter[i].Id,-18} par {par,3}  3* {gold,3}"
                                  + $"  held {held}/{rhythms.Length}"
-                                 + $"  3* in {starred}/{rhythms.Length}"
+                                 + $"  grades {starred}/{silvered}/{bronzed}"
+                                 + $"  spent {leanest,3}-{fattest,3}% of par"
                                  + $"  worst line {worstLine,3} of {whole,3}"
                                  + $"  reached {touched}/{rhythms.Length}");
             }
 
             swept.Table = table.ToString();
             return swept;
+        }
+
+        /// <summary>
+        /// Whether a rung really is held at <em>no</em> rhythm, asked at four times the resolution.
+        ///
+        /// <para>
+        /// <b>A second, finer sweep rather than a finer one everywhere.</b> Widening
+        /// <see cref="Play"/> itself would quadruple the cost of every gate in this file to sharpen
+        /// one reading out of six — and the other five are rates, which nine samples already
+        /// measure. This is asked only of a rung that read nought, which is a handful a run.
+        /// </para>
+        /// <para>
+        /// <b>It answers the moment it finds one</b>, because that is the whole question: a rung
+        /// held at one rhythm is not a wall, and how many more there are is <see cref="Sweep.Held"/>'s
+        /// business rather than this one's.
+        /// </para>
+        /// </summary>
+        static bool Walled(SiegeLayout layout, WardLine line)
+        {
+            // Between and around the nine, at a quarter of their spacing, so the rhythms it tries
+            // are the ones `Play` steps over rather than the ones it already asked.
+            for (float rhythm = 2.10f; rhythm <= 2.70f; rhythm += .0125f)
+            {
+                var board = SiegeBoard.Build(layout, line);
+                Hold(board, rhythm, out int _);
+
+                if (board.IsFinished && board.WardsStanding >= 2) return false;
+            }
+
+            return true;
         }
 
         // ------------------------------------------------------------------ the gates
@@ -212,7 +329,7 @@ namespace GlimmerGrove.Tests
         {
             var faults = new List<string>();
 
-            foreach (var pair in new[] { ("Thornwatch", Chapter), ("Broodmarch", Broodmarch) })
+            foreach (var pair in Ladder)
             {
                 var name = pair.Item1;
                 var rungs = pair.Item2;
@@ -236,22 +353,83 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// No boss verb is sent by both chapters.
+        /// **The star ladder has more than one rung**, on every chapter.
         ///
-        /// <b>Invariant 37z asked across a ladder rather than within one.</b> That entry was bought
-        /// by two bosses separated by a run-time hue reading as one boss, and the rule it left is
-        /// that four bosses have to be four <em>fights</em>. A player meeting a smite in chapter one
-        /// and a smite in chapter two has met one fight twice, however far apart they are - so the
-        /// four verbs are dealt one each across the twenty rungs: a warlord and an overlord here, a
-        /// blightcaller and a warbringer there.
+        /// <para>
+        /// <b>Invariant 5d asked of the grade.</b> This mode shipped three chapters where every run
+        /// that was held was also three-starred — on both lines, on every rung — so two thirds of
+        /// the ladder rejected nothing and "three stars" was simply what clearing was called. It
+        /// was not a tuning slip: a siege's par is arithmetic rather than a search (37a) and it
+        /// <em>overstates</em>, so the shared 1.20 line sat far above anything a real run spends.
+        /// Measured across 270 swept runs, every clear came in between 49% and 100% of par.
+        /// </para>
+        /// <para>
+        /// <b>So the bar is a share rather than a count.</b> A chapter where three stars is most of
+        /// what happens is one whose gold factor is too loose, whatever the numbers in the body
+        /// say — and the failure is completely silent, because a level with a generous grade
+        /// validates, plays and pays exactly like one with a tight one.
+        /// </para>
         /// </summary>
         [Test]
-        public void NoBossVerbIsSentByBothChapters()
+        public void TheStarLadderHasMoreThanOneRungOnEveryChapter()
+        {
+            // Three quarters, which is loose on purpose: what this refuses is a ladder that has
+            // collapsed, not one that leans generous. Measured 2026-09-14 on the starter line:
+            // Thornwatch, Broodmarch and Barrowfell land between 21% and 45%.
+            const int MostlyGold = 75;
+
+            var faults = new List<string>();
+
+            foreach (var pair in Ladder)
+            {
+                var swept = Play(pair.Rungs, Bare());
+
+                int cleared = swept.Starred + swept.Silvered + swept.Bronzed;
+                if (cleared == 0)
+                {
+                    faults.Add($"{pair.Name} finished no run at all on the starter line, so there "
+                               + "is no ladder here to measure");
+                    continue;
+                }
+
+                int share = swept.Starred * 100 / cleared;
+                if (share <= MostlyGold) continue;
+
+                faults.Add($"{share}% of {pair.Name}'s clears take three stars "
+                           + $"({swept.Starred} of {cleared}), so two of the three bands reject "
+                           + "almost nothing - tighten that chapter's goldFactor "
+                           + "(Tools/verify/siege.STAR_FACTORS)");
+            }
+
+            Assert.IsEmpty(faults, string.Join("\n", faults));
+        }
+
+        /// <summary>
+        /// No boss verb is sent by any two chapters.
+        ///
+        /// <para>
+        /// <b>Invariant 37z asked across a ladder rather than within one.</b> That entry was bought
+        /// by two bosses separated by a run-time hue reading as one boss, and the rule it left is
+        /// that a boss has to be a <em>fight</em>. A player meeting a smite in chapter one and a
+        /// smite in chapter three has met one fight twice, however far apart they are - so the
+        /// verbs are dealt one each across the thirty rungs: a warlord and an overlord, a
+        /// blightcaller and a warbringer, and now a gravemaw and a bonecaller.
+        /// </para>
+        /// <para>
+        /// <b>This is the rule that prices a chapter, which is worth saying out loud.</b> Two
+        /// bosses a chapter against a fixed set of verbs means the mode supports exactly
+        /// <em>verbs / 2</em> chapters and then needs more - so a fourth siege chapter is a code
+        /// change and not only content, and knowing that before it is commissioned is the whole
+        /// point of checking it here rather than trusting it.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void NoBossVerbIsSentByAnyTwoChapters()
         {
             var seen = new Dictionary<SiegeSpell, string>();
             var faults = new List<string>();
 
-            foreach (var pair in new[] { ("Thornwatch", Chapter), ("Broodmarch", Broodmarch) })
+            foreach (var pair in Ladder)
             {
                 foreach (var rung in pair.Item2)
                 {
@@ -322,8 +500,22 @@ namespace GlimmerGrove.Tests
             // roars twice as often for half as much instead (`SiegeTuning.WarbringerCast`). This
             // gate is what caught that, and it caught it as a wall rather than as a floor.
             const int BareFloor = 60;       // hard, and nobody is walled out
-            const int KittedFloor = 76;     // comfortably clearable once the shelf is used
-            const int Answers = 12;         // runs the first rung of the shelf is worth, at least
+            const int KittedFloor = 78;     // comfortably clearable once the shelf is used
+
+            // **What the shelf recovers, as a share of what the starter loses - and it is a share
+            // rather than a count because a count stopped being able to say this.** It was
+            // "twelve runs more", measured when the starter held 63 of 90 and had 27 to recover.
+            // The charms (`SiegeCharm`) moved the starter to 76, which leaves fourteen runs in
+            // existence: a twelve-run gap is then arithmetically almost impossible whatever the
+            // shelf is worth, so the old assertion had quietly become a test of the chapter's
+            // baseline rather than of the shelf. A half of what is being lost is a sentence that
+            // survives the baseline moving in either direction.
+            const int Recovers = 40;        // per cent of the runs the starter loses, at least
+
+            // And the other half, which is where the shelf's value now mostly shows: a bought line
+            // does not merely *clear* more of this chapter, it clears it *well*. Runs held
+            // saturate against a ceiling of ninety; three-stars do not.
+            const int Grades = 10;          // three-starred runs the shelf is worth, at least
 
             var bare = Play(Broodmarch, Bare());
             var kitted = Play(Broodmarch, Kitted());
@@ -341,11 +533,21 @@ namespace GlimmerGrove.Tests
                            + $"against Thornwatch's {first.Held} of {first.Runs} - the second "
                            + "chapter is not harder than the first, which is what it is for");
 
-            if (kitted.Held <= bare.Held + Answers)
+            int losing = bare.Runs - bare.Held;
+            int back = kitted.Held - bare.Held;
+
+            if (losing <= 0 || back * 100 < losing * Recovers)
                 faults.Add($"one rung of the shelf moved Broodmarch from {bare.Held} to "
-                           + $"{kitted.Held} of {kitted.Runs} runs, which is inside the noise of a "
-                           + "ninety-run sweep - a shelf that changes nothing is decoration on the "
-                           + "one thing in this game a player pays for");
+                           + $"{kitted.Held} of {kitted.Runs} runs - {back} of the {losing} the "
+                           + $"starter loses, against the {Recovers}% this chapter is authored to "
+                           + "recover. A shelf that changes little is decoration on the one thing "
+                           + "in this game a player pays for");
+
+            if (kitted.Starred < bare.Starred + Grades)
+                faults.Add($"one rung of the shelf moved Broodmarch from {bare.Starred} "
+                           + $"three-starred runs to {kitted.Starred}, which is under the {Grades} "
+                           + "it is authored to be worth - and a grade is where a purchase shows "
+                           + "once the runs held are near the ceiling");
 
             if (bare.Held < BareFloor)
                 faults.Add($"on the starter line Broodmarch held {bare.Held} of {bare.Runs} runs "
@@ -370,6 +572,138 @@ namespace GlimmerGrove.Tests
                            + $"{kitted.Starred} three-starred):\n" + kitted.Table
                            + $"\nThornwatch on the starter for comparison "
                            + $"({first.Held}/{first.Runs} held):\n" + first.Table);
+        }
+
+        /// <summary>
+        /// **The third chapter needs a line somebody bought**, which is the brief it was
+        /// commissioned against and is measured rather than felt.
+        ///
+        /// <para>
+        /// <b>The same shape as <see cref="TheSecondChapterAsksForBetterTurrets"/> with the bar
+        /// moved, and the move is the point.</b> Chapter two asks whether the shelf answers a
+        /// chapter <em>at all</em>: hard on the starter, comfortable one rung up. Chapter three is
+        /// the first one authored on the assumption that a player has already used it — so the free
+        /// bolt has to be genuinely losing runs and the first purchase has to be a large, obvious
+        /// answer rather than a nudge.
+        /// </para>
+        /// <para>
+        /// <b>Two lines rather than three, and that is a finding rather than a shortcut.</b> The
+        /// obvious third line is "two rungs up the shelf" — and it is <em>weaker</em> here than one
+        /// rung up, measured: 47 of 90 against 72. That is not a defect, it is invariant 37ax
+        /// working as written. The shelf is ordered by <b>how much of the hill an ability
+        /// reaches</b>, never by how hard a turret hits, and every turret fires the same primary
+        /// bolt within a weight the roster authors per model (37bb) — <c>siphon</c> carries 1.1x
+        /// and <c>beacon</c> carries the baseline with more toughness instead. So "further up the
+        /// shelf" and "stronger against this hill" are two different orderings, and a gate that
+        /// asserted the first was the second would be measuring a rule this project does not have.
+        /// </para>
+        /// <para>
+        /// <b>Four assertions, and each closes a way of getting this wrong.</b>
+        /// <list type="number">
+        /// <item>No rung is <em>walled</em> on the starter. A rung an unhurried player holds at no
+        /// rhythm at all with the line they arrive on is a wall rather than a reason to shop, which
+        /// is invariant 24's argument about the heart gate said about the shelf.</item>
+        /// <item>The starter is strictly harder here than on chapter two, or the chapter did not
+        /// get harder whatever its par says.</item>
+        /// <item>The first purchase is worth real runs — and a large number of them, because that
+        /// is the sentence this chapter exists to say.</item>
+        /// <item>And a bought line clears it comfortably and can reach three stars, so "doable if
+        /// you have been shopping" is a measurement rather than a hope.</item>
+        /// </list>
+        /// </para>
+        /// <para>
+        /// <b>The floors are a record of where the chapter stands, not targets.</b> A change that
+        /// moves them wants measuring and then moving deliberately; a change that drops them
+        /// several points is a change that loses runs, whatever one rhythm says (invariant 37aq).
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheThirdChapterAsksForABoughtLine()
+        {
+            // Where this chapter stands, measured 2026-09-14, with its raiders carrying a tenth
+            // more health than the two chapters before it (`SiegeTuning.ToughnessFor`). Set below
+            // what was read, because a sweep of ninety is steady and not exact: **28 on the
+            // starter and 57 one rung up**, against Broodmarch's 63 on the starter. The shelf is
+            // worth twenty-nine runs across the chapter, which is the whole story this chapter is
+            // meant to tell, and it was eighteen before the surge.
+            //
+            // **A tenth is a long way in this mode, which nothing had measured before.** The same
+            // ten rungs read 54 on the starter unsurged, 28 at a tenth more health, and **5** at
+            // three tenths — a wall, at every rhythm, on every rung. The line's damage is roughly
+            // fixed and the hill walks at a fixed speed, so health buys time on the hill directly
+            // and the line only survives fourteen blows: the lever is a cliff rather than a slope,
+            // and a chapter step of one tenth is the whole of what it can take.
+            const int BareFloor = 22;       // hard, and nobody is walled out
+            const int BoughtFloor = 50;     // comfortably clearable once the shelf has been used
+
+            // **A share of what the starter loses rather than a count of runs**, for the reason
+            // written out in `TheSecondChapterAsksForBetterTurrets`: a count is a test of the
+            // chapter's baseline as much as of the shelf, and this chapter's baseline moved when
+            // the charms shipped. The share asked for here is higher than chapter two's, because
+            // that is what this chapter is: the first one authored on the assumption that the
+            // shelf has already been used.
+            // **Measured 45, and it did not move when the charms did** — which is the evidence
+            // this shape is the right one. Before the charms this chapter read 28 on the starter
+            // and 57 one rung up: 29 of the 62 it was losing, or 47%. After them it reads 46 and
+            // 67: 21 of 44, or 48%. The baseline moved eighteen runs and the sentence about the
+            // shelf did not move at all, where the old count of runs would have failed outright.
+            const int Recovers = 45;        // per cent of the runs the starter loses, at least
+            const int Grades = 14;          // three-starred runs the shelf is worth, at least
+
+            var bare = Play(Barrowfell, Bare());
+            var bought = Play(Barrowfell, Standing(FirstRung));
+            var before = Play(Broodmarch, Bare());
+
+            var faults = new List<string>();
+
+            if (bare.Walled > 0)
+                faults.Add($"{bare.Walled} rung(s) of Barrowfell are held at no rhythm at all on "
+                           + "the starter line, which is a wall rather than a reason to buy a "
+                           + "turret");
+
+            if (bare.Held >= before.Held)
+                faults.Add($"on the starter line Barrowfell held {bare.Held} of {bare.Runs} runs "
+                           + $"against Broodmarch's {before.Held} of {before.Runs} - the third "
+                           + "chapter is not harder than the second, which is what it is for");
+
+            int losing = bare.Runs - bare.Held;
+            int back = bought.Held - bare.Held;
+
+            if (losing <= 0 || back * 100 < losing * Recovers)
+                faults.Add($"one rung of the shelf moved Barrowfell from {bare.Held} to "
+                           + $"{bought.Held} of {bought.Runs} runs - {back} of the {losing} the "
+                           + $"starter loses, against the {Recovers}% this chapter is authored to "
+                           + "recover. A shelf that changes little is decoration on the one thing "
+                           + "in this game a player pays for");
+
+            if (bought.Starred < bare.Starred + Grades)
+                faults.Add($"one rung of the shelf moved Barrowfell from {bare.Starred} "
+                           + $"three-starred runs to {bought.Starred}, which is under the {Grades} "
+                           + "it is authored to be worth");
+
+            if (bare.Held < BareFloor)
+                faults.Add($"on the starter line Barrowfell held {bare.Held} of {bare.Runs} runs "
+                           + $"against a floor of {BareFloor}, so it has become a wall rather than "
+                           + "hard - re-measure before moving the floor");
+
+            if (bought.Held < BoughtFloor)
+                faults.Add($"one rung up the shelf Barrowfell held {bought.Held} of "
+                           + $"{bought.Runs} runs against a floor of {BoughtFloor}, so it is not "
+                           + "doable with a bought line either - re-measure before moving the "
+                           + "floor");
+
+            if (bought.Starred == 0)
+                faults.Add("three stars was out of reach on every rung at every rhythm even one "
+                           + "rung up the shelf, so nobody playing this way ever sees three");
+
+            Assert.IsEmpty(faults,
+                           string.Join("\n", faults)
+                           + $"\n\nBarrowfell on the starter ({bare.Held}/{bare.Runs} held, "
+                           + $"{bare.Starred} three-starred):\n" + bare.Table
+                           + $"\nBarrowfell on {FirstRung} ({bought.Held}/{bought.Runs} held, "
+                           + $"{bought.Starred} three-starred):\n" + bought.Table
+                           + $"\nBroodmarch on the starter for comparison "
+                           + $"({before.Held}/{before.Runs} held):\n" + before.Table);
         }
     }
 }

@@ -90,6 +90,38 @@ RIM = 0.10
 #: How much of its own size a piece is padded by, so a rim has somewhere to land.
 PAD = 0.03
 
+# ----------------------------------------------------------------------- the sun
+# **The key is a sun and the fill is the sky, and before this they were one grey.**
+#
+# `AMBIENT` alone says how *much* light a face turned away from the key gets and can never
+# say what *colour* it is, so every piece in the catalogue was lit by one white lamp: a
+# roof and the wall under it differed only in how dark they were. That renders a flat-
+# shaded pack as a diagram of itself — correct, even, and with nothing in it that says
+# outdoors. The verdict was "dark and dead", and the count behind it is that the whole
+# village used exactly one hue of light.
+#
+# So the key carries a warm sun and the fill carries a cool sky, which is the one thing
+# two numbers can say that one cannot. `AMBIENT` and the scalar path it belongs to are
+# still there and still exactly what they were — `kaykit.render` falls back to them when
+# nothing asks for a colour, which is what let the refactor be proved byte-identical
+# before any of these numbers were chosen.
+#
+# **Both are above and below one on purpose.** `SUN` is over-unity, so a face the sun
+# really lands on is drawn *brighter than the pack painted it* rather than merely
+# undimmed; measured across the roster nothing clips, because these atlases top out well
+# short of white. `SHADE` is barely cool — three per cent — because a shadow tinted any
+# harder turns the pack's neutral stone blue, and a village of blue towers is the same
+# complaint from the other side.
+SUN = (1.32, 1.21, 1.02)
+SHADE = (0.74, 0.75, 0.775)
+
+#: Saturation, applied to the finished picture. Lifting light divides apparent saturation
+#: by the same factor (`_grade` is the same arithmetic the ground runs), so a sun that
+#: is not paid for in chroma buys brightness and loses colour — which is the half of
+#: "dead" that brightness alone does not fix. Luminance is left alone: `SUN` has already
+#: done that, and doing it twice is how a picture goes pastel.
+PIECE_CHROMA = 1.24
+
 
 # --------------------------------------------------------------------------- render
 class Rendered(object):
@@ -134,7 +166,8 @@ def piece(row, model_paths):
 
     cull = kaykit.cullable(mesh, tex, PITCH, yaws)
     buffers = [kaykit.render(mesh, tex, PITCH, yaw, box, extent, super_sample=SUPER,
-                             light=KEY, ambient=AMBIENT, rim=RIM, cull=cull)
+                             light=KEY, ambient=AMBIENT, rim=RIM, cull=cull,
+                             sun=SUN, shadow=SHADE)
                for yaw in yaws]
 
     # One trim over every facing. `getbbox` on each and then the union, rather than the
@@ -149,7 +182,13 @@ def piece(row, model_paths):
     right = max(b[2] for b in boxes)
     bottom = max(b[3] for b in boxes)
 
-    images = [kaykit.to_image(b).crop((left, top, right, bottom)) for b in buffers]
+    # Graded **after** the trim and before anything is measured off it, which is the whole
+    # of why it is safe: `_grade` touches the three colour channels and nothing else, so
+    # the alpha the box was found from, the size the catalogue carries and the hit mask
+    # the build gate reads are all exactly what they would have been. A grade that moved
+    # any of those would be a catalogue describing a piece that is no longer that shape.
+    images = [_grade(kaykit.to_image(b).crop((left, top, right, bottom)), 1.0, PIECE_CHROMA)
+              for b in buffers]
     w, h = right - left, bottom - top
 
     # **Four facings that all look the same is four times the download for nothing**, and it
@@ -273,8 +312,8 @@ FLOOR_SKIRT = 0.28
 #: things standing on it come from one hand.
 FLOOR_PALETTE = "hex/tiles/base/hex_grass"
 
-# How much brighter the ground is drawn than the pack painted it, and how much of its colour
-# is handed back afterwards.
+# How much brighter the ground is drawn than the pack painted it, how much of its colour is
+# handed back afterwards, and how far its hue is turned.
 #
 # The grass this borrows is drawn to be seen in the pack's own daylight, and on this floor it
 # read as too dark a green. It cannot be fixed anywhere else: the tile is drawn at
@@ -286,29 +325,88 @@ FLOOR_PALETTE = "hex/tiles/base/hex_grass"
 # pastel, where a straight scale keeps the relation between the lit top and the earth skirt.
 # And the chroma is multiplied back, because lifting luminance divides apparent saturation by
 # the same factor — brightening alone is what *makes* a green washy.
-FLOOR_LIFT = 1.18
-FLOOR_CHROMA = 1.12
+#
+# **And the hue is turned, which is the part brightness could never do.** The pack's grass is
+# a *yellow* green — hue about 62 degrees, which is olive — and the sun added above pushes it
+# further that way, because warm light on a yellow-green is more yellow still. Lifting and
+# saturating an olive gives a brighter olive, so the complaint ("make the floor a brighter
+# green") is answered by moving the hue as well as the level: `FLOOR_HUE` is where the grass
+# lands and `FLOOR_TURN` is what share of the way it goes. It is turned rather than replaced
+# so the tile keeps the pack's own spread between its lit top and its darker walls — a floor
+# painted one flat colour stops reading as blocks and goes back to being a sheet of paper,
+# which is what `FLOOR_SKIRT` exists to prevent.
+FLOOR_LIFT = 1.26
+FLOOR_CHROMA = 1.22
+FLOOR_HUE = 98.0
+FLOOR_TURN = 0.72
 
 
-def _brighter(image):
-    """Lifts the ground's own green without washing it out. See `FLOOR_LIFT`.
+def _grade(image, lift, chroma):
+    """Lifts an image's luminance and multiplies its chroma back. Alpha is untouched.
 
-    Alpha is not touched, and neither is the picture's size — so every measurement the
-    caller makes afterwards (the one-tile scale, the top face's share of the width) reads
-    exactly what it would have read before, and this cannot move the calibration.
+    The one grade both the ground and every piece run through, because they are two halves
+    of one picture and a floor graded on its own would be a lawn somebody else's village is
+    standing on. Neither the size nor the alpha moves, so every measurement a caller makes
+    afterwards — the one-tile scale, the top face's share of the width, a piece's box and
+    its hit mask — reads exactly what it would have read without it.
     """
     rgba = np.asarray(image.convert("RGBA")).astype(np.float32)
     rgb = rgba[..., :3]
 
     # Rec. 601, which is what the eye weights these three at.
     luma = (rgb * np.array([0.299, 0.587, 0.114], np.float32)).sum(axis=2, keepdims=True)
-    chroma = rgb - luma
-
-    lit = np.clip(luma * FLOOR_LIFT + chroma * FLOOR_CHROMA, 0.0, 255.0)
+    lit = np.clip(luma * lift + (rgb - luma) * chroma, 0.0, 255.0)
 
     out = rgba.copy()
     out[..., :3] = lit
     return Image.fromarray(out.astype(np.uint8), "RGBA")
+
+
+def _turn(image, hue, share):
+    """Turns every colour in `image` `share` of the way toward `hue`, keeping S and V.
+
+    By the shortest way round the wheel, which is the only definition that does not
+    occasionally send a colour the long way through red on its way from yellow to green
+    (invariant 37p's blend, arrived at for the same reason).
+
+    Grey is left where it is: a pixel with no saturation has no hue to turn, and turning
+    one anyway is how a white highlight comes out tinted. Alpha and size are untouched,
+    for the reason `_grade` gives.
+    """
+    rgba = np.asarray(image.convert("RGBA")).astype(np.float32) / 255.0
+    rgb = rgba[..., :3]
+
+    hi = rgb.max(axis=2)
+    lo = rgb.min(axis=2)
+    span = hi - lo
+
+    safe = np.maximum(span, 1e-6)
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    h = np.where(hi == r, (g - b) / safe % 6.0,
+                 np.where(hi == g, (b - r) / safe + 2.0, (r - g) / safe + 4.0)) * 60.0
+
+    # The shortest arc, then a share of it.
+    delta = (hue - h + 540.0) % 360.0 - 180.0
+    h = (h + delta * share * np.where(span > 1e-6, 1.0, 0.0)) % 360.0
+
+    # Back to RGB at the same saturation and value, which is what "turn" means here.
+    c = span
+    x = c * (1.0 - np.abs((h / 60.0) % 2.0 - 1.0))
+    m = lo
+    sector = (h / 60.0).astype(np.int32) % 6
+    zero = np.zeros_like(c)
+    table = [(c, x, zero), (x, c, zero), (zero, c, x),
+             (zero, x, c), (x, zero, c), (c, zero, x)]
+    out = np.zeros_like(rgb)
+    for k, (rr, gg, bb) in enumerate(table):
+        hit = sector == k
+        out[..., 0] = np.where(hit, rr, out[..., 0])
+        out[..., 1] = np.where(hit, gg, out[..., 1])
+        out[..., 2] = np.where(hit, bb, out[..., 2])
+    out += m[..., None]
+
+    rgba[..., :3] = np.clip(out, 0.0, 1.0)
+    return Image.fromarray(np.rint(rgba * 255.0).astype(np.uint8), "RGBA")
 
 
 def floor(dry=False):
@@ -347,12 +445,16 @@ def floor(dry=False):
     # the *top* went, leaving a silhouette two thirds the right height with every other
     # number still plausible.
     buf = kaykit.render(mesh, tex, PITCH, YAWS[0], box, extent,
-                        super_sample=SUPER, light=KEY, ambient=AMBIENT, rim=0.0, cull=False)
+                        super_sample=SUPER, light=KEY, ambient=AMBIENT, rim=0.0, cull=False,
+                        sun=SUN, shadow=SHADE)
 
     image = kaykit.to_image(buf)
     crop = image.getbbox()
     image = image.crop(crop)
-    image = _brighter(image)
+    # Turned first and then lifted: turning is a pure hue move that keeps S and V, so it
+    # cannot undo the level, where lifting first would be grading a colour that is about to
+    # be replaced.
+    image = _grade(_turn(image, FLOOR_HUE, FLOOR_TURN), FLOOR_LIFT, FLOOR_CHROMA)
 
     # The assertion this function exists for. A tile's own art must draw at one.
     scale = (extent.span / float(box)) / pack.tile_on_screen * TILE_WIDTH / PIECE_SCALE

@@ -5,15 +5,14 @@ Run it from the repository root:
 
     python Tools/make_launcher_icons.py
 
-Input   Tools/IconSource/glimmer_launcher.jpeg   (the authored artwork)
-Output  Assets/Game/Branding/Icons/*.png         (checked in, referenced by PlayerSettings)
+Input   Tools/IconSource/glimmer_launcher.png   (the authored artwork)
+Output  Assets/Game/Branding/Icons/*.png        (checked in, referenced by PlayerSettings)
 
-The artwork arrives as a rounded-square badge sitting on a black field. Every
-platform masks the icon itself, so shipping that black field would draw a black
-frame around the real icon on both stores. This script removes it and derives the
-five shapes the two platforms actually want:
+The artwork is a full-bleed square: three turrets on a plinth row, firing, over a
+radial burst of blue. Five shapes come out of it, which is what the two platforms
+between them actually want:
 
-  icon_master_1024                  full-bleed square, opaque, no alpha
+  icon_master_1024                  the artwork as drawn, opaque, no alpha
                                     -> every iOS slot, including the 1024 App Store
                                        icon (Apple rejects icons with an alpha
                                        channel, so this one is written as RGB)
@@ -21,38 +20,38 @@ five shapes the two platforms actually want:
                                     -> Android pre-adaptive launchers
   icon_android_round_512            circular composition
                                     -> Android round-icon launchers
-  icon_android_adaptive_background  the gradient alone, full bleed
-  icon_android_adaptive_foreground  the character alone, inside the safe zone
+  icon_android_adaptive_background  the burst alone, full bleed
+  icon_android_adaptive_foreground  the turrets alone, inside the safe zone
                                     -> Android 8+ adaptive icon, which is what every
                                        device this game supports actually uses
                                        (AndroidMinSdkVersion is 26)
 
-Nothing here is hand-traced. The three derivations that are worth understanding:
+Nothing here is hand-traced. The two derivations that are worth understanding:
 
-* **Un-masking the badge.** The black field is everything outside the artwork's
-  own rounded rectangle. The rectangle is found by threshold, inset far enough to
-  drop the glass rim the artist drew along its edge, and the corners are then
-  filled by extending the nearest real pixel outward. The result is a true square
-  with no rim and no black.
+* **Cutting the turrets out.** Colour cannot do it: the cyan turret reads (20, 240,
+  253) and the background near the burst's centre reads (76, 233, 253), which is the
+  same colour to any threshold that would also keep the blue plate. What separates
+  them is that the artwork outlines every turret in near-black. So the *background*
+  is found instead — flood-filled inward from the border across everything that is
+  neither outline nor flame — and the subject is whatever that flood cannot reach.
+  Excluding the flames from the flood is the load-bearing half: a flame leaves the
+  muzzle without an outline, so with them passable the fill walks up the barrel and
+  hollows out the turret behind it. That is exactly how the cyan turret was lost on
+  the first cut, with nothing else about the run looking wrong.
 
-* **Cutting the character out.** The character is whatever the dark outline
-  encloses. The plinth has no outline, so it is found by colour instead: the
-  background is teal (blue about equal to green) and the plinth is green and tan
-  (blue far below green). That single rule separates them without touching the
-  character's own teal shell, which the outline pass has already claimed.
-
-* **Rebuilding the gradient behind it.** An adaptive icon's background layer has
-  to cover the whole canvas, including the part the character was standing in
-  front of. Erasing and blurring leaves a ghost of the silhouette, so instead a
-  cubic polynomial is fitted per channel to the pixels that *are* background —
-  three passes, rejecting outliers, so the sparkles do not drag the fit. That
-  yields an exactly smooth field with nothing to ghost. The sparkles are then
-  composited back on top; the long light rays deliberately are not, because they
-  radiate from behind the character and would be cut off where he used to be.
+* **Rebuilding the burst behind them.** An adaptive icon's background layer has to
+  cover the whole canvas, including the part the turrets stand in front of. Erasing
+  and blurring leaves a ghost of the silhouette, and extending each ray inward from
+  the last pixel it can be seen at smears the plinths' ground shadow into a cone. So
+  the burst is *fitted* instead, as the one thing it is: brightness that varies with
+  radius (a hot centre, a vignette at the corners) times a colour that varies with
+  angle (the rays) — separable, fitted in the log of each channel, three passes with
+  the outliers thrown out so the sparkles and the shadow do not drag it. That yields
+  a burst with the artwork's own ray angles and palette and nothing to ghost. The
+  sparkles are then composited back on top.
 
 Regenerate and re-run 'Glimmer Grove > Apply Launcher Icons' after any change to
-the artwork. The generated files are checked in so a clone can build without
-Python.
+the artwork. The generated files are checked in so a clone can build without Python.
 """
 
 from __future__ import annotations
@@ -65,121 +64,203 @@ from PIL import Image, ImageDraw
 from scipy import ndimage
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCE = ROOT / "Tools" / "IconSource" / "glimmer_launcher.jpeg"
+SOURCE = ROOT / "Tools" / "IconSource" / "glimmer_launcher.png"
 OUT_DIR = ROOT / "Assets" / "Game" / "Branding" / "Icons"
 
-# How far inside the artwork's rounded rectangle to cut. Large enough to drop the
-# glass rim the artist drew along the edge; small enough to leave the plinth
-# untouched, which reaches to within ~110 px of it.
-RIM_INSET = 45
+# What counts as the artwork's outline. Every turret, barrel and plinth is drawn
+# inside one; nothing in the background is anywhere near this dark.
+OUTLINE_MAX = 95
+
+# What counts as flame. The background is blue to the point of having almost no red
+# in it at all, so any pixel with red meaningfully above blue belongs to a muzzle
+# flash — which is why this can be a plain colour rule where the turrets cannot.
+FLAME_RED_OVER_BLUE = 50
+FLAME_MIN_RED = 110
+
+# A component smaller than this fraction of the canvas is a speck, not a turret.
+MIN_SUBJECT_FRACTION = 0.0008
 
 # Adaptive icons are authored at 108 dp. Only the middle 72 dp survives every
 # launcher mask, and only a 66 dp circle inside that is guaranteed. 108 dp maps to
 # 432 px at xxxhdpi; the subject is fitted into 286 px, a little under 72 dp, which
-# keeps the crown and the plinth clear of a circular mask.
+# keeps the outermost flame tips clear of a circular mask.
 ADAPTIVE_PX = 432
 SAFE_PX = 286
 
-# The corner radius the artwork itself was drawn with, as a fraction of its width.
+# The corner radius a legacy Android launcher icon is drawn with, as a fraction of
+# its width. The artwork itself is square to the edge, so this is ours to choose.
 CORNER_RADIUS = 0.20
+
+# Resolution of the burst fit: angular bins around the circle, radial bins out to
+# the far corner. The radial profile is read back by interpolation rather than by
+# bin, because a piecewise-constant one draws visible rings across the plate.
+BURST_ANGLES = 720
+BURST_RADII = 48
 
 
 def load_master() -> np.ndarray:
-    """The artwork as a full-bleed opaque square: black field and rim removed."""
+    """The artwork as a full-bleed opaque square."""
     rgb = np.asarray(Image.open(SOURCE).convert("RGB"))
-
-    # The badge is the one large blob that is not the black field.
-    lit = ndimage.binary_fill_holes(rgb.max(2) > 24)
-    labels, count = ndimage.label(lit)
-    if count == 0:
-        raise SystemExit(f"{SOURCE.name}: found no artwork, only background")
-    sizes = ndimage.sum(lit, labels, range(1, count + 1))
-    badge = labels == int(np.argmax(sizes)) + 1
-
-    kernel = np.ones((RIM_INSET * 2 + 1, RIM_INSET * 2 + 1))
-    badge = ndimage.binary_erosion(badge, kernel)
-
-    ys, xs = np.where(badge)
-    rgb = rgb[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
-    badge = badge[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
-
-    # Push the nearest real pixel outward into the rounded corners.
-    nearest = ndimage.distance_transform_edt(~badge, return_indices=True)[1]
-    filled = rgb[nearest[0], nearest[1]]
-
-    height, width = filled.shape[:2]
+    height, width = rgb.shape[:2]
     side = min(height, width)
     top, left = (height - side) // 2, (width - side) // 2
-    return filled[top:top + side, left:left + side]
+    return rgb[top:top + side, left:left + side]
 
 
 def cut_subject(master: np.ndarray) -> np.ndarray:
-    """Boolean mask of the character and the plinth he stands on."""
-    rgb = master.astype(np.float32)
+    """Boolean mask of the turrets, their plinths and their muzzle flashes."""
+    rgb = master.astype(np.int32)
+    red, blue = rgb[..., 0], rgb[..., 2]
 
-    # The character is whatever the dark outline encloses: label everything that is
-    # not outline, discard the components that reach the border, keep the largest.
-    labels, _ = ndimage.label(rgb.max(2) >= 80)
-    border = np.concatenate([labels[0], labels[-1], labels[:, 0], labels[:, -1]])
-    enclosed = ~np.isin(labels, list(set(np.unique(border)) - {0}))
+    outline = rgb.max(2) < OUTLINE_MAX
+    flame = (red - blue > FLAME_RED_OVER_BLUE) & (red > FLAME_MIN_RED)
 
-    labels, count = ndimage.label(enclosed)
-    sizes = ndimage.sum(enclosed, labels, range(1, count + 1))
-    character = ndimage.binary_fill_holes(labels == int(np.argmax(sizes)) + 1)
+    # The background is everything the border can reach without crossing an outline
+    # or a flame. Leave the flames passable and the fill walks up a barrel through
+    # its own muzzle and empties the turret behind it.
+    labels, _ = ndimage.label(~outline & ~flame)
+    border = set(np.unique(np.concatenate(
+        [labels[0], labels[-1], labels[:, 0], labels[:, -1]]))) - {0}
 
-    # The plinth has no outline to enclose it, but the background never does this:
-    # blue well below green. Teal background and teal shell both stay clear of it.
-    plinth = ndimage.binary_opening(rgb[..., 2] < 0.62 * rgb[..., 1], np.ones((7, 7)))
-
-    labels, count = ndimage.label(plinth | character)
-    sizes = ndimage.sum(plinth | character, labels, range(1, count + 1))
-    solid = [i + 1 for i, size in enumerate(sizes) if size > 0.004 * plinth.size]
-
-    subject = ndimage.binary_fill_holes(np.isin(labels, solid))
-    subject = ndimage.binary_closing(subject, np.ones((9, 9)))
+    subject = ndimage.binary_fill_holes(
+        ndimage.binary_closing(~np.isin(labels, list(border)), np.ones((11, 11))))
 
     labels, count = ndimage.label(subject)
     sizes = ndimage.sum(subject, labels, range(1, count + 1))
-    return ndimage.binary_fill_holes(labels == int(np.argmax(sizes)) + 1)
+    solid = [i + 1 for i, size in enumerate(sizes)
+             if size > MIN_SUBJECT_FRACTION * subject.size]
+    if not solid:
+        raise SystemExit(f"{SOURCE.name}: found no subject, only background")
+    return np.isin(labels, solid)
+
+
+def burst_centre(master: np.ndarray, visible: np.ndarray) -> tuple[float, float]:
+    """Where the rays converge, found rather than typed.
+
+    A ray is a stretch of one colour at one angle, so the right centre is the one
+    that makes the background's brightness depend on angle and not much else. The
+    search scores a candidate by how little the brightness still varies *within* an
+    angular bin once the radial trend is taken out, and keeps the lowest.
+    """
+    side = master.shape[0]
+    ys, xs = np.mgrid[0:side, 0:side].astype(np.float32)
+    luma = master.astype(np.float32).mean(2)
+
+    def score(cx: float, cy: float) -> float:
+        radius = np.hypot(xs - cx, ys - cy)
+        angle = np.arctan2(ys - cy, xs - cx)
+        take = visible & (radius > side * 0.25) & (radius < side * 0.72)
+        if take.sum() < 5000:
+            return np.inf
+
+        bins = np.clip((radius[take] / (side * 0.72) * 24).astype(int), 0, 23)
+        values = luma[take]
+        radial = (np.bincount(bins, values, 24)
+                  / np.maximum(np.bincount(bins, None, 24), 1))
+        detrended = values - radial[bins]
+
+        spokes = ((angle[take] + np.pi) / (2 * np.pi) * 360).astype(int) % 360
+        counts = np.maximum(np.bincount(spokes, None, 360), 1)
+        mean = np.bincount(spokes, detrended, 360) / counts
+        return float(np.bincount(spokes, (detrended - mean[spokes]) ** 2, 360).sum()
+                     / len(detrended))
+
+    best = (np.inf, side / 2.0, side / 2.0)
+    for step, span in ((side // 32, side // 2), (side // 160, side // 16)):
+        _, cx0, cy0 = best
+        for cy in np.arange(cy0 - span / 2, cy0 + span / 2 + 1, step):
+            for cx in np.arange(cx0 - span / 2, cx0 + span / 2 + 1, step):
+                best = min(best, (score(cx, cy), float(cx), float(cy)))
+    return best[1], best[2]
 
 
 def rebuild_background(master: np.ndarray, subject: np.ndarray) -> np.ndarray:
-    """The gradient across the whole canvas, including behind the subject."""
+    """The burst across the whole canvas, including behind the subject."""
     side = master.shape[0]
     rgb = master.astype(np.float32)
 
-    y, x = np.mgrid[0:side, 0:side] / (side - 1.0) * 2 - 1
-    basis = np.stack([t.ravel() for t in (
-        np.ones_like(x), x, y, x * x, x * y, y * y,
-        x ** 3, x * x * y, x * y * y, y ** 3,
-    )], axis=1)
+    # Fit only where the background is plainly visible: clear of the outlines, and
+    # clear of the flames' soft outer glow, which carries far past the flame itself
+    # and would otherwise paint a warm streak down the rays it sits on.
+    glow = ndimage.binary_dilation(rgb[..., 0] > rgb[..., 2], np.ones((9, 9)))
+    visible = ~ndimage.binary_dilation(subject, np.ones((31, 31))) & ~glow
 
-    # Fit only where the background is actually visible, well clear of the outline.
-    visible = (~ndimage.binary_dilation(subject, np.ones((25, 25)))).ravel()
-    fitted = np.zeros_like(rgb)
+    cx, cy = burst_centre(master, visible)
+    ys, xs = np.mgrid[0:side, 0:side].astype(np.float32)
+    radius = np.hypot(xs - cx, ys - cy)
+    angle = np.arctan2(ys - cy, xs - cx)
+    far = float(radius.max())
 
-    for channel in range(3):
-        values = rgb[..., channel].ravel()
-        use = visible.copy()
-        for _ in range(3):  # re-fit without the sparkles, which are outliers
-            coefficients, *_ = np.linalg.lstsq(basis[use], values[use], rcond=None)
-            residual = values - basis @ coefficients
-            use = visible & (np.abs(residual) < 2.2 * residual[visible].std())
-        fitted[..., channel] = (basis @ coefficients).reshape(side, side)
+    spoke = np.clip(((angle + np.pi) / (2 * np.pi) * BURST_ANGLES).astype(int)
+                    % BURST_ANGLES, 0, BURST_ANGLES - 1)
+    ring = np.clip((radius / far * BURST_RADII).astype(int), 0, BURST_RADII - 1)
+    scaled = radius / far * BURST_RADII - 0.5
 
-    fitted = np.clip(fitted, 0, 255)
+    # Fitted in the log of each channel, so "a ray is this much lighter" is one
+    # number wherever on the plate it is read.
+    log = np.log(rgb + 8.0)
+    model = np.zeros_like(log)
+    keep = visible.copy()
 
-    # Put the sparkles back — small bright blobs only. The long light rays are left
-    # out on purpose: they radiate from behind the character and would end abruptly.
-    excess = master.max(2).astype(np.float32) - fitted.max(2)
+    for _ in range(3):
+        radial = np.stack([_profile(ring[keep], log[..., c][keep], BURST_RADII, 60)
+                           for c in range(3)], axis=1)
+        fitted = np.stack([np.interp(scaled.ravel(), np.arange(BURST_RADII),
+                                     radial[:, c]).reshape(side, side)
+                           for c in range(3)], axis=-1)
+
+        residual = log - fitted
+        angular = np.stack([_profile(spoke[keep], residual[..., c][keep],
+                                     BURST_ANGLES, 40, wrap=True)
+                            for c in range(3)], axis=1)
+        angular = np.stack([ndimage.uniform_filter1d(angular[:, c], 5, mode="wrap")
+                            for c in range(3)], axis=-1)
+
+        model = fitted + angular[spoke]
+        error = np.abs(log - model).max(2)
+        keep = visible & (error < 3.0 * np.median(error[visible]) * 1.4826)
+
+    burst = np.clip(np.exp(model) - 8.0, 0, 255)
+
+    # Put the sparkles back — small bright blobs only. Anything large that the fit
+    # could not explain is the subject's ground shadow, which belongs to the
+    # turrets rather than to the plate they stand on.
+    excess = rgb.max(2) - burst.max(2)
     sparkle = (excess > 22) & ~subject
     labels, count = ndimage.label(sparkle)
     sizes = ndimage.sum(sparkle, labels, range(1, count + 1))
     compact = [i + 1 for i, size in enumerate(sizes) if size < 2600]
     sparkle = np.isin(labels, compact)
 
-    glow = ndimage.gaussian_filter(np.where(sparkle, excess, 0.0).astype(np.float32), 1.2)
-    return np.clip(fitted + glow[..., None], 0, 255).astype(np.uint8)
+    halo = ndimage.gaussian_filter(np.where(sparkle, excess, 0.0).astype(np.float32), 1.2)
+    return np.clip(burst + halo[..., None], 0, 255).astype(np.uint8)
+
+
+def _profile(bins: np.ndarray, values: np.ndarray, count: int,
+             minimum: int, wrap: bool = False) -> np.ndarray:
+    """Median per bin, with thin and empty bins interpolated from their neighbours.
+
+    A median rather than a mean because what is being averaged over still holds a
+    little of everything the masks did not catch — a flame's last glow, the edge of
+    a shadow — and a mean carries that straight into the plate as a streak.
+    """
+    out = np.full(count, np.nan)
+    order = np.argsort(bins, kind="stable")
+    edges = np.searchsorted(bins[order], np.arange(count + 1))
+    sorted_values = values[order]
+    for k in range(count):
+        sample = sorted_values[edges[k]:edges[k + 1]]
+        if len(sample) >= minimum:
+            out[k] = np.median(sample)
+
+    known = np.where(~np.isnan(out))[0]
+    if len(known) == 0:
+        raise SystemExit("burst fit: no bin held enough background to measure")
+    if wrap:
+        return np.interp(np.arange(count),
+                         np.concatenate([known - count, known, known + count]),
+                         np.concatenate([out[known]] * 3))
+    return np.interp(np.arange(count), known, out[known])
 
 
 def subject_cutout(master: np.ndarray, subject: np.ndarray) -> Image.Image:
@@ -233,7 +314,7 @@ def main() -> int:
         Image.fromarray(master).resize((1024, 1024), Image.LANCZOS).convert("RGB"),
     ))
 
-    # Android adaptive: gradient behind, character in front.
+    # Android adaptive: burst behind, turrets in front.
     written.append((
         "icon_android_adaptive_background_432.png",
         Image.fromarray(background).resize((ADAPTIVE_PX, ADAPTIVE_PX), Image.LANCZOS).convert("RGB"),
@@ -241,7 +322,7 @@ def main() -> int:
     foreground = fit_into_safe_zone(subject_cutout(master, subject))
     written.append(("icon_android_adaptive_foreground_432.png", foreground))
 
-    # Android legacy: the artwork as drawn, with its own corner radius back.
+    # Android legacy: the artwork as drawn, with a launcher's corner radius on it.
     legacy = Image.fromarray(master).resize((512, 512), Image.LANCZOS)
     written.append(("icon_android_legacy_512.png", masked(
         legacy,

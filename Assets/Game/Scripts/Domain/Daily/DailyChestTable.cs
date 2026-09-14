@@ -110,16 +110,30 @@ namespace GlimmerGrove.Daily
         /// server and the client would then disagree about.
         /// </summary>
         public List<ChestDrop> Roll(string playerKey, int dayKey, int chestIndex)
+            => Roll(ChestSeed.ForDay(playerKey, dayKey, chestIndex));
+
+        /// <summary>
+        /// Everything in this chest, for any seed.
+        ///
+        /// <para>
+        /// The one roll, with the seed handed in rather than built here. A day-keyed chest
+        /// and a subject-keyed one (a task's chest is seeded from the task and the period
+        /// it was done in) are the same arithmetic over a different first hash, and a second
+        /// copy of the loop below would be a second place the stream numbers live — the
+        /// numbers the server mirrors byte for byte (invariant 9c).
+        /// </para>
+        /// </summary>
+        public List<ChestDrop> Roll(ChestSeed seed)
         {
             var drops = new List<ChestDrop>(_guaranteed.Length + 1);
 
             for (int i = 0; i < _guaranteed.Length; i++)
             {
-                var random = new ChestRandom(playerKey, dayKey, chestIndex, StreamForGuaranteed(i));
+                var random = seed.At(StreamForGuaranteed(i));
                 Merge(drops, _guaranteed[i].Resolve(ref random));
             }
 
-            Merge(drops, Pick(playerKey, dayKey, chestIndex));
+            Merge(drops, Pick(seed));
 
             return drops;
         }
@@ -162,10 +176,13 @@ namespace GlimmerGrove.Daily
 
         /// <summary>The weighted pick alone, which is the half the odds describe.</summary>
         public ChestDrop Pick(string playerKey, int dayKey, int chestIndex)
+            => Pick(ChestSeed.ForDay(playerKey, dayKey, chestIndex));
+
+        public ChestDrop Pick(ChestSeed seed)
         {
             if (_options.Length == 0 || TotalWeight <= 0) return ChestDrop.None;
 
-            var chooser = new ChestRandom(playerKey, dayKey, chestIndex, StreamPick);
+            var chooser = seed.At(StreamPick);
             int target = chooser.Below(TotalWeight);
 
             for (int i = 0; i < _options.Length; i++)
@@ -175,14 +192,14 @@ namespace GlimmerGrove.Daily
 
                 // A second stream for the amount, so two options of the same kind and
                 // band pay the same distribution regardless of where they sit in the list.
-                var amount = new ChestRandom(playerKey, dayKey, chestIndex, StreamAmount);
+                var amount = seed.At(StreamAmount);
                 return _options[i].Band.Resolve(ref amount);
             }
 
             // Unreachable while the weights sum to TotalWeight; kept because "unreachable"
             // has a way of becoming reachable, and paying the last option is a better
             // failure than paying nothing.
-            var fallback = new ChestRandom(playerKey, dayKey, chestIndex, StreamAmount);
+            var fallback = seed.At(StreamAmount);
             return _options[_options.Length - 1].Band.Resolve(ref fallback);
         }
 
@@ -313,7 +330,7 @@ namespace GlimmerGrove.Daily
 
             for (int i = 0; i < dto.chests.Length; i++)
             {
-                var chest = ReadChest(dto.chests[i], i, problems);
+                var chest = ReadChest(dto.chests[i], $"daily chest {i}", problems);
                 if (chest == null) return Default;              // named already; refuse the lot
                 chests[i] = chest;
             }
@@ -329,23 +346,23 @@ namespace GlimmerGrove.Daily
         /// that is authored but unreachable, and an unknown kind is content written
         /// against a newer build than the one reading it.
         /// </summary>
-        static ChestDefinition ReadChest(DailyChestEntryDto dto, int index, List<string> problems)
+        internal static ChestDefinition ReadChest(DailyChestEntryDto dto, string label, List<string> problems)
         {
-            if (dto == null) { problems.Add($"daily chest {index} is empty"); return null; }
+            if (dto == null) { problems.Add($"{label} is empty"); return null; }
 
             var guaranteed = new List<ChestBand>();
             if (dto.guaranteed != null)
             {
                 foreach (var band in dto.guaranteed)
                 {
-                    if (!TryReadBand(band, index, "guaranteed", problems, out var read)) continue;
+                    if (!TryReadBand(band, label, "guaranteed", problems, out var read)) continue;
                     guaranteed.Add(read);
                 }
             }
 
             if (guaranteed.Count == 0)
             {
-                problems.Add($"daily chest {index} guarantees nothing; every chest must pay " +
+                problems.Add($"{label} guarantees nothing; every chest must pay " +
                              "something or a player can open one and receive an empty screen");
                 return null;
             }
@@ -356,11 +373,11 @@ namespace GlimmerGrove.Daily
                 foreach (var option in dto.options)
                 {
                     if (option == null) continue;
-                    if (!TryReadBand(option.AsBand(), index, "option", problems, out var read)) continue;
+                    if (!TryReadBand(option.AsBand(), label, "option", problems, out var read)) continue;
 
                     if (option.weight < 1)
                     {
-                        problems.Add($"daily chest {index} option '{option.kind}' has weight " +
+                        problems.Add($"{label} option '{option.kind}' has weight " +
                                      $"{option.weight}; an option that can never be picked is " +
                                      "an odds table that lies about itself");
                         return null;
@@ -375,7 +392,7 @@ namespace GlimmerGrove.Daily
             return new ChestDefinition(guaranteed.ToArray(), options.ToArray());
         }
 
-        static bool TryReadBand(DailyDropDto dto, int chestIndex, string role,
+        static bool TryReadBand(DailyDropDto dto, string label, string role,
                                 List<string> problems, out ChestBand band)
         {
             band = default;
@@ -387,7 +404,7 @@ namespace GlimmerGrove.Daily
                 // Skipped rather than fatal: an unknown kind is how a newer content pack
                 // reaches an older build, and dropping the entry degrades the table
                 // instead of the game.
-                problems.Add($"daily chest {chestIndex} {role} names unknown reward kind " +
+                problems.Add($"{label} {role} names unknown reward kind " +
                              $"'{dto.kind}'; skipped");
                 return false;
             }
@@ -399,14 +416,14 @@ namespace GlimmerGrove.Daily
             // one this build knows and knows to be wrong here.
             if (ChestDropKinds.IsTransient(kind))
             {
-                problems.Add($"daily chest {chestIndex} {role} pays '{dto.kind}', which is " +
+                problems.Add($"{label} {role} pays '{dto.kind}', which is " +
                              "spent inside a run; a chest is opened where there is no run");
                 return false;
             }
 
             if (dto.min < 1 || dto.max < dto.min)
             {
-                problems.Add($"daily chest {chestIndex} {role} '{dto.kind}' has band " +
+                problems.Add($"{label} {role} '{dto.kind}' has band " +
                              $"{dto.min}..{dto.max}; a band must be at least 1 and not run backwards");
                 return false;
             }
@@ -416,7 +433,7 @@ namespace GlimmerGrove.Daily
             // kind is: this build knows the kind and knows the band to be wrong.
             if (ChestDropKinds.NeedsItem(kind) && string.IsNullOrEmpty(dto.item))
             {
-                problems.Add($"daily chest {chestIndex} {role} pays '{dto.kind}' and names no " +
+                problems.Add($"{label} {role} pays '{dto.kind}' and names no " +
                              "item; a chest cannot hand over a utility without saying which");
                 return false;
             }

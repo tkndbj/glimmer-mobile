@@ -32,6 +32,7 @@
     "waves": [],
     "boss": "",
     "cogs": 30,
+    "charms": "pls",
     "endless": {
      "goldWave": 20,
      "silverFactor": 0.55

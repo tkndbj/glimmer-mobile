@@ -150,6 +150,52 @@ for (const testCase of dailyCases) {
 failures += dailyFailures;
 console.log(`  ${dailyCases.length - dailyFailures}/${dailyCases.length} daily chest vector(s) ok`);
 
+// ------------------------------------------------------------- task chests
+/*
+ * The third contract: a chest seeded from a subject. Same generator as the daily chest,
+ * different first hash, and the same reason for pinning it — the client shows the roll and
+ * the server grants it, so the two have to be one roll.
+ */
+const tasksCompiled = join(REPO, "firebase", "functions", "lib", "tasks.js");
+const { rollTaskChest } = await import(pathToFileURL(tasksCompiled).href);
+
+const taskTiers = vectors.taskChestTiers ?? [];
+const taskCases = vectors.taskChestCases ?? [];
+
+if (taskTiers.length === 0 || taskCases.length === 0) {
+  failures++;
+  console.log("  FAIL the task chest vectors are missing");
+}
+
+let taskFailures = 0;
+
+for (const testCase of taskCases) {
+  const tier = taskTiers.find((t) => t.id === testCase.tier);
+  const rolled = tier
+    ? rollTaskChest(tier.chest, testCase.playerKey, testCase.period, testCase.key, testCase.taskId)
+    : [];
+  const got = rolled.map((d) => `${d.kind}${d.item ? ":" + d.item : ""}=${d.amount}`).join(",");
+  const want = (testCase.drops ?? []).map((d) => `${d.kind}${d.item ? ":" + d.item : ""}=${d.amount}`).join(",");
+
+  if (got !== want) {
+    taskFailures++;
+    console.log(`  FAIL task '${testCase.name}': expected ${want || "(nothing)"}, got ${got || "(nothing)"}`);
+  }
+}
+
+// The cases have to keep covering what a naive port gets wrong: the same id in the other
+// period, and a day key that happens to equal a week key, are different chests.
+const taskNames = taskCases.map((c) => c.name).join(" | ");
+for (const required of ["@weekly:2901:d_play#", "@daily:2901:w_win#", "(Ünïcödé)@"]) {
+  if (!taskNames.includes(required)) {
+    taskFailures++;
+    console.log(`  FAIL the task vectors no longer cover '${required}'`);
+  }
+}
+
+failures += taskFailures;
+console.log(`  ${taskCases.length - taskFailures}/${taskCases.length} task chest vector(s) ok`);
+
 /*
  * The streak ladder.
  *
@@ -322,6 +368,7 @@ if (failures > 0) {
     "update firebase/shared/reward-vectors.json and make the same change in " +
     "Assets/Game/Scripts/Domain/Progression/ProgressionLedger.cs, " +
     "Assets/Game/Scripts/Domain/Daily/DailyChestTable.cs, " +
+    "Assets/Game/Scripts/Domain/Daily/ChestSeed.cs (with functions/src/tasks.ts), " +
     "Assets/Game/Scripts/Domain/Daily/StreakTable.cs or " +
     "Assets/Game/Scripts/Domain/Ads/BonusWheel.cs."
   );

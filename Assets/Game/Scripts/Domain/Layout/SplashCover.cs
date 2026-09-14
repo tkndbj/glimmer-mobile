@@ -92,22 +92,16 @@
     public static class SplashCover
     {
         /// <summary>
-        /// The poster and the clip are named by <c>AssetManifest</c>, not here — invariant 7,
-        /// which keeps every asset path in one place. This class owns only geometry.
+        /// The cover's pixel size. It is named by <c>AssetManifest</c>, not here — invariant 7,
+        /// which keeps every asset path in one place; this class owns only geometry.
         ///
         /// <para>
-        /// The poster is the video's own first frame, which is what makes the handover
-        /// invisible: the screen draws the still immediately, the player prepares behind it,
-        /// and the frame it starts on is the frame already on screen. It is also the fallback —
-        /// a device that cannot decode the clip shows the picture and never says so, which is
-        /// the right failure for a launch screen. Both are measured below as one image, because
-        /// they are one image.
+        /// <b>Aspect only</b>, so the importer's cap on the texture does not matter and neither
+        /// does the source's absolute size: every length below is a multiple of a scale that
+        /// divides one of these back out again.
         /// </para>
         /// </summary>
-        /// The source's pixel size — the video's, and the poster's, which are the same frame.
-        /// Aspect only, so the importer's cap on the still does not matter.
-        /// </summary>
-        public const float ArtWidth = 1080f, ArtHeight = 1920f;
+        public const float ArtWidth = 941f, ArtHeight = 1672f;
 
         /// <summary>
         /// How far down the picture the wordmark's lowest ink reaches, as a fraction of its
@@ -115,27 +109,70 @@
         ///
         /// <para>
         /// Measured off the art rather than judged: the lettering plus its dark rim ends at
-        /// 1780 of 1920 rows, and the soft glow below that is not ink and may be drawn over.
-        /// <b>Anything that re-cuts or replaces the cover has to re-measure this</b>, because
-        /// it is the one number here that a wrong value moves the bar straight onto the word,
-        /// on every device at once, with nothing to say so.
+        /// about 677 of 1672 rows, and the glow and the burst's lower spike below that are not
+        /// ink and may be drawn over. <b>Anything that re-cuts or replaces the cover has to
+        /// re-measure this</b>, because it is the one number here that a wrong value moves the
+        /// bar straight onto the word, on every device at once, with nothing to say so.
+        /// </para>
+        /// <para>
+        /// <b>It stopped being where the bar hangs from and became a ceiling the bar may not
+        /// cross</b>, and that is a fact about this cover rather than a change of mind. The
+        /// frame before it carried its wordmark in the bottom tenth with clear ground under it,
+        /// so "hang the bar under the word" and "put the bar at the foot of the screen" were the
+        /// same instruction. This one carries the wordmark across the middle with three turrets
+        /// firing below it, so they are opposite instructions — and a bar obeying the first
+        /// would be drawn across the muzzle flash of the red turret. See <see cref="Fit"/>.
         /// </para>
         /// </summary>
-        public const float WordFootUv = .930f;
+        public const float WordFootUv = .405f;
+
+        /// <summary>
+        /// Where the wordmark's highest ink starts, same space — the top of the dark burst the
+        /// lettering is set on, not the top of the letters, because the burst is part of the
+        /// mark and a crop through its spikes reads as damage.
+        /// </summary>
+        public const float WordHeadUv = .210f;
+
+        /// <summary>The middle of the mark, so the two ends cannot be centred on separately.</summary>
+        public const float MarkCentreUv = (WordHeadUv + WordFootUv) * .5f;
+
+        /// <summary>
+        /// Where the mark's middle wants to sit on the canvas, as a fraction down from the top.
+        ///
+        /// <para>
+        /// <b>This is the number that replaced bottom-alignment, and the cover is why.</b> The
+        /// frame before this one put everything the screen was for — its wordmark, and the strip
+        /// of ground the bar stood on — inside its bottom tenth, so standing the picture on the
+        /// canvas floor and letting the crop come off the top was free: what it ate was sky. This
+        /// cover carries its mark across the <em>middle</em>, with three turrets under it and a
+        /// quarter of the frame in gems above. Bottom-aligned, a display squarer than about 5:4
+        /// crops nearly seventeen hundred units off the top and the crop lands on the logo —
+        /// tested, on a 1:1 canvas, which is a foldable opened or a tablet in split view.
+        /// </para>
+        /// <para>
+        /// So the picture is hung on the mark instead and the crop is taken from whichever end
+        /// has room, clamped so neither edge can pull away from the canvas. Thirty per cent
+        /// rather than half because the art is composed that way: the mark sits above centre with
+        /// its subject below it, and centring the mark would push the turrets off the bottom on
+        /// exactly the canvases this exists to fix.
+        /// </para>
+        /// </summary>
+        public const float MarkOnCanvas = .30f;
 
         /// <summary>
         /// The widest the wordmark reaches, ink and dark rim together, as fractions across the
-        /// picture — the upper line (GLIMMER). This is the extent the crop may never eat into;
-        /// see <see cref="WordMargin"/>.
+        /// picture. This is the extent the crop may never eat into; see <see cref="WordMargin"/>.
+        ///
+        /// <para>
+        /// <b>One pair rather than two.</b> The frame before this one set its mark on two lines
+        /// and kept a second span for the lower one, because the bar sat directly under it and a
+        /// bar wider than the word above it reads as a different object. This mark is one line,
+        /// so a second pair would be two constants holding the same number — and the day
+        /// somebody re-measured one of them the two would quietly disagree about what the
+        /// wordmark is.
+        /// </para>
         /// </summary>
-        public const float WordLeftUv = .137f, WordRightUv = .862f;
-
-        /// <summary>
-        /// The horizontal span of the lower line (GROOVE), same space. The lower line rather
-        /// than the wider one because it is the edge the bar is read against, and a bar wider
-        /// than the word directly above it reads as a different object.
-        /// </summary>
-        public const float LowerLeftUv = .198f, LowerRightUv = .799f;
+        public const float WordLeftUv = .085f, WordRightUv = .918f;
 
         /// <summary>
         /// The least clear air the wordmark keeps from the side of the screen.
@@ -150,22 +187,33 @@
         /// </summary>
         public const float WordMargin = 12f;
 
-        /// <summary>How much of the lower line's width the bar spans, and how tall it is drawn.</summary>
-        public const float BarSpan = .86f, BarHeight = 28f;
+        /// <summary>How much of the wordmark's width the bar spans, and how tall it is drawn.</summary>
+        public const float BarSpan = .68f, BarHeight = 28f;
 
         /// <summary>
-        /// The air between the word's foot and the bar's top: what it wants, and the least it
-        /// will accept.
+        /// How far the bar stands above the system's bottom inset, over and above
+        /// <see cref="Pad"/>.
         ///
         /// <para>
-        /// Two numbers rather than one because the band under the word is only six per cent of
-        /// the picture, and on a display whose system chrome eats a bottom inset there is not
-        /// always room for the gap the design wants. <see cref="Gap"/> is what it takes when it
-        /// can; <see cref="MinGap"/> is the point past which the bar would be sitting on the
-        /// lettering, which is the one outcome worth giving up the inset for.
+        /// The bottom eighth of this cover is deep shadow and the bar is read against it, so
+        /// this is bounded from both ends by the picture rather than by taste: too little and
+        /// the bar is jammed into the edge of the display, too much and it climbs out of the
+        /// dark band and onto the lit rock the turrets stand on.
         /// </para>
         /// </summary>
-        public const float Gap = 34f, MinGap = 14f;
+        public const float Foot = 60f;
+
+        /// <summary>
+        /// The least air the bar will leave under the wordmark.
+        ///
+        /// <para>
+        /// It does not bind on any display this game is drawn on and it is kept anyway, because
+        /// it is the only thing standing between a re-cut cover and a loading bar drawn across
+        /// the logo. A guard that has stopped firing is not a guard that has stopped being
+        /// needed — the cover it was written for is already not the cover it guards.
+        /// </para>
+        /// </summary>
+        public const float MinGap = 14f;
 
         /// <summary>Air between the bar's foot and the system's bottom inset.</summary>
         public const float Pad = 10f;
@@ -191,22 +239,27 @@
         /// </param>
         /// <remarks>
         /// <para>
-        /// The picture is scaled to cover, <em>capped</em> so the wordmark never clips, and
-        /// bottom-aligned. On everything up to about 19.9:9 the cap does not bite and the fit
-        /// is a plain cover; past that it holds the zoom and leaves a band of open sky at the
-        /// top, which <see cref="SplashPlan.SkyHeight"/> reports and the screen fills with a
-        /// gradient matched to the picture's own top edge. That band is at the very top of the
-        /// tallest displays there are — under the status bar and the camera — which is why
-        /// buying the wordmark with it is a good trade.
+        /// The picture is scaled to cover and <em>capped</em> so the wordmark never clips at the
+        /// sides. On everything up to about 19.9:9 the cap does not bite and the fit is a plain
+        /// cover; past that it holds the zoom and leaves a band of open sky at the top, which
+        /// <see cref="SplashPlan.SkyHeight"/> reports and the screen fills with a gradient
+        /// matched to the picture's own top edge. That band is at the very top of the tallest
+        /// displays there are — under the status bar and the camera — which is why buying the
+        /// wordmark with it is a good trade.
         /// </para>
         /// <para>
-        /// The bar's height is settled by three claims in order, and the order is the substance.
-        /// It wants to sit <see cref="Gap"/> under the word. It is then <em>raised</em> to clear
-        /// the system inset if it can. And it is finally <em>capped</em> so it can never come
-        /// closer than <see cref="MinGap"/> to the lettering — because on a short canvas with a
-        /// large inset those two wants are not both satisfiable, and the honest answer is to
-        /// give up the inset rather than the word. A bar drawn a few units into a home indicator
-        /// is a decoration behind a translucent pill; a bar drawn across the logo is a bug.
+        /// Up the screen it is hung on the mark rather than stood on the floor — see
+        /// <see cref="MarkOnCanvas"/> — and then clamped, so whichever end the crop comes off,
+        /// neither edge of the picture can pull away from the canvas and show through.
+        /// </para>
+        /// <para>
+        /// The bar stands at the <em>foot</em> of the canvas — <see cref="Pad"/> and
+        /// <see cref="Foot"/> above whatever inset the system has taken — and is then
+        /// <em>capped</em> so it can never come closer than <see cref="MinGap"/> to the
+        /// lettering. On this cover the cap cannot bite, because the wordmark is across the
+        /// middle and the bar is in the bottom tenth; it is what makes the arithmetic survive a
+        /// cover whose mark sits lower, and a bar drawn across the logo is the one outcome here
+        /// worth giving up the inset for.
         /// </para>
         /// </remarks>
         public static SplashPlan Fit(float canvasW, float canvasH, float safeBottom)
@@ -224,26 +277,39 @@
             float scale = System.Math.Max(fill, System.Math.Min(cover, clip));
             float width = ArtWidth * scale, height = ArtHeight * scale;
 
-            // Bottom-aligned: the picture's foot meets the canvas's, so the crop comes off the
-            // top — sky, rather than the word and the ground it stands on. Negative when the
-            // cap has bitten, which is the case the sky band exists for.
-            float pictureY = (height - canvasH) * .5f;
+            // Hung on the mark, then clamped to the canvas. `limit` is how far the picture can
+            // travel before one of its own edges comes away from an edge of the canvas, so the
+            // clamp is what keeps the cover a cover; inside it, the crop is split between top and
+            // bottom in whatever proportion puts the mark where it was composed to be.
+            float pictureY;
+            if (height >= canvasH)
+            {
+                float limit = (height - canvasH) * .5f;
+                float wanted = canvasH * (.5f - MarkOnCanvas) - height * (.5f - MarkCentreUv);
+                pictureY = wanted > limit ? limit : (wanted < -limit ? -limit : wanted);
+            }
+            else
+            {
+                // The capped-zoom case: the picture is shorter than the canvas, so there is no
+                // crop to place. It stands on the floor and the sky band is the rest.
+                pictureY = (height - canvasH) * .5f;
+            }
+
             float skyHeight = System.Math.Max(0f, canvasH - height);
 
             float wordFoot = pictureY + height * (.5f - WordFootUv);
 
             float half = BarHeight * .5f;
-            float ideal = wordFoot - Gap - half;
-            float floor = -canvasH * .5f + safeBottom + Pad + half;
+            float ideal = -canvasH * .5f + safeBottom + Pad + Foot + half;
             float cap = wordFoot - MinGap - half;
 
-            float barY = System.Math.Min(System.Math.Max(ideal, floor), cap);
+            float barY = System.Math.Min(ideal, cap);
 
-            float span = width * (LowerRightUv - LowerLeftUv) * BarSpan;
+            float span = width * (WordRightUv - WordLeftUv) * BarSpan;
             float room = System.Math.Max(MinBarWidth, canvasW - SideMargin * 2f);
             float barWidth = System.Math.Max(MinBarWidth, System.Math.Min(span, room));
 
-            float barX = ((LowerLeftUv + LowerRightUv) * .5f - .5f) * width;
+            float barX = ((WordLeftUv + WordRightUv) * .5f - .5f) * width;
 
             return new SplashPlan(width, height, pictureY, barX, barY, barWidth, wordFoot, skyHeight);
         }

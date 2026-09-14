@@ -70,11 +70,13 @@ MonoBehaviour:
   m_GroupAssets:
   - {fileID: 11400000, guid: 47c46bda514740a4dbc05a44d4a23ac8, type: 2}
   - {fileID: 11400000, guid: 4d5a579f47b771f40be12597dc3a83b4, type: 2}
+  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
+  - {fileID: 11400000, guid: 0a877d0e8dd7b05409edd6e3049d86d2, type: 2}
   - {fileID: 11400000, guid: 984a834b48cbf384482d9e2e9aebfe5d, type: 2}
   - {fileID: 11400000, guid: 82cde781aeb2b8c47a1f377b73392623, type: 2}
   - {fileID: 11400000, guid: b92e976ef28c68c42becd8a3e8622ca7, type: 2}
   - {fileID: 11400000, guid: eb66a2de3aecee54b8958759c2eff7bc, type: 2}
-  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
+  - {fileID: 11400000, guid: 3443c775a1c727145bcd87368713f7dd, type: 2}
   - {fileID: 11400000, guid: d66337f20f2bdd44d867926ead515cc3, type: 2}
   m_BuildSettings:
     m_LogResourceManagerExceptions: 1
@@ -799,6 +801,45 @@ MonoBehaviour:
     - Art/Homestead/tower_stone
     - Art/Homestead/tower_round
     - Art/Homestead/tavern
+    - Art/Siege/boneBrute_b
+    - Art/Siege/boneBrute_b_swing
+    - Art/Siege/boneBrute_g
+    - Art/Siege/boneBrute_g_swing
+    - Art/Siege/boneBrute_r
+    - Art/Siege/boneBrute_r_swing
+    - Art/Siege/boneBrute_y
+    - Art/Siege/boneBrute_y_swing
+    - Art/Siege/boneBulwark_b
+    - Art/Siege/boneBulwark_b_swing
+    - Art/Siege/boneBulwark_g
+    - Art/Siege/boneBulwark_g_swing
+    - Art/Siege/boneBulwark_r
+    - Art/Siege/boneBulwark_r_swing
+    - Art/Siege/boneBulwark_y
+    - Art/Siege/boneBulwark_y_swing
+    - Art/Siege/boneMon_b
+    - Art/Siege/boneMon_b_swing
+    - Art/Siege/boneMon_g
+    - Art/Siege/boneMon_g_swing
+    - Art/Siege/boneMon_r
+    - Art/Siege/boneMon_r_swing
+    - Art/Siege/boneMon_y
+    - Art/Siege/boneMon_y_swing
+    - Art/Siege/caller
+    - Art/Siege/caller_cast
+    - Art/Siege/maw
+    - Art/Siege/maw_cast
+    - Art/Siege/caller_walk
+    - Art/Fx/Siege/charm_blast_b
+    - Art/Fx/Siege/charm_blast_g
+    - Art/Fx/Siege/charm_blast_r
+    - Art/Fx/Siege/charm_blast_y
+    - Art/Siege/beam
+    - Art/Chests/wood
+    - Art/Chests/royal
+    - Art/Chests/silver
+    - Art/Chests/gold
+    - Art/Siege/laser
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1c550e3b8c7244948b0ae7d2fbce14c6, type: 2}

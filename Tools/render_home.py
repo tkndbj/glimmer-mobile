@@ -23,6 +23,7 @@ the tweens, so nothing here says whether an entrance reads well.
 from __future__ import annotations
 
 import argparse
+import math
 import sys
 from pathlib import Path
 
@@ -35,11 +36,15 @@ W, H = K.W, K.H
 
 # HomeScreen
 TOPBAR_Y, TOPBAR_H = 116.0, 168.0
-RES_Y, RES_H = 250.0, 92.0
-DAILY_Y, DAILY_W, DAILY_H = 424.0, 910.0, 240.0
-ROW_TOP, ROW_HEIGHT, ROW_WIDTH, ROW_GAP = 556.0, 300.0, 900.0, 24.0
+RES_Y, RES_H = 254.0, 104.0
+TASKS_Y, TASKS_H = 436.0, 240.0
+ROW_TOP, ROW_HEIGHT, ROW_WIDTH, ROW_GAP = 570.0, 300.0, 960.0, 24.0
 HERO_Y, HERO_W, HERO_H = 150.0, 620.0, 700.0
 PLAY_W, PLAY_H = 600.0, 172.0
+
+# HomeScreen.BuildChestRow
+CHEST_TALL, CHEST_SHORT = 188.0, 130.0
+CHEST_DIP, CHEST_FLOOR, CHEST_OVERLAP = 20.0, -92.0, .07
 
 
 def top_bar(sheet):
@@ -108,41 +113,128 @@ def resources(sheet):
         K.paste(sheet, K.fit(K.load("Hud/add")[0], (58, 58)), cx + 276 / 2 - 14, RES_Y)
 
 
-def daily(sheet):
-    """`HomeScreen.BuildDaily` — the kit's panel, a progress rail and three chests on it."""
-    cy = DAILY_Y
-    K.paste(sheet, K.skin("Hud/panel", DAILY_W, DAILY_H), W / 2, cy)
+def chest_geometry():
+    """The closed chest's headroom, **measured off the art rather than typed**.
 
-    top = cy - DAILY_H / 2
-    K.text(sheet, "DAILY BONUSES", W / 2 - DAILY_W / 2 + 148, top + 38, 32, fill=K.GOLD, anchor="l")
-    K.text(sheet, "resets in 6h 12m", W / 2 + DAILY_W / 2 - 40, top + 38, 26,
-           fill=(255, 242, 214), outline=0, anchor="r")
+    `HomeScreen` carries the same four numbers as constants (`ChestFill`, `ChestWide`,
+    `ChestLift`, `ChestAspect`) because a screen cannot open a PNG. This can, so it does — and
+    it prints what it found, which is the only thing that can say the constants have gone stale
+    after a re-cut (44b's rule: measured, not typed).
+    """
+    out = {}
+    for tier in ("wood", "silver", "gold", "royal"):
+        im = Image.open(K.UI / "Chest" / f"{tier}.png").convert("RGBA")
+        box = im.getchannel("A").getbbox()
+        out[tier] = (im, box)
+    return out
 
-    try:
-        K.paste(sheet, K.fit(Image.open(K.UI / "ic_gift.png").convert("RGBA"), (72, 72)),
-                W / 2 - DAILY_W / 2 + 62, top + 42)
-    except FileNotFoundError:
-        pass
 
-    ty = cy - 4
-    K.paste(sheet, K.skin("Hud/trough", 816, 42), W / 2, ty)
-    K.paste(sheet, K.tint(K.skin("Hud/fill", 806 * .55, 32), K.GOLD),
-            W / 2 - 403 + 806 * .55 / 2, ty)
+def strings():
+    import json
+    table = json.loads((K.REPO / "Assets" / "StreamingAssets" / "Content" / "loc" / "en.json")
+                       .read_text(encoding="utf-8"))
+    return {e["key"]: e["text"] for e in table["entries"]}
 
-    for i in range(3):
-        px = W / 2 - 408 + 816 * ((i + 1) / 3.0)
-        ready = i == 0
-        try:
-            chest = Image.open(K.UI / ("ic_chest.png" if not (i == 2) else "ic_chest_open.png")).convert("RGBA")
-        except FileNotFoundError:
-            continue
-        chest = K.fit(chest, (96 if ready else 78, 96 if ready else 78))
-        if not ready and i != 2:
-            chest = K.tint(chest, (128, 138, 148))
-        K.paste(sheet, chest, px, ty - 8)
 
-    K.text(sheet, "PLAY 2 MORE GLADES FOR THE NEXT CHEST", W / 2, cy + DAILY_H / 2 - 24, 24,
-           fill=(255, 242, 214), outline=0)
+LOCS = strings()
+
+
+def txt(key):
+    return LOCS.get(key, key)
+
+
+def tasks(sheet, ready=("silver",), verbose=False):
+    """`HomeScreen.BuildTasks` — the chest pack, a countdown and a starburst. No title.
+
+    The chests are laid out here exactly as `BuildChestRow` lays them out: a cosine bell for
+    the heights, a cursor for the positions, the run centred on what it measures. What this
+    can see and nothing else can is whether "big and close" is actually what lands — a row that
+    reads as four icons on a plate is the fault this card was rebuilt to fix.
+    """
+    cy = TASKS_Y
+    K.paste(sheet, K.skin("Hud/" + "plate_violet", ROW_WIDTH, TASKS_H), W / 2, cy)
+
+    # the rays and the shelf, both clipped to the plate in the game (RectMask2D)
+    plate = Image.new("RGBA", (int(ROW_WIDTH) - 12, int(TASKS_H) - 12), (0, 0, 0, 0))
+    fan = K.rays(256, 14).resize((860, 860), Image.LANCZOS)
+    tinted = Image.new("RGBA", fan.size, (*K.SUN, 0))
+    tinted.putalpha(fan.point(lambda v: int(v * .22)))
+    plate.alpha_composite(tinted, (plate.width // 2 - 430, plate.height // 2 - 430 + 34))
+
+    shelf = K.glow(170, 1.7, (41, 5, 61), .34).resize((840, 170), Image.LANCZOS)
+    plate.alpha_composite(shelf, (plate.width // 2 - 420, plate.height // 2 - 85 + 84))
+    K.paste(sheet, plate, W / 2, cy)
+
+    tiers = ["wood", "silver", "gold", "royal"]
+    art = chest_geometry()
+    n = len(tiers)
+
+    near, far = (n - 1) % 2, n - 1
+    span = far - near
+    bell = [math.cos((0.0 if span <= 0 else (abs(2 * i - (n - 1)) - near) / float(span)) * math.pi * .5)
+            for i in range(n)]
+    tall = [CHEST_SHORT + (CHEST_TALL - CHEST_SHORT) * b for b in bell]
+
+    # the grandest chest takes the crest and the rest fall away from it
+    seat = sorted(range(n), key=lambda k: (-bell[k], -k))
+    stands = [None] * n
+    for k, s_i in enumerate(seat):
+        stands[s_i] = tiers[n - 1 - k]
+
+    # the drawn width per drawn height, off the art itself
+    wide = []
+    for i in range(n):
+        im, box = art[stands[i]]
+        wide.append(tall[i] * (box[2] - box[0]) / float(box[3] - box[1]))
+
+    x = [0.0] * n
+    for i in range(1, n):
+        x[i] = x[i - 1] + (wide[i - 1] + wide[i]) * .5 - min(wide[i - 1], wide[i]) * CHEST_OVERLAP
+    mid = (x[0] - wide[0] * .5 + x[n - 1] + wide[n - 1] * .5) * .5
+
+    if verbose:
+        im, box = art["gold"]
+        print("  chest art %dx%d, drawn box %s" % (im.width, im.height, box))
+        print("  fill %.4f  wide %.4f  lift %.4f  aspect %.4f"
+              % ((box[3] - box[1]) / im.height,
+                 (box[2] - box[0]) / float(box[3] - box[1]),
+                 ((box[1] + box[3]) * .5 - im.height * .5) / (box[3] - box[1]),
+                 im.width / im.height))
+        print("  row %.0f wide, %.0f%% of the plate" % (x[-1] + wide[-1] / 2 + wide[0] / 2,
+                                                        100 * (x[-1] + wide[-1]) / ROW_WIDTH))
+
+    # the contact shadows first, all of them (they are siblings, not children)
+    for i in range(n):
+        foot = CHEST_FLOOR - CHEST_DIP * bell[i]
+        shade = K.glow(128, 1.9, (26, 5, 41), .42).resize(
+            (max(1, int(wide[i] * 1.30)), max(1, int(tall[i] * .22))), Image.LANCZOS)
+        K.paste(sheet, shade, W / 2 + x[i] - mid, cy - (foot - 2))
+
+    # shortest first, so each chest is drawn over the smaller one beside it
+    for i in sorted(range(n), key=lambda k: bell[k]):
+        im, box = art[stands[i]]
+        drawn = im.crop(box)
+        w = max(1, int(round(wide[i])))
+        h = max(1, int(round(tall[i])))
+        drawn = drawn.resize((w, h), Image.LANCZOS)
+
+        foot = CHEST_FLOOR - CHEST_DIP * bell[i]
+        px = W / 2 + x[i] - mid
+        py = cy - (foot + tall[i] * .5)
+
+        if stands[i] in ready:
+            K.paste(sheet, K.glow(int(tall[i] * 1.9), 1.7, K.GOLD, .55), px, py)
+        else:
+            drawn = K.tint(drawn, (230, 235, 245))
+        K.paste(sheet, drawn, px, py)
+
+    # the name, across the top
+    top = cy - TASKS_H / 2
+    K.text(sheet, txt("ui.tasks.title").upper(), W / 2, top + 26, 27, fill=K.GOLD)
+
+    # the starburst, top left
+    K.paste(sheet, K.tint(K.skin("Hud/burst", 104, 104), K.GOLD), W / 2 - ROW_WIDTH / 2 + 46, top + 44)
+    K.text(sheet, "+2", W / 2 - ROW_WIDTH / 2 + 46, top + 42, 30, fill=(43, 28, 5), outline=0)
 
 
 def feature(sheet, paired=True):
@@ -260,14 +352,14 @@ def play(sheet):
     K.text(sheet, "NEXT UP - THE FIRST WATCH", W / 2, ny, 27, fill=(255, 245, 220), outline=0)
 
 
-def screen(paired=True):
+def screen(paired=True, verbose=False):
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
     K.room(sheet)
     K.rail(sheet, top=True)
 
     top_bar(sheet)
     resources(sheet)
-    daily(sheet)
+    tasks(sheet, verbose=verbose)
     feature(sheet, paired)
     hero(sheet)
     play(sheet)
@@ -282,7 +374,7 @@ def main():
     ap.add_argument("--out", type=Path, default=Path("home.png"))
     args = ap.parse_args()
 
-    out = screen(paired=not args.no_event)
+    out = screen(paired=not args.no_event, verbose=True)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
     print(f"  wrote {args.out}  {out.width}x{out.height}  - look at it")

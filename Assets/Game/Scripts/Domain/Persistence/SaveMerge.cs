@@ -87,6 +87,11 @@ namespace GlimmerGrove.Persistence
                 // for the reason the two above it do.
                 streak = Daily.DailyStreak.Join(mine.streak, other.streak),
 
+                // The later period outright, and within a shared period the larger count per
+                // goal and the union of the claims — the daily counters' rule, one level up.
+                // The rule lives with the feature for the reason the ones above it do.
+                tasks = Tasks.TaskLedger.Join(mine.tasks, other.tasks),
+
                 // A floor per event, unioned by id and taken at its larger value — the
                 // fourth thing in this file shaped that way, and the rule lives with the
                 // feature for the reason the three above it do.

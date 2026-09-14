@@ -644,6 +644,72 @@ namespace GlimmerGrove
             });
         }
 
+        /// <summary>
+        /// A band of neon that runs left to right through the spectrum, for sweeping inside a
+        /// mask.
+        ///
+        /// <para>
+        /// <b>The alpha is the shape of the light, not just its edge.</b> It rises from nothing
+        /// at both ends to a peak in the middle and is squared, so what travels is a core with a
+        /// long falloff either side rather than a coloured rectangle with soft ends — which is
+        /// the difference between a light passing through a letter and a swatch sliding past it.
+        /// It never reaches 1: the letters underneath are white and are meant to stay legible as
+        /// white that has been lit, rather than being replaced by the colour.
+        /// </para>
+        /// <para>
+        /// Four stops rather than a hue rotation. A rotation through HSV spends most of its
+        /// length in the greens, which are the least neon thing in it; these are picked.
+        /// </para>
+        /// </summary>
+        public static Sprite Neon(int width = 256)
+        {
+            int w = Mathf.Max(8, width);
+            return MakeRGBA($"neon{w}", w, 4, (x, y) =>
+            {
+                float t = Mathf.Clamp01((x - .5f) / (w - 1));
+                var hue = NeonAt(t);
+
+                // **The core is opaque, and that is the whole difference between neon and a
+                // pastel.** This band is drawn over *white* lettering, so anything short of
+                // full alpha is the colour mixed with white — which is exactly how a saturated
+                // magenta arrives on screen as pale pink.
+                //
+                // **And it is a plateau rather than a peak, which is what makes it colourful.**
+                // A ramp that peaks in the middle is only ever opaque *in* the middle, so the
+                // only stops ever really seen are the middle ones — the first cut faded its
+                // pink and its yellow to nothing at the two ends and read as a blue-green
+                // glint, on a card asked for in colour. Held open across four fifths of its
+                // width, the whole spectrum is lit at once and travels as one band.
+                return new Color(hue.r, hue.g, hue.b, Mathf.Clamp01(Mathf.Sin(t * Mathf.PI) * 2.6f));
+            });
+        }
+
+        /// <summary>
+        /// The neon ramp's colour at <paramref name="t"/>.
+        ///
+        /// <para>
+        /// Five picked stops rather than a hue rotation. A rotation through HSV spends most of
+        /// its length in the greens, which are the least neon thing in it.
+        /// </para>
+        /// <para>
+        /// Private: it was public while a bloom outside the mask had to be tinted from the same
+        /// ramp, and that bloom is gone — an opaque sheet does not leak light around its own
+        /// cut-out. Nothing outside this file has any business asking what colour the band is.
+        /// </para>
+        /// </summary>
+        static Color NeonAt(float t)
+        {
+            t = Mathf.Clamp01(t);
+            float u = t * (NeonStops.Length - 1);
+            int i = Mathf.Min((int)u, NeonStops.Length - 2);
+            return Color.Lerp(NeonStops[i], NeonStops[i + 1], u - i);
+        }
+
+        static readonly Color[] NeonStops =
+        {
+            Pal.Hex("#FF2E9A"), Pal.Hex("#8A5BFF"), Pal.Hex("#20E0FF"), Pal.Hex("#4BFFA5"), Pal.Hex("#FFE24A"),
+        };
+
         /// <summary>Capsule aligned to +Y, used for conduit arms.</summary>
         public static Sprite Capsule(int thickness = 24, int length = 96)
         {

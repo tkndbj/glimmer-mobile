@@ -24,12 +24,21 @@ namespace GlimmerGrove.Wards
     /// unrelated ones would be a shelf nobody could hold in their head.
     /// </para>
     /// <para>
-    /// <b>It is one ladder climbed one rung at a time, and both walls apply to every rung.</b> A
-    /// turret is sealed until the one before it on the shelf is held (<see cref="Before"/>), and
-    /// every priced turret carries a keeper level — <em>including</em> the gem half, which is the
-    /// reverse of what shipped and the owner's decision. The two rules need each other: a shelf
-    /// where money alone could take the dearest rung first is not a ladder, and a ladder whose
-    /// gates do not climb is a ladder with no gates on it (<see cref="LadderProblem"/>).
+    /// <b>A keeper level is the whole of what opens a rung, and the sequential unlock is
+    /// gone.</b> It was there: a turret was sealed until the one before it on the shelf was held,
+    /// on the argument that a wall of twenty prices is not a next step. What that made, once the
+    /// walls were real, was two conditions saying nearly the same thing — a player at keeper
+    /// level twenty-two who had skipped one credit turret could not buy the gem turret they had
+    /// earned, and the shelf's answer named a turret they did not want. <b>The owner's
+    /// decision</b>: reach the level and the rung is open, in whatever order a player likes.
+    /// </para>
+    /// <para>
+    /// <b>So the three bands are the ladder now.</b> What used to be forced one rung at a time is
+    /// three stretches of keeper level a player climbs through — under twenty, twenty to thirty,
+    /// thirty to forty (<see cref="WardTier"/>) — and every priced turret carries a wall inside
+    /// its own band, gem half included. That is what <see cref="LadderProblem"/> holds the roster
+    /// to: the walls may not fall as the shelf climbs, and none of them may stand outside the
+    /// band whose header a player is reading it under.
     /// </para>
     /// <para>
     /// <b>And a turret is bought for one colour of the line rather than for the line.</b> See
@@ -171,17 +180,19 @@ namespace GlimmerGrove.Wards
         /// </para>
         /// <para>
         /// <b>The credit ladder is the ramp and the gem ladder is what is above it.</b> Credit
-        /// prices climb 1,200 to 9,000 against keeper levels 2 to 14; gem prices climb 600 to
-        /// 2,000 — the same band the grove's gem-priced land sits in (invariant 16j) — against
-        /// levels 15 to 24. Gems still buy a rung far sooner than credits could, which is what
-        /// makes them a shortcut; what they no longer do is skip the rungs below.
+        /// prices climb 1,200 to 9,000 against keeper levels 2 to 18, two levels a rung; gem
+        /// prices climb 600 to 2,000 — the same band the grove's gem-priced land sits in
+        /// (invariant 16j) — against levels 20 to 40. Gems still buy a rung far sooner than
+        /// credits could, which is what makes them a shortcut; what they no longer do is skip a
+        /// wall.
         /// </para>
         /// <para>
-        /// <b>The honest cost of that, said out loud: today's one chapter pays about 1,650 XP,
-        /// which is roughly keeper level seven.</b> So most of this shelf is currently gated by
-        /// how much content exists rather than by the wall, and the top of it waits on chapters
-        /// that have not shipped. Every number here is <em>content</em>, so that is a config push
-        /// to retune rather than a store review — see <c>progression.json</c>.
+        /// <b>The honest cost of the owner's re-banding, said out loud: today's three chapters
+        /// pay for about keeper level nine, so tiers two and three are shut to every player
+        /// alive.</b> That is the same state the home ladder is in and it is deliberate — a shelf
+        /// whose top is reachable on the content that exists is a shelf with nothing left in it
+        /// the week after. Every number here is <em>content</em>, so it is a config push to
+        /// retune rather than a store review; see <c>progression.json</c>.
         /// </para>
         /// <para>
         /// <b>And what decides the rung is how much of the hill an ability can reach, not how
@@ -226,32 +237,46 @@ namespace GlimmerGrove.Wards
             // Weakest ability first, which is the ladder's whole point. A rung buys a *kind* of
             // help rather than a bigger number, so they are sorted by how much of the hill each
             // kind can reach: fuel back, then fuel banked, then one raider hurt harder, then one
-            // raider slowed, then armour, then a second colour, then a lane, then a box, then
+            // raider slowed, then armour, then one raider stopped, then a lane, then a box, then
             // whatever is nearest.
+            //
+            // **A stun hits one raider and stands above armour anyway**, which is the one rung
+            // here whose place is an argument rather than a count: what it reaches is the *raid*
+            // rather than the raider. A slowed brute is still walking, swinging and casting at a
+            // rate; a stunned one has been taken out of all three for the length of it, and every
+            // other turret on the line collects those seconds as well.
+            //
+            // **Two keeper levels a rung, so tier one spans 2 to 18 and stops under twenty.**
+            // Nothing here is sealed behind anything: a player at level ten holds the wall to
+            // five of these and buys whichever of the five is worth having on the colour they are
+            // filling, which is the whole of what the shelf is for (invariant 26h).
             new WardModel("siphon",     WardAbility.Siphon, 4,  0,    0, 1200,  2,  2, 11, 13),
-            new WardModel("beacon",     WardAbility.Beacon, 5,  0,    0, 1800,  3,  3, 10, 14),
-            new WardModel("ember",      WardAbility.Ember,  3, 30,    0, 2400,  4,  4, 13,  8),
-            new WardModel("rime",       WardAbility.Frost,  4, 15,    0, 3200,  5,  5, 11, 11),
-            new WardModel("cleaver",    WardAbility.Rend,   5,  0,    0, 4000,  6,  6, 14,  8),
-            new WardModel("prism",      WardAbility.Prism,  6,  0,    0, 5000,  8,  7, 12,  9),
-            new WardModel("lance",      WardAbility.Pierce, 8,  5,    0, 6000, 10,  8, 10, 12),
-            new WardModel("mortar",     WardAbility.Splash, 5,  1,    0, 7500, 12,  9, 10, 11),
-            new WardModel("spark",      WardAbility.Beacon,10,  0,    0, 9000, 14, 10, 11, 15),
+            new WardModel("beacon",     WardAbility.Beacon, 5,  0,    0, 1800,  4,  3, 10, 14),
+            new WardModel("ember",      WardAbility.Ember,  3, 30,    0, 2400,  6,  4, 13,  8),
+            new WardModel("rime",       WardAbility.Frost,  4, 15,    0, 3200,  8,  5, 11, 11),
+            new WardModel("cleaver",    WardAbility.Rend,   5,  0,    0, 4000, 10,  6, 14,  8),
+            new WardModel("prism",      WardAbility.Stun,   0,  5,    0, 5000, 12,  7, 12,  9),
+            new WardModel("lance",      WardAbility.Pierce, 8,  5,    0, 6000, 14,  8, 10, 12),
+            new WardModel("mortar",     WardAbility.Splash, 4,  1,    0, 7500, 16,  9, 10, 11),
+            new WardModel("spark",      WardAbility.Beacon,10,  0,    0, 9000, 18, 10, 11, 15),
             // ---- bought: gems, and behind a keeper level of their own ----------------------
             // The same nine abilities in the same order, each a rung stronger, plus a third rung
-            // of the strongest one at the top of the shelf. The gate climbs past the earned
-            // ladder's top because these rungs sit above it on one shelf, and a rung that asked
-            // for a level an earlier rung had already demanded could never refuse anybody (5d).
-            new WardModel("leech",      WardAbility.Siphon, 8,  0,  600,    0, 15, 11, 12, 14),
-            new WardModel("lighthouse", WardAbility.Chain,  6,  2,  700,    0, 16, 12, 10,  9),
-            new WardModel("pyre",       WardAbility.Ember,  6, 40,  800,    0, 17, 13, 15,  8),
-            new WardModel("glacier",    WardAbility.Frost,  6, 25,  900,    0, 18, 14, 12, 12),
-            new WardModel("breaker",    WardAbility.Rend,  10,  0, 1000,    0, 19, 15, 16,  8),
-            new WardModel("spectrum",   WardAbility.Prism, 10,  0, 1100,    0, 20, 16, 13, 10),
-            new WardModel("harpoon",    WardAbility.Pierce,10,  4, 1200,    0, 21, 17, 11, 13),
-            new WardModel("howitzer",   WardAbility.Splash, 7,  1, 1400,    0, 22, 18, 11, 12),
-            new WardModel("arcstorm",   WardAbility.Chain,  8,  3, 1600,    0, 23, 19, 10, 10),
-            new WardModel("apex",       WardAbility.Chain, 10,  3, 2000,    0, 24, 20, 11, 10),
+            // of the strongest one at the top of the shelf.
+            //
+            // **Tier two spans 20 to 29 and tier three 30 to 40**, which is the owner's shape and
+            // the reason the bands stopped being punctuation: with no seal in front of them these
+            // walls are the only thing holding the gem half above the credit half, so the header
+            // a player reads and the level it asks for have to be one fact (`WardTier.Gates`).
+            new WardModel("leech",      WardAbility.Siphon, 8,  0,  600,    0, 20, 11, 12, 14),
+            new WardModel("lighthouse", WardAbility.Chain,  6,  2,  700,    0, 22, 12, 10,  9),
+            new WardModel("pyre",       WardAbility.Ember,  6, 40,  800,    0, 23, 13, 15,  8),
+            new WardModel("glacier",    WardAbility.Frost,  6, 25,  900,    0, 25, 14, 12, 12),
+            new WardModel("breaker",    WardAbility.Rend,  10,  0, 1000,    0, 26, 15, 16,  8),
+            new WardModel("spectrum",   WardAbility.Stun,   0, 10, 1100,    0, 28, 16, 13, 10),
+            new WardModel("harpoon",    WardAbility.Pierce,10,  4, 1200,    0, 29, 17, 11, 13),
+            new WardModel("howitzer",   WardAbility.Splash, 7,  1, 1400,    0, 30, 18, 11, 12),
+            new WardModel("arcstorm",   WardAbility.Chain,  8,  3, 1600,    0, 35, 19, 10, 10),
+            new WardModel("apex",       WardAbility.Chain, 10,  3, 2000,    0, 40, 20, 11, 10),
         });
 
         // ------------------------------------------------------------- building
@@ -415,57 +440,30 @@ namespace GlimmerGrove.Wards
 
         // ------------------------------------------------------------- the ladder
         /// <summary>
-        /// The turret immediately before this one on the shelf that somebody has to buy, or null
-        /// for the first rung.
-        ///
-        /// <para>
-        /// <b>This is the sequential unlock, and it is one rung rather than a set.</b> A turret is
-        /// sealed until the one before it is held, and that one until the one before <em>it</em> —
-        /// so the whole prefix follows by induction and the shelf never has to be walked. It is
-        /// <c>HomesteadRegion</c>'s ladder exactly (invariant 16j): ground is offered one rung at
-        /// a time because a wall of nine prices asks a player to compare things they cannot
-        /// picture, where one offer at a time is a next step.
-        /// </para>
-        /// <para>
-        /// <b>Free turrets are skipped, because a rung nobody buys can never be climbed.</b> A
-        /// starter is held from the first launch, so it is not a rung; anything else with no price
-        /// would seal the whole shelf behind something that can never be bought, which is why both
-        /// content gates refuse a priced-at-nought entry that is not free outright.
-        /// </para>
-        /// </summary>
-        public WardModel Before(WardModel model)
-        {
-            if (model == null) return null;
-
-            WardModel previous = null;
-
-            for (int i = 0; i < _models.Length; i++)
-            {
-                var other = _models[i];
-
-                if (other.Order >= model.Order) break;
-                if (other.IsStarter) continue;
-
-                previous = other;
-            }
-
-            return previous;
-        }
-
-        /// <summary>
         /// What is wrong with the shelf read as one ladder, or null.
         ///
         /// <para>
-        /// <b>The keeper level has to climb, and that is forced rather than chosen.</b> A turret
-        /// is sealed until the rung before it is held, so reaching rung <em>n</em> means having
-        /// met every gate below it — and a rung asking for a level one below it already demanded
-        /// could therefore never refuse anybody. That is the decoration invariant 5d names,
-        /// arriving through a door that was shut for as long as only the credit half carried a
-        /// gate at all.
+        /// <b>Two rules, and both of them moved when the sequential unlock went.</b> A turret used
+        /// to be sealed until the rung below it was held, so reaching rung <em>n</em> meant having
+        /// met every wall under it — which is what made a wall that did not <em>strictly</em>
+        /// climb a wall that could never refuse anybody (invariant 5d). That argument is gone with
+        /// the seal: a level of twenty refuses everybody under twenty whatever stands beside it,
+        /// so two rungs may now share a wall and this asks only that none of them <em>falls</em>.
         /// </para>
         /// <para>
-        /// <b>Ties are refused for the same reason as a fall.</b> Two rungs at one level is the
-        /// second of them gating nothing, which is a wall drawn on a shelf that is not there.
+        /// <b>A fall is still refused, and for a plainer reason than 5d.</b> The shelf is ordered
+        /// by how much of the hill an ability reaches and its prices climb with it (invariant
+        /// 37ax), so a wall that drops as the shelf rises opens a dearer, further-reaching turret
+        /// <em>earlier</em> than a cheaper one under it — which a player reads as arbitrary, and
+        /// which is very nearly always a typed digit rather than a decision.
+        /// </para>
+        /// <para>
+        /// <b>And every wall has to stand inside its own band, which is the rule the removal
+        /// left uncovered.</b> With nothing forcing the order, the three headers are all a player
+        /// has to go on — TIER II now means "this stretch of the shelf opens between keeper level
+        /// twenty and twenty-nine" and nothing else says so. A rung authored outside its band
+        /// parses, prices, validates and plays; what it does is put a lie in a header
+        /// (<see cref="WardTier.OpensAtLevel"/>).
         /// </para>
         /// </summary>
         public string LadderProblem()
@@ -478,11 +476,21 @@ namespace GlimmerGrove.Wards
                 var model = _models[i];
                 if (model.IsStarter) continue;
 
-                if (model.MinLevel <= highest)
-                    return $"turret '{model.Id}' asks for keeper level {model.MinLevel}, which " +
-                           $"'{below}' below it on the shelf already asked for; a rung is sealed " +
-                           "until the one before it is bought, so a gate that does not climb can " +
-                           "never refuse anybody";
+                if (model.MinLevel < highest)
+                    return $"turret '{model.Id}' asks for keeper level {model.MinLevel}, under " +
+                           $"the {highest} that '{below}' below it on the shelf asks for; the " +
+                           "shelf climbs by reach and by price, so a wall that falls opens the " +
+                           "dearer turret first";
+
+                int band = WardTier.Of(model);
+                int opens = WardTier.OpensAtLevel(band);
+                int closes = WardTier.ClosesAtLevel(band);
+
+                if (model.MinLevel < opens || model.MinLevel > closes)
+                    return $"turret '{model.Id}' stands in band {band}, which opens between " +
+                           $"keeper level {opens} and {closes}, and asks for {model.MinLevel}; " +
+                           "a band is the only thing saying when a stretch of the shelf opens " +
+                           "now that no rung is sealed behind another";
 
                 highest = model.MinLevel;
                 below = model.Id;

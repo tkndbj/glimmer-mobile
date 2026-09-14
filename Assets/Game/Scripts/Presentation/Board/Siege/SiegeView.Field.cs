@@ -120,6 +120,16 @@ namespace GlimmerGrove
             // What went, and where its fuel is going. The motes are the point of the whole
             // animation: a match is only ever worth the colour it was, so the colour has to be
             // seen leaving the field and arriving at a ward.
+            // **Before the gems go, because a lance is the reason they are going.** The cross it
+            // draws is over the cells this beat is about to take, so drawn afterwards it would be
+            // a beam arriving at an empty row.
+            // **Reset before, never after.** `Sprung` sets it to the cell a charm went off in, and
+            // `ClearDelay` reads it to stagger this beat's clear by distance from there - so a
+            // beat that springs nothing has to answer "nobody", or the next ordinary match on the
+            // board would come apart in rings around a stone that is long gone.
+            _sprang = -1;
+            for (int i = 0; i < beat.Sprung.Count; i++) Sprung(beat.Sprung[i]);
+
             for (int i = 0; i < beat.Cleared.Count; i++)
             {
                 int cell = beat.Cleared[i];
@@ -127,27 +137,57 @@ namespace GlimmerGrove
                 if (gem == null || gem.Img == null) continue;
 
                 var at = CentreOf(cell);
-                var tint = TintOf(gem.Colour);
+
+                // **What the board says this cell was paid**, never what its picture happens to
+                // be. They are the same for every ordinary gem and they are not the same for a
+                // prism, which is drawn colourless and is worth the colour of the run it
+                // completed (`SiegeBeat.Paid`).
+                int paid = i < beat.Paid.Count ? beat.Paid[i] : gem.Colour;
+                var tint = paid >= 0 ? TintOf(paid) : Pal.Cream;
 
                 // **A gem comes apart rather than switching off**, which is what came back from
                 // play as "gems only disappear when they are matched". Three things at once and
                 // none of them is the gem: a ring of debris in the gem's own colour, a flash under
                 // it, and shards thrown outward. The gem itself does the smallest part - one
                 // frame of swelling and then it is behind all of that.
-                Shatter(at, tint, i * .012f);
+                // **Staggered by distance from the charm that took it, when one did.** A lance
+                // clears a whole row and a whole column at once, and index order across that is an
+                // arbitrary scatter; what the player has to see is the beam leaving the stone and
+                // the row failing behind it. An ordinary match answers the old `i * .012f`,
+                // because three touching cells in any order look the same. See `ClearDelay`.
+                float late = ClearDelay(cell, i);
 
-                int ward = _layout.WardOf(SiegeLayout.Letters[gem.Colour]);
-                if (ward >= 0) Mote(at, ward, tint, i * .012f);
+                Shatter(at, tint, late);
+
+                int ward = paid >= 0 && paid < SiegeLayout.Letters.Length
+                         ? _layout.WardOf(SiegeLayout.Letters[paid])
+                         : -1;
+
+                // **Stretched by however far the clock has been bent**, because a mote is a
+                // drawing of fuel that the *model* credits at `FuelLands` - in model seconds. A
+                // charm slows or stops that clock, so a mote flown at real speed would cross the
+                // board and sit on a tube that does not fill for another second. `Stretched`
+                // answers one when nothing is dilated, so an ordinary match is untouched.
+                if (ward >= 0) Mote(at, ward, tint, late, Stretched(SiegeTuning.FuelFlight));
 
                 var img = gem.Img;
-                Tween.Scale(img.transform, 1.45f, .07f, Ease.OutQuad).OnDone(() =>
+
+                // **The gem itself waits for the wavefront too.** Shattering a cell on time while
+                // the stone it stands on vanishes immediately is the two halves of one event
+                // disagreeing, which is exactly the class of fault invariant 30i is about.
+                Tween.After(late, () =>
                 {
-                    if (img) Tween.Scale(img.transform, 0f, .10f, Ease.InBack);
+                    if (!img) return;
+
+                    Tween.Scale(img.transform, 1.45f, .07f, Ease.OutQuad).OnDone(() =>
+                    {
+                        if (img) Tween.Scale(img.transform, 0f, .10f, Ease.InBack);
+                    });
+                    Tween.RotateBy(img.rectTransform, Random.Range(-70f, 70f), .17f, Ease.OutQuad);
                 });
-                Tween.RotateBy(img.rectTransform, Random.Range(-70f, 70f), .17f, Ease.OutQuad);
 
                 _gems[cell] = null;
-                Tween.After(.23f, () => { if (img) Destroy(img.gameObject); });
+                Tween.After(late + .23f, () => { if (img) Destroy(img.gameObject); });
             }
 
             // The cogs this beat took, drawn as a journey rather than as a disappearance: what
@@ -168,6 +208,19 @@ namespace GlimmerGrove
 
             if (beat.Depth > 1) Chain(beat.Depth);
 
+            // **A charm is watched out before the board refills**, which is the one thing this
+            // coroutine does that is not paced by `BeatFor`. A lance takes a whole row and a whole
+            // column and the cross fails outward from the stone over most of a second; dropping
+            // into that would be gems falling through a beam that is still travelling, which is
+            // the picture the owner asked for the opposite of.
+            //
+            // **It is affordable because the run's own clock is slowed or stopped for exactly the
+            // same window** (`Dilate`): the model is handed fewer seconds rather than the same
+            // seconds later, so the hill has not walked while the player was watching. Taken and
+            // waited on as a deadline rather than counted down, so a stormglass whose barrage
+            // only exists a beat later can push it out from under the wait (see `_holdUntil`).
+            while (HoldLeft > 0f) yield return null;
+
             // Halves of `BeatFor`, because the board books this beat's fuel to land a whole
             // `BeatFor` after the last one - see `SiegeTuning.FuelLands`. Typed here they would
             // drift, and a mote that arrives after its fuel does is the bug this schedule exists
@@ -185,7 +238,8 @@ namespace GlimmerGrove
 
                 if (drop.IsNew)
                 {
-                    gem = Mint(drop.Colour);
+                    gem = Mint(SiegeCharms.IsWild(drop.Charm) ? PrismColour : drop.Colour,
+                               drop.Charm);
                     gem.Img.rectTransform.anchoredPosition =
                         CentreOf(drop.Column) + new Vector2(0f, Cell * (1.1f - drop.From));
                 }
@@ -325,8 +379,10 @@ namespace GlimmerGrove
         }
 
         /// <summary>A gem's worth of fuel, flying from the field to the ward it feeds.</summary>
-        void Mote(Vector2 from, int ward, Color tint, float delay)
+        void Mote(Vector2 from, int ward, Color tint, float delay, float flight = 0f)
         {
+            if (flight <= 0f) flight = SiegeTuning.FuelFlight;
+
             // **The tube, wherever the tube is** - see `TubeY`. It was a typed offset from the
             // ward, and the day the tube moved that would have left every mote in this mode flying
             // to a point with nothing at it. A mote that lands somewhere other than the meter it is
@@ -344,7 +400,7 @@ namespace GlimmerGrove
             // travelling rather than as one line being drawn.
             float bow = Random.Range(-Cell * 1.1f, Cell * 1.1f);
 
-            Tween.Run(SiegeTuning.FuelFlight, Ease.InOutSine, t =>
+            Tween.Run(flight, Ease.InOutSine, t =>
             {
                 if (!rt) return;
                 var p = Vector2.Lerp(from, to, t);
@@ -505,7 +561,8 @@ namespace GlimmerGrove
         /// <summary>
         /// What is standing in this cell, as the number <see cref="GemArt"/> is keyed on.
         /// </summary>
-        int Face(int cell) => _board.ColourAt(cell);
+        int Face(int cell)
+            => SiegeCharms.IsWild(_board.CharmAt(cell)) ? PrismColour : _board.ColourAt(cell);
 
         /// <summary>
         /// Shows or hides the lock over a gem, minting it the first time one is needed.
@@ -539,7 +596,7 @@ namespace GlimmerGrove
             if (webbed) Tween.Pop(gem.Web.transform, .0f, .34f);
         }
 
-        Gem Mint(int colour)
+        Gem Mint(int colour, SiegeCharm charm = SiegeCharm.None)
         {
             // A cog is drawn a shade smaller than a jewel, so the socket shows around it: it is
             // the one thing on this field that is not a gem, and the gap is the cheapest way of
@@ -550,7 +607,15 @@ namespace GlimmerGrove
                                 new Vector2(side, side));
             img.preserveAspect = true;
 
-            return new Gem { Img = img, Colour = colour };
+            var gem = new Gem { Img = img, Colour = colour };
+
+            // **Dressed here rather than by the caller**, because a gem is minted in three places
+            // - the deal, every refill and the upkeep pass - and a charm one of them forgot would
+            // be a rule with no picture on exactly the gems a player is dealt rather than the ones
+            // they start with.
+            if (charm != SiegeCharm.None) Charmed(gem, charm);
+
+            return gem;
         }
 
         /// <summary>Repaints one cell's face and its lock. The one door both readings go through.</summary>
@@ -571,6 +636,12 @@ namespace GlimmerGrove
                 float side = Cell * (face == CogColour ? GemInset * .88f : GemInset);
                 gem.Img.rectTransform.sizeDelta = new Vector2(side, side);
             }
+
+            // **The one door both readings go through, which is what this method is for.** A
+            // charm can arrive on a cell without its colour changing - a shuffle moves the two
+            // together (`SiegeBoard.Trade`) - so a repaint that only looked at the face would
+            // leave a mark on the wrong gem, which is a rule the board has and the screen denies.
+            Charmed(gem, _board.CharmAt(cell));
         }
 
         void Place(int cell)

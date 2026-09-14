@@ -1,8 +1,8 @@
-# app-ads.txt — Glimmer Grove
+# app-ads.txt - Gemfire (Tekoworld)
 #
 # WHAT THIS IS. An IAB Tech Lab authorised-sellers file. Programmatic buyers fetch it from
 # the developer website named in the app's store listing and refuse inventory sold by anyone
-# it does not list. A missing or unreachable file does not produce an error anywhere — it
+# it does not list. A missing or unreachable file does not produce an error anywhere - it
 # produces lower fill and lower prices, silently, for ever. That is why it is in the
 # repository rather than pasted onto a server once: it has to be reviewed in a diff beside
 # the mediation change that made it wrong.
@@ -11,14 +11,14 @@
 #
 #     https://<developer-website>/app-ads.txt
 #
-# on the exact domain in the "Developer website" field of BOTH store listings — Google Play
+# on the exact domain in the "Developer website" field of BOTH store listings - Google Play
 # and App Store Connect. The crawlers read the listing to find the domain, so a file on the
 # right server behind the wrong listing is invisible. It must return 200 with
 # Content-Type: text/plain, follow at most one redirect, and not be behind Cloudflare's bot
 # protection, which is the commonest reason a correctly written file is never read.
 #
 # HOW TO FILL IT IN. Every line below is a placeholder. Each mediation network publishes its
-# own required lines and they are not guessable — take them from each network's dashboard
+# own required lines and they are not guessable - take them from each network's dashboard
 # (usually "app-ads.txt" or "Authorised sellers" in the account or monetisation settings) and
 # paste them verbatim. Do not edit the numbers: the middle field is that network's publisher
 # id for THIS account, and a wrong one authorises somebody else to sell your inventory.
@@ -30,7 +30,7 @@
 #
 # KEEP IT IN STEP. Every network added to the waterfall adds lines here, and a network
 # removed leaves its lines behind harmlessly. The failure mode is always the same shape and
-# always silent — inventory that cannot be bought — so the rule is: change the waterfall,
+# always silent - inventory that cannot be bought - so the rule is: change the waterfall,
 # change this file, in the same commit.
 
 # ---------------------------------------------------------------- ironSource / Unity LevelPlay
@@ -57,7 +57,7 @@ google.com, pub-4604184534032643, DIRECT, f08c47fec0942fa0
 
 # ---------------------------------------------------------------- not yet installed
 # Nothing below is in the project yet. Each one needs an adapter added to Unity, keys entered
-# in LevelPlay, AND its lines added here — all three, or the network cannot buy. Left in as a
+# in LevelPlay, AND its lines added here - all three, or the network cannot buy. Left in as a
 # checklist rather than deleted, because the list of what is missing is the useful part.
 #
 # AppLovin             applovin.com, PLACEHOLDER, DIRECT

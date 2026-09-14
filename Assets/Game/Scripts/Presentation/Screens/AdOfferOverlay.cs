@@ -605,7 +605,7 @@ namespace GlimmerGrove
 
                 if (_watch.Label)
                 {
-                    _watch.Label.text = Loc.Get("ui.daily.collect");
+                    _watch.Label.text = Loc.Get("ui.chest.collect");
 
                     // Back to a plain centred caption. FitLabel is a no-op without a glyph,
                     // so the box it left behind has to be restored by hand.

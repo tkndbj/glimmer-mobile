@@ -47,5 +47,17 @@ namespace GlimmerGrove.Modes
 
         /// <summary><b>Retired with <see cref="Weave"/>.</b></summary>
         Bombard,
+
+        /// <summary>
+        /// Takes every loose thing off the hill — the cogs and the bombs nobody has picked up.
+        /// The gravemaw's, and aimed at no ward.
+        /// </summary>
+        Devour,
+
+        /// <summary>
+        /// Puts a fresh group of raiders at the top of the hill. The bonecaller's, and aimed at no
+        /// ward.
+        /// </summary>
+        Raise,
     }
 }

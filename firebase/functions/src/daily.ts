@@ -133,6 +133,18 @@ export function rollChest(
   const chest = config.chests[chestIndex];
   if (!chest) return [];
 
+  return rollChestWith(chest, (stream) => new ChestRandom(playerKey, dayKey, chestIndex, stream));
+}
+
+/**
+ * One chest, rolled with whatever generator the caller seeds per stream.
+ *
+ * The daily chest seeds by day and index; a task's chest seeds by subject (`tasks.ts`).
+ * Both are this loop — the guaranteed bands on streams 100+, then one weighted pick on
+ * stream 0 with its amount on stream 1 — and a second copy of it would be a second place
+ * the stream numbers the client mirrors could drift.
+ */
+export function rollChestWith(chest: ChestConfig, seed: (stream: number) => Rolls): RolledDrop[] {
   const drops: RolledDrop[] = [];
 
   /**
@@ -158,7 +170,7 @@ export function rollChest(
   const guaranteed = chest.guaranteed ?? [];
   for (let i = 0; i < guaranteed.length; i++) {
     const band = clampBand(guaranteed[i]);
-    const random = new ChestRandom(playerKey, dayKey, chestIndex, streamForGuaranteed(i));
+    const random = seed(streamForGuaranteed(i));
     merge(band.kind, random.between(band.min, band.max), band.item);
   }
 
@@ -167,7 +179,7 @@ export function rollChest(
   for (const option of options) totalWeight += option.weight < 1 ? 1 : Math.floor(option.weight);
 
   if (options.length > 0 && totalWeight > 0) {
-    const chooser = new ChestRandom(playerKey, dayKey, chestIndex, STREAM_PICK);
+    const chooser = seed(STREAM_PICK);
     let target = chooser.below(totalWeight);
 
     let chosen = options[options.length - 1];
@@ -177,7 +189,7 @@ export function rollChest(
     }
 
     const band = clampBand(chosen);
-    const amountRandom = new ChestRandom(playerKey, dayKey, chestIndex, STREAM_AMOUNT);
+    const amountRandom = seed(STREAM_AMOUNT);
     merge(band.kind, amountRandom.between(band.min, band.max), band.item);
   }
 

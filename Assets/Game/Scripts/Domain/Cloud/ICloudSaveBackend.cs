@@ -217,6 +217,26 @@ namespace GlimmerGrove.Cloud
         public List<string> ConfirmedGrantIds = new List<string>();
 
         /// <summary>
+        /// Award ids the server has <b>refused</b>, and will refuse again tomorrow.
+        ///
+        /// <para>
+        /// Until now a refused claim stayed in the ledger: it counted toward the local
+        /// balance, was resubmitted on every sync, and was refused every time — a number
+        /// the wallet showed and the server would never honour, for the life of the
+        /// account. The server's answer governs (invariant 19b, applied to money), so an id
+        /// here is dropped from the pending grants and the balance it inflated goes with it.
+        /// </para>
+        /// <para>
+        /// Only a claim the server <em>refused</em> lands here, never one it left
+        /// unconfirmed — that distinction is the whole of invariant 13a, and it is the
+        /// server's to make. Repeated on every currency row for
+        /// <see cref="RevokedContainers"/>' reason: the reply is a list of currency rows and
+        /// the refusal list is not per currency. A reader may take it from any row.
+        /// </para>
+        /// </summary>
+        public List<string> RejectedGrantIds = new List<string>();
+
+        /// <summary>
         /// Heart containers the server has <b>revoked</b> — receipts it granted and has since
         /// reversed because the store refunded or charged back the payment.
         ///

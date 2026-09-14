@@ -8,6 +8,7 @@ using GlimmerGrove.Store;
 using GlimmerGrove.Utilities;
 using GlimmerGrove.Wards;
 using UnityEngine;
+using TaskTable = GlimmerGrove.Tasks.TaskTable;   // the property below is also called Tasks
 
 namespace GlimmerGrove.Progression
 {
@@ -88,7 +89,7 @@ namespace GlimmerGrove.Progression
                          StoreCatalog store,
                          AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
                          ContinueTable carryOn, UtilityCatalog utilities,
-                         WardCatalog wards)
+                         WardCatalog wards, TaskTable tasks)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -105,6 +106,7 @@ namespace GlimmerGrove.Progression
             Continue = carryOn ?? ContinueTable.Default;
             Utilities = utilities ?? UtilityCatalog.Default;
             Wards = wards ?? WardCatalog.Default;
+            Tasks = tasks ?? TaskTable.Default;
         }
 
         /// <summary>
@@ -115,6 +117,14 @@ namespace GlimmerGrove.Progression
         /// precisely the window an economy exploit lives in.
         /// </summary>
         public DailyChestTable Daily { get; }
+
+        /// <summary>
+        /// The task slates and their chest ladder. Rides with the curve for the daily
+        /// block's reason: the slate is the most retuned surface in a live game, and a
+        /// build that has to go through two store reviews to change a task is a slate
+        /// that never changes.
+        /// </summary>
+        public TaskTable Tasks { get; }
 
         /// <summary>
         /// The utilities a player may hold, published with the curve for the chest table's
@@ -261,7 +271,8 @@ namespace GlimmerGrove.Progression
             chapterGate: ChapterGateTable.Default,
             carryOn: ContinueTable.Default,
             utilities: UtilityCatalog.Default,
-            wards: WardCatalog.Default);
+            wards: WardCatalog.Default,
+            tasks: TaskTable.Default);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -486,9 +497,14 @@ namespace GlimmerGrove.Progression
             // than by `JsonUtility` cannot be dereferenced through.
             WardStars.Resolve(dto.wards, problems);
 
+            // And the slates. Read last because their chests are read with the daily
+            // table's own band reader, and an unreadable block costs the live slate and
+            // never the feature — the built-in slate is a working screen.
+            var tasks = TaskTable.Resolve(dto.tasks, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
-                          store, prompts, chapterGate, carryOn, utilities, wards);
+                          store, prompts, chapterGate, carryOn, utilities, wards, tasks);
             return true;
         }
 
@@ -501,7 +517,7 @@ namespace GlimmerGrove.Progression
                                       StoreCatalog store,
                                       AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
                                       ContinueTable carryOn, UtilityCatalog utilities,
-                                      WardCatalog wards)
+                                      WardCatalog wards, TaskTable tasks)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -520,7 +536,7 @@ namespace GlimmerGrove.Progression
 
             return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
                                         golden, hearts, hints, store, prompts,
-                                        chapterGate, carryOn, utilities, wards);
+                                        chapterGate, carryOn, utilities, wards, tasks);
         }
     }
 }

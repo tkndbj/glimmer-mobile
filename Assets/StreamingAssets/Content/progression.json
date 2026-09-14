@@ -524,7 +524,7 @@
         "ability": "beacon",
         "magnitude": 5,
         "coinPrice": 1800,
-        "minLevel": 3,
+        "minLevel": 4,
         "power": 10,
         "guard": 14,
         "order": 3
@@ -535,7 +535,7 @@
         "magnitude": 3,
         "extent": 30,
         "coinPrice": 2400,
-        "minLevel": 4,
+        "minLevel": 6,
         "power": 13,
         "guard": 8,
         "order": 4
@@ -546,7 +546,7 @@
         "magnitude": 4,
         "extent": 15,
         "coinPrice": 3200,
-        "minLevel": 5,
+        "minLevel": 8,
         "power": 11,
         "guard": 11,
         "order": 5
@@ -556,17 +556,17 @@
         "ability": "rend",
         "magnitude": 5,
         "coinPrice": 4000,
-        "minLevel": 6,
+        "minLevel": 10,
         "power": 14,
         "guard": 8,
         "order": 6
       },
       {
         "id": "prism",
-        "ability": "prism",
-        "magnitude": 1,
+        "ability": "stun",
+        "extent": 5,
         "coinPrice": 5000,
-        "minLevel": 8,
+        "minLevel": 12,
         "power": 12,
         "guard": 9,
         "order": 7
@@ -577,7 +577,7 @@
         "magnitude": 8,
         "extent": 5,
         "coinPrice": 6000,
-        "minLevel": 10,
+        "minLevel": 14,
         "power": 10,
         "guard": 12,
         "order": 8
@@ -585,10 +585,10 @@
       {
         "id": "mortar",
         "ability": "splash",
-        "magnitude": 5,
+        "magnitude": 4,
         "extent": 1,
         "coinPrice": 7500,
-        "minLevel": 12,
+        "minLevel": 16,
         "power": 10,
         "guard": 11,
         "order": 9
@@ -598,7 +598,7 @@
         "ability": "beacon",
         "magnitude": 10,
         "coinPrice": 9000,
-        "minLevel": 14,
+        "minLevel": 18,
         "power": 11,
         "guard": 15,
         "order": 10
@@ -608,7 +608,7 @@
         "ability": "siphon",
         "magnitude": 8,
         "gemPrice": 600,
-        "minLevel": 15,
+        "minLevel": 20,
         "power": 12,
         "guard": 14,
         "order": 11
@@ -619,7 +619,7 @@
         "magnitude": 6,
         "extent": 2,
         "gemPrice": 700,
-        "minLevel": 16,
+        "minLevel": 22,
         "power": 10,
         "guard": 9,
         "order": 12
@@ -630,7 +630,7 @@
         "magnitude": 6,
         "extent": 40,
         "gemPrice": 800,
-        "minLevel": 17,
+        "minLevel": 23,
         "power": 15,
         "guard": 8,
         "order": 13
@@ -641,7 +641,7 @@
         "magnitude": 6,
         "extent": 25,
         "gemPrice": 900,
-        "minLevel": 18,
+        "minLevel": 25,
         "power": 12,
         "guard": 12,
         "order": 14
@@ -651,17 +651,17 @@
         "ability": "rend",
         "magnitude": 10,
         "gemPrice": 1000,
-        "minLevel": 19,
+        "minLevel": 26,
         "power": 16,
         "guard": 8,
         "order": 15
       },
       {
         "id": "spectrum",
-        "ability": "prism",
-        "magnitude": 2,
+        "ability": "stun",
+        "extent": 10,
         "gemPrice": 1100,
-        "minLevel": 20,
+        "minLevel": 28,
         "power": 13,
         "guard": 10,
         "order": 16
@@ -672,7 +672,7 @@
         "magnitude": 10,
         "extent": 4,
         "gemPrice": 1200,
-        "minLevel": 21,
+        "minLevel": 29,
         "power": 11,
         "guard": 13,
         "order": 17
@@ -683,7 +683,7 @@
         "magnitude": 7,
         "extent": 1,
         "gemPrice": 1400,
-        "minLevel": 22,
+        "minLevel": 30,
         "power": 11,
         "guard": 12,
         "order": 18
@@ -694,7 +694,7 @@
         "magnitude": 8,
         "extent": 3,
         "gemPrice": 1600,
-        "minLevel": 23,
+        "minLevel": 35,
         "power": 10,
         "guard": 10,
         "order": 19
@@ -705,11 +705,98 @@
         "magnitude": 10,
         "extent": 3,
         "gemPrice": 2000,
-        "minLevel": 24,
+        "minLevel": 40,
         "power": 11,
         "guard": 10,
         "order": 20
       }
+    ]
+  },
+  "tasks": {
+    "activePerPeriod": 3,
+    "tiers": [
+      {
+        "id": "wood",
+        "chest": {
+          "guaranteed": [ { "kind": "credits", "min": 70, "max": 110 } ],
+          "options": [
+            { "kind": "credits", "min": 50, "max": 90, "weight": 40 },
+            { "kind": "hearts", "min": 1, "max": 1, "weight": 25 },
+            { "kind": "utility", "item": "mending", "min": 1, "max": 1, "weight": 20 },
+            { "kind": "gems", "min": 1, "max": 2, "weight": 15 }
+          ]
+        }
+      },
+      {
+        "id": "silver",
+        "chest": {
+          "guaranteed": [
+            { "kind": "credits", "min": 140, "max": 200 },
+            { "kind": "utility", "item": "firepot", "min": 1, "max": 1 }
+          ],
+          "options": [
+            { "kind": "gems", "min": 2, "max": 4, "weight": 35 },
+            { "kind": "hearts", "min": 1, "max": 2, "weight": 25 },
+            { "kind": "utility", "item": "surge", "min": 1, "max": 1, "weight": 20 },
+            { "kind": "heart_boost", "min": 12, "max": 12, "weight": 20 }
+          ]
+        }
+      },
+      {
+        "id": "gold",
+        "chest": {
+          "guaranteed": [
+            { "kind": "credits", "min": 280, "max": 380 },
+            { "kind": "gems", "min": 3, "max": 5 }
+          ],
+          "options": [
+            { "kind": "utility", "item": "stormcall", "min": 1, "max": 1, "weight": 30 },
+            { "kind": "gems", "min": 5, "max": 8, "weight": 30 },
+            { "kind": "hearts", "min": 2, "max": 3, "weight": 20 },
+            { "kind": "heart_boost", "min": 24, "max": 24, "weight": 20 }
+          ]
+        }
+      },
+      {
+        "id": "royal",
+        "chest": {
+          "guaranteed": [
+            { "kind": "credits", "min": 550, "max": 750 },
+            { "kind": "gems", "min": 8, "max": 12 },
+            { "kind": "utility", "item": "stormcall", "min": 1, "max": 1 }
+          ],
+          "options": [
+            { "kind": "gems", "min": 12, "max": 20, "weight": 40 },
+            { "kind": "utility", "item": "firepot", "min": 3, "max": 3, "weight": 25 },
+            { "kind": "hearts", "min": 5, "max": 5, "weight": 15 },
+            { "kind": "heart_boost", "min": 24, "max": 24, "weight": 20 }
+          ]
+        }
+      }
+    ],
+    "daily": [
+      { "id": "d_play", "goal": "runs", "target": 2, "tier": "wood" },
+      { "id": "d_win", "goal": "wins", "target": 1, "tier": "wood" },
+      { "id": "d_stars", "goal": "stars", "target": 5, "tier": "silver" },
+      { "id": "d_matches", "goal": "matches", "target": 60, "tier": "wood" },
+      { "id": "d_raiders", "goal": "raiders", "target": 40, "tier": "wood" },
+      { "id": "d_charms", "goal": "charms", "target": 2, "tier": "silver" },
+      { "id": "d_cogs", "goal": "cogs", "target": 3, "tier": "wood" },
+      { "id": "d_bombs", "goal": "bombs", "target": 1, "tier": "silver" },
+      { "id": "d_utility", "goal": "utilities", "target": 1, "tier": "silver" },
+      { "id": "d_three", "goal": "three_stars", "target": 1, "tier": "silver" }
+    ],
+    "weekly": [
+      { "id": "w_play", "goal": "runs", "target": 12, "tier": "silver" },
+      { "id": "w_win", "goal": "wins", "target": 7, "tier": "gold" },
+      { "id": "w_stars", "goal": "stars", "target": 24, "tier": "gold" },
+      { "id": "w_raiders", "goal": "raiders", "target": 300, "tier": "gold" },
+      { "id": "w_bosses", "goal": "bosses", "target": 2, "tier": "royal" },
+      { "id": "w_charms", "goal": "charms", "target": 10, "tier": "gold" },
+      { "id": "w_three", "goal": "three_stars", "target": 3, "tier": "royal" },
+      { "id": "w_waves", "goal": "waves", "target": 12, "tier": "gold" },
+      { "id": "w_streak", "goal": "streak", "target": 5, "tier": "royal" },
+      { "id": "w_cogs", "goal": "cogs", "target": 20, "tier": "silver" }
     ]
   }
 }

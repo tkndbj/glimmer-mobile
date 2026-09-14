@@ -11,7 +11,6 @@ using GlimmerGrove.Ads;
 using GlimmerGrove.Store;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Video;
 
 namespace GlimmerGrove
 {
@@ -37,10 +36,22 @@ namespace GlimmerGrove
     /// </para>
     ///
     /// <para>
-    /// <b>The still and the clip are the same frame</b>, so there is no handover to hide and no
-    /// state to get right — see <see cref="BuildVideo"/>. Everything below is placed against the
-    /// still, which means the bar's arithmetic is checkable offline against a PNG rather than
-    /// against a decoder.
+    /// <b>It is a still, and the moving version of it has been withdrawn.</b> The key art used to
+    /// be laid over with a four-second clip of itself out of <c>StreamingAssets</c> — same frame,
+    /// so the handover was invisible — and what that cost was a platform decoder, a texture the
+    /// size of the display, a release path that had to be idempotent because it was reached two
+    /// ways, and four megabytes in every build, all on the one screen guaranteed to be built at
+    /// every launch and never returned to. The picture is the picture. Everything below is placed
+    /// against it, which means the bar's arithmetic is checkable offline against a PNG rather
+    /// than against a decoder.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>What the player meets first is not this screen but the curtain over it.</b> The black
+    /// plate this screen already used to cover its own settling frames now carries the publisher
+    /// card — see <see cref="StudioIdent"/> — so the ident costs the launch nothing: the content
+    /// loader runs underneath it, and the curtain lifts when the card is finished rather than on
+    /// the first frame that holds still.
     /// </para>
     ///
     /// <para>
@@ -74,8 +85,16 @@ namespace GlimmerGrove
         /// everything below happens in under a second and is then waited out, which is a
         /// loading screen that lies in the flattering direction.
         /// </para>
+        /// <para>
+        /// <b><see cref="MinimumShow"/> is counted from the moment the curtain lifts, not from
+        /// the moment the screen is built</b>, and that is the whole of what the ident changed
+        /// here. Counted from the build it would be spent behind the publisher card, so on a warm
+        /// device the loading screen would appear and be gone inside half a second — a bar the
+        /// player never sees fill, which is worse than no bar. It is shorter than it was for the
+        /// same reason: the launch now carries two beats and only one of them used to exist.
+        /// </para>
         /// </summary>
-        const float MinimumShow = 2.5f;
+        const float MinimumShow = 1.7f;
         const float FillRate = .55f;
         const float FinaleHold = .55f;
 
@@ -126,28 +145,31 @@ namespace GlimmerGrove
         /// The picture's own top row, and a shade of it for the sky band to darken into.
         ///
         /// <para>
-        /// <c>#30294D</c> is measured off the frame rather than picked: the top row averages
-        /// exactly that. It is only ever seen on a canvas so tall that the capped zoom leaves a
-        /// band of sky above the picture — which, with this frame's narrower wordmark, is past
-        /// anything a phone is — and behind the picture on a device that cannot decode at all.
+        /// <c>#02388F</c> is measured off the frame rather than picked: the top row averages
+        /// exactly that. It is seen on any canvas tall enough that the capped zoom leaves a band
+        /// of sky above the picture — which, with this frame's wide wordmark, is every phone
+        /// taller than about 19:9 — and behind the picture if the sprite is missing altogether.
+        /// <b>Re-measure all three whenever the cover is re-cut</b>; a join that is nearly right
+        /// is a seam, and a seam across the top of the launch screen is the one place there is
+        /// nothing else to look at.
         /// </para>
         /// </summary>
-        static readonly Color SkyJoin = Pal.Hex("#30294D");
-        static readonly Color SkyMid = Pal.Hex("#2A2444");
-        static readonly Color SkyTop = Pal.Hex("#231E3A");
+        static readonly Color SkyJoin = Pal.Hex("#02388F");
+        static readonly Color SkyMid = Pal.Hex("#022C72");
+        static readonly Color SkyTop = Pal.Hex("#021F52");
 
-        Image _cover, _mirror, _veil, _fill, _head, _sheen, _halo;
-        RectTransform _coverRT, _mirrorRT, _veilRT, _barRT, _fillRT, _headRT, _sheenRT, _haloRT;
+        Image _cover, _mirror, _veil, _fill, _head, _sheen, _halo, _scrim;
+        RectTransform _coverRT, _mirrorRT, _veilRT, _barRT, _fillRT, _headRT, _sheenRT, _haloRT, _scrimRT;
 
         Image _curtain;
-        VideoPlayer _video;
-        RawImage _screen;
-        RectTransform _screenRT;
+        CanvasGroup _curtainGroup;
+        StudioIdent _ident;
 
         float _shown, _target;
         float _fitW, _fitH, _fitInset = -1f;
         float _builtAt, _lastScale = -1f;
-        bool _fitApplied, _fitSettled, _lifting;
+        float _revealedAt = -1f;
+        bool _fitApplied, _fitSettled, _lifting, _identDone;
         bool _flared;
 
         protected override void Build()
@@ -180,6 +202,13 @@ namespace GlimmerGrove
             _art = AssetLibrary.Hold("splash");
             _art.Claim(AssetManifest.SplashBackdrop);
 
+            // The publisher card's mark, on the same scope and claimed in the same breath. It is
+            // claimed here rather than in StudioIdent because a scope has to own an address
+            // *before* anything asks for it, and the curtain is built after this method — so a
+            // claim made where the card is built would be a claim made too late, and the mark
+            // would go into the global set and stay there for the life of the process.
+            _art.Claim(AssetManifest.IdentWord);
+
             var sprite = AssetLibrary.Sprite(AssetManifest.SplashBackdrop);
             if (sprite == null) return;
 
@@ -206,106 +235,6 @@ namespace GlimmerGrove
             _cover = UIKit.Img("Cover", Content, sprite, Color.white,
                                new Vector2(1080f, 1920f), new Vector2(.5f, .5f), Vector2.zero);
             _coverRT = (RectTransform)_cover.transform;
-
-            BuildVideo();
-        }
-
-        /// <summary>
-        /// The moving version of the same picture, laid over the still one.
-        ///
-        /// <para>
-        /// <b>The still is not a placeholder, it is the first frame.</b> So the screen is
-        /// complete and correct before the decoder has done anything, the handover has nothing
-        /// to blend because both sides are the same image, and a device that cannot play the
-        /// clip at all simply keeps the picture — which is the only acceptable failure for a
-        /// launch screen, because there is nothing here for a player to retry.
-        /// </para>
-        /// <para>
-        /// It plays from <c>StreamingAssets</c> by URL rather than as a <c>VideoClip</c>
-        /// through <c>AssetLibrary</c>: the asset pipeline addresses sprites, clips and fonts,
-        /// and a fourth kind would be a change to the manifest, the audit and the loader for
-        /// one file that must be resident before any of them have run. It is
-        /// <see cref="VideoRenderMode.APIOnly"/>, so the player owns its own texture and this
-        /// screen never allocates a <c>RenderTexture</c> the size of the display.
-        /// </para>
-        /// <para>
-        /// It <b>loops</b>, and that is what lets the launch screen stay as short as it was.
-        /// The clip is four seconds and the screen is gone in about three on a warm device;
-        /// padding the wait out to fit the video would be a loading screen lying in the
-        /// flattering direction (see <see cref="MinimumShow"/>). The camera is locked and there
-        /// is no beat to miss, so a cut anywhere reads the same — and the iris covers it.
-        /// </para>
-        /// </summary>
-        void BuildVideo()
-        {
-            _screenRT = UIKit.Box("Screen", Content, new Vector2(1080f, 1920f),
-                                  new Vector2(.5f, .5f), Vector2.zero);
-            _screen = _screenRT.gameObject.AddComponent<RawImage>();
-            _screen.raycastTarget = false;
-            _screen.enabled = false;                       // until there is a frame to show
-
-            _video = _screen.gameObject.AddComponent<VideoPlayer>();
-            _video.source = VideoSource.Url;
-            _video.url = Application.streamingAssetsPath + "/" + AssetManifest.SplashVideoFile;
-            _video.renderMode = VideoRenderMode.APIOnly;
-            _video.audioOutputMode = VideoAudioOutputMode.None;
-            _video.playOnAwake = false;
-            _video.isLooping = true;
-            _video.waitForFirstFrame = true;
-            _video.skipOnDrop = true;
-
-            _video.errorReceived += OnVideoError;
-            _video.prepareCompleted += OnVideoPrepared;
-            _video.Prepare();
-        }
-
-        void OnVideoPrepared(VideoPlayer player) => player.Play();
-
-        // A failure is a line in the log and nothing else. The picture underneath is the frame
-        // the clip would have opened on, so there is nothing to fall back to and nothing for a
-        // player to retry.
-        void OnVideoError(VideoPlayer player, string message)
-        {
-            Debug.LogWarning("[Splash] video unavailable: " + message);
-            ReleaseVideo();
-        }
-
-        /// <summary>
-        /// Gives back the decoder, its texture and this screen's picture.
-        ///
-        /// <para>
-        /// <b>Everything here is native and none of it is collected.</b> A <c>VideoPlayer</c>
-        /// holds a platform decoder and a texture it allocated itself; both are released when
-        /// the component is destroyed, but only if it is not still running — a player left
-        /// playing keeps the decoder alive through the teardown on some Android drivers, which
-        /// is a hardware decoder and a few megabytes held for the rest of the session, on the
-        /// one screen guaranteed to be built at every launch. So it is stopped first, its
-        /// handlers dropped so nothing fires into a half-destroyed screen, and the
-        /// <c>RawImage</c>'s reference to its texture cleared before the texture goes.
-        /// </para>
-        /// <para>
-        /// Idempotent, because it is reached two ways — an error while preparing, and the
-        /// screen being swapped out — and the second follows the first whenever both happen.
-        /// </para>
-        /// </summary>
-        void ReleaseVideo()
-        {
-            if (_screen != null)
-            {
-                _screen.texture = null;
-                _screen.enabled = false;
-            }
-
-            if (_video == null) return;
-
-            _video.errorReceived -= OnVideoError;
-            _video.prepareCompleted -= OnVideoPrepared;
-
-            if (_video.isPlaying) _video.Stop();
-            _video.targetTexture = null;
-
-            Destroy(_video);
-            _video = null;
         }
 
         /// <summary>
@@ -315,11 +244,7 @@ namespace GlimmerGrove
         /// </summary>
         AssetHold _art;
 
-        void OnDestroy()
-        {
-            ReleaseVideo();
-            _art?.Dispose();
-        }
+        void OnDestroy() => _art?.Dispose();
 
         // ------------------------------------------------------------------- bar
         /// <summary>
@@ -345,6 +270,24 @@ namespace GlimmerGrove
             float h = SplashCover.BarHeight;
 
             _barRT = UIKit.Box("Bar", Content, new Vector2(600f, h), new Vector2(.5f, .5f), Vector2.zero);
+
+            // A soft darkness under the bar, before the warm halo over it.
+            //
+            // **The bar used to be able to rely on the picture behind it and can no longer.** It
+            // stands at the foot of the canvas and the bottom eighth of this cover is deep
+            // shadow, so on every phone this draws over something already black and is invisible.
+            // It is not invisible on a canvas squarer than about 5:4 — a foldable opened, a
+            // tablet in split view — where the crop needed to keep the wordmark on screen lifts
+            // the picture far enough that the bar lands on lit rock and grass instead. Measured:
+            // the bar sits at 0.96 of the picture's height on a phone and 0.68 on a 1:1 canvas.
+            //
+            // A scrim rather than moving the picture, because there is no placement that keeps
+            // both: at 1:1 nearly half the frame is cropped and any fit that puts dark ground
+            // under the bar has put the logo off the top. And a scrim is the version that stays
+            // right when the art is next re-cut, which is exactly how this was found.
+            _scrim = UIKit.Img("Scrim", _barRT, Art.Glow(128, 1.15f), new Color(0f, .02f, .06f, .58f),
+                               new Vector2(980f, 210f), new Vector2(.5f, .5f), Vector2.zero);
+            _scrimRT = (RectTransform)_scrim.transform;
 
             _halo = UIKit.Img("Halo", _barRT, Art.Glow(128, 2f), new Color(1f, .80f, .38f, .22f),
                               new Vector2(760f, 120f), new Vector2(.5f, .5f), Vector2.zero);
@@ -380,15 +323,29 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The black the app launches on, lifted off the picture. Built last so it is over
-        /// everything — the fade is of the whole screen arriving, bar included, not of the
-        /// artwork alone.
+        /// The black the app launches on, and the publisher card standing on it. Built last so it
+        /// is over everything — the fade is of the whole screen arriving, bar included, not of
+        /// the artwork alone.
+        ///
+        /// <para>
+        /// <b>A <c>CanvasGroup</c> rather than the plate's own colour</b>, because the curtain is
+        /// no longer one <c>Image</c>: the ident's rule and thirty-odd strokes hang off it, and
+        /// fading the plate alone would leave TEKOWORLD standing over the key art while the black
+        /// went out from under it.
+        /// </para>
         /// </summary>
         void BuildCurtain()
         {
             _curtain = UIKit.Img("Curtain", Content, Art.Pixel, Color.black);
             _curtain.raycastTarget = false;
+            _curtainGroup = _curtain.gameObject.AddComponent<CanvasGroup>();
+            _curtainGroup.blocksRaycasts = false;
             _builtAt = Time.unscaledTime;
+
+            // Boot.CanvasWidth rather than the rect, for the reason Fit is made of: this is the
+            // frame the canvas was created in, so nothing under it can be measured yet.
+            _ident = StudioIdent.Raise(_curtain.rectTransform, Boot.CanvasWidth,
+                                       () => _identDone = true);
         }
 
         /// <summary>
@@ -411,18 +368,35 @@ namespace GlimmerGrove
             bool steady = _fitSettled && Mathf.Approximately(scale, _lastScale);
             _lastScale = scale;
 
+            // The card is the floor, and it is far longer than <see cref="CurtainHold"/> — so the
+            // settling this method was written to hide is now over before anybody could see it,
+            // and the timeout below has stopped being the thing that decides when the curtain
+            // goes. It is kept because it still answers the question it was asked: a device that
+            // never stops changing its mind must not hold black for ever.
+            if (!_identDone) return;
+
             if (steady || Time.unscaledTime - _builtAt >= CurtainHold) LiftCurtain();
         }
 
-        /// <summary>Starts the fade, once — see <see cref="CurtainHold"/> for when.</summary>
+        /// <summary>
+        /// Starts the fade, once — see <see cref="CurtainHold"/> for when, and
+        /// <see cref="StudioIdent"/> for what has to have finished first.
+        ///
+        /// <para>
+        /// <b>The clock the loading screen is measured by starts here</b>, not when this screen
+        /// was built: everything before this moment happened behind the card. See
+        /// <see cref="MinimumShow"/>.
+        /// </para>
+        /// </summary>
         void LiftCurtain()
         {
             _lifting = true;
-            if (_curtain == null) return;
+            _revealedAt = Time.unscaledTime;
+            if (_curtainGroup == null) return;
 
             Tween.Run(FadeIn, Ease.InOutSine,
-                      t => { if (_curtain) _curtain.color = new Color(0f, 0f, 0f, 1f - t); }, _curtain)
-                 .OnDone(() => { if (_curtain) _curtain.enabled = false; });
+                      t => { if (_curtainGroup) _curtainGroup.alpha = 1f - t; }, _curtain)
+                 .OnDone(() => { if (_curtain) _curtain.gameObject.SetActive(false); });
         }
 
         // ------------------------------------------------------------------- fit
@@ -500,14 +474,6 @@ namespace GlimmerGrove
                 _coverRT.anchoredPosition = new Vector2(0f, plan.PictureY);
             }
 
-            // Exactly the picture's rect, because it is the picture — same frame, same aspect,
-            // so one plan places both and they can never drift apart by a unit.
-            if (_screenRT != null)
-            {
-                _screenRT.sizeDelta = new Vector2(plan.Width, plan.Height);
-                _screenRT.anchoredPosition = new Vector2(0f, plan.PictureY);
-            }
-
             bool banded = plan.SkyHeight > .5f;
 
             if (_mirrorRT != null)
@@ -527,6 +493,7 @@ namespace GlimmerGrove
             _barRT.sizeDelta = new Vector2(plan.BarWidth, SplashCover.BarHeight);
             _barRT.anchoredPosition = new Vector2(plan.BarX, plan.BarY);
             _haloRT.sizeDelta = new Vector2(plan.BarWidth + 160f, 120f);
+            _scrimRT.sizeDelta = new Vector2(plan.BarWidth + 380f, 210f);
         }
 
         // ------------------------------------------------------------- the light
@@ -536,31 +503,15 @@ namespace GlimmerGrove
 
             if (!_lifting) HoldCurtainUntilNothingMoves();
 
-            ShowVideoOnceItHasAFrame();
+            // The card's neon, driven from here because StudioIdent is not a behaviour — it is
+            // built onto the curtain rather than owning a node of its own, so there is nothing
+            // for Unity to send a message to. A no-op once the curtain has gone.
+            _ident?.Tick();
 
             _shown = Mathf.MoveTowards(_shown, _target, Time.unscaledDeltaTime * FillRate);
             DrawBar();
 
             if (!_flared && _shown > .999f) { _flared = true; Flare(); }
-        }
-
-        /// <summary>
-        /// Reveals the video the frame it actually has something to draw, and not before.
-        ///
-        /// <para>
-        /// <c>prepareCompleted</c> is not that moment — the player is ready but its texture can
-        /// still be blank for a frame, and a blank one drawn over the poster is a black flash
-        /// on the launch screen, which is the one thing the poster exists to prevent. Waiting
-        /// for a frame to have gone by is a two-term test and costs nothing.
-        /// </para>
-        /// </summary>
-        void ShowVideoOnceItHasAFrame()
-        {
-            if (_screen == null || _screen.enabled) return;
-            if (_video == null || !_video.isPlaying || _video.frame <= 0) return;
-
-            _screen.texture = _video.texture;
-            _screen.enabled = _screen.texture != null;
         }
 
         /// <summary>
@@ -637,8 +588,6 @@ namespace GlimmerGrove
         /// </summary>
         IEnumerator Run()
         {
-            float started = Time.unscaledTime;
-
             yield return LoadContent();                    // → .12
             yield return LoadGlobalAssets();               // → .82
 
@@ -686,7 +635,12 @@ namespace GlimmerGrove
             // owned there rather than written out at this call site.
             RewardedAds.BeginStart();
 
-            while (Time.unscaledTime - started < MinimumShow || _shown < .999f) yield return null;
+            // Against the reveal rather than against the build, so a launch is the card and then
+            // a bar somebody can actually watch fill. A device still holding the curtain has
+            // `_revealedAt` at its sentinel and waits here, which is the correct answer — there
+            // is no honest way to finish a loading screen nobody has seen.
+            while (_revealedAt < 0f || Time.unscaledTime - _revealedAt < MinimumShow
+                   || _shown < .999f) yield return null;
 
             yield return new WaitForSecondsRealtime(FinaleHold);
             Flow.Go<HomeScreen>();

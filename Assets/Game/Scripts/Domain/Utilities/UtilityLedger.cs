@@ -258,6 +258,8 @@ namespace GlimmerGrove.Utilities
             if (item == null) return false;
             if (_stock.Use(item.Id, 1) <= 0) return false;
 
+            Tasks.TaskLedger.Note(Tasks.TaskGoal.Utilities);
+
             SaveService.Save();
             Raise();
             return true;

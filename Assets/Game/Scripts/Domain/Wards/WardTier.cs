@@ -12,11 +12,19 @@ namespace GlimmerGrove.Wards
     /// <c>SiegeView.Barrels</c> is keyed the same way — the two are the same kind of question.
     /// </para>
     /// <para>
-    /// <b>Purely how the shelf is read, and nothing else may key on it.</b> A tier is not a gate,
-    /// a price or a stat: what opens a rung is the one below it plus a keeper level
-    /// (<c>WardCatalog.Before</c>), and what a turret does is its ability and its figures. Drawing
-    /// a band where one currency ends and another begins is a label on an order that already
-    /// exists, so it cannot disagree with anything.
+    /// <b>A band is a wall now, and it was a caption before.</b> The shelf used to be one ladder
+    /// climbed a rung at a time — a turret sealed until the one below it was held — so the three
+    /// headers were punctuation over an order that was already forced, and this file said in as
+    /// many words that nothing else might key on it. The seal is gone at the owner's decision: a
+    /// keeper level is the whole of what opens a rung, and a player buys whatever they have
+    /// reached in whatever order they like. What that leaves is three bands and three walls, so
+    /// the band is what the walls are authored against — <see cref="OpensAtLevel"/>.
+    /// </para>
+    /// <para>
+    /// <b>Still not a price and still not a stat.</b> What a turret does is its ability and its
+    /// figures, and what it costs is its own price; the band says only which stretch of keeper
+    /// levels its wall must stand in, which is the one thing a header claiming "TIER II" is
+    /// actually promising a player who reads it.
     /// </para>
     /// <para>
     /// <b>The boundaries are authored here and the first is not a coincidence.</b> Tier one is
@@ -38,6 +46,36 @@ namespace GlimmerGrove.Wards
         /// a chapter's levels are a list and its gate is a rule.
         /// </summary>
         static readonly int[] Opens = { 1, 11, 18 };
+
+        /// <summary>
+        /// The keeper level each band's rungs stand at or above, lowest first.
+        ///
+        /// <para>
+        /// <b>The owner's three stretches: under twenty, twenty to thirty, thirty to forty.</b>
+        /// A band's rungs may ask for anything from its own opening level up to the level the
+        /// band above it opens at, exclusive — and the top band up to <see cref="TopLevel"/>.
+        /// </para>
+        /// <para>
+        /// <b>Written here rather than in the roster, which is the point of it.</b> Every
+        /// turret's wall is authored one at a time in <c>progression.json</c>, so twenty numbers
+        /// carry a shape nobody stated; said once, the shape is a thing both content gates can
+        /// refuse a file for breaking (<c>WardCatalog.LadderProblem</c>). A header reading
+        /// "TIER II" over a rung asking for keeper level four is a promise the shelf is not
+        /// keeping, and it is exactly the fault no numeric gate could see while the walls were
+        /// only ever asked to climb.
+        /// </para>
+        /// </summary>
+        static readonly int[] Gates = { 1, 20, 30 };
+
+        /// <summary>
+        /// The highest keeper level any rung of the shelf may ask for.
+        ///
+        /// The top band's ceiling, and the one number here that is a decision rather than a
+        /// boundary: it says how far up the game's own progression the shelf is allowed to
+        /// reach, so a retune that put a turret at level ninety would be refused rather than
+        /// shipping a padlock nobody alive can open.
+        /// </summary>
+        public const int TopLevel = 40;
 
         /// <summary>
         /// Which band <paramref name="model"/> stands in, one to <see cref="Count"/>.
@@ -67,6 +105,30 @@ namespace GlimmerGrove.Wards
             if (tier > Count) tier = Count;
 
             return Opens[tier - 1];
+        }
+
+        /// <summary>The lowest keeper level a rung of this band may ask for.</summary>
+        public static int OpensAtLevel(int tier)
+        {
+            if (tier < 1) tier = 1;
+            if (tier > Count) tier = Count;
+
+            return Gates[tier - 1];
+        }
+
+        /// <summary>
+        /// The highest keeper level a rung of this band may ask for.
+        ///
+        /// <b>One under the band above, so the two stretches cannot overlap.</b> A wall shared by
+        /// the last rung of one band and the first of the next is a boundary a player cannot read
+        /// off the shelf: two headers, one condition.
+        /// </summary>
+        public static int ClosesAtLevel(int tier)
+        {
+            if (tier < 1) tier = 1;
+            if (tier > Count) tier = Count;
+
+            return tier == Count ? TopLevel : Gates[tier] - 1;
         }
 
         /// <summary>

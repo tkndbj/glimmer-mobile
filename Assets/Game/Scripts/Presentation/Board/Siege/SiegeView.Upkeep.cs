@@ -22,11 +22,16 @@ namespace GlimmerGrove
             // behind is put right here rather than trusted.
             for (int i = 0; i < _gems.Count && i < Width * Height; i++)
             {
-                if (_gems[i] == null) _gems[i] = Mint(Face(i));
+                if (_gems[i] == null) _gems[i] = Mint(Face(i), _board.CharmAt(i));
 
                 Dress(i);
                 Place(i);
             }
+
+            // **A charm that has arrived is announced here and nowhere else**, because a repaint
+            // *is* the board settling: every cell above has just been dressed and placed, so the
+            // gem a lesson rings is in its socket rather than in the air. See `Flush`.
+            Flush();
         }
 
         /// <summary>

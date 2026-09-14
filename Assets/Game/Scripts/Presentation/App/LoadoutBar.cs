@@ -80,11 +80,26 @@ namespace GlimmerGrove
         /// at the loadout drew its ring under the orange tab. <see cref="Spotlight"/> is the
         /// answer and this is its arithmetic, kept beside the placement it has to agree with.
         /// </para>
+        /// <para>
+        /// <b>Public because something other than a lesson's ring needs it now.</b> Anything placed
+        /// <em>above</em> this bar has to clear the tab rather than the plate — the endless hub's
+        /// key is the first thing in this game measured against the shelf from outside it
+        /// (<c>EndlessHub.Band</c>).
+        /// </para>
         /// </summary>
-        const float Overhang = TabH - TabLift;
+        public const float Overhang = TabH - TabLift;
 
-        /// <summary>What the bar is, before the display's own foot is added to it.</summary>
-        const float Bare = Pad + TurretCell + Gap + KitCell + Pad;
+        /// <summary>
+        /// What the bar is, before the display's own foot is added to it.
+        ///
+        /// <b>Public because it is the only half of this bar a fixture can ask about.</b>
+        /// <see cref="Height"/> reads the display's safe area, which is a native call — so a test
+        /// measuring anything against it is reported as "needs the Editor" and becomes a gate
+        /// nobody runs on the way past (invariant 29e). This is a constant, and on the canvas the
+        /// tightest layout has to survive — a squarish phone, which has no home indicator — it
+        /// <em>is</em> the height. <c>EndlessHubTests</c> is the caller.
+        /// </summary>
+        public const float Bare = Pad + TurretCell + Gap + KitCell + Pad;
 
         /// <summary>
         /// How much room the bar takes at the foot of the screen, the display's foot included.

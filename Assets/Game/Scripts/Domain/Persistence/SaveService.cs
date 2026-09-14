@@ -69,6 +69,7 @@ namespace GlimmerGrove.Persistence
             Homestead.GroveSave.LoadFrom(dto);
             Daily.DailyChests.LoadFrom(dto);
             Daily.DailyStreak.LoadFrom(dto);
+            Tasks.TaskLedger.LoadFrom(dto);
             Events.EventCollection.LoadFrom(dto);
             Ads.RewardedAds.LoadFrom(dto);
 
@@ -176,6 +177,7 @@ namespace GlimmerGrove.Persistence
             Homestead.GroveSave.WriteInto(dto);
             Daily.DailyChests.WriteInto(dto);
             Daily.DailyStreak.WriteInto(dto);
+            Tasks.TaskLedger.WriteInto(dto);
             Events.EventCollection.WriteInto(dto);
             Ads.RewardedAds.WriteInto(dto);
             ProgressionStore.WriteInto(dto);
@@ -214,6 +216,7 @@ namespace GlimmerGrove.Persistence
             Homestead.GroveSave.LoadFrom(dto);
             Daily.DailyChests.LoadFrom(dto);
             Daily.DailyStreak.LoadFrom(dto);
+            Tasks.TaskLedger.LoadFrom(dto);
             Events.EventCollection.LoadFrom(dto);
             Ads.RewardedAds.LoadFrom(dto);
 

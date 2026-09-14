@@ -14,6 +14,7 @@ import { todayKey } from "./daily";
 import { assertUsableConfig, earnedCredits, ProgressionConfig } from "./progression";
 import { readFloor, StreakFloor } from "./streak";
 import { readWheelPosition } from "./wheel";
+import { readTaskPaid, TaskPaid } from "./tasks";
 
 export interface CurrencyState {
   granted: number;
@@ -94,6 +95,13 @@ export type WalletDoc = Record<CurrencyId, CurrencyState> & {
    * </p>
    */
   wheel?: { day: number; spins: number };
+
+  /**
+   * Which task ids this server has paid, per period (`tasks.ts`). The bound on a task
+   * claim, and server-owned for the streak floor's reason. Carried through `readWallet`
+   * for the wheel's reason: every writer writes this document whole.
+   */
+  tasks?: TaskPaid;
 };
 
 /** What the client's `CloudWalletState` expects back. */
@@ -203,6 +211,14 @@ export function readWallet(
       spins: Math.max(0, Math.floor(wheel.spins)),
     };
   }
+
+  // The task allowance, carried through for exactly the reason the three fields above are:
+  // every writer of this document writes it *whole*, so a field this function does not copy
+  // is a field the next spend or claim silently deletes — and deleting this one hands every
+  // period's chests out a second time. Assigned only when there is something, for the
+  // `undefined` reason above.
+  const paid = readTaskPaid(raw?.tasks);
+  if (Object.keys(paid).length > 0) wallet.tasks = paid;
 
   // Whether this server has ever recorded currency for the account, which is what "brand new"
   // has always meant here. It used to be read off `snapshot.exists`, and that stopped being

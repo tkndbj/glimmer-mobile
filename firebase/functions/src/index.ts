@@ -36,6 +36,11 @@ import {
   parseStreakClaim, raise, readSavedStreak, saveSupports, StreakClaim,
   streakCurrencyValue, usableStreakConfig,
 } from "./streak";
+import {
+  allowsTask, findTask, findTier, insideWindow, isTaskGrantId, noteUndealt,
+  parseTaskClaim, pruneTaskPaid, recordTask, TaskClaim, taskCurrencyValue,
+  usableTaskConfig,
+} from "./tasks";
 import { grantEntries, readProduct } from "./products";
 import { ReceiptRejected, lookupAppleTransaction, validateReceipt } from "./receipts";
 import {
@@ -343,7 +348,8 @@ type CleanCommon = {
 
 type CleanAward =
   | (CleanCommon & { kind: "daily"; claim: DailyClaim })
-  | (CleanCommon & { kind: "streak"; claim: StreakClaim });
+  | (CleanCommon & { kind: "streak"; claim: StreakClaim })
+  | (CleanCommon & { kind: "task"; claim: TaskClaim });
 
 export const claimAwards = onCall(callOptions, async (request): Promise<{
   wallets: WalletReply[];
@@ -403,6 +409,25 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       return [{ ...common, kind: "streak", claim: streak, currency: streak.currency as CurrencyId }];
     }
 
+    // A task's chest: recomputed like a daily chest, bounded like a streak night. See
+    // `tasks.ts` for why the window is refused rather than left pending.
+    if (isTaskGrantId(id)) {
+      const task = parseTaskClaim(id);
+      if (!task) { rejected.push(id); return []; }
+
+      if (!CURRENCIES.includes(task.currency as CurrencyId)) { rejected.push(id); return []; }
+
+      if (!insideWindow(task, Date.now())) {
+        logger.warn("refused a task chest dated outside the window", {
+          uid, id, period: task.period, key: task.key, today,
+        });
+        rejected.push(id);
+        return [];
+      }
+
+      return [{ ...common, kind: "task", claim: task, currency: task.currency as CurrencyId }];
+    }
+
     const claim = parseDailyClaim(id);
     if (!claim) { rejected.push(id); return []; }
 
@@ -454,6 +479,11 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
 
     const daily = usableDailyConfig((config as { daily?: unknown }).daily);
     const ladder = usableStreakConfig((config as { streak?: unknown }).streak);
+    const tasks = usableTaskConfig((config as { tasks?: unknown }).tasks);
+
+    // Which task ids this server has paid per period. Threaded through the loop like the
+    // streak floor, because a batch pays several and each one narrows the allowance.
+    let paid = pruneTaskPaid(state.tasks ?? {}, Date.now());
 
     // Where this server last paid a streak night to. Threaded through the loop rather than
     // re-read, because a batch pays several nights and each one moves it.
@@ -474,7 +504,7 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       // guess would be inventing money, so the award is neither granted nor rejected: the
       // client keeps its local copy and tries again after the seeder has run. Rejecting
       // would be worse than doing nothing — it throws away a reward the player earned.
-      const table = award.kind === "streak" ? ladder : daily;
+      const table = award.kind === "streak" ? ladder : award.kind === "task" ? tasks : daily;
 
       if (!table) {
         logger.error(`config/progression has no usable ${award.kind} table; leaving the ` +
@@ -510,6 +540,37 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
 
         amount = streakCurrencyValue(ladder!, award.claim.night, award.currency);
         detail = { night: award.claim.night };
+      } else if (award.kind === "task") {
+        // The whole of the security, in one call: a period pays no more chests than the
+        // slate deals. The rotation itself is only logged (`noteUndealt`), because a slate
+        // edited by a content push re-deals every period after it and a claim in flight
+        // across that push would otherwise be refused for ever (13a).
+        if (!allowsTask(paid, award.claim, tasks!.activePerPeriod)) {
+          logger.warn("refused a task chest past the period's allowance", {
+            uid, id: award.id, period: award.claim.period, key: award.claim.key,
+            task: award.claim.taskId, paid: paid[`${award.claim.period}:${award.claim.key}`] ?? [],
+          });
+          rejected.push(award.id);
+          continue;
+        }
+
+        // A task the published slate has never held is a claim this server cannot price.
+        // Unconfirmed rather than refused: it is either a content pack the client fetched
+        // before the seeder ran, or a forged id — and the first must not be thrown away
+        // for the sake of the second, which pays nothing either way.
+        const entry = findTask(tasks!, award.claim.period, award.claim.taskId);
+        const tier = entry ? findTier(tasks!, entry.tier) : null;
+        if (!entry || !tier) {
+          logger.error("a task claim names a task or tier config/progression does not hold; " +
+                       "leaving it unconfirmed", { uid, id: award.id });
+          continue;
+        }
+
+        noteUndealt(uid, tasks!, award.claim);
+
+        amount = taskCurrencyValue(tier.chest, uid, award.claim.period, award.claim.key,
+                                   award.claim.taskId, award.currency);
+        detail = { period: award.claim.period, task: award.claim.taskId, tier: tier.id };
       } else {
         if (award.claim.chestIndex >= daily!.chests.length) {
           rejected.push(award.id);
@@ -558,9 +619,11 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       // Raised inside the same transaction that moves the money, so a night cannot be
       // paid without the floor moving with it.
       if (award.kind === "streak") floor = raise(floor, award.claim.dayKey, award.claim.night);
+      if (award.kind === "task") paid = recordTask(paid, award.claim);
     }
 
     state.streak = floor;
+    state.tasks = paid;
 
     transaction.set(walletRef, { ...state, updatedAt: FieldValue.serverTimestamp() });
     return state;

@@ -255,14 +255,13 @@ namespace GlimmerGrove
         /// reason the two abilities are not the same one twice (<c>WardAbility.Chain</c>'s note).
         /// </para>
         /// <para>
-        /// <b>A prism stands two colours</b>, because being strong against two is the whole of what
-        /// it buys and one target could only ever show one of them. <b>A rend stands a bulwark</b>,
-        /// for the same reason from the other end: the shield is the thing the ability is about, so
-        /// a preview without one is a turret whose note has nothing on screen to point at.
+        /// <b>A rend stands a bulwark</b>, for the same reason from the other end: the shield is
+        /// the thing the ability is about, so a preview without one is a turret whose note has
+        /// nothing on screen to point at.
         /// </para>
         /// <para>
         /// <b>Everything else stands one</b>, and it is deliberate that most of the roster does:
-        /// frost, ember, siphon and beacon all act on the raider that was hit or on the ward
+        /// frost, stun, ember, siphon and beacon all act on the raider that was hit or on the ward
         /// itself, so a second body would be a raider nothing happens to — the decoration invariant
         /// 5d names, drawn on the one screen that exists to say what a turret does.
         /// </para>
@@ -300,14 +299,6 @@ namespace GlimmerGrove
                     Column(Same(own, 3), .80f);
                     break;
 
-                case WardAbility.Prism:
-                    // Its own colour and the next **however many its magnitude names**, which is
-                    // the set `SiegeWard.StrongAgainst` walks. Drawn rather than counted, because
-                    // the whole reason this panel exists is that two rungs of one ability have to
-                    // look like two different purchases (invariant 37z).
-                    Row(Widened(own), 1.90f, 1.24f, .34f);
-                    break;
-
                 case WardAbility.Rend:
                     // The bulwark whose plating the ability is about. A rend previewed against a
                     // plain raider is a note with nothing on screen to point at.
@@ -318,30 +309,6 @@ namespace GlimmerGrove
                     Stand(own, Plain, 0f, .30f, 1.55f);
                     break;
             }
-        }
-
-        /// <summary>
-        /// Every colour a prism turret is strong against: its own first, then as many after it as
-        /// its magnitude names.
-        ///
-        /// <b>The same walk <c>SiegeWard.StrongAgainst</c> makes</b>, and an unauthored nought
-        /// means one for the same reason it does there.
-        /// </summary>
-        char[] Widened(char own)
-        {
-            int at = WardLine.Colours.IndexOf(own);
-            if (at < 0) at = 0;
-
-            int most = WardLine.Colours.Length - 1;
-            int extra = _model == null || _model.Magnitude <= 0 ? 1 : _model.Magnitude;
-            if (extra > most) extra = most;
-
-            var marks = new char[extra + 1];
-
-            for (int i = 0; i <= extra; i++)
-                marks[i] = WardLine.Colours[(at + i) % WardLine.Colours.Length];
-
-            return marks;
         }
 
         static char[] Same(char colour, int count)
@@ -559,17 +526,15 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Which mark the shot itself is aimed at.
+        /// Which mark the shot itself is aimed at: the first, which the formations put where the
+        /// rule starts — the middle of a clump, the near end of a line, the foot of a column.
         ///
-        /// <b>A prism alternates</b>, because both of its two colours are doubles and firing at one
-        /// of them for ever would show half the ability. Everything else is aimed at the first,
-        /// which the formations put where the rule starts: the middle of a clump, the near end of a
-        /// line, the foot of a column.
+        /// <b>Kept as a method now that every turret answers nought.</b> It alternated for a prism,
+        /// whose two colours were both doubles; what stood here after that was withdrawn is the one
+        /// place a formation could ever want a different mark hit, and a call site reading
+        /// <c>_marks[0]</c> directly would be the rule spread back out over the two that ask.
         /// </summary>
-        int PrimaryMark()
-            => _model.Ability == WardAbility.Prism && _marks.Count > 1
-             ? (_shots - 1) % _marks.Count
-             : 0;
+        int PrimaryMark() => 0;
 
         /// <summary>Every mark this volley's ability reaches beyond the one it hit.</summary>
         List<int> Extras(int primary)
@@ -719,17 +684,17 @@ namespace GlimmerGrove
         /// What an ability leaves behind on the raider it hit.
         ///
         /// <para>
-        /// <b>Two of the ten do something a still frame could not show</b>, and both are lasting
-        /// rather than instant — a freeze and a burn are the only abilities whose whole value is
-        /// what happens <em>after</em> the bolt. Drawn for the length the model authors, in real
-        /// seconds, so the preview says how long as well as what.
+        /// <b>Three of the ten do something a still frame could not show</b>, and all three are
+        /// lasting rather than instant — a freeze, a stun and a burn are the abilities whose whole
+        /// value is what happens <em>after</em> the bolt. Drawn for the length the model authors,
+        /// in real seconds, so the preview says how long as well as what.
         /// </para>
         /// <para>
-        /// <b>Nothing is drawn for the other eight, deliberately.</b> A splash, a chain, a lance
-        /// and a prism are already on the screen as bodies; a rend is the bulwark it is standing in
-        /// front of; and a siphon and a beacon are about the ward's fuel rather than about the
-        /// hill, which is a readout this stage does not have and would have to invent. An invented
-        /// one is a preview making a promise the board does not draw.
+        /// <b>Nothing is drawn for the other seven, deliberately.</b> A splash, a chain and a lance
+        /// are already on the screen as bodies; a rend is the bulwark it is standing in front of;
+        /// and a siphon and a beacon are about the ward's fuel rather than about the hill, which is
+        /// a readout this stage does not have and would have to invent. An invented one is a
+        /// preview making a promise the board does not draw.
         /// </para>
         /// </summary>
         void Linger(Mark mark)
@@ -742,6 +707,15 @@ namespace GlimmerGrove
             {
                 case WardAbility.Frost:
                     Aura(mark, new Color(.62f, .84f, 1f), new Color(.55f, .80f, 1f, .55f), seconds);
+                    break;
+
+                // **Told apart from a frost by value rather than by hue**, because the two are
+                // the same sentence at two strengths and a player comparing them on this panel is
+                // choosing between them: a chill washes a raider cold, a stun drains it toward
+                // slate and stands a hard white ring on it.
+                case WardAbility.Stun:
+                    Aura(mark, new Color(.58f, .60f, .70f), new Color(.92f, .94f, 1f, .70f),
+                         seconds);
                     break;
 
                 case WardAbility.Ember:

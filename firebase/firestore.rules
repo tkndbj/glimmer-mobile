@@ -49,6 +49,13 @@ service cloud.firestore {
     // ------------------------------------------------------------- the save
     match /players/{uid} {
 
+      // One task period: a key and two bounded lists. See the `tasks` clause below.
+      function taskPeriod(p) {
+        return p is map
+               && (!('counts' in p) || (p.counts is list && p.counts.size() <= 32))
+               && (!('claimed' in p) || (p.claimed is list && p.claimed.size() <= 32));
+      }
+
       // Shape checks only. Anything expensive or unbounded is the functions' job.
       function wellFormed() {
         let d = request.resource.data;
@@ -64,6 +71,7 @@ service cloud.firestore {
                  'wardsOwned', 'wardLoadout', 'wardLoadoutSetUnix',
                  'endlessBest',
                  'wardStars',
+                 'tasks',
                  'checksum'
                ])
                && d.schemaVersion is int
@@ -187,6 +195,16 @@ service cloud.firestore {
                // rules refuse loses *every* save write rather than the extra rows (12a).
                && (!('utilityStock' in d) || (d.utilityStock is list
                                               && d.utilityStock.size() <= 64))
+
+               // The tasks: two periods, each a key, a list of per-goal counts and a list of
+               // claimed task ids. Nothing here is paid on — a task chest is bounded by the
+               // wallet's own per-period allowance in `claimAwards` — so this is shape only.
+               // The list bounds match `TaskLedger.MaxGoals` and `MaxClaimed` (32), and have
+               // to: `hasOnly` is an allow-list over the whole document, so a save these rules
+               // refuse loses *every* write rather than the extra rows (12a).
+               && (!('tasks' in d) || (d.tasks is map
+                                       && (!('daily' in d.tasks) || taskPeriod(d.tasks.daily))
+                                       && (!('weekly' in d.tasks) || taskPeriod(d.tasks.weekly))))
 
                // The turrets the player bought and the line they stand in. Client-owned and
                // forgeable, and accounted for the way the companion set is: a forged turret buys

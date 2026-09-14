@@ -95,12 +95,22 @@ namespace GlimmerGrove.Modes
         public const int PairEvery = 5;
 
         /// <summary>
-        /// The four fights, in the order a player meets them.
+        /// The four fights this lane sends, in the order a player meets them.
         ///
-        /// <b>Gentlest first, and it is the chapter's own order</b>: a blightcaller takes a ward's
-        /// fire and can never bring one down, a warlord takes health, a warbringer shakes the whole
-        /// line, an overlord takes the rank the player earned. Meeting them in that order is
-        /// meeting them in order of what they cost.
+        /// <para>
+        /// <b>Gentlest first, and it is the first chapter's own order</b>: a blightcaller takes a
+        /// ward's fire and can never bring one down, a warlord takes health, a warbringer shakes
+        /// the whole line, an overlord takes the rank the player earned. Meeting them in that
+        /// order is meeting them in order of what they cost.
+        /// </para>
+        /// <para>
+        /// <b>Four of the six, and the two it leaves out are left out deliberately.</b> A gravemaw
+        /// eats the cogs and bombs lying on the hill and a bonecaller raises creepers onto it
+        /// (invariants 37bs, 37bt) — both are fine here and both would change what this lane
+        /// <em>sends</em>, and its two star waves are guesses nobody has played against yet
+        /// (invariant 43). Adding them is one line and a re-measure; adding them before the
+        /// measurement exists would move a ladder nothing is holding.
+        /// </para>
         /// </summary>
         public static readonly SiegeKind[] Bosses =
         {

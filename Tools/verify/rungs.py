@@ -12,10 +12,11 @@ because a fixture that loads JSON goes through `JsonUtility` - a native call - s
 reports the whole file as "needs the Editor" and it becomes the one gate nobody runs on the way past
 (see `Tools/verify/tests.py`). For a siege that is not a convenience: a siege has nothing to search
 (invariant 37a), so `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine` and
-`TheSecondChapterAsksForBetterTurrets` are the *only* instruments this mode has, and they can only
+`TheSecondChapterAsksForBetterTurrets` and `TheThirdChapterAsksForABoughtLine` are
+the *only* instruments this mode has, and they can only
 run offline if the boards are inline.
 
-**And why that needs a gate.** A hand copy is a second source of truth. Twenty rungs are now typed
+**And why that needs a gate.** A hand copy is a second source of truth. Thirty rungs are now typed
 out twice - once in `Tools/chapters/*.py`, which writes the body a player actually plays, and once
 in a C# array, which is what every tuning decision in this mode is read off. When they drift, nothing
 fails: both files parse, both tables are internally consistent, every gate stays green, and the
@@ -52,6 +53,7 @@ CHAPTERS = REPO / "Assets" / "StreamingAssets" / "Content" / "chapters"
 TABLES = (
     ("Chapter", "s01_thornwatch", "SiegeRuleTests.cs"),
     ("Broodmarch", "s03_broodmarch", "SiegeRuleTests.Chapters.cs"),
+    ("Barrowfell", "s04_barrowfell", "SiegeRuleTests.Chapters.cs"),
 )
 
 #: One `new Rung(...)` line. Deliberately narrow - it matches the shape this project writes and
@@ -63,7 +65,10 @@ ROW = re.compile(
     r'"(?P<wards>[^"]*)",\s*'
     r'new\[\]\s*\{(?P<waves>[^}]*)\},\s*'
     r'"(?P<boss>[^"]*)",\s*'
-    r'(?P<cogs>\d+)\)'
+    r'(?P<cogs>\d+)'
+    r'(?:,\s*(?P<tough>\d+))?'
+    r'(?:,\s*(?P<gold>\d+),\s*(?P<silver>\d+))?'
+    r'(?:,\s*"(?P<charms>[^"]*)")?\)'
 )
 
 STRINGS = re.compile(r'"([^"]*)"')
@@ -90,6 +95,10 @@ def table_of(source, name):
             "waves": STRINGS.findall(m.group("waves")),
             "boss": m.group("boss"),
             "cogs": int(m.group("cogs")),
+            "tough": int(m.group("tough") or 0),
+            "gold": int(m.group("gold") or 120),
+            "silver": int(m.group("silver") or 140),
+            "charms": m.group("charms") or "",
         })
 
     return made
@@ -115,17 +124,36 @@ def body_of(chapter):
             "waves": list(block["waves"]),
             "boss": block.get("boss", "") or "",
             "cogs": int(block.get("cogs", 0)),
+            "tough": int(block.get("tough", 0)),
+
+            # **The star lines too**, because a siege authors its own (`siege.STAR_FACTORS`) and a
+            # hand copy that graded against the shared 1.20 would sweep a ladder nobody ships.
+            "gold": int(round(level.get("goldFactor", 1.2) * 100)),
+            "silver": int(round(level.get("silverFactor", 1.4) * 100)),
+
+            # **And the charms, for the surge's reason exactly** (invariant 37by): this fixture
+            # has no catalog, so a set the C# copy is missing is ninety runs a chapter played on a
+            # board nobody ships, with every gate green.
+            "charms": block.get("charms", "") or "",
         })
 
     return made
 
 
 def row_text(rung):
-    """One `new Rung(...)` line, spelled the way this project writes them."""
+    """One `new Rung(...)` line, spelled the way this project writes them.
+
+    **Every optional argument is emitted, always.** They are positional in C# and four of them now
+    exist - the surge, the two star lines and the charms - so a `--print` that stopped at `cogs`
+    would hand back a row that compiles, reads plausibly and quietly plays the wrong chapter. That
+    is the exact fault this whole file exists to catch, so it may not be reintroduced by the fixer.
+    """
     rows = ", ".join('"%s"' % r for r in rung["rows"])
     waves = ", ".join('"%s"' % w for w in rung["waves"])
-    return ('            new Rung("%s", new[] { %s }, "%s", "%s", new[] { %s }, "%s", %d),'
-            % (rung["id"], rows, rung["gems"], rung["wards"], waves, rung["boss"], rung["cogs"]))
+    return ('            new Rung("%s", new[] { %s }, "%s", "%s", new[] { %s }, "%s", %d, %d, %d, '
+            '%d, "%s"),'
+            % (rung["id"], rows, rung["gems"], rung["wards"], waves, rung["boss"], rung["cogs"],
+               rung["tough"], rung["gold"], rung["silver"], rung["charms"]))
 
 
 def main():
@@ -173,7 +201,8 @@ def main():
                 continue
 
             print("%s row %d disagrees with %s.json:" % (name, i + 1, chapter))
-            for key in ("id", "rows", "gems", "wards", "waves", "boss", "cogs"):
+            for key in ("id", "rows", "gems", "wards", "waves", "boss", "cogs", "tough",
+                        "gold", "silver", "charms"):
                 if inline[i][key] != shipped[i][key]:
                     print("    %-6s inline  %r" % (key, inline[i][key]))
                     print("    %-6s shipped %r" % ("", shipped[i][key]))

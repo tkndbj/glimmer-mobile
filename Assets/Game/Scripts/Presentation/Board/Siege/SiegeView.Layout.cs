@@ -134,11 +134,20 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>The ladder may reach above the hill on a short board, and that is stated rather
-        /// than clamped.</b> A 4:3 tablet leaves the hill 1.46 cells tall — less than one of
-        /// these captions, let alone two — so no arrangement fits, and clamping would put them
-        /// back on top of each other, which is the one thing this exists to stop.
+        /// than clamped.</b> On the shortest hill any display leaves, the two of them together
+        /// are taller than it is — so no arrangement fits, and clamping would put them back on
+        /// top of each other, which is the one thing this exists to stop.
         /// <c>SiegeCaptionTests</c> holds the separation at every shape and the fit at the shapes
-        /// a phone really produces, which is the same split <c>SiegeBandTests</c> already makes.
+        /// that have the room, which is the same split <c>SiegeBandTests</c> already makes.
+        /// </para>
+        /// <para>
+        /// <b>That shortest hill is the squarest <em>phone</em>, and it used to be a tablet.</b>
+        /// Before the field was capped to a phone's width (invariant 37cc, <see cref="CellFor"/>)
+        /// a 4:3 left the hill 3.15 cells and could carry neither banner; it carries both now, at
+        /// 5.6, while the 16:9 iPhone SE is unchanged at 4.0 and is the one shape that cannot.
+        /// Worth saying out loud because it inverts where somebody would go looking: this is a
+        /// fault of a <em>short</em> display rather than a squat one, and the two stopped being
+        /// the same thing the day the canvas started widening.
         /// </para>
         /// </summary>
         public readonly struct Captions
@@ -210,13 +219,61 @@ namespace GlimmerGrove
         /// the field was a column in the middle of a full-width plate, which is the one thing on
         /// this screen that had no reason to be inset. See <see cref="MaxGemBand"/> for what caps
         /// it, and `Compose` for how the hill and the line then share what is left.
+        ///
+        /// <b>And the width it leads on is a <em>phone's</em></b> — see <see cref="CellFor"/>,
+        /// which is where the whole of that argument lives.
         /// </summary>
         protected override float Fit(Vector2 room)
         {
             _room = room;
+            return CellFor(room, Layout.CanvasFit.PhoneWidth / Boot.CanvasWidth, Width, Height);
+        }
 
-            float wide = (room.x - Margin * 2f) / Width;
-            float tall = (room.y - Margin * 2f) * MaxGemBand / Height;
+        /// <summary>
+        /// How big a cell may be in a room this size, on a canvas drawn at
+        /// <paramref name="scale"/> — 1 on every phone, and about .67 on a 4:3 tablet.
+        ///
+        /// <para>
+        /// <b>This board is the one layout in the game that grows when the canvas widens, and
+        /// that is what a tablet reported as the gem field eating the hill</b> (invariant 37cc).
+        /// <c>CanvasFit</c> widens a squarer display's canvas so that every screen here keeps its
+        /// sizes in units and is simply drawn smaller — which works because every other screen is
+        /// a vertical stack of <em>fixed-height</em> chrome. A field laid out to the width is not:
+        /// handed 1620 units across instead of 1080 it asks for a cell half again as big, and
+        /// since a cell is square it takes that back out of the height. Measured on a 4:3 tablet
+        /// the cell came out at 160 units against a phone's 124, which put the field on its
+        /// <see cref="MaxGemBand"/> ceiling, left the hill 3.2 cells against a phone's 6.9, and
+        /// pinned the ward line on its own furniture floor — a turret's plinth and fuel tube
+        /// drawn behind the field's plate, which is invariants 37g and 37y arriving together on
+        /// a screen shape no render had been taken at.
+        /// </para>
+        /// <para>
+        /// <b>So the field is laid out to the width a <em>phone</em> would have given it.</b> The
+        /// extra width on a short canvas was bought to buy height and is not the board's to
+        /// spend: scaled back, the cell lands within two units of a phone's on every display this
+        /// game runs on, which is exactly what <c>CanvasFit</c> promises every other screen.
+        /// Nothing else moves — the plate, the ground, the rampart, the lanes and the aiming grid
+        /// still run to the edges of the room (invariant 39g), so the board still fills the
+        /// display and what a tablet gains is a hill that is wider as well as three cells taller.
+        /// The field is then narrower than the plate it stands on, which is why
+        /// <c>Sockets</c> draws that plate full-bleed.
+        /// </para>
+        /// <para>
+        /// <b>A static taking the scale rather than reading the screen, for <c>Bands.Of</c>'s
+        /// reason.</b> A render draws one display at a time, and this is a fault that only
+        /// appears on the shapes nobody rendered; <c>SiegeFitTests</c> sweeps them instead.
+        /// </para>
+        /// </summary>
+        public static float CellFor(Vector2 room, float scale, int width, int height)
+        {
+            if (width <= 0 || height <= 0) return 0f;
+
+            // A degenerate scale is what a divide by a zero-sized screen would produce during a
+            // rotation. `CanvasFit.IsShort` answers no to one; this answers "a phone" to match.
+            if (!(scale > 0f) || scale > 1f) scale = 1f;
+
+            float wide = (room.x * scale - Margin * 2f) / width;
+            float tall = (room.y - Margin * 2f) * MaxGemBand / height;
             return Mathf.Min(wide, tall);
         }
 

@@ -40,14 +40,14 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(LegalLinks.Usable(null), "null");
             Assert.IsFalse(LegalLinks.Usable(""), "empty");
             Assert.IsFalse(LegalLinks.Usable("https://"), "a scheme and nothing else");
-            Assert.IsFalse(LegalLinks.Usable("glimmergroove.app/privacy"), "no scheme");
+            Assert.IsFalse(LegalLinks.Usable("tekoworld.com/privacy"), "no scheme");
 
             // Plain http is refused rather than upgraded. iOS blocks it under App Transport
             // Security anyway, so allowing it here would be a link that works in the Editor and
             // silently does nothing on the device that matters.
-            Assert.IsFalse(LegalLinks.Usable("http://www.glimmergroove.app/privacy"), "not https");
+            Assert.IsFalse(LegalLinks.Usable("http://www.tekoworld.com/privacy"), "not https");
 
-            Assert.IsFalse(LegalLinks.Usable("https://www.glimmergroove.app/a b"), "unescaped space");
+            Assert.IsFalse(LegalLinks.Usable("https://www.tekoworld.com/a b"), "unescaped space");
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheyAllPointAtTheSiteTheStoreListingsName()
         {
-            Assert.AreEqual("https://www.glimmergroove.app", LegalLinks.Site);
+            Assert.AreEqual("https://www.tekoworld.com", LegalLinks.Site);
 
             foreach (var url in new[] { LegalLinks.Privacy, LegalLinks.Terms, LegalLinks.Support })
                 Assert.IsTrue(url.StartsWith(LegalLinks.Site + "/"), url);

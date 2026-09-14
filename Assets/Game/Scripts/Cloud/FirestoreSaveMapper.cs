@@ -286,6 +286,12 @@ namespace GlimmerGrove.Cloud
                 // usual reason — it is clamped there to the glades the star ledger actually
                 // supports, so an edited one takes early what play had already earned and
                 // nothing more.
+                // The tasks: both periods' counters and claims. The server never reads them —
+                // a task chest is bounded by the wallet's own per-period allowance and re-rolled
+                // from the claim id — but a second device needs them, or a task done on one
+                // phone reads half done on the other and a chest paid on one is paid again.
+                { "tasks", Tasks(dto.tasks) },
+
                 { "eventsSeeded", dto.eventsSeeded },
                 { "events", EventFloors(dto.events) },
 
@@ -631,6 +637,11 @@ namespace GlimmerGrove.Cloud
             dto.eventsSeeded = Bool(doc, "eventsSeeded");
             dto.events = ReadEventFloors(doc);
 
+            // Absent on a document written before tasks existed, which reads back as two
+            // periods with key zero — what the join treats as "knows nothing", so the local
+            // side wins. Nothing has to detect the upgrade.
+            dto.tasks = ReadTasks(doc);
+
             // Absent on a document written before the grove existed, which reads back as no
             // rows — and no rows is "this device has no opinion about any slot", so the join
             // takes the local side whole. Nothing has to detect the upgrade.
@@ -840,6 +851,93 @@ namespace GlimmerGrove.Cloud
             }
 
             return rows.ToArray();
+        }
+
+        /// <summary>
+        /// The task section as two small maps. The counts are a list of maps rather than a map
+        /// keyed by goal, and the claims a list of strings, for every other id-keyed section's
+        /// reason: an id is content and a Firestore field name is not. An empty period (key
+        /// zero) is written as an empty map rather than dropped, so the reader and the writer
+        /// agree about what "nothing yet" looks like on both sides of a round trip.
+        /// </summary>
+        static Dictionary<string, object> Tasks(TaskStateDto tasks)
+            => new Dictionary<string, object>
+            {
+                { "daily", Period(tasks?.daily) },
+                { "weekly", Period(tasks?.weekly) },
+            };
+
+        static Dictionary<string, object> Period(TaskPeriodDto period)
+        {
+            var counts = new List<object>();
+            var claimed = new List<object>();
+
+            if (period != null && period.key > 0)
+            {
+                if (period.counts != null)
+                    foreach (var row in period.counts)
+                    {
+                        if (row == null || string.IsNullOrEmpty(row.goal) || row.count <= 0) continue;
+                        counts.Add(new Dictionary<string, object>
+                        {
+                            { "goal", row.goal },
+                            { "count", (long)row.count },
+                        });
+                    }
+
+                if (period.claimed != null)
+                    foreach (var id in period.claimed)
+                        if (!string.IsNullOrEmpty(id)) claimed.Add(id);
+            }
+
+            return new Dictionary<string, object>
+            {
+                { "key", (long)(period != null && period.key > 0 ? period.key : 0) },
+                { "counts", counts },
+                { "claimed", claimed },
+            };
+        }
+
+        static TaskStateDto ReadTasks(IDictionary<string, object> doc)
+        {
+            var tasks = new TaskStateDto { daily = ReadPeriod(null), weekly = ReadPeriod(null) };
+            if (!(Map(doc, "tasks") is IDictionary<string, object> map)) return tasks;
+
+            tasks.daily = ReadPeriod(Map(map, "daily") as IDictionary<string, object>);
+            tasks.weekly = ReadPeriod(Map(map, "weekly") as IDictionary<string, object>);
+            return tasks;
+        }
+
+        /// <summary>Drops exactly what the writer drops, so a round trip is a fixed point.</summary>
+        static TaskPeriodDto ReadPeriod(IDictionary<string, object> map)
+        {
+            var period = new TaskPeriodDto { counts = new TaskCountDto[0], claimed = new string[0] };
+            if (map == null) return period;
+
+            long key = Long(map, "key", 0L);
+            if (key <= 0L) return period;
+            period.key = key > int.MaxValue ? int.MaxValue : (int)key;
+
+            var counts = new List<TaskCountDto>();
+            if (map.TryGetValue("counts", out object rawCounts) && rawCounts is IEnumerable<object> rows)
+            {
+                foreach (object item in rows)
+                {
+                    if (!(item is IDictionary<string, object> row)) continue;
+                    string goal = Str(row, "goal");
+                    long count = Long(row, "count", 0L);
+                    if (string.IsNullOrEmpty(goal) || count <= 0L) continue;
+                    counts.Add(new TaskCountDto
+                    {
+                        goal = goal,
+                        count = count > int.MaxValue ? int.MaxValue : (int)count,
+                    });
+                }
+            }
+
+            period.counts = counts.ToArray();
+            period.claimed = StrList(map, "claimed");
+            return period;
         }
 
         static UtilityStockDto[] ReadUtilities(IDictionary<string, object> doc)

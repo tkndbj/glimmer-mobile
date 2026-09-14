@@ -79,6 +79,62 @@ namespace GlimmerGrove
             return host;
         }
 
+        /// <summary>
+        /// A sun, high and a little to the right, for a screen whose backdrop is daylight.
+        ///
+        /// <para>
+        /// <b>It is drawn where the art was lit from, not where it looks nice.</b> Every piece
+        /// in the grove is rendered by one rig in <c>Tools/make_grove_art.py</c>, and that
+        /// rig's key projects onto this screen's axes as .996 up and .078 right — all but
+        /// straight overhead, leaning a hair right. So the offset here is that ratio and not a
+        /// taste: a sun drawn on the opposite side from the one the models are lit by is the
+        /// fault <c>37aj</c> names, where the shape is right and the sign is wrong and no
+        /// numeric gate can see it. If <c>KEY</c> ever moves, this moves with it.
+        /// </para>
+        ///
+        /// <para>
+        /// Three layers, because one is a circle and a sun is not: a wide halo that reaches
+        /// most of the way down the sky, a tighter core, and a small hard disc that is the
+        /// thing actually being looked at. Added <em>after</em> the shade and the vignette, so
+        /// the one part of the picture that is supposed to be the brightest is not the part
+        /// being darkened.
+        /// </para>
+        ///
+        /// <para>
+        /// Every measurement is a share of <see cref="Boot.RefHeight"/> rather than of the
+        /// canvas width, because the width is the one thing that is not the same on every
+        /// display (invariant 37cc): sized against it, a tablet would get a sun half again as
+        /// large for no reason anybody could state. The height is what does not move.
+        /// </para>
+        /// </summary>
+        public static void Sun(Transform host, float strength = 1f)
+        {
+            const float H = Boot.RefHeight;
+
+            // Where the disc stands, and it is **not** the top of the screen. Every screen
+            // that carries this also carries a header fade — a gradient 268 units deep plus
+            // whatever the notch has taken — so a sun drawn against the top edge is a sun
+            // drawn behind the only thing on the sky that is not the sky. This clears the
+            // deepest that fade gets (268 + a tall cutout) and nothing more, so the sun is as
+            // high as it can be and still be a sun rather than a smudge under the banner.
+            const float Rise = H * .25f;
+
+            // Sideways, from the centre. See above — `key . right / key . up`, and nothing
+            // else: this is where the models were lit from, not where it looks best.
+            var at = new Vector2(H * .078f, -Rise);
+
+            var halo = new Color(1f, .88f, .58f, .30f * strength);
+            var core = new Color(1f, .94f, .72f, .46f * strength);
+            var face = new Color(1f, .985f, .90f, .92f * strength);
+
+            UIKit.Img("SunHalo", host, Art.Glow(256, 1.35f), halo,
+                      new Vector2(H * 1.10f, H * 1.10f), new Vector2(.5f, 1f), at);
+            UIKit.Img("SunCore", host, Art.Glow(192, 2.8f), core,
+                      new Vector2(H * .46f, H * .46f), new Vector2(.5f, 1f), at);
+            UIKit.Img("SunFace", host, Art.Disc(128), face,
+                      new Vector2(H * .095f, H * .095f), new Vector2(.5f, 1f), at);
+        }
+
         // -------------------------------------------------------------------- the kit
         /// <summary>
         /// The quiet ground every screen that is not the hub stands on: a flat blue scattered

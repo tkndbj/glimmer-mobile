@@ -186,6 +186,35 @@ namespace GlimmerGrove.AssetPipeline
 
         /// <summary>Thornwatch's explosions, which live under Fx rather than beside the board.</summary>
         public static string SiegeFx(string key) => ArtRoot + "Fx/Siege/" + key;
+
+        /// <summary>
+        /// A task chest's opening reel: <c>Chests/{tier}</c>, a folder of frames.
+        ///
+        /// Its own folder so the reels bundle apart from the global set
+        /// (<c>AddressableAddresses.ChestPrefix</c>): the closed icons the hub draws are global
+        /// and tiny, the reels are a couple of megabytes wanted only while a chest opens, and a
+        /// bundle that carried both would be loaded whole at every launch for the sake of four
+        /// small pictures.
+        /// </summary>
+        public static string ChestArt(string key) => ArtRoot + "Chests/" + key;
+
+        /// <summary>
+        /// Every chest tier's opening reel, for the screens that open one and for the Editor's
+        /// sweeps. Read from the table rather than listed, so a fifth tier added by content is
+        /// labelled, audited and loaded without anyone editing this — and a tier whose reel was
+        /// never cut fails the audit rather than drawing a white rectangle over the ceremony.
+        /// </summary>
+        public static List<AssetRequest> ChestAssets(Tasks.TaskTable table)
+        {
+            var list = new List<AssetRequest>(8);
+            if (table == null) return list;
+
+            foreach (var tier in table.Tiers)
+                if (tier != null && !string.IsNullOrEmpty(tier.Id))
+                    list.Add(AssetRequest.SpriteSet(ArtRoot + tier.Reel));
+
+            return list;
+        }
         public static string MapArt(string key) => MapRoot + key;
         public static string Ui(string key) => UiRoot + key;
         public static string Sfx(string key) => SfxRoot + key;
@@ -205,19 +234,35 @@ namespace GlimmerGrove.AssetPipeline
         /// cannot prove resolves.
         /// </para>
         /// <para>
-        /// The video is not an address at all. It is read from <c>StreamingAssets</c> by URL,
-        /// because it has to be playable before the asset pipeline has been started; it is
-        /// named beside its poster so the two cannot drift apart.
+        /// There was a clip beside it once — the same frame, moving, streamed from
+        /// <c>StreamingAssets</c> by URL — and it is gone: a platform decoder, a display-sized
+        /// texture and four megabytes of build, on the one screen built at every launch and
+        /// returned to never. See <c>SplashScreen</c>.
         /// </para>
         /// </summary>
         public const string SplashBackdrop = BackdropRoot + "splash_cover";
 
-        /// <summary>The clip, relative to <c>StreamingAssets</c>. See <see cref="SplashBackdrop"/>.</summary>
-        public const string SplashVideoFile = "Video/splash.mp4";
+        /// <summary>
+        /// The publisher card's wordmark, baked from Orbitron by
+        /// <c>Tools/make_ident_art.py</c>. White throughout, with the letters in its alpha,
+        /// because the launch screen draws it twice — as the lettering, and as the mask that
+        /// clips the neon sweep to it.
+        ///
+        /// <para>
+        /// It is on the splash scope with the cover rather than in the global set: it is drawn
+        /// for two seconds at launch and never again, so leaving it resident would be a
+        /// full-width texture held for the life of the process for a screen nobody sees twice.
+        /// </para>
+        /// </summary>
+        public const string IdentWord = BackdropRoot + "ident_word";
 
         /// <summary>What the launch screen loads, for the audit and the build gate.</summary>
         public static List<AssetRequest> SplashAssets()
-            => new List<AssetRequest> { AssetRequest.Sprite(SplashBackdrop) };
+            => new List<AssetRequest>
+            {
+                AssetRequest.Sprite(SplashBackdrop),
+                AssetRequest.Sprite(IdentWord),
+            };
 
         // ---------------------------------------------------------------- global
         static readonly string[] UiSprites =
@@ -237,6 +282,15 @@ namespace GlimmerGrove.AssetPipeline
             "ic_heart", "ic_gem", "ic_chest", "ic_chest_open", "ic_key", "ic_gift", "ic_star3d",
             "ic_profile", "ic_pencil", "ic_power", "ic_heart_boost",
             "seal_gold", "crest_gold", "bar_track", "bar_fill",
+
+            // The three marks the Infinite lane's hub reads its lines against
+            // (`make_siege_art.HUB_ICONS`). **Global rather than scoped to the mode whose lane
+            // draws them**, and it is the map screen that decides it: the hub is drawn there, and
+            // the chapter scope is what the map loads *for the chapter*, so an icon filed with the
+            // mode would be asked for on a screen that may not hold it yet — and an `Image` with
+            // no sprite is a white rectangle rather than a blank (invariant 7b). Three 96-pixel
+            // tiles are not worth a scope's two failure modes.
+            "ic_endless", "ic_surge", "ic_rank",
             "potion1", "potion2", "potion3", "potion4", "potion5", "potion6",
 
             // The action bar's three utilities. Global rather than scoped to the one mode that
@@ -306,6 +360,15 @@ namespace GlimmerGrove.AssetPipeline
             "ic_nav_home", "ic_nav_shop", "ic_nav_grove",
             "ic_nav_ranks", "ic_nav_profile", "ic_battle", "ic_chest_wood", "ic_streak", "ic_padlock",
             "Hud/lander", "Hud/beam", "Hud/room",
+
+            // The task chests, closed, and the goal glyphs the shared icon set has no picture
+            // for. Global for the streak flame's reason: the hub draws all four chests on the
+            // first screen after the splash, and an `Image` whose sprite has not arrived is a
+            // white rectangle (invariant 7b). The *opening* reels are not here — they are a
+            // scope of their own (ChestAssets), because sixty-eight frames are only ever
+            // wanted while a chest is being opened.
+            "Chest/wood", "Chest/silver", "Chest/gold", "Chest/royal",
+            "Task/raiders", "Task/boss", "Task/charm", "Task/cog", "Task/wave",
         };
 
         /// <summary>Map furniture used by every chapter, unlike the strips themselves.</summary>
@@ -342,7 +405,8 @@ namespace GlimmerGrove.AssetPipeline
             "hub_room",
 
             // And the quiet ground behind every screen that is a list rather than a place —
-            // the storefront, the boards, the profile and the grove's shop. See `Scenery.Plain`.
+            // the storefront, the boards, the profile, the grove's shop and the tasks page.
+            // See `Scenery.Plain`.
             "plain",
         };
 

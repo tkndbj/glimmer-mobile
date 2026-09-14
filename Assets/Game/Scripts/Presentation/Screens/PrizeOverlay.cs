@@ -204,7 +204,7 @@ namespace GlimmerGrove
             // somewhere to fly to; where there is not, the button closes and the prize is
             // already banked either way.
             _collect = UIKit.TextButton("Collect", panel, "btn_green",
-                                        Loc.Get("ui.daily.collect"), 42,
+                                        Loc.Get("ui.chest.collect"), 42,
                                         new Vector2(520f, PrizePanel.ButtonHeight),
                                         new Vector2(.5f, 1f), new Vector2(0f, -stack.ButtonCentre),
                                         OnCollect);

@@ -415,6 +415,15 @@ namespace GlimmerGrove.Content
             // climbs, and it can never be won. See <see cref="Endless"/>.
             if (layout.IsEndless) { Endless(level, layout, issues); return; }
 
+            // **A surge belongs to a chapter, and an endless lane already has one of its own.**
+            // Its ramp climbs every wave (`SiegeEndless.SurgeAt`), so a body that also carried a
+            // flat one would multiply the two - a lane that is a third tougher at wave one and
+            // twice as tough by the time anybody notices.
+            if (layout.IsEndless && !layout.Tough.IsNone)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    "this endless lane authors a toughness surge and already ramps one per wave, "
+                    + "so the two would multiply - take the 'tough' field off"));
+
             // Certain, and the one thing that could make a siege unlosable by accident: with a
             // budget turned off, the ward line is the only fail state there is.
             if (level.Tuning.HasBudget)
@@ -472,6 +481,41 @@ namespace GlimmerGrove.Content
                     $"this siege drops a cog {layout.Cogs} times in a hundred kills and sends "
                     + $"{layout.RaiderCount} raiders, so a run expects fewer than one - the "
                     + "mechanic, its art and its lesson all ship and most players never see one"));
+
+            // **Invariant 5d asked of the charms, and it is the cog's question with a different
+            // denominator.** A charm is dealt into a *refill* rather than dropped by a kill, so
+            // what decides whether a player ever meets one is how many gems the level clears -
+            // which is par times what a match takes. A rung authoring a charm its own length can
+            // never deal ships the rule, its picture and its lesson to somebody who will never see
+            // any of them, which is exactly what happened to two whole raider kinds (invariant
+            // 40a) and what the drop-rate check above was written for.
+            if (layout.Charms != null && layout.Charms.Length > 0)
+            {
+                int gems = par * SiegeTuning.MatchGemsTenths / 10;
+                int sparks = gems / SiegeTuning.CharmWithin;
+
+                // **One window, because that is what the mechanism guarantees** - and a floor
+                // rather than an expectation, because what a run really meets is about twice this
+                // (the gap inside a window averages half of it). A gate may only refuse on the
+                // guarantee. See `SiegeTuning.CharmWithin` and invariant 37ci for the rung that
+                // shipped dealing none.
+                if (sparks < 1)
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                        $"this field deals charms and clears about {gems} gems over a run at par "
+                        + $"{par}, which is under the {SiegeTuning.CharmWithin}-gem window a charm "
+                        + "falls in - so a run can be dealt none, and the mechanic, its art and "
+                        + "its lesson all ship to somebody who never sees one"));
+
+                // Certain. A stormglass is worth what is standing on the hill when it goes
+                // (`SiegeBoard.Volley`), so a hill this short is a payoff that rejects nothing.
+                bool storms = System.Array.IndexOf(layout.Charms, SiegeCharm.Storm) >= 0;
+
+                if (storms && layout.RaiderCount < 4)
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                        $"this field deals a stormglass and sends {layout.RaiderCount} raider(s). "
+                        + "A stormglass is the whole line firing at everything on the hill, so on "
+                        + "a hill this short there is nothing for it to be worth"));
+            }
 
             // Invariant 5d asked of each boss's own spell, which is the reading four bosses
             // needed and two would never have: each of the four takes a *different* thing, so
@@ -634,6 +678,38 @@ namespace GlimmerGrove.Content
                         + $"and only {Coming(layout)} raiders come before it - it will arrive onto "
                         + "an empty hill and rally nothing"));
                     break;
+
+                // A devour takes the loose things a felled raider leaves. A level that deals no
+                // cogs and sends no bombers leaves nothing on the ground at all, so a gravemaw is
+                // a boss that opens its mouth over bare hill four times and takes nothing - which
+                // is invariant 5d with the answer already counted: nought.
+                case SiegeSpell.Devour when layout.Cogs <= 0 && !Leaves(layout):
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                        $"this siege ends with a {who}, whose spell eats the cogs and bombs lying "
+                        + "on the hill, and this level deals no cogs and sends no bombers - so "
+                        + "there is never anything on the ground for it to take"));
+                    break;
+
+                // And the same question one step out: a devour eats what a *kill* leaves, so it
+                // wants a hill somebody has been killing on. It rides the last authored wave
+                // (`SiegeTuning.WantsACrowd`), which is what this checks is really there.
+                case SiegeSpell.Devour when Coming(layout) < 4:
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                        $"this siege ends with a {who}, which eats what a felled raider leaves, "
+                        + $"and only {Coming(layout)} raiders come beside it - it will feed on an "
+                        + "empty stretch of hill"));
+                    break;
+
+                // A raise puts creepers on the hill in the caster's own colour, so the one thing
+                // that could make it decide nothing is a line with no ward wearing that colour:
+                // every bolt would be worth half, and what the boss added would be answered by
+                // arithmetic rather than by a choice about where the fuel goes.
+                case SiegeSpell.Raise when layout.WardOf(layout.Boss) < 0:
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                        $"this siege ends with a {who} wearing '{layout.Boss}', and no ward on the "
+                        + "line carries it - so every creeper it raises is answered at half weight "
+                        + "by whichever ward happens to be fed"));
+                    break;
             }
         }
 
@@ -649,6 +725,16 @@ namespace GlimmerGrove.Content
         /// nothing earlier can still be walking.
         /// </para>
         /// </summary>
+        /// <summary>Whether anything this level sends leaves something standing on the hill.</summary>
+        static bool Leaves(SiegeLayout layout)
+        {
+            for (int w = 0; w < layout.Coming.Length; w++)
+                for (int i = 0; i < layout.Coming[w].Length; i++)
+                    if (SiegeTuning.LeavesABomb(layout.KindAt(w, i))) return true;
+
+            return false;
+        }
+
         static int Coming(SiegeLayout layout)
         {
             if (layout.BossWave < 0) return layout.SizeOf(layout.Coming.Length - 1);

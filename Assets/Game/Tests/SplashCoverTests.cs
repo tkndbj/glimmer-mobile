@@ -18,16 +18,33 @@ namespace GlimmerGrove.Tests
     public sealed class SplashCoverTests
     {
         /// <summary>
-        /// The shapes this game is actually drawn on: the canvas is width-matched at 1080, so
-        /// its height is 1080 divided by the display's aspect. 4:3 is the shortest thing a
-        /// tablet gives us and 20:9 the tallest a phone does.
+        /// The shapes this game is actually drawn on, as whole canvases rather than heights.
+        ///
+        /// <para>
+        /// <b>It used to be a list of heights at a fixed 1080 wide, and that is how a cropped
+        /// wordmark got past it.</b> A phone is drawn at <see cref="CanvasFit.PhoneWidth"/> and
+        /// is never squarer than <see cref="CanvasFit.PhoneFloor"/>, so 1080x1890 is the
+        /// squarest canvas that can exist at that width — every shorter entry in the old list
+        /// was a shape no display produces. Anything squarer than a phone is handed
+        /// <see cref="CanvasFit.ShortHeight"/> and a <em>wider</em> canvas instead, and those are
+        /// the shapes the fixture had none of: a 4:3 tablet is 1620x2160, a foldable opened is
+        /// nearer 1800x2160, and split view can reach 1:1. Those are the canvases that crop the
+        /// most off this cover, so they are the ones that decide whether the mark survives.
+        /// </para>
         /// </summary>
-        static readonly float[] Canvases = { 1440f, 1620f, 1920f, 2160f, 2340f, 2400f, 2520f };
+        static readonly (float W, float H)[] Canvases =
+        {
+            // phones: 1080 across, from the squarest that can exist to a 21:9
+            (1080f, 1890f), (1080f, 1922f), (1080f, 1998f), (1080f, 2160f),
+            (1080f, 2279f), (1080f, 2344f), (1080f, 2398f), (1080f, 2516f),
+
+            // squarer than a phone: 2160 tall, widened — tablet, foldable, split view
+            (1241f, 2160f), (1350f, 2160f), (1440f, 2160f),
+            (1624f, 2160f), (1800f, 2160f), (2160f, 2160f),
+        };
 
         /// <summary>Bottom insets: none, a home indicator, and an Android navigation bar.</summary>
         static readonly float[] Insets = { 0f, 93f, 144f };
-
-        const float W = 1080f;
 
         /// <summary>
         /// Nothing anywhere shows through. The picture fills the width on its own; up the
@@ -38,20 +55,20 @@ namespace GlimmerGrove.Tests
         [Test]
         public void NothingShowsThroughOnAnyCanvasThisGameIsDrawnOn()
         {
-            foreach (var h in Canvases)
+            foreach (var (w, h) in Canvases)
             {
-                var plan = SplashCover.Fit(W, h, 0f);
+                var plan = SplashCover.Fit(w, h, 0f);
 
-                Assert.GreaterOrEqual(plan.Width, W - .01f, $"canvas {h}: picture is narrower than the screen");
+                Assert.GreaterOrEqual(plan.Width, w - .01f, $"canvas {w}x{h}: picture is narrower than the screen");
 
                 float top = plan.PictureY + plan.Height * .5f;
                 float bottom = plan.PictureY - plan.Height * .5f;
 
-                Assert.LessOrEqual(bottom, -h * .5f + .01f, $"canvas {h}: ground short of the bottom edge");
+                Assert.LessOrEqual(bottom, -h * .5f + .01f, $"canvas {w}x{h}: ground short of the bottom edge");
                 Assert.GreaterOrEqual(top + plan.SkyHeight, h * .5f - .01f,
-                                      $"canvas {h}: the sky band does not reach the top edge");
+                                      $"canvas {w}x{h}: the sky band does not reach the top edge");
                 Assert.LessOrEqual(plan.SkyHeight, System.Math.Max(0f, h - plan.Height) + .01f,
-                                   $"canvas {h}: the sky band overruns the picture");
+                                   $"canvas {w}x{h}: the sky band overruns the picture");
             }
         }
 
@@ -65,37 +82,66 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheWordmarkKeepsItsMarginOnEveryCanvasAndOnlyThenIsSkyAdded()
         {
-            foreach (var h in Canvases)
+            foreach (var (w, h) in Canvases)
             {
-                var plan = SplashCover.Fit(W, h, 0f);
+                var plan = SplashCover.Fit(w, h, 0f);
                 float wordHalf = plan.Width * (SplashCover.WordRightUv - SplashCover.WordLeftUv) * .5f;
 
-                Assert.LessOrEqual(wordHalf, W * .5f - SplashCover.WordMargin + .01f,
-                                   $"canvas {h}: the wordmark is clipped at the sides");
+                Assert.LessOrEqual(wordHalf, w * .5f - SplashCover.WordMargin + .01f,
+                                   $"canvas {w}x{h}: the wordmark is clipped at the sides");
 
                 if (plan.SkyHeight > .01f)
-                    Assert.Greater(wordHalf, W * .5f - SplashCover.WordMargin - 1f,
-                                   $"canvas {h}: sky was added on a canvas the picture could have covered");
+                    Assert.Greater(wordHalf, w * .5f - SplashCover.WordMargin - 1f,
+                                   $"canvas {w}x{h}: sky was added on a canvas the picture could have covered");
             }
         }
 
         /// <summary>
-        /// The crop comes off the top, so the wordmark and the band of ground it stands on are
-        /// on screen whatever shape the display is. A centred crop passes the coverage test
-        /// above and fails this one on a tablet, which is why both are here.
+        /// The mark is wholly on screen whatever shape the display is — the property
+        /// <see cref="SplashCover.MarkOnCanvas"/> exists for, and the one a bottom-aligned fit
+        /// fails.
+        ///
+        /// <para>
+        /// <b>This is the test that was passing for the wrong reason.</b> Its assertions have
+        /// not changed; the list of canvases under them has. The cover this file was written for
+        /// carried its mark in the bottom tenth, so standing the picture on the canvas floor
+        /// kept it on screen by construction and no shape could fail — and the fixture had no
+        /// widened canvases in it to try. The cover that replaced it carries the mark across the
+        /// middle, and bottom-aligned it is cropped through the logo on anything squarer than
+        /// about 5:4.
+        /// </para>
         /// </summary>
         [Test]
         public void TheWordmarkIsWhollyOnScreenOnEveryCanvas()
         {
-            foreach (var h in Canvases)
+            foreach (var (w, h) in Canvases)
             {
-                var plan = SplashCover.Fit(W, h, 0f);
+                var plan = SplashCover.Fit(w, h, 0f);
+                float wordHead = plan.PictureY + plan.Height * (.5f - SplashCover.WordHeadUv);
 
-                // The upper line's head, measured off the same frame the foot was.
-                float wordHead = plan.PictureY + plan.Height * (.5f - .763f);
+                Assert.Less(wordHead, h * .5f, $"canvas {w}x{h}: the wordmark's top is cropped away");
+                Assert.Greater(plan.WordFoot, -h * .5f, $"canvas {w}x{h}: the wordmark's foot is off the bottom");
+            }
+        }
 
-                Assert.Less(wordHead, h * .5f, $"canvas {h}: the wordmark's top is cropped away");
-                Assert.Greater(plan.WordFoot, -h * .5f, $"canvas {h}: the wordmark's foot is off the bottom");
+        /// <summary>
+        /// Neither edge of the picture ever pulls away from the canvas, however far the mark
+        /// would have liked to move it. The clamp in <see cref="SplashCover.Fit"/> is the only
+        /// thing holding this, and what it is holding against is a canvas shape rather than a
+        /// mistake — the squarer the display, the further the mark wants to travel.
+        /// </summary>
+        [Test]
+        public void HangingThePictureOnTheMarkNeverUncoversAnEdge()
+        {
+            foreach (var (w, h) in Canvases)
+            {
+                var plan = SplashCover.Fit(w, h, 0f);
+                if (plan.SkyHeight > .01f) continue;      // the capped-zoom case, covered above
+
+                Assert.LessOrEqual(plan.PictureY - plan.Height * .5f, -h * .5f + .01f,
+                                   $"canvas {w}x{h}: the picture came away from the bottom edge");
+                Assert.GreaterOrEqual(plan.PictureY + plan.Height * .5f, h * .5f - .01f,
+                                      $"canvas {w}x{h}: the picture came away from the top edge");
             }
         }
 
@@ -106,28 +152,28 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheBarNeverDrawsOnTheWordmark()
         {
-            foreach (var h in Canvases)
+            foreach (var (w, h) in Canvases)
                 foreach (var inset in Insets)
                 {
-                    var plan = SplashCover.Fit(W, h, inset);
+                    var plan = SplashCover.Fit(w, h, inset);
                     float barTop = plan.BarY + SplashCover.BarHeight * .5f;
 
                     Assert.LessOrEqual(barTop, plan.WordFoot - SplashCover.MinGap + .01f,
-                                       $"canvas {h}, inset {inset}: the bar is on the word");
+                                       $"canvas {w}x{h}, inset {inset}: the bar is on the word");
                 }
         }
 
         [Test]
         public void TheBarStaysOnTheCanvas()
         {
-            foreach (var h in Canvases)
+            foreach (var (w, h) in Canvases)
                 foreach (var inset in Insets)
                 {
-                    var plan = SplashCover.Fit(W, h, inset);
-                    string what = $"canvas {h}, inset {inset}";
+                    var plan = SplashCover.Fit(w, h, inset);
+                    string what = $"canvas {w}x{h}, inset {inset}";
 
-                    Assert.GreaterOrEqual(plan.BarX - plan.BarWidth * .5f, -W * .5f, what + ": bar off the left");
-                    Assert.LessOrEqual(plan.BarX + plan.BarWidth * .5f, W * .5f, what + ": bar off the right");
+                    Assert.GreaterOrEqual(plan.BarX - plan.BarWidth * .5f, -w * .5f, what + ": bar off the left");
+                    Assert.LessOrEqual(plan.BarX + plan.BarWidth * .5f, w * .5f, what + ": bar off the right");
                     Assert.Greater(plan.BarY - SplashCover.BarHeight * .5f, -h * .5f, what + ": bar off the bottom");
                 }
         }
@@ -141,10 +187,10 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheBarClearsTheSystemInsetWhereverBothWillFit()
         {
-            foreach (var h in Canvases)
+            foreach (var (w, h) in Canvases)
                 foreach (var inset in Insets)
                 {
-                    var plan = SplashCover.Fit(W, h, inset);
+                    var plan = SplashCover.Fit(w, h, inset);
 
                     float floor = -h * .5f + inset;
                     float barBottom = plan.BarY - SplashCover.BarHeight * .5f;
@@ -152,7 +198,34 @@ namespace GlimmerGrove.Tests
 
                     if (headroom >= SplashCover.Pad)
                         Assert.GreaterOrEqual(barBottom, floor + SplashCover.Pad - .01f,
-                                              $"canvas {h}, inset {inset}: the bar sat in the inset with room to spare");
+                                              $"canvas {w}x{h}, inset {inset}: the bar sat in the inset with room to spare");
+                }
+        }
+
+        /// <summary>
+        /// The bar is placed by the foot rule and the wordmark ceiling never binds.
+        ///
+        /// <para>
+        /// A ceiling that binds is a ceiling doing a ratio's job (invariant 37cc): if
+        /// <see cref="SplashCover.MinGap"/> were what decided where the bar went on some canvas,
+        /// then <see cref="SplashCover.Foot"/> and <see cref="SplashCover.Pad"/> — the two
+        /// numbers anybody would reach for to tune it — would be deciding nothing there, and no
+        /// other check in this file could tell. The guard is kept because a future cover may set
+        /// its mark low again; it must not be load-bearing for <em>this</em> one.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheBarIsPlacedByTheFootRuleAndNotByTheWordmarkCeiling()
+        {
+            foreach (var (w, h) in Canvases)
+                foreach (var inset in Insets)
+                {
+                    var plan = SplashCover.Fit(w, h, inset);
+                    float wanted = -h * .5f + inset + SplashCover.Pad + SplashCover.Foot
+                                   + SplashCover.BarHeight * .5f;
+
+                    Assert.AreEqual(wanted, plan.BarY, .01f,
+                                    $"canvas {w}x{h}, inset {inset}: the wordmark ceiling moved the bar");
                 }
         }
 
@@ -164,12 +237,12 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheBarIsMeasuredAgainstTheWordAboveIt()
         {
-            var shortCanvas = SplashCover.Fit(W, 1920f, 0f);
-            var tallCanvas = SplashCover.Fit(W, 2400f, 0f);
+            var shortCanvas = SplashCover.Fit(1080f, 1920f, 0f);
+            var tallCanvas = SplashCover.Fit(1080f, 2400f, 0f);
 
             Assert.Greater(tallCanvas.Width, shortCanvas.Width, "a taller canvas draws the picture wider");
             Assert.Greater(tallCanvas.BarWidth, shortCanvas.BarWidth, "the bar did not follow the word");
-            Assert.LessOrEqual(tallCanvas.BarWidth, W - SplashCover.SideMargin * 2f + .01f,
+            Assert.LessOrEqual(tallCanvas.BarWidth, 1080f - SplashCover.SideMargin * 2f + .01f,
                                "the bar outgrew the margin it is allowed");
         }
 

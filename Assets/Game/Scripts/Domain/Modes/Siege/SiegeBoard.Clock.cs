@@ -87,6 +87,13 @@ namespace GlimmerGrove.Modes
                 if (ward.Fill(charge.Fuel)) _report.Brimmed.Add(charge.Ward);
             }
 
+            // **After the fuel and never before it.** A stormglass and the motes of the match that
+            // sprang it are booked to land on the same beat, and a ward that is about to be fed
+            // should have its fuel before the hill is thinned — otherwise a run that kills the
+            // last raider of a wave leaves the fuel arriving at a line with nothing to shoot at,
+            // which is a different run from the one the player played.
+            Break(dt);
+
             Arrive(dt);
         }
 
@@ -155,6 +162,12 @@ namespace GlimmerGrove.Modes
                     continue;
                 }
 
+                // **Two spells that are aimed at the hill rather than at the line**, settled
+                // here for the reason the roar above is: the path below indexes `spell.Ward`, and
+                // both of these carry -1.
+                if (spell.Craft == SiegeSpell.Devour) { Devour(caster); continue; }
+                if (spell.Craft == SiegeSpell.Raise) { Raise(caster); continue; }
+
                 var ward = _wards[spell.Ward];
                 if (!ward.Alive) continue;
 
@@ -187,6 +200,85 @@ namespace GlimmerGrove.Modes
                 _report.Spells.Add(new SiegeSpellLanded(spell.Raider, spell.Ward, spell.Craft,
                                                         cast, felled, sundered));
             }
+        }
+
+        /// <summary>
+        /// Takes every loose thing off the hill: the cogs nobody has picked up and the bombs
+        /// nobody has tapped.
+        ///
+        /// <para>
+        /// <b>What it takes is what the hill owes the player</b>, which is the one thing on this
+        /// board that is neither the line nor the field. A cog is a rank somebody earned and a
+        /// bomb is a firepot they were given (invariant 40i), and both lie there until a finger
+        /// reaches for them — so a gravemaw is a clock on the decision invariant 40i says is the
+        /// whole of that raider: <em>when</em>.
+        /// </para>
+        /// <para>
+        /// <b>It never touches a ward</b>, so a rung whose only threat were one could not be lost
+        /// — which is why one rides the last authored wave rather than walking on alone, and why
+        /// <c>SiegeValidator</c> refuses a rung that sends one with nothing to eat.
+        /// </para>
+        /// <para>
+        /// <b>The ids go into the report</b> rather than being left to the view's poll to notice.
+        /// Both lists are polled against the board every frame, so the widgets would come down
+        /// either way — what the report buys is that they come down <em>toward the thing that ate
+        /// them</em>, which is the difference between a mechanic and a player's cogs quietly
+        /// disappearing.
+        /// </para>
+        /// </summary>
+        void Devour(SiegeRaider caster)
+        {
+            for (int i = _cogs.Count - 1; i >= 0; i--)
+            {
+                _report.Devoured.Add(_cogs[i].Id);
+                _cogs.RemoveAt(i);
+            }
+
+            for (int i = _bombs.Count - 1; i >= 0; i--)
+            {
+                _report.Devoured.Add(_bombs[i].Id);
+                _bombs.RemoveAt(i);
+            }
+
+            _report.Spells.Add(new SiegeSpellLanded(caster.Id, -1, SiegeSpell.Devour, 0, false));
+        }
+
+        /// <summary>
+        /// Puts a fresh group of creepers at the top of the hill, in the caster's own colour.
+        ///
+        /// <para>
+        /// <b>Capped, and the cap is what lets this mode keep a par at all</b> — see
+        /// <see cref="SiegeTuning.RaiseSize"/>. The counter is on the caster so two bonecallers on
+        /// one hill each get their own allowance, which is what the level's par priced.
+        /// </para>
+        /// <para>
+        /// <b>They muster exactly as a wave does</b>: lanes off the field's stream through
+        /// <see cref="SiegeLanes.Walk"/>, spaced by <c>RaiderSpacing</c>, at the top of the hill.
+        /// Anything else would be a group of raiders that behaved unlike every other group of
+        /// raiders in the mode, and the drawn difference would read as a bug rather than as a
+        /// spell. Invariant 41 is why the draw is taken here and not skipped: the number of times
+        /// the field's stream is drawn from is part of what a level deals.
+        /// </para>
+        /// </summary>
+        void Raise(SiegeRaider caster)
+        {
+            caster.Raised++;
+
+            var surge = Layout.SurgeOf(_wave > 0 ? _wave - 1 : 0);
+
+            for (int i = 0; i < SiegeTuning.RaiseSize; i++)
+            {
+                uint roll = Next();
+
+                int lane = SiegeLanes.Walk(Layout.WardOf(SiegeLayout.Letters[caster.Colour]),
+                                           Layout.Wards.Length, roll);
+
+                _raiders.Add(new SiegeRaider(_minted++, caster.Colour, SiegeKind.Creeper, lane,
+                                             i * SiegeTuning.RaiderSpacing, surge));
+            }
+
+            _report.Spells.Add(new SiegeSpellLanded(caster.Id, -1, SiegeSpell.Raise,
+                                                    SiegeTuning.RaiseSize, false));
         }
 
         void Muster(float dt)
@@ -378,10 +470,9 @@ namespace GlimmerGrove.Modes
 
                 ward.Cool = SiegeTuning.FireEvery;
 
-                // **What this bolt is worth is asked of the ward, about the raider.** A prism
-                // widens the mode's central rule to a second colour and a boss is answered by the
-                // whole line whatever it wears (`SiegeTuning.EveryWardReaches`), and both of those
-                // are one question — may this ward fire at this, and for how much — so they are
+                // **What this bolt is worth is asked of the ward, about the raider.** A boss is
+                // answered by the whole line whatever it wears (`SiegeTuning.EveryWardReaches`),
+                // so "may this ward fire at this" and "for how much" are one question and are
                 // asked in one place. A call site comparing colours here would be a second opinion
                 // about what "its own colour" means.
                 //
@@ -425,9 +516,8 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// What a ward will shoot at: the furthest raider of its own colour, then — for a prism —
-        /// the furthest of its partner colour, and then a boss, each only when the one before it
-        /// has nothing left standing.
+        /// What a ward will shoot at: the furthest raider of its own colour, and then a boss, only
+        /// when its own colour has nothing left standing.
         ///
         /// <para>
         /// <b>A turret only ever attacks its own colour, and that one line is the mode.</b> It
@@ -452,16 +542,15 @@ namespace GlimmerGrove.Modes
         /// gets no target and leaves the tube alone.
         /// </para>
         /// <para>
-        /// <b>Own colour first, always.</b> A prism's partner is a shot it would otherwise not
-        /// have fired, so reaching for it only when its own colour is clear is what keeps the
-        /// ability strictly additive — see <see cref="SiegeWard.PartnerShare"/>. Picking the
-        /// furthest of either would let a partner at reduced weight displace an own-colour target
-        /// at full, which is a turret somebody paid for making their own bolt weaker (invariant
-        /// 42).
+        /// <b>Own colour first, always.</b> Anything a ward reaches beyond it is a shot it would
+        /// otherwise not have fired, so reaching for it only when its own colour is clear is what
+        /// keeps every such rule strictly additive: picking the furthest of either would let a
+        /// part-weight bolt displace an own-colour target at full, which is a turret somebody paid
+        /// for making their own bolt weaker (invariant 42).
         /// </para>
         /// <para>
-        /// <b>And a boss last of the three, for the same reason and it is the stronger half of
-        /// it.</b> Every ward answers a boss whatever colour it wears
+        /// <b>And a boss last, for the same reason and it is the stronger half of it.</b> Every
+        /// ward answers a boss whatever colour it wears
         /// (<see cref="SiegeTuning.EveryWardReaches"/>), so a duel is fought by the whole line
         /// rather than by the one turret that happened to match — but a boss holds the middle of
         /// the hill while its escort walks to the wards, and a line that turned to face the boss
@@ -473,7 +562,7 @@ namespace GlimmerGrove.Modes
         /// </summary>
         SiegeRaider Aim(SiegeWard ward)
         {
-            SiegeRaider own = null, partner = null, boss = null;
+            SiegeRaider own = null, boss = null;
 
             for (int i = 0; i < _raiders.Count; i++)
             {
@@ -486,17 +575,11 @@ namespace GlimmerGrove.Modes
                     continue;
                 }
 
-                if (ward.ReachTenths(raider.Colour) > 0)
-                {
-                    if (partner == null || raider.March > partner.March) partner = raider;
-                    continue;
-                }
-
                 if (!SiegeTuning.EveryWardReaches(raider.Kind)) continue;
                 if (boss == null || raider.March > boss.March) boss = raider;
             }
 
-            return own ?? partner ?? boss;
+            return own ?? boss;
         }
 
         void Conjure(float dt)
@@ -508,6 +591,13 @@ namespace GlimmerGrove.Modes
                 // Bosses only. A weaver and a thief cast too, on their own timer and at the field
                 // rather than at the line — see `Meddle`.
                 if (!boss.Boss || !boss.Alive || !boss.InPlace) continue;
+
+                // **A stunned boss does not cast**, which is the decision a stun turret is bought
+                // for: a duel is one raider wearing one colour, so standing a stun on *that*
+                // colour is the one thing on the shelf that can take seconds off the finale's
+                // spell rather than health off the boss (invariant 26h - the player decides, and
+                // can be wrong).
+                if (boss.Stunned) continue;
 
                 boss.Spell -= dt;
                 if (boss.Spell > 0f) continue;
@@ -530,11 +620,18 @@ namespace GlimmerGrove.Modes
                 // Re-arming short instead means the spell lands on the frame there is something
                 // to take. It can only ever make a cast arrive *sooner than it would have* and
                 // never more often than the cadence, because a cast that lands re-arms in full.
-                if (ward < 0 && craft != SiegeSpell.Rally)
+                if (ward < 0 && SiegeTuning.AimsAtAWard(boss.Kind))
                 {
                     boss.Spell = SiegeTuning.CastRetry;
                     continue;
                 }
+
+                // **A bonecaller that has spent its raises stops casting**, and that is invariant
+                // 5d rather than tidiness: par counts exactly `RaisesInAll` bodies, so a fourth
+                // raise would put raiders on a hill nothing priced — and a cast that went through
+                // the tell, the flight and the ring and then raised nothing would be a boss
+                // visibly doing nothing, which is the reading `CastRetry`'s note is about.
+                if (SiegeTuning.Summons(boss.Kind) && boss.Raised >= SiegeTuning.Raises) continue;
 
                 boss.Spell = SiegeTuning.CastEveryFor(boss.Kind);
 
@@ -630,6 +727,12 @@ namespace GlimmerGrove.Modes
             {
                 var raider = _raiders[i];
                 if (!raider.AtTheLine) continue;
+
+                // **A stunned raider does not swing, and its wind-up is held rather than lost.**
+                // Stopping the march alone would be a stun that costs a raider already at the line
+                // nothing at all — which is the half of the hill it is worth most against, because
+                // that is where a second of quiet is a blow the line did not take.
+                if (raider.Stunned) continue;
 
                 raider.Blow -= dt;
                 if (raider.Blow > 0f) continue;

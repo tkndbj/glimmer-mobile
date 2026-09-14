@@ -24,6 +24,57 @@ namespace GlimmerGrove.Modes
         readonly char[] _cells;
 
         /// <summary>
+        /// What each cell is carrying, parallel to <see cref="_cells"/> and moved with it.
+        ///
+        /// <para>
+        /// <b>A second array rather than a second alphabet, which is the opposite of what this
+        /// field has twice shipped.</b> A cog in a cell and a thief's sack were both <em>glyphs</em>
+        /// — things that were not a colour — and both were taken back out, because every rule here
+        /// asks either <em>what colour is this</em> or <em>what is standing here</em> and one
+        /// alphabet answers the first with a thing that has none. A charm is not a second answer to
+        /// the first question: the cell is still a gem, still that colour, still worth that fuel.
+        /// So it sits beside the cell exactly as a weaver's web did, and for the same reason — the
+        /// player can see both facts at once.
+        /// </para>
+        /// <para>
+        /// <b>The cost of anything parallel is that it has to be carried through
+        /// <c>Collapse</c> and <c>Settle</c> in lockstep</b>, and that is the whole of what makes
+        /// this shape expensive. It is one array and not two because there is exactly one fact per
+        /// cell to carry; a charm that needed to remember anything else would be wrong here.
+        /// </para>
+        /// </summary>
+        readonly SiegeCharm[] _charms;
+
+        /// <summary>
+        /// Scratch for <see cref="SiegeLayout.Runs"/>: the colour each cleared cell is paid as.
+        ///
+        /// <b>Held rather than allocated per beat</b>, because a cascade resolves several of them
+        /// inside one swap and this board is stepped sixty times a second. Cleared at the head of
+        /// every use, never read outside one.
+        /// </summary>
+        readonly char[] _paid;
+
+        /// <summary>
+        /// Where the next charm falls: how many gems have been dealt since the last one, and which
+        /// gem of the current window is the one that carries it.
+        ///
+        /// <para>
+        /// <b>State on the board rather than a chance taken per gem</b>, which is what makes the
+        /// gap <em>bounded</em> — see <see cref="SiegeTuning.CharmWithin"/> for the measurement that
+        /// bought it. Both are a pure function of the field's own stream, so two devices playing
+        /// the same swaps meet the same charms in the same cells, exactly as they meet the same
+        /// gems.
+        /// </para>
+        /// <para>
+        /// <b>The first window is picked from the seed and not from nought</b>, or every board in
+        /// the mode would deal its first charm on the same gem of the first refill — a tell a
+        /// player would find in one session and the one thing a deterministic stream makes easy to
+        /// get wrong.
+        /// </para>
+        /// </summary>
+        int _sinceCharm, _charmAt;
+
+        /// <summary>
         /// Which cells a weaver has locked. Parallel to <see cref="_cells"/> and moved with it.
         ///
         /// <para>
@@ -115,6 +166,22 @@ namespace GlimmerGrove.Modes
         {
             Layout = layout;
             _cells = layout.Grid.Copy();
+
+            // **A field opens with no charms on it, and that is the rule rather than the default.**
+            // Charms are dealt into a refill (`Deal`), so an authored field is exactly what its
+            // author wrote and the settled proof is asked the question it was written for.
+            _charms = new SiegeCharm[_cells.Length];
+            _paid = new char[_cells.Length];
+
+            // Where the first charm falls, out of the seed rather than out of the stream: taking a
+            // draw for it would be a draw, and invariant 41 is that the number of draws is content.
+            //
+            // **`CharmFirstWithin` and not `CharmWithin`, which is the whole of what "I never see
+            // them" turned out to be.** The window bounds the gap between two charms; the gap
+            // before the *first* one was drawn from the same window, so a run could be a whole
+            // window old before it met one - and on a short rung that is longer than the run.
+            _charmAt = (int)(Avalanche(layout.Seed) % (uint)SiegeTuning.CharmFirstWithin);
+
             _rng = layout.Seed;
 
             // A different constant so the two streams cannot walk in step, and never nought,
@@ -260,7 +327,86 @@ namespace GlimmerGrove.Modes
 
         public int Goals => Layout.RaiderCount;
 
-        public int GoalsLeft => Goals - _felled;
+        /// <summary>
+        /// How many raiders this run still has to see off: what the level has not sent yet, plus
+        /// everything alive right now.
+        ///
+        /// <para>
+        /// <b>Derived from the state of the hill, never from a tally of kills, and the difference
+        /// is a run that could not end.</b> It was <c>Goals - _felled</c> — the authored raider
+        /// count less everything that has died — which is exact on every board whose raiders are
+        /// all authored, and wrong the day one of them <em>makes</em> raiders. A bonecaller raises
+        /// <see cref="SiegeTuning.RaisesInAll"/> creepers that <see cref="SiegeLayout.RaiderCount"/>
+        /// has never heard of and that <c>Fell</c> counts like any other death, so on the shipped
+        /// rung the kill tally passed the authored 27 <b>while the boss was still standing on
+        /// 1,186 health with seven raiders walking</b>, and then went straight past it.
+        /// </para>
+        /// <para>
+        /// <b>Both halves of that are bugs and only the second was reported.</b> The model reads
+        /// the equality the frame it happens and so declared the level cleared mid-fight — which
+        /// is what the hold simulation had been measuring on that rung, so its whole reading of it
+        /// was of a run that stopped when 27 things had died. The <em>view</em> is not allowed to
+        /// ask while the field is coming apart or while something is dying (<c>SiegeView.Judge</c>
+        /// holds on <c>Busy</c> and <c>_felling</c>), so what a player met was the counter sliding
+        /// past nought during the hold and never coming back to it: a cleared hill, a dead boss
+        /// and a run that simply never ended. Reported from play in exactly those words.
+        /// </para>
+        /// <para>
+        /// <b>The general rule is that a terminal reading has to be monotone</b> — an equality on
+        /// a counter that can overshoot its target is not an ending, it is a coincidence that has
+        /// to be observed on the exact frame it happens. This cannot overshoot: nothing may be
+        /// raised onto a hill with nothing alive on it, because the only thing that raises is a
+        /// raider.
+        /// </para>
+        /// <para>
+        /// <b>The endless lane keeps the tally</b>, and that is not an exception dodging the rule:
+        /// it has no ending of this shape at all (<see cref="IsFinished"/> asks the ward line
+        /// there), its <see cref="Goals"/> is <c>int.MaxValue</c>, and what this figure is used
+        /// for on that lane is the analytics reading <c>Goals - GoalsLeft</c>, which is how many
+        /// raiders the run saw off.
+        /// </para>
+        /// <para>
+        /// <b>What it costs is that <c>Goals - GoalsLeft</c> steps backwards when a caster
+        /// raises</b>, and that is the truth rather than a defect: the hill really did just get
+        /// four raiders longer. It is read in one place — <c>ProtoScreen</c>'s <c>lit</c> on the
+        /// defeat record, since the victory record passes <see cref="Goals"/> for both — and it
+        /// cannot go negative, because the only board that raises anything raises it from the last
+        /// wave, by which point nothing is unsent.
+        /// </para>
+        /// </summary>
+        public int GoalsLeft => Layout.IsEndless ? Goals - _felled : Unsent + Standing;
+
+        /// <summary>How many raiders the level has authored and not yet mustered.</summary>
+        int Unsent
+        {
+            get
+            {
+                int n = 0;
+                for (int wave = _wave; wave < Layout.WaveCount; wave++) n += Layout.SizeOf(wave);
+
+                return n;
+            }
+        }
+
+        /// <summary>
+        /// How many raiders are alive, wherever they are.
+        ///
+        /// <b>Not <see cref="OnTheHill"/>, which asks whether one has walked on yet.</b> A raider
+        /// minted above the top of the hill is still a raider this run has to see off, so an
+        /// ending that did not count it would fire in the gap between a wave mustering and its
+        /// first body arriving.
+        /// </summary>
+        int Standing
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 0; i < _raiders.Count; i++)
+                    if (_raiders[i].Alive) n++;
+
+                return n;
+            }
+        }
 
         /// <summary>
         /// How many raiders are standing on the hill right now.

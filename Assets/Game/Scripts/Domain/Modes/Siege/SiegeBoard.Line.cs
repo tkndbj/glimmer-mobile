@@ -64,6 +64,13 @@ namespace GlimmerGrove.Modes
                     target.Freeze(model.Magnitude, model.Extent / 10f);
                     break;
 
+                // **Asked rather than set**, because a stun is the one lasting state here that is
+                // refused while it is running instead of refreshed - see `SiegeRaider.Stagger` for
+                // why a refreshing one would never end.
+                case WardAbility.Stun:
+                    target.Stagger(model.Extent / 10f);
+                    break;
+
                 case WardAbility.Pierce:
                     if (model.Extent > 0 && ward.Shots % model.Extent == 0)
                         Lance(ward, index, target, Share(damage, model.Magnitude));
@@ -73,14 +80,13 @@ namespace GlimmerGrove.Modes
                     target.Kindle(Share(damage, model.Magnitude), model.Extent / 10f, index);
                     break;
 
-                // Rend, Prism and Beacon are not applied here at all: the first two change what
-                // the *primary* hit is worth and are read by `SiegeTuning.DamageTo`, and a beacon
-                // changes what the ward holds and is read once when it is built. Said out loud
-                // rather than left as a missing case, because a reader looking for a turret's
-                // effect has to be told where it lives.
+                // Rend and Beacon are not applied here at all: a rend changes what the *primary*
+                // hit is worth and is read by `SiegeTuning.DamageTo`, and a beacon changes what
+                // the ward holds and is read once when it is built. Said out loud rather than left
+                // as a missing case, because a reader looking for a turret's effect has to be told
+                // where it lives.
                 case WardAbility.Siphon:
                 case WardAbility.Rend:
-                case WardAbility.Prism:
                 case WardAbility.Beacon:
                 case WardAbility.None:
                 default:
@@ -229,6 +235,13 @@ namespace GlimmerGrove.Modes
                 var raider = _raiders[i];
 
                 if (raider.Chill > 0f) raider.Chill = Math.Max(0f, raider.Chill - dt);
+
+                // **Both halves of a stun run down here**, in the one place the board already
+                // ages what a bolt left behind. `Steady` outlives `Stun` by
+                // `SiegeTuning.StunRest`, which is what stops the next bolt renewing it.
+                if (raider.Stun > 0f) raider.Stun = Math.Max(0f, raider.Stun - dt);
+                if (raider.Steady > 0f) raider.Steady = Math.Max(0f, raider.Steady - dt);
+
                 if (!raider.Alive || raider.Burn <= 0f) continue;
 
                 float span = Math.Min(dt, raider.Burn);

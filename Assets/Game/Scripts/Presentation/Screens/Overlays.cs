@@ -943,15 +943,23 @@ namespace GlimmerGrove
             UIKit.Titled("Ver", Panel, Loc.Format("ui.settings.version", Application.version), 28, new Color(.44f, .32f, .24f),
                          TextAnchor.MiddleCenter, new Vector2(700f, 40f), new Vector2(.5f, 1f),
                          new Vector2(0f, -420f), 0f, 0f);
-            // The art licences, and the one place in the game that discharges them. Shrinkable
-            // and nearly the full width of the panel because it is a *list* that grows with the
-            // packs the build draws from — a fixed box would let the next one run off the paper
-            // (UIKit.Label overflows rather than truncating), in whichever language is longest.
-            UIKit.Shrinkable(
-                UIKit.Titled("Credit", Panel, Loc.Get("ui.settings.credit"), 24,
-                             new Color(.52f, .40f, .31f, .85f),
-                             TextAnchor.MiddleCenter, new Vector2(800f, 36f), new Vector2(.5f, 1f),
-                             new Vector2(0f, -462f), 0f, 0f), 16);
+            // There is deliberately no art-credit row here any more, and the reason is that
+            // none of the packs this build draws from asks for one. CraftPix says so in as
+            // many words ("no attribution or link back to this site is required"), and the
+            // Envato/GraphicRiver and Unity Asset Store licences the rest come under say
+            // nothing about credit at all. The one vendor that *did* compel an in-app line
+            // was Freepik — whose free licence wants the credit in the app or the store
+            // listing specifically, so a website would not have discharged it — and no
+            // Freepik pixel has shipped since the shop's money art was re-cut from the Layer
+            // Lab pack (`Tools/make_shop_art.py --check` proves every shipped sprite is that
+            // pack's). So the courtesy credit moved to the publisher's site, at
+            // tekoworld.com/credits, which is where a list that grows with the packs can be
+            // corrected without an app update — this line having been wrong for five days
+            // because it could not be.
+            //
+            // If a pack whose licence *requires* attribution is ever cut into this game, the
+            // row comes back here: a website is not an answer to Freepik's rule, and the
+            // store description is the only other place that is.
 
             if (privacy)
             {
@@ -962,7 +970,7 @@ namespace GlimmerGrove
                 // dialog and stacking one over a Unity modal leaves the modal drawn behind it
                 // for as long as it is up.
                 UIKit.TextButton("Privacy", Panel, "btn_blue", Loc.Get("ui.settings.privacy"), 40,
-                                 new Vector2(600f, 116f), new Vector2(.5f, 1f), new Vector2(0f, -560f),
+                                 new Vector2(600f, 116f), new Vector2(.5f, 1f), new Vector2(0f, -520f),
                                  () => Close(() => _ = AdPrivacy.RevisitAsync()));
             }
 
@@ -1020,8 +1028,15 @@ namespace GlimmerGrove
         /// of the top edge, so a panel that grows past that is drawn off the top of a 4:3 tablet
         /// and off nothing else. That is the failure this file has already had once.
         /// </para>
+        /// <para>
+        /// 660 rather than 700: the art-credit row and the gap above it were 40 units of the
+        /// old height, and taking a row out has to take its height out with it — leaving the
+        /// panel at 700 would have drawn the consent button through the legal row on the one
+        /// arrangement that has both, because everything below the toggles hangs from the
+        /// foot and only the things above it hang from the top.
+        /// </para>
         /// </summary>
-        internal const float BaseHeight = 700f, ConsentRow = 130f, LegalRow = 96f;
+        internal const float BaseHeight = 660f, ConsentRow = 130f, LegalRow = 96f;
 
         /// <summary>
         /// One link out to the public site.

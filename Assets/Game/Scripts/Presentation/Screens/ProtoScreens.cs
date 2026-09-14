@@ -320,6 +320,13 @@ namespace GlimmerGrove
             if (board == null || Level == null) return;
 
             LevelAnalytics.TrackSiegeAttention(Level, board.Attention, won);
+
+            // The hill's half of the tasks, beside the analytics that already read the same
+            // counters: what was felled, sprung, taken and tapped, and how many matches paid
+            // for it. The run's own half (finished, won, starred) is the ledger's, one call
+            // later, where every mode reports it.
+            Tasks.TaskLedger.RecordSiege(board.Attention, board.WavesCleared,
+                                         _siege.Run != null ? _siege.Run.Spent : 0);
         }
 
         /// <summary>Whether this rung's waves never stop.</summary>
@@ -437,6 +444,12 @@ namespace GlimmerGrove
             _siege.Brimmed = () => Teaching?.Teach(Mechanic.SiegeBrim);
             _siege.Salvaged = () => Teaching?.Teach(Mechanic.SiegeSalvage);
             _siege.Bombed = () => Teaching?.Teach(Mechanic.SiegeBomber);
+
+            // **One lesson per charm, raised when one is dealt** - a charm arrives at a rate
+            // rather than at a moment, so a panel offered at the opening would be about a thing
+            // that is not on the screen (invariant 6b). Which lesson is `Taught`, so the mapping
+            // lives in one place and a fourth charm cannot be half-added.
+            _siege.Dealt = charm => Teaching?.Teach(Taught(charm));
 
             // **What a bomb hits for is the published firepot's number, not a constant.** The two
             // are the same blast and the player is told so; a second figure is a second thing a
@@ -756,6 +769,42 @@ namespace GlimmerGrove
             // act on; `Later` keeps it out of the opening chain, and a player who never kills a
             // bomber is never told about a bomb they do not have.
             into.Add(Lesson.Later(Mechanic.SiegeBomber, _siege.LiveBomb()));
+
+            // **And one per charm this level actually deals.** A lesson is shown once in a
+            // player's life, so offering the lance's on a chapter that deals no lance would spend
+            // it on something that can never appear - which is the cog's own rule, and the reason
+            // this list is a fact about *this board* rather than about the mode.
+            // Held in a local rather than reached through `board.Layout.` at the call site: the
+            // offline compile refuses that shape anywhere in a screen, because
+            // `LevelDefinition.Layout` is null on any level that is not a glade and the check is
+            // deliberately coarse about which `Layout` it is looking at.
+            var plan = board.Layout;
+            var charms = plan.Charms;
+
+            for (int i = 0; charms != null && i < charms.Length; i++)
+                into.Add(Lesson.Later(Taught(charms[i]), _siege.LiveCharm(charms[i])));
+        }
+
+        /// <summary>
+        /// Which lesson a charm's arrival raises.
+        ///
+        /// <b>A table rather than a <c>default</c> that answers something</b>, which is invariant
+        /// 44e: a fourth charm falling through here would quietly show a player the prism's panel
+        /// and mark it seen, and a lesson id that has travelled in a save can never be re-pointed
+        /// (invariant 6a). <c>default</c> is not a valid <c>Mechanic</c>, so it is refused by
+        /// <c>Teach</c> rather than shown.
+        /// </summary>
+        static Mechanic Taught(SiegeCharm charm)
+        {
+            switch (charm)
+            {
+                case SiegeCharm.Prism: return Mechanic.SiegePrism;
+                case SiegeCharm.Lance: return Mechanic.SiegeLance;
+                case SiegeCharm.Storm: return Mechanic.SiegeStorm;
+
+                case SiegeCharm.None:
+                default: return default;
+            }
         }
 
         /// <summary>

@@ -47,6 +47,14 @@ namespace GlimmerGrove.EditorTools
         public const string HomesteadGroup = "Glimmer Grove Homestead";
 
         /// <summary>
+        /// The task chests' opening reels. Their own bundle, because they are a scope of their
+        /// own: the hub draws the closed icons (global) and only a chest being opened draws a
+        /// reel, so a bundle shared with the global set would load sixty-eight frames at every
+        /// launch for the sake of four small pictures.
+        /// </summary>
+        public const string ChestGroup = "Glimmer Chests";
+
+        /// <summary>
         /// Art that belongs to no chapter in particular. Branding is the clear case: the
         /// launcher icon is consumed by the build pipeline and never loaded at runtime,
         /// so giving it an address would put a texture in a bundle nothing ever opens.
@@ -126,6 +134,13 @@ namespace GlimmerGrove.EditorTools
             foreach (var request in AssetManifest.AllWardAssets(ProgressionRules.Table.Wards))
                 if (request.Kind == AssetKind.SpriteSet) folders.Add(request.Address);
 
+            // The chest reels, for the turrets' reason: a scope asks for them and no chapter
+            // does, so a set built from the global and chapter lists would leave four reels
+            // importing as loose sprites with no label — addressed, audited green and
+            // completely unloadable (37at).
+            foreach (var request in AssetManifest.ChestAssets(ProgressionRules.Table.Tasks))
+                if (request.Kind == AssetKind.SpriteSet) folders.Add(request.Address);
+
             // **Every mode's own art, asked without a chapter, and it is the one entry here that
             // is about what *exists* rather than about what something loads.**
             //
@@ -194,6 +209,9 @@ namespace GlimmerGrove.EditorTools
         /// <summary>Addresses under here are companion portraits, whoever asks for them.</summary>
         public const string CompanionPrefix = "Art/Companions/";
 
+        /// <summary>Addresses under here are chest reels, whoever asks for them. See <see cref="ChestGroup"/>.</summary>
+        public const string ChestPrefix = "Art/Chests/";
+
         /// <summary>
         /// Addresses under here belong to the grove, whoever asks for them.
         ///
@@ -223,6 +241,9 @@ namespace GlimmerGrove.EditorTools
         {
             if (address != null && address.StartsWith(CompanionPrefix, System.StringComparison.Ordinal))
                 return CompanionGroup;
+
+            if (address != null && address.StartsWith(ChestPrefix, System.StringComparison.Ordinal))
+                return ChestGroup;
 
             if (address != null && (address.StartsWith(HomesteadPrefix, System.StringComparison.Ordinal)
                                  || address.StartsWith(GrovePrefix, System.StringComparison.Ordinal)))

@@ -64,6 +64,7 @@ from __future__ import annotations
 
 import math
 import random
+import re
 import argparse
 import json
 import sys
@@ -110,6 +111,24 @@ SAFE_BOTTOM = 0
 #: the foot of it. `--phone` swaps these in.
 PHONE_CANVAS = (1080, 2340)
 PHONE_SAFE_BOTTOM = 94
+
+#: A 4:3 tablet, in the canvas units `CanvasFit` gives one. `--tablet` swaps these in.
+#:
+#: **The shape this file could not draw, which is why the fault it hid was reported from a device
+#: rather than found here.** A squarer display is not handed 1080 units across: `CanvasFit` widens
+#: the canvas until it is `ShortHeight` (2160) units tall so that every layout keeps its sizes in
+#: units and is simply drawn smaller, which for a 4:3 works out at 1620 x 2160. Every picture this
+#: tool had ever drawn was 1080 wide, so the one screen in the game that *grows* when the canvas
+#: widens - this board, laid out to the width - was drawing a cell a third too big on every tablet
+#: and no render could say so (invariant 37cc).
+#:
+#: No home indicator: an iPad's is a 20pt strip and the board is laid out inside the safe layer
+#: either way, and what `--phone` exists to show is the *shelf's* foot rather than the board's.
+TABLET_CANVAS = (1620, 2160)
+TABLET_SAFE_BOTTOM = 0
+
+#: `CanvasFit.PhoneWidth` - the width every layout in this game was measured against.
+PHONE_WIDTH = 1080
 
 #: `UtilityBar.Shelf` and `UtilityBar.MostFoot`. The bar is a shelf that meets the board's plate
 #: rather than a strip floating under it, so the bottom inset is the bar and nothing else - but
@@ -182,6 +201,23 @@ BACK = (9, 14, 20)
 TINTS = [(242, 64, 79), (123, 216, 106), (79, 193, 255), (255, 138, 43)]
 
 GEM_ART = {"r": "gem_r", "g": "gem_g", "b": "gem_b", "y": "gem_y", "*": "gem_cog"}
+
+#: `SiegeView.CharmFace` - which stone a charmed gem *is*, per charm and per colour.
+#:
+#: **A gem of its own rather than a mark worn over one**, which is the correction this table was
+#: rewritten for: a lance and a stormglass used to be a white glyph printed on one of the four
+#: jewels, and the owner's verdict was that the charms were the existing gems with an icon on them.
+#: A prism is absent on purpose and always was - it is a face in `GEM_ART`'s sense, because it is
+#: the one gem here that is not a colour.
+CHARM_ART = {siege.LANCE: "gem_lance", siege.STORM: "gem_storm"}
+
+#: `SiegeView.MarkInset` and `.RingInset`, as fractions of a cell.
+#: `SiegeView.CharmInset` and `RingInset` - how big a charmed stone and its halo are drawn.
+#:
+#: A charmed stone is a shade larger than a plain one, because both charmed cuts are pointed or
+#: round where the four are broad: fitted to the same box a star and an orb draw visibly smaller
+#: than the stones beside them, which would say a charm is a lesser gem.
+CHARM_INSET, CHARM_RING = 1.06, 1.18
 
 #: `SiegeLayout.Bomb` - what a bomber drops. Drawn as the firepot the player already owns, which
 #: is what the view draws it as: tapping it throws exactly what a firepot throws, so a second
@@ -630,6 +666,10 @@ BOSSES = {
     "warlord": dict(hold=0.46, tall=3.1, stem="boss", fx="spell", fire=(180, 120, 255)),
     "warbringer": dict(hold=0.46, tall=3.3, stem="bringer", fx="roar", fire=(255, 244, 206)),
     "overlord": dict(hold=0.38, tall=3.5, stem="over", fx="omen", fire=(255, 116, 212)),
+    # `Pal.Verdant` and `Pal.Glass` - the two that land on the hill rather than on the line, so
+    # neither can be read as "this hurts the green ward more" (`SiegeView.Casting`).
+    "gravemaw": dict(hold=0.62, tall=3.2, stem="maw", fx="roar", fire=(84, 228, 140)),
+    "bonecaller": dict(hold=0.40, tall=3.0, stem="caller", fx="roar", fire=(220, 235, 245)),
 }
 
 
@@ -672,7 +712,13 @@ def warlord(sheet, draw_on, kind, colour, wards, span, cell, hill_top, hill_foot
     fire = look["fire"]
 
     tall = cell * look["tall"]
-    ly = hill_top + (hill_foot - hill_top) * look["hold"]
+
+    # **Standing on its ground, except while it is walking to it.** `SiegeTuning.HoldOf` is where
+    # a boss stops, so every other picture here is of one in place; drawing the entrance at that
+    # same spot would be a walk cycle on a body that has arrived, which is the fault this flag
+    # exists to look at, drawn.
+    reached = look["hold"] * (0.5 if casting == "walk" else 1.0)
+    ly = hill_top + (hill_foot - hill_top) * reached
 
     # **A lone boss walks down the middle and a pair stands either side of it**, which is
     # `SiegeBoard.Muster`'s own rule rather than this picture's - the middle lane is where a
@@ -680,13 +726,25 @@ def warlord(sheet, draw_on, kind, colour, wards, span, cell, hill_top, hill_foot
     cx, cy = at(0.0 if lane is None else lane_x(span, lane), ly)
 
     # `SiegeView.Follow` - the walk while it is crossing ground, the idle once it is standing.
-    # This picture is of a boss in place, so the idle is the honest one to draw; `--warlord walk`
-    # is what looks at the reel that was missing for a whole session.
+    # This picture is of a boss in place, so the idle is what it draws unless asked otherwise, and
+    # `--warlord walk` is the entrance.
     stem = look["stem"]
-    # **Two reels rather than three**: every body in this cast is a top-down insect whose legs and
-    # wings cycle in place, so standing and walking are one picture and only the throw is its own
-    # (see `SiegeView.Mob.Idle`).
-    body = reel(stem + ("_cast" if casting == "cast" else ""))
+
+    # **Three reels for a boss that was rendered out of 3D and two for one that was cut from a 2D
+    # pack**, which is a fact about the art rather than about the kind (`SiegeView.WalkReel`). A
+    # pack drew each of its bosses one animation, so standing and walking are one picture for
+    # four of the six; a baked body genuinely stands still when it stops, so it carries a walk of
+    # its own and `caller_walk` is the only one on disk. Falling back to the stand is the same
+    # answer the view gives, and it is what keeps `--warlord walk` a legal thing to ask of every
+    # boss rather than a flag that draws nothing for four of them.
+    body = None
+    if casting == "cast":
+        body = reel(stem + "_cast")
+    elif casting == "walk":
+        body = reel(stem + "_walk")
+
+    if body is None:
+        body = reel(stem)
     if body is None:
         return
 
@@ -1193,6 +1251,24 @@ def put(sheet, im, cx, cy, w, h):
                           (int(cx - size[0] / 2), int(cy - size[1] / 2)))
 
 
+def dyed(im, rgb, alpha=255):
+    """`Image.color` on a white sprite: a multiply, so it can only ever darken.
+
+    Written out rather than approximated, because that *is* the rule the game draws by and a
+    mirror that lightened instead would show a charm's halo the game cannot produce (invariant
+    37l is the whole of why the wards carry a baked hue rotation rather than a tint).
+    """
+    if im is None:
+        return None
+
+    out = im.copy()
+    r, g, b, a = out.split()
+    lut = lambda ch, k: ch.point(lambda v: v * k // 255)
+
+    return Image.merge("RGBA", (lut(r, rgb[0]), lut(g, rgb[1]), lut(b, rgb[2]),
+                                a.point(lambda v: v * alpha // 255)))
+
+
 def stretch(sheet, im, cx, cy, w, h):
     """Draws a sprite stretched to w x h, which is what the view does to the wall."""
     sheet.alpha_composite(im.resize((max(1, int(w)), max(1, int(h))), Image.LANCZOS),
@@ -1229,7 +1305,8 @@ def layout_of(level):
     grid = proto.Grid(block["rows"], block["width"], block["height"], siege.CELLS)
     return siege.Layout(grid, block["gems"], block["wards"], block["waves"],
                         block.get("boss"), block.get("cogs", 0),
-                        endless=bool(block.get("endless")))
+                        endless=bool(block.get("endless")),
+                        charms=block.get("charms", ""))
 
 
 def coming(lay, wave):
@@ -1264,15 +1341,110 @@ def ground(rung):
     return "hill%d" % (rung % GROUNDS + 1)
 
 
+def beam_thicks():
+    """`SiegeView.HazeThick` / `BodyThick` / `CoreThick`, read off the source that draws them.
+
+    **A mirror that types its own numbers vouches for a picture the game does not produce**
+    (invariant 44d), and thickness is the one question `--volley` exists to answer: whether a dozen
+    layered beams standing at once read as a barrage or as a white smear. Typed here, this tool
+    would go on answering it about whatever the numbers used to be.
+    """
+    src = (REPO / "Assets/Game/Scripts/Presentation/Board/Siege/SiegeView.Charms.cs") \
+        .read_text(encoding="utf-8")
+
+    said = re.search(r"HazeThick\s*=\s*([\d.]+)f,\s*BodyThick\s*=\s*([\d.]+)f,"
+                     r"\s*CoreThick\s*=\s*([\d.]+)f", src)
+
+    if not said:
+        raise SystemExit("SiegeView.Charms: no HazeThick/BodyThick/CoreThick to mirror")
+
+    return tuple(float(g) for g in said.groups())
+
+
+def white_glow(side):
+    """`Art.Glow` - the soft radial the view blooms a muzzle with."""
+    side = max(8, int(side))
+    im = Image.new("RGBA", (side, side), (255, 255, 255, 0))
+    px = im.load()
+    mid = side / 2.0
+
+    for y in range(side):
+        for x in range(side):
+            r = math.hypot(x - mid, y - mid) / mid
+            if r >= 1.0:
+                continue
+            px[x, y] = (255, 255, 255, int((1.0 - r) ** 2.0 * 235.0))
+
+    return im
+
+
+def stood_lance(where, level):
+    """`--lance`, as a cell index, or None.
+
+    Bare means the middle of the field, which is the worst case for the picture: a cross drawn from
+    the middle has an arm running to every edge, so nothing about the beam is hidden by the board
+    ending early.
+    """
+    if where is None:
+        return None
+
+    if where >= 0:
+        return where
+
+    block = level.get("siege") or {}
+    wide, tall = block.get("width") or 0, block.get("height") or 0
+    return (tall // 2) * wide + wide // 2
+
+
+def stood_charms(spec, level):
+    """`--charms`, as {cell: kind}.
+
+    **`auto` stands one of each along the middle row**, which is the arrangement that answers the
+    question this is for: three marks side by side over three different jewels, at the size a phone
+    draws them. A named list is for looking at one particular pairing - a lance on a yellow gem is
+    the worst case, because white on amber is the least contrast this board can produce.
+    """
+    if not spec:
+        return {}
+
+    block = level.get("siege") or {}
+    wide, tall = block.get("width") or 0, block.get("height") or 0
+
+    if spec == "auto":
+        row = (tall // 2) * wide
+        kinds = (siege.PRISM, siege.LANCE, siege.STORM)
+        return {row + 1 + i * 2: kinds[i % len(kinds)] for i in range(min(3, (wide - 1) // 2))}
+
+    named = {k: v for v, k in ((siege.PRISM, "prism"), (siege.LANCE, "lance"),
+                               (siege.STORM, "storm"))}
+    out = {}
+
+    for part in spec.split(","):
+        cell, _, kind = part.partition("=")
+        if kind.strip() not in named:
+            raise SystemExit("--charms: '%s' is not one of prism, lance, storm" % kind.strip())
+        out[int(cell)] = named[kind.strip()]
+
+    return out
+
+
 def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, line=None,
-         burn=None, storm=0, bombs=None, cogs=0, forecast=False, armed=()):
+         burn=None, storm=0, bombs=None, cogs=0, forecast=False, armed=(), charms=None,
+         lance=None, volley=None):
     lay = layout_of(level)
     grid = lay.grid
+    charms = charms or {}
 
     left, bottom, right, top = inset()
     host = (CANVAS[0] - left - right, CANVAS[1] - top - bottom)
 
-    cell = min((host[0] - MARGIN * 2) / grid.w,
+    # `SiegeView.CellFor` - the field is laid out to the width a *phone* would have given it,
+    # because the extra width on a squarer canvas was bought to buy height and is not the board's
+    # to spend (invariant 37cc). Without it a 4:3 tablet draws a 160-unit cell against a phone's
+    # 124, which puts the field on its `MAX_GEM_BAND` ceiling and leaves the hill 3.2 cells.
+    scale = min(1.0, PHONE_WIDTH / CANVAS[0])
+
+    cell = min((host[0] * scale - MARGIN * 2) / grid.w,
                (host[1] - MARGIN * 2) * MAX_GEM_BAND / grid.h)
     span = (max(cell * grid.w, host[0] - MARGIN * 2), max(cell * grid.h, host[1] - MARGIN * 2))
 
@@ -1515,8 +1687,12 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
 
     # ------------------------------------------------------------------ the field
     cx, cy = at(0, gem_centre)
+    # `SiegeView.Sockets` - the plate runs to the edge of the board like the ground and the
+    # rampart do. On a phone the two are the same number to within six units; on a tablet the
+    # field is narrower than the board (invariant 37cc) and a plate cut to the cells would leave
+    # a strip of bare board down each side of it.
     stretch(sheet, sprite("plate"), cx, cy,
-            cell * grid.w + cell * 0.34, cell * grid.h + cell * 0.34)
+            max(cell * grid.w + cell * 0.34, span[0] + MARGIN * 2), cell * grid.h + cell * 0.34)
 
     for i, c in enumerate(grid.cells):
         gx = (i % grid.w - (grid.w - 1) / 2) * cell
@@ -1526,11 +1702,145 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         draw_on.rounded_rectangle([cx - cell * 0.46, cy - cell * 0.46,
                                    cx + cell * 0.46, cy + cell * 0.46],
                                   radius=16, fill=(255, 255, 255, 12))
+
+        # **The charms, stood where `--charms` asks for them** (`SiegeCharm`). They are dealt at a
+        # rate rather than authored, so no shipped field carries one and this is the only way to
+        # look at one at all - which is the whole job of this tool: whether a charmed *stone* is
+        # told apart from the four beside it at forty pixels, and whether it still reads as its own
+        # colour, are two questions no numeric gate can be asked (invariant 32b).
+        charm = charms.get(i)
+
+        if charm:
+            put(sheet, dyed(sprite("charm_ring"), TINTS[siege.LETTERS.index(c)], 216),
+                cx, cy, cell * CHARM_RING, cell * CHARM_RING)
+
         # A cog is drawn a shade smaller than a jewel, so the socket shows around it - it is the
         # one thing on this field that is not a gem, and the gap is the cheapest way of saying so
         # that survives being forty pixels wide (`SiegeView.Mint`).
         side = cell * (GEM_INSET * 0.88 if c == "*" else GEM_INSET)
-        put(sheet, sprite(GEM_ART[c]), cx, cy, side, side)
+
+        # **Every charm is a face** (`SiegeView.CharmFace`): a prism is the one gem here that is
+        # not a colour, and the other two are their own stone cut in the colour they are worth. So
+        # a charm never stands *on* a jewel - it replaces it, which is what a player separates at a
+        # glance on a board that also has a hill walking down it.
+        if charm == siege.PRISM:
+            art = "gem_prism"
+        elif charm:
+            art = "%s_%s" % (CHARM_ART[charm], c)
+            side *= CHARM_INSET
+        else:
+            art = GEM_ART[c]
+
+        put(sheet, sprite(art), cx, cy, side, side)
+
+    # ------------------------------------------------------------------ a lance going off
+    # **`--lance`, and it is the one thing in this mode a still picture can still be asked.** A
+    # charm's whole complaint was the drawing (invariant 37cn), and a drawing is what no numeric
+    # gate opens: whether the beam reads as light rather than as a highlighter line, whether it is
+    # thick enough to cover the gems it is taking without hiding the row either side, and whether a
+    # burst on every cell of the cross reads as a row failing or as noise.
+    #
+    # **The peak frame rather than the sequence.** The game draws this over about a second - charge,
+    # beams, then the cross failing outward from the stone - and a still can only stand at one
+    # moment of that. The moment worth looking at is the one where the most is on the screen, which
+    # is the beams at full and the wavefront about two thirds of the way out: the bursts near the
+    # stone are already fading and the far ones have not started, which is exactly the reading the
+    # `Ruin` stagger is for.
+    if lance is not None and 0 <= lance < len(grid.cells):
+        lx, ly = lance % grid.w, lance // grid.w
+        hue = TINTS[siege.LETTERS.index(grid.cells[lance])]             if grid.cells[lance] in siege.LETTERS else (255, 243, 220)
+
+        def cell_at(gx_i, gy_i):
+            return at((gx_i - (grid.w - 1) / 2) * cell,
+                      gem_centre + ((grid.h - 1) / 2 - gy_i) * cell)
+
+        sx, sy = cell_at(lx, ly)
+
+        # The two strokes, body then core - a tint is a multiply, so the white filament the art
+        # tool drew only survives as a second, thinner draw over the top (`SiegeView.Stroke`).
+        beam_body = reel("beam", 4)
+
+        for wide, tall in ((cell * grid.w, cell * 0.66), (cell * 0.66, cell * grid.h)):
+            across = wide > tall
+            for colour, thin in ((hue, 1.0), ((255, 255, 255), 0.34)):
+                im = dyed(beam_body, colour, 236 if thin == 1.0 else 210)
+                if im is None:
+                    continue
+                if not across:
+                    im = im.transpose(Image.ROTATE_90)
+                    stretch(sheet, im, sx, sy, wide * thin, tall)
+                else:
+                    stretch(sheet, im, sx, sy, wide, tall * thin)
+
+        # The cross failing, outward. Two thirds of the way out, so the near cells are past their
+        # peak and the far ones have not lit - which is what says the light travelled.
+        front = int(max(grid.w, grid.h) * 0.66)
+        burst = "hit_%s" % (grid.cells[lance] if grid.cells[lance] in siege.LETTERS else "r")
+
+        for gx_i, gy_i in ([(x, ly) for x in range(grid.w)]
+                           + [(lx, y) for y in range(grid.h) if y != ly]):
+            far = max(abs(gx_i - lx), abs(gy_i - ly))
+            if far > front:
+                continue
+
+            bx, by = cell_at(gx_i, gy_i)
+            put(sheet, blast(burst, min(11, 2 + (front - far) * 3)),
+                bx, by, cell * 1.7, cell * 1.7)
+
+        # And the stone's own detonation, which is the reel baked for this and nothing else.
+        put(sheet, blast("charm_blast_%s" % (grid.cells[lance]
+                                             if grid.cells[lance] in siege.LETTERS else "r"), 7),
+            sx, sy, cell * 4.2, cell * 4.2)
+
+    # ------------------------------------------------------------------ a stormglass firing
+    # **`--volley`, and it is the only way to look at the one moment this mode stops for.** The
+    # board and the hill are both frozen while a stormglass fires (invariant 37cq), so what is on
+    # the screen is every standing ward's beam at once - which is a question about *density* and
+    # *thickness* that no numeric gate can be asked and that one beam on its own cannot answer
+    # either. Drawn at the peak: every beam open, before any of them has begun to close.
+    if volley is not None and 0 <= volley < len(grid.cells):
+        vx, vy = volley % grid.w, volley // grid.w
+        sx, sy = at((vx - (grid.w - 1) / 2) * cell,
+                    gem_centre + ((grid.h - 1) / 2 - vy) * cell)
+
+        bolt = reel("laser", 3)
+
+        # **Read off `SiegeView`'s own constants rather than typed here**, which is invariant 44d's
+        # rule about a mirror: two numbers for one thickness is a tool vouching for a beam the game
+        # does not draw, and thickness is the one question this exists to answer.
+        thicks = beam_thicks()
+        layers = ((thicks[0], 107, True), (thicks[1], 242, True), (thicks[2], 242, False))
+
+        for n, (tx, ty) in enumerate(mob):
+            letter = lay.wards[n % len(lay.wards)] if lay.wards else "r"
+            hue = TINTS[siege.LETTERS.index(letter)]
+
+            dx, dy = tx - sx, ty - sy
+            far = math.hypot(dx, dy) or 1.0
+            lean = math.degrees(math.atan2(dy, dx))
+
+            # Run a little past the raider, so a beam ends *in* what it hit rather than at its
+            # feet - `SiegeView.Beam`.
+            length = far + cell * 0.55
+            mx = sx + dx / far * (length / 2.0)
+            my = sy + dy / far * (length / 2.0)
+
+            for thick, alpha, hued_layer in layers:
+                if bolt is None:
+                    break
+
+                im = bolt.resize((max(1, int(length)), max(1, int(cell * thick))), Image.LANCZOS)
+                if hued_layer:
+                    im = dyed(im, hue, alpha)
+                im = im.rotate(-lean, expand=True, resample=Image.BICUBIC)
+                sheet.alpha_composite(im, (int(mx - im.width / 2), int(my - im.height / 2)))
+
+            # Where it lands - `SiegeView.Scorch`, the charm's own burst rather than a bolt's.
+            put(sheet, loudest("hit_%s" % letter), tx, ty, cell * 1.9, cell * 1.9)
+
+        # And the stone opening fire: a white core over a wide bloom, because what leaves here is
+        # every ward at once and no one colour may own it.
+        put(sheet, white_glow(cell * 7.2), sx, sy, cell * 7.2, cell * 7.2)
 
     # ------------------------------------------------------------------ the bombs
     # **What a bomber leaves, standing on the hill.** Whether a bomb reads as a thing to *tap* on
@@ -1702,6 +2012,7 @@ def levels():
 CHAPTER_CASTS = {
     "s01_thornwatch": "",
     "s03_broodmarch": "brood",
+    "s04_barrowfell": "bone",
     "s02_endlesswatch": "kay",
 }
 
@@ -1990,14 +2301,14 @@ def main():
                     help="how many of the first wave to stand on the hill")
     ap.add_argument("--no-bolts", action="store_true",
                     help="draw the board with nothing in flight")
-    ap.add_argument("--warlord", default="cast", choices=("cast", "idle", "storm"),
-                    help="draw the boss winding up (cast), standing, or the frame "
-                         "its volley leaves (storm)")
+    ap.add_argument("--warlord", default="cast", choices=("cast", "idle", "walk", "storm"),
+                    help="draw the boss winding up (cast), standing (idle), walking on "
+                         "(walk), or the frame its volley leaves (storm)")
     ap.add_argument("--cooling", nargs="?", const="firepot=6,stormcall=22", default="",
                     help="draw slots mid-cooldown, as id=seconds pairs; bare gives a sample")
     ap.add_argument("--no-bar", action="store_true",
                     help="draw the board without the utility bar under it")
-    ap.add_argument("--cast", default="", choices=("", "kay", "brood"),
+    ap.add_argument("--cast", default="", choices=("", "kay", "brood", "bone"),
                     help="which cast to draw: the insects (default) or the 3D bake, which is "
                          "what the Infinite lane draws")
     ap.add_argument("--wave", type=int, default=1,
@@ -2028,6 +2339,25 @@ def main():
                          "picture that says whether the prize a kill pays can be picked out of a "
                          "hill full of walking monsters, and whether the ring reads as a clock "
                          "rather than as one more threat")
+    ap.add_argument("--charms", nargs="?", const="auto", default="", metavar="CELL=KIND,...",
+                    help="stand charms on the field - `12=prism,19=lance,27=storm`, or bare for "
+                         "one of each on the middle row. They are dealt at a rate rather than "
+                         "authored (one a window, `SiegeTuning.CharmWithin`), so no shipped field carries "
+                         "one and this is the only way to look at one: whether a charmed *stone* "
+                         "is told apart from the four beside it at forty pixels, and whether it "
+                         "still reads as its own colour")
+    ap.add_argument("--lance", nargs="?", type=int, const=-1, default=None, metavar="CELL",
+                    help="draw a lance going off in CELL, or bare for the middle of the field - "
+                         "the peak frame of it, with both beams at full and the cross failing "
+                         "outward from the stone. The one thing about invariant 37cn a still can "
+                         "still be asked: whether the beam reads as light rather than as a "
+                         "highlighter line, and whether a burst on every cell reads as a row "
+                         "failing or as noise")
+    ap.add_argument("--volley", nargs="?", type=int, const=-1, default=None, metavar="CELL",
+                    help="draw a stormglass firing from CELL, or bare for the middle of the "
+                         "field - every beam open at once, which is what the frozen board "
+                         "really shows. The question it answers is density: whether a dozen "
+                         "layered beams read as a barrage or as a white smear")
     ap.add_argument("--forecast", action="store_true",
                     help="draw the breather's forecast band over the hill - what the next wave is "
                          "bringing, by colour. The one readout that turns 'which colour is "
@@ -2044,12 +2374,23 @@ def main():
                     help="draw a 19.5:9 display with an iPhone's home-indicator strip at the "
                          "foot of it, rather than the 16:9 sheet this file draws by default - "
                          "the only shape in which the shelf's own foot is visible at all")
+    ap.add_argument("--tablet", action="store_true",
+                    help="draw a 4:3 tablet's canvas (1620x2160 units, per `CanvasFit`) rather "
+                         "than the 16:9 sheet this file draws by default - the only shape in "
+                         "which the board's own bands can be seen at a tablet's proportions")
     ap.add_argument("--out", default=str(REPO / "Tools" / "siege_boards.png"))
     args = ap.parse_args()
+
+    if args.phone and args.tablet:
+        sys.exit("--phone and --tablet are two displays; draw one at a time")
 
     if args.phone:
         globals()["CANVAS"] = PHONE_CANVAS
         globals()["SAFE_BOTTOM"] = PHONE_SAFE_BOTTOM
+
+    if args.tablet:
+        globals()["CANVAS"] = TABLET_CANVAS
+        globals()["SAFE_BOTTOM"] = TABLET_SAFE_BOTTOM
 
     # **Comma separated**, because the one picture this mode cannot do without is the four boss
     # rungs side by side: invariant 37z was found by looking at exactly that, and 37ac was tuned
@@ -2105,7 +2446,9 @@ def main():
         shot = draw(lv, args.raiders, not args.no_bolts, aim=args.aim,
                     boss=args.warlord, rung=rung, wave=args.wave, line=stood, burn=burn,
                     storm=args.storm, bombs=bombs, cogs=args.cogs, forecast=args.forecast,
-                    armed=[int(x) for x in args.armed.split(",") if x.strip()])
+                    armed=[int(x) for x in args.armed.split(",") if x.strip()],
+                    charms=stood_charms(args.charms, lv), lance=stood_lance(args.lance, lv),
+                    volley=stood_lance(args.volley, lv))
         if not args.no_bar:
             bar(shot, held, cooling)
         if not args.no_header:

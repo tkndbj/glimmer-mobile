@@ -9,6 +9,7 @@ using GlimmerGrove.Content;
 using GlimmerGrove.Content.Sources;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Homestead;
+using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Modes;
 using GlimmerGrove.Persistence;
@@ -267,6 +268,7 @@ namespace GlimmerGrove.EditorTools
             ValidateContinue(table.Continue, table.Store, result, verbose);
             ValidateDailyChests(table.Daily, table.Hearts, result, verbose);
             ValidateUtilities(table.Utilities, table.Daily, result, verbose);
+            ValidateTasks(table.Tasks, table.Utilities, table.Hearts, result, verbose);
             ValidateWards(table.Wards, result, verbose);
             ValidateStreak(table.Streak, result, verbose);
             ValidateGolden(table.Golden, table, index, result, verbose);
@@ -562,9 +564,7 @@ namespace GlimmerGrove.EditorTools
         {
             long daily = 0;
 
-            var chests = table.Daily;
-            for (int i = 0; i < chests.ChestCount; i++)
-                daily += ExpectedGems(chests.Chest(i));
+            daily += TaskIncome(table.Tasks, ExpectedGems);
 
             var streak = table.Streak;
             if (streak.Length > 0)
@@ -580,6 +580,35 @@ namespace GlimmerGrove.EditorTools
             }
 
             return daily;
+        }
+
+        /// <summary>
+        /// What a day of tasks pays in one currency: each slate's live tasks at their tier's
+        /// expectation, averaged, times what a period deals, over the period's days.
+        /// </summary>
+        static long TaskIncome(Tasks.TaskTable tasks, Func<ChestDefinition, long> worth)
+        {
+            if (tasks == null) return 0;
+
+            double total = 0;
+            foreach (var period in Tasks.TaskPeriods.All)
+            {
+                double sum = 0;
+                int live = 0;
+                foreach (var task in tasks.Slate(period))
+                {
+                    if (task.Retired) continue;
+                    sum += worth(task.Tier.Chest);
+                    live++;
+                }
+                if (live == 0) continue;
+
+                int dealt = Math.Min(tasks.ActivePerPeriod, live);
+                int days = period == Tasks.TaskPeriod.Weekly ? Daily.WeeklyRules.DaysPerWeek : 1;
+                total += sum / live * dealt / days;
+            }
+
+            return (long)total;
         }
 
         /// <summary>Gems one chest is worth on average. See <see cref="ExpectedCredits"/>.</summary>
@@ -942,9 +971,9 @@ namespace GlimmerGrove.EditorTools
                 }
 
             // **The shelf read as one ladder**, which is the roster's own rule rather than a
-            // second opinion about it: a turret is sealed until the rung below it is bought, so a
-            // gate that does not climb can never refuse anybody (invariant 5d). Asked of the
-            // catalog rather than re-derived, so this gate and the reader cannot disagree.
+            // second opinion about it: no wall may fall as the shelf climbs, and every wall has
+            // to stand inside the band whose header a player reads it under. Asked of the catalog
+            // rather than re-derived, so this gate and the reader cannot disagree.
             string climb = wards.LadderProblem();
             if (climb != null) result.Errors.Add(climb);
 
@@ -1058,14 +1087,164 @@ namespace GlimmerGrove.EditorTools
 
         static void CheckUtilityBand(ChestBand band, int chest, HashSet<string> known,
                                      ContentValidationResult result)
+            => CheckUtilityBand(band, $"daily chest {chest}", known, result);
+
+        static void CheckUtilityBand(ChestBand band, string where, HashSet<string> known,
+                                     ContentValidationResult result)
         {
             if (band.Kind != ChestDropKind.Utility) return;
 
             if (string.IsNullOrEmpty(band.Item))
-                result.Errors.Add($"daily chest {chest} pays a utility and names none");
+                result.Errors.Add($"{where} pays a utility and names none");
             else if (!known.Contains(band.Item))
-                result.Errors.Add($"daily chest {chest} pays utility '{band.Item}', which the " +
+                result.Errors.Add($"{where} pays utility '{band.Item}', which the " +
                                   "utilities block does not define; it would grant nothing");
+        }
+
+        /// <summary>
+        /// The task slates and their chest ladder.
+        ///
+        /// <para>
+        /// <b>The art check is the one only this gate can make</b>, for the turrets' reason: a
+        /// tier's closed icon and opening reel are <em>built</em> from its id, so
+        /// <c>artnames.py</c> reads neither, and a missing one is a white rectangle on the hub
+        /// or over the one ceremony in the game that is entirely a picture (invariant 7b).
+        /// The copy is derived the same way (<c>task.{id}.name</c>, <c>chest.{id}.name</c>),
+        /// which is invariant 5a's situation and the reason it is checked here or nowhere.
+        /// </para>
+        /// <para>
+        /// The reader has already refused a tier nobody defined and a duplicated id. What is
+        /// left is the class of mistake that produces a perfectly valid slate nobody wanted: a
+        /// ladder that does not rise, a slate too short to deal, a target of one with a plural
+        /// sentence, and a boost longer than the ceiling.
+        /// </para>
+        /// </summary>
+        static void ValidateTasks(Tasks.TaskTable tasks, UtilityCatalog utilities, HeartRuleTable hearts,
+                                  ContentValidationResult result, bool verbose)
+        {
+            if (tasks == null) { result.Errors.Add("progression.json produced no task table"); return; }
+
+            var declared = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var request in AssetManifest.GlobalAssets()) declared.Add(request.Address);
+            foreach (var request in AssetManifest.ChestAssets(tasks)) declared.Add(request.Address);
+
+            var known = new HashSet<string>(StringComparer.Ordinal);
+            if (utilities != null) foreach (var item in utilities.Items) known.Add(item.Id);
+
+            var addressable = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var path in AssetDatabase.GetAllAssetPaths())
+            {
+                if (!path.StartsWith("Assets/Game/Art/", StringComparison.Ordinal)) continue;
+                string address = "Art/" + path.Substring("Assets/Game/Art/".Length);
+                int dot = address.LastIndexOf('.');
+                if (dot > 0) address = address.Substring(0, dot);
+                addressable.Add(address);
+                int slash = address.LastIndexOf('/');
+                if (slash > 0) addressable.Add(address.Substring(0, slash));
+            }
+
+            long previousFloor = 0;
+
+            foreach (var tier in tasks.Tiers)
+            {
+                string icon = AssetManifest.ArtRoot + tier.Icon;
+                string reel = AssetManifest.ArtRoot + tier.Reel;
+
+                if (!declared.Contains(icon))
+                    result.Errors.Add($"chest tier '{tier.Id}' draws '{tier.Icon}', which " +
+                                      "AssetManifest does not name; the hub would draw a white rectangle");
+                if (!addressable.Contains(icon) || !addressable.Contains(reel))
+                    result.Errors.Add($"chest tier '{tier.Id}' needs '{tier.Icon}' and '{tier.Reel}/' " +
+                                      "on disk; run Tools/make_chest_art.py");
+
+                long floor = 0;
+                foreach (var band in tier.Chest.Guaranteed)
+                {
+                    floor += band.Min;
+                    CheckUtilityBand(band, $"chest tier '{tier.Id}'", known, result);
+                    if (band.Kind == ChestDropKind.HeartBoost && band.Max > hearts.MaxBoostHours)
+                        result.Errors.Add($"chest tier '{tier.Id}' guarantees a {band.Max}h heart boost, " +
+                                          $"more than the {hearts.MaxBoostHours}h ceiling");
+                }
+
+                foreach (var option in tier.Chest.Options)
+                {
+                    CheckUtilityBand(option.Band, $"chest tier '{tier.Id}'", known, result);
+                    if (option.Band.Kind == ChestDropKind.HeartBoost && option.Band.Max > hearts.MaxBoostHours)
+                        result.Errors.Add($"chest tier '{tier.Id}' can drop a {option.Band.Max}h heart boost, " +
+                                          $"more than the {hearts.MaxBoostHours}h ceiling");
+                }
+
+                // A dearer chest that pays less reads as the game punishing the player for the
+                // harder task, and nothing else in the build catches it.
+                if (floor <= previousFloor)
+                    result.Errors.Add($"chest tier '{tier.Id}' guarantees {floor}, not more than the " +
+                                      $"tier below it at {previousFloor}; a dearer chest must pay more");
+                previousFloor = floor;
+            }
+
+            foreach (var period in Tasks.TaskPeriods.All)
+            {
+                int live = 0;
+                foreach (var task in tasks.Slate(period))
+                {
+                    if (!task.Retired) live++;
+
+                    if (string.IsNullOrEmpty(Tasks.TaskGoals.Icon(task.Goal)))
+                        result.Errors.Add($"task '{task.Id}' names goal '{task.Goal}', which has no picture");
+                    else if (!declared.Contains(AssetManifest.ArtRoot + Tasks.TaskGoals.Icon(task.Goal)))
+                        result.Errors.Add($"task '{task.Id}' draws '{Tasks.TaskGoals.Icon(task.Goal)}', " +
+                                          "which AssetManifest does not name");
+                }
+
+                string slate = Tasks.TaskPeriods.Id(period);
+                if (live < tasks.ActivePerPeriod)
+                    result.Errors.Add($"the {slate} slate has {live} live task(s) and deals " +
+                                      $"{tasks.ActivePerPeriod}; the page would show fewer rows than promised");
+                else if (live < tasks.ActivePerPeriod * 2)
+                    result.Warnings.Add($"the {slate} slate has only {live} live task(s) for " +
+                                        $"{tasks.ActivePerPeriod} a period, so consecutive periods repeat tasks");
+            }
+
+            if (!verbose) return;
+
+            foreach (var tier in tasks.Tiers)
+            {
+                var line = new System.Text.StringBuilder()
+                    .Append("[Glimmer] chest tier ").Append(tier.Rank).Append(" '").Append(tier.Id)
+                    .Append("' always pays");
+                foreach (var band in tier.Chest.Guaranteed)
+                    line.Append(' ').Append(band.Min).Append('-').Append(band.Max)
+                        .Append(' ').Append(ChestDropKinds.Id(band.Kind))
+                        .Append(band.Item.Length > 0 ? ":" + band.Item : string.Empty);
+                if (tier.Chest.Options.Count > 0)
+                {
+                    line.Append("  ·  bonus:");
+                    for (int o = 0; o < tier.Chest.Options.Count; o++)
+                    {
+                        var option = tier.Chest.Options[o];
+                        line.Append("  ").Append(ChestDropKinds.Id(option.Band.Kind))
+                            .Append(option.Band.Item.Length > 0 ? ":" + option.Band.Item : string.Empty)
+                            .Append(' ').Append(option.Band.Min).Append('-').Append(option.Band.Max)
+                            .Append(" at ").Append(tier.Chest.ChanceOf(o).ToString("0.#")).Append('%');
+                    }
+                }
+                Debug.Log(line.ToString());
+            }
+
+            foreach (var period in Tasks.TaskPeriods.All)
+            {
+                var line = new System.Text.StringBuilder("[Glimmer] ")
+                    .Append(Tasks.TaskPeriods.Id(period)).Append(" slate:");
+                foreach (var task in tasks.Slate(period))
+                    line.Append("  ").Append(task.Id).Append(task.Retired ? " (retired)" : string.Empty)
+                        .Append(" -> ").Append(task.Tier.Id);
+                Debug.Log(line.ToString());
+            }
+
+            Debug.Log($"[Glimmer] the tasks deal {tasks.ActivePerPeriod} a period and are paid by " +
+                      "the server from config/progression — run firebase/seed/seed-config.mjs " +
+                      "after this change or every task claim is left unconfirmed.");
         }
 
         /// <summary>
@@ -2834,9 +3013,10 @@ namespace GlimmerGrove.EditorTools
         {
             long daily = 0;
 
-            var chests = table.Daily;
-            for (int i = 0; i < chests.ChestCount; i++)
-                daily += ExpectedCredits(chests.Chest(i));
+            // The task chests: every live task's tier at its expectation, averaged over the
+            // slate and scaled to what a period deals — the daily slate over a day, the weekly
+            // over seven. The daily *ladder* this replaced no longer pays anybody on this build.
+            daily += TaskIncome(table.Tasks, ExpectedCredits);
 
             var streak = table.Streak;
             if (streak.Length > 0)
@@ -2932,6 +3112,29 @@ namespace GlimmerGrove.EditorTools
                 Require(table, LevelDefinition.DefaultTaglineKey(id), $"level '{id}'", result);
             }
 
+            // **A lane's copy is derived from its track id, and a lane with no ladder is made of
+            // almost nothing else.** The ordinary lanes owe a name and a tagline, which the
+            // switcher draws; a lane that is a single endless run draws a whole screen instead of
+            // a map (`EndlessHub`), and three of the six things on it are strings nothing else in
+            // this project names. Asked of the lanes the catalog actually carries rather than of
+            // every lane this build knows, because a lane whose chapters are all disabled draws
+            // nothing and owes no words.
+            var lanes = new HashSet<GameTrack>();
+
+            foreach (var chapter in content.Index.Chapters) lanes.Add(chapter.Track);
+
+            foreach (var track in lanes)
+            {
+                Require(table, track.NameKey, $"track '{track}'", result);
+                Require(table, track.TaglineKey, $"track '{track}'", result);
+
+                if (track.Laddered) continue;
+
+                for (int i = 1; i <= EndlessHubLayout.Points; i++)
+                    Require(table, track.PointKey(i),
+                            $"track '{track}', which draws a hub rather than a map", result);
+            }
+
             // A turret's name and its one line are derived from its id like a companion's, so the
             // source scan below cannot see them either - and unlike a companion's they are the
             // only words the game ever says about what a turret does.
@@ -2989,6 +3192,23 @@ namespace GlimmerGrove.EditorTools
                 Require(table, item.NameKey, $"utility '{item.Id}'", result);
                 Require(table, item.NoteKey, $"utility '{item.Id}'", result);
             }
+
+            // And the tasks' and chest tiers', derived from their ids for the same reason. A
+            // task with no title is a row reading "task.d_play.name" on the page; a task whose
+            // target is one and has no singular sentence reads "1 battles", which is a
+            // warning because every language but this one may not need it.
+            var tasks = ProgressionRules.Table.Tasks;
+            foreach (var tier in tasks.Tiers)
+                Require(table, tier.NameKey, $"chest tier '{tier.Id}'", result);
+
+            foreach (var period in Tasks.TaskPeriods.All)
+                foreach (var task in tasks.Slate(period))
+                {
+                    Require(table, task.NameKey, $"task '{task.Id}'", result);
+                    if (task.Target == 1 && !table.TryGet(task.NameOneKey, out _))
+                        result.Warnings.Add($"task '{task.Id}' has a target of one and no " +
+                                            $"'{task.NameOneKey}'; the sentence reads '1 battles'");
+                }
 
             // And a mode's, for the same reason and with one sharper edge. Both of its strings
             // are drawn by the switcher, which is chrome on the map - so a mode shipped without
