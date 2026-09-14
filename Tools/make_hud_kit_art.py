@@ -165,7 +165,10 @@ class Piece:
 
     `hue` re-paints it, masked by INDIGO/GREY_FLOOR unless `mask` is off — which it has to be
     for a piece that is *all* keyline colour, where the mask would keep the whole sprite.
-    `grey` drains it instead, which is a different question and not a hue at all. `well`
+    `grey` drains it instead, which is a different question and not a hue at all. `lift`
+    raises its *value* — a third question again, and the one the fill needed: draining a gold
+    takes the chroma out and leaves the gold's own brightness behind, so a piece asked for
+    "near-white" came out at 86% of it. `well`
     sinks the interior; `dim` darkens the lot. `flip` turns it upside down, which is how one
     bar serves as both rails. `flatten` paints an ornament out — see `flattened`. `face`
     repaints the inside of a disc, which is how a glyphed round button becomes a blank cap —
@@ -174,12 +177,13 @@ class Piece:
     """
 
     def __init__(self, pack, source, name, zoom=1.0, slice_x=False, slice_y=False, hue=None,
-                 pull=HUE_PULL, sat=1.0, grey=False, dim=1.0, well=None, border=None,
+                 pull=HUE_PULL, sat=1.0, grey=False, lift=0.0, dim=1.0, well=None, border=None,
                  crop=None, resize=None, blur=0.0, flip=False, plus=False, mask=True,
                  flatten=None, face=None, scene=None, trim=False):
         self.pack, self.source, self.name, self.zoom = pack, source, name, zoom
         self.slice_x, self.slice_y = slice_x, slice_y
         self.hue, self.pull, self.sat, self.grey, self.dim = hue, pull, sat, grey, dim
+        self.lift = lift
         self.well, self.border = well, border
         self.crop, self.resize, self.blur = crop, resize, blur
         self.flip, self.plus, self.mask = flip, plus, mask
@@ -248,7 +252,13 @@ KIT = [
     # and keeps the lighter top half that makes it read as a filled tube rather than a block.
     # Cut from the gold fill rather than the blue one because gold is the least saturated of
     # them and so drains to the cleanest white.
-    Piece("cartoon", "Artboard 39", "fill", 1.0, slice_x=True, trim=True, grey=True),
+    #
+    # **`lift` is what makes that sentence true.** For as long as this piece existed it was
+    # drained and nothing else, and draining keeps a piece's *value* — so "near-white" was
+    # 86% of white across the body and 74% across the lower third, and since a tint is a
+    # multiply, every bar in this app was drawn at 86% of the colour its call site asked for.
+    # See `lifted` for why the normalisation is a percentile and not the maximum.
+    Piece("cartoon", "Artboard 39", "fill", 1.0, slice_x=True, trim=True, grey=True, lift=90.0),
 
     # A title is a *word* the game owns rather than a number, and this pack draws the thing
     # that has been missing from every version of this UI: a real ribbon, with tails, in one
@@ -769,6 +779,48 @@ def drained(im, keep=0.10):
         (np.concatenate([np.clip(out, 0, 1), alpha], -1) * 255).astype(np.uint8), "RGBA")
 
 
+def lifted(im, percentile):
+    """Raises a piece's value until its brightest *band* is white, keeping its shading.
+
+    **Not the same question as `drained`, and the fill is what proved it.** Draining takes the
+    chroma out of a piece and leaves its value exactly where it was, so the pack's gold bar —
+    cut, in this file's own words, "near-white" — arrived at 86% of white across its body and
+    74% across its lower third. `Image.color` is a multiply, so that is a ceiling: every bar in
+    the app was drawn at 86% of whatever colour the call site asked for, and the darker third
+    was where a bar spends most of its area. Reported from play as a bar that "looks dark".
+
+    **Normalised on a percentile rather than on the maximum**, because a one-pixel specular
+    highlight must not set the exposure for the whole piece: at the max this lifts a bar by 6%
+    and changes nothing anybody can see, where at the band that actually covers it the bar
+    arrives white and the highlight clips into it. Same rule the grove's grading works under —
+    a level is set by what covers the picture, not by its brightest pixel.
+    """
+    a = np.asarray(im).astype(np.float32) / 255.0
+    rgb, alpha = a[..., :3], a[..., 3:]
+
+    solid = alpha[..., 0] > .9
+    if not solid.any():
+        return im
+
+    lum = (rgb * np.array([.2126, .7152, .0722], np.float32)).sum(-1)
+
+    # float() on purpose: a NumPy scalar is strong under NEP 50 and would promote this whole
+    # float32 pipeline to float64 (see CLAUDE.md's arithmetic notes).
+    top = float(np.percentile(lum[solid], percentile))
+    if top <= 0.0:
+        return im
+
+    # **Clipped per pixel rather than per channel**, which is the difference between keeping
+    # the piece's warmth and inventing a cast. `drained` leaves a tenth of the original chroma
+    # on purpose, so this fill is a *warm* off-white — and a flat clip takes red and green to
+    # white while blue stays where it is, which turns that tenth into a third. Capping each
+    # pixel's gain by its own brightest channel keeps every ratio it had.
+    gain = np.minimum(1.0 / top, 1.0 / np.maximum(rgb.max(-1, keepdims=True), 1e-4))
+    out = np.clip(rgb * gain, 0.0, 1.0)
+    return Image.fromarray(
+        (np.concatenate([out, alpha], -1) * 255).astype(np.uint8), "RGBA")
+
+
 def plussed(im):
     """Draws the kit's missing "+" onto one of its squares.
 
@@ -986,6 +1038,8 @@ def build(packs, pieces):
             im = saturated(im, piece.sat)
         if piece.grey:
             im = drained(im)
+        if piece.lift:
+            im = lifted(im, piece.lift)
         im = dimmed(im, piece.dim)
         if piece.plus:
             im = plussed(im)

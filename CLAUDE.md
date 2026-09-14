@@ -1779,21 +1779,33 @@ changed** (5f).
    names under them; rebuilt as the pack, **the names had to go** — a packed row overlaps them into
    one run of letters — and what replaces them is the line saying the row can be **tapped**, which
    the old version never said and is the only reason anybody would find the odds panel.
-   <br>**"A dead yellow bar" was not a hue.** The kit's fill is documented as a white sprite and is
-   a warm off-white ramp (241→188), and `Image.color` is a multiply (37l), so `Pal.Gold` over it
-   lands on a **brown** across the bottom two thirds — where a bar spends most of its area. The
-   obvious fixes all read *worse* drawn at the size a bar is actually drawn: a pre-divided tint with
-   a bright gloss along the top covers half a 20-unit bar and turns gold into pale tan, and lifting
-   the tint toward white takes the chroma with it (44g from the other end). What reads is a
-   **saturated** tint drawn **taller in its trough** — 26 of 30 rather than 20, because the dark
-   border was a third of what the eye was averaging. **A colour question is settled on a swatch
-   sheet, not by argument**, and the gloss is deliberately absent rather than merely turned down.
-   The bar is **orange** in the end and its tint is neither `Pal.Gold` nor `Pal.Amber` but a
-   pre-divided number, because on this sprite a tint is not the colour a bar comes out — it is the
-   colour the multiply *needs* to land on one. **A full bar is green**, tinted on the paint that
-   filled it and set instantly on the first one, so a page opened on a finished task finds it
-   already green rather than watching it arrive — a colour rather than a second readout, because
-   the length is already saying it and the change is what makes a glance down the list enough.
+   <br>**"A dead yellow bar" was the art, and three rounds of tuning the call site is what it cost
+   to find that out.** `Skins.Fill` is documented as *cut near-white so a call site tints it* and
+   was not: it is cut by **draining** the pack's gold bar, and draining takes the chroma out and
+   leaves the value exactly where it was — so it arrived at **86% of white across its body and 74%
+   across its lower third**. `Image.color` is a multiply (37l), so that is a **ceiling**: every bar
+   in this app — this one, the hub's rank bar, the profile's, the event's — was drawn at 86% of
+   whatever colour its call site asked for, and the darker third is where a bar spends most of its
+   area. **The fix is one number in `make_hud_kit_art.py` and it fixed all of them**, which is 44's
+   whole argument arriving from the art's end: re-cut what the name points at rather than sweep the
+   call sites.
+   <br>Three things that came out of it. **Raising a value is a third question, beside hue and
+   chroma** — `hued`, `drained` and now `lifted`, and asking one of them for another's answer is
+   what this was. **A lift is normalised on a percentile, never on the maximum**, or a one-pixel
+   specular sets the exposure for the whole piece (at the max this lifts the fill by 6% and changes
+   nothing anybody can see). And **it is clipped per pixel rather than per channel**, because
+   `drained` leaves a tenth of the original chroma on purpose: a flat clip takes red and green to
+   white while blue stays put, turning that tenth into a third.
+   <br>**What the call site kept from those three rounds is the height**, drawn 26 of the trough's
+   30 rather than 20, because the dark border was a third of what the eye was averaging — and the
+   gloss that was tried along the top is deliberately absent rather than turned down, since it
+   covers half a 20-unit bar and washes the colour out whatever the art underneath is. The bar is
+   **orange**, and its tint is neither `Pal.Gold` nor `Pal.Amber` but a number, because on a sprite
+   a tint is not the colour a bar comes out — it is the colour the multiply *needs* to land on one.
+   **A full bar is green**, tinted on the paint that filled it and set instantly on the first one,
+   so a page opened on a finished task finds it already green rather than watching it arrive — a
+   colour rather than a second readout, because the length is already saying it and the change is
+   what makes a glance down the list enough.
    <br>**A finished task's light is two pieces, because a card is opaque.** A glow behind the kit's
    navy plate is a glow with a card-shaped hole in it and one in front washes out everything written
    on the row, so the light outside the card is a **pool** and the light on the card is its **rim**,
@@ -2379,6 +2391,13 @@ same 7 warnings as before) and `Validate Art` (828 assets present, 751 + the 77 
 Editor on 2026-09-14; the EditMode suite has run **offline only** (1919 pass), so the fixtures that need
 the Editor — the two vector fixtures and `TheListBoundsMatchTheSecurityRules` — are still owed a run. (5) `firebase/e2e/smoke-test.mjs` gained seven task cases and has not run against a deploy.
 The previous drop's note stands below.
+<br>**Owed on the tasks-screen rebuild (45g–45i):** one reimport and nothing else. `Ui/Hud/fill.png`
+was **re-cut in place** (45h) with the Editor closed — same address, same importer settings, same
+nine-slice border, so there is no new Addressables entry and no dead one, and `Sync All Assets` is
+not needed. But it is the sprite **every progress bar in the app** is drawn from, so the Editor has
+to reimport it before a build says anything about how a bar looks: click the Editor, then look at
+the hub's rank bar, the profile's and the event box's as well as the tasks page's.
+`Tools/make_hud_kit_art.py --check` is the gate and is green.
 <br>**Owed on the charm drop:** nothing, and that is worth saying because the charm re-cut (37cn) is the
 kind of change that usually leaves something. It **removed** `charm_lance`, `charm_storm` and the
 single-frame `beam.png`, and **added** eight charmed gem faces (`gem_lance_{r,g,b,y}`,
