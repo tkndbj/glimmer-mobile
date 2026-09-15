@@ -305,8 +305,14 @@ namespace GlimmerGrove
     /// </summary>
     public sealed class ChestOverlay : ModalView
     {
-        /// <summary>The task whose chest this opens. Set by the caller before Build.</summary>
-        [System.NonSerialized] public TaskDefinition Task;
+        /// <summary>
+        /// The chest this opens and how to claim it. Set by the caller before Build.
+        ///
+        /// A <see cref="ChestClaim"/> rather than the thing that earned it, because this
+        /// panel's only interest in a task or a season rung is which tier it pays — see
+        /// that type for why a second copy of this ceremony was the alternative.
+        /// </summary>
+        [System.NonSerialized] public ChestClaim Claim;
 
         Image _chest;
         Image _seam;
@@ -367,7 +373,7 @@ namespace GlimmerGrove
             // the balance before the grant cannot be wrong about it.
             _flight = RewardFlight.Begin();
 
-            if (Task == null || !TaskLedger.TryClaim(Task, out _drops))
+            if (!Claim.TryClaim(out _drops))
             {
                 // Beaten to it — another device synced the claim in, or the period rolled
                 // over between the tap and this frame. Nothing to show and nothing lost.
@@ -410,7 +416,7 @@ namespace GlimmerGrove
             var ribbon = UIKit.Img("Ribbon", Content, Art.S("Ui/ribbon_orange"), Color.white,
                                    new Vector2(620f, 132f), new Vector2(.5f, 1f), new Vector2(0f, -300f));
             UIKit.Shrinkable(
-                UIKit.Titled("T", ribbon.transform, Loc.Get(Task.Tier.NameKey).ToUpperInvariant(), 50,
+                UIKit.Titled("T", ribbon.transform, Loc.Get(Claim.Tier.NameKey).ToUpperInvariant(), 50,
                              Pal.Cream, TextAnchor.MiddleCenter, new Vector2(540f, 80f),
                              new Vector2(.5f, .5f), Vector2.zero, 4f, 4f), 28);
             ribbon.transform.localRotation = Quaternion.Euler(0, 0, -1.6f);
@@ -448,7 +454,7 @@ namespace GlimmerGrove
 
             // The closed icon, global and therefore always here, at the reel's own aspect so
             // the first frame of the reel lands exactly over it.
-            _chest = UIKit.Img("Chest", host, Art.S(Task.Tier.Icon), Color.white,
+            _chest = UIKit.Img("Chest", host, Art.S(Claim.Tier.Icon), Color.white,
                                ChestSize, new Vector2(.5f, .5f), new Vector2(0f, -10f));
             _chest.preserveAspect = true;
             _chest.transform.localScale = Vector3.zero;
@@ -500,7 +506,7 @@ namespace GlimmerGrove
 
             // The reel, if the scope has arrived; the icon with a punch if it has not. Not
             // looped: a lid is an event, and the last frame holds it open (Flipbook's rule).
-            var frames = AssetLibrary.PeekFrames(AssetManifest.ArtRoot + Task.Tier.Reel);
+            var frames = AssetLibrary.PeekFrames(AssetManifest.ArtRoot + Claim.Tier.Reel);
             if (frames != null && frames.Length > 0)
                 Flipbook.Attach(_chest, frames, ReelFps, loop: false);
 
@@ -646,7 +652,7 @@ namespace GlimmerGrove
             // translation, and it is a disclosure — a disclosure that runs off the side
             // of the screen is not one.
             _chrome.Add((RectTransform)UIKit.Shrinkable(
-                UIKit.Titled("Odds", Content, ChestOddsOverlay.OddsLine(Task.Tier.Chest), 21,
+                UIKit.Titled("Odds", Content, ChestOddsOverlay.OddsLine(Claim.Tier.Chest), 21,
                              new Color(1f, .96f, .86f, .42f),
                              TextAnchor.MiddleCenter, new Vector2(940f, 34f), new Vector2(.5f, 0f),
                              new Vector2(0f, 168f), 0f, 0f), 14).transform);

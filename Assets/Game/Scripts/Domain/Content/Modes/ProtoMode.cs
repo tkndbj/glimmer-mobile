@@ -33,7 +33,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>A count rather than a multiple of par</b>, for invariant 26e's reason: a wrong move
         /// in every one of these modes is permanent <em>and</em> makes the board worse — a pulled
-        /// stone is gone, a stopper cannot go back, three blooms have left the grove, a pod is
+        /// stone is gone, a stopper cannot go back, three marks have left the grove, a pod is
         /// burst, a bramble is cut, and a charge cut loose in the wrong direction is a charge
         /// that has already gone off. So the room a board needs is a count, and it is the same on
         /// the first board and the last, because the budget is a fail line and difficulty is the

@@ -155,21 +155,23 @@ namespace GlimmerGrove.Content
         }
 
         /// <summary>
-        /// Reads one event entry.
+        /// Reads one season entry.
         ///
         /// <para>
         /// Stricter than a chapter or a companion, and refused whole rather than salvaged,
-        /// because an event's reward is <em>derived</em>: a milestone that was dropped or
-        /// reordered changes what every player who finished the track has earned, and the
-        /// earned floor means they keep the higher figure forever. A half-read event is
-        /// therefore not a degraded event, it is a permanent economy change nobody
-        /// authored. Skipping it entirely costs one event and nothing else.
+        /// because a rung dropped or reordered is a different ladder from the one somebody
+        /// authored — and eighty chests is not a thing anybody eyeballs. A half-read season
+        /// is not a degraded season, it is a reward table nobody signed off. Skipping it
+        /// entirely costs one season and nothing else.
         /// </para>
         /// <para>
-        /// Level ids are <b>not</b> checked against the catalog here, and cannot be: an
-        /// event may be added in the same manifest as the chapter it runs over, and this
-        /// reads entries in file order. <see cref="Build"/> does it once every chapter is
-        /// known.
+        /// <b>Tier ids are not checked against the tier table here, and cannot be.</b> The
+        /// ladder lives in <c>manifest.json</c> and the tiers in <c>progression.json</c>,
+        /// which version independently (invariant 9b) and are fetched separately — so the
+        /// table this build holds at parse time is not necessarily the one it will hold a
+        /// minute later. The gates check it (<c>content.py</c> and the Editor validator both
+        /// error on a rung naming a tier the tasks block does not define), and at runtime an
+        /// unresolvable tier fails closed: the rung simply cannot be claimed.
         /// </para>
         /// </summary>
         public bool AddEvent(ManifestEventDto entry)
@@ -179,21 +181,21 @@ namespace GlimmerGrove.Content
 
             if (string.IsNullOrEmpty(entry.id) || !IsCleanId(entry.id))
             {
-                _problems.Add($"manifest lists an event with an unusable id '{entry.id}'; ids are " +
-                              "lower case letters, digits and underscores, because a player's " +
-                              "earned credits depend on them");
+                _problems.Add($"manifest lists a season with an unusable id '{entry.id}'; ids are " +
+                              "lower case letters, digits and underscores, because one names a " +
+                              "save row, a loc key and every claim id its chests produce");
                 return false;
             }
 
             if (!_eventIds.Add(entry.id))
             {
-                _problems.Add($"manifest lists event '{entry.id}' twice; the later entry is ignored");
+                _problems.Add($"manifest lists season '{entry.id}' twice; the later entry is ignored");
                 return false;
             }
 
             if (entry.endUnix <= entry.startUnix)
             {
-                _problems.Add($"event '{entry.id}' ends at or before it starts ({entry.startUnix} " +
+                _problems.Add($"season '{entry.id}' ends at or before it starts ({entry.startUnix} " +
                               $"to {entry.endUnix}); it is ignored");
                 return false;
             }
@@ -201,33 +203,18 @@ namespace GlimmerGrove.Content
             long days = (entry.endUnix - entry.startUnix) / Events.EventRules.SecondsPerDay;
             if (days > Events.EventRules.MaxWindowDays)
             {
-                _problems.Add($"event '{entry.id}' runs for {days} days, above the supported " +
-                              $"{Events.EventRules.MaxWindowDays}; it is ignored. An event that " +
+                _problems.Add($"season '{entry.id}' runs for {days} days, above the supported " +
+                              $"{Events.EventRules.MaxWindowDays}; it is ignored. A season that " +
                               "outlives interest in it is content with a countdown attached");
                 return false;
             }
 
-            var levels = new List<LevelId>();
-            foreach (var raw in entry.levels ?? System.Array.Empty<string>())
+            bool sellsPass = entry.passGems > 0;
+            if (entry.passGems < 0 || entry.passGems > Events.EventRules.MaxPassGems)
             {
-                if (!LevelId.TryParse(raw, out var levelId, out string error))
-                {
-                    _problems.Add($"event '{entry.id}' lists level '{raw}' which is rejected: {error}");
-                    return false;
-                }
-                if (levels.Contains(levelId))
-                {
-                    _problems.Add($"event '{entry.id}' lists level '{levelId}' twice; one glade " +
-                                  "cannot count for two");
-                    return false;
-                }
-                levels.Add(levelId);
-            }
-
-            if (levels.Count == 0)
-            {
-                _problems.Add($"event '{entry.id}' names no glades, so nothing could ever " +
-                              "advance it; it is ignored");
+                _problems.Add($"season '{entry.id}' prices its pass at {entry.passGems} gems, " +
+                              $"outside 0..{Events.EventRules.MaxPassGems}; nought is a season " +
+                              "with a free track only");
                 return false;
             }
 
@@ -236,48 +223,72 @@ namespace GlimmerGrove.Content
 
             foreach (var rung in entry.milestones ?? System.Array.Empty<ManifestEventMilestoneDto>())
             {
-                if (rung == null) { _problems.Add($"event '{entry.id}' has an empty milestone"); return false; }
+                if (rung == null) { _problems.Add($"season '{entry.id}' has an empty rung"); return false; }
 
                 if (rung.goal <= previousGoal)
                 {
-                    _problems.Add($"event '{entry.id}' milestone goals must rise: {rung.goal} " +
-                                  $"follows {previousGoal}. An out-of-order track is refused rather " +
+                    _problems.Add($"season '{entry.id}' rung goals must rise: {rung.goal} " +
+                                  $"follows {previousGoal}. An out-of-order ladder is refused rather " +
                                   "than sorted, because sorting it would pay rewards nobody authored");
                     return false;
                 }
 
-                if (rung.goal > levels.Count)
+                if (rung.goal > Events.EventRules.MaxGoal)
                 {
-                    _problems.Add($"event '{entry.id}' has a milestone at {rung.goal} glades but " +
-                                  $"only names {levels.Count}; it could never be reached");
+                    _problems.Add($"season '{entry.id}' has a rung at {rung.goal} marks, above the " +
+                                  $"supported {Events.EventRules.MaxGoal}; it could never be reached");
                     return false;
                 }
 
-                if (rung.credits < 0 || rung.credits > Events.EventRules.MaxMilestoneCredits)
+                // The free column may not have a hole in it: a rung nobody can claim is a row
+                // on the page saying nothing, which is worse than a rung paying the humblest
+                // chest. The paid column is required exactly when the season sells a pass.
+                if (string.IsNullOrEmpty(rung.tier) || !IsCleanId(rung.tier))
                 {
-                    _problems.Add($"event '{entry.id}' milestone at {rung.goal} pays {rung.credits} " +
-                                  $"credits, outside 0..{Events.EventRules.MaxMilestoneCredits}");
+                    _problems.Add($"season '{entry.id}' rung at {rung.goal} names free tier " +
+                                  $"'{rung.tier}', which is not a usable tier id; every rung pays " +
+                                  "something on the free track");
                     return false;
                 }
 
-                if (rung.premiumCredits < 0 || rung.premiumCredits > Events.EventRules.MaxMilestoneCredits ||
-                    rung.premiumGems < 0 || rung.premiumGems > 1000 ||
-                    (string.IsNullOrEmpty(entry.premiumProductId) && (rung.premiumCredits > 0 || rung.premiumGems > 0)))
-                { _problems.Add($"event '{entry.id}' has invalid premium rewards"); return false; }
-                milestones.Add(new Events.EventMilestone(rung.goal, rung.credits, rung.premiumCredits, rung.premiumGems));
+                string premium = rung.premiumTier ?? string.Empty;
+
+                if (premium.Length > 0 && !IsCleanId(premium))
+                {
+                    _problems.Add($"season '{entry.id}' rung at {rung.goal} names pass tier " +
+                                  $"'{premium}', which is not a usable tier id");
+                    return false;
+                }
+
+                if (sellsPass && premium.Length == 0)
+                {
+                    _problems.Add($"season '{entry.id}' sells a pass but its rung at {rung.goal} " +
+                                  "pays nothing on the pass track; a paid column with a hole in it " +
+                                  "is a player looking at what they bought and seeing nothing");
+                    return false;
+                }
+
+                if (!sellsPass && premium.Length > 0)
+                {
+                    _problems.Add($"season '{entry.id}' pays pass tier '{premium}' at {rung.goal} " +
+                                  "but sells no pass, so nobody could ever claim it");
+                    return false;
+                }
+
+                milestones.Add(new Events.EventMilestone(rung.goal, rung.tier, premium));
                 previousGoal = rung.goal;
             }
 
             if (milestones.Count == 0)
             {
-                _problems.Add($"event '{entry.id}' has no milestones, so it pays nothing and " +
+                _problems.Add($"season '{entry.id}' has no rungs, so it pays nothing and " +
                               "would be a countdown with no reason to watch it");
                 return false;
             }
 
             if (milestones.Count > Events.EventRules.MaxMilestones)
             {
-                _problems.Add($"event '{entry.id}' has {milestones.Count} milestones, above the " +
+                _problems.Add($"season '{entry.id}' has {milestones.Count} rungs, above the " +
                               $"supported {Events.EventRules.MaxMilestones}");
                 return false;
             }
@@ -289,13 +300,13 @@ namespace GlimmerGrove.Content
             string icon = entry.icon ?? string.Empty;
             if (icon.Length > 0 && !IsCleanId(icon))
             {
-                _problems.Add($"event '{entry.id}' asks for icon '{icon}', which is not a usable " +
+                _problems.Add($"season '{entry.id}' asks for icon '{icon}', which is not a usable " +
                               "name; icons are lower case letters, digits and underscores");
                 return false;
             }
 
             _events.Add(new Events.GroveEvent(entry.id, entry.startUnix, entry.endUnix,
-                                              levels, milestones, icon, entry.premiumProductId));
+                                              milestones, icon, entry.passGems));
             return true;
         }
 
@@ -391,40 +402,23 @@ namespace GlimmerGrove.Content
         }
 
         /// <summary>
-        /// Events whose glades all exist, in start order.
+        /// The seasons, in start order.
         ///
         /// <para>
-        /// The catalog check happens here rather than in <see cref="AddEvent"/> because
-        /// entries are read in file order and an event may legitimately be listed before
-        /// the chapter it runs over. By the time this runs every chapter is known.
+        /// <b>A season no longer names levels, so there is nothing left to check against the
+        /// catalog here.</b> That is the whole shape of the v28 change: a track graded on
+        /// marks is a track no mode owns, so withdrawing a mode can no longer take a season
+        /// down with it — which is exactly how the first one died, and the same bargain
+        /// invariant 20a already struck for the star ledger.
         /// </para>
         /// <para>
-        /// An event naming a glade the catalog does not have is dropped whole. The
-        /// alternative — running it over the glades that do exist — silently lowers every
-        /// goal on the track relative to what was authored, and a player who then finishes
-        /// it keeps the credits forever because the earned floor never falls.
+        /// The sort stays, because the calendar has to be deterministic rather than dependent
+        /// on where somebody happened to paste the entry.
         /// </para>
         /// </summary>
         Events.GroveEvent[] UsableEvents()
         {
-            var usable = new List<Events.GroveEvent>(_events.Count);
-
-            foreach (var groveEvent in _events)
-            {
-                bool complete = true;
-
-                foreach (var levelId in groveEvent.Levels)
-                {
-                    if (_levelChapter.ContainsKey(levelId)) continue;
-
-                    _problems.Add($"event '{groveEvent.Id}' names glade '{levelId}', which no " +
-                                  "chapter in this manifest holds; the event is ignored");
-                    complete = false;
-                    break;
-                }
-
-                if (complete) usable.Add(groveEvent);
-            }
+            var usable = new List<Events.GroveEvent>(_events);
 
             // Start order, ties broken on id, so the calendar is deterministic rather than
             // dependent on where somebody happened to paste the entry.

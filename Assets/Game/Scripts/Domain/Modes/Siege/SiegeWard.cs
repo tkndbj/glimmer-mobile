@@ -50,6 +50,19 @@ namespace GlimmerGrove.Modes
         public float Dark;
 
         /// <summary>
+        /// Seconds this ward stands chained, having been bound by a shackler.
+        ///
+        /// <b>A second countdown rather than a second meaning for <see cref="Dark"/>, because the
+        /// two are opposites and a player has to be able to tell them apart.</b> A douse takes the
+        /// fuel with the seconds and is answered by pouring more in; a bind takes only the seconds
+        /// and pouring is not an answer — what goes in <em>banks</em> and lets go when the chain
+        /// does. Folded into one field, a surge would silently lift a shackle
+        /// (<c>SiegeBoard.Surge</c> clears <see cref="Dark"/> on purpose) and the one boss whose
+        /// whole verb is "this cannot be bought back" would be answerable for eight gems.
+        /// </summary>
+        public float Bound;
+
+        /// <summary>
         /// The turret the player has stood on this colour.
         ///
         /// <para>
@@ -109,8 +122,11 @@ namespace GlimmerGrove.Modes
         /// <summary>Whether it is standing but smothered. Fuel poured in is still fuel.</summary>
         public bool Doused => Alive && Dark > 0f;
 
+        /// <summary>Whether it is standing, loaded, and chained. See <see cref="Bound"/>.</summary>
+        public bool Shackled => Alive && Bound > 0f;
+
         /// <summary>Whether it can get a bolt away. An upgraded ward needs less to do it.</summary>
-        public bool Fuelled => Alive && !Doused && Fuel >= SiegeTuning.FuelShot(Rank);
+        public bool Fuelled => Alive && !Doused && !Shackled && Fuel >= SiegeTuning.FuelShot(Rank);
 
         /// <summary>What this turret does beyond firing.</summary>
         public Wards.WardAbility Ability => Model.Ability;
@@ -205,8 +221,17 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public int Charges;
 
-        /// <summary>Whether an overcharge is ready to be thrown.</summary>
-        public bool Armed => Alive && Charges > 0;
+        /// <summary>
+        /// Whether an overcharge is ready to be thrown.
+        ///
+        /// <b>A chained ward is not, and that is what makes a bind take the seconds rather than
+        /// the tempo.</b> A shackle that left the tap live would be answered by spending whatever
+        /// was banked the moment it landed, which turns "this ward is offline for six seconds"
+        /// into "press the button you were going to press anyway" — invariant 5d, on the one boss
+        /// whose entire verb is the seconds. The charge is kept, not lost: it is there when the
+        /// chain comes off.
+        /// </summary>
+        public bool Armed => Alive && !Shackled && Charges > 0;
 
         /// <summary>
         /// Pours fuel in, and banks a charge for every whole tube it fills.
@@ -259,6 +284,18 @@ namespace GlimmerGrove.Modes
             Fuel = 0f;
             Dark = SiegeTuning.Douse;
         }
+
+        /// <summary>
+        /// Chains this ward: what a shackler's spell does when it lands.
+        ///
+        /// <b>One line, and what it does <em>not</em> do is the mechanic.</b> Beside
+        /// <see cref="Snuff"/> the difference is the whole of the difference between the two
+        /// bosses: a douse empties the tube and a bind leaves it exactly as full as it was, still
+        /// filling, still banking a charge when it brims. So the fuel a player pours into a
+        /// chained ward is not wasted and is not available either — which is the decision
+        /// (invariant 26h), and the reason no utility answers this.
+        /// </summary>
+        public void Shackle() => Bound = SiegeTuning.ShacklerBind;
 
         /// <summary>
         /// Knocks a rank off: what an overlord's spell does on top of its damage.

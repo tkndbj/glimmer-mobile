@@ -205,7 +205,7 @@ namespace GlimmerGrove.Dev
 
             // Pure black, and that is a requirement of the bloom rather than a preference. The
             // bright pass has a threshold; anything the ground sits above it by gets blurred and
-            // added back, so a merely dark blue background blooms into a bright haze that swallows
+            // added back, so a merely dark blue background marks into a bright haze that swallows
             // the effect. Nothing under the threshold means nothing to lift.
             _cam.backgroundColor = Color.black;
             _cam.allowHDR = true;

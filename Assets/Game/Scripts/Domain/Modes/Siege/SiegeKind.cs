@@ -142,5 +142,71 @@ namespace GlimmerGrove.Modes
         /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
         /// </summary>
         Bonecaller,
+
+        /// <summary>
+        /// The shackler: it chains a ward, and what it takes is the line's <em>time</em>.
+        ///
+        /// <para>
+        /// <b>The one axis the first six leave open.</b> Between them they take health, fire, a
+        /// rank, the player's clock, what is lying on the ground and the emptiness of the hill —
+        /// every one of which is a <em>resource</em>, and every one of which has an answer that is
+        /// also a resource. A shackled ward keeps all of them: its fuel, its rank, its health and
+        /// its charges are exactly where they were, and for
+        /// <see cref="SiegeTuning.ShacklerBind"/> seconds it cannot fire. There is nothing to pour
+        /// back, so what the player spends is the only thing this mode never lets them buy.
+        /// </para>
+        /// <para>
+        /// <b>It is the deliberate opposite of a douse and the two must not be read as one.</b> A
+        /// blightcaller takes a ward's fuel and its seconds together, and its answer is to pour
+        /// more in — <c>SiegeBoard.Surge</c> lifts a douse for exactly that reason. A shackle takes
+        /// the seconds and leaves the fuel, so pouring is not an answer and is not refused either:
+        /// a ward filled while it is chained <em>banks</em>, and lets go the moment the chain does.
+        /// So the decision it asks is the mirror of the blightcaller's — feed the ward that cannot
+        /// use it yet, or feed the three that can (invariant 26h: the player decides, and can be
+        /// wrong).
+        /// </para>
+        /// <para>
+        /// <b>It takes no ward health at all</b>, so it is the third of the eight that cannot bring
+        /// the line down on its own, and it rides the last authored wave rather than walking on
+        /// alone (<see cref="SiegeTuning.EndangersTheLine"/>, invariant 37ad).
+        /// </para>
+        /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
+        /// </summary>
+        Shackler,
+
+        /// <summary>
+        /// The ironclad: only the ward wearing its own colour can touch it.
+        ///
+        /// <para>
+        /// <b>Invariant 37bq read backwards, and that is the whole fight.</b> Every other boss in
+        /// this mode is answered by the <em>whole</em> line whatever colour it wears, because a
+        /// duel is one raider and a lock that left three turrets idle would fight the biggest
+        /// number in the mode with a quarter of the loadout. An ironclad puts that back on purpose:
+        /// <see cref="SiegeTuning.EveryWardReaches"/> answers false for it alone, so three of the
+        /// four wards will not fire at it at all.
+        /// </para>
+        /// <para>
+        /// <b>What makes that a fight rather than a wall is that the fuel is not lost.</b> A ward
+        /// with nothing it may shoot banks (<c>SiegeBoard.Aim</c> simply gives it no target), a
+        /// full tube converts to an overcharge, and an overcharge is thrown at whatever is
+        /// furthest down the hill at this ward's own full weight —
+        /// <c>SiegeBoard.Through</c> blunts a bulwark and nothing else. So the answer to an
+        /// ironclad is the one mechanic in the mode that has never been the answer to anything:
+        /// feed its colour to kill it, and let the other three fill and dump.
+        /// </para>
+        /// <para>
+        /// <b>And par stays exactly as honest as it is for every other boss.</b>
+        /// <see cref="SiegeTuning.PerfectMatch"/> assumes a match burns as full-weight bolts; the
+        /// one ward that answers this boss lands full-weight bolts and every overcharge lands at
+        /// full weight too, so nothing here converts fuel at a rate the arithmetic does not
+        /// already assume (invariant 37a).
+        /// </para>
+        /// <para>
+        /// <b>It takes ward health as well</b>, so unlike the shackler it can end a run on its own
+        /// and gets a wave to itself as a finale should (invariant 37t).
+        /// </para>
+        /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
+        /// </summary>
+        Ironclad,
     }
 }

@@ -262,7 +262,15 @@ namespace GlimmerGrove.Modes
         /// three idle turrets is all it buys.
         /// </para>
         /// </summary>
-        public static bool EveryWardReaches(SiegeKind kind) => IsBoss(kind);
+        /// <para>
+        /// <b>Every boss but one, and the exception is a whole fight rather than a special
+        /// case.</b> An <see cref="SiegeKind.Ironclad"/> answers false here, so three of the four
+        /// wards will not fire at it at all — which is this rule read backwards and is the only
+        /// thing its verb consists of. See that kind for why the fuel those wards hold is not
+        /// lost, and why par is untouched by it.
+        /// </para>
+        public static bool EveryWardReaches(SiegeKind kind)
+            => IsBoss(kind) && kind != SiegeKind.Ironclad;
 
         /// <summary>
         /// What a bolt of the wrong colour is worth against a boss, in tenths of a full hit.
@@ -1262,6 +1270,103 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const int RaiseSize = 4, Raises = 3;
 
+        // ------------------------------------------------------------------ the shackler
+        /// <summary>
+        /// The shackler's health, and it is priced as a <em>midpoint</em> boss rather than a
+        /// finale one.
+        ///
+        /// <b>Between the gravemaw's and the warlord's, for the same reason the gravemaw's sits
+        /// where it does</b>: a boss that takes no ward health is a boss the player may walk away
+        /// from, so its health is what stops them ignoring it rather than what makes it a wall. It
+        /// rides the head of its last authored wave (invariant 37ad), so the line is answering an
+        /// ordinary wave at the same time and every point here is a point not spent on that.
+        /// </summary>
+        public const int ShacklerHealth = 1700;
+
+        /// <summary>
+        /// Where a shackler stops, and it is the furthest back of any boss in the mode.
+        ///
+        /// <b>Because what it throws is the only boss spell with no <em>damage</em> to read.</b>
+        /// A smite lands a number on a ward and a raise puts bodies on the hill; a chain is a
+        /// state, and a state is only legible if the thing that caused it is visibly the thing
+        /// that caused it. Standing well back with a drawn bow is what says <em>that</em> is where
+        /// this came from — and it is also honest about the fight, because a shackler is answered
+        /// last and is meant to be answered last.
+        /// </summary>
+        public const float ShacklerHold = .68f;
+
+        /// <summary>Seconds a shackler takes to reach its ground. Paced with the gravemaw's.</summary>
+        public const float ShacklerMarch = 7.5f;
+
+        /// <summary>
+        /// Seconds between one chain and the next.
+        ///
+        /// <b>It must be longer than <see cref="ShacklerBind"/> or the mechanic stops being a
+        /// mechanic.</b> A bind that is re-thrown before the last one has run out is a colour held
+        /// off the hill for the whole fight, which is invariant 5d from the other side: a fail
+        /// state that rejects nothing, because there is no play that answers it. The gap is what
+        /// the player is being sold — see <c>SiegeRuleTests</c>, which holds the two apart rather
+        /// than trusting this comment.
+        /// </summary>
+        public const float ShacklerCastEvery = 7f;
+
+        /// <summary>
+        /// Seconds a chained ward stands idle, holding everything it had.
+        ///
+        /// <b>Longer than a douse and it is not the same number wearing a different name.</b> A
+        /// douse takes the fuel with it, so five seconds of dark is five seconds plus whatever the
+        /// player had banked; a shackle takes nothing, so the seconds <em>are</em> the whole cost
+        /// and they have to be worth noticing. It is still comfortably shorter than
+        /// <see cref="ShacklerCastEvery"/>, which is the rule that matters.
+        /// </summary>
+        public const float ShacklerBind = 6f;
+
+        /// <summary>What one chain takes off a ward: nothing. See <see cref="SiegeSpell.Bind"/>.</summary>
+        public const int ShacklerCast = 0;
+
+        // ------------------------------------------------------------------ the ironclad
+        /// <summary>
+        /// The ironclad's health, and it is <em>under</em> the overlord's on purpose.
+        ///
+        /// <para>
+        /// <b>Because its aegis multiplies the time rather than the damage, and only one of those
+        /// two is in par.</b> Three of the four wards will not fire at it
+        /// (<see cref="EveryWardReaches"/>), so the fuel they hold reaches it only through an
+        /// overcharge the player has to bank and throw. Par is unmoved by that — every bolt and
+        /// every charge that does land lands at full weight, which is exactly what
+        /// <see cref="PerfectMatch"/> assumes — but the <em>clock</em> is not, and this mode's fail
+        /// state is a clock (invariant 37b). A finale at an overlord's 3,650 behind an aegis is a
+        /// duel long enough for its escort to take the line apart while the player is doing
+        /// everything right.
+        /// </para>
+        /// <para>
+        /// <b>Which is the same trade the bonecaller's note describes and pointing the other
+        /// way</b>: that one buys length with bodies par can count, and this one buys difficulty
+        /// with a rule par cannot see — so the number has to come down to pay for it. Where it
+        /// lands is a measurement, not an argument: <c>SiegeRuleTests</c> sweeps the chapter.
+        /// </para>
+        /// </summary>
+        public const int IroncladHealth = 2600;
+
+        /// <summary>Where an ironclad stops. An overlord's ground: it holds the middle.</summary>
+        public const float IroncladHold = .42f;
+
+        /// <summary>Seconds an ironclad takes to reach it. The slowest walk in the mode.</summary>
+        public const float IroncladMarch = 9f;
+
+        /// <summary>Seconds between one strike and the next.</summary>
+        public const float IroncladCastEvery = 4.5f;
+
+        /// <summary>
+        /// What one ironclad strike takes off a ward.
+        ///
+        /// <b>Under a warlord's, and that is the aegis being paid for twice over.</b> The fight is
+        /// already long by construction; a finale that also hit like an overlord would be a rung
+        /// decided by whether the player happened to have banked a charge. What makes it a finale
+        /// is <em>which</em> ward it hits — see <c>SiegeBoard.Wanted</c>.
+        /// </summary>
+        public const int IroncladCast = 2;
+
         /// <summary>
         /// Where the raised come up, as a march reading.
         ///
@@ -1686,6 +1791,23 @@ namespace GlimmerGrove.Modes
              // mass of a barrel with arms, and the finale has to be the biggest thing on the hill
              // rather than merely the tallest number in this switch.
              : kind == SiegeKind.Bonecaller ? 3.0f
+
+             // **Both baked, so both carry the bonecaller's discount and for the same reason** -
+             // a reel trimmed to its own alpha fills about 0.93 of its frame where a 2D cut fills
+             // two thirds, so the same number here draws a bigger body.
+             //
+             // **And they are not the same number, because they are not the same shape.** A
+             // shackler is a `Rig_Medium` archer - the slightest body in either pack, and slighter
+             // still than the robed caller - so it takes the ladder's floor and gets its width
+             // from a drawn bow rather than from its shoulders (`SiegeCastBake`). An ironclad is
+             // the only body in this mode on `Rig_Large`: it stands 4.5 units by 5.8 in the
+             // model, wider than it is tall, which no other body here is at any pose. It is drawn
+             // *shorter* than an overlord on purpose - the mass is already there, and matching
+             // the tallest row would put a body two thirds again as wide at the same height,
+             // which is a boss that stops fitting the hill (invariant 37u).
+             : kind == SiegeKind.Ironclad ? 3.2f
+             : kind == SiegeKind.Shackler ? 2.9f
+
              : kind == SiegeKind.Bulwark ? 1.85f
              : kind == SiegeKind.Bomber ? 1.30f
              : kind == SiegeKind.Brute ? 1.55f : 1.15f;
@@ -1892,7 +2014,8 @@ namespace GlimmerGrove.Modes
         public static bool IsBoss(SiegeKind kind)
             => kind == SiegeKind.Boss || kind == SiegeKind.Overlord
             || kind == SiegeKind.Blightcaller || kind == SiegeKind.Warbringer
-            || kind == SiegeKind.Gravemaw || kind == SiegeKind.Bonecaller;
+            || kind == SiegeKind.Gravemaw || kind == SiegeKind.Bonecaller
+            || kind == SiegeKind.Shackler || kind == SiegeKind.Ironclad;
 
         /// <summary>
         /// What each of the four bosses does when its spell lands.
@@ -1920,6 +2043,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Warbringer ? SiegeSpell.Rally
              : kind == SiegeKind.Gravemaw ? SiegeSpell.Devour
              : kind == SiegeKind.Bonecaller ? SiegeSpell.Raise
+             : kind == SiegeKind.Shackler ? SiegeSpell.Bind
+             : kind == SiegeKind.Ironclad ? SiegeSpell.Aegis
              : SiegeSpell.Smite;
 
         /// <summary>
@@ -1939,6 +2064,10 @@ namespace GlimmerGrove.Modes
             // lying on the ground and a raise puts bodies on it, so neither has a ward to pick and
             // everything downstream - the tell, `Arrive`, the view's ring - has to ask rather than
             // index a slot nobody set.
+            // **A bind and an aegis are both listed nowhere, which is the point.** A chain has
+            // to land on something and an ironclad's strike is the thing its aegis is drawn by,
+            // so both aim — and both pick their ward by a rule of their own
+            // (`SiegeBoard.Wanted`) rather than by taking whatever a smite would have taken.
             return craft != SiegeSpell.Rally
                 && craft != SiegeSpell.Devour
                 && craft != SiegeSpell.Raise;
@@ -1961,6 +2090,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Boss ? BossHealth
              : kind == SiegeKind.Bonecaller ? BonecallerHealth
              : kind == SiegeKind.Gravemaw ? GravemawHealth
+             : kind == SiegeKind.Shackler ? ShacklerHealth
+             : kind == SiegeKind.Ironclad ? IroncladHealth
              : kind == SiegeKind.Blightcaller ? BlightHealth
              : kind == SiegeKind.Bulwark ? BulwarkHealth
              : kind == SiegeKind.Bomber ? BomberHealth
@@ -1972,6 +2103,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Boss ? BossMarch
              : kind == SiegeKind.Bonecaller ? BonecallerMarch
              : kind == SiegeKind.Gravemaw ? GravemawMarch
+             : kind == SiegeKind.Shackler ? ShacklerMarch
+             : kind == SiegeKind.Ironclad ? IroncladMarch
              : kind == SiegeKind.Blightcaller ? BlightMarch
              : kind == SiegeKind.Bulwark ? BulwarkMarch
              : kind == SiegeKind.Bomber ? BomberMarch
@@ -1983,6 +2116,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Warbringer ? WarbringerCastEvery
              : kind == SiegeKind.Bonecaller ? BonecallerCastEvery
              : kind == SiegeKind.Gravemaw ? GravemawCastEvery
+             : kind == SiegeKind.Shackler ? ShacklerCastEvery
+             : kind == SiegeKind.Ironclad ? IroncladCastEvery
              : kind == SiegeKind.Blightcaller ? BlightCastEvery : BossCastEvery;
 
         /// <summary>
@@ -1996,6 +2131,7 @@ namespace GlimmerGrove.Modes
         public static int CastOf(SiegeKind kind)
             => kind == SiegeKind.Overlord ? OverlordCast
              : kind == SiegeKind.Warbringer ? WarbringerCast
+             : kind == SiegeKind.Ironclad ? IroncladCast
              : kind == SiegeKind.Boss ? BossCast : 0;
 
         /// <summary>
@@ -2037,6 +2173,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Boss ? BossHold
              : kind == SiegeKind.Bonecaller ? BonecallerHold
              : kind == SiegeKind.Gravemaw ? GravemawHold
+             : kind == SiegeKind.Shackler ? ShacklerHold
+             : kind == SiegeKind.Ironclad ? IroncladHold
              : kind == SiegeKind.Blightcaller ? BlightHold
              : 1f;
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
+using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -756,7 +757,7 @@ namespace GlimmerGrove
             Tween.Punch(row.Root, .12f, .3f);
             Burst.Sparks(row.Chest.transform, Vector2.zero, Pal.Gold, 16, 300f, 26f, .6f);
 
-            var overlay = Flow.Modal<ChestOverlay>(v => v.Task = row.Task);
+            var overlay = Flow.Modal<ChestOverlay>(v => v.Claim = ChestClaim.ForTask(row.Task));
 
             // The ledger raised Changed inside the overlay's Build; the repaint was held back
             // by _claiming so the row did not turn grey under the ceremony. Paint it now,

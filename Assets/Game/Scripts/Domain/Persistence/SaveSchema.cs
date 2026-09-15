@@ -74,7 +74,7 @@ namespace GlimmerGrove.Persistence
         ///      reward that arrives as a number moving behind another screen is not a
         ///      reward. A floor per event keyed by the event's permanent id, for the
         ///      fourth time and the same reason — it only ever rises, so the merge is
-        ///      <c>max</c> per key. See <see cref="Events.EventCollection"/>.
+        ///      <c>max</c> per key. See <see cref="Events.SeasonLedger"/>.
         /// v12 — the companions bought with credits (<see cref="SaveFileDto.companionsOwned"/>).
         ///      The first thing in this file that is stored because it genuinely <em>cannot</em>
         ///      be derived: a companion reached by keeper level needs no record, but nothing
@@ -403,8 +403,28 @@ namespace GlimmerGrove.Persistence
         ///      a rolled-back client still writes it and the rules' allow-list cannot lose a key
         ///      without losing every save write (12a).
         ///      </para>
+        ///      <para>
+        ///      <b>v28</b> — the season track stopped being a count of glades and became a count
+        ///      of <em>marks</em> (<see cref="Events.SeasonLedger"/>), so
+        ///      <see cref="EventStateDto"/> gained <see cref="EventStateDto.marks"/> and a
+        ///      second claim floor, <see cref="EventStateDto.premiumGoal"/>. All three numbers
+        ///      only rise, so the join is a per-field <c>max</c> and the section keeps the shape
+        ///      invariant 11b asks for.
+        ///      </para>
+        ///      <para>
+        ///      <b>No migration, and the reason is structural rather than lucky.</b> Every floor
+        ///      is clamped to the marks actually grown before it is read
+        ///      (<c>EventLedger.ProgressOf</c>), and a v27 file has no marks at all — so a
+        ///      stale <c>collectedGoal</c> written under the old meaning clamps to nought on
+        ///      the first read whatever it says. (It is also nought in fact: the one authored
+        ///      season shipped <c>"disabled": true</c>, and a disabled season never enters the
+        ///      catalog, so nothing could ever have written a floor for it.)
+        ///      <see cref="SaveFileDto.eventsSeeded"/> is retired in place: unread now, still
+        ///      written, because a rolled-back client writes it and the rules' allow-list
+        ///      cannot lose a key without losing every save write (12a).
+        ///      </para>
         /// </summary>
-        public const int Version = 27;
+        public const int Version = 28;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -479,12 +499,12 @@ namespace GlimmerGrove.Persistence
         public StreakStateDto streak;
 
         /// <summary>
-        /// How far each event's reward track has been collected. See <see cref="EventStateDto"/>.
+        /// Each season's marks and claim floors. See <see cref="EventStateDto"/>.
         ///
         /// An array on the wire and a map everywhere else, exactly like <see cref="levels"/>
-        /// and for the reason invariant 11a gives: keyed by the event's permanent id, so a
+        /// and for the reason invariant 11a gives: keyed by the season's permanent id, so a
         /// duplicated row is a malformed file rather than a second payout, and a sync can
-        /// write one event without re-uploading the calendar.
+        /// write one season without re-uploading the calendar.
         /// </summary>
         public EventStateDto[] events;
 
@@ -494,17 +514,15 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// False is what <c>JsonUtility</c> writes into a field an older file never had, so
         /// it means exactly the right thing: "written by a build that folded every reached
-        /// milestone straight into derived earnings". <see cref="Events.EventCollection"/>
-        /// reads that as a cue to mark everything already reached as already collected —
-        /// under the old rule it had been — rather than lighting up a track the player has
-        /// in fact already been paid for.
+        /// milestone straight into derived earnings".
         /// </para>
         /// <para>
-        /// Nothing depends on it for correctness. Event credits are derived and bounded
-        /// below by the wallet's earned floor, so an unseeded file can only ever produce a
-        /// collect that pays nothing visible — never one that pays twice. This exists so
-        /// that does not happen, not because it would be unsafe if it did. A bool that only
-        /// goes one way is a join, so the merge is <c>or</c>.
+        /// <b>Retired in place at v28.</b> Nothing reads it any more: a season's rewards are
+        /// chests claimed by hand and no longer fold into derived earnings at all, so there
+        /// is nothing for a seeding pass to make honest. It stays on the wire because a
+        /// rolled-back client still writes it and <c>hasOnly</c> is an allow-list over the
+        /// whole document — dropping the key would lose <em>every</em> save write (12a). A
+        /// bool that only goes one way is a join, so the merge is still <c>or</c>.
         /// </para>
         /// </summary>
         public bool eventsSeeded;
@@ -1367,11 +1385,55 @@ namespace GlimmerGrove.Persistence
     [Serializable]
     public sealed class EventStateDto
     {
-        /// <summary>The event's permanent id, as authored in the manifest.</summary>
+        /// <summary>The season's permanent id, as authored in the manifest.</summary>
         public string id;
 
-        /// <summary>The largest milestone goal already collected. 0 for none.</summary>
+        /// <summary>
+        /// Marks grown inside this season's window, bounded by its own last rung.
+        ///
+        /// A count of things that <em>happened</em>, which is the only shape of count this
+        /// save may hold (invariant 11b): it only ever rises, so two devices join with
+        /// <c>max</c> and no rule has to decide which of them is behind.
+        /// </summary>
+        public int marks;
+
+        /// <summary>
+        /// The largest <b>free</b>-track goal already claimed. 0 for none.
+        ///
+        /// Named for what it meant in v11 rather than renamed to match v28's two tracks,
+        /// because the field is on the wire and in the security rules' allow-list: a rename
+        /// is a new key and a lost one at the same time, and <c>hasOnly</c> answers that by
+        /// refusing every save write (12a).
+        /// </summary>
         public int collectedGoal;
+
+        /// <summary>The largest <b>pass</b>-track goal already claimed. 0 for none.</summary>
+        public int premiumGoal;
+
+        /// <summary>
+        /// Whether this account has bought the season's pass.
+        ///
+        /// <para>
+        /// A bool that only ever goes one way, so the join is <c>or</c> — buying is
+        /// irreversible, which is the same argument that makes owned companions and owned
+        /// land union-joined id sets (invariant 15).
+        /// </para>
+        /// <para>
+        /// <b>It rides inside this row rather than becoming a key of its own</b>, and that is
+        /// deliberate: <c>hasOnly</c> is an allow-list over the whole document and a new
+        /// top-level key costs a <c>firestore.rules</c> release before the client can ship
+        /// (12a). The rules bound the <c>events</c> list without checking a row's fields, so a
+        /// field added here needs nothing deployed.
+        /// </para>
+        /// <para>
+        /// <b>It is the client's copy and it does not gate money.</b> The server keeps its own,
+        /// written by <c>submitSpends</c> in the same transaction that takes the gems, and
+        /// that is what <c>claimAwards</c> reads before paying a paid-track chest. A forged
+        /// <c>true</c> here buys a page that draws the paid column and a claim the server
+        /// refuses.
+        /// </para>
+        /// </summary>
+        public bool pass;
     }
 
     /// <summary>

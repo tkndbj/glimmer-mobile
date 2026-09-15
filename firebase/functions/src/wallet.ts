@@ -307,19 +307,19 @@ export async function deriveEarned(
   config: ProgressionConfig
 ): Promise<Record<CurrencyId, number>> {
   const save = await transaction.get(getFirestore().doc(PATHS.player(uid)));
-  const data = save.exists ? (save.data() as { levels?: unknown; events?: unknown }) : undefined;
+  const data = save.exists ? (save.data() as { levels?: unknown }) : undefined;
   const levels = data?.levels ?? {};
 
   // The uid is passed because it seeds the golden multiplier — a glade's credits are a
   // function of (account, level), not of the level alone. See `goldenPercent`. Omitting
   // it would pay every player the base and quietly disagree with what the game showed them.
   //
-  // `events` carries how much of each event track the player has collected. It has to be
-  // read: since save schema v11 a milestone pays only once it has been taken, so a wallet
-  // deriving without it would hold back credits the game has already shown as banked.
-  // Forging it buys nothing — `eventCredits` clamps the floor to the glades this same
-  // derivation counted.
-  const derived = earnedCredits(levels, config, uid, data?.events).credits;
+  // The save's `events` section is deliberately *not* read. Until v28 a season's rungs
+  // folded into this derivation, so a wallet that ignored the collected floors held back
+  // credits the game had already shown as banked. A rung pays a chest now, and a chest is a
+  // claim with its own grant document (`season.ts`) — so a season contributes nothing here,
+  // and reading the section would be reading a number nothing spends.
+  const derived = earnedCredits(levels, config, uid).credits;
 
   if (derived > wallet.credits.earnedFloor) wallet.credits.earnedFloor = derived;
 

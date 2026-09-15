@@ -1322,7 +1322,7 @@ beside the chapter list and the roster:
 ```json
 "events": [
   {
-    "id": "first_bloom",
+    "id": "first_watch",
     "icon": "bloom",
     "startUnix": 1786320000,
     "endUnix": 1787529600,
@@ -1351,7 +1351,7 @@ That last one is worth being precise about, because the obvious reading is wrong
 name a sprite file: invariant 7 routes every sprite through `AssetLibrary` and
 `AssetManifest` decides what is registered, so a filename invented in a content push would
 resolve to nothing and the box would draw a white rectangle. A *named mark* degrades the
-other way — `EventMark` falls back to the default for a name it has never heard of, so the
+other way — `SeasonCrest` falls back to the default for a name it has never heard of, so the
 worst a typo can do is draw the wrong flower, and a manifest naming a mark that ships in a
 later build stays valid on the clients that have not updated. `CatalogIndexBuilder` checks
 only that the name is a clean id, deliberately: whether a mark exists is a question about
@@ -1368,7 +1368,7 @@ cleared. It opens, and then it waits on `EventScreen` until the player taps it. 
 unchanged — this is not a field — but three consequences are worth knowing before you write
 a track:
 
-- **A closed event is still a live page.** Glades stop counting at `endUnix`; blooms do not
+- **A closed event is still a live page.** Glades stop counting at `endUnix`; marks do not
   expire. The hub keeps the event's box while anything is uncollected (`GroveEvents.Featured`),
   so shipping a new event does not strand a reward the last one grew.
 - **`EventScreen` lays itself out from the goals, not from the rung count.** Rungs sit along

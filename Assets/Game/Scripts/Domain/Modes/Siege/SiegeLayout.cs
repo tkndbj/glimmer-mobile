@@ -196,6 +196,8 @@ namespace GlimmerGrove.Modes
             ("overlord", SiegeKind.Overlord),
             ("gravemaw", SiegeKind.Gravemaw),
             ("bonecaller", SiegeKind.Bonecaller),
+            ("shackler", SiegeKind.Shackler),
+            ("ironclad", SiegeKind.Ironclad),
         };
 
         /// <summary>The colour a boss may wear. Lower case only — case no longer means anything.</summary>

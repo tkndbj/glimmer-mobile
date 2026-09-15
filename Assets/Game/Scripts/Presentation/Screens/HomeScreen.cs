@@ -1211,9 +1211,9 @@ namespace GlimmerGrove
         /// </summary>
         bool BuildFocusBox(float w)
         {
-            // Featured, not Live. Rewards are collected by hand now, so a window closing must
-            // not take a bloom the player grew and never took — and the box is the only way
-            // back to the page holding it. A closed event with nothing waiting stops being
+            // Featured, not Live. Chests are opened by hand, so a window closing must not
+            // take one the player earned and never opened — and the box is the only way back
+            // to the page holding it. A closed season with nothing waiting stops being
             // featured, so the goal box gets the slot back the moment the track is settled.
             var featured = GroveEvents.Featured;
             if (featured == null) return BuildGoalBox(w);
@@ -1226,8 +1226,8 @@ namespace GlimmerGrove
         /// The live event: its name, its clock, how much of the track is done, and the mark
         /// it wears.
         ///
-        /// The mark is the interesting part. It is <see cref="EventMark"/> rather than a
-        /// fixed glyph, so the event picks it from the manifest; and for the bloom it opens
+        /// The mark is the interesting part. It is <see cref="SeasonCrest"/> rather than a
+        /// fixed glyph, so the season picks it from the manifest; and for the watch it fills
         /// as the track fills, which means the picture and the bar under it say the same
         /// thing and a glance is enough.
         /// </summary>
@@ -1235,7 +1235,7 @@ namespace GlimmerGrove
         {
             var progress = GroveEvents.ProgressOf(live);
             int goal = Mathf.Max(1, live.FinalGoal);
-            float done = Mathf.Clamp01(progress.Finished / (float)goal);
+            float done = Mathf.Clamp01(progress.Marks / (float)goal);
             float gx = -w * .5f + 115f;
             long left = live.SecondsLeftAt(GameClock.NowUnix());
 
@@ -1255,20 +1255,20 @@ namespace GlimmerGrove
 
             var mark = UIKit.Box("Mark", card, new Vector2(148f, 148f),
                                  new Vector2(.5f, .5f), new Vector2(gx, 4f));
-            EventMark.Paint(mark, live.Icon, Pal.Bloom, done);
+            SeasonCrest.Paint(mark, live.Icon, Pal.Bloom, done);
             Tween.Breathe(mark, .055f, 2.6f);
 
             // The caption gives way to the instruction when there is something to take. The
             // fraction is still drawn right above it, so nothing is lost — and a box whose
             // border is lit and whose corner carries a count should say what to do about it.
-            FeatureValue(card, w, Loc.Format("ui.home.fraction", progress.Finished, goal),
+            FeatureValue(card, w, Loc.Format("ui.home.fraction", progress.Marks, goal),
                          Pal.Cream,
                          progress.AnyWaiting ? Loc.Get("ui.home.event_waiting")
-                                             : Loc.Get("ui.home.glades"),
+                                             : Loc.Get("ui.home.marks"),
                          progress.AnyWaiting ? Pal.Gold : Pal.Bloom);
 
             Milestones(FeatureBar(FeatureStrip(card, w), w, done, Pal.Bloom),
-                       w, live, progress.Finished, goal);
+                       w, live, progress.Marks, goal);
 
             CornerBadge(card).Paint(progress.Waiting);
 
@@ -1276,7 +1276,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The count of blooms waiting, pinned to the corner.
+        /// The count of marks waiting, pinned to the corner.
         ///
         /// The same disc the streak wears, and deliberately the same: a gold badge on a
         /// feature box means one thing across this screen. Not redundant with the beacon
@@ -1293,21 +1293,29 @@ namespace GlimmerGrove
         /// The track's rungs, as pips on the bar.
         ///
         /// A bar says how far along; the pips say how far to the next thing worth having,
-        /// which is the question that actually moves somebody. Placed from the event's own
-        /// milestones rather than at even spacing, because the rungs are not evenly spaced —
-        /// the shipped track pays at one, two and four of four.
+        /// which is the question that actually moves somebody.
+        ///
+        /// <para>
+        /// <b>Every fifth rung, not every rung.</b> A season carries forty of them and this
+        /// bar is under six hundred units wide, so one pip each is a dotted line — measured,
+        /// they overlap, which is a row of pictures pretending to be a scale (the tasks
+        /// ladder's captions, 45h, on an axis rather than a row). The ones drawn are the
+        /// rungs that pay a better chest than the one below, which is also what makes them
+        /// worth aiming at.
+        /// </para>
         /// </summary>
-        static void Milestones(RectTransform bar, float w, GroveEvent live, int finished, int goal)
+        static void Milestones(RectTransform bar, float w, GroveEvent live, int marks, int goal)
         {
             float track = w - 132f;
+            int every = Mathf.Max(1, Mathf.CeilToInt(live.Milestones.Count / 8f));
 
-            for (int i = 0; i < live.Milestones.Count; i++)
+            for (int i = every - 1; i < live.Milestones.Count; i += every)
             {
                 int rung = live.Milestones[i].Goal;
                 float x = -track * .5f + 3f + (track - 6f) * Mathf.Clamp01(rung / (float)goal);
 
                 var pip = UIKit.Img("P" + i, bar, Art.Disc(32),
-                                    finished >= rung ? Pal.Gold : new Color(.47f, .51f, .55f, .95f),
+                                    marks >= rung ? Pal.Gold : new Color(.47f, .51f, .55f, .95f),
                                     new Vector2(18f, 18f), new Vector2(.5f, .5f), new Vector2(x, 0f));
 
                 var rim = UIKit.Img("Rim", pip.transform, Art.Ring(32, 7f),

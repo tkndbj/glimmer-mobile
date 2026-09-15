@@ -50,6 +50,8 @@ BOSS_NAMES = {
     "overlord": "overlord",
     "gravemaw": "gravemaw",
     "bonecaller": "bonecaller",
+    "shackler": "shackler",
+    "ironclad": "ironclad",
 }
 
 #: The colour a boss may wear. Lower case only - case no longer means anything.
@@ -209,6 +211,23 @@ BOSSES = {
     "overlord": {"health": 3650, "cast": 5, "spell": "sunder"},
     "gravemaw": {"health": 1500, "cast": 0, "spell": "devour"},
     "bonecaller": {"health": 3000, "cast": 0, "spell": "raise"},
+
+    #: The fourth chapter's two, and between them they take the one thing the first six leave.
+    #:
+    #: A **shackler** chains a ward - it keeps its fuel, its rank and its charges and cannot fire
+    #: for `SiegeTuning.ShacklerBind` seconds - so its `cast` is nought exactly as a douse's and a
+    #: devour's are, and `endangers` answers False for it: a rung whose only threat were one could
+    #: not be lost, so it rides the last authored wave (invariant 37ad).
+    #:
+    #: An **ironclad** is the one boss in this mode that is *not* answered by the whole line
+    #: (`SiegeTuning.EveryWardReaches`): only the ward wearing its colour will fire at it, and the
+    #: other three bank and dump overcharges instead. **None of that reaches par**, which is why
+    #: there is no third column here for it - every bolt and every charge that lands on it lands at
+    #: full weight, which is exactly what `PERFECT_MATCH` already assumes of every gem. What its
+    #: aegis really costs is the *clock*, and this mode's fail state is a clock rather than a move
+    #: budget (invariant 37b), so its health is set under an overlord's to pay for it.
+    "shackler": {"health": 1700, "cast": 0, "spell": "bind"},
+    "ironclad": {"health": 2600, "cast": 2, "spell": "aegis"},
 }
 
 #: `SiegeTuning.RaiseSize` and `.Raises` - how many creepers one raise puts on the hill, and how
@@ -296,6 +315,16 @@ STAR_FACTORS = {
     1: (0.75, 0.92),
     2: (0.75, 0.92),
     3: (0.67, 0.84),
+
+    #: Ashenhold, whose raiders carry **two** tenths more health than the baseline against
+    #: Barrowfell's one. Par scales exactly with a surge and a run's *matches* do not - bombs,
+    #: cogs and an overcharge deliver a flat amount that does not scale with the hill - so a
+    #: tougher chapter's clears land at a lower share of par than a gentler one's, and its lines
+    #: have to come down with it (invariant 37cb). Provisional until this chapter's own sweep has
+    #: **Measured on this chapter's own sweep**: every clear came in between 40% and 73% of
+#: par, so Barrowfell's 0.67 would have three-starred almost all of them - invariant 5d
+#: asked of the grade, which is exactly what the shipped ladder did for three chapters.
+    4: (0.52, 0.66),
 }
 
 
@@ -726,9 +755,9 @@ SWINGS_BEFORE_ANSWERED = 2
 def endangers(kind):
     """`SiegeTuning.EndangersTheLine` - whether this boss can bring a ward down, given long enough.
 
-    **Two of the six cannot.** A blightcaller takes a ward's fire rather than its health and a
-    gravemaw takes what is lying on the ground, so a level whose only threat were either could not
-    be lost. It was one while the warbringer took ground instead of health, which was withdrawn
+    **Three of the eight cannot.** A blightcaller takes a ward's fire rather than its health, a
+    gravemaw takes what is lying on the ground, and a shackler takes six seconds and nothing else -
+    so a level whose only threat were any of them could not be lost. It was one while the warbringer took ground instead of health, which was withdrawn
     after play.
 
     **And it stopped being readable off the damage column**, which is what the bonecaller bought:

@@ -1,68 +1,48 @@
 using System.Collections.Generic;
 using GlimmerGrove.Content;
-using GlimmerGrove.Persistence;
 
 namespace GlimmerGrove.Events
 {
     /// <summary>
-    /// The calendar as the game reads it: which event is running, and how far through it
+    /// The calendar as the game reads it: which season is running, and how far through it
     /// this player is.
     ///
     /// <para>
-    /// A facade over <see cref="CatalogIndex.Events"/> and <see cref="EventLedger"/>, in
-    /// the same spirit as <c>PlayerProgression</c> over <c>ProgressionLedger</c>. The
-    /// ledger stays a pure function of its arguments so it can be run against the shared
-    /// vectors, and this is the one place that hands it the live catalog, the live save and
-    /// the trusted clock.
+    /// A facade over <see cref="CatalogIndex.Events"/> and <see cref="SeasonLedger"/>, in the
+    /// same spirit as <c>PlayerProgression</c> over <c>ProgressionLedger</c>. The ledger's
+    /// arithmetic stays a pure function of its arguments so it can be run against the shared
+    /// vectors, and this is the one place that hands it the live catalog and the trusted
+    /// clock.
     /// </para>
     /// <para>
-    /// Nothing is cached. Both questions are a walk over a handful of events and a
-    /// dictionary lookup per glade, and the alternative is a cache to invalidate on two
-    /// events, a content refresh and a clock correction — which is more moving parts than
-    /// the work it saves.
+    /// Nothing is cached. Both questions are a walk over a handful of seasons and a
+    /// dictionary lookup, and the alternative is a cache to invalidate on two events, a
+    /// content refresh and a clock correction — which is more moving parts than the work it
+    /// saves.
     /// </para>
     /// </summary>
     public static class GroveEvents
     {
-        /// <summary>The event running right now, or null. Judged on the trusted clock.</summary>
+        /// <summary>The season running right now, or null. Judged on the trusted clock.</summary>
         public static GroveEvent Live => GameContent.Index.LiveEventAt(GameClock.NowUnix());
 
-        /// <summary>Every event the catalog holds, past and future, in start order.</summary>
+        /// <summary>Every season the catalog holds, past and future, in start order.</summary>
         public static IReadOnlyList<GroveEvent> All => GameContent.Index.Events;
 
-        /// <summary>How far through a track this player is, and how much of it they hold.</summary>
-        public static EventProgress ProgressOf(GroveEvent groveEvent)
-            => EventLedger.ProgressOf(groveEvent, PlayerProgress.RecordsById,
-                                      EventCollection.CollectedGoal(groveEvent?.Id));
+        /// <summary>How far through a track this player is, and how much of it is waiting.</summary>
+        public static EventProgress ProgressOf(GroveEvent season) => SeasonLedger.ProgressOf(season);
 
         /// <summary>
-        /// Hands over every uncollected rung of this event up to and including
-        /// <paramref name="goal"/>, and returns how many that swept.
+        /// The season whose box the hub should show, or null.
         ///
-        /// The one write in this facade, here rather than on <see cref="EventCollection"/>'s
-        /// own surface for the reason the reads are: this is the type that knows the live
-        /// save, and a screen should not have to fetch the record map to collect a flower.
-        /// </summary>
-        public static int Collect(GroveEvent groveEvent, int goal)
-            => EventCollection.Collect(groveEvent, goal, PlayerProgress.RecordsById);
-
-        /// <summary>True when tapping this rung would hand something over.</summary>
-        public static bool IsCollectable(GroveEvent groveEvent, EventMilestone milestone)
-            => EventCollection.IsCollectable(groveEvent, milestone, PlayerProgress.RecordsById);
-
-        /// <summary>True when this rung's reward is already in the player's balance.</summary>
-        public static bool IsCollected(GroveEvent groveEvent, EventMilestone milestone)
-            => EventCollection.IsCollected(groveEvent, milestone);
-
-        /// <summary>
-        /// The event whose box the hub should show, or null.
-        ///
+        /// <para>
         /// The live one, or — when nothing is running — the most recent closed one still
-        /// holding a reward the player has not taken. Rewards are collected by hand now, so
-        /// a window closing must not take an earned flower with it: the glades stop counting
-        /// at the deadline, the reward does not expire, and there has to be a way back to
-        /// the page that holds it. Nothing else changes about a closed event, which is why
-        /// this is a second reader rather than a change to <see cref="Live"/>.
+        /// holding a chest the player has not taken. Rewards are claimed by hand, so a window
+        /// closing must not take an earned chest with it: the marks stop growing at the
+        /// deadline, the chests do not expire, and there has to be a way back to the page
+        /// that holds them. Nothing else changes about a closed season, which is why this is a
+        /// second reader rather than a change to <see cref="Live"/>.
+        /// </para>
         /// </summary>
         public static GroveEvent Featured
         {
@@ -82,9 +62,7 @@ namespace GlimmerGrove.Events
                     var candidate = all[i];
                     if (candidate == null || !candidate.IsValid) continue;
                     if (!candidate.HasEndedAt(now)) continue;
-                    // Premium claims live on the server; retain access after collecting free tiers.
-                    if (!ProgressOf(candidate).AnyWaiting &&
-                        !(candidate.HasPremium && ProgressOf(candidate).Finished > 0)) continue;
+                    if (!ProgressOf(candidate).AnyWaiting) continue;
 
                     if (best == null || candidate.EndUnix > best.EndUnix) best = candidate;
                 }
@@ -96,9 +74,9 @@ namespace GlimmerGrove.Events
         /// <summary>
         /// Rungs waiting across the whole calendar. What the hub's badge counts.
         ///
-        /// Every event rather than the live one, because a closed track can still be
-        /// holding something and a badge that stopped counting it would be advertising a
-        /// smaller number than the page shows.
+        /// Every season rather than the live one, because a closed track can still be holding
+        /// something and a badge that stopped counting it would be advertising a smaller
+        /// number than the page shows.
         /// </summary>
         public static int Waiting
         {
@@ -113,7 +91,7 @@ namespace GlimmerGrove.Events
             }
         }
 
-        /// <summary>Seconds until the live event closes, or 0 when there is not one.</summary>
+        /// <summary>Seconds until the live season closes, or 0 when there is not one.</summary>
         public static long SecondsLeft
         {
             get
@@ -121,33 +99,6 @@ namespace GlimmerGrove.Events
                 var live = Live;
                 return live == null ? 0 : live.SecondsLeftAt(GameClock.NowUnix());
             }
-        }
-
-        /// <summary>
-        /// The next glade of the live event this player has not finished inside the window,
-        /// or <see cref="LevelId.None"/>.
-        ///
-        /// What the event's play button aims at. In event order rather than catalog order,
-        /// because the track's own list is the order somebody authored for it.
-        /// </summary>
-        public static LevelId NextGlade(GroveEvent groveEvent)
-        {
-            if (groveEvent == null || !groveEvent.IsValid) return LevelId.None;
-
-            var records = PlayerProgress.RecordsById;
-
-            foreach (var levelId in groveEvent.Levels)
-            {
-                if (!records.TryGetValue(levelId, out var record) || record == null ||
-                    !record.IsCleared)
-                {
-                    return levelId;
-                }
-
-                // A replay cannot change a first-clear date outside the event window.
-            }
-
-            return LevelId.None;
         }
     }
 }

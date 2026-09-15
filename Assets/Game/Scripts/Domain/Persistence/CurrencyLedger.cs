@@ -49,6 +49,26 @@ namespace GlimmerGrove.Persistence
         /// <summary>A fresh idempotency key. Never derived from anything reusable.</summary>
         public static string NewId() => Guid.NewGuid().ToString("N");
 
+        /// <summary>
+        /// A season pass's debit: <c>pass:{seasonId}</c>.
+        ///
+        /// <para>
+        /// The one spend id in this game that is <b>derived</b> rather than random, and for
+        /// the reason invariant 10a gives about awards, read across to a debit: the server
+        /// has to recognise this one. <c>submitSpends</c> turns it into the entitlement that
+        /// gates a paid-track chest, in the same transaction that takes the gems, so the
+        /// purchase and the permission cannot come apart.
+        /// </para>
+        /// <para>
+        /// It is also what makes buying twice unrepresentable: the spend document is keyed by
+        /// this id, so a resubmission confirms rather than charging again.
+        /// </para>
+        /// </summary>
+        public static string SeasonPassId(string seasonId) => "pass:" + seasonId;
+
+        /// <summary>What a support reader sees against a pass debit.</summary>
+        public const string SeasonPassReason = "season_pass";
+
         public SpendEntryDto ToDto()
             => new SpendEntryDto { id = Id, amount = Amount, unix = Unix, reason = Reason };
 
@@ -144,6 +164,27 @@ namespace GlimmerGrove.Persistence
             => $"task:{Tasks.TaskPeriods.Id(period)}:{key}:{taskId}:{currency}";
 
         public const string TaskChestReason = "task_chest";
+
+        /// <summary>
+        /// A season rung's chest: <c>mark:{seasonId}:{track}:{goal}:{currency}</c>.
+        ///
+        /// <para>
+        /// Derived from what earned it, for <see cref="DailyChestId"/>'s reason, and parsed
+        /// back by <c>functions/src/season.ts</c>, which re-rolls the chest from the same
+        /// facts. The <em>goal</em> names the rung rather than its position, because a
+        /// position moves when a ladder is retuned and a goal does not — the same argument
+        /// that keeps a level record keyed on an id rather than an order (invariant 1).
+        /// </para>
+        /// <para>
+        /// The track is spelt out because the two tracks pay different chests at the same
+        /// goal, and an id that could not tell them apart would let one claim collect both.
+        /// </para>
+        /// </summary>
+        public static string MarkChestId(string seasonId, Events.SeasonTrack track, int goal,
+                                          string currency)
+            => $"mark:{seasonId}:{Events.SeasonTracks.Id(track)}:{goal}:{currency}";
+
+        public const string MarkChestReason = "mark_chest";
 
         public GrantEntryDto ToDto()
             => new GrantEntryDto { id = Id, amount = Amount, unix = Unix, reason = Reason };
@@ -270,12 +311,38 @@ namespace GlimmerGrove.Persistence
         /// the server later, possibly more than once, still debits exactly one time.
         /// </summary>
         public bool TrySpend(long amount, long derivedEarned, string reason, out SpendEntry entry)
+            => TrySpend(amount, derivedEarned, reason, SpendEntry.NewId(), out entry);
+
+        /// <summary>
+        /// The same debit under an id the caller chose, for a purchase the <em>server</em> has
+        /// to be able to recognise.
+        ///
+        /// <para>
+        /// A spend id is random by default and that is right for almost everything: the id is
+        /// only an idempotency key, and two purchases of the same turret are two debits. A
+        /// season pass is the exception — it is bought once, for ever, and the server turns
+        /// that one debit into the entitlement that gates a currency payout, so it has to be
+        /// able to say <em>which</em> spend it is looking at. See
+        /// <see cref="SpendEntry.SeasonPassId"/>.
+        /// </para>
+        /// <para>
+        /// A duplicate is refused rather than queued twice. The pending list is the only place
+        /// this can check — a confirmed spend is inside <see cref="SpentBaseline"/> and its id
+        /// is gone — so it is a guard against a double tap rather than against a repurchase,
+        /// and the caller's own entitlement check is what stops the second buy.
+        /// </para>
+        /// </summary>
+        public bool TrySpend(long amount, long derivedEarned, string reason, string id,
+                             out SpendEntry entry)
         {
             entry = null;
-            if (amount <= 0) return false;
+            if (amount <= 0 || string.IsNullOrEmpty(id)) return false;
             if (BalanceFrom(derivedEarned) < amount) return false;
 
-            entry = new SpendEntry(SpendEntry.NewId(), amount, SaveSchema.NowUnix(), reason);
+            for (int i = 0; i < _pending.Count; i++)
+                if (string.Equals(_pending[i].Id, id, StringComparison.Ordinal)) return false;
+
+            entry = new SpendEntry(id, amount, SaveSchema.NowUnix(), reason);
             _pending.Add(entry);
             return true;
         }

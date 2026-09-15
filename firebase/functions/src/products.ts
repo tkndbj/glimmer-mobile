@@ -18,7 +18,6 @@ import { CURRENCIES, CurrencyId } from "./config";
 
 /** What one product grants. Absent currencies are zero rather than missing. */
 export interface ProductGrant {
-  eventPassId?: string;
   credits: number;
   gems: number;
 
@@ -111,13 +110,17 @@ export function readProduct(table: unknown, productId: string): ProductGrant {
     capacity: nonNegative(raw.capacity),
   };
 
+  // Refused by name rather than merely unread. A season's pass is bought with gems
+  // (`SeasonLedger.TryBuyPass`), so nothing on this side grants one — a product still
+  // carrying the entitlement would take real money and unlock nothing, which is the one
+  // failure a store product may never have.
   if (raw.eventPassId !== undefined && raw.eventPassId !== "") {
-    if (typeof raw.eventPassId !== "string" || !/^[a-z0-9_]{1,64}$/.test(raw.eventPassId) ||
-        grant.kind !== "nonconsumable" || grant.capacity !== 0 || grant.credits !== 0 || grant.gems !== 0) {
-      throw new ProductRejected(`product '${productId}' has an invalid event pass entitlement`);
-    }
-    grant.eventPassId = raw.eventPassId;
+    throw new ProductRejected(
+      `product '${productId}' carries a season pass entitlement, which nothing grants any ` +
+      "more; a pass is bought with gems"
+    );
   }
+
   if (grant.capacity > 0 && (grant.credits > 0 || grant.gems > 0)) {
     throw new ProductRejected(
       `product '${productId}' grants both a heart capacity and currency; a product may grant ` +
@@ -134,7 +137,7 @@ export function readProduct(table: unknown, productId: string): ProductGrant {
     );
   }
 
-  if (grant.credits === 0 && grant.gems === 0 && grant.capacity === 0 && !grant.eventPassId) {
+  if (grant.credits === 0 && grant.gems === 0 && grant.capacity === 0) {
     throw new ProductRejected(`product '${productId}' grants nothing`);
   }
 

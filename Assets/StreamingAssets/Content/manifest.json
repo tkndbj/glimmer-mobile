@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "progressionVersion": 4,
+  "progressionVersion": 5,
   "groveVersion": 23,
   "chapters": [
     {
@@ -212,6 +212,26 @@
       ]
     },
     {
+      "id": "s05_ashenhold",
+      "version": 1,
+      "order": 148,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s05_firstiron",
+        "s05_shieldline",
+        "s05_pikewall",
+        "s05_emberrow",
+        "s05_chainfall",
+        "s05_ironyard",
+        "s05_hollowvigil",
+        "s05_sunderway",
+        "s05_longmarch",
+        "s05_ashenheart"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,
@@ -226,294 +246,212 @@
   ],
   "events": [
     {
-      "id": "first_bloom",
-      "icon": "bloom",
-      "premiumProductId": "gg_first_bloom_pass",
-      "startUnix": 1786320000,
-      "endUnix": 1794096000,
-      "disabled": true,
-      "levels": [
-        "c01_first_light",
-        "c01_twin_streams",
-        "c01_prism_heart",
-        "c01_thorn_hollow",
-        "c01_bound_roots",
-        "c01_duskcap_hollow",
-        "c01_lantern_ring",
-        "c01_sleeping_thicket",
-        "c01_three_springs",
-        "c01_grovekeepers_knot",
-        "c02_two_ways_over",
-        "c02_the_millrace",
-        "c02_under_the_boughs",
-        "c02_the_old_weir",
-        "c02_braided_water",
-        "c02_the_wheelhouse",
-        "c02_hollow_ford",
-        "c02_stonebridge",
-        "c02_three_bridges",
-        "c02_the_millers_knot",
-        "c03_amberlight",
-        "c03_two_lights",
-        "c03_the_verdigris",
-        "c03_foxfire",
-        "c03_the_quiet_hollow",
-        "c03_rootbound",
-        "c03_three_springs",
-        "c03_under_the_lanterns",
-        "c03_the_ashen_path",
-        "c03_the_amberwood_knot",
-        "c04_thornlight",
-        "c04_the_shut_way",
-        "c04_nightfall",
-        "c04_bramble_and_bridge",
-        "c04_the_hollow_gate",
-        "c04_rootbriar",
-        "c04_three_thorns",
-        "c04_the_long_dark",
-        "c04_wick_and_wane",
-        "c04_the_nightbriar_knot"
-      ],
+      "id": "first_watch",
+      "icon": "watch",
+      "passGems": 350,
+      "startUnix": 1789430400,
+      "endUnix": 1793059200,
+      "disabled": false,
       "milestones": [
         {
-          "goal": 1,
-          "credits": 60,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 2,
-          "credits": 90,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 3,
-          "credits": 50,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 4,
-          "credits": 250,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
           "goal": 5,
-          "credits": 50,
-          "premiumCredits": 0,
-          "premiumGems": 50
-        },
-        {
-          "goal": 6,
-          "credits": 400,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 7,
-          "credits": 50,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 8,
-          "credits": 600,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 9,
-          "credits": 50,
-          "premiumCredits": 225,
-          "premiumGems": 0
+          "tier": "wood",
+          "premiumTier": "silver"
         },
         {
           "goal": 10,
-          "credits": 1000,
-          "premiumCredits": 1200,
-          "premiumGems": 100
-        },
-        {
-          "goal": 11,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 12,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 13,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 14,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
+          "tier": "wood",
+          "premiumTier": "silver"
         },
         {
           "goal": 15,
-          "credits": 300,
-          "premiumCredits": 0,
-          "premiumGems": 50
-        },
-        {
-          "goal": 16,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 17,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 18,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 19,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
+          "tier": "wood",
+          "premiumTier": "silver"
         },
         {
           "goal": 20,
-          "credits": 300,
-          "premiumCredits": 1200,
-          "premiumGems": 100
-        },
-        {
-          "goal": 21,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 22,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 23,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 24,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
+          "tier": "wood",
+          "premiumTier": "silver"
         },
         {
           "goal": 25,
-          "credits": 300,
-          "premiumCredits": 0,
-          "premiumGems": 50
-        },
-        {
-          "goal": 26,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 27,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 28,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 29,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
+          "tier": "silver",
+          "premiumTier": "gold"
         },
         {
           "goal": 30,
-          "credits": 300,
-          "premiumCredits": 1200,
-          "premiumGems": 100
-        },
-        {
-          "goal": 31,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 32,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 33,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 34,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
+          "tier": "wood",
+          "premiumTier": "silver"
         },
         {
           "goal": 35,
-          "credits": 300,
-          "premiumCredits": 0,
-          "premiumGems": 50
-        },
-        {
-          "goal": 36,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 37,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 38,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
-        },
-        {
-          "goal": 39,
-          "credits": 80,
-          "premiumCredits": 225,
-          "premiumGems": 0
+          "tier": "wood",
+          "premiumTier": "silver"
         },
         {
           "goal": 40,
-          "credits": 300,
-          "premiumCredits": 1200,
-          "premiumGems": 100
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 45,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 50,
+          "tier": "gold",
+          "premiumTier": "royal"
+        },
+        {
+          "goal": 55,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 60,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 65,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 70,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 75,
+          "tier": "silver",
+          "premiumTier": "gold"
+        },
+        {
+          "goal": 80,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 85,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 90,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 95,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 100,
+          "tier": "gold",
+          "premiumTier": "royal"
+        },
+        {
+          "goal": 105,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 110,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 115,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 120,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 125,
+          "tier": "silver",
+          "premiumTier": "gold"
+        },
+        {
+          "goal": 130,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 135,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 140,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 145,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 150,
+          "tier": "gold",
+          "premiumTier": "royal"
+        },
+        {
+          "goal": 155,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 160,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 165,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 170,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 175,
+          "tier": "silver",
+          "premiumTier": "gold"
+        },
+        {
+          "goal": 180,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 185,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 190,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 195,
+          "tier": "wood",
+          "premiumTier": "silver"
+        },
+        {
+          "goal": 200,
+          "tier": "gold",
+          "premiumTier": "royal"
         }
       ]
     }

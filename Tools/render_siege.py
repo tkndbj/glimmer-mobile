@@ -1362,7 +1362,7 @@ def beam_thicks():
 
 
 def white_glow(side):
-    """`Art.Glow` - the soft radial the view blooms a muzzle with."""
+    """`Art.Glow` - the soft radial the view marks a muzzle with."""
     side = max(8, int(side))
     im = Image.new("RGBA", (side, side), (255, 255, 255, 0))
     px = im.load()

@@ -110,7 +110,7 @@ level only picks a backdrop and a tint and everything else follows.
 | 2 | tidal lagoon (azure / cyan) | `#0F2A4A` |
 | 3 | blossom dusk (violet / magenta) | `#241540` |
 
-The backdrops are generated gradients with soft colour blooms and a faint blurred
+The backdrops are generated gradients with soft colour marks and a faint blurred
 wash of the island art for texture — clean enough not to fight the board, saturated
 enough for the glowing conduits to sit on.
 

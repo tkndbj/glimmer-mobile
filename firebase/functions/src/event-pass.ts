@@ -1,13 +1,45 @@
-import { FieldValue, getFirestore } from "firebase-admin/firestore";
-import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { PATHS, REGION } from "./config";
-import { EventConfig, ProgressionConfig } from "./progression";
-import { loadProgressionConfig, readWallet, toReply } from "./wallet";
+/**
+ * The season pass entitlement: one bounded document per account and season.
+ *
+ * <p><b>Only `submitSpends` writes it</b>, in the same transaction that takes the gems —
+ * so the purchase and the permission cannot come apart, and nothing a client asserts on
+ * its own can set it. The client keeps its own copy in the save for drawing the page; this
+ * is the one that gates the money.</p>
+ *
+ * <p>It was a real-money entitlement written by `redeemPurchase` against a verified
+ * receipt. A pass is priced in gems now, which is an ordinary spend (invariant 18) — and
+ * that removed the whole apparatus a non-consumable needs: the receipt, the store
+ * registration, the refund reversal and the paid-so-far tally a refund had to subtract.</p>
+ */
 
-/** A bounded document per account/event. Only receipt redemption can set owned. */
+import { PATHS } from "./config";
+import { EventConfig } from "./progression";
+
+/** A bounded document per account/season. Only receipt redemption may set `owned`. */
 export interface PassState {
+  /**
+   * The season as it was when the pass was sold.
+   *
+   * Kept so a content deployment cannot change what somebody has already bought — the
+   * ladder they were shown at checkout is the ladder they own. Written by
+   * `redeemPurchase`; never read for the entitlement itself, which is `owned` alone.
+   */
   definition?: EventConfig;
   owned?: boolean;
+
+  /**
+   * Which season this entitlement is for, checked as well as `owned`.
+   *
+   * Belt and braces on a document whose path already says it: a bug that wrote the wrong
+   * path would otherwise hand somebody a season they never bought, and this is the field
+   * that makes that a refusal rather than a gift.
+   */
+  seasonId?: string;
+
+  /** What was paid for it, in gems. For support, never for a decision. */
+  gems?: number;
+
+  /** Written by earlier builds, kept so a rollback reads a document it understands. */
   productId?: string;
   receiptPath?: string;
   collectedGoal?: number;
@@ -15,85 +47,26 @@ export interface PassState {
   paidGems?: number;
 }
 
-export function passProgress(event: EventConfig, levels: unknown, config: ProgressionConfig): number {
-  if (!levels || typeof levels !== "object" || Array.isArray(levels)) return 0;
-  const records = levels as Record<string, { stars?: unknown; firstClearedUnix?: unknown }>;
-  let finished = 0;
-  for (const id of new Set(event.levels)) {
-    if (!Object.prototype.hasOwnProperty.call(config.levelChapters, id)) continue;
-    const record = records[id];
-    if (!record || typeof record.stars !== "number" || !Number.isFinite(record.stars) || record.stars < 1) continue;
-    const at = record.firstClearedUnix;
-    if (typeof at === "number" && Number.isSafeInteger(at) && at >= event.startUnix && at < event.endUnix) finished++;
-  }
-  return finished;
+/**
+ * Whether this account holds a season's pass, read under this server's own credentials.
+ *
+ * <p>Shared by the callable below and by `claimAwards`, so the paid column is gated by one
+ * rule rather than two that can disagree. `productId` is compared as well as `owned`,
+ * because a season may change which product sells it and an entitlement bought against the
+ * old one is not an entitlement to the new ladder.</p>
+ */
+export function holdsPass(state: PassState | undefined, season: EventConfig | undefined): boolean {
+  if (!state || !season) return false;
+  return state.owned === true && state.seasonId === season.id;
 }
 
-/** Pure claim arithmetic. A retry, stale device or forged goal cannot pay twice. */
-export function passClaim(event: EventConfig, state: PassState, finished: number, goal: number) {
-  const floor = Math.max(0, Math.floor(state.collectedGoal ?? 0));
-  let through = floor, credits = 0, gems = 0;
-  if (!state.owned || state.productId !== event.premiumProductId || !Number.isSafeInteger(goal) || goal < 1)
-    return { through, credits, gems };
-  for (const tier of event.milestones) {
-    if (tier.goal <= floor || tier.goal > Math.min(goal, finished)) continue;
-    credits += tier.premiumCredits ?? 0;
-    gems += tier.premiumGems ?? 0;
-    through = tier.goal;
-  }
-  return { through, credits, gems };
-}
-
-export function validatePass(event: EventConfig | undefined): asserts event is EventConfig {
-  if (!event || !event.premiumProductId || !Array.isArray(event.levels) ||
-      !Array.isArray(event.milestones) || event.milestones.length < 1 || event.milestones.length > 40 ||
-      !(event.endUnix > event.startUnix) || new Set(event.levels).size !== event.levels.length)
-    throw new HttpsError("failed-precondition", "event pass is not configured");
-  let previous = 0;
-  for (const tier of event.milestones) {
-    if (!Number.isSafeInteger(tier.goal) || tier.goal <= previous || tier.goal > event.levels.length ||
-        !Number.isSafeInteger(tier.premiumCredits ?? 0) || (tier.premiumCredits ?? 0) < 0 || (tier.premiumCredits ?? 0) > 5000 ||
-        !Number.isSafeInteger(tier.premiumGems ?? 0) || (tier.premiumGems ?? 0) < 0 || (tier.premiumGems ?? 0) > 1000)
-      throw new HttpsError("failed-precondition", "invalid event pass rewards");
-    previous = tier.goal;
-  }
-}
-
-/** goal=0 reads; positive goals collect earned premium tiers. Earned claims never expire. */
-export const eventPass = onCall({ region: REGION, cors: false, enforceAppCheck: false }, async request => {
-  const uid = request.auth?.uid;
-  if (!uid) throw new HttpsError("unauthenticated", "sign in to read the pass");
-  const id = request.data?.eventId, goal = request.data?.goal ?? 0;
-  if (typeof id !== "string" || !/^[a-z0-9_]{1,64}$/.test(id) || !Number.isSafeInteger(goal) || goal < 0 || goal > 10000)
-    throw new HttpsError("invalid-argument", "invalid event pass request");
-  return resolveEventPass(getFirestore(), uid, id, goal);
-});
-
-export async function resolveEventPass(db: FirebaseFirestore.Firestore, uid: string, id: string, goal: number) {
-  return db.runTransaction(async tx => {
-    const config = await loadProgressionConfig(tx);
-    const passRef = db.doc(PATHS.eventPass(uid, id)), walletRef = db.doc(PATHS.wallet(uid));
-    const [passDoc, saveDoc, walletDoc] = await tx.getAll(passRef, db.doc(PATHS.player(uid)), walletRef);
-    const state = (passDoc.data() ?? {}) as PassState;
-    // Preserve the contract sold to this account, even after a content deployment.
-    const event = state.definition ?? config.events?.find(e => e.id === id);
-    validatePass(event);
-    const finished = passProgress(event, saveDoc.data()?.levels, config);
-    if (goal > 0 && (!state.owned || state.productId !== event.premiumProductId))
-      throw new HttpsError("permission-denied", "a verified pass purchase is required");
-    const claim = passClaim(event, state, finished, goal);
-    const wallet = readWallet(walletDoc, config);
-    if (claim.through > (state.collectedGoal ?? 0)) {
-      wallet.credits.granted += claim.credits;
-      wallet.gems.granted += claim.gems;
-      tx.set(walletRef, { ...wallet, updatedAt: FieldValue.serverTimestamp() });
-      tx.set(passRef, { collectedGoal: claim.through,
-        paidCredits: (state.paidCredits ?? 0) + claim.credits,
-        paidGems: (state.paidGems ?? 0) + claim.gems,
-        updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-    }
-    return { eventId: id, owned: state.owned === true && state.productId === event.premiumProductId,
-      collectedGoal: claim.through, finished, wallets: toReply(wallet, {}),
-      credits: claim.credits, gems: claim.gems };
-  });
+/** Reads the entitlement document for one account and season. */
+export async function readPass(
+  reader: { get(ref: FirebaseFirestore.DocumentReference): Promise<FirebaseFirestore.DocumentSnapshot> },
+  db: FirebaseFirestore.Firestore,
+  uid: string,
+  seasonId: string
+): Promise<PassState> {
+  const snapshot = await reader.get(db.doc(PATHS.eventPass(uid, seasonId)));
+  return (snapshot.data() ?? {}) as PassState;
 }

@@ -493,6 +493,25 @@ namespace GlimmerGrove
                     post.Glow.rectTransform.localScale = Vector3.one * (1.05f + left * .3f);
                 }
 
+                // **A chained ward is drawn bright and held, which is the opposite of a doused
+                // one and has to be.** The two states look alike in the rules — a ward that is not
+                // firing — and mean opposite things to the player: a douse took the fuel and is
+                // answered by pouring more in, a bind left the fuel exactly where it was and is
+                // answered by waiting or by feeding somebody else. So the body keeps its coat and
+                // the tube keeps its reading (invariant 37m: a light goes *up*, and there is
+                // nothing wrong with this one), and what says it cannot fire is iron laid over
+                // it rather than the colour draining out of it.
+                //
+                // **Drawn from the model every frame rather than latched when the arrow lands**,
+                // for the douse's reason one line above: the frame the seconds run out is the
+                // frame the chain comes off.
+                else if (ward.Shackled)
+                {
+                    float left = Mathf.Clamp01(ward.Bound / SiegeTuning.ShacklerBind);
+                    post.Glow.color = Pal.A(Casting(SiegeKind.Shackler), .22f + left * .40f);
+                    post.Glow.rectTransform.localScale = Vector3.one * (1.02f + left * .16f);
+                }
+
                 // Cream, then gold, then ember: the line says how close it is to going in the
                 // one place a player is already looking.
                 float held = Mathf.Clamp01(ward.Health / (float)ward.Full);

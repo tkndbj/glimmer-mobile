@@ -564,6 +564,50 @@ namespace GlimmerGrove.EditorTools
             new Shot { Key = "roar", Prefab = "vfx_Projectile_Wind01", Hue = Pal.Radiance };
 
         /// <summary>
+        /// What a <b>shackler</b> looses, and it is the first thing a boss in this mode throws
+        /// that is not magic.
+        ///
+        /// <para>
+        /// <b>Iron rather than a hue</b>, and that is a decision the four before it could not
+        /// make. Every boss colour here has to be one no ward and no gem wears, or the drawing
+        /// says a colour rule the game does not have — and between them the first four take every
+        /// entry in <c>Pal</c>'s board set that qualifies. <see cref="Pal.Dormant"/> is the
+        /// unpowered slate, which is the one thing in this palette that reads as <em>metal</em>:
+        /// it is the colour of a chain, it cannot be mistaken for any of the four, and it is the
+        /// right answer rather than the last one left.
+        /// </para>
+        /// <para>
+        /// <b>An arrow, because the body loosing it is an archer</b> (<c>SiegeCastBake</c>). A
+        /// shackler's whole silhouette is a drawn bow, so a sun or an orb coming off it would be
+        /// the boss and its spell disagreeing about what it is — which is invariant 33e asked of
+        /// the pair rather than of the effect alone. <b>The prefab is a candidate until the
+        /// contact sheet says otherwise</b>: no gate here opens a PNG (32b), so
+        /// <c>Siege Projectile Contact Sheet</c> is what picks between the pack's three arrows.
+        /// </para>
+        /// </summary>
+        static readonly Shot Snare =
+            new Shot { Key = "snare", Prefab = "vfx_Projectile_MagicArrow02", Hue = Pal.Dormant };
+
+        /// <summary>
+        /// What an <b>ironclad</b> lands when it brings its axe down.
+        ///
+        /// <para>
+        /// <b>Near-white, sharing the roar's hue, and that is allowed where sharing a
+        /// <em>shape</em> would not be.</b> The constraint on a boss colour is that it must not
+        /// read as one of the board's four (see <see cref="Spell"/>); pressure and dust are both
+        /// colourless, and the two bosses are four rungs and two chapters apart. What must differ
+        /// is the thing invariant 37z is actually about — a roar opens a ring over the whole hill
+        /// and a slam is one heavy arc coming down on one ward — and that is the prefab, not the
+        /// grade.
+        /// </para>
+        /// <para>
+        /// <b>Also a candidate until it has been looked at</b>, for <see cref="Snare"/>'s reason.
+        /// </para>
+        /// </summary>
+        static readonly Shot Quake =
+            new Shot { Key = "quake", Prefab = "vfx_Projectile_Slash03", Hue = Pal.Radiance };
+
+        /// <summary>
         /// What a <b>charm</b> goes off in: one big radial detonation, in each of the four gem
         /// colours.
         ///
@@ -983,7 +1027,7 @@ namespace GlimmerGrove.EditorTools
             // other half — two spells that were one prefab at two colours. Each of the four
             // now throws a different *kind* of object, which is invariant 33e's test asked of
             // the thing the author places rather than of the thing the player makes.
-            foreach (var thrown in new[] { Hex, Spell, Roar, Omen })
+            foreach (var thrown in new[] { Hex, Spell, Roar, Omen, Snare, Quake })
             {
                 var warlord = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(thrown.Prefab));
 

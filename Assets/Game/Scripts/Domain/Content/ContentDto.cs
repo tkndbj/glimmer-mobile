@@ -87,10 +87,10 @@ namespace GlimmerGrove.Content
     /// <summary>
     /// One time-boxed run at a set of glades.
     ///
-    /// <see cref="id"/> is permanent: it names the event's loc keys and will key its
-    /// analytics, and a player's earned credits depend on it through the reward track.
-    /// Renaming one is the same class of mistake as renaming a level id — it does not
-    /// break anything visibly, it silently un-pays everybody who finished it.
+    /// <see cref="id"/> is permanent: it names the season's loc keys, its save row, its
+    /// analytics and every claim id its chests produce. Renaming one is the same class of
+    /// mistake as renaming a level id — it does not break anything visibly, it silently
+    /// resets everybody's track and orphans every claim already in flight.
     /// </summary>
     [Serializable]
     public sealed class ManifestEventDto
@@ -125,30 +125,48 @@ namespace GlimmerGrove.Content
         /// </summary>
         public string icon;
 
-        /// <summary>
-        /// The glades this event runs over, by permanent id. They may belong to any
-        /// chapter — an event is a lens on the catalog, not a chapter of its own, which is
-        /// what lets one be run without shipping any new content at all.
-        /// </summary>
-        public string[] levels;
-
-        /// <summary>The reward track, lowest goal first.</summary>
+        /// <summary>The reward ladder, lowest goal first.</summary>
         public ManifestEventMilestoneDto[] milestones;
-        public string premiumProductId;
+
+        /// <summary>
+        /// What the pass track costs in <b>gems</b>, or nought for a season with only a free
+        /// one.
+        ///
+        /// <para>
+        /// <b>Gems rather than money, and that is a simplification rather than a discount.</b>
+        /// A real-money product would have to be a non-consumable with a receipt, a
+        /// server-written entitlement, a refund sweep and a store registration that can never
+        /// be renamed — the shape invariant 18d describes and every line of which has to work
+        /// before a single rung pays. A gem price is an <em>ordinary spend</em> (invariant 18),
+        /// so the pass becomes what every other permanent thing in this game already is: an
+        /// entitlement bought with a currency the player already holds.
+        /// </para>
+        /// </summary>
+        public int passGems;
     }
 
     /// <summary>
-    /// One rung: finish <c>goal</c> of the event's glades inside the window, earn
-    /// <c>credits</c>. Credits and nothing else — see <c>EventLedger</c> for why a track
-    /// that paid anything the server cannot re-derive could not be paid at all.
+    /// One rung: grow <c>goal</c> marks inside the window, open <c>tier</c> on the free
+    /// track and <c>premiumTier</c> on the pass track.
+    ///
+    /// <para>
+    /// <b>Tier names rather than amounts</b> — see <c>EventMilestone</c>. A rung that
+    /// authored its own credits would be one of eighty numbers whose odds nobody can
+    /// disclose and which no retune can reach; naming a <c>TaskTierDto.id</c> makes one
+    /// disclosure per tier the odds for every rung that pays it.
+    /// </para>
+    /// <para>
+    /// <c>premiumTier</c> is empty on a season with no product. On a season that has one it
+    /// is required, because a paid column with a hole in it is a player looking at what they
+    /// bought and seeing nothing.
+    /// </para>
     /// </summary>
     [Serializable]
     public sealed class ManifestEventMilestoneDto
     {
-        public int premiumCredits;
-        public int premiumGems;
         public int goal;
-        public int credits;
+        public string tier;
+        public string premiumTier;
     }
 
     /// <summary>
@@ -1564,6 +1582,12 @@ namespace GlimmerGrove.Content
 
         /// <summary>What opening one pays, in the daily chest's own shape.</summary>
         public DailyChestEntryDto chest;
+
+        /// <summary>
+        /// What claiming one earns toward a season. Absent is nought, which is a legal
+        /// answer — see <c>ChestTier.Marks</c>.
+        /// </summary>
+        public int marks;
     }
 
     /// <summary>

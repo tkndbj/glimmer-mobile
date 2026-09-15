@@ -15,7 +15,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Shared by inheritance, exactly as <c>ModeScreen</c> shares the chrome.</b> Each of the
     /// five draws something completely different — a cairn, a network of channels, a wall of
-    /// blooms, an arbour, a warren — but every one of them is a rectangle of cells on a dark
+    /// marks, an arbour, a warren — but every one of them is a rectangle of cells on a dark
     /// plate that takes taps, animates in waves, and finishes with either a celebration or a
     /// board going out. Writing those five times is five places for "a run may only be decided
     /// once" to stop being true.

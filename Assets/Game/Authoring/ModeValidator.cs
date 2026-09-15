@@ -710,6 +710,32 @@ namespace GlimmerGrove.Content
                         + "line carries it - so every creeper it raises is answered at half weight "
                         + "by whichever ward happens to be fed"));
                     break;
+
+                // A bind takes a ward out for six seconds and takes nothing else at all, so what
+                // it costs is entirely what that ward was about to do. It rides the last authored
+                // wave (`SiegeTuning.WantsACrowd`) exactly as a devour does, and for the same
+                // reason: on a hill with nothing walking, the seconds it takes are seconds nobody
+                // was going to spend firing - which is invariant 5d with the answer counted.
+                case SiegeSpell.Bind when Coming(layout) < 4:
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                        $"this siege ends with a {who}, whose arrow chains a ward for "
+                        + $"{SiegeTuning.ShacklerBind:0.#}s, and only {Coming(layout)} raiders "
+                        + "come beside it - it will take a turret out of a fight that is already "
+                        + "over"));
+                    break;
+
+                // **An aegis is the one boss clause here that is about the *line* rather than the
+                // hill**, and it is the sharpest of them. An ironclad may only be hurt by the ward
+                // wearing its own colour (`SiegeTuning.EveryWardReaches`), so a line with no such
+                // ward can reach it through overcharges alone - which is a fight decided by
+                // whether the player has banked rather than by which colour they feed, and on a
+                // rung where the field deals no such gem it is not a fight at all.
+                case SiegeSpell.Aegis when layout.WardOf(layout.Boss) < 0:
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                        $"this siege ends with an {who} wearing '{layout.Boss}', and no ward on "
+                        + "the line carries it - nothing but a banked overcharge can hurt it at "
+                        + "all"));
+                    break;
             }
         }
 

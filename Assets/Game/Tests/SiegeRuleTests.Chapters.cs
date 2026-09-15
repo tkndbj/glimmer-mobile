@@ -67,6 +67,27 @@ namespace GlimmerGrove.Tests
             new Rung("s04_barrowheart", new[] { "brgbgybr", "bybrrbgg", "rgyggybr", "rygbrryb", "bgyygbgy" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY#rRGby", "RGBYRG#gby" }, "bonecaller:b", 25, 11, 67, 84, "pls"),
         };
 
+        // ------------------------------------------------------------------ the fourth chapter
+        /// <summary>
+        /// Every rung of Ashenhold, held inline exactly as `Tools/chapters/s05_ashenhold.py`
+        /// writes it, and held to the shipped body by `Tools/verify/rungs.py`.
+        ///
+        /// See <see cref="Broodmarch"/> for why a hand copy exists and what keeps it honest.
+        /// </summary>
+        static readonly Rung[] Ashenhold =
+        {
+            new Rung("s05_firstiron", new[] { "ggyyrbry", "grrbgrbg", "yrgbbygr", "ygyyggry", "rygrybyg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBYRGby", "RGBY#rRGbyrg" }, "", 25, 12, 52, 66, "pls"),
+            new Rung("s05_shieldline", new[] { "rrbrggyb", "rgyyrbgb", "ggrbbyrg", "rrygygby", "ygyrrgyy" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY#g#bRGby", "RGbyRGbyrg" }, "", 25, 12, 52, 66, "pls"),
+            new Rung("s05_pikewall", new[] { "bygrgbgy", "ryybyryy", "grbggybg", "bryyrbrr", "gbbgygrg" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGby#g#b#yRGby", "RGByRGbyrg" }, "", 25, 12, 52, 66, "pls"),
+            new Rung("s05_emberrow", new[] { "brbybyby", "bryrbrbg", "yggbrgyr", "rgyryyrg", "rybygbby" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY#g!gRG#bby", "RGby!bRGByby" }, "", 25, 12, 52, 66, "pls"),
+            new Rung("s05_chainfall", new[] { "ybygygrr", "rgbrbbgr", "grgyrbyy", "ygrbggrr", "ybybggyy" }, "rgby", "rgby", new[] { "RGBYRGBy", "RGBY#rRG!bby", "RGby#rRGBy" }, "shackler:g", 25, 12, 52, 66, "pls"),
+            new Rung("s05_ironyard", new[] { "gybgyrbb", "grbrbgrr", "yyggrbgy", "grgbrygb", "bybrgyyg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY#rRGby", "RGby#gRGby", "RGBYRGbyrg" }, "", 25, 12, 52, 66, "pls"),
+            new Rung("s05_hollowvigil", new[] { "bgyryrgb", "rbrbgygr", "rgyggryb", "ggrbyrry", "bygrybgy" }, "rgby", "rgby", new[] { "RRRR#rrrrg", "GGGG#g#ggggb", "BBBB#bbbYYY#yy" }, "", 25, 12, 52, 66, "pls"),
+            new Rung("s05_sunderway", new[] { "rbrgbrrb", "rgbgybyr", "gybrbrgg", "yrgrygyr", "gbgyybbg" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY!gRG#bby", "RGBY#bRGByby" }, "", 25, 12, 52, 66, "pls"),
+            new Rung("s05_longmarch", new[] { "ygygygbr", "rrbgyyby", "bybbrggb", "grrybryy", "bbyrgbyg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY#rRGby", "RGby#gRGby#bby", "RGBYRGby" }, "", 25, 12, 52, 66, "pls"),
+            new Rung("s05_ashenheart", new[] { "bgyyrrbb", "yrrgbyyr", "gygbbgrr", "gybggrbg", "rbbgybbg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY#rRGby", "RGBY#gRG#bby" }, "ironclad:b", 25, 12, 52, 66, "pls"),
+        };
+
         // ------------------------------------------------------------------ the lines it plays
         /// <summary>
         /// The four turrets a player who has bought nothing stands: the free bolt, four times.
@@ -156,6 +177,7 @@ namespace GlimmerGrove.Tests
             ("Thornwatch", Chapter),
             ("Broodmarch", Broodmarch),
             ("Barrowfell", Barrowfell),
+            ("Ashenhold", Ashenhold),
         };
 
         static Sweep Play(Rung[] chapter, WardLine line)
@@ -704,6 +726,205 @@ namespace GlimmerGrove.Tests
                            + $"{bought.Starred} three-starred):\n" + bought.Table
                            + $"\nBroodmarch on the starter for comparison "
                            + $"({before.Held}/{before.Runs} held):\n" + before.Table);
+        }
+
+        /// <summary>
+        /// **The fourth chapter is harder than the third and is still not a wall**, measured on
+        /// the same three lines every chapter gate here plays.
+        ///
+        /// <para>
+        /// <b>Two things make it harder and only one of them is visible in the file.</b> Its
+        /// raiders carry <em>two</em> tenths more health than the baseline against Barrowfell's
+        /// one (<c>SiegeTuning.ToughnessFor</c>), which invariant 37bz measured as the sharpest
+        /// lever this mode has — the same ten rungs read 54 of 90 unsurged, 28 at one tenth and
+        /// <b>5</b> at three. And its composition is heavier: armour from the first rung, three
+        /// shields in a wave where Barrowfell's worst carried two, and bombers standing in it.
+        /// </para>
+        /// <para>
+        /// <b>The assertions are Barrowfell's, one chapter along</b>, and the reason they are the
+        /// same four is that they close the same four ways of getting this wrong: a rung nobody
+        /// can hold on the line they arrive with, a chapter that did not actually get harder, a
+        /// shelf that buys nothing, and a chapter nobody can clear even having shopped. What moves
+        /// is the floors, which are a <em>record of where this chapter stands</em> rather than
+        /// targets — a change that drops them several points is a change that loses runs, whatever
+        /// one rhythm says (invariant 37aq).
+        /// </para>
+        /// <para>
+        /// <b>Recovered share rather than a count of runs</b>, for invariant 37ch's reason: a
+        /// count is a test of the chapter's own baseline as much as of the shelf, and this
+        /// chapter's baseline is the lowest in the mode.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheFourthChapterIsFoughtOnABoughtLine()
+        {
+            // Where this chapter stands, measured 2026-09-14 over 90 runs a line.
+            //
+            // **38 on the starter against Barrowfell's 47**, which is the whole of what "harder
+            // than the chapter before it" means here, and no rung is walled.
+            const int BareFloor = 30;       // hard, and nobody is walled out
+            const int BoughtFloor = 44;     // clearable once the shelf has been used
+
+            // **A share of what the starter loses, and this chapter's is far under Barrowfell's
+            // 45% — which is a finding rather than a slip.** `siphon` is the cheapest four-turret
+            // line in the game and its ability drains; this chapter is built out of *armour*, and
+            // a bulwark halves every bolt that is not its own colour. So the cheapest purchase is
+            // close to the worst possible answer to it, and it still buys twelve runs in ninety.
+            // Measured: 38 -> 50 held, 10 -> 17 three-starred.
+            const int Recovers = 18;        // per cent of the runs the starter loses, at least
+            const int Grades = 5;           // three-starred runs the shelf is worth, at least
+
+            // **And the line that really answers this chapter, which is the point of measuring a
+            // second one at all** (invariant 37bw: the shelf is ordered by *reach*, so "further
+            // up" is not "stronger" — a chapter has to be told which purchase answers *it*).
+            // `cleaver` carries `WardAbility.Rend`, and Rend is the one thing on the shelf that
+            // ignores a bulwark's soak outright (`SiegeBoard.Through`). A chapter made of armour
+            // that a shield-breaker did not answer would be a chapter whose difficulty is not
+            // about the thing it is drawn as.
+            const string Answers = "cleaver";
+
+            var bare = Play(Ashenhold, Bare());
+            var bought = Play(Ashenhold, Standing(FirstRung));
+            var answered = Play(Ashenhold, Standing(Answers));
+            var before = Play(Barrowfell, Bare());
+
+            var faults = new List<string>();
+
+            if (bare.Walled > 0)
+                faults.Add($"{bare.Walled} rung(s) of Ashenhold are held at no rhythm at all on "
+                           + "the starter line, which is a wall rather than a reason to buy a "
+                           + "turret");
+
+            if (bare.Held >= before.Held)
+                faults.Add($"on the starter line Ashenhold held {bare.Held} of {bare.Runs} runs "
+                           + $"against Barrowfell's {before.Held} of {before.Runs} - the fourth "
+                           + "chapter is not harder than the third, which is what it is for");
+
+            int losing = bare.Runs - bare.Held;
+            int back = bought.Held - bare.Held;
+
+            if (losing <= 0 || back * 100 < losing * Recovers)
+                faults.Add($"one rung of the shelf moved Ashenhold from {bare.Held} to "
+                           + $"{bought.Held} of {bought.Runs} runs - {back} of the {losing} the "
+                           + $"starter loses, against the {Recovers}% this chapter is authored to "
+                           + "recover");
+
+            if (bought.Starred < bare.Starred + Grades)
+                faults.Add($"one rung of the shelf moved Ashenhold from {bare.Starred} "
+                           + $"three-starred runs to {bought.Starred}, which is under the {Grades} "
+                           + "it is authored to be worth");
+
+            // **The assertion this chapter exists to make.** A shield-breaker has to beat a drain
+            // against a hill built out of shields; if it does not, the armour is decoration and
+            // the difficulty is coming from somewhere else entirely (invariant 5d, asked of a
+            // chapter's own material rather than of a mechanic).
+            if (answered.Held <= bought.Held)
+                faults.Add($"'{Answers}', which ignores a bulwark's soak, held {answered.Held} of "
+                           + $"{answered.Runs} runs against '{FirstRung}'s {bought.Held} - so a "
+                           + "chapter built out of armour is not answered by the one ability that "
+                           + "beats armour, and its difficulty is not what it is drawn as");
+
+            if (bare.Held < BareFloor)
+                faults.Add($"on the starter line Ashenhold held {bare.Held} of {bare.Runs} runs "
+                           + $"against a floor of {BareFloor}, so it has become a wall rather than "
+                           + "hard - re-measure before moving the floor");
+
+            if (bought.Held < BoughtFloor)
+                faults.Add($"one rung up the shelf Ashenhold held {bought.Held} of "
+                           + $"{bought.Runs} runs against a floor of {BoughtFloor}, so it is not "
+                           + "doable with a bought line either - re-measure before moving the "
+                           + "floor");
+
+            if (bought.Starred == 0)
+                faults.Add("three stars was out of reach on every rung at every rhythm even one "
+                           + "rung up the shelf, so nobody playing this way ever sees three");
+
+            Assert.IsEmpty(faults,
+                           string.Join("\n", faults)
+                           + $"\n\nAshenhold on the starter ({bare.Held}/{bare.Runs} held, "
+                           + $"{bare.Starred} three-starred):\n" + bare.Table
+                           + $"\nAshenhold on {FirstRung} ({bought.Held}/{bought.Runs} held, "
+                           + $"{bought.Starred} three-starred):\n" + bought.Table
+                           + $"\nAshenhold on {Answers} ({answered.Held}/{answered.Runs} held, "
+                           + $"{answered.Starred} three-starred):\n" + answered.Table
+                           + $"\nBarrowfell on the starter for comparison "
+                           + $"({before.Held}/{before.Runs} held):\n" + before.Table);
+        }
+
+        /// <summary>
+        /// **A shackler's chain is shorter than the gap between two of them**, which is the one
+        /// number in this boss that is a rule rather than a taste.
+        ///
+        /// <para>
+        /// <b>Invariant 5d, arriving as arithmetic.</b> A bind takes a ward out for
+        /// <c>ShacklerBind</c> seconds and takes nothing else at all; if it could be re-thrown
+        /// before the last one ran out, the chained colour would be off the hill for the whole
+        /// fight and there would be no play that answers it — a fail state that rejects nothing.
+        /// The gap between the two is the entire mechanic, so it is checked rather than left to a
+        /// comment on the constant.
+        /// </para>
+        /// <para>
+        /// <b>And the margin has to be worth something</b>, not merely positive: a ward that comes
+        /// back a tenth of a second before it is chained again is a ward that never fires.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AShacklersChainAlwaysRunsOutBeforeTheNextOne()
+        {
+            Assert.Less(SiegeTuning.ShacklerBind, SiegeTuning.ShacklerCastEvery,
+                        "a shackler would re-chain a ward before its last chain expired, so that "
+                        + "colour would be off the hill for the whole fight");
+
+            float free = SiegeTuning.ShacklerCastEvery - SiegeTuning.ShacklerBind;
+
+            Assert.GreaterOrEqual(free, SiegeTuning.FireEvery,
+                                  "a chained ward comes back with less than one bolt's worth of "
+                                  + "time before the next arrow, so the seconds it is sold back "
+                                  + "buy nothing");
+        }
+
+        /// <summary>
+        /// **An ironclad is answered by one ward and every other boss by the whole line.**
+        ///
+        /// <para>
+        /// <b>The aegis is not a number anywhere — it is this predicate</b>
+        /// (<c>SiegeTuning.EveryWardReaches</c>), so the only way to state it is to ask it. A
+        /// change that made bosses uniform again would delete the fourth chapter's finale without
+        /// touching a single file that mentions it, and every other gate would stay green: the
+        /// level parses, par is unmoved, and the fight simply stops being one.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void OnlyItsOwnColourReachesAnIronclad()
+        {
+            var line = Bare();
+
+            for (int c = 0; c < WardLine.Colours.Length; c++)
+            {
+                var ward = new SiegeWard(c, line.At(c));
+
+                for (int wears = 0; wears < WardLine.Colours.Length; wears++)
+                {
+                    var clad = new SiegeRaider(0, wears, SiegeKind.Ironclad, 0, 0f);
+                    var over = new SiegeRaider(1, wears, SiegeKind.Overlord, 0, 0f);
+
+                    if (c == wears)
+                    {
+                        Assert.Greater(ward.ReachTenths(clad), 0,
+                                       "the ward of an ironclad's own colour cannot hurt it");
+                        continue;
+                    }
+
+                    Assert.AreEqual(0, ward.ReachTenths(clad),
+                                    $"a {WardLine.Colours[c]} ward reaches an ironclad wearing "
+                                    + $"{WardLine.Colours[wears]}, so the aegis rejects nothing");
+
+                    Assert.Greater(ward.ReachTenths(over), 0,
+                                   "every ward still answers every other boss whatever it wears "
+                                   + "(invariant 37bq), so the aegis is the exception rather than "
+                                   + "the new rule");
+                }
+            }
         }
     }
 }

@@ -203,6 +203,7 @@ namespace GlimmerGrove.Modes
                 post.Fuel = 0f;
                 post.Charges = 0;
                 post.Dark = 0f;
+                post.Bound = 0f;
                 post.Cool = 0f;
 
                 return raised;
@@ -306,6 +307,7 @@ namespace GlimmerGrove.Modes
                 post.Fuel = 0f;
                 post.Charges = 0;
                 post.Dark = 0f;
+                post.Bound = 0f;
                 post.Cool = 0f;
 
                 raised++;

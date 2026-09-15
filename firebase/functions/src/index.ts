@@ -64,7 +64,11 @@ import {
   WHEEL_MIN_PERCENT, applyWheelPercent, readWheelPosition, usableWheelConfig, wheelPercent,
 } from "./wheel";
 import { earnedCredits } from "./progression";
-import { validatePass } from "./event-pass";
+import { holdsPass, PassState, readPass } from "./event-pass";
+import {
+  MarkClaim, markCurrencyValue, isMarkGrantId, judgeMarkClaim, noteLateClaim,
+  parseMarkClaim, parsePassSpendId, passPrice, usableSeason,
+} from "./season";
 import {
   deriveEarned,
   loadProgressionConfig,
@@ -78,7 +82,6 @@ import {
 
 initializeApp();
 
-export { eventPass } from "./event-pass";
 
 // Secrets live in Secret Manager, never in source and never in environment config that
 // ends up in a repository. Absent secrets make validation fail closed — see receipts.ts.
@@ -291,6 +294,55 @@ export const submitSpends = onCall(callOptions, async (request): Promise<{
         continue;
       }
 
+      // A season pass is the one debit this server turns into a permission.
+      //
+      // It is recognised by its id — `pass:{seasonId}`, the only derived spend id in the
+      // game (`SpendEntry.SeasonPassId`) — and it is refused unless the amount is at least
+      // the **published** price in gems. That check is the whole of why the price is in the
+      // config at all: a spend is an amount the client chooses, so without it the paid
+      // column of a season would cost one gem.
+      //
+      // The entitlement is written in this transaction rather than a later one, so the
+      // purchase and the permission cannot come apart: a process killed between them would
+      // otherwise leave a player who paid and did not receive, or worse, a pass nobody paid
+      // for. `claimAwards` reads exactly this document before paying a paid-track chest.
+      const passSeason = parsePassSpendId(spend.id);
+
+      if (passSeason) {
+        const season = usableSeason(config, passSeason);
+        const price = season ? passPrice(season) : 0;
+
+        if (!season || price <= 0) {
+          // A season this server has not been seeded with, or one that sells no pass. Refused
+          // rather than left pending, because the debit has already landed on the client and a
+          // spend that never resolves is one resubmitted for the life of the account.
+          logger.warn("refused a pass debit for a season that sells none", {
+            uid, spendId: spend.id, season: passSeason,
+          });
+          rejected.push(spend.id);
+          continue;
+        }
+
+        if (spend.currency !== "gems" || spend.amount < price) {
+          logger.warn("refused an underpaid pass debit", {
+            uid, spendId: spend.id, currency: spend.currency, paid: spend.amount, price,
+          });
+          rejected.push(spend.id);
+          continue;
+        }
+
+        transaction.set(db.doc(PATHS.eventPass(uid, passSeason)), {
+          owned: true,
+          seasonId: passSeason,
+          gems: spend.amount,
+
+          // The ladder as it stood when it was bought, so a content deployment cannot change
+          // what somebody has already paid for.
+          definition: season,
+          updatedAt: FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
+
       transaction.set(db.doc(PATHS.spend(uid, spend.id)), {
         currency: spend.currency,
         amount: spend.amount,
@@ -349,7 +401,8 @@ type CleanCommon = {
 type CleanAward =
   | (CleanCommon & { kind: "daily"; claim: DailyClaim })
   | (CleanCommon & { kind: "streak"; claim: StreakClaim })
-  | (CleanCommon & { kind: "task"; claim: TaskClaim });
+  | (CleanCommon & { kind: "task"; claim: TaskClaim })
+  | (CleanCommon & { kind: "mark"; claim: MarkClaim });
 
 export const claimAwards = onCall(callOptions, async (request): Promise<{
   wallets: WalletReply[];
@@ -428,6 +481,20 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       return [{ ...common, kind: "task", claim: task, currency: task.currency as CurrencyId }];
     }
 
+    // A season rung's chest: recomputed like a task chest, and bounded by the authored
+    // ladder rather than by a per-period allowance — the grant log already makes a rung
+    // payable exactly once, so one season's ladder is the whole of what a forged save can
+    // reach. See `season.ts`. No window check: a rung reached before a season closed stays
+    // claimable, which is what keeps a closed season's box on the hub.
+    if (isMarkGrantId(id)) {
+      const mark = parseMarkClaim(id);
+      if (!mark) { rejected.push(id); return []; }
+
+      if (!CURRENCIES.includes(mark.currency as CurrencyId)) { rejected.push(id); return []; }
+
+      return [{ ...common, kind: "mark", claim: mark, currency: mark.currency as CurrencyId }];
+    }
+
     const claim = parseDailyClaim(id);
     if (!claim) { rejected.push(id); return []; }
 
@@ -475,6 +542,17 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       ? readSavedStreak((await transaction.get(db.doc(PATHS.player(uid)))).data())
       : null;
 
+    // The pass entitlements the batch needs, gathered here because every read has to happen
+    // before the first write. One per season rather than one per claim: a batch of forty
+    // rungs on one season is one document, and the entitlement cannot change inside a
+    // transaction.
+    const passes = new Map<string, PassState>();
+    for (const seasonId of new Set(clean
+      .filter((award) => award.kind === "mark" && (award.claim as MarkClaim).track === "pass")
+      .map((award) => (award.claim as MarkClaim).seasonId))) {
+      passes.set(seasonId, await readPass(transaction, db, uid, seasonId));
+    }
+
     await deriveEarned(transaction, uid, state, config);   // ratchets the floor
 
     const daily = usableDailyConfig((config as { daily?: unknown }).daily);
@@ -504,7 +582,12 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       // guess would be inventing money, so the award is neither granted nor rejected: the
       // client keeps its local copy and tries again after the seeder has run. Rejecting
       // would be worse than doing nothing — it throws away a reward the player earned.
-      const table = award.kind === "streak" ? ladder : award.kind === "task" ? tasks : daily;
+      // A season claim prices itself out of `config.events` and the tier table together, so
+      // it is judged below rather than gated on one table here.
+      const table = award.kind === "mark" ? tasks
+                  : award.kind === "streak" ? ladder
+                  : award.kind === "task" ? tasks
+                  : daily;
 
       if (!table) {
         logger.error(`config/progression has no usable ${award.kind} table; leaving the ` +
@@ -540,6 +623,40 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
 
         amount = streakCurrencyValue(ladder!, award.claim.night, award.currency);
         detail = { night: award.claim.night };
+      } else if (award.kind === "mark") {
+        const mark = award.claim as MarkClaim;
+        const season = usableSeason(config, mark.seasonId);
+        const owns = mark.track === "pass" && holdsPass(passes.get(mark.seasonId), season ?? undefined);
+
+        const verdict = judgeMarkClaim(mark, config, tasks, owns);
+
+        if (verdict.kind === "refuse") {
+          // Permanent. A claim on the paid column without the purchase, or on a track that
+          // rung pays nothing on, will fail this for ever — and a claim that will never
+          // confirm is a claim resubmitted for the life of the account (13a).
+          logger.warn("refused a season chest", {
+            uid, id: award.id, season: mark.seasonId, track: mark.track,
+            goal: mark.goal, why: verdict.why,
+          });
+          rejected.push(award.id);
+          continue;
+        }
+
+        if (verdict.kind === "unknown") {
+          // Unconfirmed rather than refused: a content pack the client fetched before the
+          // seeder ran must not be thrown away for the sake of a forged id, which pays
+          // nothing either way.
+          logger.error("a season chest cannot be priced yet; leaving it unconfirmed", {
+            uid, id: award.id, season: mark.seasonId, why: verdict.why,
+          });
+          continue;
+        }
+
+        if (season) noteLateClaim(uid, season, mark, Date.now());
+
+        amount = markCurrencyValue(verdict.chest, uid, mark.seasonId, mark.track,
+                                    mark.goal, award.currency);
+        detail = { season: mark.seasonId, track: mark.track, goal: mark.goal, tier: verdict.tierId };
       } else if (award.kind === "task") {
         // The whole of the security, in one call: a period pays no more chests than the
         // slate deals. The rotation itself is only logged (`noteUndealt`), because a slate
@@ -620,6 +737,11 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       // paid without the floor moving with it.
       if (award.kind === "streak") floor = raise(floor, award.claim.dayKey, award.claim.night);
       if (award.kind === "task") paid = recordTask(paid, award.claim);
+
+      // Nothing is tallied against the entitlement any more. It used to accumulate what the
+      // paid column had paid so a refund could subtract exactly that (invariant 18c) — and
+      // a gem purchase has no refund: the gems were themselves bought or earned, and a
+      // store refund reverses the gems, not what they were later spent on.
     }
 
     state.streak = floor;
@@ -960,23 +1082,10 @@ export const redeemPurchase = onCall(
         return { state, granted: {} as Record<string, number>, already: true };
       }
 
-      if (grant.eventPassId) {
-        const event = config.events?.find(e => e.id === grant.eventPassId);
-        validatePass(event);
-        if (event.premiumProductId !== purchase.productId)
-          throw new HttpsError("failed-precondition", "event pass product mismatch");
-        const previousPass = await transaction.get(db.doc(PATHS.eventPass(uid, grant.eventPassId)));
-        // Entitlement and receipt commit together. Re-deliveries take the receipt branch above.
-        // Merge preserves the claim floor through a refund/re-purchase.
-        transaction.set(db.doc(PATHS.eventPass(uid, grant.eventPassId)), {
-          owned: true, productId: purchase.productId, receiptPath: receiptRef.path,
-          definition: previousPass.data()?.definition ?? event,
-          // A new payment after a refund buys the full contract again. The previous
-          // grant was reversed; a verified re-purchase can collect it again.
-          ...(!previousPass.data()?.owned ? { collectedGoal: 0, paidCredits: 0, paidGems: 0 } : {}),
-          updatedAt: FieldValue.serverTimestamp(),
-        }, { merge: true });
-      }
+      // No season-pass branch here any more. A pass is bought with gems — an ordinary
+      // spend, adjudicated by `submitSpends` — so no real-money product grants one, and
+      // `products.ts` refuses any that claims to.
+
       const granted: Record<string, number> = {};
 
       for (const [currency, amount] of entries) {
@@ -1001,7 +1110,6 @@ export const redeemPurchase = onCall(
         // Recorded so a refund can be reversed without re-reading the product catalog,
         // which may have been re-seeded by then. `revokeReceipt` reads exactly this.
         capacity: grant.capacity,
-        eventPassId: grant.eventPassId ?? "",
         granted,
         sandbox: purchase.sandbox,
         purchasedAt: Timestamp.fromMillis(purchase.purchasedAtMillis),
@@ -1262,7 +1370,7 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
   // their grove would have been clamped to near nothing and ranked at the bottom. Nothing
   // could catch it but a live run: the unit vectors take `affordable` as a parameter, and a
   // clamp that is too tight looks exactly like a clamp that is working.
-  const derived = earnedCredits(save.levels, config, uid, save.events);
+  const derived = earnedCredits(save.levels, config, uid);
   //
   // Typed rather than read off `DocumentData`, so the next person to reach for the reply's
   // name gets a compile error instead of a zero.

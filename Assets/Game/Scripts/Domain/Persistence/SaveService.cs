@@ -70,7 +70,7 @@ namespace GlimmerGrove.Persistence
             Daily.DailyChests.LoadFrom(dto);
             Daily.DailyStreak.LoadFrom(dto);
             Tasks.TaskLedger.LoadFrom(dto);
-            Events.EventCollection.LoadFrom(dto);
+            Events.SeasonLedger.LoadFrom(dto);
             Ads.RewardedAds.LoadFrom(dto);
 
             // Not loaded from anything — dropped. The bonus wheel's position is the *server's*
@@ -178,7 +178,7 @@ namespace GlimmerGrove.Persistence
             Daily.DailyChests.WriteInto(dto);
             Daily.DailyStreak.WriteInto(dto);
             Tasks.TaskLedger.WriteInto(dto);
-            Events.EventCollection.WriteInto(dto);
+            Events.SeasonLedger.WriteInto(dto);
             Ads.RewardedAds.WriteInto(dto);
             ProgressionStore.WriteInto(dto);
             CloudState.WriteInto(dto);
@@ -217,7 +217,7 @@ namespace GlimmerGrove.Persistence
             Daily.DailyChests.LoadFrom(dto);
             Daily.DailyStreak.LoadFrom(dto);
             Tasks.TaskLedger.LoadFrom(dto);
-            Events.EventCollection.LoadFrom(dto);
+            Events.SeasonLedger.LoadFrom(dto);
             Ads.RewardedAds.LoadFrom(dto);
 
             // Not loaded from anything — dropped. The bonus wheel's position is the *server's*

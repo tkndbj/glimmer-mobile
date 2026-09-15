@@ -377,22 +377,15 @@ namespace GlimmerGrove.EditorTools
                     sb.AppendLine("    {");
                     sb.AppendLine($"      \"id\": \"{e.id}\",");
                     sb.AppendLine($"      \"icon\": \"{e.icon}\",");
-                    sb.AppendLine($"      \"premiumProductId\": \"{e.premiumProductId}\",");
+                    sb.AppendLine($"      \"passGems\": {e.passGems},");
                     sb.AppendLine($"      \"startUnix\": {e.startUnix},");
                     sb.AppendLine($"      \"endUnix\": {e.endUnix},");
                     sb.AppendLine($"      \"disabled\": {(e.disabled ? "true" : "false")},");
-                    sb.AppendLine("      \"levels\": [");
-
-                    var levels = e.levels ?? new string[0];
-                    for (int k = 0; k < levels.Length; k++)
-                        sb.AppendLine($"        \"{levels[k]}\"{(k < levels.Length - 1 ? "," : string.Empty)}");
-
-                    sb.AppendLine("      ],");
                     sb.AppendLine("      \"milestones\": [");
 
                     var rungs = e.milestones ?? new ManifestEventMilestoneDto[0];
                     for (int k = 0; k < rungs.Length; k++)
-                        sb.AppendLine($"        {{ \"goal\": {rungs[k].goal}, \"credits\": {rungs[k].credits}, \"premiumCredits\": {rungs[k].premiumCredits}, \"premiumGems\": {rungs[k].premiumGems} }}" +
+                        sb.AppendLine($"        {{ \"goal\": {rungs[k].goal}, \"tier\": \"{rungs[k].tier}\", \"premiumTier\": \"{rungs[k].premiumTier}\" }}" +
                                       (k < rungs.Length - 1 ? "," : string.Empty));
 
                     sb.AppendLine("      ]");
@@ -501,22 +494,20 @@ namespace GlimmerGrove.EditorTools
             {
                 var a = before.events[i];
                 var b = after.events[i];
-                if ((a.premiumProductId ?? string.Empty) != (b.premiumProductId ?? string.Empty) || a.id != b.id || a.icon != b.icon || a.startUnix != b.startUnix ||
+                if (a.passGems != b.passGems || a.id != b.id || a.icon != b.icon || a.startUnix != b.startUnix ||
                     a.endUnix != b.endUnix || a.disabled != b.disabled ||
-                    !Same(a.levels, new List<string>(b.levels ?? new string[0])) ||
                     Count(a.milestones) != Count(b.milestones))
                 {
-                    lost = $"event '{a.id}' did not survive the write";
+                    lost = $"season '{a.id}' did not survive the write";
                     return false;
                 }
 
                 for (int k = 0; k < Count(a.milestones); k++)
                     if (a.milestones[k].goal != b.milestones[k].goal ||
-                        a.milestones[k].credits != b.milestones[k].credits ||
-                        a.milestones[k].premiumCredits != b.milestones[k].premiumCredits ||
-                        a.milestones[k].premiumGems != b.milestones[k].premiumGems)
+                        (a.milestones[k].tier ?? string.Empty) != (b.milestones[k].tier ?? string.Empty) ||
+                        (a.milestones[k].premiumTier ?? string.Empty) != (b.milestones[k].premiumTier ?? string.Empty))
                     {
-                        lost = $"event '{a.id}' lost a milestone on the way out";
+                        lost = $"season '{a.id}' lost a rung on the way out";
                         return false;
                     }
             }

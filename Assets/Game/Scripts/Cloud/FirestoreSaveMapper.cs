@@ -342,12 +342,12 @@ namespace GlimmerGrove.Cloud
         }
 
         /// <summary>
-        /// Each event's collected floor, as a list of small maps.
+        /// Each season's marks and claim floors, as a list of small maps.
         ///
         /// A list rather than a map keyed by event id, for the reason <see cref="AdCounts"/>
         /// gives: an event id is content and a Firestore field name is not, so an id
         /// carrying a dot would silently become a nested path. Already sorted by
-        /// <c>EventCollection.WriteInto</c>, so the walk back is ordered.
+        /// <c>SeasonLedger.WriteInto</c>, so the walk back is ordered.
         /// </summary>
         static List<object> EventFloors(EventStateDto[] events)
         {
@@ -361,7 +361,9 @@ namespace GlimmerGrove.Cloud
                 list.Add(new Dictionary<string, object>
                 {
                     { "id", entry.id },
+                    { "marks", (long)entry.marks },
                     { "collectedGoal", (long)entry.collectedGoal },
+                    { "premiumGoal", (long)entry.premiumGoal },
                 });
             }
 
@@ -723,7 +725,13 @@ namespace GlimmerGrove.Cloud
                 string id = Str(entry, "id");
                 if (string.IsNullOrEmpty(id)) continue;
 
-                floors.Add(new EventStateDto { id = id, collectedGoal = (int)Long(entry, "collectedGoal", 0) });
+                floors.Add(new EventStateDto
+                {
+                    id = id,
+                    marks = (int)Long(entry, "marks", 0),
+                    collectedGoal = (int)Long(entry, "collectedGoal", 0),
+                    premiumGoal = (int)Long(entry, "premiumGoal", 0),
+                });
             }
 
             return floors.ToArray();

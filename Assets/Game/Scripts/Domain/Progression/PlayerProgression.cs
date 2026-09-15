@@ -39,10 +39,11 @@ namespace GlimmerGrove.Progression
             GameContent.CatalogChanged += Invalidate;
             ProgressionRules.Changed += Invalidate;
 
-            // Collecting an event rung moves a floor that this total reads. Without this the
-            // credits would not appear until something else happened to invalidate — which
-            // is exactly the silent arrival collecting by hand exists to avoid.
-            Events.EventCollection.Changed += Invalidate;
+            // A season's chests are claims rather than derived credits, so they already
+            // invalidate through `Award`. This is here for the other half — the hub's badge
+            // and the pills repaint on the same cue the rest of the wallet does, so a rung
+            // taken on the season page cannot leave a stale number behind it.
+            Events.SeasonLedger.Changed += Invalidate;
         }
 
         /// <summary>Forces the next read to recompute. Cheap; safe to call often.</summary>
@@ -130,6 +131,23 @@ namespace GlimmerGrove.Progression
             return true;
         }
 
+        /// <summary>
+        /// The same debit under an id the caller chose, for a purchase the server has to be
+        /// able to recognise. See <see cref="SpendEntry.SeasonPassId"/> — it is the one of
+        /// these in the game, and the comment there says why it is not the default.
+        /// </summary>
+        public static bool TrySpend(string currency, long amount, string reason, string id)
+        {
+            EnsureFresh();
+
+            var ledger = Wallet.Ledger(currency);
+            if (!ledger.TrySpend(amount, DerivedEarnedFor(currency), reason, id, out _)) return false;
+
+            SaveService.Save();
+            Invalidate();
+            return true;
+        }
+
         public static bool CanAfford(string currency, long amount)
             => amount <= 0 || Balance(currency) >= amount;
 
@@ -181,23 +199,12 @@ namespace GlimmerGrove.Progression
 
             var table = ProgressionRules.Table;
 
-            // Once, on the first derivation that has a catalog to read: a file from a build
-            // which paid event milestones automatically has already been paid for every rung
-            // it reached, so those rungs start collected rather than lighting up the page.
-            // Here rather than in the save migration because a migration cannot see content.
-            if (GameContent.IsLoaded)
-            {
-                Events.EventCollection.SeedIfNeeded(GameContent.Index.Events,
-                                                    PlayerProgress.RecordsById);
-            }
-
             // The seed is read here, at the one place the live totals are derived, rather
             // than inside the ledger — see ProgressionLedger.Value for why that has to stay
             // a pure function. Empty before the first sign-in, which pays the base and can
             // only ever be revised upward afterwards.
             _totals = ProgressionLedger.Compute(PlayerProgress.Records, GameContent.Index, table,
-                                                RewardSeed.PlayerKey, GameContent.Index.Events,
-                                                Events.EventCollection.Floors);
+                                                RewardSeed.PlayerKey);
 
             // Three floors, applied as one: whichever demands the most XP wins, and
             // everything downstream — level, progress bar, remaining XP — then stays

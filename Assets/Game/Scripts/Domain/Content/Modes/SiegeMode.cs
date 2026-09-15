@@ -360,6 +360,33 @@ namespace GlimmerGrove.Content
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("roar_muzzle")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("roar_hit")));
                     break;
+
+                // **Three body reels each, because both are baked** (invariant 37bx, and the
+                // bonecaller's note above): a rendered body really stands still when it reaches
+                // its ground, so walking on and holding the hill are two pictures rather than one
+                // cycle looping in place.
+                //
+                // **And all three flight reels, because unlike the last three bosses these throw
+                // something.** A shackler looses an arrow at a ward and an ironclad brings an axe
+                // down on one, so both have a flight to draw — which is what separates them from
+                // the roar/devour/raise family that aims at the hill and has nothing crossing it.
+                case SiegeKind.Shackler:
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("snare")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("snare_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("snare_walk")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("snare")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("snare_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("snare_hit")));
+                    break;
+
+                case SiegeKind.Ironclad:
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("clad")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("clad_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("clad_walk")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("quake")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("quake_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("quake_hit")));
+                    break;
             }
         }
 
@@ -604,6 +631,90 @@ namespace GlimmerGrove.Content
             AssetRequest.SpriteSet(AssetManifest.SiegeArt("boneBulwark_y_swing")),
         };
 
+        /// <summary>
+        /// What the <b>baked</b> cast swings at the ward line.
+        ///
+        /// <b>New with the fourth chapter, and it is a fix to a cast that had already
+        /// shipped.</b> These bodies are rendered from rigged models, so a swing was always
+        /// available and was simply never cut — for two chapters the Infinite lane's raiders
+        /// reached the ward line and went on running on the spot against it, which is invariant
+        /// 37u's complaint arriving through the art. The bake now hangs a weapon off the rig's own
+        /// hand socket and cuts a second reel from the shared melee library
+        /// (<c>SiegeCastBake.Body.Swing</c>); nothing about the runtime changed.
+        /// </summary>
+        static readonly AssetRequest[] BakedSwings =
+        {
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_y_swing")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_y_swing")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_y_swing")),
+        };
+
+        /// <summary>
+        /// The <b>iron</b> cast: the twelve bodies the fourth chapter draws.
+        ///
+        /// <para>
+        /// <b>A living warband, which is the one thing the three casts before it are not.</b>
+        /// Insects, blobs and skeletons are all <em>things</em>; none of them is somebody who
+        /// chose to come. The chapter reads as a raid rather than an infestation and the bodies
+        /// are the whole of what says so — a rogue with two daggers creeps, a barbarian behind a
+        /// two-handed axe is a brute, and an engineer behind a spiked pavise is a bulwark: invariant
+        /// 37bu's vocabulary said twice over, once by the body and once by what it is holding.
+        /// </para>
+        /// <para>
+        /// <b>Baked from the same pack as the Infinite lane's and sharing no body with it</b>, for
+        /// the reason that lane is one tap from this chapter on the same map (invariant 43): the
+        /// obvious bulwark in the pack is a knight, and a knight is already standing over there.
+        /// See <c>SiegeCastBake.IronRoster</c>.
+        /// </para>
+        /// </summary>
+        static readonly AssetRequest[] IronCast =
+        {
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_y")),
+        };
+
+        /// <summary>What the iron cast swings. See <see cref="BakedSwings"/>.</summary>
+        static readonly AssetRequest[] IronSwings =
+        {
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_y_swing")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_y_swing")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_y_swing")),
+        };
+
         /// <summary>The insects, which are what a siege draws unless something says otherwise.</summary>
         public const int Insects = 0;
 
@@ -616,8 +727,11 @@ namespace GlimmerGrove.Content
         /// <summary>The skeletons. See <see cref="BoneCast"/>.</summary>
         public const int Bones = 3;
 
+        /// <summary>The warband. See <see cref="IronCast"/>.</summary>
+        public const int Iron = 4;
+
         /// <summary>How many casts this mode ships.</summary>
-        public const int CastSets = 4;
+        public const int CastSets = 5;
 
         /// <summary>
         /// The casts the <b>main ladder</b> draws from, in the order its chapters meet them.
@@ -628,7 +742,7 @@ namespace GlimmerGrove.Content
         /// year costs no cast at all</b>, and no chapter can ship drawing bodies nobody chose. A
         /// third pack lengthens this array and changes nothing else.
         /// </summary>
-        static readonly int[] MainCasts = { Insects, Brood, Bones };
+        static readonly int[] MainCasts = { Insects, Brood, Bones, Iron };
 
         /// <summary>
         /// How many casts the main ladder draws from before it starts again.
@@ -686,6 +800,7 @@ namespace GlimmerGrove.Content
                 case Baked: return SecondCast;
                 case Brood: return BroodCast;
                 case Bones: return BoneCast;
+                case Iron: return IronCast;
                 default: return InsectCast;
             }
         }
@@ -699,8 +814,14 @@ namespace GlimmerGrove.Content
         /// keeps walking and the second would be an <c>Image</c> with no sprite, which is a white
         /// rectangle over every raider at the line (invariant 7b).
         /// </summary>
+        /// <b>Three of the five swing now, and the two that do not are the two bought as flat
+        /// sheets.</b> A baked cast can always be given one — the rig has the clip and the hand
+        /// socket — so for a rendered body the question is only whether somebody cut it, where for
+        /// the insects and the brood it is whether the pack drew one at all.
         public static IReadOnlyList<AssetRequest> CastSwingArt(int set)
-            => set == Bones ? BoneSwings : null;
+            => set == Bones ? BoneSwings
+             : set == Baked ? BakedSwings
+             : set == Iron ? IronSwings : null;
 
         /// <summary>
         /// The address one raider's swing reel is at, or <b>empty</b> when this cast has none.

@@ -7,12 +7,12 @@ using NUnit.Framework;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// The four casts a siege can draw, and the ways a cast can silently stop being drawable.
+    /// The five casts a siege can draw, and the ways a cast can silently stop being drawable.
     ///
     /// <para>
     /// <b>This is <c>SiegeGroundTests</c>'s question asked of the raiders.</b> A rung's ground is
     /// named twice and a test holds the two names together; a cast is worse, because it is twelve
-    /// bodies rather than one and there are four of them. What that fixture records applies here
+    /// bodies rather than one and there are five of them. What that fixture records applies here
     /// unchanged: if what a chapter <em>loads</em> and what the board <em>draws</em> come apart, an
     /// <c>Image</c> with a null sprite is a <b>white rectangle</b> rather than a blank (invariant
     /// 7b) — over every raider on the hill, on one chapter, with every other gate green. The
@@ -38,7 +38,7 @@ namespace GlimmerGrove.Tests
     {
         static readonly int[] Sets =
         {
-            SiegeMode.Insects, SiegeMode.Baked, SiegeMode.Brood, SiegeMode.Bones,
+            SiegeMode.Insects, SiegeMode.Baked, SiegeMode.Brood, SiegeMode.Bones, SiegeMode.Iron,
         };
 
         static readonly SiegeKind[] Bodies =

@@ -293,9 +293,14 @@ function buildProgressionConfig() {
       ads: readAds(progression),
       streak: readStreak(progression),
       golden: readGolden(progression),
-      events: readEvents(manifest, levelChapters),
+      // Read before the calendar, because a season names its tiers and the seeder is the
+      // one place that can prove a rung's tier actually exists — the ladder lives in the
+      // manifest and the tiers in progression.json, and neither file can check the other.
+      ...(() => {
+        const tasks = readTasks(progression);
+        return { events: readEvents(manifest, new Set(tasks.tiers.map((t) => t.id))), tasks };
+      })(),
       keeper: readKeeperCurve(progression),
-      tasks: readTasks(progression),
     },
     products: readStore(progression),
     levelCount,
@@ -362,10 +367,14 @@ function readStore(progression) {
     const credits = Math.floor(entry.credits ?? 0);
     const gems = Math.floor(entry.gems ?? 0);
     const capacity = Math.floor(entry.heartCapacity ?? 0);
-    const eventPassId = entry.eventPassId ?? "";
-    if ((eventPassId && (!/^[a-z0-9_]{1,64}$/.test(eventPassId) || entry.kind !== "nonconsumable" ||
-        credits || gems || capacity || entry.shelf !== "event_pass")) ||
-        (entry.shelf === "event_pass" && !eventPassId)) throw new Error(`invalid event pass product '${id}'`);
+    // A season's pass is bought with gems, so no real-money product grants one. `products.ts`
+    // refuses such a product on the way in; refusing here is what stops one being published
+    // in the first place, which is the difference between a seed that fails on a terminal
+    // and a card that takes money and unlocks nothing.
+    if (entry.eventPassId || entry.shelf === "event_pass") {
+      throw new Error(`store product '${id}' carries a season pass entitlement, which nothing ` +
+                      "grants any more; a pass is bought with gems");
+    }
 
     if (!Number.isFinite(credits) || !Number.isFinite(gems) || credits < 0 || gems < 0) {
       throw new Error(`store product '${id}' grants ${entry.credits} credits and ${entry.gems} gems`);
@@ -407,7 +416,7 @@ function readStore(progression) {
       );
     }
 
-    if (credits === 0 && gems === 0 && capacity === 0 && !eventPassId) {
+    if (credits === 0 && gems === 0 && capacity === 0) {
       throw new Error(`store product '${id}' grants nothing`);
     }
 
@@ -444,7 +453,7 @@ function readStore(progression) {
     // Only what the server needs in order to honour a receipt. The shelf, the badge and
     // the reference price are display and validation; publishing them would invite
     // somebody to think the server had an opinion about them.
-    products[id] = { credits, gems, kind: entry.kind, capacity, ...(eventPassId ? { eventPassId } : {}) };
+    products[id] = { credits, gems, kind: entry.kind, capacity };
   }
 
   // The ladder has to get better as it gets bigger. A middle rung worth less per unit of
@@ -510,18 +519,26 @@ function shelfValue(entry, perGem) {
 }
 
 /**
- * The event calendar, published so the server can re-derive what a track has paid.
+ * The season calendar, published so the server can price what a rung's chest pays.
  *
- * Past events are published too, and that is not an oversight: a closed event still pays
- * what it paid, so dropping one from the config would make the server derive less than the
- * game shows for every player who finished it. Nothing here expires.
+ * Past seasons are published too, and that is not an oversight: a rung reached before a
+ * window closed stays claimable for ever, so dropping one would refuse a chest somebody
+ * earned. Nothing here expires.
  *
- * Every rule the client's reader enforces is enforced again here, because the two derive
- * the same number and a config the client would have refused is a config the server would
- * quietly disagree with. A refusal at seed time is a message on a terminal; the same
- * refusal in production is a balance nobody can explain.
+ * Every rule the client's reader enforces is enforced again here, because a config the
+ * client would have refused is a config the server would quietly disagree with. A refusal
+ * at seed time is a message on a terminal; the same refusal in production is a chest
+ * nobody can claim.
+ *
+ * `tierIds` is the published tasks block's own ladder, and checking against it here is the
+ * whole reason this takes an argument: a rung naming a tier nothing defines is a claim the
+ * server can never price, and it is invisible in both files on their own.
+ *
+ * The pass is priced in **gems**, and that price is published because `submitSpends` has to
+ * compare a pass debit against it — a spend is an amount the client chooses, so without it
+ * the paid column would cost whatever a client says.
  */
-function readEvents(manifest, levelChapters) {
+function readEvents(manifest, tierIds) {
   const events = manifest.events;
   if (!Array.isArray(events) || events.length === 0) return null;
 
@@ -533,60 +550,60 @@ function readEvents(manifest, levelChapters) {
 
     const id = String(entry.id ?? "");
     if (!/^[a-z0-9_]+$/.test(id)) {
-      throw new Error(`event id '${entry.id}' is unusable; ids are lower case letters, ` +
-                      "digits and underscores, because earned credits depend on them");
+      throw new Error(`season id '${entry.id}' is unusable; ids are lower case letters, ` +
+                      "digits and underscores, because one names a save row and every claim id");
     }
-    if (seen.has(id)) throw new Error(`manifest lists event '${id}' twice`);
+    if (seen.has(id)) throw new Error(`manifest lists season '${id}' twice`);
     seen.add(id);
 
     const startUnix = Math.floor(Number(entry.startUnix));
     const endUnix = Math.floor(Number(entry.endUnix));
     if (!Number.isFinite(startUnix) || !Number.isFinite(endUnix) || endUnix <= startUnix) {
-      throw new Error(`event '${id}' ends at or before it starts`);
+      throw new Error(`season '${id}' ends at or before it starts`);
     }
 
-    const levels = [...new Set(entry.levels ?? [])];
-    if (levels.length === 0) throw new Error(`event '${id}' names no glades`);
-
-    for (const levelId of levels) {
-      if (!levelChapters[levelId]) {
-        throw new Error(
-          `event '${id}' names glade '${levelId}', which no shipped chapter holds. The ` +
-          "server counts only glades the catalog vouches for, so it would derive a " +
-          "shorter track than the game shows"
-        );
-      }
+    const passGems = Math.floor(Number(entry.passGems ?? 0));
+    if (!Number.isFinite(passGems) || passGems < 0 || passGems > 100000) {
+      throw new Error(`season '${id}' prices its pass at ${entry.passGems} gems, outside 0..100000`);
     }
-
     const milestones = [];
     let previousGoal = 0;
 
     for (const rung of entry.milestones ?? []) {
       const goal = Math.floor(Number(rung?.goal));
-      const credits = Math.floor(Number(rung?.credits));
 
       if (!Number.isFinite(goal) || goal <= previousGoal) {
-        throw new Error(`event '${id}' milestone goals must rise: ${rung?.goal} follows ${previousGoal}`);
+        throw new Error(`season '${id}' rung goals must rise: ${rung?.goal} follows ${previousGoal}`);
       }
-      if (goal > levels.length) {
-        throw new Error(`event '${id}' has a milestone at ${goal} glades but names only ${levels.length}`);
-      }
-      if (!Number.isFinite(credits) || credits < 0) {
-        throw new Error(`event '${id}' milestone at ${goal} pays ${rung?.credits}`);
+      if (goal > 100000) throw new Error(`season '${id}' has a rung at ${goal} marks, above 100000`);
+
+      const tier = String(rung?.tier ?? "");
+      const premiumTier = String(rung?.premiumTier ?? "");
+
+      if (!tierIds.has(tier)) {
+        throw new Error(`season '${id}' rung at ${goal} pays free tier '${tier}', which the ` +
+                        "published tasks block does not define; a rung paying a chest nobody " +
+                        "can price is a claim the server can never confirm");
       }
 
-      const premiumCredits = rung.premiumCredits ?? 0, premiumGems = rung.premiumGems ?? 0;
-      if (!Number.isSafeInteger(premiumCredits) || premiumCredits < 0 || premiumCredits > 5000 ||
-          !Number.isSafeInteger(premiumGems) || premiumGems < 0 || premiumGems > 1000 ||
-          (!entry.premiumProductId && (premiumCredits || premiumGems))) throw new Error(`invalid premium reward '${id}'`);
-      milestones.push({ goal, credits, premiumCredits, premiumGems });
+      if (passGems > 0 && !tierIds.has(premiumTier)) {
+        throw new Error(`season '${id}' sells a pass but its rung at ${goal} pays pass tier ` +
+                        `'${premiumTier}', which the published tasks block does not define`);
+      }
+
+      if (passGems <= 0 && premiumTier) {
+        throw new Error(`season '${id}' pays pass tier '${premiumTier}' at ${goal} but sells ` +
+                        "no pass, so nobody could ever claim it");
+      }
+
+      milestones.push(premiumTier ? { goal, tier, premiumTier } : { goal, tier });
       previousGoal = goal;
     }
 
-    if (milestones.length === 0) throw new Error(`event '${id}' has no milestones, so it pays nothing`);
+    if (milestones.length === 0) throw new Error(`season '${id}' has no rungs, so it pays nothing`);
+    if (milestones.length > 40) throw new Error(`season '${id}' exceeds 40 rungs`);
 
-    if (milestones.length > 40) throw new Error(`event '${id}' exceeds 40 tiers`);
-    published.push({ id, startUnix, endUnix, levels, milestones, premiumProductId: entry.premiumProductId ?? "" });
+    published.push({ id, startUnix, endUnix, milestones, passGems });
   }
 
   return published.length > 0 ? published : null;
@@ -894,7 +911,12 @@ function readTasks(progression) {
       weight: Math.max(1, Math.floor(option.weight ?? 1)),
     }));
 
-    return { id: tier.id, chest: { guaranteed, options } };
+    // `marks` is published for completeness and read by nobody on this side: the season
+    // track's pace is a client and content concern, and the server's whole interest in a
+    // season is which chest a rung pays. Publishing it keeps the config document a faithful
+    // copy of the authored table, which is what makes a support question answerable.
+    const marks = Math.max(0, Math.floor(tier.marks ?? 0));
+    return { id: tier.id, chest: { guaranteed, options }, ...(marks > 0 ? { marks } : {}) };
   });
 
   const ids = new Set();
@@ -1085,12 +1107,27 @@ async function writeDoc(token, path, data, options = {}) {
 
 // ------------------------------------------------------------------------- main
 const { config, levelCount, products } = buildProgressionConfig();
+
+// A season's pass price is one number in the manifest with nothing on the other side of it
+// to drift from, so the cross-file link this used to check is gone. What is left is that a
+// season selling one actually names a price the server can enforce — without it,
+// `submitSpends` has nothing to compare a pass debit against and the paid column would cost
+// whatever a client says.
 for (const event of config.events ?? []) {
-  if (event.premiumProductId && products?.[event.premiumProductId]?.eventPassId !== event.id)
-    throw new Error(`event '${event.id}' has no matching premium store product`);
+  const gems = event.passGems ?? 0;
+  const sells = (event.milestones ?? []).some((rung) => rung.premiumTier);
+
+  if (sells && !(Number.isSafeInteger(gems) && gems > 0)) {
+    throw new Error(`season '${event.id}' pays a pass track but prices no pass; the server ` +
+                    "would have nothing to check a pass debit against");
+  }
+  if (!sells && gems > 0) {
+    throw new Error(`season '${event.id}' prices a pass at ${gems} gems but pays nothing on ` +
+                    "the pass track");
+  }
 }
 if (process.argv.includes("--check")) {
-  console.log(`Validated ${levelCount} levels, ${Object.keys(products ?? {}).length} store products and event pass links. No remote writes.`);
+  console.log(`Validated ${levelCount} levels, ${Object.keys(products ?? {}).length} store products and season pass prices. No remote writes.`);
   process.exit(0);
 }
 const token = accessToken();

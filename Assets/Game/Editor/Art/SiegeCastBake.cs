@@ -90,9 +90,88 @@ namespace GlimmerGrove.EditorTools
 
             /// <summary>The height this body is cut at, or nought for <see cref="Tall"/>.</summary>
             public int Height;
+
+            /// <summary>
+            /// What this body is <b>holding</b>, hung off the rig's own hand sockets.
+            ///
+            /// <para>
+            /// <b>Every KayKit character ships unarmed, and for two chapters this cast shipped
+            /// that way with it</b> — reported in one line: <em>they don't have weapons or
+            /// anything, they should</em>. It is not a shortcoming of the pack. KayKit models a
+            /// weapon as a separate mesh and gives the rig two empty transforms,
+            /// <c>handslot.l</c> and <c>handslot.r</c>, for somebody to hang one on; a body with
+            /// nothing in them is a body nobody finished dressing.
+            /// </para>
+            /// <para>
+            /// <b>So the socket is the seam and there is no offset anywhere in this file.</b> A
+            /// weapon is instantiated under the slot at identity and the rig carries it — which
+            /// is what makes an axe swing when an arm swings, and what would be a table of
+            /// hand-tuned positions per body per weapon if the pack had not provided them. The
+            /// one rule is that gear is fitted <em>before</em> <see cref="Skin"/> is built, so
+            /// its renderer is in that class's drawn set: a weapon added afterwards renders and
+            /// is invisible to <see cref="Skin.Box"/>, which frames the shot — so it would be cut
+            /// off at the edge of every frame with nothing saying so.
+            /// </para>
+            /// <para>
+            /// <b>A weapon carries its owner's material</b> — <c>sword_1handed</c> is painted in
+            /// the knight's palette, <c>axe_2handed</c> in the barbarian's — so a body and what it
+            /// holds cannot drift apart in colour, and <see cref="Tint"/> then pulls both the same
+            /// way. Arming a body across packs is legal and is a decision: it reads as loot.
+            /// </para>
+            /// </summary>
+            public Gear[] Hold;
+
+            /// <summary>
+            /// What this body <b>swings</b> when it reaches the ward line, or null for one that
+            /// keeps walking.
+            ///
+            /// <para>
+            /// <b>A raider that reaches the line stands there hitting it</b> every
+            /// <c>SiegeTuning.BlowEvery</c> until something kills it, and what that looked like on
+            /// every baked body was a run cycle looping in place against a turret — invariant
+            /// 37u's complaint (a body doing the wrong thing where it stands) arriving through the
+            /// art. The bone cast answered it from a bought sheet
+            /// (<c>make_siege_art.walk_and_swing</c>); this answers it from the rig, which is
+            /// strictly better, because the swing and the walk are then the same body posed by the
+            /// same skeleton rather than two cuts of two drawings.
+            /// </para>
+            /// <para>
+            /// <b>It is the reason <see cref="Gear"/> had to come first.</b> An empty hand swinging
+            /// is a body waving at a turret; the gesture only reads because something long and
+            /// bright travels through it, which is 37ar's rule (a silhouette has to be made of
+            /// something) asked of six frames instead of a pose.
+            /// </para>
+            /// </summary>
+            public string Swing;
+
+            /// <summary>The animation file <see cref="Swing"/> lives in.</summary>
+            public string SwingRig;
         }
 
+        /// <summary>
+        /// One thing a body holds, and which hand it is in.
+        ///
+        /// <b>A struct rather than a bare model name, because which hand is a decision and not a
+        /// property of the weapon.</b> A shield in the off hand and a sword in the main is a
+        /// bulwark; the same two swapped is a body that reads as fumbling. The rig's sockets are
+        /// mirrored, so nothing else distinguishes them.
+        /// </summary>
+        struct Gear
+        {
+            public string Model;      // the FBX under Source/Gear
+            public bool Left;         // the off hand rather than the main one
+        }
+
+        static Gear Main(string model) => new Gear { Model = model, Left = false };
+        static Gear Off(string model) => new Gear { Model = model, Left = true };
+
         const string Source = "Assets/Game/Editor/Art/KayKit";
+
+        /// <summary>Where the weapons and shields live, beside the bodies that hold them.</summary>
+        const string Armoury = Source + "/Gear";
+
+        /// <summary>The rig transforms a weapon may be hung from. KayKit's own names.</summary>
+        const string MainHand = "handslot.r", OffHand = "handslot.l";
 
         /// <summary>
         /// The library every character's animations come from.
@@ -129,6 +208,36 @@ namespace GlimmerGrove.EditorTools
         const string AdventurerClips = Source + "/Adventurers_MovementBasic.fbx";
 
         /// <summary>
+        /// The melee library: what a body does when it reaches the ward line.
+        ///
+        /// <para>
+        /// <b>It is the shared <c>Rig_Medium</c> library rather than either character pack's own
+        /// copy, and that is safe for exactly the reason <see cref="AdventurerClips"/> is not.</b>
+        /// A clip binds by transform <em>path</em>, and the path that matters is the one under the
+        /// rig root — which every KayKit humanoid shares, because they are all bound to one
+        /// skeleton. What breaks is a clip authored against a <em>different</em> rig's hierarchy;
+        /// the Character Animations pack is that one hierarchy's own library, so it binds to all
+        /// of them. <see cref="Moves"/> is what proves that claim rather than this sentence:
+        /// every reel cut from here is asked whether its lower half actually moved.
+        /// </para>
+        /// <para>
+        /// <b>Which attack a body swings is a decision about its weapon</b>, not a default: a
+        /// one-handed chop is a different gesture from a two-handed slice, and a body holding an
+        /// axe in both hands playing the one-handed clip swings through its own off hand.
+        /// </para>
+        /// </summary>
+        const string MeleeClips = Source + "/Rig_Medium_CombatMelee.fbx";
+
+        /// <summary>
+        /// The ranged library, which today is one boss's.
+        ///
+        /// <b>Kept separate from <see cref="MeleeClips"/> for the plainest reason</b>: a bow is
+        /// drawn and loosed, and there is no melee clip that does not look like a body throwing
+        /// its bow at something.
+        /// </summary>
+        const string RangedClips = Source + "/Rig_Medium_CombatRanged.fbx";
+
+        /// <summary>
         /// The three kinds a chapter draws, as models.
         ///
         /// <b>Picked for what projects sideways, which is the only thing that survives this
@@ -141,12 +250,25 @@ namespace GlimmerGrove.EditorTools
         /// The knight is the one borrowed from the Adventurers pack rather than the Skeletons,
         /// because a bulwark has to say it is carrying armour before it is in range.
         /// </summary>
+        /// <b>Every body here is armed, and until this drop not one of them was.</b> KayKit hangs a
+        /// weapon off <c>handslot.r</c> rather than modelling it into the mesh, so an unarmed cast
+        /// is the pack's default and not its intent — see <see cref="Body.Hold"/>. What it bought
+        /// beyond the obvious is the <em>swing</em>: a body with nothing in its hands reaching the
+        /// ward line has no gesture worth drawing, so the whole cast walked on the spot against a
+        /// turret for two chapters (invariant 37u through the art). Each kind's weapon is chosen to
+        /// say its kind a second time in <see cref="Body.Swing"/>'s own vocabulary — a blade
+        /// creeps, a long axe is a brute, a shield is a bulwark (37bu) — so the silhouette now
+        /// carries the kind twice and the colour is still said by the tint, the bake and the ring.
         static readonly Body[] Roster =
         {
             new Body { Key = "kayMon",     Model = "Skeleton_Rogue",   Clip = "Running_A",
-                       Rig = Clips },
+                       Rig = Clips,
+                       Hold = new[] { Main("Skeleton_Blade") },
+                       Swing = "Melee_1H_Attack_Slice_Diagonal", SwingRig = MeleeClips },
             new Body { Key = "kayBrute",   Model = "Skeleton_Warrior", Clip = "Running_A",
-                       Rig = Clips },
+                       Rig = Clips,
+                       Hold = new[] { Main("Skeleton_Axe") },
+                       Swing = "Melee_1H_Attack_Chop", SwingRig = MeleeClips },
             // **The knight is back, and what it was withdrawn for never existed.** It was replaced
             // by a third skeleton because it "would not animate" — its bones moved exactly as much
             // as a skeleton's and its mesh did not follow them, which was recorded as unexplained.
@@ -158,8 +280,78 @@ namespace GlimmerGrove.EditorTools
             // It was the healthiest body here and it was the one thrown out, because it had
             // nothing to hide the bug behind.
             new Body { Key = "kayBulwark", Model = "Knight",           Clip = "Running_A",
-                       Rig = Clips },
+                       Rig = Clips,
+                       // The one body on this hill that carries a shield, and it carries it in the
+                       // off hand so the sword is free — which is also why its swing is the block's
+                       // own counter rather than a chop: a bulwark that drops its guard to hit is
+                       // a bulwark for six frames a blow.
+                       Hold = new[] { Main("sword_1handed"), Off("shield_square") },
+                       Swing = "Melee_Block_Attack", SwingRig = MeleeClips },
         };
+
+        /// <summary>
+        /// The <b>iron</b> cast: the twelve bodies the fourth chapter draws.
+        ///
+        /// <para>
+        /// <b>A living warband rather than a fourth kind of dead thing</b>, which is the one axis
+        /// the three shipped casts leave open: insects, blobs and skeletons are all *things*, and
+        /// what none of them is is somebody who chose to come. The chapter reads as a raid rather
+        /// than an infestation, and the bodies are the whole of what says so.
+        /// </para>
+        /// <para>
+        /// <b>Nothing here is borrowed from <see cref="Roster"/>, and the knight is the one that
+        /// had to be argued.</b> It is the obvious bulwark in the pack and it is already the
+        /// Infinite lane's — which is *one tap* from this chapter on the same map (invariant 43),
+        /// so a player would meet the same armoured body in two places and read the second as the
+        /// first. A cast is told apart by its bodies or it is not told apart at all (37bu), so the
+        /// engineer takes the shield instead: a spiked pavise and a one-handed axe, which is a
+        /// sapper rather than a knight and reads as a different trade at the same silhouette
+        /// weight.
+        /// </para>
+        /// <para>
+        /// <b>Every body is armed and every body swings</b> — see <see cref="Roster"/>'s note,
+        /// which this cast is the first to be built under rather than retro-fitted to.
+        /// </para>
+        /// <para>
+        /// <b>And the first cut of it was re-bodied on the strength of one render, which is what
+        /// a contact sheet is for</b> (32b). The adventurer pack's bodies share one chibi torso and
+        /// at this camera almost nothing about a *body* separates them — held up beside the kay
+        /// cast, whose hooded skull, horned helm and closed visor read instantly, the three came
+        /// out as "a woman in a dress, a teddy bear and a man in goggles". So the silhouette is
+        /// made of the two things that do survive the projection: a **hood** where the rogue had
+        /// hair, and gear a size up. The oversized axe and the skeletons' large shield are
+        /// deliberately out of scale for a medium body — a brute whose reach you can read while it
+        /// is still walking is the whole of what a brute is for (37ar: a silhouette has to be made
+        /// of something), and at the true size the two-handed axe was a sliver behind the torso.
+        /// </para>
+        /// </summary>
+        static readonly Body[] IronRoster =
+        {
+            // Two daggers rather than one, which is the cheapest legible difference in the set: a
+            // dual-wield slice throws a blade out on *both* sides of the body, so a creeper's
+            // swing is the only one on the hill that is symmetrical and it reads at a glance
+            // against the brute's single arc.
+            new Body { Key = "ironMon",     Model = "Rogue_Hooded", Clip = "Running_A",
+                       Rig = AdventurerClips,
+                       Hold = new[] { Main("dagger"), Off("dagger") },
+                       Swing = "Melee_Dualwield_Attack_Slice", SwingRig = MeleeClips },
+
+            // The two-handed axe is the longest thing any raider carries, and length is what a
+            // brute is for: it is the body the player has to answer before it is in range, so its
+            // reach has to be visible while it is still walking.
+            new Body { Key = "ironBrute",   Model = "Barbarian", Clip = "Running_A",
+                       Rig = AdventurerClips,
+                       Hold = new[] { Main("axe_2handed_Large") },
+                       Swing = "Melee_2H_Attack_Chop", SwingRig = MeleeClips },
+
+            new Body { Key = "ironBulwark", Model = "Engineer",  Clip = "Running_A",
+                       Rig = AdventurerClips,
+                       Hold = new[] { Main("axe_1handed_Large"), Off("Skeleton_Shield_Large_A") },
+                       Swing = "Melee_Block_Attack", SwingRig = MeleeClips },
+        };
+
+        /// <summary>Every raider baked here, in the order a player meets their chapters.</summary>
+        static Body[] AllRaiders => Roster.Concat(IronRoster).ToArray();
 
         /// <summary>
         /// The bosses baked here, which today is the one the third chapter ends on.
@@ -227,7 +419,59 @@ namespace GlimmerGrove.EditorTools
             new Body { Key = "caller", Model = "Skeleton_Mage", Clip = "Idle_A", Cast = "Throw",
                        Walk = "Running_A", WalkRig = Clips,
                        Rig = SkeletonGeneral, Height = BossTall },
+
+            // ---------------------------------------------------------- the fourth chapter's two
+            // **The shackler, and its whole silhouette is the thing in its hands.** A ranger is
+            // the slightest body in either pack — narrower than the rogue and a head shorter than
+            // the knight — and at three cells tall that is a stick. A drawn longbow is nearly as
+            // wide as the body is high and sits *across* it, which is the one thing in the set
+            // that projects sideways without being an antler (37ar, 37bx). It is also the only
+            // ranged body on any hill in this mode, so what it reads as is a thing that reaches
+            // the line without walking to it — which is exactly what a bind does.
+            //
+            // **The bow is in the off hand**, which is not a preference: KayKit's `Ranged_Bow_*`
+            // clips draw with the right and hold with the left, so a bow in the main hand is a
+            // body pulling a string that is not there.
+            //
+            // Its stand is an *aim* rather than an idle. A boss that has reached its ground holds
+            // the middle of the hill for the rest of the fight (37t), and an archer standing at
+            // ease for thirty seconds between loosings is the bonecaller's photograph (37cm)
+            // wearing a bow.
+            new Body { Key = "snare", Model = "Ranger",
+                       Clip = "Ranged_Bow_Aiming_Idle", Rig = RangedClips,
+                       Cast = "Ranged_Bow_Release",
+                       Walk = "Running_A", WalkRig = Clips,
+                       Hold = new[] { Off("bow_withString") },
+                       Height = BossTall },
+
+            // **The ironclad is the first body in this mode on a different rig, and that is what
+            // buys the size.** Every other humanoid here is `Rig_Medium` and stands 2.4-2.8 units;
+            // the large barbarian is `Rig_Large` and stands 4.5 by 5.8 — wider than it is tall,
+            // which no `Rig_Medium` body is at any pose. So it does not need a boss's height
+            // multiplier to read as a boss: it is one, in the geometry, beside a cast it shares a
+            // palette with.
+            //
+            // **`Rig_Large` is a genuinely different skeleton and the failure is silent**, which
+            // is this pack's one trap (see <see cref="AdventurerClips"/>) and was measured here
+            // rather than assumed: `Rig_Medium/Running_A` sampled onto this body moves its foot
+            // **0.00** units and renders a perfect bind pose. Every clip below comes from the
+            // `Rig_Large` libraries, and <see cref="Moves"/> is what holds that to the pixels.
+            //
+            // Its stand is the two-handed guard rather than `Idle_A` — measured at 0.03 units of
+            // travel, `Idle_A` on this rig is the photograph 37cm is about.
+            new Body { Key = "clad", Model = "Barbarian_Large",
+                       Clip = "Melee_2H_Idle", Rig = LargeMelee,
+                       Cast = "Melee_2H_Slam",
+                       Walk = "Running_A", WalkRig = LargeClips,
+                       Hold = new[] { Main("axe_2handed_Large") },
+                       Height = BossTall },
         };
+
+        /// <summary>The <c>Rig_Large</c> movement library. See the ironclad in <see cref="Bosses"/>.</summary>
+        const string LargeClips = Source + "/Rig_Large_MovementBasic.fbx";
+
+        /// <summary>The <c>Rig_Large</c> melee library — the ironclad's guard and its slam.</summary>
+        const string LargeMelee = Source + "/Rig_Large_CombatMelee.fbx";
 
         /// <summary>
         /// The Skeletons pack's general animations — idles, throws, hits.
@@ -458,7 +702,7 @@ namespace GlimmerGrove.EditorTools
                 // seen from further up than a cast that could not.
                 var shots = new List<Texture2D>();
                 foreach (float pitch in new[] { Pitch, Pitch + 12f, Pitch + 24f })
-                    foreach (var body in Roster)
+                    foreach (var body in AllRaiders)
                         shots.Add(Still(stage.transform, cam, key, body, pitch));
 
                 Sheet(shots, "siege_cast_angles.png", 3);
@@ -486,7 +730,7 @@ namespace GlimmerGrove.EditorTools
             {
                 stage = BuildStage(out var cam, out var key);
 
-                foreach (var body in raiders ? Roster : NoBodies)
+                foreach (var body in raiders ? AllRaiders : NoBodies)
                 {
                     var reels = Reels(stage.transform, cam, key, body);
                     if (reels == null)
@@ -497,6 +741,14 @@ namespace GlimmerGrove.EditorTools
 
                     for (int i = 0; i < Letters.Length; i++)
                         made[body.Key + "_" + Letters[i]] = reels[i];
+
+                    // **An armed body brings four more**, and the suffix is written out here
+                    // rather than assembled at the call site for `Tools/verify/artnames.py`'s
+                    // reason - it is `SiegeMode.CastSwing`'s own literal, at both ends.
+                    if (reels.Length <= Letters.Length) continue;
+
+                    for (int i = 0; i < Letters.Length; i++)
+                        made[body.Key + "_" + Letters[i] + "_swing"] = reels[Letters.Length + i];
                 }
 
                 // **The bosses, which are the same stage and nothing else the same.** See
@@ -543,8 +795,24 @@ namespace GlimmerGrove.EditorTools
             var clip = ClipNamed(body.Rig, body.Clip);
             if (model == null || clip == null) return null;
 
+            // Refused rather than silently skipped: a body that authors a swing this rig has never
+            // heard of is a typo, and a cast that quietly ships one reel short is a raider walking
+            // on the spot at the ward line with every gate green.
+            var swing = ClipNamed(body.SwingRig ?? MeleeClips, body.Swing);
+            if (!string.IsNullOrEmpty(body.Swing) && swing == null)
+            {
+                Debug.LogError(string.Format(
+                    "SiegeCastBake: '{0}' asks for the swing clip '{1}', which is not in {2}.",
+                    body.Key, body.Swing, body.SwingRig ?? MeleeClips));
+                return null;
+            }
+
             var inst = (GameObject)PrefabUtility.InstantiatePrefab(model);
             inst.transform.SetParent(stage, false);
+
+            // **Before the skin, and that ordering is load-bearing** — see <see cref="Fit"/>.
+            if (!Fit(inst, body)) { Object.DestroyImmediate(inst); return null; }
+
             var skin = new Skin(inst);
 
             try
@@ -555,6 +823,8 @@ namespace GlimmerGrove.EditorTools
                 // insect side (invariant 37ar).
                 var box = Extent(skin, clip);
                 float pitch = body.Lean > 0f ? body.Lean : Pitch;
+
+                if (swing != null) return Armed(cam, key, skin, body, clip, swing, box, pitch);
 
                 var out4 = new Texture2D[Hues.Length][];
                 for (int c = 0; c < Hues.Length; c++) out4[c] = new Texture2D[Frames];
@@ -584,6 +854,279 @@ namespace GlimmerGrove.EditorTools
                 return out4;
             }
             finally { skin.Dispose(); Object.DestroyImmediate(inst); }
+        }
+
+        /// <summary>
+        /// Hangs this body's gear off the rig's own hand sockets.
+        ///
+        /// <para>
+        /// <b>It must run before <see cref="Skin"/> is constructed, and that is the only rule
+        /// here.</b> That class collects the renderers it will draw and the renderers it will
+        /// measure once, in its constructor; a weapon parented afterwards is drawn but is not in
+        /// <see cref="Skin.Box"/>, so it never reaches <see cref="Extent"/> and the camera is
+        /// framed as though the body were empty-handed. What ships then is an axe cropped at the
+        /// edge of every frame — which imports, addresses, audits and animates, and is only
+        /// visible if somebody looks (invariant 32b).
+        /// </para>
+        /// <para>
+        /// <b>A missing socket or a missing weapon is an error rather than a shrug</b>, for
+        /// invariant 7b's reason read one step back: a body that silently declines to pick up its
+        /// weapon is the unarmed cast this drop exists to replace, and it would ship green.
+        /// </para>
+        /// <para>
+        /// <b>Nothing is offset, rotated or scaled.</b> KayKit authors <c>handslot.l</c> and
+        /// <c>handslot.r</c> at the grip, so identity is the right transform and any number typed
+        /// here would be a number that has to be re-tuned per body per weapon — thirty-odd of them
+        /// across this roster, each invisible to every gate.
+        /// </para>
+        /// </summary>
+        static bool Fit(GameObject inst, Body body)
+        {
+            if (body.Hold == null || body.Hold.Length == 0) return true;
+
+            Transform main = null, off = null;
+            foreach (var t in inst.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == MainHand) main = t;
+                else if (t.name == OffHand) off = t;
+            }
+
+            foreach (var gear in body.Hold)
+            {
+                var slot = gear.Left ? off : main;
+                if (slot == null)
+                {
+                    Debug.LogError(string.Format(
+                        "SiegeCastBake: '{0}' has no {1} to hold '{2}' in.",
+                        body.Key, gear.Left ? OffHand : MainHand, gear.Model));
+                    return false;
+                }
+
+                var mesh = AssetDatabase.LoadAssetAtPath<GameObject>(
+                    Armoury + "/" + gear.Model + ".fbx");
+
+                if (mesh == null)
+                {
+                    Debug.LogError(string.Format(
+                        "SiegeCastBake: '{0}' asks for the gear '{1}', which is not in {2}.",
+                        body.Key, gear.Model, Armoury));
+                    return false;
+                }
+
+                var held = (GameObject)PrefabUtility.InstantiatePrefab(mesh);
+                held.transform.SetParent(slot, false);
+            }
+
+            return true;
+        }
+
+        /// <summary>Frames kept from a swing. <c>make_siege_art.SWING_FRAMES</c>, matched.</summary>
+        const int SwingFrames = 8;
+
+        /// <summary>
+        /// The largest frame this folder may ship, which is <c>ProjectSetup</c>'s own cap on
+        /// <c>/Art/Siege/</c>.
+        ///
+        /// <b>Named here so a swing canvas can be held under it rather than discovered over
+        /// it.</b> A texture above the cap is not refused — the importer halves it, silently, so
+        /// what ships is a reel drawn at half the resolution of the walk it belongs to, costing
+        /// the disk and giving nothing back (that rule's own warning, and <c>Tall</c>'s note).
+        /// </summary>
+        const int MostPixels = 512;
+
+        /// <summary>
+        /// A body's eight reels: four colours of walk, and four of the swing it makes at the line.
+        ///
+        /// <para>
+        /// <b>The difficulty is entirely that the two reels must share a pixel scale and must not
+        /// share a canvas</b>, which is <c>make_siege_art.walk_and_swing</c>'s finding arriving on
+        /// the 3D side. A swing throws a two-handed axe far outside the box the walk sweeps:
+        /// framing both to the union would draw every raider in the chapter at a fraction of its
+        /// size <em>for the whole run</em>, for the sake of six frames at the ward line, and
+        /// framing each to its own box would make the body jump the moment it arrives.
+        /// </para>
+        /// <para>
+        /// <b>So there is one camera box and one square, and the two reels are cut out of it
+        /// differently.</b> The box is the walk's, expanded symmetrically about the walk's own
+        /// centre until it contains the swing; the square grows in exact proportion, which is what
+        /// keeps world-units-per-pixel identical to what the walk alone would have had —
+        /// <c>orthographicSize</c> scales with the box and the render target scales with it, so
+        /// the two cancel. The walk is then cut tight to its own alpha and the swing to a box
+        /// mirrored about the walk body's middle, so the body sits at the same pixels in the same
+        /// place in both and <c>SiegeView.Wear</c>'s <c>Grown</c> reads the difference straight off
+        /// the sprites.
+        /// </para>
+        /// <para>
+        /// <b>The square is capped at <see cref="MostPixels"/> rather than allowed to run past
+        /// it.</b> Over the cap the importer halves the reel without saying so; under it the body
+        /// is drawn a few per cent smaller than it could be and everything downstream is honest.
+        /// The view sizes a raider in <em>cells</em> (<c>SiegeTuning.TallOf</c>), so this decides
+        /// crispness and nothing else.
+        /// </para>
+        /// </summary>
+        static Texture2D[][] Armed(Camera cam, Light key, Skin skin, Body body,
+                                   AnimationClip walk, AnimationClip swing, Bounds home, float pitch)
+        {
+            var reach = Extent(skin, swing);
+
+            // Symmetric about the walk's own centre, so the body's middle is the middle of the
+            // square in both reels and the crop below has one point to mirror about.
+            var arm = home.extents;
+            arm = Vector3.Max(arm, home.center - reach.min);
+            arm = Vector3.Max(arm, reach.max - home.center);
+
+            var padded = new Bounds(home.center, arm * 2f);
+
+            float grow = Mathf.Max(padded.size.x, padded.size.y, padded.size.z)
+                       / Mathf.Max(1e-5f, Mathf.Max(home.size.x, home.size.y, home.size.z));
+
+            int side = Mathf.Min(MostPixels, Mathf.RoundToInt(Tall * grow));
+
+            var reels = new Texture2D[Hues.Length * 2][];
+            for (int c = 0; c < Hues.Length; c++)
+            {
+                reels[c] = new Texture2D[Frames];
+                reels[Hues.Length + c] = new Texture2D[SwingFrames];
+            }
+
+            for (int f = 0; f < Frames; f++)
+            {
+                skin.Pose(walk, walk.length * f / Frames);
+                var raw = Render(cam, key, padded, pitch, side);
+                for (int c = 0; c < Hues.Length; c++) reels[c][f] = Finish(raw, Hues[c], side, true);
+                Object.DestroyImmediate(raw);
+            }
+
+            for (int f = 0; f < SwingFrames; f++)
+            {
+                skin.Pose(swing, swing.length * f / SwingFrames);
+                var raw = Render(cam, key, padded, pitch, side);
+                for (int c = 0; c < Hues.Length; c++)
+                    reels[Hues.Length + c][f] = Finish(raw, Hues[c], side, true);
+                Object.DestroyImmediate(raw);
+            }
+
+            var walks = new Texture2D[Hues.Length][];
+            var swings = new Texture2D[Hues.Length][];
+            for (int c = 0; c < Hues.Length; c++)
+            {
+                walks[c] = reels[c];
+                swings[c] = reels[Hues.Length + c];
+            }
+
+            Pare(walks, swings);
+
+            Moves(body, walks[0]);
+            Moves(body, swings[0], body.Swing);
+
+            return reels;
+        }
+
+        /// <summary>
+        /// Cuts a walk tight and a swing to a canvas mirrored about the walk body's own middle.
+        ///
+        /// <b>Mirrored rather than merely containing, because the view centres both.</b>
+        /// <c>SiegeView.Wear</c> swaps the sprite and resizes the widget about its own centre, so
+        /// the body only stays put between the two reels if it sits at the same fraction of each
+        /// frame. A box that merely contained the swing would put the body off-centre by however
+        /// far the weapon reached on one side, and a raider would step sideways every time it hit
+        /// something. See <see cref="Armed"/> for why they are cut out of one render at all.
+        /// </summary>
+        static void Pare(Texture2D[][] walks, Texture2D[][] swings)
+        {
+            var home = Box(walks);
+            var whole = Box(walks, swings);
+            if (home.width <= 0 || whole.width <= 0) return;
+
+            float across = home.x + home.width * .5f, down = home.y + home.height * .5f;
+
+            int reach = Mathf.CeilToInt(Mathf.Max(across - whole.x, whole.xMax - across));
+            int fall = Mathf.CeilToInt(Mathf.Max(down - whole.y, whole.yMax - down));
+
+            var wide = new RectInt(Mathf.FloorToInt(across) - reach, Mathf.FloorToInt(down) - fall,
+                                   reach * 2, fall * 2);
+
+            // `one_canvas`'s promise, asserted rather than trusted for its own reason: a clipped
+            // weapon imports, addresses, audits and draws, and the only symptom is an axe losing
+            // its head for two frames of a swing nobody is looking at closely.
+            if (wide.x > whole.x || wide.y > whole.y
+                || wide.xMax < whole.xMax || wide.yMax < whole.yMax)
+            {
+                Debug.LogError("SiegeCastBake: a swing canvas does not contain every frame of it.");
+                return;
+            }
+
+            Cut(walks, home);
+            Cut(swings, wide);
+        }
+
+        /// <summary>The alpha box over every frame of every reel handed in.</summary>
+        static RectInt Box(params Texture2D[][][] sets)
+        {
+            int left = int.MaxValue, right = int.MinValue, low = int.MaxValue, high = int.MinValue;
+
+            foreach (var set in sets)
+                foreach (var reel in set)
+                    foreach (var frame in reel)
+                    {
+                        var px = frame.GetPixels32();
+                        for (int y = 0; y < frame.height; y++)
+                            for (int x = 0; x < frame.width; x++)
+                            {
+                                // Anything below this cannot be seen and must never set a frame's
+                                // extent — the insect side paid for that one in a hill of raiders
+                                // drawn at half size (invariant 37as).
+                                if (px[y * frame.width + x].a < 8) continue;
+                                if (x < left) left = x;
+                                if (x > right) right = x;
+                                if (y < low) low = y;
+                                if (y > high) high = y;
+                            }
+                    }
+
+            if (left > right || low > high) return new RectInt(0, 0, 0, 0);
+            return new RectInt(left, low, right - left + 1, high - low + 1);
+        }
+
+        /// <summary>
+        /// Crops every frame of every reel to one box.
+        ///
+        /// <b>A box that runs off the render is padded with nothing rather than clamped into
+        /// range</b>, because the box's whole job is to be centred on the body: clamping it would
+        /// silently move the body inside its own frame, which is the one thing
+        /// <see cref="Pare"/> exists to prevent. Transparent margin costs a few rows and keeps the
+        /// promise.
+        /// </summary>
+        static void Cut(Texture2D[][] reels, RectInt box)
+        {
+            int w = Mathf.Max(1, box.width), h = Mathf.Max(1, box.height);
+
+            foreach (var reel in reels)
+                for (int f = 0; f < reel.Length; f++)
+                {
+                    var src = reel[f];
+                    var from = src.GetPixels32();
+                    var to = new Color32[w * h];
+
+                    for (int y = 0; y < h; y++)
+                    {
+                        int sy = box.y + y;
+                        if (sy < 0 || sy >= src.height) continue;
+
+                        for (int x = 0; x < w; x++)
+                        {
+                            int sx = box.x + x;
+                            if (sx < 0 || sx >= src.width) continue;
+                            to[y * w + x] = from[sy * src.width + sx];
+                        }
+                    }
+
+                    var cut = new Texture2D(w, h, TextureFormat.RGBA32, false);
+                    cut.SetPixels32(to);
+                    cut.Apply();
+                    Object.DestroyImmediate(src);
+                    reel[f] = cut;
+                }
         }
 
         /// <summary>
@@ -653,6 +1196,10 @@ namespace GlimmerGrove.EditorTools
 
             var inst = (GameObject)PrefabUtility.InstantiatePrefab(model);
             inst.transform.SetParent(stage, false);
+
+            // **Before the skin, and that ordering is load-bearing** - see `Fit`.
+            if (!Fit(inst, body)) { Object.DestroyImmediate(inst); return null; }
+
             var skin = new Skin(inst);
 
             try
@@ -1131,7 +1678,15 @@ namespace GlimmerGrove.EditorTools
             return box;
         }
 
-        static Texture2D Render(Camera cam, Light key, Bounds box, float pitch)
+        /// <summary>
+        /// One frame, rendered.
+        ///
+        /// <b><c>tall</c> is the square this is cut into, not the height of the body in it</b> -
+        /// the body fills <see cref="Fill"/> of whatever square it is given. A reel that has to
+        /// share a pixel scale with another passes its own (see <see cref="Armed"/>); everything
+        /// else takes <see cref="Tall"/>.
+        /// </summary>
+        static Texture2D Render(Camera cam, Light key, Bounds box, float pitch, int tall = 0)
         {
             float reach = Mathf.Max(box.size.x, box.size.y, box.size.z);
 
@@ -1143,7 +1698,7 @@ namespace GlimmerGrove.EditorTools
             // The key rides with the camera, so a body is lit the same whatever pitch is chosen.
             key.transform.rotation = Quaternion.Euler(pitch - 16f, Yaw + 32f, 0f);
 
-            int side = Tall * Super;
+            int side = (tall > 0 ? tall : Tall) * Super;
             var rt = RenderTexture.GetTemporary(side, side, 24, RenderTextureFormat.ARGB32);
             cam.targetTexture = rt;
             cam.aspect = 1f;
@@ -1467,6 +2022,10 @@ namespace GlimmerGrove.EditorTools
 
             var inst = (GameObject)PrefabUtility.InstantiatePrefab(model);
             inst.transform.SetParent(stage, false);
+
+            // **Before the skin, and that ordering is load-bearing** - see `Fit`.
+            if (!Fit(inst, body)) { Object.DestroyImmediate(inst); return null; }
+
             var skin = new Skin(inst);
 
             try
@@ -1489,13 +2048,39 @@ namespace GlimmerGrove.EditorTools
         /// "is the render clean" — it is whether the thing sits on this board beside the cast that
         /// is already there. A contact sheet on grey says yes to everything.
         /// </summary>
+        /// <summary>
+        /// The widest a pane grid may be before it stops being readable, in panes.
+        ///
+        /// <b>A wrap rather than a row, and the row was a limit nobody had met.</b> This sheet laid
+        /// every pane out in a single line, which was fine while a bake made nineteen of them; the
+        /// fourth chapter took it to fifty-seven — a fifth cast, and a swing reel for every body in
+        /// two of them — and 57 panes at 300 is <b>17,100 pixels</b>, past the 16,384 a
+        /// <c>Texture2D</c> may be. Unity refuses the allocation and the whole run throws at the
+        /// very end, after every reel has been rendered: the most expensive possible moment to
+        /// find out.
+        ///
+        /// <b>So the grid is derived rather than trusted</b>, and twelve is about readability
+        /// rather than about the ceiling — a strip fifty-four panes wide would fit a texture and
+        /// answer no question anybody has, which is what a contact sheet is for (32b).
+        /// </summary>
+        const int WidestSheet = 12;
+
         static void Sheet(List<Texture2D> shots, string file, int rows = 1)
         {
             shots = shots.Where(s => s != null).ToList();
             if (shots.Count == 0) return;
 
             const int Pane = 300;
+
+            // `rows` is a hint - what `Angles` wants is its three pitches on three rows - and it
+            // gives way to the wrap when there are more panes than a row may hold.
             int cols = Mathf.CeilToInt(shots.Count / (float)rows);
+            if (cols > WidestSheet)
+            {
+                cols = WidestSheet;
+                rows = Mathf.CeilToInt(shots.Count / (float)cols);
+            }
+
             var sheet = new Texture2D(Pane * cols, Pane * rows, TextureFormat.RGBA32, false);
 
             var floor = AssetDatabase.LoadAssetAtPath<Texture2D>(

@@ -204,16 +204,19 @@ const save = {
                                       counts: { arrayValue: { values: [] } },
                                       claimed: { arrayValue: { values: [] } } } } },
     } } },
-    // How much of each event's reward track has been taken, here for the reason the three
-    // blocks above are and one sharper than any of them: `eventCredits` *pays* on this, so
-    // a PERMISSION_DENIED here would stop the save pushing and the server would go on
-    // deriving a balance without the milestones the game has already shown as collected.
-    // A list of maps rather than a map keyed by event id, because an event id is content
-    // and a Firestore field name is not.
+    // Each season's marks and its two claim floors, here for the reason the three blocks
+    // above are: an unlisted field is refused outright by `hasOnly`, so a rules release
+    // that forgot these would not degrade the season, it would turn every sync in the game
+    // into PERMISSION_DENIED (invariant 12a). Nothing on the server *derives* from them —
+    // a season pays chests, which are claims — which is exactly why they need a live push
+    // to prove anything at all. A list of maps rather than a map keyed by season id,
+    // because a season id is content and a Firestore field name is not.
     eventsSeeded: { booleanValue: true },
     events: { arrayValue: { values: [
-      { mapValue: { fields: { id: { stringValue: "first_bloom" },
-                              collectedGoal: { integerValue: "2" } } } },
+      { mapValue: { fields: { id: { stringValue: "first_watch" },
+                              marks: { integerValue: "62" },
+                              collectedGoal: { integerValue: "55" },
+                              premiumGoal: { integerValue: "40" } } } },
     ] } },
     // The lessons already shown and the companions already bought. Here for the reason
     // every block above is: the mapper sends them, so this has to, or nothing checks that

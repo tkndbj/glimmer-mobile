@@ -24,11 +24,12 @@ namespace GlimmerGrove.Tasks
     /// </summary>
     public sealed class ChestTier
     {
-        public ChestTier(string id, int rank, ChestDefinition chest)
+        public ChestTier(string id, int rank, ChestDefinition chest, int marks = 0)
         {
             Id = id ?? string.Empty;
             Rank = rank < 1 ? 1 : rank;
             Chest = chest ?? new ChestDefinition(null, null);
+            Marks = marks < 0 ? 0 : marks > MaxMarks ? MaxMarks : marks;
         }
 
         public string Id { get; }
@@ -37,6 +38,30 @@ namespace GlimmerGrove.Tasks
         public int Rank { get; }
 
         public ChestDefinition Chest { get; }
+
+        /// <summary>
+        /// What opening one of these grows the season by (<c>Events.SeasonLedger</c>).
+        ///
+        /// <para>
+        /// <b>The season's pace is a property of the chest, not of what paid for it.</b> A
+        /// season track needs a unit that is repeatable — a finite catalog of levels is
+        /// cleared once and then pays nothing for ever, which is exactly how the first one
+        /// died — and it needs one nothing can farm. A claimed chest is both: the calendar
+        /// bounds how many a player can be dealt, so the ceiling is the slate rather than a
+        /// cap somebody has to remember, and every future source of chests feeds the season
+        /// by naming a tier rather than by growing a second rule.
+        /// </para>
+        /// <para>
+        /// Authored per tier rather than derived from <see cref="Rank"/>, so the pace of a
+        /// season is content and retunable without a build — and nought is a legal answer,
+        /// which is what lets a tier be added for a one-off promotion without moving anybody's
+        /// track.
+        /// </para>
+        /// </summary>
+        public int Marks { get; }
+
+        /// <summary>A sanity bound, not tuning: a tier worth more than a whole track is a typo.</summary>
+        public const int MaxMarks = 1000;
 
         /// <summary>Derived from the id and never authored, for <c>UtilityItem.NameKey</c>'s reason.</summary>
         public string NameKey => "chest." + Id + ".name";
@@ -47,7 +72,7 @@ namespace GlimmerGrove.Tasks
         /// <summary>The opening reel, scoped to the screens that open one: <c>Chests/{id}</c>.</summary>
         public string Reel => "Chests/" + Id;
 
-        public override string ToString() => Id + " #" + Rank;
+        public override string ToString() => Id + " #" + Rank + " (+" + Marks + ")";
     }
 
     /// <summary>

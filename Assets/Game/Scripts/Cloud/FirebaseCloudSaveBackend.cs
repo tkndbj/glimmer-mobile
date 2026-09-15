@@ -36,7 +36,7 @@ namespace GlimmerGrove.Cloud
     /// than an exception.
     /// </para>
     /// </summary>
-    public sealed class FirebaseCloudSaveBackend : ICloudSaveBackend, Social.IGroveBoardBackend, Events.IEventPassBackend
+    public sealed class FirebaseCloudSaveBackend : ICloudSaveBackend, Social.IGroveBoardBackend
     {
         /// <summary>Must match <c>REGION</c> in the functions' config.ts.</summary>
         public const string FunctionsRegion = "europe-west1";
@@ -777,30 +777,6 @@ namespace GlimmerGrove.Cloud
             }
 
             return redemption;
-        }
-
-        public async Task<(CloudResult result, List<CloudWalletState> wallets, Events.EventPassState state)>
-            EventPassAsync(string userId, string eventId, int goal, CancellationToken cancellation = default)
-        {
-            if (!await EnsureReadyAsync() || CurrentIdentity.UserId != userId)
-                return (CloudResult.Failed(CloudFailure.Offline, "account unavailable"), Empty(), null);
-            try
-            {
-                cancellation.ThrowIfCancellationRequested();
-                var reply = await CallAsync("eventPass", new Dictionary<string, object>
-                    { { "eventId", eventId }, { "goal", goal } });
-                cancellation.ThrowIfCancellationRequested();
-                if (reply == null || !reply.TryGetValue("eventId", out var id) || !Equals(id, eventId) ||
-                    !reply.TryGetValue("owned", out var owned) || !(owned is bool))
-                    return (CloudResult.Failed(CloudFailure.Rejected, "invalid pass response"), Empty(), null);
-                return (CloudResult.Success, ReadWalletStates(reply), new Events.EventPassState
-                {
-                    EventId = eventId, Owned = (bool)owned,
-                    CollectedGoal = (int)ReadLong(reply, "collectedGoal"), Finished = (int)ReadLong(reply, "finished"),
-                    Credits = ReadLong(reply, "credits"), Gems = ReadLong(reply, "gems"),
-                });
-            }
-            catch (Exception e) { return (Classify(e, "event pass"), Empty(), null); }
         }
 
         // ---------------------------------------------------------- the grove board

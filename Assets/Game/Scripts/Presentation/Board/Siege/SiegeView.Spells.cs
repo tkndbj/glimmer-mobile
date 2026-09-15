@@ -213,11 +213,23 @@ namespace GlimmerGrove
         /// </summary>
         static float ThrownAt(SiegeKind kind)
             => kind == SiegeKind.Overlord ? 2.1f
-             : kind == SiegeKind.Blightcaller ? 1.35f : 1.6f;
+             : kind == SiegeKind.Blightcaller ? 1.35f
+
+             // **An arrow is the smallest thing thrown in this mode and the heaviest slam is the
+             // second largest**, and both numbers are the rule above being obeyed rather than a
+             // taste. A bind takes no health at all, so it has to read lighter than anything that
+             // does — lighter even than a hex, because a hex at least takes the fuel with it. An
+             // ironclad's strike takes less health than a warlord's and is drawn bigger than one:
+             // that is not a contradiction, because what the drawing has to say is that the axe
+             // came down, and the thing it is really announcing is the aegis it stands behind.
+             : kind == SiegeKind.Shackler ? 1.15f
+             : kind == SiegeKind.Ironclad ? 1.9f : 1.6f;
 
         static float BurstAt(SiegeKind kind)
             => kind == SiegeKind.Overlord ? 1.2f
-             : kind == SiegeKind.Blightcaller ? .85f : 1f;
+             : kind == SiegeKind.Blightcaller ? .85f
+             : kind == SiegeKind.Shackler ? .8f
+             : kind == SiegeKind.Ironclad ? 1.15f : 1f;
 
         /// <summary>
         /// One arm of a volley: an orb crossing the hill on a bowed path.
@@ -414,6 +426,17 @@ namespace GlimmerGrove
             // takes no health, so a hit that shook the board and flashed the screen would be the
             // drawing overstating the rule — and the thing a player has to notice is the ward
             // itself going dark, which `Post` keeps drawn for as long as it lasts.
+            // **A chain lands quietly and on the chassis rather than on the tube.** A douse is
+            // drawn at the fuel readout because what it took was in there (invariant 37y); a bind
+            // takes nothing that is drawn anywhere, so the only honest place to put it is the
+            // machine itself, and the state `Charge` keeps on the post is what the player really
+            // reads. Iron sparks rather than the boss's own fire, because there is no fire in it.
+            if (spell.Craft == SiegeSpell.Bind)
+            {
+                Chained(spell.Ward, fire);
+                return;
+            }
+
             if (spell.Craft == SiegeSpell.Douse)
             {
                 Snuffed(spell.Ward, fire);
@@ -584,6 +607,32 @@ namespace GlimmerGrove
                          Cell * 1.4f, Cell * .12f, .45f);
 
             Audio.Sfx("whoosh", .55f, 1.25f);
+        }
+
+        /// <summary>
+        /// A ward being chained by a shackler.
+        ///
+        /// <b>Deliberately smaller than <see cref="Snuffed"/>, because it takes less.</b> A douse
+        /// empties the tube and the drawing follows the loss down to where the loss was; a bind
+        /// takes six seconds and leaves everything, so a burst of the same weight would be the
+        /// picture overstating the rule — the same argument the douse's own note makes against
+        /// flashing the screen. What has to read is that the turret is *held*, and that is the
+        /// standing state rather than this instant.
+        /// </summary>
+        void Chained(int ward, Color fire)
+        {
+            var post = _posts[ward];
+            var at = new Vector2(PostX(ward), _lineY + Cell * .18f);
+
+            Burst.Sparks(_fx, at, fire, 8, Cell * 1.5f, Cell * .14f, .5f);
+            Tween.Shake(post.Node, Cell * .06f, .22f);
+
+            // **The chain's own clip, and it is the one sound in the library that is a *fastening*
+            // rather than a blow.** A douse is a `whoosh` because a light goes out; a bind is a
+            // thing being shut, so `blocked` — which is what this game plays when an input is
+            // refused — is the right noise in the right place: what the player is being told is
+            // that a turret has stopped answering.
+            Audio.Sfx("blocked", .55f, .8f);
         }
 
         /// <summary>
@@ -801,6 +850,8 @@ namespace GlimmerGrove
                 case SiegeKind.Blightcaller: return "mode.siege.blightcaller";
                 case SiegeKind.Gravemaw: return "mode.siege.gravemaw";
                 case SiegeKind.Bonecaller: return "mode.siege.bonecaller";
+                case SiegeKind.Shackler: return "mode.siege.shackler";
+                case SiegeKind.Ironclad: return "mode.siege.ironclad";
 
                 // **The warlord, and it is the only kind that may fall through here.** Invariant
                 // 44e's rule: a `default` that is a real answer hides the case nobody is looking

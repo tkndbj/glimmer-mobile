@@ -59,5 +59,27 @@ namespace GlimmerGrove.Modes
         /// ward.
         /// </summary>
         Raise,
+
+        /// <summary>
+        /// Chains a ward: it keeps its fuel, its rank and its charges, and cannot fire. The
+        /// shackler's, and the only spell here that takes no <em>resource</em> at all.
+        ///
+        /// <b>Deliberately not a douse with the fuel left in.</b> See
+        /// <see cref="SiegeKind.Shackler"/> for why the two ask opposite questions, and
+        /// <c>SiegeWard.Shackle</c> for the one line that separates them.
+        /// </summary>
+        Bind,
+
+        /// <summary>
+        /// Nothing, to a ward — it is the standing rule that only the caster's own colour may hurt
+        /// it. The ironclad's, and aimed at no ward.
+        ///
+        /// <b>A verb with no event is a contradiction, so this one has a blow behind it.</b> An
+        /// ironclad also strikes for <see cref="SiegeTuning.IroncladCast"/>, which is what the
+        /// spell's flight and its landing draw; the aegis itself is read off
+        /// <see cref="SiegeTuning.EveryWardReaches"/> every time a ward looks for something to
+        /// shoot, and the view says it by refusing the three wards that cannot answer.
+        /// </summary>
+        Aegis,
     }
 }

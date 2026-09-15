@@ -67,7 +67,7 @@ namespace GlimmerGrove.Tests
                 eventsSeeded = true,
                 events = new[]
                 {
-                    new EventStateDto { id = "first_bloom", collectedGoal = 2 },
+                    new EventStateDto { id = "first_watch", collectedGoal = 2 },
                     new EventStateDto { id = "second_bloom", collectedGoal = 1 },
                 },
                 streak = new StreakStateDto
@@ -392,7 +392,7 @@ namespace GlimmerGrove.Tests
             // collect the wallet never hears about.
             Assert.IsTrue(restored.eventsSeeded);
             Assert.AreEqual(2, restored.events.Length);
-            Assert.AreEqual("first_bloom", restored.events[0].id);
+            Assert.AreEqual("first_watch", restored.events[0].id);
             Assert.AreEqual(2, restored.events[0].collectedGoal);
             Assert.AreEqual("second_bloom", restored.events[1].id);
             Assert.AreEqual(1, restored.events[1].collectedGoal);

@@ -50,6 +50,10 @@
       "text": "Barrowfell"
     },
     {
+      "key": "chapter.s05_ashenhold.name",
+      "text": "Ashenhold"
+    },
+    {
       "key": "chest.gold.name",
       "text": "Golden Chest"
     },
@@ -906,6 +910,86 @@
       "text": "Answer each shield in its own colour"
     },
     {
+      "key": "level.s05_ashenheart.name",
+      "text": "Ashenheart"
+    },
+    {
+      "key": "level.s05_ashenheart.tagline",
+      "text": "Only one ward can touch it. Bank the rest"
+    },
+    {
+      "key": "level.s05_chainfall.name",
+      "text": "Chainfall"
+    },
+    {
+      "key": "level.s05_chainfall.tagline",
+      "text": "It chains a ward and takes nothing else"
+    },
+    {
+      "key": "level.s05_emberrow.name",
+      "text": "Ember Row"
+    },
+    {
+      "key": "level.s05_emberrow.tagline",
+      "text": "Hold the bomb until the armour is in it"
+    },
+    {
+      "key": "level.s05_firstiron.name",
+      "text": "First Iron"
+    },
+    {
+      "key": "level.s05_firstiron.tagline",
+      "text": "These ones came armed"
+    },
+    {
+      "key": "level.s05_hollowvigil.name",
+      "text": "Hollow Vigil"
+    },
+    {
+      "key": "level.s05_hollowvigil.tagline",
+      "text": "One colour at a time, and each one shielded"
+    },
+    {
+      "key": "level.s05_ironyard.name",
+      "text": "Iron Yard"
+    },
+    {
+      "key": "level.s05_ironyard.tagline",
+      "text": "Four waves, nothing clever, no let up"
+    },
+    {
+      "key": "level.s05_longmarch.name",
+      "text": "Long March"
+    },
+    {
+      "key": "level.s05_longmarch.tagline",
+      "text": "No colour may go dark for a whole wave"
+    },
+    {
+      "key": "level.s05_pikewall.name",
+      "text": "Pike Wall"
+    },
+    {
+      "key": "level.s05_pikewall.tagline",
+      "text": "Three shields, three colours, in that order"
+    },
+    {
+      "key": "level.s05_shieldline.name",
+      "text": "Shield Line"
+    },
+    {
+      "key": "level.s05_shieldline.tagline",
+      "text": "Two shields a wave, and each wants its own colour"
+    },
+    {
+      "key": "level.s05_sunderway.name",
+      "text": "Sunderway"
+    },
+    {
+      "key": "level.s05_sunderway.tagline",
+      "text": "Armour and bombs on the tightest field yet"
+    },
+    {
       "key": "mode.cap.asleep",
       "text": "still asleep"
     },
@@ -1034,6 +1118,14 @@
       "text": "THE BONECALLER"
     },
     {
+      "key": "mode.siege.shackler",
+      "text": "SHACKLER"
+    },
+    {
+      "key": "mode.siege.ironclad",
+      "text": "IRONCLAD"
+    },
+    {
       "key": "mode.siege.boss",
       "text": "THE WARLORD"
     },
@@ -1124,10 +1216,6 @@
     {
       "key": "store.product.gg_coins_4",
       "text": "Coin Vault"
-    },
-    {
-      "key": "store.product.gg_first_bloom_pass",
-      "text": "First Bloom Pass"
     },
     {
       "key": "store.product.gg_gems_1",
@@ -2142,34 +2230,6 @@
       "text": "Wave {0}"
     },
     {
-      "key": "ui.event.all_taken",
-      "text": "every bloom on this vine is yours"
-    },
-    {
-      "key": "ui.event.at_goal",
-      "text": "at {0} glades"
-    },
-    {
-      "key": "ui.event.at_goal_one",
-      "text": "at 1 glade"
-    },
-    {
-      "key": "ui.event.closed_waiting",
-      "text": "the window has closed — what you grew is still here"
-    },
-    {
-      "key": "ui.event.collect",
-      "text": "tap to take"
-    },
-    {
-      "key": "ui.event.complete",
-      "text": "track finished — every reward is yours"
-    },
-    {
-      "key": "ui.event.cta",
-      "text": "PLAY"
-    },
-    {
       "key": "ui.event.ended",
       "text": "this one has closed"
     },
@@ -2178,72 +2238,12 @@
       "text": "ends in {0}"
     },
     {
-      "key": "ui.event.first_bloom.blurb",
-      "text": "The shallows are waking early this year. Light them while they last."
+      "key": "ui.event.first_watch.blurb",
+      "text": "The grove keeps watch through the turning of the year. Take your marks while it lasts."
     },
     {
-      "key": "ui.event.first_bloom.name",
-      "text": "First Bloom"
-    },
-    {
-      "key": "ui.event.gathered",
-      "text": "gathered so far"
-    },
-    {
-      "key": "ui.event.info_collect_body",
-      "text": "A bloom opens the moment you reach it, and then it waits. Come back and tap it and the credits are yours. Tapping a bloom higher up the vine takes every open one below it at the same time, so nothing can be left behind."
-    },
-    {
-      "key": "ui.event.info_collect_title",
-      "text": "nothing is taken for you"
-    },
-    {
-      "key": "ui.event.info_count_body",
-      "text": "Only the {0} glades below count, and only the first time you finish one inside the window — a glade you cleared before the event opened is one you have already been paid for. There are {1} blooms along the vine, worth {2} credits between them."
-    },
-    {
-      "key": "ui.event.info_count_title",
-      "text": "finish glades, the vine grows"
-    },
-    {
-      "key": "ui.event.info_title",
-      "text": "how the bloom works"
-    },
-    {
-      "key": "ui.event.info_window_body",
-      "text": "Glades stop counting when the event closes. Blooms do not — anything you grew stays on the vine until you take it, however long that is."
-    },
-    {
-      "key": "ui.event.info_window_title",
-      "text": "when the window shuts"
-    },
-    {
-      "key": "ui.event.progress",
-      "text": "{0} of {1} glades"
-    },
-    {
-      "key": "ui.event.rail",
-      "text": "the glades that count"
-    },
-    {
-      "key": "ui.event.reward",
-      "text": "+{0}"
-    },
-    {
-      "key": "ui.event.title",
-      "text": "GROOVE EVENT"
-    },
-    {
-      "key": "ui.event.to_next",
-      "text": "{0} more for the next reward"
-    },
-    {
-      "key": "ui.event.waiting_many",
-      "text": "{0} blooms are open — tap one to take them"
-    },
-    {
-      "key": "ui.event.waiting_one",
-      "text": "a bloom is open — tap it to take what it holds"
+      "key": "ui.event.first_watch.name",
+      "text": "The First Watch"
     },
     {
       "key": "ui.forfeit.leave_body",
@@ -2578,8 +2578,8 @@
       "text": "{0}/{1}"
     },
     {
-      "key": "ui.home.glades",
-      "text": "glades"
+      "key": "ui.home.marks",
+      "text": "marks"
     },
     {
       "key": "ui.home.next_chapter",
@@ -2954,6 +2954,110 @@
       "text": "Turrets"
     },
     {
+      "key": "ui.mark.bought",
+      "text": "The pass is yours. Both chests at every rung."
+    },
+    {
+      "key": "ui.mark.buy",
+      "text": "{0}"
+    },
+    {
+      "key": "ui.mark.closed_hint",
+      "text": "The watch has ended. What you opened is still yours."
+    },
+    {
+      "key": "ui.mark.complete",
+      "text": "every rung is open"
+    },
+    {
+      "key": "ui.mark.connecting",
+      "text": "Checking your pass…"
+    },
+    {
+      "key": "ui.mark.free",
+      "text": "Free"
+    },
+    {
+      "key": "ui.mark.grown",
+      "text": "{0} marks"
+    },
+    {
+      "key": "ui.mark.info_grow_body",
+      "text": "Every chest you open on Tasks & Bonuses earns marks, and a better chest earns more. There are {0} rungs on the ladder and the last one is at {1} marks."
+    },
+    {
+      "key": "ui.mark.info_grow_title",
+      "text": "Marks come from chests"
+    },
+    {
+      "key": "ui.mark.info_title",
+      "text": "The Keeper's Watch"
+    },
+    {
+      "key": "ui.mark.info_tracks_body",
+      "text": "Reach a rung and both its chests open up. The left one is everybody's; the right one needs the Keeper's Pass, and it always holds a better chest than the left. There are {0} kinds of chest — tap one on Tasks & Bonuses to see what it holds."
+    },
+    {
+      "key": "ui.mark.info_tracks_title",
+      "text": "Two chests a rung"
+    },
+    {
+      "key": "ui.mark.info_window_body",
+      "text": "Marks stop counting when the watch closes. Chests do not — anything you have reached stays here until you open it, however long that takes."
+    },
+    {
+      "key": "ui.mark.info_window_title",
+      "text": "When the watch ends"
+    },
+    {
+      "key": "ui.mark.needs_more",
+      "text": "{0} more marks to open this one"
+    },
+    {
+      "key": "ui.mark.owned_hint",
+      "text": "Your pass is open. Both chests are yours at every rung."
+    },
+    {
+      "key": "ui.mark.pass",
+      "text": "Keeper's Pass"
+    },
+    {
+      "key": "ui.mark.pass_required",
+      "text": "the Keeper's Pass opens this side"
+    },
+    {
+      "key": "ui.mark.purchase_hint",
+      "text": "One purchase, no subscription. Earlier rungs come with it."
+    },
+    {
+      "key": "ui.mark.rung_goal",
+      "text": "{0} marks"
+    },
+    {
+      "key": "ui.mark.rungs",
+      "text": "rungs open"
+    },
+    {
+      "key": "ui.mark.subtitle",
+      "text": "Open chests to earn marks. Every rung pays two."
+    },
+    {
+      "key": "ui.mark.to_next",
+      "text": "{0} more to the next rung"
+    },
+    {
+      "key": "ui.mark.too_poor",
+      "text": "the pass costs {0} gems"
+    },
+    {
+      "key": "ui.mark.unlocked",
+      "text": "Unlocked"
+    },
+    {
+      "key": "ui.mark.upgrade",
+      "text": "Unlock"
+    },
+    {
       "key": "ui.nav.grovement",
       "text": "groovement"
     },
@@ -2986,132 +3090,8 @@
       "text": "DONE"
     },
     {
-      "key": "ui.pass.buy",
-      "text": "Unlock • {0}"
-    },
-    {
-      "key": "ui.pass.cache",
-      "text": "MILESTONE CACHE"
-    },
-    {
-      "key": "ui.pass.claim",
-      "text": "TAP TO COLLECT"
-    },
-    {
-      "key": "ui.pass.claim_all",
-      "text": "Collect all"
-    },
-    {
-      "key": "ui.pass.claimed",
-      "text": "COLLECTED"
-    },
-    {
-      "key": "ui.pass.claiming",
-      "text": "Collecting…"
-    },
-    {
-      "key": "ui.pass.closed_hint",
-      "text": "Season ended. Earned rewards remain yours to collect."
-    },
-    {
-      "key": "ui.pass.coins",
-      "text": "GROVE COINS"
-    },
-    {
-      "key": "ui.pass.collected",
-      "text": "Rewards collected!"
-    },
-    {
-      "key": "ui.pass.connecting",
-      "text": "Connecting…"
-    },
-    {
-      "key": "ui.pass.eyebrow",
-      "text": "GROVE ADVENTURES"
-    },
-    {
-      "key": "ui.pass.free",
-      "text": "FREE TRAIL"
-    },
-    {
-      "key": "ui.pass.gems",
-      "text": "GEM CACHE"
-    },
-    {
-      "key": "ui.pass.hero_detail",
-      "text": "{0} tiers • One shared adventure"
-    },
-    {
-      "key": "ui.pass.hero_kicker",
-      "text": "A LITTLE PLAY. A LOT TO DISCOVER."
-    },
-    {
-      "key": "ui.pass.hero_title",
-      "text": "Let your rewards blossom"
-    },
-    {
-      "key": "ui.pass.keep_playing",
-      "text": "KEEP EXPLORING"
-    },
-    {
-      "key": "ui.pass.no_glades",
-      "text": "No new event glades are available right now."
-    },
-    {
-      "key": "ui.pass.online",
-      "text": "Connect to check your pass and current store price."
-    },
-    {
-      "key": "ui.pass.owned_hint",
-      "text": "Your premium trail is open. Play to earn both rewards."
-    },
-    {
-      "key": "ui.pass.pair",
-      "text": "{0} coins\n{1} gems"
-    },
-    {
-      "key": "ui.pass.pass_required",
-      "text": "BLOOM PASS REQUIRED"
-    },
-    {
-      "key": "ui.pass.premium",
-      "text": "BLOOM PASS"
-    },
-    {
-      "key": "ui.pass.progress",
-      "text": "{0} / {1} glades • First clears grow your trail"
-    },
-    {
-      "key": "ui.pass.purchase_hint",
-      "text": "One purchase. No subscription. Includes earlier earned tiers."
-    },
-    {
-      "key": "ui.pass.restore",
-      "text": "Restore purchases"
-    },
-    {
-      "key": "ui.pass.restoring",
-      "text": "Checking your store purchases…"
-    },
-    {
-      "key": "ui.pass.retry",
-      "text": "Could not collect yet. Reconnect and try again."
-    },
-    {
-      "key": "ui.pass.time",
-      "text": "SEASON ENDS IN {0}d {1}h"
-    },
-    {
       "key": "ui.pass.unlocked",
       "text": "Pass unlocked"
-    },
-    {
-      "key": "ui.pass.up_to_date",
-      "text": "Your premium rewards are up to date."
-    },
-    {
-      "key": "ui.pass.upgrade",
-      "text": "Unlock Bloom Pass"
     },
     {
       "key": "ui.pause.glades",
@@ -4218,10 +4198,6 @@
       "text": "{0} / {1}"
     },
     {
-      "key": "ui.tasks.ladder_hint",
-      "text": "Tap a chest to see what it holds"
-    },
-    {
       "key": "ui.tasks.info_chest_body",
       "text": "There are {0} kinds of chest, and the harder the task the better the chest. Tap a chest on the shelf to see what it always holds and what it might. Chests are earned by playing and can never be bought."
     },
@@ -4248,6 +4224,10 @@
     {
       "key": "ui.tasks.info_title",
       "text": "TASKS"
+    },
+    {
+      "key": "ui.tasks.ladder_hint",
+      "text": "Tap a chest to see what it holds"
     },
     {
       "key": "ui.tasks.resets_in",

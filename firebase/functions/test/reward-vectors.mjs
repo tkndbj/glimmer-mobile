@@ -53,7 +53,6 @@ for (const entry of vectors.levelChapters ?? []) {
 const config = {
   version: 1, rewards: defaults, chapterRewards, levelChapters,
   golden: vectors.progression.golden?.bands,
-  events: vectors.events,
 };
 
 let failures = 0;
@@ -67,10 +66,7 @@ for (const testCase of vectors.cases) {
     levels[level.levelId] = { stars: level.stars, firstClearedUnix: level.firstClearedUnix ?? 0 };
   }
 
-  // The floors go in as the wire shape a save document carries, so the harness exercises
-  // `eventFloors` too rather than handing the derivation a tidy map it would never see.
-  const { credits } = earnedCredits(levels, config, testCase.playerKey ?? "",
-                                    testCase.collected ?? []);
+  const { credits } = earnedCredits(levels, config, testCase.playerKey ?? "");
 
   if (credits !== testCase.credits) {
     failures++;
@@ -107,7 +103,7 @@ if (!(vectors.goldenCases ?? []).length) {
 // A guard against the vectors being quietly hollowed out. These are the cases where a
 // naive implementation on either side would differ.
 const names = vectors.cases.map((c) => (c.name ?? "").toLowerCase()).join(" | ");
-for (const required of ["does not know", "duplicated", "clamped", "negative", "inherits", "pay nothing", "golden", "outside its window", "whole track"]) {
+for (const required of ["does not know", "duplicated", "clamped", "negative", "inherits", "pay nothing", "golden"]) {
   if (!names.includes(required)) {
     failures++;
     console.log(`  FAIL the vectors no longer cover '${required}'`);
@@ -195,6 +191,78 @@ for (const required of ["@weekly:2901:d_play#", "@daily:2901:w_win#", "(Ünïcö
 
 failures += taskFailures;
 console.log(`  ${taskCases.length - taskFailures}/${taskCases.length} task chest vector(s) ok`);
+
+/*
+ * The fourth contract: a season rung's chest.
+ *
+ * The same generator again with a different subject — the season, the track and the rung —
+ * and one trap of its own: the two tracks at one rung must roll *differently*, or one claim
+ * would collect both columns. See `season.ts`.
+ */
+const seasonCompiled = join(REPO, "firebase", "functions", "lib", "season.js");
+const { rollMarkChest } = await import(pathToFileURL(seasonCompiled).href);
+
+const markTiers = vectors.markChestTiers ?? [];
+const markCases = vectors.markChestCases ?? [];
+
+if (markTiers.length === 0 || markCases.length === 0) {
+  failures++;
+  console.log("  FAIL the season chest vectors are missing");
+}
+
+let markFailures = 0;
+const markRolls = new Map();
+
+for (const testCase of markCases) {
+  const tier = markTiers.find((t) => t.id === testCase.tier);
+  const rolled = tier
+    ? rollMarkChest(tier.chest, testCase.playerKey, testCase.seasonId, testCase.track, testCase.goal)
+    : [];
+  const got = rolled.map((d) => `${d.kind}${d.item ? ":" + d.item : ""}=${d.amount}`).join(",");
+  const want = (testCase.drops ?? []).map((d) => `${d.kind}${d.item ? ":" + d.item : ""}=${d.amount}`).join(",");
+
+  markRolls.set(testCase.name, got);
+
+  if (got !== want) {
+    markFailures++;
+    console.log(`  FAIL season '${testCase.name}': expected ${want || "(nothing)"}, got ${got || "(nothing)"}`);
+  }
+}
+
+// The trap: one rung, two tracks, two different rolls.
+//
+// Compared over *all* the tiers of a subject rather than tier by tier, because a chest with
+// no randomness in it — the synthetic `silver` is a flat four gems — rolls the same whatever
+// the seed, correctly. What the track in the subject has to buy is that the two columns are
+// drawing from different streams, and a whole subject's worth of rolls is where that shows.
+const bySubject = new Map();
+for (const testCase of markCases) {
+  const subject = `${testCase.playerKey}|${testCase.seasonId}|${testCase.track}|${testCase.goal}`;
+  bySubject.set(subject, (bySubject.get(subject) ?? "") + "/" + markRolls.get(testCase.name));
+}
+
+let pairs = 0;
+for (const [subject, rolled] of bySubject) {
+  const parts = subject.split("|");
+  if (parts[2] !== "free") continue;
+
+  const twin = `${parts[0]}|${parts[1]}|pass|${parts[3]}`;
+  if (!bySubject.has(twin)) continue;
+
+  pairs++;
+  if (rolled === bySubject.get(twin)) {
+    markFailures++;
+    console.log(`  FAIL season '${subject}' and its pass twin roll the same chests`);
+  }
+}
+
+if (pairs === 0) {
+  markFailures++;
+  console.log("  FAIL the season vectors no longer cover both tracks at one rung");
+}
+
+failures += markFailures;
+console.log(`  ${markCases.length - markFailures}/${markCases.length} season chest vector(s) ok`);
 
 /*
  * The streak ladder.

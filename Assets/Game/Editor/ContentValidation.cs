@@ -318,13 +318,10 @@ namespace GlimmerGrove.EditorTools
         {
             var catalog = table.Store;
             if (catalog == null) { result.Errors.Add("progression.json produced no store catalog"); return; }
-            foreach (var groveEvent in result.Content.Index.Events)
-            {
-                if (!groveEvent.HasPremium) continue;
-                var product = catalog.Find(groveEvent.PremiumProductId);
-                if (product == null || !product.IsEventPass || product.EventPassId != groveEvent.Id)
-                    result.Errors.Add($"event '{groveEvent.Id}' has no matching premium store product");
-            }
+            // A season's pass used to be a store product, and this is where the two files were
+            // held to naming each other. It is priced in gems now — one number in the manifest,
+            // with nothing on the other side of it to drift from — so the check that survives
+            // is about the *price*, and it lives with the rest of the season's rules below.
 
             if (!catalog.HasAnything)
             {
@@ -1619,13 +1616,38 @@ namespace GlimmerGrove.EditorTools
                                         "invisible for as long as they both run");
                 }
 
-                if (groveEvent.FinalGoal <= 1 && groveEvent.Levels.Count > 1)
-                    result.Warnings.Add($"event '{groveEvent.Id}' finishes at one glade but names " +
-                                        $"{groveEvent.Levels.Count}; the rest are decoration");
+                // Every rung has to name a tier the live table actually holds, or it pays a
+                // chest nobody can price — a claim the server leaves unconfirmed for ever.
+                // An **error**, because it is invisible in either file on its own: the ladder
+                // lives in the manifest and the tiers in progression.json.
+                foreach (var rung in groveEvent.Milestones)
+                {
+                    foreach (var track in Events.SeasonTracks.All)
+                    {
+                        string tierId = rung.TierIdOn(track);
+                        if (tierId.Length == 0 || rung.TierOn(track) != null) continue;
 
-                if (groveEvent.TotalCredits <= 0)
-                    result.Warnings.Add($"event '{groveEvent.Id}' pays nothing, so its countdown is " +
-                                        "a deadline with no prize behind it");
+                        result.Errors.Add($"season '{groveEvent.Id}' pays tier '{tierId}' at " +
+                                          $"{rung.Goal} marks on the {Events.SeasonTracks.Id(track)} " +
+                                          "track, which the tasks block does not define");
+                    }
+                }
+
+                // How long the ladder takes to climb, against what the slates can deal. A
+                // season nobody can finish is a countdown with an unreachable prize on it,
+                // and the arithmetic is the only thing that can say so.
+                int perDay = MarksPerDay();
+                if (perDay > 0)
+                {
+                    long window = (groveEvent.EndUnix - groveEvent.StartUnix) / Events.EventRules.SecondsPerDay;
+                    long reachable = window * perDay;
+
+                    if (reachable < groveEvent.FinalGoal)
+                        result.Warnings.Add($"season '{groveEvent.Id}' tops out at {groveEvent.FinalGoal} " +
+                                            $"marks but its {window}-day window can deal about " +
+                                            $"{reachable} to a player who claims every chest; the " +
+                                            "last rungs are unreachable");
+                }
 
                 if (groveEvent.HasEndedAt(now)) continue;
 
@@ -1647,14 +1669,57 @@ namespace GlimmerGrove.EditorTools
                     .Append("[Glimmer] event '").Append(groveEvent.Id).Append("' ").Append(state)
                     .Append(": ").Append(Stamp(groveEvent.StartUnix))
                     .Append(" → ").Append(Stamp(groveEvent.EndUnix))
-                    .Append("  ·  ").Append(groveEvent.Levels.Count).Append(" glade(s)  ·  track:");
+                    .Append("  ·  ").Append(groveEvent.Milestones.Count).Append(" rung(s)  ·  ladder:");
 
                 foreach (var milestone in groveEvent.Milestones)
-                    line.Append("  ").Append(milestone.Goal).Append('→').Append(milestone.Credits);
+                    line.Append("  ").Append(milestone.Goal).Append('→')
+                        .Append(milestone.FreeTier)
+                        .Append('/')
+                        .Append(milestone.PassTier.Length == 0 ? "-" : milestone.PassTier);
 
-                line.Append("  (").Append(groveEvent.TotalCredits).Append(" total)");
+                line.Append("  (tops at ").Append(groveEvent.FinalGoal).Append(" marks)");
                 Debug.Log(line.ToString());
             }
+        }
+
+        /// <summary>
+        /// About how many marks a day a player who claims everything is dealt.
+        ///
+        /// The daily slate over a day plus the weekly slate over a week, at the rate the
+        /// rotation actually deals them — which is the only honest reading, because a slate
+        /// of ten dealt three at a time never pays all ten in one period. Zero when the table
+        /// pays no marks at all, which is a season nobody can advance and is caught by the
+        /// reachability warning above rather than here.
+        /// </summary>
+        static int MarksPerDay()
+        {
+            var table = Progression.ProgressionRules.Table.Tasks;
+            if (table == null) return 0;
+
+            float perDay = 0f;
+
+            foreach (var period in Tasks.TaskPeriods.All)
+            {
+                var slate = table.Slate(period);
+                if (slate.Count == 0) continue;
+
+                float sum = 0f;
+                int live = 0;
+
+                foreach (var task in slate)
+                {
+                    if (task.Retired) continue;
+                    sum += task.Tier.Marks;
+                    live++;
+                }
+
+                if (live == 0) continue;
+
+                float dealt = Mathf.Min(table.ActivePerPeriod, live) * (sum / live);
+                perDay += period == Tasks.TaskPeriod.Weekly ? dealt / 7f : dealt;
+            }
+
+            return Mathf.FloorToInt(perDay);
         }
 
         /// <summary>A Unix second as a date a person can proofread. UTC, like the window.</summary>

@@ -1,189 +1,168 @@
-using System.Collections.Generic;
 using GlimmerGrove.Content;
 using GlimmerGrove.Events;
-using GlimmerGrove.Persistence;
-using GlimmerGrove.Progression;
 using NUnit.Framework;
 
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// The event calendar: what advances a track, what a track pays, and what the reader
-    /// refuses.
+    /// The season calendar: what a mark count adds up to, and what the reader refuses.
     ///
     /// <para>
-    /// The reward here is <em>derived</em>, which is what makes an event cost no save
-    /// schema, no merge rule and no claim — see <see cref="EventLedger"/>. It also makes
-    /// the arithmetic load-bearing in a way a granted reward's would not be: the total is
-    /// recomputed from scratch on every launch and by the server on every sync, so a rule
-    /// that is wrong is wrong retroactively for everybody, and the wallet's earned floor
-    /// means an overpayment can never be taken back.
+    /// These are the arithmetic half — <see cref="EventLedger"/> is a pure function of its
+    /// arguments, so every case here runs offline. What a season does to the <em>save</em>
+    /// is <see cref="SeasonLedgerTests"/>, and what it does to a wallet is the shared
+    /// vectors.
     /// </para>
     /// <para>
-    /// The numbers match <c>firebase/shared/reward-vectors.json</c>. Those are also run
-    /// end to end by <c>RewardVectorTests</c>, which needs the Editor; these run anywhere.
+    /// <b>What is deliberately absent is any case about levels.</b> A season used to be
+    /// graded on glades first cleared inside its window, which tied it to a named list of
+    /// content: the modes those levels belonged to were withdrawn and the season went with
+    /// them. It is graded on marks now — see <see cref="GroveEvent"/> — and the tests that
+    /// proved the old rule are gone with the rule rather than kept as a record of it.
     /// </para>
     /// </summary>
     public sealed class EventTests
     {
         const long Start = 1_700_000_000L;
         const long End = 1_701_000_000L;
-        const long Inside = Start + 5_000L;
-        const long Outside = Start - 5_000L;
 
-        static readonly string[] EventLevels = { "plain_one", "plain_two", "generous_one" };
-
-        static GroveEvent Bloom() => new GroveEvent(
+        /// <summary>A three-rung season with both tracks, at 10, 20 and 30 marks.</summary>
+        static GroveEvent Season() => new GroveEvent(
             "vector_bloom", Start, End,
-            new[] { LevelId.Parse("plain_one"), LevelId.Parse("plain_two"), LevelId.Parse("generous_one") },
-            new[] { new EventMilestone(1, 50), new EventMilestone(3, 200) });
-
-        static Dictionary<LevelId, LevelRecord> Records(params (string id, int stars, long at)[] entries)
-        {
-            var map = new Dictionary<LevelId, LevelRecord>();
-            foreach (var (id, stars, at) in entries)
+            new[]
             {
-                var levelId = LevelId.Parse(id);
-                map[levelId] = new LevelRecord(levelId, stars, bestMoves: 10, clears: 1,
-                                               firstClearedUnix: at, lastPlayedUnix: at);
-            }
-            return map;
-        }
+                new EventMilestone(10, "wood", "silver"),
+                new EventMilestone(20, "wood", "gold"),
+                new EventMilestone(30, "silver", "royal"),
+            },
+            passGems: 250);
 
-        /// <summary>
-        /// The track as seen by a player who has collected everything they have reached.
-        ///
-        /// <c>ProgressOf</c> clamps the floor to the glades actually finished, so
-        /// <see cref="int.MaxValue"/> means "nothing is still waiting" rather than a number
-        /// anything trusts — which is the reading these cases want: they are about what a
-        /// track <em>pays</em>, not about the hand-collection introduced in save schema v11.
-        /// The waiting half is covered by <see cref="ATrackPaysNothingUntilItIsCollected"/>.
-        /// </summary>
-        static EventProgress Collected(GroveEvent groveEvent,
-                                       Dictionary<LevelId, LevelRecord> records)
-            => EventLedger.ProgressOf(groveEvent, records, int.MaxValue);
-
-        // ------------------------------------------------------------ the count
+        // ---------------------------------------------------------------- the ladder
         [Test]
-        public void AClearInsideTheWindowCounts()
+        public void ARungIsReachedWhenTheBloomsReachIt()
         {
-            Assert.AreEqual(1, EventLedger.Finished(Bloom(), Records(("plain_one", 3, Inside))));
-        }
+            var none = EventLedger.ProgressOf(Season(), 9, 0, 0);
+            Assert.AreEqual(0, none.Rungs);
+            Assert.AreEqual(10, none.NextGoal);
+            Assert.AreEqual(1, none.ToNext);
+            Assert.AreEqual(0, none.LastGoal);
+            Assert.IsFalse(none.IsComplete);
 
-        /// <summary>
-        /// The rule that makes an event an event. Without it, a player finishes the same
-        /// glades on the last day of every event forever and the calendar becomes a chore
-        /// list rather than a reason to play something new.
-        /// </summary>
-        [Test]
-        public void AClearOutsideTheWindowCountsForNothing()
-        {
-            Assert.AreEqual(0, EventLedger.Finished(Bloom(), Records(("plain_one", 3, Outside))));
-            Assert.AreEqual(0, EventLedger.Finished(Bloom(), Records(("plain_one", 3, End))),
-                            "the end of the window is exclusive");
-            Assert.AreEqual(1, EventLedger.Finished(Bloom(), Records(("plain_one", 3, Start))),
-                            "the start of it is not");
+            var one = EventLedger.ProgressOf(Season(), 10, 0, 0);
+            Assert.AreEqual(1, one.Rungs);
+            Assert.AreEqual(20, one.NextGoal);
+            Assert.AreEqual(10, one.ToNext);
+            Assert.AreEqual(10, one.LastGoal);
         }
 
         [Test]
-        public void AGladeThatWasPlayedButNeverClearedCountsForNothing()
+        public void ATopppedLadderHasNoNextRung()
         {
-            Assert.AreEqual(0, EventLedger.Finished(Bloom(), Records(("plain_one", 0, Inside))));
-        }
-
-        [Test]
-        public void AGladeOutsideTheEventCountsForNothing()
-        {
-            Assert.AreEqual(0, EventLedger.Finished(Bloom(), Records(("free_one", 3, Inside))));
-        }
-
-        // ----------------------------------------------------------- the track
-        [Test]
-        public void TheTrackPaysEveryMilestoneThatHasBeenPassed()
-        {
-            var one = Collected(Bloom(), Records(("plain_one", 3, Inside)));
-            Assert.AreEqual(1, one.Finished);
-            Assert.AreEqual(1, one.Milestones);
-            Assert.AreEqual(50, one.Credits);
-            Assert.AreEqual(3, one.NextGoal);
-            Assert.AreEqual(2, one.ToNext);
-            Assert.IsFalse(one.IsComplete);
-
-            var all = Collected(Bloom(), Records(("plain_one", 2, Inside),
-                                                 ("plain_two", 1, Inside),
-                                                 ("generous_one", 3, Inside)));
-            Assert.AreEqual(3, all.Finished);
-            Assert.AreEqual(2, all.Milestones);
-            Assert.AreEqual(250, all.Credits);
+            var all = EventLedger.ProgressOf(Season(), 30, 0, 0);
+            Assert.AreEqual(3, all.Rungs);
             Assert.AreEqual(0, all.NextGoal);
+            Assert.AreEqual(0, all.ToNext);
             Assert.IsTrue(all.IsComplete);
+            Assert.AreEqual(1f, all.ToNext01, "a finished track draws full, not empty");
         }
 
         /// <summary>
-        /// Stars do not matter to an event, only clears. That is deliberate: an event is a
-        /// reason to visit glades, and gating it on three stars would turn a fortnight of
-        /// invitation into a fortnight of grinding the hardest glade in the set.
+        /// The bar measures the run between two rungs rather than the whole ladder. Over
+        /// forty rungs the second reading barely moves, which is a bar that says nothing.
         /// </summary>
         [Test]
-        public void OneStarAdvancesATrackAsMuchAsThree()
+        public void TheBarMeasuresTheRunBetweenTwoRungs()
         {
-            Assert.AreEqual(Collected(Bloom(), Records(("plain_one", 1, Inside))).Credits,
-                            Collected(Bloom(), Records(("plain_one", 3, Inside))).Credits);
+            Assert.AreEqual(.5f, EventLedger.ProgressOf(Season(), 5, 0, 0).ToNext01, 1e-5f);
+            Assert.AreEqual(.5f, EventLedger.ProgressOf(Season(), 15, 0, 0).ToNext01, 1e-5f);
+            Assert.AreEqual(0f, EventLedger.ProgressOf(Season(), 10, 0, 0).ToNext01, 1e-5f);
+        }
+
+        // ---------------------------------------------------------------- the tracks
+        [Test]
+        public void EachTrackCountsItsOwnClaims()
+        {
+            var fresh = EventLedger.ProgressOf(Season(), 30, 0, 0);
+            Assert.AreEqual(3, fresh.Free.Reached);
+            Assert.AreEqual(0, fresh.Free.Claimed);
+            Assert.AreEqual(3, fresh.Free.Waiting);
+            Assert.AreEqual(3, fresh.Pass.Waiting);
+            Assert.AreEqual(6, fresh.Waiting, "a badge counts both columns");
+
+            var half = EventLedger.ProgressOf(Season(), 30, 20, 0);
+            Assert.AreEqual(2, half.Free.Claimed);
+            Assert.AreEqual(1, half.Free.Waiting);
+            Assert.AreEqual(3, half.Pass.Waiting, "claiming the free column takes nothing from the paid one");
         }
 
         /// <summary>
-        /// A closed event still pays what it paid. The derived total would otherwise fall
-        /// the moment a window shut, and a balance that drops for no reason the player can
-        /// see is the worst thing an economy can do in front of somebody.
+        /// The clamp that is the whole of the client-side security property: a floor is
+        /// written by the client, and one that outruns the marks behind it is either an
+        /// impossible merge or an edited file. Either way the honest reading is the smaller,
+        /// so the most a forged floor can do is take early what was coming anyway.
         /// </summary>
         [Test]
-        public void AClosedEventKeepsPaying()
+        public void AFloorIsNeverTrustedAboveTheBloomsBehindIt()
         {
-            var finished = Records(("plain_one", 3, Inside), ("plain_two", 3, Inside),
-                                   ("generous_one", 3, Inside));
+            var forged = EventLedger.ProgressOf(Season(), 10, int.MaxValue, int.MaxValue);
+            Assert.AreEqual(1, forged.Rungs);
+            Assert.AreEqual(1, forged.Free.Claimed);
+            Assert.AreEqual(0, forged.Free.Waiting);
+            Assert.AreEqual(1, forged.Pass.Claimed, "a clamp, not a refusal — the rung was reached");
 
-            // The progress is a pure function of the records and the window; nothing about
-            // it consults the clock, which is exactly why an ended event cannot un-pay.
-            Assert.AreEqual(250, Collected(Bloom(), finished).Credits);
+            Assert.IsFalse(EventLedger.IsClaimable(Season(), Season().Milestones[0],
+                                                   SeasonTrack.Free, 10, int.MaxValue));
         }
 
-        /// <summary>
-        /// The v11 half: a milestone the player has reached but not tapped is
-        /// <em>waiting</em>, and pays nothing until it is. Without this the floor could be
-        /// ignored entirely and every case above would still be green.
-        /// </summary>
         [Test]
-        public void ATrackPaysNothingUntilItIsCollected()
+        public void ARungIsClaimableOnceAndOnlyWhenReached()
         {
-            var records = Records(("plain_one", 3, Inside), ("plain_two", 3, Inside),
-                                  ("generous_one", 3, Inside));
+            var season = Season();
+            var rung = season.Milestones[1];        // 20 marks
 
-            var uncollected = EventLedger.ProgressOf(Bloom(), records, 0);
-            Assert.AreEqual(0, uncollected.Credits, "nothing has been handed over yet");
-            Assert.AreEqual(2, uncollected.Waiting);
-            Assert.AreEqual(250, uncollected.WaitingCredits);
-
-            // Collecting the first rung moves it into the balance and leaves the second.
-            var half = EventLedger.ProgressOf(Bloom(), records, 1);
-            Assert.AreEqual(50, half.Credits);
-            Assert.AreEqual(1, half.Waiting);
-            Assert.AreEqual(200, half.WaitingCredits);
+            Assert.IsFalse(EventLedger.IsClaimable(season, rung, SeasonTrack.Free, 19, 0),
+                           "not reached");
+            Assert.IsTrue(EventLedger.IsClaimable(season, rung, SeasonTrack.Free, 20, 10),
+                          "reached, and the floor is below it");
+            Assert.IsFalse(EventLedger.IsClaimable(season, rung, SeasonTrack.Free, 20, 20),
+                           "already taken");
         }
 
-        // ------------------------------------------------------------ the reader
-        static ManifestEventDto Entry(params (int goal, int credits)[] milestones)
+        [Test]
+        public void ASeasonWithNoPassPaysNothingOnThePaidTrack()
         {
-            var rungs = new ManifestEventMilestoneDto[milestones.Length];
-            for (int i = 0; i < milestones.Length; i++)
-                rungs[i] = new ManifestEventMilestoneDto
+            var free = new GroveEvent("free_only", Start, End,
+                                      new[] { new EventMilestone(10, "wood", null) });
+
+            Assert.IsTrue(free.Milestones[0].Pays(SeasonTrack.Free));
+            Assert.IsFalse(free.Milestones[0].Pays(SeasonTrack.Pass));
+            Assert.AreEqual(0, EventLedger.ProgressOf(free, 10, 0, 0).Pass.Reached);
+        }
+
+        [Test]
+        public void ARungIsFoundByItsGoalRatherThanItsPosition()
+        {
+            var season = Season();
+
+            Assert.IsTrue(season.TryRung(20, out var rung));
+            Assert.AreEqual("gold", rung.PassTier);
+            Assert.IsFalse(season.TryRung(25, out _), "no rung asks for exactly that");
+        }
+
+        // ---------------------------------------------------------------- the reader
+        static ManifestEventDto Entry(params (int goal, string tier, string premium)[] rungs)
+        {
+            var milestones = new ManifestEventMilestoneDto[rungs.Length];
+            for (int i = 0; i < rungs.Length; i++)
+                milestones[i] = new ManifestEventMilestoneDto
                 {
-                    goal = milestones[i].goal, credits = milestones[i].credits,
+                    goal = rungs[i].goal, tier = rungs[i].tier, premiumTier = rungs[i].premium,
                 };
 
             return new ManifestEventDto
             {
-                id = "bloom", startUnix = Start, endUnix = End,
-                levels = EventLevels, milestones = rungs,
+                id = "a_season", startUnix = Start, endUnix = End,
+                passGems = 250, milestones = milestones,
             };
         }
 
@@ -200,60 +179,84 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void AWellFormedEventIsRead()
+        public void AWellFormedSeasonIsRead()
         {
-            Assert.IsTrue(Reads(Entry((1, 50), (3, 200)), out var builder));
+            Assert.IsTrue(Reads(Entry((10, "wood", "silver"), (20, "silver", "gold")), out var builder));
 
             var index = builder.Build();
             Assert.AreEqual(1, index.Events.Count);
-            Assert.AreEqual(3, index.Events[0].Levels.Count);
-            Assert.AreEqual(250, index.Events[0].TotalCredits);
+            Assert.AreEqual(2, index.Events[0].Milestones.Count);
+            Assert.AreEqual(20, index.Events[0].FinalGoal);
         }
 
         /// <summary>
-        /// Refused whole rather than sorted. Reordering a track would pay rewards nobody
-        /// authored, and because the reward is derived and floored, every player who
-        /// finished it would keep the wrong figure permanently.
+        /// Refused whole rather than sorted. Reordering a ladder would pay chests nobody
+        /// authored, and eighty of them is not a thing anybody eyeballs afterwards.
         /// </summary>
         [Test]
-        public void AnOutOfOrderTrackIsRefused()
+        public void AnOutOfOrderLadderIsRefused()
         {
-            Assert.IsFalse(Reads(Entry((3, 200), (1, 50)), out _));
+            Assert.IsFalse(Reads(Entry((20, "wood", "silver"), (10, "wood", "silver")), out _));
         }
 
         [Test]
-        public void AMilestoneBeyondTheGladesItNamesIsRefused()
-        {
-            Assert.IsFalse(Reads(Entry((1, 50), (9, 200)), out _));
-        }
-
-        [Test]
-        public void AnEventWithNoMilestonesIsRefused()
+        public void ASeasonWithNoRungsIsRefused()
         {
             Assert.IsFalse(Reads(Entry(), out _));
+        }
+
+        /// <summary>
+        /// A paid column with a hole in it is a player looking at what they bought and
+        /// seeing nothing — so a season that sells a pass has to pay on every rung of it.
+        /// </summary>
+        [Test]
+        public void ASeasonSellingAPassMustPayOnEveryRungOfIt()
+        {
+            Assert.IsFalse(Reads(Entry((10, "wood", "silver"), (20, "wood", null)), out _));
+        }
+
+        /// <summary>
+        /// And the other way: a rung that pays a paid chest on a season nobody can buy into
+        /// is a reward nothing could ever hand over.
+        /// </summary>
+        [Test]
+        public void APaidRungOnASeasonWithNoPassIsRefused()
+        {
+            var entry = Entry((10, "wood", "silver"));
+            entry.passGems = 0;
+
+            Assert.IsFalse(Reads(entry, out _));
+        }
+
+        [Test]
+        public void ARungWithNoFreeTierIsRefused()
+        {
+            Assert.IsFalse(Reads(Entry((10, null, "silver")), out _));
+            Assert.IsFalse(Reads(Entry((10, "Wood Chest", "silver")), out _),
+                           "a tier id names art and copy, so it is lower case and underscores");
         }
 
         /// <summary>
         /// An icon is carried through untouched, and an absent one is empty rather than null.
         ///
         /// Domain deliberately has no list of the marks that exist — that is a question about
-        /// what has been drawn, and it is answered in Presentation by <c>EventMark</c>. So the
+        /// what has been drawn, and it is answered in Presentation by <c>SeasonCrest</c>. So the
         /// only thing checkable here is that the string survives the trip.
         /// </summary>
         [Test]
-        public void AnEventCarriesTheMarkItAsksFor()
+        public void ASeasonCarriesTheMarkItAsksFor()
         {
-            var entry = Entry((1, 50));
-            entry.icon = "bloom";
+            var entry = Entry((10, "wood", "silver"));
+            entry.icon = "watch";
 
             Assert.IsTrue(Reads(entry, out var builder));
-            Assert.AreEqual("bloom", builder.Build().Events[0].Icon);
+            Assert.AreEqual("watch", builder.Build().Events[0].Icon);
         }
 
         [Test]
-        public void AnEventWithNoIconAsksForNothingRatherThanNull()
+        public void ASeasonWithNoIconAsksForNothingRatherThanNull()
         {
-            Assert.IsTrue(Reads(Entry((1, 50)), out var builder));
+            Assert.IsTrue(Reads(Entry((10, "wood", "silver")), out var builder));
             Assert.AreEqual(string.Empty, builder.Build().Events[0].Icon);
         }
 
@@ -262,17 +265,16 @@ namespace GlimmerGrove.Tests
         ///
         /// A build that has never heard of the mark a manifest names must still read that
         /// manifest: content ships ahead of clients, so an unknown mark has to be a fallback
-        /// at draw time rather than a rejected event. Refusing it here would pull the whole
-        /// event — its window, its glades and its track — over a picture.
+        /// at draw time rather than a rejected season.
         /// </summary>
         [Test]
         public void AnUnusableIconNameIsRefusedButAnUnknownOneIsNot()
         {
-            var bad = Entry((1, 50));
+            var bad = Entry((10, "wood", "silver"));
             bad.icon = "Ui/ic_stars.png";
             Assert.IsFalse(Reads(bad, out _), "a name that is not a clean id");
 
-            var unknown = Entry((1, 50));
+            var unknown = Entry((10, "wood", "silver"));
             unknown.icon = "a_mark_this_build_has_never_drawn";
             Assert.IsTrue(Reads(unknown, out _), "a clean id this build does not recognise");
         }
@@ -280,7 +282,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AWindowThatEndsBeforeItStartsIsRefused()
         {
-            var entry = Entry((1, 50));
+            var entry = Entry((10, "wood", "silver"));
             entry.endUnix = entry.startUnix - 1;
 
             Assert.IsFalse(Reads(entry, out _));
@@ -293,93 +295,59 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AnAbsurdlyLongWindowIsRefused()
         {
-            var entry = Entry((1, 50));
+            var entry = Entry((10, "wood", "silver"));
             entry.endUnix = entry.startUnix + (EventRules.MaxWindowDays + 1) * EventRules.SecondsPerDay;
 
             Assert.IsFalse(Reads(entry, out _));
         }
 
         /// <summary>
-        /// Checked at build time rather than on read, because a manifest may legitimately
-        /// list an event before the chapter it runs over. Running it over the glades that
-        /// do exist would silently lower every goal on the track.
+        /// The v28 bargain, stated as a test: a season names no content, so no withdrawal
+        /// can take one down with it. The old reader dropped a season whose glades had gone.
         /// </summary>
         [Test]
-        public void AnEventNamingAGladeNoChapterHoldsIsDropped()
+        public void ASeasonSurvivesAnEmptyCatalog()
         {
             var builder = new CatalogIndexBuilder();
-            builder.Add(new ManifestChapterDto
-            {
-                id = "c_plain", order = 10, version = 1, levels = new[] { "plain_one" },
-            }, 1);
 
-            Assert.IsTrue(builder.AddEvent(Entry((1, 50))), "the entry itself is well formed");
-            Assert.AreEqual(0, builder.Build().Events.Count, "but two of its glades do not exist");
+            Assert.IsTrue(builder.AddEvent(Entry((10, "wood", "silver"))));
+            Assert.AreEqual(1, builder.Build().Events.Count,
+                            "a season is a window and a ladder; it needs no chapter to run over");
         }
 
         [Test]
-        public void ADisabledEventIsSkippedWithoutComplaint()
+        public void ADisabledSeasonIsSkippedWithoutComplaint()
         {
-            var entry = Entry((1, 50));
+            var entry = Entry((10, "wood", "silver"));
             entry.disabled = true;
 
             Assert.IsFalse(Reads(entry, out var builder));
-            Assert.IsFalse(builder.HasProblems, "pulling an event is a decision, not a mistake");
+            Assert.IsFalse(builder.HasProblems, "pulling a season is a decision, not a mistake");
         }
 
-        // ----------------------------------------------------------- the window
+        // ---------------------------------------------------------------- the window
         [Test]
         public void LivenessIsDecidedByTheWindowAndNothingElse()
         {
-            var bloom = Bloom();
+            var season = Season();
 
-            Assert.IsTrue(bloom.StartsAfter(Start - 1));
-            Assert.IsTrue(bloom.IsLiveAt(Start));
-            Assert.IsTrue(bloom.IsLiveAt(End - 1));
-            Assert.IsFalse(bloom.IsLiveAt(End));
-            Assert.IsTrue(bloom.HasEndedAt(End));
-            Assert.AreEqual(0, bloom.SecondsLeftAt(End + 100));
+            Assert.IsTrue(season.StartsAfter(Start - 1));
+            Assert.IsTrue(season.IsLiveAt(Start));
+            Assert.IsTrue(season.IsLiveAt(End - 1));
+            Assert.IsFalse(season.IsLiveAt(End));
+            Assert.IsTrue(season.HasEndedAt(End));
+            Assert.AreEqual(0, season.SecondsLeftAt(End + 100));
         }
 
-        // -------------------------------------------------------------- totals
-        /// <summary>
-        /// The event track is inside derived earnings rather than beside them, which is the
-        /// decision that makes the whole feature free of save state. This proves the wiring
-        /// as well as the arithmetic: the same records with and without a calendar differ
-        /// by exactly the track.
-        /// </summary>
         [Test]
-        public void EventCreditsLandInTheDerivedTotal()
+        public void ATrackIdIsContractAndRoundTrips()
         {
-            var map = new FixedChapterMap();
-            foreach (var id in EventLevels) map.Add(id, "c_plain");
+            foreach (var track in SeasonTracks.All)
+                Assert.AreEqual(track, SeasonTracks.Parse(SeasonTracks.Id(track)));
 
-            var records = new List<LevelRecord>();
-            foreach (var id in EventLevels)
-            {
-                var levelId = LevelId.Parse(id);
-                records.Add(new LevelRecord(levelId, 3, 10, 1, Inside, Inside));
-            }
-
-            var table = ProgressionTable.Default;
-
-            long without = ProgressionLedger.Compute(records, map, table).EarnedCredits;
-
-            // The floors have to be handed over as well as the calendar: since v11 a track
-            // pays what has been *collected*, so a caller with no floors gets nothing — the
-            // deliberate default, because understating is recoverable and a giveaway is not.
-            var collected = new Dictionary<string, int> { { "vector_bloom", 3 } };
-
-            long uncollected = ProgressionLedger.Compute(records, map, table, null,
-                                                         new[] { Bloom() }).EarnedCredits;
-            Assert.AreEqual(without, uncollected,
-                            "an uncollected track is worth nothing to the balance");
-
-            long with = ProgressionLedger.Compute(records, map, table, null,
-                                                  new[] { Bloom() }, collected).EarnedCredits;
-
-            Assert.AreEqual(250, with - without,
-                            "the whole track is 50 + 200, and nothing else may have moved");
+            Assert.AreEqual("free", SeasonTracks.Id(SeasonTrack.Free));
+            Assert.AreEqual("pass", SeasonTracks.Id(SeasonTrack.Pass));
+            Assert.IsNull(SeasonTracks.Parse("premium"), "a name this build does not know is not a guess");
         }
     }
 }

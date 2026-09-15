@@ -115,17 +115,23 @@ namespace GlimmerGrove.Progression
         /// <summary>
         /// Folds every record the player holds into one total, counting only glades the
         /// chapter map recognises.
+        ///
+        /// <para>
+        /// <b>A season pays nothing here, and that is a v28 change worth stating.</b> The
+        /// old event track folded its milestones straight into this derived total, which is
+        /// what let it be earned rather than granted. A season's rewards are
+        /// <em>chests</em> now, and a chest cannot be derived — its contents are a roll, and
+        /// the whole of what makes a roll safe is that the server re-rolls it from the same
+        /// seed and pays its own answer (invariant 10a). So a season pays as a task pays: a
+        /// claim with an id derived from what earned it. Nothing was taken away from anybody
+        /// by the change, because the earned floor only rises
+        /// (<see cref="ProgressionStore"/>) — the same property that let three whole modes
+        /// be deleted (invariant 38).
+        /// </para>
         /// </summary>
-        /// <param name="collectedEvents">
-        /// Each event's collected floor, keyed by event id — how much of a track the player
-        /// has actually taken. Null pays no event credits at all, which is the safe default
-        /// rather than an oversight: see <c>EventLedger.CreditsFrom</c>.
-        /// </param>
         public static ProgressionTotals Compute(IEnumerable<LevelRecord> records,
                                                 IChapterMap chapters, ProgressionTable table,
-                                                string playerKey = null,
-                                                IReadOnlyList<Events.GroveEvent> events = null,
-                                                IReadOnlyDictionary<string, int> collectedEvents = null)
+                                                string playerKey = null)
         {
             table ??= ProgressionTable.Default;
 
@@ -134,16 +140,6 @@ namespace GlimmerGrove.Progression
 
             if (records == null || chapters == null)
                 return new ProgressionTotals(0, 0, 0, 0);
-
-            bool wantsEvents = events != null && events.Count > 0;
-
-            // Built only when there is a calendar to answer for. The event track needs a
-            // lookup by level id, and this loop is already visiting every record — walking
-            // them a second time per event would be the same work multiplied by however
-            // many events the game has ever run.
-            var byId = wantsEvents
-                ? new Dictionary<LevelId, LevelRecord>()
-                : null;
 
             var counted = new HashSet<LevelId>();
 
@@ -157,25 +153,12 @@ namespace GlimmerGrove.Progression
                 // Two records for one glade is a malformed save, not two clears.
                 if (!counted.Add(record.Id)) continue;
 
-                byId?.Add(record.Id, record);
-
                 var totals = Value(record, chapter, table, playerKey);
                 xp += totals.Xp;
                 credits += totals.EarnedCredits;
                 cleared += totals.ClearedGlades;
                 stars += totals.TotalStars;
             }
-
-            // Event tracks are earned, not granted — see EventLedger for why that is the
-            // only shape they can safely take. They add to the same derived total, so the
-            // earned floor covers them and there is nothing to claim or confirm. What the
-            // floors decide is only *when* a rung lands: a milestone the player has reached
-            // but not yet collected is not in this number, which is what makes collecting
-            // one move a balance rather than replay an arithmetic they were paid for weeks
-            // ago. Since a balance is max(derived, earned floor), a floor that is behind can
-            // never take currency away from anybody — the worst case is a page offering a
-            // flower whose credits are already banked.
-            if (wantsEvents) credits += Events.EventLedger.CreditsFrom(events, byId, collectedEvents);
 
             return new ProgressionTotals(xp, credits, cleared, stars);
         }

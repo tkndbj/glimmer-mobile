@@ -129,7 +129,7 @@ namespace GlimmerGrove
                 // The top bundle chest, shared rather than cut again: a pass is the same
                 // kind of purchase, and identical pixels at a second address is memory
                 // spent to avoid sharing a string.
-                UIKit.Img("BloomPass", box, Art.S("Ui/Shop/bundles_3"), Color.white,
+                UIKit.Img("SeasonPass", box, Art.S("Ui/Shop/bundles_3"), Color.white,
                           Vector2.one * Mathf.Max(200f, box.rect.width), new Vector2(.5f, .5f), Vector2.zero).preserveAspect = true;
                 return;
             }

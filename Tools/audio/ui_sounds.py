@@ -45,7 +45,7 @@ re-triggering, which is exactly what a coin cascade is, and it is a strange thin
 pay a player with when they finish a puzzle.
 
 The replacement is a shape rather than a texture: four notes of a C major arpeggio
-rising 85 ms apart, arriving on a held triad that blooms and decays, over a slow pad
+rising 85 ms apart, arriving on a held triad that marks and decays, over a slow pad
 underneath that gives it weight. It ends in about two seconds instead of three and a
 half, which matters because it is heard on *every* completed glade — the old one was
 still going while the victory panel was assembling itself.

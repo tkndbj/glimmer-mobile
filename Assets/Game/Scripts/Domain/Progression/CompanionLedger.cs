@@ -327,7 +327,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// No early return for an empty side, deliberately — the same trap
-        /// <c>EventCollection.Join</c> documents. Handing one array straight back would skip
+        /// <c>SeasonLedger.Join</c> documents. Handing one array straight back would skip
         /// the sort, so an unsorted file joined against nothing would come out still unsorted,
         /// and <see cref="SaveDelta"/> walks these in order: every launch would then read as
         /// changed and push a write for nothing, forever.

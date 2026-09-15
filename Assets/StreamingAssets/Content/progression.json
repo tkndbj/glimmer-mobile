@@ -405,13 +405,6 @@
         "heartCapacity": 50,
         "referenceUsdCents": 3999,
         "badge": "best_value"
-      },
-      {
-        "id": "gg_first_bloom_pass",
-        "kind": "nonconsumable",
-        "shelf": "event_pass",
-        "eventPassId": "first_bloom",
-        "referenceUsdCents": 499
       }
     ],
     "goods": [
@@ -490,15 +483,30 @@
   "wards": {
     "upgrades": {
       "tiers": [
-      {
-        "prices": [ 2000, 5000, 12000, 30000 ]
-      },
-      {
-        "prices": [ 4000, 10000, 28000, 60000 ]
-      },
-      {
-        "prices": [ 10000, 28000, 60000, 150000 ]
-      }
+        {
+          "prices": [
+            2000,
+            5000,
+            12000,
+            30000
+          ]
+        },
+        {
+          "prices": [
+            4000,
+            10000,
+            28000,
+            60000
+          ]
+        },
+        {
+          "prices": [
+            10000,
+            28000,
+            60000,
+            150000
+          ]
+        }
       ]
     },
     "models": [
@@ -718,85 +726,309 @@
       {
         "id": "wood",
         "chest": {
-          "guaranteed": [ { "kind": "credits", "min": 70, "max": 110 } ],
+          "guaranteed": [
+            {
+              "kind": "credits",
+              "min": 70,
+              "max": 110
+            }
+          ],
           "options": [
-            { "kind": "credits", "min": 50, "max": 90, "weight": 40 },
-            { "kind": "hearts", "min": 1, "max": 1, "weight": 25 },
-            { "kind": "utility", "item": "mending", "min": 1, "max": 1, "weight": 20 },
-            { "kind": "gems", "min": 1, "max": 2, "weight": 15 }
+            {
+              "kind": "credits",
+              "min": 50,
+              "max": 90,
+              "weight": 40
+            },
+            {
+              "kind": "hearts",
+              "min": 1,
+              "max": 1,
+              "weight": 25
+            },
+            {
+              "kind": "utility",
+              "item": "mending",
+              "min": 1,
+              "max": 1,
+              "weight": 20
+            },
+            {
+              "kind": "gems",
+              "min": 1,
+              "max": 2,
+              "weight": 15
+            }
           ]
-        }
+        },
+        "marks": 1
       },
       {
         "id": "silver",
         "chest": {
           "guaranteed": [
-            { "kind": "credits", "min": 140, "max": 200 },
-            { "kind": "utility", "item": "firepot", "min": 1, "max": 1 }
+            {
+              "kind": "credits",
+              "min": 140,
+              "max": 200
+            },
+            {
+              "kind": "utility",
+              "item": "firepot",
+              "min": 1,
+              "max": 1
+            }
           ],
           "options": [
-            { "kind": "gems", "min": 2, "max": 4, "weight": 35 },
-            { "kind": "hearts", "min": 1, "max": 2, "weight": 25 },
-            { "kind": "utility", "item": "surge", "min": 1, "max": 1, "weight": 20 },
-            { "kind": "heart_boost", "min": 12, "max": 12, "weight": 20 }
+            {
+              "kind": "gems",
+              "min": 2,
+              "max": 4,
+              "weight": 35
+            },
+            {
+              "kind": "hearts",
+              "min": 1,
+              "max": 2,
+              "weight": 25
+            },
+            {
+              "kind": "utility",
+              "item": "surge",
+              "min": 1,
+              "max": 1,
+              "weight": 20
+            },
+            {
+              "kind": "heart_boost",
+              "min": 12,
+              "max": 12,
+              "weight": 20
+            }
           ]
-        }
+        },
+        "marks": 2
       },
       {
         "id": "gold",
         "chest": {
           "guaranteed": [
-            { "kind": "credits", "min": 280, "max": 380 },
-            { "kind": "gems", "min": 3, "max": 5 }
+            {
+              "kind": "credits",
+              "min": 280,
+              "max": 380
+            },
+            {
+              "kind": "gems",
+              "min": 3,
+              "max": 5
+            }
           ],
           "options": [
-            { "kind": "utility", "item": "stormcall", "min": 1, "max": 1, "weight": 30 },
-            { "kind": "gems", "min": 5, "max": 8, "weight": 30 },
-            { "kind": "hearts", "min": 2, "max": 3, "weight": 20 },
-            { "kind": "heart_boost", "min": 24, "max": 24, "weight": 20 }
+            {
+              "kind": "utility",
+              "item": "stormcall",
+              "min": 1,
+              "max": 1,
+              "weight": 30
+            },
+            {
+              "kind": "gems",
+              "min": 5,
+              "max": 8,
+              "weight": 30
+            },
+            {
+              "kind": "hearts",
+              "min": 2,
+              "max": 3,
+              "weight": 20
+            },
+            {
+              "kind": "heart_boost",
+              "min": 24,
+              "max": 24,
+              "weight": 20
+            }
           ]
-        }
+        },
+        "marks": 3
       },
       {
         "id": "royal",
         "chest": {
           "guaranteed": [
-            { "kind": "credits", "min": 550, "max": 750 },
-            { "kind": "gems", "min": 8, "max": 12 },
-            { "kind": "utility", "item": "stormcall", "min": 1, "max": 1 }
+            {
+              "kind": "credits",
+              "min": 550,
+              "max": 750
+            },
+            {
+              "kind": "gems",
+              "min": 8,
+              "max": 12
+            },
+            {
+              "kind": "utility",
+              "item": "stormcall",
+              "min": 1,
+              "max": 1
+            }
           ],
           "options": [
-            { "kind": "gems", "min": 12, "max": 20, "weight": 40 },
-            { "kind": "utility", "item": "firepot", "min": 3, "max": 3, "weight": 25 },
-            { "kind": "hearts", "min": 5, "max": 5, "weight": 15 },
-            { "kind": "heart_boost", "min": 24, "max": 24, "weight": 20 }
+            {
+              "kind": "gems",
+              "min": 12,
+              "max": 20,
+              "weight": 40
+            },
+            {
+              "kind": "utility",
+              "item": "firepot",
+              "min": 3,
+              "max": 3,
+              "weight": 25
+            },
+            {
+              "kind": "hearts",
+              "min": 5,
+              "max": 5,
+              "weight": 15
+            },
+            {
+              "kind": "heart_boost",
+              "min": 24,
+              "max": 24,
+              "weight": 20
+            }
           ]
-        }
+        },
+        "marks": 5
       }
     ],
     "daily": [
-      { "id": "d_play", "goal": "runs", "target": 2, "tier": "wood" },
-      { "id": "d_win", "goal": "wins", "target": 1, "tier": "wood" },
-      { "id": "d_stars", "goal": "stars", "target": 5, "tier": "silver" },
-      { "id": "d_matches", "goal": "matches", "target": 60, "tier": "wood" },
-      { "id": "d_raiders", "goal": "raiders", "target": 40, "tier": "wood" },
-      { "id": "d_charms", "goal": "charms", "target": 2, "tier": "silver" },
-      { "id": "d_cogs", "goal": "cogs", "target": 3, "tier": "wood" },
-      { "id": "d_bombs", "goal": "bombs", "target": 1, "tier": "silver" },
-      { "id": "d_utility", "goal": "utilities", "target": 1, "tier": "silver" },
-      { "id": "d_three", "goal": "three_stars", "target": 1, "tier": "silver" }
+      {
+        "id": "d_play",
+        "goal": "runs",
+        "target": 2,
+        "tier": "wood"
+      },
+      {
+        "id": "d_win",
+        "goal": "wins",
+        "target": 1,
+        "tier": "wood"
+      },
+      {
+        "id": "d_stars",
+        "goal": "stars",
+        "target": 5,
+        "tier": "silver"
+      },
+      {
+        "id": "d_matches",
+        "goal": "matches",
+        "target": 60,
+        "tier": "wood"
+      },
+      {
+        "id": "d_raiders",
+        "goal": "raiders",
+        "target": 40,
+        "tier": "wood"
+      },
+      {
+        "id": "d_charms",
+        "goal": "charms",
+        "target": 2,
+        "tier": "silver"
+      },
+      {
+        "id": "d_cogs",
+        "goal": "cogs",
+        "target": 3,
+        "tier": "wood"
+      },
+      {
+        "id": "d_bombs",
+        "goal": "bombs",
+        "target": 1,
+        "tier": "silver"
+      },
+      {
+        "id": "d_utility",
+        "goal": "utilities",
+        "target": 1,
+        "tier": "silver"
+      },
+      {
+        "id": "d_three",
+        "goal": "three_stars",
+        "target": 1,
+        "tier": "silver"
+      }
     ],
     "weekly": [
-      { "id": "w_play", "goal": "runs", "target": 12, "tier": "silver" },
-      { "id": "w_win", "goal": "wins", "target": 7, "tier": "gold" },
-      { "id": "w_stars", "goal": "stars", "target": 24, "tier": "gold" },
-      { "id": "w_raiders", "goal": "raiders", "target": 300, "tier": "gold" },
-      { "id": "w_bosses", "goal": "bosses", "target": 2, "tier": "royal" },
-      { "id": "w_charms", "goal": "charms", "target": 10, "tier": "gold" },
-      { "id": "w_three", "goal": "three_stars", "target": 3, "tier": "royal" },
-      { "id": "w_waves", "goal": "waves", "target": 12, "tier": "gold" },
-      { "id": "w_streak", "goal": "streak", "target": 5, "tier": "royal" },
-      { "id": "w_cogs", "goal": "cogs", "target": 20, "tier": "silver" }
+      {
+        "id": "w_play",
+        "goal": "runs",
+        "target": 12,
+        "tier": "silver"
+      },
+      {
+        "id": "w_win",
+        "goal": "wins",
+        "target": 7,
+        "tier": "gold"
+      },
+      {
+        "id": "w_stars",
+        "goal": "stars",
+        "target": 24,
+        "tier": "gold"
+      },
+      {
+        "id": "w_raiders",
+        "goal": "raiders",
+        "target": 300,
+        "tier": "gold"
+      },
+      {
+        "id": "w_bosses",
+        "goal": "bosses",
+        "target": 2,
+        "tier": "royal"
+      },
+      {
+        "id": "w_charms",
+        "goal": "charms",
+        "target": 10,
+        "tier": "gold"
+      },
+      {
+        "id": "w_three",
+        "goal": "three_stars",
+        "target": 3,
+        "tier": "royal"
+      },
+      {
+        "id": "w_waves",
+        "goal": "waves",
+        "target": 12,
+        "tier": "gold"
+      },
+      {
+        "id": "w_streak",
+        "goal": "streak",
+        "target": 5,
+        "tier": "royal"
+      },
+      {
+        "id": "w_cogs",
+        "goal": "cogs",
+        "target": 20,
+        "tier": "silver"
+      }
     ]
   }
 }

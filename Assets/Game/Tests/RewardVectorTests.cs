@@ -74,12 +74,20 @@ namespace GlimmerGrove.Tests
             public StreakVectorCase[] streakCases;
 
             /// <summary>
-            /// The event calendar. Top level rather than inside <see cref="progression"/>
-            /// because it is a fact about the catalog — which glades, when — in the same
-            /// sense <see cref="levelChapters"/> is, and the reward table has no field for
-            /// it to land in.
+            /// The season chest's own tiers and cases — a chest seeded from a subject, like a
+            /// task's, with the season, the track and the rung in it. Synthetic for
+            /// <see cref="dailyChestConfig"/>'s reason.
+            ///
+            /// <para>
+            /// <b>The calendar itself is deliberately not here any more.</b> A season used to
+            /// fold into derived credits, so the vectors had to carry its ladder to pin the
+            /// arithmetic; a rung pays a chest now and a chest is a claim, so what is under
+            /// contract is the roll rather than the ladder.
+            /// </para>
             /// </summary>
-            public ManifestEventDto[] events;
+            public TaskTierDto[] markChestTiers;
+
+            public MarkVectorCase[] markChestCases;
 
             /// <summary>
             /// The bonus wheel's own slices, synthetic for <see cref="dailyChestConfig"/>'s
@@ -151,6 +159,19 @@ namespace GlimmerGrove.Tests
             public DropVector[] drops;
         }
 
+        /// <summary>One rung's chest on one track, for one account.</summary>
+        [Serializable]
+        public sealed class MarkVectorCase
+        {
+            public string name;
+            public string playerKey;
+            public string seasonId;
+            public string track;
+            public int goal;
+            public string tier;
+            public DropVector[] drops;
+        }
+
         /// <summary>
         /// One night of the ladder. <c>kind</c> is empty for a night that pays nothing,
         /// which is a state the lookup has to reach as exactly as any other.
@@ -185,23 +206,8 @@ namespace GlimmerGrove.Tests
 
             public VectorRecord[] levels;
 
-            /// <summary>
-            /// How much of each event's track this player has collected. Absent — which
-            /// JsonUtility reads as null — means nothing has been taken, and therefore that
-            /// no event pays. That is the safe default rather than the convenient one: a
-            /// case that means to be paid says so.
-            /// </summary>
-            public EventFloor[] collected;
-
             public long credits;
             public long xp;
-        }
-
-        [Serializable]
-        public sealed class EventFloor
-        {
-            public string id;
-            public int collectedGoal;
         }
 
         [Serializable]
@@ -307,68 +313,6 @@ namespace GlimmerGrove.Tests
             }
         }
 
-        /// <summary>
-        /// The calendar, built through the same reader the game uses.
-        ///
-        /// Deliberately not hand-assembled: a track the builder would refuse — goals out of
-        /// order, a milestone past the number of glades — must not be able to pass here and
-        /// then be rejected in production.
-        /// </summary>
-        static IReadOnlyList<GroveEvent> EventsFrom(VectorFile file)
-        {
-            if (file.events == null || file.events.Length == 0) return null;
-
-            var builder = new CatalogIndexBuilder();
-
-            // The events name glades, and the builder drops an event whose glades no
-            // chapter holds — so the chapters have to go in first.
-            var byChapter = new Dictionary<string, List<string>>(StringComparer.Ordinal);
-            foreach (var entry in file.levelChapters ?? new LevelChapterDto[0])
-            {
-                if (!byChapter.TryGetValue(entry.chapterId, out var list))
-                    byChapter[entry.chapterId] = list = new List<string>();
-                list.Add(entry.levelId);
-            }
-
-            int order = 0;
-            foreach (var pair in byChapter)
-                builder.Add(new ManifestChapterDto
-                {
-                    id = pair.Key, order = order += 10, version = 1, levels = pair.Value.ToArray(),
-                }, 1);
-
-            foreach (var groveEvent in file.events) builder.AddEvent(groveEvent);
-
-            var index = builder.Build();
-
-            Assert.AreEqual(file.events.Length, index.Events.Count,
-                            "the vector file's events were not all accepted by the builder: " +
-                            string.Join("; ", builder.Problems));
-
-            return index.Events;
-        }
-
-        /// <summary>
-        /// A case's collected floors, as the map the derivation wants.
-        ///
-        /// Never null, so a case that names none is asking to be paid nothing rather than
-        /// falling through to some older behaviour — which is exactly the distinction the
-        /// "a track nobody has collected pays nothing yet" case exists to pin.
-        /// </summary>
-        static Dictionary<string, int> FloorsFrom(VectorCase test)
-        {
-            var floors = new Dictionary<string, int>(StringComparer.Ordinal);
-            if (test.collected == null) return floors;
-
-            foreach (var floor in test.collected)
-            {
-                if (floor == null || string.IsNullOrEmpty(floor.id)) continue;
-                floors[floor.id] = floor.collectedGoal;
-            }
-
-            return floors;
-        }
-
         // -------------------------------------------------------------- the test
         [Test]
         public void EveryRewardVectorMatches()
@@ -376,14 +320,13 @@ namespace GlimmerGrove.Tests
             var file = Load();
             var table = TableFrom(file);
             var chapters = ChaptersFrom(file);
-            var events = EventsFrom(file);
 
             var failures = new List<string>();
 
             foreach (var test in file.cases)
             {
                 var totals = ProgressionLedger.Compute(RecordsFrom(test), chapters, table,
-                                                       test.playerKey, events, FloorsFrom(test));
+                                                       test.playerKey);
 
                 if (totals.EarnedCredits != test.credits)
                     failures.Add($"'{test.name}': credits expected {test.credits}, got {totals.EarnedCredits}");
@@ -657,8 +600,7 @@ namespace GlimmerGrove.Tests
             string all = string.Join(" | ", names).ToLowerInvariant();
 
             foreach (var required in new[] { "does not know", "duplicated", "clamped", "negative",
-                                             "inherits", "pay nothing", "golden",
-                                             "outside its window", "whole track" })
+                                             "inherits", "pay nothing", "golden" })
             {
                 Assert.IsTrue(all.Contains(required),
                               $"the vectors no longer cover '{required}' — that is a case where the two " +
@@ -789,6 +731,101 @@ namespace GlimmerGrove.Tests
                            "Tools/make_task_vectors.py and make the same change in " +
                            "firebase/functions/src/tasks.ts — otherwise the server will grant a " +
                            "different amount than the game showed.\n" + string.Join("\n", failures));
+        }
+
+        /// <summary>
+        /// The season chest's own contract: a chest seeded from a subject carrying the
+        /// season, the track and the rung. Rolled here through <see cref="ChestSeed.ForSubject"/>
+        /// exactly as <c>SeasonLedger.SeedFor</c> rolls it, and again in
+        /// <c>functions/src/season.ts</c>. The cases were produced by a fourth copy of the
+        /// generator (<c>Tools/make_mark_vectors.py</c>), so a disagreement here says which
+        /// side moved.
+        /// </summary>
+        [Test]
+        public void EveryBloomChestVectorMatches()
+        {
+            var file = Load();
+
+            Assert.IsNotNull(file.markChestTiers, "the vector file has no season chest tiers");
+            Assert.IsNotNull(file.markChestCases, "the vector file has no season chest cases");
+            Assert.Greater(file.markChestCases.Length, 0);
+
+            var tiers = new Dictionary<string, ChestDefinition>();
+            foreach (var tier in file.markChestTiers)
+            {
+                var problems = new List<string>();
+                var chest = DailyChestTable.ReadChest(tier.chest, "vector tier " + tier.id, problems);
+                Assert.IsEmpty(problems, string.Join("; ", problems));
+                tiers[tier.id] = chest;
+            }
+
+            var failures = new List<string>();
+
+            foreach (var test in file.markChestCases)
+            {
+                var track = Events.SeasonTracks.Parse(test.track);
+                Assert.IsNotNull(track, test.track);
+
+                var seed = ChestSeed.ForSubject(test.playerKey, Events.SeasonLedger.SeedTag,
+                                                Events.SeasonLedger.Subject(test.seasonId, track.Value, test.goal));
+
+                string got = Describe(tiers[test.tier].Roll(seed));
+                string want = Describe(test.drops);
+
+                if (got != want)
+                    failures.Add($"'{test.name}': expected {want}, got {got}");
+            }
+
+            Assert.IsEmpty(failures,
+                           "the client no longer rolls season chests the way the server does. If this " +
+                           "change was intended, regenerate firebase/shared/reward-vectors.json with " +
+                           "Tools/make_mark_vectors.py and make the same change in " +
+                           "firebase/functions/src/season.ts — otherwise the server will grant a " +
+                           "different amount than the game showed.\n" + string.Join("\n", failures));
+        }
+
+        /// <summary>
+        /// The one trap a season's seeding has that a task's does not: <b>two tracks at one
+        /// rung</b>. Same account, same season, same goal — and they have to draw from
+        /// different streams, or one claim would collect both columns.
+        ///
+        /// <para>
+        /// Compared over <em>all</em> of a subject's tiers rather than tier by tier, because a
+        /// chest with no randomness in it — the synthetic <c>silver</c> is a flat four gems —
+        /// rolls the same whatever the seed, correctly. A whole subject's worth of rolls is
+        /// where a shared stream would show.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheBloomVectorsCoverBothTracksAtOneRung()
+        {
+            var file = Load();
+            var bySubject = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            foreach (var test in file.markChestCases ?? new MarkVectorCase[0])
+            {
+                string subject = $"{test.playerKey}|{test.seasonId}|{test.track}|{test.goal}";
+                bySubject.TryGetValue(subject, out string so_far);
+                bySubject[subject] = so_far + "/" + Describe(test.drops);
+            }
+
+            int pairs = 0;
+
+            foreach (var pair in bySubject)
+            {
+                var parts = pair.Key.Split('|');
+                if (parts[2] != "free") continue;
+
+                string twin = $"{parts[0]}|{parts[1]}|pass|{parts[3]}";
+                if (!bySubject.TryGetValue(twin, out string other)) continue;
+
+                pairs++;
+                Assert.AreNotEqual(pair.Value, other,
+                                   $"'{pair.Key}' and its pass twin roll the same chests; the track " +
+                                   "is in the subject precisely so they cannot");
+            }
+
+            Assert.Greater(pairs, 0, "the season vectors no longer cover both tracks at one rung");
         }
 
         /// <summary>

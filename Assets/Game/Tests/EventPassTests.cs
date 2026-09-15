@@ -1,71 +1,123 @@
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using GlimmerGrove.Content;
 using GlimmerGrove.Events;
-using GlimmerGrove.Persistence;
-using GlimmerGrove.Store;
+using GlimmerGrove.Progression;
 using NUnit.Framework;
 using UnityEngine;
 
 namespace GlimmerGrove.Tests
 {
+    /// <summary>
+    /// The shipped season as a contract.
+    ///
+    /// The shipped cases read <c>manifest.json</c> through <c>JsonUtility</c>, which is a
+    /// native call — so they need the Editor and the offline runner reports them as such
+    /// (invariant 29e). Everything above them runs anywhere.
+    /// </summary>
     public sealed class EventPassTests
     {
+        // ------------------------------------------------------------ what shipped
+        static ManifestEventDto Shipped()
+            => JsonUtility.FromJson<ManifestDto>(File.ReadAllText(
+                   Path.Combine(Application.streamingAssetsPath, "Content/manifest.json")))
+               .events.Single(x => x.id == "first_watch");
+
+        /// <summary>
+        /// Forty rungs and eighty chests, which is the shape the season was commissioned as.
+        /// Pinned as a count rather than as a table, because every tier on it is content and
+        /// retunable — what may not move without somebody meaning it is the <em>size</em>.
+        /// </summary>
         [Test]
-        public void PremiumAmountsCannotLeakIntoTheFreeLedger()
+        public void TheShippedSeasonHasFortyRungsOnBothTracks()
         {
-            var id = LevelId.Parse("first");
-            var records = new Dictionary<LevelId, LevelRecord>
-                { [id] = new LevelRecord(id, 3, 10, 1, 150, 150) };
-            var e = new GroveEvent("event", 100, 200, new[] { id },
-                new[] { new EventMilestone(1, 60, 1200, 100) }, premiumProductId: "pass");
-            Assert.AreEqual(60, EventLedger.ProgressOf(e, records, 1).Credits);
-            Assert.AreEqual(60, e.TotalCredits);
-            Assert.AreEqual(0, EventLedger.ProgressOf(e, records, 0).Credits);
+            var season = Shipped();
+
+            Assert.AreEqual(EventRules.MaxMilestones, season.milestones.Length);
+            Assert.IsTrue(season.milestones.All(r => !string.IsNullOrEmpty(r.tier)),
+                          "every rung pays on the free track");
+            Assert.IsTrue(season.milestones.All(r => !string.IsNullOrEmpty(r.premiumTier)),
+                          "and on the paid one, because it sells a pass");
+            Assert.Greater(season.passGems, 0, "and the pass has a gem price to sell it at");
         }
 
+        /// <summary>
+        /// Goals rise and every tier the ladder names is one the shipped table defines —
+        /// the one fault that is invisible in either file on its own, because the ladder is
+        /// in the manifest and the tiers are in <c>progression.json</c>.
+        /// </summary>
         [Test]
-        public void APassIsAStandaloneNonconsumableEntitlement()
+        public void EveryShippedRungRisesAndNamesATierThatExists()
         {
-            var problems = new List<string>();
-            var catalog = StoreCatalog.Resolve(new StoreDto { products = new[] {
-                new StoreProductDto { id = "test_pass", eventPassId = "event", shelf = "event_pass",
-                    kind = "nonconsumable", referenceUsdCents = 499 }
-            } }, problems);
-            Assert.IsEmpty(problems);
-            Assert.IsTrue(catalog.Find("test_pass").IsValid);
-            Assert.IsTrue(catalog.Find("test_pass").IsEventPass);
-            Assert.IsTrue(catalog.Find("test_pass").IsOneTime);
+            var season = Shipped();
+            var table = ProgressionRules.Table.Tasks;
+            int previous = 0;
+
+            foreach (var rung in season.milestones)
+            {
+                Assert.Greater(rung.goal, previous, "rung goals rise");
+                previous = rung.goal;
+
+                Assert.IsNotNull(table.Tier(rung.tier), $"free tier '{rung.tier}' exists");
+                Assert.IsNotNull(table.Tier(rung.premiumTier), $"pass tier '{rung.premiumTier}' exists");
+            }
         }
 
-        [TestCase("consumable", 0)]
-        [TestCase("nonconsumable", 100)]
-        public void APassCannotAlsoBeACurrencyGrantOrAConsumable(string kind, int gems)
+        /// <summary>
+        /// The paid column has to be worth paying for, rung by rung — a pass that sold the
+        /// same chest the free track already gives is a product with nothing behind it. Read
+        /// off the ladder's own ranks rather than typed, so a retune keeps this honest.
+        /// </summary>
+        [Test]
+        public void EveryPaidRungOutranksTheFreeOneBesideIt()
         {
-            var problems = new List<string>();
-            var catalog = StoreCatalog.Resolve(new StoreDto { products = new[] {
-                new StoreProductDto { id = "test_pass", eventPassId = "event", shelf = "event_pass",
-                    kind = kind, gems = gems, referenceUsdCents = 499 }
-            } }, problems);
-            Assert.IsNotEmpty(problems);
-            Assert.IsNull(catalog.Find("test_pass"));
+            var season = Shipped();
+            var table = ProgressionRules.Table.Tasks;
+
+            foreach (var rung in season.milestones)
+                Assert.Greater(table.Tier(rung.premiumTier).Rank, table.Tier(rung.tier).Rank,
+                               $"the pass rung at {rung.goal} marks must beat the free one");
         }
 
+        /// <summary>
+        /// The ladder has to be climbable inside its own window by somebody who claims every
+        /// chest they are dealt — a season whose last rungs nobody can reach is a countdown
+        /// with an unreachable prize on it. The same arithmetic the Editor validator warns
+        /// on, pinned here so it fails a build rather than printing into a log.
+        /// </summary>
         [Test]
-        public void ShippedBloomContractPreservesLegacyPayoutsAndEconomyBudget()
+        public void TheShippedLadderCanBeClimbedInsideItsWindow()
         {
-            var dto = JsonUtility.FromJson<ManifestDto>(File.ReadAllText(
-                Path.Combine(Application.streamingAssetsPath, "Content/manifest.json")));
-            var e = dto.events.Single(x => x.id == "first_bloom");
-            Assert.AreEqual(40, e.milestones.Length);
-            Assert.AreEqual(40, e.levels.Distinct().Count());
-            Assert.AreEqual(6320, e.milestones.Sum(x => x.credits));
-            Assert.AreEqual(12000, e.milestones.Sum(x => x.premiumCredits));
-            Assert.AreEqual(600, e.milestones.Sum(x => x.premiumGems));
-            Assert.AreEqual("first_bloom", StoreCatalog.Default.Find(e.premiumProductId).EventPassId);
-            int[] goals = { 1, 2, 4, 6, 8, 10 }, amounts = { 60, 90, 250, 400, 600, 1000 };
-            for (int i = 0; i < goals.Length; i++) Assert.AreEqual(amounts[i], e.milestones.Single(x => x.goal == goals[i]).credits);
+            var season = Shipped();
+            var table = ProgressionRules.Table.Tasks;
+
+            float perDay = 0f;
+
+            foreach (var period in Tasks.TaskPeriods.All)
+            {
+                var slate = table.Slate(period);
+                float sum = 0f;
+                int live = 0;
+
+                foreach (var task in slate)
+                {
+                    if (task.Retired) continue;
+                    sum += task.Tier.Marks;
+                    live++;
+                }
+
+                if (live == 0) continue;
+
+                float dealt = Mathf.Min(table.ActivePerPeriod, live) * (sum / live);
+                perDay += period == Tasks.TaskPeriod.Weekly ? dealt / 7f : dealt;
+            }
+
+            long days = (season.endUnix - season.startUnix) / EventRules.SecondsPerDay;
+            int top = season.milestones[season.milestones.Length - 1].goal;
+
+            Assert.Greater(perDay, 0f, "the tier table pays marks at all");
+            Assert.GreaterOrEqual(perDay * days, top,
+                                  $"{days} days at about {perDay:0.0} marks a day has to reach {top}");
         }
     }
 }

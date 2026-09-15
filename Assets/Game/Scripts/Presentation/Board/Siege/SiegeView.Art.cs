@@ -543,6 +543,8 @@ namespace GlimmerGrove
                 case SiegeKind.Blightcaller: return Reel("blight");
                 case SiegeKind.Gravemaw: return Reel("maw");
                 case SiegeKind.Bonecaller: return Reel("caller");
+                case SiegeKind.Shackler: return Reel("snare");
+                case SiegeKind.Ironclad: return Reel("clad");
             }
 
             // **A body per colour, which is what removing the tint bought.** It used to be
@@ -731,6 +733,13 @@ namespace GlimmerGrove
                 case SiegeKind.Gravemaw:
                 case SiegeKind.Bonecaller: return null;
 
+                // **Both of the fourth chapter's do throw something**, which is what separates
+                // them from the three above: a shackler looses an arrow at a ward and an ironclad
+                // brings an axe down on one, so both have a flight and both are drawn crossing
+                // the hill.
+                case SiegeKind.Shackler: return Blast("snare");
+                case SiegeKind.Ironclad: return Blast("quake");
+
                 default: return Blast("spell");
             }
         }
@@ -744,6 +753,8 @@ namespace GlimmerGrove
                 case SiegeKind.Warbringer:
                 case SiegeKind.Gravemaw:
                 case SiegeKind.Bonecaller: return Blast("roar_muzzle");
+                case SiegeKind.Shackler: return Blast("snare_muzzle");
+                case SiegeKind.Ironclad: return Blast("quake_muzzle");
                 default: return Blast("spell_muzzle");
             }
         }
@@ -757,6 +768,8 @@ namespace GlimmerGrove
                 case SiegeKind.Warbringer:
                 case SiegeKind.Gravemaw:
                 case SiegeKind.Bonecaller: return Blast("roar_hit");
+                case SiegeKind.Shackler: return Blast("snare_hit");
+                case SiegeKind.Ironclad: return Blast("quake_hit");
                 default: return Blast("spell_hit");
             }
         }
@@ -788,6 +801,16 @@ namespace GlimmerGrove
                 case SiegeKind.Overlord: return Pal.Bloom;
                 case SiegeKind.Blightcaller: return Pal.Aqua;
                 case SiegeKind.Warbringer: return Pal.Radiance;
+
+                // **The first two bosses here that are not magic at all**, and that is what lets
+                // them past the rule this method is about rather than around it. A shackler is an
+                // archer and an ironclad is a man with an axe, so what they throw is iron and
+                // dust: `Dormant` is the unpowered slate, which is the only thing in this palette
+                // that reads as *metal*, and a slam's dust is the same colourless `Radiance` a
+                // roar is — pressure has no hue, and the two are two chapters apart. Neither can
+                // be read as "this hurts the red ward more", which is the whole constraint.
+                case SiegeKind.Shackler: return Pal.Dormant;
+                case SiegeKind.Ironclad: return Pal.Radiance;
 
                 // **The two that land on the hill rather than on the line**, which is what lets
                 // them take the two colours left. A devour is `Verdant` and a raise is `Glass`,

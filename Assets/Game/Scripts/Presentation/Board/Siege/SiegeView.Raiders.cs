@@ -238,6 +238,8 @@ namespace GlimmerGrove
                 // raises its staff and lowers it again, which is why `make_siege_art.boss_reels`
                 // grew a `whole` flag rather than cutting it to a rear-up.
                 case SiegeKind.Bonecaller: return Reel("caller_cast");
+                case SiegeKind.Shackler: return Reel("snare_cast");
+                case SiegeKind.Ironclad: return Reel("clad_cast");
 
                 default: return null;
             }
@@ -247,11 +249,11 @@ namespace GlimmerGrove
         /// The reel a boss walks on in, and <b>null</b> for a boss whose cast drew only one.
         ///
         /// <para>
-        /// <b>One case, and the shape is the interesting part.</b> The four bosses cut from 2D
-        /// packs have a single reel that is their walk and their stand at once — they never stop
-        /// cycling, so nothing about them wants a second — where the one boss rendered out of 3D
-        /// (invariant 37bx) genuinely stands still when it arrives and therefore needs both.
-        /// Answering null for the rest is what keeps this a fact about the art rather than a
+        /// <b>Three cases now, and the split is exactly the 2D/3D one.</b> The five bosses cut
+        /// from flat packs have a single reel that is their walk and their stand at once — they
+        /// never stop cycling, so nothing about them wants a second — where a boss rendered out of
+        /// rigged 3D (invariant 37bx) genuinely stands still when it arrives and therefore needs
+        /// both. Answering null for the rest is what keeps this a fact about the art rather than a
         /// rule everything has to satisfy.
         /// </para>
         /// <para>
@@ -266,6 +268,8 @@ namespace GlimmerGrove
             switch (kind)
             {
                 case SiegeKind.Bonecaller: return Reel("caller_walk");
+                case SiegeKind.Shackler: return Reel("snare_walk");
+                case SiegeKind.Ironclad: return Reel("clad_walk");
                 default: return null;
             }
         }

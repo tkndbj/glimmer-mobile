@@ -31,7 +31,7 @@ namespace GlimmerGrove.Homestead
     /// <b>Why this exists at all.</b> Full ground and empty ground would otherwise be the
     /// same picture with different things on it, so nothing about the grove would ever say
     /// <em>you changed this</em> — and a before-and-after is the entire mechanism the feature
-    /// runs on. A region brightens, warms and finally blooms as it fills.
+    /// runs on. A region brightens, warms and finally marks as it fills.
     /// </para>
     /// <para>
     /// <b>It stores nothing.</b> Fill is a pure function of the arrangement already in the
@@ -1139,7 +1139,7 @@ namespace GlimmerGrove.Homestead
         /// The two devices' arrangements, joined slot by slot.
         ///
         /// <para>
-        /// No early return for an empty side, for <c>EventCollection.Join</c>'s reason:
+        /// No early return for an empty side, for <c>SeasonLedger.Join</c>'s reason:
         /// handing one array straight back would skip the sort and the deduplication, so a
         /// malformed file joined against nothing would come out still malformed — and
         /// <see cref="SaveDelta"/> walks these in order, so it would read as changed on every

@@ -855,7 +855,17 @@ changed** (5f).
   hub's box stopped carrying words, and the title it carries again is the page's own
   `ui.tasks.title` rather than a key of its own; the connection line they shared is still said on
   the page itself),
-  `ui.settings.credit` (46); the `run_continue` ad
+  `ui.settings.credit` (46); **the store product `gg_first_bloom_pass`** and its string
+  `store.product.gg_first_bloom_pass` (47d — a pass is bought with gems, and the id is
+  **registered with both stores and therefore never reusable**; deactivate it in App Store
+  Connect and Play Console rather than repointing it); `ui.event.first_bloom.name` and
+  `ui.event.first_bloom.blurb`, the disabled season's own copy (47); every `ui.pass.*` key but `ui.pass.unlocked` (which the shop's own
+  purchase panel still prints) and the twenty-three `ui.event.*` keys the vine screen owned —
+  `all_taken` `at_goal` `at_goal_one` `closed_waiting` `collect` `complete` `cta` `gathered`
+  `progress` `rail` `reward` `title` `to_next` `waiting_many` `waiting_one`, the four
+  `info_*` pairs and `ui.home.glades` (47g; the season's own copy is `ui.mark.*`, and
+  `ui.event.ends_in`, `ui.event.ended` and the derived `ui.event.{id}.name` / `.blurb` are
+  **kept**); the `run_continue` ad
   placement; the grove homes `home_longhouse` `home_tower` `home_keep` and the decor `barracks` `citadel`,
   whose models two dwelling rungs wear under new ids — **minting a new id rather than promoting the decor
   one is what keeps the stock honest**, since a decor id that quietly became a dwelling would be a purchase
@@ -1499,6 +1509,65 @@ changed** (5f).
    *what the hell is that*. The ring keys on `Rally`; `aimed` asks `SiegeTuning.AimsAtAWard`, which
    its own comment had claimed for a year while the code named one craft of three.
 
+37cw. **Two boss verbs is a chapter's price, and 37br's bill came due exactly where it said it
+   would.** Six verbs over three chapters at two a chapter, and the fourth needed code before it
+   needed content. What was left to take was **not a resource** — health, fire, a rank, the clock,
+   the ground's loot and the hill's emptiness are all spoken for, and every one of them has an
+   answer that is also a resource. So a **shackler** takes the line's *time*: it chains a ward,
+   which keeps its fuel, its rank and its charges and simply cannot fire. It is the deliberate
+   inverse of a douse and the two must not be folded into one field — a douse takes the fuel with
+   the seconds and is answered by pouring more in (`Surge` clears it on purpose), where a shackle
+   leaves the fuel exactly where it was, so pouring **banks** and no utility answers it at all.
+   That is the one thing this mode never lets a player buy. <br>**And an ironclad is 37bq read
+   backwards**: only the ward wearing its colour will fire at it, so three of the four bank and
+   answer through **overcharges** — the one mechanic here that has never before been the answer to
+   anything. **Neither touches par**, which is what made both affordable: every bolt and every
+   charge that lands on either lands at full weight, which is precisely what `PerfectMatch` already
+   assumes of every gem. What an aegis really costs is the *clock*, and the clock is this mode's
+   fail state (37b), so its health is set **under** an overlord's to pay for it.
+37cx. **A bought body ships unarmed, and the socket is the seam.** Every KayKit character models
+   its weapon as a separate mesh and leaves `handslot.l` / `handslot.r` on the rig at the grip —
+   so an unarmed cast is the pack's default rather than its intent, and for two chapters this mode
+   drew one. Reported in one line: *they don't have weapons or anything, they should*. Nothing here
+   carries an offset, a rotation or a scale, and it must not: the pack authored the sockets, so
+   identity is the right transform and any number typed would be one to re-tune per body per
+   weapon, invisible to every gate. <br>**Gear is fitted before the skin is built, and that
+   ordering is load-bearing.** `Skin` collects what it will draw *and what it will measure* in its
+   constructor, so a weapon parented afterwards renders and never reaches `Extent` — which frames
+   the shot. What ships then is an axe cropped at the edge of every frame, which imports,
+   addresses, audits and animates (32b). <br>**What the weapon really bought is the swing.** A body
+   with nothing in its hands reaching the ward line has no gesture worth drawing, so the gesture
+   only reads because something long and bright travels through it — 37ar's rule asked of six
+   frames instead of a pose.
+37cy. **A swing must share a pixel scale with its walk and must not share a canvas**, which is
+   `walk_and_swing`'s finding arriving on the 3D side where it is harder. Framing both to the union
+   draws the body small **for the whole run** for the sake of six frames at the line; framing each
+   to its own box makes the body jump the moment it arrives. So there is **one camera box and one
+   square**: the box is the walk's, expanded symmetrically about the walk's own centre until it
+   contains the swing, and the square grows in exact proportion — `orthographicSize` scales with
+   the box and the render target scales with it, so the two cancel and world-units-per-pixel is
+   identical by construction. The walk is then cut tight and the swing to a box **mirrored about
+   the walk body's middle**, because the view resizes about a centre: a box that merely *contained*
+   the swing would put the body off-centre by however far the weapon reached, and a raider would
+   step sideways every time it hit something. **The square is capped at the importer's 512**, or
+   what ships is a reel silently halved.
+37cz. **A cast is told apart by its bodies or it is not told apart at all, and the lane one tap
+   away counts.** The fourth cast is a living warband — the first in this mode that is *somebody*
+   rather than something, where insects, blobs and skeletons are all things. The obvious bulwark in
+   the pack is a knight and a knight is already standing on the Infinite lane, which is one tap
+   from this chapter on the same map (43), so the engineer takes the shield instead. **A body
+   shared across two lanes a player can reach in one gesture is a cast nobody told apart.**
+37da. **The cheapest rung of a shelf may be close to the worst answer to a chapter, and a gate that
+   plays only it is measuring the wrong thing.** 37bw established that the shelf is ordered by
+   *reach* rather than by strength; the sharper half is that an *ability* answers a *material*.
+   Ashenhold is built out of armour, `siphon` drains, and a bulwark halves every bolt that is not
+   its own colour — so the line every chapter gate plays is the one purchase that helps least, and
+   it still bought twelve runs in ninety. **So a chapter's gate plays the line that answers its own
+   material as well**: `cleaver` carries `Rend`, which is the only thing on the shelf that ignores
+   a bulwark's soak outright, and a chapter made of armour that a shield-breaker did not answer
+   would be a chapter whose difficulty is not what it is drawn as (5d, asked of a chapter's
+   material rather than of a mechanic).
+
 40. **A mechanic that attacks the *field* was the hole this mode had** — everything could only hurt the
    wards, so the field was a fuel tap the player operated while looking somewhere else.
 40a. **A mechanic nobody authored into a wave does not exist, and it shipped that way for two
@@ -1843,6 +1912,78 @@ changed** (5f).
    **the title is now the ceiling the crest is measured against**, where the clock used to be the
    thing the row's short end had to clear.
 
+### The season
+47. **A season is a forty-rung ladder graded on *marks*, and a bloom is a claimed chest.**
+   Every `ChestTier` carries what opening one is worth, so the pace is content and every future
+   source of chests feeds the season by naming a tier rather than by growing a second rule. The
+   unit had to be **repeatable and calendar-bounded** at once: the slates deal what they deal, a
+   board already beaten pays no chest, and so there is nothing to farm and no cap anybody has to
+   remember. A season is a **meta-layer over the tasks**, which is why it cost them nothing.
+47a. **What killed the first one was naming content.** The original ladder counted *glades first
+   cleared inside the window*, so it was tied to a list of level ids — the modes those levels
+   belonged to were withdrawn and the season went with them, disabled for two drops. It could
+   never have worked for a returning player anyway: a first clear happens once and a finite
+   catalog runs out. A season names **no content at all** now, which is invariant 20a's bargain
+   collected a second time — `UsableEvents` has nothing left to check.
+47b. **A rung names two tiers and no amounts.** Eighty authored rewards would be eighty numbers
+   whose odds nobody can disclose and which no retune can reach; naming a tier makes one
+   disclosure the odds for every rung that pays it (10b) and retunes the whole ladder at once.
+   **A paid column may not have a hole in it**: a season that sells a pass pays on every rung of
+   it, refused by the reader, because a player looking at what they bought and seeing nothing is
+   worse than a wooden chest. And a tier is resolved on **every read** rather than frozen when the
+   calendar was parsed, because `progression.json` versions independently of the manifest (9b).
+47c. **The bound is the ladder, not the play.** The server cannot recompute whether the marks
+   were earned — they come from counters in the player's own save — so a rung is *bounded* rather
+   than proved, the way a streak night and a task chest are, and tighter than either: the grant
+   log makes `bloom:{season}:{track}:{goal}:{ccy}` payable exactly once, so the most a forged save
+   can ever reach is **one season's authored ladder, once**, which is what an honest player who
+   finishes the track gets. No allowance map and no window check — a rung reached before a season
+   closed stays claimable, which is what keeps a closed season's box on the hub.
+47d. **The pass is bought with gems, and that removed a whole apparatus rather than a price.**
+   It was a $4.99 non-consumable, and a real-money product drags in every line of 18a and 18d
+   behind it: a receipt to verify, an entitlement only `redeemPurchase` may write, a refund
+   sweep, a paid-so-far tally for the refund to subtract, and an id registered with two stores
+   that can **never be renamed**. A gem price is an *ordinary spend* (18), so the pass became
+   what every other permanent thing here already is — and `gg_first_bloom_pass`, the one
+   product in the catalog granting neither currency nor capacity, went with it. Both content
+   gates now **refuse** a product carrying a pass entitlement by name, because such a product
+   would take real money and unlock nothing.
+47e. **A gem entitlement that gates a payout cannot live in the save alone, and the spend is
+   what fixes that.** Every other gem purchase here is a union-joined id set the client writes,
+   and the forgery is accepted because none of them pays *currency* — a paid rung does. So the
+   debit carries the one **derived spend id** in the game, `pass:{seasonId}`
+   (`SpendEntry.SeasonPassId`), and `submitSpends` turns it into the entitlement **in the same
+   transaction that takes the gems**, so the purchase and the permission cannot come apart.
+   Two halves follow. The **price is published** and the server refuses a debit under it,
+   because a spend is an amount the *client* chooses and `pass:{season}` would otherwise buy
+   the paid column for one gem. And the client keeps its own copy — a bool inside the season's
+   save row, joined by `or` — which draws the page offline and gates nothing: a forged `true`
+   buys a column whose every claim the server refuses. <br>**It rides inside the `events` row
+   rather than becoming a key of its own**, which is 12a read as a cost: a new top-level key is
+   a `firestore.rules` release before the client can ship, and the rules bound that list
+   without checking a row's fields.
+47f. **The slack in a ladder is the decision, and it is arithmetic over two files.** How many
+   marks a window can deal is the daily slate over a day plus the weekly over a week, at the rate
+   the rotation deals them — about 6 a day here, 250 over 42 days. The first cut set the top at
+   **240**, which a perfect player reaches on the last day and everybody else never does: a
+   countdown with a prize behind it nobody can take. At **200** the track tops out around day 33,
+   so a missed day a week still finishes. Both content gates print both figures and **error** when
+   the ladder cannot be climbed, which is the one fault invisible in either file alone.
+47g. **A season and a slate are one idea at two cadences, so they are one design.** The old page
+   was a painted sky with two vines climbing it, forty cards in a palette of its own and a dock at
+   the foot — a screen that looked like nothing else in the game. It is the tasks page's furniture
+   now (44), and a rung pays a chest so a rung opens the **same ceremony every other chest opens**:
+   `ChestClaim` is a tier plus a closure, and it took a thousand lines of payout cascade,
+   decoys, shockwaves and rising figures out of the screen that had been handing over currency
+   itself. <br>**Forty rungs is eighty chests, so the ladder recycles.** Bounded rather than
+   unbounded, so not quite 16d's grid — the same arithmetic with the same answer, and the same
+   rule with it: **bind writes everything and never animates**, because a recycled row is a
+   different rung a frame later.
+47h. **A count of marks and a count of rungs answer different questions, and the hero draws
+   both.** "Am I getting anywhere" against "how much is left" — and the bar between them measures
+   the run from the **last** rung to the next rather than the whole ladder, because a bar crawling
+   across forty rungs is a bar that never visibly moves.
+
 ### Art credits
 46. **An art credit belongs wherever its licence says, and for this game that is nowhere in the
    app.** Every pack here is bought or CC0 and none of them asks: CraftPix says it in as many
@@ -1988,6 +2129,12 @@ Do not guess — verify offline.
   content gates walk the roster and error on a model whose pictures are not on disk or whose derived loc
   keys do not resolve. **Stronger than a literal rather than weaker: it catches a missing file and a
   misspelled id at once** (42).
+- **The season:** `python Tools/author_season.py --check` proves the shipped ladder is what the
+  generator writes (a rung is arithmetic on its ordinal, never typed — 4 and 37d, applied to a
+  reward table), and `content.py` errors on a rung naming a tier the tasks block does not define
+  and on a ladder its own window cannot deal. `Tools/make_mark_vectors.py --check` is the fourth
+  copy of the chest generator; `Tools/render_season.py --contact` is the only thing that can say
+  whether the page reads (44d: it shares `hudkit` with the tasks and hub mirrors).
 - **Word list:** `Tools/make_name_blocklist.py --check`; the filter itself is
   `npm --prefix firebase/functions test`.
 - **Name fold:** `Tools/verify/names.py` runs the fold against the shared vectors **on Unity's own Mono**,
@@ -2195,15 +2342,15 @@ claimed five modes and a hundred levels "across eleven chapters" when the truth 
 - **Content pipeline** — levels as data, stable `LevelId`s, manifest-built `CatalogIndex`, lazy chapter
   bodies, `Content ▸ Sync Manifest`, build gate.
 - **Save** — versioned atomic file with checksum, backup rotation, corrupt-file recovery, tested
-  migrations, monotonic merge. **Save schema v27.** Content schema: manifest and chapter bodies **v2**,
+  migrations, monotonic merge. **Save schema v28.** Content schema: manifest and chapter bodies **v2**,
   grove body **v3**.
 - **Cloud** — Firebase (Firestore + Auth + Functions), anonymous by default, Apple/Google linking,
   per-account local archive for switching, debounce/backoff.
 - **Progression** — derived XP, keeper levels and credits from the star ledger; high-water floors only.
   Hearts and hints are produced/spent ledgers. Chapters open on stars (21); a mode's opening levels are
   free to fail (24).
-- **Retention** — tasks and the chest ladder (45), streak, golden levels, event calendar, percentile
-  standings, per-level records. The daily chest ladder is retired in place (45).
+- **Retention** — tasks and the chest ladder (45), the bloom season (47), streak, golden levels,
+  percentile standings, per-level records. The daily chest ladder is retired in place (45).
 - **Tasks &amp; Bonuses** — the hub's box and a page of its own: ten daily and ten weekly tasks on the
   slate, three of each dealt a period by a global rotation, every one paying one of four chest tiers.
   A chest is rolled from (account, period, task), claimed as `task:{period}:{key}:{id}:{ccy}`, opened in
@@ -2212,6 +2359,16 @@ claimed five modes and a hundred levels "across eleven chapters" when the truth 
   grandest at the crest, under a small title and beside a starburst, with no caption, no clock and
   no button (45g, 45i). The page leads with its banner and then the wallet, on the quiet ground
   every screen that is a list rather than a place stands on (45h).
+- **The Bloom** — a forty-rung season with a free track and a **$4.99 Bloom Pass**, eighty chests
+  in all (47). It is graded on **marks**, and a bloom is a claimed chest: wood 1, silver 2, gold
+  3, royal 5, so a player who claims everything is dealt about six a day. The ladder steps five
+  marks a rung and tops at **200** against the ~250 a 42-day window deals, so it finishes around
+  day 33 (47f). The free column is wooden with a silver every fifth rung and a gold every tenth;
+  the paid column is the same ladder one tier up. A rung is claimed as
+  `bloom:{season}:{track}:{goal}:{ccy}` and opens the ordinary chest ceremony; the paid column
+  additionally needs the receipt the server verified (47d). The page is the tasks page's
+  furniture: a banner, the wallet, a hero carrying the bloom count and the rungs open, the pass
+  plate, and a recycling ladder of two-chest cards.
 - **Economy** — real-money shop (Unity IAP 5.4.2), gems as the soft sink, rewarded ads, refund sweeps,
   server-adjudicated grants, a gem-priced continue (23) and a bonus wheel (25), neither costing the save
   file a field.
@@ -2224,13 +2381,14 @@ claimed five modes and a hundred levels "across eleven chapters" when the truth 
   filtering and reporting. A card is rebuilt about fifteen seconds after its owner changes the grove while
   online, or on their next launch; the cost grows with decorating, never with playing (19j).
 - **One live mode, three hidden** (38). The game a player opens today is **Thornwatch**:
-  `s01_thornwatch`, `s03_broodmarch` and `s04_barrowfell` (ten rungs each) on the ordinary ladder,
-  and `s02_endlesswatch` on an **Infinite** track beside it (43). The map draws no *mode* switcher,
+  `s01_thornwatch`, `s03_broodmarch`, `s04_barrowfell` and `s05_ashenhold` (ten rungs each) on the
+  ordinary ladder, and `s02_endlesswatch` on an **Infinite** track beside it (43). The map draws no *mode* switcher,
   because there is one mode; it draws the **track** switcher, because there are two ladders. The
   ordinary ladder draws a map and the Infinite lane draws a **hub** — a medal carrying the best
   wave, a plate of three lines, and BATTLE (43a–43c).
-  **Three casts and six boss verbs**, one cast per chapter by ordinal and two verbs per chapter
-  (7c, 37bd, 37br).
+  **Four casts and eight boss verbs**, one cast per chapter by ordinal and two verbs per chapter
+  (7c, 37bd, 37br) — and **every raider is armed and every raider swings** (37cx), which the two
+  baked casts were not until the fourth chapter shipped.
 - **Charms** — three powers dealt onto ordinary gems (37cd), one introduced per chapter: a
   **prism** that joins a run of any colour, a **lance** that takes its row and column, and a
   **stormglass** that makes the whole line fire at everything on the hill. One every **112** dealt
@@ -2260,6 +2418,7 @@ claimed five modes and a hundred levels "across eleven chapters" when the truth 
 | `s01_thornwatch` | siege | 10 | 14–57 matches | the verb, the cog, the **prism** from rung 3, the fourth ward, a warlord on rung 5 and an overlord on rung 10 |
 | `s03_broodmarch` | siege | 10 | 38–59 matches | the same board and one new rule — the **lance**: a second cast and a hill that no longer forgives rank one; a blightcaller on rung 5 and a warbringer on rung 10 |
 | `s04_barrowfell` | siege | 10 | 49–81 matches | the first chapter authored for a *bought* line, and the one that deals all three charms: a skeleton cast, armour from the second rung, and the two verbs the mode had to grow — a gravemaw on rung 5 that eats the cogs and bombs left lying, and a bonecaller on rung 10, **the one boss in this mode rendered out of 3D** (37bx), that raises them back; **the first chapter whose raiders carry a surge** (37by) |
+| `s05_ashenhold` | siege | 10 | 49–81 matches | the fourth chapter, and the first that cost the mode **code**: two new boss verbs and a fourth cast. A living warband — rogue, barbarian and engineer, every body armed and every body swinging — armour from the first rung and three shields in a wave; a **shackler** on rung 5 that chains a ward and takes nothing else, and an **ironclad** on rung 10 that only its own colour can touch; **the first chapter whose raiders carry two tenths of surge** (37by) |
 | `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 20 | waves that never stop, graded on how far it got — **both star waves are guesses until somebody plays it** |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock**
@@ -2326,8 +2485,8 @@ update. **Re-seed after any change to it.**
 - **Bonus wheel** — eight equal slices at 100/200/150/300/100/250/150/500 percent of the authored 200, each
   a 1-in-8 chance; mean 218.75%, so a view pays about **438** and a capped day about **2,628** against
   2,400 under the old flat offer at a cap of twelve (25).
-- **Shop** — 17 products, **$298.83** in total. Gems 100 → 8,500 for $0.99 → $49.99; coins 2,500 → 75,000
-  for $1.99 → $39.99; three bundles $2.99 → $29.99; the Bloom Pass $4.99; 5-heart refill 50 gems; a day of
+- **Shop** — 16 products, **$293.84** in total. Gems 100 → 8,500 for $0.99 → $49.99; coins 2,500 → 75,000
+  for $1.99 → $39.99; three bundles $2.99 → $29.99; 5-heart refill 50 gems; a day of
   fast hearts 30 gems. **Heart containers** at $19.99 / $29.99 / $39.99 raise the refill cap to 10 / 20 /
   50 — the only real-money products granting something other than currency (18d).
 - **Stars** — the graded count and nothing else (22). Gold `par x 1.20`, silver `par x 1.40`, the run ends
@@ -2348,7 +2507,11 @@ update. **Re-seed after any change to it.**
 Firebase project `glimmer-groove-1cd60`, Firestore `eur3`, Node 22 in `europe-west1`. **Fourteen
 functions**: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`, `adReward`, `appleNotification`,
 `sweepVoidedPurchases`, `publishGroveStats`, `publishGrove`, `withdrawGrove`, `publishGroveRanks`,
-`claimName`, `reportKeeperName`, `deleteAccount`. `firebase/README.md` is the guide;
+`claimName`, `reportKeeperName`, `deleteAccount`. A fifteenth, `eventPass`, was **deployed and
+is now deleted** — it read a season's entitlement back for the client, which nothing needs since
+the pass stopped being a receipt: the client owns its own copy in the save and the server reads
+its own (47d). It was never in this list, which is how a deployed function came to outlive its
+own documentation; `firebase functions:list` is the authority. `firebase/README.md` is the guide;
 `firebase/e2e/smoke-test.mjs` is **91/91 live** and `firebase/e2e/delete-account.mjs` **14/14** — the
 second erases the throwaway accounts it makes, so it is the only suite here that leaves less behind than it
 creates. Client half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK 13.15.0 as vendored UPM tarballs
@@ -2390,7 +2553,37 @@ how the suite gets run without taking the owner's session (the recipe is in the 
 Editor was closed is unaddressed (a white rectangle, 7b) and deleted art leaves entries that fail
 `BuildPlayer` rather than the game. Re-bake the projectiles for any ward colour whose `Pal` entry has
 moved (37ak), then sync and verify.
-<br>**Owed on this drop (tasks, 2026-09-14), in this order.** (1) ~~`firebase deploy --only
+<br>**Owed on this drop (The First Watch, 2026-09-14), in this order.** (1) **`firebase deploy
+--only firestore:rules` is *not* needed**, and that was checked rather than assumed: every number
+the season stores — the marks, the two claim floors and the pass flag — lives inside the `events`
+list the rules already allow, and that clause bounds the list without checking a row's fields, so
+`hasOnly` has nothing new to learn (12a). **The pass flag rides in that row for exactly this
+reason**; a top-level key would have been a rules release before the client could ship.
+(2) ~~`npm --prefix firebase/functions run deploy`~~ **deployed 2026-09-14**, in batches of three
+— `claimAwards` gained the `mark:` kind, `submitSpends` gained the pass purchase, `redeemPurchase`
+and `revokeReceipt` lost the whole real-money pass path, and `eventPass` was deleted outright.
+Until it ran, the deployed `claimAwards` refused every `mark:` id as a malformed daily claim and
+the client drops a refused claim permanently (45d), so no season chest could have been claimed on
+a live build before it. (3) ~~`npm --prefix firebase/functions run seed`~~ **seeded 2026-09-14** —
+the published season block changed shape twice over (tier names instead of amounts, a gem price
+instead of a product) and every tier gained `marks`; until it ran, every season claim was left
+**unconfirmed** rather than refused, which is the safe half of 13a but pays nobody. (4) In the
+Editor: `Validate Content`, `Validate Art` and the **EditMode suite** — the offline runner is
+green but the two vector fixtures and `TheListBoundsMatchTheSecurityRules` need `JsonUtility`,
+and `EveryMarkChestVectorMatches` is one of them (29e). **No new art and no Addressables work**:
+the page is cut entirely from the interface kit and the chest icons the tasks page already
+registered. (5) `firebase/e2e/smoke-test.mjs` now pushes a season row with `marks`, `premiumGoal`
+and `pass`, and has not run against the deploy.
+<br>**One action only the owner can take.** `gg_first_bloom_pass` is still **registered and active
+in App Store Connect and Play Console**, and nothing in this build sells it any more — it should
+be deactivated in both, or it is a live product nobody can buy. Nothing is owed to anybody: no
+receipt has ever reached `redeemPurchase` at all, so no player owns one.
+<br>**And three decisions the owner owes**, all content and all retunable without a build: whether
+a mark is worth 1/2/3/5 by tier, whether a 42-day window and a 200-mark top are the right pace
+(47f prints both figures on every `content.py` run), and whether **350 gems** is the right price
+for a column one tier up — about seven weeks of free play at ~7 gems a day. **Nobody has played a
+day of it**, let alone six weeks.
+<br>**Owed on the previous drop (tasks, 2026-09-14), in this order.** (1) ~~`firebase deploy --only
 firestore:rules`~~ **released 2026-09-14** — the save gains a `tasks` key and `hasOnly` refuses the
 whole write until the rules know it (12a); rules before client, always. (2) `npm --prefix
 firebase/functions run deploy` in batches — `claimAwards` gained the `task:` kind and the wallet gained
@@ -2475,6 +2668,19 @@ a phone in sunlight — and the one string that changed (`ui.shop.capacity_upgra
   drawn — a change to ask for, not to slip in.
 
 **Play it.**
+- **The First Watch** (47), never played, and the largest untried surface in the game — eighty
+  chests over six weeks with a 350-gem pass on it. **Is a mark understood as coming from a
+  chest?** That is the one rule nothing on the page can show, because the chests that earn them are
+  opened on another screen; a player who does not get it is watching a bar that never moves, and
+  the info panel and the subtitle are all that say so. Is a rung with something open *found* in a
+  list of forty — the light is the only thing that says which row to tap. Does the locked paid column read as
+  **buyable** rather than as broken — and is 350 gems read as a price a player can reach, where
+  a $4.99 card would have read as a wall? **The figure worth an event is how many
+  seconds a player spends on the page before their first tap**, because a ladder that is only
+  scrolled is a ladder nobody has realised is a set of buttons. And the honest risk: the pace is
+  six marks a day against a two-hundred ladder, which nobody has watched a week of — a season
+  that is finished in a fortnight and a season that is never finished are the same failure from
+  two ends.
 - **Tasks &amp; Bonuses** (45), never played. **The hub box now carries no words at all** (45g): four
   big chests in an arch, a clock and a starburst. Is it tapped — a card with nothing on it that
   looks like a control is the risk the OPEN pill was paying for — and does anybody work out what it

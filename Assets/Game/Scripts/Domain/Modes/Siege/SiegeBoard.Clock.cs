@@ -181,6 +181,18 @@ namespace GlimmerGrove.Modes
                     continue;
                 }
 
+                // **A bind settles here beside the douse and takes nothing**, which is the whole
+                // of the difference between the two: `Snuff` empties the tube and `Shackle` does
+                // not touch it. Reported with a nought exactly as a douse is, because what a view
+                // has to draw is a state rather than a number.
+                if (spell.Craft == SiegeSpell.Bind)
+                {
+                    ward.Shackle();
+                    _report.Spells.Add(
+                        new SiegeSpellLanded(spell.Raider, spell.Ward, SiegeSpell.Bind, 0, false));
+                    continue;
+                }
+
                 // A rank is taken *before* the health, so a spell that fells a ward has still
                 // taken the rank it came for — and the view is told both in one record rather than
                 // having to work out which order they happened in.
@@ -460,6 +472,12 @@ namespace GlimmerGrove.Modes
                 // that clears it is the frame it may fire again.
                 if (ward.Dark > 0f) ward.Dark = Math.Max(0f, ward.Dark - dt);
 
+                // **And a chained one burns its seconds in the same place, for the same reason.**
+                // `Fuelled` is false while either is running, so the frame that clears one is the
+                // frame the ward may fire again — and the two are ticked together so neither can
+                // ever be a frame ahead of the other.
+                if (ward.Bound > 0f) ward.Bound = Math.Max(0f, ward.Bound - dt);
+
                 if (!ward.Fuelled) { ward.Cool = 0f; continue; }
 
                 ward.Cool -= dt;
@@ -607,7 +625,7 @@ namespace GlimmerGrove.Modes
                 // **A roar is thrown at the hill, so it carries no ward.** Three of the four aim
                 // at the line and one does not, and the difference is asked once here rather than
                 // by every reader of a ward index nobody set.
-                int ward = SiegeTuning.AimsAtAWard(boss.Kind) ? Wanted(craft) : -1;
+                int ward = SiegeTuning.AimsAtAWard(boss.Kind) ? Wanted(craft, boss) : -1;
 
                 // **A cast that found nothing to aim at does not spend its cadence.** The timer
                 // used to be re-armed above, before the target was known, so a blightcaller that
@@ -674,7 +692,32 @@ namespace GlimmerGrove.Modes
         /// smite does and cannot dismantle the line one ward at a time.
         /// </para>
         /// </summary>
-        int Wanted(SiegeSpell craft)
+        /// <summary>
+        /// How many live raiders of one colour are on the hill.
+        ///
+        /// <b>Named away from <see cref="Standing"/></b>, which counts everything this run still
+        /// has to see off including bodies that have not walked on yet - a different question, and
+        /// the compiler is the only thing that would ever have said so.
+        ///
+        /// <b>The hill rather than the whole list</b>, because a raider that has reached the line
+        /// is one the ward is already failing to answer and one still mustering is not yet the
+        /// player's problem — <c>OnTheHill</c> is the same window <see cref="Aim"/> shoots into,
+        /// so what a shackler reads and what a ward can act on are the same set.
+        /// </summary>
+        int Pressing(int colour)
+        {
+            int many = 0;
+
+            for (int i = 0; i < _raiders.Count; i++)
+            {
+                var raider = _raiders[i];
+                if (raider.Alive && raider.OnTheHill && raider.Colour == colour) many++;
+            }
+
+            return many;
+        }
+
+        int Wanted(SiegeSpell craft, SiegeRaider caster)
         {
             int best = -1;
             long most = -1;
@@ -705,6 +748,32 @@ namespace GlimmerGrove.Modes
 
                     case SiegeSpell.Sunder:
                         rank = (long)ward.Rank * 64L + ward.Health;
+                        break;
+
+                    // **A bind wants the ward the hill most needs answered**, which is the one
+                    // piece of information no other spell here reads: a smite reads the line, a
+                    // douse reads a tube and a sunder reads a badge, and all three are facts about
+                    // the player's own side. A chain is only a decision if it takes the colour
+                    // that was about to matter — chaining a ward with nothing to shoot at costs
+                    // the player exactly nothing, which is invariant 5d wearing six seconds.
+                    //
+                    // **An already-chained ward is never chosen twice**, for the douse's reason:
+                    // there is nothing left to take and a second chain reads as the boss doing
+                    // nothing (`SiegeTuning.CastRetry` holds the cast instead).
+                    case SiegeSpell.Bind:
+                        if (ward.Shackled) continue;
+                        rank = (long)Pressing(ward.Colour) * 64L + ward.Health;
+                        break;
+
+                    // **An ironclad strikes the one ward that can hurt it**, which is the fight:
+                    // the colour the player has to feed to kill it is the colour it is trying to
+                    // put out, so a duel against it is a race rather than a grind. It falls
+                    // through to the freshest when that ward is already down, because a boss with
+                    // nothing left to aim at would otherwise hold its cast for ever
+                    // (`CastRetry`) and read as broken.
+                    case SiegeSpell.Aegis:
+                        rank = (caster != null && ward.Colour == caster.Colour ? 1L << 40 : 0L)
+                             + ward.Health;
                         break;
 
                     default:

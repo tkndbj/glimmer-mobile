@@ -349,6 +349,12 @@ namespace GlimmerGrove.Tasks
             state.Claimed.Add(task.Id);
             Apply(rolled, task, state.Key);
 
+            // The season grows here and nowhere else. A chest is the one thing in this game
+            // that is both repeatable and calendar-bounded, which is why it is what a season
+            // is graded on — see `ChestTier.Marks`. Before the save, so one write carries
+            // both; after the claim, so a refused one grows nothing.
+            Events.SeasonLedger.NoteChest(task.Tier);
+
             SaveService.Save();
             Raise();
 

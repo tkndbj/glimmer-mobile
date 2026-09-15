@@ -151,7 +151,7 @@ namespace GlimmerGrove.Tasks
                     new ChestOption(new ChestBand(ChestDropKind.Hearts, 1, 1), 25),
                     new ChestOption(new ChestBand(ChestDropKind.Utility, 1, 1, "mending"), 20),
                     new ChestOption(new ChestBand(ChestDropKind.Gems, 1, 2), 15),
-                }));
+                }), 1);
 
             var silver = new ChestTier("silver", 2, new ChestDefinition(
                 new[]
@@ -165,7 +165,7 @@ namespace GlimmerGrove.Tasks
                     new ChestOption(new ChestBand(ChestDropKind.Hearts, 1, 2), 25),
                     new ChestOption(new ChestBand(ChestDropKind.Utility, 1, 1, "surge"), 20),
                     new ChestOption(new ChestBand(ChestDropKind.HeartBoost, 12, 12), 20),
-                }));
+                }), 2);
 
             var gold = new ChestTier("gold", 3, new ChestDefinition(
                 new[]
@@ -179,7 +179,7 @@ namespace GlimmerGrove.Tasks
                     new ChestOption(new ChestBand(ChestDropKind.Gems, 5, 8), 30),
                     new ChestOption(new ChestBand(ChestDropKind.Hearts, 2, 3), 20),
                     new ChestOption(new ChestBand(ChestDropKind.HeartBoost, 24, 24), 20),
-                }));
+                }), 3);
 
             var royal = new ChestTier("royal", 4, new ChestDefinition(
                 new[]
@@ -194,7 +194,7 @@ namespace GlimmerGrove.Tasks
                     new ChestOption(new ChestBand(ChestDropKind.Utility, 3, 3, "firepot"), 25),
                     new ChestOption(new ChestBand(ChestDropKind.Hearts, 5, 5), 15),
                     new ChestOption(new ChestBand(ChestDropKind.HeartBoost, 24, 24), 20),
-                }));
+                }), 5);
 
             var daily = new[]
             {
@@ -303,7 +303,15 @@ namespace GlimmerGrove.Tasks
                 var chest = ReadChest(entry.chest, entry.id, problems);
                 if (chest == null) return null;
 
-                tiers[i] = new ChestTier(entry.id, i + 1, chest);
+                if (entry.marks < 0 || entry.marks > ChestTier.MaxMarks)
+                {
+                    problems.Add($"tasks tier '{entry.id}' is worth {entry.marks} marks, outside " +
+                                 $"0..{ChestTier.MaxMarks}; a tier worth more than a whole season " +
+                                 "track is a typo rather than a tuning");
+                    return null;
+                }
+
+                tiers[i] = new ChestTier(entry.id, i + 1, chest, entry.marks);
             }
 
             return tiers;

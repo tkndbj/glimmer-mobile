@@ -363,147 +363,6 @@
       "xp": 100
     },
     {
-      "name": "an event pays nothing for clears outside its window",
-      "collected": [
-        {
-          "id": "vector_bloom",
-          "collectedGoal": 3
-        }
-      ],
-      "levels": [
-        {
-          "levelId": "plain_one",
-          "stars": 3,
-          "firstClearedUnix": 1699995000
-        },
-        {
-          "levelId": "plain_two",
-          "stars": 3,
-          "firstClearedUnix": 1699995000
-        },
-        {
-          "levelId": "generous_one",
-          "stars": 3,
-          "firstClearedUnix": 1699995000
-        }
-      ],
-      "credits": 330,
-      "xp": 450
-    },
-    {
-      "name": "an event pays its first milestone",
-      "collected": [
-        {
-          "id": "vector_bloom",
-          "collectedGoal": 1
-        }
-      ],
-      "levels": [
-        {
-          "levelId": "plain_one",
-          "stars": 3,
-          "firstClearedUnix": 1700005000
-        },
-        {
-          "levelId": "plain_two",
-          "stars": 3,
-          "firstClearedUnix": 1699995000
-        }
-      ],
-      "credits": 200,
-      "xp": 200
-    },
-    {
-      "name": "an event pays the whole track",
-      "collected": [
-        {
-          "id": "vector_bloom",
-          "collectedGoal": 3
-        }
-      ],
-      "levels": [
-        {
-          "levelId": "plain_one",
-          "stars": 2,
-          "firstClearedUnix": 1700005000
-        },
-        {
-          "levelId": "plain_two",
-          "stars": 1,
-          "firstClearedUnix": 1700005000
-        },
-        {
-          "levelId": "generous_one",
-          "stars": 3,
-          "firstClearedUnix": 1700005000
-        }
-      ],
-      "credits": 535,
-      "xp": 390
-    },
-    {
-      "name": "an event does not know an invented level either",
-      "collected": [
-        {
-          "id": "vector_bloom",
-          "collectedGoal": 1
-        }
-      ],
-      "levels": [
-        {
-          "levelId": "plain_one",
-          "stars": 3,
-          "firstClearedUnix": 1700005000
-        },
-        {
-          "levelId": "invented_one",
-          "stars": 3,
-          "firstClearedUnix": 1700005000
-        },
-        {
-          "levelId": "free_one",
-          "stars": 3,
-          "firstClearedUnix": 1700005000
-        }
-      ],
-      "credits": 125,
-      "xp": 100
-    },
-    {
-      "name": "an event and a golden stack on one save",
-      "collected": [
-        {
-          "id": "vector_bloom",
-          "collectedGoal": 3
-        }
-      ],
-      "levels": [
-        {
-          "levelId": "plain_one",
-          "stars": 3,
-          "firstClearedUnix": 1700005000
-        },
-        {
-          "levelId": "plain_two",
-          "stars": 3,
-          "firstClearedUnix": 1700005000
-        },
-        {
-          "levelId": "generous_one",
-          "stars": 3,
-          "firstClearedUnix": 1700005000
-        },
-        {
-          "levelId": "free_one",
-          "stars": 3,
-          "firstClearedUnix": 1700005000
-        }
-      ],
-      "credits": 805,
-      "xp": 450,
-      "playerKey": "uid_beta"
-    },
-    {
       "name": "a track nobody has collected pays nothing yet",
       "levels": [
         {
@@ -524,52 +383,6 @@
       ],
       "credits": 330,
       "xp": 450
-    },
-    {
-      "name": "an event pays only the rungs that have been collected",
-      "collected": [
-        {
-          "id": "vector_bloom",
-          "collectedGoal": 1
-        }
-      ],
-      "levels": [
-        {
-          "levelId": "plain_one",
-          "stars": 3,
-          "firstClearedUnix": 1700005000
-        },
-        {
-          "levelId": "plain_two",
-          "stars": 3,
-          "firstClearedUnix": 1700005000
-        },
-        {
-          "levelId": "generous_one",
-          "stars": 3,
-          "firstClearedUnix": 1700005000
-        }
-      ],
-      "credits": 380,
-      "xp": 450
-    },
-    {
-      "name": "a collected floor past the glades finished is clamped to them",
-      "collected": [
-        {
-          "id": "vector_bloom",
-          "collectedGoal": 99
-        }
-      ],
-      "levels": [
-        {
-          "levelId": "plain_one",
-          "stars": 3,
-          "firstClearedUnix": 1700005000
-        }
-      ],
-      "credits": 125,
-      "xp": 100
     }
   ],
   "_dailyComment": [
@@ -2647,73 +2460,125 @@
   ],
   "streakLadder": {
     "rungs": [
-      { "kind": "credits", "amount": 120 },
-      { },
-      { "kind": "gems", "amount": 3 },
-      { "kind": "hearts", "amount": 2 },
-      { "kind": "heart_boost", "amount": 8 },
-      { "kind": "credits", "amount": 9999 },
-      { "kind": "gems", "amount": 250 }
+      {
+        "kind": "credits",
+        "amount": 120
+      },
+      {},
+      {
+        "kind": "gems",
+        "amount": 3
+      },
+      {
+        "kind": "hearts",
+        "amount": 2
+      },
+      {
+        "kind": "heart_boost",
+        "amount": 8
+      },
+      {
+        "kind": "credits",
+        "amount": 9999
+      },
+      {
+        "kind": "gems",
+        "amount": 250
+      }
     ]
   },
   "streakCases": [
-    { "name": "night 1 opens the lap", "night": 1, "kind": "credits", "amount": 120 },
-    { "name": "night 2 pays nothing", "night": 2, "kind": "", "amount": 0 },
-    { "name": "night 3", "night": 3, "kind": "gems", "amount": 3 },
-    { "name": "night 4", "night": 4, "kind": "hearts", "amount": 2 },
-    { "name": "night 5", "night": 5, "kind": "heart_boost", "amount": 8 },
-    { "name": "night 6 is clamped to the credit ceiling", "night": 6, "kind": "credits", "amount": 2000 },
-    { "name": "night 7 is clamped to the gem ceiling", "night": 7, "kind": "gems", "amount": 100 },
-    { "name": "night 8 laps to night 1", "night": 8, "kind": "credits", "amount": 120 },
-    { "name": "night 9 laps to night 2", "night": 9, "kind": "", "amount": 0 },
-    { "name": "night 10 laps to night 3", "night": 10, "kind": "gems", "amount": 3 },
-    { "name": "night 14 ends the second lap", "night": 14, "kind": "gems", "amount": 100 },
-    { "name": "night 15 opens the third lap", "night": 15, "kind": "credits", "amount": 120 },
-    { "name": "night 100 is still on the ladder", "night": 100, "kind": "", "amount": 0 },
-    { "name": "night 0 is not a night", "night": 0, "kind": "", "amount": 0 },
-    { "name": "a negative night is not a night", "night": -3, "kind": "", "amount": 0 }
-  ],
-  "_eventComment": [
-    "The contract between EventLedger.cs and functions/src/progression.ts.",
-    "",
-    "An event's progress is a count of its glades whose *first* clear falls inside its",
-    "window, and its reward is the milestones that count has passed. Both sides derive it",
-    "from records the catalog vouches for — nothing is claimed, granted or stored — so the",
-    "reward simply becomes part of the earned credits the server already recomputes.",
-    "",
-    "Two rules the cases pin, because a naive implementation gets them wrong: a clear dated",
-    "outside the window counts for nothing however many stars it has, and a level the",
-    "catalog does not know advances no event.",
-    "",
-    "Since save schema v11 a rung is also *collected* by hand, so a case carries the",
-    "player's floor per event — the largest goal they have taken. Reaching a rung is not",
-    "being paid for it. Two more rules follow, and both sides must agree on them: an",
-    "absent floor pays nothing at all, and a floor is clamped to the glades actually",
-    "finished before anything is paid, which is what makes a client-written number safe."
-  ],
-  "events": [
     {
-      "id": "vector_bloom",
-      "startUnix": 1700000000,
-      "endUnix": 1701000000,
-      "levels": [
-        "plain_one",
-        "plain_two",
-        "generous_one"
-      ],
-      "milestones": [
-        {
-          "goal": 1,
-          "credits": 50
-        },
-        {
-          "goal": 3,
-          "credits": 200
-        }
-      ]
+      "name": "night 1 opens the lap",
+      "night": 1,
+      "kind": "credits",
+      "amount": 120
+    },
+    {
+      "name": "night 2 pays nothing",
+      "night": 2,
+      "kind": "",
+      "amount": 0
+    },
+    {
+      "name": "night 3",
+      "night": 3,
+      "kind": "gems",
+      "amount": 3
+    },
+    {
+      "name": "night 4",
+      "night": 4,
+      "kind": "hearts",
+      "amount": 2
+    },
+    {
+      "name": "night 5",
+      "night": 5,
+      "kind": "heart_boost",
+      "amount": 8
+    },
+    {
+      "name": "night 6 is clamped to the credit ceiling",
+      "night": 6,
+      "kind": "credits",
+      "amount": 2000
+    },
+    {
+      "name": "night 7 is clamped to the gem ceiling",
+      "night": 7,
+      "kind": "gems",
+      "amount": 100
+    },
+    {
+      "name": "night 8 laps to night 1",
+      "night": 8,
+      "kind": "credits",
+      "amount": 120
+    },
+    {
+      "name": "night 9 laps to night 2",
+      "night": 9,
+      "kind": "",
+      "amount": 0
+    },
+    {
+      "name": "night 10 laps to night 3",
+      "night": 10,
+      "kind": "gems",
+      "amount": 3
+    },
+    {
+      "name": "night 14 ends the second lap",
+      "night": 14,
+      "kind": "gems",
+      "amount": 100
+    },
+    {
+      "name": "night 15 opens the third lap",
+      "night": 15,
+      "kind": "credits",
+      "amount": 120
+    },
+    {
+      "name": "night 100 is still on the ladder",
+      "night": 100,
+      "kind": "",
+      "amount": 0
+    },
+    {
+      "name": "night 0 is not a night",
+      "night": 0,
+      "kind": "",
+      "amount": 0
+    },
+    {
+      "name": "a negative night is not a night",
+      "night": -3,
+      "kind": "",
+      "amount": 0
     }
   ],
-
   "_wheelComment": [
     "The contract between BonusWheel.cs and functions/src/wheel.ts.",
     "",
@@ -2738,81 +2603,570 @@
     "while the server rolls against a uid is the one way this feature could pay two different",
     "numbers for one video."
   ],
-
   "wheelConfig": {
     "slices": [
-      { "percent": 100 },
-      { "percent": 175 },
-      { "percent": 250 },
-      { "percent": 325 },
-      { "percent": 400 },
-      { "percent": 900 }
+      {
+        "percent": 100
+      },
+      {
+        "percent": 175
+      },
+      {
+        "percent": 250
+      },
+      {
+        "percent": 325
+      },
+      {
+        "percent": 400
+      },
+      {
+        "percent": 900
+      }
     ]
   },
-
   "wheelBasis": 200,
-
   "wheelCases": [
-    { "name": "(none)@0#0", "playerKey": "", "dayKey": 0, "spinIndex": 0, "landing": -1, "percent": 100, "pays": 200 },
-    { "name": "(none)@0#1", "playerKey": "", "dayKey": 0, "spinIndex": 1, "landing": -1, "percent": 100, "pays": 200 },
-    { "name": "(none)@0#2", "playerKey": "", "dayKey": 0, "spinIndex": 2, "landing": -1, "percent": 100, "pays": 200 },
-    { "name": "(none)@0#5", "playerKey": "", "dayKey": 0, "spinIndex": 5, "landing": -1, "percent": 100, "pays": 200 },
-    { "name": "(none)@20330#0", "playerKey": "", "dayKey": 20330, "spinIndex": 0, "landing": -1, "percent": 100, "pays": 200 },
-    { "name": "(none)@20330#1", "playerKey": "", "dayKey": 20330, "spinIndex": 1, "landing": -1, "percent": 100, "pays": 200 },
-    { "name": "(none)@20330#2", "playerKey": "", "dayKey": 20330, "spinIndex": 2, "landing": -1, "percent": 100, "pays": 200 },
-    { "name": "(none)@20330#5", "playerKey": "", "dayKey": 20330, "spinIndex": 5, "landing": -1, "percent": 100, "pays": 200 },
-    { "name": "(none)@20331#0", "playerKey": "", "dayKey": 20331, "spinIndex": 0, "landing": -1, "percent": 100, "pays": 200 },
-    { "name": "(none)@20331#1", "playerKey": "", "dayKey": 20331, "spinIndex": 1, "landing": -1, "percent": 100, "pays": 200 },
-    { "name": "(none)@20331#2", "playerKey": "", "dayKey": 20331, "spinIndex": 2, "landing": -1, "percent": 100, "pays": 200 },
-    { "name": "(none)@20331#5", "playerKey": "", "dayKey": 20331, "spinIndex": 5, "landing": -1, "percent": 100, "pays": 200 },
-    { "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@0#0", "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa", "dayKey": 0, "spinIndex": 0, "landing": 4, "percent": 400, "pays": 800 },
-    { "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@0#1", "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa", "dayKey": 0, "spinIndex": 1, "landing": 0, "percent": 100, "pays": 200 },
-    { "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@0#2", "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa", "dayKey": 0, "spinIndex": 2, "landing": 5, "percent": 900, "pays": 1800 },
-    { "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@0#5", "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa", "dayKey": 0, "spinIndex": 5, "landing": 1, "percent": 175, "pays": 350 },
-    { "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20330#0", "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa", "dayKey": 20330, "spinIndex": 0, "landing": 1, "percent": 175, "pays": 350 },
-    { "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20330#1", "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa", "dayKey": 20330, "spinIndex": 1, "landing": 2, "percent": 250, "pays": 500 },
-    { "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20330#2", "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa", "dayKey": 20330, "spinIndex": 2, "landing": 2, "percent": 250, "pays": 500 },
-    { "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20330#5", "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa", "dayKey": 20330, "spinIndex": 5, "landing": 4, "percent": 400, "pays": 800 },
-    { "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20331#0", "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa", "dayKey": 20331, "spinIndex": 0, "landing": 0, "percent": 100, "pays": 200 },
-    { "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20331#1", "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa", "dayKey": 20331, "spinIndex": 1, "landing": 0, "percent": 100, "pays": 200 },
-    { "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20331#2", "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa", "dayKey": 20331, "spinIndex": 2, "landing": 5, "percent": 900, "pays": 1800 },
-    { "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20331#5", "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa", "dayKey": 20331, "spinIndex": 5, "landing": 4, "percent": 400, "pays": 800 },
-    { "name": "player_one@0#0", "playerKey": "player_one", "dayKey": 0, "spinIndex": 0, "landing": 2, "percent": 250, "pays": 500 },
-    { "name": "player_one@0#1", "playerKey": "player_one", "dayKey": 0, "spinIndex": 1, "landing": 4, "percent": 400, "pays": 800 },
-    { "name": "player_one@0#2", "playerKey": "player_one", "dayKey": 0, "spinIndex": 2, "landing": 3, "percent": 325, "pays": 650 },
-    { "name": "player_one@0#5", "playerKey": "player_one", "dayKey": 0, "spinIndex": 5, "landing": 3, "percent": 325, "pays": 650 },
-    { "name": "player_one@20330#0", "playerKey": "player_one", "dayKey": 20330, "spinIndex": 0, "landing": 5, "percent": 900, "pays": 1800 },
-    { "name": "player_one@20330#1", "playerKey": "player_one", "dayKey": 20330, "spinIndex": 1, "landing": 3, "percent": 325, "pays": 650 },
-    { "name": "player_one@20330#2", "playerKey": "player_one", "dayKey": 20330, "spinIndex": 2, "landing": 3, "percent": 325, "pays": 650 },
-    { "name": "player_one@20330#5", "playerKey": "player_one", "dayKey": 20330, "spinIndex": 5, "landing": 0, "percent": 100, "pays": 200 },
-    { "name": "player_one@20331#0", "playerKey": "player_one", "dayKey": 20331, "spinIndex": 0, "landing": 1, "percent": 175, "pays": 350 },
-    { "name": "player_one@20331#1", "playerKey": "player_one", "dayKey": 20331, "spinIndex": 1, "landing": 4, "percent": 400, "pays": 800 },
-    { "name": "player_one@20331#2", "playerKey": "player_one", "dayKey": 20331, "spinIndex": 2, "landing": 4, "percent": 400, "pays": 800 },
-    { "name": "player_one@20331#5", "playerKey": "player_one", "dayKey": 20331, "spinIndex": 5, "landing": 3, "percent": 325, "pays": 650 },
-    { "name": "zZ9@0#0", "playerKey": "zZ9", "dayKey": 0, "spinIndex": 0, "landing": 0, "percent": 100, "pays": 200 },
-    { "name": "zZ9@0#1", "playerKey": "zZ9", "dayKey": 0, "spinIndex": 1, "landing": 2, "percent": 250, "pays": 500 },
-    { "name": "zZ9@0#2", "playerKey": "zZ9", "dayKey": 0, "spinIndex": 2, "landing": 5, "percent": 900, "pays": 1800 },
-    { "name": "zZ9@0#5", "playerKey": "zZ9", "dayKey": 0, "spinIndex": 5, "landing": 1, "percent": 175, "pays": 350 },
-    { "name": "zZ9@20330#0", "playerKey": "zZ9", "dayKey": 20330, "spinIndex": 0, "landing": 5, "percent": 900, "pays": 1800 },
-    { "name": "zZ9@20330#1", "playerKey": "zZ9", "dayKey": 20330, "spinIndex": 1, "landing": 1, "percent": 175, "pays": 350 },
-    { "name": "zZ9@20330#2", "playerKey": "zZ9", "dayKey": 20330, "spinIndex": 2, "landing": 4, "percent": 400, "pays": 800 },
-    { "name": "zZ9@20330#5", "playerKey": "zZ9", "dayKey": 20330, "spinIndex": 5, "landing": 2, "percent": 250, "pays": 500 },
-    { "name": "zZ9@20331#0", "playerKey": "zZ9", "dayKey": 20331, "spinIndex": 0, "landing": 1, "percent": 175, "pays": 350 },
-    { "name": "zZ9@20331#1", "playerKey": "zZ9", "dayKey": 20331, "spinIndex": 1, "landing": 1, "percent": 175, "pays": 350 },
-    { "name": "zZ9@20331#2", "playerKey": "zZ9", "dayKey": 20331, "spinIndex": 2, "landing": 0, "percent": 100, "pays": 200 },
-    { "name": "zZ9@20331#5", "playerKey": "zZ9", "dayKey": 20331, "spinIndex": 5, "landing": 1, "percent": 175, "pays": 350 },
-    { "name": "uid-With-Dashes-01@0#0", "playerKey": "uid-With-Dashes-01", "dayKey": 0, "spinIndex": 0, "landing": 2, "percent": 250, "pays": 500 },
-    { "name": "uid-With-Dashes-01@0#1", "playerKey": "uid-With-Dashes-01", "dayKey": 0, "spinIndex": 1, "landing": 0, "percent": 100, "pays": 200 },
-    { "name": "uid-With-Dashes-01@0#2", "playerKey": "uid-With-Dashes-01", "dayKey": 0, "spinIndex": 2, "landing": 5, "percent": 900, "pays": 1800 },
-    { "name": "uid-With-Dashes-01@0#5", "playerKey": "uid-With-Dashes-01", "dayKey": 0, "spinIndex": 5, "landing": 5, "percent": 900, "pays": 1800 },
-    { "name": "uid-With-Dashes-01@20330#0", "playerKey": "uid-With-Dashes-01", "dayKey": 20330, "spinIndex": 0, "landing": 2, "percent": 250, "pays": 500 },
-    { "name": "uid-With-Dashes-01@20330#1", "playerKey": "uid-With-Dashes-01", "dayKey": 20330, "spinIndex": 1, "landing": 1, "percent": 175, "pays": 350 },
-    { "name": "uid-With-Dashes-01@20330#2", "playerKey": "uid-With-Dashes-01", "dayKey": 20330, "spinIndex": 2, "landing": 0, "percent": 100, "pays": 200 },
-    { "name": "uid-With-Dashes-01@20330#5", "playerKey": "uid-With-Dashes-01", "dayKey": 20330, "spinIndex": 5, "landing": 4, "percent": 400, "pays": 800 },
-    { "name": "uid-With-Dashes-01@20331#0", "playerKey": "uid-With-Dashes-01", "dayKey": 20331, "spinIndex": 0, "landing": 4, "percent": 400, "pays": 800 },
-    { "name": "uid-With-Dashes-01@20331#1", "playerKey": "uid-With-Dashes-01", "dayKey": 20331, "spinIndex": 1, "landing": 1, "percent": 175, "pays": 350 },
-    { "name": "uid-With-Dashes-01@20331#2", "playerKey": "uid-With-Dashes-01", "dayKey": 20331, "spinIndex": 2, "landing": 5, "percent": 900, "pays": 1800 },
-    { "name": "uid-With-Dashes-01@20331#5", "playerKey": "uid-With-Dashes-01", "dayKey": 20331, "spinIndex": 5, "landing": 4, "percent": 400, "pays": 800 }
+    {
+      "name": "(none)@0#0",
+      "playerKey": "",
+      "dayKey": 0,
+      "spinIndex": 0,
+      "landing": -1,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "(none)@0#1",
+      "playerKey": "",
+      "dayKey": 0,
+      "spinIndex": 1,
+      "landing": -1,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "(none)@0#2",
+      "playerKey": "",
+      "dayKey": 0,
+      "spinIndex": 2,
+      "landing": -1,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "(none)@0#5",
+      "playerKey": "",
+      "dayKey": 0,
+      "spinIndex": 5,
+      "landing": -1,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "(none)@20330#0",
+      "playerKey": "",
+      "dayKey": 20330,
+      "spinIndex": 0,
+      "landing": -1,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "(none)@20330#1",
+      "playerKey": "",
+      "dayKey": 20330,
+      "spinIndex": 1,
+      "landing": -1,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "(none)@20330#2",
+      "playerKey": "",
+      "dayKey": 20330,
+      "spinIndex": 2,
+      "landing": -1,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "(none)@20330#5",
+      "playerKey": "",
+      "dayKey": 20330,
+      "spinIndex": 5,
+      "landing": -1,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "(none)@20331#0",
+      "playerKey": "",
+      "dayKey": 20331,
+      "spinIndex": 0,
+      "landing": -1,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "(none)@20331#1",
+      "playerKey": "",
+      "dayKey": 20331,
+      "spinIndex": 1,
+      "landing": -1,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "(none)@20331#2",
+      "playerKey": "",
+      "dayKey": 20331,
+      "spinIndex": 2,
+      "landing": -1,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "(none)@20331#5",
+      "playerKey": "",
+      "dayKey": 20331,
+      "spinIndex": 5,
+      "landing": -1,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@0#0",
+      "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "dayKey": 0,
+      "spinIndex": 0,
+      "landing": 4,
+      "percent": 400,
+      "pays": 800
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@0#1",
+      "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "dayKey": 0,
+      "spinIndex": 1,
+      "landing": 0,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@0#2",
+      "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "dayKey": 0,
+      "spinIndex": 2,
+      "landing": 5,
+      "percent": 900,
+      "pays": 1800
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@0#5",
+      "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "dayKey": 0,
+      "spinIndex": 5,
+      "landing": 1,
+      "percent": 175,
+      "pays": 350
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20330#0",
+      "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "dayKey": 20330,
+      "spinIndex": 0,
+      "landing": 1,
+      "percent": 175,
+      "pays": 350
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20330#1",
+      "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "dayKey": 20330,
+      "spinIndex": 1,
+      "landing": 2,
+      "percent": 250,
+      "pays": 500
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20330#2",
+      "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "dayKey": 20330,
+      "spinIndex": 2,
+      "landing": 2,
+      "percent": 250,
+      "pays": 500
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20330#5",
+      "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "dayKey": 20330,
+      "spinIndex": 5,
+      "landing": 4,
+      "percent": 400,
+      "pays": 800
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20331#0",
+      "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "dayKey": 20331,
+      "spinIndex": 0,
+      "landing": 0,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20331#1",
+      "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "dayKey": 20331,
+      "spinIndex": 1,
+      "landing": 0,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20331#2",
+      "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "dayKey": 20331,
+      "spinIndex": 2,
+      "landing": 5,
+      "percent": 900,
+      "pays": 1800
+    },
+    {
+      "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa@20331#5",
+      "playerKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "dayKey": 20331,
+      "spinIndex": 5,
+      "landing": 4,
+      "percent": 400,
+      "pays": 800
+    },
+    {
+      "name": "player_one@0#0",
+      "playerKey": "player_one",
+      "dayKey": 0,
+      "spinIndex": 0,
+      "landing": 2,
+      "percent": 250,
+      "pays": 500
+    },
+    {
+      "name": "player_one@0#1",
+      "playerKey": "player_one",
+      "dayKey": 0,
+      "spinIndex": 1,
+      "landing": 4,
+      "percent": 400,
+      "pays": 800
+    },
+    {
+      "name": "player_one@0#2",
+      "playerKey": "player_one",
+      "dayKey": 0,
+      "spinIndex": 2,
+      "landing": 3,
+      "percent": 325,
+      "pays": 650
+    },
+    {
+      "name": "player_one@0#5",
+      "playerKey": "player_one",
+      "dayKey": 0,
+      "spinIndex": 5,
+      "landing": 3,
+      "percent": 325,
+      "pays": 650
+    },
+    {
+      "name": "player_one@20330#0",
+      "playerKey": "player_one",
+      "dayKey": 20330,
+      "spinIndex": 0,
+      "landing": 5,
+      "percent": 900,
+      "pays": 1800
+    },
+    {
+      "name": "player_one@20330#1",
+      "playerKey": "player_one",
+      "dayKey": 20330,
+      "spinIndex": 1,
+      "landing": 3,
+      "percent": 325,
+      "pays": 650
+    },
+    {
+      "name": "player_one@20330#2",
+      "playerKey": "player_one",
+      "dayKey": 20330,
+      "spinIndex": 2,
+      "landing": 3,
+      "percent": 325,
+      "pays": 650
+    },
+    {
+      "name": "player_one@20330#5",
+      "playerKey": "player_one",
+      "dayKey": 20330,
+      "spinIndex": 5,
+      "landing": 0,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "player_one@20331#0",
+      "playerKey": "player_one",
+      "dayKey": 20331,
+      "spinIndex": 0,
+      "landing": 1,
+      "percent": 175,
+      "pays": 350
+    },
+    {
+      "name": "player_one@20331#1",
+      "playerKey": "player_one",
+      "dayKey": 20331,
+      "spinIndex": 1,
+      "landing": 4,
+      "percent": 400,
+      "pays": 800
+    },
+    {
+      "name": "player_one@20331#2",
+      "playerKey": "player_one",
+      "dayKey": 20331,
+      "spinIndex": 2,
+      "landing": 4,
+      "percent": 400,
+      "pays": 800
+    },
+    {
+      "name": "player_one@20331#5",
+      "playerKey": "player_one",
+      "dayKey": 20331,
+      "spinIndex": 5,
+      "landing": 3,
+      "percent": 325,
+      "pays": 650
+    },
+    {
+      "name": "zZ9@0#0",
+      "playerKey": "zZ9",
+      "dayKey": 0,
+      "spinIndex": 0,
+      "landing": 0,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "zZ9@0#1",
+      "playerKey": "zZ9",
+      "dayKey": 0,
+      "spinIndex": 1,
+      "landing": 2,
+      "percent": 250,
+      "pays": 500
+    },
+    {
+      "name": "zZ9@0#2",
+      "playerKey": "zZ9",
+      "dayKey": 0,
+      "spinIndex": 2,
+      "landing": 5,
+      "percent": 900,
+      "pays": 1800
+    },
+    {
+      "name": "zZ9@0#5",
+      "playerKey": "zZ9",
+      "dayKey": 0,
+      "spinIndex": 5,
+      "landing": 1,
+      "percent": 175,
+      "pays": 350
+    },
+    {
+      "name": "zZ9@20330#0",
+      "playerKey": "zZ9",
+      "dayKey": 20330,
+      "spinIndex": 0,
+      "landing": 5,
+      "percent": 900,
+      "pays": 1800
+    },
+    {
+      "name": "zZ9@20330#1",
+      "playerKey": "zZ9",
+      "dayKey": 20330,
+      "spinIndex": 1,
+      "landing": 1,
+      "percent": 175,
+      "pays": 350
+    },
+    {
+      "name": "zZ9@20330#2",
+      "playerKey": "zZ9",
+      "dayKey": 20330,
+      "spinIndex": 2,
+      "landing": 4,
+      "percent": 400,
+      "pays": 800
+    },
+    {
+      "name": "zZ9@20330#5",
+      "playerKey": "zZ9",
+      "dayKey": 20330,
+      "spinIndex": 5,
+      "landing": 2,
+      "percent": 250,
+      "pays": 500
+    },
+    {
+      "name": "zZ9@20331#0",
+      "playerKey": "zZ9",
+      "dayKey": 20331,
+      "spinIndex": 0,
+      "landing": 1,
+      "percent": 175,
+      "pays": 350
+    },
+    {
+      "name": "zZ9@20331#1",
+      "playerKey": "zZ9",
+      "dayKey": 20331,
+      "spinIndex": 1,
+      "landing": 1,
+      "percent": 175,
+      "pays": 350
+    },
+    {
+      "name": "zZ9@20331#2",
+      "playerKey": "zZ9",
+      "dayKey": 20331,
+      "spinIndex": 2,
+      "landing": 0,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "zZ9@20331#5",
+      "playerKey": "zZ9",
+      "dayKey": 20331,
+      "spinIndex": 5,
+      "landing": 1,
+      "percent": 175,
+      "pays": 350
+    },
+    {
+      "name": "uid-With-Dashes-01@0#0",
+      "playerKey": "uid-With-Dashes-01",
+      "dayKey": 0,
+      "spinIndex": 0,
+      "landing": 2,
+      "percent": 250,
+      "pays": 500
+    },
+    {
+      "name": "uid-With-Dashes-01@0#1",
+      "playerKey": "uid-With-Dashes-01",
+      "dayKey": 0,
+      "spinIndex": 1,
+      "landing": 0,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "uid-With-Dashes-01@0#2",
+      "playerKey": "uid-With-Dashes-01",
+      "dayKey": 0,
+      "spinIndex": 2,
+      "landing": 5,
+      "percent": 900,
+      "pays": 1800
+    },
+    {
+      "name": "uid-With-Dashes-01@0#5",
+      "playerKey": "uid-With-Dashes-01",
+      "dayKey": 0,
+      "spinIndex": 5,
+      "landing": 5,
+      "percent": 900,
+      "pays": 1800
+    },
+    {
+      "name": "uid-With-Dashes-01@20330#0",
+      "playerKey": "uid-With-Dashes-01",
+      "dayKey": 20330,
+      "spinIndex": 0,
+      "landing": 2,
+      "percent": 250,
+      "pays": 500
+    },
+    {
+      "name": "uid-With-Dashes-01@20330#1",
+      "playerKey": "uid-With-Dashes-01",
+      "dayKey": 20330,
+      "spinIndex": 1,
+      "landing": 1,
+      "percent": 175,
+      "pays": 350
+    },
+    {
+      "name": "uid-With-Dashes-01@20330#2",
+      "playerKey": "uid-With-Dashes-01",
+      "dayKey": 20330,
+      "spinIndex": 2,
+      "landing": 0,
+      "percent": 100,
+      "pays": 200
+    },
+    {
+      "name": "uid-With-Dashes-01@20330#5",
+      "playerKey": "uid-With-Dashes-01",
+      "dayKey": 20330,
+      "spinIndex": 5,
+      "landing": 4,
+      "percent": 400,
+      "pays": 800
+    },
+    {
+      "name": "uid-With-Dashes-01@20331#0",
+      "playerKey": "uid-With-Dashes-01",
+      "dayKey": 20331,
+      "spinIndex": 0,
+      "landing": 4,
+      "percent": 400,
+      "pays": 800
+    },
+    {
+      "name": "uid-With-Dashes-01@20331#1",
+      "playerKey": "uid-With-Dashes-01",
+      "dayKey": 20331,
+      "spinIndex": 1,
+      "landing": 1,
+      "percent": 175,
+      "pays": 350
+    },
+    {
+      "name": "uid-With-Dashes-01@20331#2",
+      "playerKey": "uid-With-Dashes-01",
+      "dayKey": 20331,
+      "spinIndex": 2,
+      "landing": 5,
+      "percent": 900,
+      "pays": 1800
+    },
+    {
+      "name": "uid-With-Dashes-01@20331#5",
+      "playerKey": "uid-With-Dashes-01",
+      "dayKey": 20331,
+      "spinIndex": 5,
+      "landing": 4,
+      "percent": 400,
+      "pays": 800
+    }
   ],
   "_taskComment": [
     "The contract between TaskLedger/ChestSeed.cs and functions/src/tasks.ts.",
@@ -5786,6 +6140,2609 @@
         {
           "kind": "gems",
           "amount": 49
+        }
+      ]
+    }
+  ],
+  "_markComment": [
+    "The contract between SeasonLedger/ChestSeed.cs and functions/src/season.ts.",
+    "",
+    "A season rung's chest is a chest seeded from a *subject* rather than a day: the account,",
+    "the tag 'mark', and '{seasonId}:{track}:{goal}'. Same generator as the task chest with a",
+    "different subject, so the two tracks at one rung roll differently - which is the whole",
+    "reason the track is in the subject at all, since one claim would otherwise collect both.",
+    "",
+    "The tiers below are the task vectors' synthetic ones, not the shipped ladder: what is",
+    "pinned is the seeding, the stream numbers and the merge, so retuning progression.json",
+    "must not turn these red. Generated by Tools/make_mark_vectors.py, a fourth copy of the",
+    "generator that is neither side - if both harnesses go red the contract moved; if one",
+    "does, that side drifted."
+  ],
+  "markChestTiers": [
+    {
+      "id": "wood",
+      "chest": {
+        "guaranteed": [
+          {
+            "kind": "credits",
+            "min": 10,
+            "max": 99
+          }
+        ],
+        "options": [
+          {
+            "kind": "credits",
+            "min": 5,
+            "max": 5,
+            "weight": 2
+          },
+          {
+            "kind": "hearts",
+            "min": 1,
+            "max": 3,
+            "weight": 7
+          },
+          {
+            "kind": "gems",
+            "min": 1,
+            "max": 2,
+            "weight": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "silver",
+      "chest": {
+        "guaranteed": [
+          {
+            "kind": "gems",
+            "min": 4,
+            "max": 4
+          }
+        ],
+        "options": []
+      }
+    },
+    {
+      "id": "gold",
+      "chest": {
+        "guaranteed": [
+          {
+            "kind": "credits",
+            "min": 100,
+            "max": 100
+          },
+          {
+            "kind": "utility",
+            "item": "firepot",
+            "min": 1,
+            "max": 1
+          }
+        ],
+        "options": [
+          {
+            "kind": "utility",
+            "item": "firepot",
+            "min": 2,
+            "max": 2,
+            "weight": 1
+          },
+          {
+            "kind": "utility",
+            "item": "surge",
+            "min": 1,
+            "max": 1,
+            "weight": 1
+          },
+          {
+            "kind": "heart_boost",
+            "min": 6,
+            "max": 12,
+            "weight": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "royal",
+      "chest": {
+        "guaranteed": [
+          {
+            "kind": "credits",
+            "min": 1,
+            "max": 100000
+          }
+        ],
+        "options": [
+          {
+            "kind": "gems",
+            "min": 1,
+            "max": 50,
+            "weight": 1
+          }
+        ]
+      }
+    }
+  ],
+  "markChestCases": [
+    {
+      "name": "(empty)@first_watch:free:5#wood",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 80
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:free:5#silver",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:free:5#gold",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:free:5#royal",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 74691
+        },
+        {
+          "kind": "gems",
+          "amount": 21
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:pass:5#wood",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 55
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:pass:5#silver",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:pass:5#gold",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 10
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:pass:5#royal",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 62176
+        },
+        {
+          "kind": "gems",
+          "amount": 15
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:free:200#wood",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 66
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:free:200#silver",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:free:200#gold",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:free:200#royal",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 49617
+        },
+        {
+          "kind": "gems",
+          "amount": 15
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:pass:200#wood",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 30
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:pass:200#silver",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:pass:200#gold",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:pass:200#royal",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 57756
+        },
+        {
+          "kind": "gems",
+          "amount": 27
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:free:100#wood",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 77
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:free:100#silver",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:free:100#gold",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 7
+        }
+      ]
+    },
+    {
+      "name": "(empty)@first_watch:free:100#royal",
+      "playerKey": "",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 47338
+        },
+        {
+          "kind": "gems",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "name": "(empty)@second_watch:free:5#wood",
+      "playerKey": "",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 21
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "(empty)@second_watch:free:5#silver",
+      "playerKey": "",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@second_watch:free:5#gold",
+      "playerKey": "",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(empty)@second_watch:free:5#royal",
+      "playerKey": "",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 60212
+        },
+        {
+          "kind": "gems",
+          "amount": 41
+        }
+      ]
+    },
+    {
+      "name": "(empty)@second_watch:pass:200#wood",
+      "playerKey": "",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 44
+        }
+      ]
+    },
+    {
+      "name": "(empty)@second_watch:pass:200#silver",
+      "playerKey": "",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@second_watch:pass:200#gold",
+      "playerKey": "",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(empty)@second_watch:pass:200#royal",
+      "playerKey": "",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 88830
+        },
+        {
+          "kind": "gems",
+          "amount": 7
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:free:5#wood",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 79
+        },
+        {
+          "kind": "gems",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:free:5#silver",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:free:5#gold",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:free:5#royal",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 35020
+        },
+        {
+          "kind": "gems",
+          "amount": 46
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:pass:5#wood",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 86
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:pass:5#silver",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:pass:5#gold",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 11
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:pass:5#royal",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 46147
+        },
+        {
+          "kind": "gems",
+          "amount": 21
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:free:200#wood",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 96
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:free:200#silver",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:free:200#gold",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:free:200#royal",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 45062
+        },
+        {
+          "kind": "gems",
+          "amount": 32
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:pass:200#wood",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 73
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:pass:200#silver",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:pass:200#gold",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 12
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:pass:200#royal",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 86059
+        },
+        {
+          "kind": "gems",
+          "amount": 18
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:free:100#wood",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 28
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:free:100#silver",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:free:100#gold",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 7
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@first_watch:free:100#royal",
+      "playerKey": "uid_abc123",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 51739
+        },
+        {
+          "kind": "gems",
+          "amount": 31
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@second_watch:free:5#wood",
+      "playerKey": "uid_abc123",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 88
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@second_watch:free:5#silver",
+      "playerKey": "uid_abc123",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@second_watch:free:5#gold",
+      "playerKey": "uid_abc123",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@second_watch:free:5#royal",
+      "playerKey": "uid_abc123",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 14649
+        },
+        {
+          "kind": "gems",
+          "amount": 13
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@second_watch:pass:200#wood",
+      "playerKey": "uid_abc123",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 77
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@second_watch:pass:200#silver",
+      "playerKey": "uid_abc123",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@second_watch:pass:200#gold",
+      "playerKey": "uid_abc123",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@second_watch:pass:200#royal",
+      "playerKey": "uid_abc123",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 37318
+        },
+        {
+          "kind": "gems",
+          "amount": 29
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:free:5#wood",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 94
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:free:5#silver",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:free:5#gold",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 12
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:free:5#royal",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 64910
+        },
+        {
+          "kind": "gems",
+          "amount": 34
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:pass:5#wood",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 29
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:pass:5#silver",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:pass:5#gold",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:pass:5#royal",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 54840
+        },
+        {
+          "kind": "gems",
+          "amount": 24
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:free:200#wood",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 30
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:free:200#silver",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:free:200#gold",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:free:200#royal",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 50511
+        },
+        {
+          "kind": "gems",
+          "amount": 46
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:pass:200#wood",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 56
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:pass:200#silver",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:pass:200#gold",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:pass:200#royal",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 73597
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:free:100#wood",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 30
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:free:100#silver",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:free:100#gold",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@first_watch:free:100#royal",
+      "playerKey": "player-7",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 28991
+        },
+        {
+          "kind": "gems",
+          "amount": 10
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@second_watch:free:5#wood",
+      "playerKey": "player-7",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 16
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@second_watch:free:5#silver",
+      "playerKey": "player-7",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@second_watch:free:5#gold",
+      "playerKey": "player-7",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@second_watch:free:5#royal",
+      "playerKey": "player-7",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 84617
+        },
+        {
+          "kind": "gems",
+          "amount": 27
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@second_watch:pass:200#wood",
+      "playerKey": "player-7",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 51
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@second_watch:pass:200#silver",
+      "playerKey": "player-7",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@second_watch:pass:200#gold",
+      "playerKey": "player-7",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@second_watch:pass:200#royal",
+      "playerKey": "player-7",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 57382
+        },
+        {
+          "kind": "gems",
+          "amount": 19
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:free:5#wood",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 36
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:free:5#silver",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:free:5#gold",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:free:5#royal",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 14582
+        },
+        {
+          "kind": "gems",
+          "amount": 22
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:pass:5#wood",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 36
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:pass:5#silver",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:pass:5#gold",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:pass:5#royal",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 88447
+        },
+        {
+          "kind": "gems",
+          "amount": 40
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:free:200#wood",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 45
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:free:200#silver",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:free:200#gold",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:free:200#royal",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 6466
+        },
+        {
+          "kind": "gems",
+          "amount": 30
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:pass:200#wood",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 55
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:pass:200#silver",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:pass:200#gold",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:pass:200#royal",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 13986
+        },
+        {
+          "kind": "gems",
+          "amount": 47
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:free:100#wood",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 45
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:free:100#silver",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:free:100#gold",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@first_watch:free:100#royal",
+      "playerKey": "Ünïcödé",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 61786
+        },
+        {
+          "kind": "gems",
+          "amount": 18
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@second_watch:free:5#wood",
+      "playerKey": "Ünïcödé",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 104
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@second_watch:free:5#silver",
+      "playerKey": "Ünïcödé",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@second_watch:free:5#gold",
+      "playerKey": "Ünïcödé",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@second_watch:free:5#royal",
+      "playerKey": "Ünïcödé",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 50180
+        },
+        {
+          "kind": "gems",
+          "amount": 20
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@second_watch:pass:200#wood",
+      "playerKey": "Ünïcödé",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 96
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@second_watch:pass:200#silver",
+      "playerKey": "Ünïcödé",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@second_watch:pass:200#gold",
+      "playerKey": "Ünïcödé",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 9
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@second_watch:pass:200#royal",
+      "playerKey": "Ünïcödé",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 81487
+        },
+        {
+          "kind": "gems",
+          "amount": 29
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:free:5#wood",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 29
+        },
+        {
+          "kind": "gems",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:free:5#silver",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:free:5#gold",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 12
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:free:5#royal",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 39070
+        },
+        {
+          "kind": "gems",
+          "amount": 36
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:pass:5#wood",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 14
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:pass:5#silver",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:pass:5#gold",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:pass:5#royal",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 42405
+        },
+        {
+          "kind": "gems",
+          "amount": 49
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:free:200#wood",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 65
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:free:200#silver",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:free:200#gold",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:free:200#royal",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 15156
+        },
+        {
+          "kind": "gems",
+          "amount": 17
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:pass:200#wood",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 83
+        },
+        {
+          "kind": "gems",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:pass:200#silver",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:pass:200#gold",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:pass:200#royal",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 97024
+        },
+        {
+          "kind": "gems",
+          "amount": 10
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:free:100#wood",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 46
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:free:100#silver",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:free:100#gold",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 9
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@first_watch:free:100#royal",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "first_watch",
+      "track": "free",
+      "goal": 100,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 27542
+        },
+        {
+          "kind": "gems",
+          "amount": 24
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@second_watch:free:5#wood",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 22
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@second_watch:free:5#silver",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@second_watch:free:5#gold",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@second_watch:free:5#royal",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "second_watch",
+      "track": "free",
+      "goal": 5,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 68748
+        },
+        {
+          "kind": "gems",
+          "amount": 47
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@second_watch:pass:200#wood",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 16
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@second_watch:pass:200#silver",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@second_watch:pass:200#gold",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@second_watch:pass:200#royal",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "seasonId": "second_watch",
+      "track": "pass",
+      "goal": 200,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 80717
+        },
+        {
+          "kind": "gems",
+          "amount": 37
         }
       ]
     }

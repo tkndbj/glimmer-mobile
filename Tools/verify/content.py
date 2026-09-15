@@ -2499,6 +2499,22 @@ def check_tasks(progression, keys, utilities, art, warnings):
             errors.append(f"tasks tier '{tier_ids[i]}' guarantees {floors[i]}, not more than "
                           f"'{tier_ids[i - 1]}' at {floors[i - 1]}; a dearer chest must pay more")
 
+    # What each tier earns toward a season. Absent is nought and legal - a tier added for a
+    # promotion should be able to move nobody's track - but a ladder that only ever falls is a
+    # season where the humblest chest is worth the most, which is the same fault as a dearer
+    # chest paying less, one rung up.
+    marks = [max(0, int((block.get("tiers") or [])[i].get("marks") or 0))
+              for i in range(len(tier_ids))]
+
+    for i, worth in enumerate(marks):
+        if worth > 1000:
+            errors.append(f"tasks tier '{tier_ids[i]}' is worth {worth} marks, above the "
+                          "supported 1000; a tier worth more than a whole season track is a typo")
+        if i and worth and marks[i - 1] and worth < marks[i - 1]:
+            errors.append(f"tasks tier '{tier_ids[i]}' is worth {worth} mark(s), fewer than "
+                          f"'{tier_ids[i - 1]}' at {marks[i - 1]}; a dearer chest may not grow "
+                          "the season less")
+
     ids = set()
     slates = {}
     for period in ("daily", "weekly"):
@@ -2546,7 +2562,118 @@ def check_tasks(progression, keys, utilities, art, warnings):
                             "period, so consecutive periods repeat tasks")
         slates[period] = live
 
-    return errors, {"tiers": tier_ids, "per": per, "slates": slates}
+    # About how many marks a day a player who claims everything is dealt: the daily slate
+    # over a day plus the weekly slate over a week, at the rate the rotation deals them. The
+    # season's reachability is measured against it, and it is the only figure that can say
+    # whether a ladder can be climbed inside its own window.
+    worth = dict(zip(tier_ids, marks))
+    per_day = 0.0
+    for period, live in slates.items():
+        entries = [e for e in (block.get(period) or []) if not e.get("retired")]
+        if not entries:
+            continue
+        average = sum(worth.get(e.get("tier"), 0) for e in entries) / len(entries)
+        dealt = min(per, len(entries)) * average
+        per_day += dealt / 7.0 if period == "weekly" else dealt
+
+    return errors, {"tiers": tier_ids, "per": per, "slates": slates,
+                    "marks": worth, "marksPerDay": per_day}
+
+
+def check_seasons(manifest, progression, tasks, keys, warnings):
+    """The seasons: the ladder, the tiers it names, and whether it can be climbed.
+
+    Every rule here is one the client's `CatalogIndexBuilder.AddEvent` also enforces, plus the
+    two it structurally cannot. **A rung's tier has to exist**, and that is invisible in either
+    file on its own: the ladder is in `manifest.json` and the tiers are in `progression.json`,
+    which version independently (invariant 9b) and are fetched separately. And **the ladder has
+    to be climbable inside its own window**, which is arithmetic over both files and the one
+    thing that says a season's last rungs are reachable at all.
+    """
+    errors = []
+    seasons = (manifest or {}).get("events") or []
+    tier_ids = set((tasks or {}).get("tiers") or [])
+    ranks = {tid: i for i, tid in enumerate((tasks or {}).get("tiers") or [])}
+    per_day = float((tasks or {}).get("marksPerDay") or 0.0)
+    shipped = []
+
+    for season in seasons:
+        sid = season.get("id") or ""
+        if season.get("disabled"):
+            continue
+
+        if not TASK_ID.match(sid):
+            errors.append(f"season '{sid}' has an unusable id; one names a save row, a loc key "
+                          "and every claim id its chests produce")
+            continue
+
+        for suffix in ("name", "blurb"):
+            key = f"ui.event.{sid}.{suffix}"
+            if key not in keys:
+                errors.append(f"season '{sid}' needs loc key '{key}'")
+
+        start = int(season.get("startUnix") or 0)
+        end = int(season.get("endUnix") or 0)
+        if end <= start:
+            errors.append(f"season '{sid}' ends at or before it starts")
+            continue
+
+        days = (end - start) // 86400
+        if days > 90:
+            errors.append(f"season '{sid}' runs for {days} days, above the supported 90")
+
+        gems = int(season.get("passGems") or 0)
+        sells_pass = gems > 0
+
+        if gems < 0 or gems > 100000:
+            errors.append(f"season '{sid}' prices its pass at {gems} gems, outside 0..100000")
+        rungs = season.get("milestones") or []
+
+        if not rungs:
+            errors.append(f"season '{sid}' has no rungs, so it pays nothing")
+            continue
+        if len(rungs) > 40:
+            errors.append(f"season '{sid}' has {len(rungs)} rungs, above the supported 40")
+
+        previous = 0
+        for rung in rungs:
+            goal = int(rung.get("goal") or 0)
+            if goal <= previous:
+                errors.append(f"season '{sid}' rung goals must rise: {goal} follows {previous}")
+            previous = max(previous, goal)
+
+            free = rung.get("tier") or ""
+            paid = rung.get("premiumTier") or ""
+
+            if free not in tier_ids:
+                errors.append(f"season '{sid}' rung at {goal} pays free tier '{free}', which the "
+                              "tasks block does not define; a rung paying a chest nobody can "
+                              "price is a claim the server can never confirm")
+            if sells_pass and paid not in tier_ids:
+                errors.append(f"season '{sid}' sells a pass but its rung at {goal} pays pass "
+                              f"tier '{paid}', which the tasks block does not define")
+            if not sells_pass and paid:
+                errors.append(f"season '{sid}' pays pass tier '{paid}' at {goal} but sells no "
+                              "pass, so nobody could ever claim it")
+
+            # The paid column has to be worth paying for, rung by rung. A pass selling the
+            # chest the free track already gives is a product with nothing behind it, and it
+            # is a warning rather than an error because a promotion may deliberately match.
+            if sells_pass and free in ranks and paid in ranks and ranks[paid] <= ranks[free]:
+                warnings.append(f"season '{sid}' pays '{paid}' on the pass track at {goal} "
+                                f"marks against '{free}' free; the pass rung does not beat "
+                                "the one beside it")
+
+        top = previous
+        if per_day > 0 and days > 0 and days * per_day < top:
+            errors.append(f"season '{sid}' tops out at {top} marks but its {days}-day window "
+                          f"deals about {int(days * per_day)} to a player who claims every "
+                          "chest; its last rungs are unreachable")
+
+        shipped.append({"id": sid, "days": days, "rungs": len(rungs), "top": top,
+                        "pass": gems})
+
+    return errors, shipped
 
 
 #: The abilities a turret may name. Mirrors `WardAbilities`.
@@ -3046,18 +3173,16 @@ def check_store(progression, keys, manifest=None):
         if entry.get("kind") != "nonconsumable" and cents:
             shelves.setdefault(entry["shelf"], []).append((cents, pid, credits, gems))
 
-    # An event that sells a pass must have a product that unlocks it, and the two must name
-    # each other. Split across two files, the halves drift: the manifest names a product id
-    # and progression.json names an event id, and a typo in either is a purchase that takes
-    # real money and unlocks nothing. Mirrors ContentValidation and seed-config.mjs.
-    by_pass = {e.get("eventPassId"): e.get("id") for e in products if e.get("eventPassId")}
-    for event in (manifest or {}).get("events") or []:
-        wanted = event.get("premiumProductId") or ""
-        if not wanted:
-            continue
-        if by_pass.get(event.get("id")) != wanted:
-            errors.append(f"event '{event.get('id')}' names premium product '{wanted}', which is "
-                          "not a store product carrying that event's pass entitlement")
+    # A season's pass used to be a store product, and this is where the two files were held
+    # to naming each other. It is priced in gems now - one number in the manifest, with
+    # nothing on the other side of it to drift from - so what is left is a check that no
+    # product still claims to sell one, because such a product would take real money and
+    # unlock nothing.
+    for entry in products:
+        if entry.get("eventPassId"):
+            errors.append(f"store product '{entry.get('id')}' carries an event pass entitlement, "
+                          "which nothing grants any more - a season's pass is bought with gems "
+                          "(`passGems`), so this product would take real money and unlock nothing")
 
     # The container ladder, which the money ladder below cannot see: a container grants no
     # currency, so its value per unit of money is zero and it would fail any shelf it was
@@ -3630,6 +3755,11 @@ def main():
     task_errors, tasks = check_tasks(progression, keys, utilities, art_on_disk(), warnings)
     errors.extend(task_errors)
 
+    # The seasons. They name their tiers across two files that version independently, so
+    # this is the only place a rung paying a chest nobody can price is visible at all.
+    season_errors, seasons = check_seasons(manifest, progression, tasks, keys, warnings)
+    errors.extend(season_errors)
+
     # The turret roster. Checked here rather than nowhere: its art addresses are *built* from an
     # id (`WardModel.ArtFor`), so `artnames.py` cannot see them, and its loc keys are derived from
     # one, so `loc.py` cannot either.
@@ -3666,6 +3796,19 @@ def main():
         print("")
         print(f"tasks: {slates} on the slate, {tasks['per']} of each dealt a period, paying "
               f"{len(tasks['tiers'])} chest tier(s) ({', '.join(tasks['tiers'])})")
+        worth = ", ".join(f"{tid} +{n}" for tid, n in tasks["marks"].items())
+        print(f"       a claimed chest earns {worth} - about "
+              f"{tasks['marksPerDay']:.1f} a day to a player who claims every one")
+
+    if seasons:
+        print("")
+        for season in seasons:
+            reach = season["days"] * (tasks or {}).get("marksPerDay", 0)
+            print(f"season {season['id']}: {season['rungs']} rung(s) over {season['days']} day(s), "
+                  f"topping at {season['top']} mark(s)"
+                  + (f", pass {season['pass']} gems" if season['pass'] else ""))
+            print(f"       about {int(reach)} mark(s) are dealt in that window, so the ladder "
+                  f"is {'reachable' if reach >= season['top'] else 'NOT reachable'}")
 
     if shop:
         shelves = ", ".join(f"{n} {shelf}" for shelf, n in sorted(shop["shelves"].items()))

@@ -95,7 +95,7 @@ namespace GlimmerGrove.Persistence
                 // A floor per event, unioned by id and taken at its larger value — the
                 // fourth thing in this file shaped that way, and the rule lives with the
                 // feature for the reason the three above it do.
-                events = Events.EventCollection.Join(mine.events, other.events),
+                events = Events.SeasonLedger.Join(mine.events, other.events),
 
                 // Having been through a build that collects by hand cannot be undone, so
                 // the union is "either". A device still on the old build joins as false and

@@ -1,27 +1,28 @@
 using GlimmerGrove.Events;
 using GlimmerGrove.Localization;
+using GlimmerGrove.Progression;
 using UnityEngine;
 
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The three things the vine cannot draw for itself.
+    /// The three things the ladder cannot draw for itself.
     ///
     /// <para>
-    /// Same brief as <see cref="StreakInfoOverlay"/>, and the same two rules. It answers only
+    /// Same brief as <see cref="TasksInfoOverlay"/>, and the same two rules. It answers only
     /// what the page in front of it leaves genuinely unanswerable, because a panel that
-    /// restates the board is a panel players learn to skip. And <b>every number in it is read
-    /// from the event rather than written into the copy</b> — an author retunes a track by
-    /// editing <c>manifest.json</c>, with no build and no review, so a figure typed into a
-    /// sentence here would be wrong within one content push and nothing would catch it.
+    /// restates the screen is a panel players learn to skip. And <b>every number in it is
+    /// read from the season rather than written into the copy</b> — an author retunes a
+    /// ladder by editing <c>manifest.json</c>, with no build and no review, so a figure typed
+    /// into a sentence here would be wrong within one content push and nothing would catch it.
     /// </para>
     /// <para>
-    /// The three are chosen by what the vine gets asked about. That a glade only counts if it
-    /// is <em>first</em> cleared inside the window is the one rule players cannot deduce and
-    /// will feel cheated by — a rail node stays blank for a glade they have plainly finished.
-    /// That the window stops progress but never takes a flower away is the reassurance a
-    /// countdown creates and cannot answer. And that a reward has to be tapped is the whole
-    /// change this page exists for.
+    /// The three are chosen by what a season gets asked about. <b>Where marks come from</b>
+    /// is the one rule nothing on this page can show — the chests that grow it are opened on
+    /// another screen — and a player who does not know it is a player watching a bar that
+    /// never moves. <b>That the window stops the growing but never takes a chest away</b> is
+    /// the reassurance a countdown creates and cannot answer. And <b>what the pass is</b>, on
+    /// the page selling it.
     /// </para>
     /// </summary>
     public sealed class EventInfoOverlay : ModalView
@@ -32,29 +33,27 @@ namespace GlimmerGrove
         static readonly Color Body = new Color(.40f, .30f, .22f);
         static readonly Color Head = new Color(.28f, .18f, .12f);
 
-        GroveEvent _event;
-
         /// <summary>Set through <c>Flow.Modal</c>'s configure callback, before Build runs.</summary>
-        public void For(GroveEvent groveEvent) => _event = groveEvent;
+        [System.NonSerialized] public GroveEvent Season;
 
         protected override void Build()
         {
-            _event ??= GroveEvents.Featured;
+            Season ??= GroveEvents.Featured;
 
-            MakePanel(new Vector2(PanelW, 1240f), Loc.Get("ui.event.info_title"));
+            MakePanel(new Vector2(PanelW, 1240f), Loc.Get("ui.mark.info_title"));
 
-            int goal = _event == null ? 0 : _event.FinalGoal;
-            int rungs = _event == null ? 0 : _event.Milestones.Count;
-            long total = _event == null ? 0 : _event.TotalCredits;
+            int rungs = Season == null ? 0 : Season.Milestones.Count;
+            int top = Season == null ? 0 : Season.FinalGoal;
+            int tiers = ProgressionRules.Table.Tasks.Tiers.Count;
 
-            Section(-208f, "ic_star", "ui.event.info_count_title",
-                    Loc.Format("ui.event.info_count_body", goal, rungs, Compact.Number(total)));
+            Section(-208f, "ic_list", "ui.mark.info_grow_title",
+                    Loc.Format("ui.mark.info_grow_body", rungs, top));
 
-            Section(-544f, "ic_gift", "ui.event.info_collect_title",
-                    Loc.Get("ui.event.info_collect_body"));
+            Section(-544f, "ic_gift", "ui.mark.info_tracks_title",
+                    Loc.Format("ui.mark.info_tracks_body", tiers));
 
-            Section(-880f, "ic_hint", "ui.event.info_window_title",
-                    Loc.Get("ui.event.info_window_body"));
+            Section(-880f, "ic_hint", "ui.mark.info_window_title",
+                    Loc.Get("ui.mark.info_window_body"));
 
             UIKit.TextButton("Close", Panel, "btn_green", Loc.Get("ui.common.got_it"), 44,
                              new Vector2(560f, 120f), new Vector2(.5f, 0f),
@@ -63,23 +62,26 @@ namespace GlimmerGrove
 
         void Section(float y, string icon, string titleKey, string body)
         {
-            var host = UIKit.Box("S", Panel, new Vector2(810f, 300f), new Vector2(.5f, 1f),
-                                 new Vector2(0f, y));
+            var host = UIKit.Box("S" + titleKey, Panel, new Vector2(PanelW - 90f, 300f),
+                                 new Vector2(.5f, 1f), new Vector2(0f, y));
 
-            UIKit.Img("Seat", host, Art.Disc(96), new Color(1f, .95f, .84f, .9f),
-                      new Vector2(112f, 112f), new Vector2(0f, 1f), new Vector2(66f, -58f));
+            var seat = UIKit.Img("Seat", host, Art.Disc(96), new Color(.94f, .84f, .64f, .85f),
+                                 new Vector2(112f, 112f), new Vector2(0f, 1f), new Vector2(66f, -58f));
 
-            var glyph = UIKit.Img("Icon", host, Art.S("Ui/" + icon), Pal.Bloom,
-                                  new Vector2(76f, 76f), new Vector2(0f, 1f), new Vector2(66f, -58f));
+            var glyph = UIKit.Img("Icon", seat.transform, Art.S("Ui/" + icon), Color.white,
+                                  new Vector2(76f, 76f), new Vector2(.5f, .5f), Vector2.zero);
             glyph.preserveAspect = true;
 
             UIKit.Shrinkable(
-                UIKit.Titled("Head", host, Loc.Get(titleKey).ToUpperInvariant(), 34, Head,
-                             TextAnchor.MiddleLeft, new Vector2(BodyW, 44f), new Vector2(0f, 1f),
-                             new Vector2(148f + BodyW * .5f, -34f), 0f, 0f), 22);
+                UIKit.Titled("H", host, Loc.Get(titleKey).ToUpperInvariant(), 34, Head,
+                             TextAnchor.MiddleLeft, new Vector2(BodyW, 44f),
+                             new Vector2(0f, 1f), new Vector2(148f + BodyW * .5f, -34f), 0f, 0f), 22);
 
+            // Shrinkable as well as wrapped: these are among the longest strings in the game,
+            // and a translation half again the length of the English would otherwise run out
+            // of the paragraph and into the row below it.
             UIKit.Shrinkable(
-                UIKit.Titled("Body", host, body, 27, Body, TextAnchor.UpperLeft,
+                UIKit.Titled("B", host, body, 27, Body, TextAnchor.UpperLeft,
                              new Vector2(BodyW, 190f), new Vector2(0f, 1f),
                              new Vector2(148f + BodyW * .5f, -152f), 0f, 0f, wrap: true), 18);
         }

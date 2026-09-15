@@ -237,8 +237,14 @@ namespace GlimmerGrove.Store
         public static readonly StoreCatalog Default = new StoreCatalog(
             new[]
             {
-                new StoreProduct("gg_first_bloom_pass", StoreProductKind.NonConsumable, StoreShelf.EventPass,
-                                 0, 0, 499, StoreBadge.None, 0, "first_bloom"),
+                // No season pass here, and that is a removal rather than an omission. It was
+                // `gg_first_bloom_pass`, a $4.99 non-consumable on `StoreShelf.EventPass` — the
+                // one product in this catalog that granted neither currency nor capacity. A
+                // pass is bought with **gems** now (`SeasonLedger.TryBuyPass`), which makes it
+                // an ordinary spend and costs the store nothing at all: no receipt, no
+                // entitlement to write, no refund sweep and no registration that can never be
+                // renamed. The id is spent; see the table in CLAUDE.md.
+                //
                 // --- gems: the ladder every other price is measured against ------------
                 new StoreProduct("gg_gems_1", StoreProductKind.Consumable, StoreShelf.Gems,
                                  0, 100, 99, StoreBadge.None),

@@ -1,0 +1,108 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter s05_ashenhold
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter s05_ashenhold
+  m_GUID: a3bd826724c6386489607772e5d26f68
+  m_SerializeEntries:
+  - m_GUID: 14bf33b0a3adfdf499e33c3fa8f4f2e8
+    m_Address: Art/Bg/sky_32
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 327864e03838b6643acb5aa28de844e9
+    m_Address: Art/Bg/sky_30
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 342446f69d709c5448ce2e1dc55d0ed5
+    m_Address: Art/Bg/sky_37
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5691197f7547cd547b43db0693b1857d
+    m_Address: Art/Bg/sky_31
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 56d09bb4eec6d5c4483acf12eb39df2c
+    m_Address: Art/Bg/sky_38
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 63240a889836eef4ca5cd8ae38fff92c
+    m_Address: Art/Bg/sky_36
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6a3471122e574c748a4dec281a08cac0
+    m_Address: Art/Map/map4_strip5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7367ba1b32f3b40418606d314ca5c63f
+    m_Address: Art/Map/map4_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 834f1260e71bbcd4ea03fdf3b65a127f
+    m_Address: Art/Bg/sky_39
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9244a001c80e35749a5146536a989500
+    m_Address: Art/Bg/sky_34
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b075912d04465f6439b3123d89f9722e
+    m_Address: Art/Bg/sky_33
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e1f31f9927690924dba1f71ea2f38c9a
+    m_Address: Art/Map/map4_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eeb44b6a925ab1b4fb69ce3df68aa163
+    m_Address: Art/Map/map4_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f3313ed178325a84ba6f792aacb4e9f8
+    m_Address: Art/Map/map4_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fbbade98458269f4b8b1b5c12724796d
+    m_Address: Art/Bg/sky_35
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fefcc113530d9f84291e94746acbc284
+    m_Address: Art/Map/map4_strip4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 766f97db83ac39d41adbad9263637818, type: 2}
+    - {fileID: 11400000, guid: bed759f842fdf6945a0d3ffdd73e6432, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter s05_ashenhold_BundledAssetGroupSchema
+    - Glimmer Chapter s05_ashenhold_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1
