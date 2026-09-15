@@ -229,7 +229,7 @@ namespace GlimmerGrove.Tests
         /// The crown and the body are what the screen draws, measured in Domain where the
         /// validator can reach them. The screen may not hold the map's geometry (8a) and
         /// Domain may not read the screen, so this is the only place the two meet: resize the
-        /// standing pill, the plate or the rock and this names the number that stopped
+        /// standing pill, the plate or the node and this names the number that stopped
         /// covering it.
         /// </summary>
         [Test]
@@ -247,21 +247,16 @@ namespace GlimmerGrove.Tests
                                   "the standing mark reaches above the crown");
 
             Assert.GreaterOrEqual(ChapterMap.BodyHalfWidth,
-                                  Mathf.Max(LevelsScreen.PerchWidth, LevelsScreen.PlateWidth) * .5f,
-                                  "a perch is wider than the body");
+                                  Mathf.Max(LevelsScreen.NodeWidth, LevelsScreen.PlateWidth) * .5f,
+                                  "a node is wider than the body");
             Assert.GreaterOrEqual(ChapterMap.BodyBelow, -LevelsScreen.PlateY + LevelsScreen.PlateHeight * .5f,
                                   "the name plate hangs below the body");
-            // The disc's stand is the perch's, so the tallest of them is what the body owes —
-            // reading one mode's would leave the body short on every other map, and the check
-            // would still pass.
-            float highestDisc = 0f;
-            foreach (var look in ModeLooks.All)
-                highestDisc = Mathf.Max(highestDisc, look.PerchLift);
 
-            Assert.GreaterOrEqual(ChapterMap.BodyAbove,
-                                  Mathf.Max(LevelsScreen.NodeSize * .5f + highestDisc,
-                                            LevelsScreen.PerchRockY + LevelsScreen.PerchRockHeight * .5f),
-                                  "the disc or the rock reaches above the body");
+            // One number rather than the tallest of four, because a node stands where it is
+            // placed now: the disc used to sit on a floating tile whose top face was somewhere
+            // different on every mode's map, so the body owed whichever mode stood highest.
+            Assert.GreaterOrEqual(ChapterMap.BodyAbove, LevelsScreen.NodeSize * .5f,
+                                  "the disc reaches above the body");
         }
 
         /// <summary>

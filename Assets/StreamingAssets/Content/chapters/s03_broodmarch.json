@@ -10,11 +10,14 @@
   "map2_strip2",
   "map2_strip3"
  ],
+ "teaserX": 0.66,
+ "teaserAfloat": false,
  "levels": [
   {
    "id": "s03_firstbrood",
    "mapX": 0.7,
-   "mapY": 0.065,
+   "mapY": 0.061,
+   "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.75,
    "silverFactor": 0.92,
@@ -44,7 +47,8 @@
   {
    "id": "s03_hollowshell",
    "mapX": 0.28,
-   "mapY": 0.145,
+   "mapY": 0.143,
+   "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.75,
    "silverFactor": 0.92,
@@ -74,7 +78,8 @@
   {
    "id": "s03_mirewalk",
    "mapX": 0.74,
-   "mapY": 0.22,
+   "mapY": 0.218,
+   "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.75,
    "silverFactor": 0.92,
@@ -103,8 +108,9 @@
   },
   {
    "id": "s03_spinecrest",
-   "mapX": 0.3,
-   "mapY": 0.3,
+   "mapX": 0.207,
+   "mapY": 0.294,
+   "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.75,
    "silverFactor": 0.92,
@@ -133,8 +139,9 @@
   },
   {
    "id": "s03_blightfen",
-   "mapX": 0.72,
-   "mapY": 0.39,
+   "mapX": 0.62,
+   "mapY": 0.372,
+   "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.75,
    "silverFactor": 0.92,
@@ -164,7 +171,8 @@
   {
    "id": "s03_stillmire",
    "mapX": 0.26,
-   "mapY": 0.485,
+   "mapY": 0.472,
+   "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.75,
    "silverFactor": 0.92,
@@ -193,8 +201,9 @@
   },
   {
    "id": "s03_thornbrood",
-   "mapX": 0.7,
-   "mapY": 0.56,
+   "mapX": 0.79,
+   "mapY": 0.549,
+   "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.75,
    "silverFactor": 0.92,
@@ -223,8 +232,9 @@
   },
   {
    "id": "s03_gloamfield",
-   "mapX": 0.32,
-   "mapY": 0.65,
+   "mapX": 0.401,
+   "mapY": 0.627,
+   "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.75,
    "silverFactor": 0.92,
@@ -254,7 +264,8 @@
   {
    "id": "s03_deepmire",
    "mapX": 0.74,
-   "mapY": 0.73,
+   "mapY": 0.739,
+   "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.75,
    "silverFactor": 0.92,
@@ -285,7 +296,8 @@
   {
    "id": "s03_broodheart",
    "mapX": 0.28,
-   "mapY": 0.83,
+   "mapY": 0.819,
+   "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.75,
    "silverFactor": 0.92,

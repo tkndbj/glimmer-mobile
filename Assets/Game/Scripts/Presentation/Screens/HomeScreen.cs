@@ -1191,10 +1191,15 @@ namespace GlimmerGrove
         /// </summary>
         bool BuildFocusBox(float w)
         {
-            // Featured, not Live. Chests are opened by hand, so a window closing must not
-            // take one the player earned and never opened — and the box is the only way back
-            // to the page holding it. A closed season with nothing waiting stops being
-            // featured, so the goal box gets the slot back the moment the track is settled.
+            // Featured, not Live. Chests are opened by hand, so a window closing must not take
+            // one the player earned and never opened — and the box is the only way back to the
+            // page holding it, so `Featured` answers the *oldest* season still owing something
+            // and falls back to the live one (GroveEvents.Featured).
+            //
+            // **The shipped season repeats, so there is always a live one and this box is now
+            // permanent.** The goal box below takes the slot only when the catalog has no
+            // season at all — a build standing before the first window opens, which is the
+            // state the game shipped in and which a content push leaves behind for good.
             var featured = GroveEvents.Featured;
             if (featured == null) return BuildGoalBox(w);
 
@@ -1207,9 +1212,11 @@ namespace GlimmerGrove
         /// it wears.
         ///
         /// The mark is the interesting part. It is <see cref="SeasonCrest"/> rather than a
-        /// fixed glyph, so the season picks it from the manifest; and for the watch it fills
-        /// as the track fills, which means the picture and the bar under it say the same
-        /// thing and a glance is enough.
+        /// fixed glyph, so the season picks it from the manifest — and the shipped one is a
+        /// crest cut from this app's own interface kit rather than a shape drawn here, for the
+        /// reason <see cref="SeasonCrest.Watch"/> gives. How far through the track the player
+        /// is was said by the crest and by the bar under it; it is said by the bar alone now,
+        /// which is one reading drawn by an artist rather than two and one of them generated.
         /// </summary>
         void BuildEventBox(GroveEvent live, float w)
         {

@@ -314,7 +314,7 @@ export const submitSpends = onCall(callOptions, async (request): Promise<{
       const passSeason = parsePassSpendId(spend.id);
 
       if (passSeason) {
-        const season = usableSeason(config, passSeason);
+        const season = usableSeason(config, passSeason, Math.floor(Date.now() / 1000));
         const price = season ? passPrice(season) : 0;
 
         if (!season || price <= 0) {
@@ -647,10 +647,11 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
         detail = { night: award.claim.night, tier: night.tierId };
       } else if (award.kind === "mark") {
         const mark = award.claim as MarkClaim;
-        const season = usableSeason(config, mark.seasonId);
+        const nowUnix = Math.floor(Date.now() / 1000);
+        const season = usableSeason(config, mark.seasonId, nowUnix);
         const owns = mark.track === "pass" && holdsPass(passes.get(mark.seasonId), season ?? undefined);
 
-        const verdict = judgeMarkClaim(mark, config, tasks, owns);
+        const verdict = judgeMarkClaim(mark, config, tasks, owns, nowUnix);
 
         if (verdict.kind === "refuse") {
           // Permanent. A claim on the paid column without the purchase, or on a track that
@@ -1684,6 +1685,13 @@ export const deleteAccount = onCall(
  * world during the previous day is in the sample. Like the stats job it has no retry policy
  * and no alerting: a day with no run leaves yesterday's boards standing, every client reads
  * them exactly as it read them yesterday, and nothing in the game behaves differently.
+ *
+ * **The cadence is mirrored on the client as `LeaderboardBoard.RebuildHours`**, which is the
+ * number the boards screen's own panel prints when it tells a keeper that what they built
+ * today counts in the next tally. Nothing over there waits on it or caches against it, so a
+ * drift costs a sentence rather than a feature - but the two still move together, and a job
+ * that stops being daily is a different feature rather than a retune. It is the bargain
+ * `MAX_WAVE` and `EndlessLedger.MaxWave` already strike one file along.
  */
 export const publishGroveRanks = onSchedule(
   { region: REGION, schedule: "0 4 * * *", timeZone: "Etc/UTC", timeoutSeconds: 540 },

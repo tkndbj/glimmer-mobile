@@ -96,7 +96,7 @@ namespace GlimmerGrove.Content
                 ParseColour(dto.slate, ParseColour(DefaultSlateHex, Color.black)),
                 string.IsNullOrEmpty(dto.backdrop) ? LastResortBackdrop : dto.backdrop,
                 dto.mapStrips,
-                dto.teaserX);
+                dto.teaserX, dto.teaserAfloat);
 
             body = new ChapterBody(definition, levels);
             return true;
@@ -149,7 +149,7 @@ namespace GlimmerGrove.Content
         static LevelPresentation ReadPresentation(LevelDto dto)
             => new LevelPresentation(new Vector2(dto.mapX, dto.mapY),
                                      OptionalColour(dto.accent), OptionalColour(dto.slate),
-                                     dto.backdrop, ReadStory(dto.story));
+                                     dto.backdrop, ReadStory(dto.story), dto.afloat);
 
         /// <summary>
         /// A level's dialogue, or <c>StoryScript.Silent</c>.

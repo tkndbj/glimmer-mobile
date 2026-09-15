@@ -2725,6 +2725,16 @@ def check_streak(progression, tasks, keys, warnings):
     }
 
 
+#: `SeasonCycle.NamePoolSize`, `SeasonCycle.IndexDigits` and `EventRules.MaxSeasonIdLength`.
+#:
+#: Mirrored rather than imported for the reason every constant in this file is: the gate has to
+#: run with no Unity on the machine. They are contract on both sides - the digits decide the id a
+#: phone writes and the server parses, and the pool size decides how many names have to exist.
+SEASON_NAME_POOL = 12
+SEASON_INDEX_DIGITS = 4
+SEASON_ID_MAX = 64
+
+
 def check_seasons(manifest, progression, tasks, keys, warnings):
     """The seasons: the ladder, the tiers it names, and whether it can be climbed.
 
@@ -2752,10 +2762,39 @@ def check_seasons(manifest, progression, tasks, keys, warnings):
                           "and every claim id its chests produce")
             continue
 
-        for suffix in ("name", "blurb"):
-            key = f"ui.event.{sid}.{suffix}"
-            if key not in keys:
-                errors.append(f"season '{sid}' needs loc key '{key}'")
+        repeats = bool(season.get("repeats"))
+
+        if repeats:
+            # A repeating season mints its ids from the clock (`SeasonCycle`), so nobody can
+            # author `ui.event.watch_0037.name` and the name comes out of a pool that wraps.
+            # `loc.py` cannot see a derived key at all, which is why this check lives here.
+            for slot in range(SEASON_NAME_POOL):
+                key = f"ui.season.{slot}.name"
+                if key not in keys:
+                    errors.append(f"season '{sid}' repeats, so its name comes from a pool of "
+                                  f"{SEASON_NAME_POOL}; loc key '{key}' is missing and that "
+                                  "cycle would draw an empty banner")
+            if "ui.season.blurb" not in keys:
+                errors.append(f"season '{sid}' repeats and needs loc key 'ui.season.blurb'")
+
+            # The suffix has to fit inside the id ceiling `season.ts` parses against, or the
+            # ids this stem mints are ids that deployment refuses - every claim in the game's
+            # longest-running feature unconfirmed, with every file reading as authored.
+            room = SEASON_ID_MAX - (SEASON_INDEX_DIGITS + 1)
+            if len(sid) > room:
+                errors.append(f"season '{sid}' repeats, so its id is a stem with a "
+                              f"{SEASON_INDEX_DIGITS}-digit cycle number on the end; that "
+                              f"leaves {room} characters and this one is {len(sid)}")
+
+            if any(e.get("repeats") for e in shipped):
+                errors.append(f"manifest asks season '{sid}' to repeat, but another already "
+                              "does; only one season may repeat, because two would be two "
+                              "answers to which season is running")
+        else:
+            for suffix in ("name", "blurb"):
+                key = f"ui.event.{sid}.{suffix}"
+                if key not in keys:
+                    errors.append(f"season '{sid}' needs loc key '{key}'")
 
         start = int(season.get("startUnix") or 0)
         end = int(season.get("endUnix") or 0)
@@ -2816,7 +2855,7 @@ def check_seasons(manifest, progression, tasks, keys, warnings):
                           "chest; its last rungs are unreachable")
 
         shipped.append({"id": sid, "days": days, "rungs": len(rungs), "top": top,
-                        "pass": gems})
+                        "pass": gems, "repeats": repeats})
 
     return errors, shipped
 
@@ -4262,6 +4301,19 @@ def main():
                   + (f", pass {season['pass']} gems" if season['pass'] else ""))
             print(f"       about {int(reach)} mark(s) are dealt in that window, so the ladder "
                   f"is {'reachable' if reach >= season['top'] else 'NOT reachable'}")
+
+            # Printed rather than merely checked, because "does this game still have a season
+            # next year" is not a question any file answers on its own: a one-off is a date
+            # somebody has to remember, and a recurrence is not.
+            if season.get("repeats"):
+                done = int(season['top'] / reach * season['days']) if reach > 0 else 0
+                print(f"       it REPEATS, back to back, for ever - every {season['days']} days "
+                      f"a new one opens as '{season['id']}_0000', '{season['id']}_0001', ...")
+                print(f"       a player who claims every chest tops the ladder about day {done} "
+                      f"of {season['days']}, and marks, rungs and the pass all start again")
+            else:
+                print(f"       it runs ONCE and then nothing follows it; the hub's box goes the "
+                      f"day the last chest is claimed")
 
     if shop:
         shelves = ", ".join(f"{n} {shelf}" for shelf, n in sorted(shop["shelves"].items()))

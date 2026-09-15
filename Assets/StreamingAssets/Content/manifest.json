@@ -247,12 +247,13 @@
   ],
   "events": [
     {
-      "id": "first_watch",
+      "id": "watch",
       "icon": "watch",
       "passGems": 350,
       "startUnix": 1789430400,
       "endUnix": 1793059200,
       "disabled": false,
+      "repeats": true,
       "milestones": [
         {
           "goal": 5,

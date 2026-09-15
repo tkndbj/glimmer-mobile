@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GlimmerGrove.Ads;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.Cloud;
 using GlimmerGrove.Localization;
@@ -81,6 +82,31 @@ namespace GlimmerGrove
         readonly List<StoreProduct> _products = new List<StoreProduct>();
         readonly List<StoreGood> _goods = new List<StoreGood>();
         readonly List<UtilityItem> _kit = new List<UtilityItem>();
+
+        /// <summary>
+        /// The rewarded offer standing in this shelf's first spot, or <c>AdOffer.None</c>.
+        ///
+        /// <para>
+        /// <b>Two shelves have one</b>, and they are the two the hub already offers a video for:
+        /// coins and hearts (<see cref="ShopAdShelf"/>). It was reachable only from the
+        /// <c>+</c> on the hub's own pills, which is the one place in the game a player is
+        /// <em>not</em> thinking about buying anything — somebody who has come to the shop for
+        /// coins has already decided they want coins, and the free way to get some was on
+        /// another screen.
+        /// </para>
+        /// <para>
+        /// <b>First, not last.</b> Every other card on these shelves is sorted cheapest first
+        /// and this one costs nothing, so the top-left cell is where the ladder already says it
+        /// goes — and a free offer buried under six prices is an offer nobody scrolls to.
+        /// </para>
+        /// <para>
+        /// Resolved in <see cref="Reload"/> rather than asked for on every bind, because
+        /// whether the row exists at all decides how many rows the grid has: an offer the
+        /// content table does not carry takes the card off the shelf outright, which is how a
+        /// config push switches the whole thing off with no build (<c>AdRewardTable</c>).
+        /// </para>
+        /// </summary>
+        AdOffer _ad = AdOffer.None;
 
         readonly Dictionary<StoreShelf, ShelfTab> _tabViews = new Dictionary<StoreShelf, ShelfTab>();
 
@@ -608,6 +634,13 @@ namespace GlimmerGrove
             _goods.Clear();
             _kit.Clear();
 
+            // The free spot, resolved before anything else because it shifts every row under
+            // it. `Offer` answers `None` for a placement the published table does not carry,
+            // and `AdOffer.IsValid` is what the card and the row count both ask — so switching
+            // the offer off is a content push and not a build, and nothing here has to know
+            // that it happened.
+            _ad = RewardedAds.Table.Offer(ShopAdShelf.For(_shelf));
+
             if (OnUtilities)
             {
                 // In the catalog's own authored order, which is the order the action bar draws
@@ -680,9 +713,10 @@ namespace GlimmerGrove
         /// How many cells this shelf shows. Every shelf but one is a single list; supplies is
         /// the goods followed by the heart containers, so its rows are the sum.
         /// </summary>
-        int ShelfRows() => OnUtilities ? _kit.Count
-                         : OnSupplies ? _goods.Count + _products.Count
-                         : _products.Count;
+        int ShelfRows() => (_ad.IsValid ? 1 : 0)
+                         + (OnUtilities ? _kit.Count
+                          : OnSupplies ? _goods.Count + _products.Count
+                          : _products.Count);
 
         /// <summary>Redraws what is on screen: same cells, same place, no entrance.</summary>
         void Repaint()
@@ -867,6 +901,41 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// Tapping the free spot opens the same panel the hub's <c>+</c> opens, and nothing
+        /// else happens here.
+        ///
+        /// <para>
+        /// <b>The same panel, deliberately</b> — the argument the kit shelf already makes about
+        /// <c>UtilityBuyOverlay</c>. It knows how to say all five ways a rewarded ad can fail to
+        /// happen, how to count the day's allowance down, how to hand the reward over and how to
+        /// fly it into the pills above. A second route that showed a video itself would be a
+        /// second copy of every one of those, on the screen where the first copy is already the
+        /// game's only honest account of them.
+        /// </para>
+        /// <para>
+        /// It is a modal over the shop rather than a navigation, which is this screen's own
+        /// rule for anything that answers "I want more of this": the shelf is still underneath
+        /// when the panel closes, so a player who watched a video for coins is standing in front
+        /// of the coins.
+        /// </para>
+        /// </summary>
+        void TapAd()
+        {
+            if (!_ad.IsValid) return;
+
+            Flow.Modal<AdOfferOverlay>(panel =>
+            {
+                panel.PlacementId = _ad.PlacementId;
+
+                // The cards carry no balance of their own, but the supplies shelf greys a heart
+                // pack at a full pool and the gem prices are measured against a wallet the
+                // video may have just moved. A repaint rather than a reload: the same cards,
+                // redrawn, at the moment the player is watching the reward land.
+                panel.Rewarded = Repaint;
+            });
+        }
+
+        /// <summary>
         /// Tapping a supply.
         ///
         /// <para>
@@ -1040,12 +1109,16 @@ namespace GlimmerGrove
 
             public RectTransform Root => _card.Root;
 
+            /// <summary>Set when this cell is the shelf's free spot, cleared on every other bind.</summary>
+            bool _isAd;
+
             public ShopCell(ShopScreen screen, RectTransform parent)
             {
                 _screen = screen;
                 _card = new ProductCard(parent,
                                         new ProductCard.Look(CellW, CellH, decorated: true),
-                                        () => { if (_kit != null) _screen.TapUtility(_kit);
+                                        () => { if (_isAd) _screen.TapAd();
+                                                else if (_kit != null) _screen.TapUtility(_kit);
                                                 else if (_good != null) _screen.TapGood(_good);
                                                 else _screen.Tap(_product); });
             }
@@ -1062,6 +1135,25 @@ namespace GlimmerGrove
             /// </summary>
             public void Bind(int index)
             {
+                // The free spot, and everything else on the shelf shifted down by it. Taken
+                // first so no other branch has to know it exists, and the flag is cleared on
+                // every other bind rather than only set on this one — a cell is rebound as the
+                // grid scrolls (invariant 16d), so a latch left standing is a coin pack that
+                // opens a video panel.
+                _isAd = _screen._ad.IsValid && index == 0;
+
+                if (_isAd)
+                {
+                    _product = null;
+                    _good = null;
+                    _kit = null;
+
+                    _card.Draw(_screen._ad, _screen._shelf);
+                    return;
+                }
+
+                if (_screen._ad.IsValid) index--;
+
                 if (_screen.OnUtilities)
                 {
                     _product = null;

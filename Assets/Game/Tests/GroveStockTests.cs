@@ -424,6 +424,61 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
+        public void EverySaveLeavingTheMergeCarriesTheMirrorItsStockDerives()
+        {
+            // **The fixture this section did not have, and what it cost.** The mirror is
+            // derived, so it is only ever as good as the discipline of whoever sets the rows it
+            // is derived from — and there are two such writers: HomesteadLedger.WriteInto, on
+            // the way to disk, and SaveMerge, on the way to the cloud. The second set the stock
+            // and never the mirror, so *every synced document in the game* carried a full stock
+            // beside an empty array.
+            //
+            // Nothing could see it. The stock is what GroveStock.In prefers, so the grove was
+            // never wrong on any device; the score is what stockOf reads, so the boards were
+            // right; the file parsed, the merge was lossless and the round trip above passed.
+            // What paid was `buildCard`, which asked the mirror alone for the best home held —
+            // so a keeper who had bought a farmhouse was published to every stranger in the
+            // game standing in the free cottage.
+            //
+            // Asserted over the *merge's own output* rather than over GroveStock.Record,
+            // because a helper that cannot be got wrong is no use to a caller that does not
+            // reach for it.
+            var mine = new SaveFileDto
+            {
+                homesteadStock = Rows(("home_farmhouse", 1), ("fence", 12)),
+                homesteadOwned = GroveStock.Mirror(Rows(("home_farmhouse", 1), ("fence", 12))),
+            };
+
+            var other = new SaveFileDto
+            {
+                homesteadStock = Rows(("oak", 3)),
+                homesteadOwned = GroveStock.Mirror(Rows(("oak", 3))),
+            };
+
+            var merged = SaveMerge.Join(mine, other);
+
+            Assert.AreEqual(GroveStock.Mirror(merged.homesteadStock), merged.homesteadOwned,
+                            "the merge writes the stock and the mirror it derives together");
+            CollectionAssert.Contains(merged.homesteadOwned, "home_farmhouse",
+                                      "a home bought on one device reaches the card built from "
+                                      + "the merged save");
+            Assert.AreEqual("fence=12,home_farmhouse=1,oak=3", Describe(GroveStock.In(merged)));
+        }
+
+        [Test]
+        public void AMergeOfTwoSavesThatHaveNeverBoughtAnythingCarriesNoMirror()
+        {
+            // The other half of the pair, and it has to be empty rather than absent-shaped:
+            // GroveStock.In falls back to the mirror only when the stock holds nothing, so a
+            // mirror that outlived an empty stock would re-grant a whole grove's purchases
+            // through LegacyGrant. Written together, the two can never be in that state.
+            var merged = SaveMerge.Join(new SaveFileDto(), new SaveFileDto());
+
+            CollectionAssert.IsEmpty(merged.homesteadOwned);
+            CollectionAssert.IsEmpty(merged.homesteadStock);
+        }
+
+        [Test]
         public void AMirrorRoundTripsBackThroughTheMigrationToTheSameIds()
         {
             // The mirror is what a rolled-back client and a not-yet-redeployed server read. It

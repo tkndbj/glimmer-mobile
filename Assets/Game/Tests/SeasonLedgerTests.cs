@@ -325,10 +325,10 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheSeedSubjectIsContract()
         {
-            Assert.AreEqual("first_watch:free:200",
-                            SeasonLedger.Subject("first_watch", SeasonTrack.Free, 200));
-            Assert.AreEqual("first_watch:pass:5",
-                            SeasonLedger.Subject("first_watch", SeasonTrack.Pass, 5));
+            Assert.AreEqual("watch_0000:free:200",
+                            SeasonLedger.Subject("watch_0000", SeasonTrack.Free, 200));
+            Assert.AreEqual("watch_0000:pass:5",
+                            SeasonLedger.Subject("watch_0000", SeasonTrack.Pass, 5));
             Assert.AreEqual("mark", SeasonLedger.SeedTag);
         }
 
@@ -339,10 +339,18 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheClaimIdIsContractAndFitsTheGrantKey()
         {
-            string id = GrantEntry.MarkChestId("first_watch", SeasonTrack.Pass, 200, "credits");
+            string id = GrantEntry.MarkChestId("watch_0000", SeasonTrack.Pass, 200, "credits");
 
-            Assert.AreEqual("mark:first_watch:pass:200:credits", id);
+            Assert.AreEqual("mark:watch_0000:pass:200:credits", id);
             Assert.Less(id.Length, 64);
+
+            // And it still fits at the far end of the calendar, which is the one the season id
+            // grows toward: a cycle id is the same length whatever cycle it names, by
+            // construction (`SeasonCycle.IndexDigits`), so this is a proof rather than a spot
+            // check — but the length ceiling is what `season.ts` parses against and a claim id
+            // that overflows it is a claim refused for ever with every file correct.
+            Assert.Less(GrantEntry.MarkChestId("watch_9999", SeasonTrack.Pass,
+                                               EventRules.MaxGoal, "credits").Length, 64);
         }
 
         /// <summary>
@@ -353,8 +361,99 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ThePassSpendIdIsContract()
         {
-            Assert.AreEqual("pass:first_watch", SpendEntry.SeasonPassId("first_watch"));
-            Assert.Less(SpendEntry.SeasonPassId("first_watch").Length, 64);
+            Assert.AreEqual("pass:watch_0000", SpendEntry.SeasonPassId("watch_0000"));
+            Assert.Less(SpendEntry.SeasonPassId("watch_9999").Length, 64);
+        }
+
+        // ------------------------------------------------------------- the ceiling
+        /// <summary>
+        /// Past the ceiling the join evicts rather than truncating, and what it keeps first is
+        /// anything that might still be holding a chest.
+        ///
+        /// <para>
+        /// <b>This was a live bug waiting for a repeating season.</b> The old rule sorted by id
+        /// and lopped off the tail — and ordinal order is calendar order, so it kept the
+        /// <em>oldest</em> sixty-four rows and deleted the newest. On a calendar that ends, the
+        /// sixty-fifth season is a decade away and nobody meets it; on one that does not, it is
+        /// the season being played, deleted silently at the moment it opens.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void PastTheCeilingASettledSeasonGoesBeforeAnythingStillOwed()
+        {
+            var rows = new EventStateDto[SeasonLedger.MaxSeasons + 1];
+
+            // Sixty-four settled seasons, oldest first: every rung claimed, so nothing is owed.
+            for (int i = 0; i < SeasonLedger.MaxSeasons; i++)
+                rows[i] = new EventStateDto { id = Cycle(i), marks = 200, collectedGoal = 200 };
+
+            // And the newest, mid-season, with marks past its claim floor — something waiting.
+            string newest = Cycle(SeasonLedger.MaxSeasons);
+            rows[SeasonLedger.MaxSeasons] =
+                new EventStateDto { id = newest, marks = 40, collectedGoal = 10 };
+
+            var joined = SeasonLedger.Join(rows, Array.Empty<EventStateDto>());
+
+            Assert.AreEqual(SeasonLedger.MaxSeasons, joined.Length, "the ceiling still binds");
+            Assert.IsTrue(Has(joined, newest), "the season being played survives the cull");
+            Assert.IsFalse(Has(joined, Cycle(0)), "and the oldest settled one is what went");
+        }
+
+        /// <summary>
+        /// With nothing settled to drop, the oldest goes — there is no arrangement in which a
+        /// bounded list keeps everything, and the honest fallback is the one a player is least
+        /// likely to be looking at.
+        /// </summary>
+        [Test]
+        public void WithEverythingOwedTheOldestIsStillWhatGoes()
+        {
+            var rows = new EventStateDto[SeasonLedger.MaxSeasons + 1];
+            for (int i = 0; i <= SeasonLedger.MaxSeasons; i++)
+                rows[i] = new EventStateDto { id = Cycle(i), marks = 40, collectedGoal = 10 };
+
+            var joined = SeasonLedger.Join(rows, Array.Empty<EventStateDto>());
+
+            Assert.AreEqual(SeasonLedger.MaxSeasons, joined.Length);
+            Assert.IsFalse(Has(joined, Cycle(0)));
+            Assert.IsTrue(Has(joined, Cycle(SeasonLedger.MaxSeasons)));
+        }
+
+        /// <summary>
+        /// The rows that survive are still written in id order, whatever order the eviction
+        /// considered them in.
+        ///
+        /// Not tidiness: <c>SaveDelta</c> decides whether to sync by walking these in order, so
+        /// rows that came out in eviction order would make an unchanged save read as changed on
+        /// every launch — a write and an upload for nothing, for ever.
+        /// </summary>
+        [Test]
+        public void TheSurvivorsAreStillWrittenInIdOrder()
+        {
+            var rows = new EventStateDto[SeasonLedger.MaxSeasons + 4];
+            for (int i = 0; i < rows.Length; i++)
+                rows[i] = new EventStateDto
+                {
+                    id = Cycle(i),
+                    marks = 200,
+                    collectedGoal = i % 2 == 0 ? 200 : 10,      // every other one still owes
+                };
+
+            var joined = SeasonLedger.Join(rows, Array.Empty<EventStateDto>());
+
+            for (int i = 1; i < joined.Length; i++)
+                Assert.Less(string.CompareOrdinal(joined[i - 1].id, joined[i].id), 0,
+                            "rows are written in id order");
+        }
+
+        /// <summary>A padded cycle id, so ordinal order is calendar order.</summary>
+        static string Cycle(int index) => "watch_" + index.ToString("D4");
+
+        static bool Has(EventStateDto[] rows, string id)
+        {
+            foreach (var row in rows)
+                if (string.Equals(row.id, id, StringComparison.Ordinal)) return true;
+
+            return false;
         }
 
         static int Field(EventStateDto[] rows, string id, Func<EventStateDto, int> read)

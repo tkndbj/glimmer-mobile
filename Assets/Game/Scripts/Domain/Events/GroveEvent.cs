@@ -72,6 +72,17 @@ namespace GlimmerGrove.Events
         public const int MaxPassGems = 100000;
 
         public const long SecondsPerDay = 24L * 60L * 60L;
+
+        /// <summary>
+        /// The longest a season id may be.
+        ///
+        /// <b>Contract with the server</b>: <c>season.ts</c>'s <c>SEASON_ID</c> is
+        /// <c>^[a-z0-9_]{1,64}$</c>, and an id longer than that is refused there while parsing
+        /// perfectly here — a claim left unconfirmed for ever with every file correct. It
+        /// matters most for a repeating season, whose id is a stem plus a cycle number, because
+        /// that is the one id a human does not write out in full.
+        /// </summary>
+        public const int MaxSeasonIdLength = 64;
     }
 
     /// <summary>
@@ -205,9 +216,13 @@ namespace GlimmerGrove.Events
 
         public bool HasPremium => PassGems > 0;
 
+        readonly string _nameKey;
+        readonly string _blurbKey;
+
         public GroveEvent(string id, long startUnix, long endUnix,
                           IReadOnlyList<EventMilestone> milestones,
-                          string icon = null, int passGems = 0)
+                          string icon = null, int passGems = 0,
+                          string nameKey = null, string blurbKey = null)
         {
             Id = id ?? string.Empty;
             StartUnix = startUnix;
@@ -215,22 +230,41 @@ namespace GlimmerGrove.Events
             Milestones = milestones ?? Array.Empty<EventMilestone>();
             Icon = icon ?? string.Empty;
             PassGems = passGems < 0 ? 0 : passGems > EventRules.MaxPassGems ? EventRules.MaxPassGems : passGems;
+
+            _nameKey = string.IsNullOrEmpty(nameKey) ? null : nameKey;
+            _blurbKey = string.IsNullOrEmpty(blurbKey) ? null : blurbKey;
         }
 
         public bool IsValid => !string.IsNullOrEmpty(Id) && EndUnix > StartUnix && Milestones.Count > 0;
 
         /// <summary>
-        /// This season's name, derived from its id and not overridable.
+        /// This season's name: derived from its id, unless the season's id is itself derived.
         ///
-        /// The same rule a level's name follows — invariant 5a — and for the same reason:
-        /// it is what lets anything holding a season id name it without reading the
-        /// manifest entry back.
+        /// <para>
+        /// The default is the rule a level's name follows — invariant 5a — and for the same
+        /// reason: it is what lets anything holding a season id name it without reading the
+        /// manifest entry back. An authored, dated season takes that path and nothing about it
+        /// has changed.
+        /// </para>
+        /// <para>
+        /// <b>A repeating season cannot, and the exception is exactly that narrow.</b>
+        /// <see cref="SeasonCycle"/> mints its ids from the clock, so there is no moment at
+        /// which a human could have written <c>ui.event.watch_0037.name</c> into a string table
+        /// that ships inside the app — the key would resolve to nothing and the hub's largest
+        /// card would carry an empty banner. Such a season is handed a key out of a pool that
+        /// wraps (<see cref="SeasonCycle.NameKeyFor"/>), and it is handed it <b>at construction
+        /// by the thing that minted the id</b>, so the two can never be sourced separately and
+        /// come apart. Nothing else may pass these: every other call site takes the default, and
+        /// there is no setter.
+        /// </para>
         /// </summary>
-        public string NameKey => DefaultNameKey(Id);
+        public string NameKey => _nameKey ?? DefaultNameKey(Id);
 
-        public string BlurbKey => "ui.event." + Id + ".blurb";
+        public string BlurbKey => _blurbKey ?? DefaultBlurbKey(Id);
 
         public static string DefaultNameKey(string id) => "ui.event." + id + ".name";
+
+        public static string DefaultBlurbKey(string id) => "ui.event." + id + ".blurb";
 
         public bool IsLiveAt(long now) => IsValid && now >= StartUnix && now < EndUnix;
 

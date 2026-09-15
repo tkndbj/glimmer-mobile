@@ -10,11 +10,14 @@
   "map2_strip2",
   "map2_strip3"
  ],
+ "teaserX": 0.66,
+ "teaserAfloat": false,
  "levels": [
   {
    "id": "s02_endless",
    "mapX": 0.7,
-   "mapY": 0.065,
+   "mapY": 0.061,
+   "afloat": false,
    "budgetFactor": -1.0,
    "backdrop": "sky_10",
    "siege": {

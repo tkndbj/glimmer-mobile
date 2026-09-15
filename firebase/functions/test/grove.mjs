@@ -626,6 +626,60 @@ console.log("\nthe card a public profile reads");
   check("and the line", Array.isArray(denied.line) && denied.line.length === 1);
 }
 
+console.log("\nthe home a card draws");
+{
+  const config = groveConfig();
+  const worth = groveWorth({}, config, 1, 0);
+
+  // The ladder this catalog authors, cheapest rung first, so this block says nothing about
+  // which homes ship — only that the best one held is the one published.
+  const rungs = Object.entries(config.dwellings).sort((a, b) => a[1] - b[1]).map(([id]) => id);
+  const free = rungs.find((id) => !(config.pieces[id] > 0));
+  const paid = rungs.filter((id) => config.pieces[id] > 0);
+
+  const at = (save, level = 99) =>
+    buildCard("uid-home", save, config, worth, level, 1_700_000_000, null).dwelling;
+
+  equal("a keeper who has bought no home draws the free rung", at({}), free);
+
+  // **The whole of the fault this block exists for.** A v20 client writes `homesteadStock`
+  // and derives `homesteadOwned` from it — and `SaveMerge` built the merged save with the
+  // stock and no mirror, so every synced document in the game carried a full stock beside an
+  // empty array. `buildCard` asked the mirror alone, so a keeper who had paid for a farmhouse
+  // was published with the free cottage, on every board and every visitor's screen, while the
+  // score beside it counted the farmhouse correctly because *it* read the stock. Both halves
+  // are fixed; this is the half that keeps a card honest whatever a client writes.
+  for (const id of paid) {
+    equal(`a home bought and recorded only as stock is published (${id})`,
+          at({ homesteadStock: [{ id, copies: 1 }] }), id);
+    equal(`and one recorded only in the v19 mirror still is (${id})`,
+          at({ homesteadOwned: [id] }), id);
+  }
+
+  if (paid.length > 1) {
+    const best = paid[paid.length - 1];
+    equal("the best rung held wins, whatever order the rows are in",
+          at({ homesteadStock: paid.map((id) => ({ id, copies: 1 })).reverse() }), best);
+  }
+
+  // The gate is asked before anything else, exactly as `groveWorth` asks it: a card drawing a
+  // citadel over a ledger that cannot reach one is the inconsistency a visitor could catch.
+  const gated = paid.find((id) => (config.dwellingLevels?.[id] ?? 0) > 0);
+  if (gated) {
+    equal("a rung the keeper level has not opened falls back to the free one",
+          at({ homesteadStock: [{ id: gated, copies: 1 }] },
+             config.dwellingLevels[gated] - 1), free);
+    equal("and is published the moment it has",
+          at({ homesteadStock: [{ id: gated, copies: 1 }] },
+             config.dwellingLevels[gated]), gated);
+  }
+
+  // The empty-array fall-through `stockOf` already makes for the score, now made for the home
+  // as well — the two cannot disagree, because there is only one reading left.
+  equal("an empty stock falls through to the mirror rather than meaning 'owns nothing'",
+        at({ homesteadStock: [], homesteadOwned: [paid[0]] }), paid[0]);
+}
+
 // ------------------------------------------------------------------ the revision
 //
 // What `publishGrove` reports beside the card, so the client can prove the card was built

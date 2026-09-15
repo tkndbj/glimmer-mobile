@@ -249,6 +249,44 @@ namespace GlimmerGrove.Homestead
         }
 
         /// <summary>
+        /// Writes the stock into a save file — <b>both halves of it, in the one call</b>.
+        ///
+        /// <para>
+        /// <see cref="Mirror"/> explains why the v19 array is still written. What it could not
+        /// say is that a derived field is only as good as the discipline of everyone who sets
+        /// the field it is derived from, and there are two such writers here:
+        /// <c>HomesteadLedger.WriteInto</c>, which finalises the file on its way to disk, and
+        /// <see cref="SaveMerge"/>, which builds a fresh DTO out of two joined ones on its way
+        /// to the cloud. The second one set <c>homesteadStock</c> and never the mirror, so
+        /// <em>every synced save in the game</em> carried a full stock beside an empty mirror —
+        /// and a rolled-back client would have read that as a grove with nothing in it.
+        /// </para>
+        /// <para>
+        /// <b>It was not a rolled-back client that paid, which is what makes this worth a
+        /// method rather than a line.</b> <c>buildCard</c> asked the mirror alone for the best
+        /// home held, so a public card drew the free cottage over a save that had bought a
+        /// farmhouse — on every board and every visitor's screen, for as long as the mirror had
+        /// been empty, with the score beside it counting the farmhouse correctly the whole time
+        /// because <em>it</em> read the stock. Neither half is visible to any gate: the file
+        /// parses, the merge is lossless in the field that matters, the score is right, and the
+        /// only symptom is a picture on somebody else's phone.
+        /// </para>
+        /// <para>
+        /// So the pair is set together and nothing else may set either. A writer that cannot
+        /// forget the mirror is worth more than a comment asking it not to —
+        /// <c>SaveMergeTests</c> holds the promise, because a third writer is exactly what will
+        /// be added next.
+        /// </para>
+        /// </summary>
+        public static void Record(SaveFileDto dto, HomesteadStockDto[] rows)
+        {
+            if (dto == null) return;
+
+            dto.homesteadStock = rows ?? Array.Empty<HomesteadStockDto>();
+            dto.homesteadOwned = Mirror(dto.homesteadStock);
+        }
+
+        /// <summary>
         /// A v19 file's <c>homesteadOwned</c> set as stock rows.
         ///
         /// <para>

@@ -163,28 +163,60 @@ namespace GlimmerGrove
         const float NodeFaceY = NodeSize * UIKit.NodeFaceLift;
 
         /// <summary>
-        /// Where the glade disc stands above a node's centre, and how far under it its
+        /// Where the glade disc stands relative to a node's centre, and how far under it its
         /// contact shadow falls.
         ///
         /// <para>
-        /// Asked of the mode rather than typed, because it is a fact about the perch tile
-        /// (<see cref="ModeLook.PerchLift"/>) and the four tiles disagree by 30 units about
-        /// where their own top face is. Read in one place so the disc, the halo behind it,
-        /// the teaser's seal and the shadow under all of them cannot come apart — four
-        /// hand-written offsets is how the shadow came to stay put while the disc moved.
+        /// <b>Nought, and it is kept as a name rather than inlined</b> because the disc, the
+        /// halo behind it, the teaser's seal and the shadow under all of them have to agree,
+        /// and four hand-written offsets is how the shadow once came to stay put while the
+        /// disc moved. It was <see cref="ModeLook"/>'s business while a node stood on a
+        /// floating tile whose top face was somewhere different on every mode's map; a node
+        /// standing on the painting stands where it is placed.
         /// </para>
         /// </summary>
-        float DiscY => ModeLooks.Of(Mode).PerchLift;
-        const float ContactDrop = 46f;
+        /// <summary>
+        /// The tile a node is moored on when it stands over water, the box it is fitted into
+        /// with its aspect kept, and where that box hangs from the node's centre.
+        ///
+        /// <para>
+        /// One tile rather than one per mode, which is what it used to be. A perch is now a
+        /// fact about a *place* rather than about a mode — it appears only where a painting
+        /// has water under the chain, which today is `map1` and nothing else — so choosing it
+        /// per mode would be choosing it for a map that is shared by every mode's first
+        /// chapter anyway. Grass-topped with a pale skirt, because that is what `map1`'s own
+        /// islets are drawn as and the skirt reads as surf against the current.
+        /// </para>
+        /// </summary>
+        const string PerchArt = "rock_grass";
+        static readonly Vector2 PerchBox = new Vector2(360f, 290f);
+        const float PerchY = -50f;
 
         /// <summary>
-        /// A perch's rock and the name plate under it, and where each hangs from the node's
-        /// centre. Public because <see cref="ChapterMap"/> carries the same shape as the
-        /// footprint another glade's standing mark has to clear (<c>BodyHalfWidth</c>,
+        /// How far above the node's centre the disc stands, with a perch under it and without.
+        ///
+        /// <para>
+        /// Nought on the ground, because a node standing on the painting stands where it is
+        /// placed. On a perch it has to clear the tile's own top face, which is the number
+        /// <c>ModeLook.PerchLift</c> used to carry per mode — one tile now, so one number.
+        /// Read in one place so the disc, the halo behind it, the teaser's seal and the shadow
+        /// under all of them cannot come apart: four hand-written offsets is how the shadow
+        /// once came to stay put while the disc moved.
+        /// </para>
+        /// </summary>
+        const float PerchLift = 14f;
+        static float DiscY(bool afloat) => afloat ? PerchLift : 0f;
+
+        const float ContactDrop = 34f;
+
+        /// <summary>
+        /// A node's footprint and the name plate under it, and where each hangs from the
+        /// node's centre. Public because <see cref="ChapterMap"/> carries the same shape as
+        /// the footprint another glade's standing mark has to clear (<c>BodyHalfWidth</c>,
         /// <c>BodyBelow</c>, <c>BodyAbove</c>), and Domain cannot read these — so
         /// <c>ChapterMapTests</c> reads both and holds them to each other.
         /// </summary>
-        public const float PerchWidth = 360f, PerchRockHeight = 290f, PerchRockY = -50f;
+        public const float NodeWidth = 360f;
         public const float PlateWidth = 340f, PlateHeight = 62f, PlateY = -196f;
 
         /// <summary>
@@ -335,7 +367,6 @@ namespace GlimmerGrove
 
             BuildScroller();
             BuildMapArt();
-            BuildTrails();
             BuildNodes();
             BuildChapterEnd();
             _drawn = true;
@@ -519,34 +550,23 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------ the nodes
-        void BuildTrails()
-        {
-            var levels = _layout.Levels;
-
-            // What the last trail leads to, which is the one place the two unlock rules meet.
-            // Inside the chapter a trail is lit when the island it leads to is open; the trail
-            // out of the chapter has to ask the same question of what it leads to, and since
-            // the boundary became a star gate that is no longer "was the last level cleared".
-            // A lit trail running into a padlocked signpost is the map contradicting itself.
-            var onward = LevelUnlock.ChapterAfter(_index, _entry.Id);
-
-            for (int i = 0; i < levels.Count; i++)
-            {
-                bool last = i == levels.Count - 1;
-                var from = _layout.PositionOf(levels[i].Id);
-                var to = last ? _layout.TeaserPosition : _layout.PositionOf(levels[i + 1].Id);
-                bool live = last
-                    ? (onward != null
-                        ? LevelUnlock.IsChapterUnlocked(_index, onward.Id)
-                        : PlayerProgress.IsCleared(levels[i].Id))
-                    : LevelUnlock.IsUnlocked(_index, levels[i + 1].Id);
-
-                var trail = _map.gameObject.AddComponent<Trail>();
-                trail.Setup(_map, from, to, 13,
-                            live ? ModeLooks.Of(Mode).Accent : new Color(1f, .99f, .92f, .8f), live,
-                            _mapScale);
-            }
-        }
+        //
+        // **There is no trail between the nodes, and its absence is the design rather than
+        // something missing.** A row of drifting dots joined one glade to the next, lit in the
+        // mode's accent when the glade ahead was open and cream when it was not. It was right
+        // while a node was a floating island over a backdrop: the dots were the only thing
+        // saying the islands were a chain.
+        //
+        // A node stands on the painting now (`MakeNode`), and every one of these paintings
+        // draws a road. So a straight run of dots between two glades seated on that road is a
+        // *second* path cutting the corners of the first - and on `map3`, whose trail is drawn
+        // as a dashed line, it crossed the painting's own. The road is the chain.
+        //
+        // **It carried no fact the map does not still show.** A trail was lit when the glade
+        // ahead was unlocked, and that glade draws `node_lock` when it is not; the trail out of
+        // a chapter asked whether the next chapter was open, and the marker it ran to draws its
+        // own padlock for exactly that. Both readouts were second copies, which is why this is
+        // a deletion and not a trade.
 
         void BuildNodes()
         {
@@ -563,18 +583,18 @@ namespace GlimmerGrove
             // reads as its true position in the catalog.
             int displayNumber = _index.OrderOf(level.Id) + 1;
 
-            var node = MakePerch(_layout.PositionOf(level.Id), ModeLooks.Of(Mode).Perch,
-                                 indexInChapter);
+            bool afloat = level.Presentation.Afloat;
+            var node = MakeNode(_layout.PositionOf(level.Id), afloat);
             _nodes[level.Id] = node;
 
             string skin = !unlocked ? "node_lock" : (stars > 0 ? "node_s" + stars : "node_open");
             if (unlocked && stars == 0)
                 UIKit.Halo(node, level.Presentation.ResolveAccent(_body.Definition), 360f, .34f,
-                           new Vector2(0f, DiscY));
+                           new Vector2(0f, DiscY(afloat)));
 
             var id = level.Id;
             var btn = UIKit.Button("Btn", node, Art.S("Map/" + skin), new Vector2(NodeSize, NodeSize),
-                                   new Vector2(.5f, .5f), new Vector2(0f, DiscY), () => Open(id, unlocked));
+                                   new Vector2(.5f, .5f), new Vector2(0f, DiscY(afloat)), () => Open(id, unlocked));
             btn.GetComponent<Image>().preserveAspect = true;
 
             // A glade has its own voice: Open() plays `unlock` when it lets you in, and
@@ -620,21 +640,22 @@ namespace GlimmerGrove
         void BuildChapterEnd()
         {
             var next = LevelUnlock.ChapterAfter(_index, _entry.Id);
-            var node = MakePerch(_layout.TeaserPosition, ModeLooks.Of(Mode).Perch, 99);
+            bool afloat = _body.Definition != null && _body.Definition.TeaserAfloat;
+            var node = MakeNode(_layout.TeaserPosition, afloat);
 
             bool onward = next != null;
             bool reachable = onward && LevelUnlock.IsChapterUnlocked(_index, next.Id);
 
             var disc = UIKit.Img("Seal", node, Art.S("Map/" + (reachable ? "node_open" : "node_lock")),
                                  reachable ? Color.white : new Color(.88f, .90f, .94f, .95f),
-                                 new Vector2(NodeSize, NodeSize), new Vector2(.5f, .5f), new Vector2(0f, DiscY));
+                                 new Vector2(NodeSize, NodeSize), new Vector2(.5f, .5f), new Vector2(0f, DiscY(afloat)));
             disc.preserveAspect = true;
 
             if (reachable)
             {
                 var target = next.Id;
                 var btn = UIKit.Button("Btn", node, Art.S("Map/node_open"), new Vector2(NodeSize, NodeSize),
-                                       new Vector2(.5f, .5f), new Vector2(0f, DiscY), () => GoToChapter(target));
+                                       new Vector2(.5f, .5f), new Vector2(0f, DiscY(afloat)), () => GoToChapter(target));
                 btn.GetComponent<Image>().preserveAspect = true;
                 UIKit.Titled("Arrow", btn.transform, "»", 64, new Color(.30f, .21f, .13f),
                              TextAnchor.MiddleCenter, new Vector2(190f, 110f), new Vector2(.5f, .5f),
@@ -643,10 +664,11 @@ namespace GlimmerGrove
             }
             else
             {
-                // hangs off the perch rather than the seal, so it carries the seal's own
+                // hangs off the node rather than the seal, so it carries the seal's own
                 // offset as well as the face lift
                 UIKit.Titled("Q", node, "?", 64, new Color(.36f, .38f, .44f), TextAnchor.MiddleCenter,
-                             new Vector2(190f, 110f), new Vector2(.5f, .5f), new Vector2(0f, DiscY + NodeFaceY),
+                             new Vector2(190f, 110f), new Vector2(.5f, .5f),
+                             new Vector2(0f, DiscY(afloat) + NodeFaceY),
                              0f, 2f);
                 // The gate, as a number rather than as an instruction. "Clear this chapter to
                 // go on" was true when the boundary was a chain and is now both wrong and
@@ -690,35 +712,54 @@ namespace GlimmerGrove
                 ? Loc.Format("ui.levels.chapter_gate", gate.Held, gate.Required)
                 : Loc.Get("ui.levels.chapter_locked");
 
-        /// <summary>Floating rock with a soft shadow, gently bobbing.</summary>
-        RectTransform MakePerch(Vector2 frac, string rock, int seed)
+        /// <summary>
+        /// A node standing on the map, with a contact shadow under it.
+        ///
+        /// <para>
+        /// <b>It used to be a floating island tile</b> — a rock sprite with a soft drop shadow
+        /// below it, bobbing — and the packs these paintings come from are advertised the
+        /// other way round, with the disc sitting on the road the picture already draws. The
+        /// tile was doing real work: a node's position was a serpentine spaced down the map
+        /// (<c>Tools/chapters/mapart.py</c>), which ignores the painting entirely, so the tile
+        /// brought its own ground and it did not matter that a glade stood over a river or a
+        /// rooftop. Taking it away is therefore not a deletion — it is paid for by
+        /// <c>Tools/make_map_seats.py</c>, which reads the ground out of each painting and
+        /// seats the chain on it.
+        /// </para>
+        /// <para>
+        /// <b>Nothing bobs any more, and that is the point rather than a saving.</b> A tile
+        /// hanging in the air may drift; a node standing on a road may not, and one that
+        /// bobbed would read as art that had come unstuck from the picture behind it.
+        /// </para>
+        /// <para>
+        /// The shadow stays and is the whole of what plants the disc. It hangs off the disc
+        /// rather than off the node — a shadow at a fixed y is a smudge left behind the moment
+        /// anything stands the disc somewhere else — and it is shallower and tighter than the
+        /// tile's was, because it is cast onto ground a few units under the disc rather than
+        /// onto a map a tile's height below it.
+        /// </para>
+        /// </summary>
+        RectTransform MakeNode(Vector2 frac, bool afloat)
         {
-            var node = UIKit.Node("Perch", _map);
+            var node = UIKit.Node("Node", _map);
             node.anchorMin = node.anchorMax = frac;
             node.pivot = new Vector2(.5f, .5f);
-            node.sizeDelta = new Vector2(360f, 420f);
+            node.sizeDelta = new Vector2(NodeWidth, 420f);
             node.anchoredPosition = Vector2.zero;
 
-            UIKit.Img("Shadow", node, Art.Glow(96, 2.2f), new Color(.03f, .10f, .16f, .38f),
-                      new Vector2(370f, 150f), new Vector2(.5f, .5f), new Vector2(0f, -150f));
+            if (afloat)
+            {
+                UIKit.Img("Shadow", node, Art.Glow(96, 2.2f), new Color(.03f, .10f, .16f, .38f),
+                          new Vector2(370f, 150f), new Vector2(.5f, .5f), new Vector2(0f, -150f));
 
-            // Tinted rather than re-cut, which is the whole of what a second mode costs the map
-            // art: one multiply over sprites that are already loaded, moving every island of a
-            // chapter together. The rock *set* differs too, so the two maps are still told apart
-            // by somebody who cannot see the colour.
-            var img = UIKit.Img("Rock", node, Art.S("Map/" + rock), ModeLooks.Of(Mode).Wash,
-                                new Vector2(PerchWidth, PerchRockHeight), new Vector2(.5f, .5f),
-                                new Vector2(0f, PerchRockY));
-            img.preserveAspect = true;
+                var rock = UIKit.Img("Perch", node, Art.S("Map/" + PerchArt), Color.white,
+                                     PerchBox, new Vector2(.5f, .5f), new Vector2(0f, PerchY));
+                rock.preserveAspect = true;
+            }
 
-            // Contact shadow, so the glade disc looks planted rather than floating — which
-            // means it hangs off the disc rather than off the node: a shadow at a fixed y is a
-            // smudge left behind on the tile the moment a perch stands its disc anywhere else.
-            UIKit.Img("Contact", node, Art.Glow(96, 2.6f), new Color(.02f, .08f, .12f, .45f),
-                      new Vector2(232f, 74f), new Vector2(.5f, .5f),
-                      new Vector2(0f, DiscY - ContactDrop));
-
-            Tween.Bob(node, 8f, 3.1f + (seed % 5) * .27f, seed * 1.1f);
+            UIKit.Img("Contact", node, Art.Glow(96, 2.6f), new Color(.02f, .08f, .12f, .42f),
+                      new Vector2(214f, 62f), new Vector2(.5f, .5f),
+                      new Vector2(0f, DiscY(afloat) - ContactDrop));
             return node;
         }
 
@@ -1661,61 +1702,5 @@ namespace GlimmerGrove
         }
 
         public override bool OnBack() { Flow.Go<HomeScreen>(); return true; }
-    }
-
-    /// <summary>Row of drifting dots joining two points on the map.</summary>
-    public sealed class Trail : MonoBehaviour
-    {
-        RectTransform _area;
-        Vector2 _a, _b;
-        Image[] _dots;
-        bool _live;
-
-        /// <summary>
-        /// <paramref name="scale"/> is the map's own, and the dots take it because a trail is
-        /// part of the painting rather than a control on top of it: the ends it joins are
-        /// fractions, so on a map drawn half again as large the gaps between the dots grow and
-        /// the dots would not — a dotted path becoming a sparser one for no reason a player
-        /// could name. One on every phone.
-        /// </summary>
-        public void Setup(RectTransform area, Vector2 fracA, Vector2 fracB, int count, Color colour,
-                          bool live, float scale = 1f)
-        {
-            _area = area; _a = fracA; _b = fracB; _live = live;
-            _dots = new Image[count];
-            var host = UIKit.Node("Trail", area);
-            for (int i = 0; i < count; i++)
-            {
-                float k = (i + 1f) / (count + 1f);
-                float size = Mathf.Lerp(22f, 34f, Mathf.Sin(k * Mathf.PI)) * scale;
-                _dots[i] = UIKit.Img("d" + i, host, Art.Disc(64), colour,
-                                     Vector2.one * size, new Vector2(.5f, .5f), Vector2.zero);
-            }
-        }
-
-        void LateUpdate()
-        {
-            if (_area == null || _dots == null) return;
-            var size = _area.rect.size;
-            Vector2 pa = new Vector2((_a.x - .5f) * size.x, (_a.y - .5f) * size.y);
-            Vector2 pb = new Vector2((_b.x - .5f) * size.x, (_b.y - .5f) * size.y);
-            float bow = Mathf.Min(150f, Vector2.Distance(pa, pb) * .17f);
-            var n = (pb - pa).normalized;
-            float t = Time.unscaledTime;
-
-            for (int i = 0; i < _dots.Length; i++)
-            {
-                if (!_dots[i]) continue;
-                float k = (i + 1f) / (_dots.Length + 1f);
-                var rt = (RectTransform)_dots[i].transform;
-                var p = Vector2.Lerp(pa, pb, k) + new Vector2(-n.y, n.x) * Mathf.Sin(k * Mathf.PI) * bow;
-                rt.anchoredPosition = p;
-                var c = _dots[i].color;
-                c.a = _live ? .32f + .48f * (.5f + .5f * Mathf.Sin(t * 2.6f - k * 7f)) : .38f;
-                _dots[i].color = c;
-                float s = _live ? 1f + .17f * Mathf.Sin(t * 2.6f - k * 7f) : 1f;
-                rt.localScale = new Vector3(s, s, 1f);
-            }
-        }
     }
 }

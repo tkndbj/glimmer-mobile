@@ -289,6 +289,13 @@ namespace GlimmerGrove.AssetPipeline
             // screens that do not hold it — and an `Image` with no sprite is a white
             // rectangle (invariant 7b) on the one panel a player cannot dismiss.
             "ic_update",
+
+            // The season's crest (`SeasonCrest.Watch`, cut by `Tools/make_season_crest.py`).
+            // **Global rather than scoped**, and the hub decides it: the season box is drawn on
+            // the first screen after the splash, before any screen scope exists, so a crest
+            // filed with the season page would be asked for by the box that opens it — and an
+            // `Image` with no sprite is a white rectangle rather than a blank (invariant 7b).
+            "ic_season",
             "seal_gold", "crest_gold", "bar_track", "bar_fill",
 
             // The three marks the Infinite lane's hub reads its lines against
@@ -379,12 +386,30 @@ namespace GlimmerGrove.AssetPipeline
             "Task/raiders", "Task/boss", "Task/charm", "Task/cog", "Task/wave",
         };
 
-        /// <summary>Map furniture used by every chapter, unlike the strips themselves.</summary>
+        /// <summary>
+        /// Map furniture used by every chapter, unlike the strips themselves.
+        ///
+        /// <para>
+        /// <b>Nine of the ten <c>rock_*</c> perches are gone from here and still on disk.</b> A
+        /// node stands on the painting now rather than on a floating tile of its own, and a
+        /// preloaded picture nothing draws is resident memory for the life of the game — which
+        /// is the cost that matters and the one this pays. The PNGs, their <c>.meta</c> guids
+        /// and their Addressables rows are kept until the change has been seen on a device.
+        /// </para>
+        /// <para>
+        /// <b><c>rock_grass</c> stays, because one map still moors.</b> `map1` is an
+        /// archipelago and half its chain crosses open water on the current the painting
+        /// draws, so those nodes keep a tile under them (<c>LevelsScreen.PerchArt</c>). It is
+        /// global rather than a chapter's, exactly as the rest of this row is: the map's
+        /// furniture is wanted by whichever chapter is open, and an <c>Image</c> whose sprite
+        /// has not arrived is a white rectangle (invariant 7b) — over the sea, on the first
+        /// chapter of the game.
+        /// </para>
+        /// </summary>
         static readonly string[] MapSprites =
         {
             "node_open", "node_lock", "node_s0", "node_s1", "node_s2", "node_s3", "pointer",
-            "rock_grass", "rock_tall", "rock_wide", "rock_chip", "rock_plain",
-            "rock_sand", "rock_palm", "rock_wood", "rock_lumen", "rock_basin",
+            "rock_grass",
             "palm", "boulder", "stump", "post",
         };
 

@@ -1,4 +1,6 @@
 using System;
+using GlimmerGrove.Ads;
+using GlimmerGrove.Daily;
 using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Store;
@@ -191,7 +193,14 @@ namespace GlimmerGrove
             // It is on the price face rather than beside the caption because the face is what
             // moves when the card is pressed — a glyph parented anywhere else would stay put
             // while the price it belongs to squashed away from it.
-            _priceMark = UIKit.Img("PriceMark", _priceFace.transform, Art.S("Ui/ic_gem"), Pal.Cream,
+            //
+            // **Its sprite is assigned on every draw rather than fixed here**, because there is
+            // more than one thing a face can be marked with now: a gem in front of a gem price,
+            // and a play triangle in front of the one face on this shelf that asks for no
+            // currency at all (<see cref="Draw(AdOffer, StoreShelf)"/>). A cell is rebound rather than
+            // rebuilt (invariant 16d), so a mark left over from the row this cell used to be is
+            // a gem in front of "WATCH".
+            _priceMark = UIKit.Img("PriceMark", _priceFace.transform, Art.S(GemMark), Pal.Cream,
                                    Vector2.one * (faceH * .34f), new Vector2(.5f, .5f),
                                    new Vector2(0f, faceH * UIKit.PillFaceLift));
             _priceMark.preserveAspect = true;
@@ -419,6 +428,89 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// A rewarded video: what it pays, and a face that asks for a minute rather than money.
+        ///
+        /// <para>
+        /// <b>The one card on this screen whose price is not a number</b>, and it keeps the
+        /// card's grammar exactly: the headline is what arrives, the line under it names the
+        /// currency, and the face says what it costs. What tells it apart from the packs beside
+        /// it is the three things a player reads before any of that — the picture is a small
+        /// heap with a play mark on it rather than a painted chest (<c>ShopArt.PaintAd</c>), the
+        /// face is <see cref="Skins.Affirm"/>'s green rather than the money orange or the gem
+        /// violet, and the ribbon says FREE where a pack's says how much extra.
+        /// </para>
+        /// <para>
+        /// <b>Green because the panel it opens is green.</b> The watch button on
+        /// <c>AdOfferOverlay</c> is <c>btn_green</c> and has been since rewarded ads shipped, so
+        /// a card that leads to it wearing the same face is one control rather than two — the
+        /// argument the shelf tabs make about borrowing a glyph the game already draws.
+        /// </para>
+        /// <para>
+        /// <b>It is drawn live whatever the network is doing, and that is deliberate.</b> A
+        /// rewarded ad has five ways of not happening (<c>AdOfferState</c>) and every one of
+        /// them resolves by waiting; the panel behind this card says which one it is, in its own
+        /// words, with the allowance and the cooldown beside it. Painting a refusal here as well
+        /// would be a second copy of those five sentences on a cell that is rebound as the shelf
+        /// scrolls — and a countdown drawn on a card nothing ticks is a number that is wrong a
+        /// second after it is written. It is the rule the hub's <c>+</c> already follows: a
+        /// control beside a resource opens that resource's panel, whatever the state of the
+        /// world.
+        /// </para>
+        /// <para>
+        /// What <em>does</em> take the card off the shelf is the content table not carrying the
+        /// placement at all, which is the caller's to decide — see <c>ShopScreen.Reload</c> and
+        /// <c>AdRewardTable.Offer</c>. That is a refusal no amount of waiting resolves, and it
+        /// is how a config push switches the offer off everywhere at once.
+        /// </para>
+        /// </summary>
+        public void Draw(AdOffer offer, StoreShelf shelf)
+        {
+            if (!offer.IsValid) { Hide(); return; }
+
+            _plate.gameObject.SetActive(true);
+
+            Shelf(shelf);
+
+            ShopArt.PaintAd(_art, offer.Kind);
+
+            _amount.text = Compact.Number(offer.Amount);
+            _amount.color = Pal.A(RewardArt.Tint(offer.Kind, null), 1f);
+
+            _sub.text = UnitOf(offer.Kind);
+            _sub.color = Unit;
+
+            Face(Skins.Affirm, live: true);
+            _price.color = Pal.Cream;
+            SetPrice(Loc.Get("ui.ads.watch"), PlayMark);
+
+            PaintRibbon(Loc.Get("ui.shop.ad_free"));
+            PaintSeal(null);
+        }
+
+        /// <summary>
+        /// The noun under the headline figure, in the shelf's own words.
+        ///
+        /// <para>
+        /// Written out rather than taken from <see cref="RewardArt.Name"/>, which answers for
+        /// every kind there is and answers in lower case: beside a shelf printing "Coins" and
+        /// "Hearts" on every other card, a lower-case "coins" reads as a different kind of card
+        /// rather than as the same one. The three keys the shop already owns are named here and
+        /// the general answer is the fallback, so a placement paying something else still says
+        /// what it pays.
+        /// </para>
+        /// </summary>
+        static string UnitOf(ChestDropKind kind)
+        {
+            switch (kind)
+            {
+                case ChestDropKind.Credits: return Loc.Get("ui.shop.coins");
+                case ChestDropKind.Hearts: return Loc.Get("ui.shop.hearts");
+                case ChestDropKind.Gems: return Loc.Get("ui.shop.gems");
+                default: return RewardArt.Name(kind, null);
+            }
+        }
+
+        /// <summary>
         /// A utility: the picture the action bar draws, its name, how many are in the pack, and
         /// what one more costs in gems.
         ///
@@ -497,7 +589,7 @@ namespace GlimmerGrove
             // taken off explicitly rather than left alone, because the same cell object is
             // rebound between a gem-priced good and a real-money container as the supplies shelf
             // scrolls (invariant 16d) — leaving it would put a gem in front of a dollar sign.
-            SetGemMark(false);
+            SetMark(null);
 
             switch (offer.State)
             {
@@ -556,17 +648,37 @@ namespace GlimmerGrove
         /// other leaves a price shoved half a glyph off centre — the failure
         /// <see cref="UIKit.CentreGlyph"/> exists to make unforgettable.
         /// </summary>
-        void SetPrice(string text, bool gem)
+        void SetPrice(string text, bool gem) => SetPrice(text, gem ? GemMark : null);
+
+        /// <summary>
+        /// The same thing with a named mark rather than a boolean, for the one face that is
+        /// marked with something other than a gem.
+        /// </summary>
+        void SetPrice(string text, string mark)
         {
             _price.text = text;
-            SetGemMark(gem);
+            SetMark(mark);
             UIKit.CentreGlyph(_price, _priceMark, _priceWidth);
         }
 
-        void SetGemMark(bool on)
+        /// <summary>The two marks a price face can wear. Written out so the scanner sees both.</summary>
+        const string GemMark = "Ui/ic_gem", PlayMark = "Ui/ic_play";
+
+        /// <summary>
+        /// Shows or hides the glyph in front of the price, and says which one it is.
+        ///
+        /// The sprite is assigned before the object is shown rather than after, because an
+        /// <c>Image</c> turned on with the previous row's sprite still in it draws that sprite
+        /// for a frame — which on this screen is a gem flashing in front of a free offer.
+        /// </summary>
+        void SetMark(string address)
         {
-            if (_priceMark && _priceMark.gameObject.activeSelf != on)
-                _priceMark.gameObject.SetActive(on);
+            if (!_priceMark) return;
+
+            bool on = address != null;
+            if (on) _priceMark.sprite = Art.S(address);
+
+            if (_priceMark.gameObject.activeSelf != on) _priceMark.gameObject.SetActive(on);
         }
 
         /// <summary>
@@ -607,10 +719,24 @@ namespace GlimmerGrove
         const float SpotAlpha = .22f;
 
         void PaintRibbon(int bonusPercent)
+            => PaintRibbon(bonusPercent >= 5 ? Loc.Format("ui.shop.bonus", bonusPercent) : null);
+
+        /// <summary>
+        /// The mark across the top-left corner, or nothing.
+        ///
+        /// <para>
+        /// A caption rather than a percentage, because the ribbon has two things to say now: a
+        /// money card's bonus, which is arithmetic over the ladder, and the one card on the
+        /// shelf that asks for nothing at all. Both are "why this one is worth a look", which is
+        /// the whole of what this corner has ever meant — a second badge invented for the second
+        /// case would be a second vocabulary for one idea.
+        /// </para>
+        /// </summary>
+        void PaintRibbon(string said)
         {
             if (!_ribbon) return;
 
-            bool show = bonusPercent >= 5;
+            bool show = said != null;
             _ribbon.gameObject.SetActive(show);
             if (!show) return;
 
@@ -619,7 +745,6 @@ namespace GlimmerGrove
             // repainted whenever a price arrives, so the caption is remembered and the work is
             // skipped when it has not moved — which is most binds, since a shelf of coin packs
             // carries the same handful of percentages.
-            string said = Loc.Format("ui.shop.bonus", bonusPercent);
             if (said == _ribbonSaid) return;
 
             _ribbonSaid = said;

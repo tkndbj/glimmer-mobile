@@ -204,7 +204,7 @@ def rows_of(rung):
 
 
 def level(index, rung):
-    x, y = mapart.places(ORDINAL)[index]
+    x, y, afloat = mapart.places(ORDINAL)[index]
 
     block = {
         "width": WIDE,
@@ -230,6 +230,7 @@ def level(index, rung):
         "id": rung["id"],
         "mapX": round(x, 3),
         "mapY": round(y, 3),
+        "afloat": afloat,
 
         # No allowance, on every rung. A siege is lost when the last ward falls (invariant 24, and
         # the mode) - and both gates *error* on a siege that authors one.
@@ -257,6 +258,11 @@ def body():
         "slate": "#1A0F14",
         "backdrop": mapart.sky(ORDINAL, 0, "siege"),
         "mapStrips": mapart.strips(ORDINAL),
+        # The end-of-chapter marker stands on the painting like every glade does, and its
+        # x is the only axis a body can author (`ChapterMap.TeaserPosition` derives its
+        # height). Generated with the seats: `Tools/make_map_seats.py`.
+        "teaserX": mapart.marker(ORDINAL),
+        "teaserAfloat": mapart.marker_afloat(ORDINAL),
         "levels": [level(i, rung) for i, rung in enumerate(LEVELS)],
     }
 

@@ -137,9 +137,10 @@ namespace GlimmerGrove.Persistence
                 // so the only way to clear one is for the newer epoch's grove to replace the
                 // older one's rather than absorb it. The epoch itself merges by max like
                 // every other monotonic number here, so the two converge either way round.
-                homesteadStock = GroveOf(mine, other,
-                                         m => Homestead.GroveStock.In(m),
-                                         (a, b) => Homestead.HomesteadLedger.Join(a, b)),
+                // homesteadStock is set below rather than here, through GroveStock.Record,
+                // because the v19 mirror beside it is derived from these very rows and this
+                // initializer once set the rows alone — see GroveStock.Record for the card
+                // that drew the wrong house for every keeper in the game as a result.
                 groveLandOwned = GroveOf(mine, other,
                                          m => m.groveLandOwned,
                                          Homestead.GroveLand.Join),
@@ -178,6 +179,17 @@ namespace GlimmerGrove.Persistence
                 // whichever device is asking - invariant 11b's one legal shape for a count.
                 wardStars = Wards.WardStarLedger.Join(mine.wardStars, other.wardStars),
             };
+
+            // The grove's purchases, and the v19 mirror that is derived from them, written
+            // together so neither can be set without the other. Read through GroveStock.In on
+            // both sides rather than off the field, so a v19 document — on this disk, or in the
+            // cloud under a device that has not updated — brings its purchases into the join
+            // instead of arriving as nothing; and skipped entirely when the two sides' groves
+            // are different generations, which is GroveEpoch's rule for the reason given above.
+            Homestead.GroveStock.Record(merged,
+                GroveOf(mine, other,
+                        m => Homestead.GroveStock.In(m),
+                        (a, b) => Homestead.HomesteadLedger.Join(a, b)));
 
             return merged;
         }

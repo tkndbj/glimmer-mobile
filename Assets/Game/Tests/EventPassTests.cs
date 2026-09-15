@@ -18,10 +18,20 @@ namespace GlimmerGrove.Tests
     public sealed class EventPassTests
     {
         // ------------------------------------------------------------ what shipped
+        /// <summary>
+        /// The season the game ships, whatever it is called.
+        ///
+        /// <b>Found by being the one enabled season rather than by id</b>, which is not
+        /// laziness: the shipped season repeats (<see cref="SeasonCycle"/>), so its manifest
+        /// `id` is a <em>stem</em> that the clock builds cycle ids on — and a fixture pinning
+        /// the stem would be pinning the one part of a season's identity that a rename touches
+        /// while everything this file actually asserts stays true. It was pinned by id and it
+        /// went red the day the season was renamed, with nothing about the ladder wrong.
+        /// </summary>
         static ManifestEventDto Shipped()
             => JsonUtility.FromJson<ManifestDto>(File.ReadAllText(
                    Path.Combine(Application.streamingAssetsPath, "Content/manifest.json")))
-               .events.Single(x => x.id == "first_watch");
+               .events.Single(x => !x.disabled);
 
         /// <summary>
         /// Forty rungs and eighty chests, which is the shape the season was commissioned as.

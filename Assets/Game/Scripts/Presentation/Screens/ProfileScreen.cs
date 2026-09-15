@@ -605,7 +605,24 @@ namespace GlimmerGrove
         // ----------------------------------------------------------- the account
         // ------------------------------------------------------------- the boards
         /// <summary>
-        /// Where this grove stands among everybody else's, and whether it appears at all.
+        /// Where this keeper stands among everybody else, and whether they appear at all.
+        ///
+        /// <para>
+        /// <b>It reads the Endless Watch, because that is the board there is.</b> It used to
+        /// read what the grove was worth, which was the figure the finest-groves board was
+        /// ordered on — and that board is <b>held</b> with the Grovement it ranks. Left as it
+        /// was, this card would have printed "buy something for your grove and you will be
+        /// ranked" to a player with no grove shop to reach and no board to be ranked on, which
+        /// is the worst kind of stale copy: every word of it true when it was written, every
+        /// word of it a wrong instruction now.
+        /// </para>
+        /// <para>
+        /// <b>The opt-out is untouched and that is the point of keeping the card at all.</b>
+        /// What it governs is whether a card is published, and a card is what <em>both</em>
+        /// boards are built from — so holding one board does not make the control less
+        /// needed, it makes it the only way off the one that is left. Removing it with the
+        /// grove's own figures would have taken away a player's only way out of a public list.
+        /// </para>
         ///
         /// <para>
         /// <b>The opt-out lives here rather than in Settings, and for the reason the account
@@ -625,18 +642,22 @@ namespace GlimmerGrove
             var card = Section("Boards", 330f, 3);
             CardTitle(card, "ui.board.title", CardWidth);
 
-            var standing = GroveScore.Of(HomesteadCatalog.Current);
-
             var glyph = UIKit.Img("Glyph", card, Art.S("Ui/ic_trophy"), Color.white,
                                   new Vector2(76f, 76f), new Vector2(0f, .5f), new Vector2(104f, 54f));
             glyph.preserveAspect = true;
             UIKit.Halo(glyph.transform, Pal.Gold, 150f, .26f);
 
-            int top = GroveRanks.Table.TopPercent(standing.Score);
+            // `Waves` rather than `Table`, which is the same distribution document read on a
+            // different field — the two populations are deliberately different lengths, because
+            // a percentile only means anything against keepers who have actually done the
+            // thing (invariant 19m). Both refuse to answer under their own sample floor, and
+            // `TopPercent` returning nought is what `ui.board.building` is for.
+            int best = EndlessLedger.Best;
+            int top = GroveRanks.Waves.TopPercent(best);
 
             string line = !GroveBoard.IsAvailable ? Loc.Get("ui.board.offline")
                         : !GroveBoard.OptedIn ? Loc.Get("ui.board.opted_out")
-                        : standing.Score < GrovePublishPolicy.Worth ? Loc.Get("ui.board.unranked")
+                        : best <= 0 ? Loc.Get("ui.board.unranked")
                         : top > 0 ? Loc.Format("ui.board.top_percent", top)
                         : Loc.Get("ui.board.building");
 

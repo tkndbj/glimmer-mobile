@@ -27,7 +27,7 @@ namespace GlimmerGrove.Content
             new CatalogIndex(Array.Empty<ChapterIndexEntry>(), Array.Empty<LevelId>(),
                              new Dictionary<LevelId, int>(), new Dictionary<LevelId, ChapterId>(),
                              Array.Empty<AvatarDefinition>(), Array.Empty<Events.GroveEvent>(),
-                             null, null, null);
+                             null, null, null, null);
 
         static readonly LevelId[] NoLevels = Array.Empty<LevelId>();
         static readonly ChapterIndexEntry[] NoChapters = Array.Empty<ChapterIndexEntry>();
@@ -40,6 +40,9 @@ namespace GlimmerGrove.Content
         readonly AvatarDefinition[] _companions;
         readonly Events.GroveEvent[] _events;
 
+        /// <summary>The one repeating season, or null. See <see cref="Events.SeasonCycle"/>.</summary>
+        readonly Events.SeasonCycle _cycle;
+
         readonly Dictionary<LevelId, GameMode> _levelMode;
         readonly Dictionary<ModeLane, LevelId[]> _byLane;
         readonly Dictionary<ModeLane, ChapterIndexEntry[]> _chaptersByLane;
@@ -50,6 +53,7 @@ namespace GlimmerGrove.Content
                               Dictionary<LevelId, ChapterId> levelChapter,
                               AvatarDefinition[] companions,
                               Events.GroveEvent[] events,
+                              Events.SeasonCycle cycle,
                               Dictionary<LevelId, GameMode> levelMode,
                               Dictionary<ModeLane, List<LevelId>> byLane,
                               Dictionary<ModeLane, List<ChapterIndexEntry>> chaptersByLane)
@@ -60,6 +64,7 @@ namespace GlimmerGrove.Content
             _levelChapter = levelChapter;
             _companions = companions ?? Array.Empty<AvatarDefinition>();
             _events = events ?? Array.Empty<Events.GroveEvent>();
+            _cycle = cycle != null && cycle.IsValid ? cycle : null;
             _levelMode = levelMode ?? new Dictionary<LevelId, GameMode>();
 
             _chapterById = new Dictionary<ChapterId, ChapterIndexEntry>(chapters.Length);
@@ -223,13 +228,55 @@ namespace GlimmerGrove.Content
         /// </summary>
         public IReadOnlyList<Events.GroveEvent> Events => _events;
 
-        /// <summary>The event running at <paramref name="nowUnix"/>, or null.</summary>
+        /// <summary>The repeating season this catalog declares, or null.</summary>
+        public Events.SeasonCycle Cycle => _cycle;
+
+        /// <summary>
+        /// The event running at <paramref name="nowUnix"/>, or null.
+        ///
+        /// <para>
+        /// <b>An authored season beats a derived one, and that precedence is stated rather than
+        /// emergent.</b> A repeating season covers the whole calendar from its start onward, so
+        /// any dated season a manifest also carries necessarily overlaps it — and the useful
+        /// reading is that the hand-written one wins, because it is the more specific thing and
+        /// the only reason to author it is to interrupt the rotation. The alternative, refusing
+        /// the overlap, would make "run a one-off event this December" impossible without taking
+        /// the endless season down.
+        /// </para>
+        /// </summary>
         public Events.GroveEvent LiveEventAt(long nowUnix)
         {
             for (int i = 0; i < _events.Length; i++)
                 if (_events[i].IsLiveAt(nowUnix)) return _events[i];
 
-            return null;
+            return _cycle?.LiveAt(nowUnix);
+        }
+
+        /// <summary>
+        /// The season an id names — authored or derived — or null.
+        ///
+        /// <para>
+        /// <b>This is how a season the player still holds an unopened chest from stays
+        /// reachable.</b> <see cref="Events"/> is the authored calendar and cannot list a
+        /// recurrence, so a closed cycle exists only as an id in somebody's save; without a
+        /// reader that can turn that id back into a season, the chest it holds would be
+        /// unreachable — which is exactly what invariant 47c promises never happens
+        /// ("a rung reached before a season closed stays claimable").
+        /// </para>
+        /// <para>
+        /// No clock is consulted. Whether a cycle may be <em>claimed against</em> is the
+        /// server's question (<see cref="Events.SeasonCycle.HasOpenedBy"/>); whether it can be
+        /// <em>drawn</em> is this one, and a closed season is by definition in the past.
+        /// </para>
+        /// </summary>
+        public Events.GroveEvent EventById(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+
+            for (int i = 0; i < _events.Length; i++)
+                if (string.Equals(_events[i].Id, id, StringComparison.Ordinal)) return _events[i];
+
+            return _cycle?.EventById(id);
         }
 
         // ------------------------------------------------------------- chapters

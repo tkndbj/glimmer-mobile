@@ -101,12 +101,13 @@ def rows_of():
 
 
 def level():
-    x, y = mapart.places(ORDINAL)[0]
+    x, y, afloat = mapart.places(ORDINAL)[0]
 
     return {
         "id": "s02_endless",
         "mapX": round(x, 3),
         "mapY": round(y, 3),
+        "afloat": afloat,
 
         # No allowance, like every siege: the ward line is the fail state, and both gates *error*
         # on one that authors an allowance.
@@ -145,6 +146,11 @@ def body():
         "slate": "#1A0F14",
         "backdrop": mapart.sky(ORDINAL, 0, "siege"),
         "mapStrips": mapart.strips(ORDINAL),
+        # The end-of-chapter marker stands on the painting like every glade does, and its
+        # x is the only axis a body can author (`ChapterMap.TeaserPosition` derives its
+        # height). Generated with the seats: `Tools/make_map_seats.py`.
+        "teaserX": mapart.marker(ORDINAL),
+        "teaserAfloat": mapart.marker_afloat(ORDINAL),
         "levels": [level()],
     }
 

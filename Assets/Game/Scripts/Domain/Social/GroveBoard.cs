@@ -224,8 +224,22 @@ namespace GlimmerGrove.Social
         /// catch that only runs on a reply, which no old note is ever going to get. A new key
         /// makes every device republish exactly once on its next settled sync. Bump it again
         /// only for the same reason: a fingerprint that has been recorded against a wrong card.
+        /// <para>
+        /// <b>Bumped to 3 for exactly that reason, and it is the only repair this fault has.</b>
+        /// <c>SaveMerge</c> wrote the grove's stock without the v19 mirror it derives, and
+        /// <c>buildCard</c> asked that mirror alone for the best home held, so every card in
+        /// the game was published with the free cottage over a keeper who had paid for a
+        /// farmhouse — see <c>GroveStock.Record</c>. Both halves are fixed, and neither reaches
+        /// a card that is already standing: the fingerprint covers what a <em>visitor</em> can
+        /// see, and nothing a visitor can see has changed, so the note under key 2 would go on
+        /// suppressing the one publish that would put the house right — for the life of the
+        /// account, or until its owner happened to move a bench. The alternatives were a
+        /// backfill over every player document in the database, which is a read and a write per
+        /// account at any population, or leaving it to chance. This costs one publish per
+        /// account, once, on the launch after the update, and nothing at all thereafter.
+        /// </para>
         /// </remarks>
-        const string PublishedKey = "grove.published.2.";
+        const string PublishedKey = "grove.published.3.";
 
         static void Remember()
         {

@@ -1056,7 +1056,22 @@ export function buildCard(
   // the reason a home cannot be bought and then not seen. "Held" is the same composite the
   // client uses: a rung with no price is free to everybody, and a priced one has to be in
   // the purchased set. Ties break on catalog order, which is arbitrary and stable.
-  const owned = idSet(save.homesteadOwned, 512);
+  //
+  // <b>Read through `stockOf`, which is the one door every reader of this section goes
+  // through, and it is here because this line once did not.</b> It asked `homesteadOwned`
+  // alone — the *derived* v19 mirror, kept only so a rolled-back client and a
+  // not-yet-redeployed `groveWorth` keep working — where the score beside it asked
+  // `stockOf`, which prefers the real `homesteadStock` and falls back to the mirror. The
+  // two disagreed the moment anything wrote one and not the other, and `SaveMerge` did
+  // exactly that on every sync in the game: a card drew the free cottage over a save that
+  // had paid 2,500 credits for a farmhouse, on every board and every visitor's screen,
+  // with the *score* counting the farmhouse correctly the whole time. Invariant 5b, in the
+  // shape it always takes — one question answered in two places, both plausible, and the
+  // copy that is wrong is the one nothing else reads.
+  //
+  // So there is no second reading of "what does this save hold" in this file. A dwelling is
+  // never bundled, so a row of any size means the rung was bought.
+  const owned = stockOf(save, grove);
   let dwelling = "";
   let dwellingTier = -1;
 

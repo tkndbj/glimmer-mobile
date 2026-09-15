@@ -140,9 +140,19 @@ namespace GlimmerGrove
         /// a screen with nothing on it is worse than no button — the same judgement the watch
         /// button makes about a placement the content table does not carry.
         /// </para>
+        /// <para>
+        /// <b>And never when the shop is what raised it.</b> The two placements this button is
+        /// offered on now stand on the shop's own shelves as well as on the hub's pills
+        /// (<c>ShopAdShelf</c>), and a button promising to take somebody to the screen they are
+        /// standing on is the fault <c>BuildBalances</c> took the hub's <c>+</c> off the shop's
+        /// balance pills for: a control that answers a question nobody asked, and one tap of
+        /// ceremony to arrive where you already were. Asked of the screen underneath rather
+        /// than passed in by the caller, because a flag a caller has to remember to clear is a
+        /// flag that is right until the third call site.
+        /// </para>
         /// </summary>
         bool ShowsShop
-            => StoreService.IsAvailable &&
+            => StoreService.IsAvailable && !(Flow.Current is ShopScreen) &&
                (PlacementId == AdPlacement.HeartRefill || PlacementId == AdPlacement.CoinBonus);
 
         protected override void Build()

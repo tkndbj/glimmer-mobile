@@ -655,7 +655,36 @@ function readEvents(manifest, tierIds) {
     if (milestones.length === 0) throw new Error(`season '${id}' has no rungs, so it pays nothing`);
     if (milestones.length > 40) throw new Error(`season '${id}' exceeds 40 rungs`);
 
-    published.push({ id, startUnix, endUnix, milestones, passGems });
+    // A repeating season mints its ids from the clock (`SeasonCycle`), so what is published
+    // is the *stem* and the window of cycle nought — and the flag is what tells this server
+    // to derive the rest rather than look the id up in this list.
+    //
+    // **Publishing it is not optional and its absence is silent.** Without the flag the
+    // server finds no season by `watch_0003`, answers `unknown`, and the client — which is
+    // quite happy, because it derived the season itself — resubmits that claim for the life
+    // of the account without ever being paid. Every file reads as authored.
+    const repeats = entry.repeats === true;
+
+    if (repeats) {
+      // The suffix has to fit inside the id ceiling `season.ts` parses against, or the ids
+      // this stem mints are ids that deployment refuses. `EventRules.MaxSeasonIdLength`.
+      const room = 64 - (4 + 1);
+      if (id.length > room) {
+        throw new Error(`season '${id}' repeats, so its id is a stem with a 4-digit cycle ` +
+                        `number on the end; that leaves ${room} characters and this one is ` +
+                        `${id.length}`);
+      }
+
+      if (published.some((e) => e.repeats)) {
+        throw new Error(`manifest asks season '${id}' to repeat, but another already does; ` +
+                        "only one season may repeat, because two would be two answers to " +
+                        "which season is running");
+      }
+    }
+
+    published.push(repeats
+      ? { id, startUnix, endUnix, milestones, passGems, repeats: true }
+      : { id, startUnix, endUnix, milestones, passGems });
   }
 
   return published.length > 0 ? published : null;
@@ -1228,6 +1257,25 @@ if (process.argv.includes("--check")) {
   console.log(`Validated ${levelCount} levels, ${Object.keys(products ?? {}).length} store products and season pass prices. No remote writes.`);
   process.exit(0);
 }
+
+// **An argument this tool does not recognise stops it, and that guard was bought the hard
+// way.** Writing is the default here, so anything that is not `--check` publishes — and a
+// run typed as `--help`, `--dry-run` or `-n`, every one of which reads as "show me what you
+// would do", silently republished the whole working tree to the live project instead. It is
+// the same class of fault as a flood keyer that keeps almost nothing (`make_siege_art`): the
+// tool did exactly what it was told and the sentence the operator read was not the sentence
+// the tool heard. There is no dry-run flag beyond `--check`, which is what this says.
+const KNOWN_FLAGS = new Set(["--check"]);
+const unknown = process.argv.slice(2).filter((arg) => !KNOWN_FLAGS.has(arg));
+
+if (unknown.length > 0) {
+  console.error(`seed-config: unrecognised argument(s) ${unknown.join(" ")}.`);
+  console.error("This tool PUBLISHES to the live project when run with no arguments;");
+  console.error("the only flag it takes is --check, which validates and writes nothing.");
+  console.error("Nothing was sent.");
+  process.exit(2);
+}
+
 const token = accessToken();
 
 await writeDoc(token, "config/progression", config);

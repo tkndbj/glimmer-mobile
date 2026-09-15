@@ -597,6 +597,11 @@ def chapter_json(built):
     doc["slate"] = "#17301E"
     doc["backdrop"] = SKIES[0]
     doc["mapStrips"] = list(STRIPS)
+    # The end-of-chapter marker stands on the painting like every glade does, and its
+    # x is the only axis a body can author (`ChapterMap.TeaserPosition` derives its
+    # height). Generated with the seats: `Tools/make_map_seats.py`.
+    doc["teaserX"] = mapart.marker(ORDINAL)
+    doc["teaserAfloat"] = mapart.marker_afloat(ORDINAL)
 
     levels = []
     for i, (lid, make, target) in enumerate(BOARDS):
@@ -605,7 +610,7 @@ def chapter_json(built):
         level["id"] = lid
         level["width"] = board.w
         level["height"] = board.h
-        level["mapX"], level["mapY"] = PLACES[i]
+        level["mapX"], level["mapY"], level["afloat"] = PLACES[i]
         accent, slate = PALETTE[lid]
         level["accent"] = accent
         level["slate"] = slate

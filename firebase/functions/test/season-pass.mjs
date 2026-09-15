@@ -19,8 +19,9 @@ import { readFileSync } from "node:fs";
 import { initializeApp } from "firebase-admin/app";
 import { holdsPass } from "../lib/event-pass.js";
 import {
-  SEASON_TRACKS, markSubject, findRung, isMarkGrantId, isPassSpendId, judgeMarkClaim,
-  parseMarkClaim, parsePassSpendId, passPrice, tierIdOn, usableSeason,
+  MAX_SEASON_INDEX, SEASON_INDEX_DIGITS, SEASON_TRACKS, markSubject, findRung, isMarkGrantId,
+  isPassSpendId, judgeMarkClaim, parseMarkClaim, parsePassSpendId, passPrice, seasonCycleIndex,
+  tierIdOn, usableSeason,
 } from "../lib/season.js";
 import { usableTaskConfig } from "../lib/tasks.js";
 import { readProduct } from "../lib/products.js";
@@ -32,7 +33,18 @@ const manifest = JSON.parse(readFileSync(
 const progression = JSON.parse(readFileSync(
   new URL("../../../Assets/StreamingAssets/Content/progression.json", import.meta.url)));
 
-const season = manifest.events.find(e => e.id === "first_watch");
+// The shipped season *repeats* (`SeasonCycle`), so `cycle` is the authored entry — a stem,
+// a window describing cycle nought and a ladder — and `season` is one concrete cycle of it,
+// which is what every id in this file names and what the server ever actually prices.
+const cycle = manifest.events.find(e => e.id === "watch");
+const PERIOD = cycle.endUnix - cycle.startUnix;
+
+const SEASON = "watch_0000";
+const NOW = cycle.startUnix;                       // inside cycle nought
+const config = { events: [cycle] };
+
+const season = usableSeason(config, SEASON, NOW);
+assert.ok(season, "cycle nought of the shipped season resolves");
 
 // ------------------------------------------------------------------ the price
 assert.equal(season.milestones.length, 40, "forty rungs");
@@ -46,38 +58,38 @@ assert.equal(passPrice({ ...season, passGems: 1e9 }), 0, "and an absurd one sell
 // No real-money product may carry the entitlement any more. Refused by name rather than
 // merely unread: such a product would take money and unlock nothing.
 assert.throws(() => readProduct(
-  { gg_pass: { credits: 0, gems: 0, kind: "nonconsumable", capacity: 0, eventPassId: "first_watch" } },
+  { gg_pass: { credits: 0, gems: 0, kind: "nonconsumable", capacity: 0, eventPassId: SEASON } },
   "gg_pass"));
 
 assert.equal(progression.store.products.some(p => p.eventPassId || p.shelf === "event_pass"),
              false, "and none ships");
 
 // ------------------------------------------------------------- the debit's id
-assert.equal(isPassSpendId("pass:first_watch"), true);
-assert.equal(isPassSpendId("mark:first_watch:pass:200:credits"), false);
-assert.equal(parsePassSpendId("pass:first_watch"), "first_watch");
+assert.equal(isPassSpendId(`pass:${SEASON}`), true);
+assert.equal(isPassSpendId(`mark:${SEASON}:pass:200:credits`), false);
+assert.equal(parsePassSpendId(`pass:${SEASON}`), SEASON);
 
 // Malformed or non-canonical names no purchase. The round-trip check is the one that
 // matters: two ids naming one pass would be two debits for one entitlement.
-for (const bad of ["pass:", "pass:First_Watch", "pass:first watch", "pass:first_watch:extra",
-                   "pass:" + "x".repeat(70), "spend:first_watch"])
+for (const bad of ["pass:", "pass:Watch_0000", "pass:watch 0000", `pass:${SEASON}:extra`,
+                   "pass:" + "x".repeat(70), "spend:watch_0000"])
   assert.equal(parsePassSpendId(bad), null, bad);
 
 // -------------------------------------------------------------- the entitlement
-assert.equal(holdsPass({ owned: true, seasonId: "first_watch" }, season), true);
+assert.equal(holdsPass({ owned: true, seasonId: SEASON }, season), true);
 assert.equal(holdsPass({ owned: true, seasonId: "other" }, season), false,
              "an entitlement written against another season is not this one's");
-assert.equal(holdsPass({ owned: false, seasonId: "first_watch" }, season), false);
+assert.equal(holdsPass({ owned: false, seasonId: SEASON }, season), false);
 assert.equal(holdsPass(undefined, season), false);
-assert.equal(holdsPass({ owned: true, seasonId: "first_watch" }, undefined), false);
+assert.equal(holdsPass({ owned: true, seasonId: SEASON }, undefined), false);
 
 // ------------------------------------------------------------------ the ladder
-const config = { events: [season] };
 const tasks = usableTaskConfig(progression.tasks);
 
 assert.ok(tasks, "the shipped tasks block is usable, or no rung could be priced");
-assert.ok(usableSeason(config, "first_watch"), "the shipped season is usable");
-assert.equal(usableSeason(config, "no_such_season"), null);
+assert.equal(usableSeason(config, "no_such_season", NOW), null);
+assert.equal(usableSeason(config, "watch", NOW), null,
+             "the stem alone names no season; every cycle carries its number");
 
 // Everything the reader refuses. Each one is a ladder the client would also have refused,
 // and a config the client refuses is a config this server would quietly disagree with.
@@ -90,7 +102,7 @@ for (const bad of [
   { ...season, milestones: [{ goal: 10, tier: "wood", premiumTier: "../x" }] },
   { ...season, endUnix: season.startUnix },
 ])
-  assert.equal(usableSeason({ events: [bad] }, season.id), null);
+  assert.equal(usableSeason({ events: [{ ...bad, id: "watch", repeats: true }] }, SEASON, NOW), null);
 
 const top = season.milestones[season.milestones.length - 1];
 assert.equal(findRung(season, top.goal).tier, top.tier);
@@ -99,18 +111,18 @@ assert.equal(tierIdOn(top, "free"), top.tier);
 assert.equal(tierIdOn(top, "pass"), top.premiumTier);
 
 // ------------------------------------------------------------------- the claim
-assert.equal(isMarkGrantId("mark:first_watch:pass:200:credits"), true);
+assert.equal(isMarkGrantId(`mark:${SEASON}:pass:200:credits`), true);
 assert.equal(isMarkGrantId("task:daily:0:d_play:credits"), false);
 
-const claim = parseMarkClaim("mark:first_watch:pass:200:credits");
-assert.deepEqual(claim, { seasonId: "first_watch", track: "pass", goal: 200,
+const claim = parseMarkClaim(`mark:${SEASON}:pass:200:credits`);
+assert.deepEqual(claim, { seasonId: SEASON, track: "pass", goal: 200,
                           currency: "credits", dayKey: 0 });
-assert.equal(markSubject(claim.seasonId, claim.track, claim.goal), "first_watch:pass:200");
+assert.equal(markSubject(claim.seasonId, claim.track, claim.goal), `${SEASON}:pass:200`);
 
-for (const bad of ["mark:first_watch:pass:200", "mark:first_watch:premium:200:credits",
-                   "mark:first_watch:pass:0200:credits", "mark:first_watch:pass:0:credits",
-                   "mark:First_Watch:pass:200:credits", "mark::pass:200:credits",
-                   "mark:first_watch:pass:200:" + "c".repeat(40)])
+for (const bad of [`mark:${SEASON}:pass:200`, `mark:${SEASON}:premium:200:credits`,
+                   `mark:${SEASON}:pass:0200:credits`, `mark:${SEASON}:pass:0:credits`,
+                   "mark:Watch_0000:pass:200:credits", "mark::pass:200:credits",
+                   `mark:${SEASON}:pass:200:` + "c".repeat(40)])
   assert.equal(parseMarkClaim(bad), null, bad);
 
 // The verdict. `refuse` is permanent and `unknown` is "not yet" — a claim the client keeps
@@ -120,24 +132,80 @@ for (const bad of ["mark:first_watch:pass:200", "mark:first_watch:premium:200:cr
 // content (`Tools/author_season.py`), and a number written here goes stale the first time
 // it moves.
 const firstGoal = season.milestones[0].goal;
-const free = { seasonId: "first_watch", track: "free", goal: firstGoal,
+const free = { seasonId: SEASON, track: "free", goal: firstGoal,
                currency: "credits", dayKey: 0 };
 const paid = { ...free, track: "pass" };
 
-assert.equal(judgeMarkClaim(free, config, tasks, false).kind, "pay");
-assert.equal(judgeMarkClaim(paid, config, tasks, true).kind, "pay");
-assert.equal(judgeMarkClaim(paid, config, tasks, false).kind, "refuse",
+assert.equal(judgeMarkClaim(free, config, tasks, false, NOW).kind, "pay");
+assert.equal(judgeMarkClaim(paid, config, tasks, true, NOW).kind, "pay");
+assert.equal(judgeMarkClaim(paid, config, tasks, false, NOW).kind, "refuse",
              "the paid column without the purchase is refused for good");
-assert.equal(judgeMarkClaim(paid, { events: [{ ...season, passGems: 0 }] }, tasks, true).kind,
+assert.equal(judgeMarkClaim(paid, { events: [{ ...cycle, passGems: 0 }] }, tasks, true, NOW).kind,
              "refuse", "and so is a paid claim on a season that sells no pass");
-assert.equal(judgeMarkClaim({ ...free, goal: firstGoal + 1 }, config, tasks, false).kind, "unknown",
+assert.equal(judgeMarkClaim({ ...free, goal: firstGoal + 1 }, config, tasks, false, NOW).kind, "unknown",
              "a goal no rung asks for is left alone rather than refused");
-assert.equal(judgeMarkClaim(free, { events: [] }, tasks, false).kind, "unknown");
-assert.equal(judgeMarkClaim(free, config, null, false).kind, "unknown");
+assert.equal(judgeMarkClaim(free, { events: [] }, tasks, false, NOW).kind, "unknown");
+assert.equal(judgeMarkClaim(free, config, null, false, NOW).kind, "unknown");
 
-assert.equal(judgeMarkClaim(free, config, tasks, false).tierId,
+assert.equal(judgeMarkClaim(free, config, tasks, false, NOW).tierId,
              findRung(season, firstGoal).tier, "and it pays the tier the ladder names");
 
 assert.deepEqual([...SEASON_TRACKS], ["free", "pass"], "the track ids are contract");
+
+// ------------------------------------------------------------- the recurrence
+// A season that runs for ever needs a bound that is not "the ladder is a finite list",
+// because it no longer is. The replacement is the clock: a cycle that has not opened does
+// not exist, so the most any save can extract is one ladder per elapsed period.
+assert.equal(cycle.repeats, true, "the shipped season repeats");
+assert.ok(PERIOD > 0);
+
+// The id arithmetic, which is contract with `SeasonCycle` on the client.
+assert.equal(SEASON_INDEX_DIGITS, 4);
+assert.equal(MAX_SEASON_INDEX, 9999);
+assert.equal(seasonCycleIndex("watch", "watch_0000"), 0);
+assert.equal(seasonCycleIndex("watch", "watch_0037"), 37);
+assert.equal(seasonCycleIndex("watch", "watch_9999"), 9999);
+
+// Every other spelling names nothing. Two spellings of one cycle would be two sets of
+// grant-log keys for one ladder, which is the bound quietly doubling.
+for (const bad of ["watch_37", "watch_00037", "watch_-001", "watch_", "watch",
+                   "watch_abcd", "Watch_0000", "watch_0000 ", "other_0000"])
+  assert.equal(seasonCycleIndex("watch", bad), -1, bad);
+
+// A cycle that has opened resolves, and its window is its own rather than cycle nought's.
+const later = usableSeason(config, "watch_0003", cycle.startUnix + 3 * PERIOD);
+assert.ok(later, "an open cycle resolves");
+assert.equal(later.id, "watch_0003");
+assert.equal(later.startUnix, cycle.startUnix + 3 * PERIOD);
+assert.equal(later.endUnix, cycle.startUnix + 4 * PERIOD);
+assert.deepEqual(later.milestones, cycle.milestones, "and pays the same ladder");
+assert.equal(later.passGems, cycle.passGems, "at the same price");
+
+// A cycle that has closed still resolves — a season's chests never expire (invariant 47c).
+assert.ok(usableSeason(config, "watch_0000", cycle.startUnix + 9 * PERIOD),
+          "a closed cycle is still priceable, because its chests do not expire");
+
+// A cycle that has not opened does not. This is the bound.
+assert.equal(usableSeason(config, "watch_0001", NOW), null, "the next cycle is not open yet");
+assert.equal(usableSeason(config, "watch_9999", NOW), null, "nor is a forged far-future one");
+assert.equal(usableSeason(config, "watch_0001", cycle.startUnix + PERIOD - 1), null,
+             "not one second early");
+assert.ok(usableSeason(config, "watch_0001", cycle.startUnix + PERIOD),
+          "and exactly on the boundary it is");
+
+// A claim against an unopened cycle is left *unconfirmed*, never refused: "it has not
+// started" stops being true on its own, and a clock skew either side of a rollover makes an
+// honest claim look early (invariant 13a).
+const future = { seasonId: "watch_0001", track: "free", goal: firstGoal,
+                 currency: "credits", dayKey: 0 };
+assert.equal(judgeMarkClaim(future, config, tasks, false, NOW).kind, "unknown");
+assert.equal(judgeMarkClaim(future, config, tasks, false, cycle.startUnix + PERIOD).kind, "pay",
+             "and it pays itself the moment that cycle opens");
+
+// An authored one-off season alongside the recurrence is still found, and is not parsed as
+// a cycle of it.
+const oneOff = { ...cycle, id: "yule_feast", repeats: false };
+assert.ok(usableSeason({ events: [cycle, oneOff] }, "yule_feast", NOW));
+assert.equal(seasonCycleIndex("watch", "yule_feast"), -1);
 
 console.log("Season pass: price, debit id, entitlement, ladder, claim parsing and verdicts passed.");

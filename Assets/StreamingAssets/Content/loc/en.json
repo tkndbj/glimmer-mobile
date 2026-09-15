@@ -1227,7 +1227,7 @@
     },
     {
       "key": "notify.board_climb.body",
-      "text": "The finest groves are ranked tonight."
+      "text": "The Endless Watch is ranked tonight."
     },
     {
       "key": "notify.board_climb.title",
@@ -1243,11 +1243,11 @@
     },
     {
       "key": "notify.grove_idle.body",
-      "text": "The keepers are waiting. Come home."
+      "text": "The waves are waiting. Come and hold the line."
     },
     {
       "key": "notify.grove_idle.title",
-      "text": "Your grove misses you"
+      "text": "We miss you"
     },
     {
       "key": "store.good.boost_day",
@@ -1867,7 +1867,7 @@
     },
     {
       "key": "ui.board.building",
-      "text": "Your groove is ranked. The standing arrives with the next tally."
+      "text": "You are ranked. The standing arrives with the next tally."
     },
     {
       "key": "ui.board.endless",
@@ -1882,12 +1882,44 @@
       "text": "Finest grooves"
     },
     {
+      "key": "ui.board.info_boards_body",
+      "text": "{0} ranks keepers by the furthest wave they have held on the Infinite lane."
+    },
+    {
+      "key": "ui.board.info_boards_title",
+      "text": "The board"
+    },
+    {
+      "key": "ui.board.info_place_body",
+      "text": "Only the first {0} keepers are listed. Wherever you are, your profile says what share of keepers you are ahead of."
+    },
+    {
+      "key": "ui.board.info_place_title",
+      "text": "Where you stand"
+    },
+    {
+      "key": "ui.board.info_tally_body",
+      "text": "The board is a tally taken every {0} hours, not a live reading. Any wave you beat today counts in the next one."
+    },
+    {
+      "key": "ui.board.info_tally_built",
+      "text": "The board is a tally taken every {0} hours, not a live reading. This one was taken {1} ago; anything you have done since counts in the next."
+    },
+    {
+      "key": "ui.board.info_tally_title",
+      "text": "Counted once a day"
+    },
+    {
+      "key": "ui.board.info_title",
+      "text": "how the board works"
+    },
+    {
       "key": "ui.board.join",
-      "text": "Show my groove"
+      "text": "Show me on the boards"
     },
     {
       "key": "ui.board.leave",
-      "text": "Hide my groove"
+      "text": "Hide me from the boards"
     },
     {
       "key": "ui.board.loading",
@@ -1911,7 +1943,7 @@
     },
     {
       "key": "ui.board.opted_out",
-      "text": "Your groove is hidden from the boards."
+      "text": "You are hidden from the boards."
     },
     {
       "key": "ui.board.placed",
@@ -1931,11 +1963,11 @@
     },
     {
       "key": "ui.board.top_percent",
-      "text": "Your groove is in the top {0}% of keepers."
+      "text": "You are in the top {0}% of watchers."
     },
     {
       "key": "ui.board.unranked",
-      "text": "Buy something for your groove and you will be ranked."
+      "text": "Hold the line on the Infinite lane and you will be ranked."
     },
     {
       "key": "ui.bonus.on_top",
@@ -2322,12 +2354,56 @@
       "text": "ends in {0}"
     },
     {
-      "key": "ui.event.first_watch.blurb",
-      "text": "The grove keeps watch through the turning of the year. Take your marks while it lasts."
+      "key": "ui.season.0.name",
+      "text": "The First Watch"
     },
     {
-      "key": "ui.event.first_watch.name",
-      "text": "The First Watch"
+      "key": "ui.season.1.name",
+      "text": "The Second Watch"
+    },
+    {
+      "key": "ui.season.2.name",
+      "text": "The Third Watch"
+    },
+    {
+      "key": "ui.season.3.name",
+      "text": "The Fourth Watch"
+    },
+    {
+      "key": "ui.season.4.name",
+      "text": "The Fifth Watch"
+    },
+    {
+      "key": "ui.season.5.name",
+      "text": "The Sixth Watch"
+    },
+    {
+      "key": "ui.season.6.name",
+      "text": "The Seventh Watch"
+    },
+    {
+      "key": "ui.season.7.name",
+      "text": "The Eighth Watch"
+    },
+    {
+      "key": "ui.season.8.name",
+      "text": "The Ninth Watch"
+    },
+    {
+      "key": "ui.season.9.name",
+      "text": "The Tenth Watch"
+    },
+    {
+      "key": "ui.season.10.name",
+      "text": "The Eleventh Watch"
+    },
+    {
+      "key": "ui.season.11.name",
+      "text": "The Twelfth Watch"
+    },
+    {
+      "key": "ui.season.blurb",
+      "text": "The grove keeps watch through the turning of the year. Take your marks while it lasts."
     },
     {
       "key": "ui.forfeit.leave_body",
@@ -3934,6 +4010,10 @@
       "text": "landmarks"
     },
     {
+      "key": "ui.shop.ad_free",
+      "text": "FREE"
+    },
+    {
       "key": "ui.shop.already_included",
       "text": "Your bigger vessel already holds this much"
     },
@@ -4290,10 +4370,6 @@
       "text": "Week {0}"
     },
     {
-      "key": "ui.streak.board_hint",
-      "text": "Tap the glowing night to take it"
-    },
-    {
       "key": "ui.streak.shield",
       "text": "Streak Shield"
     },
@@ -4344,6 +4420,22 @@
     {
       "key": "ui.streak.shield_price",
       "text": "{0}"
+    },
+    {
+      "key": "ui.streak.collect",
+      "text": "Collect"
+    },
+    {
+      "key": "ui.streak.in_many",
+      "text": "in {0} nights"
+    },
+    {
+      "key": "ui.streak.tonight",
+      "text": "Tonight"
+    },
+    {
+      "key": "ui.streak.in_one",
+      "text": "tomorrow night"
     },
     {
       "key": "ui.tasks.claimed",
@@ -4755,7 +4847,7 @@
     },
     {
       "key": "ui.visit.gone",
-      "text": "This groove is no longer on the boards."
+      "text": "This keeper is no longer on the boards."
     },
     {
       "key": "ui.visit.loading",

@@ -44,9 +44,15 @@ namespace GlimmerGrove.Content
         /// </summary>
         public readonly float TeaserX;
 
+        /// <summary>
+        /// Whether the end-of-chapter marker is moored on a floating tile rather than standing
+        /// on the painting. Generated with the seats, never authored — see <c>LevelDto.afloat</c>.
+        /// </summary>
+        public readonly bool TeaserAfloat;
+
         public ChapterDefinition(ChapterId id, string nameKey,
                                  Color accent, Color slate, string backdrop, string[] mapStrips,
-                                 float teaserX = 0f)
+                                 float teaserX = 0f, bool teaserAfloat = false)
         {
             if (!id.IsValid) throw new ArgumentException("chapter needs a valid id", nameof(id));
 
@@ -57,6 +63,7 @@ namespace GlimmerGrove.Content
             Backdrop = backdrop;
             MapStrips = mapStrips != null && mapStrips.Length > 0 ? mapStrips : new[] { "map1_strip0" };
             TeaserX = ChapterMap.TeaserAcross(teaserX);
+            TeaserAfloat = teaserAfloat;
         }
 
         public int StripCount => MapStrips.Length;

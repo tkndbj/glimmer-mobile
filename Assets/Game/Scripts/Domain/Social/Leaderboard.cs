@@ -128,6 +128,27 @@ namespace GlimmerGrove.Social
         /// </summary>
         public const int MaxRows = 100;
 
+        /// <summary>
+        /// How often the boards are rebuilt, in hours.
+        ///
+        /// <para>
+        /// <b>A mirror of <c>publishGroveRanks</c>' own schedule</b> — <c>"0 4 * * *"</c> in
+        /// <c>functions/src/index.ts</c> — and the only copy of it on this side. It is a
+        /// <em>sentence's</em> number rather than a rule's: nothing here waits on it, caches
+        /// against it or refuses anything because of it, so the worst a drift costs is a panel
+        /// that over- or under-states the wait. That is the same bargain <c>EndlessLedger.MaxWave</c>
+        /// strikes with <c>MAX_WAVE</c>, and it is affordable for the same reason — the two are
+        /// one idea with one place to change it on each side, and a job that is not daily is a
+        /// different feature rather than a retune.
+        /// </para>
+        /// <para>
+        /// The panel that prints it also prints <see cref="BuiltUnix"/>, which is not a mirror
+        /// at all: it is what the job that wrote this board actually recorded, so the honest
+        /// half of the sentence cannot go stale however this constant drifts.
+        /// </para>
+        /// </summary>
+        public const int RebuildHours = 24;
+
         public readonly string BoardId;
 
         /// <summary>Rows, best first. Never null; empty is the ordinary first-day state.</summary>

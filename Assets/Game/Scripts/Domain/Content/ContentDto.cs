@@ -107,6 +107,27 @@ namespace GlimmerGrove.Content
         public bool disabled;
 
         /// <summary>
+        /// Set true and the season runs again for ever, back to back, instead of ending.
+        ///
+        /// <para>
+        /// <c>startUnix</c> and <c>endUnix</c> then describe <b>cycle nought</b> and the gap
+        /// between them is the period; cycle <c>n</c> runs <c>[start + n·period, …)</c>, and its
+        /// id is this entry's <c>id</c> with the cycle number on the end. See
+        /// <see cref="Events.SeasonCycle"/> for what that costs and what it buys — in short,
+        /// nothing and everything: no content push a season, no re-seed a season, and no
+        /// calendar for anybody to forget to extend.
+        /// </para>
+        /// <para>
+        /// <b>Absent is a one-off season, which is what shipped before this field existed</b>,
+        /// so an entry written against the old shape still reads exactly as it did — and a
+        /// client too old to know the field reads a repeating season as its first window and
+        /// then shows no season at all. That is the honest degradation rather than a wrong one,
+        /// and it is only reachable through remote content delivery, which is off.
+        /// </para>
+        /// </summary>
+        public bool repeats;
+
+        /// <summary>
         /// Which mark the event wears. Optional; empty draws the default.
         ///
         /// <para>
@@ -369,6 +390,9 @@ namespace GlimmerGrove.Content
         /// </summary>
         public float teaserX;
 
+        /// <summary>Whether the end-of-chapter marker is moored on a tile. See <c>afloat</c>.</summary>
+        public bool teaserAfloat;
+
         public LevelDto[] levels;
     }
 
@@ -432,6 +456,24 @@ namespace GlimmerGrove.Content
 
         public float mapX;
         public float mapY;
+
+        /// <summary>
+        /// Whether this glade stands on a floating tile rather than on the painting itself.
+        ///
+        /// <para>
+        /// Generated with the position (<c>Tools/make_map_seats.py</c>) and never authored. A
+        /// node stands on the ground the map draws; `map1` is an archipelago whose chain
+        /// crosses open water, and on the stretch where the painting has only a current to
+        /// offer, a node is moored on a tile instead.
+        /// </para>
+        /// <para>
+        /// <b>False is the honest default</b>, which is what makes this safe to add: every
+        /// chapter body written before it said nothing, <c>JsonUtility</c> writes <c>false</c>
+        /// into a field a file never had, and false means "stands on the map" — which is what
+        /// all three road maps do and what every one of those files meant.
+        /// </para>
+        /// </summary>
+        public bool afloat;
         public string accent;
         public string slate;
         public string backdrop;

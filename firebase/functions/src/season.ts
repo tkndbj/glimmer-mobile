@@ -42,11 +42,94 @@ export const SEASON_ID = /^[a-z0-9_]{1,64}$/;
 export const MAX_SEASON_RUNGS = 40;
 export const MAX_SEASON_GOAL = 100000;
 
+/**
+ * Matches `SeasonCycle.IndexDigits` and `SeasonCycle.MaxIndex`. **Contract.**
+ *
+ * A repeating season mints its ids from the clock rather than from a file, so these two
+ * numbers are the only thing that makes an id written by a phone parseable by this server.
+ * Widening them later would orphan every id already in a save row and every key already in
+ * a grant log (invariant 1), which is why they are stated here rather than inferred from
+ * whatever the id happens to look like.
+ */
+export const SEASON_INDEX_DIGITS = 4;
+export const MAX_SEASON_INDEX = 9999;
+
+/**
+ * The cycle number an id names against a repeating season, or -1.
+ *
+ * Deliberately strict, and identical to `SeasonCycle.IndexOf`: exact stem, exactly
+ * `SEASON_INDEX_DIGITS` digits, no other spelling accepted. A looser parse would read
+ * `watch_7` and `watch_0007` as one season on one side and two on the other, which is two
+ * sets of grant-log keys for one ladder — the bound in this file's header would then be
+ * "one season's authored ladder, once, per spelling".
+ */
+export function seasonCycleIndex(baseId: string, seasonId: string): number {
+  if (!baseId || !seasonId) return -1;
+  if (seasonId.length !== baseId.length + 1 + SEASON_INDEX_DIGITS) return -1;
+  if (!seasonId.startsWith(baseId)) return -1;
+  if (seasonId[baseId.length] !== "_") return -1;
+
+  const digits = seasonId.slice(baseId.length + 1);
+  if (!/^[0-9]+$/.test(digits)) return -1;
+
+  const index = Number(digits);
+  return Number.isSafeInteger(index) && index >= 0 && index <= MAX_SEASON_INDEX ? index : -1;
+}
+
 export function isSeasonTrack(value: unknown): value is SeasonTrack {
   return typeof value === "string" && (SEASON_TRACKS as readonly string[]).includes(value);
 }
 
 // --------------------------------------------------------------------------- the config
+/**
+ * The cycle a repeating season's published entry would have minted under this id, or null.
+ *
+ * **This is the whole of what keeps invariant 47c true once the calendar stops ending.** The
+ * bound was "the most a forged save can extract is one season's authored ladder, once",
+ * which rested on the ladder being a finite list; a recurrence has no list, so a save that
+ * simply invented `watch_9999` could otherwise claim ten thousand ladders. The replacement
+ * is a clock: **a cycle that has not opened yet does not exist**, so the most any save can
+ * extract is one ladder per elapsed period — which is exactly what an honest player who
+ * finishes every season gets, and is the same sentence as before with the list swapped for
+ * the calendar.
+ *
+ * A *future* cycle answers null, which `judgeMarkClaim` turns into `unknown` rather than
+ * `refuse`. That is deliberate and it is invariant 13a: "this season has not started" stops
+ * being true the moment it does, so refusing it would throw away a claim that a clock skew
+ * of a few seconds either side of a rollover makes perfectly honest. Left unconfirmed, it
+ * pays itself the next time the client asks.
+ *
+ * A *past* cycle is resolved without complaint, because a season's chests never expire.
+ */
+function cycleSeason(config: { events?: EventConfig[] } | undefined,
+                     seasonId: string,
+                     nowUnix: number): EventConfig | null {
+  const cycles = config?.events?.filter((entry) => entry?.repeats) ?? [];
+
+  for (const cycle of cycles) {
+    if (!cycle.id || !Number.isSafeInteger(cycle.startUnix) || !Number.isSafeInteger(cycle.endUnix)) {
+      continue;
+    }
+
+    const period = cycle.endUnix - cycle.startUnix;
+    if (period <= 0) continue;
+
+    const index = seasonCycleIndex(cycle.id, seasonId);
+    if (index < 0) continue;
+
+    const startUnix = cycle.startUnix + index * period;
+
+    // Not yet open. Null rather than a refusal — see this function's note.
+    if (!Number.isSafeInteger(startUnix) || !Number.isSafeInteger(nowUnix) || nowUnix < startUnix) {
+      return null;
+    }
+
+    return { ...cycle, id: seasonId, startUnix, endUnix: startUnix + period };
+  }
+
+  return null;
+}
+
 /**
  * Guards a season the seeder published, or one it published badly.
  *
@@ -56,8 +139,10 @@ export function isSeasonTrack(value: unknown): value is SeasonTrack {
  * the sake of the second, which pays nothing either way (invariant 13a).
  */
 export function usableSeason(config: { events?: EventConfig[] } | undefined,
-                             seasonId: string): EventConfig | null {
-  const season = config?.events?.find((entry) => entry?.id === seasonId);
+                             seasonId: string,
+                             nowUnix: number): EventConfig | null {
+  const authored = config?.events?.find((entry) => entry?.id === seasonId && !entry.repeats);
+  const season = authored ?? cycleSeason(config, seasonId, nowUnix);
   if (!season) return null;
 
   if (!SEASON_ID.test(season.id)) return null;
@@ -241,10 +326,17 @@ export function judgeMarkClaim(
   claim: MarkClaim,
   config: { events?: EventConfig[] } | undefined,
   tasks: TaskConfig | null,
-  ownsPass: boolean
+  ownsPass: boolean,
+  nowUnix: number
 ): MarkVerdict {
-  const season = usableSeason(config, claim.seasonId);
-  if (!season) return { kind: "unknown", why: "config/progression holds no usable season by that id" };
+  const season = usableSeason(config, claim.seasonId, nowUnix);
+  if (!season) {
+    // Covers three cases that all deserve the same answer: a season this deployment has not
+    // been seeded with, a cycle of a repeating season that has not opened yet, and an id
+    // nobody could have earned. `unknown` rather than `refuse` because the first two stop
+    // being true on their own (invariant 13a) and the third pays nothing either way.
+    return { kind: "unknown", why: "config/progression holds no usable season by that id" };
+  }
 
   const rung = findRung(season, claim.goal);
   if (!rung) return { kind: "unknown", why: "the published ladder has no rung at that goal" };

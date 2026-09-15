@@ -225,38 +225,19 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void NoTwoModesShareAPerch()
+        public void NoTwoModesShareAnAccent()
         {
-            // The floating tile under a node is the single agreed visual difference between
-            // modes. Two modes sharing one makes their maps indistinguishable, which is the one
-            // thing the design asks this art to prevent.
-            var seen = new HashSet<string>();
+            // What tells two modes' maps apart, now that a node stands on the painting rather
+            // than on a tile of its own (see ModeLook). It is weaker than the perch it replaced
+            // - a colour is a difference only some people can see - and it is the whole of what
+            // is left, so two modes sharing one makes their maps identical.
+            var seen = new HashSet<UnityEngine.Color>();
 
             foreach (var look in ModeLooks.All)
-            {
-                Assert.IsNotEmpty(look.Perch, $"{look.Mode} has no perch");
-                Assert.IsTrue(seen.Add(look.Perch),
-                              $"{look.Mode} stands on '{look.Perch}', which another mode "
-                              + "already uses");
-            }
-        }
-
-        [Test]
-        public void EveryPerchIsAnAddressTheGameActuallyLoads()
-        {
-            // A perch is fetched with Art.S, which answers null for an address nothing asked
-            // for - and an Image with no sprite is a white rectangle, not a blank. So the one
-            // failure this can have is a mode whose map draws a white square under every glade,
-            // on a screen no compile, validator or content check looks at. AssetManifest is
-            // Domain and ModeLooks is Presentation, so neither can read the other; this is the
-            // only place the two can be asked whether they agree.
-            var global = new HashSet<string>();
-            foreach (var request in AssetManifest.GlobalAssets()) global.Add(request.Address);
-
-            foreach (var look in ModeLooks.All)
-                Assert.IsTrue(global.Contains(AssetManifest.MapArt(look.Perch)),
-                              $"{look.Mode} stands on '{look.Perch}', which is not in "
-                              + "AssetManifest.MapSprites - it would draw as a white square");
+                Assert.IsTrue(seen.Add(look.Accent),
+                              $"{look.Mode} draws its trail in a colour another mode "
+                              + "already uses, and the map has nothing else left to tell "
+                              + "them apart");
         }
 
         /// <summary>

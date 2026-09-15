@@ -222,11 +222,11 @@ BOARDS = [
 
 # ---------------------------------------------------------------------------- writing it out
 def level_json(well, at):
-    x, y = WHERE[at]
+    x, y, afloat = WHERE[at]
     block = {"width": len(well.rows[0]), "height": len(well.rows),
              "rows": well.rows, "motes": well.motes}
 
-    out = {"id": well.id, "mapX": x, "mapY": y}
+    out = {"id": well.id, "mapX": x, "mapY": y, "afloat": afloat}
     if at:                              # level one takes the chapter's own
         out["backdrop"] = SKIES[at]
     if well.budget:
@@ -243,6 +243,11 @@ def chapter_json():
         "slate": SLATE,
         "backdrop": SKIES[0],
         "mapStrips": list(STRIPS),
+        # The end-of-chapter marker stands on the painting like every glade does, and its
+        # x is the only axis a body can author (`ChapterMap.TeaserPosition` derives its
+        # height). Generated with the seats: `Tools/make_map_seats.py`.
+        "teaserX": mapart.marker(ORDINAL),
+        "teaserAfloat": mapart.marker_afloat(ORDINAL),
         "levels": [level_json(w, i) for i, w in enumerate(BOARDS)],
     }
 

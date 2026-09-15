@@ -82,6 +82,17 @@ export interface EventConfig {
   startUnix: number;
   endUnix: number;
   milestones: EventMilestone[];
+
+  /**
+   * True when the season runs again for ever instead of ending — see `SeasonCycle` on the
+   * client, which this mirrors.
+   *
+   * `id` is then a *stem* and `startUnix`/`endUnix` describe cycle nought; cycle `n` runs
+   * `[start + n·period, …)` and wears the id `{stem}_{n padded to 4}`. Absent is a one-off
+   * season, which is the only kind that existed before this field and reads exactly as it
+   * always did.
+   */
+  repeats?: boolean;
 }
 
 /** One golden outcome: a percentage of the ordinary credit reward, and its weight. */

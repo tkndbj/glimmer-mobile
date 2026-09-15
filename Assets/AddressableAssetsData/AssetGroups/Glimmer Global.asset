@@ -10866,6 +10866,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/boss
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 518efccee27feed8b8f938fce482b1c4
+    m_Address: Art/Ui/ic_season
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 519c02afaf875964c97797723226136e
     m_Address: Art/Siege/mon_g/f01
     m_ReadOnly: 0

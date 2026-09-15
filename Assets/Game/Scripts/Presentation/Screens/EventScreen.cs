@@ -84,10 +84,19 @@ namespace GlimmerGrove
         /// How many rungs the mark was last drawn open to, so it is redrawn when that moves
         /// and not on every repaint.
         ///
+        /// <para>
         /// <see cref="SeasonCrest.Paint"/> <em>adds</em> to its host rather than replacing what
-        /// is there, so calling it on a repaint would stack a second flower on the first — and
-        /// a flower painted at nought on the way in would then never open at all, which is
-        /// what this used to do.
+        /// is there, so calling it on a repaint would stack a second crest on the first — and a
+        /// crest painted at nought on the way in would then never open at all, which is what
+        /// this used to do.
+        /// </para>
+        /// <para>
+        /// <b>It is kept although the season this game ships wears a crest that does not
+        /// open.</b> A crest is chosen in the manifest and <see cref="SeasonCrest.Bloom"/>
+        /// still fills with the track, so a season that picks it would need exactly this; and
+        /// the guard is what stops the repaint stacking, which every crest needs whether it
+        /// uses the number or not.
+        /// </para>
         /// </summary>
         int _markRungs = -1;
         Text _grown, _toNext, _clock, _passCaption, _passHint, _rungs;
@@ -254,10 +263,11 @@ namespace GlimmerGrove
                       t => { if (rays) rays.transform.localRotation = Quaternion.Euler(0, 0, t * 360f); },
                       rays, "spin").Loop(-1, false);
 
-            // The season's own mark, opening as the ladder fills — the picture and the number
-            // beside it then say the same thing and a glance is enough. Drawn by
-            // <see cref="PaintMark"/> on the first repaint, so it opens to where the player
-            // actually is rather than to nought.
+            // The season's own crest. Drawn by PaintMark on the first repaint rather than here,
+            // because a crest that fills with the track (SeasonCrest.Bloom) has to be painted
+            // once the progress is known — the shipped one is a fixed emblem and does not care,
+            // and a screen that only draws the one crest its manifest happens to name today is
+            // a screen that breaks on the next season.
             _mark = UIKit.Box("Mark", plate.transform, new Vector2(150f, 150f), Left,
                               new Vector2(132f, 14f));
             Tween.Breathe(_mark, .05f, 2.6f);

@@ -56,23 +56,71 @@ namespace GlimmerGrove
         /// only tab that navigates rather than opening a panel, so it wants the corner
         /// the thumb already rests in. Slot width is derived from this, so adding a
         /// sixth tab re-spaces the bar rather than needing new coordinates.
+        ///
+        /// <para>
+        /// <b><see cref="Tab.Grove"/> is held, and this list is the whole of the hold.</b> The
+        /// Grovement is being rebuilt from the ground up, and until it is there is nothing
+        /// worth putting a permanent control in front of — so the tab is taken out of the
+        /// order and everything else about it is left standing: its caption, its cap, its
+        /// destination and every screen under it. Putting it back is this one entry, which is
+        /// deliberately cheaper than a flag somebody has to find. The bar re-spaces itself
+        /// because the slot width is derived from the length rather than typed.
+        /// </para>
         /// </summary>
-        static readonly Tab[] Order = { Tab.Home, Tab.Shop, Tab.Grove, Tab.Ranks, Tab.Profile };
+        static readonly Tab[] Order = { Tab.Home, Tab.Shop, Tab.Ranks, Tab.Profile };
 
         /// <summary>
         /// The button itself, and the cell that takes the tap. The button is the whole tab —
         /// icon and caption sit inside it — which is the shape the genre uses and the reason
         /// the icon is allowed to break its top edge: a glyph that overhangs reads as a thing
         /// standing in a slot rather than as a picture printed on a square.
+        ///
+        /// <para>
+        /// <b>The width is derived from the slot and only the width.</b> A typed 200 was right
+        /// at five tabs and wrong the moment there were four: the slot went 216 to 270 and every
+        /// one of those 54 units became <em>air</em>, so the bar read as four caps adrift in a
+        /// strip rather than as a console. <see cref="Gutter"/> is the air a cap is entitled to
+        /// and the rest belongs to the cap — so a five-tab bar still <em>draws</em> exactly what
+        /// shipped (216 - 16 = the old 200; the hit cell gains two units it was leaving dead)
+        /// and re-spaces itself if the Grovement tab comes back.
+        /// </para>
+        /// <para>
+        /// <b><see cref="MaxBtnW"/> is why it is a clamp rather than a share.</b> Four tabs would
+        /// take 254 and three would take 344, and past a point a nav cap stops reading as a
+        /// button and starts reading as a banner with a word on it. The ceiling binds today, so
+        /// it is a number to look at rather than one to trust — `render_home.py` is the
+        /// instrument.
+        /// </para>
+        /// <para>
+        /// <b>Nothing vertical moves, deliberately.</b> The height, the glyph and the overhang
+        /// are exactly what shipped, so <see cref="Height"/> stays the budget every screen
+        /// reserves and no other screen's layout moves by a unit. The complaint was horizontal
+        /// and so is the answer; growing the cap's height would push the glyph — which already
+        /// breaks the top edge on purpose — up into whatever the screen is drawing above it.
+        /// </para>
         /// </summary>
-        const float CellW = 214f;
+        const float Gutter = 16f;
+        const float MaxBtnW = 240f;
         const float CellH = 208f;
-        const float BtnW = 200f;
         const float BtnH = 172f;
+
+        /// <summary>How much bigger the live tab is drawn. The cell has to contain it.</summary>
+        const float Grow = 1.06f;
 
         /// <summary>How far above the button's own middle the glyph sits, so it overhangs.</summary>
         const float IconY = 40f;
         const float IconSize = 136f;
+
+        /// <summary>
+        /// How wide a cap is drawn in a slot of <paramref name="slot"/>, and how wide the cell
+        /// that takes the tap is. The cell contains the <em>grown</em> plate, because a live tab
+        /// drawn wider than its own hit box is a button whose edges do not take a press.
+        /// </summary>
+        static (float Button, float Cell) Widths(float slot)
+        {
+            float button = Mathf.Min(MaxBtnW, slot - Gutter);
+            return (button, Mathf.Min(slot, button * Grow + 8f));
+        }
 
         /// <summary>
         /// Draws the bar with <paramref name="active"/> marked.
@@ -95,17 +143,20 @@ namespace GlimmerGrove
             bar.sizeDelta = new Vector2(0f, Height);
 
             float slot = Boot.RefWidth / (float)Order.Length;
+            var (btnW, cellW) = Widths(slot);
+
             for (int i = 0; i < Order.Length; i++)
             {
                 float x = (i - (Order.Length - 1) * .5f) * slot;
-                Item(bar, x, Order[i], active == Order[i], onSidePage);
+                Item(bar, x, Order[i], active == Order[i], onSidePage, btnW, cellW);
             }
 
             return bar;
         }
 
         // --------------------------------------------------------------- one tab
-        static void Item(Transform bar, float x, Tab tab, bool active, bool onSidePage)
+        static void Item(Transform bar, float x, Tab tab, bool active, bool onSidePage,
+                         float btnW, float cellW)
         {
             string labelKey = LabelKey(tab);
 
@@ -113,22 +164,22 @@ namespace GlimmerGrove
             // press squashes plate, glyph and caption as one object
             bool standing = active && !onSidePage;
 
-            var cell = UIKit.Button("Nav_" + tab, bar, Art.Pixel, new Vector2(CellW, CellH),
+            var cell = UIKit.Button("Nav_" + tab, bar, Art.Pixel, new Vector2(cellW, CellH),
                                     new Vector2(.5f, .5f), new Vector2(x, 4f), Tap(tab, standing));
             var hit = cell.GetComponent<Image>();
             hit.color = new Color(1f, 1f, 1f, 0f);
             if (standing) { cell.ClickSfx = null; cell.PressScale = .97f; }
 
-            float grow = active ? 1.06f : 1f;
+            float grow = active ? Grow : 1f;
             var face = Skins.Plate;
 
-            if (active) UIKit.Halo(cell.transform, Pal.Sun, BtnW * 1.7f, .30f, new Vector2(0f, 6f));
+            if (active) UIKit.Halo(cell.transform, Pal.Sun, btnW * 1.7f, .30f, new Vector2(0f, 6f));
 
             // A soft-cornered plate in the tab's own colour, lifted when it is the live one.
             // Selection is the plate and its frame, never the glyph — see Glyph.
             var plate = UIKit.Img("Plate", cell.transform, Art.Round(26),
                                   active ? Lift(face, .22f) : Pal.A(face, .92f),
-                                  new Vector2(BtnW * grow, BtnH * grow), new Vector2(.5f, .5f),
+                                  new Vector2(btnW * grow, BtnH * grow), new Vector2(.5f, .5f),
                                   new Vector2(0f, 0f));
 
             // Two rims: a dark seat under everything, and the kit's gold on the live tab.
@@ -157,7 +208,7 @@ namespace GlimmerGrove
             UIKit.Shrinkable(
                 UIKit.Titled("L_" + tab, plate.transform, Loc.Get(labelKey), active ? 27 : 25,
                              active ? Pal.Sun : new Color(1f, .97f, .90f, .92f),
-                             TextAnchor.MiddleCenter, new Vector2(BtnW - 16f, 34f),
+                             TextAnchor.MiddleCenter, new Vector2(btnW - 16f, 34f),
                              new Vector2(.5f, 0f), new Vector2(0f, 28f), 4f, 3f), 17);
 
             cell.transform.localScale = Vector3.zero;
@@ -248,8 +299,8 @@ namespace GlimmerGrove
                 case Tab.Grove: return () => Flow.Go<HomesteadScreen>();
 
                 // The boards. It was the last tab that opened a panel saying "soon", which is
-                // the worst thing to leave in a row of five permanent controls — four of them
-                // go somewhere and the fifth teaches the player that this one does not.
+                // the worst thing to leave in a row of permanent controls — every other one
+                // goes somewhere, and the odd one teaches the player that this one does not.
                 case Tab.Ranks: return () => Flow.Go<LeaderboardScreen>();
 
                 default: return () => Flow.Go<ProfileScreen>();

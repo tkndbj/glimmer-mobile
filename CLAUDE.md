@@ -120,10 +120,98 @@ New level chapters ship every two to four weeks.
    used to be wherever they were **up to**. It is **device-local, never in the save**, because it
    moves both ways and could not be joined (11b), and it answers null the moment the id is not a
    chapter of that mode in this catalog.
-8c. **Where a disc stands is a fact about the *perch*, not a constant.** A perch is fitted into a fixed box
-   with its aspect kept, so a tall sprite lands smaller and higher than a squat one. `ModeLook.PerchLift` is
-   **abstract rather than defaulted**, and is read in **one** place, because five offsets must move
-   together. `CRAFT.md`.
+8c. *(Spent by 8e.)* **Where a disc stands was a fact about the *perch*, not a constant** — a floating
+   tile fitted into a fixed box with its aspect kept, so a tall sprite landed smaller and higher than a
+   squat one and `ModeLook.PerchLift` had to be abstract rather than defaulted. There is no perch now and
+   the offset is nought. What survives is the half that was never about tiles: **the disc, the halo, the
+   seal and the shadow are read from one name**, because five hand-written offsets is how the shadow once
+   came to stay put while the disc moved.
+8e. **A node stands on the ground the painting draws, and where that is has to be read off the
+   picture.** A node used to stand on a *perch* — a floating island tile with its own drop shadow,
+   bobbing — and that is what let its position be a serpentine spaced down the map: a tile brings its own
+   ground, so what the painting had underneath did not matter. It mattered. All four paintings draw a
+   road, all four were ignored, and bare discs at those coordinates land **in a river, on a rooftop, in a
+   lake and off the side of a cliff**. The perch was not decoration, it was cover. <br>**So the seats are
+   derived from the drawing** (`Tools/make_map_seats.py`, 33g's rule applied to a map), which is a
+   picture nothing else in this project opens (32b) — and the tool asks a painting **two** questions, not
+   one: *is the disc's own footing on the way* (the road, at a radius far smaller than the disc, because
+   a level node is **supposed** to be wider than the path it stands on — `map2`'s road is 68 units thick
+   against a 196-unit node) and *is there land all round it, or is this an edge*. One question answered
+   `map1`, the archipelago, backwards: its islands are mostly palms and pines, so measuring *road* called
+   its real islands too small to stand on while the bare rocks in the sea between them passed.
+   <br>**Three things fell out that no amount of care would have predicted.** A colour list is per
+   painting and must be **subtracted** as well as added — `map4`'s lava is within tolerance of its own
+   orange stone, so the opening node of a chapter was seated in a molten pool, on ground, by every number
+   in the file. Open water is a **gradient** where a road is flat colour, so the void needs its own wider
+   tolerance: at the road's, the shades between `map1`'s five listed blues read as land, hairline threads
+   of it ran across the sea, and every island and stepping stone merged into **one** region — so the
+   "is this a real landmass" test was measuring the whole map and threw nothing away. And **a seat must
+   be rounded before it is judged**, because the rounded pair is what ships: two glades came out 383.4
+   units apart against a 384-unit crown rule, cleared by the tool and warned by the build gate, on six
+   tenths of a unit the tool introduced itself. <br>**A greedy walk is not enough and the reason is
+   general**: on an archipelago the sea gaps push the early rungs higher than they wanted, the top island
+   is the only land left, and the tenth glade arrives to find the ninth standing where its own record
+   mark would have to go — with nothing about the ninth's seat wrong when it was chosen. It backtracks,
+   which costs nothing on the three road maps where the first try is the answer. <br>**What it cost is
+   7c's perch clause**: the floating tile was the one thing telling two modes' maps apart, and it was a
+   *silhouette*, so it worked for somebody who cannot see colour. What is left is the accent. That is a
+   real loss, deliberately unpaid, and affordable only because one mode ships and the map draws no mode
+   switcher at all — the day a second ships, the tell comes back as a mode naming its own `GROUND` row
+   and standing on a different part of the same painting, which costs a table entry and no art.
+   <br>**And the trail between the nodes goes with the perch, which is the half nobody asks for
+   and the one that decides whether this reads.** A row of drifting dots joined one glade to the
+   next, lit in the mode's accent when the glade ahead was open. It was right while a node was
+   an island over a backdrop: the dots were the only thing saying the islands were a chain. Once
+   the nodes are seated on a road, a straight run of dots between two of them is a **second path
+   cutting the corners of the first** — and on `map3`, whose trail is drawn as a dashed line, it
+   crossed the painting's own. **It carried no fact the map does not still show**: a trail was
+   lit when the glade ahead was unlocked and that glade draws `node_lock` when it is not; the
+   trail out of a chapter asked whether the next was open and the marker it ran to draws its own
+   padlock for exactly that. Two second copies, so this is a deletion rather than a trade — and
+   the render mirror drops it in the same change, because a mirror still drawing a piece the
+   screen does not is worse than no mirror at all (44d, 48i).
+8f. **A perch is a fact about a *place*, not about a mode — and one map still needs one.** 8e
+   took the floating tile off every node and that is right for a painting of a continent; the
+   first chapter of the game is not one. `map1` is an archipelago, and the owner's reading of it
+   is the one the tool could not have reached on its own: **it draws paths on its islands *and* a
+   current in the water between them**, so a chain crossing it is on the ground for half its
+   length and over open water for the other half. A node on the current is standing on nothing,
+   so it gets a tile — and a node on an island path does not. <br>**So a seat carries one thing
+   that is not a coordinate**, `afloat`, generated with the position and never authored, false
+   on every road map. It is the only field a chapter body has ever gained whose *default* is the
+   whole reason it was safe to add: `JsonUtility` writes `false` into a field a file never had,
+   and false means "stands on the painting", which is what every body written before it meant.
+   <br>**Three things this cost that the first cut did not see.** A colour tolerance is a fact
+   about a painting and cannot be one number: `map1`'s island *path* and its island *cliff face*
+   are exactly 26 apart, so at the shared figure a seat could be put on a vertical rock — and
+   tightening it everywhere took `map4`, whose road is half a dozen browns shading into each
+   other, from 8.1% seatable to 5.4% and it could not seat ten nodes at all. **A wide test that
+   asks "is there land all round this" must not be asked of a seat on water**, because a current
+   is surrounded by sea and the honest answer refuses every point of it; what stands in for it
+   is a wider *narrow* test, which is also what tells a current from the foam ring the same
+   palette paints around every island. And **only a map that paints a current may moor
+   anything**: reading `map4`'s background shadow as "nothing" stood a grass-topped island tile
+   over volcanic rock, which is the right question asked of the wrong painting. <br>**What it
+   does not buy back is 7c's tell.** The tile is one sprite for every mode now rather than one
+   each, because it appears only on a map that every mode's first chapter shares — so choosing
+   it per mode would be choosing it for a picture they all draw.
+8g. **The search says where the road is; an eye says which part of it a node looks right on, and
+   the second is authored.** `make_map_seats.NUDGE` is the one hand-written table in that file —
+   an offset in canvas units per map and per rung — and the distinction it draws is the whole of
+   why it is not a way back to hand-placing: a nudge **shifts a seat along ground the search
+   already found**, it may not put one where the search refused, and every nudged seat is
+   re-checked against `ChapterMap`'s clearance rules, which names the nudge that collided rather
+   than leaving the build gate to find it later. It is per *map* rather than per chapter, like
+   the seats, because a map is drawn by every mode's chapter at that ordinal. <br>**A marker may
+   only be moved across the map, never up or down.** Its height is derived by
+   `ChapterMap.TeaserPosition` from the highest glade and a body can author only its `teaserX`,
+   so a vertical nudge would move it in the tool's picture and nowhere else — a mirror telling a
+   comfortable lie about the screen, which is the one thing a mirror may never do (44d).
+   <br>**Every collision the nudges caused was the rounding trap again** (8e), and at a scale
+   worth stating: the crown rule refuses two nodes closer than 384 units across unless they are
+   529 apart up the map, and four separate nudges landed between 366 and 383 — each one read as
+   "a little to the left" and each one three decimal places away from legal. **Size a nudge
+   against the rule, not against the instruction.**
 8d. **A prop scattered on the map has to be drawn the way the map is drawn**, and there is no gate for it:
    put it on a strip and look. A preloaded picture nothing draws is resident memory for the life of the
    game, so a withdrawn one goes with its `.meta`, its manifest entry and its Addressables row.
@@ -208,6 +296,20 @@ New level chapters ship every two to four weeks.
    turrets (42c).
 
 ### The grove
+
+> **The Grovement is HELD as of 2026-09-15, and nothing below has been deleted.** The owner is
+> rebuilding it from the ground up, so this build simply does not *draw* it: the nav tab is out
+> of `NavBar.Order`, the finest-groves board is out of `LeaderboardScreen`, the public profile's
+> grove card and worth line are gone, the board-row chooser is bypassed, and
+> `ReportSubjects.Held` carries the grovement subject. **Every screen, every rule, every id and
+> the whole server half still stand** — `LeaderboardBoard.Global` and `BOARD_IDS` still name a
+> live board (so `pruneRetiredBoards` never takes the document, 19k), `publishGrove` still writes
+> a card (the Endless Watch and the public profile are built from the same one), and no id, no
+> wire spelling and no loc key is spent. **Putting it back is a handful of table entries**, which
+> is deliberately cheaper than a flag somebody has to find — and is why this is a note rather
+> than a deletion. What did change is six strings on the profile's board card, kept and re-worded
+> (5f, which allows that for a sentence and refuses it for an id).
+
 16. **A grove is built, and only four facts about it are stored**, split by *shape* rather than by feature:
    a purchase is an **entitlement**, so owned pieces and land are union-joined id sets; an arrangement is
    an **instruction**, so placements are merged by recency with a stamp per slot (11c) — the only part that
@@ -342,6 +444,32 @@ New level chapters ship every two to four weeks.
    moved hall opened on the ground it had left; and the culling window grew only by how far art
    reaches *up*, so a footprint's picture — hung below its anchor, which is its back corner — was
    culled with two thirds of the house in view. **A gate that reads the model cannot see either.**
+16x. **A derived copy is written by whoever writes what it derives from, in the same call —
+   and no reader may ever prefer the copy.** `homesteadOwned` is the v19 mirror of
+   `homesteadStock`, kept so a rolled-back client and a not-yet-redeployed `groveWorth` keep
+   working (16h). It had **two** writers and only one of them knew: `HomesteadLedger.WriteInto`
+   set both on the way to disk, and `SaveMerge` built the joined DTO with the rows alone — so
+   **every synced save in the game carried a full stock beside an empty array**. Nothing
+   noticed, because `GroveStock.In` and `stockOf` both prefer the real section and fall back to
+   the mirror only when it is empty: the grove drew right on every device, the score was right
+   on every board, the file parsed and the merge lost nothing. <br>**What paid was the one
+   reader that asked the mirror on its own.** `buildCard` derived the best home held from
+   `homesteadOwned`, so a keeper who had bought a farmhouse was **published to every stranger in
+   the game standing in the free cottage** — on their card, their grovement and their profile —
+   while the score beside it counted the farmhouse correctly the whole time, because *it* went
+   through the one door. Invariant 5b in the shape it always takes: one question answered twice,
+   both answers plausible, and the wrong copy is the one nothing else reads. <br>Three rules.
+   **The pair is set by one call** (`GroveStock.Record`) and nothing else may set either half,
+   because a writer that cannot forget is worth more than a comment asking it not to — and the
+   fixture is asserted over **the merge's own output**, since a helper that cannot be got wrong
+   is no use to a caller that does not reach for it. **A mirror is never the authority**, so
+   every reader goes through the door that knows which section is real. And **the repair is the
+   publish note** (`GroveBoard.PublishedKey`): the fingerprint covers what a *visitor* can see,
+   nothing a visitor can see changed, so a corrected deployment would have gone on drawing the
+   wrong house for the life of every account that never moved a bench — the key is bumped, which
+   costs one publish per account once and is the alternative to a backfill over every player
+   document in the database.
+
 17. **A save may only ever be pushed to the account it says it belongs to.** `AccountGate`, five
    lines, and the only rule here whose failure has no undo: a sync is pull → join → push and the
    join is monotonic, so aimed at the wrong account it takes the better half of two strangers'
@@ -414,6 +542,31 @@ New level chapters ship every two to four weeks.
    receipt the server will not honour at *every single launch*. `StoreService._checkout` is the
    only thing that knows the difference, and the card's own `AwaitingGrant` face stays exactly as
    it was — it is still the right reporting for something the player did not just do.
+18g. **A shelf may carry an offer that costs no currency, and the whole of what it costs to
+   build one is that the panel already exists.** The coins shelf and the hearts shelf each stand
+   a **rewarded video in their first spot** — 300 coins and 2 hearts, the two the hub's own `+`
+   has always offered — and both were reachable from nowhere but a pill on the one screen a
+   player is *not* thinking about buying anything. First rather than last, and that falls out of
+   the sort rather than being a taste: every money shelf is ordered cheapest first and nothing is
+   cheaper than nothing. <br>**The card is drawn live whatever the network is doing**, which is
+   the hub's rule (*a control beside a resource opens that resource's panel, whatever the state
+   of the world*) and is what keeps `AdOfferState`'s five sentences in the one place that says
+   them honestly: a refusal painted here would be a second copy of them on a cell the grid
+   rebinds as it scrolls, and a countdown on a card nothing ticks is a number that is wrong a
+   second after it is written. What *does* take the card off the shelf is the content table not
+   carrying the placement, which is the one refusal no waiting resolves — so switching the whole
+   thing off is a config push. <br>**Three pictures tell it apart from the six prices under it**,
+   because none of the three is a number: a composed heap of **two** tokens where the packs draw
+   a painted ladder of one, three or five (18e from the other end — a heap of three beside a
+   fifteen-heart pack is the same picture twice, which is what the render mirror caught), a
+   **green** face rather than the money orange or the gem violet, and FREE on the ribbon rather
+   than a percentage. Green because the watch button on the panel it opens is green, so the card
+   and the control it leads to are one thing. <br>**And the panel stopped offering the shop when
+   the shop is what raised it**, asked of the screen underneath rather than passed in by the
+   caller — a flag a caller must remember to clear is a flag that is right until the third call
+   site. <br>Which shelf carries which placement is `ShopAdShelf`, in **Domain**, for 8a's
+   reason: a shelf naming a placement this build has retired loses its card silently, with every
+   other gate green.
 
 19. **Anything a stranger can see is a separate, server-written document.** The save is `isOwner(uid)` for
    ever; a leaderboard row is built by a function with its own credentials and never writable by a client.
@@ -555,7 +708,10 @@ New level chapters ship every two to four weeks.
    trap said about a shelf, and without it the one turret every account in the game stands is
    the one seat a card could never carry. **A stale seed publishes no line**, never an unvouched
    one.
-19q. **A row on a board leads to two places, so it opens a chooser.** A tap used to walk
+19q. **A row on a board leads to two places, so it opens a chooser** — *and a chooser with
+   one door in it is a confirmation for a free navigation, which is why the panel is bypassed
+   while the grovement is held (see the note under **The grove**) rather than drawn with one
+   key on it.* A tap used to walk
    straight into a grovement, which was the only thing there was to see; a profile beside it
    makes a silent choice into a screen reachable from nowhere. The panel is also where a row
    finally says *who* it is at a size somebody can look at, which is what makes the extra tap
@@ -565,6 +721,24 @@ New level chapters ship every two to four weeks.
    **nothing unheld is drawn at all** — thirty-one discs with nine lit is an inventory of a
    stranger's gaps rather than their collection, and the count in the corner already says how
    far along they are.
+19r. **A board is a tally taken once a day, and the screen cannot say so by drawing itself.**
+   A keeper who spends thirty thousand credits and comes straight here sees a list that has not
+   moved, and the only two readings available are *the boards are broken* and *what I built did
+   not count* — both wrong, and both the kind of conclusion somebody reaches once and never
+   revisits. So the boards screen carries the corner every other page in this game keeps its
+   explanation in, and the panel answers three things, of which only the first is half-said
+   anywhere else: that there are **two** boards ordered on two different numbers, when the tally
+   is taken, and that the list stops at `MaxRows` — invisible from inside it, since a keeper off
+   the board cannot tell "412th" from "not ranked", which is exactly what the published
+   distribution answers on their own profile (19c). <br>**The cadence is the one number in this
+   game mirrored from a cron.** `LeaderboardBoard.RebuildHours` copies `publishGroveRanks`'
+   `"0 4 * * *"`, and it is affordable for `EndlessLedger.MaxWave`'s reason and no other:
+   nothing waits on it, caches against it or refuses anything because of it, so a drift costs a
+   sentence rather than a feature, and a job that stops being daily is a different feature rather
+   than a retune. **What makes the sentence honest anyway is that the panel also prints
+   `BuiltUnix`** — what the job that wrote *this* board actually recorded — handed over by the
+   screen that already paid for the document rather than fetched, and dropped entirely when it is
+   nought, because "last built 56 years ago" is worse than saying nothing.
 
 ### What a mode is, and what a mode costs
 20. **A mode is code, and a chapter names one.** A way of playing brings an interaction, a fail
@@ -781,7 +955,10 @@ New level chapters ship every two to four weeks.
    needs to name a line of dialogue it has not read.
 30e. **A backdrop belongs to a mode's *world* as well as to a level's place** — one axis added to 7c rather
    than an exception to it. The arithmetic is unchanged, so a second chapter still costs no art. **The map
-   is deliberately not part of it**: a mode is told apart on the map by its perch and by nothing else.
+   is deliberately not part of it**: a map belongs to an ordinal, and two modes at the same ordinal draw
+   the same picture. *(When this was written a mode was told apart on the map by its perch. Since 8e there
+   is no perch and no trail either, so they are told apart by nothing at all — which is 8e's own stated
+   cost rather than a second rule, and does not change what this one is about.)*
 30g. **A `MonoBehaviour` that hides itself must not disable the object it needs to be alive on.**
    `SetActive(false)` on its own node meant the next call started a coroutine on a disabled
    behaviour — which Unity refuses **silently** — so the `done` callback never fired and the board
@@ -986,13 +1163,22 @@ changed** (5f).
   panel's two keys — "Their name" and "Their groovement" say what they are, and the paragraph
   above them already says what a report is for and what it does not do, so the notes were a third
   and fourth sentence explaining two words each;
-  the streak's own `ui.streak.beyond`, `ui.streak.beyond_plain`, `ui.streak.collect`,
-  `ui.streak.explain_held`, `ui.streak.info_boost_title`, `ui.streak.info_boost_body`,
-  `ui.streak.progress`, `ui.streak.progress_week` and `ui.streak.tonight` (48 — the page is the
-  tasks page's furniture now, the ladder pays no boost to explain, and the lap is said by the
-  board's own heading);
+  the streak's own `ui.streak.beyond`, `ui.streak.beyond_plain`, `ui.streak.explain_held`,
+  `ui.streak.info_boost_title`, `ui.streak.info_boost_body`, `ui.streak.progress` and
+  `ui.streak.progress_week` (48 — the page is the tasks page's furniture now, the ladder pays
+  no boost to explain, and the lap is said by the board's own heading), and
+  `ui.streak.board_hint` (48g — the row's own COLLECT key says it where the tap is). **Two
+  streak keys came *back* from that list**, `ui.streak.collect` and `ui.streak.tonight`, which
+  is legitimate for a string where it is not for an id: a loc key names a sentence rather than a
+  thing a save can hold, so a retired one may be re-minted when the sentence is needed again —
+  what may never come back is a level id, a chest tier or a grove piece (invariant 1);
   `ui.settings.credit` (46); `ui.board.league`, `ui.board.of_league` and the nine `ui.league.l*`
   names (19k — the league board is gone, and no screen had ever drawn a league's *name*);
+  **the season id `first_watch`** and its two strings `ui.event.first_watch.name` /
+  `.blurb` (47j — the season repeats now, so the manifest carries the *stem* `watch` and
+  every cycle is `watch_0000`, `watch_0001`, …; the retired id was never played, but a
+  season id names a save row, a grant-log key and a pass entitlement, so invariant 1
+  reaches it in full and it may never be re-authored);
   **the store product `gg_first_bloom_pass`** and its string
   `store.product.gg_first_bloom_pass` (47d — a pass is bought with gems, and the id is
   **registered with both stores and therefore never reusable**; deactivate it in App Store
@@ -2191,7 +2377,7 @@ changed** (5f).
 47c. **The bound is the ladder, not the play.** The server cannot recompute whether the marks
    were earned — they come from counters in the player's own save — so a rung is *bounded* rather
    than proved, the way a streak night and a task chest are, and tighter than either: the grant
-   log makes `bloom:{season}:{track}:{goal}:{ccy}` payable exactly once, so the most a forged save
+   log makes `mark:{season}:{track}:{goal}:{ccy}` payable exactly once, so the most a forged save
    can ever reach is **one season's authored ladder, once**, which is what an honest player who
    finishes the track gets. No allowance map and no window check — a rung reached before a season
    closed stays claimable, which is what keeps a closed season's box on the hub.
@@ -2239,6 +2425,94 @@ changed** (5f).
    both.** "Am I getting anywhere" against "how much is left" — and the bar between them measures
    the run from the **last** rung to the next rather than the whole ladder, because a bar crawling
    across forty rungs is a bar that never visibly moves.
+47j. **A season that runs again for ever is a *recurrence*, not a longer list — and it cost
+   the save nothing, the server one deploy, and the calendar nobody.** The season used to be
+   a dated entry in `manifest.json`, which is a thing that runs out: on a date somebody picked
+   months earlier the hub's box simply stops appearing, with nothing red anywhere. That is the
+   failure this file refuses everywhere else (19e's gate that cannot fail), and it is worse
+   here because the symptom is a feature quietly ending. `SeasonCycle` is **45b's shape asked
+   of a season**: cycle `n` runs `[start + n·period, …)`, both sides compute `n` from the
+   clock, and **nothing is stored on either** — no cursor, no "which season is it", no
+   calendar to extend. <br>**The period is the window, deliberately.** A separate "repeat
+   every N days" is a second number that can disagree with the first, invisibly: a 42-day
+   window repeating every 50 leaves eight days with no season and every file still reading as
+   authored. <br>**Everything a new season has to reset resets by itself, because it is all
+   keyed on the id** — marks are a per-season row so they start at nought, the grant log is
+   `mark:{id}:{track}:{goal}:{ccy}` so every rung pays again, and the pass is `pass:{id}` so it
+   is bought again. **No save schema version, no `firestore.rules` change and no new claim
+   shape**, which is 20a's bargain collected on a season. <br>**The one thing it costs is the
+   name.** A season's name key is derived from its id (5a), and a derived id cannot carry an
+   authored string — nobody writes `ui.event.watch_0037.name` into a table that ships inside
+   the app. So a cycle's name comes from a **pool of twelve that wraps**, which is over a year
+   at the shipped period, and `GroveEvent` takes an explicit name key **only from the thing
+   that minted its id**, so the two cannot be sourced separately and come apart. An ordinal
+   composed at runtime was the alternative and does not survive translation.
+47k. **What bounded a forged claim was the ladder being a finite list, and a calendar that
+   never ends has no list — so the bound is the clock.** 47c's sentence was "the most a forged
+   save can extract is one season's authored ladder, once"; under a recurrence a save that
+   simply invents `watch_9999` would have ten thousand of them. **A cycle that has not opened
+   does not exist** (`SeasonCycle.HasOpenedBy`, mirrored by `season.ts`'s `cycleSeason`), so
+   the most any save reaches is one ladder per *elapsed* period — which is exactly what an
+   honest player who finishes every season gets, and is the same sentence with the list swapped
+   for the calendar. <br>**An unopened cycle is `unknown` rather than `refuse`**, because "it
+   has not started" stops being true on its own (13a) and a clock skew either side of a
+   rollover makes an honest claim look early; left unconfirmed it pays itself the moment that
+   cycle opens. **A closed one resolves without complaint**, because a season's chests never
+   expire. <br>**Two spellings of one cycle would double the bound**, so the id parse is strict
+   on both sides — exact stem, exactly four digits, `watch_7` and `watch_00007` name nothing — and
+   the padding is what makes ordinal order calendar order, which the save's row sort and the
+   eviction at the ceiling both rely on without saying so.
+47l. **The 64-row ceiling used to delete the season being played, and it was unreachable until
+   the calendar stopped ending.** `SeasonLedger` sorted rows by id and lopped off the tail —
+   and ordinal order is calendar order, so it kept the *oldest* sixty-four and threw away the
+   newest. With seasons authored one at a time the sixty-fifth was a decade away; with a
+   recurrence it is the one in play, deleted silently at the moment it opens. It **evicts**
+   rather than truncating now, by what a row is worth: anything that **might** still be holding
+   an unopened chest survives ahead of anything settled, and the newest survives within each
+   group. "Might" is a sound over-approximation read off the row alone (`marks > floor`), and
+   it has to be one — answering exactly needs a catalog the ledger deliberately does not hold,
+   and the two ways of being wrong are one row kept against a player's chest deleted.
+47m. **A closed season holding an unopened chest has to be reachable, and on an endless
+   calendar there is always something live standing in front of it.** `Featured` was "the live
+   one, or when nothing is running the most recent closed one still owing something" — correct
+   while a closed season had nothing in front of it, and on a recurrence it would have made
+   last season's chest unreachable from the instant the next one opened: no box, no page, and a
+   badge counting a chest with nowhere to go. It answers the **oldest season still owing
+   anything** now, falling back to live — which is **48b's rule** (only the earliest waiting
+   night may be taken) arriving on a season. In the ordinary case the live season *is* the
+   oldest owing anything, so the box shows what it always showed; it points backwards only
+   while something finished with still owes, and stops the moment it is taken. <br>**And
+   `GroveEvents.All` is no longer the authored calendar.** A recurrence has no list, so a
+   closed cycle exists nowhere but as an id in somebody's save; `All` joins the ids the save
+   holds onto the authored calendar and turns each back into a season through
+   `CatalogIndex.EventById`. A row for a season this build has never heard of is skipped, which
+   is the case a rolled-back client is in.
+47i. **The season's crest is a bought sprite, and the generated one it replaced was the same
+   mistake the update wall paid for.** It was a dark ring carrying twelve pips that lit
+   clockwise round a growing core — every part of it real, correct and drawn by nobody — and
+   the owner rejected it on sight in both places it appears, which is 49h arriving a second
+   time: **a shape assembled out of primitives has no artist in it**, and it reads as a
+   placeholder against a card cut from a licensed kit. The fix is the same one and so is the
+   method: cut a candidate from a pack and **look at it**, with several up at once (46b).
+   `Tools/make_season_crest.py` takes a crown out of **the same interface kit every plate,
+   ribbon and trough in this app is cut from** (44), so the crest is not merely suited to the
+   card it stands on — it is the same object family, and the next kit swap re-cuts it along
+   with everything else instead of leaving one emblem behind in the old palette. The surveyed
+   alternatives all failed for a reason worth keeping: the parchment kit's glyphs are
+   monochrome and read as a stencil, the hundred-icon skill pack paints inside a **square
+   frame** so every one of them cuts as a sticker rather than a silhouette, and a plain shield
+   is a badge on any screen in any game. <br>**What it cost is the one thing the generated
+   crest was good at**, and that is a trade rather than a loss: the pips filled as the ladder
+   filled, and both callers already print the count *and* draw a bar directly under the crest
+   — so the reading was being made twice and only one of the two was drawn by anybody. A crest
+   says which season this is; the bar says how far through it the player is. The other shape,
+   a crest **lit** as the track fills, is what 37m refuses from the other end: it is dim on the
+   first frame of every season anybody opens. <br>**The crest's name is content and its picture
+   is not** — `"icon": "watch"` is in the manifest, so re-pointing what that name draws costs
+   nothing and renaming it is a content push. And **both mirrors were drawing something else**:
+   `render_home.py` stood in `ic_stars` and `render_season.py` re-generated the pips in Python,
+   because a generated crest is the one thing a mirror cannot load — so the screen the crest is
+   on could not honestly be looked at until it became a file (44d).
 
 ### The streak
 48. **A streak is a run of days that never ends, and it is the only reward here that asks a
@@ -2296,27 +2570,71 @@ changed** (5f).
    growing a second rule (47). The consequence is arithmetic and worth saying out loud: adding
    chests to this ladder **moves the season's pace**, and both content gates print the combined
    figure rather than the slates' alone.
-48g. **A tile is not a row, and the kit's card is the wrong plate for one.** The board's seven
-   nights were built on `Skins.Card` because the tasks page's rows are — and a card is the
-   *darkest* plate the kit cuts, which is right under a wide row full of content and wrong for a
-   small tile on a blue ground: seven of them read as seven holes punched in the page. They are
-   `Skins.Panel` now, the light one. Three more things came out of the same look. **The night
-   rides a coloured chip and the colour is the state** (green kept, gold yours, aqua tonight,
-   dark ahead), where it used to ride an inset trough — the kit's darkest plate inside its second
-   darkest, which said nothing about the tile until you found the seal. **The reward stands in a
-   `Skins.Slot` well**, because a picture floating in the middle of a plate is a picture nobody
-   put anywhere. And **the amount sits on a trough of its own**, which is what gives the tile a
-   bottom edge. <br>**The reward's size is a *drawn* height, converted by `ChestPack`.** A closed
-   chest icon is frame nought of the opening reel and carries the lid's headroom, so a box set
-   straight from a height draws the chest two thirds the size of the gem on the tile beside it
-   and floats it high — and the render mirror, which crops to alpha, disagreed with the game by
-   half again. Four screens share that conversion now.
-48h. **The streak page says "level" where the rest of the game says "glade"**, at the owner's
+48g. **A list of rewards is a list, and the board was a grid twice before it was one.** The
+   seven nights shipped as a four-across grid of 240-unit tiles, and the owner rejected the
+   design twice — once on the plate and once on the shape, which is the order that mattered:
+   the second rejection is the one that was right. **A tile is a column of three things stacked
+   in 240 units** (a night, a picture, an amount), so the reward is a thumbnail, the sentence
+   has to fit in two words, and every state has to be said by colouring something. **A row is
+   1000 units** with the reward in a well on the left, "NIGHT 5 / 16 gems" in the middle and the
+   answer on the right — which is the shape the tasks page and the season ladder already use,
+   for this reason, and the shape this board should have had from the start. <br>**The right
+   end carries one answer and the first of them is a word.** A **COLLECT** key on the night that
+   can be taken, a seal on one already paid, and on the rest the night it lands — "TONIGHT",
+   "IN 2 NIGHTS" — because "when do I get the Royal Chest" is the only question a row that can
+   do nothing is still being asked. The grid said none of that, and the hint above the board
+   saying the tiles were tappable went with it: the same sentence said where the tap is beats
+   it said forty units away. <br>**It scrolls, and that is paid for rather than avoided.** Seven
+   rows is taller than the band on every phone, so the board opens on the night that can be
+   taken (`FocusOnPending`) rather than on night one — a page whose one action is below the
+   fold is a page with no action on it.
+48i. **A reward that can be taken wears a light, and the light has to be drawn over the plate.**
+   A halo and a turning fan of rays, on the one row that is collectable — the page has exactly
+   one at a time, so it can afford to be the loudest thing on the screen and it has to be,
+   because the row under it is one of seven that otherwise look alike. **Built on the row that
+   becomes lit and destroyed when it stops**, rather than built for every row and hidden:
+   looping tweens, seven times over, behind a scroll. <br>**And it was invisible the first time,
+   for the reason a light usually is here**: hung as the card's first sibling it sat *behind* an
+   opaque plate the kit cuts, so the whole effect drew nothing on the only row it exists for
+   (16i's ground rule, on a row instead of a floor). It is inserted at the well's own index now,
+   over the plate and under the reward. <br>**The mirror could not see it and that is its own
+   finding**: `render_streak.py` composited the light after the card, so it drew a page the game
+   does not — 44d's rule that a mirror with its own idea of the order answers the wrong
+   question. <br>**A third piece was here and the owner had it taken out**: a gold ring that
+   scaled out of the seat and faded as it grew, on its own loop. It said *and it is still
+   happening*, which the fan already says by turning — so what it added over a reward the player
+   is meant to be looking at was a second thing moving on a second clock, which is 37h's
+   argument about the one ward that may flash, asked of a row instead of a board. What that
+   settles is the pairing the pool under it was written against: **nothing on the row is sharp
+   now**, the pool breathes and the fan turns. **The mirror dropped it in the same change**, or
+   a render still drawing a piece the screen does not is worse than no render at all.
+48j. **The reward's size is a *drawn* height, converted by `ChestPack`.** A closed chest icon is
+   frame nought of the opening reel and carries the lid's headroom, so a box set straight from a
+   height draws the chest two thirds the size of the gem on the row above it and floats it high.
+   The render mirror had the opposite error — it crops to alpha, so it drew chests half again
+   bigger than the game did. Four screens share that conversion now.
+48k. **The streak page says "level" where the rest of the game says "glade"**, at the owner's
    instruction, and it is deliberately not a sweep: six strings moved (the page's subtitle and
    CTA, two info lines, the shield's own copy, and the hub's streak box, which says the same
    sentence about the same feature and would otherwise disagree with the page it opens).
    **Twenty-four other strings still say "glade".** Changing those is a separate decision about
    what this game calls a level, not a tidy-up to be done on the way past.
+48l. **A repaint is a drawing of a state, so anything a one-off path switches off it has to
+   switch back on.** Collecting a night hid the reward's icon the instant the flight left it —
+   *a reward that vanishes from the face it was printed on is the point* — and nothing ever
+   re-enabled it: the repaint writes the icon's **colour** and had never written its `enabled`,
+   so a collected night was a row with a hole in it **for the life of the screen**, and the only
+   repair a player had was to leave the page and come back. Reported exactly that way. <br>Two
+   general things, and the second is the one worth keeping. The effect was **decoration rather
+   than mechanism** — `RewardFlight.Add` spawns its own tokens and reads the source rect only
+   for a start point, so nothing on the row was ever consumed and the seal stamped over it
+   already says the night has been taken — which is why the fix is to stop hiding it rather than
+   to time a re-show. And **every gate here is green on a stale widget** (44j's finding, on
+   `enabled` instead of a balance): it compiles, it validates, the mirror draws the row
+   correctly because the mirror draws a *state* rather than a sequence, and a fixture asserting
+   the icon matches the rung passes, because nothing is collected during a test. The instrument
+   was somebody tapping COLLECT and looking at the row. So the repaint now re-asserts `enabled`
+   beside the tint it was already writing.
 
 ### The update wall
 49. **A client can be withdrawn, and the whole of what makes that reliable is that the
@@ -2702,6 +3020,14 @@ Do not guess — verify offline.
   correct (43d).
 - **Difficulty:** `python Tools/verify/difficulty.py` — what each glade actually asks of a player, counted
   rather than argued about. Not a gate (5d).
+- **Where the nodes stand:** `python Tools/make_map_seats.py --check` proves `mapart.SEATS` is still
+  what the four paintings say (8e, 8f), and `--contact` draws every map with its chain on it — including
+  which seats are moored on a tile and which stand on the painting — which is the
+  gate that matters — a disc can sit on perfectly good ground and still be lost against it, and no
+  number here can see that. `content.py` is what proves the seats *clear each other*: it already walks
+  every chapter for collisions, backward trails and crowns, so a bad seat is a build warning rather
+  than something only a render catches. Re-run `--write` and then every chapter generator after any
+  change to a map painting, or the shipped coordinates describe a picture that has moved.
 - **Charms:** there is no offline gate and there cannot be one — a charm is dealt into a *refill*, so
   what it does can only be measured by playing. The instruments are `SiegeCharmTests` (what each one
   does, and that the deal still costs one draw), the hold simulation (what they are worth over ninety
@@ -2733,12 +3059,24 @@ Do not guess — verify offline.
   content gates walk the roster and error on a model whose pictures are not on disk or whose derived loc
   keys do not resolve. **Stronger than a literal rather than weaker: it catches a missing file and a
   misspelled id at once** (42).
+- **The season's recurrence:** `content.py` walks it and **errors** on a stem too long for the
+  cycle number to fit inside the 64-character id `season.ts` parses against, on a second season
+  asking to repeat, and on any of the twelve pool name keys or the shared blurb being missing —
+  `loc.py` cannot see a derived key at all, so that check can only live here. It also **prints
+  what the recurrence means**: how often a new one opens, what the ids look like, and roughly
+  which day of the window a player who claims everything tops the ladder. The arithmetic itself
+  is `SeasonCycleTests` (twenty cases, all offline) and `season-pass.mjs` on the server, which
+  run the same id parse and the same open/not-open bound from both sides (9a).
 - **The season:** `python Tools/author_season.py --check` proves the shipped ladder is what the
   generator writes (a rung is arithmetic on its ordinal, never typed — 4 and 37d, applied to a
   reward table), and `content.py` errors on a rung naming a tier the tasks block does not define
   and on a ladder its own window cannot deal. `Tools/make_mark_vectors.py --check` is the fourth
   copy of the chest generator; `Tools/render_season.py --contact` is the only thing that can say
   whether the page reads (44d: it shares `hudkit` with the tasks and hub mirrors).
+  **The crest is `Tools/make_season_crest.py`** — `--check` proves the shipped `Ui/ic_season`
+  reproduces and `--contact` draws it on the season box's own violet plate at both the sizes
+  the game draws it, which is the only thing that can say whether it reads (47i). Like every
+  art tool here it **passes with the licensed pack absent**, because the PNG is committed.
 - **The streak:** `content.py` walks the ladder and refuses a rung naming a retired kind or a
   chest tier the `tasks` block does not define — which is invisible in either half of
   `progression.json` on its own — and prints what a lap is worth in marks, because a streak
@@ -3018,16 +3356,28 @@ claimed five modes and a hundred levels "across eleven chapters" when the truth 
   credited, so the count carries on from where it was and buys no nights. Four monotonic dates in
   the save and nothing adjudicated: the rate bound that has always governed a night holds whether
   or not anybody paid for anything (48e).
-- **The Bloom** — a forty-rung season with a free track and a **$4.99 Bloom Pass**, eighty chests
+- **The Bloom** — a forty-rung season with a free track and a **350-gem Keeper's Pass**, eighty chests
   in all (47). It is graded on **marks**, and a bloom is a claimed chest: wood 1, silver 2, gold
   3, royal 5, so a player who claims everything is dealt about six a day. The ladder steps five
   marks a rung and tops at **200** against the ~250 a 42-day window deals, so it finishes around
   day 33 (47f). The free column is wooden with a silver every fifth rung and a gold every tenth;
   the paid column is the same ladder one tier up. A rung is claimed as
-  `bloom:{season}:{track}:{goal}:{ccy}` and opens the ordinary chest ceremony; the paid column
+  `mark:{season}:{track}:{goal}:{ccy}` and opens the ordinary chest ceremony; the paid column
   additionally needs the receipt the server verified (47d). The page is the tasks page's
   furniture: a banner, the wallet, a hero carrying the bloom count and the rungs open, the pass
   plate, and a recycling ladder of two-chest cards.
+  <br>**It runs again for ever** (47j–47m). The manifest carries a *stem* (`watch`) and a
+  window describing cycle nought; cycle `n` runs back to back after it and wears the id
+  `watch_0000`, `watch_0001`, …, derived from the clock on the device **and on the server**
+  with nothing stored on either. So a new season costs **no content push, no re-seed, no
+  deploy and no calendar anybody has to extend** — marks restart at nought, every rung pays
+  again, and the 350-gem pass has to be bought again, all because each is keyed on the season
+  id. Its name comes from a **pool of twelve** that wraps (`The First Watch` … `The Twelfth
+  Watch`), which is over a year at the shipped six weeks. **A forged claim is bounded by the
+  clock rather than by the ladder**: a cycle that has not opened does not exist, so the most
+  any save reaches is one ladder per elapsed period. **Its crest is a gold crown cut from that
+  same kit** (`Ui/ic_season`, `Tools/make_season_crest.py`) and is drawn on both the hub's box
+  and the page's hero; it replaced a generated ring of pips the owner rejected on sight (47i).
 - **Economy** — real-money shop (Unity IAP 5.4.2), gems as the soft sink, rewarded ads, refund sweeps,
   server-adjudicated grants, a gem-priced continue (23) and a bonus wheel (25), neither costing the save
   file a field.
@@ -3036,7 +3386,11 @@ claimed five modes and a hundred levels "across eleven chapters" when the truth 
   walls, gates, trees and props. A piece stands on an authored footprint (1x1 to 4x4; the hall and
   every dwelling the floor's own 4x4) and can be **turned** — four facings, four renders, one hit
   mask each.
-- **Boards** — **two**, and they are the game's two permanent numbers (19k): **Finest grooves**,
+- **Boards** — **one drawn, two published.** *The finest-groves board is **held** with the
+  Grovement: nothing in this build asks for it, and the server still writes it every night, so
+  its id is not spent and turning it back on is `LeaderboardScreen` alone.* What follows is what
+  the backend does, unchanged: **two**, and they are the game's two permanent numbers (19k):
+  **Finest grooves**,
   ordered on what a keeper has built, and the **Endless Watch**, ordered on how far they have held
   the line on the Infinite lane. A hundred rows each, one published document each, rebuilt at 04:00
   — about fifteen thousand reads a night for the whole game at ten million cards, and nothing in it
@@ -3050,7 +3404,11 @@ claimed five modes and a hundred levels "across eleven chapters" when the truth 
   once enough keepers have run it. Both are nine deciles off the same five-thousand-card sample,
   so the second cost no reads; both refuse to answer under 200 samples, which is what they do on
   the day they ship.
-- **A keeper, seen from outside** (19o–19q). A row on either board opens a **chooser** — their
+- **A keeper, seen from outside** (19o–19q). *Held with the Grovement: the chooser, the
+  profile's grove card and worth line, and the grovement half of the report panel. A board row
+  walks straight into the profile, which draws the keeper, the Endless Watch, the companions and
+  the line; reporting offers the name alone.* What follows is the shape it returns to. A row on
+  either board opens a **chooser** — their
   portrait, their name, the figure that board ranks them on, and two doors: their **grovement**
   and their **profile**. The profile is a read-only page built from the same published card the
   grovement is: keeper level and honorific, what their grove is worth and its stars, the Endless
@@ -3194,7 +3552,9 @@ update. **Re-seed after any change to it.**
   ceiling, not the refill cap, so a chest at a full bar still pays (the daily chest's rule kept).
 - **Streak** — a 7-night lap of **coins, gems and chests** (48): 400 credits, 8 gems, a **silver chest**, 800 credits, 16 gems, a **golden chest**, a **royal chest**. One lap is 1,200 credits, 24 gems and three chests, and the three chests are worth **10 marks** to the season (48f). Nothing below silver, and nothing the client banks itself. A **streak shield** costs **120 gems** and covers **7 days** from the day it is bought — it is not extended by playing and cannot be bought while one is running (48c).
 - **Ads** — four placements, all opt-in, no interstitials: 2 hearts, **300** credits, win-bonus
-  credits, 1 hint.
+  credits, 1 hint. The first two are offered **twice**: from the hub's own `+` and from the first
+  spot of the shop's coins and hearts shelves (18g). The other two are offered where they are
+  earned rather than from a storefront.
 - **Bonus wheel** — eight equal slices at 100/200/150/300/100/250/150/500 percent of the authored 200, each
   a 1-in-8 chance; mean 218.75%, so a view pays about **438** and a capped day about **2,628** against
   2,400 under the old flat offer at a cap of twelve (25).
@@ -3230,8 +3590,9 @@ is now deleted** — it read a season's entitlement back for the client, which n
 the pass stopped being a receipt: the client owns its own copy in the save and the server reads
 its own (47d). It was never in this list, which is how a deployed function came to outlive its
 own documentation; `firebase functions:list` is the authority. `firebase/README.md` is the guide;
-`firebase/e2e/smoke-test.mjs` is **123/123 live** (2026-09-15, after the report callable's
-rename, the streak drop's own seed and the update wall's rules release) and `firebase/e2e/delete-account.mjs` **14/14** — the
+`firebase/e2e/smoke-test.mjs` is **132/132 live** (2026-09-15, after the report callable's
+rename, the streak drop's own seed, the update wall's rules release and the endless season's
+two functions) and `firebase/e2e/delete-account.mjs` **14/14** — the
 second erases the throwaway accounts it makes, so it is the only suite here that leaves less behind than it
 creates. Client half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK 13.15.0 as vendored UPM tarballs
 under `GooglePackages/` (gitignored — run `pwsh GooglePackages/fetch.ps1` on a fresh clone).
@@ -3481,6 +3842,64 @@ What a render cannot say is whether a slightly softer letterform still reads at 
 a phone in sunlight — and the one string that changed (`ui.shop.capacity_upgrade`, now "{0} to
 {1} hearts") is on a **real-money** card, so look at that shelf specifically.
 
+**Done on the home a card draws (16x), 2026-09-15, in this order.**
+(1) **No `firestore.rules` release and no re-seed**, and both were checked against what is
+*live* rather than against the tree. **The rules**: `homesteadOwned` has been in `hasOnly`
+since v19 and is already written on every push — as an **empty array**, which is the fault —
+so the save gains no key. The clause that mattered is the *size* guard, because the client
+now writes that array with something in it for the first time, and a cap it overflowed would
+fail **the whole save write** (12a): it is `<= 512` against `GroveStock.MaxIds`' own 512, and
+the mirror carries one entry per stock row, so it cannot exceed a stock the same rule already
+bounds. Read out of the **released** ruleset through `firebaserules.googleapis.com`, not out
+of `firestore.rules`, because another agent had a release in flight the same day.
+**The seed**: every block of the live `config/grove` — `pieces`, `bundles`, `dwellings`,
+`dwellingLevels`, `regions`, `wards`, 167 entries — was diffed against `homestead.json` and
+`progression.json` and agrees exactly. **The seed was not the problem and re-running it would
+have proved nothing**, which is worth saying because it is the first thing this class of bug
+looks like, and because a re-seed publishes the working tree (there was other content in
+flight). The one trap in writing that diff is `regions`: a gem-priced region is present **at
+nought**, so a naive `cost > 0` filter reports five false drifts.
+(2) ~~`firebase deploy --only functions:publishGrove`~~ **deployed 2026-09-15**, **one
+function, by name**, because exactly one builds a card — proved by grepping every write to
+the `groves` collection rather than by reading the call graph: `index.ts` is the only `.set`
+of a whole card, `deleteAccount` only deletes one, `reportKeeper` only `.update`s `name` or
+`placed`, and `publishGroveRanks` ranks cards it does not build. The deployed artifact was
+then **downloaded and read back** (`functions:generateDownloadUrl`), because "the deploy
+said Successful" and "the running bundle has the fix in it" are two different facts —
+`lib/grove.js` carries `const owned = stockOf(save, grove)` — `publishGroveRanks` ranks cards it
+does not build, and `reportKeeper` patches `name` and `placed` and never the home. Deploying
+by name was load-bearing a second time: `index.ts` and the streak and reports sources all had
+another agent's work in flight, and leaving thirteen functions on the revision they had is
+what kept it out of anything that runs. **Until it ran, every card in the game published the
+free cottage.**
+(3) **The client half is owed a build**, and it is the half that matters for the next
+account: `SaveMerge` now writes the stock and its mirror together through
+`GroveStock.Record`, so a synced save stops carrying an empty `homesteadOwned` — which is
+also what a rolled-back client reads, and what it has been reading as "this grove is empty".
+`GroveBoard.PublishedKey` is bumped to `grove.published.3.` in the same build, which is the
+only thing that repairs a card already standing (16x).
+(4) In the Editor: `Validate Content`, `Validate Art` and the **EditMode suite**. **No new
+art, no Addressables work and no new loc key** — nothing on any screen changed; what changed
+is which home id the card names, and `GroveVisitScreen` already scopes the dwelling's art off
+`GroveCard.DwellingId`.
+(5) **Proved, in three places.** `functions/test/grove.mjs` gained nine cases (**632 pass**)
+covering a home recorded only as stock, only in the mirror, the best rung winning whatever
+order the rows arrive in, and the keeper gate either side of its own threshold;
+`GroveStockTests` gained two asserted over **`SaveMerge`'s own output** rather than over the
+helper (offline suite **2059 pass**); and `firebase/e2e/smoke-test.mjs` gained two and runs
+**125/125 live** against the deploy. **And the fix was run over the real save that was
+drawing the wrong house**: `homesteadStock` naming `home_farmhouse`, `homesteadOwned` empty,
+keeper level 12 — published `home_cottage`, rebuilds as `home_farmhouse`, with the score
+(60,200) and the turret line byte-identical.
+<br>**The turret loadout was checked and is correct**, which is worth recording because it is
+the obvious second suspect and it is *not* the same shape: `publishedLine` reads
+`wardLoadout`, `wardsOwned` and `wardStars`, all three authoritative fields with no mirror
+anywhere, all three carried by `SaveMerge`, and the fingerprint covers the seat **and its
+rung** so an upgrade owes a publish. Verified end to end against the live account — four
+cleaver seats at five stars in the save, four cleaver seats at five stars on the card — and
+the published `wards` roster's twenty keeper gates were diffed against
+`progression.json`'s own `minLevel` and agree exactly. **Nothing is owed on it.**
+
 **Done on the update wall (49), 2026-09-15, in this order.**
 (1) ~~`firebase deploy --only firestore:rules`~~ **released 2026-09-15**, and unlike the last
 several drops this genuinely was needed rather than documentation: `config/release` is a new
@@ -3554,6 +3973,123 @@ mode is a white blob drawn by the operating system with the app not running (50i
 everything is green: `compile.py`, `content.py` (0 errors, 0 warnings), `loc.py` (0 missing),
 `artnames.py`, `sfxnames.py`, `make_notification_icons.py --check`, and the whole offline suite
 at 2052 pass with `NotificationTests`' twenty-three in it.
+
+**Owed on the endless season (47j–47m, 2026-09-15), in this order — and one thing was
+published by accident, which is recorded here rather than tidied away.**
+**(0) `config/progression` was already written from the working tree**, by a
+`seed-config.mjs --help` that this tool treats as "publish" — there is no dry-run flag but
+`--check`, and every other spelling of one falls through to a live write. The live document
+now carries the recurrence, read back and confirmed (`id: watch`, `repeats: true`). **Nothing
+was lost**: `progression.json` was clean against HEAD, so the only block that moved is the
+season's, and it moved *ahead of* the deployment rather than behind it. The tool now
+**refuses any argument it does not know** rather than publishing, which is the cheapest gate
+in this file and was bought at the same moment as 50m's.
+(1) **`firebase deploy --only firestore:rules` is *not* needed**, checked rather than
+assumed: the save gains no key — a season's marks and floors have always ridden inside the
+`events` list the rules bound without naming its fields — so `hasOnly` has nothing to learn
+(12a) and there is no rules-before-client ordering.
+(2) ~~deploy `claimAwards` and `submitSpends`~~ **deployed 2026-09-15**, the two that
+resolve a season id, **by name and never as the codebase**. `package.json`'s own `deploy`
+script is `firebase deploy --only functions` — the whole fourteen, which this file forbids —
+and here it would also have given `publishGrove` a new revision carrying another agent's
+uncommitted `grove.ts` fix. `firebase deploy --only functions:claimAwards,functions:submitSpends`
+gives exactly those two new revisions and leaves the other twelve on the bundle they had; the
+only other edit inside that surface was a doc comment, with no runtime effect. **Until it ran,
+every claim against `watch_0000` came back `unknown`** — unconfirmed rather than refused,
+which is the safe half of 13a and pays nobody.
+(3) **No re-seed is owed** — step (0) already did it, and `--check` is green against the
+tree.
+(4) In the Editor: `Validate Content`, `Validate Art` and the **EditMode suite**. **No new
+art and no Addressables work** beyond the crest's own, above.
+(5) `firebase/e2e/smoke-test.mjs` gained **seven season cases and ran 132/132 live**
+(2026-09-15, was 125). **It pushed a season row and never claimed one until this drop**, which
+is the gap worth naming: every offline gate here reads a mirror, so the only thing that can
+say a deployment understands a *derived* season id is a claim against one. It now resolves the
+live cycle from the published window, claims its first rung and checks the wallet moved by the
+server's own roll, resubmits it and checks it did not move again, and proves the bound from
+both ends — a forged `watch_9999` pays nothing and is left unconfirmed, and the stem alone
+names no season. The pass column without the pass is refused, as it always was.
+<br>Offline, everything is green: `compile.py`, `content.py` (0 errors, 0 warnings — and it
+prints what the recurrence means in plain words), `loc.py` (0 missing), `artnames.py`,
+`sfxnames.py`, `make_mark_vectors.py --check`, `seed-config.mjs --check`, the functions'
+own suite (**34 season cases**, including the whole bound) and the offline suite at
+**2075 pass, 0 failed** — the last in a shadow tree, because another agent is mid-edit.
+<br>**What no gate here can answer** is whether a rollover *reads* as a new season rather
+than as a reset: nobody has watched one happen, and the first is six weeks out. The two
+things to watch when it does are whether a player who left a chest unclaimed finds it (the
+hub box points backwards at the oldest season still owing, then flips forward) and whether
+buying the pass again lands as fair rather than as a charge for something they had.
+
+**Owed on the nodes coming down onto the map (8e, 2026-09-15): the Editor's three, and one
+look.** **No `firestore.rules` release, no functions deploy and no re-seed**, checked rather
+than assumed: where a node stands is a `mapX`/`mapY` in a chapter body, the save gains no
+key, and `seed-config.mjs` publishes the reward map and the chapter *set* — neither of which
+moved, and no level was enabled, disabled or relisted. **No Addressables work either**, and
+that is the half worth reading. Nothing was added and nothing was deleted: every sprite the map
+draws — the discs, the pointer, the four props and `rock_grass`, which `map1` still moors its
+chain on (8f) — was already in the global set and is still on disk. **Nine** `rock_*` perches
+were withdrawn from the manifest and kept on disk, which is deliberately half of what invariant
+8d asks: the cost that matters is paid (a preloaded picture nothing draws is resident memory
+for the life of the game), and the PNGs, their `.meta` guids and their Addressables rows stay
+until the change has been seen on a device, because until then putting a perch back is one line
+in `AssetManifest` and afterwards it is a re-import and a re-address. **The dead-entry half of
+7b therefore does not apply** — no asset has gone, so `BuildPlayer` has nothing to trip on.
+<br>**The chapter bodies gained two fields and the schema did not move**, which was checked
+rather than assumed. `afloat` on a level and `teaserAfloat` on a chapter are both bools whose
+`false` means "stands on the painting" — which is what every body written before them meant and
+what all three road maps still mean — so an older reader ignores them and a newer reader on an
+older file is right by default (8f). That is the whole reason a bool was the right shape here,
+and it is the opposite of the save's rule (11b), where a default a real value can hold is the
+thing to avoid: a content field is authored by a generator that always writes it, where a save
+field is written by whatever client last touched the file.
+<br>What is owed is (1) `Validate Content`, (2) `Validate Art` — the same asset count as last
+time, since nothing was added or deleted — and (3) the **EditMode suite**, which carries a
+rewritten `ModeRegistryTests.NoTwoModesShareAnAccent` (the perch test it replaces) and a
+`ChapterMapTests` that no longer reads `PerchWidth`, `PerchRockY` or `PerchLift` — those moved
+onto `LevelsScreen` as one tile's worth of constants (8f). Offline,
+everything is green **in a shadow tree** (another agent was mid-edit and the live tree's
+compile went red in three different places on three consecutive runs):
+`compile.py`, `content.py` (**41 levels, 0 errors, 0 warnings** — it was 2 warnings before the
+rounding fix), `loc.py` (0 missing), `artnames.py` (450 names), `sfxnames.py`, `rungs.py`,
+`make_map_seats.py --check` and the whole offline suite at **2050 pass, 0 failed**.
+<br>**(4) And the one thing no gate here can answer is whether it reads**, which on a change
+that is entirely about a picture is the whole of it. `Tools/make_map_seats.py --contact` draws
+all four maps with their chains on them and is what this was tuned against, but a render cannot
+say whether a 196-unit disc separates from a road at arm's length on a phone. **The trail is
+gone too** — the road is the chain — so what to look for is whether the chapter still reads as
+a *sequence* without dots joining it up, and whether it is obvious which glade comes next. **Look at
+`s01_thornwatch` first**: it is the hybrid (8f), the only chapter in the game that draws both
+kinds of seat, and the first map every player sees. Five of its ten nodes and its marker are
+moored on the current; the other five stand on its island paths. What a render cannot say is
+whether the two kinds read as one chain rather than as two designs — and whether
+`rock_grass` is the right tile against that water, which was chosen by drawing all ten
+candidates on the current and looking (`--contact` will not answer it; the chooser is in the
+session's scratch, and re-running it is ten lines).
+
+**Owed on the season crest (47i, 2026-09-15): the Editor's four, and nothing else.**
+**No `firestore.rules` release, no functions deploy and no re-seed**, checked rather than
+assumed: the save gains no key, the crest is chosen by a manifest field that **did not move**
+(`"icon": "watch"` — only what that name draws has changed), and nothing about a picture is
+published, adjudicated or paid. What is owed is (1) **`▸ Addressables ▸ Sync All Assets` and a
+save**, because `Assets/Game/Art/Ui/ic_season.png` was written while the Editor was closed and
+unaddressed art draws as a **white rectangle** (7b) — on the first screen after the splash, on
+the one card selling a pass. It is in the **global** set (`AssetManifest.UiSprites`) rather than
+a scope, for the reason the comment beside it gives. It is an ordinary add with **no deletion**,
+so the dead-entry half of 7b does not apply. Then (2) `Validate Content`, (3) `Validate Art` —
+one asset more than last time — and (4) the **EditMode suite**. Offline: `compile.py`,
+`content.py` (0 errors, 0 warnings), `loc.py` (0 missing), `artnames.py` (**451** literal names,
+one more, because `Ui/ic_season` is a literal where the ring of pips was arithmetic),
+`sfxnames.py`, `make_season_crest.py --check` and the whole offline suite (**2052 pass, 0
+failed**) are green — the suite run **in a shadow tree**, because another agent was mid-edit and
+the live tree's runner was racing them (`verify-in-a-shared-tree` in the memory directory).
+**And it has not been looked at on a device**, which for an emblem is the only instrument that
+finally counts; `render_home.py` and `render_season.py --contact` both draw it now, where before
+this neither could.
+<br>**Two streak-page fixes rode the same drop and owe even less** (48i, 48l): the collectable
+row's expanding ring is gone and a repaint re-asserts the reward icon's `enabled`. **No art, no
+Addressables work, no manifest entry and no strings** — one deleted tween and one line — so the
+Editor's three are all that is owed, and `render_streak.py --contact` draws the row without the
+ring.
 
 **Decisions the owner owes.**
 - **Is the streak's new ladder worth what it costs the economy?** It was rebuilt at the owner's

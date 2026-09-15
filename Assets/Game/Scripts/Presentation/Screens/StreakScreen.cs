@@ -69,38 +69,43 @@ namespace GlimmerGrove
         const float Width = 1000f;
 
         /// <summary>
-        /// A night tile, and how many sit in a row.
+        /// One night is one <b>row</b>, the full width of the page.
         ///
-        /// Four across is what fits at a size a thumb can read on a phone: a tile has to
-        /// carry a caption, a reward — which for a chest night is a picture with an aspect of
-        /// its own — and an amount, and five across takes the chest below the size where a
-        /// silver and a gold are told apart at a glance.
+        /// <para>
+        /// <b>It was a four-across grid of tiles and that was the mistake.</b> A tile is a
+        /// column of three things stacked in 240 units — a night, a picture, an amount — so
+        /// every one of them is cramped, the reward is the size of a thumbnail, and what the
+        /// night actually pays has to be squeezed into two words. A row is 1000 units with the
+        /// reward on the left, a sentence in the middle and the answer on the right, which is
+        /// the shape the tasks page and the season ladder already use for exactly this reason:
+        /// a list of rewards is a <em>list</em>.
+        /// </para>
+        /// <para>
+        /// It costs a scroll. Seven rows is taller than the band under the heading on every
+        /// phone, so the board opens scrolled to the night that can be taken
+        /// (<see cref="FocusOnPending"/>) rather than to the top — a page whose one action is
+        /// below the fold is a page with no action on it.
+        /// </para>
         /// </summary>
-        const float TileW = 240f;
-        const float TileH = 320f;
-        const float TileGap = 18f;
-        const int PerRow = 4;
+        const float RowH = 156f;
+        const float RowGap = 12f;
 
         /// <summary>
-        /// How much of the board band's spare height falls <em>above</em> the tiles.
-        ///
-        /// Not a half, because the band is measured from under the heading: centring puts a
-        /// hole between the heading and the thing it names. See <see cref="BuildBoard"/>.
-        /// </summary>
-        const float BoardLead = .28f;
-
-        /// <summary>
-        /// The well a night's reward stands in, and how big the reward is drawn in it.
+        /// The well a night's reward stands in at the left of its row, and how big the reward
+        /// is drawn in it.
         ///
         /// <para>
         /// <b><see cref="RewardTall"/> is a <em>drawn</em> height</b>, which is the only unit a
         /// chest and a gem can share: a chest's icon carries the lid's headroom (see
         /// <see cref="ChestPack"/>), so a box set straight from a height would draw the chest
-        /// two thirds the size of the gem on the tile beside it and float it high. The pack
+        /// two thirds the size of the gem on the row above it and float it high. The pack
         /// converts once, here as on the hub and the tasks page.
         /// </para>
         /// </summary>
-        const float SeatSize = 176f, SeatY = 14f, RewardTall = 126f;
+        const float SeatSize = 124f, SeatX = 106f, RewardTall = 88f;
+
+        /// <summary>Where the sentence starts, and how much of the row it may have.</summary>
+        const float TextX = 196f, TextW = 450f;
 
         static readonly Vector2 Top = new Vector2(.5f, 1f);
         static readonly Vector2 Left = new Vector2(0f, .5f);
@@ -144,6 +149,11 @@ namespace GlimmerGrove
         bool? _barFull;
 
         float _clockTick;
+
+        /// <summary>The board's list, its own height and the band it scrolls inside.</summary>
+        RectTransform _nights;
+        ScrollRect _scroll;
+        float _boardH, _bandH;
 
         /// <summary>
         /// Whether the page was built with something to ask for, so a repaint can notice that
@@ -199,17 +209,28 @@ namespace GlimmerGrove
             public Image Card;
             public Image Icon;
 
-            /// <summary>The coloured plate the night rides on. Repainted per state.</summary>
-            public Image Chip;
+            /// <summary>The well the reward stands in. What the holy ring is hung on.</summary>
+            public RectTransform Seat;
 
-            public Text ChipText;
+            /// <summary>"NIGHT 3", and under it what the night pays in words.</summary>
+            public Text Title, Sub;
 
-            /// <summary>What the night pays, on its own strip. Dimmed with the rest when kept.</summary>
-            public Text Amount;
+            /// <summary>The three answers the right end of a row can carry, one at a time.</summary>
+            public RectTransform Collect, Mark, Seal;
+
+            /// <summary>
+            /// The turning fan, the halo and the ring that opens out of it — the whole of the
+            /// light around a reward that can be taken.
+            ///
+            /// Built when a row becomes the one on offer and destroyed when it stops being it,
+            /// rather than built for every row and hidden: these are three looping tweens each,
+            /// and seven rows' worth of them running behind a scroll is a page that costs
+            /// something to look at.
+            /// </summary>
+            public RectTransform Aura;
+
             public Image Pool;
             public Image Rim;
-            public RectTransform Halo;
-            public RectTransform Seal;
             public Btn Tap;
             public StreakRung Rung;
             public CanvasGroup Group;
@@ -217,9 +238,9 @@ namespace GlimmerGrove
             /// <summary>
             /// Whether the light is already running on this tile.
             ///
-            /// Held rather than re-derived, because <see cref="Shine"/> and the bob are
-            /// looping tweens: started on every repaint they would restart on every counter
-            /// that moves, which is a tile that jumps each time anything else on the page
+            /// Held rather than re-derived, because <see cref="Shine"/>, the ring and the bob
+            /// are looping tweens: started on every repaint they would restart on every counter
+            /// that moves, which is a row that jumps each time anything else on the page
             /// changes (invariant 16k).
             /// </summary>
             public bool Lit;
@@ -257,6 +278,10 @@ namespace GlimmerGrove
             HoldReels();
 
             Repaint();
+
+            // After the paint, because the row that gets the focus is the one the paint just
+            // lit, and before the frame ends, so the board is never seen at the top first.
+            FocusOnPending();
         }
 
         void OnEnable()
@@ -669,13 +694,13 @@ namespace GlimmerGrove
 
         // -------------------------------------------------------------- heading
         /// <summary>
-        /// The board's heading, pinned above it rather than scrolling with it, and the line
-        /// that says the tiles can be tapped.
+        /// The board's heading, pinned above it rather than scrolling with it.
         ///
-        /// A tile carries a night, a picture and an amount and nothing on it says it is a
-        /// button. Saying so once above the board is the arrangement every table in this game
-        /// already uses — and it is the only reason a player would discover that a waiting
-        /// night is taken by tapping it rather than by playing another glade.
+        /// <b>It used to carry a line saying the rows could be tapped, and does not need to
+        /// any more.</b> That hint existed because a tile was a night, a picture and an amount
+        /// with nothing on it that looked like a control; a row ends in a key that says
+        /// <b>COLLECT</b>, which is the same sentence said where the tap actually is. Two of
+        /// them is one too many.
         /// </summary>
         float BuildHeading(float y)
         {
@@ -689,28 +714,25 @@ namespace GlimmerGrove
                              28, Pal.Gold, TextAnchor.MiddleLeft, new Vector2(420f, 38f), Top,
                              new Vector2(-Width * .5f + 210f + 8f, cy), 3f, 3f), 17);
 
-            UIKit.Shrinkable(
-                UIKit.Titled("Hint", Safe, Loc.Get("ui.streak.board_hint"), 22,
-                             Pal.A(Pal.Cream, .74f), TextAnchor.MiddleRight,
-                             new Vector2(520f, 32f), Top,
-                             new Vector2(Width * .5f - 260f - 8f, cy), 0f, 0f), 14);
-
             return y + HeadingH;
         }
 
         // ---------------------------------------------------------------- board
         /// <summary>
-        /// One lap of the ladder, four nights to a row.
+        /// One lap of the ladder, one row a night.
         ///
         /// <para>
-        /// It scrolls only when it has to. A ladder is content —
-        /// <see cref="StreakRules.MaxRungs"/> allows thirty — so a board sized to the shipped
-        /// seven is a code change waiting on a content change, which is the failure invariant
-        /// 4 exists to prevent. But a <c>ScrollRect</c> that is always there is not free: it
-        /// clamps its content to the top of the viewport, so the seven that do fit would sit
-        /// hard against the heading instead of centred in the space they have. The band is
-        /// measured off the canvas rather than a reference height, or the shipped ladder is
-        /// centred on exactly one device.
+        /// The list always scrolls, which is a change from the grid it replaces: seven rows is
+        /// taller than the band under the heading on every phone this game runs on, and a
+        /// ladder is content — <see cref="StreakRules.MaxRungs"/> allows thirty — so a board
+        /// sized to fit the shipped seven would be a code change waiting on a content change
+        /// (invariant 4). What the grid bought was "no scroll" and what it cost was every row
+        /// being a thumbnail; a list of rewards is a list.
+        /// </para>
+        /// <para>
+        /// So the one thing that has to be handled is the fold, and it is handled by
+        /// <see cref="FocusOnPending"/>: the board opens on the night that can be taken rather
+        /// than on night one.
         /// </para>
         /// </summary>
         void BuildBoard(float top)
@@ -721,29 +743,22 @@ namespace GlimmerGrove
             UIKit.StretchTo(band, 0f, bottom, 0f, top);
             band.gameObject.AddComponent<RectMask2D>();
 
-            int rows = Mathf.CeilToInt(_rungs / (float)PerRow);
-            float boardH = rows * (TileH + TileGap) - TileGap;
-
-            float slack = Mathf.Max(0f, (Flow.Size.y - top - bottom) - boardH);
-
-            // Biased toward the heading rather than centred. A board centred in whatever is
-            // left hangs a long way under the line that names it, which reads as two things
-            // on the page rather than one thing with a title on it; the spare below is then
-            // breathing room over the nav bar, which is what it should look like.
-            slack *= BoardLead;
+            _bandH = Mathf.Max(0f, Flow.Size.y - top - bottom);
+            _boardH = _rungs * (RowH + RowGap) - RowGap;
 
             var nights = UIKit.Node("Nights", band);
             nights.anchorMin = new Vector2(0f, 1f);
             nights.anchorMax = new Vector2(1f, 1f);
             nights.pivot = new Vector2(.5f, 1f);
-            nights.sizeDelta = new Vector2(0f, boardH);
-            nights.anchoredPosition = new Vector2(0f, -slack * .5f);
+            nights.sizeDelta = new Vector2(0f, _boardH);
+            nights.anchoredPosition = Vector2.zero;
+            _nights = nights;
 
-            // Every waiting tile's pool of light lives here, built before any card, so all of
+            // Every waiting row's pool of light lives here, built before any card, so all of
             // them are **under every card**. A pool hung off a card would have to be either a
             // child — which draws over the card it is meant to light — or a sibling inserted
-            // beside it, which draws over its neighbour, because a light worth seeing reaches
-            // further than the eighteen units between two tiles (the tasks page's rule).
+            // beside it, which draws over the row above, because a light worth seeing reaches
+            // further than the twelve units between two rows (the tasks page's rule).
             var lights = UIKit.Node("Lights", nights);
             lights.anchorMin = new Vector2(0f, 1f);
             lights.anchorMax = new Vector2(1f, 1f);
@@ -751,110 +766,140 @@ namespace GlimmerGrove
             UIKit.StretchTo(lights, 0f, 0f, 0f, 0f);
 
             for (int i = 0; i < _rungs; i++)
-            {
-                int row = i / PerRow;
-                int col = i % PerRow;
-                int inRow = Mathf.Min(PerRow, _rungs - row * PerRow);
-
-                float x = (col - (inRow - 1) * .5f) * (TileW + TileGap);
-                float ty = -(row * (TileH + TileGap) + TileH * .5f);
-
-                Tile(nights, lights, _first + i, new Vector2(x, ty), i);
-            }
-
-            if (slack > 0f) return;
+                Row(nights, lights, _first + i, i * (RowH + RowGap), i);
 
             // Invisible, but drags have to land on something: every Image this UI builds is
-            // raycast-transparent, so without a catcher a long ladder could not be scrolled.
+            // raycast-transparent, so without a catcher the list could not be scrolled.
             var catcher = band.gameObject.AddComponent<Image>();
             catcher.color = new Color(0f, 0f, 0f, 0f);
             catcher.raycastTarget = true;
 
-            var scroll = band.gameObject.AddComponent<ScrollRect>();
-            scroll.content = nights;
-            scroll.viewport = band;
-            scroll.horizontal = false;
-            scroll.vertical = true;
-            scroll.movementType = ScrollRect.MovementType.Elastic;
-            scroll.elasticity = .14f;
-            scroll.inertia = true;
-            scroll.decelerationRate = .04f;
-            scroll.scrollSensitivity = 55f;
+            _scroll = band.gameObject.AddComponent<ScrollRect>();
+            _scroll.content = nights;
+            _scroll.viewport = band;
+            _scroll.horizontal = false;
+            _scroll.vertical = true;
+            _scroll.movementType = ScrollRect.MovementType.Elastic;
+            _scroll.elasticity = .14f;
+            _scroll.inertia = true;
+            _scroll.decelerationRate = .04f;
+            _scroll.scrollSensitivity = 55f;
         }
 
         /// <summary>
-        /// One night: which night it is, what it pays, and whether it has been taken.
+        /// Opens the board on the night that can be taken.
+        ///
+        /// <para>
+        /// A list taller than its band starts at the top, and the top of this one is the
+        /// oldest night — which on any streak past its third day is a row that has already
+        /// been paid. The one row with something to do would then be below the fold, which
+        /// makes a page whose whole point is that one tap look like a page with nothing on it.
+        /// </para>
+        /// <para>
+        /// Centred in the band rather than scrolled to the top of the viewport, so the rows
+        /// either side are visible: a row alone at the top of a list reads as the end of the
+        /// list. Clamped at both ends, because a content position past either is a list that
+        /// springs back the first time it is touched.
+        /// </para>
+        /// </summary>
+        void FocusOnPending()
+        {
+            if (_nights == null || _boardH <= _bandH) return;
+
+            int pending = DailyStreak.FirstPending;
+            if (pending <= 0) return;
+
+            int index = pending - _first;
+            if (index < 0 || index >= _rungs) return;
+
+            float rowTop = index * (RowH + RowGap);
+            float want = Mathf.Clamp(rowTop - (_bandH - RowH) * .5f, 0f, _boardH - _bandH);
+
+            _nights.anchoredPosition = new Vector2(0f, want);
+        }
+
+        /// <summary>
+        /// One night: the reward in a well at the left, what it is in the middle, and what to
+        /// do about it at the right.
         ///
         /// <para>
         /// Everything that changes with state is written by <see cref="Paint"/>; this builds
-        /// the furniture once. The reward is a picture with an amount under it — a chest for a
-        /// chest night, the currency's own glyph for a figure — because a player scanning the
-        /// board is reading pictures, and the tier name under a chest is what tells a silver
-        /// from a gold when the two are forty pixels apart.
+        /// the furniture once. The three answers the right end can carry — a <b>COLLECT</b>
+        /// key, a seal, or the night it will be earned on — are all built and only one is ever
+        /// shown, which is what lets a repaint be a repaint (<c>CRAFT.md</c>: Show animates,
+        /// Refresh does not).
         /// </para>
         /// </summary>
-        void Tile(RectTransform parent, RectTransform lights, int night, Vector2 at, int index)
+        void Row(RectTransform parent, RectTransform lights, int night, float top, int index)
         {
             var entry = new NightTile { Night = night, Rung = _ladder.Rung(night) };
             _tiles.Add(entry);
 
-            // The pool a waiting night stands in, built dark. See BuildBoard for why it is
-            // not a child of the card.
-            entry.Pool = UIKit.Img("Light_" + night, lights, Art.Glow(128, 1.35f), Pal.A(Pal.Sun, 0f),
-                                   new Vector2(TileW + 130f, TileH + 120f), Top, at);
+            float cy = -(top + RowH * .5f);
 
-            // `Skins.Panel` rather than `Skins.Card`, and that one swap is most of the
-            // rebuild. The kit's card is the darkest plate it cuts — right for a wide row on
-            // the tasks page, where the row is full of content and the card is a backing — and
-            // wrong for a small tile on a blue ground, where seven of them read as seven holes
-            // punched in the page rather than as seven things. The panel is the light one.
-            var card = UIKit.Img("N" + night, parent, Art.S("Ui/" + Skins.Panel), Color.white,
-                                 new Vector2(TileW, TileH), Top, at);
+            // The pool a waiting row stands in, built dark. See BuildBoard for why it is not a
+            // child of the card.
+            entry.Pool = UIKit.Img("Light_" + night, lights, Art.Glow(128, 1.35f), Pal.A(Pal.Sun, 0f),
+                                   new Vector2(Width + 150f, RowH + 130f), Top, new Vector2(0f, cy));
+
+            // `Skins.Card` and not `Skins.Panel`, which is the opposite of what a *tile* wanted:
+            // a card is the kit's darkest plate, which reads as a hole at 240 square on a blue
+            // ground and reads as a row at 1000 wide with a picture and a sentence on it. The
+            // tasks page and the season ladder are the same plate for the same reason.
+            var card = UIKit.Img("N" + night, parent, Art.S("Ui/" + Skins.Card), Color.white,
+                                 new Vector2(Width, RowH), Top, new Vector2(0f, cy));
             entry.Card = card;
             entry.Root = (RectTransform)card.transform;
             entry.Group = UIKit.Group(entry.Root);
 
-            var halo = UIKit.Img("Halo", entry.Root, Art.Glow(128, 2f), Pal.A(Pal.Gold, 0f),
-                                 new Vector2(TileW * 1.5f, TileW * 1.5f), Centre, new Vector2(0f, 6f));
-            entry.Halo = (RectTransform)halo.transform;
-            halo.transform.SetAsFirstSibling();
-
-            // **The night rides a coloured chip, and the colour is the state.** It used to be
-            // an inset trough, which is the kit's *darkest* plate sitting inside its second
-            // darkest — two dark rectangles stacked, on a tile that then said nothing about
-            // itself until you read the seal. A player scanning a board reads colour, and this
-            // is the one element every tile has.
-            entry.Chip = UIKit.Img("Chip", entry.Root, null, Color.white,
-                                   new Vector2(TileW - 44f, 54f), Top, new Vector2(0f, -22f));
-
-            entry.ChipText = UIKit.Shrinkable(
-                UIKit.Titled("ChipText", entry.Root,
-                             Loc.Format("ui.streak.day_n", night).ToUpperInvariant(),
-                             25, Pal.Cream, TextAnchor.MiddleCenter,
-                             new Vector2(TileW - 66f, 36f), Top,
-                             new Vector2(0f, -22f + 54f * UIKit.PillFaceLift), 3f, 3f), 15);
-
-            // The seat the reward stands in. The kit's inset well, which is what gives the
-            // middle of the tile something to be about — a picture floating in the centre of a
-            // plate is a picture nobody put anywhere.
-            UIKit.Img("Seat", entry.Root, Art.S("Ui/" + Skins.Slot), Color.white,
-                      new Vector2(SeatSize, SeatSize), Centre, new Vector2(0f, SeatY));
-
-            UIKit.Img("Lamp", entry.Root, Art.Glow(128, 1.9f), Pal.A(Pal.Sun, .16f),
-                      new Vector2(SeatSize + 24f, SeatSize + 24f), Centre, new Vector2(0f, SeatY));
+            // The well, and the reward standing in it.
+            var seat = UIKit.Img("Seat", entry.Root, Art.S("Ui/" + Skins.Slot), Color.white,
+                                 new Vector2(SeatSize, SeatSize), Left, new Vector2(SeatX, 0f));
+            entry.Seat = (RectTransform)seat.transform;
 
             Reward(entry);
 
-            // The seal a taken night wears, on the seat's own corner rather than over the
-            // reward: the chip already says the night was kept, so this is the confirmation on
-            // top of the colour rather than the signal itself.
+            entry.Title = UIKit.Shrinkable(
+                UIKit.Titled("Title", entry.Root, Loc.Format("ui.streak.day_n", night).ToUpperInvariant(),
+                             31, Pal.Cream, TextAnchor.MiddleLeft, new Vector2(TextW, 42f), Left,
+                             new Vector2(TextX + TextW * .5f, 26f), 3f, 3f), 18);
+
+            entry.Sub = UIKit.Shrinkable(
+                UIKit.Titled("Sub", entry.Root, Says(entry.Rung), 25, Pal.A(Pal.Cream, .84f),
+                             TextAnchor.MiddleLeft, new Vector2(TextW, 36f), Left,
+                             new Vector2(TextX + TextW * .5f, -22f), 3f, 3f), 15);
+
+            // --- the right end, three answers and one of them showing
+            //
+            // **The key says COLLECT, which is the whole of what was missing.** The row was
+            // tappable before and nothing said so: a glowing reward is an invitation and a word
+            // is an instruction, and on a page whose one action is this tap the instruction is
+            // worth the eighty units it costs.
+            var collect = UIKit.Img("Collect", entry.Root, Art.S("Ui/" + Skins.Affirm), Color.white,
+                                    new Vector2(212f, 84f), Right, new Vector2(-130f, 0f));
+
+            UIKit.Shrinkable(
+                UIKit.Titled("CollectText", collect.transform,
+                             Loc.Get("ui.streak.collect").ToUpperInvariant(), 34, Pal.Cream,
+                             TextAnchor.MiddleCenter, new Vector2(176f, 52f), Centre,
+                             new Vector2(0f, 84f * UIKit.PillFaceLift), 4f, 4f), 20);
+
+            entry.Collect = (RectTransform)collect.transform;
+            entry.Collect.gameObject.SetActive(false);
+
+            // What a night still ahead says: the day it lands on, quietly, so a row that can do
+            // nothing still answers the question a player is asking of it.
+            entry.Mark = (RectTransform)Scenery.Pill(
+                entry.Root, string.Empty, 23, new Vector2(196f, 62f), Right,
+                new Vector2(-130f, 0f), new Color(.05f, .09f, .18f, .70f)).transform.parent;
+            entry.Mark.gameObject.SetActive(false);
+
             var seal = UIKit.Img("Seal", entry.Root, Art.S("Ui/seal_gold"), Color.white,
-                                 new Vector2(66f, 66f), Centre,
-                                 new Vector2(TileW * .29f, -TileW * .22f + 14f));
+                                 new Vector2(84f, 84f), Right, new Vector2(-146f, 0f));
             seal.preserveAspect = true;
 
             var tick = UIKit.Img("Tick", seal.transform, Art.S("Ui/ic_check"), Pal.Cream,
-                                 new Vector2(34f, 34f), Centre, Vector2.zero);
+                                 new Vector2(44f, 44f), Centre, Vector2.zero);
             tick.preserveAspect = true;
 
             entry.Seal = (RectTransform)seal.transform;
@@ -866,58 +911,60 @@ namespace GlimmerGrove
             entry.Rim = UIKit.Img("Rim", entry.Root, Art.RoundOutline(30, 7f), Pal.A(Pal.Sun, 0f));
             UIKit.StretchTo((RectTransform)entry.Rim.transform, 0f, 0f, 0f, 0f);
 
-            // The whole tile is the button. A small "collect" chip inside it would be a
-            // smaller target for the same action, and there is nothing else on a night to tap
-            // by mistake (the tasks page's rule).
-            entry.Tap = UIKit.Button("Tap", entry.Root, Art.Pixel, new Vector2(TileW, TileH),
+            // The whole row is the button, and the COLLECT key is a label on it. A key that was
+            // the only target would be a smaller target for the same action, and there is
+            // nothing else on a row to tap by mistake (the tasks page's rule).
+            entry.Tap = UIKit.Button("Tap", entry.Root, Art.Pixel, new Vector2(Width, RowH),
                                      Centre, Vector2.zero, () => Take(entry));
             entry.Tap.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
             entry.Tap.ClickSfx = null;
-            entry.Tap.PressScale = .95f;
+            entry.Tap.PressScale = .98f;
             entry.Tap.gameObject.SetActive(false);
 
             entry.Root.localScale = Vector3.zero;
-            Tween.Pop(entry.Root, 0f, .46f, .22f + index * .05f);
+            Tween.Pop(entry.Root, 0f, .46f, .20f + index * .04f);
         }
 
         /// <summary>
-        /// What the night pays, printed on its own face.
+        /// What a night pays, in words. The line under the night's own number.
         ///
-        /// A rung that pays nothing is not left blank: saying "the flame lights" is the
-        /// difference between "this night is worth nothing" and "this night is where it
-        /// starts".
+        /// A chest names itself — "Royal Chest" is the whole answer, and it is the same name
+        /// the ceremony puts on its ribbon — where a figure needs its amount and its unit.
+        /// This is the room a row buys over a tile: the grid had two words to say it in.
+        /// </summary>
+        static string Says(StreakRung rung)
+        {
+            if (rung.IsChest) return Loc.Get(rung.Tier.NameKey);
+
+            var drop = rung.AsDrop();
+            return drop.IsValid
+                ? RewardArt.Amount(drop) + " " + RewardArt.Name(drop.Kind, drop.Item)
+                : Loc.Get("ui.streak.rung_none");
+        }
+
+        /// <summary>
+        /// The reward itself, in the well at the left of the row.
+        ///
+        /// <b>Sized and placed in *drawn* units, through <see cref="ChestPack"/>.</b> The
+        /// closed chest icon is frame nought of the opening reel, so its sprite carries the
+        /// lid's headroom — a box set straight from a height draws a chest two thirds of it and
+        /// floats it high, which is a row whose reward is smaller than the gem on the row above
+        /// for a reason nothing on the screen explains.
         /// </summary>
         void Reward(NightTile entry)
         {
             var rung = entry.Rung;
-
-            // The strip the amount stands on, at the foot of every tile. A figure printed
-            // straight onto the plate floats; a figure on a trough is a readout, and it is what
-            // gives the tile a bottom edge so the reward above it is standing on something
-            // rather than drifting in a box.
-            UIKit.Img("Well", entry.Root, Art.S("Ui/" + Skins.Trough), Color.white,
-                      new Vector2(TileW - 44f, 58f), new Vector2(.5f, 0f), new Vector2(0f, 26f));
+            var at = new Vector2(SeatX, 0f);
 
             if (rung.IsChest)
             {
-                // <b>Sized and placed in *drawn* units, through `ChestPack`.</b> The closed
-                // icon is frame nought of the opening reel, so its sprite carries the lid's
-                // headroom — a box set straight from a height draws a chest two thirds of it
-                // and floats it high, which is a tile whose reward is smaller than the gem on
-                // the tile beside it for a reason nothing on the screen explains. The pack owns
-                // that conversion and four screens now share it.
                 float tall = RewardTall;
                 var box = new Vector2(tall / ChestPack.Fill * ChestPack.Aspect, tall / ChestPack.Fill);
 
                 var chest = UIKit.Img("Chest", entry.Root, Art.S(rung.Tier.Icon), Color.white,
-                                      box, Centre, new Vector2(0f, SeatY + tall * ChestPack.Lift));
+                                      box, Left, at + new Vector2(0f, tall * ChestPack.Lift));
                 chest.preserveAspect = true;
                 entry.Icon = chest;
-
-                entry.Amount = UIKit.Shrinkable(
-                    UIKit.Titled("Amt", entry.Root, Loc.Get(rung.Tier.NameKey), 25, Pal.Cream,
-                                 TextAnchor.MiddleCenter, new Vector2(TileW - 62f, 38f),
-                                 new Vector2(.5f, 0f), new Vector2(0f, 26f), 3f, 3f), 14);
                 return;
             }
 
@@ -926,20 +973,15 @@ namespace GlimmerGrove
             if (!drop.IsValid)
             {
                 var spark = UIKit.Img("Icon", entry.Root, Art.S("Ui/ic_star"), Pal.A(Pal.Cream, .92f),
-                                      new Vector2(104f, 104f), Centre, new Vector2(0f, SeatY));
+                                      new Vector2(RewardTall, RewardTall), Left, at);
                 spark.preserveAspect = true;
                 entry.Icon = spark;
-
-                entry.Amount = UIKit.Shrinkable(
-                    UIKit.Titled("Amt", entry.Root, Loc.Get("ui.streak.rung_none"), 23, Pal.Cream,
-                                 TextAnchor.MiddleCenter, new Vector2(TileW - 62f, 44f),
-                                 new Vector2(.5f, 0f), new Vector2(0f, 26f), 3f, 3f), 13);
                 return;
             }
 
             // Never tinted: every reward glyph carries its own colour. See RewardArt.
             var icon = UIKit.Img("Icon", entry.Root, RewardArt.Icon(drop.Kind, drop.Item), Color.white,
-                                 new Vector2(RewardTall, RewardTall), Centre, new Vector2(0f, SeatY));
+                                 new Vector2(RewardTall, RewardTall), Left, at);
             icon.preserveAspect = true;
             entry.Icon = icon;
 
@@ -947,11 +989,6 @@ namespace GlimmerGrove
             // finished here rather than by `Icon`. Without this a credit night draws as a
             // white square, which is what an Image with no sprite actually is (invariant 7b).
             RewardArt.Glyph(icon, drop.Kind, 10f);
-
-            entry.Amount = UIKit.Shrinkable(
-                UIKit.Titled("Amt", entry.Root, RewardArt.Amount(drop), 36, Pal.Cream,
-                             TextAnchor.MiddleCenter, new Vector2(TileW - 62f, 46f),
-                             new Vector2(.5f, 0f), new Vector2(0f, 26f), 3f, 4f), 20);
         }
 
         // -------------------------------------------------------------- painting
@@ -1124,96 +1161,154 @@ namespace GlimmerGrove
             var state = StateOf(tile.Night);
             bool waiting = state == Night.Waiting;
             bool kept = state == Night.Kept;
+            bool lit = waiting && tile.Night == DailyStreak.FirstPending;
 
-            if (tile.Group) tile.Group.alpha = state == Night.Ahead ? .72f : 1f;
-            if (tile.Seal) tile.Seal.gameObject.SetActive(kept);
+            if (tile.Group) tile.Group.alpha = state == Night.Ahead ? .74f : 1f;
 
-            // Every waiting tile is a button, and every one of them takes the *earliest*
+            // Every waiting row is a button, and every one of them takes the *earliest*
             // waiting night — see Take. A tap that did nothing would be a broken button
             // (invariant 16o), and a tap that quietly reached past an older night would be a
             // reward stranded behind a newer one.
             if (tile.Tap) tile.Tap.gameObject.SetActive(waiting);
 
-            bool lit = waiting && tile.Night == DailyStreak.FirstPending;
+            // The right end carries one answer at a time, and the order is the order a player
+            // needs them in: something to do, then something done, then when it will be.
+            if (tile.Collect) tile.Collect.gameObject.SetActive(waiting);
+            if (tile.Seal) tile.Seal.gameObject.SetActive(kept);
+            if (tile.Mark) tile.Mark.gameObject.SetActive(!waiting && !kept);
 
-            // The chip is the state, and it is the one thing on a tile that is coloured. Four
-            // answers rather than five: a night waiting its turn wears the same gold as the one
-            // on offer, because both are the player's — what separates them is the light, which
-            // is the thing that says *this* one is tappable now.
-            if (tile.Chip)
+            if (tile.Mark && tile.Mark.gameObject.activeSelf)
             {
-                tile.Chip.sprite = Art.S("Ui/" + ChipSkin(state));
+                var text = tile.Mark.GetComponentInChildren<Text>();
+                if (text)
+                {
+                    // A night still ahead says *when*, which is the one question a row that can
+                    // do nothing is still being asked — "when do I get the Royal Chest" is the
+                    // reason somebody scrolls to the bottom of this list at all. Written out
+                    // per case rather than composed, because the build gate scans the source
+                    // for key-shaped literals and a concatenated key is invisible to it.
+                    int away = tile.Night - _days;
 
-                // `Image.color` is a multiply (invariant 37l), so a chip is never tinted: the
-                // kit cuts each of these at the colour it means, and lifting one toward white
-                // would only wash it out.
-                tile.Chip.color = Color.white;
-                tile.Chip.type = tile.Chip.sprite != null && tile.Chip.sprite.border != Vector4.zero
-                               ? Image.Type.Sliced : Image.Type.Simple;
+                    text.text = (state == Night.Tonight ? Loc.Get("ui.streak.tonight")
+                               : away <= 1 ? Loc.Get("ui.streak.in_one")
+                               : Loc.Format("ui.streak.in_many", away)).ToUpperInvariant();
+
+                    text.color = state == Night.Tonight ? Pal.Aqua : Pal.A(Pal.Cream, .60f);
+                }
             }
 
-            if (tile.ChipText)
-                tile.ChipText.color = state == Night.Ahead ? Pal.A(Pal.Cream, .88f) : Pal.Cream;
+            // The night is gold while it is the player's to take, mint once it is theirs, and
+            // cream the rest of the time. Colour on the *title* rather than on a chip, because
+            // a row has a line of text where a tile had none: the words are the element every
+            // row has, so the words are what carries the state.
+            if (tile.Title)
+                tile.Title.color = lit ? Pal.Gold : kept ? Pal.Mint : Pal.Cream;
 
-            // A kept night recedes without going grey: the chip is already green, so the plate
-            // and the reward only have to stop competing with the ones still to come.
-            if (tile.Card) tile.Card.color = kept ? new Color(.88f, .92f, .98f, 1f) : Color.white;
-            if (tile.Icon) tile.Icon.color = kept ? new Color(.82f, .86f, .92f, 1f) : Color.white;
-            if (tile.Amount) tile.Amount.color = kept ? Pal.A(Pal.Cream, .72f) : Pal.Cream;
+            // A kept night recedes without going grey — it still has to read.
+            if (tile.Card) tile.Card.color = kept ? new Color(.90f, .94f, 1f, 1f) : Color.white;
+            if (tile.Icon)
+            {
+                tile.Icon.color = kept ? new Color(.84f, .88f, .94f, 1f) : Color.white;
+
+                // Re-asserted rather than assumed. A repaint is this page's drawing of a state
+                // and `enabled` is as much a part of that state as the tint beside it — the
+                // collect path switched it off once and no repaint ever switched it back, which
+                // is the whole of how an icon went missing until the screen was rebuilt.
+                tile.Icon.enabled = true;
+            }
+            if (tile.Sub) tile.Sub.color = Pal.A(Pal.Cream, kept ? .66f : .84f);
 
             if (lit && !tile.Lit)
             {
-                if (tile.Halo) Tween.Tint(tile.Halo.GetComponent<Image>(), Pal.A(Pal.Gold, .55f), .4f);
-                if (tile.Icon) Tween.Bob((RectTransform)tile.Icon.transform, 7f, 1.5f, tile.Night * .4f);
+                tile.Aura = Aura(tile.Seat);
+                if (tile.Icon) Tween.Bob((RectTransform)tile.Icon.transform, 6f, 1.5f);
+                if (tile.Collect) Tween.Breathe(tile.Collect, .035f, 1.5f);
                 Sheen.Attach(tile.Root, 2.8f);
                 Shine(tile, true);
                 tile.Lit = true;
             }
             else if (!lit && tile.Lit)
             {
-                if (tile.Halo) Tween.Tint(tile.Halo.GetComponent<Image>(), Pal.A(Pal.Gold, 0f), .3f);
+                if (tile.Aura) Destroy(tile.Aura.gameObject);
+                tile.Aura = null;
                 if (tile.Icon) Tween.KillChannel(tile.Icon.transform, "bob");
+                if (tile.Collect) Tween.KillChannel(tile.Collect, "breathe");
                 Shine(tile, false);
                 tile.Lit = false;
             }
-
         }
 
         /// <summary>
-        /// Which of the kit's jelly plates a night's chip wears.
+        /// The light around a reward that can be taken: a halo, and a turning fan over it.
         ///
-        /// <b>Gold means "this is yours", aqua means "this is tonight's", green means "taken"
-        /// and the kit's dark square means "not yet".</b> Each is a literal rather than a name
-        /// assembled from the state, which is what keeps them inside the four `artnames.py`
-        /// can see in this method — an address a gate cannot read is an address that draws a
-        /// white rectangle the day somebody renames a file (invariant 7b).
+        /// <para>
+        /// <b>This is what "ready" looks like, and it is deliberately more than a glow.</b> The
+        /// page has exactly one of these at a time — only the oldest waiting night may be taken
+        /// — so it can afford to be the loudest thing on the screen, and it has to be: the row
+        /// under it is one of seven that otherwise look alike. The fan says <em>light is coming
+        /// out of this</em>, which is the thing that could not be said by tinting the plate.
+        /// </para>
+        /// <para>
+        /// <b>A third piece was here and the owner had it taken out: a gold ring that scaled
+        /// out of the seat and faded as it grew, on a loop.</b> It said <em>and it is still
+        /// happening</em>, which the fan already says by turning — so what it really added was
+        /// a second thing moving on its own clock over a reward the player is meant to be
+        /// looking at, and two sharp things on one row is the complaint this page's own copy
+        /// recorded about the pool under it (see <see cref="Shine"/>). The halo and the fan are
+        /// what is left; nothing else about the row moved.
+        /// </para>
+        /// <para>
+        /// Both are generated shapes rather than art — see <see cref="Art.Rays"/> — so the
+        /// effect costs no addresses and tints to whatever the palette says. They live on one
+        /// node hung <em>behind</em> the well, so a payout can throw the lot away in a single
+        /// call without touching the row underneath, and so the reward itself is never drawn
+        /// through.
+        /// </para>
         /// </summary>
-        static string ChipSkin(Night state)
+        RectTransform Aura(RectTransform seat)
         {
-            switch (state)
-            {
-                case Night.Kept: return "sq_green";
-                case Night.Waiting: return "sq_orange";
-                case Night.Tonight: return "sq_aqua";
-                default: return Skins.Resting;
-            }
+            if (seat == null) return null;
+
+            var host = UIKit.Box("Aura", seat.parent, Vector2.zero, Left,
+                                 new Vector2(SeatX, 0f));
+
+            // <b>Directly under the well, and *not* first.</b> The card is an opaque plate the
+            // kit cuts, and a sibling before it is a light with a card drawn on top of it — the
+            // whole effect invisible, on the one row it exists for. (The render mirror composited
+            // the ring after the card and so could not see it, which is 44d's rule about a mirror
+            // with its own idea of the order.) Inserting at the well's own index puts every ray
+            // over the plate and every one of them under the reward.
+            host.SetSiblingIndex(seat.GetSiblingIndex());
+
+            UIKit.Halo(host, Pal.Gold, SeatSize * 2.4f, .46f);
+
+            var rays = UIKit.Img("Rays", host, Art.Rays(256, 14), Pal.A(Pal.Sun, .34f),
+                                 Vector2.one * SeatSize * 2.15f, Centre, Vector2.zero);
+            var rrt = (RectTransform)rays.transform;
+            Tween.Run(14f, Ease.Linear,
+                      t => { if (rrt) rrt.localRotation = Quaternion.Euler(0f, 0f, t * 360f); },
+                      rays).Loop(-1, false);
+
+            return host;
         }
 
         /// <summary>
-        /// The light a waiting night stands in: a warm pool that reaches past the card and a
+        /// The light the whole row stands in: a warm pool that reaches past the card and a
         /// bright rim on its edge, breathing together on one tween.
         ///
         /// <para>
         /// <b>Two pieces rather than one, because a card is opaque.</b> A glow behind the kit's
         /// navy card is a glow with a card-shaped hole punched out of the middle of it, and a
-        /// glow in front of it washes out everything printed on the tile — so the light outside
+        /// glow in front of it washes out everything written on the row — so the light outside
         /// the card is a pool and the light on the card is its edge. Together they read as one
         /// thing lit from behind (the tasks page's finding).
         /// </para>
         /// <para>
-        /// It breathes rather than flashing, which matters less here than on a list of six —
-        /// only one tile is ever lit — but the rule is the rule: a flash is for the one thing
-        /// that has just happened, never for a state (invariant 37h).
+        /// It breathes rather than flashing (37h's rule about the one ward that may flash). It
+        /// was written as the <em>slow</em> half of a pair against a ring that scaled out of the
+        /// seat on its own clock — and that ring is gone at the owner's instruction, which
+        /// settles the pairing the other way: the pool breathes and the fan turns, and nothing
+        /// on the row is sharp.
         /// </para>
         /// </summary>
         static void Shine(NightTile tile, bool on)
@@ -1344,10 +1439,15 @@ namespace GlimmerGrove
             bool flying = false;
             foreach (var drop in drops) flying |= flight.Add(drop, source);
 
-            // Hidden rather than destroyed: the tile keeps its layout, and a reward that
-            // vanishes from the face it was printed on is the point.
-            if (tile.Icon) tile.Icon.enabled = false;
-
+            // <b>The reward stays on the row.</b> This used to hide the icon the moment the
+            // flight left — "a reward that vanishes from the face it was printed on is the
+            // point" — and the icon then never came back, because nothing re-enabled it: a
+            // repaint writes the icon's *colour* and has never written its `enabled`, so a
+            // collected night was a row with a hole in it for the life of the screen and the
+            // repair was to leave the page and come back. The flight spawns its own tokens and
+            // only reads this rect for a start point (`RewardFlight.Add`), so nothing here was
+            // ever consumed — the disappearance was decoration, and the seal stamped over it
+            // already says the night has been taken.
             Stamp(tile);
 
             if (!flying)

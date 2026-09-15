@@ -84,7 +84,8 @@ def level(rung, place, sky):
     if rung.get("spare"):
         block["spare"] = rung["spare"]
 
-    out = {"id": rung["id"], "mapX": place[0], "mapY": place[1]}
+    out = {"id": rung["id"], "mapX": place[0], "mapY": place[1],
+       "afloat": place[2]}
     if rung.get("budget") is not None:
         out["budgetFactor"] = rung["budget"]
     out["backdrop"] = sky
@@ -106,6 +107,11 @@ def body():
         "slate": "#0E1A14",
         "backdrop": skies[0],
         "mapStrips": mapart.strips(ORDINAL),
+        # The end-of-chapter marker stands on the painting like every glade does, and its
+        # x is the only axis a body can author (`ChapterMap.TeaserPosition` derives its
+        # height). Generated with the seats: `Tools/make_map_seats.py`.
+        "teaserX": mapart.marker(ORDINAL),
+        "teaserAfloat": mapart.marker_afloat(ORDINAL),
         "levels": [level(r, places[i], skies[i]) for i, r in enumerate(RUNGS)],
     }
 

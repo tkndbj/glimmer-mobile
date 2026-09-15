@@ -46,11 +46,24 @@ INK = (32, 48, 63)
 # Scenery
 RAIL_TOP_H, RAIL_FOOT_H = 65.0, 77.0
 
-# NavBar
-NAV_HEIGHT = 206.0
-NAV_CELL_W, NAV_CELL_H = 200.0, 176.0
-NAV_CAP_LIVE, NAV_CAP_REST = 150.0, 122.0
-NAV_GROVE_SCALE = 1.16
+# NavBar. Every one of these is named after the field it mirrors, and the button width is
+# **derived** exactly as `NavBar.Widths` derives it - a typed one would answer the wrong
+# question the next time a tab is added or held.
+NAV_HEIGHT = 236.0
+NAV_CELL_H = 208.0
+NAV_BTN_H = 172.0
+NAV_GUTTER = 16.0
+NAV_MAX_BTN_W = 240.0
+NAV_GROW = 1.06
+NAV_ICON = 136.0
+NAV_ICON_Y = 40.0
+NAV_PLATE = (8, 31, 69)          # Skins.Plate  #081F45
+NAV_LIT = (255, 200, 61)         # Skins.PlateEdge  #FFC83D
+
+
+def nav_button(slot):
+    """`NavBar.Widths` - the cap fills its slot up to a ceiling, leaving `NAV_GUTTER` of air."""
+    return min(NAV_MAX_BTN_W, slot - NAV_GUTTER), NAV_BTN_H
 
 _cache = {}
 
@@ -133,6 +146,24 @@ def tint(im, colour, alpha=1.0):
 
 def paste(sheet, im, cx, cy):
     sheet.alpha_composite(im, (int(cx - im.width / 2), int(cy - im.height / 2)))
+
+
+def round_rect(w, h, radius, colour, alpha=1.0, width=0):
+    """`Art.Round(r)` filled, or `Art.RoundOutline(r, width)` when `width` is given.
+
+    The game generates these rather than cutting them, so the mirror generates them too: a
+    nine-slice of a bought sprite would answer a different question about the corner.
+    """
+    w, h = max(1, int(round(w))), max(1, int(round(h)))
+    im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    fill = (*colour, int(255 * alpha))
+
+    if width <= 0:
+        d.rounded_rectangle([0, 0, w - 1, h - 1], radius=radius, fill=fill)
+    else:
+        d.rounded_rectangle([0, 0, w - 1, h - 1], radius=radius, outline=fill, width=int(width))
+    return im
 
 
 def glow(size, power, colour, alpha):
@@ -239,6 +270,45 @@ def shrunk(sheet, s, cx, cy, box_w, box_h, size, floor, fill=CREAM, outline=3):
     return int(floor)
 
 
+def shrunk_left(sheet, s, left, top, box_w, box_h, size, floor, fill=CREAM, outline=3):
+    """`UIKit.Shrinkable` over a **`TextAnchor.UpperLeft`, wrapped** label.
+
+    The same Best Fit as `shrunk` and the same greedy wrap; what differs is where the block
+    is put, which is the whole reason it is a second function rather than a flag. A
+    `PanelStack` paragraph is left-aligned and hangs from the top of its box, so a mirror
+    that centred it would draw a ragged column down the middle of a panel whose real text is
+    a flush-left block — a picture of a screen the game does not draw (invariant 44d), on the
+    one question these panels are ever asked.
+
+    `left` and `top` are the box's own edges, not a centre: `UIKit.Box` pivots at centre, so
+    a caller working in Unity's coordinates converts once, at the point of placement.
+    """
+    draw = ImageDraw.Draw(sheet)
+
+    for px in range(int(size), int(floor) - 1, -1):
+        f = font(px)
+        lines, line = [], ""
+
+        for word in s.split(" "):
+            trial = word if not line else line + " " + word
+            if draw.textlength(trial, font=f) <= box_w or not line:
+                line = trial
+            else:
+                lines.append(line)
+                line = word
+        if line:
+            lines.append(line)
+
+        widest = max((draw.textlength(ln, font=f) for ln in lines), default=0)
+        if (widest <= box_w and len(lines) * px * 1.2 <= box_h) or px == int(floor):
+            for i, ln in enumerate(lines):
+                text(sheet, ln, left, top + px * .6 + i * px * 1.2, px,
+                     fill=fill, outline=outline, anchor="l")
+            return px
+
+    return int(floor)
+
+
 # --------------------------------------------------------------------------- furniture
 def room(sheet):
     """`Scenery.Room` — the world, enveloped to the canvas, lightly shaded, vignetted."""
@@ -283,39 +353,65 @@ def rail(sheet, top):
     sheet.alpha_composite(im, (0, 0 if top else int(H - h)))
 
 
-NAV_TABS = [("home", "ic_home"), ("shop", "ic_chest"), ("grovement", "Map/rock_grass"),
+# `NavBar.Order`, and it is the order rather than the enum: the Grovement tab is **held**
+# while that feature is rebuilt, and the hold is the entry being taken out of the list on
+# both sides. A mirror still drawing a cap the game does not would answer the wrong
+# question about the spacing of every other cap, because the slot width is derived from
+# the length (44d).
+NAV_TABS = [("home", "ic_home"), ("shop", "ic_chest"),
             ("ranks", "ic_trophy"), ("profile", "ic_profile")]
 NAV_WORDS = {"home": "HOME", "shop": "SHOP", "grovement": "GROVE",
              "ranks": "RANKS", "profile": "YOU"}
 
 
 def navbar(sheet, active):
-    """`NavBar.Build` — the rail, then five caps overhanging it."""
+    """`NavBar.Build` and `NavBar.Item`, drawn the way the game draws them.
+
+    **Not the kit's cap sprite.** `NavBar.Item` builds `Art.Round(26)` tinted `Skins.Plate`,
+    with a dark seat rim under it and the kit's gold rim on the live tab; `NavBar.CapSkin`
+    still looks up `Hud/cap_on` and nothing calls it. This mirror drew that unused sprite,
+    square-fitted, for as long as it has existed — so every render of the hub showed a row
+    of round caps against a device drawing rounded rectangles (invariant 44d).
+    """
     rail(sheet, top=False)
 
-    base = H - NAV_HEIGHT / 2
+    # `NavBar.Build`: the bar is `NAV_HEIGHT` tall against the foot, the cell sits 4 above
+    # its middle, and the slot is derived from the tab count rather than typed.
+    base = H - NAV_HEIGHT / 2 - 4
     slot = W / float(len(NAV_TABS))
+    btn_w, btn_h = nav_button(slot)
 
     for i, (tab, icon) in enumerate(NAV_TABS):
         x = W / 2 + (i - (len(NAV_TABS) - 1) * .5) * slot
         live = tab == active
-        cap = (NAV_CAP_LIVE if live else NAV_CAP_REST) * (NAV_GROVE_SCALE if tab == "grovement" else 1.0)
-        cy = base - (26 if live else 16) - 8
+        grow = 1.06 if live else 1.0
+
+        pw, ph = btn_w * grow, btn_h * grow
 
         if live:
-            paste(sheet, glow(cap * 1.55, 2.1, SUN, .26), x, cy)
+            paste(sheet, glow(btn_w * 1.7, 2.1, SUN, .30), x, base - 6)
 
-        face = fit(load("Hud/cap_on" if live else "Hud/cap_off")[0], (cap, cap))
-        paste(sheet, face, x, cy)
+        # `Skins.Plate`, lifted toward white on the live tab; the rest at 92% alpha.
+        face = (62, 80, 110) if live else NAV_PLATE
+        paste(sheet, round_rect(pw, ph, 26, face, 1.0 if live else .92), x, base)
 
+        # Two rims: the dark seat under everything, then the kit's gold on the live one.
+        paste(sheet, round_rect(pw, ph, 26, (5, 15, 33), .85, width=4), x, base)
+        if live:
+            paste(sheet, round_rect(pw - 6, ph - 6, 26, NAV_LIT, 1.0, width=6), x, base)
+
+        # The glyph, hanging over the plate's top edge, and never tinted.
         try:
             mark = fit(Image.open(UI / f"{icon}.png").convert("RGBA")
                        if "/" not in icon else
                        Image.open(REPO / "Assets" / "Game" / "Art" / f"{icon}.png").convert("RGBA"),
-                       (cap * (.40 if live else .38), cap * (.40 if live else .38)))
-            paste(sheet, tint(mark, INK if live else CREAM), x, cy)
+                       (NAV_ICON * grow, NAV_ICON * grow))
+            paste(sheet, mark, x, base - NAV_ICON_Y * grow)
         except FileNotFoundError:
             pass
 
-        text(sheet, NAV_WORDS[tab], x, base + 64 - 8, 26 if live else 24,
-             fill=SUN if live else (255, 245, 224), outline=4)
+        # Inside the plate, measured from its own foot — which is what makes the button one
+        # object rather than a square with a caption parked under it.
+        shrunk(sheet, NAV_WORDS[tab], x, base + ph / 2 - 28, btn_w - 16, 34,
+               27 if live else 25, 17,
+               fill=SUN if live else (255, 247, 230), outline=4)

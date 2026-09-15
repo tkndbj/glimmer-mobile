@@ -29,7 +29,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import sys
 from pathlib import Path
 
@@ -88,8 +87,28 @@ def strings():
 
 STR = strings()
 TASKS = json.loads(TABLE.read_text(encoding="utf-8"))["tasks"]
+#: The season the page draws, and which cycle of it.
+#:
+#: **The shipped season repeats** (`SeasonCycle`), so the manifest holds a *stem* and a window
+#: describing cycle nought rather than a dated entry. The ladder, the pass price and the window
+#: length are the same on every cycle - which is the whole point of a recurrence - so the mirror
+#: draws cycle `CYCLE` and takes its name out of the pool, exactly as the screen does. Drawing
+#: a fixed `ui.event.<id>.name` was right until the id stopped being a thing anybody writes.
 SEASON = next(e for e in json.loads(MANIFEST.read_text(encoding="utf-8"))["events"]
-              if e["id"] == "first_watch")
+              if not e.get("disabled"))
+
+#: Which cycle to draw. Only the *name* changes with it, so this is a knob for looking at the
+#: pool rather than a parameter of the page.
+CYCLE = 0
+
+#: `SeasonCycle.NamePoolSize` - mirrored, because a render that names the season out of a key
+#: the game does not use is a render of a screen that does not exist (invariant 44d).
+NAME_POOL = 12
+
+
+def season_name_key(cycle=CYCLE):
+    """`SeasonCycle.NameKeyFor` - the pool slot a cycle takes its name from."""
+    return "ui.season.%d.name" % (cycle % NAME_POOL) if SEASON.get("repeats")         else "ui.event.%s.name" % SEASON["id"]
 
 
 def txt(key, *args):
@@ -136,7 +155,7 @@ def header(sheet, y):
     ribbon = K.skin("Hud/title", 720, BANNER_H)
     plate = Image.new("RGBA", ribbon.size, (0, 0, 0, 0))
     plate.alpha_composite(ribbon)
-    K.text(plate, txt("ui.event.first_watch.name").upper(), plate.width / 2,
+    K.text(plate, txt(season_name_key()).upper(), plate.width / 2,
            plate.height / 2 - 6, 42, fill=K.SUN)
     K.paste(sheet, plate, W / 2, cy)
     y += BANNER_H + 4
@@ -158,45 +177,17 @@ def header(sheet, y):
     return y + CHROME + 16
 
 
-#: `SeasonCrest.PaintWatch` — how many tally marks the ring carries.
-CREST_MARKS = 12
+def season_crest(size):
+    """`SeasonCrest.PaintCrest` — the bought crown, sized to its host with `preserveAspect`.
 
-
-def watch_crest(size, open01):
-    """`SeasonCrest.PaintWatch` — a ring of tally marks lighting clockwise round a lit core."""
-    crest = Image.new("RGBA", (int(size), int(size)), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(crest)
-
-    lit = 0 if open01 <= 0 else max(1, min(CREST_MARKS, math.ceil(open01 * CREST_MARKS)))
-
-    # The dark band the marks sit on, so an unlit pip reads as a place for one.
-    band = size * .5
-    draw.ellipse((size / 2 - band, size / 2 - band, size / 2 + band, size / 2 + band),
-                 outline=(15, 26, 41, 217), width=int(round(size * .07)))
-
-    radius = size * .40
-    pip = size * .13
-
-    for i in range(CREST_MARKS):
-        angle = math.pi * .5 - i * (math.pi * 2 / CREST_MARKS)
-        cx = size / 2 + math.cos(angle) * radius
-        cy = size / 2 - math.sin(angle) * radius
-
-        if i < lit:
-            crest.alpha_composite(
-                K.glow(64, 2.0, K.BLOOM, .55).resize((int(pip * 2.2), int(pip * 2.2)), Image.LANCZOS),
-                (int(cx - pip * 1.1), int(cy - pip * 1.1)))
-
-        colour = (255, 180, 232, 255) if i < lit else (66, 82, 102, 235)
-        draw.ellipse((cx - pip / 2, cy - pip / 2, cx + pip / 2, cy + pip / 2), fill=colour)
-
-    core = size * .26 * (.34 + .66 * open01)
-    crest.alpha_composite(
-        K.glow(96, 2.0, K.SUN, .40).resize((int(core * 2.1), int(core * 2.1)), Image.LANCZOS),
-        (int(size / 2 - core * 1.05), int(size / 2 - core * 1.05)))
-    draw.ellipse((size / 2 - core, size / 2 - core, size / 2 + core, size / 2 + core),
-                 fill=(*K.SUN, 255))
-    return crest
+    **This generated a ring of twelve pips for as long as the screen did**, which was a
+    faithful mirror of a crest the owner then rejected on sight; the picture is a sprite now
+    (`Tools/make_season_crest.py`) and so this loads it, which is the only version of this
+    function that cannot come to disagree with the screen (invariant 44d). It takes no
+    progress, because the crest no longer carries any — the bar under it does.
+    """
+    mark = Image.open(K.UI / "ic_season.png").convert("RGBA")
+    return K.fit(mark, (int(size), int(size)))
 
 
 def hero(sheet, y, marks, rungs, top):
@@ -213,8 +204,7 @@ def hero(sheet, y, marks, rungs, top):
     band.alpha_composite(lit, (150 - 380, band.height // 2 - 380 - 10))
     K.paste(sheet, band, W / 2, cy)
 
-    open01 = 0.0 if not rungs else rungs / float(len(SEASON["milestones"]))
-    K.paste(sheet, watch_crest(150, open01), left + 132, cy - 14)
+    K.paste(sheet, season_crest(150), left + 132, cy - 14)
 
     K.text(sheet, txt("ui.mark.grown", "{:,}".format(marks)), left + 236, cy - 34, 58,
            anchor="l")

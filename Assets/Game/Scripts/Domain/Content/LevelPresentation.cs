@@ -15,6 +15,12 @@ namespace GlimmerGrove.Content
         /// <summary>Position on the map, 0..1 across and up the chapter's strip.</summary>
         public readonly Vector2 MapPosition;
 
+        /// <summary>
+        /// Whether the node is moored on a floating tile instead of standing on the painting.
+        /// True only where a map draws water under the chain — see <c>LevelDto.afloat</c>.
+        /// </summary>
+        public readonly bool Afloat;
+
         /// <summary>Highlight colour for the map node. Null means take the chapter's.</summary>
         public readonly Color? Accent;
 
@@ -31,12 +37,17 @@ namespace GlimmerGrove.Content
         public readonly StoryScript Story;
 
         public LevelPresentation(Vector2 mapPosition, Color? accent, Color? slate, string backdrop)
-            : this(mapPosition, accent, slate, backdrop, null) { }
+            : this(mapPosition, accent, slate, backdrop, null, false) { }
 
         public LevelPresentation(Vector2 mapPosition, Color? accent, Color? slate, string backdrop,
                                  StoryScript story)
+            : this(mapPosition, accent, slate, backdrop, story, false) { }
+
+        public LevelPresentation(Vector2 mapPosition, Color? accent, Color? slate, string backdrop,
+                                 StoryScript story, bool afloat)
         {
             MapPosition = mapPosition;
+            Afloat = afloat;
             Accent = accent;
             Slate = slate;
             Backdrop = string.IsNullOrEmpty(backdrop) ? null : backdrop;

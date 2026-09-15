@@ -1,3 +1,4 @@
+using GlimmerGrove.Daily;
 using GlimmerGrove.Layout;
 using GlimmerGrove.Store;
 using GlimmerGrove.Utilities;
@@ -188,6 +189,76 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// Draws what a rewarded video pays: a small heap of the resource, with the play mark
+        /// standing on it.
+        ///
+        /// <para>
+        /// <b>Composed rather than painted, and it has to be.</b> Every other card on these two
+        /// shelves draws a rung of a painted ladder (<see cref="ShopLadder"/>), and a video
+        /// stands on no ladder — it is one fixed amount that content retunes, so borrowing the
+        /// cheapest rung would draw this card and the pack below it identically, which is the
+        /// fault invariant 18e is about arriving from the other end. The heap is the same
+        /// arrangement <see cref="PaintGood"/> piles hearts in, so the two read as the same
+        /// currency in different quantities.
+        /// </para>
+        /// <para>
+        /// <b>The play mark is the picture's whole job.</b> A heap of coins says coins and says
+        /// nothing at all about how they are come by, and there is no bought "watch a video"
+        /// art in this project — nine icon packs on this machine hold none, which was surveyed
+        /// rather than assumed. So the answer is the one invariant 32b prescribes: compose it
+        /// out of what the game already draws. <c>ic_play</c> is the mark on the watch button
+        /// every rewarded offer in the game is taken through, so a player meets it here and
+        /// again on the panel this card opens.
+        /// </para>
+        /// <para>
+        /// It rides the heap rather than sitting beside it, on a disc of its own, because a
+        /// glyph floating on a plate is a glyph nobody put anywhere — the same judgement the
+        /// streak tile's reward well makes (invariant 48g).
+        /// </para>
+        /// </summary>
+        public static void PaintAd(RectTransform box, ChestDropKind kind)
+        {
+            if (box == null) return;
+
+            Clear(box);
+
+            RewardArt.Token(kind, null, out var token, out var tint);
+            if (token == null) return;
+
+            float size = box.rect.width;
+            if (size <= 1f) size = 200f;
+
+            // **Two, always, and two is the whole of why it is two.** The figure under the
+            // picture is the amount — 300 coins is not a pile anybody can draw — so the heap
+            // only has to say "some of these". What it must *also* do is not be one of the
+            // packs: `PaintGood`'s ladder draws one, three or five, so a heap of three beside a
+            // fifteen-heart pack is two cards on one shelf with the same picture, which is
+            // exactly the fault invariant 18e names. Two is the one count no ladder here uses,
+            // and a single row of two leaves the mark below it clear ground to stand on.
+            Heap(box, "A", token, tint, 2, size * .44f, size * .06f);
+
+            // Centred and low, which is a fact about a row of two rather than a taste: two
+            // tokens leaning away from each other (`TokenPile.Tilt`) leave a notch under the
+            // middle, so the mark stands *in* the heap and covers neither of them. It is why
+            // the count above is not three — an odd row puts a token on the centre line, and a
+            // mark there is a mark drawn over the picture it is meant to be part of.
+            var seat = UIKit.Img("PlaySeat", box, Art.Disc(96), new Color(.05f, .09f, .06f, .88f),
+                                 Vector2.one * (size * .34f), new Vector2(.5f, .5f),
+                                 new Vector2(0f, -size * .24f));
+
+            var ring = UIKit.Img("PlayRing", seat.transform, Art.Disc(96), Pal.A(Pal.Mint, .85f));
+            UIKit.StretchTo((RectTransform)ring.transform, -3, -3, -3, -3);
+            ring.transform.SetAsFirstSibling();
+
+            var play = UIKit.Img("Play", seat.transform, Art.S("Ui/ic_play"), Pal.Cream,
+                                 Vector2.one * (size * .17f), new Vector2(.5f, .5f),
+                                 new Vector2(size * .012f, 0f));
+            play.preserveAspect = true;
+
+            Tween.Breathe(seat.transform, .04f, 2.4f);
+        }
+
+        /// <summary>
         /// Draws one utility: the same icon the action bar draws, and nothing else.
         ///
         /// <para>
@@ -290,10 +361,26 @@ namespace GlimmerGrove
         /// </summary>
         static void Heap(RectTransform box, string name, string sprite,
                          int count, float token, float lift)
+            => Heap(box, name, Art.S(sprite), Color.white, count, token, lift);
+
+        /// <summary>
+        /// The same heap from a sprite already in hand.
+        ///
+        /// <para>
+        /// The overload above is the one every shelf uses, because a shelf knows the address it
+        /// wants. <see cref="PaintAd"/> does not: what a placement pays is content, so the
+        /// picture comes out of <see cref="RewardArt.Token"/> — which is the one place that
+        /// knows credits have no sprite at all and are a frame of a flipbook, and the one place
+        /// that answers a tinted disc rather than <b>null</b> when the art has not arrived
+        /// (invariant 7b).
+        /// </para>
+        /// </summary>
+        static void Heap(RectTransform box, string name, Sprite sprite, Color tint,
+                         int count, float token, float lift)
         {
             foreach (var spot in TokenPile.Of(count, token))
             {
-                var img = UIKit.Img(name + spot.Slot, box, Art.S(sprite), Color.white,
+                var img = UIKit.Img(name + spot.Slot, box, sprite, tint,
                                     Vector2.one * token, new Vector2(.5f, .5f),
                                     new Vector2(spot.X, lift + spot.Y));
                 img.preserveAspect = true;

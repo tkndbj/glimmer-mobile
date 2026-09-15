@@ -51,15 +51,16 @@ SHIELD_H = 168.0
 HEADING_H = 62.0
 WIDTH = 1000.0
 
-TILE_W, TILE_H, TILE_GAP = 240.0, 320.0, 18.0
-BOARD_LEAD = .28
+#: `StreakScreen` - one night is one row, the full width of the page.
+ROW_H, ROW_GAP = 156.0, 12.0
 
-#: `StreakScreen.SeatSize`, `SeatY` and `RewardTall`. The last is a *drawn* height, which is the
-#: only unit a chest and a gem can share - the closed chest carries the lid's headroom, so a box
-#: set straight from a height draws it two thirds the size of the gem beside it. `ChestPack`
-#: owns the conversion and this mirror has to make the same one or it answers the wrong question
-#: about every tile that pays a chest (invariant 44d).
-SEAT_SIZE, SEAT_Y, REWARD_TALL = 176.0, 14.0, 126.0
+#: `StreakScreen.SeatSize`, `SeatX`, `RewardTall`, `TextX` and `TextW`. `REWARD_TALL` is a
+#: *drawn* height, which is the only unit a chest and a gem can share - the closed chest carries
+#: the lid's headroom, so a box set straight from a height draws it two thirds the size of the
+#: gem beside it. `ChestPack` owns the conversion and this mirror has to make the same one or it
+#: answers the wrong question about every row that pays a chest (invariant 44d).
+SEAT_SIZE, SEAT_X, REWARD_TALL = 124.0, 106.0, 88.0
+TEXT_X, TEXT_W = 196.0, 450.0
 CHEST_FILL, CHEST_LIFT = 155.0 / 244.0, 38.5 / 155.0
 PER_ROW = 4
 
@@ -273,97 +274,151 @@ def heading(sheet, y, cycle):
     K.text(sheet, (txt("ui.streak.week_n", cycle) if cycle > 1
                    else txt("ui.streak.week_one")).upper(),
            left + 8, cy, 28, fill=K.GOLD, anchor="l")
-    K.text(sheet, txt("ui.streak.board_hint"), W / 2 + WIDTH / 2 - 8, cy, 22,
-           fill=(255, 243, 220), outline=0, anchor="r")
     return y + HEADING_H
 
 
 # ------------------------------------------------------------------- the board
-def tile(sheet, cx, cy, night, rung, state):
-    """One night. `state` is 'kept', 'waiting', 'lit', 'tonight' or 'ahead'."""
+def aura(sheet, cx, cy, size):
+    """`StreakScreen.Aura` - the halo and the turning fan over it.
+
+    Drawn at one instant, which is what a mirror can say about a loop: whether the light is
+    *there* and whether the reward survives being inside it. Whether it reads as travelling is
+    a question only a device answers.
+
+    **A gold ring scaling out of the seat was the third piece and is gone**, at the owner's
+    instruction - so this drew it too, and a mirror still drawing a piece the screen has
+    dropped is the one thing that makes a render worse than no render at all (invariant 44d).
+    It is `aura` rather than `ring` for the same reason: the name said which of the three it
+    was about, and it was the one that went.
+    """
+    K.paste(sheet, K.glow(int(size * 2.4), 1.7, K.GOLD, .46), cx, cy)
+
+    fan = K.rays(256, 14).resize((int(size * 2.15), int(size * 2.15)), Image.LANCZOS)
+    lit = Image.new("RGBA", fan.size, (*K.SUN, 0))
+    lit.putalpha(fan.point(lambda v: int(v * .34)))
+    sheet.alpha_composite(lit, (int(cx - fan.width / 2), int(cy - fan.height / 2)))
+
+
+def row(sheet, cx, cy, night, rung, state, days):
+    """One night's row. `state` is 'kept', 'waiting', 'lit', 'tonight' or 'ahead'."""
     lit = state == "lit"
     kept = state == "kept"
+    waiting = state in ("lit", "waiting")
 
-    # A night still ahead is drawn on the screen through a CanvasGroup at .70, so the mirror
-    # draws the whole tile onto its own sheet and fades it. Faded per-element instead, the
-    # picture would be wrong in exactly the way that matters: the card would stay solid and
-    # only its contents would recede.
     if state == "ahead":
-        cell = Image.new("RGBA", (int(TILE_W + 40), int(TILE_H + 40)), (0, 0, 0, 0))
-        tile(cell, cell.width / 2, cell.height / 2, night, rung, "ahead_flat")
-        cell.putalpha(cell.getchannel("A").point(lambda v: int(v * .70)))
+        cell = Image.new("RGBA", (int(WIDTH + 200), int(ROW_H + 60)), (0, 0, 0, 0))
+        row(cell, cell.width / 2, cell.height / 2, night, rung, "ahead_flat", days)
+        cell.putalpha(cell.getchannel("A").point(lambda v: int(v * .74)))
         sheet.alpha_composite(cell, (int(cx - cell.width / 2), int(cy - cell.height / 2)))
         return
 
     if lit:
         pool = K.glow(420, 1.35, K.SUN, .80).resize(
-            (int(TILE_W + 130), int(TILE_H + 120)), Image.LANCZOS)
+            (int(WIDTH + 150), int(ROW_H + 130)), Image.LANCZOS)
         K.paste(sheet, pool, cx, cy)
-        K.paste(sheet, K.glow(int(TILE_W * 1.5), 2.0, K.GOLD, .55), cx, cy + 6)
 
-    card = K.skin("Hud/panel", TILE_W, TILE_H)
+    card = K.skin("Hud/card", WIDTH, ROW_H)
     if kept:
-        card = K.tint(card, (224, 234, 250))
+        card = K.tint(card, (230, 240, 255))
     K.paste(sheet, card, cx, cy)
 
     if lit:
         d = ImageDraw.Draw(sheet)
-        d.rounded_rectangle([cx - TILE_W / 2 + 3, cy - TILE_H / 2 + 3,
-                             cx + TILE_W / 2 - 3, cy + TILE_H / 2 - 3],
+        d.rounded_rectangle([cx - WIDTH / 2 + 3, cy - ROW_H / 2 + 3,
+                             cx + WIDTH / 2 - 3, cy + ROW_H / 2 - 3],
                             radius=30, outline=(255, 244, 206, 255), width=7)
 
-    # `StreakScreen.ChipSkin` — the chip is the state, and it is the one coloured thing here.
-    chip = {"kept": "sq_green", "lit": "sq_orange", "waiting": "sq_orange",
-            "tonight": "sq_aqua"}.get(state, "sq_dark")
-    K.paste(sheet, K.skin(chip, TILE_W - 44, 54), cx, cy - TILE_H / 2 + 22)
-    K.shrunk(sheet, txt("ui.streak.day_n", night).upper(),
-             cx, cy - TILE_H / 2 + 22 - 54 * 0.0231, TILE_W - 66, 36, 25, 15)
+    left = cx - WIDTH / 2
+    sx = left + SEAT_X
 
-    # the seat, and the lamp in it
-    K.paste(sheet, K.skin("Hud/slot", SEAT_SIZE, SEAT_SIZE), cx, cy - SEAT_Y)
-    K.paste(sheet, K.glow(int(SEAT_SIZE + 24), 1.9, K.SUN, .16), cx, cy - SEAT_Y)
+    if lit:
+        aura(sheet, sx, cy, SEAT_SIZE)
 
-    # the strip the amount stands on
-    K.paste(sheet, K.skin("Hud/trough", TILE_W - 44, 58), cx, cy + TILE_H / 2 - 26)
+    K.paste(sheet, K.skin("Hud/slot", SEAT_SIZE, SEAT_SIZE), sx, cy)
 
     if rung.get("tier"):
-        # The *drawn* chest at REWARD_TALL, and its middle where the game puts it: the sprite's
-        # own box is higher by `CHEST_LIFT` of that height, so the mirror shifts by the same.
-        K.paste(sheet, drawn(rung["tier"], REWARD_TALL, not kept), cx, cy - SEAT_Y)
-        K.shrunk(sheet, txt("chest.%s.name" % rung["tier"]), cx, cy + TILE_H / 2 - 26,
-                 TILE_W - 62, 38, 25, 14,
-                 fill=K.CREAM if not kept else (222, 214, 196))
+        K.paste(sheet, drawn(rung["tier"], REWARD_TALL, not kept), sx, cy)
     else:
         kind = rung.get("kind") or ""
         glyph = {"credits": "Coin/f0", "gems": "ic_gem"}.get(kind, "ic_star")
         icon = Image.open(K.UI / ("%s.png" % glyph)).convert("RGBA")
         box = (int(REWARD_TALL), int(REWARD_TALL))
         K.paste(sheet, K.fit(icon, box) if not kept
-                else K.tint(K.fit(icon, box), (209, 219, 235)), cx, cy - SEAT_Y)
-        amount = "{:,}".format(rung.get("amount", 0)) if kind else txt("ui.streak.rung_none")
-        K.shrunk(sheet, amount, cx, cy + TILE_H / 2 - 26, TILE_W - 62, 46, 36, 20,
-                 fill=K.CREAM if not kept else (222, 214, 196))
+                else K.tint(K.fit(icon, box), (214, 224, 240)), sx, cy)
 
-    if kept:
-        sx, sy = cx + TILE_W * .29, cy + TILE_W * .22 - SEAT_Y
+    title = K.GOLD if lit else ((123, 216, 106) if kept else K.CREAM)
+    K.text(sheet, txt("ui.streak.day_n", night).upper(), left + TEXT_X, cy - 26, 31,
+           fill=title, anchor="l")
+    K.text(sheet, says(rung), left + TEXT_X, cy + 22, 25,
+           fill=(255, 243, 220) if not kept else (214, 205, 186), outline=2, anchor="l")
+
+    # --- the right end: one answer at a time
+    if waiting:
+        bx = cx + WIDTH / 2 - 130
+        K.paste(sheet, K.skin("btn_green", 212, 84), bx, cy)
+        K.shrunk(sheet, txt("ui.streak.collect").upper(), bx, cy - 84 * 0.0231,
+                 176, 52, 34, 20)
+    elif kept:
+        sxx = cx + WIDTH / 2 - 146
         seal = Image.open(K.UI / "seal_gold.png").convert("RGBA")
-        K.paste(sheet, K.fit(seal, (66, 66)), sx, sy)
+        K.paste(sheet, K.fit(seal, (84, 84)), sxx, cy)
         tick = Image.open(K.UI / "ic_check.png").convert("RGBA")
-        K.paste(sheet, K.tint(K.fit(tick, (34, 34)), K.CREAM), sx, sy)
+        K.paste(sheet, K.tint(K.fit(tick, (44, 44)), K.CREAM), sxx, cy)
+    else:
+        bx = cx + WIDTH / 2 - 130
+        away = night - days
+        if state == "tonight":
+            words, fill = txt("ui.streak.tonight"), K.AQUA
+        elif away <= 1:
+            words, fill = txt("ui.streak.in_one"), (255, 243, 220)
+        else:
+            words, fill = txt("ui.streak.in_many", away), (255, 243, 220)
+
+        plate = Image.new("RGBA", (196, 62), (0, 0, 0, 0))
+        dd = ImageDraw.Draw(plate)
+        dd.rounded_rectangle([0, 0, 195, 61], radius=28, fill=(13, 23, 46, 179))
+        dd.rounded_rectangle([1, 1, 194, 60], radius=28, outline=(255, 255, 255, 33), width=3)
+        K.paste(sheet, plate, bx, cy)
+        K.shrunk(sheet, words.upper(), bx, cy, 164, 44, 23, 14, fill=fill, outline=2)
 
 
-def board(sheet, top, first, states):
-    rows = (len(RUNGS) + PER_ROW - 1) // PER_ROW
-    tall = rows * (TILE_H + TILE_GAP) - TILE_GAP
+def says(rung):
+    """`StreakScreen.Says` - what a night pays, in words."""
+    if rung.get("tier"):
+        return txt("chest.%s.name" % rung["tier"])
+
+    kind = rung.get("kind") or ""
+    if not kind:
+        return txt("ui.streak.rung_none")
+
+    unit = txt("ui.reward.%s" % kind)
+    return "%s %s" % ("{:,}".format(rung.get("amount", 0)), unit)
+
+
+def board(sheet, top, first, states, days):
+    """`StreakScreen.BuildBoard` - the list, and the fold it opens on."""
+    tall = len(RUNGS) * (ROW_H + ROW_GAP) - ROW_GAP
     bottom = K.NAV_HEIGHT + 20 + (FOOTER_H if states.get("cta") else 0)
-    slack = max(0.0, (H - top - bottom) - tall)
+    band = H - top - bottom
+
+    # `StreakScreen.FocusOnPending` - the board opens on the night that can be taken, not on
+    # night one, so the mirror has to scroll the same way or it draws a page nobody sees.
+    offset = 0.0
+    if tall > band:
+        want = next((i for i, st in enumerate(states["rows"]) if st == "lit"), -1)
+        if want >= 0:
+            offset = max(0.0, min(want * (ROW_H + ROW_GAP) - (band - ROW_H) * .5, tall - band))
+
+    strip = Image.new("RGBA", (W, int(max(tall, band))), (0, 0, 0, 0))
 
     for i, rung in enumerate(RUNGS):
-        row, col = divmod(i, PER_ROW)
-        in_row = min(PER_ROW, len(RUNGS) - row * PER_ROW)
-        x = W / 2 + (col - (in_row - 1) * .5) * (TILE_W + TILE_GAP)
-        y = top + slack * BOARD_LEAD + row * (TILE_H + TILE_GAP) + TILE_H / 2
-        tile(sheet, x, y, first + i, rung, states["tiles"][i])
+        row(strip, W / 2, i * (ROW_H + ROW_GAP) + ROW_H / 2, first + i,
+            rung, states["rows"][i], days)
+
+    window = strip.crop((0, int(offset), W, int(offset + band)))
+    sheet.alpha_composite(window, (0, int(top)))
+
+    return tall > band
 
 
 def footer(sheet):
@@ -394,17 +449,17 @@ def shot(state):
         days, first, lit, kept, cta, held, line, colour = 5, 1, 4, 4, False, False, \
             txt("ui.streak.waiting_one"), K.GOLD
 
-    tiles = []
+    rows = []
     for i in range(n):
         night = first + i
         if i == lit:
-            tiles.append("lit")
+            rows.append("lit")
         elif night <= days and i < kept:
-            tiles.append("kept")
+            rows.append("kept")
         elif night == days + 1:
-            tiles.append("tonight")
+            rows.append("tonight")
         else:
-            tiles.append("ahead")
+            rows.append("ahead")
 
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
     K.plain(sheet)
@@ -415,7 +470,7 @@ def shot(state):
     y = hero(sheet, y, days, max(0, min(n, days - first + 1)), n, line, colour)
     y = shield_row(sheet, y, held, 4)
     y = heading(sheet, y, 1 + (first - 1) // n)
-    board(sheet, y, first, {"tiles": tiles, "cta": cta})
+    scrolls = board(sheet, y, first, {"rows": rows, "cta": cta}, days)
 
     if cta:
         footer(sheet)
@@ -448,8 +503,8 @@ def main():
     out.save(args.out)
 
     print("  ladder: %d night(s); shield %d gems for %d days" % (len(RUNGS), SHIELD_GEMS, SHIELD_DAYS))
-    print("  a tile is %.0fx%.0f; the reward draws %.0f tall in a %.0f seat, and a chest's own "
-          "sprite box is %.0f" % (TILE_W, TILE_H, REWARD_TALL, SEAT_SIZE, REWARD_TALL / CHEST_FILL))
+    print("  a row is %.0fx%.0f; the reward draws %.0f tall in a %.0f well, and a chest's own "
+          "sprite box is %.0f" % (WIDTH, ROW_H, REWARD_TALL, SEAT_SIZE, REWARD_TALL / CHEST_FILL))
     print("  wrote %s  %dx%d  - look at it" % (args.out, out.width, out.height))
 
 

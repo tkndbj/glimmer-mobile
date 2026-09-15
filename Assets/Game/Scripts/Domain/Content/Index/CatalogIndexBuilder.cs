@@ -20,6 +20,16 @@ namespace GlimmerGrove.Content
         readonly List<AvatarDefinition> _companions = new List<AvatarDefinition>();
         readonly HashSet<string> _companionIds = new HashSet<string>(System.StringComparer.Ordinal);
         readonly List<Events.GroveEvent> _events = new List<Events.GroveEvent>();
+
+        /// <summary>
+        /// The one repeating season, or null. At most one, and the reader refuses a second.
+        ///
+        /// <b>Two recurrences would be two answers to "which season is running"</b>, decided by
+        /// whichever the loop reached first — an ordering nothing in a JSON file promises, which
+        /// is the same reason <c>SiegeBoard</c> states its contested-cog rule rather than letting
+        /// a <c>HashSet</c> walk decide it (invariant 37w).
+        /// </summary>
+        Events.SeasonCycle _cycle;
         readonly HashSet<string> _eventIds = new HashSet<string>(System.StringComparer.Ordinal);
         readonly List<string> _problems = new List<string>();
 
@@ -309,8 +319,37 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
-            _events.Add(new Events.GroveEvent(entry.id, entry.startUnix, entry.endUnix,
-                                              milestones, icon, entry.passGems));
+            if (!entry.repeats)
+            {
+                _events.Add(new Events.GroveEvent(entry.id, entry.startUnix, entry.endUnix,
+                                                  milestones, icon, entry.passGems));
+                return true;
+            }
+
+            // A repeating season's id is a stem the clock builds on, so the room the suffix
+            // needs has to exist inside the ceiling the server parses ids against — a stem that
+            // only just fits would mint ids `season.ts` refuses, and the symptom is every claim
+            // in the game's longest-running feature coming back unconfirmed.
+            int room = Events.EventRules.MaxSeasonIdLength - (Events.SeasonCycle.IndexDigits + 1);
+            if (entry.id.Length > room)
+            {
+                _problems.Add($"season '{entry.id}' repeats, so its id is a stem with a " +
+                              $"{Events.SeasonCycle.IndexDigits}-digit cycle number on the end; " +
+                              $"that leaves {room} characters and this one is {entry.id.Length}");
+                return false;
+            }
+
+            if (_cycle != null)
+            {
+                _problems.Add($"manifest asks season '{entry.id}' to repeat, but '{_cycle.BaseId}' " +
+                              "already does; only one season may repeat, because two would be two " +
+                              "answers to which season is running and nothing decides between them");
+                return false;
+            }
+
+            _cycle = new Events.SeasonCycle(entry.id, entry.startUnix,
+                                            entry.endUnix - entry.startUnix,
+                                            milestones, icon, entry.passGems);
             return true;
         }
 
@@ -401,7 +440,7 @@ namespace GlimmerGrove.Content
             }
 
             return new CatalogIndex(_chapters.ToArray(), levelIds.ToArray(), levelOrder, _levelChapter,
-                                    SortedCompanions(), UsableEvents(), levelMode, byLane,
+                                    SortedCompanions(), UsableEvents(), _cycle, levelMode, byLane,
                                     chaptersByLane);
         }
 

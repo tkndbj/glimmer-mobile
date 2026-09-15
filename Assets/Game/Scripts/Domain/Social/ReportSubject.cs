@@ -40,8 +40,40 @@ namespace GlimmerGrove.Social
     /// </summary>
     public static class ReportSubjects
     {
-        /// <summary>Every subject this build can report, in the order a panel offers them.</summary>
-        public static readonly ReportSubject[] All = { ReportSubject.Name, ReportSubject.Grove };
+        /// <summary>
+        /// Every subject this build can report, in the order a panel offers them.
+        ///
+        /// <para>
+        /// <b><see cref="ReportSubject.Grove"/> is held and this list is the whole of the
+        /// hold</b>, exactly as <c>NavBar.Order</c> holds a tab: nothing in this build draws a
+        /// grovement, so a key offering to report one would file a report about a picture
+        /// nobody can see. The enum member, the wire spelling and the loc key all stay — they
+        /// are permanent for invariant 1's reason, the server still accepts the subject, and
+        /// every report already filed against it still counts toward its own threshold. The
+        /// panel's height is the sum of what this table holds, so it re-measures itself.
+        /// </para>
+        /// </summary>
+        public static readonly ReportSubject[] All = { ReportSubject.Name };
+
+        /// <summary>
+        /// Subjects this build deliberately does not offer, and the reason the gate above
+        /// <see cref="All"/> is still a gate.
+        ///
+        /// <para>
+        /// <c>Mechanic.Retired</c>'s shape, arriving on a report subject: a member missing from
+        /// <see cref="All"/> is either something nobody can ever file a report about — the
+        /// fault invariant 40a describes, where a whole mechanic shipped that no level ever sent
+        /// — or a deliberate hold, and the two are indistinguishable from the enum alone.
+        /// Naming it here makes it the second, and leaves <c>KeeperReportTests</c> refusing any
+        /// member that is in neither list.
+        /// </para>
+        /// <para>
+        /// <b>Held, never retired.</b> The wire spelling stays live on the server, reports
+        /// already filed still count, and putting the subject back is a row in <see cref="All"/>
+        /// and this entry coming out.
+        /// </para>
+        /// </summary>
+        public static readonly ReportSubject[] Held = { ReportSubject.Grove };
 
         /// <summary>What the server calls this subject. Permanent, for invariant 1's reason.</summary>
         public static string Wire(ReportSubject subject)

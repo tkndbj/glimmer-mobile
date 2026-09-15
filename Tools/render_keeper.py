@@ -5,7 +5,8 @@
     python Tools/render_keeper.py --keeper         # the chooser a board row opens
     python Tools/render_keeper.py --report         # the report panel, both subjects
     python Tools/render_keeper.py --report --sent  # …with one subject already spent
-    python Tools/render_keeper.py --contact        # all three side by side
+    python Tools/render_keeper.py --ranks          # how the boards work (19r)
+    python Tools/render_keeper.py --contact        # every live screen side by side
 
 **Why this exists.** Every question these three raise is a picture, and no numeric gate in this
 project can open one (invariant 32b). Does a stranger's profile read as *theirs* rather than as
@@ -88,6 +89,30 @@ SCRIM = 0.72
 TALLEST = K.W * 1.75 - 2 * 87.0
 
 INK = (59, 38, 26)
+
+# --------------------------------------------------------------------- PanelStack
+# `RanksInfoOverlay` is laid out by `PanelStack` (Domain) rather than by offsets of its own, so
+# these are that type's constants and nothing else. Mirrored rather than eyeballed because the
+# whole point of that type is that the arithmetic is checkable: a mirror with its own spacing
+# would draw a panel the game does not (invariant 44d).
+PS_SEAT, PS_SEAT_CY = 100.0, 54.0
+PS_HEAD_CY, PS_HEAD_H = 30.0, 42.0
+PS_BODY_TOP, PS_BODY_H = 66.0, 100.0
+PS_W, PS_HOST_INSET = 960.0, 90.0
+PS_TEXT_LEFT, PS_TEXT_W = 122.0, 700.0
+PS_SECTION_H = PS_BODY_TOP + PS_BODY_H
+PS_PITCH = PS_SECTION_H + 30.0
+PS_FIRST_TOP, PS_FOOT_GAP = 60.0, 50.0
+PS_BUTTON_H, PS_BUTTON_BOTTOM = 112.0, 56.0
+
+
+def ps_top(row):
+    return PS_FIRST_TOP + row * PS_PITCH
+
+
+def ps_height(sections):
+    body = (ps_top(sections - 1) + PS_SECTION_H + PS_FOOT_GAP) if sections else PS_FIRST_TOP
+    return body + PS_BUTTON_H + PS_BUTTON_BOTTOM
 
 
 # --------------------------------------------------------------------------- content
@@ -197,8 +222,7 @@ def card_title(sheet, cy_top, key):
 
 
 # --------------------------------------------------------------------------- the page
-def profile(level=24, name="Fern Willow", worth=48200, star_count=3, wave=31,
-            held=None, line=None, pieces=(74, 22)):
+def profile(level=24, name="Fern Willow", wave=31, held=None, line=None):
     """`PublicProfileScreen` — the whole scroller, drawn from the top."""
     held = held if held is not None else {c["id"] for c in ROSTER[:9]}
     line = line or [("r", "cleaver", 3), ("g", "beacon", 2), ("b", "rime", 5), ("y", "bolt", 1)]
@@ -208,17 +232,18 @@ def profile(level=24, name="Fern Willow", worth=48200, star_count=3, wave=31,
 
     cursor = HEADER_H + GAP
 
-    cursor = keeper_card(sheet, cursor, level, name, worth, star_count)
+    # No grove card and no worth line: both are held with the Grovement. See
+    # `PublicProfileScreen`.
+    cursor = keeper_card(sheet, cursor, level, name)
     cursor = watch_card(sheet, cursor, wave)
     cursor = companion_card(sheet, cursor, held)
     cursor = line_card(sheet, cursor, line)
-    cursor = grove_card(sheet, cursor, pieces)
 
     header(sheet)
     return sheet
 
 
-def keeper_card(sheet, top, level, name, worth, star_count):
+def keeper_card(sheet, top, level, name):
     cy = top + KEEPER_H / 2
     K.paste(sheet, K.skin("Hud/plate_blue", int(CARD_W), int(KEEPER_H)), W / 2, cy)
 
@@ -234,18 +259,14 @@ def keeper_card(sheet, top, level, name, worth, star_count):
     K.paste(sheet, disc(92, K.GOLD), mx + 80, my + 80)
     K.text(sheet, str(level), mx + 80, my + 80, 44, fill=(77, 51, 13), outline=0)
 
-    left_text(sheet, name, W / 2 + 160 - 280, cy - 104, 560, 50, 28, fill=K.CREAM, outline=4)
+    # Two rows, re-centred on the card rather than left at the top of it — `NameY` and
+    # `RibbonY`, which moved when the worth line and the star row went.
+    left_text(sheet, name, W / 2 + 160 - 280, cy - 44, 560, 50, 28, fill=K.CREAM, outline=4)
 
     rib = K.fit(K.load("ribbon_flat")[0], (380, 74))
-    K.paste(sheet, rib, W / 2 + 100, cy - 30)
-    K.shrunk(sheet, say(title_key(level)), W / 2 + 100, cy - 30, 340, 50, 32,
+    K.paste(sheet, rib, W / 2 + 100, cy + 42)
+    K.shrunk(sheet, say(title_key(level)), W / 2 + 100, cy + 42, 340, 50, 32,
              20, fill=(87, 56, 31), outline=0)
-
-    left_text(sheet, say("ui.profile.public_worth", f"{worth:,}"),
-              W / 2 + 160 - 280, cy + 40, 560, 28, 19, fill=K.GOLD, outline=3)
-
-    stars(sheet, W / 2 + 160 + STAR_STEP * 4 * .5, cy + 96, STAR_SIZE, STAR_STEP,
-          star_count, 5)
 
     return top + KEEPER_H + GAP
 
@@ -356,25 +377,6 @@ def line_card(sheet, top, line):
     return top + LINE_H + GAP
 
 
-def grove_card(sheet, top, pieces):
-    cy = top + GROVE_H / 2
-    K.paste(sheet, K.skin("Hud/plate_blue", int(CARD_W), int(GROVE_H)), W / 2, cy)
-    card_title(sheet, top, "ui.grove.title")
-
-    left = W / 2 - CARD_W / 2 + GROVE_TEXT_LEFT
-    left_text(sheet, say("ui.profile.public_pieces", *pieces), left, cy - 22,
-              GROVE_TEXT_W, 28, 19, fill=(255, 245, 224), outline=3)
-    left_text(sheet, say("ui.visit.updated", "2 hours ago"), left, cy + 20,
-              GROVE_TEXT_W, 22, 15, fill=(255, 245, 224), outline=2)
-
-    bx = W / 2 + CARD_W / 2 - VISIT_INSET - VISIT_W / 2
-    K.paste(sheet, K.skin("btn_green", int(VISIT_W), 104), bx, cy)
-    K.shrunk(sheet, say("ui.keeper.see_grove"), bx + 24, cy - 8, 260, 60, 32, 20,
-             fill=K.CREAM, outline=3)
-
-    return top + GROVE_H + GAP
-
-
 def header(sheet):
     fade = Image.new("RGBA", (W, int(HEADER_H + 30)), (0, 0, 0, 0))
     d = ImageDraw.Draw(fade)
@@ -414,15 +416,28 @@ def draw_panel(sheet, width, height, title):
     rib = K.load("ribbon_orange")[0].resize(
         (int(width * RIBBON_FRACTION), int(RIBBON_H)), Image.LANCZOS)
     rib = rib.rotate(-RIBBON_TILT, expand=True, resample=Image.BICUBIC)
-    K.paste(sheet, rib, W / 2, cy - height / 2 + RIBBON_RISE)
-    K.shrunk(sheet, title, W / 2, cy - height / 2 + RIBBON_RISE, width * .68, 80, 54, 30,
+
+    # **Minus, not plus** - the ribbon stands *proud* of the panel's top edge. `MakePanel`
+    # anchors it at (.5, 1) with `anchoredPosition` (0, 22) and `UIKit.Box` always pivots at
+    # centre (invariant 44d), so its centre is 22 units **above** the plate and its lower lip
+    # lands 43 below it - which is exactly what `PanelStack.TitleOverhang`'s 87 is measured
+    # from. Drawn at `+RIBBON_RISE` it sat 44 units low and its lip reached 87 into the plate,
+    # which is far enough to swallow the top of a `PanelStack` panel's first heading. The two
+    # panels this tool drew before start their content lower, so nothing could see it: the
+    # wrong sign in an axis that runs the other way, which is the trap invariant 37aj names.
+    ribbon_cy = cy - height / 2 - RIBBON_RISE
+    K.paste(sheet, rib, W / 2, ribbon_cy)
+    K.shrunk(sheet, title, W / 2, ribbon_cy, width * .68, 80, 54, 30,
              fill=K.CREAM, outline=4)
 
     return cy - height / 2
 
 
 def report(sent=False):
-    subjects = ["ui.report.name", "ui.report.grove"]
+    # `ReportSubjects.All`, which holds the grovement subject while that feature is
+    # rebuilt — and the panel's height is the sum of what it draws, so the picture shrinks
+    # with it rather than leaving a gap where the second key was.
+    subjects = ["ui.report.name"]
 
     height = (REPORT_TITLE_ROW + REPORT_BODY_H + REPORT_AFTER_BODY
               + len(subjects) * (REPORT_BUTTON_H + REPORT_AFTER)
@@ -451,6 +466,70 @@ def report(sent=False):
     foot = H / 2 + height / 2 - REPORT_FOOT - REPORT_CANCEL_H / 2
     K.paste(sheet, K.skin("btn_green", int(REPORT_W - 260), int(REPORT_CANCEL_H)), W / 2, foot)
     K.shrunk(sheet, say("ui.common.cancel"), W / 2, foot - 8, REPORT_W - 300, 70, 42, 24,
+             fill=K.CREAM, outline=3)
+
+    fit_note(sheet, height)
+    return sheet
+
+
+def ranks_info(built_ago="6h 12m"):
+    """The panel the boards screen's `i` opens — `RanksInfoOverlay`.
+
+    **The one question it can answer**: does a paragraph explaining that a board is a tally
+    taken once a day still read at the size it is drawn, in a box `UIKit.Shrinkable` will
+    shrink rather than grow? Three sections is well inside what `PanelStackTests` proves fits,
+    so the geometry is not in doubt; what is in doubt is the *English*, and a translation half
+    again as long lands on whatever size best-fit settles at (invariant 19n — "22 against a
+    floor of 22" is the tell that a string has outgrown its plate).
+    """
+    sections = [
+        ("ic_trophy", "ui.board.info_boards_title",
+         say("ui.board.info_boards_body", say("ui.board.endless"))),
+        ("ic_restart", "ui.board.info_tally_title",
+         say("ui.board.info_tally_built", 24, built_ago)),
+        # `ic_profile`, not `ic_rank`: the sentence sends the reader to their own profile for
+        # the percentile, and the rank badge is a coloured emblem that fights the two flat
+        # white glyphs above it - which is a thing only this picture could say.
+        ("ic_profile", "ui.board.info_place_title", say("ui.board.info_place_body", 100)),
+    ]
+
+    height = ps_height(len(sections))
+    title = say("ui.board.info_title").upper()
+
+    sheet = panel(height, title)
+    top = draw_panel(sheet, PS_W, height, title)
+
+    host_left = W / 2 - (PS_W - PS_HOST_INSET) / 2
+
+    for row, (icon, title_key, body) in enumerate(sections):
+        stop = top + ps_top(row)
+
+        K.paste(sheet, disc(PS_SEAT, (240, 214, 163), .85),
+                host_left + PS_SEAT * .6, stop + PS_SEAT_CY)
+        try:
+            glyph = K.fit(Image.open(ART / "Ui" / f"{icon}.png").convert("RGBA"), (70, 70))
+            K.paste(sheet, glyph, host_left + PS_SEAT * .6, stop + PS_SEAT_CY)
+        except FileNotFoundError:
+            pass
+
+        # `UIKit.Box` pivots at centre, so a left-aligned label anchored to the column's left
+        # edge is positioned at `left + width / 2` — the pivot rule this tool caught three
+        # faults with on its first run.
+        # Both are **left-aligned** (`TextAnchor.MiddleLeft` and `.UpperLeft`), which is what
+        # makes the glyphs a column of their own and lets somebody find the one answer they
+        # came for without reading the panel. Drawn centred here it would be a ragged column
+        # down the middle of a panel whose real text is a flush-left block.
+        text_left = host_left + PS_TEXT_LEFT
+
+        K.shrunk_left(sheet, say(title_key).upper(), text_left,
+                      stop + PS_HEAD_CY - PS_HEAD_H / 2, PS_TEXT_W, PS_HEAD_H,
+                      34, 22, fill=(71, 46, 31), outline=0)
+        K.shrunk_left(sheet, body, text_left, stop + PS_BODY_TOP,
+                      PS_TEXT_W, PS_BODY_H, 27, 18, fill=INK, outline=0)
+
+    foot = H / 2 + height / 2 - PS_BUTTON_BOTTOM - PS_BUTTON_H / 2
+    K.paste(sheet, K.skin("btn_green", 560, int(PS_BUTTON_H)), W / 2, foot)
+    K.shrunk(sheet, say("ui.common.got_it"), W / 2, foot - 8, 500, 70, 44, 24,
              fill=K.CREAM, outline=3)
 
     fit_note(sheet, height)
@@ -519,7 +598,12 @@ def save(sheet, name):
 
 
 def contact():
-    sheets = [profile(), keeper(), report()]
+    # **The chooser is not on the sheet, because a board row no longer opens one.** With the
+    # grovement held there is one door left, so `LeaderboardScreen.Visit` walks straight into
+    # the profile — and a contact sheet carrying a panel the game never raises is the fault
+    # invariant 44d names. `--keeper` still draws it, which is a deliberate ask rather than
+    # something the gate shows you every run.
+    sheets = [profile(), report(), ranks_info()]
     pad = 24
     strip = Image.new("RGB", (len(sheets) * W + (len(sheets) + 1) * pad, H + 2 * pad), (16, 18, 22))
     for i, sheet in enumerate(sheets):
@@ -529,12 +613,14 @@ def contact():
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--keeper", action="store_true", help="the chooser a board row opens")
+    ap.add_argument("--keeper", action="store_true",
+                    help="the chooser a board row used to open (held with the grovement)")
     ap.add_argument("--report", action="store_true", help="the report panel")
     ap.add_argument("--sent", action="store_true", help="…with one subject already spent")
     ap.add_argument("--unplayed", action="store_true",
                     help="a keeper who has never run the Infinite lane")
-    ap.add_argument("--contact", action="store_true", help="all three side by side")
+    ap.add_argument("--ranks", action="store_true", help="how the boards work (19r)")
+    ap.add_argument("--contact", action="store_true", help="every live screen side by side")
     args = ap.parse_args()
 
     if args.contact:
@@ -547,6 +633,10 @@ def main():
 
     if args.report:
         save(report(sent=args.sent), "keeper_report.png")
+        return
+
+    if args.ranks:
+        save(ranks_info(), "keeper_ranks_info.png")
         return
 
     save(profile(wave=0 if args.unplayed else 31), "keeper_profile.png")

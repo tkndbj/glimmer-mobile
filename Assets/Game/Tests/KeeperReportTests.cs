@@ -46,6 +46,14 @@ namespace GlimmerGrove.Tests
         /// Folded into one set, a player who reported a name would open that keeper's grovement
         /// to a dead control — and the obvious reading of a dead control they never used is that
         /// the game is broken.
+        ///
+        /// <b>It asks the store and not the panel</b>, which is what lets it keep asking while
+        /// the grovement subject is held (<see cref="ReportSubjects.Held"/>): what is being
+        /// pinned is that a row is keyed on the pair and not on the keeper, and that is true
+        /// whether or not anything currently offers the second subject. <c>AllSent</c> is
+        /// deliberately not asserted here — it walks <see cref="ReportSubjects.All"/>, so it is
+        /// a reading of the panel rather than of the store, and
+        /// <see cref="AllSentIsTrueOnlyWhenEverySubjectHasBeenReported"/> is where it belongs.
         /// </summary>
         [Test]
         public void ReportingOneSubjectLeavesTheOtherOffered()
@@ -54,7 +62,6 @@ namespace GlimmerGrove.Tests
 
             Assert.IsTrue(KeeperReports.AlreadySent(ReportSubject.Name, "keeper-a"));
             Assert.IsFalse(KeeperReports.AlreadySent(ReportSubject.Grove, "keeper-a"));
-            Assert.IsFalse(KeeperReports.AllSent("keeper-a"));
         }
 
         /// <summary>
@@ -172,18 +179,27 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// And every member of the enum is offered. A member nobody can reach is a subject the
-        /// server will take reports about and no player can ever file one for — the shape
-        /// invariant 40a describes for a raider kind nothing sends.
+        /// And every member of the enum is either offered or named as held. A member in neither
+        /// list is a subject the server will take reports about and no player can ever file one
+        /// for — the shape invariant 40a describes for a raider kind nothing sends.
+        ///
+        /// <b>Two lists rather than one because a hold is a decision and an omission is a bug</b>,
+        /// and from the enum alone they look identical. This is <c>TipTests</c>' rule for a
+        /// retired lesson, asked of a report subject.
         /// </summary>
         [Test]
-        public void NoSubjectIsUnreachable()
+        public void EverySubjectIsEitherOfferedOrHeld()
         {
             foreach (ReportSubject subject in
                      System.Enum.GetValues(typeof(ReportSubject)))
             {
-                Assert.Contains(subject, ReportSubjects.All,
-                                $"{subject} is in the enum and not on the panel");
+                bool offered = System.Array.IndexOf(ReportSubjects.All, subject) >= 0;
+                bool held = System.Array.IndexOf(ReportSubjects.Held, subject) >= 0;
+
+                Assert.IsTrue(offered || held,
+                              $"{subject} is in the enum, is not on the panel and is not held");
+                Assert.IsFalse(offered && held,
+                               $"{subject} is offered and held at once");
             }
         }
     }

@@ -285,13 +285,20 @@ def feature(sheet, paired=True):
             K.text(sheet, meta, cx + bw / 2 - 30 - 70, cy - ROW_HEIGHT / 2 + 36, 23,
                    fill=(255, 242, 214), outline=0, anchor="r")
 
-        # the streak's calendar or the event mark, on its own glow
+        # the streak's calendar or the season's crest, on its own glow.
+        #
+        # **The crest is `ic_season` at 148 and this drew `ic_stars` at 128**, which was the
+        # nearest thing on disk while `SeasonCrest` *generated* the picture — a ring of pips
+        # no mirror could reproduce, so this drew a stand-in and the one screen the crest is
+        # on could not be looked at. It is a bought sprite now (`make_season_crest.py`), so
+        # the mirror draws the sprite: `SeasonCrest.PaintCrest` sizes it to the 148-unit host
+        # with `preserveAspect`, which is what `K.fit` is.
         gx = cx - bw / 2 + 115
         K.paste(sheet, K.glow(200, 2.0, K.SUN if icon else K.BLOOM, .30), gx, cy + 4)
-        art = "ic_streak" if icon else "ic_stars"
+        art = "ic_streak" if icon else "ic_season"
         try:
             mark = Image.open(K.UI / f"{art}.png").convert("RGBA")
-            K.paste(sheet, K.fit(mark, (130, 130) if icon else (128, 128)), gx, cy + 4)
+            K.paste(sheet, K.fit(mark, (130, 130) if icon else (148, 148)), gx, cy + 4)
         except FileNotFoundError:
             pass
 

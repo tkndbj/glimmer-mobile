@@ -213,7 +213,9 @@ const save = {
     // because a season id is content and a Firestore field name is not.
     eventsSeeded: { booleanValue: true },
     events: { arrayValue: { values: [
-      { mapValue: { fields: { id: { stringValue: "first_watch" },
+      // A *cycle* id rather than the manifest's stem: the shipped season repeats, so
+      // `watch` names no season and `watch_0000` is the first one (`SeasonCycle`).
+      { mapValue: { fields: { id: { stringValue: "watch_0000" },
                               marks: { integerValue: "62" },
                               collectedGoal: { integerValue: "55" },
                               premiumGoal: { integerValue: "40" } } } },
@@ -693,6 +695,31 @@ console.log("task chests");
 // The published slate, read live for the reason the streak's ladder is: the suite signs in
 // as a fresh account and hard-codes nothing the catalog decides — and a task chest cannot
 // be read as a flat amount, so it is re-rolled with the server's own compiled roller.
+//: One decoder for the published document, used by the tasks block and by the season's.
+//: Lifted out of the tasks IIFE when the season came to need it: two copies of a Firestore
+//: value decoder is two places one of them stops understanding a type.
+const decodeFirestore = (v) => {
+  if (v.integerValue !== undefined) return Number(v.integerValue);
+  if (v.doubleValue !== undefined) return Number(v.doubleValue);
+  if (v.stringValue !== undefined) return v.stringValue;
+  if (v.booleanValue !== undefined) return v.booleanValue;
+  if (v.arrayValue) return (v.arrayValue.values ?? []).map(decodeFirestore);
+  if (v.mapValue) {
+    return Object.fromEntries(
+      Object.entries(v.mapValue.fields ?? {}).map(([k, x]) => [k, decodeFirestore(x)]));
+  }
+  return null;
+};
+
+//: The published seasons, read live for the reason everything else here is: the suite hard-
+//: codes nothing the catalog decides, and a repeating season's ids are not in the catalog at
+//: all - they are derived from its window.
+const publishedSeasons = await (async () => {
+  const body = await publishedConfig.clone().json().catch(() => null);
+  const values = body?.fields?.events?.arrayValue?.values;
+  return Array.isArray(values) ? values.map(decodeFirestore) : [];
+})();
+
 const taskConfig = await (async () => {
   const body = await publishedConfig.clone().json().catch(() => null);
   const fields = body?.fields?.tasks?.mapValue?.fields;
@@ -763,6 +790,80 @@ if (taskConfig) {
   });
   check(rejectedBy(future.body).includes(`task:weekly:${weekOfDay(today) + 5}:${taskConfig.weekly[0].id}:gems`),
         "a chest dated weeks ahead is refused");
+
+  // ---------------------------------------------------------------- the season
+  // **The one thing that proves the deployment understands a repeating season.** The ladder
+  // is derived from the clock on both sides now (`SeasonCycle`), so the server is asked for a
+  // season id that appears in no published list — and every gate that can run offline reads a
+  // mirror rather than the deployed function. A deployment that has not been redeployed
+  // answers `unknown` here, pays nothing, and looks exactly like a network hiccup.
+  const { usableSeason, seasonCycleIndex, rollMarkChest } = await import(
+    pathToFileURL(join(here, "..", "functions", "lib", "season.js")).href);
+
+  const cycleEntry = publishedSeasons.find((e) => e && e.repeats);
+
+  if (!cycleEntry) {
+    check(false, "the published season repeats",
+          "config/progression holds no repeating season; re-seed before trusting this");
+  } else {
+    const nowUnix = Math.floor(Date.now() / 1000);
+    const period = cycleEntry.endUnix - cycleEntry.startUnix;
+    const index = Math.max(0, Math.floor((nowUnix - cycleEntry.startUnix) / period));
+    const seasonId = `${cycleEntry.id}_${String(index).padStart(4, "0")}`;
+
+    check(seasonCycleIndex(cycleEntry.id, seasonId) === index,
+          "the live cycle's id round-trips", seasonId);
+
+    const live = usableSeason({ events: publishedSeasons }, seasonId, nowUnix);
+    check(!!live && live.milestones.length > 0,
+          "the deployment can price a cycle that appears in no published list", seasonId);
+
+    const rung = live.milestones[0];
+    const markClaim = (id, track, goal, currency) => ({
+      id: `mark:${id}:${track}:${goal}:${currency}`,
+      claimedAmount: 1, unix: 1700000005, reason: "season_rung",
+    });
+
+    const tier = taskConfig.tiers.find((t) => t.id === rung.tier);
+    const owed = rollMarkChest(tier.chest, uid, seasonId, "free", rung.goal)
+      .filter((d) => d.kind === "credits").reduce((sum, d) => sum + d.amount, 0);
+
+    const was = creditsOf(future.body)?.grantedBaseline ?? 0;
+    const paidRung = await call("claimAwards",
+                                { awards: [markClaim(seasonId, "free", rung.goal, "credits")] });
+
+    check(creditsOf(paidRung.body)?.grantedBaseline === was + owed,
+          "a season rung pays the server's own roll of its chest",
+          `credits ${was} -> ${creditsOf(paidRung.body)?.grantedBaseline}, expected +${owed}`);
+
+    const twice = await call("claimAwards",
+                             { awards: [markClaim(seasonId, "free", rung.goal, "credits")] });
+    check(creditsOf(twice.body)?.grantedBaseline === was + owed,
+          "and the grant log pays it exactly once, which is the whole bound");
+
+    // The paid column without the purchase is refused for good: no content push will ever
+    // make an unpaid account paid (invariant 13a, the other direction).
+    const unpaid = await call("claimAwards",
+                              { awards: [markClaim(seasonId, "pass", rung.goal, "credits")] });
+    check(rejectedBy(unpaid.body).includes(`mark:${seasonId}:pass:${rung.goal}:credits`),
+          "the pass column without the pass is refused rather than left pending");
+
+    // **The bound.** A cycle that has not opened does not exist, so a forged far-future id
+    // pays nothing — and is left *unconfirmed* rather than refused, because it stops being
+    // early on its own.
+    const forged = `${cycleEntry.id}_9999`;
+    const ahead = await call("claimAwards",
+                             { awards: [markClaim(forged, "free", rung.goal, "credits")] });
+    check(creditsOf(ahead.body)?.grantedBaseline === was + owed &&
+          !rejectedBy(ahead.body).includes(`mark:${forged}:free:${rung.goal}:credits`),
+          "a cycle that has not opened pays nothing and is left unconfirmed", forged);
+
+    // And the stem alone names no season at all.
+    const stem = await call("claimAwards",
+                            { awards: [markClaim(cycleEntry.id, "free", rung.goal, "credits")] });
+    check(creditsOf(stem.body)?.grantedBaseline === was + owed,
+          "the stem alone names no season, so it pays nothing");
+  }
 
 }
 
@@ -1065,6 +1166,30 @@ if (cheapest) {
   check(legacyScore === price,
         "a v19 save reads as one bundle, so it scores exactly what it used to",
         `${legacyScore} against ${price}`);
+
+  // **A card always names a home, and it is one this deployment's own catalog knows.**
+  //
+  // What this is for is a seed the client has outgrown. The home a card draws is derived
+  // server-side from `config/grove`'s `dwellings` map, and the visiting client then looks that
+  // id up in the catalog it shipped with: a rung renamed in `homestead.json` and not re-seeded
+  // publishes an id nothing can resolve, and a `dwellings` map that never made it into the seed
+  // at all publishes the empty string. Both draw *no house* on every visitor's screen, and both
+  // are invisible to every other gate here — the score is right, the arrangement is right, the
+  // write succeeds and the document is well formed.
+  //
+  // It is asked over the three writes above rather than once, because those are the three
+  // shapes a real save arrives in (stock, larger stock, v19 mirror) and the home is derived
+  // from the same rows the score is. That is the half worth checking live; whether the *best*
+  // rung wins is arithmetic over a fixed catalog, which `functions/test/grove.mjs` pins on both
+  // sides of the keeper gate and which this throwaway account cannot reach in any case.
+  const homed = await (await fetch(`${FS}/groves/${uid}`, { headers: bearer })).json();
+  const drawn = homed?.fields?.dwelling?.stringValue ?? "";
+  const rungs = Object.keys(groveConfig?.fields?.dwellings?.mapValue?.fields ?? {});
+
+  check(rungs.length > 0, "the published catalog names a home ladder", String(rungs.length));
+  check(drawn.length > 0 && rungs.includes(drawn),
+        "a published card names a home the published catalog knows",
+        `drew ${JSON.stringify(drawn)} against ${rungs.join(", ")}`);
 }
 
 

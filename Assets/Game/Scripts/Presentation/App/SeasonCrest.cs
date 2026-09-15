@@ -20,9 +20,13 @@ namespace GlimmerGrove
     /// overload that reads fine to whoever wrote it and to nobody else.
     /// </para>
     /// <para>
-    /// Crests are generated rather than painted wherever they can be, for the reason
-    /// <see cref="Art.Gem"/> gives — nothing to register, nothing to scope, and no frame
-    /// where the box shows a white rectangle because the art had not arrived.
+    /// <b>The live crest is a bought sprite and the generated ones are what is left.</b> A
+    /// generated emblem costs nothing to register and nothing to scope, which is <see
+    /// cref="Art.Gem"/>'s bargain and is why the rest of this file draws rather than loads —
+    /// and it buys a picture nobody drew. The crest a season actually wears is on the first
+    /// screen after the splash and on a page selling a pass, so it is cut from the interface
+    /// kit like every other surface either screen is made of; <see cref="Watch"/> records what
+    /// that cost and what it bought.
     /// </para>
     /// </summary>
     public static class SeasonCrest
@@ -35,11 +39,15 @@ namespace GlimmerGrove
         public const string Bloom = "bloom";
 
         /// <summary>
-        /// A ring of tally marks that lights round as the ladder is climbed.
+        /// The crown, which is what the keeper's season wears.
         ///
-        /// What the keeper's season wears, and the reason it exists rather than the flower:
-        /// the unit is a <em>mark</em>, so the crest that counts them is the one picture on
-        /// the page that says what the number beside it means without a caption.
+        /// <para>
+        /// <b>The string is permanent and the picture behind it is not.</b> A manifest names a
+        /// crest, so this name is content that has shipped; what it <em>looks like</em> is a
+        /// decision this file owns and has already changed once — it was a ring of twelve pips
+        /// filling clockwise, and the owner rejected it on sight. Re-pointing a crest costs
+        /// nothing and renaming one is a content push, so the name stays.
+        /// </para>
         /// </summary>
         public const string Watch = "watch";
 
@@ -62,7 +70,7 @@ namespace GlimmerGrove
             switch (icon)
             {
                 case Bloom: PaintBloom(host, size, tint, progress01); return;
-                case Watch: PaintWatch(host, size, tint, progress01); return;
+                case Watch: PaintCrest(host, size); return;
                 default: PaintStars(host, size, tint); return;
             }
         }
@@ -110,68 +118,41 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// A ring of twelve tally marks, lighting clockwise from the top, round a core that
-        /// grows with the track.
+        /// The crown, drawn from `Ui/ic_season` and nothing else.
         ///
         /// <para>
-        /// <b>Twelve rather than one per rung.</b> A forty-rung season would put forty pips
-        /// on a 150-unit disc — measured, they touch — and a ring nobody can count is a
-        /// texture rather than a tally. Twelve reads at a glance and divides the ladder into
-        /// something a player can say out loud ("three round"), which is the same argument
-        /// the hub's own bar makes for pipping every fifth rung rather than every one.
+        /// <b>A bought sprite rather than a generated shape, and the owner rejected the
+        /// generated one on sight.</b> What stood here was a dark band carrying twelve pips
+        /// that lit clockwise round a growing core — every part of it real, correct, and drawn
+        /// by nobody, which beside a card cut from a licensed kit reads as a placeholder
+        /// (invariant 49h, which the update wall's mark paid for first). It is cut by
+        /// `Tools/make_season_crest.py`, out of the same kit every plate on both screens is cut
+        /// from, and that tool records why a crown rather than any of the shields, stars and
+        /// badges it was surveyed against.
         /// </para>
         /// <para>
-        /// The lit ones are ceilinged rather than rounded, so the first mark a player earns
-        /// lights one immediately: a crest that stays dark through the first three rungs is
-        /// a crest that reads as broken before it reads as empty.
+        /// <b>It ignores both arguments, and only one of those is free.</b> The tint is a
+        /// painted piece's own — a colour multiply over a gold crown on a violet plate gives a
+        /// muddy one, which is `FeatureCard`'s finding said about an emblem instead of a plate.
+        /// The progress is the real trade: the pips filled as the ladder filled, which the
+        /// crown cannot do. What buys it back is that <em>both</em> callers already print the
+        /// count and draw a bar directly under the crest, so the reading was being made twice
+        /// and only one of the two was drawn by an artist. A crest says which season this is;
+        /// the bar says how far through it the player is. The other shape — a crest lit as the
+        /// track fills — is what invariant 37m refuses from the other end: it is dim on the
+        /// first frame of every season anybody opens.
+        /// </para>
+        /// <para>
+        /// <c>preserveAspect</c> is not optional. The crown is wider than it is tall and the
+        /// sprite is square with symmetric margin, so it is the right picture in a square box
+        /// and a squashed one without.
         /// </para>
         /// </summary>
-        static void PaintWatch(RectTransform host, float size, Color tint, float progress01)
+        static void PaintCrest(RectTransform host, float size)
         {
-            const int Marks = 12;
-
-            float done = Mathf.Clamp01(progress01);
-            int lit = done <= 0f ? 0 : Mathf.Clamp(Mathf.CeilToInt(done * Marks), 1, Marks);
-
-            // The ring the marks sit on, dark, so an unlit pip reads as a place for one
-            // rather than as an absence.
-            UIKit.Img("Band", host, Art.Ring(128, 9f), new Color(.06f, .10f, .16f, .85f),
-                      Vector2.one * size, new Vector2(.5f, .5f), Vector2.zero);
-
-            float radius = size * .40f;
-            float pip = size * .13f;
-
-            for (int i = 0; i < Marks; i++)
-            {
-                // Clockwise from the top, which is the only direction a dial may fill.
-                float angle = Mathf.PI * .5f - i * (Mathf.PI * 2f / Marks);
-                var at = new Vector2(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius);
-
-                bool on = i < lit;
-
-                if (on)
-                {
-                    UIKit.Img("G" + i, host, Art.Glow(64, 2f), Pal.A(tint, .55f),
-                              Vector2.one * (pip * 2.2f), new Vector2(.5f, .5f), at);
-                }
-
-                UIKit.Img("M" + i, host, Art.Disc(64),
-                          on ? Pal.A(Color.Lerp(tint, Color.white, .30f), 1f)
-                             : new Color(.26f, .32f, .40f, .92f),
-                          Vector2.one * pip, new Vector2(.5f, .5f), at);
-            }
-
-            // The core, growing with the track rather than sitting at a fixed size — a full
-            // crest and an empty one differ in more than which pips are lit.
-            float core = size * .26f * (.34f + .66f * done);
-
-            UIKit.Img("Core", host, Art.Glow(96, 2f), Pal.A(Pal.Sun, .40f),
-                      Vector2.one * (core * 2.1f), new Vector2(.5f, .5f), Vector2.zero);
-            UIKit.Img("Eye", host, Art.Disc(64), Pal.Sun,
-                      Vector2.one * core, new Vector2(.5f, .5f), Vector2.zero);
-            UIKit.Img("Gloss", host, Art.Disc(32), new Color(1f, 1f, 1f, .55f),
-                      Vector2.one * (core * .40f), new Vector2(.5f, .5f),
-                      new Vector2(-core * .17f, core * .17f));
+            var img = UIKit.Img("Crest", host, Art.S("Ui/ic_season"), Color.white,
+                                Vector2.one * size, new Vector2(.5f, .5f), Vector2.zero);
+            img.preserveAspect = true;
         }
 
         /// <summary>The crest every season wore before there were any: a tinted trio of stars.</summary>

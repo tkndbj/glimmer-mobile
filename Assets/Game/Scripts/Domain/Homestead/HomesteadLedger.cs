@@ -740,15 +740,10 @@ namespace GlimmerGrove.Homestead
 
         internal static void WriteInto(SaveFileDto dto)
         {
-            var rows = _stock.Write();
-
-            dto.homesteadStock = rows;
-
-            // The v19 section, derived rather than kept — see GroveStock.Mirror. It is never
-            // read back while the stock section has anything in it, so it cannot re-grant what
-            // a player has spent, and it is what lets a rolled-back client and a not-yet-
-            // redeployed server both keep working.
-            dto.homesteadOwned = GroveStock.Mirror(rows);
+            // Both halves in one call, and never the two fields by hand — the v19 mirror is
+            // derived from these rows and a writer that sets one without the other is the fault
+            // GroveStock.Record was written to make unrepresentable. See it for what that cost.
+            GroveStock.Record(dto, _stock.Write());
         }
 
         /// <summary>

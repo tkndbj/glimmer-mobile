@@ -12,11 +12,14 @@
     "map1_strip4",
     "map1_strip5"
   ],
+  "teaserX": 0.333,
+  "teaserAfloat": true,
   "levels": [
     {
       "id": "f01_first_fall",
-      "mapX": 0.7,
-      "mapY": 0.055,
+      "mapX": 0.325,
+      "mapY": 0.017,
+      "afloat": true,
       "budgetFactor": -1.0,
       "fall": {
         "width": 4,
@@ -34,8 +37,9 @@
     },
     {
       "id": "f01_two_lights",
-      "mapX": 0.28,
-      "mapY": 0.14,
+      "mapX": 0.586,
+      "mapY": 0.119,
+      "afloat": true,
       "backdrop": "sky_01",
       "fall": {
         "width": 4,
@@ -53,8 +57,9 @@
     },
     {
       "id": "f01_the_kindling",
-      "mapX": 0.74,
-      "mapY": 0.225,
+      "mapX": 0.781,
+      "mapY": 0.194,
+      "afloat": true,
       "backdrop": "sky_02",
       "fall": {
         "width": 5,
@@ -73,8 +78,9 @@
     },
     {
       "id": "f01_narrow_water",
-      "mapX": 0.3,
-      "mapY": 0.31,
+      "mapX": 0.659,
+      "mapY": 0.291,
+      "afloat": true,
       "backdrop": "sky_03",
       "fall": {
         "width": 5,
@@ -94,8 +100,9 @@
     },
     {
       "id": "f01_the_stack",
-      "mapX": 0.72,
-      "mapY": 0.395,
+      "mapX": 0.658,
+      "mapY": 0.409,
+      "afloat": false,
       "backdrop": "sky_04",
       "fall": {
         "width": 5,
@@ -114,8 +121,9 @@
     },
     {
       "id": "f01_deep_cistern",
-      "mapX": 0.26,
-      "mapY": 0.48,
+      "mapX": 0.611,
+      "mapY": 0.489,
+      "afloat": false,
       "backdrop": "sky_05",
       "fall": {
         "width": 6,
@@ -136,7 +144,8 @@
     {
       "id": "f01_brimming",
       "mapX": 0.7,
-      "mapY": 0.56,
+      "mapY": 0.608,
+      "afloat": true,
       "backdrop": "sky_06",
       "fall": {
         "width": 6,
@@ -156,8 +165,9 @@
     },
     {
       "id": "f01_the_undertow",
-      "mapX": 0.32,
-      "mapY": 0.645,
+      "mapX": 0.284,
+      "mapY": 0.716,
+      "afloat": false,
       "backdrop": "sky_07",
       "fall": {
         "width": 6,
@@ -178,8 +188,9 @@
     },
     {
       "id": "f01_last_ember",
-      "mapX": 0.74,
-      "mapY": 0.73,
+      "mapX": 0.578,
+      "mapY": 0.79,
+      "afloat": false,
       "backdrop": "sky_08",
       "fall": {
         "width": 6,
@@ -200,8 +211,9 @@
     },
     {
       "id": "f01_the_deep_well",
-      "mapX": 0.28,
-      "mapY": 0.815,
+      "mapX": 0.689,
+      "mapY": 0.868,
+      "afloat": false,
       "backdrop": "sky_09",
       "fall": {
         "width": 6,

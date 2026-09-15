@@ -224,7 +224,13 @@ namespace GlimmerGrove
                 BuildWatchCard();
                 BuildCompanionCard();
                 BuildLineCard();
-                BuildGroveCard();
+
+                // **The grove card is held**, with the feature it was a door into. It carried
+                // the piece count, when the picture was taken and the key into their
+                // grovement, and all three are about a thing this build does not draw. The
+                // stack is a cursor rather than a table of positions, so a card being absent
+                // costs nothing and adding it back is one call (`BuildGroveCard`, deleted with
+                // it — the history is the copy).
             }
 
             _stack.sizeDelta = new Vector2(0f, -_cursor + Gap);
@@ -309,9 +315,15 @@ namespace GlimmerGrove
                              new Vector2(84f, 60f), new Vector2(.5f, .5f), Vector2.zero,
                              outline: 0f, shadow: 0f), 22);
 
-            // The four lines beside it, stacked from the card's own top edge so the column
+            // The two lines beside it, stacked from the card's own top edge so the column
             // and the portrait are measured against one thing rather than against each other.
-            const float NameY = 104f, RibbonY = 30f, WorthY = -40f, StarY = -96f;
+            //
+            // **It was four and the bottom two were the grove's** — what it is worth and the
+            // stars that buys — so they are held with it. The remaining pair is re-centred
+            // rather than left where it was: a column that keeps its old coordinates after
+            // losing its lower half is a card whose contents have quietly climbed into its top
+            // third, beside a portrait that still fills the whole of it.
+            const float NameY = 44f, RibbonY = -42f;
 
             UIKit.Shrinkable(
                 UIKit.Titled("Name", card, _card.Name, 50, Pal.Cream, TextAnchor.MiddleLeft,
@@ -327,25 +339,6 @@ namespace GlimmerGrove
                              new Vector2(340f, 50f), new Vector2(.5f, .5f), Vector2.zero,
                              outline: 0f, shadow: 2f), 20);
 
-            // What their grove is worth and the stars it earns — the two figures a board ranks
-            // them on, printed here because this screen is reached from a row that showed one of
-            // them and from a grove that shows the other.
-            UIKit.Shrinkable(
-                UIKit.Titled("Worth", card,
-                             Loc.Format("ui.profile.public_worth", Compact.Number(_card.Score)),
-                             28, Pal.Gold, TextAnchor.MiddleLeft, new Vector2(560f, 40f),
-                             new Vector2(.5f, .5f), new Vector2(160f, WorthY), 3f, 2f), 19);
-
-            // **A row is centred on its position**, so one meant to begin under the text above
-            // it is pushed out by half its own width — `Spacing * (rungs - 1) / 2`, and the
-            // spacing rather than the star's own size, which is the number that decides where
-            // the outermost star lands.
-            const float StarSize = 34f, StarStep = 40f;
-
-            int rungs = Mathf.Max(1, Homestead.HomesteadCatalog.Current.Scores.StarCount);
-            StarRow.Create(card, new Vector2(.5f, .5f),
-                           new Vector2(160f + StarStep * (rungs - 1) * .5f, StarY),
-                           StarSize, StarStep, Mathf.Min(_card.Stars, rungs), false, rungs);
         }
 
         // ------------------------------------------------------- the Endless Watch
@@ -586,59 +579,6 @@ namespace GlimmerGrove
                 _bodies[i].sprite = sprite;
                 _bodies[i].enabled = sprite != null;
             }
-        }
-
-        // ------------------------------------------------------------- the grove
-        /// <summary>
-        /// The door to their grovement, and when the picture behind it was taken.
-        ///
-        /// <b>The age is said here as well as on the grove itself</b>, and for the grove's
-        /// reason: everything on this screen comes off a card the server rebuilt the last time
-        /// its owner synced, so it is never "now" — and a visitor with no way to tell cannot
-        /// separate "this keeper has not played since Tuesday" from "this game is showing me the
-        /// wrong profile". The second reading is the expensive one.
-        /// </summary>
-        void BuildGroveCard()
-        {
-            // The same column arithmetic as the watch card, and the same reason for it.
-            const float TextLeft = 104f, TextW = 520f;
-            const float TextX = TextLeft + TextW * .5f;
-
-            // And the button, which is anchored to the *right* edge: a control positioned at
-            // its own centre has to be pulled in by half its width or half of it is drawn past
-            // the card. This one was, by 66 units.
-            const float VisitW = 340f, VisitInset = 104f;
-
-            var card = Section("Grove", 258f, 4);
-            CardTitle(card, "ui.grove.title");
-
-            UIKit.Shrinkable(
-                UIKit.Titled("Count", card,
-                             Loc.Format("ui.profile.public_pieces", _card.OccupiedCount,
-                                        _card.VarietyCount),
-                             28, new Color(1f, .96f, .88f, .78f), TextAnchor.MiddleLeft,
-                             new Vector2(TextW, 40f), new Vector2(0f, .5f),
-                             new Vector2(TextX, 22f), 3f, 2f), 19);
-
-            string when = Since.Describe(_card.PublishedUnix, SaveSchema.NowUnix());
-            if (when.Length > 0)
-            {
-                UIKit.Shrinkable(
-                    UIKit.Titled("Age", card, Loc.Format("ui.visit.updated", when), 22,
-                                 new Color(1f, .96f, .88f, .55f), TextAnchor.MiddleLeft,
-                                 new Vector2(TextW, 32f), new Vector2(0f, .5f),
-                                 new Vector2(TextX, -20f), 2f, 0f), 15);
-            }
-
-            var button = UIKit.TextButton("Visit", card, "btn_green",
-                                          Loc.Get("ui.keeper.see_grove"), 32,
-                                          new Vector2(VisitW, 104f), new Vector2(1f, .5f),
-                                          new Vector2(-(VisitInset + VisitW * .5f), 0f),
-                                          () => Flow.Go<GroveVisitScreen>(
-                                              v => v.Visit(_ownerId, _card.Name)),
-                                          "ic_nav_grove");
-            UIKit.Shrinkable(button.Label, 20);
-            UIKit.FitLabel(button);
         }
 
         // ---------------------------------------------------------------- header

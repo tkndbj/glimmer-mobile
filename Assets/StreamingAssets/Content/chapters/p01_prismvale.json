@@ -12,11 +12,14 @@
   "map1_strip4",
   "map1_strip5"
  ],
+ "teaserX": 0.333,
+ "teaserAfloat": true,
  "levels": [
   {
    "id": "p01_firstvein",
-   "mapX": 0.7,
-   "mapY": 0.055,
+   "mapX": 0.325,
+   "mapY": 0.017,
+   "afloat": true,
    "budgetFactor": -1.0,
    "backdrop": "sky_00",
    "prism": {
@@ -34,8 +37,9 @@
   },
   {
    "id": "p01_twinlight",
-   "mapX": 0.28,
-   "mapY": 0.14,
+   "mapX": 0.586,
+   "mapY": 0.119,
+   "afloat": true,
    "backdrop": "sky_01",
    "prism": {
     "width": 6,

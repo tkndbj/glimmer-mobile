@@ -53,26 +53,90 @@ PER_CHAPTER = 10
 BLOCKS = 4
 
 
-#: Where a chapter's ten nodes stand, as fractions of its own map. One layout for every
-#: chapter of every mode, because the art already is (above) and because seven copies of
-#: this table in seven generators had drifted apart - the Mill Vale and the Deep Well drew
-#: the same four-strip map with two different spacings.
+#: Which side of the map each rung of a chapter **prefers**, and nothing more.
 #:
-#: The shape: odd glades on the right, even on the left, so consecutive nodes are always on
-#: opposite sides - and **the tenth glade on the left**, because the end-of-chapter marker
-#: sits on the right (`ChapterMap.TeaserX`, 0.66, which no chapter overrides any more). Every
-#: mode's first chapter shipped the other way round, marker straight above the tenth glade,
-#: and the marker's name plate sat on that glade's standing mark - the record and rank a
-#: cleared glade draws above its disc - which the disc-distance check could not see. The ninth
-#: glade is on the marker's side, so it has to sit at least 529 canvas units below it (the
-#: mark's 302 plus the plate's 227): that is what the four-strip column's 0.73 is for, and why
-#: the rows differ by strip count at all. `ChapterMap.Overshadows` is the rule and
-#: `Tools/verify/content.py` proves every chapter against it.
+#: This used to be half of a table that decided where every node in the game stood: odd glades
+#: on the right, even on the left, at ten heights spaced down the map. It was the right shape
+#: for a node standing on a **perch** - a floating island tile with a shadow under it, which
+#: brings its own ground and so does not care what the painting has underneath. It is the
+#: wrong shape for a node standing on the painting, and every one of the four paintings said
+#: so: the serpentine put glades in a river, on a rooftop, in a lake and off a cliff.
+#:
+#: So where a node stands is now read off the picture (`SEATS`), and this survives as what the
+#: search aims at when the ground gives it a choice - which is most of the time, because all
+#: four paintings wind from side to side anyway.
 XS = (0.70, 0.28, 0.74, 0.30, 0.72, 0.26, 0.70, 0.32, 0.74, 0.28)
-YS = {
-    6: (0.055, 0.140, 0.225, 0.310, 0.395, 0.480, 0.560, 0.645, 0.730, 0.815),
-    5: (0.060, 0.145, 0.225, 0.305, 0.390, 0.475, 0.555, 0.640, 0.725, 0.815),
-    4: (0.065, 0.145, 0.220, 0.300, 0.390, 0.485, 0.560, 0.650, 0.730, 0.830),
+
+#: Where a chapter's ten nodes stand on each map, as fractions of that map.
+#:
+#: **Generated, never typed** - `python Tools/make_map_seats.py --write` finds the ground each
+#: painting draws and seats the chain on it, and `--check` proves this table is still what it
+#: finds. One layout per *map* rather than per chapter, which is the same bargain the art
+#: itself makes (above): every mode's first chapter draws `map1`, so every mode's first
+#: chapter stands its glades in the same ten places, and a chapter published next year costs
+#: no art and no coordinates.
+#:
+#: Keyed by map rather than by strip count, which is the one thing that changed shape here.
+#: The old table was keyed by strip count because the spacing was arithmetic and only the
+#: height of the map could affect it; these are facts about four particular pictures, and two
+#: paintings cut into six strips have nothing else in common.
+SEATS = {
+    1: (
+        (0.325, 0.017, True),
+        (0.586, 0.119, True),
+        (0.781, 0.194, True),
+        (0.659, 0.291, True),
+        (0.658, 0.409, False),
+        (0.611, 0.489, False),
+        (0.700, 0.608, True),
+        (0.284, 0.716, False),
+        (0.578, 0.790, False),
+        (0.689, 0.868, False),
+    ),
+    2: (
+        (0.700, 0.061, False),
+        (0.280, 0.143, False),
+        (0.740, 0.218, False),
+        (0.207, 0.294, False),
+        (0.620, 0.372, False),
+        (0.260, 0.472, False),
+        (0.790, 0.549, False),
+        (0.401, 0.627, False),
+        (0.740, 0.739, False),
+        (0.280, 0.819, False),
+    ),
+    3: (
+        (0.700, 0.076, False),
+        (0.281, 0.181, False),
+        (0.740, 0.258, False),
+        (0.209, 0.334, False),
+        (0.720, 0.392, False),
+        (0.195, 0.494, False),
+        (0.700, 0.560, False),
+        (0.224, 0.644, False),
+        (0.796, 0.744, False),
+        (0.280, 0.825, False),
+    ),
+    4: (
+        (0.375, 0.055, False),
+        (0.428, 0.166, False),
+        (0.655, 0.249, False),
+        (0.520, 0.332, False),
+        (0.380, 0.453, False),
+        (0.450, 0.603, False),
+        (0.680, 0.678, False),
+        (0.290, 0.750, False),
+        (0.732, 0.806, False),
+        (0.356, 0.833, False),
+    ),
+}
+
+#: Where the end-of-chapter marker stands on each map, found the same way.
+MARKERS = {
+    1: (0.333, 0.903, True),
+    2: (0.660, 0.854, False),
+    3: (0.826, 0.883, False),
+    4: (0.712, 0.903, False),
 }
 
 
@@ -83,15 +147,42 @@ def ordinal_of(chapter_id, mode_chapters):
 
 def strips(ordinal):
     """The map strips a chapter at this ordinal draws, bottom to top."""
-    which = (ordinal - 1) % len(STRIPS) + 1
+    which = map_of(ordinal)
     return ["map%d_strip%d" % (which, i) for i in range(STRIPS[which])]
 
 
+def map_of(ordinal):
+    """Which of the four paintings a chapter at this ordinal draws."""
+    return (ordinal - 1) % len(STRIPS) + 1
+
+
 def places(ordinal):
-    """Where a chapter at this ordinal stands its ten nodes: (mapX, mapY) in play order."""
-    which = (ordinal - 1) % len(STRIPS) + 1
-    ys = YS[STRIPS[which]]
-    return [(XS[i], ys[i]) for i in range(PER_CHAPTER)]
+    """
+    Where a chapter at this ordinal stands its ten nodes, in play order.
+
+    Each is `(mapX, mapY, afloat)`. **`afloat` is the one thing a seat carries that is not a
+    coordinate**: `map1` is an archipelago and half its chain stands on the current the
+    painting draws between the islands, so those nodes get a floating tile back under them
+    while the ones on its island paths do not. It is false on every road map.
+    """
+    return list(SEATS[map_of(ordinal)])
+
+
+def marker(ordinal):
+    """
+    Where the end-of-chapter marker stands, as a chapter's `teaserX`.
+
+    Only the x is ours: the marker's height is derived by `ChapterMap.TeaserPosition` from the
+    highest glade, and `ChapterDefinition` gives a chapter no way to author it. So this is the
+    one number a body carries about it, and `make_map_seats.py` finds it at exactly the height
+    the game will draw it at.
+    """
+    return MARKERS[map_of(ordinal)][0]
+
+
+def marker_afloat(ordinal):
+    """Whether the end-of-chapter marker stands on a floating tile. See `places`."""
+    return MARKERS[map_of(ordinal)][2]
 
 
 #: The worlds a mode can be set in, and the family of backdrops each one draws.

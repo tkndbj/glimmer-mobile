@@ -10,7 +10,7 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// Where every keeper stands: two boards, and the two ways into somebody else's game.
+    /// Where every keeper stands: one board, and the two ways into somebody else's game.
     ///
     /// <para>
     /// <b>The list is the screen.</b> The player's own standing used to be drawn above it in a
@@ -20,19 +20,23 @@ namespace GlimmerGrove
     /// a header the player scrolls past to reach the thing they came for.
     /// </para>
     /// <para>
-    /// <b>Two boards, and they are the game's two ladders.</b> The finest groves anywhere —
-    /// what a keeper has <em>built</em> — and the Endless Watch, which is how far anybody has
-    /// held the line on the Infinite lane (invariant 43). They are the two things this game
-    /// keeps a permanent number for, and each is one published document a day however many
-    /// people are playing.
+    /// <b>One board, and the tabs went with the other one.</b> The Endless Watch is how far
+    /// anybody has held the line on the Infinite lane (invariant 43). The finest groves — what
+    /// a keeper has <em>built</em> — is <b>held</b> while the Grovement is rebuilt, and a hold
+    /// is drawn by taking the board away rather than by greying a tab: a tab that cannot be
+    /// tapped is the broken button invariant 16o refuses, and a lone tab is a caption wearing a
+    /// control's clothes. <b>Nothing server-side moved</b> — <c>LeaderboardBoard.Global</c> is
+    /// still a live id and <c>BOARD_IDS</c> still names it, so the document goes on being
+    /// written and is never pruned (invariant 19k), and putting the board back is this screen
+    /// alone. A board id that had been <em>spent</em> could not come back at all.
     /// </para>
     /// <para>
-    /// <b>What used to stand where the second tab is was MY LEAGUE, and it is gone.</b> Nine
-    /// more boards, nine queries and nine counts a night bought a second cut of the <em>same</em>
-    /// number the first tab is ordered on, into bands nothing in the game ever named — and
-    /// "where do I stand" was already answered exactly by the published distribution
-    /// (<see cref="GroveRanks"/>, invariant 19c), which is what the profile prints. A tab is
-    /// worth having when it answers a question the other tab cannot.
+    /// <b>What used to stand where the second tab was is MY LEAGUE, and it is gone for good.</b>
+    /// Nine more boards, nine queries and nine counts a night bought a second cut of the
+    /// <em>same</em> number the global board is ordered on, into bands nothing in the game ever
+    /// named — and "where do I stand" was already answered exactly by the published
+    /// distribution (<see cref="GroveRanks"/>, invariant 19c), which is what the profile prints.
+    /// Those ids are spent; the global board's is not.
     /// </para>
     /// <para>
     /// What is still deliberately missing is a "keepers near you" list, which needs an exact
@@ -55,12 +59,12 @@ namespace GlimmerGrove
         AssetHold _portraits;
 
         /// <summary>
-        /// Everything above the list: the banner, the two tabs and the board caption. It was
-        /// 470 while the standing box stood between the banner and the tabs; removing that box
-        /// moves everything under it up by its own height, so this moves with them or the list
+        /// Everything above the list: the banner, and nothing else now. It was 470 while a
+        /// standing box stood under the banner and 312 while two board tabs did; each removal
+        /// moves everything below it up by its own height, so this moves with them or the list
         /// begins in a strip of empty sky.
         /// </summary>
-        const float HeaderHeight = 312f;
+        const float HeaderHeight = 208f;
         const float RowHeight = 132f;
 
         /// <summary>
@@ -70,13 +74,15 @@ namespace GlimmerGrove
         /// </summary>
         const float BottomPad = 24f;
 
-        /// <summary>Which board is being drawn. One of <see cref="LeaderboardBoard.All"/>.</summary>
+        /// <summary>
+        /// Which board is being drawn. One of <see cref="LeaderboardBoard.All"/>, and while the
+        /// finest groves are held it is always <see cref="LeaderboardBoard.Endless"/>.
+        /// </summary>
         string _boardId;
 
         RectTransform _viewport;
         GridView _grid;
         Text _empty;
-        Btn _globalTab, _endlessTab;
 
         LeaderboardBoard _board = LeaderboardBoard.None;
         bool _fetching;
@@ -87,11 +93,12 @@ namespace GlimmerGrove
             Scenery.Plain(Content);
             Fireflies.Spawn(Content, 14, new Color(1f, .93f, .70f), 6f, 20f);
 
-            // Finest groves by default, and deliberately: it is the board every account is
-            // eligible for the moment they buy anything, where the Endless Watch is a board a
-            // player has to have gone and played a lane to be on. Opening on a list somebody
-            // cannot be in is the wrong first impression of a screen about standing.
-            if (string.IsNullOrEmpty(_boardId)) _boardId = LeaderboardBoard.Global;
+            // The Endless Watch, because it is the only board on offer while the finest
+            // groves are held. It is a board a player has to have gone and played a lane to be
+            // on, which is the one thing holding the other cost: an account that has never run
+            // the Infinite lane opens on a list it cannot be in, and `PaintEmpty` is what keeps
+            // that honest rather than blank.
+            if (!Offered(_boardId)) _boardId = LeaderboardBoard.Endless;
 
             BuildList();
             BuildHeader();
@@ -122,8 +129,19 @@ namespace GlimmerGrove
         /// <summary>Opens straight onto a particular board. Used by nothing yet; kept for a deep link.</summary>
         public void ShowBoard(string boardId)
         {
-            if (LeaderboardBoard.IsKnown(boardId)) _boardId = boardId;
+            if (Offered(boardId)) _boardId = boardId;
         }
+
+        /// <summary>
+        /// Whether this screen will draw a board at all.
+        ///
+        /// Narrower than <see cref="LeaderboardBoard.IsKnown"/> on purpose, and named for its
+        /// narrowness (invariant 15a): the global board is still a perfectly valid id the server
+        /// still writes, and what has changed is only that nothing here offers it. A deep link
+        /// carrying it lands on the board this screen does draw rather than on a list with no
+        /// way off it.
+        /// </summary>
+        static bool Offered(string boardId) => LeaderboardBoard.IsEndless(boardId);
 
         // ------------------------------------------------------------------ header
         void BuildHeader()
@@ -146,77 +164,33 @@ namespace GlimmerGrove
 
             // Home, not the Grovement. This is a tab of its own now and can be reached from
             // the bar on any screen, so the one destination that is right however the player
-            // arrived is the way back — ShopScreen's rule, and the other four tabs are one
-            // tap away in the bar below regardless.
+            // arrived is the way back — ShopScreen's rule, and the other tabs are one tap
+            // away in the bar below regardless.
             UIKit.IconButton("Back", chrome, Skins.Nav, "ic_left", new Vector2(112f, 112f),
                              new Vector2(0f, 1f), new Vector2(92f, -104f),
                              () => Flow.Go<HomeScreen>());
 
-            // The caption that used to sit under the tabs is gone. It said how many keepers
-            // the board holds, which is a fact about the population rather than about the
-            // player's standing — and the rows themselves are what somebody came here to read.
-            BuildTabs(chrome);
-        }
+            // The corner opposite the way out, which is where every other page in this game
+            // keeps its explanation (the tasks page, the streak, the map, the loadout).
+            //
+            // **It is here because a board is a tally rather than a live reading**, and that
+            // is the one fact this screen cannot say by drawing itself: a keeper who has just
+            // spent thirty thousand credits and finds the list unmoved has two readings
+            // available, "the boards are broken" and "what I built did not count", and both
+            // are wrong. The panel is handed the board already in hand rather than fetching
+            // one, so it can name when *this* tally was taken without spending a read.
+            UIKit.IconButton("Info", chrome, Skins.Aside, "ic_info", new Vector2(112f, 112f),
+                             new Vector2(1f, 1f), new Vector2(-92f, -104f),
+                             () => { if (!Flow.HasModal) Flow.Modal<RanksInfoOverlay>(panel => panel.Board = _board); });
 
-        void BuildTabs(Transform chrome)
-        {
-            var size = new Vector2(300f, 88f);
-
-            _globalTab = UIKit.TextButton("Global", chrome, "btn_orange",
-                                          Loc.Get("ui.board.global"), 28, size,
-                                          new Vector2(.5f, 1f), new Vector2(-158f, -230f),
-                                          () => Select(LeaderboardBoard.Global));
-            UIKit.Shrinkable(_globalTab.Label, 18);
-            UIKit.FitLabel(_globalTab);
-
-            _endlessTab = UIKit.TextButton("Endless", chrome, Skins.Alternate,
-                                           Loc.Get("ui.board.endless"), 28, size,
-                                           new Vector2(.5f, 1f), new Vector2(158f, -230f),
-                                           () => Select(LeaderboardBoard.Endless));
-            UIKit.Shrinkable(_endlessTab.Label, 18);
-            UIKit.FitLabel(_endlessTab);
-
-            StyleTabs();
-        }
-
-        /// <summary>
-        /// Which tab is live, said with the skin the rest of the game already uses for "this
-        /// is the affirmative one". The plate is read off the button rather than held, because
-        /// a second reference to it is a second thing that can be pointed at the wrong object.
-        /// </summary>
-        void StyleTabs()
-        {
-            bool global = _boardId == LeaderboardBoard.Global;
-
-            Skin(_globalTab, global);
-            Skin(_endlessTab, !global);
-        }
-
-        static void Skin(Btn tab, bool live)
-        {
-            if (!tab) return;
-
-            // "Ui/" because a skin name is a name, not an address. `UIKit.TextButton` adds the
-            // folder for its callers, so the bare names in `Skins` only ever reach `Art.S`
-            // through it — and this is the one place that reached past it. Without the prefix
-            // there is no location for the key, so both tabs threw and then drew with **no
-            // sprite at all**, which is a white rectangle rather than a missing decoration
-            // (invariant 7b). `StreakScreen.Skin` writes it the same way.
-            var plate = tab.GetComponent<Image>();
-            if (plate) plate.sprite = Art.S("Ui/" + (live ? "btn_orange" : Skins.Alternate));
-        }
-
-        void Select(string boardId)
-        {
-            if (!LeaderboardBoard.IsKnown(boardId) || boardId == _boardId) return;
-
-            _boardId = boardId;
-            StyleTabs();
-
-            // No sound of its own. The tab is an ordinary Btn, so it has already spoken on
-            // the way down; a second cue on the way up is the stutter Btn.ClickSfx was
-            // consolidated to remove, heard here as one tap making two noises.
-            Fetch();
+            // **The board caption and the two tabs are both gone, and for two different
+            // reasons.** The caption said how many keepers the board holds, which is a fact
+            // about the population rather than about the player's standing. The tabs chose
+            // between two boards and there is one, so what they would draw now is a pair of
+            // plates of which one refuses and one re-enters the screen you are standing on —
+            // and a lone tab is a caption that looks like a control. The board this screen
+            // draws is named by the rows themselves (`Row.Bind` prints the figure it is
+            // ordered on) and by the info panel in the corner.
         }
 
         // -------------------------------------------------------------------- list
@@ -294,30 +268,27 @@ namespace GlimmerGrove
         /// Opens the keeper a row names.
         ///
         /// <para>
-        /// <b>A chooser rather than a destination, because a row leads to two places now.</b>
-        /// It used to walk straight into the grovement, which was the only thing there was to
-        /// see; there is a public profile beside it now — the keeper level, the companions, the
-        /// Endless Watch and the line they carry — and a row that silently picked one of the
-        /// two would leave the other reachable from nowhere on the one screen it belongs to.
+        /// <b>Straight in, because a row leads to one place again.</b> It used to walk into a
+        /// stranger's grovement; then there were two destinations and <c>KeeperOverlay</c> was
+        /// the chooser between them, because a row that silently picked one would leave the
+        /// other reachable from nowhere. The grovement is <b>held</b> while it is rebuilt, so
+        /// there is one door left — and a chooser with one door in it is a confirmation for a
+        /// free navigation, which this game keeps to exactly three (none of them this).
         /// </para>
         /// <para>
-        /// The panel is also where a row finally says <em>who</em> it is, at a size somebody can
-        /// look at, which is what makes the extra tap worth having rather than merely tolerable.
-        /// It is handed the row's own figures so it needs no fetch of its own — see
-        /// <see cref="KeeperOverlay.Entry"/>.
+        /// <b>What that costs is where the row said <em>who</em> it is at a readable size</b>,
+        /// which the panel was worth having for as much as for the choice. The profile says the
+        /// same thing one tap in and says more of it, so the loss is an introduction rather than
+        /// an answer. <c>KeeperOverlay</c> is left standing untouched beside the screens it
+        /// opened, for <c>NavBar.Order</c>'s reason: putting the chooser back is this method.
         /// </para>
         /// </summary>
         void Visit(LeaderboardEntry entry)
         {
             if (!entry.IsValid) return;
 
-            // Silent, for Select's reason: the row is a button and has already clicked.
-            Flow.Modal<KeeperOverlay>(panel =>
-            {
-                panel.OwnerId = entry.OwnerId;
-                panel.Entry = entry;
-                panel.FromEndlessBoard = LeaderboardBoard.IsEndless(_boardId);
-            });
+            // Silent, for the row's own reason: it is a button and has already clicked.
+            Flow.Go<PublicProfileScreen>(v => v.Show(entry.OwnerId, entry));
         }
 
         /// <summary>

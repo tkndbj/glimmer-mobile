@@ -40,6 +40,25 @@ namespace GlimmerGrove.Events
         }
 
         public bool IsEmpty => Marks <= 0 && FreeGoal <= 0 && PassGoal <= 0 && !Pass;
+
+        /// <summary>
+        /// Whether this row might still be holding a chest nobody has opened.
+        ///
+        /// <para>
+        /// <b>A sound over-approximation, and it has to be one.</b> Answering exactly needs the
+        /// season's own ladder, and the ledger deliberately does not hold a catalog — so this
+        /// asks the question the row alone can answer: a claim floor is the goal of the highest
+        /// rung taken, and every rung still waiting has a goal above that floor and at or below
+        /// the marks earned. So <c>Marks &gt; floor</c> is true of every row that owes something
+        /// and of some that owe nothing, which is the direction to be wrong in — the cost of a
+        /// false yes is one row kept, and the cost of a false no is a player's chest deleted.
+        /// </para>
+        /// <para>
+        /// The pass floor counts only for somebody who bought the pass, because the paid column
+        /// of a season nobody paid for was never claimable.
+        /// </para>
+        /// </summary>
+        public bool MayOwe => Marks > FreeGoal || (Pass && Marks > PassGoal);
     }
 
     /// <summary>
@@ -126,6 +145,36 @@ namespace GlimmerGrove.Events
         {
             if (string.IsNullOrEmpty(seasonId)) return new SeasonState();
             return _seasons.TryGetValue(seasonId, out var state) ? state.Copy() : new SeasonState();
+        }
+
+        /// <summary>
+        /// Every season this save carries a row for, in calendar order.
+        ///
+        /// <para>
+        /// What <see cref="GroveEvents.All"/> joins onto the authored calendar, so a season that
+        /// has closed and left no trace in the manifest — every cycle of a repeating season, the
+        /// moment the next one opens — stays reachable while the player still has something in
+        /// it (invariant 47c). Ids rather than seasons, because turning one back into a season
+        /// is the catalog's job and this assembly's ledger has no catalog in it.
+        /// </para>
+        /// <para>
+        /// Ordinal order, which for a cycle id is calendar order by construction
+        /// (<see cref="SeasonCycle.IndexDigits"/>).
+        /// </para>
+        /// </summary>
+        public static IReadOnlyList<string> HeldIds
+        {
+            get
+            {
+                if (_seasons.Count == 0) return Array.Empty<string>();
+
+                var ids = new List<string>(_seasons.Count);
+                foreach (var pair in _seasons)
+                    if (!pair.Value.IsEmpty) ids.Add(pair.Key);
+
+                ids.Sort(StringComparer.Ordinal);
+                return ids;
+            }
         }
 
         /// <summary>Marks grown in this season.</summary>
@@ -459,12 +508,31 @@ namespace GlimmerGrove.Events
         }
 
         /// <summary>
-        /// The seasons as rows, <b>sorted by id</b>.
+        /// The seasons as rows, <b>sorted by id</b> and capped at <see cref="MaxSeasons"/>.
         ///
-        /// Not tidiness. <see cref="SaveChecksum"/> hashes the serialised file and
+        /// <para>
+        /// The sort is not tidiness. <see cref="SaveChecksum"/> hashes the serialised file and
         /// <c>SaveDelta</c> decides whether to sync by walking these in order, so rows in
-        /// dictionary order would make an unchanged save look changed on every launch —
-        /// a write and an upload for nothing, forever.
+        /// dictionary order would make an unchanged save look changed on every launch — a write
+        /// and an upload for nothing, forever.
+        /// </para>
+        /// <para>
+        /// <b>The cap used to truncate the sorted list, and that was a live bug waiting for a
+        /// repeating season.</b> Ordinal order is calendar order, so lopping off the tail keeps
+        /// the <em>oldest</em> sixty-four rows and throws away the newest — which on a calendar
+        /// that never ends means the season being played is the first thing deleted, silently, at
+        /// the moment the sixty-fifth opens. It was unreachable while seasons were authored one
+        /// at a time and a real ending on the day one was not.
+        /// </para>
+        /// <para>
+        /// So the cap now <b>evicts rather than truncates</b>, and it evicts by what a row is
+        /// worth: anything that might still be holding an unopened chest (<see
+        /// cref="SeasonState.MayOwe"/>) is kept ahead of anything settled, and within each group
+        /// the newest survives. A player who somehow has more than sixty-four unsettled seasons
+        /// still loses the oldest of them — there is no arrangement in which a bounded list keeps
+        /// everything — but that is sixty-four seasons of never opening a chest, against the old
+        /// rule's "the one you are playing".
+        /// </para>
         /// </summary>
         static EventStateDto[] Rows(Dictionary<string, SeasonState> seasons)
         {
@@ -476,8 +544,24 @@ namespace GlimmerGrove.Events
 
             if (ids.Count == 0) return Array.Empty<EventStateDto>();
 
+            if (ids.Count > MaxSeasons)
+            {
+                // Worth keeping first, then newest first. Ordinal is calendar order for a cycle
+                // id and an arbitrary-but-stable order for an authored one, which is all this
+                // needs: the rule has to be deterministic, because two devices evicting
+                // differently would each push rows the other had dropped and the merge would
+                // resurrect them for ever.
+                ids.Sort((a, b) =>
+                {
+                    bool owedA = seasons[a].MayOwe, owedB = seasons[b].MayOwe;
+                    if (owedA != owedB) return owedA ? -1 : 1;
+                    return string.CompareOrdinal(b, a);
+                });
+
+                ids.RemoveRange(MaxSeasons, ids.Count - MaxSeasons);
+            }
+
             ids.Sort(StringComparer.Ordinal);
-            if (ids.Count > MaxSeasons) ids.RemoveRange(MaxSeasons, ids.Count - MaxSeasons);
 
             var rows = new EventStateDto[ids.Count];
             for (int i = 0; i < ids.Count; i++)

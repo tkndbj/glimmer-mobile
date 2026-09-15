@@ -175,6 +175,13 @@ PLAYERS = ["", "uid_abc123", "player-7", "Ünïcödé", "x" * 40]
 #: same season and the same rung, and they must roll *differently* or one claim would collect
 #: both. The rest cover a first rung, a last rung and a second season with the same ladder.
 SUBJECTS = [
+    # **The season ids here are samples, not the shipped calendar.** A chest is a pure
+    # function of (account, tag, subject), so what these pin is the *generator* agreeing
+    # across three runtimes - the subject string is an opaque input to it. They are left as
+    # `first_watch` deliberately: the shipped season repeats now and its ids are minted from
+    # the clock (`SeasonCycle`), so re-pinning them against `watch_0000` would tie a vector
+    # file to a calendar it does not test and would have to be re-seeded every time the
+    # season was renamed. See `SeasonCycleTests` for what does pin the ids.
     ("first_watch", "free", 5),
     ("first_watch", "pass", 5),
     ("first_watch", "free", 200),
