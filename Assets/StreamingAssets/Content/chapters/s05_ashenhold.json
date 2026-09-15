@@ -113,7 +113,7 @@
   },
   {
    "id": "s05_emberrow",
-   "mapX": 0.52,
+   "mapX": 0.619,
    "mapY": 0.332,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -145,8 +145,8 @@
   },
   {
    "id": "s05_chainfall",
-   "mapX": 0.38,
-   "mapY": 0.453,
+   "mapX": 0.295,
+   "mapY": 0.46,
    "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.52,
@@ -177,7 +177,7 @@
   },
   {
    "id": "s05_ironyard",
-   "mapX": 0.45,
+   "mapX": 0.549,
    "mapY": 0.603,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -210,7 +210,7 @@
   },
   {
    "id": "s05_hollowvigil",
-   "mapX": 0.68,
+   "mapX": 0.764,
    "mapY": 0.678,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -242,7 +242,7 @@
   },
   {
    "id": "s05_sunderway",
-   "mapX": 0.29,
+   "mapX": 0.261,
    "mapY": 0.75,
    "afloat": false,
    "budgetFactor": -1.0,

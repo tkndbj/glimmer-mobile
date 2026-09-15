@@ -17,8 +17,8 @@
   "levels": [
     {
       "id": "f01_first_fall",
-      "mapX": 0.325,
-      "mapY": 0.017,
+      "mapX": 0.22,
+      "mapY": 0.094,
       "afloat": true,
       "budgetFactor": -1.0,
       "fall": {
@@ -100,7 +100,7 @@
     },
     {
       "id": "f01_the_stack",
-      "mapX": 0.658,
+      "mapX": 0.602,
       "mapY": 0.409,
       "afloat": false,
       "backdrop": "sky_04",

@@ -17,7 +17,7 @@
     {
       "id": "f03_first_whorl",
       "mapX": 0.7,
-      "mapY": 0.076,
+      "mapY": 0.069,
       "afloat": false,
       "fall": {
         "width": 5,
@@ -97,7 +97,7 @@
     {
       "id": "f03_two_shores",
       "mapX": 0.72,
-      "mapY": 0.392,
+      "mapY": 0.399,
       "afloat": false,
       "backdrop": "sky_24",
       "fall": {

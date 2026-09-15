@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -108,6 +108,21 @@ namespace GlimmerGrove
         const float BetweenButtons = 14f, AfterButtons = 22f, BeforeClose = 12f;
 
         /// <summary>
+        /// Whether the Apple key is drawn. App Store Guideline 4.8 requires Apple wherever
+        /// another third-party sign-in appears, so it is offered on iOS without exception;
+        /// that rule does not reach Android, where the flow is a web sheet rather than the
+        /// system one, so the key is withdrawn there. It is a platform define rather than a
+        /// runtime check so the Editor on an Android target draws exactly what ships — and
+        /// the measure pass and the build pass read the same constant, because the gaps are
+        /// consumed positionally and a row measured but not drawn shifts every row under it.
+        /// </summary>
+#if UNITY_ANDROID
+        static readonly bool ShowApple = false;
+#else
+        static readonly bool ShowApple = true;
+#endif
+
+        /// <summary>
         /// The rows this state will draw, in order, so the panel can be sized to hold exactly
         /// them.
         ///
@@ -178,7 +193,11 @@ namespace GlimmerGrove
             if (contested) Row(ButtonH, costly ? BetweenButtons : AfterButtons);
             if (costly) Row(WarnH, AfterButtons);
             if (showSwitch) Row(ButtonH, AfterButtons);
-            if (showProviders) { Row(ButtonH, BetweenButtons); Row(ButtonH, AfterButtons); }
+            if (showProviders)
+            {
+                if (ShowApple) Row(ButtonH, BetweenButtons);
+                Row(ButtonH, AfterButtons);
+            }
             Row(CloseH, 0f);
 
             MakePanel(new Vector2(860f, height), Loc.Get("ui.account.title"));
@@ -267,11 +286,10 @@ namespace GlimmerGrove
                 Button("Google", "btn_green", Loc.Get("ui.account.google"),
                        () => Begin(LinkCredential.ForGoogle()));
 
-                // Offered on both platforms, not only iOS. App Store Guideline 4.8
-                // requires Apple wherever another third-party sign-in appears, and a
-                // player with an Apple ID on Android should not be turned away either.
-                Button("Apple", "btn_blue", Loc.Get("ui.account.apple"),
-                       () => Begin(LinkCredential.ForApple()));
+                // iOS only — see ShowApple.
+                if (ShowApple)
+                    Button("Apple", "btn_blue", Loc.Get("ui.account.apple"),
+                           () => Begin(LinkCredential.ForApple()));
             }
 
             _cursor += BeforeClose;

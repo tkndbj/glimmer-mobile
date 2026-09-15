@@ -19,7 +19,7 @@
       "width": 6,
       "height": 6,
       "mapX": 0.7,
-      "mapY": 0.076,
+      "mapY": 0.069,
       "afloat": false,
       "rows": [
         "-ES/2 -SW/0 @E#R/2 -ESW/1 @W#R/2 @S#A/3",
@@ -93,7 +93,7 @@
       "width": 7,
       "height": 7,
       "mapX": 0.72,
-      "mapY": 0.392,
+      "mapY": 0.399,
       "afloat": false,
       "accent": "#A98BFF",
       "slate": "#1C1830",

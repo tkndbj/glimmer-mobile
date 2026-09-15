@@ -242,6 +242,67 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(0, _backend.Pushes);
         }
 
+        /// <summary>
+        /// The state the rule above leaves behind, and the one a real device was found in.
+        ///
+        /// <para>
+        /// A save that names an account may only Resume, which creates nobody — so a device
+        /// whose session has gone is refused for ever: every sync stops, every board read is
+        /// denied by the security rules for want of a `request.auth`, and the account panel
+        /// reports "you are not signed in" over a control that is refused before it reaches the
+        /// provider. It is reachable without doing anything unusual — Android's Auto Backup
+        /// restores Firebase's persisted session onto a reinstall, encrypted against a key that
+        /// is regenerated per install, so the SDK holds no user while the save still names the
+        /// old account.
+        /// </para>
+        /// <para>
+        /// Signing <em>in</em> with the provider is the way out and is safe for exactly the
+        /// reason linking is not: it attaches nothing and invents nothing, so the account the
+        /// credential already owns is the account that comes back. This asserts the whole of
+        /// that — the session is restored, the provider was never attached, and no account was
+        /// created — because the first two would pass on a path that quietly did the third.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ALostSessionIsRestoredByTheProviderRatherThanRefusedForEver()
+        {
+            SignedInAs(Mine);
+            _backend.Session = null;
+            _backend.SignsInAs = Mine;          // the credential already owns this account
+
+            var result = Wait(CloudSaveService.LinkAsync(LinkCredential.ForGoogle()));
+
+            Assert.IsTrue(result.Ok, "a device whose session has gone must have a way back");
+            Assert.AreEqual(1, _backend.CredentialSignIns, "by signing in, which invents nothing");
+            Assert.AreEqual(0, _backend.Links, "never by linking, which attaches to whatever is there");
+            Assert.AreEqual(0, _backend.SignIns, "and never by creating an account");
+            Assert.AreEqual(Mine, CloudState.UserId, "the grove keeps the account it belongs to");
+            Assert.IsFalse(CloudSaveService.AccountMismatched);
+        }
+
+        /// <summary>
+        /// The same tap, by somebody who picked a different entry out of the provider's account
+        /// chooser. It is a switch away from a grove this device could never push — there was no
+        /// session to push it with — so it is reported rather than performed: deciding it here
+        /// would be this button quietly doing what the Switch button exists to ask about.
+        /// </summary>
+        [Test]
+        public void ALostSessionSignedInAsSomebodyElseIsReportedRatherThanSwapped()
+        {
+            SignedInAs(Mine);
+            _backend.Session = null;
+            _backend.SignsInAs = Theirs;
+
+            var result = Wait(CloudSaveService.LinkAsync(LinkCredential.ForGoogle()));
+
+            Assert.IsFalse(result.Ok);
+            Assert.AreEqual(CloudFailure.AccountMismatch, result.Failure);
+            Assert.AreEqual(0, _backend.Links);
+            Assert.AreEqual(Mine, CloudState.UserId, "the grove on this device is not handed over");
+            Assert.AreEqual(0, _backend.Pushes, "and nothing of theirs is written under it");
+            Assert.IsTrue(CloudSaveService.AccountMismatched, "the panel offers a switch from here");
+        }
+
         [Test]
         public void LinkingAGuestKeepsTheAccountItAlreadyHad()
         {

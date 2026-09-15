@@ -510,44 +510,24 @@ namespace GlimmerGrove
                 img.type = Image.Type.Simple;
             }
 
-            BuildScenery();
-
             // unify the strips and let the chrome read on top of them
             var shade = UIKit.Img("Shade", _map, Art.Pixel, new Color(.04f, .09f, .13f, .17f));
             UIKit.StretchTo((RectTransform)shade.transform, 0, 0, 0, 0);
             shade.transform.SetAsLastSibling();
         }
 
-        /// <summary>
-        /// Decorative props, positioned as fractions of this chapter's map so the
-        /// same arrangement works for a chapter of any height.
-        /// </summary>
-        void BuildScenery()
-        {
-            (string art, float x, float y, float size, float bob)[] props =
-            {
-                ("palm",    0.14f, 0.055f, 190f, 6f),
-                ("boulder", 0.86f, 0.135f, 150f, 0f),
-                ("stump",   0.16f, 0.315f, 150f, 0f),
-                ("palm",    0.88f, 0.455f, 200f, 7f),
-                ("post",    0.46f, 0.505f, 120f, 0f),
-                ("boulder", 0.18f, 0.545f, 140f, 0f),
-                ("stump",   0.82f, 0.665f, 160f, 0f),
-                ("palm",    0.13f, 0.745f, 180f, 6f),
-                ("boulder", 0.30f, 0.945f, 130f, 0f),
-            };
-            foreach (var (art, x, y, size, bob) in props)
-            {
-                var s = Art.S("Map/" + art);
-                if (s == null) continue;
-                var img = UIKit.Img("Prop_" + art, _map, s, new Color(1f, 1f, 1f, .95f),
-                                    Vector2.one * size * _mapScale, new Vector2(x, y), Vector2.zero);
-                img.preserveAspect = true;
-                if (bob > 0f)
-                    Tween.Bob((RectTransform)img.transform, bob * _mapScale,
-                              Random.Range(2.6f, 4.2f), Random.value * 6f);
-            }
-        }
+        // **No scattered props, and their absence is the design.** A palm, a boulder, a stump
+        // and a post used to be dropped onto every chapter's map at nine authored fractions,
+        // the same nine on every map of every mode. It was right when a map was a column of
+        // strips a node floated over: the props were the only thing making the empty stretches
+        // between islands read as a place.
+        //
+        // Every one of these paintings is already a place. The props were laid over the top of
+        // one without knowing anything about it - a palm tree in a volcanic chasm, a stump in
+        // the middle of a lake, a post standing in open sea - because a fraction of the map is
+        // not a fact about what the painting has there. With the nodes seated on the painting's
+        // own roads (invariant 8e), an object that ignores it is the one thing left on the
+        // screen that does.
 
         // ------------------------------------------------------------ the nodes
         //

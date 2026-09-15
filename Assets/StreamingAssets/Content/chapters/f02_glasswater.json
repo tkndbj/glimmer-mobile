@@ -75,7 +75,7 @@
     },
     {
       "id": "f02_the_crossing",
-      "mapX": 0.207,
+      "mapX": 0.155,
       "mapY": 0.294,
       "afloat": false,
       "backdrop": "sky_13",
@@ -96,7 +96,7 @@
     },
     {
       "id": "f02_two_panes",
-      "mapX": 0.62,
+      "mapX": 0.54,
       "mapY": 0.372,
       "afloat": false,
       "backdrop": "sky_14",
@@ -117,7 +117,7 @@
     },
     {
       "id": "f02_far_shore",
-      "mapX": 0.26,
+      "mapX": 0.15,
       "mapY": 0.472,
       "afloat": false,
       "backdrop": "sky_15",
@@ -139,7 +139,7 @@
     },
     {
       "id": "f02_lantern_row",
-      "mapX": 0.79,
+      "mapX": 0.81,
       "mapY": 0.549,
       "afloat": false,
       "backdrop": "sky_16",
@@ -161,7 +161,7 @@
     },
     {
       "id": "f02_slack_water",
-      "mapX": 0.401,
+      "mapX": 0.451,
       "mapY": 0.627,
       "afloat": false,
       "backdrop": "sky_17",

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The launcher module's manifest, overridden for exactly one reason: to turn Android's
+    Auto Backup off.
+
+    Why it has to be here and not in a library. `GlimmerBackup.androidlib` declared the
+    same attribute first and it did not work, and the way it failed is the point: the
+    AppsFlyer SDK's own manifest sets `android:allowBackup="true"`, two libraries at the
+    same level cannot resolve a conflict between themselves, and `tools:replace` in one
+    of them does not settle it. The first attempt failed the build outright; the second
+    merged green and silently kept `true`. Only the application module outranks every
+    library, and that is this file. Proved by running the manifest merger and reading
+    `allowBackup` out of the merged result, because it is the one fault here that leaves
+    no trace: the build succeeds and the setting is simply not applied.
+
+    Why Auto Backup is refused at all. It is on by default and copies `shared_prefs`,
+    `databases` and `files` off the device, then restores them onto a reinstall or a new
+    phone. For an app whose cross device story is an account, that is a second sync path
+    nobody designed, and it cannot merge: it is a blind file restore, where every join
+    this game makes is idempotent and monotonic (invariant 11). Three things it restores
+    are actively poisonous, and all three were found on a real device.
+
+    `shared_prefs/com.google.firebase.auth.api.Store.*` is Firebase's persisted session,
+    encrypted against `com.google.firebase.auth.api.crypto.*`, which is regenerated per
+    install. Restored, it cannot be decrypted, so the SDK holds no user while everything
+    derived from it still names the old account. `databases/firestore.*` is the Firestore
+    offline cache; restored, it serves another install's documents to a client that
+    cannot authenticate, so the game draws a name, a wallet and a roster with no session
+    behind any of it. And the Unity player preferences carry two things the invariants
+    already refuse travelling: the cached update wall, which is a fact about this install
+    on this platform (invariant 49c), and the remembered chapter per mode, which is
+    device local and never in the save (invariant 8b).
+
+    What it costs, stated rather than discovered: a player who reinstalls without signing
+    in loses a grove that was only ever on that phone. That is what the account panel
+    already tells them, and what an anonymous account costs regardless, since its uid
+    dies with the installation.
+
+    What this file freezes. Everything else here is Unity's own generated launcher
+    manifest, copied verbatim, so `installLocation`, the icon references, the label and
+    the screen support no longer follow Player Settings. They are four attributes and
+    they are listed here so a change to any of them is a change to this file too.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          android:installLocation="preferExternal">
+
+    <application android:icon="@mipmap/app_icon"
+                 android:label="@string/app_name"
+                 android:roundIcon="@mipmap/app_icon_round"
+                 android:allowBackup="false"
+                 android:dataExtractionRules="@xml/glimmer_data_extraction_rules"
+                 tools:replace="android:allowBackup,android:dataExtractionRules" />
+
+    <supports-screens android:smallScreens="true"
+                      android:normalScreens="true"
+                      android:largeScreens="true"
+                      android:xlargeScreens="true"
+                      android:anyDensity="true" />
+</manifest>

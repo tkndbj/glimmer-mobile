@@ -410,7 +410,6 @@ namespace GlimmerGrove.AssetPipeline
         {
             "node_open", "node_lock", "node_s0", "node_s1", "node_s2", "node_s3", "pointer",
             "rock_grass",
-            "palm", "boulder", "stump", "post",
         };
 
         /// <summary>

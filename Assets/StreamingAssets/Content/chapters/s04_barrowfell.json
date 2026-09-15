@@ -17,7 +17,7 @@
   {
    "id": "s04_firstbone",
    "mapX": 0.7,
-   "mapY": 0.076,
+   "mapY": 0.069,
    "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.67,
@@ -145,7 +145,7 @@
   {
    "id": "s04_hollowgrave",
    "mapX": 0.72,
-   "mapY": 0.392,
+   "mapY": 0.399,
    "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.67,

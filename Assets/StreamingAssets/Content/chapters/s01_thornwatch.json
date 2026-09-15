@@ -17,8 +17,8 @@
  "levels": [
   {
    "id": "s01_firstwatch",
-   "mapX": 0.325,
-   "mapY": 0.017,
+   "mapX": 0.22,
+   "mapY": 0.094,
    "afloat": true,
    "budgetFactor": -1.0,
    "goldFactor": 0.75,
@@ -137,7 +137,7 @@
   },
   {
    "id": "s01_warlordsgate",
-   "mapX": 0.658,
+   "mapX": 0.602,
    "mapY": 0.409,
    "afloat": false,
    "budgetFactor": -1.0,

@@ -108,7 +108,7 @@
   },
   {
    "id": "s03_spinecrest",
-   "mapX": 0.207,
+   "mapX": 0.155,
    "mapY": 0.294,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -139,7 +139,7 @@
   },
   {
    "id": "s03_blightfen",
-   "mapX": 0.62,
+   "mapX": 0.54,
    "mapY": 0.372,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -170,7 +170,7 @@
   },
   {
    "id": "s03_stillmire",
-   "mapX": 0.26,
+   "mapX": 0.15,
    "mapY": 0.472,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -201,7 +201,7 @@
   },
   {
    "id": "s03_thornbrood",
-   "mapX": 0.79,
+   "mapX": 0.81,
    "mapY": 0.549,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -232,7 +232,7 @@
   },
   {
    "id": "s03_gloamfield",
-   "mapX": 0.401,
+   "mapX": 0.451,
    "mapY": 0.627,
    "afloat": false,
    "budgetFactor": -1.0,

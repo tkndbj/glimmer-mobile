@@ -683,6 +683,46 @@ namespace GlimmerGrove.Cloud
         /// state the player can be in for hours without anything being wrong with the code, and
         /// a sync fires on every foreground.
         /// </summary>
+        /// <summary>
+        /// Restores the session for a save that already names an account, by signing in with
+        /// the provider the player just tapped rather than linking to a session that is gone.
+        ///
+        /// <para>
+        /// The latch is held by the caller, so this talks to the backend directly. It creates
+        /// no account — <see cref="ICloudSaveBackend.SignInWithCredentialAsync"/> resolves the
+        /// credential to whoever already owns that identity — which is what keeps invariant 17
+        /// intact: no anonymous account is minted, no provider is attached to one, and no grove
+        /// is re-owned. In the ordinary case the uid that comes back *is* the save's own and
+        /// nothing on this device is touched at all.
+        /// </para>
+        /// <para>
+        /// <b>A different uid is reported, never acted on.</b> It means the player signed in as
+        /// somebody else, which is a switch away from a grove this device could not push (there
+        /// was no session to push it with) — so it lands in the ordinary mismatched state the
+        /// account panel already knows how to offer a switch from, with the outgoing grove
+        /// still on disk. Deciding it here would be this button quietly doing what the Switch
+        /// button exists to ask about.
+        /// </para>
+        /// </summary>
+        static async Task<CloudResult> ReclaimAsync(
+            LinkCredential credential, CancellationToken cancellation)
+        {
+            var (signIn, identity) = await _backend.SignInWithCredentialAsync(credential, cancellation);
+            if (!signIn.Ok) return signIn;
+
+            if (!identity.IsValid)
+                return CloudResult.Failed(CloudFailure.Unauthenticated, "no user id");
+
+            if (AccountGate.Decide(CloudState.UserId, identity.UserId) == AccountGateVerdict.Refuse)
+                return Disagreed(identity.UserId);
+
+            // A no-op whenever the uid agreed, which is every case that reaches it.
+            CloudState.SignIn(identity.UserId);
+            SaveService.Save();
+
+            return Agreed();
+        }
+
         static CloudResult Disagreed(string sessionUserId)
         {
             if (!AccountMismatched)
@@ -835,7 +875,33 @@ namespace GlimmerGrove.Cloud
                 // creates nobody and reports honestly, and the player's route back is the
                 // account panel — which is where they already are.
                 var authorised = await AuthoriseAsync(cancellation);
-                if (!authorised.Ok) return authorised;
+
+                // The one refusal above that a player cannot act on, and the one this button
+                // is supposed to be the answer to.
+                //
+                // A save that names an account may only Resume, which creates nobody — so a
+                // device whose Firebase session has gone (a reinstall, cleared app data, a
+                // revoked token) is refused `Unauthenticated` for ever: every sync stops, every
+                // board read is denied by the security rules because there is no `request.auth`
+                // at all, and the account panel reports "you are not signed in" while the only
+                // control it offers is refused before it reaches the provider. The comment
+                // above says the provider buttons are the way out; they were not, because they
+                // come through here.
+                //
+                // Signing *in* with the provider is the way out, and it is safe for exactly the
+                // reason linking is not: it attaches nothing and creates nothing. Firebase
+                // resolves the credential to whichever account already owns that identity, so
+                // the ordinary case lands back on the uid the save already names and the
+                // session is simply restored. A different uid is a genuine disagreement and is
+                // reported as one rather than resolved here — the grove on this device was
+                // never pushed, so a swap is not this button's decision to make.
+                if (!authorised.Ok)
+                {
+                    if (authorised.Failure != CloudFailure.Unauthenticated || !CloudState.IsSignedIn)
+                        return authorised;
+
+                    return await ReclaimAsync(credential, cancellation);
+                }
 
                 var (result, identity) = await _backend.LinkAsync(credential, cancellation);
 

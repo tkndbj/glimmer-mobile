@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Carries the backup exclusion rules resource, and nothing else.
+
+    It declares no `<application>` attributes on purpose. It did once, and that is the
+    mistake this comment exists to stop somebody repeating: the AppsFlyer SDK's manifest
+    sets `android:allowBackup="true"` and its own backup rules, two libraries at the same
+    level cannot settle a conflict between themselves, and `tools:replace` here does not
+    win it. Declaring `fullBackupContent` here failed the build with a colliding
+    attributes error; declaring `allowBackup` here merged green and silently kept the
+    SDK's `true`, which is worse. The attributes belong to the application module and
+    live in `Assets/Plugins/Android/LauncherManifest.xml`, which outranks every library.
+
+    A library's `res` is merged into the application package, so the rules file it ships
+    resolves as `@xml/glimmer_data_extraction_rules` from that manifest. Resource merging
+    has no priority contest in it, which is why this half works from a library when the
+    attribute half does not.
+
+    The package name is a namespace rather than code, and must be unique: AGP 9 refuses
+    a namespace shared by two modules.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.tekoworld.glimmergroove.backup"
+          android:versionCode="1"
+          android:versionName="1.0">
+</manifest>

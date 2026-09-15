@@ -17,8 +17,8 @@
  "levels": [
   {
    "id": "p01_firstvein",
-   "mapX": 0.325,
-   "mapY": 0.017,
+   "mapX": 0.22,
+   "mapY": 0.094,
    "afloat": true,
    "budgetFactor": -1.0,
    "backdrop": "sky_00",

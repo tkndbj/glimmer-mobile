@@ -86,23 +86,24 @@ PRECISION = 3
 #: end-of-chapter signpost.
 NUDGE = {
     1: {
-        1: (0, 0),
+        1: (-113, 554),       # clear of the bar, and clear of the left edge
         2: (330, 148),        # up the current, not off it
-        5: (0, 90),
+        5: (-60, 90),
         7: (0, 170),
         8: (0, -110),
         9: (-95, 0),
     },
     2: {
-        4: (-100, 0),         # makes room for 15 to come left
-        5: (-108, 0),         # level 15
-        7: (97, 0),           # makes room for 18 to go right
-        8: (181, 0),          # level 18
+        4: (-157, 0),         # makes room for 15 to come left
+        6: (-119, 0),         # ...and 6 has to come with it
+        5: (-194, 0),         # level 15
+        7: (119, 0),          # makes room for 18 to go right
+        8: (235, 0),          # level 18
         "marker": (0, 0),     # see `nudged`: the road at its height is out of reach
     },
     3: {
-        1: (0, 90), 2: (0, 90), 3: (0, 42),
-        4: (-90, 0), 5: (0, -90), 6: (-70, 0),
+        1: (0, 45), 2: (0, 90), 3: (0, 42),
+        4: (-90, 0), 5: (0, -45), 6: (-70, 0),
         7: (0, -32), 8: (-101, 0), 9: (60, 0), 10: (0, -90),
         "marker": (80, 0),
     },
@@ -110,11 +111,11 @@ NUDGE = {
         1: (-33, 58),         # level 31
         2: (70, 0),
         3: (-15, -43),
-        4: (419, 60),         # level 34
-        5: (-466, 0),         # level 35
-        6: (186, 0),
-        7: (11, 14),
-        8: (37, 50),
+        4: (526, 60),         # level 34
+        5: (-557, 50),        # level 35
+        6: (293, 0),
+        7: (102, 14),
+        8: (5, 50),
         9: (-9, 0),
         10: (0, 0),            # right is blocked by the marker’s own mark
     },
@@ -315,6 +316,16 @@ RUNG_SEARCH = 0.34
 #: bottom edge of the painting, with sea under half of it.
 EDGE_MARGIN = 118.0
 
+#: **The foot of the map wants more than this and does not get it**, which is a known gap kept
+#: narrow on purpose. A node moored on the water carries a perch hanging 195 units below its
+#: centre (`PERCH_Y + PERCH_BOX[1] / 2`) with a shadow under that, the map opens scrolled to
+#: its bottom, and on a siege the loadout bar stands in that foot - so the first glade of the
+#: game came out 122 units up with its tile behind the bar. Widening this margin re-seats every
+#: rung of every map, which throws away hand corrections that have already been approved, so
+#: the first rung is lifted by a nudge instead. **Widen it the next time the seats are being
+#: re-derived anyway, and delete this paragraph.** No render here draws the loadout bar, so
+#: nothing but a phone can see the fault.
+
 
 def stack(which: int) -> Image.Image:
     """A whole map painting, assembled exactly as `LevelsScreen.BuildMapArt` assembles it."""
@@ -429,6 +440,7 @@ def footing(mask: np.ndarray, land: np.ndarray, stream: np.ndarray) -> np.ndarra
     full[:, :margin] = 0
     full[:, -margin:] = 0
     full[:margin, :] = 0
+
     full[-margin:, :] = 0
     return full
 
