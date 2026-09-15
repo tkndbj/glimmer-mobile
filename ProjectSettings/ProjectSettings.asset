@@ -178,7 +178,7 @@ PlayerSettings:
     iPhone: 16
     tvOS: 0
   overrideDefaultApplicationIdentifier: 1
-  AndroidBundleVersionCode: 7
+  AndroidBundleVersionCode: 8
   AndroidMinSdkVersion: 26
   AndroidTargetSdkVersion: 36
   AndroidPreferredInstallLocation: 1
@@ -564,7 +564,7 @@ PlayerSettings:
   m_BuildTargetDefaultTextureCompressionFormat:
   - serializedVersion: 3
     m_BuildTarget: Android
-    m_Formats: 01000000
+    m_Formats: 03000000
   - serializedVersion: 3
     m_BuildTarget: iOS
     m_Formats: 03000000

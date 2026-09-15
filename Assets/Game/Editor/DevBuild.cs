@@ -134,6 +134,7 @@ namespace GlimmerGrove.EditorTools
             ProjectSetup.Setup();
 
             EditorUserBuildSettings.buildAppBundle = true;
+            PinTextureCompression();
 
             // Native symbols, so a crash in Play Console reads as a stack trace instead of
             // a column of hex. Uploaded with the bundle automatically.
@@ -328,6 +329,60 @@ namespace GlimmerGrove.EditorTools
                       "cannot provide.");
         }
 
+        /// <summary>
+        /// Pin Android texture compression to ASTC.
+        ///
+        /// <para>
+        /// <b>Nothing in this project ever set a compression format</b>, so every texture took
+        /// Unity's automatic default — ETC2 RGBA8, 8 bits per pixel — and the siege reels alone
+        /// came to 158 MB of it. The first store bundle was 263 MB on disk and about 220 MB of
+        /// download per device against Play's 200 MB ceiling, which is a rejected upload rather
+        /// than a slow one. <c>ProjectSetup.OnPreprocessTexture</c> sets <c>maxTextureSize</c>
+        /// and stops there, and the per-texture Android block in every <c>.meta</c> carries
+        /// <c>overridden: 0</c>, so it is decoration: the default platform settings are what
+        /// actually apply.
+        /// </para>
+        /// <para>
+        /// <b>ASTC is smaller and better at once, which is not the usual trade.</b> ETC2 RGBA8
+        /// spends only 4 bpp on colour (the other 4 go to a separate EAC alpha block) and uses a
+        /// much weaker block model, where ASTC allocates across all four channels adaptively.
+        /// Measured by encoding the shipped PNGs and comparing against the source, colour PSNR
+        /// rises everywhere at 44% of the size — reels 42.2 → 48.2 dB, turrets 31.5 → 40.3,
+        /// UI furniture 33.7 → 45.4, portraits 32.5 → 39.1, backdrops 38.6 → 50.1. What it
+        /// gives up is alpha, where EAC is strong: 39–43 dB against ETC2's 45–52. That is
+        /// clean at this art's sizes and is the one thing here a number cannot settle, so it
+        /// is checked by eye (<c>Tools/compare_texture_formats.py --contact</c>).
+        /// </para>
+        /// <para>
+        /// <b>The block size is not settable from here and does not need to be.</b> Unity
+        /// derives it from each texture's own quality tier — Normal gives 6x6, High gives 4x4 —
+        /// so this one line moves the whole project and writes to no <c>.meta</c> file. Asking
+        /// for 5x5 instead means an explicit per-texture override on all 3,700 of them, for
+        /// about 3 dB of alpha; do that per folder if a portrait ever shows a fringe, never
+        /// across the project.
+        /// </para>
+        /// <para>
+        /// Set here rather than left to the Build Settings dropdown for the reason
+        /// <c>stripEngineCode</c> is, and for the reason <c>m_BuildAddressablesWithPlayerBuild</c>
+        /// is pinned in the project asset: the dropdown is per machine, so a bundle built on a
+        /// second machine would be a different size and a different quality with nothing in the
+        /// tree saying why.
+        /// </para>
+        /// </summary>
+        static void PinTextureCompression()
+        {
+            EditorUserBuildSettings.androidBuildSubtarget = MobileTextureSubtarget.ASTC;
+
+            // The App Bundle path can carry several formats and serve each device the one it
+            // supports. One is deliberate: a second format is a second copy of every texture in
+            // the bundle, which is the size problem this exists to fix. ASTC is universal at
+            // `AndroidMinSdkVersion: 26`, so there is nothing to fall back for.
+            PlayerSettings.Android.textureCompressionFormats =
+                new[] { TextureCompressionFormat.ASTC };
+
+            Debug.Log("[Glimmer] texture compression pinned to ASTC");
+        }
+
         static void BuildAndroid(bool andRun)
         {
             if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
@@ -347,6 +402,12 @@ namespace GlimmerGrove.EditorTools
             ProjectSetup.Setup();
 
             EditorUserBuildSettings.buildAppBundle = false;
+
+            // The APK path pins it too, or the build somebody actually looks at on a device is
+            // drawn in a format the store bundle does not ship — which is the one comparison
+            // this change has to be judged by.
+            PinTextureCompression();
+
             PlayerSettings.Android.useCustomKeystore = false;      // debug keystore
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);

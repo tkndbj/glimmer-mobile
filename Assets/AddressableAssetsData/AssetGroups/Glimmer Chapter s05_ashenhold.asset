@@ -15,23 +15,8 @@ MonoBehaviour:
   m_GroupName: Glimmer Chapter s05_ashenhold
   m_GUID: a3bd826724c6386489607772e5d26f68
   m_SerializeEntries:
-  - m_GUID: 076669c72fcbab441a53b5d36ac4861e
-    m_Address: Art/Siege/clad_walk
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 14bf33b0a3adfdf499e33c3fa8f4f2e8
     m_Address: Art/Bg/sky_32
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1d2f90ddf9f5bcf49b65ea84b491d08f
-    m_Address: Art/Siege/snare_walk
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2c15ab9b1baaeb244af03d28b4d96c62
-    m_Address: Art/Fx/Siege/snare_muzzle
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -42,21 +27,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 342446f69d709c5448ce2e1dc55d0ed5
     m_Address: Art/Bg/sky_37
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3856dba7af68ae34cbdfff17b507d91b
-    m_Address: Art/Fx/Siege/quake_hit
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4869ff6312d2d9d44ab81482d34b9d38
-    m_Address: Art/Siege/snare
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 50f5c9c3f365d67478b80daec6842c77
-    m_Address: Art/Siege/clad_cast
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -85,21 +55,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7395d529a2b3ed6418f32687a661c02b
-    m_Address: Art/Fx/Siege/quake_muzzle
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 74face40962ce984d8bb31aa088b3f94
-    m_Address: Art/Siege/clad
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7f5931acdc7ccd649a331f53465c33c9
-    m_Address: Art/Fx/Siege/quake
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 834f1260e71bbcd4ea03fdf3b65a127f
     m_Address: Art/Bg/sky_39
     m_ReadOnly: 0
@@ -107,16 +62,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9244a001c80e35749a5146536a989500
     m_Address: Art/Bg/sky_34
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a88bda75cbac47b4f9f5ed93b6a50887
-    m_Address: Art/Fx/Siege/snare_hit
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: aec9ac3efcd723e4393fb70e34976653
-    m_Address: Art/Siege/snare_cast
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -137,11 +82,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f3313ed178325a84ba6f792aacb4e9f8
     m_Address: Art/Map/map4_strip2
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f967103fe7e7c604b9e5d8d91975b6c1
-    m_Address: Art/Fx/Siege/snare
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

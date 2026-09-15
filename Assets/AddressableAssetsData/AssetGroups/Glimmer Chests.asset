@@ -33,11 +33,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Chests/silver
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0a8d49bd856fef64bb334898fb26b4ff
-    m_Address: Art/Chests/silver
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 11873356ec69415fcd1abcd0478704e7
     m_Address: Art/Chests/silver/f07
     m_ReadOnly: 0
@@ -254,11 +249,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Chests/wood
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 88ad298d97845e340b3d405217f97407
-    m_Address: Art/Chests/gold
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8e0d68f9c117597acaa5635667e4a5e0
     m_Address: Art/Chests/royal/f14
     m_ReadOnly: 0
@@ -312,11 +302,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Chests/royal
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ad6b3ed5a2a46a64099968fb6e4ec853
-    m_Address: Art/Chests/wood
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: aff3e7c69e5c6eb8bc85937b218b0bcb
     m_Address: Art/Chests/wood/f03
@@ -413,11 +398,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Chests/wood
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f6874435a7a2a844bba96f73ef64ad75
-    m_Address: Art/Chests/royal
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f9f0d902e37b0fe2d26e3725a55051f1
     m_Address: Art/Chests/wood/f01

@@ -25,16 +25,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 28f0383838cb510468cee1d0f9fa5470
-    m_Address: Art/Siege/maw
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2910029cf99a64c438f3fe90641fd696
-    m_Address: Art/Siege/caller_cast
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2eed109265b95814993a95ef0b009801
     m_Address: Art/Bg/sky_27
     m_ReadOnly: 0
@@ -70,16 +60,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6432ae79b48e5d14e948230146fef998
-    m_Address: Art/Siege/caller
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6e3e8c11635c1894cb1921157a33a6a9
-    m_Address: Art/Siege/maw_cast
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 80f95f04c18b90b4e89c9bff27d3a7b0
     m_Address: Art/Bg/sky_28
     m_ReadOnly: 0
@@ -107,11 +87,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d85dfbac7b4ebdc43870a4163873ebef
     m_Address: Art/Bg/sky_26
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: dc68af5bc1d9b964787a0ee9f38b59eb
-    m_Address: Art/Siege/caller_walk
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
