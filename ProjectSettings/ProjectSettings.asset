@@ -178,7 +178,7 @@ PlayerSettings:
     iPhone: 16
     tvOS: 0
   overrideDefaultApplicationIdentifier: 1
-  AndroidBundleVersionCode: 6
+  AndroidBundleVersionCode: 7
   AndroidMinSdkVersion: 26
   AndroidTargetSdkVersion: 36
   AndroidPreferredInstallLocation: 1
@@ -271,7 +271,7 @@ PlayerSettings:
   useCustomGradlePropertiesTemplate: 0
   useCustomGradleSettingsTemplate: 0
   useCustomProguardFile: 0
-  AndroidTargetArchitectures: 2
+  AndroidTargetArchitectures: 3
   AndroidSplashScreenScale: 0
   androidSplashScreen: {fileID: 0}
   AndroidKeystoreName: C:/Users/Digikey/GlimmerGroveKeys/glimmergrove-upload.keystore
@@ -287,7 +287,7 @@ PlayerSettings:
   AndroidEnableTango: 0
   androidEnableBanner: 1
   androidUseLowAccuracyLocation: 0
-  androidUseCustomKeystore: 0
+  androidUseCustomKeystore: 1
   m_AndroidBanners:
   - width: 320
     height: 180
