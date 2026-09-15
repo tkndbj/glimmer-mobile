@@ -37,6 +37,14 @@ namespace GlimmerGrove.Progression
         /// played most of it well.
         /// </para>
         /// <para>
+        /// <b>A chapter may also carry a keeper wall</b>, and it rides the same boundary rather
+        /// than being a third rule: <see cref="GateFor"/> answers both halves and
+        /// <c>ChapterGate.IsOpen</c> is the conjunction, which is what stops anything here
+        /// asking for half of it (invariant 15a). It is a fact about the chapter being entered
+        /// rather than the one behind, so it is the only gate a lane's <em>first</em> chapter
+        /// can have — see <c>ManifestChapterDto.minKeeperLevel</c>.
+        /// </para>
+        /// <para>
         /// Note what the boundary rule does <em>not</em> do: it never opens a glade in the
         /// middle of a chapter. Only the first level of a chapter asks the gate, so the chain
         /// inside is exactly as it was and a chapter is still entered at its start.
@@ -54,16 +62,42 @@ namespace GlimmerGrove.Progression
             // the first level of a chapter they finished padlocked while the nine behind it are
             // open, because the chain inside a chapter and the gate at its head would be
             // answering different questions about the same save. Note that it cannot weaken the
-            // gate: a level nobody has cleared is a level nobody has opened.
-            if (PlayerProgress.IsCleared(id)) return true;
+            // gate: a level nobody has played is a level nobody has opened.
+            if (HasEverPlayed(id)) return true;
 
-            var previous = index.Previous(id);
-            if (!previous.IsValid) return true;            // the very first level
-
+            // **The head is asked before the chain, and the order is load-bearing.** This used
+            // to shortcut on "no level before it" first, which was harmless while the only gate
+            // was on the chapter behind — a lane's first level has no chapter behind it, so the
+            // gate would have answered open anyway. It stopped being harmless the moment a
+            // chapter could carry a wall of its own: the Infinite lane is one chapter of one
+            // level, so that shortcut returned true before anything looked at the wall, and the
+            // gate would have been dead code on the only lane that has one. `IsChapterHead` is
+            // already true when there is nothing before it, so the very first level of the game
+            // still walks the same path and `GateFor` still answers open for it.
             if (IsChapterHead(index, id)) return GateFor(index, index.ChapterOf(id)).IsOpen;
 
-            return PlayerProgress.IsCleared(previous);
+            return PlayerProgress.IsCleared(index.Previous(id));
         }
+
+        /// <summary>
+        /// Whether this player has ever played this level at all — the fact the monotonic
+        /// clause above is really about.
+        ///
+        /// <para>
+        /// <b>Two ledgers, because a clear is not the only thing a run leaves behind.</b> Every
+        /// laddered level records a <c>LevelRecord</c> when it is beaten; an endless one is
+        /// never beaten and leaves a wave count in <see cref="EndlessLedger"/> instead
+        /// (invariant 43). Asking only about clears would take the Infinite lane back off
+        /// somebody who has run it, the first time a wall was put in front of it — which is the
+        /// exact failure the monotonic clause exists to prevent, arriving through the one lane
+        /// that does not use the ledger it reads.
+        /// </para>
+        /// <para>
+        /// Both halves only ever rise, so this can never weaken a gate.
+        /// </para>
+        /// </summary>
+        public static bool HasEverPlayed(LevelId id)
+            => PlayerProgress.IsCleared(id) || EndlessLedger.BestFor(id) > 0;
 
         /// <summary>
         /// True when this glade is the one a chapter is entered at, so the gate applies to it
@@ -90,10 +124,25 @@ namespace GlimmerGrove.Progression
         /// What stands between the player and <paramref name="chapter"/>.
         ///
         /// <para>
-        /// The gate is on the chapter <em>before</em> this one in the same mode. That is the
-        /// whole of what keeps the modes independent (invariant 20a): the ladders never chain,
-        /// so the first chapter of a mode is always open however little of another mode has
-        /// been played, and a mode's own second chapter asks only about its own first.
+        /// The <em>star</em> gate is on the chapter <em>before</em> this one in the same lane.
+        /// That is the whole of what keeps the modes independent (invariant 20a): the ladders
+        /// never chain, so the first chapter of a mode is always open however little of another
+        /// mode has been played, and a mode's own second chapter asks only about its own first.
+        /// </para>
+        /// <para>
+        /// <b>The keeper wall is on <em>this</em> chapter, and it is read before the early
+        /// return.</b> A lane's first chapter has nothing behind it and so no star gate at all —
+        /// which is every mode's opening chapter and the whole of the Infinite lane — so a wall
+        /// computed after that return would be a field the one lane that needs it could never
+        /// use. It comes from the manifest and costs nothing to move
+        /// (<c>ManifestChapterDto.minKeeperLevel</c>).
+        /// </para>
+        /// <para>
+        /// <b>The keeper level is read off <see cref="PlayerProgression"/> rather than taken as
+        /// an argument</b>, which is <c>HomesteadLedger</c>'s shape and for its reason: every
+        /// caller is a screen asking about the player in front of it, and a second way of
+        /// supplying it would be a second answer. It is memoised behind a dirty flag, so the map
+        /// asking this once per node costs one recompute per change.
         /// </para>
         /// <para>
         /// Returns a reading rather than a verdict, because four callers want different halves
@@ -108,15 +157,26 @@ namespace GlimmerGrove.Progression
             var entry = index?.FindChapter(chapter);
             if (entry == null) return ChapterGate.Missing;
 
+            // This chapter's own wall, and the keeper level it is measured against. Read first
+            // so that every return below carries it - the two early returns are about the star
+            // half alone, and a lane's first chapter takes both of them.
+            int wall = entry.MinKeeperLevel;
+            int keeper = wall > 0 ? PlayerProgression.Level.Level : 0;
+
             var behind = index.ChapterNeighbour(chapter, -1);
-            if (behind == null) return ChapterGate.Open;   // the first chapter of its mode
+            if (behind == null)                            // the first chapter of its lane
+                return wall > 0 ? new ChapterGate(ChapterId.None, 0, 0, 0, wall, keeper)
+                                : ChapterGate.Open;
 
             int required = ChapterGateRules.Table.RequiredStars(behind.LevelCount);
-            if (required <= 0) return ChapterGate.Open;    // the gate is switched off
+            if (required <= 0)                             // the star gate is switched off
+                return wall > 0 ? new ChapterGate(ChapterId.None, 0, 0, 0, wall, keeper)
+                                : ChapterGate.Open;
 
             return new ChapterGate(behind.Id, required,
                                    PlayerProgress.TotalStars(behind),
-                                   PlayerProgress.MaxStars(behind));
+                                   PlayerProgress.MaxStars(behind),
+                                   wall, keeper);
         }
 
         /// <summary>

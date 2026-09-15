@@ -534,50 +534,39 @@
       "serverOnly": false
     }
   ],
-  "_starComment": [
-    "Stars from a score, against the ladder in `catalog.score.stars`. The league a grove is",
-    "ranked on is its star count, so these cases pin both."
-  ],
+  "_starComment": "The star ladder, which is the only thing a score is banded into now. The league ids it used to name went with the league board (see LeaderboardBoard); l0..l8 are spent.",
   "starCases": [
     {
       "score": 0,
-      "stars": 0,
-      "league": "l0"
+      "stars": 0
     },
     {
       "score": 999,
-      "stars": 0,
-      "league": "l0"
+      "stars": 0
     },
     {
       "score": 1000,
-      "stars": 1,
-      "league": "l1"
+      "stars": 1
     },
     {
       "score": 4999,
-      "stars": 1,
-      "league": "l1"
+      "stars": 1
     },
     {
       "score": 5000,
-      "stars": 2,
-      "league": "l2"
+      "stars": 2
     },
     {
       "score": 19999,
-      "stars": 2,
-      "league": "l2"
+      "stars": 2
     },
     {
       "score": 20000,
-      "stars": 3,
-      "league": "l3"
+      "stars": 3
     },
     {
       "score": 900000,
-      "stars": 3,
-      "league": "l3"
+      "stars": 3
     }
   ],
   "_keeperComment": [

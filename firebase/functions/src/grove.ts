@@ -121,7 +121,7 @@ export interface GroveConfig {
    */
   dwellingLevels?: Record<string, number>;
 
-  /** The star ladder, ascending. Doubles as the league boundaries — see `leagueOf`. */
+  /** The star ladder, ascending. What a grove's worth is banded into on a card. */
   stars: number[];
 }
 
@@ -343,14 +343,52 @@ export function starsFor(score: number, ladder: number[]): number {
 }
 
 /**
- * The league id for a star count. Mirrors `GroveLeague.IdFor`.
+ * The furthest wave this save has ever reached on the Infinite lane. Mirrors
+ * `EndlessLedger.BestIn`.
  *
- * A league *is* the star rating the player already wears, so there is no second ladder to
- * tune and no second thing to explain — see `GroveLeague` for the argument.
+ * ## The one figure on a card that cannot be recomputed
+ *
+ * Everything else `buildCard` writes is derived from records this server validates for
+ * currency, or clamped to currency it derived itself (see this file's header). A wave count
+ * is neither: nothing the server holds implies how far a run got, and there is no third
+ * party to ask — which is invariant 10d's shape, arriving on a *reading* instead of on a
+ * grant. So the two defences it has are the ones invariant 13 leaves when a claim cannot be
+ * adjudicated:
+ *
+ *   * it is **bounded** to `MAX_WAVE`, which is far past anything the mode can produce, so a
+ *     tampered save takes a row on a board rather than making every honest row unreadable
+ *     beside a nineteen-digit one; and
+ *   * **it buys nothing.** Credits and XP derive from the star ledger and from nothing else
+ *     (invariant 9), so a forged wave moves a position on a list and not a balance. The day
+ *     the endless board pays anything, this stops being defensible.
+ *
+ * Read the same way the client reads it and bounded the same way, or the client's prediction
+ * and the card disagree for the one account that reaches the ceiling.
  */
-export function leagueOf(stars: number): string {
-  const clamped = stars < 0 ? 0 : stars > 8 ? 8 : Math.floor(stars);
-  return `l${clamped}`;
+export const MAX_WAVE = 9999;
+
+export function bestWave(save: Record<string, unknown>): number {
+  const rows = save.endlessBest;
+  if (!Array.isArray(rows)) return 0;
+
+  let best = 0;
+
+  // The rules cap the array at 64 (`EndlessLedger.MaxRows`); walking no further is belt and
+  // braces against a document written before that cap existed.
+  for (const raw of rows.slice(0, 64)) {
+    const row = raw as { level?: unknown; wave?: unknown } | null;
+    if (!row || typeof row !== "object") continue;
+
+    // A row naming nothing is not a run. The length cap is the level ledger's, for its
+    // reason: an id this long cannot have come from a catalog we shipped.
+    const level = typeof row.level === "string" ? row.level : "";
+    if (level.length === 0 || level.length > MAX_LEVEL_ID_LENGTH) continue;
+
+    const wave = Math.floor(Number(row.wave ?? 0));
+    if (Number.isFinite(wave) && wave > best) best = wave;
+  }
+
+  return best <= 0 ? 0 : Math.min(best, MAX_WAVE);
 }
 
 /**
@@ -649,7 +687,6 @@ export interface GroveCardDoc {
   level: number;
   score: number;
   stars: number;
-  league: string;
   dwelling: string;
   land: string[];
   placed: Record<string, CardPlacement>;
@@ -665,6 +702,19 @@ export interface GroveCardDoc {
    */
   hall?: string;
   hallFacing?: number;
+
+  /**
+   * The furthest wave this keeper has held out to on the Infinite lane — what the `endless`
+   * board is ordered on. See `bestWave` for why it is bounded rather than recomputed.
+   *
+   * **Absent rather than nought for a keeper who has never played the lane**, and that is the
+   * whole cost story of the second board. Firestore indexes a field only on the documents
+   * that carry it, so `orderBy("wave","desc")` and `where("wave",">",0).count()` walk an
+   * index holding the endless players alone rather than every card in the game — a board that
+   * costs a hundred reads a night at any population, and a count billed against the people on
+   * it rather than against everybody.
+   */
+  wave?: number;
 
   /** The grove catalog this was scored against, so a stale seed is diagnosable. */
   catalogVersion: number;
@@ -762,17 +812,22 @@ export function buildCard(
     if (Object.keys(placed).length >= 1024) break;
   }
 
+  // Spread rather than written as `wave: bestWave(save)`, because Firestore refuses
+  // `undefined` and a nought written out would put every card in the game into the endless
+  // board's index — see `GroveCardDoc.wave`.
+  const wave = bestWave(save);
+
   return {
     name: boardName(confirmedName, uid, list),
     avatar: typeof wallet.avatarId === "string" ? wallet.avatarId.slice(0, 64) : "",
     level,
     score: worth.score,
     stars: worth.stars,
-    league: leagueOf(worth.stars),
     dwelling,
     land,
     placed,
     ...hallSeat(save),
+    ...(wave > 0 ? { wave } : {}),
     builtUnix: nowUnix,
     catalogVersion: Math.floor(grove.version ?? 0),
   };
@@ -827,7 +882,21 @@ export interface RankedGrove {
   level: number;
   score: number;
   stars: number;
-  league: string;
+
+  /**
+   * The furthest wave, carried on every row of every board rather than only on the endless
+   * one.
+   *
+   * One row shape for both boards, because a row *is* the same row — the person, their
+   * companion and their keeper level are the same facts whichever list they are read off, and
+   * which figure gets drawn is the board's decision (`LeaderboardBoard.IsEndless`). Two row
+   * shapes would be two readers on the client for one document format.
+   *
+   * Nought for a keeper who has never played the lane, which is what a global row usually is.
+   * Written out here rather than omitted: inside an array it costs a byte and buys nothing,
+   * and unlike the card's own field it is not in an index.
+   */
+  wave: number;
 }
 
 /**
@@ -859,8 +928,22 @@ export function deciles(sorted: number[]): number[] {
   return out;
 }
 
-/** Every board this job writes: the global hundred and one per league. */
-export const BOARD_IDS = ["global", ...Array.from({ length: 9 }, (_, i) => `l${i}`)];
+/**
+ * Every board this job writes, and the whole of what `leaderboards` is allowed to hold.
+ *
+ * Two, and they are the game's two permanent numbers: what a keeper has **built** (the grove's
+ * worth) and how far they have **held out** (the Infinite lane's wave count). Mirrored by
+ * `LeaderboardBoard.All`, which is what the client asks for, and a board id is permanent for
+ * invariant 1's reason — it names a document, so renaming one orphans whatever the last run
+ * wrote and empties the screen until the next.
+ *
+ * **What used to be here was nine league boards** (l0 to l8) cutting the global board's own
+ * number into bands. They cost nine queries and nine counts a night to answer a question the
+ * published distribution already answers exactly and at O(1) (`config/groveRanks`, invariant
+ * 19c), and no screen in the game ever named one. Those ids are spent and must never be
+ * reused; `pruneRetiredBoards` is what takes the documents away.
+ */
+export const BOARD_IDS = ["global", "endless"];
 
 /** The alphabet a Firebase uid is drawn from, for the sampling cursor. See `randomCursor`. */
 const UID_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -885,12 +968,23 @@ function randomCursor(): string {
 }
 
 /**
- * The scores of a bounded random sample of cards, for the deciles and nothing else.
+ * A bounded random sample of cards, for the deciles and nothing else.
  *
- * **Projected to one field.** `select("score")` still costs one read per document - Firestore
- * bills the index entry rather than the payload - but it is the difference between pulling
- * five thousand whole cards into a function's memory and pulling five thousand numbers. A
- * card carries every placement in somebody's grove.
+ * **Projected, and it now projects two fields for the price of one.** `select(...)` still costs
+ * one read per document - Firestore bills the index entry rather than the payload - but it is
+ * the difference between pulling five thousand whole cards into a function's memory and pulling
+ * five thousand pairs of numbers. A card carries every placement in somebody's grove.
+ *
+ * **Both distributions come out of one walk, and that is why the second board's percentile was
+ * nearly free.** A board is a hundred rows; a *percentile* is what answers "where do I stand" for
+ * everybody the hundred cannot reach, and without one the Endless Watch would be a feature for a
+ * hundred people at any population. Sampling waves separately would have cost another five
+ * thousand reads a night; asking the same documents for a second field costs nothing at all.
+ *
+ * The two arrays are deliberately **not** the same length. A card with a wave and an empty grove
+ * belongs in the wave distribution and not in the worth one, and vice versa - each population is
+ * "keepers who have actually done this thing", which is the only population a percentile means
+ * anything against (see `GroveRankTable`). That is also why each ships its own sample count.
  *
  * **The window wraps, and it wraps with `endBefore`.** A cursor landing near the end of the
  * id space would otherwise return a short sample, and a short sample taken from the end of
@@ -901,21 +995,47 @@ function randomCursor(): string {
  * That is not a rounding error — it double-weights the tail of the id space in a distribution
  * players are shown as a percentile. It was caught by a live run reporting 29 samples against
  * a population of 15.
+ *
+ * **A card worth nothing is read and then discarded, and that is now a real dilution.** Since
+ * the endless board shipped, a keeper who has played the Infinite lane publishes a card even
+ * with an empty grove (`GrovePublishPolicy.WorthPublishing`), so the window can hand back
+ * documents whose score is nought — which is exactly right for the deciles, whose population
+ * is deliberately "keepers who have built something", and which means the *usable* sample is
+ * smaller than `RANK_SAMPLE_SIZE`. It degrades the honest way: below
+ * `GroveRankTable.MinimumSamples` the client draws no percentile at all rather than a wrong
+ * one. Raising the sample size is the lever if that ever binds — it cannot be filtered in the
+ * query, because Firestore wants the inequality field first in the ordering and this one is
+ * ordered by document id.
  */
-async function sampleScores(db: FirebaseFirestore.Firestore): Promise<number[]> {
+export interface RankSample {
+  /** Grove worth, for every sampled card worth more than nothing. */
+  scores: number[];
+
+  /** Furthest wave, for every sampled card that has ever run the Infinite lane. */
+  waves: number[];
+}
+
+async function sampleRanks(db: FirebaseFirestore.Firestore): Promise<RankSample> {
   const groves = db.collection("groves");
   const byId = FieldPath.documentId();
   const cursor = randomCursor();
 
   const first = await groves.orderBy(byId).startAt(cursor)
-                            .limit(RANK_SAMPLE_SIZE).select("score").get();
+                            .limit(RANK_SAMPLE_SIZE).select("score", "wave").get();
 
-  const scores: number[] = [];
+  const sample: RankSample = { scores: [], waves: [] };
 
   const take = (snap: FirebaseFirestore.QuerySnapshot) => {
     for (const doc of snap.docs) {
       const score = Math.floor(Number(doc.get("score") ?? 0));
-      if (Number.isFinite(score) && score > 0) scores.push(score);
+      if (Number.isFinite(score) && score > 0) sample.scores.push(score);
+
+      // Absent on every card whose owner has never played the lane, which is most of them -
+      // and absent has to read as "not in this population" rather than as a nought, or the
+      // median wave would be nought and the first person to finish a run would be told they
+      // are ahead of ninety per cent of the world.
+      const wave = Math.floor(Number(doc.get("wave") ?? 0));
+      if (Number.isFinite(wave) && wave > 0) sample.waves.push(wave);
     }
   };
 
@@ -923,30 +1043,51 @@ async function sampleScores(db: FirebaseFirestore.Firestore): Promise<number[]> 
 
   if (first.size < RANK_SAMPLE_SIZE) {
     const rest = await groves.orderBy(byId).endBefore(cursor)
-                             .limit(RANK_SAMPLE_SIZE - first.size).select("score").get();
+                             .limit(RANK_SAMPLE_SIZE - first.size).select("score", "wave").get();
     take(rest);
   }
 
-  return scores;
+  return sample;
 }
+
+/**
+ * The field a board is ordered on, which is the whole of what tells two boards apart here.
+ *
+ * A board is "rank the cards by one number, best first", so the only thing that varies is
+ * which number — which keeps `topOf` and `countOf` one query each rather than a branch per
+ * board, and makes a third board a row in a table instead of a third code path. A field named
+ * here **must** be one `buildCard` writes, or the board is silently empty for ever: nothing
+ * fails, the query simply matches no document.
+ *
+ * Both are single fields, so Firestore indexes them automatically and neither board needs a
+ * composite index. That is not an accident — it is why a board is ordered on a figure the card
+ * already carries rather than on one derived at query time.
+ */
+const BOARD_FIELD: Record<string, "score" | "wave"> = {
+  global: "score",
+  endless: "wave",
+};
 
 /** The top rows of one board, straight out of the index. */
 async function topOf(db: FirebaseFirestore.Firestore, boardId: string): Promise<RankedGrove[]> {
-  const groves = db.collection("groves");
+  const field = BOARD_FIELD[boardId];
+  if (!field) return [];
 
-  const query = boardId === "global"
-    ? groves.orderBy("score", "desc").limit(BOARD_ROWS)
-    : groves.where("league", "==", boardId).orderBy("score", "desc").limit(BOARD_ROWS);
+  const snapshot = await db.collection("groves")
+                           .orderBy(field, "desc").limit(BOARD_ROWS).get();
 
-  const snapshot = await query.get();
   const rows: RankedGrove[] = [];
 
   for (const doc of snapshot.docs) {
     const data = doc.data() as Partial<GroveCardDoc>;
-    const score = typeof data.score === "number" ? Math.floor(data.score) : 0;
-    if (score <= 0) continue;
 
-    const stars = typeof data.stars === "number" ? Math.floor(data.stars) : 0;
+    const score = typeof data.score === "number" ? Math.floor(data.score) : 0;
+    const wave = typeof data.wave === "number" ? Math.floor(data.wave) : 0;
+
+    // Nothing worth ranking. A card carrying a nought sorts to the bottom of its own board
+    // rather than being absent from it, which is the one thing an `orderBy` alone cannot say
+    // — and it is unreachable on `endless`, where a nought is never written at all.
+    if ((field === "score" ? score : wave) <= 0) continue;
 
     rows.push({
       uid: doc.id,
@@ -954,29 +1095,53 @@ async function topOf(db: FirebaseFirestore.Firestore, boardId: string): Promise<
       avatar: typeof data.avatar === "string" ? data.avatar : "",
       level: typeof data.level === "number" ? Math.floor(data.level) : 1,
       score,
-      stars,
-
-      // Recomputed from the stars rather than read off the document, exactly as it always
-      // was. The stored `league` is what the query selected on and `buildCard` writes it from
-      // these same stars, so the two cannot disagree - but the row a player reads is derived
-      // from the figure printed beside it rather than from a field that merely ought to match.
-      league: leagueOf(stars),
+      stars: typeof data.stars === "number" ? Math.floor(data.stars) : 0,
+      wave,
     });
   }
 
   return rows;
 }
 
-/** How many keepers are on one board, counted rather than sampled. */
+/**
+ * How many keepers are on one board, counted rather than sampled.
+ *
+ * An aggregation, which Firestore bills at one read per thousand index entries — so this is
+ * the one figure here that grows with the game, and it grows at a thousandth of it. The
+ * inequality is what keeps it honest on `global`, where every published card carries a `score`
+ * and a good many of them are worth nothing; on `endless` it is nearly free, because a card
+ * with no wave is not in that index at all.
+ */
 async function countOf(db: FirebaseFirestore.Firestore, boardId: string): Promise<number> {
-  const groves = db.collection("groves");
+  const field = BOARD_FIELD[boardId];
+  if (!field) return 0;
 
-  const query = boardId === "global"
-    ? groves.where("score", ">", 0)
-    : groves.where("league", "==", boardId).where("score", ">", 0);
-
-  const snapshot = await query.count().get();
+  const snapshot = await db.collection("groves").where(field, ">", 0).count().get();
   return snapshot.data().count;
+}
+
+/**
+ * Deletes any board document this build no longer publishes.
+ *
+ * **A retired board is worse than a missing one.** It keeps whatever rows the last run that
+ * knew about it wrote, for ever, readable by any signed-in player — a picture of a ladder that
+ * no longer exists, which nothing will ever correct because nothing writes it. That is what
+ * the nine league boards became the moment `BOARD_IDS` stopped naming them.
+ *
+ * It is a standing rule in the job rather than a one-off script, for invariant 7a's reason: a
+ * cleanup somebody has to remember on the day they retire a board will be forgotten, and its
+ * failure is invisible. `listDocuments` bills one read per document name and this collection is
+ * bounded by `BOARD_IDS` from the next run onwards, so the steady-state cost is two reads a
+ * night for ever and the collection can never quietly grow a stale member again.
+ */
+async function pruneRetiredBoards(db: FirebaseFirestore.Firestore): Promise<string[]> {
+  const live = new Set(BOARD_IDS);
+  const stale = (await db.collection("leaderboards").listDocuments())
+                  .filter((ref) => !live.has(ref.id));
+
+  await Promise.all(stale.map((ref) => ref.delete()));
+
+  return stale.map((ref) => ref.id);
 }
 
 /**
@@ -989,43 +1154,57 @@ async function countOf(db: FirebaseFirestore.Firestore, boardId: string): Promis
  * arbitrary five thousand, with no symptom anybody could see. A top hundred has to be a
  * *query*, because it is the one number here where approximately right is wrong.
  *
- * - **Boards** come from `orderBy("score","desc").limit(100)`: exact at any population, and a
+ * - **Boards** come from `orderBy(field,"desc").limit(100)`: exact at any population, and a
  *   hundred reads each whether the game has a thousand players or ten million.
  * - **Populations** come from a `count()` aggregation, which Firestore bills at one read per
  *   thousand matches rather than one per document. "The finest of N keepers" is now N rather
  *   than the size of a sample.
  * - **Deciles** stay sampled, because a percentile from a few thousand draws is accurate to
  *   far under the point it is rounded to, and an exact one would mean reading every card in
- *   the game every day to tell somebody they are in the top 12%.
+ *   the game every day to tell somebody they are in the top 12%. **Both** distributions come
+ *   out of the one sample, so the second board's percentile costs no reads at all.
  *
- * **What it costs at ten million players:** eleven board queries at a hundred rows (1,100),
- * eleven counts (Firestore bills an aggregation at one read per thousand index entries, so
- * the global count is 10,000 and the nine leagues sum to another 10,000), and the sample
- * (5,000). Call it twenty-six thousand reads a day for the entire game, once, at four in the
- * morning - under a penny. The old job cost five thousand and was wrong. Nothing here grows
- * with the player count except the counts, and those grow at a thousandth of it.
+ * **What it costs at ten million published cards:** two board queries at a hundred rows (200),
+ * two counts (Firestore bills an aggregation at one read per thousand index entries, so the
+ * global count is at most 10,000 and the endless one is a thousandth of however many people
+ * have actually played the lane), the prune (one read per board document, so two), and the
+ * sample (5,000). Call it fifteen thousand reads a day for the entire game, once, at four in
+ * the morning - a fraction of a penny. **Nothing here grows with the player count except the
+ * counts, and those grow at a thousandth of it**; adding a board adds a hundred reads a night
+ * and one aggregation, which is the whole reason a board is a document rather than a query.
  *
- * Every board is written whether or not anything is on it, so a league that emptied stops
- * showing yesterday's rows rather than keeping them for ever. `config/groveRanks` is written
- * last: it is what the client reads to decide whether to draw a percentile at all, so
- * publishing it before the boards it describes would open a window where the two disagree.
+ * Every board is written whether or not anything is on it, so a board that emptied stops
+ * showing yesterday's rows rather than keeping them for ever, and one that has been *retired*
+ * is deleted outright (`pruneRetiredBoards`). `config/groveRanks` is written last: it is what
+ * the client reads to decide whether to draw a percentile at all, so publishing it before the
+ * boards it describes would open a window where the two disagree.
  */
 export async function rebuildGroveRanks(): Promise<{ ranked: number; boards: number }> {
   const db = getFirestore();
 
   // Asked for together rather than one after another: they are independent reads against one
-  // collection, and a scheduled job should not spend twenty-three round trips in series to
-  // learn what it could have learned in one.
-  const [tops, counts, scores] = await Promise.all([
+  // collection, and a scheduled job should not spend a round trip in series for each of them.
+  //
+  // The prune rides along here rather than after the writes because it touches a different
+  // collection and can only ever remove ids `BOARD_IDS` does not name - so it cannot race the
+  // batch below, whatever order the two finish in.
+  const [tops, counts, sample, pruned] = await Promise.all([
     Promise.all(BOARD_IDS.map((id) => topOf(db, id))),
     Promise.all(BOARD_IDS.map((id) => countOf(db, id))),
-    sampleScores(db),
+    sampleRanks(db),
+    pruneRetiredBoards(db),
   ]);
+
+  if (pruned.length > 0) logger.info("removed retired boards", { boards: pruned });
 
   const population: Record<string, number> = {};
   BOARD_IDS.forEach((id, i) => { population[id] = counts[i]; });
 
-  const ascending = scores.slice().sort((a, b) => a - b);
+  // Ascending in both cases, which is what `deciles` wants and what the client asserts before
+  // it will believe a table at all.
+  const scores = sample.scores.slice().sort((a, b) => a - b);
+  const waves = sample.waves.slice().sort((a, b) => a - b);
+
   const builtUnix = Math.floor(Date.now() / 1000);
 
   const batch = db.batch();
@@ -1040,9 +1219,16 @@ export async function rebuildGroveRanks(): Promise<{ ranked: number; boards: num
 
   await batch.commit();
 
+  // `waveSamples` and `waveDeciles` are **additive**, and that is what makes this deployable
+  // in either order: a client that has never heard of them reads the document exactly as it
+  // did, and a client that has reads an absent pair as "nothing to say" and draws no standing
+  // — which is also the honest answer on the day this ships, when no population of watchers
+  // exists yet.
   await db.doc(GROVE_PATHS.ranksConfig).set({
-    samples: ascending.length,
-    deciles: deciles(ascending),
+    samples: scores.length,
+    deciles: deciles(scores),
+    waveSamples: waves.length,
+    waveDeciles: deciles(waves),
     population,
     builtUnix,
     builtAt: new Date().toISOString(),
@@ -1050,7 +1236,9 @@ export async function rebuildGroveRanks(): Promise<{ ranked: number; boards: num
 
   logger.info("published grove ranks", {
     ranked: population.global ?? 0,
-    sampled: ascending.length,
+    sampled: scores.length,
+    watchers: population.endless ?? 0,
+    waveSampled: waves.length,
     boards: BOARD_IDS.length,
   });
 

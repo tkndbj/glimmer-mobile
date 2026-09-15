@@ -128,11 +128,12 @@ namespace GlimmerGrove.Social
         /// from <c>Boot</c>, and safe to call again.
         ///
         /// <para>
-        /// The four sources are the three entitlement ledgers and the arrangement — which is
-        /// precisely the set <see cref="GroveCard.Fingerprint"/> covers, and the agreement
-        /// between those two lists is the whole correctness of the debounce. A fifth thing
-        /// that changes a card and does not raise one of these would simply never publish, so
-        /// anything added to the card belongs on this list in the same commit.
+        /// The sources are the three entitlement ledgers, the arrangement and the endless
+        /// lane's own high-water mark (<c>SyncTriggers</c>) — which is precisely the set
+        /// <see cref="GroveCard.Fingerprint"/> covers, and the agreement between those two
+        /// lists is the whole correctness of the debounce. Something that changes a card and
+        /// does not raise one of them would simply never publish, so <b>anything added to the
+        /// card belongs on both lists in the same commit</b>.
         /// </para>
         /// </summary>
         public static void Attach()
@@ -197,7 +198,7 @@ namespace GlimmerGrove.Social
                                         PlayerProgression.Level.Level, SaveSchema.NowUnix());
 
             _policy.Request(card.Fingerprint(), receipt.ServerRevision,
-                            card.Score >= GrovePublishPolicy.Worth);
+                            GrovePublishPolicy.WorthPublishing(card));
         }
 
         // ------------------------------------------------------------- remembering
@@ -476,10 +477,9 @@ namespace GlimmerGrove.Social
         {
             if (!IsAvailable) return CloudResult.Failed(CloudFailure.Offline, "no cloud backend");
 
-            var (result, table, population, builtUnix) =
-                await Backend.ReadGroveRanksAsync(cancellation);
+            var (result, published) = await Backend.ReadGroveRanksAsync(cancellation);
 
-            if (result.Ok) GroveRanks.Publish(table, population, builtUnix);
+            if (result.Ok) GroveRanks.Publish(published);
             else _ranksAsked = false;               // asked and missed; a later screen may retry
 
             return result;
@@ -610,9 +610,5 @@ namespace GlimmerGrove.Social
             _cards.Remove(ownerId);
             _cardOrder.Remove(ownerId);
         }
-
-        /// <summary>The board this player's own grove is ranked on right now.</summary>
-        public static string MyLeagueId()
-            => GroveLeague.IdFor(GroveScore.Of(HomesteadCatalog.Current).Stars);
     }
 }

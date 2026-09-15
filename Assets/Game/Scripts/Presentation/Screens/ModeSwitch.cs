@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
+using GlimmerGrove.Progression;
 using UnityEngine;
 
 namespace GlimmerGrove
@@ -159,10 +160,39 @@ namespace GlimmerGrove
 
                 rows.Add(new HeaderRow("Track_" + track.Value, Loc.Get(track.NameKey),
                                        Loc.Get(track.TaglineKey), accent, track == current,
-                                       () => choose?.Invoke(track)));
+                                       () => choose?.Invoke(track), !IsOpen(index, mode, track)));
             }
 
             return HeaderMenu.Build(host, PillSkin, Loc.Get(current.NameKey), rows, y);
+        }
+
+        /// <summary>
+        /// Whether a lane can be entered at all — its <em>first</em> chapter's gate and nothing
+        /// finer.
+        ///
+        /// <para>
+        /// <b>The first chapter, because that is what switching to a lane lands on</b>
+        /// (<c>LevelsScreen.FirstOf</c>), and because a lane is not shut just for having a
+        /// chapter further along that nobody has reached — every laddered lane has one of those
+        /// permanently.
+        /// </para>
+        /// <para>
+        /// <b>Asked through <c>LevelUnlock</c> rather than read off the entry</b>, so this row
+        /// and the screen it opens cannot come to disagree: the wall is one rule with one
+        /// answer, and a switcher keeping its own copy is the second place it could stop being
+        /// true.
+        /// </para>
+        /// <para>
+        /// <b>Public because the first-run tip asks it too.</b> A lesson is offered once in a
+        /// player's life, so one naming a lane nobody can enter yet is spent for good — the rule
+        /// the chapter-gate tip beside it already follows.
+        /// </para>
+        /// </summary>
+        public static bool IsOpen(CatalogIndex index, GameMode mode, GameTrack track)
+        {
+            var chapters = index.ChaptersIn(mode, track);
+            return chapters.Count == 0
+                || LevelUnlock.IsChapterUnlocked(index, chapters[0].Id);
         }
     }
 }

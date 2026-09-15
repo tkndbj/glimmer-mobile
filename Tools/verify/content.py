@@ -2764,6 +2764,88 @@ def check_tracks(manifest, keys):
     return errors
 
 
+def reachable_keeper_level(manifest, progression):
+    """The highest keeper level the shipped catalog can ever pay for, and the XP that does it.
+
+    XP derives from the star ledger and from nothing else (invariant 9), so three stars on every
+    live glade is the ceiling on what any account can reach - which is the number every keeper
+    wall has to be measured against. Mirrors `ContentValidation.PerfectXp` and
+    `ProgressionTable.LevelFor`.
+    """
+    base = progression.get("rewards") or {}
+    over = {c.get("chapterId"): c for c in (progression.get("chapterRewards") or [])}
+
+    def rule(chapter_id):
+        return over.get(chapter_id, base)
+
+    total = 0
+    glades = 0
+    for chapter in manifest.get("chapters", []):
+        if chapter.get("disabled"):
+            continue
+        r = rule(chapter.get("id"))
+        n = len(chapter.get("levels") or [])
+        glades += n
+        total += n * (r.get("xpFirstClear", 0) + 3 * r.get("xpPerStar", 0))
+
+    steps = progression.get("xpToNext") or []
+    tail = progression.get("tailXpToNext", 0)
+    step = progression.get("tailXpIncrement", 0)
+    top = progression.get("maxLevel", 1)
+
+    level, spent, i = 1, 0, 0
+    while level < top:
+        need = steps[i] if i < len(steps) else tail + step * (i - len(steps))
+        if need <= 0 or spent + need > total:
+            break
+        spent += need
+        level += 1
+        i += 1
+
+    return level, total, glades, top
+
+
+def check_keeper_walls(manifest, progression, warnings):
+    """The keeper walls the manifest puts in front of chapters. `ContentValidation.ValidateKeeperWalls`.
+
+    **The only way this goes wrong is invisible in either file alone.** A wall is one integer in
+    `manifest.json`; what can reach it is every reward rule in `progression.json` multiplied by
+    every glade in the catalog - so a wall above that ceiling is a lane padlocked for the life of
+    the build, with the manifest, the index, the map and the hub all perfectly correct.
+
+    An **error** above the level curve's own top, which is unreachable by arithmetic and can only
+    be a mistake; a **warning** above what the catalog pays for, which is a decision somebody may
+    genuinely want - a wall meant for content that has not shipped yet is how the home ladder's
+    rungs are authored.
+    """
+    errors = []
+    walls = []
+
+    reach, _, glades, top = reachable_keeper_level(manifest, progression)
+
+    for chapter in sorted(manifest.get("chapters", []), key=lambda c: c.get("order", 0)):
+        wall = chapter.get("minKeeperLevel", 0) or 0
+
+        if wall < 0:
+            errors.append(f"chapter '{chapter.get('id')}' has a negative minKeeperLevel")
+            continue
+        if not wall:
+            continue
+
+        walls.append((chapter, wall))
+
+        if wall > top:
+            errors.append(f"chapter '{chapter.get('id')}' asks for keeper level {wall}, above "
+                          f"the {top} the curve tops out at, so it can never be opened by "
+                          "anybody")
+        elif wall > reach:
+            warnings.append(f"chapter '{chapter.get('id')}' asks for keeper level {wall} and "
+                            f"three stars on all {glades} shipped glade(s) reaches only level "
+                            f"{reach}, so nobody can open it until more content ships")
+
+    return errors, walls, reach
+
+
 def check_wards(progression, keys, warnings, art):
     """The turret roster. `ContentValidation.ValidateWards`, offline.
 
@@ -3770,6 +3852,11 @@ def main():
     # a lane with no ladder draws a whole screen out of strings nothing else names.
     errors.extend(check_tracks(manifest, keys))
 
+    # The keeper walls. One integer in the manifest against every reward rule in
+    # progression.json times every glade in the catalog - a sum neither file can do alone.
+    wall_errors, keeper_walls, keeper_reach = check_keeper_walls(manifest, progression, warnings)
+    errors.extend(wall_errors)
+
     if utilities:
         # Printed rather than merely checked, because a cooldown is a number nobody can read off
         # a running game and the whole bar's pacing is four of them side by side.
@@ -3886,6 +3973,21 @@ def main():
         if stars_per_level >= 3:
             print("       that is every star a level can pay - no room for a single "
                   "two-star clear anywhere")
+
+    # Printed whether or not anything is wrong, for the chapter gate's reason: a wall decides
+    # whether a whole way of playing is on the screen, and nobody should have to open a JSON
+    # file to find out where it stands.
+    print()
+    if not keeper_walls:
+        print(f"keeper walls: none - every chapter opens on stars alone "
+              f"(three stars everywhere reaches level {keeper_reach})")
+    else:
+        print(f"keeper walls: {len(keeper_walls)} chapter(s), against level {keeper_reach} "
+              "reachable on three stars everywhere")
+        for chapter, wall in keeper_walls:
+            lane = f"{chapter.get('mode') or 'glade'}/{chapter.get('track') or 'main'}"
+            print(f"       {chapter.get('id')} ({lane}) opens at keeper level {wall}"
+                  + ("" if wall <= keeper_reach else " - out of reach of today's content"))
 
     hearts_block = progression.get("hearts") or {}
 

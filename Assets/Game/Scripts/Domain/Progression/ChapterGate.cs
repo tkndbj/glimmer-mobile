@@ -137,14 +137,30 @@ namespace GlimmerGrove.Progression
     }
 
     /// <summary>
-    /// What stands between a player and the next chapter, as a number they can count towards.
+    /// What stands between a player and a chapter, as numbers they can count towards.
     ///
     /// <para>
-    /// Deliberately a plain reading of three integers rather than a call into anything. The map
+    /// Deliberately a plain reading of integers rather than a call into anything. The map
     /// draws it, the victory panel decides from it whether a chapter just opened, the
     /// information panel explains it and <see cref="LevelUnlock"/> answers with it — one struct
     /// is what stops those four coming to disagree about what the gate is, which is exactly
     /// what happened to the companion unlock rule while it was answered in two places.
+    /// </para>
+    /// <para>
+    /// <b>Two halves, and one struct is what keeps them from being checked one at a time.</b>
+    /// A chapter can ask for stars in the chapter behind it (<see cref="Required"/>) and for a
+    /// keeper level of its own (<see cref="RequiredLevel"/>), and invariant 15a is the whole
+    /// reason they live together: a companion's unlock was <em>two</em> predicates for a year,
+    /// and a call site checking half a rule under a name promising all of it is how somebody's
+    /// purchase stayed behind a padlock. <see cref="IsOpen"/> is both halves, so no caller can
+    /// ask for less than the rule.
+    /// </para>
+    /// <para>
+    /// <b>The level half is the one reported when both apply</b>, which is
+    /// <c>HomesteadLedger</c>'s rule (invariant 16s) read across: when two refusals stand, the
+    /// one worth saying is the one the nearer currency cannot answer. A player told "20 of 30
+    /// stars to go on" who then meets a second wall has been given a number that was never the
+    /// whole price.
     /// </para>
     /// <para>
     /// It is filled from <see cref="PlayerProgress"/> by <see cref="LevelUnlock.GateFor"/> and
@@ -166,12 +182,32 @@ namespace GlimmerGrove.Progression
         /// <summary>The most <see cref="Behind"/> can hold, so a readout can say "18 of 30".</summary>
         public readonly int Available;
 
+        /// <summary>
+        /// The keeper level this chapter asks for, or nought when it asks for none.
+        ///
+        /// <b>A fact about <em>this</em> chapter, where the star half is about the one behind
+        /// it.</b> That asymmetry is not an accident: stars are how well the previous chapter
+        /// was played, and a keeper level is how much of the game has been played at all — so a
+        /// lane's <em>first</em> chapter, which has nothing behind it and therefore no star
+        /// gate, can still carry a wall. That is what the Infinite lane is.
+        /// </summary>
+        public readonly int RequiredLevel;
+
+        /// <summary>The keeper level the player is at, so a readout can say "level 7 of 10".</summary>
+        public readonly int KeeperLevel;
+
         public ChapterGate(ChapterId behind, int required, int held, int available)
+            : this(behind, required, held, available, 0, 0) { }
+
+        public ChapterGate(ChapterId behind, int required, int held, int available,
+                           int requiredLevel, int keeperLevel)
         {
             Behind = behind;
             Required = required < 0 ? 0 : required;
             Held = held < 0 ? 0 : held;
             Available = available < 0 ? 0 : available;
+            RequiredLevel = requiredLevel < 0 ? 0 : requiredLevel;
+            KeeperLevel = keeperLevel < 0 ? 0 : keeperLevel;
         }
 
         /// <summary>
@@ -194,18 +230,43 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static readonly ChapterGate Missing = new ChapterGate(ChapterId.None, 1, 0, 0);
 
-        /// <summary>True when the player may go on.</summary>
-        public bool IsOpen => Held >= Required;
+        /// <summary>
+        /// True when the player may go on — <b>both</b> halves met, never one.
+        ///
+        /// This is the whole rule and the only thing entitled to answer it. See the type's own
+        /// note on invariant 15a for why the halves are not separately askable.
+        /// </summary>
+        public bool IsOpen => Held >= Required && KeeperLevel >= RequiredLevel;
 
         /// <summary>True when there is a requirement worth printing.</summary>
-        public bool Exists => Required > 0 && Behind.IsValid;
-
-        /// <summary>Stars still to earn. Zero once the gate is open.</summary>
-        public int Remaining => Held >= Required ? 0 : Required - Held;
+        public bool Exists => (Required > 0 && Behind.IsValid) || RequiredLevel > 0;
 
         /// <summary>
-        /// How far along the gate the player is, 0 to 1. One when the gate asks for nothing, so
-        /// a bar never divides by zero and never reads as empty at the start of a mode.
+        /// True when the keeper wall is what is shutting this gate, and so the refusal to
+        /// print.
+        ///
+        /// <b>Asked before the star line</b>, for the reason in the type's own note: when both
+        /// stand, a star count is a number that was never the whole price.
+        /// </summary>
+        public bool NeedsLevel => KeeperLevel < RequiredLevel;
+
+        /// <summary>Stars still to earn. Zero once the star half is met.</summary>
+        public int Remaining => Held >= Required ? 0 : Required - Held;
+
+        /// <summary>Keeper levels still to climb. Zero once the level half is met.</summary>
+        public int LevelsRemaining
+            => KeeperLevel >= RequiredLevel ? 0 : RequiredLevel - KeeperLevel;
+
+        /// <summary>
+        /// How far along the <em>star</em> half the player is, 0 to 1. One when that half asks
+        /// for nothing, so a bar never divides by zero and never reads as empty at the start of
+        /// a mode.
+        ///
+        /// <b>Deliberately not a reading of both halves.</b> Stars and keeper levels are
+        /// different units, and averaging them would draw a bar reading nearly full with a wall
+        /// still standing. The one place that draws this is the map's signpost, which is about
+        /// the chapter behind; a caller wanting the other half asks
+        /// <see cref="LevelsRemaining"/>.
         /// </summary>
         public float Fraction
         {
@@ -218,6 +279,17 @@ namespace GlimmerGrove.Progression
         }
 
         public override string ToString()
-            => Exists ? $"{Behind}: {Held}/{Required} of {Available}" : "open";
+        {
+            if (!Exists) return "open";
+
+            string stars = Required > 0 && Behind.IsValid
+                ? $"{Behind}: {Held}/{Required} of {Available}"
+                : null;
+            string keeper = RequiredLevel > 0 ? $"keeper {KeeperLevel}/{RequiredLevel}" : null;
+
+            return stars == null ? keeper
+                 : keeper == null ? stars
+                 : stars + ", " + keeper;
+        }
     }
 }

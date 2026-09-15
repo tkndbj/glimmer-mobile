@@ -431,8 +431,11 @@ New level chapters ship every two to four weeks.
    set, because a tab is a control character *and* a word break.
 19c. **A standing is read off a published distribution; nothing maintains a global ordering.** Nine deciles
    and a hundred-row board, rebuilt daily, read as one document at O(1) at any player count — against a
-   query costing a hundred reads per screen open on a collection that grows for ever. A league is not a
-   second ladder either: it *is* the score table.
+   query costing a hundred reads per screen open on a collection that grows for ever. **This is also
+   why the nine league boards are gone** (19k): a league was the star rating over the player's own
+   grove, so a league board was the *same* number the global board is ordered on, cut into bands no
+   screen in the game ever named — nine queries and nine counts a night to answer worse a question
+   the deciles already answer exactly.
 19d. **A name is unique because a document id is unique, never because a query said so.** Uniqueness
    is enforced by the database's own primary key at any concurrency, where an equality query returns
    empty for two players a second apart and lets both write — and it is the shape that does not
@@ -464,6 +467,50 @@ New level chapters ship every two to four weeks.
    holding the save it carries and by nothing else — `Synced` is also raised by a switch, a link, a
    purchase and a deletion — and the card judged is built over the receipt's save, never the live
    ledgers.
+19k. **A board is one published document ordered on one field the card already carries, and adding
+   one is a row in a table.** `BOARD_FIELD` is that table; a board costs a hundred reads and one
+   aggregation a night **at any player count**, which is what makes "the finest groves" and "the
+   Endless Watch" two boards rather than two features. Four rules fell out of adding the second.
+   <br>**The field must be one a card is *ordered* on and one the row *prints*** — a list that
+   descends by a number nobody can see reads as shuffled. **A nought is absent rather than
+   written**, because Firestore indexes a field only on the documents carrying it: the wave is
+   omitted for a keeper who has never played the lane, so the endless index holds the endless
+   players alone and its `count()` is billed against them rather than against everybody. **A board
+   is about the *lane*, never a level** (43), so a second Infinite level is content and not a board
+   id. And **a retired board is worse than a missing one** — it keeps the last rows anybody wrote,
+   for ever, because nothing rewrites it — so `pruneRetiredBoards` deletes what `BOARD_IDS` does not
+   name, and the deletion scrub (27) walks the *collection* rather than that list, which is the one
+   place the two must differ.
+19m. **A board of a hundred rows is a feature for a hundred people; what makes it a feature for
+   everybody is the *distribution*, and both of them come out of one walk.** At ten million cards
+   the Endless Watch reaches 0.001% of them, so a lane ranked by a board alone is silent for
+   everyone who is not on it — 19c's argument arriving on the second board. `sampleRanks` already
+   reads five thousand cards by document-id range and Firestore bills per document whatever
+   `select` asks for, so **the wave deciles cost no reads at all**: one field more on a walk that
+   was happening anyway. <br>**The two populations are deliberately different lengths.** A card
+   with a wave and an empty grove is in one distribution and not the other, because a percentile
+   only means something against "keepers who have actually done this thing" — so each ships its
+   own sample count and each refuses to answer below `MinimumSamples`. **And a nought is never a
+   sample**: counting the unplayed would put the median wave at nought and tell the first person
+   to finish a run that they are ahead of ninety per cent of the world.
+19n. **A caption that can grow has to be measured against the plate it sits on, and only a render
+   can do it.** The standing replaces BEST WAVE on the medal's nameplate — a fixed trough — and
+   "TOP 12% OF WATCHERS" fits it only by wrapping to two lines, which `UIKit.Shrinkable` sets
+   `VerticalWrapMode.Truncate` on: the device would have drawn **"TOP 12% OF"** and dropped the
+   rest, silently (37n). "TOP 12%" draws on one line at the full 34px, the same weight as the
+   label it replaces. Found by `render_endless.py --standing`, which now prints the size Best Fit
+   settled on — **"22 against a floor of 22" is the tell that a string has outgrown its plate** —
+   and the mirror had to learn to shrink first (`hudkit.shrunk`), because a mirror that can only
+   draw the maximum answers the wrong question about every plate in this game whose text can grow.
+19l. **The endless board is the one public number this server cannot recompute, and what stands in
+   for that is a bound plus the fact that it buys nothing.** Nothing the server holds implies how
+   far a run got and no third party can be asked (10d's shape on a reading rather than a grant), so
+   invariant 13's fourth clause is all that is left: `MAX_WAVE` keeps a forged figure inside the
+   range a real one is drawn in, and credits and XP still derive from the star ledger alone (9), so
+   a forged wave moves a position and never a balance. **The day the endless board pays anything,
+   this stops being defensible.** The ceiling is mirrored in `EndlessLedger.MaxWave` and the two
+   move together, or the prediction a device draws and the card the server writes disagree for the
+   one account that reaches it.
 
 ### What a mode is, and what a mode costs
 20. **A mode is code, and a chapter names one.** A way of playing brings an interaction, a fail
@@ -848,6 +895,11 @@ changed** (5f).
   `.Snatch` / `.Bombard`.
 - **Retired in place on the wire**: `bestMillis` (22) — a field a rolled-back client still writes cannot be
   dropped from `hasOnly` without losing *every* save write (12a).
+- **The nine league board ids `l0`…`l8`** (19c, 19k), and the `league` field on a published grove card.
+  A board id names a document a nightly job writes, so invariant 1 reaches it in full. Nothing enforces
+  this but the table — except that `pruneRetiredBoards` deletes any `leaderboards/*` document
+  `BOARD_IDS` does not name, so re-minting one would quietly resurrect a board the client refuses to
+  ask for. `GroveLeague` and the two `groves` composite indexes on `league` went with them.
 - **Other**: the map sprite `boat` (8d); the loc keys `mode.cap.wards` (37v), `ui.loadout.sealed` /
   `ui.loadout.sealed_note` (42e), `ui.home.bonuses` and every `ui.daily.*` key (45 — the generic chest
   lines moved to `ui.chest.*`), `ui.tasks.hub_title` / `ui.tasks.hub_hint` / `ui.tasks.cta` /
@@ -855,7 +907,9 @@ changed** (5f).
   hub's box stopped carrying words, and the title it carries again is the page's own
   `ui.tasks.title` rather than a key of its own; the connection line they shared is still said on
   the page itself),
-  `ui.settings.credit` (46); **the store product `gg_first_bloom_pass`** and its string
+  `ui.settings.credit` (46); `ui.board.league`, `ui.board.of_league` and the nine `ui.league.l*`
+  names (19k — the league board is gone, and no screen had ever drawn a league's *name*);
+  **the store product `gg_first_bloom_pass`** and its string
   `store.product.gg_first_bloom_pass` (47d — a pass is bought with gems, and the id is
   **registered with both stores and therefore never reusable**; deactivate it in App Store
   Connect and Play Console rather than repointing it); `ui.event.first_bloom.name` and
@@ -1631,6 +1685,29 @@ changed** (5f).
    (`LoadoutBar.Overhang`). <br>**And everything a piece draws has to fit the box the stack gave
    it** — the first cut's emblem ring was scaled 1.16 past its own box and cleared the track pill by
    nine units on the shortest canvas, which reads as touching.
+43d. **A lane's first chapter has nothing behind it, so a star gate cannot reach it — and the
+   Infinite lane is nothing but a first chapter.** A gate counts the stars in the chapter
+   *before* this one (21), which is right for a ladder and empty for a lane holding one chapter
+   of one level: the endless run stood open to an account that had never played a siege, offering
+   the ending first. So a chapter may carry a **keeper wall** of its own, `minKeeperLevel` in the
+   manifest, and `s02_endlesswatch` asks for **10** — about twenty-two rungs at three stars
+   against the forty that ship. <br>**It lives inside `ChapterGate` rather than beside it**, which
+   is 15a spent again: two predicates is a rule somebody checks half of, so `IsOpen` is the
+   conjunction and nothing else may answer. **The wall is the refusal reported when both stand**
+   (16s read across) — a star count is a number that was never the whole price, and it would send
+   a player back to a chapter they may already have finished. <br>Three things that were not
+   obvious. **`IsUnlocked` shortcut on "nothing before it" before it asked any gate**, which was
+   harmless while every gate was about the chapter behind and made the wall **dead code on the
+   only lane that has one**; the head is asked first now, and the game's very first level still
+   walks the same path. **The monotonic clause reads a second ledger**, because an endless run is
+   never *cleared* — it leaves a wave count (`EndlessLedger`) — so "nothing already played is ever
+   taken back" would have padlocked the lane under somebody who had already run it. And **the wall
+   is per chapter and content**, so a wall is measured against what the shipped catalog can pay
+   for: both gates **error** above the level curve's own top and **warn** above the catalog's,
+   which is a sum neither `manifest.json` nor `progression.json` can do alone. <br>**The lane is
+   still on the switcher and the hub still draws its key** (42a): the row wears a padlock, the key
+   turns grey and says **reach keeper level 10** rather than LOCKED (42e), and nothing that says
+   *press this* — the glow, the breath, the sheen — is drawn over a key that will refuse.
 
 42. **A player chooses the line, and the load-bearing rule is that no turret may make a bolt
    weaker.** Twenty turrets, each standing on a colour the player picks, carried into every rung.
@@ -2100,6 +2177,12 @@ Do not guess — verify offline.
   chapter tool, once in C# — and when they drift **nothing fails**: both parse, every gate stays green, and
   the hold simulation happily measures a chapter nobody ships. The hand copy is not optional (a fixture
   that loads JSON needs `JsonUtility` and is skipped offline), so the gate is.
+- **Keeper walls:** both content gates walk the manifest's `minKeeperLevel` and print every wall
+  against the level three stars on every shipped glade reaches (**13** today, against the Infinite
+  lane's **10**). It **errors** above the curve's own top and **warns** above the catalog's,
+  because a wall is one integer in one file and what reaches it is every reward rule in another
+  times every glade in the catalog — a lane padlocked for the life of a build with every file
+  correct (43d).
 - **Difficulty:** `python Tools/verify/difficulty.py` — what each glade actually asks of a player, counted
   rather than argued about. Not a gate (5d).
 - **Charms:** there is no offline gate and there cannot be one — a charm is dealt into a *refill*, so
@@ -2377,15 +2460,28 @@ claimed five modes and a hundred levels "across eleven chapters" when the truth 
   walls, gates, trees and props. A piece stands on an authored footprint (1x1 to 4x4; the hall and
   every dwelling the floor's own 4x4) and can be **turned** — four facings, four renders, one hit
   mask each.
-- **Boards** — public grove cards, published rank distribution, unique keeper names with server-side
-  filtering and reporting. A card is rebuilt about fifteen seconds after its owner changes the grove while
-  online, or on their next launch; the cost grows with decorating, never with playing (19j).
+- **Boards** — **two**, and they are the game's two permanent numbers (19k): **Finest grooves**,
+  ordered on what a keeper has built, and the **Endless Watch**, ordered on how far they have held
+  the line on the Infinite lane. A hundred rows each, one published document each, rebuilt at 04:00
+  — about fifteen thousand reads a night for the whole game at ten million cards, and nothing in it
+  grows with the player count except the two `count()`s, which grow at a thousandth of it. Plus the
+  published rank distribution and unique keeper names with server-side filtering and reporting. A
+  card is rebuilt about fifteen seconds after its owner changes the grove or beats their endless
+  best while online, or on their next launch; the cost grows with decorating, never with playing
+  (19j). **The nine league boards are gone** and their ids are spent. <br>**Two published
+  distributions, not one** (19m): grove worth, read on the profile as "top N% of keepers", and
+  endless waves, read on the Infinite lane's own nameplate as **TOP N%** in place of BEST WAVE
+  once enough keepers have run it. Both are nine deciles off the same five-thousand-card sample,
+  so the second cost no reads; both refuse to answer under 200 samples, which is what they do on
+  the day they ship.
 - **One live mode, three hidden** (38). The game a player opens today is **Thornwatch**:
   `s01_thornwatch`, `s03_broodmarch`, `s04_barrowfell` and `s05_ashenhold` (ten rungs each) on the
   ordinary ladder, and `s02_endlesswatch` on an **Infinite** track beside it (43). The map draws no *mode* switcher,
   because there is one mode; it draws the **track** switcher, because there are two ladders. The
   ordinary ladder draws a map and the Infinite lane draws a **hub** — a medal carrying the best
-  wave, a plate of three lines, and BATTLE (43a–43c).
+  wave, a plate of three lines, and BATTLE (43a–43c). **The lane opens at keeper level 10**
+  (43d), which is the first keeper wall in the catalog: until then the switcher row wears a
+  padlock and the hub's key is grey and says what would change that.
   **Four casts and eight boss verbs**, one cast per chapter by ordinal and two verbs per chapter
   (7c, 37bd, 37br) — and **every raider is armed and every raider swings** (37cx), which the two
   baked casts were not until the fourth chapter shipped.
@@ -2419,7 +2515,7 @@ claimed five modes and a hundred levels "across eleven chapters" when the truth 
 | `s03_broodmarch` | siege | 10 | 38–59 matches | the same board and one new rule — the **lance**: a second cast and a hill that no longer forgives rank one; a blightcaller on rung 5 and a warbringer on rung 10 |
 | `s04_barrowfell` | siege | 10 | 49–81 matches | the first chapter authored for a *bought* line, and the one that deals all three charms: a skeleton cast, armour from the second rung, and the two verbs the mode had to grow — a gravemaw on rung 5 that eats the cogs and bombs left lying, and a bonecaller on rung 10, **the one boss in this mode rendered out of 3D** (37bx), that raises them back; **the first chapter whose raiders carry a surge** (37by) |
 | `s05_ashenhold` | siege | 10 | 49–81 matches | the fourth chapter, and the first that cost the mode **code**: two new boss verbs and a fourth cast. A living warband — rogue, barbarian and engineer, every body armed and every body swinging — armour from the first rung and three shields in a wave; a **shackler** on rung 5 that chains a ward and takes nothing else, and an **ironclad** on rung 10 that only its own colour can touch; **the first chapter whose raiders carry two tenths of surge** (37by) |
-| `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 20 | waves that never stop, graded on how far it got — **both star waves are guesses until somebody plays it** |
+| `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 20 | waves that never stop, graded on how far it got — **both star waves are guesses until somebody plays it**; opens at **keeper level 10** (43d) |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock**
 (22). Par is derived; both star lines and the losing line are multiples of it. **Par is never monotonic
@@ -2512,7 +2608,7 @@ is now deleted** — it read a season's entitlement back for the client, which n
 the pass stopped being a receipt: the client owns its own copy in the save and the server reads
 its own (47d). It was never in this list, which is how a deployed function came to outlive its
 own documentation; `firebase functions:list` is the authority. `firebase/README.md` is the guide;
-`firebase/e2e/smoke-test.mjs` is **91/91 live** and `firebase/e2e/delete-account.mjs` **14/14** — the
+`firebase/e2e/smoke-test.mjs` is **91/91 live** (95 cases since the Endless Watch board, four of them unrun) and `firebase/e2e/delete-account.mjs` **14/14** — the
 second erases the throwaway accounts it makes, so it is the only suite here that leaves less behind than it
 creates. Client half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK 13.15.0 as vendored UPM tarballs
 under `GooglePackages/` (gitignored — run `pwsh GooglePackages/fetch.ps1` on a fresh clone).
@@ -2553,6 +2649,37 @@ how the suite gets run without taking the owner's session (the recipe is in the 
 Editor was closed is unaddressed (a white rectangle, 7b) and deleted art leaves entries that fail
 `BuildPlayer` rather than the game. Re-bake the projectiles for any ward colour whose `Pal` entry has
 moved (37ak), then sync and verify.
+<br>**Owed on the Endless Watch board (19k, 19l), in this order.** (1) **`firebase deploy --only
+firestore:rules` is *not* needed**, and that was checked rather than assumed: the wave is copied
+from `endlessBest`, which the rules have allowed and capped since the Infinite lane shipped, and
+both `groves` and `leaderboards` are `allow write: if false` already — the only change to that file
+is a comment. Nothing about `hasOnly` moves (12a). (2) ~~`npm --prefix firebase/functions run
+deploy`~~ **deployed 2026-09-15**, one batch of three — `publishGrove` now writes `wave` and no
+longer writes `league`, `publishGroveRanks` writes two boards instead of ten and prunes the rest,
+and `deleteAccount` scrubs by walking the collection. The other eleven were left on the bundle they
+already had, which is the batching rule doing its job: none of them reads `league` or `BOARD_IDS`.
+Until it ran, no card carried a wave, so the endless board would have been written and empty — the
+honest degradation rather than a wrong list. (3) **The first `publishGroveRanks` after that deploy
+is what deletes `leaderboards/l0`…`l8`** — it runs itself at 04:00 UTC, so nothing has to be
+remembered, but **until the run on 2026-09-16 those nine documents keep their last rows**, and a
+*deleted* keeper's name would survive on them. That window is exactly why the scrub reads the
+collection rather than `BOARD_IDS` (27), so it is covered rather than merely short. (4)
+~~`firebase deploy --only firestore:indexes`~~ **deployed 2026-09-15**: the two `groves` composites
+on `league` are gone and `indexes` is now empty, the `spendLog` field override being the only thing
+left in the file. `wave` needs **no** index — single fields are indexed automatically, which is why
+a board is ordered on a figure the card already carries. (5) **No re-seed.** Nothing about
+`config/grove` or `config/progression` moved. (6) ~~a second `functions:publishGroveRanks`~~
+**deployed 2026-09-15** for the wave deciles (19m), which are **additive** on
+`config/groveRanks` — a client that has never heard of `waveDeciles` reads the document exactly as
+it did, so the two halves were deployable in either order. (7) In the Editor: `Validate Content`,
+`Validate Art` and the **EditMode suite** — no new art, no Addressables work, nothing under `Art/`.
+(8) `firebase/e2e/smoke-test.mjs` gained four cases (the card's wave, the absent league, and the
+endless board's read and write rules) and **has not run against the deploy** — which is now the only
+thing standing between this feature and "proved", since every gate that has run reads a mirror
+rather than the live card. <br>**And nothing will draw a standing until a night has run with two
+hundred watchers on it**, which on a game nobody has played yet is some way off: until then the
+nameplate reads BEST WAVE and the profile draws no percentile, which is the honest state rather than
+a fault to chase.
 <br>**Owed on this drop (The First Watch, 2026-09-14), in this order.** (1) **`firebase deploy
 --only firestore:rules` is *not* needed**, and that was checked rather than assumed: every number
 the season stores — the marks, the two claim floors and the pass flag — lives inside the `events`
@@ -2606,6 +2733,18 @@ not needed. But it is the sprite **every progress bar in the app** is drawn from
 to reimport it before a build says anything about how a bar looks: click the Editor, then look at
 the hub's rank bar, the profile's and the event box's as well as the tasks page's.
 `Tools/make_hud_kit_art.py --check` is the gate and is green.
+<br>**Owed on the Infinite lane's keeper wall (43d): nothing at all**, and the reasons are worth
+naming because every one of them is a thing this file has been caught by before. **No rules
+release and no functions deploy**, because unlocking is a pure function of the star ledger and is
+written nowhere (`ChapterGateTable`'s own note) — the save gains no field, so `hasOnly` has
+nothing to learn (12a). **No re-seed**, because the seeder publishes the reward map and the
+chapter set, and neither moved: `minKeeperLevel` is read by the client alone and no level was
+enabled, disabled or relisted. **No Addressables work and no art**, because the two sprites the
+shut key wears — `Ui/ic_padlock` and `Ui/btn_gray` — are both already in the global set. What is
+owed is the Editor's ordinary three (`Validate Content`, `Validate Art`, the EditMode suite);
+offline, `compile.py`, `content.py`, `loc.py`, `artnames.py` and the whole offline suite are green
+with `KeeperWallTests` in it, and `Tools/render_endless.py --locked 10` is what the shut key was
+sized against.
 <br>**Owed on the charm drop:** nothing, and that is worth saying because the charm re-cut (37cn) is the
 kind of change that usually leaves something. It **removed** `charm_lance`, `charm_storm` and the
 single-frame `beam.png`, and **added** eight charmed gem faces (`gem_lance_{r,g,b,y}`,
@@ -2750,7 +2889,22 @@ a phone in sunlight — and the one string that changed (`ui.shop.capacity_upgra
   arriving somewhere? Is the **medal** the right hero — it is the one number the lane is graded on,
   and on an account that has never run it the medal is empty, which is either an invitation or a
   blank. Do the three marks read as belonging to this game, given they are the only bought pictures
-  on the screen that are not the interface kit's?
+  on the screen that are not the interface kit's? <br>**And the whole screen now has a second face
+  nobody has met** (43d): before keeper 10 the key is grey and says *reach keeper level 10*. Is the
+  lane still read as something to want rather than as a broken button — the padlocked switcher row
+  is the only thing a player sees before they tap through to find out. **The figure worth an event
+  is how many accounts open the hub while it is shut**, because a lane nobody looks at before it
+  opens is a wall that bought nothing.
+- **The Endless Watch board** (19k), never played, and it replaces MY LEAGUE on the second tab.
+  Two questions and only one is about the list. **Does a keeper connect the wave on the medal with
+  the wave on the board** — they are the same number, drawn on two screens neither of which names
+  the other, and nothing says a run puts you on a list. And **does the tab get opened at all**,
+  given that the boards screen opens on the groves: a player who never taps it never learns the
+  lane is ranked, which would make the whole Infinite track a solitary score. **The figure worth an
+  event is how many people who have run the lane ever open the second tab**, because a board nobody
+  reads is a board that motivates nobody. And the honest risk: a wave cannot be recomputed, so the
+  first cheater at the top of that list is a thing to be looked at rather than a thing a gate
+  catches (19l).
 - **The restyled UI on a device** (44h): do the navy plates read against a bright world in sunlight, and
   does the backdrop stay a *place*? **A render is much weaker at "is this palette any good" than at "is
   this widget where I think it is".**

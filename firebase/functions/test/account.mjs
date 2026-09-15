@@ -23,7 +23,7 @@
  *     value it is retargeted to must be something no real account can ever be.
  */
 
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { generateKeyPairSync, createVerify } from "node:crypto";
@@ -39,7 +39,7 @@ if (!existsSync(join(LIB, "account.js"))) {
 
 const load = async (name) => import(pathToFileURL(join(LIB, name)).href);
 
-const { usableAppleKeys, clientSecret, TOMBSTONE_UID, BOARD_IDS } = await load("account.js");
+const { usableAppleKeys, clientSecret, TOMBSTONE_UID } = await load("account.js");
 const { BUNDLE_ID } = await load("config.js");
 
 let pass = 0;
@@ -135,14 +135,23 @@ check("and contains characters a uid never does", /[^A-Za-z0-9]/.test(TOMBSTONE_
 // ============================================================ the boards
 console.log("\nthe boards a deleted keeper is scrubbed from");
 
-// Mirrors `rebuildGroveRanks`. A board it does not know about keeps a deleted player's name
-// and score standing on a public leaderboard until the nightly rebuild, which is the one thing
-// the scrub exists to prevent.
-equal("ten of them", BOARD_IDS.length, 10);
-equal("the global one first", BOARD_IDS[0], "global");
-check("and one per league",
-      BOARD_IDS.slice(1).every((id, i) => id === `l${i}`),
-      BOARD_IDS.join(","));
+// This used to assert that the scrub's list of boards matched `rebuildGroveRanks`'. It no
+// longer keeps a list: it walks `leaderboards` and scrubs every document it finds.
+//
+// The difference is the whole point and it is worth a gate rather than a comment. `BOARD_IDS`
+// is what this build *publishes*; what a deleted keeper's name is standing on is whatever
+// documents are there, which the day a board is retired is a superset of it — and the rows on
+// a board nothing rewrites any more are permanent, so that is exactly when "your name is off
+// the boards" would quietly stop being true. Reading the collection makes the rule hold
+// without anybody remembering it (invariant 7a), and this proves the source still does it.
+{
+  const source = readFileSync(join(HERE, "..", "lib", "account.js"), "utf8");
+  const scrub = source.slice(source.indexOf("function removeFromPublicView"));
+  const body = scrub.slice(0, scrub.indexOf("\nasync function"));
+
+  check("the scrub reads the collection", body.includes("listDocuments()"), body.length);
+  check("and keys on no list of board ids", !body.includes("BOARD_IDS"));
+}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

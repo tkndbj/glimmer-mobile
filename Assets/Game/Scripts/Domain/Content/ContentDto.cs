@@ -300,6 +300,35 @@ namespace GlimmerGrove.Content
         /// </para>
         /// </summary>
         public string track;
+
+        /// <summary>
+        /// The keeper level a player must have reached before this chapter opens at all. 0 or
+        /// absent means no such wall, which is what every chapter that shipped before this
+        /// field existed carries.
+        ///
+        /// <para>
+        /// <b>Zero is the safe sentinel and it is chosen rather than inherited</b>, for
+        /// <see cref="ManifestCompanionDto.unlockCost"/>'s reason: <c>JsonUtility</c> writes a
+        /// zero into every field an older manifest never had, so "absent" and "no wall" have to
+        /// be the same value or a manifest from before this field existed would padlock the
+        /// whole catalog behind a level nobody has.
+        /// </para>
+        /// <para>
+        /// <b>Content rather than code, and per chapter rather than per lane.</b> A wall in
+        /// front of a way of playing is the one kind of tuning whose damage is players who stop
+        /// playing rather than an economy that drifts — <c>ChapterGateTable</c>'s argument — so
+        /// it has to be movable by pushing one small file rather than by a store review. Per
+        /// chapter because a chapter is the catalog's unit and the star gate already lives
+        /// there: a lane-wide field would be a second place a gate is written down, and the two
+        /// would disagree the first time a lane grew a second chapter.
+        /// </para>
+        /// <para>
+        /// <b>It is a wall, never a skip.</b> Unlike <see cref="minAppVersion"/> a chapter
+        /// behind this is still listed, still drawn and still named — the player is meant to see
+        /// what they are working towards. See <c>ChapterGate</c>.
+        /// </para>
+        /// </summary>
+        public int minKeeperLevel;
     }
 
     [Serializable]

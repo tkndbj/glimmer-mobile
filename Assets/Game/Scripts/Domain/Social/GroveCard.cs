@@ -72,8 +72,26 @@ namespace GlimmerGrove.Social
         /// <summary>Stars the score earned against the published ladder.</summary>
         public readonly int Stars;
 
-        /// <summary>The board this grove is ranked on. See <see cref="GroveLeague"/>.</summary>
-        public readonly string LeagueId;
+        /// <summary>
+        /// The furthest wave this keeper has held out to on the Infinite lane, or nought — what
+        /// the endless board is ordered on.
+        ///
+        /// <para>
+        /// <b>The one figure on a card the server cannot recompute, and it is on here rather than
+        /// anywhere else precisely because of that.</b> A card is already the document a stranger
+        /// reads, already written by the server alone, already moderated and already taken down by
+        /// one opt-out; a second public document for one integer would be a second publish path, a
+        /// second withdrawal, a second thing to moderate and a second thing to forget. What the
+        /// server can do is <em>bound</em> it (<see cref="Progression.EndlessLedger.MaxWave"/>) and
+        /// make sure it buys nothing — invariant 13 for a number that is not currency.
+        /// </para>
+        /// <para>
+        /// <b>Nought is absent on the wire.</b> The server omits the field for a keeper who has
+        /// never played the lane, which is what keeps the index the endless board is built from to
+        /// the players who are actually on it rather than to every card in the game.
+        /// </para>
+        /// </summary>
+        public readonly int BestWave;
 
         /// <summary>When the server last rebuilt this card, as a Unix timestamp.</summary>
         public readonly long PublishedUnix;
@@ -106,7 +124,7 @@ namespace GlimmerGrove.Social
         readonly Dictionary<string, Placement> _placed;
 
         public GroveCard(string ownerId, string name, string avatarId, int keeperLevel,
-                         long score, int stars, string leagueId, long publishedUnix,
+                         long score, int stars, int bestWave, long publishedUnix,
                          string dwellingId,
                          IEnumerable<string> land,
                          IReadOnlyDictionary<string, Placement> placed,
@@ -118,7 +136,9 @@ namespace GlimmerGrove.Social
             KeeperLevel = keeperLevel < 1 ? 1 : keeperLevel;
             Score = score < 0L ? 0L : score;
             Stars = stars < 0 ? 0 : stars;
-            LeagueId = GroveLeague.IsKnown(leagueId) ? leagueId : GroveLeague.IdFor(Stars);
+            BestWave = bestWave < 0 ? 0
+                     : bestWave > Progression.EndlessLedger.MaxWave ? Progression.EndlessLedger.MaxWave
+                     : bestWave;
             PublishedUnix = publishedUnix < 0L ? 0L : publishedUnix;
             DwellingId = dwellingId ?? string.Empty;
             HallSlot = hallSlot ?? string.Empty;
@@ -142,7 +162,7 @@ namespace GlimmerGrove.Social
         /// </summary>
         public static readonly GroveCard Empty =
             new GroveCard(string.Empty, string.Empty, string.Empty, 1, 0L, 0,
-                          GroveLeague.IdFor(0), 0L, string.Empty, null, null);
+                          0, 0L, string.Empty, null, null);
 
         /// <summary>True once this names an account, which is what a visit needs to draw.</summary>
         public bool IsValid => OwnerId.Length > 0;
@@ -314,7 +334,8 @@ namespace GlimmerGrove.Social
             // same fingerprint for the same grove, and only one of them can see the floor's
             // fallback. Absent is the answer for a grove nobody has rearranged, on both sides.
             return Build(catalog, LedgerHoldings.Instance, ownerId, name, avatarId, keeperLevel,
-                         nowUnix, placed, HomesteadLayout.HallSlot, HomesteadLayout.HallFacing);
+                         EndlessLedger.Best, nowUnix, placed,
+                         HomesteadLayout.HallSlot, HomesteadLayout.HallFacing);
         }
 
         /// <summary>
@@ -362,13 +383,15 @@ namespace GlimmerGrove.Social
             string name = string.IsNullOrEmpty(stored) ? Persistence.Wallet.DefaultName : stored;
 
             return Build(catalog, new SaveHoldings(save, keeperLevel), ownerId, name,
-                         save?.wallet?.avatarId ?? string.Empty, keeperLevel, nowUnix, placed,
+                         save?.wallet?.avatarId ?? string.Empty, keeperLevel,
+                         EndlessLedger.BestIn(save), nowUnix, placed,
                          save?.groveHall, save?.groveHallFacing ?? 0);
         }
 
         /// <summary>The one builder both readings go through, so they cannot drift.</summary>
         static GroveCard Build(HomesteadCatalog catalog, IGroveHoldings held, string ownerId,
-                               string name, string avatarId, int keeperLevel, long nowUnix,
+                               string name, string avatarId, int keeperLevel, int bestWave,
+                               long nowUnix,
                                IReadOnlyDictionary<string, Placement> placed,
                                string hallSlot = null, int hallFacing = 0)
         {
@@ -386,7 +409,7 @@ namespace GlimmerGrove.Social
                                  keeperLevel,
                                  standing.Score,
                                  standing.Stars,
-                                 GroveLeague.IdFor(standing.Stars),
+                                 bestWave,
                                  nowUnix,
                                  HomesteadLedger.BestDwelling(catalog, held).Id,
                                  land,
@@ -421,6 +444,14 @@ namespace GlimmerGrove.Social
             var parts = new List<string>(_land.Count + _placed.Count + 2)
             {
                 "s:" + Score.ToString(System.Globalization.CultureInfo.InvariantCulture),
+
+                // The wave is on the card, so a new best is a change a visitor can see and owes
+                // a publish exactly as a bench does. Left out, a keeper could hold out ten waves
+                // further than anybody alive and never reach the board they did it for, because
+                // nothing else about their grove had moved — invariant 19j's fault arriving
+                // through a field rather than through a stale read, which is precisely how the
+                // hall's seat got here.
+                "w:" + BestWave.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 "d:" + DwellingId,
                 "n:" + Name,
                 "a:" + AvatarId,

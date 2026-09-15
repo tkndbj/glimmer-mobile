@@ -234,7 +234,7 @@ function buildGroveConfig() {
     .sort((a, b) => a - b);
 
   if (stars.length === 0) {
-    throw new Error("homestead.json has no score ladder; every grove would rank in the bottom league");
+    throw new Error("homestead.json has no score ladder; every grove would be published wearing no stars");
   }
 
   if (Object.keys(dwellings).length === 0) {

@@ -62,7 +62,7 @@ import { getFirestore, Firestore, Transaction } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 
 import { PATHS } from "./config";
-import { GROVE_PATHS, BOARD_ROWS, BOARD_IDS } from "./grove";
+import { GROVE_PATHS, BOARD_ROWS } from "./grove";
 import { NAME_PATHS, NameDoc, heldName, isDenied } from "./names";
 import { REPORT_PATHS } from "./reports";
 
@@ -148,10 +148,19 @@ function emptyReport(): DeletionReport {
  * is off the boards" has to be true when this call returns, because the account it named will
  * not exist to correct it, and a card cannot be withdrawn twice.
  *
- * Ten reads and at most ten small writes, once in the life of an account. It is a transaction
- * per board rather than one batch because `rebuildGroveRanks` rewrites all ten in a batch of
- * its own: read-filter-write under a transaction is what makes a collision with the 04:00 job
- * a retry instead of one of the two writes disappearing.
+ * <b>It walks the collection rather than `BOARD_IDS`, and that is the difference between a
+ * scrub and a scrub that is true.</b> `BOARD_IDS` is what this build *publishes*; what a
+ * deleted keeper's name is standing on is whatever documents are actually there, which after a
+ * board is retired is a superset of it until the next nightly prune. Reading the list is a few
+ * document-name reads once in the life of an account, and it is what makes this rule hold
+ * without anybody having to remember it on the day a board is withdrawn (invariant 7a) — which
+ * is precisely the day it would matter, because the rows on a board nothing rewrites any more
+ * are permanent.
+ *
+ * A handful of reads and at most a handful of small writes, once in the life of an account. It
+ * is a transaction per board rather than one batch because `rebuildGroveRanks` rewrites them
+ * all in a batch of its own: read-filter-write under a transaction is what makes a collision
+ * with the 04:00 job a retry instead of one of the two writes disappearing.
  */
 async function removeFromPublicView(db: Firestore, uid: string): Promise<{
   cardRemoved: boolean;
@@ -164,9 +173,7 @@ async function removeFromPublicView(db: Firestore, uid: string): Promise<{
 
   let boardsScrubbed = 0;
 
-  for (const boardId of BOARD_IDS) {
-    const ref = db.doc(GROVE_PATHS.board(boardId));
-
+  for (const ref of await db.collection("leaderboards").listDocuments()) {
     const changed = await db.runTransaction(async (tx: Transaction) => {
       const snapshot = await tx.get(ref);
       if (!snapshot.exists) return false;
@@ -563,4 +570,4 @@ export async function revokeAppleGrant(
 }
 
 /** Exported so the offline suite can drive it; see `test/account.mjs`. */
-export { BOARD_IDS, clientSecret };
+export { clientSecret };

@@ -91,33 +91,131 @@ namespace GlimmerGrove
         const float TabsHeight = 104f;
 
         /// <summary>
-        /// How many cells across, and it is <b>four because the roster is twenty</b>.
+        /// The air either side of the row, in canvas units.
+        ///
+        /// <b>Units rather than a share of the display</b>, which is <c>CanvasFit</c>'s own
+        /// doctrine: a margin does not grow because a screen is squarer, it is drawn smaller
+        /// along with everything else.
+        /// </summary>
+        const float RowGutter = 38f;
+
+        /// <summary>
+        /// How wide one row of the shelf is drawn: the canvas, less a gutter either side.
         ///
         /// <para>
-        /// <b>A grid whose count does not divide by its columns has a hole in the corner the eye
-        /// reads as the end.</b> At three across, twenty turrets are six full rows and a row of
-        /// two - so the bottom-right cell, which is where anybody looks for "the last one", was
-        /// <em>empty</em>, and the last thing actually drawn there was whatever sat at the end of
-        /// the row above. It was reported as the shelf being in the wrong order, and the order was
-        /// right: apex was rung twenty the whole time, sitting in the middle of a ragged row.
-        /// Four columns is five full rows and nothing left over.
+        /// <b>The canvas rather than 1,080</b>, because <c>CanvasFit</c> widens a squarer
+        /// display's canvas instead of scaling a phone's — every phone is 1,080 units across and
+        /// a tablet is 1,350 to 1,620. Pinned to the phone's row, this shelf would draw as a
+        /// 1,004-unit column down the middle of a 1,620-unit screen with three hundred units of
+        /// nothing either side, every card drawn at two thirds the size for no reason at all.
         /// </para>
         /// <para>
-        /// <b>Whoever changes the roster's size owns this number.</b> Twenty into four is exact;
-        /// twenty-one into four is a ragged row again, and the fix is the columns or the roster,
-        /// never a tidier ending drawn on top of it.
+        /// <b>And it is not invariant 37cc being broken; it is 37cc's own reason read the other
+        /// way.</b> A siege field may not spend a tablet's extra width because its cell is
+        /// square, so every unit it takes across it takes back out of the hill and the ward line
+        /// — the width was bought to buy height, and is not the board's to spend. A shelf is a
+        /// scrolling grid that fights nothing for height. <b>Before spending a tablet's width,
+        /// ask what the thing being widened would be taking it from.</b>
+        /// </para>
+        /// <para>
+        /// <b><c>Boot.CanvasWidth</c> rather than the viewport's own rect</b>, which is 43c's
+        /// rule the other way up and worth stating once: a constant lies when the thing it
+        /// describes has moved, and a <em>rect</em> lies when nothing has laid it out yet. This
+        /// is read while the grid is being built, a frame before uGUI resolves anything, and
+        /// <c>CanvasFit.WidthFor</c> is a pure function of the screen — which is the same reason
+        /// <c>SplashScreen.Fit</c> reads it rather than measuring.
         /// </para>
         /// </summary>
-        const int Columns = 4;
+        static float RowSpan => Boot.CanvasWidth - RowGutter * 2f;
+
+        /// <summary>
+        /// How many cells across: <b>two on a phone and four on a tablet</b>.
+        ///
+        /// <para>
+        /// <b>A declared pair rather than a count derived from the width, and the argument is
+        /// the threshold rather than the arithmetic</b> — which is worth saying plainly, because
+        /// the arithmetic one was written here first and is no longer true. This number used to
+        /// be defended as "twenty divides by four": at three across, twenty turrets were six
+        /// full rows and a row of two, so the bottom-right cell — where anybody looks for "the
+        /// last one" — was <em>empty</em>, and it was reported as the shelf being in the wrong
+        /// order when the order was right the whole time. <b>That stopped being the reason the
+        /// day <see cref="TierBadge"/> shipped.</b> A band starts a fresh row, the bands hold
+        /// ten, seven and three, and <em>no</em> column count leaves all three full — two across
+        /// leaves 0, 1 and 1 over; three leaves 1, 1 and 0; four leaves 2, 3 and 3. It does not
+        /// matter, and the render is what says so: a part-full row under a header reads as the
+        /// end of that band rather than as a hole in a grid, which is the whole of what 37bc
+        /// bought by laying this out with a cursor instead of <c>i / Columns</c>.
+        /// </para>
+        /// <para>
+        /// <b>So what decides it is that every tablet should draw the same shelf.</b> The switch
+        /// is <c>CanvasFit</c>'s own threshold, which sits in the gap between the squarest phone
+        /// (16:9) and the tallest tablet (16:10): no shipping display is near it and none can be
+        /// on both sides of it from one frame to the next. A count ramped off the canvas width
+        /// would answer <b>three</b> on a 16:10 tablet and <b>four</b> on a 4:3 — two devices a
+        /// player would call the same thing, drawing two different screens, with the ragged
+        /// bands landing in different places on each. A threshold has one answer per kind of
+        /// display, which is the same shape, for the same reason, as <c>PhoneFloor</c> itself.
+        /// </para>
+        /// <para>
+        /// <b>Whoever changes the roster's size owns both numbers</b> — not because the total
+        /// has to divide, but because the card is sized by them: four across a phone drew each
+        /// turret 130 units wide, and six across a tablet would do it again.
+        /// </para>
+        /// <para>
+        /// <b>What two across costs is the scroll</b>, which is the trade and not a fault: ten
+        /// rows on a phone where there were five. What it buys is a card wide enough for the
+        /// picture to be the thing being judged — this shelf's whole job is a choice between
+        /// twenty silhouettes, and at four across a phone drew each one 130 units wide.
+        /// </para>
+        /// </summary>
+        static int Columns => Boot.ShortCanvas ? TabletColumns : PhoneColumns;
+
+        const int PhoneColumns = 2, TabletColumns = 4;
+
+        /// <summary>
+        /// The cell this card was drawn at — a phone's, two across — and what
+        /// <see cref="Scale"/> is measured against.
+        /// </summary>
+        const float DesignW = 492f;
+
+        /// <summary>
+        /// How far this card is from the one it was designed as, which is
+        /// <c>PieceCard.ScaleFor</c>'s idiom and is here for its reason: one design, drawn at
+        /// whatever size the row has room for.
+        ///
+        /// <para>
+        /// <b>It is 1 on every phone by construction</b> — 1,080 less two gutters, less one gap,
+        /// halved, is <see cref="DesignW"/> exactly — so a tablet is the only display this
+        /// arithmetic does anything on, and a change to the card is still a change to the
+        /// numbers a phone draws.
+        /// </para>
+        /// <para>
+        /// <b>The gaps are deliberately outside it.</b> Scaling them would make
+        /// <see cref="CellW"/> depend on a scale derived from <see cref="CellW"/>; they are two
+        /// small constants in units, so a tablet's denser grid simply keeps a phone's gutters
+        /// between its cards.
+        /// </para>
+        /// </summary>
+        static float Scale => CellW / DesignW;
 
         /// <summary>
         /// One cell, and the vertical structure inside it - shared by both shelves, because the
         /// two grids differing anywhere is a difference nobody chose.
         ///
         /// <para>
-        /// <b>Narrower because there are four of them</b>: the row is the same 1,004 units it
-        /// always was, so the cell is what gives. Everything below the picture moved up by exactly
-        /// what the picture lost, which is why <see cref="CellH"/> fell by the same 46.
+        /// <b>The width is derived, never typed</b> (invariant 16l): the row is
+        /// <see cref="RowSpan"/> and the gaps are known, so the cell is what is left over
+        /// divided by the columns. Typed as a literal beside a column count it is two numbers
+        /// that have to agree, and the day one moves the grid draws off-centre or overlaps with
+        /// every gate green - a layout fault no test in this project can see.
+        /// </para>
+        /// <para>
+        /// <b>The height was authored rather than scaled off the width</b>, because a card is a
+        /// stack of a picture, a name and a strip and only the picture grows with the cell.
+        /// Twice the width at twice the height is a card two thirds air; this is the same
+        /// five-part structure with the picture given the room the second column paid for. What
+        /// it <em>does</em> follow is <see cref="Scale"/>, which is a different thing: the card
+        /// keeps its proportions on a display that draws the whole interface smaller.
         /// </para>
         /// <para>
         /// <b>And it is one structure again, which it briefly was not.</b> A kit cell used to be
@@ -129,24 +227,43 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>What a thing does is a sentence, and a sentence belongs on the panel.</b> Twenty
-        /// turrets or four utilities four across, each with a line of small print, is a wall of
-        /// prose on a screen whose job is a choice between pictures — and every one of those
-        /// sentences is already drawn one tap in, on the panel where somebody is deciding rather
-        /// than scanning. What the space buys is a price big enough to read at a glance, which is
-        /// the number a shelf is really about.
+        /// turrets or four utilities, each with a line of small print, is a wall of prose on a
+        /// screen whose job is a choice between pictures — and every one of those sentences is
+        /// already drawn one tap in, on the panel where somebody is deciding rather than
+        /// scanning. What the space buys is a price big enough to read at a glance, which is the
+        /// number a shelf is really about.
         /// </para>
         /// </summary>
-        const float CellW = 236f, CellH = 262f;
+        static float CellW => (RowSpan - (Columns - 1) * CellGapX) / Columns;
+
+        static float CellH => 470f * Scale;
+
+        /// <summary>
+        /// The plate's corner, and it <b>does not scale with the cell</b>.
+        ///
+        /// <para>
+        /// <b>A nine-sliced sprite's corner is a fact about the sprite, not about the rect</b>
+        /// (invariant 44a from the other end): the kit plate under every cell draws its corner
+        /// at one sprite pixel per UI unit whatever size the card is, so the generated veil and
+        /// rim that have to sit on top of it keep the radius they always had. Scaling it with
+        /// the card is how a veil comes to show four slivers of plate at its corners.
+        /// </para>
+        /// <para>
+        /// <b>The price strip's seat is the opposite case and does scale</b>: it is a generated
+        /// sprite with nothing to match, so its corner is a ratio of its own height rather than
+        /// a number that has to agree with a bought one.
+        /// </para>
+        /// </summary>
         const int CellRadius = 24;
         const float CellGapX = 20f, CellGapY = 22f;
 
         /// <summary>The picture: square, centred, a margin down from the cell's own top.</summary>
-        const float IconTop = 18f, IconBox = CellW * .55f;
+        static float IconTop => 30f * Scale;
+        static float IconBox => CellW * .55f;
 
         /// <summary>The name's middle, measured down from the cell's top.</summary>
-        const float NameY = 172f;
+        static float NameY => 336f * Scale;
 
-        /// <summary>The price strip's middle, measured <em>up</em> from the cell's foot.</summary>
         /// <summary>
         /// Where a held turret's star ladder sits, measured down from the cell's top.
         ///
@@ -154,9 +271,30 @@ namespace GlimmerGrove
         /// price — so a cell is the same height whichever it is, and the eye finds one thing or
         /// the other in the same place rather than in two.
         /// </summary>
-        const float StarsY = 210f;
+        static float StarsY => 395f * Scale;
 
-        const float FootY = 34f;
+        /// <summary>
+        /// How wide one of those stars is drawn.
+        ///
+        /// <b>Passed rather than left to <c>WardStarRow</c>'s default</b>, which is the size the
+        /// preview panel draws at: a row keeps its own arithmetic (its width, its step, where
+        /// the upgrade ceremony drops a star) and every screen says how big it wants it. At the
+        /// default a five-star ladder is 158 units under a 468-wide name, which reads as a
+        /// readout that belongs to something else.
+        /// </summary>
+        static float StarSize => 32f * Scale;
+
+        /// <summary>The price strip's middle, measured <em>up</em> from the cell's foot.</summary>
+        static float FootY => 57f * Scale;
+
+        /// <summary>
+        /// A scaled size as a font size.
+        ///
+        /// <c>Text.fontSize</c> is an int and <c>UIKit.Shrinkable</c> clamps its floor against
+        /// it, so both have to be rounded at the same moment rather than one of them drifting a
+        /// point on a tablet. The same helper, for the same reason, as <c>PieceCard.Pt</c>.
+        /// </summary>
+        static int Pt(float size) => Mathf.Max(1, Mathf.RoundToInt(size));
 
         /// <summary>The parts of a slot that change when the line does.</summary>
         sealed class SlotView
@@ -652,6 +790,30 @@ namespace GlimmerGrove
         /// second the new grid would sit above the header in paint order.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// How many cells across the grid was last painted at. See <see cref="Update"/>.
+        /// </summary>
+        int _painted;
+
+        /// <summary>
+        /// Repaints the shelf when the display changes shape, which is <c>CanvasFitter</c>'s
+        /// argument one layer up: a column count read once is right on every device that never
+        /// changes shape and silently wrong on the ones that do — an iPad entering split view, a
+        /// foldable being opened, and Android reporting a different size for a frame or two
+        /// after a rotation.
+        ///
+        /// <para>
+        /// <b>Watched rather than subscribed to</b>, because nothing raises an event for it, and
+        /// it is a property read and an int compare a frame. The entrance is not replayed: a
+        /// resize is a redraw, not an arrival (invariant 16d).
+        /// </para>
+        /// </summary>
+        void Update()
+        {
+            if (_grid == null || _painted == Columns) return;
+            Paint();
+        }
+
         void Rebuild()
         {
             Drop(_viewport);

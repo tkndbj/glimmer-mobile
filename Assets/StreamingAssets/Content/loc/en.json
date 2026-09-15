@@ -1790,6 +1790,10 @@
       "text": "Your groove is ranked. The standing arrives with the next tally."
     },
     {
+      "key": "ui.board.endless",
+      "text": "Endless Watch"
+    },
+    {
       "key": "ui.board.failed",
       "text": "The boards could not be reached. Try again in a moment."
     },
@@ -1800,10 +1804,6 @@
     {
       "key": "ui.board.join",
       "text": "Show my groove"
-    },
-    {
-      "key": "ui.board.league",
-      "text": "My league"
     },
     {
       "key": "ui.board.leave",
@@ -1822,10 +1822,6 @@
       "text": "the finest of {0} keepers"
     },
     {
-      "key": "ui.board.of_league",
-      "text": "{0} — {1} keepers"
-    },
-    {
       "key": "ui.board.offline",
       "text": "The boards are not available here."
     },
@@ -1840,6 +1836,10 @@
     {
       "key": "ui.board.placed",
       "text": "You are ranked #{0} on this board."
+    },
+    {
+      "key": "ui.board.row_wave",
+      "text": "Wave {0} · keeper {1}"
     },
     {
       "key": "ui.board.row_worth",
@@ -2220,6 +2220,10 @@
     {
       "key": "ui.endless.reached",
       "text": "You held to wave {0}."
+    },
+    {
+      "key": "ui.endless.standing",
+      "text": "Top {0}%"
     },
     {
       "key": "ui.endless.unplayed",
@@ -2726,42 +2730,6 @@
       "text": "West Hollow"
     },
     {
-      "key": "ui.league.l0",
-      "text": "Saplings"
-    },
-    {
-      "key": "ui.league.l1",
-      "text": "Thickets"
-    },
-    {
-      "key": "ui.league.l2",
-      "text": "Hollows"
-    },
-    {
-      "key": "ui.league.l3",
-      "text": "Meadows"
-    },
-    {
-      "key": "ui.league.l4",
-      "text": "Orchards"
-    },
-    {
-      "key": "ui.league.l5",
-      "text": "Sanctums"
-    },
-    {
-      "key": "ui.league.l6",
-      "text": "Wildwoods"
-    },
-    {
-      "key": "ui.league.l7",
-      "text": "Everglades"
-    },
-    {
-      "key": "ui.league.l8",
-      "text": "The Elderwood"
-    },
-    {
       "key": "ui.levels.chapter_gate",
       "text": "{0} / {1} stars to go on"
     },
@@ -2772,6 +2740,10 @@
     {
       "key": "ui.levels.info_title",
       "text": "Information"
+    },
+    {
+      "key": "ui.levels.keeper_gate",
+      "text": "reach keeper level {0}"
     },
     {
       "key": "ui.levels.locked",

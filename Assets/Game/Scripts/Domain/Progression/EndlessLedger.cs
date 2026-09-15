@@ -17,11 +17,14 @@ namespace GlimmerGrove.Progression
     /// invariant 11b permits for a number two devices both write.
     /// </para>
     /// <para>
-    /// <b>It pays nothing, deliberately.</b> Credits and XP derive from the star ledger and from
-    /// nothing else (invariant 9), so an endless run buys a place on a board and a number on a map
-    /// node. That is what makes it safe for the client to write it without the server being told:
-    /// a forged wave moves a reading, never a balance — and the public half is clamped by
-    /// <c>publishGrove</c> the way every public number in this game is (invariant 19a).
+    /// <b>It pays nothing, deliberately, and that is what makes it publishable.</b> Credits and XP
+    /// derive from the star ledger and from nothing else (invariant 9), so an endless run buys a
+    /// place on a board and a number on a map node. Unlike a grove's worth this cannot be
+    /// <em>recomputed</em> by the server — nothing it holds implies how far a run got, which is
+    /// invariant 10d's shape — so the only two defences a public wave has are that it is
+    /// <see cref="MaxWave">bounded</see> and that forging it buys nothing at all. <b>Never make the
+    /// endless board pay</b>: the moment a wave decides currency it becomes a claim with no way to
+    /// adjudicate it (invariant 13).
     /// </para>
     /// <para>
     /// <b>A level id is permanent and invariant 1 reaches this</b>, the way it reaches the star
@@ -41,10 +44,44 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public const int MaxRows = 64;
 
+        /// <summary>
+        /// The furthest wave this will ever record or publish.
+        ///
+        /// <para>
+        /// <b>A ceiling rather than a clamp on a derivation</b>, because there is no derivation to
+        /// clamp against: a wave count comes out of a run this server never saw. What a bound is
+        /// worth is that it keeps a forged number inside the range a real one is drawn in, so a
+        /// tampered save takes a row on a board rather than making every honest row unreadable
+        /// beside a ten-digit one. It is mirrored by <c>MAX_WAVE</c> in <c>functions/src/grove.ts</c>
+        /// and the two must move together, or the client's prediction and the server's card
+        /// disagree for the one account that reaches it.
+        /// </para>
+        /// <para>
+        /// Four figures is far past anything the mode can produce — a wave is a muster on a clock,
+        /// so ten thousand of them is a run measured in days — and it is deliberately not tuned any
+        /// tighter than that: a ceiling a real player could ever meet is a ceiling that silently
+        /// stops recording their best.
+        /// </para>
+        /// </summary>
+        public const int MaxWave = 9999;
+
         static readonly Dictionary<string, int> _best = new Dictionary<string, int>(StringComparer.Ordinal);
 
         /// <summary>Raised when a best moved, so an open map can redraw its badge.</summary>
         public static event Action Changed;
+
+        /// <summary>
+        /// Raised when the player's own run set a new best, and by nothing else.
+        ///
+        /// <para>
+        /// <b>An intent, where <see cref="Changed"/> is a state.</b> <see cref="Changed"/> fires on
+        /// every <see cref="LoadFrom"/>, which is every sync that adopts a merge — so a sync asked
+        /// for on it is a sync every few seconds for the life of the process, which is exactly the
+        /// trap <c>SyncTriggers</c> is written around. This fires once, from <see cref="Record"/>,
+        /// when a person actually did something.
+        /// </para>
+        /// </summary>
+        public static event Action Beaten;
 
         /// <summary>The furthest wave this level has ever reached, or nought.</summary>
         public static int BestFor(LevelId level)
@@ -52,6 +89,55 @@ namespace GlimmerGrove.Progression
 
         /// <summary>Whether any endless run has ever been finished at all.</summary>
         public static bool Any => _best.Count > 0;
+
+        /// <summary>
+        /// The furthest wave reached anywhere on the endless lane — the one number the public
+        /// board is ordered on.
+        ///
+        /// <para>
+        /// <b>The best of every row rather than one named level, and that is a decision about what
+        /// the board is about.</b> Nothing but an endless run ever writes a row here, so this is
+        /// "the furthest this keeper has ever held out", which stays the right sentence if the
+        /// Infinite lane ever grows a second level (invariant 43 — the lane is a track, and a track
+        /// is one ladder). A board about one named level would have to carry that level's id into
+        /// the save, into the server's config and into a board id, and would answer nothing better.
+        /// </para>
+        /// </summary>
+        public static int Best
+        {
+            get
+            {
+                int best = 0;
+                foreach (var pair in _best) if (pair.Value > best) best = pair.Value;
+                return best > MaxWave ? MaxWave : best;
+            }
+        }
+
+        /// <summary>
+        /// The same reading taken off a <em>save file</em> rather than off this ledger.
+        ///
+        /// <para>
+        /// <b>What a publish is judged on has to come from the file the server holds</b>, never
+        /// from the live ledger: a run finished while a push was in flight is on the device and not
+        /// on the server, and a fingerprint taken from the device would mark it published when it
+        /// never was. That is <see cref="Social.GroveCard.OfSave"/>'s whole argument, arriving on
+        /// the one field of a card that is not a grove.
+        /// </para>
+        /// </summary>
+        public static int BestIn(SaveFileDto save)
+        {
+            int best = 0;
+            var rows = save?.endlessBest;
+            if (rows == null) return 0;
+
+            foreach (var row in rows)
+            {
+                if (row == null || string.IsNullOrEmpty(row.level)) continue;
+                if (row.wave > best) best = row.wave;
+            }
+
+            return best <= 0 ? 0 : best > MaxWave ? MaxWave : best;
+        }
 
         /// <summary>
         /// Records a run, and answers whether it was a new best.
@@ -67,8 +153,14 @@ namespace GlimmerGrove.Progression
 
             if (!_best.ContainsKey(level.Value) && _best.Count >= MaxRows) return false;
 
-            _best[level.Value] = wave;
+            _best[level.Value] = wave > MaxWave ? MaxWave : wave;
             Raise();
+
+            // After Changed, so anything redrawing off the badge has the new number before the
+            // sync this asks for can possibly come back and load a save over it.
+            try { Beaten?.Invoke(); }
+            catch (Exception e) { UnityEngine.Debug.LogException(e); }
+
             return true;
         }
 

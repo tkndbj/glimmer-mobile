@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GlimmerGrove.Social
 {
-    /// <summary>One row of a board: who, what their grove is worth, and where they placed.</summary>
+    /// <summary>One row of a board: who, what they are ranked on, and where they placed.</summary>
     public readonly struct LeaderboardEntry
     {
         /// <summary>Position on this board, counting from 1.</summary>
@@ -20,8 +20,21 @@ namespace GlimmerGrove.Social
         public readonly long Score;
         public readonly int Stars;
 
+        /// <summary>
+        /// The furthest wave this keeper has held out to on the Infinite lane, or nought.
+        ///
+        /// <para>
+        /// <b>One row type for both boards rather than two, because a row is the same row.</b> A
+        /// board decides which figure it is <em>ordered</em> on and which one it draws; the person,
+        /// their companion and their keeper level are the same facts either way, and they come out
+        /// of the same published card. Two entry types would be two readers, two row widgets and
+        /// two places for the portrait fallback to be got wrong.
+        /// </para>
+        /// </summary>
+        public readonly int Wave;
+
         public LeaderboardEntry(int rank, string ownerId, string name, string avatarId,
-                                int keeperLevel, long score, int stars)
+                                int keeperLevel, long score, int stars, int wave = 0)
         {
             Rank = rank < 1 ? 1 : rank;
             OwnerId = ownerId ?? string.Empty;
@@ -30,6 +43,7 @@ namespace GlimmerGrove.Social
             KeeperLevel = keeperLevel < 1 ? 1 : keeperLevel;
             Score = score < 0L ? 0L : score;
             Stars = stars < 0 ? 0 : stars;
+            Wave = wave < 0 ? 0 : wave;
         }
 
         public bool IsValid => OwnerId.Length > 0;
@@ -48,13 +62,23 @@ namespace GlimmerGrove.Social
     /// trade <c>config/stats</c> already makes, and the reason a scheduled job writes it.
     /// </para>
     /// <para>
-    /// <b>There are exactly two kinds and no third.</b> <see cref="Global"/> is aspirational —
-    /// the best groves in the world, which almost nobody is on and everybody wants to see —
-    /// and a league board is reachable, because a league is the star rating the player already
-    /// wears (see <see cref="GroveLeague"/>). What is deliberately absent is a "keepers near
-    /// you" board: that needs an exact global ordering, which is the one thing this design
-    /// refuses to maintain, and <see cref="GroveRanks"/> answers "where do I stand" to within
-    /// a percentage point without it.
+    /// <b>There are exactly two boards and they are the game's two ladders.</b>
+    /// <see cref="Global"/> is the finest groves anywhere — what a keeper has built — and
+    /// <see cref="Endless"/> is the Infinite lane's own board: how far anybody has held the
+    /// line (invariant 43). Both are one document a day, both are exact at any player count,
+    /// and neither costs a read that grows with the game.
+    /// </para>
+    /// <para>
+    /// <b>What was here and is gone is the league board.</b> Nine boards, nine queries and nine
+    /// counts a night bought a second reading of the <em>same</em> number the global board is
+    /// ordered on, cut into bands no screen in the game ever named — and the question it existed
+    /// to answer, "where do I stand", is already answered exactly, at O(1) and at any
+    /// population, by the published distribution (<see cref="GroveRanks"/>, invariant 19c). The
+    /// ids <c>l0</c> to <c>l8</c> are spent and must never be reused.
+    /// </para>
+    /// <para>
+    /// What is still deliberately absent is a "keepers near you" board: that needs an exact
+    /// global ordering, which is the one thing this design refuses to maintain.
     /// </para>
     /// </summary>
     public sealed class LeaderboardBoard
@@ -64,6 +88,32 @@ namespace GlimmerGrove.Social
         /// the server writes, so invariant 1 applies to it in full.
         /// </summary>
         public const string Global = "global";
+
+        /// <summary>
+        /// The Infinite lane's board: the furthest wave anybody has held out to.
+        ///
+        /// <para>
+        /// A permanent id, exactly as <see cref="Global"/> is — it names a document a scheduled
+        /// job writes, so renaming it orphans whatever the last run left behind and shows every
+        /// player an empty list until the next one.
+        /// </para>
+        /// <para>
+        /// <b>It is the lane's board rather than a level's</b>, which is what keeps a second
+        /// Infinite level a content decision instead of a new board id (invariant 43, and
+        /// <c>EndlessLedger.Best</c> for the same argument from the save's end).
+        /// </para>
+        /// </summary>
+        public const string Endless = "endless";
+
+        /// <summary>
+        /// Every board this build knows how to ask for, in the order the screen offers them.
+        ///
+        /// Written out rather than composed: these key documents a server writes, and invariant
+        /// 6's argument about loc keys is the same argument — a string built by concatenation is
+        /// one no search can find and no gate can check. Mirrored by <c>BOARD_IDS</c> in
+        /// <c>functions/src/grove.ts</c>, which is what decides the boards that actually exist.
+        /// </summary>
+        public static readonly IReadOnlyList<string> All = new[] { Global, Endless };
 
         /// <summary>
         /// How many rows a board carries.
@@ -107,19 +157,30 @@ namespace GlimmerGrove.Social
 
         public bool IsEmpty => Entries.Count == 0;
 
-        /// <summary>The board id for a league. See <see cref="GroveLeague"/> for the ids.</summary>
-        public static string IdFor(string leagueId)
-            => GroveLeague.IsKnown(leagueId) ? leagueId : GroveLeague.IdFor(0);
-
         /// <summary>
         /// Whether a board id is one this build knows how to ask for.
         ///
         /// Checked before the request rather than after the answer, because an unknown id is
         /// a path this client composed and a request for a document that cannot exist is a
-        /// read nobody should pay for.
+        /// read nobody should pay for. It is also what makes a retired board id — a league's,
+        /// say, reached through an old deep link — refused rather than merely empty.
         /// </summary>
         public static bool IsKnown(string boardId)
-            => string.Equals(boardId, Global, StringComparison.Ordinal) || GroveLeague.IsKnown(boardId);
+            => string.Equals(boardId, Global, StringComparison.Ordinal)
+            || string.Equals(boardId, Endless, StringComparison.Ordinal);
+
+        /// <summary>
+        /// Whether this board is ordered on waves rather than on grove worth.
+        ///
+        /// <para>
+        /// Asked of the board rather than carried on a row, because it decides what a row
+        /// <em>says</em> and every row on one board says the same thing. A flag per entry would
+        /// be the same bit written a hundred times and a hundred chances for one row to disagree
+        /// with the list it is in.
+        /// </para>
+        /// </summary>
+        public static bool IsEndless(string boardId)
+            => string.Equals(boardId, Endless, StringComparison.Ordinal);
 
         /// <summary>
         /// Where this account sits on this board, or 0 when it is not on it.

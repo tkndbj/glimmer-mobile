@@ -13,8 +13,8 @@ namespace GlimmerGrove.Tests
     /// The client half of the public boards' shared contract.
     ///
     /// <para>
-    /// A grove's worth, the public form of a keeper's name and the league a score ranks in
-    /// are all derived in two places — here, so the game can draw them offline, and in
+    /// A grove's worth, the public form of a keeper's name and the stars a score earns are
+    /// all derived in two places — here, so the game can draw them offline, and in
     /// <c>functions/src/grove.ts</c>, so a forged save cannot rank. Two implementations of
     /// one rule drift, and this one drifts silently: nothing crashes, nothing is refused,
     /// and a player simply sees one number over their own grove and a different one beside
@@ -103,7 +103,6 @@ namespace GlimmerGrove.Tests
         {
             public long score;
             public int stars;
-            public string league;
         }
 
         /// <summary>
@@ -344,10 +343,7 @@ namespace GlimmerGrove.Tests
             var table = new GroveScoreTable(file.starLadder);
 
             foreach (var c in file.starCases)
-            {
                 Assert.AreEqual(c.stars, table.StarsFor(c.score), $"stars for {c.score}");
-                Assert.AreEqual(c.league, GroveLeague.IdFor(c.score, table), $"league for {c.score}");
-            }
         }
 
         [Test]
@@ -456,42 +452,64 @@ namespace GlimmerGrove.Tests
             return builder.Append('"').ToString();
         }
 
-        // -------------------------------------------------------------- leagues
+        // --------------------------------------------------------------- boards
         [Test]
-        public void EveryLeagueTheLadderCanReachHasAnIdAndAName()
+        public void EveryBoardThisBuildAsksForIsOneTheServerWrites()
         {
-            // The ladder may be up to GroveScoreTable.MaxStars long, so there has to be an
-            // id and a name for every star count from none to all of them. A ladder that
-            // outgrew the id list would put players on a board that does not exist.
-            Assert.AreEqual(GroveScoreTable.MaxStars + 1, GroveLeague.Count);
-            Assert.AreEqual(GroveLeague.Count, GroveLeague.All.Count);
+            // `BOARD_IDS` in functions/src/grove.ts is what actually exists, and it is what
+            // `LeaderboardBoard.All` mirrors. A board named here and not there is a screen
+            // that draws an empty list for ever with nothing to say why; a board named there
+            // and not here is a nightly write nobody can read.
+            CollectionAssert.AreEqual(new[] { "global", "endless" }, LeaderboardBoard.All);
 
             var seen = new HashSet<string>(StringComparer.Ordinal);
 
-            for (int stars = 0; stars < GroveLeague.Count; stars++)
+            foreach (string id in LeaderboardBoard.All)
             {
-                string id = GroveLeague.IdFor(stars);
-
-                Assert.IsTrue(seen.Add(id), $"league id {id} is used twice");
-                Assert.IsTrue(GroveLeague.IsKnown(id));
-                Assert.AreEqual(stars, GroveLeague.StarsOf(id));
-                Assert.IsNotEmpty(GroveLeague.NameKey(stars));
+                Assert.IsTrue(seen.Add(id), $"board id {id} is used twice");
+                Assert.IsTrue(LeaderboardBoard.IsKnown(id), id);
+                Assert.IsNotEmpty(id);
             }
         }
 
         [Test]
-        public void AnUnknownLeagueIsNotMistakenForARealOne()
+        public void ARetiredBoardIdIsRefusedRatherThanFetched()
         {
-            Assert.AreEqual(-1, GroveLeague.StarsOf("l9"));
-            Assert.AreEqual(-1, GroveLeague.StarsOf(""));
-            Assert.AreEqual(-1, GroveLeague.StarsOf(null));
-            Assert.IsFalse(GroveLeague.IsKnown("global"));
+            // The nine league boards are gone. What matters is not that they are absent from
+            // the list but that `IsKnown` refuses them: an id this client composed and the
+            // server does not write is a document read nobody should pay for, and a deep link
+            // from an older build is exactly where one would come from.
+            foreach (string retired in new[] { "l0", "l4", "l8", "league", "" })
+                Assert.IsFalse(LeaderboardBoard.IsKnown(retired), retired);
 
-            // Out of range clamps rather than throwing: a content drop that lengthened the
-            // ladder past the ids would otherwise take the screen down rather than draw the
-            // top league.
-            Assert.AreEqual(GroveLeague.IdFor(GroveLeague.Count - 1), GroveLeague.IdFor(99));
-            Assert.AreEqual(GroveLeague.IdFor(0), GroveLeague.IdFor(-3));
+            Assert.IsFalse(LeaderboardBoard.IsKnown(null));
+        }
+
+        [Test]
+        public void OnlyTheEndlessBoardIsReadInWaves()
+        {
+            // Which figure a row prints is the board's decision and not the row's, so this is
+            // the one predicate standing between the endless list and a column of numbers it
+            // is not sorted by.
+            Assert.IsTrue(LeaderboardBoard.IsEndless(LeaderboardBoard.Endless));
+            Assert.IsFalse(LeaderboardBoard.IsEndless(LeaderboardBoard.Global));
+            Assert.IsFalse(LeaderboardBoard.IsEndless(null));
+            Assert.IsFalse(LeaderboardBoard.IsEndless("l3"));
+        }
+
+        [Test]
+        public void ARowCarriesBothFiguresWhicheverBoardItCameOff()
+        {
+            var row = new LeaderboardEntry(1, "uid", "Fern", "coral", 7, 4200L, 3, 41);
+
+            Assert.AreEqual(4200L, row.Score);
+            Assert.AreEqual(41, row.Wave);
+
+            // Absent reads as nought rather than as missing, which is what a global row is:
+            // the server writes the field on every row and most of them have never played
+            // the lane.
+            Assert.AreEqual(0, new LeaderboardEntry(1, "uid", "Fern", "coral", 7, 4200L, 3).Wave);
+            Assert.AreEqual(0, new LeaderboardEntry(1, "uid", "Fern", "coral", 7, 0L, 0, -9).Wave);
         }
 
         // ---------------------------------------------------------- the distribution

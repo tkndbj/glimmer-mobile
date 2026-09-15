@@ -265,6 +265,7 @@ namespace GlimmerGrove.EditorTools
             ValidateHints(table.Hints, table.Ads, result, verbose);
             ValidatePrompts(table.Prompts, result, verbose);
             ValidateChapterGate(table.ChapterGate, index, result, verbose);
+            ValidateKeeperWalls(table, index, result, verbose);
             ValidateContinue(table.Continue, table.Store, result, verbose);
             ValidateDailyChests(table.Daily, table.Hearts, result, verbose);
             ValidateUtilities(table.Utilities, table.Daily, result, verbose);
@@ -278,13 +279,87 @@ namespace GlimmerGrove.EditorTools
 
             if (!verbose) return;
 
-            long maximumXp = 0;
-            foreach (var id in index.LevelIds)
-                maximumXp += table.RuleFor(index.ChapterOf(id)).XpFor(3);
-
+            long maximumXp = PerfectXp(table, index);
             var reachable = table.LevelFor(maximumXp);
             Debug.Log($"[Glimmer] progression verified: {index.Count} glade(s) at three stars " +
                       $"is {maximumXp} XP, reaching level {reachable.Level} of {table.MaxLevel}");
+        }
+
+        /// <summary>
+        /// Every XP the shipped catalog can pay: three stars on every glade in it.
+        ///
+        /// <b>The ceiling on what any account can ever reach</b>, because XP derives from the
+        /// star ledger and from nothing else (invariant 9) — so it is the number every keeper
+        /// wall has to be checked against, and the reason that check cannot be made from
+        /// <c>progression.json</c> alone.
+        /// </summary>
+        static long PerfectXp(ProgressionTable table, CatalogIndex index)
+        {
+            long xp = 0;
+            foreach (var id in index.LevelIds)
+                xp += table.RuleFor(index.ChapterOf(id)).XpFor(3);
+
+            return xp;
+        }
+
+        /// <summary>
+        /// The keeper walls the manifest puts in front of chapters, checked against the catalog
+        /// that has to pay for them.
+        ///
+        /// <para>
+        /// <b>The only way this goes wrong is invisible in either file alone</b>, which is
+        /// <c>ValidateChapterGate</c>'s complaint with the units changed. A wall is one integer
+        /// in <c>manifest.json</c>; what can reach it is every reward rule in
+        /// <c>progression.json</c> multiplied by every glade in the catalog — so a wall above
+        /// that ceiling is a lane padlocked for the life of the build, with the manifest, the
+        /// index, the map and the hub all perfectly correct. It has happened to the home ladder
+        /// and to the turret shelf already, both deliberately; what must not happen is its
+        /// happening by accident.
+        /// </para>
+        /// <para>
+        /// <b>An error above the level curve's own ceiling and a warning above the catalog's.</b>
+        /// The first is unreachable by arithmetic and can only be a mistake. The second is a
+        /// decision somebody may genuinely want — a wall meant for content that has not shipped
+        /// yet is exactly how the home ladder's rungs are authored — so it is said loudly and
+        /// never refused.
+        /// </para>
+        /// <para>
+        /// Reported in full even when nothing is wrong, for <c>ValidateChapterGate</c>'s reason:
+        /// a wall decides whether a whole way of playing is on the screen, and nobody should
+        /// have to open a JSON file to find out where it stands.
+        /// </para>
+        /// </summary>
+        static void ValidateKeeperWalls(ProgressionTable table, CatalogIndex index,
+                                        ContentValidationResult result, bool verbose)
+        {
+            if (table == null || index == null) return;
+
+            var reachable = table.LevelFor(PerfectXp(table, index));
+
+            foreach (var chapter in index.Chapters)
+            {
+                int wall = chapter.MinKeeperLevel;
+                if (wall <= 0) continue;
+
+                if (wall > table.MaxLevel)
+                {
+                    result.Errors.Add($"chapter '{chapter.Id}' asks for keeper level {wall}, " +
+                                      $"above the {table.MaxLevel} the curve tops out at, so it " +
+                                      "can never be opened by anybody");
+                    continue;
+                }
+
+                if (wall > reachable.Level)
+                    result.Warnings.Add($"chapter '{chapter.Id}' asks for keeper level {wall} " +
+                                        $"and three stars on all {index.Count} shipped glade(s) " +
+                                        $"reaches only level {reachable.Level}, so nobody can " +
+                                        "open it until more content ships");
+
+                if (verbose)
+                    Debug.Log($"[Glimmer] keeper wall: '{chapter.Id}' " +
+                              $"({chapter.Mode.Value}/{chapter.Track.Value}) opens at keeper " +
+                              $"level {wall}, against {reachable.Level} reachable today");
+            }
         }
 
         /// <summary>

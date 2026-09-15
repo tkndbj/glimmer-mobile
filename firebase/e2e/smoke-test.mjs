@@ -255,6 +255,19 @@ const save = {
     groveLandOwned: { arrayValue: { values: [
       { stringValue: "r_north" }, { stringValue: "r_east" },
     ] } },
+
+    // How far the Infinite lane has ever been held, per level. It is here for the reason
+    // every block above is — the mapper sends it, so an unlisted field would refuse the
+    // whole write (invariant 12a) — and for one more: it is the only figure on a public
+    // card the server cannot recompute, so the *shape* it arrives in is the only thing
+    // standing between an honest board and a nonsense one. The high row is what the card's
+    // `wave` has to come back as.
+    endlessBest: { arrayValue: { values: [
+      { mapValue: { fields: { level: { stringValue: "s02_endlesswatch" },
+                              wave: { integerValue: "23" } } } },
+      { mapValue: { fields: { level: { stringValue: "s02_lower" },
+                              wave: { integerValue: "4" } } } },
+    ] } },
     progression: { mapValue: { fields: { xpHighWater: { integerValue: "100" },
                                          levelHighWater: { integerValue: "2" } } } },
     cloud: { mapValue: { fields: { userId: { stringValue: uid }, revision: { integerValue: "1" },
@@ -795,8 +808,16 @@ check(card?.fields?.name?.stringValue === PUBLIC_NAME,
       "the published name has its bidi override stripped",
       JSON.stringify(card?.fields?.name?.stringValue));
 
-check(card?.fields?.league?.stringValue?.startsWith("l"),
-      "the card names a league", card?.fields?.league?.stringValue);
+// The endless board's whole input. `bestWave` takes the best of every row, so this is the 23
+// rather than the 4 — and a unit test cannot prove the field survived Firestore's own typing,
+// which is what this run is for: an `integerValue` comes back as a *string* over REST, and a
+// reader that compared it as a number would have written a card with no wave on it at all.
+check(Number(card?.fields?.wave?.integerValue ?? 0) === 23,
+      "the card carries the best wave of every endless row",
+      JSON.stringify(card?.fields?.wave));
+
+check(card?.fields?.league === undefined,
+      "and no longer carries a league", JSON.stringify(card?.fields?.league));
 
 // Placed after the forged-grove assertions rather than before them, and that is not
 // housekeeping: these cases rewrite the player's grove sets to isolate the arithmetic, so
@@ -919,6 +940,18 @@ check(forgeBoard.status === 403, "a client cannot write a board", String(forgeBo
 
 const boardRead = await fetch(`${FS}/leaderboards/global`, { headers: bearer });
 check(boardRead.ok, "a signed-in player may read a board", String(boardRead.status));
+
+// Both boards, and read the same way — one document, whole. A board that has never been built
+// is a 404 and that is an ordinary first-day state rather than a failure, so what is asserted
+// is that the read is *permitted*, which is the half the rules decide.
+const endlessRead = await fetch(`${FS}/leaderboards/endless`, { headers: bearer });
+check(endlessRead.ok || endlessRead.status === 404,
+      "and the endless board is readable on the same rule", String(endlessRead.status));
+
+const forgeEndless = await fetch(`${FS}/leaderboards/endless?updateMask.fieldPaths=population`, {
+  method: "PATCH", headers: json, body: JSON.stringify({ fields: { population: { integerValue: "1" } } }) });
+check(forgeEndless.status === 403,
+      "and no client may write it either", String(forgeEndless.status));
 
 const ranksRead = await fetch(`${FS}/config/groveRanks`, { headers: bearer });
 check(ranksRead.ok, "and the published distribution", String(ranksRead.status));

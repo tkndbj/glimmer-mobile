@@ -57,10 +57,19 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Very little should ask. The widening is what makes a tablet need no second layout,
-        /// and a screen reaching for this is a screen about to grow a case. The one caller today
-        /// is Lightfall, whose well is the only board in the game bound by <em>height</em>: a
-        /// short display leaves it a sixth of the room a phone does, so its band and its tray
-        /// give some back. See <c>FallBand</c>.
+        /// and a screen reaching for this is a screen about to grow a case. There are two
+        /// callers, and they are the two shapes that can legitimately need one. Lightfall's well
+        /// is the only board in the game bound by <em>height</em>: a short display leaves it a
+        /// sixth of the room a phone does, so its band and its tray give some back — see
+        /// <c>FallBand</c>. The loadout shelf is bound by <em>width</em> in the other direction:
+        /// it is a scrolling grid, so what a wider canvas buys it is columns rather than a
+        /// bigger cell — and because this is a threshold rather than a ramp, every tablet draws
+        /// the same shelf. See <c>LoadoutScreen.Columns</c>.
+        /// </para>
+        /// <para>
+        /// <b>Neither is a second layout, which is the line.</b> Both ask this one question and
+        /// answer it with one number that everything else is derived from; a screen that asked
+        /// it in five places would be the tablet variant this rule exists to prevent.
         /// </para>
         /// </summary>
         public static bool ShortCanvas

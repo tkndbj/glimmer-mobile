@@ -87,6 +87,7 @@ namespace GlimmerGrove
         void PaintShelf()
         {
             _shelfIcons.Clear();
+            _painted = Columns;
 
             for (int i = _grid.childCount - 1; i >= 0; i--)
             {
@@ -291,11 +292,12 @@ namespace GlimmerGrove
             }
 
             // The name and the price, and nothing else - see `CellH`.
-            var name = UIKit.Titled("Name", cell, Loc.Get(model.NameKey), 26, Pal.Cream,
-                                    TextAnchor.MiddleCenter, new Vector2(CellW - 24f, 36f),
+            var name = UIKit.Titled("Name", cell, Loc.Get(model.NameKey), Pt(36f * Scale),
+                                    Pal.Cream, TextAnchor.MiddleCenter,
+                                    new Vector2(CellW - 24f * Scale, 50f * Scale),
                                     new Vector2(.5f, 1f), new Vector2(0f, -NameY),
                                     0f, 2f);
-            UIKit.Shrinkable(name, 16);
+            UIKit.Shrinkable(name, Pt(22f * Scale));
 
             // **Only on a turret this seat actually holds.** A ladder over a card that is still
             // for sale would read as a promise about what buying it gives you; what a player owns
@@ -303,7 +305,8 @@ namespace GlimmerGrove
             // says what it costs.
             if (held)
                 WardStarRow.Build(cell, new Vector2(0f, -StarsY),
-                                  WardStarLedger.StarsOf(model, WardLine.Colours[_slot]));
+                                  WardStarLedger.StarsOf(model, WardLine.Colours[_slot]),
+                                  StarSize);
 
             Footer(cell, model, offer, standing);
 
@@ -365,16 +368,19 @@ namespace GlimmerGrove
 
             // Bigger than it was, which is what the description's height paid for: the price is
             // the number this shelf is about and it was set at the size of a caption.
-            var box = UIKit.Box("Foot", cell, new Vector2(CellW - 20f, 56f),
+            var box = UIKit.Box("Foot", cell, new Vector2(CellW - 20f * Scale, 78f * Scale),
                                 new Vector2(.5f, 0f), new Vector2(0f, FootY));
 
-            var seat = UIKit.Img("Seat", box, Art.Round(18), new Color(0f, 0f, 0f, .30f));
+            var seat = UIKit.Img("Seat", box, Art.Round(Pt(22f * Scale)),
+                                 new Color(0f, 0f, 0f, .30f));
             UIKit.StretchTo((RectTransform)seat.transform, 0, 0, 0, 0);
 
-            float shift = coin ? 18f : 0f;
+            float shift = coin ? 24f * Scale : 0f;
 
-            var label = UIKit.Titled("T", box, text, 32, ink, TextAnchor.MiddleCenter,
-                                     new Vector2(CellW - 66f, 48f), new Vector2(.5f, .5f),
+            var label = UIKit.Titled("T", box, text, Pt(44f * Scale), ink,
+                                     TextAnchor.MiddleCenter,
+                                     new Vector2(CellW - 96f * Scale, 66f * Scale),
+                                     new Vector2(.5f, .5f),
                                      new Vector2(shift, 0f), 0f, 2f);
 
             // **Down to 14 rather than 20, because this strip now sometimes holds words.** A price
@@ -382,7 +388,7 @@ namespace GlimmerGrove
             // clipped by anything (invariant 37n), so the floor is what stops it being drawn over
             // the plate's own edge. It was lowered for a longer caption still — a sealed rung read
             // "After Lighthouse" — and it stays low, because the strip has held a sentence once.
-            UIKit.Shrinkable(label, 14);
+            UIKit.Shrinkable(label, Pt(20f * Scale));
 
             if (!coin) return;
 
@@ -390,8 +396,8 @@ namespace GlimmerGrove
             // sprite, so it is attached rather than named (`ShopScreen.BalancePill`'s idiom: the
             // pile on a card is made of this coin, so a price and a purse read as one currency).
             var glyph = UIKit.Img("Coin", box, gems ? Art.S("Ui/ic_gem") : null, Color.white,
-                                  new Vector2(34f, 34f), new Vector2(.5f, .5f),
-                                  new Vector2(-label.preferredWidth * .5f - 19f, 0f));
+                                  new Vector2(44f * Scale, 44f * Scale), new Vector2(.5f, .5f),
+                                  new Vector2(-label.preferredWidth * .5f - 25f * Scale, 0f));
             glyph.preserveAspect = true;
 
             if (!gems) Flipbook.Attach(glyph, "Ui/Coin", 11f);
@@ -466,7 +472,7 @@ namespace GlimmerGrove
             // The ward cell's numbers, for the ward cell's reason - the two grids share a cell
             // size, so anything that is not the same here is a difference nobody chose. They are
             // constants on the screen now rather than a pair of matching literals, which is what
-            // let four columns be one edit instead of two that could disagree.
+            // let the column count be one edit instead of two that could disagree.
             //
             // A name and a price and nothing else, which is the turret shelf's rule arrived at
             // here too: what a utility *does* is a sentence, and it is drawn in full on the panel
@@ -477,12 +483,13 @@ namespace GlimmerGrove
                                  new Vector2(.5f, 1f), new Vector2(0f, -(IconTop + IconBox * .5f)));
             icon.preserveAspect = true;
 
-            var name = UIKit.Titled("Name", cell, Loc.Get(item.NameKey), 25,
+            var name = UIKit.Titled("Name", cell, Loc.Get(item.NameKey), Pt(34f * Scale),
                                     open ? Pal.Cream : Pal.A(Pal.Cream, .82f),
-                                    TextAnchor.MiddleCenter, new Vector2(CellW - 24f, 34f),
+                                    TextAnchor.MiddleCenter,
+                                    new Vector2(CellW - 24f * Scale, 48f * Scale),
                                     new Vector2(.5f, 1f), new Vector2(0f, -NameY),
                                     0f, 2f);
-            UIKit.Shrinkable(name, 16);
+            UIKit.Shrinkable(name, Pt(22f * Scale));
 
             // How many are in hand, top-right, where the bar's own badge is — so the two readouts
             // of one number are in the same corner of the same shape (invariant 39d's rule about
@@ -491,37 +498,42 @@ namespace GlimmerGrove
             {
                 var badge = UIKit.Img("Badge", cell, Art.Round(999),
                                       new Color(.10f, .16f, .12f, .96f),
-                                      new Vector2(56f, 40f), new Vector2(1f, 1f),
-                                      new Vector2(-12f, -12f));
+                                      new Vector2(72f * Scale, 52f * Scale), new Vector2(1f, 1f),
+                                      new Vector2(-16f * Scale, -16f * Scale));
 
-                var count = UIKit.Titled("N", badge.transform, held.ToString(), 23, Pal.Cream,
-                                         TextAnchor.MiddleCenter, new Vector2(52f, 36f),
+                var count = UIKit.Titled("N", badge.transform, held.ToString(), Pt(30f * Scale),
+                                         Pal.Cream, TextAnchor.MiddleCenter,
+                                         new Vector2(68f * Scale, 48f * Scale),
                                          new Vector2(.5f, .5f), Vector2.zero, 0f, 2f);
-                UIKit.Shrinkable(count, 14);
+                UIKit.Shrinkable(count, Pt(19f * Scale));
             }
 
             string text = !open ? Loc.Format("ui.loadout.level", item.MinLevel)
                         : item.ForSale ? item.GemPrice.ToString("N0")
                         : Loc.Get("ui.loadout.chest_only");
 
-            var box = UIKit.Box("Foot", cell, new Vector2(CellW - 24f, 42f),
+            var box = UIKit.Box("Foot", cell, new Vector2(CellW - 24f * Scale, 58f * Scale),
                                 new Vector2(.5f, 0f), new Vector2(0f, FootY));
 
-            var seat = UIKit.Img("Seat", box, Art.Round(16), new Color(0f, 0f, 0f, .30f));
+            var seat = UIKit.Img("Seat", box, Art.Round(Pt(20f * Scale)),
+                                 new Color(0f, 0f, 0f, .30f));
             UIKit.StretchTo((RectTransform)seat.transform, 0, 0, 0, 0);
 
             bool priced = open && item.ForSale;
 
-            var label = UIKit.Titled("T", box, text, 23,
+            var label = UIKit.Titled("T", box, text, Pt(32f * Scale),
                                      open ? Pal.Cream : Pal.A(Pal.Cream, .55f),
-                                     TextAnchor.MiddleCenter, new Vector2(CellW - 62f, 36f),
-                                     new Vector2(.5f, .5f), new Vector2(priced ? 14f : 0f, 0f),
+                                     TextAnchor.MiddleCenter,
+                                     new Vector2(CellW - 92f * Scale, 50f * Scale),
+                                     new Vector2(.5f, .5f),
+                                     new Vector2(priced ? 19f * Scale : 0f, 0f),
                                      0f, 2f);
-            UIKit.Shrinkable(label, 14);
+            UIKit.Shrinkable(label, Pt(19f * Scale));
 
             if (priced)
-                UIKit.Img("Gem", box, Art.S("Ui/ic_gem"), Color.white, new Vector2(26f, 26f),
-                          new Vector2(.5f, .5f), new Vector2(-label.preferredWidth * .5f - 15f, 0f));
+                UIKit.Img("Gem", box, Art.S("Ui/ic_gem"), Color.white,
+                          new Vector2(36f * Scale, 36f * Scale), new Vector2(.5f, .5f),
+                          new Vector2(-label.preferredWidth * .5f - 21f * Scale, 0f));
 
             cell.gameObject.AddComponent<Btn>().Setup(() =>
             {

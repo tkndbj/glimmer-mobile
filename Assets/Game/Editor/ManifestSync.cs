@@ -217,6 +217,7 @@ namespace GlimmerGrove.EditorTools
                     order = order,
                     disabled = false,
                     minAppVersion = 0,
+                    minKeeperLevel = 0,
                     levels = new string[0],
                 });
 
@@ -343,6 +344,14 @@ namespace GlimmerGrove.EditorTools
                 // round trip is what stands in front of losing it.
                 if (!string.IsNullOrEmpty(entry.track))
                     sb.AppendLine($"      \"track\": \"{entry.track}\",");
+
+                // Written only when it says something, for `mode`'s reason: an omitted wall is
+                // no wall, so every chapter authored before this field existed round-trips byte
+                // for byte. **Authored rather than derived**, like `track` — nothing about a
+                // chapter's levels implies how much of the game belongs in front of it — so the
+                // round trip below is the only thing standing between it and a silent deletion.
+                if (entry.minKeeperLevel > 0)
+                    sb.AppendLine($"      \"minKeeperLevel\": {entry.minKeeperLevel},");
 
                 sb.AppendLine("      \"levels\": [");
 
@@ -474,9 +483,15 @@ namespace GlimmerGrove.EditorTools
             {
                 var a = before.chapters[i];
                 var b = after.chapters[i];
+                // **Every authored field, and two of them were missing.** `track` and
+                // `minKeeperLevel` are the only chapter fields this writer prints conditionally,
+                // which makes them precisely the ones a forgotten `AppendLine` would drop in
+                // silence under a success message — invariant 4c's whole subject. A check that
+                // does not name a field is a check that cannot see it go.
                 if (a.id != b.id || a.version != b.version || a.order != b.order ||
                     a.disabled != b.disabled || a.minAppVersion != b.minAppVersion ||
-                    a.mode != b.mode ||
+                    a.mode != b.mode || a.track != b.track ||
+                    a.minKeeperLevel != b.minKeeperLevel ||
                     !Same(a.levels, new List<string>(b.levels ?? new string[0])))
                 {
                     lost = $"chapter '{a.id}' did not survive the write";

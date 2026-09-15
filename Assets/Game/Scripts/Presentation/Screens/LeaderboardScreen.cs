@@ -21,11 +21,24 @@ namespace GlimmerGrove
     /// a header the player scrolls past to reach the thing they came for.
     /// </para>
     /// <para>
-    /// <b>Two boards and no third.</b> The global hundred is aspirational; a league board is
-    /// reachable, because a league is the star rating already drawn over the player's own
-    /// grove (<see cref="GroveLeague"/>). What is deliberately missing is a "keepers near you"
-    /// list, which needs an exact global ordering — the one thing this design refuses to
-    /// maintain, and the reason the whole feature costs two scheduled documents.
+    /// <b>Two boards, and they are the game's two ladders.</b> The finest groves anywhere —
+    /// what a keeper has <em>built</em> — and the Endless Watch, which is how far anybody has
+    /// held the line on the Infinite lane (invariant 43). They are the two things this game
+    /// keeps a permanent number for, and each is one published document a day however many
+    /// people are playing.
+    /// </para>
+    /// <para>
+    /// <b>What used to stand where the second tab is was MY LEAGUE, and it is gone.</b> Nine
+    /// more boards, nine queries and nine counts a night bought a second cut of the <em>same</em>
+    /// number the first tab is ordered on, into bands nothing in the game ever named — and
+    /// "where do I stand" was already answered exactly by the published distribution
+    /// (<see cref="GroveRanks"/>, invariant 19c), which is what the profile prints. A tab is
+    /// worth having when it answers a question the other tab cannot.
+    /// </para>
+    /// <para>
+    /// What is still deliberately missing is a "keepers near you" list, which needs an exact
+    /// global ordering — the one thing this design refuses to maintain, and the reason the
+    /// whole feature costs three scheduled documents.
     /// </para>
     /// <para>
     /// <b>Every refusal renders a sentence.</b> No backend, no session, opted out, nothing
@@ -58,13 +71,13 @@ namespace GlimmerGrove
         /// </summary>
         const float BottomPad = 24f;
 
-        /// <summary>Which board is being drawn. Empty means the player's own league.</summary>
+        /// <summary>Which board is being drawn. One of <see cref="LeaderboardBoard.All"/>.</summary>
         string _boardId;
 
         RectTransform _viewport;
         GridView _grid;
         Text _empty;
-        Btn _globalTab, _leagueTab;
+        Btn _globalTab, _endlessTab;
 
         LeaderboardBoard _board = LeaderboardBoard.None;
         bool _fetching;
@@ -75,10 +88,10 @@ namespace GlimmerGrove
             Scenery.Plain(Content);
             Fireflies.Spawn(Content, 14, new Color(1f, .93f, .70f), 6f, 20f);
 
-            // Finest groves by default, and deliberately: the league is where the player is
-            // already standing — it is their own star rating, drawn over their own grove —
-            // so opening onto it shows them what they mostly know. The global hundred is the
-            // aspirational half of the feature and the one worth arriving on.
+            // Finest groves by default, and deliberately: it is the board every account is
+            // eligible for the moment they buy anything, where the Endless Watch is a board a
+            // player has to have gone and played a lane to be on. Opening on a list somebody
+            // cannot be in is the wrong first impression of a screen about standing.
             if (string.IsNullOrEmpty(_boardId)) _boardId = LeaderboardBoard.Global;
 
             BuildList();
@@ -157,12 +170,12 @@ namespace GlimmerGrove
             UIKit.Shrinkable(_globalTab.Label, 18);
             UIKit.FitLabel(_globalTab);
 
-            _leagueTab = UIKit.TextButton("League", chrome, Skins.Alternate,
-                                          Loc.Get("ui.board.league"), 28, size,
-                                          new Vector2(.5f, 1f), new Vector2(158f, -230f),
-                                          () => Select(GroveBoard.MyLeagueId()));
-            UIKit.Shrinkable(_leagueTab.Label, 18);
-            UIKit.FitLabel(_leagueTab);
+            _endlessTab = UIKit.TextButton("Endless", chrome, Skins.Alternate,
+                                           Loc.Get("ui.board.endless"), 28, size,
+                                           new Vector2(.5f, 1f), new Vector2(158f, -230f),
+                                           () => Select(LeaderboardBoard.Endless));
+            UIKit.Shrinkable(_endlessTab.Label, 18);
+            UIKit.FitLabel(_endlessTab);
 
             StyleTabs();
         }
@@ -177,7 +190,7 @@ namespace GlimmerGrove
             bool global = _boardId == LeaderboardBoard.Global;
 
             Skin(_globalTab, global);
-            Skin(_leagueTab, !global);
+            Skin(_endlessTab, !global);
         }
 
         static void Skin(Btn tab, bool live)
@@ -355,8 +368,16 @@ namespace GlimmerGrove
 
                 _place.text = _entry.Rank.ToString();
                 _name.text = _entry.Name;
-                _worth.text = Loc.Format("ui.board.row_worth", Compact.Number(_entry.Score),
-                                         _entry.KeeperLevel);
+
+                // What a row says is the board's decision and not the row's, because every row
+                // on one list says the same thing — see `LeaderboardBoard.IsEndless`. The figure
+                // a board is *ordered* on is the one it has to print, or the list reads as
+                // shuffled: a wave board drawn with grove worth on it would descend by a number
+                // nobody can see and ascend by one they can.
+                _worth.text = LeaderboardBoard.IsEndless(_screen._boardId)
+                    ? Loc.Format("ui.board.row_wave", _entry.Wave, _entry.KeeperLevel)
+                    : Loc.Format("ui.board.row_worth", Compact.Number(_entry.Score),
+                                 _entry.KeeperLevel);
 
                 CompanionArt.Paint(_portrait, AvatarCatalog.Resolve(_entry.AvatarId));
 

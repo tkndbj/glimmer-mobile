@@ -20,8 +20,30 @@ namespace GlimmerGrove
         public readonly bool Selected;
         public readonly Action Tap;
 
+        /// <summary>
+        /// Whether what this row leads to is behind a wall.
+        ///
+        /// <para>
+        /// <b>It marks the row; it does not disable it.</b> A row a player cannot reach is still
+        /// somewhere they should be able to look — a switcher that hides a lane is one that
+        /// cannot advertise it, and the screen on the other side is where the wall is said in
+        /// full (invariant 42a). What this buys is that nobody taps through expecting to play:
+        /// the padlock is the wall, exactly as it is on the turret shelf (invariant 42e).
+        /// </para>
+        /// <para>
+        /// <b>A row rather than a lane, because this control carries rows that are not all the
+        /// same kind of thing</b> — the type's own rule. Whoever builds the rows knows what a
+        /// wall means for the thing they are naming.
+        /// </para>
+        /// </summary>
+        public readonly bool Locked;
+
         public HeaderRow(string id, string title, string tagline, Color accent, bool selected,
                          Action tap)
+            : this(id, title, tagline, accent, selected, tap, false) { }
+
+        public HeaderRow(string id, string title, string tagline, Color accent, bool selected,
+                         Action tap, bool locked)
         {
             Id = id;
             Title = title;
@@ -29,6 +51,7 @@ namespace GlimmerGrove
             Accent = accent;
             Selected = selected;
             Tap = tap;
+            Locked = locked;
         }
     }
 
@@ -227,8 +250,8 @@ namespace GlimmerGrove
                 float rowY = height * .5f - rowH * .5f - i * (rowH + RowGap);
                 var tap = row.Tap;
 
-                Row(list, row.Id, row.Title, row.Tagline, row.Accent, row.Selected, rowY, rowH,
-                    () => { Close(); tap?.Invoke(); });
+                Row(list, row.Id, row.Title, row.Tagline, row.Accent, row.Selected, row.Locked,
+                    rowY, rowH, () => { Close(); tap?.Invoke(); });
             }
 
             if (chevron) Tween.Rotate(chevron, 180f, EntryTime, Ease.OutBack);
@@ -247,7 +270,8 @@ namespace GlimmerGrove
 
         /// <summary>One row of the list.</summary>
         static void Row(RectTransform parent, string id, string title, string tagline,
-                        Color accent, bool selected, float y, float height, Action tap)
+                        Color accent, bool selected, bool locked, float y, float height,
+                        Action tap)
         {
             var row = UIKit.Box(id, parent, new Vector2(RowInner, height),
                                 new Vector2(.5f, .5f), new Vector2(0f, y));
@@ -276,8 +300,28 @@ namespace GlimmerGrove
                 UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
             }
 
-            var name = UIKit.Titled("Name", row, title, 36,
-                                    selected ? Pal.Cream : Pal.A(Pal.Cream, .82f),
+            // **The padlock is the wall and nothing else**, which is the turret shelf's
+            // narrowing (invariant 42e): it is drawn on a row that cannot be entered yet, never
+            // on one that merely is not the current lane. It sits at the rim rather than beside
+            // the words, because the two lines are centred on the row's axis and a mark in the
+            // flow would push the name off it.
+            //
+            // Built before the words so they draw over it if a long name ever reaches this far:
+            // a row is a sentence with a mark beside it, never a mark with a caption.
+            if (locked)
+            {
+                var shut = UIKit.Img("Lock", row, Art.S("Ui/ic_padlock"), Pal.A(Color.white, .88f),
+                                     Vector2.one * 44f, new Vector2(.5f, .5f),
+                                     new Vector2(RowInner * .5f - 40f, 0f));
+                shut.preserveAspect = true;
+                shut.raycastTarget = false;
+            }
+
+            // Dimmed on a wall, for the veil's reason on a shelf cell: what says "not yours yet"
+            // is the whole row going quiet, and the mark says why.
+            float ink = locked ? .58f : selected ? 1f : .82f;
+
+            var name = UIKit.Titled("Name", row, title, 36, Pal.A(Pal.Cream, ink),
                                     TextAnchor.MiddleCenter, new Vector2(TextW, 42f),
                                     new Vector2(.5f, .5f), new Vector2(0f, split), 0f, 2f);
             UIKit.Shrinkable(name);
@@ -285,7 +329,7 @@ namespace GlimmerGrove
             // The tagline is the only place the game says what one of these *is*, and it is here
             // rather than on a first-run panel because this is where somebody is deciding.
             var tag = UIKit.Label("Tag", row, tagline, 24,
-                                  Pal.A(Pal.Cream, .60f), TextAnchor.MiddleCenter,
+                                  Pal.A(Pal.Cream, locked ? .44f : .60f), TextAnchor.MiddleCenter,
                                   new Vector2(TextW, 40f), new Vector2(.5f, .5f),
                                   new Vector2(0f, -split - 2f));
             UIKit.Shrinkable(tag, 14);

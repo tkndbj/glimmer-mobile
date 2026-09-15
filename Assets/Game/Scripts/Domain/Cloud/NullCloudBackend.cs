@@ -132,12 +132,10 @@ namespace GlimmerGrove.Cloud
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
                                 LeaderboardBoard.None));
 
-        public Task<(CloudResult result, GroveRankTable table,
-                     Dictionary<string, int> population, long builtUnix)> ReadGroveRanksAsync(
+        public Task<(CloudResult result, GroveRankPublication published)> ReadGroveRanksAsync(
             CancellationToken cancellation = default)
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
-                                GroveRankTable.None,
-                                new Dictionary<string, int>(), 0L));
+                                GroveRankPublication.None));
 
         /// <summary>
         /// Refused, and the panel never asks: <see cref="AccountDeletion.Offered"/> reads

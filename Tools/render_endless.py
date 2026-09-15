@@ -3,6 +3,7 @@
 
     python Tools/render_endless.py
     python Tools/render_endless.py --unplayed        # before anybody has held a wave
+    python Tools/render_endless.py --locked 10       # behind its keeper wall, which is a whole screen
     python Tools/render_endless.py --short           # the squarest canvas this game supports
     python Tools/render_endless.py --out out/hub.png
 
@@ -194,7 +195,7 @@ def icon(n):
 
 
 # --------------------------------------------------------------- the column
-def hero(sheet, top, played, wave):
+def hero(sheet, top, played, wave, standing=0):
     """The record, drawn as the thing this lane is about rather than as a line of text."""
     cx = W / 2
     cy = top + DISC_DOWN
@@ -218,9 +219,22 @@ def hero(sheet, top, played, wave):
     # is wide (188x152) and a caption plate is the other way round, so fitting one here drew
     # it at a third of the width asked for - the fault a still is the only thing that sees.
     K.paste(sheet, K.skin("Hud/trough", RIBBON_W, RIBBON_H), cx, top + RIBBON_DOWN)
-    K.text(sheet, loc("ui.endless.best_label", "BEST WAVE") if played
-                  else loc("ui.endless.unplayed", "NO RUN YET"),
-           cx, top + RIBBON_DOWN, 34, fill=K.CREAM, outline=3)
+
+    # `EndlessHub.CaptionFor`, mirrored. Three states and the plate never moves, so the
+    # question this render exists to answer is whether the longest of them is still legible
+    # once Best Fit has shrunk it - `shrunk` returns the size it settled on and the caller
+    # prints it, because "22 against a floor of 22" is the tell that the string has outgrown
+    # the trough and the trough is what has to change.
+    if not played:
+        caption = loc("ui.endless.unplayed", "NO RUN YET")
+    elif standing > 0:
+        caption = loc("ui.endless.standing", "TOP {0}% OF WATCHERS").format(standing)
+    else:
+        caption = loc("ui.endless.best_label", "BEST WAVE")
+
+    px = K.shrunk(sheet, caption.upper(), cx, top + RIBBON_DOWN,
+                  RIBBON_W - 40, RIBBON_H, 34, 22, fill=K.CREAM, outline=3)
+    print("  nameplate: %-22r at %dpx (floor 22)" % (caption.upper(), px))
 
 
 def points(sheet, top):
@@ -251,19 +265,48 @@ def points(sheet, top):
         K.text(sheet, say, x, cy, 34, fill=K.CREAM, outline=3, anchor="l")
 
 
-def battle(sheet, top):
+def battle(sheet, top, wall=0):
+    """`EndlessHub.Battle` - the way in, and the same key wearing its wall when there is one.
+
+    **The locked face is a whole screen and no gate can look at it.** The caption is a sentence
+    rather than a word (invariant 42e: the strip names the level, because LOCKED says a player
+    cannot have this and not what would change that), so the one question is whether it still
+    reads inside a pill sized for BATTLE - which is what this draws and prints.
+    """
     cx, cy = W / 2, top + BUTTON_CENTRE
+    shut = wall > 0
 
-    K.paste(sheet, K.glow(760, 2.1, K.SUN, 0.26), cx, cy)
-    K.paste(sheet, K.skin("Hud/btn_gold", BUTTON_W, BUTTON_H), cx, cy)
+    # The glow, the breath and the sheen are one decision: nothing invites a press that will be
+    # refused, so a shut key carries none of them. Only the glow is drawable here.
+    if not shut:
+        K.paste(sheet, K.glow(760, 2.1, K.SUN, 0.26), cx, cy)
 
-    glyph = K.fit(Image.open(K.UI / "ic_battle.png").convert("RGBA"), (112, 112))
-    caption = loc("ui.endless.battle", "BATTLE")
-    wide = K.font(62).getlength(caption)
+    if shut:
+        K.paste(sheet, K.skin("btn_gray", BUTTON_W, BUTTON_H), cx, cy)
+    else:
+        K.paste(sheet, K.skin("Hud/btn_gold", BUTTON_W, BUTTON_H), cx, cy)
+
+    mark = "ic_padlock" if shut else "ic_battle"
+    box = 88 if shut else 112
+    glyph = K.fit(Image.open(K.UI / ("%s.png" % mark)).convert("RGBA"), (box, box))
+
+    caption = (loc("ui.levels.keeper_gate", "reach keeper level {0}").format(wall).upper()
+               if shut else loc("ui.endless.battle", "BATTLE"))
+    size = 38 if shut else 62
+
+    wide = K.font(size).getlength(caption)
     block = glyph.width + 14 + wide
 
+    # `UIKit.TextButton` gives the label the pill less 40, and `UIKit.OneLine` shrinks it to fit
+    # rather than wrapping - so a caption past this is drawn smaller than authored, which is a
+    # thing to know about before a device says it.
+    room = BUTTON_W - 40 - glyph.width - 14
+    if wide > room:
+        print("  !! the key says %.0f wide in %.0f of room, so it is shrunk"
+              % (wide, room))
+
     K.paste(sheet, glyph, cx - block / 2 + glyph.width / 2, cy)
-    K.text(sheet, caption, cx - block / 2 + glyph.width + 14, cy, 62, outline=4, anchor="l")
+    K.text(sheet, caption, cx - block / 2 + glyph.width + 14, cy, size, outline=4, anchor="l")
 
 
 # --------------------------------------------------------------- the furniture
@@ -314,7 +357,7 @@ def shelf(sheet, h):
 
 
 # --------------------------------------------------------------- the screen
-def screen(h, played=True, modes=False):
+def screen(h, played=True, modes=False, wall=0, standing=0):
     sheet = Image.new("RGBA", (W, h), (*K.GROUND, 255))
 
     plain(sheet, h)
@@ -323,9 +366,9 @@ def screen(h, played=True, modes=False):
     band = h - foot - HEAD_CLEAR - SHELF
     top = foot + HEAD_CLEAR + max(0.0, (band - COLUMN_H) * LIFT)
 
-    hero(sheet, top, played, 12)
+    hero(sheet, top, played, 12, standing)
     points(sheet, top)
-    battle(sheet, top)
+    battle(sheet, top, wall)
 
     header(sheet, modes)
     shelf(sheet, h)
@@ -347,13 +390,23 @@ def main():
                     help="before anybody has held a wave")
     ap.add_argument("--modeswitch", action="store_true",
                     help="draw the mode pill too, as a catalog with a second mode would")
+    ap.add_argument("--locked", type=int, default=0, metavar="LEVEL",
+                    help="draw it behind a keeper wall at this level, as a new account meets it")
+    ap.add_argument("--standing", type=int, default=0, metavar="TOP",
+                    help="draw the nameplate as a standing - 'top N%% of watchers' - which is "
+                         "what it says once enough keepers have run the lane")
     ap.add_argument("--short", action="store_true",
                     help="the squarest canvas this game lays out for, where the band is tightest")
     ap.add_argument("--out", type=Path, default=Path("endless.png"))
     args = ap.parse_args()
 
-    out = screen(SHORT_H if args.short else K.H, played=not args.unplayed,
-                 modes=args.modeswitch)
+    # A wall is met by an account that has not run the lane, so the two states arrive together
+    # unless the caller says otherwise - drawing a gold medal behind a padlock would be a
+    # picture of a state no player can be in.
+    out = screen(SHORT_H if args.short else K.H,
+                 played=not args.unplayed and args.locked <= 0,
+                 modes=args.modeswitch, wall=max(0, args.locked),
+                 standing=max(0, min(99, args.standing)))
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
     print("  wrote %s  %dx%d  - look at it" % (args.out, out.width, out.height))

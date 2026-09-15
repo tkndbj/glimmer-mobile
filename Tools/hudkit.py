@@ -197,6 +197,48 @@ def text(sheet, s, cx, cy, size, fill=CREAM, outline=3, anchor="c"):
     return w
 
 
+def shrunk(sheet, s, cx, cy, box_w, box_h, size, floor, fill=CREAM, outline=3):
+    """`UIKit.Shrinkable` over `UIKit.Titled` - Unity's Best Fit, mirrored.
+
+    Best Fit picks the **largest** size between `floor` and `size` at which the wrapped
+    string fits the box in both directions, which is a different picture from "draw it at
+    34 and let it spill": a caption that shrinks is legible and a caption that overflows is
+    not clipped by Unity at all (invariant 37n). A mirror that could only draw the maximum
+    would answer the wrong question about every plate in this game whose text can grow.
+
+    The wrap is greedy on spaces and the line box is 1.2x the size, which is close enough
+    for the only question this is ever asked - *can you still read it* - and is stated here
+    rather than pretended away.
+
+    Returns the size it settled on, so a caller can print it: "22" against a floor of 22 is
+    the tell that a string has outgrown its plate and the plate is what has to move.
+    """
+    draw = ImageDraw.Draw(sheet)
+
+    for px in range(int(size), int(floor) - 1, -1):
+        f = font(px)
+        lines, line = [], ""
+
+        for word in s.split(" "):
+            trial = word if not line else line + " " + word
+            if draw.textlength(trial, font=f) <= box_w or not line:
+                line = trial
+            else:
+                lines.append(line)
+                line = word
+        if line:
+            lines.append(line)
+
+        widest = max((draw.textlength(ln, font=f) for ln in lines), default=0)
+        if (widest <= box_w and len(lines) * px * 1.2 <= box_h) or px == int(floor):
+            top = cy - (len(lines) - 1) * px * 1.2 / 2
+            for i, ln in enumerate(lines):
+                text(sheet, ln, cx, top + i * px * 1.2, px, fill=fill, outline=outline)
+            return px
+
+    return int(floor)
+
+
 # --------------------------------------------------------------------------- furniture
 def room(sheet):
     """`Scenery.Room` — the world, enveloped to the canvas, lightly shaded, vignetted."""

@@ -157,6 +157,27 @@ namespace GlimmerGrove
         /// </summary>
         public const string Battle = "Hud/btn_gold";
 
+        /// <summary>
+        /// A key that is drawn because the thing behind it is worth wanting, and cannot be
+        /// pressed yet — the Infinite lane's BATTLE before its keeper wall is met.
+        ///
+        /// <para>
+        /// <b>A role rather than a colour, and a role rather than a tint.</b>
+        /// <c>Image.color</c> is a multiply (invariant 37l), so dimming the gold key gives a
+        /// brown one: a key that looks damaged rather than one that looks shut. Grey is what
+        /// this kit already cuts for a control that is not live, and naming it here is what
+        /// lets a re-cut move every shut key at once (invariant 44).
+        /// </para>
+        /// <para>
+        /// <b>Distinct from <see cref="Resting"/>, which is not a control at all.</b> That one
+        /// is an off switch or a streak night not yet come round; this is a button a player is
+        /// meant to press — later. It still takes a tap, because a control that says nothing
+        /// when it is pressed is indistinguishable from a broken one: what it answers with is
+        /// the wall.
+        /// </para>
+        /// </summary>
+        public const string Shut = "btn_gray";
+
         // -------------------------------------------------------- the hub's feature plates
         /// <summary>
         /// The fill every feature plate on the hub carries — sampled off <see cref="Card"/>,

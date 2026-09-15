@@ -1309,11 +1309,13 @@ export const publishGroveStats = onSchedule(
 /**
  * Rebuilds this account's public grove card.
  *
- * <b>The request is empty and must stay empty.</b> Everything written here is recomputed
- * from the save this function opens with its own credentials — the worth, the stars, the
- * league, the keeper level and the name. A client that could hand any of those in would be
- * a client that could put any number it liked on a public leaderboard, which is the whole
- * of what `grove.ts` exists to prevent.
+ * <b>The request is empty and must stay empty.</b> Everything written here is recomputed or
+ * sanitised from the save this function opens with its own credentials — the worth, the stars,
+ * the keeper level, the name and the endless lane's wave count. A client that could hand any
+ * of those in would be a client that could put any number it liked on a public leaderboard,
+ * which is the whole of what `grove.ts` exists to prevent. The wave is the one figure that
+ * cannot be *recomputed* — see `bestWave` for what stands in for that, and for why the endless
+ * board must never be made to pay.
  *
  * Called by the client when the part of the grove a visitor can see has actually changed —
  * see `GrovePublishPolicy` for why that is a client decision and why it is safe to be one.

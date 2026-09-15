@@ -4,7 +4,7 @@
  *
  *     npm --prefix firebase/functions test
  *
- * A grove's worth, the keeper level behind it, the public name and the league are all
+ * A grove's worth, the keeper level behind it, the public name and the endless best are all
  * derived twice — in C# so the game can draw them offline, and here so a forged save
  * cannot rank. Two implementations of one rule drift, so both run
  * firebase/shared/grove-vectors.json. Assets/Game/Tests/GroveBoardTests.cs is the other
@@ -33,7 +33,7 @@ if (!existsSync(compiled)) {
 }
 
 const {
-  groveWorth, keeperLevel, leagueOf, starsFor,
+  groveWorth, keeperLevel, starsFor, bestWave, MAX_WAVE,
   sanitiseName, isNameAllowed, publicName, boardName, fallbackName,
   BOARD_IDS, deciles, optedIn, saveRevision,
 } = await import(pathToFileURL(compiled).href);
@@ -211,18 +211,56 @@ console.log("\nkeeper level");
   equal("negative xp is level 1", keeperLevel(-100, vectors.keeperCurve), 1);
 }
 
-// ---------------------------------------------------------------- stars and league
-console.log("\nstars and league");
+// ------------------------------------------------------------------------ stars
+console.log("\nstars");
 {
   const ladder = catalog.score.stars;
 
   for (const c of vectors.starCases) {
     equal(`${c.score} earns ${c.stars} star(s)`, starsFor(c.score, ladder), c.stars);
-    equal(`${c.score} ranks in ${c.league}`, leagueOf(starsFor(c.score, ladder)), c.league);
   }
+}
 
-  equal("a star count past the longest ladder still names a league", leagueOf(99), "l8");
-  equal("a negative star count names the bottom league", leagueOf(-1), "l0");
+// ------------------------------------------------------------------- endless best
+//
+// The one figure on a card that cannot be recomputed, so what is tested is the two things
+// standing in for that: it is read exactly as the client reads it (`EndlessLedger.BestIn`),
+// and it is bounded. A save that has never played the lane has to come back as a plain nought,
+// because `buildCard` omits the field on a nought and that is what keeps the endless board's
+// index to the players who are on it.
+console.log("\nendless best");
+{
+  equal("a save with no rows has no wave", bestWave({}), 0);
+  equal("an empty array has no wave", bestWave({ endlessBest: [] }), 0);
+  equal("a non-array is not a wave", bestWave({ endlessBest: 37 }), 0);
+
+  equal("the best of every row wins",
+        bestWave({ endlessBest: [
+          { level: "s02_endlesswatch", wave: 12 },
+          { level: "s09_elsewhere", wave: 31 },
+          { level: "s10_lower", wave: 4 },
+        ] }), 31);
+
+  equal("a row naming nothing is not a run",
+        bestWave({ endlessBest: [{ level: "", wave: 900 }, { level: "a", wave: 3 }] }), 3);
+  equal("a level id no catalog could have shipped is refused",
+        bestWave({ endlessBest: [{ level: "x".repeat(49), wave: 900 }] }), 0);
+  equal("a null row is skipped",
+        bestWave({ endlessBest: [null, { level: "a", wave: 5 }] }), 5);
+  equal("a wave that is not a number is nought",
+        bestWave({ endlessBest: [{ level: "a", wave: "many" }] }), 0);
+  equal("a negative wave is nought",
+        bestWave({ endlessBest: [{ level: "a", wave: -9 }] }), 0);
+
+  // The bound. It has to be the client's, or the prediction a device draws and the card the
+  // server writes disagree for the one account that reaches it.
+  equal("the ceiling holds", bestWave({ endlessBest: [{ level: "a", wave: 10 ** 9 }] }), MAX_WAVE);
+  equal("the ceiling is the one the client publishes", MAX_WAVE, 9999);
+
+  // Past `EndlessLedger.MaxRows`, which is also the rules' own cap. A document written before
+  // that cap existed must not be able to cost this an unbounded walk.
+  const long = Array.from({ length: 200 }, (_, i) => ({ level: `a${i}`, wave: i }));
+  equal("no more rows are read than the rules allow", bestWave({ endlessBest: long }), 63);
 }
 
 // ------------------------------------------------------------------------- names
@@ -374,19 +412,36 @@ console.log("\nranking");
   equal("a population of one still produces nine deciles", one.deciles.length, 9);
   check("and they are writable", writable(one));
 
-  // Every board the job publishes, and there is now exactly one list of them. `account.ts`
-  // imports this rather than mirroring it, which is invariant 27's business rather than
-  // tidiness: a board the deletion scrub cannot name is a board a deleted keeper's name
-  // survives on, where a stranger can read it.
-  equal("a board per league, and the global one", BOARD_IDS.length, 10);
-  equal("the global board is named first", BOARD_IDS[0], "global");
-  equal("every league has a board", BOARD_IDS.filter((id) => id !== "global").join(","),
-        Array.from({ length: 9 }, (_, i) => leagueOf(i)).join(","));
+  // The wave distribution is the same function over a second array, and it is what answers
+  // "where do I stand" for everybody the hundred-row board cannot reach. An empty one has to
+  // come back as an empty *array* rather than nine undefineds — Firestore refuses undefined,
+  // and this is the state on the day the board ships, when no watcher exists yet.
+  const noWatchers = { waveSamples: 0, waveDeciles: deciles([]) };
+  equal("no watchers yet publishes no wave deciles", noWatchers.waveDeciles.length, 0);
+  check("and the document is still writable", writable(noWatchers));
 
-  // A league id is what the board query selects on, so a star rating that folded to an id
-  // outside this list would be a keeper who is on no board at all.
-  check("every reachable star rating names a board this job writes",
-        [0, 1, 5, 8, 9, 40, -3].every((stars) => BOARD_IDS.includes(leagueOf(stars))));
+  const watched = deciles([3, 5, 5, 8, 12, 14, 19, 23, 31, 44].sort((a, b) => a - b));
+  equal("a wave sample produces nine deciles", watched.length, 9);
+  check("ascending, which is what the client refuses a table for not being",
+        watched.every((v, i) => i === 0 || v >= watched[i - 1]), watched.join(","));
+  check("and every one of them is a real number", watched.every(Number.isFinite));
+
+  // Every board the job publishes, and there is exactly one list of them. The nine league
+  // boards are gone; `l0`..`l8` are spent ids and `pruneRetiredBoards` is what takes the
+  // documents away. The deletion scrub deliberately no longer reads this list — it walks the
+  // collection instead, because a board that has been retired but not yet pruned is exactly
+  // where a deleted keeper's name would otherwise survive (invariant 27).
+  equal("two boards, and no more", BOARD_IDS.length, 2);
+  equal("the global board is named first", BOARD_IDS[0], "global");
+  equal("the endless board is named second", BOARD_IDS[1], "endless");
+
+  check("no retired league id has come back",
+        BOARD_IDS.every((id) => !/^l[0-8]$/.test(id)));
+
+  // Mirrored by `LeaderboardBoard.All`, and the client refuses a board id outside its own
+  // list before it spends a read on it — so an id here that the client does not know is a
+  // board nobody can ever open.
+  equal("the list the client mirrors", BOARD_IDS.join(","), "global,endless");
 }
 
 /** True when nothing in this value is undefined — what Firestore actually demands. */

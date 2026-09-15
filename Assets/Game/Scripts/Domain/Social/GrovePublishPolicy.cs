@@ -114,6 +114,27 @@ namespace GlimmerGrove.Social
         /// </summary>
         public const long Worth = 1L;
 
+        /// <summary>
+        /// Whether a card is worth putting on a board at all.
+        ///
+        /// <para>
+        /// <b>Two boards, so two ways to qualify</b>, and the rule lives here rather than at the
+        /// call site because it has to agree with <c>BOARD_IDS</c>: a keeper the client declines
+        /// to publish is a keeper no board can ever draw, whichever of them they would have
+        /// belonged on. The endless lane is the case that made this a method — somebody can hold
+        /// out forty waves having never bought a single fence, and under the worth test alone
+        /// they would have been kept off the one board they had earned a place on, silently and
+        /// for ever.
+        /// </para>
+        /// <para>
+        /// It stays a <em>bar</em> rather than being dropped: on the day this ships most accounts
+        /// hold nothing and have played nothing, and a card for each of them is a document, a
+        /// write and a row in a sample for a keeper with nothing to show.
+        /// </para>
+        /// </summary>
+        public static bool WorthPublishing(GroveCard card)
+            => card != null && (card.Score >= Worth || card.BestWave > 0);
+
         string _publishedFingerprint = string.Empty;
         string _wantedFingerprint = string.Empty;
         long _wantedRevision;

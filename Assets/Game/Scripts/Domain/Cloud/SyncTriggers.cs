@@ -22,7 +22,8 @@ namespace GlimmerGrove.Cloud
     /// loaded, and a save is loaded by every sync that adopts a merge — so a sync asked for on
     /// <c>Changed</c> is a sync every three seconds for the life of the process. The events
     /// here are raised only by the player's own act: <see cref="HomesteadLayout.Edited"/>,
-    /// the three <c>Bought</c>s and <see cref="Wallet.ProfileChanged"/>. A new act that
+    /// the three <c>Bought</c>s, <see cref="Wallet.ProfileChanged"/> and
+    /// <see cref="EndlessLedger.Beaten"/>. A new act that
     /// forgets to be listed here degrades gracefully — the change still goes up when the app
     /// is backgrounded — which is why this is a list and not a rule every call site has to
     /// remember.
@@ -47,6 +48,13 @@ namespace GlimmerGrove.Cloud
             HomesteadLedger.Bought += OnBought;
             GroveLand.Bought += OnBought;
             CompanionLedger.Bought += OnBought;
+
+            // A new endless best is on the public card (`GroveCard.BestWave`), so it is one of
+            // the things a stranger sees and belongs on this list for the reason a placement
+            // does — without it a keeper could hold out further than anybody alive and never
+            // reach the board they did it for. `Beaten` and never `Changed`: the latter fires on
+            // every save load, which is this type's whole warning.
+            EndlessLedger.Beaten += CloudSaveService.RequestSync;
         }
 
         static void OnBought(HomesteadPiece piece) => CloudSaveService.RequestSync();

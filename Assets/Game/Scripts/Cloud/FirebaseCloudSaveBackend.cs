@@ -1083,10 +1083,15 @@ namespace GlimmerGrove.Cloud
 
                         // The rank is the row's position rather than a field, so a board
                         // written with a gap cannot draw two keepers at the same place.
+                        //
+                        // Every row carries both figures whichever board it came off, because a
+                        // row is the same row (`LeaderboardEntry.Wave`); which one is drawn is
+                        // the board's decision, and an absent `wave` reads as nought exactly as
+                        // it does on the card it was copied from.
                         rows.Add(new Social.LeaderboardEntry(
                             rank, ownerId, Text(entry, "name"), Text(entry, "avatar"),
                             (int)ReadLong(entry, "level"), ReadLong(entry, "score"),
-                            (int)ReadLong(entry, "stars")));
+                            (int)ReadLong(entry, "stars"), (int)ReadLong(entry, "wave")));
 
                         if (rows.Count >= Social.LeaderboardBoard.MaxRows) break;
                     }
@@ -1104,63 +1109,86 @@ namespace GlimmerGrove.Cloud
         }
 
         /// <summary>
-        /// Reads the published distribution of grove worth.
+        /// Reads the published distributions: grove worth, and the Endless Watch's waves.
         ///
-        /// <see cref="ReadGroveStatsAsync"/>'s twin in every respect that matters: one public
-        /// document, no sign-in, and every failure an empty answer rather than a propagated
-        /// exception, because nothing anywhere waits on it.
+        /// <see cref="ReadGroveStatsAsync"/>'s twin in every respect that matters: one document,
+        /// once a session, and every failure an empty answer rather than a propagated exception,
+        /// because nothing anywhere waits on it.
+        ///
+        /// <para>
+        /// <b>The wave pair is read exactly as the worth pair is, through one reader.</b> Two
+        /// copies of "nine ascending numbers and a sample count" would be two places for the
+        /// ascending check to be forgotten — and that check is what stands between a malformed
+        /// document and a screen printing percentages drawn at random.
+        /// </para>
         /// </summary>
-        public async Task<(CloudResult result, Social.GroveRankTable table,
-                           Dictionary<string, int> population, long builtUnix)> ReadGroveRanksAsync(
-            CancellationToken cancellation = default)
+        public async Task<(CloudResult result, Social.GroveRankPublication published)>
+            ReadGroveRanksAsync(CancellationToken cancellation = default)
         {
-            var noPopulation = new Dictionary<string, int>();
-
             if (!await EnsureReadyAsync())
                 return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"),
-                        Social.GroveRankTable.None, noPopulation, 0L);
+                        Social.GroveRankPublication.None);
 
             try
             {
                 var snapshot = await CloudCancel.OrGiveUp(
                     _db.Collection("config").Document("groveRanks").GetSnapshotAsync(), cancellation);
+
+                // An absent document is the ordinary first-day state rather than a failure: no
+                // job has run yet, so there is nothing to say and every reader draws no standing.
                 if (!snapshot.Exists)
-                    return (CloudResult.Success, Social.GroveRankTable.None, noPopulation, 0L);
+                    return (CloudResult.Success, Social.GroveRankPublication.None);
 
                 var document = snapshot.ToDictionary();
-                var table = Social.GroveRankTable.None;
-
-                if (document.TryGetValue("deciles", out object raw) && raw is IEnumerable<object> list)
-                {
-                    var deciles = new List<long>(9);
-                    foreach (var value in list) deciles.Add(ToLong(value));
-
-                    // A table that is not ascending is not a decile table, and interpolating
-                    // through one produces percentages at random. ReadGroveStatsAsync refuses
-                    // the same way, for the same reason.
-                    bool ascending = deciles.Count == 9;
-                    for (int i = 0; ascending && i < deciles.Count; i++)
-                        if (deciles[i] < 1L || (i > 0 && deciles[i] < deciles[i - 1])) ascending = false;
-
-                    if (ascending)
-                        table = new Social.GroveRankTable((int)ReadLong(document, "samples"), deciles);
-                }
 
                 var population = new Dictionary<string, int>();
                 if (document.TryGetValue("population", out object rawPop) &&
                     rawPop is IDictionary<string, object> counts)
                 {
                     foreach (var pair in counts)
-                        if (Social.GroveLeague.IsKnown(pair.Key))
+                        if (Social.LeaderboardBoard.IsKnown(pair.Key))
                             population[pair.Key] = (int)ToLong(pair.Value);
                 }
 
-                return (CloudResult.Success, table, population, ReadLong(document, "builtUnix"));
+                // `waveDeciles` is additive: a document written before the Endless Watch shipped
+                // simply has none, and an absent table is what every reader already treats as
+                // "nothing to say" (invariant 19k's additive half).
+                return (CloudResult.Success, new Social.GroveRankPublication(
+                    ReadRankTable(document, "deciles", "samples"),
+                    ReadRankTable(document, "waveDeciles", "waveSamples"),
+                    population,
+                    ReadLong(document, "builtUnix")));
             }
             catch (Exception e)
             {
-                return (Classify(e, "read grove ranks"), Social.GroveRankTable.None, noPopulation, 0L);
+                return (Classify(e, "read grove ranks"), Social.GroveRankPublication.None);
             }
+        }
+
+        /// <summary>
+        /// Nine ascending numbers and the sample they were measured over, or
+        /// <see cref="Social.GroveRankTable.None"/>.
+        ///
+        /// <b>A table that is not ascending is not a decile table</b>, and interpolating through
+        /// one produces percentages at random — so it is refused outright rather than repaired.
+        /// <c>ReadGroveStatsAsync</c> refuses the same way, for the same reason.
+        /// </summary>
+        static Social.GroveRankTable ReadRankTable(IDictionary<string, object> document,
+                                                   string decileKey, string sampleKey)
+        {
+            if (!document.TryGetValue(decileKey, out object raw) || !(raw is IEnumerable<object> list))
+                return Social.GroveRankTable.None;
+
+            var deciles = new List<long>(9);
+            foreach (var value in list) deciles.Add(ToLong(value));
+
+            if (deciles.Count != 9) return Social.GroveRankTable.None;
+
+            for (int i = 0; i < deciles.Count; i++)
+                if (deciles[i] < 1L || (i > 0 && deciles[i] < deciles[i - 1]))
+                    return Social.GroveRankTable.None;
+
+            return new Social.GroveRankTable((int)ReadLong(document, sampleKey), deciles);
         }
 
         /// <summary>
@@ -1219,7 +1247,7 @@ namespace GlimmerGrove.Cloud
                 (int)ReadLong(document, "level"),
                 ReadLong(document, "score"),
                 (int)ReadLong(document, "stars"),
-                Text(document, "league"),
+                (int)ReadLong(document, "wave"),
                 ReadLong(document, "builtUnix"),
                 Text(document, "dwelling"),
                 land,

@@ -239,6 +239,7 @@
       "minAppVersion": 0,
       "mode": "siege",
       "track": "infinite",
+      "minKeeperLevel": 10,
       "levels": [
         "s02_endless"
       ]

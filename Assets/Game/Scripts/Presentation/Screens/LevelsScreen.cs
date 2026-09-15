@@ -372,7 +372,11 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The level is the lane's first and the gate is asked exactly as a node asks it</b>,
         /// so the key on the hub and a disc on a map refuse for the same reasons and with the
-        /// same sentence — <see cref="Open"/> owns both.
+        /// same sentence — <see cref="Open"/> owns both, and <see cref="GateLine"/> owns the
+        /// words. A lane whose one chapter carries a keeper wall is the only gate this screen
+        /// can meet here (a lane of one chapter has nothing behind it to ask for stars), and the
+        /// key wears it rather than disappearing: this screen is the lane's advertisement as
+        /// much as its door.
         /// </para>
         /// </remarks>
         void BuildHub()
@@ -383,7 +387,13 @@ namespace GlimmerGrove
             var id = level.Id;
             bool unlocked = LevelUnlock.IsUnlocked(_index, id);
 
-            EndlessHub.Build(Safe, Content, this, Mode, Lane, level, _headerFoot, unlocked,
+            // Asked once and handed over as words. The hub draws; it does not decide, and it
+            // does not compose a sentence a map has already composed somewhere else.
+            string wall = unlocked
+                ? null
+                : GateLine(LevelUnlock.GateFor(_index, _index.ChapterOf(id)));
+
+            EndlessHub.Build(Safe, Content, this, Mode, Lane, level, _headerFoot, unlocked, wall,
                              () => Open(id, unlocked));
         }
 
@@ -656,19 +666,27 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// What a shut gate says, in stars.
+        /// What a shut gate says.
         ///
         /// <para>
-        /// One string used in two places — the signpost at the end of a chain and the refusal
-        /// a padlocked glade gives — because they are the same sentence and a player who read
-        /// one and then tapped the other would otherwise be told two different things about
-        /// one rule. Falls back to the plain "locked" line for a gate with no chapter behind
-        /// it, which is a catalog nobody can reach and so a validator's problem rather than a
-        /// sentence worth composing.
+        /// One string used in three places — the signpost at the end of a chain, the refusal a
+        /// padlocked glade gives and the key on a lane's hub — because they are the same
+        /// sentence, and a player who read one and then tapped another would otherwise be told
+        /// two different things about one rule. Falls back to the plain "locked" line for a gate
+        /// with no chapter behind it and no wall of its own, which is a catalog nobody can reach
+        /// and so a validator's problem rather than a sentence worth composing.
+        /// </para>
+        /// <para>
+        /// <b>The keeper wall is asked first, which is <c>ChapterGate</c>'s own rule</b>
+        /// (invariant 16s): when both halves are shut, a star count is a number that was never
+        /// the whole price, and telling somebody to earn it would send them back to a chapter
+        /// they may already have finished.
         /// </para>
         /// </summary>
         static string GateLine(ChapterGate gate)
-            => gate.Exists
+            => gate.NeedsLevel
+                ? Loc.Format("ui.levels.keeper_gate", gate.RequiredLevel)
+             : gate.Required > 0 && gate.Behind.IsValid
                 ? Loc.Format("ui.levels.chapter_gate", gate.Held, gate.Required)
                 : Loc.Get("ui.levels.chapter_locked");
 
@@ -1524,7 +1542,17 @@ namespace GlimmerGrove
             // Where else there is to go, narrowest first: another ladder of this mode, then
             // another mode. Both pills fold away when their own question has one answer, so on
             // most days exactly one of these is queued.
-            ScreenLessons.Offer(queue, Mechanic.MapTrack, _tracks, Loc.Get(OtherLane().NameKey));
+            //
+            // **Held over while that lane is still behind its keeper wall**, which is the
+            // chapter-gate tip's rule immediately above: a lesson is offered once in a player's
+            // life, so one pointing at a lane they cannot enter for another nine levels is spent
+            // on the day it means least and gone on the day it means most. The padlocked row is
+            // still there to be found in the meantime; what is withheld is the game pointing at
+            // it (invariant 43d, and 37cl's rule about a tip with nothing to ring).
+            var other = OtherLane();
+
+            if (!other.Equals(Lane) && TrackSwitch.IsOpen(_index, Mode, other))
+                ScreenLessons.Offer(queue, Mechanic.MapTrack, _tracks, Loc.Get(other.NameKey));
             ScreenLessons.Offer(queue, Mechanic.ModeSwitch, _modes);
 
             return queue;

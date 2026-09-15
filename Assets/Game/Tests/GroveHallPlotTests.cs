@@ -217,7 +217,7 @@ namespace GlimmerGrove.Tests
                 [T(9, 9)] = new Placement("fence", 0L, 0),
             };
 
-            var card = new GroveCard("owner", "Fern", "monarch", 3, 0L, 0, null, 1L,
+            var card = new GroveCard("owner", "Fern", "monarch", 3, 0L, 0, 0, 1L,
                                      "home_cottage", null, placed);
             var index = card.Occupancy(catalog);
 
@@ -235,13 +235,13 @@ namespace GlimmerGrove.Tests
         {
             var floor = Grove(4).Floor;
 
-            var moved = new GroveCard("owner", "Fern", "monarch", 3, 0L, 0, null, 1L,
+            var moved = new GroveCard("owner", "Fern", "monarch", 3, 0L, 0, 0, 1L,
                                       "home_cottage", null, null, T(7, 8), 1);
             Assert.IsTrue(moved.HallSeat(floor, out int col, out int row));
             Assert.AreEqual(7, col);
             Assert.AreEqual(8, row);
 
-            var never = new GroveCard("owner", "Fern", "monarch", 3, 0L, 0, null, 1L,
+            var never = new GroveCard("owner", "Fern", "monarch", 3, 0L, 0, 0, 1L,
                                       "home_cottage", null, null);
             Assert.IsTrue(never.HallSeat(floor, out col, out row));
             Assert.AreEqual(4, col, "absent means where the floor says");
@@ -249,7 +249,7 @@ namespace GlimmerGrove.Tests
 
             // A seat the plot cannot fit on this floor is a lie a stale card can tell, and it
             // falls back rather than opening the visitor on ground off the edge of the world.
-            var off = new GroveCard("owner", "Fern", "monarch", 3, 0L, 0, null, 1L,
+            var off = new GroveCard("owner", "Fern", "monarch", 3, 0L, 0, 0, 1L,
                                     "home_cottage", null, null, T(10, 10), 0);
             Assert.IsTrue(off.HallSeat(floor, out col, out row));
             Assert.AreEqual(4, col);

@@ -46,6 +46,19 @@ namespace GlimmerGrove.Content
         public ModeLane Lane => new ModeLane(Mode, Track);
 
         /// <summary>
+        /// The keeper level this chapter asks for before it opens at all, or nought when it
+        /// asks for none.
+        ///
+        /// <b>Index knowledge for <see cref="Track"/>'s reason</b>: <c>LevelUnlock</c> answers
+        /// what is open for a whole lane at a time — at launch, and again every time the map is
+        /// drawn — so a wall the index could not see would be one no screen could draw without
+        /// pulling a chapter body in behind it. It is authored in the manifest
+        /// (<c>ManifestChapterDto.minKeeperLevel</c>) rather than derived, because nothing about
+        /// a chapter's levels implies how much of the game should be behind it.
+        /// </summary>
+        public readonly int MinKeeperLevel;
+
+        /// <summary>
         /// Derived from the id by convention, so a chapter names itself once. The body
         /// may still override it, but the index needs a name before the body is read —
         /// a chapter carousel must be able to label a chapter it has never opened.
@@ -61,6 +74,11 @@ namespace GlimmerGrove.Content
 
         public ChapterIndexEntry(ChapterId id, int order, int version,
                                  IReadOnlyList<LevelId> levelIds, GameMode mode, GameTrack track)
+            : this(id, order, version, levelIds, mode, track, 0) { }
+
+        public ChapterIndexEntry(ChapterId id, int order, int version,
+                                 IReadOnlyList<LevelId> levelIds, GameMode mode, GameTrack track,
+                                 int minKeeperLevel)
         {
             if (!id.IsValid) throw new ArgumentException("chapter needs a valid id", nameof(id));
 
@@ -70,6 +88,11 @@ namespace GlimmerGrove.Content
             LevelIds = levelIds ?? Array.Empty<LevelId>();
             Mode = mode.IsValid ? mode : GameMode.Default;
             Track = track;
+
+            // Negative is nonsense rather than a sentinel, and reading it as "no wall" is the
+            // safe direction: the alternative is a manifest typo that shuts a chapter nobody can
+            // ever open. The content gates name it; a session never loses a lane to it.
+            MinKeeperLevel = minKeeperLevel < 0 ? 0 : minKeeperLevel;
         }
 
         public int LevelCount => LevelIds.Count;

@@ -75,8 +75,12 @@ namespace GlimmerGrove.Content
             if (levelIds.Count == 0)
                 _problems.Add($"chapter '{chapterId}' lists no levels and will show as empty");
 
+            // **A wall, never a skip** - see `ManifestChapterDto.minKeeperLevel`. Unlike an
+            // unknown mode or a newer `minAppVersion`, a chapter the player has not levelled up
+            // to is still listed, still ordered and still drawn: it is something to work
+            // towards, and dropping it here would take it off the map instead of padlocking it.
             _chapters.Add(new ChapterIndexEntry(chapterId, entry.order, entry.version, levelIds,
-                                                mode, track));
+                                                mode, track, entry.minKeeperLevel));
             return true;
         }
 

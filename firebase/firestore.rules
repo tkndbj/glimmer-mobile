@@ -225,10 +225,18 @@ service cloud.firestore {
 
                // How deep an endless run has ever got, per level. It pays nothing - credits and
                // XP derive from the star ledger alone (invariant 9) - so a forged wave moves a
-               // reading and never a balance, and the public half is clamped by `publishGrove`
-               // like every other public number here. The bound matches `EndlessLedger.MaxRows`,
-               // and it has to: `hasOnly` is an allow-list over the whole document, so a save the
-               // client writes and these rules refuse loses *every* save write (invariant 12a).
+               // reading and never a balance.
+               //
+               // Since the Endless Watch shipped it *is* a public number: `publishGrove` copies
+               // the best of these rows onto the card as `wave`. It is the one figure on a card
+               // the server cannot recompute, so unlike the grove's worth it is **bounded**
+               // rather than clamped (`bestWave`, `MAX_WAVE`) - which is only defensible while
+               // the endless board pays nothing. Nothing here changes for it: the rows were
+               // already allowed and already capped.
+               //
+               // The bound matches `EndlessLedger.MaxRows`, and it has to: `hasOnly` is an
+               // allow-list over the whole document, so a save the client writes and these rules
+               // refuse loses *every* save write (invariant 12a).
                && (!('endlessBest' in d) || (d.endlessBest is list
                                              && d.endlessBest.size() <= 64))
                // How far each turret has been upgraded: twenty turrets on four seats is eighty,

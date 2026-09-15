@@ -114,7 +114,7 @@ const LIB = join(REPO, "firebase", "functions", "lib");
 if (!existsSync(join(LIB, "grove.js"))) {
   throw new Error("build the functions first: npm --prefix firebase/functions run build");
 }
-const { buildCard, groveWorth, leagueOf, derivedXp, keeperLevel, sanitiseName } =
+const { buildCard, groveWorth, derivedXp, keeperLevel, sanitiseName } =
   await import(pathToFileURL(join(LIB, "grove.js")).href);
 const { resolveRule, buildChapterRules, DEFAULT_RULE } =
   await import(pathToFileURL(join(LIB, "progression.js")).href);
@@ -691,7 +691,7 @@ for (const village of VILLAGES) {
 
   console.log(
     `\n${village.name}  (${village.id})  ${village.bio ?? ""}\n` +
-    `  ${card.score.toLocaleString()} worth · ${card.stars}★ ${leagueOf(card.stars)} · level ${play.level} · ` +
+    `  ${card.score.toLocaleString()} worth · ${card.stars}★ · level ${play.level} · ` +
     `${placements.length} piece(s) on ${tiles} tile(s) (${Math.round(placements.length / tiles * 100)}%) · ` +
     `${held.land.length + 1} region(s) · ${held.stock.length} stock row(s) · ` +
     `${held.companions.length} companion(s) · home ${card.dwelling}` +

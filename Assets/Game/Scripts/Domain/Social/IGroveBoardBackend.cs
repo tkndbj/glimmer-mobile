@@ -136,7 +136,7 @@ namespace GlimmerGrove.Social
             string ownerId, CancellationToken cancellation = default);
 
         /// <summary>
-        /// Reads one published board: the global hundred, or a league's.
+        /// Reads one published board: the finest groves, or the Endless Watch.
         ///
         /// One document, whole, however many rows it carries — see
         /// <see cref="LeaderboardBoard"/> for why it is denormalised rather than queried.
@@ -145,14 +145,14 @@ namespace GlimmerGrove.Social
             string boardId, CancellationToken cancellation = default);
 
         /// <summary>
-        /// Reads the published distribution of grove worth, and each league's population.
+        /// Reads the published distributions — grove worth and endless waves — and each board's
+        /// population.
         ///
         /// <see cref="ReadGroveStatsAsync"/>'s twin, and public for the same reasons: it names
         /// no player, it is the same for everybody, and every reader treats an absent table as
-        /// "nothing to say".
+        /// "nothing to say". One document, whole, once a session.
         /// </summary>
-        Task<(CloudResult result, GroveRankTable table,
-              Dictionary<string, int> population, long builtUnix)> ReadGroveRanksAsync(
+        Task<(CloudResult result, GroveRankPublication published)> ReadGroveRanksAsync(
             CancellationToken cancellation = default);
     }
 }
