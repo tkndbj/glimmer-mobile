@@ -512,6 +512,76 @@ namespace GlimmerGrove.Cloud
             }
         }
 
+        // --------------------------------------------------------- the release gate
+        /// <summary>
+        /// What the deployment requires of a client on this platform, from the one public
+        /// document a release publishes.
+        ///
+        /// <para>
+        /// No sign-in and no user id, for <see cref="ReadGroveStatsAsync"/>'s reason and one
+        /// sharper than it: the builds this gate exists to stop are quite often builds whose
+        /// problem is that they can no longer talk to this deployment, and a wall behind
+        /// authentication is a wall that cannot close on them. <c>config/release</c> is
+        /// world-readable in <c>firestore.rules</c> exactly as <c>config/stats</c> is.
+        /// </para>
+        /// <para>
+        /// <b>Every shape of "there is nothing here" succeeds with
+        /// <see cref="Release.ReleaseRequirement.None"/></b> — an unseeded project, a document
+        /// with no block for this platform, a block with no minimum. Only a genuine failure to
+        /// reach Firestore is reported as one, because that is the single distinction
+        /// <c>ReleaseGate</c> cannot make for itself and the one that decides whether a standing
+        /// wall stays up.
+        /// </para>
+        /// <para>
+        /// A published block that names no store link falls back to the platform's derived one,
+        /// which exists on Android and cannot on iOS — see <c>ReleasePlatform.FallbackStoreUrl</c>.
+        /// Whether what comes out of that is enforceable is not decided here; the requirement
+        /// answers it, in one place, for every reader.
+        /// </para>
+        /// </summary>
+        public async Task<(CloudResult result, Release.ReleaseRequirement requirement)> ReadReleaseAsync(
+            string platform, CancellationToken cancellation = default)
+        {
+            // Answered without a round trip: a build with no store behind it has nowhere a wall
+            // could send anybody, so there is nothing to read and nothing to enforce.
+            if (string.IsNullOrEmpty(platform))
+                return (CloudResult.Success, Release.ReleaseRequirement.None);
+
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"),
+                        Release.ReleaseRequirement.None);
+
+            try
+            {
+                var snapshot = await CloudCancel.OrGiveUp(
+                    _db.Collection("config").Document("release").GetSnapshotAsync(), cancellation);
+
+                if (!snapshot.Exists) return (CloudResult.Success, Release.ReleaseRequirement.None);
+
+                var document = snapshot.ToDictionary();
+
+                if (!document.TryGetValue(platform, out object raw) ||
+                    !(raw is Dictionary<string, object> block))
+                {
+                    return (CloudResult.Success, Release.ReleaseRequirement.None);
+                }
+
+                int minimum = ReadInt(block, "minimum");
+
+                string store = block.TryGetValue("store", out object rawStore) && rawStore is string named
+                             ? named
+                             : string.Empty;
+
+                if (string.IsNullOrEmpty(store)) store = Release.ReleasePlatform.FallbackStoreUrl;
+
+                return (CloudResult.Success, new Release.ReleaseRequirement(minimum, store));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "read release"), Release.ReleaseRequirement.None);
+            }
+        }
+
         static int ReadInt(Dictionary<string, object> document, string key)
             => document.TryGetValue(key, out object value) ? ToInt(value) : 0;
 
@@ -925,14 +995,24 @@ namespace GlimmerGrove.Cloud
         }
 
         /// <summary>
-        /// Reports a keeper's name.
+        /// Reports a keeper's name, or what they have built.
         ///
+        /// <para>
         /// A function rather than a document write, for <c>ClaimNameAsync</c>'s reason and one
         /// of its own: the record and the count the threshold reads have to move together, and
         /// a takedown decided by a number the client writes is a takedown anybody can trigger.
+        /// </para>
+        /// <para>
+        /// <b>The subject rides in the body rather than in the callable's name.</b> It was
+        /// <c>reportKeeperName</c> until this drop and is <c>reportKeeper</c> now — a callable's
+        /// name is not an id anything is keyed on, so renaming it cost a deploy, an invoker
+        /// binding and a delete, which is a price only payable before a client ships. What the
+        /// body buys is that a third subject is one word and no ops at all.
+        /// </para>
         /// </summary>
-        public async Task<(CloudResult result, Social.NameReportOutcome outcome)> ReportKeeperNameAsync(
-            string keeperId, CancellationToken cancellation = default)
+        public async Task<(CloudResult result, Social.NameReportOutcome outcome)> ReportKeeperAsync(
+            string keeperId, Social.ReportSubject subject,
+            CancellationToken cancellation = default)
         {
             if (string.IsNullOrEmpty(keeperId))
                 return (CloudResult.Failed(CloudFailure.Rejected, "no keeper"),
@@ -944,16 +1024,21 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var reply = await CallAsync("reportKeeperName", new Dictionary<string, object>
+                var reply = await CallAsync("reportKeeper", new Dictionary<string, object>
                 {
                     { "keeperId", keeperId },
+
+                    // Through `ReportSubjects.Wire`, which is the one place the spelling lives:
+                    // the server keys a collection on this string, so a tidy-up here would file
+                    // every later report into a collection nothing reads.
+                    { "subject", Social.ReportSubjects.Wire(subject) },
                 });
 
                 return (CloudResult.Success, ReadReport(reply));
             }
             catch (Exception e)
             {
-                return (Classify(e, "report name"), Social.NameReportOutcome.Unavailable);
+                return (Classify(e, "report keeper"), Social.NameReportOutcome.Unavailable);
             }
         }
 
@@ -1240,6 +1325,45 @@ namespace GlimmerGrove.Cloud
                 }
             }
 
+            // The priced companions this keeper bought, as the server counted them. Sanitised
+            // exactly as `land` is: ids this build has never heard of are *kept*, because a
+            // visitor one content drop behind must not quietly show a keeper as owning fewer
+            // friends than they do — `AvatarCatalog.Find` resolves the unknown ones to nothing
+            // and the count says how many were published.
+            var companions = new List<string>();
+            if (document.TryGetValue("companions", out object rawFriends) &&
+                rawFriends is IEnumerable<object> friendList)
+            {
+                foreach (var id in friendList)
+                    if (id is string text && text.Length > 0) companions.Add(text);
+            }
+
+            // The turret line, as slots plus the rung each seat stands at. A malformed row is
+            // skipped rather than poisoning the line, and a missing seat is simply missing —
+            // `WardLine.Resolve` fills it with this build's own starter, which is the path every
+            // board already takes for a turret that was renamed or retired.
+            var line = new List<Wards.WardSlot>(Wards.WardLine.Colours.Length);
+            var rungs = new List<int>(Wards.WardLine.Colours.Length);
+
+            if (document.TryGetValue("line", out object rawLine) &&
+                rawLine is IEnumerable<object> seats)
+            {
+                foreach (var element in seats)
+                {
+                    if (!(element is IDictionary<string, object> seat)) continue;
+
+                    string colour = Text(seat, "c");
+                    string ward = Text(seat, "w");
+                    if (colour.Length != 1 || ward.Length == 0) continue;
+                    if (Wards.WardLine.Colours.IndexOf(colour[0]) < 0) continue;
+
+                    line.Add(new Wards.WardSlot(colour[0], ward));
+                    rungs.Add((int)ReadLong(seat, "s"));
+
+                    if (line.Count >= Wards.WardLine.Colours.Length) break;
+                }
+            }
+
             return new Social.GroveCard(
                 ownerId,
                 Text(document, "name"),
@@ -1253,7 +1377,10 @@ namespace GlimmerGrove.Cloud
                 land,
                 placed,
                 Text(document, "hall"),
-                (int)ReadLong(document, "hallFacing"));
+                (int)ReadLong(document, "hallFacing"),
+                companions,
+                line,
+                rungs);
         }
 
         static IDictionary<string, object> ReadMap(IDictionary<string, object> reply, string key)

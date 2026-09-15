@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using GlimmerGrove.Content;
 using NUnit.Framework;
 
@@ -38,78 +37,17 @@ namespace GlimmerGrove.Tests
     /// </summary>
     public sealed class RecordWordingTests
     {
-        static readonly string[] TableParts =
-            { "Assets", "StreamingAssets", "Content", "loc", "en.json" };
-
         /// <summary>
-        /// The shipped English table, found from wherever this is being run.
+        /// The shipped table, by key.
         ///
-        /// Two starting points because the two runners differ: the Editor's working directory is
-        /// the project root, and the offline runner's is wherever the tool was invoked from. The
-        /// assembly's own folder is what covers the second when it is neither.
+        /// <b>Read through <see cref="ShippedStrings"/> rather than here</b>, because a second
+        /// fixture came to want the same thing (<c>KeeperReportTests</c>, asking whether a
+        /// derived key resolves) and two readers of one table is the drift invariant 44d refuses
+        /// for a mirror. The reasoning that put the reader here in the first place moved with it:
+        /// nothing publishes the table in a fixture, and <c>JsonUtility</c> is a native call, so
+        /// a test that parsed the file the shipping way would only run with the Editor open.
         /// </summary>
-        static string TablePath()
-        {
-            var seeds = new List<string> { Directory.GetCurrentDirectory() };
-
-            string here = Path.GetDirectoryName(typeof(RecordWordingTests).Assembly.Location);
-            if (!string.IsNullOrEmpty(here)) seeds.Add(here);
-
-            foreach (string seed in seeds)
-                for (var dir = new DirectoryInfo(seed); dir != null; dir = dir.Parent)
-                {
-                    string candidate = Path.Combine(dir.FullName, Path.Combine(TableParts));
-                    if (File.Exists(candidate)) return candidate;
-                }
-
-            Assert.Fail("the shipped string table could not be found from " + string.Join(", ", seeds));
-            return null;
-        }
-
-        static readonly Regex Entry = new Regex(
-            @"\{\s*""key""\s*:\s*""(?<key>[^""]*)""\s*,\s*""text""\s*:\s*""(?<text>(?:[^""\\]|\\.)*)""",
-            RegexOptions.Singleline);
-
-        /// <summary>
-        /// The entries, by key. A deliberately small reader: it is looking at placeholders, and
-        /// the only escapes that could hide one are the ones decoded here.
-        /// </summary>
-        static Dictionary<string, string> Table()
-        {
-            string path = TablePath();
-            var table = new Dictionary<string, string>();
-
-            foreach (Match m in Entry.Matches(File.ReadAllText(path)))
-                table[m.Groups["key"].Value] = Unescape(m.Groups["text"].Value);
-
-            Assert.Greater(table.Count, 0, "no strings were read from " + path);
-            return table;
-        }
-
-        static string Unescape(string text)
-        {
-            var sb = new System.Text.StringBuilder(text.Length);
-
-            for (int i = 0; i < text.Length; i++)
-            {
-                if (text[i] != '\\' || i + 1 >= text.Length) { sb.Append(text[i]); continue; }
-
-                char c = text[++i];
-                switch (c)
-                {
-                    case 'n': sb.Append('\n'); break;
-                    case 'r': sb.Append('\r'); break;
-                    case 't': sb.Append('\t'); break;
-                    case 'u':
-                        sb.Append((char)Convert.ToInt32(text.Substring(i + 1, 4), 16));
-                        i += 4;
-                        break;
-                    default: sb.Append(c); break;
-                }
-            }
-
-            return sb.ToString();
-        }
+        static Dictionary<string, string> Table() => ShippedStrings.Table();
 
         /// <summary>
         /// The count reaches the line, and nothing else is left asking for an argument.

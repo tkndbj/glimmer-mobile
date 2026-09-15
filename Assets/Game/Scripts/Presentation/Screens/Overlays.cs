@@ -6,6 +6,7 @@ using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
+using GlimmerGrove.Notifications;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Privacy;
 using GlimmerGrove.Progression;
@@ -924,11 +925,18 @@ namespace GlimmerGrove
             // to the state it is in, exactly as the account panel is.
             bool privacy = AdPrivacy.CanRevisit;
 
+            // And the reminders row, which is drawn only where reminders can exist. Hidden in
+            // the Editor and on desktop rather than drawn disabled, for the consent row's own
+            // reason one line up: a control that can do nothing is worse than no control, and
+            // `Notify.Supported` is the only thing that knows the difference.
+            bool reminders = Notify.Supported;
+
             // Derived rather than typed, for GladeRewardsOverlay's reason: this panel now has
             // two optional rows, and a height somebody has to remember to move is a height that
             // ends up drawing a paragraph through a button. Both numbers below are what the
             // rows actually occupy, so adding a third row is one line here and one there.
-            float height = BaseHeight + (privacy ? ConsentRow : 0f) + LegalRow;
+            float height = BaseHeight + (privacy ? ConsentRow : 0f)
+                         + (reminders ? ReminderRow : 0f) + LegalRow;
 
             MakePanel(new Vector2(860f, height), Loc.Get("ui.settings.title"));
 
@@ -961,6 +969,14 @@ namespace GlimmerGrove
             // row comes back here: a website is not an answer to Freepik's rule, and the
             // store description is the only other place that is.
 
+            // The two optional rows hang from the top, so they are laid out by a cursor rather
+            // than by two typed offsets — invariant 37bc's argument said about a column. With
+            // constants, the arrangement that has both would draw one through the other, and
+            // it is the arrangement nobody has on their own device.
+            float y = -520f;
+
+            if (reminders) { Reminders(y); y -= ReminderRow; }
+
             if (privacy)
             {
                 // Reopens the consent form. Deliberately not a toggle of our own: the answer
@@ -970,7 +986,7 @@ namespace GlimmerGrove
                 // dialog and stacking one over a Unity modal leaves the modal drawn behind it
                 // for as long as it is up.
                 UIKit.TextButton("Privacy", Panel, "btn_blue", Loc.Get("ui.settings.privacy"), 40,
-                                 new Vector2(600f, 116f), new Vector2(.5f, 1f), new Vector2(0f, -520f),
+                                 new Vector2(600f, 116f), new Vector2(.5f, 1f), new Vector2(0f, y),
                                  () => Close(() => _ = AdPrivacy.RevisitAsync()));
             }
 
@@ -1037,6 +1053,68 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         internal const float BaseHeight = 660f, ConsentRow = 130f, LegalRow = 96f;
+
+        /// <summary>
+        /// The reminders row's own height, which is <see cref="ConsentRow"/>'s for the same
+        /// reason: the button plus the gap under it. Named separately anyway, because the two
+        /// rows appear independently and a shared constant is how a change to one silently
+        /// moves the other.
+        /// </summary>
+        internal const float ReminderRow = 130f;
+
+        /// <summary>
+        /// The reminders control: a row that says the state and, tapped, changes the thing that
+        /// can actually be changed.
+        ///
+        /// <para>
+        /// <b>A worded row rather than an icon toggle, because there are three answers and an
+        /// icon can only draw two.</b> On and off are the player's switch; <em>blocked</em> is
+        /// the OS's, and it cannot be undone from inside this app — neither platform shows its
+        /// permission dialog twice — so the only honest control for it is one that hands the
+        /// player to the system settings. A switch that flipped and changed nothing is exactly
+        /// the broken button invariant 16o refuses.
+        /// </para>
+        /// <para>
+        /// The panel is closed before the system settings open, for <see cref="Link"/>'s
+        /// reason: on both platforms that is another app, and coming back to a modal nobody
+        /// dismissed is how a player ends up tapping Close twice.
+        /// </para>
+        /// </summary>
+        void Reminders(float y)
+        {
+            Btn button = null;
+
+            string Wording()
+            {
+                if (NotificationOptIn.Permission == NotificationPermission.Denied)
+                    return Loc.Get("ui.settings.reminders_blocked");
+
+                return Loc.Get(NotificationOptIn.Wanted
+                    ? "ui.settings.reminders_on" : "ui.settings.reminders_off");
+            }
+
+            button = UIKit.TextButton("Reminders", Panel, "btn_blue", Wording(), 40,
+                                      new Vector2(600f, 116f), new Vector2(.5f, 1f),
+                                      new Vector2(0f, y), () =>
+            {
+                if (NotificationOptIn.Permission == NotificationPermission.Denied)
+                {
+                    Close(Notify.OpenSettings);
+                    return;
+                }
+
+                // Unasked is the one state where saying yes has to become a system prompt as
+                // well as a preference — and it is the right moment for one, because the
+                // player has just reached for the control themselves. `Notify.Ask` is a no-op
+                // once the OS has answered, so this cannot become a second dialog.
+                NotificationOptIn.SetWanted(!NotificationOptIn.Wanted);
+                if (NotificationOptIn.Wanted) Notify.Ask();
+
+                if (button != null && button.Label != null) button.Label.text = Wording();
+            });
+
+            UIKit.Shrinkable(button.Label, 24);
+        }
 
         /// <summary>
         /// One link out to the public site.

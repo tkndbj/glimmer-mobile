@@ -73,6 +73,12 @@ namespace GlimmerGrove.Tests
                 streak = new StreakStateDto
                 {
                     startDay = 20_310, lastPlayedDay = 20_315, collectedThroughDay = 20_314,
+
+                    // The shield too. A fixture that left it out would prove three quarters of
+                    // the wire, and the quarter it left out is the one a player paid gems for
+                    // — invariant 12a's rule that a round trip is only as complete as what is
+                    // fed into it.
+                    shieldFromDay = 20_313,
                 },
 
                 // Both periods, each with a count and a claim, because the pair is what the
@@ -369,11 +375,14 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(1_700_003_600, restored.wallet.hintsDueUnix);
 
             // The streak used to stay on the phone, so a player's flame quietly restarted
-            // on their second device. All three dates have to make the round trip or the
-            // merge on the other side has nothing to join against.
+            // on their second device. All four dates have to make the round trip or the
+            // merge on the other side has nothing to join against — and the shield is the
+            // sharpest of them, because a player who paid to be away and then opened the game
+            // on their tablet must not find the streak they bought cover for already broken.
             Assert.AreEqual(20_310, restored.streak.startDay);
             Assert.AreEqual(20_315, restored.streak.lastPlayedDay);
             Assert.AreEqual(20_314, restored.streak.collectedThroughDay);
+            Assert.AreEqual(20_313, restored.streak.shieldFromDay);
 
             // The tasks: both periods, counters and claims. A counter that stayed on one
             // phone is a task that reads half done on the other, and a claim that stayed is a
@@ -512,7 +521,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A document written before the streak travelled reads back as three zeros rather
+        /// A document written before the streak travelled reads back as four zeros rather
         /// than throwing — and zero is the value the join treats as "knows nothing", so the
         /// local streak simply wins. Nothing has to detect the upgrade.
         /// </summary>
@@ -528,6 +537,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(0, restored.streak.startDay);
             Assert.AreEqual(0, restored.streak.lastPlayedDay);
             Assert.AreEqual(0, restored.streak.collectedThroughDay);
+            Assert.AreEqual(0, restored.streak.shieldFromDay);
         }
 
         /// <summary>

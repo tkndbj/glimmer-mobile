@@ -69,6 +69,28 @@ namespace GlimmerGrove.Persistence
         /// <summary>What a support reader sees against a pass debit.</summary>
         public const string SeasonPassReason = "season_pass";
 
+        /// <summary>
+        /// A streak shield's debit: <c>shield:{dayKey}</c>.
+        ///
+        /// <para>
+        /// The second derived spend id here, and it is derived for only <em>half</em> of the
+        /// pass's reason. The server does not have to recognise it — a shield grants no
+        /// currency and no permission, it only keeps a streak alive across days nobody
+        /// played, and a protected streak still collects at most one night per calendar day.
+        /// What the derivation buys is the other half: two devices that both buy on the same
+        /// day while offline write byte-identical entries, the union keeps one, and the
+        /// player is charged once. A fresh guid on each would charge twice for one window.
+        /// </para>
+        /// <para>
+        /// The day is in the id rather than out of it because the day <em>is</em> the
+        /// entitlement (<c>StreakStateDto.shieldFromDay</c>): one window, one debit.
+        /// </para>
+        /// </summary>
+        public static string StreakShieldId(int dayKey) => "shield:" + dayKey;
+
+        /// <summary>What a support reader sees against a shield debit.</summary>
+        public const string StreakShieldReason = "streak_shield";
+
         public SpendEntryDto ToDto()
             => new SpendEntryDto { id = Id, amount = Amount, unix = Unix, reason = Reason };
 

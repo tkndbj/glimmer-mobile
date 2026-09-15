@@ -273,7 +273,9 @@ console.log(`  ${markCases.length - markFailures}/${markCases.length} season che
  * ceilings, which is why the vector ladder deliberately overreaches on two nights.
  */
 const streakCompiled = join(REPO, "firebase", "functions", "lib", "streak.js");
-const { rungFor, usableStreakConfig, advances } = await import(pathToFileURL(streakCompiled).href);
+const {
+  rungFor, usableStreakConfig, advances, rollStreakChest, streakSubject,
+} = await import(pathToFileURL(streakCompiled).href);
 
 const streakLadder = vectors.streakLadder;
 const streakCases = vectors.streakCases ?? [];
@@ -292,13 +294,24 @@ let streakFailures = 0;
 
 for (const testCase of streakCases) {
   const rung = rungFor(streakLadder, testCase.night);
-  const got = rung.kind ? `${rung.kind}=${rung.amount}` : "(nothing)";
-  const want = testCase.kind ? `${testCase.kind}=${testCase.amount}` : "(nothing)";
+
+  const got = rung.tier ? `tier=${rung.tier}`
+            : rung.kind ? `${rung.kind}=${rung.amount}`
+            : "(nothing)";
+
+  const want = testCase.tier ? `tier=${testCase.tier}`
+             : testCase.kind ? `${testCase.kind}=${testCase.amount}`
+             : "(nothing)";
 
   if (got !== want) {
     streakFailures++;
     console.log(`  FAIL streak '${testCase.name}' (night ${testCase.night}): expected ${want}, got ${got}`);
   }
+}
+
+if (!streakCases.some((c) => c.tier)) {
+  streakFailures++;
+  console.log("  FAIL no streak vector pays a chest, so the ladder's second shape is unpinned");
 }
 
 if (streakCases.filter((c) => c.night > (streakLadder?.rungs?.length ?? 0)).length < 3) {
@@ -309,6 +322,57 @@ if (streakCases.filter((c) => c.night > (streakLadder?.rungs?.length ?? 0)).leng
 
 failures += streakFailures;
 console.log(`  ${streakCases.length - streakFailures}/${streakCases.length} streak vector(s) ok`);
+
+/*
+ * What a streak night's chest rolls.
+ *
+ * Same contract as the task and season chests and the same reason for it, with one thing
+ * neither of those can pin: the subject is `{dayKey}:{night}`, the night's *own* calendar
+ * day rather than today's. A server that reached for the day a claim arrived on would pay a
+ * different chest from the one the board drew, and only a night collected late would ever
+ * show it.
+ */
+const streakChestTiers = vectors.streakChestTiers ?? [];
+const streakChestCases = vectors.streakChestCases ?? [];
+
+if (streakChestTiers.length === 0 || streakChestCases.length === 0) {
+  failures++;
+  console.log("  FAIL the streak chest vectors are missing");
+}
+
+const streakChests = new Map(streakChestTiers.map((tier) => [tier.id, tier.chest]));
+
+let streakChestFailures = 0;
+
+for (const testCase of streakChestCases) {
+  const chest = streakChests.get(testCase.tier);
+  if (!chest) {
+    streakChestFailures++;
+    console.log(`  FAIL streak chest '${testCase.name}': no tier '${testCase.tier}'`);
+    continue;
+  }
+
+  const rolled = rollStreakChest(chest, testCase.playerKey, testCase.dayKey, testCase.night);
+  const got = rolled.map((d) => `${d.kind}${d.item ? ":" + d.item : ""}=${d.amount}`).join(",");
+  const want = (testCase.drops ?? []).map((d) => `${d.kind}${d.item ? ":" + d.item : ""}=${d.amount}`).join(",");
+
+  if (got !== want) {
+    streakChestFailures++;
+    console.log(`  FAIL streak chest '${testCase.name}': expected ${want}, got ${got}`);
+  }
+}
+
+// Both halves of the subject have to matter, or a night collected on the wrong day rolls the
+// same chest and a player is paid for one night twice.
+if (streakSubject(20500, 3) === streakSubject(20501, 3) ||
+    streakSubject(20500, 3) === streakSubject(20500, 4)) {
+  streakChestFailures++;
+  console.log("  FAIL the streak subject does not separate the day from the night");
+}
+
+failures += streakChestFailures;
+console.log(`  ${streakChestCases.length - streakChestFailures}/${streakChestCases.length} ` +
+            "streak chest vector(s) ok");
 
 /*
  * The rule that bounds a streak claim. Server-only — the client never judges its own claim
@@ -328,6 +392,27 @@ const advanceCases = [
   ["a fresh floor refuses night five today", { paidThroughDay: 99, paidNight: 0 }, 100, 5, false],
   ["the next night, the next day", PAID_5_ON_100, 101, 6, true],
   ["three days on, three nights on", PAID_5_ON_100, 103, 8, true],
+
+  // A *protected* streak. A shield keeps a streak alive across days nobody played and
+  // deliberately buys no nights, so a player back after a week away claims one night on,
+  // seven days on. The old rule demanded exactly seven and refused this permanently — and a
+  // refused claim is dropped by the client, so it was a reward somebody had paid gems to
+  // keep and then silently lost. What replaces the equality is a band: the night has to
+  // climb, and no faster than the calendar.
+  ["a week away under a shield, one night on", PAID_5_ON_100, 107, 6, true],
+  ["played twice in a protected week", PAID_5_ON_100, 107, 8, true],
+  ["the whole week played", PAID_5_ON_100, 107, 12, true],
+  ["one night more than the calendar allows", PAID_5_ON_100, 107, 13, false],
+
+  // And the thing the band must not let through: *stalling*. A save editor who could claim
+  // the same night every day would collect the ladder's best rung every day, which is the
+  // one attack a band opens and the strict climb closes.
+  ["the same night again tomorrow", PAID_5_ON_100, 101, 5, false],
+
+  // Not refused, and worth pinning so nobody "fixes" it: ten days on, night four is an
+  // honest restart. The restart branch has always allowed that and the band changes nothing
+  // about it — reaching a rung still costs as many days as it costs an honest player.
+  ["a short streak that restarted a week ago", PAID_5_ON_100, 110, 4, true],
   ["a streak that broke and restarted", PAID_5_ON_100, 103, 1, true],
   ["a restart may be as long as the gap", PAID_5_ON_100, 103, 3, true],
   ["a restart may not outrun the gap", PAID_5_ON_100, 103, 4, false],

@@ -14449,6 +14449,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/shot_arcstorm_g
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6ca64b5177a709f3cf6ced735d44fb17
+    m_Address: Art/Ui/ic_update
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6cae2631509db236fa44421b6a4b70d1
     m_Address: Art/Critters/c3/f16
     m_ReadOnly: 0

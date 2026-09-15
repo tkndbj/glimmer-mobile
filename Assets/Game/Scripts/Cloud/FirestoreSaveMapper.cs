@@ -261,21 +261,29 @@ namespace GlimmerGrove.Cloud
                     }
                 },
 
-                // The streak's three dates, which until now never left the phone — so a
+                // The streak's four dates, which until v9 never left the phone — so a
                 // player's streak silently restarted on their second device, and
                 // DailyStreak.Join had nothing to join against. Every field is monotonic,
-                // which is what makes sending them safe: the merge is three maxes and the
+                // which is what makes sending them safe: the merge is four maxes and the
                 // larger value is always the one that knows more.
                 //
-                // The server reads them too, but only to log a disagreement — see
+                // The server reads the first two too, but only to log a disagreement — see
                 // `saveSupports` in functions/src/streak.ts. Nothing it pays depends on
                 // them, which is deliberate: they are client-written, and a payment rule
-                // resting on a forgeable number is not a rule.
+                // resting on a forgeable number is not a rule. `shieldFromDay` it does not
+                // read at all: a shield keeps a streak alive across days nobody played and
+                // never advances the night count, so a forged one still collects at most one
+                // night per calendar day — exactly what an honest daily player collects.
+                //
+                // No `firestore.rules` release was owed for the fourth field, and that was
+                // checked rather than assumed: the rules bound `streak` as a map without
+                // naming its fields, so `hasOnly` has nothing new to learn (invariant 12a).
                 { "streak", new Dictionary<string, object>
                     {
                         { "startDay", (long)(dto.streak?.startDay ?? 0) },
                         { "lastPlayedDay", (long)(dto.streak?.lastPlayedDay ?? 0) },
                         { "collectedThroughDay", (long)(dto.streak?.collectedThroughDay ?? 0) },
+                        { "shieldFromDay", (long)(dto.streak?.shieldFromDay ?? 0) },
                     }
                 },
 
@@ -631,6 +639,7 @@ namespace GlimmerGrove.Cloud
                 dto.streak.startDay = (int)Long(streak, "startDay", 0);
                 dto.streak.lastPlayedDay = (int)Long(streak, "lastPlayedDay", 0);
                 dto.streak.collectedThroughDay = (int)Long(streak, "collectedThroughDay", 0);
+                dto.streak.shieldFromDay = (int)Long(streak, "shieldFromDay", 0);
             }
 
             // Absent on a document written before rungs were collected by hand, which reads

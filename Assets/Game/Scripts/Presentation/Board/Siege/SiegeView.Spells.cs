@@ -986,6 +986,11 @@ namespace GlimmerGrove
 
         void Number(int raider, Vector2 at, int damage, bool weak, bool mine = false)
         {
+            // Reachable rather than defensive: a board event can land between a screen being
+            // handed a board and the first repaint building the layers, and a figure with nowhere
+            // to go is not drawn rather than thrown.
+            if (_figures == null) return;
+
             if (_tally.TryGetValue(raider, out var running) && running.Label &&
                 Time.unscaledTime < running.Until)
             {
@@ -1012,7 +1017,10 @@ namespace GlimmerGrove
 
             // Built through `Titled` rather than `Label`: a bare figure over a lit hill and a
             // bright cast is unreadable, and the outline is most of what a floating number is.
-            tally.Label = UIKit.Titled("Hit", _fx, damage.ToString(), 24, Pal.Cream,
+            //
+            // **On `_figures` rather than `_fx`**, so nothing drawn afterwards covers it — see
+            // `SiegeView.Build`, where the layer is the last one made for exactly this.
+            tally.Label = UIKit.Titled("Hit", _figures, damage.ToString(), 24, Pal.Cream,
                                        TextAnchor.MiddleCenter,
                                        new Vector2(Cell * 5f, Cell * 2f), default, default,
                                        Cell * .055f, Cell * .06f);

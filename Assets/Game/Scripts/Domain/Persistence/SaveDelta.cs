@@ -232,15 +232,19 @@ namespace GlimmerGrove.Persistence
             if (adsA.lastWatchedUnix != adsB.lastWatchedUnix) return true;
             if (!SameCounts(adsA.watched, adsB.watched)) return true;
 
-            // The streak's three dates. All monotonic, so a difference always means one
+            // The streak's four dates. All monotonic, so a difference always means one
             // side has seen a night the other has not — which is exactly when the other
             // device needs to hear about it, since a streak that does not travel is a
-            // streak that restarts on every device the player owns.
+            // streak that restarts on every device the player owns. The shield's date is
+            // the sharpest case of that: a player who paid to be away and then opened the
+            // game on their tablet must not find the streak they bought protection for
+            // already broken.
             var streakA = remote.streak ?? new StreakStateDto();
             var streakB = merged.streak ?? new StreakStateDto();
             if (streakA.startDay != streakB.startDay) return true;
             if (streakA.lastPlayedDay != streakB.lastPlayedDay) return true;
             if (streakA.collectedThroughDay != streakB.collectedThroughDay) return true;
+            if (streakA.shieldFromDay != streakB.shieldFromDay) return true;
 
             // The tasks. Both periods' counters and claims have to travel: a counter that stays
             // on one phone is a task that reads half done on the other, and a claim that stays

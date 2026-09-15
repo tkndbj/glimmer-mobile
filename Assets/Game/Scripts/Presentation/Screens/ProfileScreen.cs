@@ -111,6 +111,13 @@ namespace GlimmerGrove
             // exits, so a callback from it reports through some of them and not others — the
             // companion screens' bug exactly. An event cannot be forgotten.
             CloudSaveService.IdentityChanged += BuildBody;
+
+            // The record card is six derived figures and two of them are currency, so all six
+            // move while this screen is open — a sync applying another device's run, an ad's
+            // credits confirmed by the server, a chest opened before the player walked in here.
+            // A repaint rather than `BuildBody`, which is what `IdentityChanged` gets: a rebuild
+            // replays every card's entrance, and a wallet landing is not an arrival (16d).
+            PlayerProgression.Changed += PaintRecord;
         }
 
         /// <summary>
@@ -140,6 +147,7 @@ namespace GlimmerGrove
             Profile.AvatarChanged -= RepaintCompanions;
             AvatarCatalog.Changed -= RepaintCompanions;
             CloudSaveService.IdentityChanged -= BuildBody;
+            PlayerProgression.Changed -= PaintRecord;
 
             _portraits?.Dispose();
         }
@@ -346,18 +354,57 @@ namespace GlimmerGrove
             // Shown against the total the catalog holds, which is where the home screen's
             // old grove bar went when that panel became the daily one. A bare star count
             // says how far you have come; this one also says how far there is to go.
-            Tile(card, -310f, 40f, "ic_star", $"{Profile.TotalStars}/{Profile.MaxStars}",
-                 "ui.profile.stars", Pal.Gold);
-            Tile(card, 0f, 40f, "ic_home", $"{Profile.ChaptersCompleted}/{Profile.ChapterCount}",
-                 "ui.profile.chapters", Pal.Aqua);
-            Tile(card, 310f, 40f, "ic_star3d", $"{Profile.PerfectGlades}", "ui.profile.perfect", Pal.Sun);
+            _record.Clear();
 
-            Tile(card, -310f, -128f, "ic_check", $"{PlayerProgression.ClearedGlades}", "ui.profile.glades", Pal.Mint);
-            Tile(card, 0f, -128f, "ic_chest", Compact.Number(Profile.Coins), "ui.profile.coins", Pal.Gold);
-            Tile(card, 310f, -128f, "ic_gem", Compact.Number(Profile.Gems), "ui.profile.gems", Pal.Bloom);
+            Tile(card, -310f, 40f, "ic_star", () => $"{Profile.TotalStars}/{Profile.MaxStars}",
+                 "ui.profile.stars", Pal.Gold);
+            Tile(card, 0f, 40f, "ic_home", () => $"{Profile.ChaptersCompleted}/{Profile.ChapterCount}",
+                 "ui.profile.chapters", Pal.Aqua);
+            Tile(card, 310f, 40f, "ic_star3d", () => $"{Profile.PerfectGlades}", "ui.profile.perfect", Pal.Sun);
+
+            Tile(card, -310f, -128f, "ic_check", () => $"{PlayerProgression.ClearedGlades}", "ui.profile.glades", Pal.Mint);
+            Tile(card, 0f, -128f, "ic_chest", () => Compact.Number(Profile.Coins), "ui.profile.coins", Pal.Gold);
+            Tile(card, 310f, -128f, "ic_gem", () => Compact.Number(Profile.Gems), "ui.profile.gems", Pal.Bloom);
         }
 
-        static void Tile(Transform card, float x, float y, string icon, string value, string labelKey, Color tint)
+        /// <summary>
+        /// The record card's six figures, each with the question it answers rather than the
+        /// answer it was built with.
+        ///
+        /// <para>
+        /// <b>A reader rather than a string is what makes the repaint possible at all.</b> A
+        /// tile built from <c>Profile.Coins</c> is a photograph of the moment it was built, and
+        /// the alternative to keeping the question is six fields and a second copy of what each
+        /// one means — two places that can come to disagree about what "glades" counts.
+        /// </para>
+        /// <para>
+        /// <b>Deliberately not registered with <see cref="ResourceSlots"/>.</b> These are record
+        /// tiles rather than a purse: nothing on this screen pays out, the registry holds one
+        /// slot per currency, and a chest's tokens flying into a statistic on a page nobody
+        /// opened a chest from would be a reward landing in the wrong place.
+        /// </para>
+        /// </summary>
+        readonly List<Recorded> _record = new List<Recorded>(6);
+
+        sealed class Recorded
+        {
+            public Text Value;
+            public Func<string> Read;
+        }
+
+        /// <summary>Writes the six figures again. Same tiles, same place, no entrance.</summary>
+        void PaintRecord()
+        {
+            if (!this) return;
+
+            for (int i = 0; i < _record.Count; i++)
+            {
+                var tile = _record[i];
+                if (tile.Value) tile.Value.text = tile.Read();
+            }
+        }
+
+        void Tile(Transform card, float x, float y, string icon, Func<string> read, string labelKey, Color tint)
         {
             // The tiles go the *other* way now the card under them is bright: a 5%-white wash
             // was a lighter shape on a near-black card and is invisible on a lit one, so this is
@@ -373,8 +420,14 @@ namespace GlimmerGrove
                                new Vector2(62f, 62f), new Vector2(0f, .5f), new Vector2(56f, 12f));
             ic.preserveAspect = true;
 
-            UIKit.Titled("V", bg.transform, value, 44, Pal.Cream, TextAnchor.MiddleLeft,
-                         new Vector2(160f, 54f), new Vector2(0f, .5f), new Vector2(186f, 14f), 3f, 3f);
+            _record.Add(new Recorded
+            {
+                Value = UIKit.Titled("V", bg.transform, read(), 44, Pal.Cream, TextAnchor.MiddleLeft,
+                                     new Vector2(160f, 54f), new Vector2(0f, .5f),
+                                     new Vector2(186f, 14f), 3f, 3f),
+                Read = read,
+            });
+
             UIKit.Titled("L", bg.transform, Loc.Get(labelKey), 24, new Color(1f, .96f, .88f, .58f),
                          TextAnchor.MiddleCenter, new Vector2(266f, 32f), new Vector2(.5f, 0f),
                          new Vector2(0f, 26f), 3f, 0f);

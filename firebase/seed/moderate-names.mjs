@@ -21,7 +21,7 @@
  *
  * ## What the auto-hide leaves for a person to do
  *
- * `reportKeeperName` hides a name once enough distinct players have reported it, so the urgent
+ * `reportKeeper` hides a name once enough distinct players have reported it, so the urgent
  * half needs nobody. What is left is the half a threshold cannot judge: whether the name was
  * actually offensive. Both mistakes show up here — a name hidden by a brigade (`restore`), and
  * one reported once by somebody who was right (`hide`).

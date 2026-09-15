@@ -254,6 +254,16 @@ namespace GlimmerGrove
                  Compact.Number(Profile.Coins), v => Compact.Number(v));
             Pill(ResourceSlots.Kind.Gems, 232f, py, Pal.Bloom, Art.S("Ui/ic_gem"),
                  Compact.Number(Profile.Gems), v => Compact.Number(v));
+
+            // **This page registered all three and repainted none of them.** A chest's tokens
+            // land here through `RewardFlight`, which writes the readout itself, so the one
+            // path anybody exercises looked right — and every other way the wallet moves (an
+            // ad's credits confirmed by the server, a sync applying another device's day, a
+            // heart landing on its timer) left the pill showing a figure from whenever the page
+            // was opened.
+            WalletWatch.Attach(this, ResourceSlots.Kind.Hearts, ResourceSlots.Kind.Credits,
+                               ResourceSlots.Kind.Gems);
+
             y += ChromeSize + 18f;
 
             return y;

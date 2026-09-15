@@ -149,7 +149,10 @@ namespace GlimmerGrove
             StoreService.Granted += OnGranted;
             StoreService.Failed += OnFailed;
 
-            // The supplies shelf is priced in gems and gated on hearts, so both move it.
+            // The supplies shelf is priced in gems and gated on hearts, so both move it — the
+            // *cards*, that is. The three balance pills above them are watched by the
+            // `WalletWatch` that `BuildBalances` attaches, which is the one place in the game
+            // that subscribes to the wallet's own two cues.
             PlayerProgression.Changed += Repaint;
             Wallet.HeartsChanged += OnHeartsChanged;
 
@@ -450,6 +453,9 @@ namespace GlimmerGrove
                         ResourceSlots.Kind.Gems, Compact.Number);
             BalancePill(row, Pal.Rose, "ic_heart", Profile.HeartsLabel(),
                         ResourceSlots.Kind.Hearts, n => Profile.HeartsLabel((int)n));
+
+            WalletWatch.Attach(this, ResourceSlots.Kind.Credits, ResourceSlots.Kind.Gems,
+                               ResourceSlots.Kind.Hearts);
         }
 
         /// <remarks>
@@ -694,14 +700,11 @@ namespace GlimmerGrove
             PaintTabs();
             PaintSummary();
 
-            // Through the registry rather than onto the labels, which makes it the one writer
-            // of these three readouts. That is what lets the receipt panel own a pill while it
-            // walks it forward: a wallet change landing mid-flight would otherwise jump the
-            // number to the truth and have the next token drag it back down. Same rule as the
-            // hub's PaintResources — see ResourceSlots.Claim.
-            ResourceSlots.Repaint(ResourceSlots.Kind.Credits, Profile.Coins);
-            ResourceSlots.Repaint(ResourceSlots.Kind.Gems, Profile.Gems);
-            ResourceSlots.Repaint(ResourceSlots.Kind.Hearts, Profile.Hearts);
+            // The three balance pills are deliberately not written here. They are watched by
+            // `WalletWatch`, which repaints through the registry rather than onto the labels —
+            // which is what lets the receipt panel own a pill while it walks it forward, since
+            // a wallet change landing mid-flight would otherwise jump the number to the truth
+            // and have the next token drag it back down. See ResourceSlots.Claim.
         }
 
         /// <summary>

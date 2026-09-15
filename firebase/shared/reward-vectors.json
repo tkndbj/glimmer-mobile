@@ -2441,22 +2441,27 @@
   "_streakComment": [
     "The contract between StreakTable.cs and functions/src/streak.ts.",
     "",
-    "The streak ladder pays currency, so what a night is worth is decided twice: the client",
-    "shows it and the server grants it, from its own copy published to config/progression.",
-    "A disagreement means a player watches a reward arrive as a different number from the",
-    "one the board promised — the same failure the chest vectors exist to prevent.",
+    "The streak ladder pays credits, gems and chests, so what a night is worth is decided",
+    "twice: the client shows it and the server grants it, from its own copy published to",
+    "config/progression. A disagreement means a player watches a reward arrive as a different",
+    "number from the one the board promised — the same failure the chest vectors exist to",
+    "prevent.",
     "",
-    "Two things are under contract here and neither is obvious. The ladder *laps*: night",
-    "eight pays night one's rung, for ever, because a streak has no end and a ladder does.",
-    "And the per-kind ceilings are shared — a rung authored above one is clamped to the same",
-    "figure on both sides, so a content file that overreaches produces one number, not two.",
+    "Three things are under contract here and none is obvious. The ladder *laps*: night eight",
+    "pays night one's rung, for ever, because a streak has no end and a ladder does. The",
+    "per-kind ceilings are shared — a rung authored above one is clamped to the same figure on",
+    "both sides, so a content file that overreaches produces one number, not two. And a rung",
+    "names a kind and an amount *or* a chest tier, never both, so the lap has to carry a chest",
+    "night as faithfully as it carries a figure.",
     "",
     "The ladder below is synthetic and deliberately unlike the shipped one: what is under",
     "contract is the lookup, not this season's rewards. Nights 6 and 7 are authored above",
-    "the credit and gem ceilings on purpose, so the clamp is pinned rather than assumed.",
+    "the credit and gem ceilings on purpose, so the clamp is pinned rather than assumed, and",
+    "the tier ids are the synthetic ones in `taskChestTiers` rather than the shipped ladder's.",
     "",
-    "The `advances` rule that bounds a claim has no client half — the client never judges",
-    "its own claim — so it is not pinned here. It is tested in functions/test."
+    "What a chest night *rolls* is pinned separately, by `streakChestCases`. The `advances`",
+    "rule that bounds a claim has no client half — the client never judges its own claim — so",
+    "it is not pinned here either. It is tested in functions/test."
   ],
   "streakLadder": {
     "rungs": [
@@ -2470,12 +2475,10 @@
         "amount": 3
       },
       {
-        "kind": "hearts",
-        "amount": 2
+        "tier": "gold"
       },
       {
-        "kind": "heart_boost",
-        "amount": 8
+        "tier": "silver"
       },
       {
         "kind": "credits",
@@ -2507,16 +2510,18 @@
       "amount": 3
     },
     {
-      "name": "night 4",
+      "name": "night 4 is a chest",
       "night": 4,
-      "kind": "hearts",
-      "amount": 2
+      "kind": "",
+      "amount": 0,
+      "tier": "gold"
     },
     {
-      "name": "night 5",
+      "name": "night 5 is a different chest",
       "night": 5,
-      "kind": "heart_boost",
-      "amount": 8
+      "kind": "",
+      "amount": 0,
+      "tier": "silver"
     },
     {
       "name": "night 6 is clamped to the credit ceiling",
@@ -2549,6 +2554,13 @@
       "amount": 3
     },
     {
+      "name": "night 11 laps to the chest on night 4",
+      "night": 11,
+      "kind": "",
+      "amount": 0,
+      "tier": "gold"
+    },
+    {
       "name": "night 14 ends the second lap",
       "night": 14,
       "kind": "gems",
@@ -2559,6 +2571,13 @@
       "night": 15,
       "kind": "credits",
       "amount": 120
+    },
+    {
+      "name": "night 18 is the chest again, three laps on",
+      "night": 18,
+      "kind": "",
+      "amount": 0,
+      "tier": "gold"
     },
     {
       "name": "night 100 is still on the ladder",
@@ -8743,6 +8762,2490 @@
         {
           "kind": "gems",
           "amount": 37
+        }
+      ]
+    }
+  ],
+  "_streakChestComment": [
+    "The contract between DailyStreak/ChestSeed.cs and functions/src/streak.ts.",
+    "",
+    "A streak night can pay a chest, and it is a chest seeded from a *subject* rather than a",
+    "day: the account, the tag 'streak', and '{dayKey}:{night}'. Same generator as the task",
+    "and season chests with a different subject - the day is the *night's own* calendar day,",
+    "never today's, so a night collected a week late rolls what it always would have.",
+    "",
+    "The tiers below are the task vectors' synthetic ones, not the shipped ladder: what is",
+    "pinned is the seeding, the stream numbers and the merge, so retuning progression.json",
+    "must not turn these red. Generated by Tools/make_streak_vectors.py, a fifth copy of the",
+    "generator that is neither side - if both harnesses go red the contract moved; if one",
+    "does, that side drifted."
+  ],
+  "streakChestTiers": [
+    {
+      "id": "wood",
+      "chest": {
+        "guaranteed": [
+          {
+            "kind": "credits",
+            "min": 10,
+            "max": 99
+          }
+        ],
+        "options": [
+          {
+            "kind": "credits",
+            "min": 5,
+            "max": 5,
+            "weight": 2
+          },
+          {
+            "kind": "hearts",
+            "min": 1,
+            "max": 3,
+            "weight": 7
+          },
+          {
+            "kind": "gems",
+            "min": 1,
+            "max": 2,
+            "weight": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "silver",
+      "chest": {
+        "guaranteed": [
+          {
+            "kind": "gems",
+            "min": 4,
+            "max": 4
+          }
+        ],
+        "options": []
+      }
+    },
+    {
+      "id": "gold",
+      "chest": {
+        "guaranteed": [
+          {
+            "kind": "credits",
+            "min": 100,
+            "max": 100
+          },
+          {
+            "kind": "utility",
+            "item": "firepot",
+            "min": 1,
+            "max": 1
+          }
+        ],
+        "options": [
+          {
+            "kind": "utility",
+            "item": "firepot",
+            "min": 2,
+            "max": 2,
+            "weight": 1
+          },
+          {
+            "kind": "utility",
+            "item": "surge",
+            "min": 1,
+            "max": 1,
+            "weight": 1
+          },
+          {
+            "kind": "heart_boost",
+            "min": 6,
+            "max": 12,
+            "weight": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "royal",
+      "chest": {
+        "guaranteed": [
+          {
+            "kind": "credits",
+            "min": 1,
+            "max": 100000
+          }
+        ],
+        "options": [
+          {
+            "kind": "gems",
+            "min": 1,
+            "max": 50,
+            "weight": 1
+          }
+        ]
+      }
+    }
+  ],
+  "streakChestCases": [
+    {
+      "name": "(empty)@20500:3#wood",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 34
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:3#silver",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:3#gold",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:3#royal",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 63275
+        },
+        {
+          "kind": "gems",
+          "amount": 45
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20501:3#wood",
+      "playerKey": "",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 62
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20501:3#silver",
+      "playerKey": "",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20501:3#gold",
+      "playerKey": "",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20501:3#royal",
+      "playerKey": "",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 78693
+        },
+        {
+          "kind": "gems",
+          "amount": 46
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:4#wood",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 47
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:4#silver",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:4#gold",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 10
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:4#royal",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 94653
+        },
+        {
+          "kind": "gems",
+          "amount": 42
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:1#wood",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 62
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:1#silver",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:1#gold",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:1#royal",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 39533
+        },
+        {
+          "kind": "gems",
+          "amount": 18
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:8#wood",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 68
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:8#silver",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:8#gold",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:8#royal",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 33399
+        },
+        {
+          "kind": "gems",
+          "amount": 12
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:100#wood",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 41
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:100#silver",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:100#gold",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 10
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20500:100#royal",
+      "playerKey": "",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 56242
+        },
+        {
+          "kind": "gems",
+          "amount": 44
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20100:3#wood",
+      "playerKey": "",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 74
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20100:3#silver",
+      "playerKey": "",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20100:3#gold",
+      "playerKey": "",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20100:3#royal",
+      "playerKey": "",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 50550
+        },
+        {
+          "kind": "gems",
+          "amount": 21
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:3#wood",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 12
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:3#silver",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:3#gold",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:3#royal",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 57183
+        },
+        {
+          "kind": "gems",
+          "amount": 11
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20501:3#wood",
+      "playerKey": "uid_abc123",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 34
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20501:3#silver",
+      "playerKey": "uid_abc123",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20501:3#gold",
+      "playerKey": "uid_abc123",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20501:3#royal",
+      "playerKey": "uid_abc123",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 40705
+        },
+        {
+          "kind": "gems",
+          "amount": 20
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:4#wood",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 94
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:4#silver",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:4#gold",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 7
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:4#royal",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 88775
+        },
+        {
+          "kind": "gems",
+          "amount": 26
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:1#wood",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 32
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:1#silver",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:1#gold",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:1#royal",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 94318
+        },
+        {
+          "kind": "gems",
+          "amount": 26
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:8#wood",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 71
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:8#silver",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:8#gold",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 7
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:8#royal",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 44427
+        },
+        {
+          "kind": "gems",
+          "amount": 24
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:100#wood",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 50
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:100#silver",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:100#gold",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 12
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20500:100#royal",
+      "playerKey": "uid_abc123",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 54961
+        },
+        {
+          "kind": "gems",
+          "amount": 49
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20100:3#wood",
+      "playerKey": "uid_abc123",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 76
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20100:3#silver",
+      "playerKey": "uid_abc123",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20100:3#gold",
+      "playerKey": "uid_abc123",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 12
+        }
+      ]
+    },
+    {
+      "name": "(uid_abc123)@20100:3#royal",
+      "playerKey": "uid_abc123",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 40657
+        },
+        {
+          "kind": "gems",
+          "amount": 27
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:3#wood",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 32
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:3#silver",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:3#gold",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 12
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:3#royal",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 82438
+        },
+        {
+          "kind": "gems",
+          "amount": 7
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20501:3#wood",
+      "playerKey": "player-7",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 79
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20501:3#silver",
+      "playerKey": "player-7",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20501:3#gold",
+      "playerKey": "player-7",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20501:3#royal",
+      "playerKey": "player-7",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 74920
+        },
+        {
+          "kind": "gems",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:4#wood",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 51
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:4#silver",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:4#gold",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 9
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:4#royal",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 24142
+        },
+        {
+          "kind": "gems",
+          "amount": 37
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:1#wood",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 20
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:1#silver",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:1#gold",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:1#royal",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 59671
+        },
+        {
+          "kind": "gems",
+          "amount": 12
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:8#wood",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 69
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:8#silver",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:8#gold",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 10
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:8#royal",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 64410
+        },
+        {
+          "kind": "gems",
+          "amount": 12
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:100#wood",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 32
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:100#silver",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:100#gold",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20500:100#royal",
+      "playerKey": "player-7",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 15343
+        },
+        {
+          "kind": "gems",
+          "amount": 43
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20100:3#wood",
+      "playerKey": "player-7",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 61
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20100:3#silver",
+      "playerKey": "player-7",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20100:3#gold",
+      "playerKey": "player-7",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(player-7)@20100:3#royal",
+      "playerKey": "player-7",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 41227
+        },
+        {
+          "kind": "gems",
+          "amount": 14
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:3#wood",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 20
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:3#silver",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:3#gold",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:3#royal",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 53556
+        },
+        {
+          "kind": "gems",
+          "amount": 11
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20501:3#wood",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 79
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20501:3#silver",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20501:3#gold",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 10
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20501:3#royal",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 42950
+        },
+        {
+          "kind": "gems",
+          "amount": 31
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:4#wood",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 14
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:4#silver",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:4#gold",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 11
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:4#royal",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 98745
+        },
+        {
+          "kind": "gems",
+          "amount": 41
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:1#wood",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 38
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:1#silver",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:1#gold",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:1#royal",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 2189
+        },
+        {
+          "kind": "gems",
+          "amount": 18
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:8#wood",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 83
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:8#silver",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:8#gold",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 11
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:8#royal",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 88704
+        },
+        {
+          "kind": "gems",
+          "amount": 20
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:100#wood",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 74
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:100#silver",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:100#gold",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20500:100#royal",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 46115
+        },
+        {
+          "kind": "gems",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20100:3#wood",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 14
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20100:3#silver",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20100:3#gold",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(Ünïcödé)@20100:3#royal",
+      "playerKey": "Ünïcödé",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 29215
+        },
+        {
+          "kind": "gems",
+          "amount": 48
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:3#wood",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 37
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:3#silver",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:3#gold",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:3#royal",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 61388
+        },
+        {
+          "kind": "gems",
+          "amount": 28
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20501:3#wood",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 71
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20501:3#silver",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20501:3#gold",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20501:3#royal",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20501,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 69032
+        },
+        {
+          "kind": "gems",
+          "amount": 48
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:4#wood",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 58
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:4#silver",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:4#gold",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 3,
+          "item": "firepot"
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:4#royal",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 4,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 93469
+        },
+        {
+          "kind": "gems",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:1#wood",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 54
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:1#silver",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:1#gold",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:1#royal",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 1,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 51245
+        },
+        {
+          "kind": "gems",
+          "amount": 45
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:8#wood",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 63
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:8#silver",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:8#gold",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 12
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:8#royal",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 8,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 14194
+        },
+        {
+          "kind": "gems",
+          "amount": 13
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:100#wood",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 22
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:100#silver",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:100#gold",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20500:100#royal",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20500,
+      "night": 100,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 54343
+        },
+        {
+          "kind": "gems",
+          "amount": 38
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20100:3#wood",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "wood",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 76
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20100:3#silver",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "silver",
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20100:3#gold",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "gold",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 100
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "firepot"
+        },
+        {
+          "kind": "utility",
+          "amount": 1,
+          "item": "surge"
+        }
+      ]
+    },
+    {
+      "name": "(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)@20100:3#royal",
+      "playerKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "dayKey": 20100,
+      "night": 3,
+      "tier": "royal",
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 40467
+        },
+        {
+          "kind": "gems",
+          "amount": 30
         }
       ]
     }

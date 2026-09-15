@@ -86,7 +86,7 @@ namespace GlimmerGrove
 
         RectTransform _viewport, _tabs;
         GridView _grid;
-        Text _summary, _coins;
+        Text _summary;
 
         readonly List<HomesteadPiece> _items = new List<HomesteadPiece>();
 
@@ -245,9 +245,20 @@ namespace GlimmerGrove
             coin.preserveAspect = true;
             Flipbook.Attach(coin, "Ui/Coin", 11f);
 
-            _coins = UIKit.Titled("V", pill.transform, Compact.Number(Profile.Coins), 30, Pal.Cream,
-                                  TextAnchor.MiddleCenter, new Vector2(120f, 44f), new Vector2(.5f, .5f),
-                                  new Vector2(26f, 0f), 3f, 3f);
+            var coins = UIKit.Titled("V", pill.transform, Compact.Number(Profile.Coins), 30, Pal.Cream,
+                                     TextAnchor.MiddleCenter, new Vector2(120f, 44f), new Vector2(.5f, .5f),
+                                     new Vector2(26f, 0f), 3f, 3f);
+
+            // **Registered rather than written by hand**, which is what every other balance pill
+            // in the game does and what this one was the last to do. It buys two things: the
+            // repaint stops being this screen's to remember (`WalletWatch`), and a payout drawn
+            // over this screen — gems bought from a land region's own out-of-funds panel arrive
+            // through the receipt queue — has somewhere to fly to. A cascade with no registered
+            // slot pays silently.
+            ResourceSlots.Register(ResourceSlots.Kind.Credits, (RectTransform)coin.transform,
+                                   coins, glow, Pal.Gold, Compact.Number);
+
+            WalletWatch.Attach(this, ResourceSlots.Kind.Credits);
 
             // **The shelf's name moved onto its tab and this line kept the count.** The old
             // argument against naming the tabs was that nine translated nouns across a phone is
@@ -538,7 +549,7 @@ namespace GlimmerGrove
             PaintTabs();
             PaintSummary();
 
-            if (_coins) _coins.text = Compact.Number(Profile.Coins);
+            // The balance is deliberately not written here — see the pill in `BuildHeader`.
         }
 
         void PaintSummary()

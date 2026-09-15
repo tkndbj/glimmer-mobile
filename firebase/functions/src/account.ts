@@ -40,7 +40,7 @@
  *   resolves to anybody, and it is retained for fraud prevention — which is the lawful basis
  *   every store's own guidance names for exactly this document.
  *
- * - **`nameReports/{other}/reporters/{uid}`** — reports this account filed about *other*
+ * - **`{nameReports,groveReports}/{other}/reporters/{uid}`** — reports this account filed about *other*
  *   people. They are records about somebody else, the count on the parent is denormalised
  *   from them, and removing one would either drift that count or silently un-hide a name three
  *   real players had reported. There is also no index that could find them: the uid is a
@@ -64,7 +64,7 @@ import { logger } from "firebase-functions";
 import { PATHS } from "./config";
 import { GROVE_PATHS, BOARD_ROWS } from "./grove";
 import { NAME_PATHS, NameDoc, heldName, isDenied } from "./names";
-import { REPORT_PATHS } from "./reports";
+import { REPORT_PATHS, REPORT_SUBJECTS } from "./reports";
 
 /**
  * Who a retained-but-orphaned name reservation belongs to.
@@ -283,19 +283,33 @@ async function deleteSave(db: Firestore, uid: string): Promise<boolean> {
  * record is why the string is still held, so throwing it away would leave a tombstone nobody
  * could explain. For an ordinary account they are reports about a name that no longer exists,
  * filed against a player who no longer exists, and there is nothing left for them to protect.
+ *
+ * <b>A denied *grove* does not earn the same keep, and the asymmetry is the reservation.</b> A
+ * name takedown leaves a string held by a tombstone and the reports are what explain it; a
+ * grove takedown leaves nothing behind at all once the card is gone, because there is no
+ * arrangement to re-claim and nothing for a moderator to be asked about. So the retention test
+ * is still the name's, and it covers every subject — which is the conservative direction: the
+ * grove's reports survive exactly when something they could explain also survives.
  */
 async function deleteReportsAgainst(db: Firestore, uid: string): Promise<boolean> {
-  const ref = db.doc(REPORT_PATHS.summary(uid));
-  const existed = (await ref.get()).exists;
+  let removed = false;
 
-  if (!existed) return false;
+  // **Every subject, walked from `REPORT_SUBJECTS` rather than named here**, which is this
+  // file's own rule about the save arriving on the reports: a subject added next year must not
+  // be a list somebody forgot to extend, leaving a deleted keeper's reported arrangement on
+  // record against a uid nobody can ever authenticate as again.
+  for (const subject of REPORT_SUBJECTS) {
+    const ref = db.doc(REPORT_PATHS.summary(subject, uid));
+    if (!(await ref.get()).exists) continue;
 
-  const bulk = db.bulkWriter();
-  bulk.onWriteError((error) => error.failedAttempts < 5);
+    const bulk = db.bulkWriter();
+    bulk.onWriteError((error) => error.failedAttempts < 5);
 
-  await db.recursiveDelete(ref, bulk);
+    await db.recursiveDelete(ref, bulk);
+    removed = true;
+  }
 
-  return true;
+  return removed;
 }
 
 // ------------------------------------------------------------------------------- the auth

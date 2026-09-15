@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GlimmerGrove.Content;
@@ -484,6 +484,17 @@ namespace GlimmerGrove.Tests
                 ReadGroveStatsAsync(CancellationToken c = default)
                 => Task.FromResult((Cloud.CloudResult.Failed(Cloud.CloudFailure.Offline),
                                     new Dictionary<Content.LevelId, Social.LevelStats>()));
+
+            /// <summary>
+            /// Nothing to say about releases, and a failure rather than "nothing is required" —
+            /// see <c>NullCloudBackend.ReadReleaseAsync</c>. A double that answered success here
+            /// would clear a standing update wall on behalf of a fixture that is about something
+            /// else entirely.
+            /// </summary>
+            public Task<(Cloud.CloudResult result, Release.ReleaseRequirement requirement)> ReadReleaseAsync(
+                string platform, CancellationToken c = default)
+                => Task.FromResult((Cloud.CloudResult.Failed(Cloud.CloudFailure.Offline, "not this fixture"),
+                                    Release.ReleaseRequirement.None));
 
             public Task<(Cloud.CloudResult result, string appleAuthorizationCode)> ReauthenticateAsync(
                 Cloud.LinkCredential credential, CancellationToken c = default)

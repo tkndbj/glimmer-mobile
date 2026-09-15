@@ -3,6 +3,7 @@ using System.Text;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
+using GlimmerGrove.Notifications;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using GlimmerGrove.Tasks;
@@ -684,6 +685,21 @@ namespace GlimmerGrove
         {
             if (_collecting) return;
             _collecting = true;
+
+            // And the one moment in this game worth spending a permission dialog on.
+            //
+            // Both platforms show their notification prompt exactly once per install, so there
+            // is a single chance to ask and the question is worth what the player is holding
+            // when it arrives. Here they have just opened a chest and there is demonstrably
+            // another one tomorrow — which is the whole of what a reminder promises. Asked on
+            // the splash instead it would arrive before the player had seen a chest, a task or
+            // a streak, and a refusal there can never be taken back from inside the app.
+            //
+            // A no-op every time after the first: `Notify.Ask` returns immediately once the OS
+            // has answered, so this costs a branch per chest and nothing else. Raised before
+            // the cascade rather than after it, because the cascade ends by dismissing this
+            // view and a dialog raised on the way out arrives over whatever came next.
+            Notify.Ask();
 
             if (_drops == null || _cards == null || _flight == null) { Close(); return; }
 

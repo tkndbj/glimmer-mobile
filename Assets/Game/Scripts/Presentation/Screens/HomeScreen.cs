@@ -71,16 +71,15 @@ namespace GlimmerGrove
             // it is not, and a run finishing changes the box from under itself.
             TaskLedger.Changed += OnTasksChanged;
             DailyStreak.Changed += OnStreakChanged;
-            PlayerProgression.Changed += OnWalletChanged;
-            Wallet.HeartsChanged += OnHeartsChanged;
+
+            // The wallet's own two cues are not here: `BuildResources` attaches a
+            // `WalletWatch`, which is the one place in the game that subscribes to them.
         }
 
         void OnDestroy()
         {
             TaskLedger.Changed -= OnTasksChanged;
             DailyStreak.Changed -= OnStreakChanged;
-            PlayerProgression.Changed -= OnWalletChanged;
-            Wallet.HeartsChanged -= OnHeartsChanged;
         }
 
         void OnTasksChanged()
@@ -95,41 +94,6 @@ namespace GlimmerGrove
         {
             if (this == null || !_streakBox) return;
             PaintStreak();
-        }
-
-        void OnHeartsChanged(Hearts hearts) => OnWalletChanged();
-
-        /// <summary>
-        /// Three numbers changed, so three numbers are written. It used to rebuild the row.
-        ///
-        /// <para>
-        /// Nothing about the row is a function of the wallet except the readouts — same
-        /// three pills, same icons, same buttons — so a rebuild was a way of setting a
-        /// string that also replayed the pills' entrance, and the entrance starts at scale
-        /// zero behind a delay. One of those is a flourish; several in a second is the row
-        /// flashing in and out. Returning to the game fires the events several times over
-        /// (a sync applies another device's work, and the first read of the hearts catches
-        /// up whatever refilled while the app was away), which is where a player sees it.
-        /// </para>
-        /// <para>
-        /// It also removes a re-entrancy that was quietly worse than the flashing. Reading
-        /// <c>Wallet.Hearts</c> commits a refill and raises <c>HeartsChanged</c> from inside
-        /// the getter, so <c>BuildResources</c> — which reads it while placing the first
-        /// pill — could be re-entered halfway through itself. The inner call built the row
-        /// the player ends up with; the outer one carried on and registered its own pills
-        /// with <see cref="ResourceSlots"/>, which are on the row destroyed at the end of
-        /// the frame. The chest's prizes then had nowhere to fly to.
-        /// </para>
-        /// <para>
-        /// The row is still rebuilt on navigation, which is the one place its structure can
-        /// actually differ, and <see cref="ResourceSlots"/> registration stays in the
-        /// builder — it is still the one thing that runs exactly once per row.
-        /// </para>
-        /// </summary>
-        void OnWalletChanged()
-        {
-            if (this == null || !_resourceRow) return;
-            PaintResources();
         }
 
         /// <summary>
@@ -154,26 +118,6 @@ namespace GlimmerGrove
             if (!go) return;
             go.SetActive(false);
             Destroy(go);
-        }
-
-        /// <summary>
-        /// Writes today's figures onto the three pills.
-        ///
-        /// <para>
-        /// Through <see cref="ResourceSlots.Repaint"/> rather than onto the labels directly,
-        /// which makes the registry the one writer of those three readouts. That is what lets
-        /// a reward cascade own a pill while it walks it forward: a chest or a rewarded ad
-        /// rewinds the number to what it said before the grant, and a wallet change landing
-        /// mid-flight — an ad's credits arriving from the server is exactly one — would
-        /// otherwise jump it to the true figure and have the next token drag it back down.
-        /// See <see cref="ResourceSlots.Claim"/>.
-        /// </para>
-        /// </summary>
-        void PaintResources()
-        {
-            ResourceSlots.Repaint(ResourceSlots.Kind.Hearts, Profile.Hearts);
-            ResourceSlots.Repaint(ResourceSlots.Kind.Credits, Profile.Coins);
-            ResourceSlots.Repaint(ResourceSlots.Kind.Gems, Profile.Gems);
         }
 
         // ------------------------------------------------------------- backdrop
@@ -270,10 +214,25 @@ namespace GlimmerGrove
         /// <summary>
         /// Hearts, coins and gems.
         ///
-        /// Rebuilt on change rather than painted once. All three move while this screen is
-        /// open — a heart lands on a timer, and a chest pays out into an overlay drawn on
-        /// top of it — and a pill still showing the number from thirty seconds ago is how
-        /// a player concludes the reward did not arrive.
+        /// <para>
+        /// <b>Painted on change rather than rebuilt, and the row itself only on navigation.</b>
+        /// All three move while this screen is open — a heart lands on a timer, and a chest
+        /// pays out into an overlay drawn on top of it — and a pill still showing the number
+        /// from thirty seconds ago is how a player concludes the reward did not arrive. It used
+        /// to answer that by rebuilding the row, which replayed the pills' entrance from scale
+        /// zero: one of those is a flourish, and several in a second (returning to the game
+        /// fires the cues several times over) is the row flashing in and out.
+        /// </para>
+        /// <para>
+        /// <b>That also removed a re-entrancy that was quietly worse than the flashing.</b>
+        /// Reading <c>Wallet.Hearts</c> commits a refill and raises <c>HeartsChanged</c> from
+        /// inside the getter, so this method — which reads it while placing the first pill —
+        /// could be re-entered halfway through itself. The inner call built the row the player
+        /// ends up with; the outer one carried on and registered <em>its</em> pills with
+        /// <see cref="ResourceSlots"/>, which are on the row destroyed at the end of the frame,
+        /// and the chest's prizes then had nowhere to fly to. Registration stays here for the
+        /// same reason it always did: this is the one thing that runs exactly once per row.
+        /// </para>
         /// </summary>
         void BuildResources()
         {
@@ -315,6 +274,12 @@ namespace GlimmerGrove
             ResourcePill(row, 322f, Pal.Bloom, "ic_gem", Compact.Number(Profile.Gems), false,
                          () => Flow.Modal<GemShopOverlay>(),
                          ResourceSlots.Kind.Gems, Compact.Number);
+
+            // And the three are watched for the life of the screen. Idempotent, which is what
+            // lets it sit beside the registration in a builder that runs again on navigation
+            // and can re-enter itself.
+            WalletWatch.Attach(this, ResourceSlots.Kind.Hearts, ResourceSlots.Kind.Credits,
+                               ResourceSlots.Kind.Gems);
         }
 
         /// <summary>
@@ -1144,11 +1109,21 @@ namespace GlimmerGrove
         /// rather than a reason to return. Neither is a number when the next rung pays
         /// nothing, which the shipped ladder never does but a retuned one could.
         /// </para>
+        /// <para>
+        /// <b>A chest night says the chest.</b> A rung pays credits, gems or a chest, and a
+        /// chest has no amount — so the strip draws the tier's own closed icon and names it,
+        /// which is the same picture and the same words the streak board draws. Reaching for
+        /// <c>RewardArt</c> here would have meant inventing a second way to say "a Royal
+        /// Chest" on the one screen that has the least room to say anything.
+        /// </para>
         /// </summary>
         void PaintStreakStrip(int pending)
         {
-            var drop = DailyStreak.NextReward;
-            bool plain = pending > 0 || drop.Kind == ChestDropKind.None;
+            var rung = DailyStreak.NextReward;
+            var drop = rung.AsDrop();
+
+            bool chest = rung.IsChest;
+            bool plain = pending > 0 || (!chest && !drop.IsValid);
 
             if (_streakStripIcon)
             {
@@ -1156,15 +1131,20 @@ namespace GlimmerGrove
                 // before the sprite is swapped — Glyph attaches one, and a still drawn over a
                 // running reel is a still for one frame.
                 Flipbook.Detach(_streakStripIcon);
-                _streakStripIcon.sprite = plain ? Art.S("Ui/ic_gift") : RewardArt.Icon(drop.Kind, drop.Item);
+                _streakStripIcon.sprite = plain ? Art.S("Ui/ic_gift")
+                                        : chest ? Art.S(rung.Tier.Icon)
+                                        : RewardArt.Icon(drop.Kind, drop.Item);
                 _streakStripIcon.color = Color.white;
-                if (!plain) RewardArt.Glyph(_streakStripIcon, drop.Kind, 10f);
+                _streakStripIcon.preserveAspect = true;
+                if (!plain && !chest) RewardArt.Glyph(_streakStripIcon, drop.Kind, 10f);
             }
 
             if (_streakLine)
                 _streakLine.text = pending > 0 ? Loc.Get("ui.home.streak_waiting")
                                  : plain ? Loc.Get("ui.home.streak_keep")
-                                 : Loc.Format("ui.home.streak_next", RewardArt.Amount(drop));
+                                 : Loc.Format("ui.home.streak_next",
+                                              chest ? Loc.Get(rung.Tier.NameKey)
+                                                    : RewardArt.Amount(drop));
         }
 
         static string StreakCaption(int days, bool atRisk)

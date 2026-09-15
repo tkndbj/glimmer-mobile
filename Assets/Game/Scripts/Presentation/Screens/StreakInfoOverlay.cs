@@ -1,6 +1,5 @@
 using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
-using GlimmerGrove.Persistence;
 using UnityEngine;
 
 namespace GlimmerGrove
@@ -11,17 +10,24 @@ namespace GlimmerGrove
     /// <para>
     /// A board of nights shows <em>what</em> is on offer perfectly well and says nothing
     /// about the rules behind it. Three things were being guessed at. That a night is
-    /// earned by finishing a glade — not by opening the app, and not only by winning.
-    /// What a heart boost actually does, which no glyph can carry and which the amount
-    /// ("24h") only half explains. And what happens at the end of the ladder, which is the
-    /// one place a player could reasonably fear the reward stops.
+    /// earned by finishing a glade — not by opening the app, and not only by winning. That
+    /// the count never stops and the board simply begins the same nights over, which is the
+    /// one place a player could reasonably fear the reward runs out. And what the shield
+    /// actually buys, which is the one thing on the page that costs money and the one whose
+    /// promise has an exact shape: a fixed window from the day it is bought, which playing
+    /// does not extend.
     /// </para>
     /// <para>
-    /// Every number in it is read from the rules rather than written into the copy —
-    /// the length of the ladder, the refill hours, the boost ceiling, what the tail pays.
-    /// A panel that explains the game is the easiest thing in a project to leave behind
-    /// when the content is retuned, and the only defence is for it to have no numbers of
-    /// its own to get wrong.
+    /// Every number in it is read from the rules rather than written into the copy — the
+    /// length of the ladder, the length of the shield, what the tail pays. A panel that
+    /// explains the game is the easiest thing in a project to leave behind when the content
+    /// is retuned, and the only defence is for it to have no numbers of its own to get
+    /// wrong.
+    /// </para>
+    /// <para>
+    /// <b>The heart-boost section went with the boost.</b> The ladder pays credits, gems and
+    /// chests now, so the one reward on it that needed a paragraph is no longer on it — and
+    /// what a chest holds is explained where every other chest is, by tapping it.
     /// </para>
     /// </summary>
     public sealed class StreakInfoOverlay : ModalView
@@ -43,19 +49,15 @@ namespace GlimmerGrove
             // assumed. The ladder laps, so this is night one's rung — but that is the
             // table's rule to state, not this panel's to remember, and asking is what keeps
             // the sentence true if the lap is ever retuned.
-            var beyond = ladder.Rung(rungs + 1).AsDrop();
-            string beyondPay = beyond.IsValid
-                ? RewardArt.Amount(beyond) + " " + RewardArt.Name(beyond.Kind, beyond.Item)
-                : Loc.Get("ui.streak.info_cycle_nothing");
+            var beyond = ladder.Rung(rungs + 1);
+            string beyondPay = Describe(beyond);
 
             Section(-208f, "ic_play", "ui.streak.info_earn_title",
                     Loc.Get("ui.streak.info_earn_body"));
 
-            Section(-544f, "ic_heart_boost", "ui.streak.info_boost_title",
-                    Loc.Format("ui.streak.info_boost_body",
-                               HeartRules.RefillSeconds / 3600,
-                               HeartRules.BoostedRefillSeconds / 3600,
-                               HeartRules.MaxBoostHours));
+            Section(-544f, "shield", "ui.streak.info_shield_title",
+                    Loc.Format("ui.streak.info_shield_body",
+                               DailyStreak.ShieldDays, DailyStreak.ShieldGems));
 
             Section(-880f, "crest_gold", "ui.streak.info_cycle_title",
                     Loc.Format("ui.streak.info_cycle_body", rungs, beyondPay));
@@ -66,12 +68,28 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// What a rung pays, in words, whichever shape it is.
+        ///
+        /// A chest names itself — "a Royal Chest" is the whole answer, and it is the same
+        /// name the tile draws — where a figure needs its amount and its unit.
+        /// </summary>
+        static string Describe(StreakRung rung)
+        {
+            if (rung.IsChest) return Loc.Get(rung.Tier.NameKey);
+
+            var drop = rung.AsDrop();
+            return drop.IsValid
+                ? RewardArt.Amount(drop) + " " + RewardArt.Name(drop.Kind, drop.Item)
+                : Loc.Get("ui.streak.info_cycle_nothing");
+        }
+
+        /// <summary>
         /// One answer: a glyph, a heading and a paragraph.
         ///
         /// The glyph on each row is the one the game already uses for the thing being
-        /// explained — the boost row wears <c>ic_heart_boost</c> — so reading this panel
-        /// also teaches what the icons on the board mean, which is half of what a player
-        /// came here to find out.
+        /// explained — the shield row wears the shield the offer row wears — so reading this
+        /// panel also teaches what the marks on the page mean, which is half of what a
+        /// player came here to find out.
         /// </summary>
         void Section(float y, string icon, string titleKey, string body)
         {

@@ -61,6 +61,26 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         public const int Coaching = 20;
+
+        /// <summary>
+        /// A panel that is not an interaction but a <em>stop</em>: the game may not be played
+        /// past it, and nothing raised by anything else may cover it.
+        ///
+        /// <para>
+        /// <b>There is exactly one, and adding a second should be argued for.</b>
+        /// <c>UpdateRequiredOverlay</c> is a wall — the player's only move is to leave for the
+        /// store — so everything the rest of the stack is for stops applying: there is nothing
+        /// underneath worth reading, nothing it could be raised "from", and no order of arrival
+        /// that should put anything over it. A receipt, an arrival panel or a lesson landing on
+        /// a timer would otherwise do exactly that, since all three are raised from <c>Boot</c>
+        /// and know nothing about what is on screen.
+        /// </para>
+        /// <para>
+        /// Numbered well clear of <see cref="Coaching"/> so a layer can be added between them
+        /// without renumbering anything, exactly as the three below are spaced.
+        /// </para>
+        /// </summary>
+        public const int Blocking = 100;
     }
 
     /// <summary>Base class for a full screen of UI. Subclasses build themselves in Build().</summary>

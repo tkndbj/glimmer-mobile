@@ -247,39 +247,51 @@ def feature(sheet, paired=True):
     every one of which `HomeScreen.BuildStreakBox` and `BuildEventBox` have always built. A
     mirror that under-draws makes the screen look emptier than it is, which is the one way a
     render can send you off to fix something that was never broken.
+
+    **And the plate is the box's own, which this drew as the navy card for just as long.**
+    `FeatureCard` is handed `Skins.PlateOrange` and `Skins.PlateViolet` and draws them
+    untinted, so the streak box is bright orange and the event box bright violet — and a
+    mirror that paints both navy cannot answer a single question about what a *dark* piece
+    of furniture looks like standing on one. The trough's own drop-shadow read as a brown
+    ring round every bar in this row and this render showed nothing at all.
     """
     half = (ROW_WIDTH - ROW_GAP) * .5
     cy = ROW_TOP + ROW_HEIGHT * .5
     x = (ROW_WIDTH - half) * .5
 
-    boxes = [(-x if paired else 0.0, half if paired else ROW_WIDTH, K.SUN, "FLAME", "",
-              "4", "NIGHT STREAK", "ic_gift", "KEEP IT UP - 5 GEMS", 2),
-             (x, half, K.BLOOM, "SUMMER EVENT", "2d 14h",
-              "7/12", "GLADES", None, None, 3)]
+    # plate, lamp alpha, title colour, caption colour — `BuildStreakBox` passes `Pal.Cream`
+    # as its tint and `BuildEventBox` `Pal.Bloom`, and the lamp is white at `edge * .55` in
+    # both, not the box's colour.
+    boxes = [(-x if paired else 0.0, half if paired else ROW_WIDTH,
+              "plate_orange", .30, K.CREAM, K.CREAM, "STREAK", "",
+              "4", "4 NIGHTS", "ic_gift", "KEEP IT UP - 5 GEMS", 2),
+             (x, half, "plate_violet", .50, K.BLOOM, K.BLOOM, "THE FIRST WATCH", "2d 14h",
+              "7/12", "MARKS", None, None, 3)]
     if not paired:
         boxes = boxes[:1]
 
-    for bx, bw, colour, title, meta, value, caption, icon, line, badge in boxes:
+    for (bx, bw, plate, edge, colour, capcol, title, meta,
+         value, caption, icon, line, badge) in boxes:
         cx = W / 2 + bx
-        K.paste(sheet, K.skin("Hud/card", bw, ROW_HEIGHT), cx, cy)
+        K.paste(sheet, K.skin("Hud/" + plate, bw, ROW_HEIGHT), cx, cy)
 
-        # the lamp along the top edge, which is what tells the two boxes apart now that the
-        # plate is the same navy on both
-        K.paste(sheet, K.glow(max(bw * .78, 86), 1.9, colour, .38), cx, cy - ROW_HEIGHT / 2 + 14)
+        # the lamp along the top edge — white, and the box's own colour is the plate
+        K.paste(sheet, K.glow(max(bw * .78, 86), 1.9, (255, 255, 255), edge * .55),
+                cx, cy - ROW_HEIGHT / 2 + 14)
 
         K.text(sheet, title, cx - bw / 2 + 30, cy - ROW_HEIGHT / 2 + 36, 25,
-               fill=colour, outline=2, anchor="l")
+               fill=colour, outline=0, anchor="l")
         if meta:
             K.text(sheet, meta, cx + bw / 2 - 30 - 70, cy - ROW_HEIGHT / 2 + 36, 23,
                    fill=(255, 242, 214), outline=0, anchor="r")
 
-        # the flame or the event mark, on its own glow
+        # the streak's calendar or the event mark, on its own glow
         gx = cx - bw / 2 + 115
-        K.paste(sheet, K.glow(200, 2.0, colour, .30), gx, cy + 4)
-        art = "Flame/f00" if icon else "ic_stars"
+        K.paste(sheet, K.glow(200, 2.0, K.SUN if icon else K.BLOOM, .30), gx, cy + 4)
+        art = "ic_streak" if icon else "ic_stars"
         try:
             mark = Image.open(K.UI / f"{art}.png").convert("RGBA")
-            K.paste(sheet, K.fit(mark, (138, 138) if icon else (128, 128)), gx, cy + 4)
+            K.paste(sheet, K.fit(mark, (130, 130) if icon else (128, 128)), gx, cy + 4)
         except FileNotFoundError:
             pass
 
@@ -290,13 +302,16 @@ def feature(sheet, paired=True):
         # card's middle. Drawn both below, they overlap by twelve units — which is what
         # this did, and it read as a bug in the screen rather than in the mirror.
         K.text(sheet, value, vx, cy - 20, 62, fill=K.CREAM, outline=3)
-        K.text(sheet, caption, vx, cy + 32, 22, fill=colour, outline=0)
+        K.text(sheet, caption, vx, cy + 32, 22, fill=capcol, outline=0)
 
-        # the strip along the bottom: a line of copy, or a bar with milestone pips on it
+        # the strip along the bottom: a line of copy, or a bar with milestone pips on it.
+        # `FeatureStrip` is the kit's own trough at 58 — drawn here as a hand-rolled rounded
+        # rectangle for as long as this existed, which is the one shape that cannot show what
+        # a bought sprite's edge does against a coloured plate.
         d = K.ImageDraw.Draw(sheet)
         sw = bw - 72
         sy = cy + ROW_HEIGHT / 2 - 46
-        d.rounded_rectangle([cx - sw / 2, sy - 27, cx + sw / 2, sy + 27], 18, fill=(3, 10, 13, 158))
+        K.paste(sheet, K.skin("Hud/trough", sw, 58), cx, sy)
 
         if icon:
             try:

@@ -1135,6 +1135,13 @@ copy nothing keeps in step.
   see it. <br>Two things it has already caught: a row at 57% of the plate that read as an inventory
   rather than a pack, and the royal chest — the thing the card exists to sell — drawn smallest and
   half behind its neighbour, which is what the crest rule fixed.
+  <br>**It drew the two feature boxes on the wrong plate for as long as it existed** (44i):
+  `FeatureCard` is handed `Skins.PlateOrange` and `Skins.PlateViolet` and draws them untinted, so
+  the streak box is bright orange and the season box bright violet, and this painted both as the
+  navy card — with the bottom strip as a hand-rolled rounded rectangle instead of the kit's
+  trough. The trough's own half-alpha drop-shadow was reading as a brown ring round every bar in
+  that row on a real device and no render here could show it. **A mirror that is wrong about a
+  plate's colour cannot answer anything about what stands on it.**
 - `Tools/render_tasks.py` — the Tasks &amp; Bonuses page and, with `--odds <tier>`, the panel a
   chest on its ladder opens; `--contact` puts the page and all four panels side by side, which is
   the only way to see that the short panels do not carry a hole where a royal chest's prizes are.

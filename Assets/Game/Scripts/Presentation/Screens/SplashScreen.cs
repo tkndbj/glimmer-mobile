@@ -6,6 +6,7 @@ using GlimmerGrove.Cloud;
 using GlimmerGrove.Content;
 using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
+using GlimmerGrove.Notifications;
 using GlimmerGrove.Progression;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Store;
@@ -624,6 +625,14 @@ namespace GlimmerGrove
             // is why it is started here and never checked again.
             CloudSaveService.BeginStatsRefresh();
 
+            // Whether this build is still one the deployment allows to be played. Fire and
+            // forget like everything else on this list and for the same rule — nothing between
+            // tapping the icon and playing may wait on a network — which costs nothing here,
+            // because a device that has been walled before enforces it from the frame the hub
+            // draws without asking anybody. Only the first launch on a stale build waits for
+            // this, and the wall lands on the hub a moment later (see UpdateGate).
+            CloudSaveService.BeginReleaseCheck();
+
             StoreService.BeginConnect();
 
             // Consent, then mediation, in that order and never the other one. This is the
@@ -726,6 +735,17 @@ namespace GlimmerGrove
             var rules = ProgressionRules.LoadAsync(ContentBootstrap.LocalSource);
             while (!rules.IsCompleted) yield return null;
             if (rules.IsFaulted) Debug.LogException(rules.Exception);
+
+            // Reminders, bound here rather than in Boot because both halves of what they need
+            // have only just arrived: the Android channel is named with a player-facing string,
+            // so it waits on the loc table, and the slate the planner reads rides in
+            // `progression.json`, so it waits on the rules above. Binding does not schedule
+            // anything and does not ask the player anything — it registers the channel, reads
+            // what the OS already allows and finds out whether this launch came from a tap.
+            // The schedule itself is written when the app is backgrounded (`Boot.Pump`), which
+            // is the only moment the state it has to be built from is final.
+            Notify.Bind(new MobileNotificationScheduler(Loc.Get("ui.notify.channel"),
+                                                        Loc.Get("ui.notify.channel_note")));
 
             _target = .12f;
         }

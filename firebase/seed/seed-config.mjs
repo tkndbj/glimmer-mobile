@@ -129,6 +129,10 @@ function buildGroveConfig() {
   const homestead = readJson(join(CONTENT, "homestead.json"));
   const manifest = readJson(join(CONTENT, "manifest.json"));
 
+  // The shelf is authored in `progression.json`, so the card's turret roster is read from there
+  // even though everything else on this document comes out of the grove's own files.
+  const progression = readJson(join(CONTENT, "progression.json"));
+
   const pieces = {};
   const bundles = {};
   const dwellings = {};
@@ -228,6 +232,48 @@ function buildGroveConfig() {
     companions[companion.id] = { cost, level: Math.floor(companion.unlockLevel ?? 0) };
   }
 
+  // The turret roster, as id -> the keeper level that opens its rung, read out of
+  // `progression.json` rather than out of `homestead.json` because that is where the shelf is
+  // authored. It rides `config/grove` and not `config/progression` for one reason: it is read
+  // by exactly one thing, `buildCard`, which already has the grove config open — and putting it
+  // beside the reward table would be a second document read on every publish to carry twenty
+  // numbers that never change between drops.
+  //
+  // <b>The gate and nothing else.</b> The server does not price a turret, does not know which
+  // one is the starter and does not check that one was bought, because nothing it holds implies
+  // a purchase (`publishedLine`). A level is the one claim about a line that can be checked
+  // against a ledger this server derives itself, so it is the one that is published.
+  //
+  // The starter is in here at level nought, deliberately. Omitting it would make an absent entry
+  // mean two things at once — "ungated" and "not a turret" — and `publishedLine` refuses an id
+  // the roster has never heard of, so the free turret would be the only one a card could not
+  // carry.
+  //
+  // `free` is published rather than left to be derived, which is invariant 16j's trap said about
+  // a shelf: a free turret is held by everybody and is never written into `wardsOwned`, so a
+  // server testing ownership without it would drop the one turret every account in the game
+  // stands. Read here as "no price in any currency", which is `WardModel.IsStarter` — and the
+  // reason it is read *here* rather than over there is that a second currency makes the
+  // predicate ambiguous exactly once, and this is where the file is in hand.
+  const wards = {};
+  for (const model of progression.wards?.models ?? []) {
+    if (!model?.id) continue;
+    if (typeof model.id !== "string" || model.id.length === 0 || model.id.length > 64) continue;
+
+    const gems = Math.floor(model.gemPrice ?? 0);
+    const coins = Math.floor(model.coinPrice ?? 0);
+
+    wards[model.id] = {
+      level: Math.max(0, Math.floor(model.minLevel ?? 0)),
+      free: gems <= 0 && coins <= 0,
+    };
+  }
+
+  if (Object.keys(wards).length === 0) {
+    throw new Error("progression.json has no turret roster; every published card would carry " +
+                    "an empty line and every public profile would draw four starters");
+  }
+
   const stars = (homestead.score?.stars ?? [])
     .map(Math.floor)
     .filter((at) => at > 0)
@@ -249,6 +295,7 @@ function buildGroveConfig() {
     companions,
     dwellings,
     dwellingLevels,
+    wards,
     stars,
   };
 }
@@ -291,14 +338,19 @@ function buildProgressionConfig() {
       seeds: readSeeds(),
       daily: readDaily(progression),
       ads: readAds(progression),
-      streak: readStreak(progression),
       golden: readGolden(progression),
-      // Read before the calendar, because a season names its tiers and the seeder is the
-      // one place that can prove a rung's tier actually exists — the ladder lives in the
-      // manifest and the tiers in progression.json, and neither file can check the other.
+      // Read before the calendar and before the streak, because both name chest tiers and
+      // the seeder is the one place that can prove a named tier actually exists — a
+      // season's ladder lives in the manifest, the streak's in progression.json, the tiers
+      // in progression.json's tasks block, and no one of those files can check another.
       ...(() => {
         const tasks = readTasks(progression);
-        return { events: readEvents(manifest, new Set(tasks.tiers.map((t) => t.id))), tasks };
+        const tierIds = new Set(tasks.tiers.map((t) => t.id));
+        return {
+          events: readEvents(manifest, tierIds),
+          tasks,
+          streak: readStreak(progression, tierIds),
+        };
       })(),
       keeper: readKeeperCurve(progression),
     },
@@ -945,7 +997,7 @@ function readTasks(progression) {
   };
 }
 
-function readStreak(progression) {
+function readStreak(progression, tierIds) {
   const streak = progression.streak;
 
   // Absent is legitimate: the client falls back to its built-in ladder, and so does a
@@ -968,7 +1020,34 @@ function readStreak(progression) {
     const night = index + 1;
 
     // An empty entry is how a night that pays nothing is authored.
-    if (!rung || !rung.kind) return { kind: "", amount: 0 };
+    if (!rung || (!rung.kind && !rung.tier)) return { kind: "", amount: 0 };
+
+    // A chest night. The tier has to exist in the tasks block this same run publishes, or
+    // `claimAwards` would leave every claim against it unconfirmed for ever — which is the
+    // safe half of invariant 13a and pays nobody.
+    if (rung.tier) {
+      if (rung.kind) {
+        throw new Error(
+          `streak night ${night} names both a chest tier '${rung.tier}' and a reward kind ` +
+          `'${rung.kind}'; a night pays one or the other`
+        );
+      }
+      if (!tierIds.has(rung.tier)) {
+        throw new Error(
+          `streak night ${night} pays chest tier '${rung.tier}', which the tasks block does ` +
+          `not define`
+        );
+      }
+      return { kind: "", amount: 0, tier: rung.tier };
+    }
+
+    if (RETIRED_STREAK_KINDS.has(rung.kind)) {
+      throw new Error(
+        `streak night ${night} pays '${rung.kind}', which a streak rung may no longer name: ` +
+        `the streak pays credits, gems and chests. Name a chest tier instead, so one ` +
+        `published disclosure covers every night that pays it.`
+      );
+    }
 
     if (!STREAK_KINDS.has(rung.kind)) {
       throw new Error(`streak night ${night} names unknown reward kind '${rung.kind}'`);
@@ -994,12 +1073,31 @@ function readStreak(progression) {
     return { kind: rung.kind, amount };
   });
 
-  if (!rungs.some((rung) => rung.kind)) {
+  if (!rungs.some((rung) => rung.kind || rung.tier)) {
     throw new Error("the streak ladder pays nothing on any night; refusing to seed it");
   }
 
-  return { rungs };
+  // The shield's two numbers are published for completeness and read by nobody on this
+  // side, exactly as a tier's `marks` are. A shield is an ordinary gem spend on the client
+  // that stores one date in the save; it grants no currency and gates no payout, and
+  // `advances` bounds a protected streak to the same one-night-a-day an unprotected one is
+  // held to. Publishing them keeps the config document a faithful copy of the authored
+  // table, which is what makes a support question answerable.
+  const shieldDays = Math.floor(streak.shieldDays ?? 0);
+  const shieldGems = Math.floor(streak.shieldGems ?? 0);
+
+  return {
+    rungs,
+    ...(shieldDays > 0 ? { shieldDays } : {}),
+    ...(shieldGems > 0 ? { shieldGems } : {}),
+  };
 }
+
+/**
+ * Kinds a streak rung may no longer name. Refused by name rather than ignored, for
+ * `StreakRules.IsRetiredKind`'s reason: skipping one would renumber every night above it.
+ */
+const RETIRED_STREAK_KINDS = new Set(["hearts", "heart_boost"]);
 
 /** Mirrors `StreakRules`. See `readStreak`. */
 const MAX_STREAK_RUNGS = 30;
@@ -1182,6 +1280,7 @@ console.log(
   `${Object.keys(grove.companions).length} companion(s), ` +
   `${Object.keys(grove.dwellings).length} home rung(s) ` +
   `(${Object.keys(grove.dwellingLevels).length} gated), ` +
+  `${Object.keys(grove.wards).length} turret(s), ` +
   `${grove.stars.length} star(s) up to ${grove.stars[grove.stars.length - 1].toLocaleString()}, ` +
   `a complete grove worth ${groveTotal.toLocaleString()}`
 );

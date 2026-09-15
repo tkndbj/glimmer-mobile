@@ -163,33 +163,32 @@
     "rungs": [
       {
         "kind": "credits",
-        "amount": 500
-      },
-      {
-        "kind": "hearts",
-        "amount": 1
+        "amount": 400
       },
       {
         "kind": "gems",
-        "amount": 5
+        "amount": 8
       },
       {
-        "kind": "hearts",
-        "amount": 2
+        "tier": "silver"
       },
       {
-        "kind": "heart_boost",
-        "amount": 12
-      },
-      {
-        "kind": "hearts",
-        "amount": 3
+        "kind": "credits",
+        "amount": 800
       },
       {
         "kind": "gems",
-        "amount": 10
+        "amount": 16
+      },
+      {
+        "tier": "gold"
+      },
+      {
+        "tier": "royal"
       }
-    ]
+    ],
+    "shieldDays": 7,
+    "shieldGems": 120
   },
   "hearts": {
     "refillCap": 5,
@@ -214,6 +213,7 @@
     "enabled": 1,
     "gems": 20,
     "gemsStep": 0,
+    "gemsFactor": 200,
     "turns": 15,
     "taps": 4,
     "moves": 4,
@@ -615,7 +615,7 @@
         "id": "leech",
         "ability": "siphon",
         "magnitude": 8,
-        "gemPrice": 600,
+        "coinPrice": 11000,
         "minLevel": 20,
         "power": 12,
         "guard": 14,
@@ -626,7 +626,7 @@
         "ability": "chain",
         "magnitude": 6,
         "extent": 2,
-        "gemPrice": 700,
+        "coinPrice": 12500,
         "minLevel": 22,
         "power": 10,
         "guard": 9,
@@ -637,7 +637,7 @@
         "ability": "ember",
         "magnitude": 6,
         "extent": 40,
-        "gemPrice": 800,
+        "coinPrice": 14000,
         "minLevel": 23,
         "power": 15,
         "guard": 8,
@@ -648,7 +648,7 @@
         "ability": "frost",
         "magnitude": 6,
         "extent": 25,
-        "gemPrice": 900,
+        "coinPrice": 16000,
         "minLevel": 25,
         "power": 12,
         "guard": 12,
@@ -658,7 +658,7 @@
         "id": "breaker",
         "ability": "rend",
         "magnitude": 10,
-        "gemPrice": 1000,
+        "coinPrice": 18000,
         "minLevel": 26,
         "power": 16,
         "guard": 8,
@@ -668,7 +668,7 @@
         "id": "spectrum",
         "ability": "stun",
         "extent": 10,
-        "gemPrice": 1100,
+        "coinPrice": 20000,
         "minLevel": 28,
         "power": 13,
         "guard": 10,
@@ -679,7 +679,7 @@
         "ability": "pierce",
         "magnitude": 10,
         "extent": 4,
-        "gemPrice": 1200,
+        "coinPrice": 22500,
         "minLevel": 29,
         "power": 11,
         "guard": 13,
@@ -690,7 +690,7 @@
         "ability": "splash",
         "magnitude": 7,
         "extent": 1,
-        "gemPrice": 1400,
+        "coinPrice": 25000,
         "minLevel": 30,
         "power": 11,
         "guard": 12,
@@ -701,7 +701,7 @@
         "ability": "chain",
         "magnitude": 8,
         "extent": 3,
-        "gemPrice": 1600,
+        "coinPrice": 27500,
         "minLevel": 35,
         "power": 10,
         "guard": 10,
@@ -712,7 +712,7 @@
         "ability": "chain",
         "magnitude": 10,
         "extent": 3,
-        "gemPrice": 2000,
+        "coinPrice": 30000,
         "minLevel": 40,
         "power": 11,
         "guard": 10,
@@ -1029,6 +1029,24 @@
         "target": 20,
         "tier": "silver"
       }
+    ]
+  },
+  "notifications": {
+    "perDay": 3,
+    "horizonDays": 21,
+    "taperAfterDays": 7,
+    "hours": { "morning": 570, "afternoon": 810, "evening": 1170 },
+    "entries": [
+      { "kind": "season_ending", "slot": "evening",   "priority": 100, "minDaysBetween": 1 },
+      { "kind": "streak_risk",   "slot": "evening",   "priority": 90,  "minDaysBetween": 1 },
+      { "kind": "chest_waiting", "slot": "morning",   "priority": 80,  "minDaysBetween": 2 },
+      { "kind": "tasks_weekly",  "slot": "morning",   "priority": 70,  "minDaysBetween": 7 },
+      { "kind": "tasks_daily",   "slot": "morning",   "priority": 60,  "minDaysBetween": 1 },
+      { "kind": "hearts_full",   "slot": "afternoon", "priority": 50,  "minDaysBetween": 1 },
+      { "kind": "season_rungs",  "slot": "afternoon", "priority": 40,  "minDaysBetween": 2 },
+      { "kind": "endless_call",  "slot": "evening",   "priority": 30,  "minDaysBetween": 3 },
+      { "kind": "board_climb",   "slot": "evening",   "priority": 20,  "minDaysBetween": 4 },
+      { "kind": "grove_idle",    "slot": "any",       "priority": 10,  "minDaysBetween": 2 }
     ]
   }
 }

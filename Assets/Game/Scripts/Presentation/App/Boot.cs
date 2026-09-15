@@ -117,7 +117,7 @@ namespace GlimmerGrove
             // one marker can only describe one run. See RunGuard.
             RunGuard.Claim();
 
-            ContentConfig.AppVersion = ParseBuildNumber(Application.version);
+            ContentConfig.AppVersion = Release.AppVersion.Parse(Application.version);
 
             // Asset delivery is chosen once, here, before anything loads. Everything
             // downstream goes through AssetLibrary and never learns which it got.
@@ -225,23 +225,6 @@ namespace GlimmerGrove
             Flow.Go<SplashScreen>(instant: true);
         }
 
-        /// <summary>
-        /// Turns "1.4.2" into 10402 so a chapter can require a minimum client without
-        /// anyone having to keep a second version number in step by hand.
-        /// </summary>
-        static int ParseBuildNumber(string version)
-        {
-            if (string.IsNullOrEmpty(version)) return 1;
-
-            var parts = version.Split('.');
-            int major = SafeInt(parts.Length > 0 ? parts[0] : null);
-            int minor = SafeInt(parts.Length > 1 ? parts[1] : null);
-            int patch = SafeInt(parts.Length > 2 ? parts[2] : null);
-            return major * 10000 + minor * 100 + patch;
-        }
-
-        static int SafeInt(string s) => int.TryParse(s, out int v) ? v : 0;
-
         static void EnsureCamera(Transform parent)
         {
             if (Camera.main != null) return;
@@ -326,6 +309,14 @@ namespace GlimmerGrove
                 // Nothing else drives that clock, so without this line the game would never free
                 // a texture at all.
                 AssetLibrary.Tick(Time.unscaledDeltaTime);
+
+                // And whether this build is still one the deployment allows to be played. Last,
+                // after the sync above has had its frame, because the wall must never be what a
+                // player's last session is waiting on to reach the server. It is a poll rather
+                // than an event for the reason UpdateGate spells out: a screen change destroys
+                // every modal in the stack, so a wall that was merely *raised* would be
+                // dismissed by the first piece of code that navigated.
+                UpdateGate.Tick();
             }
 
             void OnApplicationPause(bool paused)
@@ -344,6 +335,19 @@ namespace GlimmerGrove
                     // one thing worse than a purchase that has not landed is one that has
                     // not landed and is five minutes from being looked at again.
                     StoreService.Resumed();
+
+                    // And re-ask what the deployment requires. Two opposite moments want this
+                    // and both are ordinary: a device that launched with no signal has never
+                    // been told anything, and a device that *has* been walled out is coming
+                    // back from the store it was sent to. Rate-limited inside ReleaseWatch, so
+                    // a player flicking between apps does not pay a document read per flick.
+                    CloudSaveService.ReleaseResumed();
+
+                    // And the shade is stale the moment they are here: every reminder this
+                    // game sends says "come and look", and they are looking. The schedule
+                    // itself is left exactly as it is — it is rewritten on the way out, which
+                    // is the only moment the state it is built from is final.
+                    Notifications.Notify.Resumed();
                 }
             }
 
@@ -363,6 +367,21 @@ namespace GlimmerGrove
             {
                 SaveService.Flush();
                 CloudSaveService.BeginSync();
+
+                // And what the phone will say while nobody is playing, written from the state
+                // the player is leaving behind.
+                //
+                // Last, and after the flush rather than before it, for two reasons that pull
+                // the same way. This is the only moment the state is final — a plan built
+                // earlier would be a plan about a run that had not finished — and a reminder
+                // nobody will read for ten hours must never be what the save is queued behind.
+                // Notify.Rearm swallows its own exceptions for the same reason.
+                //
+                // Not on a timer and not on every event: three slots a day over seven days is
+                // one cancel-and-write, and the plan is a pure function of the save, so doing
+                // it again changes nothing. There is no state to reconcile because the feature
+                // deliberately stores none.
+                Notifications.Notify.Rearm();
             }
         }
     }

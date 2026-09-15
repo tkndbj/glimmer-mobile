@@ -10,8 +10,7 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// Where every keeper's grove stands: two boards and a way into somebody else's
-    /// village.
+    /// Where every keeper stands: two boards, and the two ways into somebody else's game.
     ///
     /// <para>
     /// <b>The list is the screen.</b> The player's own standing used to be drawn above it in a
@@ -291,12 +290,34 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------------- rows
+        /// <summary>
+        /// Opens the keeper a row names.
+        ///
+        /// <para>
+        /// <b>A chooser rather than a destination, because a row leads to two places now.</b>
+        /// It used to walk straight into the grovement, which was the only thing there was to
+        /// see; there is a public profile beside it now — the keeper level, the companions, the
+        /// Endless Watch and the line they carry — and a row that silently picked one of the
+        /// two would leave the other reachable from nowhere on the one screen it belongs to.
+        /// </para>
+        /// <para>
+        /// The panel is also where a row finally says <em>who</em> it is, at a size somebody can
+        /// look at, which is what makes the extra tap worth having rather than merely tolerable.
+        /// It is handed the row's own figures so it needs no fetch of its own — see
+        /// <see cref="KeeperOverlay.Entry"/>.
+        /// </para>
+        /// </summary>
         void Visit(LeaderboardEntry entry)
         {
             if (!entry.IsValid) return;
 
             // Silent, for Select's reason: the row is a button and has already clicked.
-            Flow.Go<GroveVisitScreen>(screen => screen.Visit(entry.OwnerId, entry.Name));
+            Flow.Modal<KeeperOverlay>(panel =>
+            {
+                panel.OwnerId = entry.OwnerId;
+                panel.Entry = entry;
+                panel.FromEndlessBoard = LeaderboardBoard.IsEndless(_boardId);
+            });
         }
 
         /// <summary>

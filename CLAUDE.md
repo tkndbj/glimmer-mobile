@@ -511,6 +511,60 @@ New level chapters ship every two to four weeks.
    this stops being defensible.** The ceiling is mirrored in `EndlessLedger.MaxWave` and the two
    move together, or the prediction a device draws and the card the server writes disagree for the
    one account that reaches it.
+19o. **A keeper is two things a stranger can see, so there are two judgements and two
+   collections.** The name is free text and the grovement is 784 tiles sold with walls, gates
+   and fences — and `GroveCard`'s own remarks argued for a year that an arrangement could not be
+   offensive because every piece is an id from a catalog we ship. That was true of the
+   pre-placed dots the grove began as and false from the day land was sold by the region (16b,
+   16e): **walls tile**, so somebody with enough of them writes whatever they like on the
+   ground, and every gate here stays green while they do, because nothing opens a picture (32b,
+   on somebody else's screen). <br>**One mechanism, parameterised by a `ReportSubject`** — the
+   pair-keyed idempotency, the distinct-reporter threshold, the audit trail and the review floor
+   are shared, the *counts* are not (a name three people found offensive says nothing about the
+   benches), and the **daily quota is**, because it bounds the reporter's account rather than
+   budgeting a subject. **A takedown does exactly one thing per subject**: a name falls through
+   to the generated handle, an arrangement publishes an empty `placed`. Both are read through a
+   predicate (`publishableName`, `isGroveDenied`) so the report path and `publishGrove` cannot
+   come to disagree about what a denial means. <br>**The wire spellings and the callable's id
+   are permanent** (invariant 1): the subject names a Firestore collection, so a tidier spelling
+   orphans every report filed under the old one and resets a threshold somebody had reached.
+   **A callable's name is not in that class and the difference is worth stating**, because it is
+   the one that was nearly got wrong here: no save, no document, no store registration and no
+   analytics ordinal carries an endpoint's name, so `reportKeeperName` → `reportKeeper` cost a
+   deploy, an invoker binding and a delete — payable **once**, before a client ships, and a
+   coordinated rollout with a 404 window in it ever after. A subject the deployment does not know
+   is **refused** rather than defaulted; an **absent** one is the name, which is what every older
+   client means.
+19p. **What a public profile draws is what the score counted, and that is one walk.** A card
+   carries the priced companions a keeper owns and the four seats of their line, and the
+   companion set is the set `groveWorth` priced (`heldCompanions`) rather than a second filter
+   over the same save — two filters agree until one is edited, and the symptom is a stranger's
+   screen showing a portrait the number beside it was never told about. **The free companion is
+   deliberately absent**: it has no price, so it is in no catalog the server publishes and is
+   held by everybody past its gate, so the visitor's own client resolves it through the rule it
+   already applies to itself. <br>**A line is a picture and is priced as one.** It orders no
+   board and pays nothing, so it is 13's last clause rather than 19a's — bounded, not
+   adjudicated, exactly as `placed` has always been. The one thing the server *can* check is the
+   claim a visitor could catch as a lie, so the **keeper gate is asked** (a level-two account
+   cannot stand the turret that opens at forty) and ownership is not, because nothing this
+   server holds implies a turret was bought. **A seat it cannot vouch for is omitted rather than
+   corrected**, which is what lets the server know nothing about which turret is the starter:
+   the visiting client fills a gap through `WardLine.Resolve`, the path every board already
+   takes for a turret that was renamed or retired. <br>**A free turret is held by everybody and
+   is in nobody's `wardsOwned`**, so the published roster carries `free` beside the gate — 16j's
+   trap said about a shelf, and without it the one turret every account in the game stands is
+   the one seat a card could never carry. **A stale seed publishes no line**, never an unvouched
+   one.
+19q. **A row on a board leads to two places, so it opens a chooser.** A tap used to walk
+   straight into a grovement, which was the only thing there was to see; a profile beside it
+   makes a silent choice into a screen reachable from nowhere. The panel is also where a row
+   finally says *who* it is at a size somebody can look at, which is what makes the extra tap
+   worth having rather than merely tolerable — and it holds **no art of its own**, drawing the
+   portrait out of the roster scope the board behind it is already holding (7b). <br>**And every
+   thing a profile says, it says about somebody else**: no prices, no padlocks and no taps, and
+   **nothing unheld is drawn at all** — thirty-one discs with nine lit is an inventory of a
+   stranger's gaps rather than their collection, and the count in the corner already says how
+   far along they are.
 
 ### What a mode is, and what a mode costs
 20. **A mode is code, and a chapter names one.** A way of playing brings an interaction, a fail
@@ -612,6 +666,27 @@ New level chapters ship every two to four weeks.
    lost when its **ward line** falls, so twenty gems could have bought a top-rung clear — not a
    grading curiosity, because stars derive credits, credits are a grove's worth, and a grove's worth
    reaches a public board (19a).
+23c. **A repeatable price has to end the ladder by arithmetic, or the fail state stops binding.**
+   A continue was flat at twenty and offered again for ever, so a lost run was a shop transaction
+   with no ceiling: somebody holding a bulk pack walks up a flat ladder indefinitely and nothing on
+   any board can ever beat them (5d, asked of a price). It **doubles** — 20, 40, 80, 160 — so the
+   fifth costs sixteen times the first and there is always a number of second chances beyond which
+   the honest answer is to play the board again. <br>**It is one recurrence with two parameters,
+   never two escalation rules**: each continue multiplies the price by `gemsFactor` hundredths and
+   then adds `gemsStep`, so a factor of 100 with a step is exactly the linear ladder this shipped
+   with. Hundredths rather than a float for the reason every threshold here is one. Two dials each
+   claiming to decide a price is what this file refuses everywhere else. <br>Three things fall out.
+   A factor **below** a hundred is refused and clamped to flat, because a price that *falls* as more
+   are bought is the one setting that makes the fail state reject nothing. `ContinueLimits.MaxGems`
+   now binds a second thing — the ladder tops out there on the ninth, after 5,100 gems inside one
+   run, which is more than the largest pack in the shop holds — so both gates **print the ladder and
+   say where it stops** rather than printing the factor (37cc: a ceiling that binds is checked, not
+   discovered). And the price is read off a count nothing bounds, so every branch that cannot climb
+   further **answers at once**: a loop run out over a frozen board is a defeat panel that never
+   arrives. <br>**What it costs is 23a's symmetry, and that is a decision rather than an
+   oversight.** The heart rescue is flat at twenty on purpose, so from the second loss on one run
+   the continue is quoted dearer than the rescue offered after it — the two still buy different
+   things in a fixed order, but the pair no longer reads as one price.
 24. **A run is free when it teaches nothing new, and the rule lives in one predicate.** **The
    opening**: the first few levels of the **first chapter of each mode**, because the worst moment
    to meet the one gate that stops somebody playing is while they are still working out what the
@@ -907,6 +982,15 @@ changed** (5f).
   hub's box stopped carrying words, and the title it carries again is the page's own
   `ui.tasks.title` rather than a key of its own; the connection line they shared is still said on
   the page itself),
+  `ui.report.name_note` and `ui.report.grove_note`, the lines that used to sit under the report
+  panel's two keys — "Their name" and "Their groovement" say what they are, and the paragraph
+  above them already says what a report is for and what it does not do, so the notes were a third
+  and fourth sentence explaining two words each;
+  the streak's own `ui.streak.beyond`, `ui.streak.beyond_plain`, `ui.streak.collect`,
+  `ui.streak.explain_held`, `ui.streak.info_boost_title`, `ui.streak.info_boost_body`,
+  `ui.streak.progress`, `ui.streak.progress_week` and `ui.streak.tonight` (48 — the page is the
+  tasks page's furniture now, the ladder pays no boost to explain, and the lap is said by the
+  board's own heading);
   `ui.settings.credit` (46); `ui.board.league`, `ui.board.of_league` and the nine `ui.league.l*`
   names (19k — the league board is gone, and no screen had ever drawn a league's *name*);
   **the store product `gg_first_bloom_pass`** and its string
@@ -1721,8 +1805,10 @@ changed** (5f).
    **empty well** rather than a dimmed picture.
 42c. **A turret is bought for one colour, and a keeper level is the whole of what opens a rung.**
    **Per colour**, because a line holds four and which colour a trick is worth having on is what
-   makes the shelf a choice (26h). And **a gate on every rung**, or the half priced in the currency
-   that can be *bought* skips the ladder outright. <br>**The sequential unlock is gone** — a turret
+   makes the shelf a choice (26h). And **a gate on every rung**, which was first argued for because
+   the half priced in the currency that can be *bought* would otherwise skip the ladder outright —
+   an argument the shelf has outlived (42f) and a rule that outlived it, because a keeper level is
+   now the only wall there is. <br>**The sequential unlock is gone** — a turret
    was sealed until the rung below it was held (16j's one-offer-at-a-time argument, applied to a
    shelf) and the owner removed it: two walls saying nearly the same thing meant a player at level
    twenty-two who had skipped one cheap credit turret could not buy the gem turret they had earned,
@@ -1742,6 +1828,23 @@ changed** (5f).
    — so the lock means the wall and nothing else, the veil alone means "not yours yet", and the
    strip says **Level 26** rather than LOCKED, because one word says a player cannot have this and
    not what would change that.
+42f. **The whole shelf is priced in credits, and what that removes is a second question the player
+   was being asked.** Ten turrets used to cost gems, which made the top half of the shelf a
+   *purchase* where the bottom half was a reward for playing — two ladders wearing one header, and
+   the dearest half reachable in an afternoon by anybody who bought a pack. **The prices continue
+   the credit ladder rather than converting at the shop's own rate**, and that is the whole of the
+   arithmetic: 600 gems is about 7,000 credits at the rate the shop implies, which is *below* the
+   9,000 the rung under it already costs, so a conversion would have made the shelf get cheaper
+   halfway up and broken 37ax's "the two halves must agree" on the one thing it is about. The top
+   is anchored on `home_citadel` — 30,000 at the same keeper level 40 — because this game already
+   had a precedent for its biggest single purchase and two different answers would be two designs.
+   <br>**It cost no code**, which is the thing worth knowing before anybody moves it back:
+   `WardLedger` reads `model.ForGems ? Gems : Credits` and the star ladder was already credits, so
+   a currency is a field on a roster row. And **it cost no re-seed**, because the server publishes
+   `{level, free}` per turret and nothing else — a price has never left the client. <br>**What it
+   does cost is the gem sink**, and that is a decision rather than a consequence: gems now buy
+   hearts, boosts, utilities, a continue, land, the season pass and the streak shield, and the
+   largest thing they bought is gone.
 42d. **A preview that does not show the thing being paid for is a thumbnail with a sentence over
    it.** One raider and one bolt previewed three abilities *identically to the free one*. It stands
    **the arrangement each ability is decided by** and fires exactly what the board would report —
@@ -1752,6 +1855,40 @@ changed** (5f).
    saved?* **Why it has to be asked**: a grade is not a private number — stars derive credits,
    credits are a grove's worth, and a grove's worth reaches a public board (19a) — so a consumable
    that made a run score better would move a public figure, and utilities are **not adjudicated**.
+39m. **A magnitude is meaningless on its own; what it is *measured in* decides whether it lasts.**
+   A chapter is made harder by surging what its raiders carry (37by) and an endless lane surges
+   every wave, so the hill's numbers climb without bound while the line's do not — and a flat 440
+   quietly stops being "two creepers and a bit" on every chapter after the second. **So every
+   magnitude declares a unit** (`UtilityUnit`, derived from the kind and never authored): **hill
+   health** climbs, **ward health** and **fuel** do not, and mending and surge are correct without
+   scaling rather than by exception — a ward's stones are fixed and a blow is never surged, and a
+   surged pour is a pour a tube cannot hold. <br>**A climbing magnitude is authored against a
+   baseline raider and converted at the point of contact, through that raider's own
+   `SiegeSurge.Hurt`** — the same multiplier its health went through. So the share is exact by
+   construction on every chapter that will ever ship, nothing is authored per chapter, and there
+   is no second number to keep in step. It is per raider rather than per board because an endless
+   hill holds wave four and wave forty at once. **`Hurt` and `Health` must answer identically**,
+   which is what a test pins; the day they differ, `Storm`'s promise to hurt a boss and never fell
+   one stops being a ratio and goes back to being a number that expires. <br>**Scaling a bought
+   utility with the player's *line* is the obvious answer and is wrong twice**: it pays out least
+   to the player who bought no turrets, which is who it is for, and it would make a purchase decide
+   `MatchesFor` — a graded number, which is what 37bb keeps par on the baseline bolt to prevent.
+   **A free payoff scales with the line** (37cg, the stormglass, which is why it needed no change);
+   **a bought one scales with the board.** <br>**The charge needs no change and that is the check**:
+   `MatchesFor` divides by `PerfectMatch` and par is the hill's health over the same figure, so a
+   surge multiplies both and what a utility costs the grade *as a share of par* is identical on
+   every chapter. <br>**Invisible to every gate**, which is why it is a fixture rather than a
+   number somebody checks: such a level parses, its par is derived from the surged health and is
+   correct, the hold simulation taps no utility and no bomb at all, and no card prints a magnitude.
+   The only instrument is somebody playing chapter twenty.
+39n. **A damage figure is a readout, not an effect, so it gets a layer above every effect.**
+   Sharing `_fx` was right while the busiest thing here was a lit line — hits 55ms apart at one
+   raider, under a one-cell `Pop`. A stormglass is not that: a dozen beams, a dozen two-cell
+   scorches and a dozen landing reels, each a new sibling over the top of every figure already
+   standing, so the number was drawn, was correct, and was buried about **thirty milliseconds**
+   after it appeared — on the one screen the whole game stops for. `_figures` is built last, above
+   `_sky` as well, and `render_siege.py --volley` paints its figures last for the same reason,
+   because whether a number can be read against a barrage is a question only a picture answers.
 39a. **The stock is two counters per id, and it is the first thing here that needed both.** `earned`
    and `spent`, each monotonic, joined by a per-id `max`, with what is in hand derived and clamped
    at nought. Hearts come back on a clock; grove decor is bought and then *stands somewhere* (16h).
@@ -1845,6 +1982,48 @@ changed** (5f).
 44h. **A restyle that is only a re-cut can still ship a boring screen, and the two halves that fix
    it are the *plate* and the *ground*.** Every plate on the rejected kit was a **cream rim around
    the ground colour**, with one rim of one width everywhere and a flat near-black wash behind it.
+44i. **A bought sprite's own drop-shadow is an outline on any plate that is not the colour the
+   pack drew for, and the mirror was painting the plate the wrong colour so nothing could see
+   it.** The kit's trough ships on a nine-pixel band of its own navy at **half alpha** — a
+   shadow over the pack's cream screens, and over this game's orange, violet and blue plates a
+   muddy ring a shade off the plate, at a radius the piece does not have. That is exactly the
+   fault `FeatureCard` removed from six call sites on the *code* side, arriving through the art,
+   and it stood on the streak strip, the season strip, every bar track and the profile's level
+   bar. **Cut in the tool, once** (`matted`, 44's argument from the art's end as in 45h), as a
+   **ramp rather than a threshold** so the opaque keyline under it keeps its antialiasing — and
+   run **before** `trim`, so the band is cropped away and the border re-measures itself against
+   the corner that is really there (22 → 12). It costs a pill standing on a backdrop nothing:
+   the dark keyline inside the shadow is opaque and survives. <br>**The mirror is the other
+   half.** `render_home.py` drew both feature boxes as the navy **card**, where `FeatureCard` is
+   handed `PlateOrange` and `PlateViolet` and draws them **untinted** — and it drew the strip as
+   a hand-rolled rounded rectangle rather than the trough. A mirror that paints a dark piece of
+   furniture on the wrong-coloured plate, out of the wrong sprite, can answer no question about
+   its edge at all: the ring was invisible in every render this project has ever taken of the
+   hub, and it took somebody looking at a phone.
+44j. **A balance readout is *watched*, never drawn.** A currency pill built out of
+   `Profile.Coins` is a photograph from that moment on, and what makes it a readout is a
+   subscription to the two events that can move it — `PlayerProgression.Changed` for credits and
+   gems, `Wallet.HeartsChanged` for hearts, which is two rather than one because hearts move on a
+   refill timer rather than on a spend. Seven screens wrote that subscription by hand and **four
+   were wrong in four different ways**: the loadout registered nothing and repainted nothing, so
+   a turret bought or a star upgraded left the purse above it showing what the player held
+   *before* they spent it until they walked out of the screen and back in; the tasks page
+   registered all three pills and repainted none, which looked right because a chest's own
+   `RewardFlight` writes the readout itself; and the streak and season pages watched credits and
+   gems while drawing a hearts pill neither ever wrote to. <br>**Nothing here could see any of
+   it**, which is the general point: a stale number is a correct number that has stopped being
+   true, so the file compiles, the screen validates, the render mirror draws it and a fixture
+   asserting the pill matches the wallet passes, because the wallet does not move during a test.
+   The instrument was somebody buying a turret and looking up. <br>So the cue is **attached
+   rather than written** — `WalletWatch.Attach(this, …)` beside the registration, which is the
+   same trade `ScreenLessons` makes for a queue of modals: the thing that can be forgotten stops
+   being a thing anybody writes. It repaints through `ResourceSlots.Repaint` and never onto a
+   label, so a payout walking a pill forward still owns it (`Claim`), and it reads
+   `ResourceSlots.Balance` rather than the call site's own arithmetic. **`compile.py` refuses a
+   file that registers a readout and attaches no watch** — and what that gate cannot see is a pill
+   that was never registered at all, which is what the loadout's were, so the other half of the
+   rule is that **`ResourceSlots.Register` is the only way one is built**, never a `Text` field a
+   screen sets itself.
 
 ### Tasks and the chest ladder
 45. **A task is a goal the game can count, a number and a chest — and every reward on the page is a
@@ -2061,6 +2240,342 @@ changed** (5f).
    the run from the **last** rung to the next rather than the whole ladder, because a bar crawling
    across forty rungs is a bar that never visibly moves.
 
+### The streak
+48. **A streak is a run of days that never ends, and it is the only reward here that asks a
+   player to protect something they already have.** Everything else asks them to want something
+   they do not, and people work harder to keep six days than to earn a seventh — so the whole
+   design is aimed at making the thing worth protecting. The count climbs for ever and the
+   ladder **laps** under it: night eight pays night one, night fifteen opens the third week,
+   and the board is a window onto whichever lap holds the oldest night not yet taken. A ladder
+   that ran out would stop paying on exactly the day a streak became impressive.
+48a. **The ladder pays credits, gems and chests, and a night that pays a chest names a
+   *tier*.** That is invariant 45's bargain read across: one authored chest, one published
+   disclosure of its odds, one retune — and a night then opens the **same ceremony every other
+   chest opens** (47g), which is what let the ladder become coins, gems and chests without the
+   screen learning anything about odds, utilities or lids. **Hearts and boosts are refused by
+   name at parse** (5f), because they reach it through a tier now and skipping a rung would
+   renumber every night above it. **And no chest below the second tier**: the humblest is what
+   a daily task pays for two runs, where a streak asks for a run of consecutive days.
+48b. **Only the earliest waiting night may be taken, and that is what paying a chest cost.**
+   The collected floor is a *floor*, so taking night five takes four with it — invisible while
+   every rung was a figure, and not once a rung opens a panel: a sweep would grant three chests
+   behind one animation, which is the failure 45 and 47g already name. A player holding three
+   nights taps three times. A tap on a newer one is **redirected to the oldest** rather than
+   swallowed, because a button that does nothing is a broken button (16o).
+48c. **A streak can be protected, and the whole entitlement is the day it was bought.** One
+   monotonic date, joined by `max`, which is the fourth in this section and the fourth time the
+   answer has been a date: a stored "days remaining" is the count 11b refuses and could not be
+   merged at all. It is also what makes the promise exact rather than approximate — there is
+   **one** number, so playing inside the window writes nothing to it and cannot extend it, and a
+   second purchase is refused while the first is running rather than silently moving it.
+48d. **A protected day is *forgiven*, never credited.** The streak survives it and buys no
+   night: when the player comes back, `startDay` slides forward by however many days were
+   forgiven, so somebody on night twenty who vanishes for five protected days returns to night
+   twenty-one. Crediting them instead would sell six chests for a hundred and twenty gems,
+   which is a currency printer wearing a retention feature's clothes. **The collected floor
+   slides with it**, because the floor is a *day* and every night's day has just moved —
+   without that the player comes back to nights they have already been paid for, waiting to be
+   paid again.
+48e. **The shield needed no server, and that is a claim about the *rate* rather than an
+   oversight.** It grants no currency and gates no payout; it only keeps a streak alive across
+   days nobody played, and a protected streak still collects at most one night per calendar
+   day — exactly what an honest daily player collects. So it is an ordinary gem spend (18)
+   storing one date in the save. **What it did cost is one line of `advances`**: the server
+   demanded the night advance by *exactly* the days elapsed, which a protected player cannot
+   satisfy, and the client **drops a refused claim** (45d) — so it would have been a reward
+   somebody paid to keep and then silently lost. The equality became a band, and the security
+   is unchanged because the night must still **strictly climb**: over any window of D days an
+   account gets at most D claims advancing at least one each and at most D in total, so
+   reaching a rung costs exactly the days it costs an honest player and skipping the cheap ones
+   costs the days skipped. <br>**The debit's id is derived — `shield:{day}`** — the second
+   derived spend id in the game, and for only half of the pass's reason (47e): the server does
+   not have to recognise it, but two devices buying offline on one day must write one entry and
+   be charged once.
+48f. **A streak chest feeds the season exactly as a task's does**, because a season is graded
+   on claimed chests and every future source of them feeds it by naming a tier rather than by
+   growing a second rule (47). The consequence is arithmetic and worth saying out loud: adding
+   chests to this ladder **moves the season's pace**, and both content gates print the combined
+   figure rather than the slates' alone.
+48g. **A tile is not a row, and the kit's card is the wrong plate for one.** The board's seven
+   nights were built on `Skins.Card` because the tasks page's rows are — and a card is the
+   *darkest* plate the kit cuts, which is right under a wide row full of content and wrong for a
+   small tile on a blue ground: seven of them read as seven holes punched in the page. They are
+   `Skins.Panel` now, the light one. Three more things came out of the same look. **The night
+   rides a coloured chip and the colour is the state** (green kept, gold yours, aqua tonight,
+   dark ahead), where it used to ride an inset trough — the kit's darkest plate inside its second
+   darkest, which said nothing about the tile until you found the seal. **The reward stands in a
+   `Skins.Slot` well**, because a picture floating in the middle of a plate is a picture nobody
+   put anywhere. And **the amount sits on a trough of its own**, which is what gives the tile a
+   bottom edge. <br>**The reward's size is a *drawn* height, converted by `ChestPack`.** A closed
+   chest icon is frame nought of the opening reel and carries the lid's headroom, so a box set
+   straight from a height draws the chest two thirds the size of the gem on the tile beside it
+   and floats it high — and the render mirror, which crops to alpha, disagreed with the game by
+   half again. Four screens share that conversion now.
+48h. **The streak page says "level" where the rest of the game says "glade"**, at the owner's
+   instruction, and it is deliberately not a sweep: six strings moved (the page's subtitle and
+   CTA, two info lines, the shield's own copy, and the hub's streak box, which says the same
+   sentence about the same feature and would otherwise disagree with the page it opens).
+   **Twenty-four other strings still say "glade".** Changing those is a separate decision about
+   what this game calls a level, not a tidy-up to be done on the way past.
+
+### The update wall
+49. **A client can be withdrawn, and the whole of what makes that reliable is that the
+   requirement lives on the device.** The deployment publishes one public document per store —
+   the oldest build still allowed to run, and where to get a newer one — and a client that has
+   been told writes it down. **A wall that lived only in memory is dismissed by the one gesture
+   every player already knows**: force-quit and reopen in flight mode, so the read that raised it
+   simply fails on the way back. Written down, a cold start with no signal enforces exactly what
+   the last answered launch was told. <br>**And the server's answer governs, which is what makes
+   it reversible.** A ratchet that only ever rose would be safer against a player and
+   catastrophic against a typo: one mis-seeded minimum and the installed base is walled out of a
+   game nobody can unwall, because the document that would say so is the one the client has
+   stopped believing. So a **successful** read replaces what is held in *both* directions and a
+   failed one changes nothing — offline, the last thing the server said applies; online, what it
+   says now applies. Deleting `config/release` lifts every wall in the world on the next check,
+   and that is the intended emergency stop rather than an oversight.
+49a. **A wall needs a door, and the two travel together or neither is applied.** A minimum is a
+   wall and a store link is the door through it; a wall with no door is an install that can never
+   be made to satisfy the rule, on a device whose owner has paid money into this game. A
+   requirement naming no usable link is **neither enforced nor cached**, so a mis-seeded document
+   is inert rather than fatal — and it is refused a second time by `seed-release.mjs`, which is
+   the blocklist floor's argument (19h) said about a wall: the mistake never reaches the database
+   at all. **`https` rather than `market://`**, because both stores claim their own links on
+   device and a failed scheme link opens *nothing*, which on the one panel with only one button
+   is a dead button.
+49b. **It is per store because the two stores do not ship on the same day.** Apple review runs
+   days behind a Play rollout, so the ordinary state of a release is one store live and one
+   pending — a single shared minimum would wall every iOS player out and point them at a build
+   the App Store has not published. Android's link is derivable from the bundle id and iOS's
+   **cannot be**: an Apple id is minted by App Store Connect and is in nothing the build holds,
+   so on iOS the published link is the only answer there is. The seeder also refuses a minimum
+   **ahead of the tree's own `bundleVersion`**, which is always the same mistake — the number
+   raised before the store was serving it.
+49c. **It is device-local and must never be in the save.** It is a fact about this install on
+   this platform, not about the player: merged across devices (11b), an iOS minimum would follow
+   somebody onto a perfectly current Android phone and wall them out of it pointing at a store
+   they are not in. The save also merges monotonically, which is exactly the ratchet 49 refuses.
+   **One preferences key holding both halves**, because two keys are two writes and a process
+   killed between them pairs a new minimum with the previous release's link.
+49d. **The panel is a drawing of a state, re-asserted every frame, and the poll is the design
+   rather than laziness.** `Flow.Go` destroys every modal on a screen change, so a wall that was
+   merely *raised* is dismissed by the first timer, receipt or callback that navigates; a device
+   told last launch and offline this one gets no event to raise it from; and a rolled-back
+   requirement has to take it *down* again, which no raise ever announces. `UpdateGate` asks
+   `ReleaseGate.IsShut` on `Boot`'s clock and the cost is an integer comparison. It sits on its
+   own modal layer above everything (`ModalLayer.Blocking`), refuses the hardware key **by
+   answering it** — a silent panel hands the press to the screen underneath, which navigates,
+   which destroys the stack — and is not raised over the splash, because a panel over a progress
+   bar reads as a load that failed.
+49e. **Nothing is stopped underneath it, and that is deliberate.** The save still loads, the sync
+   still runs, a purchase interrupted by a crash is still honoured; the scrim takes the input and
+   that is the whole enforcement. There is nothing to protect the server from — every write this
+   game makes is an idempotent monotonic join (11b), which is what makes an old client pushing
+   safe by construction — and refusing to push would strand whatever the player did in the
+   session before the wall went up. A wall over a live run is held rather than lost (`Flow.Covered`),
+   and a run abandoned to the store is settled by `RunGuard` on the next launch like any force-quit.
+49f. **It reads a public document rather than a Remote Config SDK, and rather than a callable.**
+   No new dependency, no second consent surface, no opaque cache with a twelve-hour minimum fetch
+   interval in front of the one number that must not be stale. **Signed out, like `config/stats`
+   and for a sharper reason**: a forced update usually exists because something about the old
+   client no longer works against this deployment, and if that something is ever authentication
+   then a gate behind sign-in cannot close on the builds it was written for. Asked once at launch
+   and then on a cadence, because asking every foreground is a bill that grows with how twitchy a
+   phone is rather than with how often somebody plays.
+49g. **A version string is one integer and there is one parser, with two defaults.**
+   `AppVersion.Parse` floors an unreadable string at 1 for content's `minAppVersion`, where being
+   wrong shows a chapter that could have been hidden; `AppVersion.Running` answers **0** for the
+   same string and nought is never walled out, because there is no build a player could install
+   to satisfy a comparison broken on both sides. A segment above 99 is **refused rather than
+   clamped**: `1.100.0` and `2.0.0` are the same integer under this scheme, and the direction that
+   fails in is the bad one — a build that reads as newer than it is walks through the gate.
+   Refusing is loud, because the thing it disables is a safety gate.
+
+### Reminders
+50. **Every reminder this game sends is derived on the handset that sends it, and that is the
+   whole architecture.** Hearts refill on a clock, the task slate rotates on a pure function of
+   the day (45b), a streak is a pair of day keys, a season is a calendar window — so a phone can
+   work out, now, what will be true at 19:30 on Thursday, and schedule it locally. **The bill is
+   nought at any player count, for ever.** A nightly push fan-out is one document read per player
+   per send: at ten million cards, three a day is tens of millions of reads a night, growing with
+   the player count and with nothing to show for it, because every one of those messages says
+   something the device already knew. This is invariant 14's argument arriving somewhere nobody
+   expected it — being derived is what keeps the feature out of the save, out of the merge, out
+   of `firestore.rules` and off the server entirely. <br>**What it cannot do is broadcast**, and
+   that is a real gap rather than an oversight: "a new chapter is live" is not derivable from
+   anything on a handset. The answer when it is wanted is **FCM topic messages**, which are also
+   free — one publish, Google fans out, no token storage and no per-device work — and it is
+   deliberately not built, because an unused push dependency is placeholder architecture. It is a
+   sibling of `INotificationScheduler` rather than a widening of it: a broadcast has no fire time
+   and no local predicate, so it shares nothing with that interface but the word.
+50a. **A sentence is not content, so adding a reminder is a build; which ones are sent, and when,
+   is content.** The copy is a loc key derived from the kind's permanent id
+   (`NotificationKinds.TitleKey`), because a sentence has to be translated and translations ship
+   in the app — 39c's split said about words instead of pictures. What `progression.json` *can*
+   do is the thing most likely to be wanted after launch: switch a kind off, reorder the ladder,
+   move the hours, change how often one repeats. **It is the one block in that file that reaches
+   no server** — nothing here is adjudicated, claimed or paid — so `seed-config.mjs` does not
+   publish it and the rules have nothing to learn; its push path is the remote-content one.
+50b. **The copy is baked when the schedule is armed and read up to a week later, so any number
+   inside it must be a function of the *fire* instant and never of the *schedule* instant.**
+   "Play today to keep night 12" is correct when written and a lie four days on. Every string
+   this game ships is therefore argument-free, and none of them names a count content can retune
+   (the heart cap moves with a container, the slate size is `activePerPeriod`) or a season or a
+   chapter, because those are authored strings that can be renamed under a frozen sentence.
+50c. **Nothing about the schedule is stored, which is what makes re-arming safe.** No record of
+   what was armed, no cursor, no "already sent" set: the plan is a pure function of the save and
+   the clock, so `Arm` cancels the lot and writes it again, and a device restored from a backup,
+   cloned to a new phone or rolled back a version simply computes the right answer. **A scheduler
+   that appended would be invisible to every test** — the duplicates exist only on the device,
+   only while nobody is looking — so cancel-then-write is one call rather than two a caller has
+   to remember to pair.
+50d. **Armed when the app is backgrounded and at no other time.** That is the last moment a
+   mobile app is reliably told anything, and it is the only moment the state the plan is built
+   from is final. After `SaveService.Flush`, never before: a reminder nobody will read for ten
+   hours must never be what a save is queued behind, which is also why `Notify.Rearm` swallows
+   its own exceptions.
+50e. **Slots are hours of the player's *local* day, and it is the one clock here that is not
+   UTC.** Everything else in this game is UTC so the server can adjudicate it (`DailyRules`);
+   nothing about a reminder is adjudicated, so the worst a player can do by lying about their
+   timezone is get their own nudge at the wrong hour — against 09:00 UTC being three in the
+   morning for a third of the world. The offset is captured once, so a daylight-saving change
+   inside the horizon shifts the remainder by an hour and the next background corrects it.
+50f. **The ceiling is enforced by silence, so it is arithmetic in a gate.** iOS keeps the 64
+   soonest pending local notifications and drops the rest with no error, no callback and no log
+   line — so `horizonDays x perDay` overflowing it is a schedule that works on every Android
+   device, in every test, and stops a week out on iPhone for the player who has already lapsed.
+   The count, not the span, is what binds — so the schedule tapers to one a day after the
+   first week and reaches twenty-one days at 35 pending (50n). Both content gates refuse a
+   block that would overflow `NotificationWindow.MaxPending`.
+50g. **"Two to three a day" is an outcome of the cooldowns, never a quota.** A slot that finds no
+   candidate whose sentence is true is left *empty*, so the count falls out of the table rather
+   than being enforced against it — which means a retune cannot accidentally produce a day of
+   six, and a player with nothing waiting genuinely hears from the game less than one with
+   everything. <br>**And a standing fact is not news.** `HeartsFull` was first written as "the
+   bar is full at this instant", which is true of every day after the refill lands: a player who
+   stayed away for a week was told their hearts were full on seven consecutive afternoons in
+   identical words. Bounded to the day it happens, the plan **thins out** the longer somebody is
+   away — a game that nags harder the longer you ignore it is a game you uninstall. `ChestWaiting`
+   is the mirror case and is answered with a two-day cooldown instead, because a waiting chest
+   really does go on waiting.
+50h. **The permission is spent once in a player's life, so it is asked where the answer is
+   obvious.** Both platforms show their system dialog exactly once per install and a refusal
+   cannot be taken back from inside the app — so it is asked when a chest is being opened, where
+   there is demonstrably another one tomorrow, and never on the splash screen, where the player
+   has not yet seen a chest, a task or a streak. **The switch and the OS answer are two different
+   facts**: a player who said no to the OS must still be able to say yes to us, and the settings
+   row is then obliged to hand them to the system settings rather than flip a control that
+   changes nothing (16o). Both are **device-local** and must never be in the save — `ReleaseGate`'s
+   argument, and it dodges the same bill (12a's four places).
+50i. **An Android status-bar icon is a silhouette, and the default behaviour of shipping none is
+   a white blob.** Android >= 5.0 keeps a small icon's alpha channel and throws the colour away;
+   the Unity package resolves the icon by name and, finding nothing, falls back to
+   `getApplicationInfo().icon` — the launcher icon, whose alpha is a solid square. So a missing
+   or misspelled `ic_stat_glimmer` is not an error, a warning or a blank: it is a working
+   notification with a featureless white circle on it, on every device, with nothing anywhere
+   saying so. It ships in a `.androidlib`, because `Assets/Plugins/Android/res` is deprecated and
+   an Android library's `res` is what gets merged into the application package.
+50j. **A 24dp mark is not a small picture, it is a different picture** — and that cost three cuts
+   to establish, every one of them a render. Downscaling all three launcher turrets reads as a
+   bird; cutting the centre turret out by assigning every pixel to its nearest coloured turret
+   works perfectly and reads as a blob, because the artwork carries its shape in *interior*
+   outlines a filled alpha throws away; punching those back out as a stencil is confetti, because
+   they are a quarter of a pixel wide at that size. So the glyph is **drawn for 24dp** — a plinth,
+   a domed body, a raised barrel, nothing thinner than 1/12 of the canvas — and
+   `make_notification_icons.py --contact` is the gate that matters, on a dark ground and a light
+   one, because those are the two tints Android applies. `--check` proves reproducibility and says
+   nothing about whether it reads.
+
+50k. **A `versionDefines` flag says a package is installed and adds no assembly reference, and
+   the two mistakes that follow from confusing them are both invisible offline.** The binding
+   compiled green in every gate and failed at the APK with `CS0234: the namespace 'Notifications'
+   does not exist in 'Unity'` — because `compile.py` compiles it *without* the package, which
+   proves the fresh-clone property and is therefore the one pass that can never fail the way a
+   device does: with the define unset it takes the null branch, so the `using`, every API call and
+   every enum spelling are invisible to it. **A check that cannot fail is not a check** (19e's
+   shape, on a build target instead of a runtime), so there are three passes now — no package,
+   `UNITY_ANDROID`, `UNITY_IOS`. <br>**And the reference has to be platform-aware in the source as
+   well as the asmdef.** `Unity.Notifications.Unified` ships `includePlatforms: [Android, Editor,
+   iOS]`, so on a Standalone build the define is set, the package is present, and the namespace
+   still does not exist — which is why the `using` is guarded by the platform and not by the
+   define alone.
+50l. **Read the package on disk, never the docs page — the published documentation describes
+   `master`.** The unified `NotificationCenter` was written against first and is the right shape:
+   one path for channels, authorisation and both schedulers. In the shipped **2.4.3** its
+   `Notification` carries no icon field and `NotificationCenterArgs` has no `AndroidSmallIcon` —
+   that exists only on master, in no release — so the one thing this binding exists to get right
+   cannot be expressed through it at all. The second device pass is what said so, in the commit
+   that added it. Going direct to `AndroidNotificationCenter` and `iOSNotificationCenter` also buys
+   the accent colour, the channel's importance and a real auto-cancel, none of which the unified
+   path exposes; what it costs is that every call is written twice, which is why the iOS pass
+   exists beside the Android one (`editor-ios`' argument, one assembly along).
+
+50m. **An `.androidlib` manifest is parsed by Unity with `System.Xml`, so a double hyphen in a
+   comment aborts the entire Android build.** XML forbids `--` inside a comment, and Unity reads
+   this file only to learn the library's package name
+   (`AndroidProjectGradle.GetPackageFromAndroidManifest`) — so a malformed one is not a warning,
+   a missing icon or a bad drawable: it is `XmlException` thrown out of Unity's own gradle
+   generator, with a stack trace naming Unity's source files and never this project. **Every
+   offline gate was green and the Editor compiled clean**; it appeared only at `BuildPlayer`,
+   from an em dash written as two hyphens in a comment nobody would think to lint. The tool
+   refuses one now, by name, before it writes the file — which is the cheapest gate here and
+   was bought at the dearest moment.
+
+49h. **The wall was drawn twice, and both faults are ones this file already names.** The
+   sentence sat 89 units over the mark because `bodyY` was computed as the band's *top* and
+   handed to `UIKit.Box`, which **always pivots at centre** (44d) — the other three offsets on
+   the same screen were centres, so the arithmetic looked uniform and read as correct. And the
+   mark itself was a ring, a shaft and two rotated bars **generated** rather than drawn: beside
+   a panel cut from a licensed kit that reads as a placeholder, and the owner rejected it on
+   sight. **A shape assembled out of primitives has no artist in it**, which is 32b said about a
+   mark rather than a goal — and the fix is the same, to cut one from a pack and *look* at it.
+   `Tools/make_update_icon.py` does, and the choosing is the entry: every candidate in the packs
+   was drawn at the size the panel draws it, on the panel's own parchment, and the three
+   finalists went onto a mock of the real panel (46b's rule, that a face is chosen by putting
+   several up at once rather than one). The merge kit's arrow carries a **violet** keyline that
+   fights the orange ribbon and the green key either side of it; the shipped `ic_restart` reads
+   thin and muddy on cream, because its baked drop-shadow has nothing dark to sit against. **A
+   gold arrow pointing down says *download*** where an up arrow says *upgrade*, which is a
+   different sentence. <br>**The band is deeper than the English needs and the line is centred
+   in it**, because `UIKit.Shrinkable` truncates (19n): a band cut to fit English silently drops
+   the end of a German one, and a top-aligned line in a deep band leaves a pocket of dead air
+   under it on every language that does not wrap.
+
+50n. **The horizon is reach, and reach is bought with a taper rather than with a bigger
+   number.** Past the horizon this scheme is simply silent — that is the one thing a server-side
+   push can do that it cannot — and the binding constraint is a *count* of pending notifications,
+   not a span of days. So a flat three a day spends the whole allowance in one week, while
+   tapering to one a night after the first spends it over **three**: 21 + 14 = 35 against
+   `MaxPending`'s 60. It costs nothing and roughly triples how long a lapsed player stays
+   reachable, which matters because the player worth reminding is precisely the one who is not
+   opening the game. <br>**It is also the right shape rather than merely the affordable one**: the
+   frequency that reads as attentive on day one reads as desperate on day fifteen. The tail's one
+   slot goes to whichever candidate is off cooldown — usually the evening, and the morning on a
+   day when the evening kinds are all resting — which is a consequence of the fill order rather
+   than a rule of its own.
+50o. **Two of this feature's three known gaps are deliberately not fixed, and both refusals are
+   worth more than the fixes would be.** <br>**Android's OEM delivery loss** is answered as far as
+   is safe and no further: reboot rescheduling is on (50m's neighbour), and the two remaining
+   levers are both Play policy violations for a game — `USE_EXACT_ALARM` is reserved for alarm
+   clocks and calendars, and `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` is reserved for apps whose
+   function *is* background work. Taking either to recover a few per cent of delivery would put
+   the store listing at risk to make a reminder punctual. **A reminder is not an alarm, and the
+   policy is right.** <br>**The remote kill switch** is real and is not a notifications change: it
+   is `ContentConfig.RemoteBaseUrl`, which needs a CDN that does not exist, and carries a known
+   prerequisite (`Sync Manifest` bumps a chapter's `version` only when its *level list* changes,
+   so a content-only rewrite never reaches a cached client). The slate already rides that pipe the
+   day it opens, so nothing here is owed — what is owed is a drop of its own. **Until then the
+   quietening lever is an app update, and the player's own switch works regardless.**
+
+49i. **The game is called Gemfire and this panel was the last string calling it Glimmer
+   Grove.** `productName` moved and the shipped table did not, which nothing catches: `loc.py`
+   proves every key *resolves*, never that what it resolves to is still true. The wall's sentence
+   names **no** game now — a player looking at it knows which app they are in, so the name
+   carried no information and could only go stale a second time — and it says the one thing
+   nothing else on the panel did, that they cannot carry on without updating. **The wider rename
+   is deliberately not swept** (48h's precedent): the repo folder, `CLAUDE.md` and the bundle id
+   `com.tekoworld.glimmergroove` all still say Glimmer Grove, and the bundle id is permanent and
+   can never move. Whether the docs follow the product name is a decision, not a tidy-up.
+
 ### Art credits
 46. **An art credit belongs wherever its licence says, and for this game that is nowhere in the
    app.** Every pack here is bought or CC0 and none of them asks: CraftPix says it in as many
@@ -2137,6 +2652,8 @@ changed** (5f).
 Assets/Game/Scripts/Domain/        GlimmerGrove.Domain       (no UnityEngine.UI)
   Board/ Content/ Modes/ Wards/ Utilities/ Persistence/ Progression/ Homestead/ Cloud/
   Localization/ Analytics/ AssetPipeline/ Store/ Ads/ Daily/ Events/ Social/
+  Notifications/ Release/
+Assets/Game/Scripts/Notifications/  GlimmerGrove.Notifications (Domain; the mobile-notifications binding)
 Assets/Game/Scripts/Presentation/  GlimmerGrove.Presentation (Domain + UnityEngine.UI)
 Assets/Game/Authoring/             GlimmerGrove.Authoring    (Editor-only; Domain)
 Assets/Game/Editor/                GlimmerGrove.Editor
@@ -2194,6 +2711,10 @@ Do not guess — verify offline.
   what the frozen board really shows — the one question there is *density*).
   **Both content gates warn** on a level dealing a charm its own length can never produce, which is
   the cog's own question with the denominator changed.
+- **Balance readouts:** `Tools/verify/compile.py` refuses a file that calls
+  `ResourceSlots.Register` and never attaches a `WalletWatch` (44j). A pill nothing subscribes for
+  is a photograph of the wallet, and **every other gate is green on one** — it compiles, it
+  validates, it renders, and it only reads wrong once somebody spends something.
 - **Sprite names:** `Tools/verify/artnames.py` proves every sprite a *call site* asks for exists on
   disk. **Written the day the gap cost something**: a view spelt its own folder out, so every burst
   drew a white rectangle over the board (7b) — and every other gate was green, because the audit and
@@ -2218,8 +2739,55 @@ Do not guess — verify offline.
   and on a ladder its own window cannot deal. `Tools/make_mark_vectors.py --check` is the fourth
   copy of the chest generator; `Tools/render_season.py --contact` is the only thing that can say
   whether the page reads (44d: it shares `hudkit` with the tasks and hub mirrors).
+- **The streak:** `content.py` walks the ladder and refuses a rung naming a retired kind or a
+  chest tier the `tasks` block does not define — which is invisible in either half of
+  `progression.json` on its own — and prints what a lap is worth in marks, because a streak
+  chest moves the *season's* pace (48f). `Tools/make_streak_vectors.py --check` is the **fifth**
+  copy of the chest generator and pins the subject `{dayKey}:{night}`; **it has to run last**,
+  because each of the three chest generators splices its block in by cutting the vector file
+  from its own marker to the end — the order is task, then mark, then streak.
+  `Tools/render_streak.py --contact` draws all five states a player can be in and is the only
+  thing that can say whether the page reads (44d: it shares `hudkit` with the tasks, hub and
+  season mirrors).
+- **The update wall's mark:** `python Tools/make_update_icon.py --check` proves the shipped
+  `Ui/ic_update` is what the tool cuts, and `--contact` draws it on the panel's own parchment at
+  three sizes — the only thing that can say whether it reads (49h). **It passes with the licensed
+  pack absent**, which is `make_siege_art.py`'s bargain: the PNG is committed precisely so that
+  building this game never needs a zip from anybody's Downloads folder.
+- **The update wall:** `node firebase/seed/seed-release.mjs --check` is the gate and the only
+  one — nothing about a forced update is content, so `content.py` never sees it. It refuses the
+  three mistakes that cost an installed base: a minimum with **no store link** (a wall with no
+  door, 49a), a minimum **ahead of the tree's own `bundleVersion`** (an update to a release that
+  does not exist), and a link the device will not open. It also runs the ten version vectors that
+  hold its parser to `AppVersion.TryParse` — a second copy of that arithmetic decides the number
+  every phone compares itself against, so a disagreement is not a rounding error, it is the wrong
+  people being walled out. The client half is `ReleaseRuleTests`, **22 cases, all of them
+  offline**, deliberately split from `ReleaseGateTests` so the comparison is not stranded behind
+  `PlayerPrefs` and therefore behind the Editor (29e).
+- **Reminders:** `content.py` walks every kind this build knows and errors on one whose two
+  derived strings (`notify.{id}.title` / `.body`) do not resolve — `loc.py` cannot see a derived
+  key at all — and refuses a slate whose hours fall outside the waking day, whose slots do not
+  rise through it, or whose `horizonDays x perDay` would overflow the 60 pending notifications
+  `NotificationWindow` allows. **The Editor half is free**: `NotificationTable.Resolve` reports
+  into `ProgressionTable.TryResolve`'s `problems`, which `ContentValidation` already turns into
+  errors, and it adds the loc check for the same reason it does for a turret. The pacing itself
+  is `NotificationTests`, twenty-three fixtures with no phone and no `JsonUtility` in them — which
+  is deliberate, because a fixture that needs the Editor is the one nobody runs (29e).
+- **The status-bar mark:** `python Tools/make_notification_icons.py --check` proves the shipped
+  drawables reproduce; **`--contact` is the gate that matters**, drawing the glyph at 24, 36 and
+  48 real pixels on a dark ground and a light one. A missing or misspelled icon is not an error
+  — it is the launcher icon's alpha, which is a solid square, drawn as a white blob (50i).
 - **Word list:** `Tools/make_name_blocklist.py --check`; the filter itself is
   `npm --prefix firebase/functions test`.
+- **A keeper seen from outside:** `python Tools/render_keeper.py --contact` draws the public
+  profile, the chooser a board row opens and the report panel side by side, and it is the only
+  thing that can say whether any of the three reads — it caught four layout faults on its first
+  run, three of them the same one (a left-aligned label anchored to a card's edge is positioned
+  at its own *centre*, invariant 44d) and the fourth a control drawn 66 units past the plate.
+  Both panels print their own height against `PanelStack.TallestPanel`, which is the one number
+  a modal can silently get wrong. The two new card fields have no offline gate of their own —
+  `firebase/functions/test/grove.mjs` pins what the server publishes, and the live suite is what
+  sees the shape Firestore actually wrote.
 - **Name fold:** `Tools/verify/names.py` runs the fold against the shared vectors **on Unity's own Mono**,
   not the bundled .NET. That is the whole point: the first version ran on .NET 8, whose ICU agrees with
   Node, and passed happily with a mapping deleted. **A check that cannot fail is not a check** (19e).
@@ -2432,8 +3000,8 @@ claimed five modes and a hundred levels "across eleven chapters" when the truth 
 - **Progression** — derived XP, keeper levels and credits from the star ledger; high-water floors only.
   Hearts and hints are produced/spent ledgers. Chapters open on stars (21); a mode's opening levels are
   free to fail (24).
-- **Retention** — tasks and the chest ladder (45), the bloom season (47), streak, golden levels,
-  percentile standings, per-level records. The daily chest ladder is retired in place (45).
+- **Retention** — tasks and the chest ladder (45), the bloom season (47), the streak (48), golden
+  levels, percentile standings, per-level records. The daily chest ladder is retired in place (45).
 - **Tasks &amp; Bonuses** — the hub's box and a page of its own: ten daily and ten weekly tasks on the
   slate, three of each dealt a period by a global rotation, every one paying one of four chest tiers.
   A chest is rolled from (account, period, task), claimed as `task:{period}:{key}:{id}:{ccy}`, opened in
@@ -2442,6 +3010,14 @@ claimed five modes and a hundred levels "across eleven chapters" when the truth 
   grandest at the crest, under a small title and beside a starburst, with no caption, no clock and
   no button (45g, 45i). The page leads with its banner and then the wallet, on the quiet ground
   every screen that is a list rather than a place stands on (45h).
+- **The streak** — a lap of nights that never ends, on the tasks page's furniture (48). The
+  count climbs for ever and the seven-night ladder laps under it; a night pays credits, gems or a
+  **chest**, and a chest opens the ordinary ceremony. Only the oldest waiting night can be taken,
+  so a player holding three taps three times and opens three. A **shield** bought for 120 gems
+  keeps the streak across seven days nobody plays — those days are *forgiven* rather than
+  credited, so the count carries on from where it was and buys no nights. Four monotonic dates in
+  the save and nothing adjudicated: the rate bound that has always governed a night holds whether
+  or not anybody paid for anything (48e).
 - **The Bloom** — a forty-rung season with a free track and a **$4.99 Bloom Pass**, eighty chests
   in all (47). It is graded on **marks**, and a bloom is a claimed chest: wood 1, silver 2, gold
   3, royal 5, so a player who claims everything is dealt about six a day. The ladder steps five
@@ -2474,6 +3050,18 @@ claimed five modes and a hundred levels "across eleven chapters" when the truth 
   once enough keepers have run it. Both are nine deciles off the same five-thousand-card sample,
   so the second cost no reads; both refuse to answer under 200 samples, which is what they do on
   the day they ship.
+- **A keeper, seen from outside** (19o–19q). A row on either board opens a **chooser** — their
+  portrait, their name, the figure that board ranks them on, and two doors: their **grovement**
+  and their **profile**. The profile is a read-only page built from the same published card the
+  grovement is: keeper level and honorific, what their grove is worth and its stars, the Endless
+  Watch with a percentile off the published distribution, the companions they have **gathered**
+  (held only — nothing unheld is drawn), the four turrets they carry with the rungs each stands
+  at, and a door to the grovement. Each door reaches the other, so neither is only reachable
+  through a list. <br>**Reporting has two subjects**, a name and a grovement, offered on one
+  panel from either screen; each is its own collection, its own count and its own takedown, and
+  the daily quota is the reporter's account rather than a budget per subject. A name takedown
+  publishes the generated handle; a grovement takedown publishes an empty floor. In both cases
+  the keeper keeps their score, their row, their currency and everything on their own screens.
 - **One live mode, three hidden** (38). The game a player opens today is **Thornwatch**:
   `s01_thornwatch`, `s03_broodmarch`, `s04_barrowfell` and `s05_ashenhold` (ten rungs each) on the
   ordinary ladder, and `s02_endlesswatch` on an **Infinite** track beside it (43). The map draws no *mode* switcher,
@@ -2502,7 +3090,27 @@ claimed five modes and a hundred levels "across eleven chapters" when the truth 
   else (42, 42c, 42e), upgraded to five stars (37bg), previewed firing before purchase (42a, 42d),
   carried in from a readout on the map (42b).
 - **The front of the game** — one bought interface kit (44), cut by `Tools/make_hud_kit_art.py`.
+- **Reminders** — two to three local notifications a day, scheduled on the device and costing
+  the server nothing at any player count (50). Ten kinds, each a statement about state the phone
+  already holds: hearts refilled, a new slate dealt, a streak about to break, a chest waiting,
+  season rungs open, a season closing, the boards, the Infinite lane, and one evergreen
+  invitation. Three local slots (09:30 / 13:30 / 19:30) for a week, then one a day out to
+  **twenty-one** (50n), re-armed every time the app is backgrounded, per-kind cooldowns that leave a quiet day genuinely quieter. The slate
+  is content in `progression.json` and reaches no server. Android draws a purpose-drawn 24dp
+  silhouette out of `GlimmerNotifications.androidlib`; iOS draws the app icon itself.
 - **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (placeholders).
+- **The update wall** (49) — one public document per store says the oldest build still allowed
+  to run and where to get a newer one; a client that has been told **writes it down**, so a
+  cold start with no signal enforces it and a force-quit is not a way out. The panel is raised
+  on the hub, sits above every other modal, answers the back key without doing anything, and is
+  re-asserted every frame rather than raised once — so a screen change cannot dismiss it and a
+  rolled-back requirement takes it down again on its own. The game underneath keeps saving and
+  syncing; what the wall takes away is input. Published by `firebase/seed/seed-release.mjs`,
+  which refuses a wall with no store link and a minimum ahead of the build this tree makes.
+  **It ships asking for nothing on both stores**, which is the state the first publish is
+  supposed to be in. The panel is a title, a gold arrow (`Ui/ic_update`, cut by
+  `Tools/make_update_icon.py`), one line and one key — **stood on a device 2026-09-15**, which
+  is also where its two drawing faults were found (49h).
 
 ### Content shipped
 
@@ -2536,9 +3144,11 @@ not a tile: it is a heart and a critter behind a ford standing on a *cycle* of t
 
 ### The numbers
 
-Free play collects about **672 credits and 7 gems a day**; both content gates derive and print this, so
+Free play collects about **936 credits and 12 gems a day**; both content gates derive and print this, so
 never hard-code it. About **601 credits and 5 gems** of that is the tasks — the daily slate over a day
-and the weekly over seven — and the retired daily ladder no longer counts. Everything below except the shop ladder is **content** and retunable without an app
+and the weekly over seven — and about **335 credits and 7 gems** is the streak, which is a *chest*
+expectation as often as it is a figure now (48a); the retired daily ladder no longer counts.
+Everything below except the shop ladder is **content** and retunable without an app
 update. **Re-seed after any change to it.**
 
 - **Companions** — 31, one free, 30 priced 800 → 30,000 (~270,500). Unlock is keeper level **and**
@@ -2555,19 +3165,26 @@ update. **Re-seed after any change to it.**
   nothing (24). A **heart container** raises the cap to 10, 20 or 50 permanently (18d).
 - **Hints** — pool of 3 account-wide, one back every 8h, ceiling equals the cap. A hint charges no moves
   and is spent in the **glade** and nowhere else; Thornwatch's idle nudge is *not* this (37ao).
-- **Turrets** — 20, one free, **9** priced 1,200 → 9,000 **credits** behind keeper levels 2 → 18,
-  two levels a rung, and 10 priced 600 → 2,000 **gems** behind keeper levels 20 → 40. Ten abilities,
-  two rungs each (chain three), **ordered by how much of the hill an ability reaches** (37ax) with
-  two named exceptions (37ay). **Bought per colour**, so a full line is 76 purchases, and **nothing
-  is sealed behind anything** — the keeper level is the whole wall and the three bands are the
-  ladder (42c, 42e); the player stands four. Upgraded to **five stars** (37bg). **Tiers two and
-  three are out of reach of every player alive**, since today's content pays for about keeper 9 —
-  the same state the home ladder is in, and deliberate.
+- **Turrets** — 20, one free, **19 priced in credits alone** (42f): 1,200 → 9,000 behind keeper
+  levels 2 → 18, two levels a rung, then 11,000 → 30,000 behind 20 → 40, the top anchored on
+  `home_citadel`'s 30,000 at the same keeper level. One of each is 236,600 credits; a full
+  four-colour shelf is 946,400, against a grove catalogue of 476,520. Ten abilities, two rungs each
+  (chain three), **ordered by how much of the hill an ability reaches** (37ax) with two named
+  exceptions (37ay). **Bought per colour**, so a full line is 76 purchases, and **nothing is sealed
+  behind anything** — the keeper level is the whole wall and the three bands are the ladder (42c,
+  42e); the player stands four. Upgraded to **five stars**, which are credits too (37bg) — 49,000 /
+  102,000 / 248,000 a turret by band. **Tiers two and three are out of reach of every player
+  alive**, since today's content pays for about keeper 13 — the same state the home ladder is in,
+  and deliberate.
 - **Utilities** — four, held up to **100** each, account-wide, each with a **cooldown** (10s / 15s /
   20s / 30s) burned on the run's own clock (39j), and **none carries a keeper gate**. Firepot 12
-  gems (440 damage in one box of the hill, charged 2 matches), mending 8 (6 ward health, charged
-  nothing), surge 10 (18 fuel, charged 2 matches), stormcall 40 (700 to every raider, charged by the
-  same arithmetic). Three of the four are a weighted option in one daily chest.
+  gems (440 damage per raider caught in the five-box plus, charged 2 matches), mending 8 (6 ward
+  health, charged nothing), surge 10 (18 fuel, charged 2 matches), stormcall 40 (700 to every
+  raider on the hill, charged by the same arithmetic). Three of the four are a weighted option in
+  one daily chest. <br>**Every damage figure here is against a *baseline* raider and climbs with
+  the chapter it is used on** (39m), so on Barrowfell's tenth the firepot lands 528 and the
+  stormcall 840 — both content gates print the ladder. Mending and surge are in units that do not
+  climb. A bomb is the firepot's own magnitude, so it climbs with it.
 - **Tasks** — 10 daily, 10 weekly, 3 of each dealt a period. Four chest tiers, each a floor and one
   weighted pick: **wood** 70–110 credits (+ credits 40% / heart 25% / mending 20% / 1–2 gems 15%),
   **silver** 140–200 credits and a firepot (+ 2–4 gems 35% / hearts 25% / surge 20% / 12h boost 20%),
@@ -2575,7 +3192,7 @@ update. **Re-seed after any change to it.**
   **royal** 550–750 credits, 8–12 gems and a stormcall (+ 12–20 gems 40% / 3 firepots 25% / 5 hearts
   15% / 24h boost 20%). Dailies pay wood and silver; weeklies silver, gold and royal. Hearts stack to the
   ceiling, not the refill cap, so a chest at a full bar still pays (the daily chest's rule kept).
-- **Streak** — a 7-night lap: 500 credits, 1 heart, 5 gems, 2 hearts, a 12h boost, 3 hearts, 10 gems.
+- **Streak** — a 7-night lap of **coins, gems and chests** (48): 400 credits, 8 gems, a **silver chest**, 800 credits, 16 gems, a **golden chest**, a **royal chest**. One lap is 1,200 credits, 24 gems and three chests, and the three chests are worth **10 marks** to the season (48f). Nothing below silver, and nothing the client banks itself. A **streak shield** costs **120 gems** and covers **7 days** from the day it is bought — it is not extended by playing and cannot be bought while one is running (48c).
 - **Ads** — four placements, all opt-in, no interstitials: 2 hearts, **300** credits, win-bonus
   credits, 1 hint.
 - **Bonus wheel** — eight equal slices at 100/200/150/300/100/250/150/500 percent of the authored 200, each
@@ -2593,9 +3210,11 @@ update. **Re-seed after any change to it.**
 - **Heart rescue** — **20 gems** for **+2 hearts** on the defeat panel (23a), at the same gems-per-heart as
   the shop's smallest pack, which both gates check against — never the bulk pack, which is a volume
   discount every honest tuning is dearer than.
-- **Continue** — **20 gems**, flat and repeatable, for the whole ward line back at full health on a siege,
-  or the authored allowance in a hidden mode's own unit (23). Deliberately **not seeded**, so a retune is a
-  build rather than a config push.
+- **Continue** — **20 gems and doubling on every one bought inside the same run** (23c), for the whole ward
+  line back at full health on a siege, or the authored allowance in a hidden mode's own unit (23). One
+  run's ladder is 20, 40, 80, 160, 320, 640, 1280, 2560, and it tops out at the 5,000-gem ceiling on the
+  ninth; both content gates print it. Deliberately **not seeded**, so a retune is a build rather than a
+  config push.
 - **Account prompts** — 2 chapter asks, 3 purchase asks, one shared 48h quiet period.
 
 ### Backend
@@ -2603,12 +3222,16 @@ update. **Re-seed after any change to it.**
 Firebase project `glimmer-groove-1cd60`, Firestore `eur3`, Node 22 in `europe-west1`. **Fourteen
 functions**: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`, `adReward`, `appleNotification`,
 `sweepVoidedPurchases`, `publishGroveStats`, `publishGrove`, `withdrawGrove`, `publishGroveRanks`,
-`claimName`, `reportKeeperName`, `deleteAccount`. A fifteenth, `eventPass`, was **deployed and
+`claimName`, `reportKeeper`, `deleteAccount`. **`reportKeeper` was `reportKeeperName`** until
+2026-09-15, and was renamed because it now takes a **subject**, a name or a grovement: an
+endpoint's name is not an id anything is keyed on, so the rename was a deploy, an invoker
+binding and a delete rather than a migration (19o). A fifteenth, `eventPass`, was **deployed and
 is now deleted** — it read a season's entitlement back for the client, which nothing needs since
 the pass stopped being a receipt: the client owns its own copy in the save and the server reads
 its own (47d). It was never in this list, which is how a deployed function came to outlive its
 own documentation; `firebase functions:list` is the authority. `firebase/README.md` is the guide;
-`firebase/e2e/smoke-test.mjs` is **91/91 live** (95 cases since the Endless Watch board, four of them unrun) and `firebase/e2e/delete-account.mjs` **14/14** — the
+`firebase/e2e/smoke-test.mjs` is **123/123 live** (2026-09-15, after the report callable's
+rename, the streak drop's own seed and the update wall's rules release) and `firebase/e2e/delete-account.mjs` **14/14** — the
 second erases the throwaway accounts it makes, so it is the only suite here that leaves less behind than it
 creates. Client half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK 13.15.0 as vendored UPM tarballs
 under `GooglePackages/` (gitignored — run `pwsh GooglePackages/fetch.ps1` on a fresh clone).
@@ -2680,7 +3303,101 @@ rather than the live card. <br>**And nothing will draw a standing until a night 
 hundred watchers on it**, which on a game nobody has played yet is some way off: until then the
 nameplate reads BEST WAVE and the profile draws no percentile, which is the honest state rather than
 a fault to chase.
-<br>**Owed on this drop (The First Watch, 2026-09-14), in this order.** (1) **`firebase deploy
+<br>**Owed on the streak drop (2026-09-15): the Editor's three, and nothing else.**
+(1) **`firebase deploy --only firestore:rules` is *not* needed**, and that was checked rather
+than assumed: the save's fourth streak date rides **inside the existing `streak` map**, which
+the rules bound as a map without naming its fields — so `hasOnly` has nothing new to learn
+(12a) and there is no rules-before-client ordering to honour. **The field was put there for
+exactly this reason**, the way the season's pass flag was put inside its `events` row (47e).
+(2) ~~`npm --prefix firebase/functions run build && firebase deploy --only
+functions:claimAwards`~~ **deployed 2026-09-15**, one function, because one function changed:
+it prices a chest night out of the ladder's tier and `advances` relaxed its equality to a
+climbing band so a *protected* streak's claim is not refused for ever (48e). The other thirteen
+were left on the bundle they had, which is the batching rule doing its job. **Until it ran, a
+chest night's claim was refused and the client drops a refused claim (45d)** — a reward the
+player would have watched arrive and then lost. (3) ~~`npm --prefix firebase/functions run
+seed`~~ **seeded 2026-09-15**. The published ladder had a heart on night two and a boost on
+night five; the seeder refuses both by name now, and a chest night is a `tier` the server
+resolves against the same document's `tasks` block. **A deploy without a re-seed pays the old
+ladder's figures against the new board**, which is the one failure this path has always had.
+Read back and confirmed: seven rungs, three of them tiers, `shieldGems` 120 and `shieldDays` 7.
+<br>**Two side effects of that seed worth knowing about.** It republished `config/grove` with
+the `wards` block the public-profile drop below is still waiting on — additive, and its step
+(3) is therefore already done. And `config/progression`'s streak block is the *only* thing that
+moved; no reward rule, no tier, no product and no season number changed.
+(4) In the Editor: `Validate Content`, `Validate Art` and the **EditMode suite**. **No new art
+and no Addressables work** — every picture on the page is the interface kit, the chest icons
+the tasks page already registers, and `Ui/shield`, which has been in the global manifest since
+before anything drew it. Offline: `compile.py`, `content.py` (0 errors, 0 warnings),
+`loc.py` (0 missing), `artnames.py`, `make_streak_vectors.py --check` and the whole offline
+suite (1990 pass) are green. (5) `firebase/e2e/smoke-test.mjs` gained **five** cases — the
+published ladder pays a chest, every tier it names exists, no rung names a retired kind, a
+chest night is refused on a fresh account's first day, and the shield's two numbers arrived
+— and **all fourteen streak cases pass against the deploy**. (The four cases that failed when
+this was written were the public-profile drop's, which has since deployed and seeded; the suite
+is 119/119.)
+<br>**And one thing only playing can answer.** The ladder is worth about **335 credits and 7
+gems a day** where it used to be worth 71 and 2, which lifts free play from 672/7 to
+**936/12** — and because a streak chest feeds the season (48f), the 200-mark ladder now tops
+out around **day 27** of its 42-day window rather than day 33. Neither is a fault; both are
+tuning the owner owes a decision on, and every number is content.
+
+<br>**Done on this drop (the public profile, 2026-09-15), in this order — and all four ran
+from a *shadow tree*, which is the part worth reading.** The working tree had somebody else's
+streak rework in flight in `progression.json`, `streak.ts`, `index.ts` **and
+`seed-config.mjs`**, and a re-seed publishes the working tree (the memory note this file has
+carried since the first one). So the deploy ran from HEAD with only this drop's patches
+re-applied onto it — which is the established recipe and cost one real mistake worth recording:
+**the shadow was rebuilt from patch scripts, and one of them was a version behind.** The turret
+roster was written twice, flat and then widened to `{ level, free }` (19p), and only the first
+was ever a script — so the first seed published a roster the server read as ungated and
+unowned, every published line came out empty, and the live suite is what said so. **A shadow
+assembled from patches is only as current as the patches**; diff the block against the tree
+before seeding from it.
+<br>(1) ~~`firebase deploy --only firestore:rules`~~ **released 2026-09-15** — *documentation
+rather than enforcement*,
+which was checked rather than assumed: `groveReports` is denied by the catch-all at the foot
+of the file whether the block naming it is deployed or not, and **the save gains no key at
+all**, so `hasOnly` has nothing to learn and there is no rules-before-client ordering to
+honour (12a). It is deployed anyway, because a collection nobody wrote a rule for reads as a
+collection nobody thought about, and the next person to add a report subject copies whichever
+block they can see. (2) ~~the functions~~ **deployed 2026-09-15**, as one batch of three —
+`publishGrove` (the card's two new fields and the grovement takedown), `reportKeeperName` (the
+subject) and `deleteAccount` (which now walks every report subject rather than the one it was
+written for) — and then **`reportKeeper` deployed and `reportKeeperName` deleted** in a second
+pass the same day, once the owner asked whether the name was worth keeping and the answer was
+that it costs a deploy today and a rollout for ever after. **A created callable needs
+`gcloud run services add-iam-policy-binding reportkeeper --region=europe-west1
+--member=allUsers --role=roles/run.invoker`**, which `firebase deploy` neither does nor warns
+about — and **the grant is not instant**: it 401'd the live suite twice over two minutes, which
+is indistinguishable from never having been granted. `get-iam-policy` is what answers that;
+probe one call directly before re-running the suite. Deployed **by name** rather than as a codebase, which is this file's own rule
+about batches and was load-bearing here for a second reason: `claimAwards` is the only function
+that reads the streak ladder, and leaving it on its existing revision is what kept somebody
+else's in-flight rework out of anything that runs. **Until it ran, a client asking to report a
+grovement was answered by a deployment that ignored the field and filed it against the
+*name*** — a wrong-collection write nothing anywhere would report. (3) ~~the seed~~ **seeded
+2026-09-15** — `config/grove` carries `wards`, the turret roster as id → `{ level, free }`, and
+reads **20 turret(s)** in the seeder's own line. It is additive in both directions, so the order
+against (2) did not matter; what does is that **a deployment that has not been re-seeded
+publishes no line at all**, and every public profile in the game draws four starters with
+nothing anywhere saying why. `config/progression` was written from **HEAD**, which is what is
+already live, so the streak rework in the tree did not reach it. (4) In the Editor: `Validate Content`, `Validate Art` and the
+**EditMode suite**. **No new art and no Addressables work** — every picture on the three new
+screens is the interface kit, the companion portraits and the turret bodies the loadout bar
+already registers, and `artnames.py` is green on 449 literal names. (5)
+`firebase/e2e/smoke-test.mjs` gained nineteen cases — what a card publishes for a profile
+(the gated companion set, the free turret's seat, the gated turret's refusal) and the
+grovement report (its own collection, its own count, an unknown subject refused and an absent
+one still meaning the name) — and ran **119/119 live on 2026-09-15**, all nineteen green, after
+the rename below and after the streak drop published its own ladder.
+<br>**One thing a render cannot answer and no gate can.** A grovement takedown publishes an
+empty `placed`, so a reported grove reads to a visitor exactly as a grove nobody has decorated
+does. That is deliberate — the alternative says "this player was reported" to every stranger
+who visits, which is a punishment pipeline rather than a takedown — but it means the only way
+to tell a hidden grove from an empty one is `groveReports/{uid}` and the wallet's
+`grove.deniedUnix`, which is a support question rather than a screen.
+<br>**Owed on the previous drop (The First Watch, 2026-09-14), in this order.** (1) **`firebase deploy
 --only firestore:rules` is *not* needed**, and that was checked rather than assumed: every number
 the season stores — the marks, the two claim floors and the pass flag — lives inside the `events`
 list the rules already allow, and that clause bounds the list without checking a row's fields, so
@@ -2764,12 +3481,106 @@ What a render cannot say is whether a slightly softer letterform still reads at 
 a phone in sunlight — and the one string that changed (`ui.shop.capacity_upgrade`, now "{0} to
 {1} hearts") is on a **real-money** card, so look at that shelf specifically.
 
+**Done on the update wall (49), 2026-09-15, in this order.**
+(1) ~~`firebase deploy --only firestore:rules`~~ **released 2026-09-15**, and unlike the last
+several drops this genuinely was needed rather than documentation: `config/release` is a new
+document, so until the rule naming it was live the catch-all at the foot of the file **denied
+every read of it** and the gate was inert on every device in the world. **The tree was diffed
+against the live ruleset first**, which is the step worth keeping: another agent's `groveReports`
+block was in flight in the same file, and checking proved it was *already deployed* (released
+earlier the same day), so the release added exactly one `match` and nothing of anybody else's.
+`firebaserules.googleapis.com` answers that question — fetch `releases/cloud.firestore`, then the
+ruleset it names — and needs an `x-goog-user-project` header or it 403s with a quota-project
+message that reads like a permissions failure. The released ruleset was read back and is
+**byte-identical to the working tree**. **No `hasOnly` change and no save key**: the requirement
+is device-local and never in the save (49c).
+(2) **No functions deploy, and that was checked rather than assumed** — nothing under
+`firebase/functions/src` names `config/release` at all. It is published by its own tool, for its
+own reason (49), and deliberately *not* by `seed-config.mjs`, so a re-seed run for an unrelated
+reason can never raise or lower a wall as a side effect. Leaving the thirteen functions on the
+bundle they had is also what kept another agent's in-flight streak and reports source out of
+anything that runs — the batching rule doing its job.
+(3) ~~`node firebase/seed/seed-release.mjs`~~ **published 2026-09-15**. It asks for **nothing on
+both stores**, so the first publish is the no-op the wall is built against rather than a wall.
+Read back unauthenticated: both platform blocks present, `minimum` 0, Android carrying its store
+link and iOS an empty one (49b).
+(4) **Proved against the live deployment.** An unauthenticated `GET` of `config/release` answers
+**200** — which is the case that matters, since a gate behind sign-in cannot close on a build
+whose problem *is* authentication (49f) — and an unauthenticated `PATCH` answers **403**.
+`firebase/e2e/smoke-test.mjs` gained four cases and runs **123/123 live** (was 119).
+(5) **Owed: the Editor's three** — `Validate Content`, `Validate Art` and the EditMode suite,
+which now carries `ReleaseGateTests` (the seven cases needing `PlayerPrefs`). **And
+`▸ Addressables ▸ Sync All Assets` plus a save**, because the drop now ships one new sprite:
+`Ui/ic_update` was written while the Editor was open, and art the importer hook has not filed
+draws as a white rectangle (7b) on the one panel nobody can dismiss. It is in the **global** set
+(`AssetManifest.UiSprites`) rather than a scope, because the wall is raised over whatever screen
+the player is standing on. Everything else on the panel is furniture already shipped. Offline,
+`compile.py`, `content.py` (0 errors, 0 warnings), `loc.py` (0 missing), `artnames.py` (450
+names), `sfxnames.py`, `make_update_icon.py --check`, `seed-release.mjs --check` and the whole
+offline suite (**2052 pass**) are green.
+<br>**Proved on a device, twice, 2026-09-15.** `android.minimum` was published at the phone's
+own version, the wall arrived on the hub, and it **survived a force-quit in flight mode** — the
+half no test here reaches and the whole of what makes this a wall rather than a suggestion. That
+pass found 49h (the sentence drawn through the mark, and a generated mark the owner rejected on
+sight); both were fixed and **the fixed panel was then built and stood on the device too**.
+<br>**Left production-ready**: `config/release` publishes **nothing forced on either platform**
+and a usable door on both, which is the state a release is raised *from*. The test wall was
+lifted rather than left standing, and `bundleVersion` put back to 1.0.2.
+<br>**iOS is armed and has never been exercised.** `ios.store` carries the real listing
+(`id6804516450`), so the door is published ahead of ever being needed — a wall on release day is
+one line rather than a scramble. But no iPhone has met this panel, and the link 404s in a browser
+until the listing is public, which is harmless (it is only opened by somebody who has met a wall,
+and a wall is only raised once Apple is serving the build). **Give iOS the same force-quit pass
+Android got before relying on it.**
+
+**Owed on the reminders drop (50), and it is shorter than any drop in this file.**
+**No `firestore.rules` release, no functions deploy and no re-seed** — checked rather than
+assumed: the save gains no key (the switch and the OS answer are both device-local, 50h), the
+slate is read by the client alone and `seed-config.mjs` cherry-picks the blocks it publishes, so
+nothing this drop touches is one of them. **No Addressables work and no art import**: the icon
+PNGs live under `Assets/Plugins/`, and `ArtImportRules` and the audit both look only inside
+`Assets/Game/Art`, so neither the white-rectangle half of 7b nor the dead-entry half applies.
+<br>What *is* owed is four things. (1) **Let Unity resolve `com.unity.mobile.notifications`
+2.4.3**, which is new in `Packages/manifest.json` — click the Editor window; until it resolves,
+`GLIMMER_NOTIFICATIONS` is unset and the binding compiles to a scheduler that reports
+`Supported: false`, which is the honest degradation rather than a broken build. **The package is
+pinned and the version matters** (50l): 2.4.3's unified API cannot carry the small icon, so the
+binding goes direct to the two platform APIs, and an upgrade is a re-read of what it exposes
+rather than a version bump. (2) **Let it
+import the new androidlib**, so the five drawables get `.meta` files. (3) The Editor's ordinary
+three: `Validate Content`, `Validate Art`, the EditMode suite. (4) **Look at a real notification
+on a real Android phone** — this is the one thing no gate here can answer, because the failure
+mode is a white blob drawn by the operating system with the app not running (50i). <br>Offline,
+everything is green: `compile.py`, `content.py` (0 errors, 0 warnings), `loc.py` (0 missing),
+`artnames.py`, `sfxnames.py`, `make_notification_icons.py --check`, and the whole offline suite
+at 2052 pass with `NotificationTests`' twenty-three in it.
+
 **Decisions the owner owes.**
-- **Is the ward shelf's ceiling reachable?** Re-banded at the owner's decision to 2 → 18, 20 → 29 and
-  30 → 40 (42e), against content that pays for about keeper 9: **tiers two and three are shut to every
-  player alive, and so is the top half of tier one.** Deliberate — a shelf whose top is reachable on the
-  content that exists is a shelf with nothing left in it the week after — but it is the same padlock the
-  home ladder has, now on the mode's own shop, and it resolves the same way. Every number is content.
+- **Is the streak's new ladder worth what it costs the economy?** It was rebuilt at the owner's
+  instruction — coins, gems and chests, nothing the client banks, nothing below silver — and the
+  arithmetic that follows is the decision rather than a fault. One lap is 1,200 credits, 24 gems
+  and three chests against 500 credits, 15 gems and six hearts, which lifts **free play from 672
+  credits and 7 gems a day to 936 and 12**; the gem half nearly doubles, and gems are what the
+  whole supplies shelf, the continue and the season pass are priced in. And because a claimed
+  chest feeds the season (48f), the 200-mark ladder now finishes around **day 27** of its 42-day
+  window rather than day 33 — which is 47f's own question asked again by a different feature.
+  Every number is content: the rungs, the shield's price and window, and the season's top.
+- **Is 120 gems the right price for the shield, and 7 days the right window?** About ten days of
+  free play for a week of cover, against a streak whose seventh night is the biggest single
+  reward outside a weekly task. Nobody has held a streak long enough to care about losing one.
+- **Is the ward shelf's ceiling reachable, and is the credit ladder the right one?** Re-banded at the
+  owner's decision to 2 → 18, 20 → 29 and 30 → 40 (42e), against content that pays for about keeper
+  13: **tiers two and three are shut to every player alive, and so is the top half of tier one.**
+  Deliberate — a shelf whose top is reachable on the content that exists is a shelf with nothing left
+  in it the week after — but it is the same padlock the home ladder has, now on the mode's own shop,
+  and it resolves the same way. <br>**And the whole shelf is credits now** (42f), which makes this
+  two questions rather than one. The prices were chosen to continue the existing ladder and anchored
+  on the citadel, and nobody has earned their way up any of it: a full four-colour shelf is 946,400
+  credits against free play's 936 a day plus what levels pay, and five-starring one turret in the top
+  band is 248,000 on top of that. **It is now the largest credit sink in the game by a distance** —
+  bigger than the grove's whole 476,520 catalogue — and the grove is what a public board is ordered
+  on (16g), so where a player spends is a real decision rather than a sequence. Every number is
+  content. The second question is what fills the hole this left in the **gem** sink.
 - **Are the home ladder's gates reachable?** Keeper 10 / 20 / 40 against content that pays for about
   keeper 9 — so the ladder is real, correct and, for every player alive today, three padlocks. It
   resolves by shipping chapters or by moving three numbers
@@ -2807,6 +3618,38 @@ a phone in sunlight — and the one string that changed (`ui.shop.capacity_upgra
   drawn — a change to ask for, not to slip in.
 
 **Play it.**
+- **The streak**, rebuilt (48), never played. **Is the ladder read as a week worth keeping?**
+  Three of its seven nights are chests now and the seventh is a Royal Chest, which is the
+  biggest thing in the game outside a weekly task — does a player notice that, or does the
+  board read as seven of the same thing? Is the one-night-at-a-time rule understood, or does a
+  player holding three waiting nights tap the newest and feel the page ignored them (the tap is
+  redirected, so they get all three — but they get the *oldest* one's chest first, which is not
+  what their finger pointed at). **The shield is the real question**: at 120 gems it is about
+  ten days of free play, and its whole promise is a negative — nothing happens, and what you
+  bought is a thing that did not happen. Is it bought before a trip, or bought in a panic at
+  23:50 (and is that a problem)? Does "7 days from the day it was bought, and playing does not
+  extend it" land, or does somebody buy a second one on day two and feel cheated when it is
+  refused? **The figure worth an event is how many shields are bought while the streak is
+  *not* at risk**, because that is the difference between a feature people plan with and a
+  feature people are frightened into.
+- **A keeper seen from outside** (19o-19q), never played, and the first screen in this game
+  that is entirely about somebody else. **Is the chooser read as two doors or as a confirmation
+  somebody has to get past?** It stands between a row and what the row has always opened, so a
+  player who reads it as a step rather than a fork is a player who taps the first button every
+  time — **the figure worth an event is the share of chooser opens that end on SEE PROFILE**,
+  because a lane nobody takes is a screen that did not need building. On the profile: does it
+  read as *theirs* rather than as a second copy of yours, now that nothing on it is a control;
+  is a companion grid with only what they hold understood as a collection, or does it read as a
+  short roster; and is the turret line the thing a siege player actually came to see — **the
+  figure worth an event is how long a profile is open**, because a page that is scrolled once
+  and left is a page whose four cards are in the wrong order. And the honest risk: two of the
+  five cards say something only a player deep into the game has, so a profile opened on an
+  account three days old is a page of empty-ish plates, which is exactly who opens a board
+  first. <br>**Reporting** is the other half and the one that cannot be A/B'd: is the panel
+  read as two subjects, or does the second red key read as "are you sure"? **A grovement
+  takedown is invisible to everybody including its owner** — the floor simply publishes empty —
+  so the one thing to watch is whether the reports that arrive are about the arrangement at all,
+  or whether the second button is being used as a second way to report a name.
 - **The First Watch** (47), never played, and the largest untried surface in the game — eighty
   chests over six weeks with a 350-gem pass on it. **Is a mark understood as coming from a
   chest?** That is the one rule nothing on the page can show, because the chests that earn them are
@@ -2911,6 +3754,16 @@ a phone in sunlight — and the one string that changed (`ui.shop.capacity_upgra
 - **Prismvale and Whorlwater, if they come back** (36i) — and the whorl's *reason* has to be watched before
   its difficulty: a player who reads it as "a mote that pops itself" has not met it.
 
+- **Reminders** (50), never seen on a device. **The question is whether the game feels
+  attentive or nagging**, and it cannot be answered by a plan printed in a terminal. Does the
+  09:30 line get opened, or is it swiped with the rest of the morning? Is the 19:30 streak
+  warning read as help or as pressure? **The figure worth an event is the share of installs that
+  turn reminders off in Settings within a week** — a switch nobody touches means the pacing is
+  right, and it is the only signal here that arrives before the uninstall does. The honest risk
+  is at the other end: the permission is asked once, at a chest, and if that moment converts
+  badly there is no second ask and the whole feature reaches nobody. **Watch the grant rate
+  before watching anything else.**
+
 **Measure it, once there is live data.** The three star lines (1.20 / 1.40 / 1.60), reasoned about and
 never played against, which have the shortest path to an uninstall. The chapter gate. The continue against
 the heart rescue — read the two funnels *apart*, because a defeat has already happened where a refused
@@ -2926,14 +3779,21 @@ restart is a board still standing. The restart gate's floor. And the bonus wheel
 
 ### Three confirmations, and only three
 
-`ForfeitOverlay` (a committed run being abandoned), `ReportNameOverlay` (an act against another person that
+`ForfeitOverlay` (a committed run being abandoned), `ReportOverlay` (an act against another person that
 cannot be retracted) and `DeleteAccountOverlay` (27), which earns one more completely than either: there is
 no store to re-deliver an account, no archive to restore it from and no support path that can bring it
 back. Its second tap is armed only when there is a grove to lose — **arming a button over an empty grove is
 what teaches a player to tap through it on a full one**. `ContinueOverlay` is not a fourth: it is an offer
 rather than a confirmation, and its default answer is the free one. Everything else either costs nothing to
 undo or is confirmed by the store's own payment sheet — and a panel of ours in front of that sheet is a tap
-for a question about to be asked properly.
+for a question about to be asked properly. <br>**`ReportOverlay` is the chooser *and* the
+confirmation, and that is what keeps the count at three.** A keeper shows two things a stranger can
+see, so the obvious shape is a chooser that opens a confirmation — two taps of ceremony for one act,
+and the second is the one people learn to tap through. Each affirmative names its own subject and its
+own consequence instead, so picking one *is* the confirmation: nothing on the panel can be tapped by
+accident and mean something other than what it says. `KeeperOverlay`, which offers the two doors into
+somebody else's game, is not a fourth — nothing it offers costs anything, so it dismisses on the scrim
+like any other menu.
 
 ### Not done, deliberately
 

@@ -40,6 +40,40 @@ namespace GlimmerGrove.Modes
             int hit = blow * BlowTenths / 10;
             return hit < 1 ? 1 : hit;
         }
+
+        /// <summary>
+        /// Damage authored against a <em>baseline</em> raider, in this one's own scale.
+        ///
+        /// <para>
+        /// <b>Deliberately the same multiplier <see cref="Health"/> applies, and that identity is
+        /// the whole feature.</b> A firepot is authored as a share of a raider — 440 against a
+        /// creeper's 200 is two creepers and a bit — and putting <em>both sides of that
+        /// comparison</em> through one multiplier is what keeps the share exact on every chapter
+        /// that will ever ship and on wave ninety of an endless run. A flat figure decays against
+        /// a hill that surges: at a chapter carrying three tenths, a firepot that was worth two
+        /// creepers is worth one and a half, and by the tenth chapter it is worth nothing anybody
+        /// would spend gems on.
+        /// </para>
+        /// <para>
+        /// <b>Its own member rather than a call to <see cref="Health"/>, and pinned to it by a
+        /// test.</b> The two say different things at a call site — one is what a raider carries,
+        /// the other is what it takes — and a reader who finds <c>surge.Health(damage)</c> has to
+        /// work out whether that is deliberate or a paste. What must never happen is the two
+        /// drifting apart, so <c>SiegeSurgeTests</c> asserts they answer identically for every
+        /// tenths this mode can produce.
+        /// </para>
+        /// <para>
+        /// <b>Never nought once it was anything</b>, for <see cref="Blow"/>'s reason: a utility
+        /// that reads as landing and takes nothing is one the player will believe is broken.
+        /// </para>
+        /// </summary>
+        public int Hurt(int damage)
+        {
+            if (damage <= 0) return 0;
+
+            int hit = damage * HealthTenths / 10;
+            return hit < 1 ? 1 : hit;
+        }
     }
 
     /// <summary>

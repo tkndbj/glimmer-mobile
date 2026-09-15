@@ -173,13 +173,14 @@ class Piece:
     bar serves as both rails. `flatten` paints an ornament out — see `flattened`. `face`
     repaints the inside of a disc, which is how a glyphed round button becomes a blank cap —
     see `faced`. `scene` composes the world instead of reading one source. `trim` crops to
-    the silhouette, which several of these need because the pack pads every artboard.
+    the silhouette, which several of these need because the pack pads every artboard, and
+    `matte` cuts the pack's own drop-shadow off before it does — see `matted`.
     """
 
     def __init__(self, pack, source, name, zoom=1.0, slice_x=False, slice_y=False, hue=None,
                  pull=HUE_PULL, sat=1.0, grey=False, lift=0.0, dim=1.0, well=None, border=None,
                  crop=None, resize=None, blur=0.0, flip=False, plus=False, mask=True,
-                 flatten=None, face=None, scene=None, trim=False):
+                 flatten=None, face=None, scene=None, trim=False, matte=None):
         self.pack, self.source, self.name, self.zoom = pack, source, name, zoom
         self.slice_x, self.slice_y = slice_x, slice_y
         self.hue, self.pull, self.sat, self.grey, self.dim = hue, pull, sat, grey, dim
@@ -188,6 +189,7 @@ class Piece:
         self.crop, self.resize, self.blur = crop, resize, blur
         self.flip, self.plus, self.mask = flip, plus, mask
         self.flatten, self.face, self.scene, self.trim = flatten, face, scene, trim
+        self.matte = matte
 
 
 KIT = [
@@ -241,11 +243,17 @@ KIT = [
           dim=.74),
 
     # ------------------------------------------------------- troughs and title bars
-    # What a readout sits in: the pack's long navy trough, cut as it ships. This is the one
-    # place the last kit needed `welled` and this one does not — the pack draws its readouts
-    # *dark* because it writes light numbers on them, which is what this game does too. Two
-    # kits in a row had to be sunk to stop being cream-on-cream; this one arrives right.
-    Piece("cartoon", "Artboard 38", "trough", 1.0, slice_x=True, trim=True),
+    # What a readout sits in: the pack's long navy trough. This is the one place the last kit
+    # needed `welled` and this one does not — the pack draws its readouts *dark* because it
+    # writes light numbers on them, which is what this game does too. Two kits in a row had to
+    # be sunk to stop being cream-on-cream; this one arrives right.
+    #
+    # **`matte` is the one thing it does not arrive with.** Cut as it ships, the trough
+    # carries a nine-pixel band of its own navy at half alpha — a drop-shadow, correct over
+    # the pack's cream screens, and over an orange plate a brown ring round every bar in the
+    # game. See `matted`. It costs nothing anywhere else: the dark keyline inside it is
+    # opaque and survives untouched, so a pill standing on a backdrop keeps its edge.
+    Piece("cartoon", "Artboard 38", "trough", 1.0, slice_x=True, trim=True, matte=.55),
 
     # What goes *in* one. Cut near-white with the pack's two-tone shading kept, so a call
     # site tints it: `Image.color` is a multiply, so a white fill takes any colour cleanly
@@ -536,6 +544,28 @@ def crisp(im, scale):
     rgb = Image.merge("RGB", (r, g, b)).filter(
         ImageFilter.UnsharpMask(radius=max(1, int(scale)), percent=70, threshold=2))
     return Image.merge("RGBA", (*rgb.split(), a))
+
+
+def matted(im, floor):
+    """Cuts a pack's own drop-shadow off a piece, leaving the edge under it crisp.
+
+    <b>A soft shadow is drawn for a light screen and reads as an outline on a coloured
+    one.</b> The pack paints every trough on a nine-pixel band of its own navy at half
+    alpha, which over the pack's cream backgrounds is a shadow and over this game's orange,
+    violet and blue plates is a muddy ring a shade off the plate it sits on — a second
+    border, at a radius the piece does not have, which is exactly the fault this kit spent
+    six call sites removing from the *code* side (`FeatureCard`). Nothing measured it,
+    because it is a correct cut of what the pack ships.
+
+    <b>It is a ramp rather than a threshold.</b> Everything at or under `floor` goes, and
+    what is left is stretched back over the full range, so the rim's own antialiasing
+    survives as a soft row or two instead of coming out as a staircase. Run before `trim`,
+    so the band is cropped away and the border re-measures itself against the real corner.
+    """
+    r, g, b, a = im.split()
+    cut = int(round(floor * 255))
+    a = a.point(lambda v: 0 if v <= cut else min(255, int(round((v - cut) * 255.0 / (255 - cut)))))
+    return Image.merge("RGBA", (r, g, b, a))
 
 
 def inside(im):
@@ -1001,6 +1031,10 @@ def build(packs, pieces):
         except KeyError:
             sys.exit(f"{piece.name}: {piece.source} is not in the {piece.pack} pack")
 
+        if piece.matte:
+            # Before the trim, so the shadow it cuts is cropped away with the padding and the
+            # measured border answers for the corner that is really there.
+            im = matted(im, piece.matte)
         if piece.trim:
             # The pack pads every artboard with transparent margin — a 400x166 bar arrives on
             # a 466x216 canvas. Left on, the margin becomes part of the sprite, so a

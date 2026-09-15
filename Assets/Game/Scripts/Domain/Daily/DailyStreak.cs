@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
+using GlimmerGrove.Tasks;
 
 namespace GlimmerGrove.Daily
 {
@@ -17,11 +19,11 @@ namespace GlimmerGrove.Daily
     /// evening they were not otherwise going to open the game.
     /// </para>
     /// <para>
-    /// <b>Why it is stored as two dates and not as a count.</b> Invariant 11b. A count is
+    /// <b>Why it is stored as dates and not as a count.</b> Invariant 11b. A count is
     /// not mergeable: a device holding 6 and one holding 1 are equally consistent with
     /// "one of them is behind" and "the streak broke and restarted", so every rule over the
     /// pair is wrong somewhere — and the wrong one here silently resurrects a streak the
-    /// player really did break, or deletes one they really do hold. Two dates have no such
+    /// player really did break, or deletes one they really do hold. Dates have no such
     /// ambiguity. <see cref="StartDay"/> is the day the current run began and
     /// <see cref="LastPlayedDay"/> is the last day something was finished; both only ever
     /// rise, so the merge is <c>max</c> on each and the length is derived, exactly as XP,
@@ -39,7 +41,7 @@ namespace GlimmerGrove.Daily
     /// </para>
     /// <para>
     /// <b>Why there is a third date.</b> A night's reward is collected by hand — see
-    /// <see cref="Collect"/> — so something has to say which nights have been taken.
+    /// <see cref="TryCollect"/> — so something has to say which nights have been taken.
     /// <see cref="CollectedThroughDay"/> is the last one that has, which makes it the
     /// same shape as the other two and mergeable for the same reason: it only ever
     /// rises, so the join is <c>max</c> and a rung already paid cannot come back. The
@@ -48,12 +50,32 @@ namespace GlimmerGrove.Daily
     /// be cleared when a streak breaks, which is not monotonic and therefore not a join
     /// at all.
     /// </para>
+    /// <para>
+    /// <b>And why there is a fourth.</b> A streak can be <em>protected</em>: a gem purchase
+    /// buys a window of days that do not have to be played, for the player who is away from
+    /// the game rather than done with it. The whole entitlement is the day it was bought
+    /// (<see cref="ShieldFromDay"/>), which is the fourth monotonic date in this file and
+    /// the reason the promise is exact rather than approximate — there is one number, so
+    /// playing inside the window writes nothing to it and cannot extend it.
+    /// </para>
+    /// <para>
+    /// <b>The shield never advances the night count.</b> A protected day nobody played is
+    /// <em>forgiven</em>, not credited: the streak survives it, and when the player comes
+    /// back <see cref="StartDay"/> is pushed forward by however many days were forgiven, so
+    /// a player on night twenty who vanishes for five protected days comes back to night
+    /// twenty-one. Crediting them instead would sell six chests for a hundred and twenty
+    /// gems, which is a currency printer wearing a retention feature's clothes.
+    /// </para>
     /// </summary>
     public static class DailyStreak
     {
         static int _startDay;
         static int _lastPlayedDay;
         static int _collectedThrough;
+        static int _shieldFrom;
+
+        /// <summary>The seed tag a chest night is rolled under, shared with the server. Contract (9c).</summary>
+        public const string SeedTag = "streak";
 
         /// <summary>
         /// Raised when the streak moves, including when it is found broken on a read.
@@ -63,21 +85,23 @@ namespace GlimmerGrove.Daily
         public static event Action Changed;
 
         /// <summary>
-        /// Raised when today's run extended the streak, carrying the new length and what
-        /// the rung has put aside. The hook a screen uses to celebrate; nothing depends on
+        /// Raised when today's run extended the streak, carrying the new length and the rung
+        /// that has been put aside. The hook a screen uses to celebrate; nothing depends on
         /// it, so a missed one costs a flourish and never a reward.
         /// </summary>
-        public static event Action<int, ChestDrop> Advanced;
+        public static event Action<int, StreakRung> Advanced;
 
         /// <summary>
         /// Raised when a night's reward was collected, carrying the night's length along
         /// the ladder and what it paid. For the page that is drawing the tile at the time.
         /// </summary>
-        public static event Action<int, ChestDrop> Collected;
+        public static event Action<int, List<ChestDrop>> Collected;
 
         static StreakTable Table => ProgressionRules.Table.Streak;
 
         static int Today => DailyRules.DayKeyFor(GameClock.NowUnix());
+
+        static string PlayerKey => RewardSeed.PlayerKey;
 
         // ------------------------------------------------------------- reading
         /// <summary>The day the current run of days began. 0 when there has never been one.</summary>
@@ -95,57 +119,113 @@ namespace GlimmerGrove.Daily
         /// in every timezone. A comparison cannot be forgotten by a caller and cannot
         /// arrive late.
         /// </summary>
-        public static int Days => LengthOf(_startDay, _lastPlayedDay, Today);
+        public static int Days => LengthOf(_startDay, _lastPlayedDay, Today, _shieldFrom, ShieldDays);
 
         /// <summary>
-        /// How long a streak is, given the two stored dates and what day it is now.
+        /// Whether a streak that last saw a run on <paramref name="lastPlayedDay"/> is still
+        /// alive on <paramref name="today"/>.
         ///
         /// <para>
+        /// <b>Yesterday still counts.</b> A streak breaks only once a whole day has passed
+        /// with nothing finished in it — otherwise the flame would go out at midnight in
+        /// front of a player who is mid-session, and the one thing a streak must never do is
+        /// punish somebody who is playing right now.
+        /// </para>
+        /// <para>
+        /// <b>And a shielded day does not count against it.</b> The days that would break the
+        /// streak are the ones strictly between the last one played and today; the shield
+        /// forgives them, so the streak survives exactly when every one of them is covered.
+        /// Both ranges are contiguous, so testing the two ends tests all of it.
+        /// </para>
+        /// </summary>
+        public static bool Survives(int lastPlayedDay, int today, int shieldFrom, int shieldDays)
+        {
+            if (lastPlayedDay >= today - 1) return true;
+
+            return ShieldCovers(shieldFrom, lastPlayedDay + 1, shieldDays)
+                && ShieldCovers(shieldFrom, today - 1, shieldDays);
+        }
+
+        /// <summary>
+        /// How many of the unplayed days between two dates a shield covered.
+        ///
+        /// Pure interval arithmetic, and it is what <see cref="Advance"/> pushes
+        /// <see cref="StartDay"/> forward by: a forgiven day keeps the streak and buys no
+        /// night, so the run's start has to slide with it or the length would count days the
+        /// player never played.
+        /// </summary>
+        public static int ForgivenBetween(int lastPlayedDay, int today, int shieldFrom, int shieldDays)
+        {
+            int lo = lastPlayedDay + 1;
+            int hi = today - 1;
+            if (hi < lo || shieldFrom <= 0 || shieldDays < 1) return 0;
+
+            int slo = lo > shieldFrom ? lo : shieldFrom;
+            int shi = hi < shieldFrom + shieldDays - 1 ? hi : shieldFrom + shieldDays - 1;
+
+            return shi < slo ? 0 : shi - slo + 1;
+        }
+
+        /// <summary>
+        /// How long a streak is, given the stored dates and what day it is now.
+        ///
         /// Pure, and takes <paramref name="today"/> rather than reading a clock, for the
         /// same reason every method on <see cref="Persistence.Hearts"/> takes <c>now</c>:
         /// it is what lets the whole rule be exercised across midnights, gaps and merged
         /// files without waiting a day, and it keeps the question of <em>whose</em> clock
         /// it is out of the rule entirely.
-        /// </para>
-        /// <para>
-        /// Yesterday still counts. A streak breaks only once a whole day has passed with
-        /// nothing finished in it — otherwise the flame would go out at midnight in front
-        /// of a player who is mid-session, and the one thing a streak must never do is
-        /// punish somebody who is playing right now.
-        /// </para>
         /// </summary>
-        public static int LengthOf(int startDay, int lastPlayedDay, int today)
+        public static int LengthOf(int startDay, int lastPlayedDay, int today,
+                                   int shieldFrom, int shieldDays)
         {
             if (startDay <= 0 || lastPlayedDay <= 0) return 0;
-            if (lastPlayedDay < today - 1) return 0;
+            if (!Survives(lastPlayedDay, today, shieldFrom, shieldDays)) return 0;
 
             int length = lastPlayedDay - startDay + 1;
             return length < 1 ? 0 : length;
         }
 
         /// <summary>
-        /// What the two dates become when a run is finished on <paramref name="today"/>.
+        /// What the dates become when a run is finished on <paramref name="today"/>.
         ///
         /// <para>
         /// Pure, for the reason <see cref="LengthOf"/> is, and separate from
-        /// <see cref="Record"/> because this is the part with the rule in it: a run
-        /// yesterday continues the streak, anything older starts a new one, and a second
-        /// run today changes nothing at all. Both returned values are greater than or equal
-        /// to the ones passed in, which is the property the merge depends on — see
-        /// <see cref="Join"/>.
+        /// <see cref="Record"/> because this is the part with the rule in it: a run yesterday
+        /// continues the streak, a run after a gap the shield covered continues it too,
+        /// anything older starts a new one, and a second run today changes nothing at all.
+        /// Both returned values are greater than or equal to the ones passed in, which is the
+        /// property the merge depends on — see <see cref="Join"/>.
+        /// </para>
+        /// <para>
+        /// <paramref name="forgiven"/> is how much of the gap the shield covered, and it is
+        /// added to the start rather than to the length: the length is a subtraction, so
+        /// sliding the start is the only way to say "those days kept the streak and bought no
+        /// night" without storing a count of them.
         /// </para>
         /// </summary>
         public static void Advance(int startDay, int lastPlayedDay, int today,
-                                   out int nextStart, out int nextLast)
+                                   int shieldFrom, int shieldDays,
+                                   out int nextStart, out int nextLast, out int forgiven)
         {
             nextStart = startDay;
             nextLast = lastPlayedDay;
+            forgiven = 0;
 
             if (today <= 0 || lastPlayedDay >= today) return;
 
-            bool continues = startDay > 0 && lastPlayedDay == today - 1;
+            bool continues = startDay > 0 && Survives(lastPlayedDay, today, shieldFrom, shieldDays);
 
-            nextStart = continues ? startDay : today;
+            if (!continues)
+            {
+                nextStart = today;
+                nextLast = today;
+                return;
+            }
+
+            forgiven = ForgivenBetween(lastPlayedDay, today, shieldFrom, shieldDays);
+
+            nextStart = startDay + forgiven;
+            if (nextStart > today) nextStart = today;
             nextLast = today;
         }
 
@@ -153,28 +233,163 @@ namespace GlimmerGrove.Daily
         public static bool PlayedToday => _lastPlayedDay >= Today;
 
         /// <summary>
-        /// True when a streak is being held but has not yet been extended today — the one
-        /// state worth putting in front of a player, because it is the only one where doing
-        /// nothing costs them something.
+        /// True when a streak is being held, has not been extended today, <em>and</em> doing
+        /// nothing today would lose it — the one state worth putting in front of a player,
+        /// because it is the only one where doing nothing costs them something.
+        ///
+        /// <para>
+        /// <b>Asked as "would it survive tomorrow", never as "is a shield running".</b> A
+        /// protected streak is not at risk, which is the whole of what was paid for — the
+        /// page must not spend the window it sold telling the player to hurry — but the
+        /// shield's <em>last</em> day is not urgent either: yesterday always counts, so a
+        /// window ending tonight still leaves tomorrow to play. Reading the shield directly
+        /// put the clock up a day early with the row beside it still reporting a day left,
+        /// which is the page contradicting itself on the one state it was paid to handle.
+        /// </para>
         /// </summary>
-        public static bool AtRisk => Days > 0 && !PlayedToday;
+        public static bool AtRisk
+            => Days > 0 && !PlayedToday
+            && !Survives(_lastPlayedDay, Today + 1, _shieldFrom, ShieldDays);
 
         /// <summary>
         /// What the next rung pays — today's run when the streak has not yet been extended,
-        /// tomorrow's when it has. <see cref="ChestDrop.None"/> when that rung pays nothing.
+        /// tomorrow's when it has.
         ///
         /// One expression covers all three states because <see cref="Days"/> already reads
         /// 0 for a broken streak, so "one more than what is held" is the next rung whether
         /// the player is continuing a week or starting over.
         /// </summary>
-        public static ChestDrop NextReward => Table.Rung(Days + 1).AsDrop();
+        public static StreakRung NextReward => Table.Rung(Days + 1);
 
-        /// <summary>What today's run paid, or nothing when today has not been played.</summary>
-        public static ChestDrop TodaysReward
-            => PlayedToday ? Table.Rung(Days).AsDrop() : ChestDrop.None;
+        /// <summary>What today's run put aside, or nothing when today has not been played.</summary>
+        public static StreakRung TodaysReward
+            => PlayedToday ? Table.Rung(Days) : StreakRung.None;
 
         /// <summary>The ladder, for a panel that wants to print it.</summary>
         public static StreakTable Ladder => Table;
+
+        // ------------------------------------------------------------- the shield
+        /// <summary>The day a shield was bought, or 0. See <c>StreakStateDto.shieldFromDay</c>.</summary>
+        public static int ShieldFromDay => _shieldFrom;
+
+        /// <summary>How many days one shield covers, counting the day it was bought.</summary>
+        public static int ShieldDays => Table == null ? StreakRules.DefaultShieldDays : Table.ShieldDays;
+
+        /// <summary>What a shield costs in gems. Zero when this build sells none.</summary>
+        public static int ShieldGems => Table == null ? 0 : Table.ShieldGems;
+
+        /// <summary>Whether a shield may be offered at all on this content.</summary>
+        public static bool SellsShield => Table != null && Table.SellsShield;
+
+        /// <summary>
+        /// Whether a shield bought on <paramref name="shieldFrom"/> covers
+        /// <paramref name="day"/>.
+        ///
+        /// Inclusive of the day it was bought, which is what makes "seven days" seven and not
+        /// eight, and what lets a player whose streak is already at risk buy one and be safe
+        /// the same evening.
+        /// </summary>
+        public static bool ShieldCovers(int shieldFrom, int day, int shieldDays)
+            => shieldFrom > 0 && shieldDays > 0
+            && day >= shieldFrom && day < shieldFrom + shieldDays;
+
+        /// <summary>True when a shield is running right now.</summary>
+        public static bool IsProtected => ShieldCovers(_shieldFrom, Today, ShieldDays);
+
+        /// <summary>
+        /// How many days of protection are left, counting today. 0 when none is running.
+        ///
+        /// Days rather than a clock, because the thing being protected turns over on a
+        /// calendar day — a countdown to the hour would be a second, more precise-looking
+        /// answer to a question the rule does not ask that precisely.
+        /// </summary>
+        public static int ShieldDaysLeft
+        {
+            get
+            {
+                if (!IsProtected) return 0;
+                return _shieldFrom + ShieldDays - Today;
+            }
+        }
+
+        /// <summary>The last day a running shield covers, or 0 when none is.</summary>
+        public static int ShieldThroughDay => IsProtected ? _shieldFrom + ShieldDays - 1 : 0;
+
+        /// <summary>What a shield purchase can answer.</summary>
+        public enum ShieldBuy
+        {
+            Bought,
+
+            /// <summary>One is already running. Not a failure; nothing is charged.</summary>
+            Held,
+
+            /// <summary>This build sells none — the content authored no price.</summary>
+            NotSold,
+
+            /// <summary>There is no streak to protect.</summary>
+            NoStreak,
+
+            /// <summary>Not enough gems.</summary>
+            TooPoor,
+        }
+
+        /// <summary>
+        /// Buys a window of days the streak survives without being played.
+        ///
+        /// <para>
+        /// <b>The debit goes first and the date is only written if it succeeded</b>, which is
+        /// <c>SeasonLedger.TryBuyPass</c>'s ordering and its argument: a process killed
+        /// between the two leaves a player who paid and did not receive, which the spend log
+        /// can see and support can put right — where the other order leaves protection nobody
+        /// paid for, which is indistinguishable from a forgery and therefore invisible.
+        /// </para>
+        /// <para>
+        /// <b>A running shield is never sold a second one.</b> The entitlement is one date, so
+        /// buying again would move it and silently extend the window — which is exactly the
+        /// thing this was asked not to do — and charging for a window already held is worse.
+        /// It becomes buyable again the day the last one lapses.
+        /// </para>
+        /// <para>
+        /// <b>And there has to be a streak.</b> Selling protection for nothing is a hundred
+        /// and twenty gems for a date nobody will ever read: <see cref="Days"/> is zero, the
+        /// next run starts a fresh run whatever this says, and the window would quietly expire
+        /// unused.
+        /// </para>
+        /// <para>
+        /// The spend id is <b>derived</b> — <c>shield:{day}</c> — which is the second derived
+        /// spend id in this game and is here for the first one's reason read sideways: two
+        /// devices that both buy on the same day offline write byte-identical entries, the
+        /// union keeps one, and the player is charged once. It is not a permission the server
+        /// grants; see <c>StreakStateDto.shieldFromDay</c> for why it does not need to be.
+        /// </para>
+        /// </summary>
+        public static ShieldBuy TryBuyShield()
+        {
+            var table = Table;
+            if (table == null || !table.SellsShield) return ShieldBuy.NotSold;
+            if (Days <= 0) return ShieldBuy.NoStreak;
+            if (IsProtected) return ShieldBuy.Held;
+
+            int today = Today;
+
+            if (!PlayerProgression.TrySpend(Currency.Gems, table.ShieldGems,
+                                            SpendEntry.StreakShieldReason,
+                                            SpendEntry.StreakShieldId(today)))
+                return ShieldBuy.TooPoor;
+
+            _shieldFrom = today;
+
+            SaveService.Save();
+            Raise();
+
+            Telemetry.Track("streak_shield_bought",
+                            "day", today,
+                            "gems", table.ShieldGems,
+                            "days", table.ShieldDays,
+                            "length", Days);
+
+            return ShieldBuy.Bought;
+        }
 
         // ------------------------------------------------------------ collecting
         /// <summary>The last night whose reward has been handed over. 0 before any.</summary>
@@ -209,55 +424,82 @@ namespace GlimmerGrove.Daily
         }
 
         /// <summary>
-        /// True when tapping this night would pay something out, over a given ladder.
+        /// True when this night has been reached, pays something, and has not been taken.
         ///
-        /// A rung that pays nothing — day one, where the flame merely lights — is never
-        /// collectable, so it can never sit on the board asking to be tapped for nothing.
-        /// It is swept along silently when a later night is collected.
+        /// A rung that pays nothing is never waiting, so it can never sit on the board asking
+        /// to be tapped for nothing. It is swept along silently when a later night is taken.
         /// </summary>
-        public static bool CollectableAt(int startDay, int lastPlayedDay, int collectedThrough,
-                                         int today, int rung, StreakTable ladder)
+        public static bool WaitingAt(int startDay, int lastPlayedDay, int collectedThrough,
+                                     int today, int rung, StreakTable ladder,
+                                     int shieldFrom, int shieldDays)
         {
             if (ladder == null) return false;
-            if (rung < 1 || rung > LengthOf(startDay, lastPlayedDay, today)) return false;
+            if (rung < 1 || rung > LengthOf(startDay, lastPlayedDay, today, shieldFrom, shieldDays))
+                return false;
             if (CollectedAt(startDay, collectedThrough, rung)) return false;
 
-            return ladder.Rung(rung).AsDrop().IsValid;
-        }
-
-        /// <summary>How many nights are waiting to be collected, over a given ladder.</summary>
-        public static int PendingAt(int startDay, int lastPlayedDay, int collectedThrough,
-                                    int today, StreakTable ladder)
-        {
-            int days = LengthOf(startDay, lastPlayedDay, today);
-            int count = 0;
-
-            for (int rung = 1; rung <= days; rung++)
-                if (CollectableAt(startDay, lastPlayedDay, collectedThrough, today, rung, ladder))
-                    count++;
-
-            return count;
+            return ladder.Rung(rung).IsValid;
         }
 
         /// <summary>
         /// The earliest night still waiting, or 0 when nothing is.
         ///
-        /// What the board pages to. A streak runs on past the end of the ladder — a player
-        /// on night forty is the one this feature is for — so the board shows one lap of it
-        /// at a time, and the lap it shows has to be the one holding the oldest thing the
-        /// player has not taken. Showing the *current* lap instead is how night seven's
-        /// reward gets stranded off the board the moment night eight arrives.
+        /// <para>
+        /// What the board pages to, and — since a night can now pay a chest — the only night
+        /// that may actually be taken. A streak runs on past the end of the ladder, so the
+        /// board shows one lap of it at a time, and the lap it shows has to be the one holding
+        /// the oldest thing the player has not taken. Showing the <em>current</em> lap instead
+        /// is how night seven's reward gets stranded off the board the moment night eight
+        /// arrives.
+        /// </para>
         /// </summary>
         public static int FirstPendingAt(int startDay, int lastPlayedDay, int collectedThrough,
-                                         int today, StreakTable ladder)
+                                         int today, StreakTable ladder,
+                                         int shieldFrom, int shieldDays)
         {
-            int days = LengthOf(startDay, lastPlayedDay, today);
+            int days = LengthOf(startDay, lastPlayedDay, today, shieldFrom, shieldDays);
 
             for (int rung = 1; rung <= days; rung++)
-                if (CollectableAt(startDay, lastPlayedDay, collectedThrough, today, rung, ladder))
+                if (WaitingAt(startDay, lastPlayedDay, collectedThrough, today, rung, ladder,
+                              shieldFrom, shieldDays))
                     return rung;
 
             return 0;
+        }
+
+        /// <summary>
+        /// True when tapping this night would pay something out.
+        ///
+        /// <para>
+        /// <b>Only the earliest waiting night is collectable, and that is what paying a chest
+        /// cost.</b> The floor is a floor — taking night five necessarily takes four with it —
+        /// which was invisible while every rung was a figure and is not once a rung opens a
+        /// ceremony: a sweep would grant three chests behind one animation, which is the
+        /// "reward that arrives while a panel is up" failure this game has already made twice
+        /// (invariants 45, 47g). A player holding three waiting nights taps three times and
+        /// opens three chests, oldest first.
+        /// </para>
+        /// </summary>
+        public static bool CollectableAt(int startDay, int lastPlayedDay, int collectedThrough,
+                                         int today, int rung, StreakTable ladder,
+                                         int shieldFrom, int shieldDays)
+            => rung >= 1
+            && FirstPendingAt(startDay, lastPlayedDay, collectedThrough, today, ladder,
+                              shieldFrom, shieldDays) == rung;
+
+        /// <summary>How many nights are waiting to be collected, over a given ladder.</summary>
+        public static int PendingAt(int startDay, int lastPlayedDay, int collectedThrough,
+                                    int today, StreakTable ladder, int shieldFrom, int shieldDays)
+        {
+            int days = LengthOf(startDay, lastPlayedDay, today, shieldFrom, shieldDays);
+            int count = 0;
+
+            for (int rung = 1; rung <= days; rung++)
+                if (WaitingAt(startDay, lastPlayedDay, collectedThrough, today, rung, ladder,
+                              shieldFrom, shieldDays))
+                    count++;
+
+            return count;
         }
 
         /// <summary>Which lap of the ladder a night falls on, counting from one.</summary>
@@ -302,7 +544,8 @@ namespace GlimmerGrove.Daily
         {
             get
             {
-                int pending = FirstPendingAt(_startDay, _lastPlayedDay, _collectedThrough, Today, Table);
+                int pending = FirstPendingAt(_startDay, _lastPlayedDay, _collectedThrough, Today,
+                                             Table, _shieldFrom, ShieldDays);
                 int anchor = pending > 0 ? pending : Days;
                 return CycleStart(anchor < 1 ? 1 : anchor, CycleLength);
             }
@@ -312,15 +555,39 @@ namespace GlimmerGrove.Daily
         public static int Cycle => CycleOf(Days < 1 ? 1 : Days, CycleLength);
 
         /// <summary>
-        /// The collected floor a run starting today seeds, or the one already held.
+        /// The collected floor a run seeds, or the one already held.
         ///
-        /// Pure counterpart of the rule in <see cref="Record"/>. Two jobs, named there:
-        /// nights from a lapsed streak stop being offered, and a live file's floor is
-        /// never zero, which is what makes zero mean "written before rewards were
-        /// collected by hand".
+        /// <para>
+        /// Pure counterpart of the rule in <see cref="Record"/>, and it does three jobs.
+        /// Nights from a lapsed streak stop being offered; a live file's floor is never zero,
+        /// which is what makes zero mean "written before rewards were collected by hand"; and
+        /// — new with the shield — a run that continued across forgiven days carries its floor
+        /// forward by the same amount its start moved, because the floor is a <em>day</em> and
+        /// every night's day has just slid.
+        /// </para>
+        /// <para>
+        /// Without that last clause a protected player comes back to nights they have already
+        /// been paid for sitting on the board waiting to be paid again — the floor would still
+        /// name the old calendar day while night one now names a later one.
+        /// </para>
         /// </summary>
-        public static int SeedCollected(int collectedThrough, int today, bool continues)
-            => continues || today - 1 <= collectedThrough ? collectedThrough : today - 1;
+        public static int SeedCollected(int collectedThrough, int today, bool continues, int forgiven)
+        {
+            if (!continues) return today - 1 <= collectedThrough ? collectedThrough : today - 1;
+            if (collectedThrough <= 0 || forgiven <= 0) return collectedThrough;
+
+            // The ceiling is belt and braces rather than arithmetic: a floor is never past
+            // the last day played and the forgiven days are all strictly before today, so a
+            // reachable pair cannot exceed it. What is *not* belt and braces is the second
+            // clamp — without it a floor already at or past yesterday would be pulled back by
+            // the ceiling, which is the one thing this field may never do, since every merge
+            // in this file rests on it only ever rising (invariant 11b).
+            int moved = collectedThrough + forgiven;
+            int ceiling = today - 1;
+            if (moved > ceiling) moved = ceiling;
+
+            return moved < collectedThrough ? collectedThrough : moved;
+        }
 
         /// <summary>
         /// What a floor read off disk becomes. Pure counterpart of <see cref="LoadFrom"/>.
@@ -341,78 +608,150 @@ namespace GlimmerGrove.Daily
         /// <summary>True when this night's reward has been taken.</summary>
         public static bool IsCollected(int rung) => CollectedAt(_startDay, _collectedThrough, rung);
 
+        /// <summary>True when this night has been reached and not yet taken.</summary>
+        public static bool IsWaiting(int rung)
+            => WaitingAt(_startDay, _lastPlayedDay, _collectedThrough, Today, rung, Table,
+                         _shieldFrom, ShieldDays);
+
         /// <summary>True when tapping this night would pay something out.</summary>
         public static bool IsCollectable(int rung)
-            => CollectableAt(_startDay, _lastPlayedDay, _collectedThrough, Today, rung, Table);
+            => CollectableAt(_startDay, _lastPlayedDay, _collectedThrough, Today, rung, Table,
+                             _shieldFrom, ShieldDays);
+
+        /// <summary>The earliest night waiting to be taken, or 0. The only tappable one.</summary>
+        public static int FirstPending
+            => FirstPendingAt(_startDay, _lastPlayedDay, _collectedThrough, Today, Table,
+                              _shieldFrom, ShieldDays);
 
         /// <summary>How many nights are waiting to be collected. What a badge counts.</summary>
         public static int Pending
-            => PendingAt(_startDay, _lastPlayedDay, _collectedThrough, Today, Table);
+            => PendingAt(_startDay, _lastPlayedDay, _collectedThrough, Today, Table,
+                         _shieldFrom, ShieldDays);
 
         /// <summary>Whether anything is waiting, for a line that wants to mention it.</summary>
         public static bool AnyPending => Pending > 0;
 
         /// <summary>
-        /// Hands over every uncollected night up to and including <paramref name="rung"/>,
-        /// and returns how many nights that swept.
+        /// Whether a night may be claimed yet.
+        ///
+        /// The tasks' gate, for the tasks' reason, and it binds here only because a night can
+        /// pay a chest: a chest is rolled from the account id so the server can recompute it,
+        /// and before the first sign-in there is no account id to roll from. A currency night
+        /// needs no such thing, which is why this is asked of the rung rather than of the
+        /// feature — see <see cref="CanCollect"/>.
+        /// </summary>
+        public static bool CanClaimChests => RewardSeed.IsAdjudicable;
+
+        /// <summary>True when the night waiting could actually be handed over right now.</summary>
+        public static bool CanCollect(int rung)
+        {
+            if (!IsCollectable(rung)) return false;
+            return !Table.Rung(rung).IsChest || CanClaimChests;
+        }
+
+        /// <summary>
+        /// What a chest night holds, without claiming it. For the opening overlay and for a
+        /// page that wants to show the odds; empty for a night that pays a figure.
+        /// </summary>
+        public static List<ChestDrop> Preview(int rung)
+        {
+            var night = Table.Rung(rung);
+            if (!night.IsChest) return new List<ChestDrop>();
+            return night.Tier.Chest.Roll(SeedFor(DayOf(rung), rung));
+        }
+
+        /// <summary>
+        /// The seed a night's chest is rolled from: the player, this feature, and the
+        /// calendar day and night that earned it. The subject layout is contract with the
+        /// server's <c>subjectSeed</c>; see <see cref="ChestSeed"/>.
+        /// </summary>
+        public static ChestSeed SeedFor(int dayKey, int night)
+            => ChestSeed.ForSubject(PlayerKey, SeedTag, Subject(dayKey, night));
+
+        /// <summary>The subject half of the seed and of the claim id: <c>{day}:{night}</c>.</summary>
+        public static string Subject(int dayKey, int night) => dayKey + ":" + night;
+
+        /// <summary>
+        /// Hands over one night and returns what it paid.
         ///
         /// <para>
-        /// Collecting is a floor rather than a per-night flag, so taking a later night
-        /// necessarily takes the earlier ones with it. That is the only reading that cannot
-        /// lose a reward: the alternative — pay just the one tapped, leave the gap — would
-        /// need a set of collected nights to be mergeable, and a set that has to be cleared
-        /// when a streak breaks is not monotonic and so cannot be joined at all. In
-        /// practice the difference is invisible, because a player who opens this page daily
-        /// only ever has one night waiting.
+        /// <b>One night, never a sweep.</b> Only the earliest waiting night is collectable
+        /// (<see cref="CollectableAt"/>), so this pays exactly one rung per tap — which is
+        /// what lets a night open the same chest ceremony the tasks page and the season do,
+        /// instead of granting three chests behind one animation.
+        /// </para>
+        /// <para>
+        /// Nights before it that pay nothing are swept silently, because the floor is a floor
+        /// and there is nothing to show for them.
+        /// </para>
+        /// <para>
+        /// Two independent guards stop a night paying twice. The floor refuses a second
+        /// attempt; and every currency award carries an id derived from the night's own
+        /// calendar day, so even a save edited to lower the floor collides with an entry
+        /// already in the ledger, and the server refuses it a third time on top.
         /// </para>
         /// </summary>
-        public static int Collect(int rung)
+        public static bool TryCollect(int rung, out List<ChestDrop> drops)
         {
-            int days = Days;
-            if (rung < 1 || rung > days) return 0;
+            drops = null;
+            if (!IsCollectable(rung)) return false;
+
+            var night = Table.Rung(rung);
+
+            // Checked here as well as in the UI. A reward the server would recompute
+            // differently must not be claimable through any path, and a guard that lives only
+            // in a screen is a guard the next screen forgets.
+            if (night.IsChest && !CanClaimChests) return false;
 
             int through = DayOf(rung);
-            if (through <= _collectedThrough) return 0;
+            if (through <= _collectedThrough) return false;
 
-            int swept = 0;
-
-            for (int k = 1; k <= rung; k++)
-            {
-                if (IsCollected(k)) continue;
-                swept++;
-
-                // A night taken is a thing that happened, whatever the rung paid.
-                Tasks.TaskLedger.Note(Tasks.TaskGoal.Streak);
-
-                // The floor moves *before* the reward is handed over, one night at a time,
-                // and the ordering is load-bearing rather than tidy. Applying a currency
-                // rung writes the save — an award has to be durable the moment the player
-                // is shown it — so a process killed mid-sweep would otherwise come back
-                // with the floor still behind a night whose hearts had already been
-                // granted. Currency survives that: the award carries a derived id and the
-                // second attempt collides with the first. Hearts carry nothing, so they
-                // would simply be paid twice. Paying late is recoverable on the next tap;
-                // paying twice is not recoverable at all.
-                _collectedThrough = DayOf(k);
-
-                var drop = Table.Rung(k).AsDrop();
-                if (!drop.IsValid) continue;
-
-                Apply(drop, DayOf(k), k);
-
-                Telemetry.Track("streak_collected", "rung", k, "day", DayOf(k),
-                                "reward", drop.ToString());
-
-                try { Collected?.Invoke(k, drop); }
-                catch (Exception e) { UnityEngine.Debug.LogException(e); }
-            }
-
+            // The floor moves *before* the reward is handed over, and the ordering is
+            // load-bearing rather than tidy. Applying a rung writes the save — an award has to
+            // be durable the moment the player is shown it — so a process killed mid-payout
+            // would otherwise come back with the floor still behind a night whose utilities
+            // had already been banked. Currency survives that: the award carries a derived id
+            // and the second attempt collides with the first. A banked drop carries nothing,
+            // so it would simply be paid twice. Paying late is recoverable on the next tap;
+            // paying twice is not recoverable at all.
             _collectedThrough = through;
+
+            var paid = night.IsChest
+                ? night.Tier.Chest.Roll(SeedFor(through, rung))
+                : new List<ChestDrop> { night.AsDrop() };
+
+            Apply(paid, through, rung);
+
+            // A night taken is a thing that happened, whatever the rung paid.
+            TaskLedger.Note(TaskGoal.Streak);
+
+            // The season grows on a claimed chest and nowhere else, so a chest night feeds it
+            // exactly as a task's does — which is invariant 47's whole bargain: every future
+            // source of chests feeds the season by naming a tier rather than by growing a
+            // second rule. A currency night grows nothing, correctly.
+            if (night.IsChest) Events.SeasonLedger.NoteChest(night.Tier);
 
             SaveService.Save();
             Raise();
 
-            return swept;
+            Telemetry.Track("streak_collected",
+                            "rung", rung,
+                            "day", through,
+                            "chest", night.IsChest ? night.Tier.Id : string.Empty,
+                            "reward", Describe(paid));
+
+            try { Collected?.Invoke(rung, paid); }
+            catch (Exception e) { UnityEngine.Debug.LogException(e); }
+
+            drops = paid;
+            return true;
+        }
+
+        static string Describe(List<ChestDrop> drops)
+        {
+            var parts = new string[drops.Count];
+            for (int i = 0; i < drops.Count; i++) parts[i] = drops[i].ToString();
+            return string.Join(",", parts);
         }
 
         /// <summary>Seconds until the streak would be lost, or 0 when today is already safe.</summary>
@@ -430,7 +769,7 @@ namespace GlimmerGrove.Daily
         /// Records that a run resolved today, won or lost.
         ///
         /// <para>
-        /// The same event <c>DailyChests.RecordRun</c> counts, and deliberately the same
+        /// The same event <c>TaskLedger.RecordRun</c> counts, and deliberately the same
         /// bar: losing keeps a streak alive. A streak that only counts wins punishes the
         /// player on the day they were struggling, which is the day they most needed a
         /// reason to come back tomorrow — and it would make the hardest glade in a chapter
@@ -438,45 +777,41 @@ namespace GlimmerGrove.Daily
         /// </para>
         /// <para>
         /// <b>The reward is set aside, not paid.</b> It waits on the streak page until the
-        /// player taps it — see <see cref="Collect"/>. What that buys is the moment: a
+        /// player taps it — see <see cref="TryCollect"/>. What that buys is the moment: a
         /// reward that lands silently while a defeat screen is animating is a number the
         /// player never sees arrive, and a number nobody watches arrive is not a reward, it
         /// is an accounting entry. It also gives the page a reason to be opened, which is
         /// the whole point of a streak.
         /// </para>
-        /// <para>
-        /// What is <em>not</em> a reason to defer it is safety. Every kind on the ladder
-        /// survives being handed over twice: hearts and boosts merge idempotently — two
-        /// devices that both extend the streak offline grant the same hearts, and
-        /// <c>max(produced)</c> keeps one set rather than two — and currency is claimed
-        /// under an id derived from the night's calendar day, so the two devices produce
-        /// one entry between them. Deferring buys the moment, not the correctness.
-        /// </para>
         /// </summary>
         public static void Record()
         {
             int today = Today;
+            int shieldDays = ShieldDays;
 
-            Advance(_startDay, _lastPlayedDay, today, out int nextStart, out int nextLast);
+            Advance(_startDay, _lastPlayedDay, today, _shieldFrom, shieldDays,
+                    out int nextStart, out int nextLast, out int forgiven);
 
             // Nothing moved: the day has already been counted, which is what makes this
             // idempotent within a day and lets the second run of an evening cost nothing.
             if (nextStart == _startDay && nextLast == _lastPlayedDay) return;
 
-            bool continues = nextStart == _startDay;
+            // A restart is the only thing that writes today into the start, and a continued
+            // run can never land on it: the start moves forward by the forgiven days, which
+            // are all strictly before today, so `startDay + forgiven` is at most yesterday.
+            // That is what lets one comparison tell the two apart.
+            bool continues = nextStart != today;
 
             _startDay = nextStart;
             _lastPlayedDay = nextLast;
 
-            // A run that starts a new streak seeds the collected floor to the day before
-            // it, which does two jobs at once. Nights from a streak the player let lapse
-            // stop being offered, and — because a day key is a five-figure number — the
-            // floor of a live file is never zero, which is what lets a zero mean "written
-            // before rewards were collected by hand". See StreakStateDto.
-            _collectedThrough = SeedCollected(_collectedThrough, today, continues);
+            // A run that starts a new streak seeds the collected floor to the day before it,
+            // and a run that continued across forgiven days carries its floor forward by the
+            // same amount its start moved. See SeedCollected.
+            _collectedThrough = SeedCollected(_collectedThrough, today, continues, forgiven);
 
-            int length = LengthOf(_startDay, _lastPlayedDay, today);
-            var reward = Table.Rung(length).AsDrop();
+            int length = LengthOf(_startDay, _lastPlayedDay, today, _shieldFrom, shieldDays);
+            var reward = Table.Rung(length);
 
             SaveService.Save();
             Raise();
@@ -485,6 +820,7 @@ namespace GlimmerGrove.Daily
                             "day", today,
                             "length", length,
                             "continued", continues,
+                            "forgiven", forgiven,
                             "reward", reward.ToString());
 
             try { Advanced?.Invoke(length, reward); }
@@ -492,15 +828,15 @@ namespace GlimmerGrove.Daily
         }
 
         /// <summary>
-        /// Hands over one night's rung. Reached only from <see cref="Collect"/>.
+        /// Hands over one night's contents. Reached only from <see cref="TryCollect"/>.
         ///
         /// <para>
-        /// The same split <c>DailyChests.Apply</c> makes, for the same reason. Hearts and
-        /// boosts are applied here and now: a heart clamps at five and a boost expires, so
-        /// trusting the client with them costs at most a few extra runs today. Currency is
-        /// queued as an identified claim for the server to adjudicate, because currency is
-        /// the thing real money buys and therefore the thing an attacker forges — the
-        /// client never raises <c>grantedBaseline</c> itself. Invariant 10a.
+        /// The same split <c>TaskLedger.Apply</c> makes, for the same reason. Hearts, boosts
+        /// and utilities are banked here and now: a heart clamps at its ceiling and a boost
+        /// expires, so trusting the client with them costs at most a few extra runs today.
+        /// Currency is queued as an identified claim for the server to adjudicate, because
+        /// currency is the thing real money buys and therefore the thing an attacker forges —
+        /// the client never raises <c>grantedBaseline</c> itself. Invariant 10a.
         /// </para>
         /// <para>
         /// The award lands in the ledger immediately either way, so a night collected on a
@@ -509,28 +845,22 @@ namespace GlimmerGrove.Daily
         /// anything back — see <c>CurrencyLedger.BalanceFrom</c>.
         /// </para>
         /// </summary>
-        static void Apply(ChestDrop reward, int dayKey, int night)
+        static void Apply(List<ChestDrop> drops, int dayKey, int night)
         {
-            if (!reward.IsValid) return;
+            long now = GameClock.NowUnix();
 
-            switch (reward.Kind)
+            for (int i = 0; i < drops.Count; i++)
             {
-                case ChestDropKind.Credits:
-                case ChestDropKind.Gems:
-                    string currency = ChestDropKinds.CurrencyOf(reward.Kind);
-                    PlayerProgression.Award(
-                        currency, reward.Amount,
-                        GrantEntry.StreakNightId(dayKey, night, currency),
-                        GrantEntry.StreakNightReason, GameClock.NowUnix());
-                    break;
+                var drop = drops[i];
+                if (!drop.IsValid) continue;
+                if (BankedDrop.Apply(drop)) continue;
+                if (!drop.IsCurrency) continue;
 
-                case ChestDropKind.Hearts:
-                    Wallet.GrantHearts(reward.Amount);
-                    break;
-
-                case ChestDropKind.HeartBoost:
-                    Wallet.GrantHeartBoost(reward.Amount);
-                    break;
+                string currency = ChestDropKinds.CurrencyOf(drop.Kind);
+                PlayerProgression.Award(
+                    currency, drop.Amount,
+                    GrantEntry.StreakNightId(dayKey, night, currency),
+                    GrantEntry.StreakNightReason, now);
             }
         }
 
@@ -549,6 +879,7 @@ namespace GlimmerGrove.Daily
             _lastPlayedDay = streak == null || streak.lastPlayedDay < 0 ? 0 : streak.lastPlayedDay;
             _collectedThrough = streak == null || streak.collectedThroughDay < 0
                               ? 0 : streak.collectedThroughDay;
+            _shieldFrom = streak == null || streak.shieldFromDay < 0 ? 0 : streak.shieldFromDay;
 
             // A file written by hand, or one merged from a device whose clock disagreed,
             // could name a start after the last day played. Repaired on read rather than
@@ -572,18 +903,20 @@ namespace GlimmerGrove.Daily
                 startDay = _startDay,
                 lastPlayedDay = _lastPlayedDay,
                 collectedThroughDay = _collectedThrough,
+                shieldFromDay = _shieldFrom,
             };
         }
 
         /// <summary>
-        /// Joins two devices' streaks: <c>max</c> on both dates and nothing else.
+        /// Joins two devices' streaks: <c>max</c> on every date and nothing else.
         ///
         /// <para>
-        /// Both fields are counters of things that happened rather than balances, so the
+        /// Every field is a counter of something that happened rather than a balance, so the
         /// larger is always the one that knows more — a later last-played day has seen a
-        /// session the other missed, and a later start day has seen a break the other
-        /// missed. That makes this idempotent, commutative and associative like every other
-        /// merge in this file, with no opinion needed about which device is "right".
+        /// session the other missed, a later start day has seen a break or a forgiven gap the
+        /// other missed, and a later shield date has seen a purchase the other missed. That
+        /// makes this idempotent, commutative and associative like every other merge in this
+        /// file, with no opinion needed about which device is "right".
         /// </para>
         /// <para>
         /// See the type summary for what taking the later start gives up and why the
@@ -605,8 +938,13 @@ namespace GlimmerGrove.Daily
                 // out. It can cost a player a rung they had not collected on either device
                 // — the same direction the start date already errs in, and for the same
                 // reason: the alternative pays a night twice, and two devices claiming the
-                // same hearts is the failure this whole file is shaped to avoid.
+                // same chest is the failure this whole file is shaped to avoid.
                 collectedThroughDay = Math.Max(mine.collectedThroughDay, other.collectedThroughDay),
+
+                // And the shield. A purchase cannot be undone, so the later date is the one
+                // that has heard about it; there is no reading under which the earlier one
+                // knows more.
+                shieldFromDay = Math.Max(mine.shieldFromDay, other.shieldFromDay),
             };
         }
 
@@ -616,6 +954,7 @@ namespace GlimmerGrove.Daily
                 startDay = s.startDay,
                 lastPlayedDay = s.lastPlayedDay,
                 collectedThroughDay = s.collectedThroughDay,
+                shieldFromDay = s.shieldFromDay,
             };
 
         /// <summary>Forgets the streak. Dev only, and used by the wipe.</summary>
@@ -624,6 +963,7 @@ namespace GlimmerGrove.Daily
             _startDay = 0;
             _lastPlayedDay = 0;
             _collectedThrough = 0;
+            _shieldFrom = 0;
         }
     }
 }

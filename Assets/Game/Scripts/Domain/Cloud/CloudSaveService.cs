@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,6 +29,14 @@ namespace GlimmerGrove.Cloud
         static int _syncing;
 
         static readonly SyncScheduler _schedule = new SyncScheduler();
+
+        /// <summary>
+        /// When to ask the deployment what it requires of this build. Separate from
+        /// <see cref="_schedule"/> because the two answer opposite questions — that one is about
+        /// work this device owes the server and backs off when the server is failing, this one
+        /// is about a fact the device needs and asks <em>more</em> often when it has not got it.
+        /// </summary>
+        static readonly GlimmerGrove.Release.ReleaseWatch _release = new GlimmerGrove.Release.ReleaseWatch();
 
         /// <summary>Raised after a sync changes the local save, so screens can repaint.</summary>
         public static event Action Synced;
@@ -287,6 +295,14 @@ namespace GlimmerGrove.Cloud
             // fail a sync: everything it starts is best-effort and awaited by nobody.
             Social.GroveBoard.Tick(deltaSeconds, networkReachable);
 
+            // And the deployment's own word on whether this build may still be played. Here for
+            // the boards' reason — one clock, one wiring point — and deliberately *after* the
+            // availability guard: with no backend there is nothing to ask, and the gate holding
+            // whatever it already holds is the correct behaviour rather than a degraded one.
+            // Best-effort like everything else on this line; a read that never lands leaves a
+            // standing wall standing, which is the direction that matters.
+            if (_release.Tick(deltaSeconds, networkReachable)) _ = RunReleaseCheckAsync();
+
             if (!_schedule.Tick(deltaSeconds)) return;
 
             _ = RunScheduledSyncAsync();
@@ -420,6 +436,96 @@ namespace GlimmerGrove.Cloud
             if (result.Ok) Social.GroveStats.Publish(stats);
 
             return result;
+        }
+
+        // ------------------------------------------------------------- the release gate
+        /// <summary>
+        /// Asks what the deployment requires of this build, and forgets about it.
+        ///
+        /// <para>
+        /// Started from the splash beside <see cref="BeginStatsRefresh"/>, for exactly its
+        /// reason and with exactly its ordering: <b>nothing between tapping the icon and playing
+        /// is allowed to wait on a network</b>. A device that has been told before enforces what
+        /// it was told from the frame the hub draws, with no round trip at all — which is what
+        /// makes the launch path unchanged and the wall instant for everybody it has ever been
+        /// applied to. Only a first launch on a stale build sees the hub for a moment first, and
+        /// there is no honest way to avoid that without putting a network call in front of every
+        /// launch in the world.
+        /// </para>
+        /// <para>
+        /// The claim is taken here rather than left to the tick, so the launch and the first
+        /// frame cannot both fire one.
+        /// </para>
+        /// </summary>
+        public static void BeginReleaseCheck(CancellationToken cancellation = default)
+        {
+            if (!IsAvailable) return;
+            if (!_release.Claim()) return;
+
+            _ = RunReleaseCheckAsync(cancellation);
+        }
+
+        /// <summary>
+        /// The app came back to the foreground, so the requirement is worth re-reading.
+        ///
+        /// <para>
+        /// The two moments this exists for are opposite and both matter. A device that launched
+        /// with no signal has never been told anything, and coming back is often the first
+        /// moment it can be. A device that is <em>already</em> walled out has been sent to a
+        /// store and is coming back from it — either updated, in which case this is a fresh
+        /// process and none of this runs, or not, in which case the wall is still standing and
+        /// still correct.
+        /// </para>
+        /// </summary>
+        public static void ReleaseResumed() => _release.Resumed();
+
+        /// <summary>
+        /// Reads the requirement and hands it to <see cref="Release.ReleaseGate"/> — but only
+        /// when the read actually succeeded.
+        ///
+        /// <para>
+        /// That condition is the entire contract between these two classes and the reason the
+        /// gate cannot decide it for itself: an unreachable server and a server saying "nothing
+        /// is required" both arrive as <see cref="Release.ReleaseRequirement.None"/>, and
+        /// applying the first would lift a standing wall every time a player walked into a
+        /// tunnel. Applying the second is the emergency rollback.
+        /// </para>
+        /// <para>
+        /// The cadence afterwards is short while a wall is up, because that is the state a
+        /// rolled-back requirement has to reach — see <c>ReleaseWatch.RetrySeconds</c>.
+        /// </para>
+        /// </summary>
+        public static async Task<CloudResult> RefreshReleaseAsync(CancellationToken cancellation = default)
+        {
+            if (!IsAvailable) return CloudResult.Failed(CloudFailure.Offline, "no cloud backend");
+
+            var (result, requirement) = await _backend.ReadReleaseAsync(
+                GlimmerGrove.Release.ReleasePlatform.Current, cancellation);
+
+            if (result.Ok) GlimmerGrove.Release.ReleaseGate.Apply(requirement);
+
+            return result;
+        }
+
+        static async Task RunReleaseCheckAsync(CancellationToken cancellation = default)
+        {
+            CloudResult result;
+
+            try
+            {
+                result = await RefreshReleaseAsync(cancellation);
+            }
+            catch (Exception error)
+            {
+                // Swallowed rather than propagated, for the reason every fire-and-forget here is:
+                // this is started by a timer with nobody holding the task, so an exception out
+                // of it is an unobserved one. It must also never be able to leave the watch
+                // marked in-flight, or the check would stop for the life of the process.
+                Debug.LogWarning("[Release] check failed: " + error.Message);
+                result = CloudResult.Failed(CloudFailure.Offline, error.Message);
+            }
+
+            _release.Answered(result.Ok, urgent: GlimmerGrove.Release.ReleaseGate.IsShut);
         }
 
         /// <summary>

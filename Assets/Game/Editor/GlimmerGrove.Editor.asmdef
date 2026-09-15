@@ -8,7 +8,9 @@
         "Unity.Addressables",
         "Unity.Addressables.Editor",
         "Unity.ResourceManager",
-        "GlimmerGrove.Privacy"
+        "GlimmerGrove.Privacy",
+        "GlimmerGrove.Notifications",
+        "Unity.Notifications"
     ],
     "includePlatforms": [
         "Editor"
@@ -24,6 +26,11 @@
             "name": "com.unity.addressables",
             "expression": "2.0",
             "define": "GLIMMER_HAS_ADDRESSABLES"
+        },
+        {
+            "name": "com.unity.mobile.notifications",
+            "expression": "2.3",
+            "define": "GLIMMER_NOTIFICATIONS"
         }
     ],
     "noEngineReferences": false

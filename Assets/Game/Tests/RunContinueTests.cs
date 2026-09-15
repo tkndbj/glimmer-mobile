@@ -182,20 +182,124 @@ namespace GlimmerGrove.Tests
         }
 
         // ================================================================ the price
+        /// <summary>
+        /// The ladder a player is actually quoted on one run, pinned as the sequence rather
+        /// than as the factor that produces it. A recurrence nobody can read off two integers
+        /// is exactly the thing worth writing down once.
+        /// </summary>
         [Test]
-        public void TheShippedPriceIsFlatHoweverManyHaveBeenBought()
+        public void TheShippedPriceDoublesWithEveryContinueBoughtOnOneRun()
         {
             var table = Read(null);
 
-            Assert.AreEqual(table.Gems, table.PriceFor(0));
-            Assert.AreEqual(table.Gems, table.PriceFor(1));
-            Assert.AreEqual(table.Gems, table.PriceFor(50));
+            Assert.AreEqual(20L, table.PriceFor(0));
+            Assert.AreEqual(40L, table.PriceFor(1));
+            Assert.AreEqual(80L, table.PriceFor(2));
+            Assert.AreEqual(160L, table.PriceFor(3));
+            Assert.AreEqual(320L, table.PriceFor(4));
+        }
+
+        /// <summary>
+        /// Where the shipped ladder stops climbing, said out loud. It is the one reading that
+        /// shows <see cref="ContinueLimits.MaxGems"/> binding - and it binds only after 5,100
+        /// gems have been spent inside one lost run, which is more than the largest pack in
+        /// the shop holds.
+        /// </summary>
+        [Test]
+        public void TheShippedLadderTopsOutAtTheCeilingOnTheNinth()
+        {
+            var table = Read(null);
+
+            Assert.AreEqual(2_560L, table.PriceFor(7), "the eighth is the last real rung");
+            Assert.AreEqual(ContinueLimits.MaxGems, table.PriceFor(8));
+            Assert.AreEqual(ContinueLimits.MaxGems, table.PriceFor(9));
+        }
+
+        /// <summary>
+        /// A hundred hundredths holds the price still, which with a step is exactly the linear
+        /// ladder this block shipped with. The two are one recurrence rather than two dials,
+        /// and this is the case that proves the old behaviour is still reachable.
+        /// </summary>
+        [Test]
+        public void AFactorOfAHundredWithAStepIsTheOldLinearLadder()
+        {
+            var table = Read(new ContinueDto { gems = 20, gemsStep = 10, gemsFactor = 100 });
+
+            Assert.AreEqual(20L, table.PriceFor(0));
+            Assert.AreEqual(30L, table.PriceFor(1));
+            Assert.AreEqual(40L, table.PriceFor(2));
+        }
+
+        [Test]
+        public void AFactorOfAHundredWithNoStepIsFlatHoweverManyHaveBeenBought()
+        {
+            var table = Read(new ContinueDto { gems = 20, gemsStep = 0, gemsFactor = 100 });
+
+            Assert.AreEqual(20L, table.PriceFor(0));
+            Assert.AreEqual(20L, table.PriceFor(1));
+            Assert.AreEqual(20L, table.PriceFor(50));
+        }
+
+        /// <summary>
+        /// The multiply lands before the divide, which is the same rule invariant 37bh is:
+        /// taken the other way round, a tenth of 8 truncates back to 8 and a retune buys
+        /// nothing. 150 hundredths of 20 is 30, and the truncation happens once per rung
+        /// rather than once at the end.
+        /// </summary>
+        [Test]
+        public void AFractionalFactorIsExactBecauseTheDivideIsLast()
+        {
+            var table = Read(new ContinueDto { gems = 20, gemsFactor = 150 });
+
+            Assert.AreEqual(30L, table.PriceFor(1));
+            Assert.AreEqual(45L, table.PriceFor(2));
+            Assert.AreEqual(67L, table.PriceFor(3), "67.5 truncates, and does so once");
+        }
+
+        /// <summary>
+        /// A price that <em>falls</em> as more are bought is the one setting that would make
+        /// the fail state stop binding altogether - invariant 5d's complaint about a rule that
+        /// rejects nothing, said about a price. Named and clamped to flat rather than honoured.
+        /// </summary>
+        [Test]
+        public void AFallingPriceIsRefusedAndSaysSo()
+        {
+            var problems = new List<string>();
+            var table = Read(new ContinueDto { gems = 20, gemsFactor = 50 }, problems);
+
+            Assert.AreEqual(ContinueLimits.MinGemsFactor, table.GemsFactor);
+            Assert.AreEqual(20L, table.PriceFor(5), "clamped to flat, never cheaper");
+            Assert.AreEqual(1, problems.Count, string.Join("; ", problems));
+        }
+
+        [Test]
+        public void ARunawayFactorIsClampedAndSaysSo()
+        {
+            var problems = new List<string>();
+            var table = Read(new ContinueDto { gems = 20, gemsFactor = 100_000 }, problems);
+
+            Assert.AreEqual(ContinueLimits.MaxGemsFactor, table.GemsFactor);
+            Assert.AreEqual(1, problems.Count, string.Join("; ", problems));
+        }
+
+        /// <summary>
+        /// A factor that truncates back to where it started climbs no further however many are
+        /// bought - 101 hundredths of 20 is 20 in integer arithmetic. It must answer at once
+        /// rather than iterate a count nothing bounds, because that count is reached over a
+        /// frozen board with a defeat panel waiting on it.
+        /// </summary>
+        [Test]
+        public void AFactorThatCannotClimbAnswersAtOnceRatherThanSpinning()
+        {
+            var table = Read(new ContinueDto { gems = 20, gemsFactor = 101 });
+
+            Assert.AreEqual(20L, table.PriceFor(int.MaxValue));
         }
 
         [Test]
         public void AStepMakesEachFurtherContinueDearer()
         {
-            var table = Read(new ContinueDto { gems = 20, gemsStep = 10 });
+            var table = Read(new ContinueDto { gems = 20, gemsStep = 10, gemsFactor = 100 });
 
             Assert.AreEqual(20L, table.PriceFor(0));
             Assert.AreEqual(30L, table.PriceFor(1));
@@ -211,7 +315,27 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AClimbingPriceSaturatesRatherThanWrapping()
         {
-            var table = Read(new ContinueDto { gems = 20, gemsStep = ContinueLimits.MaxGemsStep });
+            var table = Read(new ContinueDto
+            {
+                gems = 20, gemsStep = ContinueLimits.MaxGemsStep, gemsFactor = 100
+            });
+
+            Assert.AreEqual(ContinueLimits.MaxGems, table.PriceFor(int.MaxValue));
+            Assert.AreEqual(ContinueLimits.MaxGems, table.PriceFor(1_000_000));
+        }
+
+        /// <summary>
+        /// The same, on the shape that ships. A geometric price reaches the ceiling far
+        /// sooner, and what matters is that it stops there rather than wrapping - and that it
+        /// says so without walking two billion rungs to find out.
+        /// </summary>
+        [Test]
+        public void ADoublingPriceSaturatesRatherThanWrapping()
+        {
+            var table = Read(new ContinueDto
+            {
+                gems = 20, gemsFactor = ContinueLimits.MaxGemsFactor
+            });
 
             Assert.AreEqual(ContinueLimits.MaxGems, table.PriceFor(int.MaxValue));
             Assert.AreEqual(ContinueLimits.MaxGems, table.PriceFor(1_000_000));
@@ -297,12 +421,12 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheOfferQuotesThePriceForTheContinueBeingBought()
         {
-            Publish(new ContinueDto { gems = 20, gemsStep = 10, turns = 15 });
+            Publish(new ContinueDto { gems = 20, turns = 15 });
 
             var third = RunContinue.Offer(ContinueUnit.Turns, deficit: 0, taken: 2,
                                           gemsHeld: 1_000, gemsForSale: false);
 
-            Assert.AreEqual(40L, third.Gems);
+            Assert.AreEqual(80L, third.Gems, "twenty doubled twice");
             Assert.AreEqual(2, third.Taken, "the panel, the debit and the event quote one number");
         }
 

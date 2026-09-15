@@ -432,11 +432,6 @@ namespace GlimmerGrove.Progression
             // and it must not take the chest table down with it either.
             var ads = AdRewardTable.Resolve(dto.ads, problems);
 
-            // And the same bargain again. An unreadable streak ladder costs the live
-            // tuning of one feature; it must not take the curve, the chests or the ads
-            // down with it.
-            var streak = StreakTable.Resolve(dto.streak, problems);
-
             // And once more. Of the four optional blocks this is the one whose absence is
             // least visible — every glade simply pays exactly what the rule says, which is
             // a working game — so it must be reported loudly and never allowed to be fatal.
@@ -497,10 +492,29 @@ namespace GlimmerGrove.Progression
             // than by `JsonUtility` cannot be dereferenced through.
             WardStars.Resolve(dto.wards, problems);
 
-            // And the slates. Read last because their chests are read with the daily
+            // And the slates. Read late because their chests are read with the daily
             // table's own band reader, and an unreadable block costs the live slate and
             // never the feature — the built-in slate is a working screen.
             var tasks = TaskTable.Resolve(dto.tasks, problems);
+
+            // And the same bargain again. An unreadable streak ladder costs the live
+            // tuning of one feature; it must not take the curve, the chests or the ads
+            // down with it.
+            //
+            // Read *after* the slates on purpose: a streak night may pay a chest, and the
+            // tier it names is one of theirs (invariant 45 — naming a tier makes one
+            // published disclosure the odds for every night that pays it). Resolving it
+            // earlier would have made the streak author a second chest ladder nobody would
+            // remember to retune beside the first.
+            var streak = StreakTable.Resolve(dto.streak, tasks.Tier, problems);
+
+            // And the slate that decides what the phone says while nobody is playing. It sets
+            // its own static rather than riding this table's constructor, which is
+            // `WardStars.Resolve` two lines up in spirit and for its reason: nothing that asks
+            // this table a question needs it, so threading it through would be an eighteenth
+            // argument for the benefit of no caller. It is also the one block here that reaches
+            // no server — see `NotificationsDto`.
+            Notifications.NotificationTable.Resolve(dto.notifications, problems);
 
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,

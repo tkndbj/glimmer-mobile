@@ -105,23 +105,26 @@ namespace GlimmerGrove.Social
             string storedName, CancellationToken cancellation = default);
 
         /// <summary>
-        /// Reports a keeper's published name.
+        /// Reports a keeper's published name, or what they have built.
         ///
         /// <para>
-        /// <b>The request carries one id and nothing else</b> — no reason, no category, no free
-        /// text. The server reads the card and the reservation itself, so there is nothing in
-        /// the body to forge and no way to report a name that is not actually on a board. It is
-        /// <see cref="PublishGroveAsync"/>'s bargain in the other direction: the client says
-        /// only that it wants something to happen, and the server decides what.
+        /// <b>The request carries one id and one of two words, and nothing else</b> — no reason,
+        /// no category, no free text. The server reads the card and the reservation itself, so
+        /// there is nothing in the body to forge and no way to report something that is not
+        /// actually on a board. It is <see cref="PublishGroveAsync"/>'s bargain in the other
+        /// direction: the client says only that it wants something to happen, and the server
+        /// decides what.
         /// </para>
         /// <para>
         /// The reply deliberately does not say whether the report counted towards a takedown —
         /// see <see cref="NameReportOutcome"/>. Safe to call twice: the server keys the record
-        /// on the pair of accounts, so a retry after a lost reply records nothing new.
+        /// on the pair of accounts <em>and the subject</em>, so a retry after a lost reply
+        /// records nothing new, and reporting the other half is a separate judgement rather than
+        /// a duplicate.
         /// </para>
         /// </summary>
-        Task<(CloudResult result, NameReportOutcome outcome)> ReportKeeperNameAsync(
-            string keeperId, CancellationToken cancellation = default);
+        Task<(CloudResult result, NameReportOutcome outcome)> ReportKeeperAsync(
+            string keeperId, ReportSubject subject, CancellationToken cancellation = default);
 
         /// <summary>
         /// Reads one keeper's published grove, for a visit.

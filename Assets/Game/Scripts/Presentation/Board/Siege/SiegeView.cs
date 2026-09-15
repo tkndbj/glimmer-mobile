@@ -348,6 +348,12 @@ namespace GlimmerGrove
         /// <summary>The effect layer that is clipped to the board — see <c>SiegeView.Build</c>.</summary>
         RectTransform _sky;
 
+        /// <summary>
+        /// The damage figures, above every effect on this board — see <c>SiegeView.Build</c> for
+        /// why they are not on <c>_fx</c> and <c>SiegeView.Number</c> for what they are.
+        /// </summary>
+        RectTransform _figures;
+
         readonly List<Gem> _gems = new List<Gem>(48);
         readonly List<Mob> _mob = new List<Mob>(24);
         readonly List<Mob> _order = new List<Mob>(24);

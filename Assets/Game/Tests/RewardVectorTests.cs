@@ -7,6 +7,7 @@ using GlimmerGrove.Daily;
 using GlimmerGrove.Events;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
+using GlimmerGrove.Tasks;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -72,6 +73,15 @@ namespace GlimmerGrove.Tests
             public StreakDto streakLadder;
 
             public StreakVectorCase[] streakCases;
+
+            /// <summary>
+            /// The streak chest's own tiers and cases — a chest seeded from a subject, like a
+            /// task's, with the night's own calendar day and the night in it. Synthetic for
+            /// <see cref="dailyChestConfig"/>'s reason.
+            /// </summary>
+            public TaskTierDto[] streakChestTiers;
+
+            public StreakChestVectorCase[] streakChestCases;
 
             /// <summary>
             /// The season chest's own tiers and cases — a chest seeded from a subject, like a
@@ -183,6 +193,21 @@ namespace GlimmerGrove.Tests
             public int night;
             public string kind;
             public int amount;
+
+            /// <summary>The chest tier a chest night pays, or empty for a figure.</summary>
+            public string tier;
+        }
+
+        /// <summary>One night's chest roll. The subject is the night's own calendar day.</summary>
+        [Serializable]
+        public sealed class StreakChestVectorCase
+        {
+            public string name;
+            public string playerKey;
+            public int dayKey;
+            public int night;
+            public string tier;
+            public DropVector[] drops;
         }
 
         [Serializable]
@@ -522,8 +547,12 @@ namespace GlimmerGrove.Tests
             // Read through the real reader, so the vectors exercise the clamp and the
             // refusals as well as the lookup. Problems are expected here — the ladder
             // deliberately overreaches on two nights — but the table must still build.
+            //
+            // The tiers a chest night names are the vector file's own synthetic ones, which
+            // is what keeps this a test of the *lookup*: the shipped tiers can be retuned,
+            // renamed or removed without turning these red.
             var problems = new List<string>();
-            var ladder = StreakTable.Resolve(file.streakLadder, problems);
+            var ladder = StreakTable.Resolve(file.streakLadder, VectorTier(file), problems);
 
             Assert.AreEqual(file.streakLadder.rungs.Length, ladder.Length,
                             "the reader refused the vector ladder outright: " +
@@ -534,8 +563,14 @@ namespace GlimmerGrove.Tests
             foreach (var test in file.streakCases)
             {
                 var rung = ladder.Rung(test.night);
-                string got = rung.IsValid ? $"{ChestDropKinds.Id(rung.Kind)}={rung.Amount}" : "(nothing)";
-                string want = string.IsNullOrEmpty(test.kind) ? "(nothing)" : $"{test.kind}={test.amount}";
+
+                string got = rung.IsChest ? $"tier={rung.Tier.Id}"
+                           : rung.IsValid ? $"{ChestDropKinds.Id(rung.Kind)}={rung.Amount}"
+                           : "(nothing)";
+
+                string want = !string.IsNullOrEmpty(test.tier) ? $"tier={test.tier}"
+                            : !string.IsNullOrEmpty(test.kind) ? $"{test.kind}={test.amount}"
+                            : "(nothing)";
 
                 if (got != want) failures.Add($"'{test.name}' (night {test.night}): expected {want}, got {got}");
             }
@@ -843,6 +878,123 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(joined.Contains("@weekly:2901:d_play#"), "a daily id claimed in the weekly period");
             Assert.IsTrue(joined.Contains("@daily:2901:w_win#"), "a day key that equals a week key");
             Assert.IsTrue(joined.Contains("(Ünïcödé)@"), "a non-ASCII player key, hashed per code unit");
+        }
+
+        /// <summary>
+        /// The vector file's synthetic chest tiers, read through the real band reader.
+        ///
+        /// Shared by the three subject-seeded chest tests and by the streak ladder's own
+        /// lookup, because they all name the same four ids — and because a tier table built
+        /// twice in one file is two tables that can disagree about what "gold" holds.
+        /// </summary>
+        static Dictionary<string, ChestTier> VectorTiers(TaskTierDto[] rows)
+        {
+            var tiers = new Dictionary<string, ChestTier>(StringComparer.Ordinal);
+            if (rows == null) return tiers;
+
+            for (int i = 0; i < rows.Length; i++)
+            {
+                var problems = new List<string>();
+                var chest = DailyChestTable.ReadChest(rows[i].chest, "vector tier " + rows[i].id, problems);
+                Assert.IsEmpty(problems, string.Join("; ", problems));
+                tiers[rows[i].id] = new ChestTier(rows[i].id, i + 1, chest);
+            }
+
+            return tiers;
+        }
+
+        /// <summary>The lookup <see cref="StreakTable.Resolve"/> takes, over those tiers.</summary>
+        static Func<string, ChestTier> VectorTier(VectorFile file)
+        {
+            var tiers = VectorTiers(file.streakChestTiers ?? file.taskChestTiers);
+            return id => id != null && tiers.TryGetValue(id, out var tier) ? tier : null;
+        }
+
+        /// <summary>
+        /// The streak chest's own contract: a chest seeded from a subject carrying the
+        /// night's own calendar day and the night. Rolled here through
+        /// <see cref="ChestSeed.ForSubject"/> exactly as <c>DailyStreak.SeedFor</c> rolls it,
+        /// and again in <c>functions/src/streak.ts</c>. The cases were produced by a fifth
+        /// copy of the generator (<c>Tools/make_streak_vectors.py</c>), so a disagreement
+        /// here says which side moved.
+        /// </summary>
+        [Test]
+        public void EveryStreakChestVectorMatches()
+        {
+            var file = Load();
+
+            Assert.IsNotNull(file.streakChestTiers, "the vector file has no streak chest tiers");
+            Assert.IsNotNull(file.streakChestCases, "the vector file has no streak chest cases");
+            Assert.Greater(file.streakChestCases.Length, 0);
+
+            var tiers = VectorTiers(file.streakChestTiers);
+            var failures = new List<string>();
+
+            foreach (var test in file.streakChestCases)
+            {
+                var seed = ChestSeed.ForSubject(test.playerKey, DailyStreak.SeedTag,
+                                                DailyStreak.Subject(test.dayKey, test.night));
+
+                string got = Describe(tiers[test.tier].Chest.Roll(seed));
+                string want = Describe(test.drops);
+
+                if (got != want)
+                    failures.Add($"'{test.name}': expected {want}, got {got}");
+            }
+
+            Assert.IsEmpty(failures,
+                           "the client no longer rolls streak chests the way the server does. If " +
+                           "this change was intended, regenerate firebase/shared/reward-vectors.json " +
+                           "with Tools/make_streak_vectors.py and make the same change in " +
+                           "firebase/functions/src/streak.ts — otherwise the server will grant a " +
+                           "different amount than the game showed.\n" + string.Join("\n", failures));
+        }
+
+        /// <summary>
+        /// The two traps a naive streak seeding falls into, and the reason the subject holds
+        /// both halves: <b>one night on two days</b> and <b>one day with two nights</b>. A
+        /// seed that dropped either would roll them the same, and the symptom is a player
+        /// who collects two nights and is paid for one of them twice.
+        /// </summary>
+        [Test]
+        public void TheStreakChestVectorsCoverBothHalvesOfTheSubject()
+        {
+            var file = Load();
+            var bySubject = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            foreach (var test in file.streakChestCases ?? new StreakChestVectorCase[0])
+            {
+                string subject = $"{test.playerKey}|{test.dayKey}|{test.night}";
+                bySubject.TryGetValue(subject, out string so_far);
+                bySubject[subject] = so_far + "/" + Describe(test.drops);
+            }
+
+            int days = 0, nights = 0;
+
+            foreach (var pair in bySubject)
+            {
+                var parts = pair.Key.Split('|');
+                int day = int.Parse(parts[1]), night = int.Parse(parts[2]);
+
+                if (bySubject.TryGetValue($"{parts[0]}|{day + 1}|{night}", out string nextDay))
+                {
+                    days++;
+                    Assert.AreNotEqual(pair.Value, nextDay,
+                                       $"'{pair.Key}' rolls the same as the night after it; the day " +
+                                       "is in the subject precisely so it cannot");
+                }
+
+                if (bySubject.TryGetValue($"{parts[0]}|{day}|{night + 1}", out string nextNight))
+                {
+                    nights++;
+                    Assert.AreNotEqual(pair.Value, nextNight,
+                                       $"'{pair.Key}' rolls the same as the next night on the same " +
+                                       "day; the night is in the subject precisely so it cannot");
+                }
+            }
+
+            Assert.Greater(days, 0, "no pair of cases shares a night across two days");
+            Assert.Greater(nights, 0, "no pair of cases shares a day across two nights");
         }
 
         static string Describe(IEnumerable<ChestDrop> drops)

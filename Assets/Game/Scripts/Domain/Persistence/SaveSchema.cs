@@ -423,8 +423,32 @@ namespace GlimmerGrove.Persistence
         ///      written, because a rolled-back client writes it and the rules' allow-list
         ///      cannot lose a key without losing every save write (12a).
         ///      </para>
+        /// v29 — the streak shield (<see cref="StreakStateDto.shieldFromDay"/>): the day a
+        ///      player paid gems to keep their streak alive while they are away.
+        ///      <para>
+        ///      <b>One date, for the fourth time in this section and the same reason.</b> The
+        ///      shield covers a fixed number of days from the one it was bought on, so the
+        ///      entitlement <em>is</em> that day: it only ever rises, the merge is <c>max</c>,
+        ///      and "days remaining" — the shape that first suggests itself — is the stored
+        ///      count invariant 11b refuses. It is also what makes the promise exact: there is
+        ///      one date, so playing during the window writes nothing and cannot extend it.
+        ///      </para>
+        ///      <para>
+        ///      <b>No migration and no rules release.</b> Zero is a file that has never bought
+        ///      one, which no live player can be wrong about, and the field rides inside the
+        ///      existing <c>streak</c> map — which <c>firestore.rules</c> already bounds as a
+        ///      map without naming its fields, so <c>hasOnly</c> has nothing new to learn
+        ///      (12a). The version moves because <see cref="SaveChecksum"/> hashes the
+        ///      serialised object and a v28 file can never match a v29 hash.
+        ///      </para>
+        ///      <para>
+        ///      The same drop took hearts and heart boosts off the streak ladder and put
+        ///      chests on it. That cost this file nothing at all: a chest night is claimed
+        ///      under the id a currency night already used, and what a chest holds has never
+        ///      been stored anywhere (<c>DailyChests</c>).
+        ///      </para>
         /// </summary>
-        public const int Version = 28;
+        public const int Version = 29;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -1363,6 +1387,34 @@ namespace GlimmerGrove.Persistence
         /// because under the old rule it had been.
         /// </summary>
         public int collectedThroughDay;
+
+        /// <summary>
+        /// The day a streak shield was bought, or 0 for a file that has never held one.
+        ///
+        /// <para>
+        /// <b>A fourth date, for the fourth time and the same reason.</b> A shield covers
+        /// <c>StreakTable.ShieldDays</c> days from the one it was bought on, so the whole
+        /// entitlement is a single day key: it only ever rises — a later purchase is by
+        /// definition a later day — so the merge is <c>max</c> and nothing has to decide
+        /// which device is right. A stored "days remaining" would be hearts' old mistake
+        /// (invariant 11b) and could not be joined at all.
+        /// </para>
+        /// <para>
+        /// It is also why a shield cannot be <em>extended</em>: there is one date, so logging
+        /// in while protected writes nothing and a second purchase is refused while the first
+        /// is still running. The lapsed date stays on disk for ever, which costs four bytes
+        /// and is what makes the field monotonic.
+        /// </para>
+        /// <para>
+        /// <b>Nothing about it is adjudicated</b>, and that is a fact about what it does
+        /// rather than an oversight. It keeps a streak alive across days nobody played; it
+        /// does not advance the night count, so a forged shield still collects at most one
+        /// night per calendar day — exactly what an honest player who opens the game every
+        /// day collects. The gems it costs are an ordinary debit the server already refuses
+        /// to let a balance go negative for. See <c>DailyStreak.TryBuyShield</c>.
+        /// </para>
+        /// </summary>
+        public int shieldFromDay;
     }
 
     /// <summary>

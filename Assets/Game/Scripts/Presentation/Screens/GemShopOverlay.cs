@@ -111,6 +111,14 @@ namespace GlimmerGrove
             StoreService.Changed += Repaint;
             StoreService.Failed += OnFailed;
 
+            // And on the wallet, because the one line this panel says about itself is how many
+            // gems the player is holding. The store's own event covers a purchase landing and
+            // nothing else: an ad's grant confirmed by the server, a sync applying another
+            // device's chest and a run that just spent a continue all move that number with the
+            // panel open, and every one of them used to leave it reading the figure from
+            // whenever it was raised.
+            PlayerProgression.Changed += Repaint;
+
             // The store may not have connected yet — the splash starts it, and a player can
             // reach a fail state before it answers. Asking again costs nothing when it has.
             StoreService.BeginConnect();
@@ -123,6 +131,7 @@ namespace GlimmerGrove
             StoreService.Granted -= OnGranted;
             StoreService.Changed -= Repaint;
             StoreService.Failed -= OnFailed;
+            PlayerProgression.Changed -= Repaint;
         }
 
         void BuildList(float top)

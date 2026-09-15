@@ -20,8 +20,10 @@ rules_version = '2';
 //   groves/{uid}                     the public grove card. Any player reads, none write.
 //   names/{nameKey}                  a reserved keeper name. Any player gets one, none list.
 //   nameReports/{uid}/...            who reported whose name. Server-only, both ways.
+//   groveReports/{uid}/...           who reported whose grovement. The same, per subject.
 //   leaderboards/{boardId}           a published board. Any player reads, none write.
 //   config/{doc}                     reward table and product catalog. Read-only.
+//   config/release                   the minimum client per store. World-readable.
 //
 // What these rules deliberately do NOT do: validate the contents of the level ledger
 // element by element. Firestore rules have no loops, so per-record checks are not
@@ -374,8 +376,8 @@ service cloud.firestore {
       allow list, write: if false;
     }
 
-    // --------------------------------------------------------- name reports
-    // Who has reported whose keeper name, and how many distinct players have.
+    // ------------------------------------------------------------- reports
+    // Who has reported whose keeper name or grovement, and how many distinct players have.
     //
     // Server-only in **both** directions, which is unusual here and deliberate in each.
     //
@@ -395,7 +397,23 @@ service cloud.firestore {
     //
     // The reporter's own daily quota lives at players/{uid}/private/reports and is covered by
     // the existing `private` rule, which is why it is not named here.
+    // The two subjects are two collections, because they are two judgements: a name three
+    // people found offensive says nothing about the benches, and one tally would hide a grove
+    // behind a name's reports. `reports.ts` owns both and the shape is identical.
+    //
+    // Named here even though the catch-all at the foot of this file already denies them, and
+    // that is not redundancy: a collection nobody has written a rule for reads as a collection
+    // nobody thought about, and the next person to add a report subject copies whichever block
+    // they can see.
     match /nameReports/{uid} {
+      allow read, write: if false;
+
+      match /reporters/{reporterUid} {
+        allow read, write: if false;
+      }
+    }
+
+    match /groveReports/{uid} {
       allow read, write: if false;
 
       match /reporters/{reporterUid} {
@@ -429,6 +447,25 @@ service cloud.firestore {
     //
     // Rules union rather than override, so this widens the read above without touching it.
     match /config/stats {
+      allow read:  if true;
+      allow write: if false;
+    }
+
+    // What the deployment requires of a client, per store: the oldest build still allowed
+    // to run, and where to get a newer one. Readable by anybody, for `config/stats`' reason
+    // and one sharper than it.
+    //
+    // A forced update exists precisely because something about an old client no longer works
+    // against this deployment - and if that something is ever authentication, a gate behind
+    // `signedIn()` is a gate that cannot close on the builds it was written for. It holds no
+    // player and no identifier: one minimum and one store link per platform, identical for
+    // everybody, fetched before anonymous sign-in has necessarily completed.
+    //
+    // Never client-writable, and here that is not merely hygiene - a client that could write
+    // this could wall every other player out of the game.
+    //
+    // Rules union rather than override, so this widens the read above without touching it.
+    match /config/release {
       allow read:  if true;
       allow write: if false;
     }

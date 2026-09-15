@@ -596,6 +596,37 @@ namespace GlimmerGrove.Cloud
             CancellationToken cancellation = default);
 
         /// <summary>
+        /// Reads what the deployment currently requires of a client on
+        /// <paramref name="platform"/> — the oldest build still allowed to run, and where to get
+        /// a newer one.
+        ///
+        /// <para>
+        /// <b>Signed out on purpose, like the stats read beside it, and here it is load-bearing
+        /// rather than convenient.</b> The reason to force an update is usually that something
+        /// about the old client no longer works against this deployment — and if that something
+        /// happens to be authentication, a gate behind sign-in is a gate that can never close on
+        /// exactly the builds it exists for. It is one public document, identical for every
+        /// player, and the rules make it world-readable for the same reason they do
+        /// <c>config/stats</c>.
+        /// </para>
+        /// <para>
+        /// <b>An absent document, an absent platform block and a bare one all succeed with
+        /// <see cref="Release.ReleaseRequirement.None"/>.</b> "Nothing is required" is the
+        /// ordinary state of a release and must be told apart from "nobody answered" — the first
+        /// lifts a wall that is standing and the second leaves it alone — so the difference is
+        /// carried by the <see cref="CloudResult"/> and never by a sentinel in the requirement.
+        /// A project that has never been seeded gates nobody.
+        /// </para>
+        /// <para>
+        /// An unknown or empty <paramref name="platform"/> is answered without a round trip:
+        /// there is no store behind a desktop build, so there is nothing a wall could send
+        /// anybody to.
+        /// </para>
+        /// </summary>
+        Task<(CloudResult result, Release.ReleaseRequirement requirement)> ReadReleaseAsync(
+            string platform, CancellationToken cancellation = default);
+
+        /// <summary>
         /// Erases this account: every document the deployment holds for it, the Sign in with
         /// Apple grant, and the authentication user itself.
         ///

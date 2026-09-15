@@ -349,6 +349,19 @@ namespace GlimmerGrove
 
             if (_report != null && _report.Label != null) UIKit.Shrinkable(_report.Label, 16);
 
+            // The other half of this keeper, one tap away. Both doors are reachable from the
+            // board's own chooser, but a player who walked in here through the grovement should
+            // not have to walk back out to a list to read who built it — two screens about one
+            // person that can only be reached from a third is a third screen nobody has open.
+            UIKit.IconButton("Profile", chrome, Skins.Nav, "ic_nav_profile",
+                             new Vector2(96f, 96f), new Vector2(0f, 1f),
+                             new Vector2(212f, -104f),
+                             () => Flow.Go<PublicProfileScreen>(
+                                 v => v.Show(_ownerId, new LeaderboardEntry(
+                                     0, _ownerId, _card.IsValid ? _card.Name : _knownName,
+                                     _card.AvatarId, _card.KeeperLevel, _card.Score,
+                                     _card.Stars, _card.BestWave))), .5f);
+
             _status = UIKit.Shrinkable(
                 UIKit.Titled("Status", Safe, string.Empty, 28, new Color(1f, .96f, .88f, .78f),
                              TextAnchor.UpperCenter, new Vector2(760f, 160f), new Vector2(.5f, 1f),
@@ -414,6 +427,13 @@ namespace GlimmerGrove
         /// is the one question this feature must not leave open, since the obvious response is
         /// to report again.
         /// </para>
+        /// <para>
+        /// <b>It opens a panel offering two subjects rather than doing one thing.</b> A keeper
+        /// puts a name and a grovement in front of strangers, and this screen is where the
+        /// second one is being looked at — a control here that could only report the name would
+        /// be a report button on a picture that cannot be reported. <c>ReportOverlay</c> owns
+        /// which subjects exist; this owns only who it is about.
+        /// </para>
         /// </summary>
         void PaintReport()
         {
@@ -427,22 +447,29 @@ namespace GlimmerGrove
             _report.gameObject.SetActive(worth);
             if (!worth) return;
 
-            bool sent = NameReports.AlreadySent(_ownerId);
+            // Dead only once *every* subject has been reported. A control greyed after one of
+            // two would tell somebody they had already reported a name they have never looked
+            // at — see `KeeperReports` for why the record is kept per subject.
+            bool spent = KeeperReports.AllSent(_ownerId);
 
-            _report.Interactable = !sent && !_reporting;
+            _report.Interactable = !spent && !_reporting;
 
             if (_report.Label != null)
-                _report.Label.text = Loc.Get(sent ? "ui.visit.report_sent" : "ui.visit.report");
+                _report.Label.text = Loc.Get(spent ? "ui.visit.report_sent" : "ui.visit.report");
         }
 
         void OnReport()
         {
-            if (_reporting || NameReports.AlreadySent(_ownerId)) return;
+            if (_reporting || KeeperReports.AllSent(_ownerId)) return;
 
-            Flow.Modal<ReportNameOverlay>(v => v.OnConfirm = Send);
+            Flow.Modal<ReportOverlay>(v =>
+            {
+                v.KeeperId = _ownerId;
+                v.OnConfirm = Send;
+            });
         }
 
-        void Send() => Run(async token =>
+        void Send(ReportSubject subject) => Run(async token =>
         {
             if (_reporting) return;
 
@@ -457,7 +484,7 @@ namespace GlimmerGrove
             // leaving one line away.
             string owner = _ownerId;
 
-            var (result, outcome) = await GroveBoard.ReportNameAsync(owner, token);
+            var (result, outcome) = await GroveBoard.ReportAsync(owner, subject, token);
 
             _reporting = false;
 

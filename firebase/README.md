@@ -88,7 +88,48 @@ functions/src/
                          believed), the public form of a name, and the daily ranking job
 seed/seed-config.mjs     publishes the reward table, the product catalog AND the grove
                          catalog, all three from the shipped content
+seed/seed-release.mjs    publishes the forced-update requirement. Its own tool on purpose —
+                         see below
+seed/release.json        what that tool publishes: a minimum build and a store link per
+                         platform, authored by hand and reviewed like code
 ```
+
+## The update wall
+
+`config/release` says the oldest build still allowed to run, per store, and where to get a
+newer one. **No function reads or writes it** — it is published by `seed/seed-release.mjs`
+and read by the client directly, signed out.
+
+Three things about it are worth knowing before touching it.
+
+**It is its own tool, not another block in `seed-config.mjs`.** Forcing an update is a
+decision taken at a moment that has nothing to do with rewards, prices or levels, and it is
+the one document here whose mistakes are counted in players who cannot open the game. A
+re-seed run for an unrelated reason must not be able to raise or lower a wall as a side
+effect — and a re-seed publishes whatever is in the working tree, which for a wall would be
+somebody else's in-flight edit deciding who may play.
+
+**A device caches what it was last told**, so a wall survives a restart with no network —
+that is the whole point of it. It follows that publishing is *not* undone by stopping
+publishing. It is undone by publishing a lower minimum, or by deleting the document; either
+reaches a stuck device on its next check, which is within fifteen minutes of a running
+session and immediately on the next launch.
+
+**A minimum with no store link is refused**, by the tool and again by the client. It would be
+a wall no build could open from the player's side. The tool also refuses a minimum ahead of
+the `bundleVersion` this repository builds, because that is an update to a release that does
+not exist yet — which is what happens when the number goes up before the store is serving it.
+
+```bash
+node seed/seed-release.mjs --check     # prove it, write nothing
+node seed/seed-release.mjs             # publish
+```
+
+Raise `android.minimum` only once Play is actually serving the build, and `ios.minimum` only
+once the App Store is — which is days later, and is exactly why they are separate. iOS has no
+store link yet and therefore cannot be walled at all: an Apple id is minted by App Store
+Connect and is derivable from nothing in the build, so the alternative to leaving it empty is
+walling iPhone players out and pointing them at nothing.
 
 ## The public boards
 
@@ -138,6 +179,17 @@ in a client is a list read out of the client. A refused name is not rejected: th
 keeps it and appears under a handle derived from their uid, which is also what gives two
 unnamed keepers rows that differ. `settings.board == 2` opts out, read off the save so the
 refusal cannot be talked past, and `withdrawGrove` takes the card down.
+
+**A card also carries what a public profile draws**: `companions`, the priced companions the
+keeper owns, and `line`, the four seats of the turret loadout. Both are built by the same pass
+that scores the grove — `heldCompanions` is the walk `groveWorth` prices, so the portraits a
+visitor sees and the number under them are one fact rather than two filters. Neither is
+adjudicated the way the score is, and neither needs to be: a line orders no board and pays
+nothing, so it is a *picture*, exactly as `placed` has always been. What the server does check
+is the one forgery a visitor could catch as a lie — the keeper level gate, asked before
+anything else, so a level-two account cannot stand the turret that opens at forty. That needs
+`config/grove.wards`, which the seeder publishes; **a deployment that has not been re-seeded
+publishes no line at all** rather than an unvouched one.
 
 Four rules exist in both C# and TypeScript — the worth, the keeper level behind it, the
 name and the league — and all four fail silently. `firebase/shared/grove-vectors.json` pins
@@ -295,6 +347,7 @@ npm --prefix functions install
 npm --prefix functions run test     # reward vectors: the server must match the client
 firebase deploy --only firestore:rules
 node seed/seed-config.mjs           # must run before functions serve traffic
+node seed/seed-release.mjs          # the forced-update requirement; harmless when nothing is forced
 firebase deploy --only functions
 node e2e/smoke-test.mjs             # proves the rules still hold
 ```
@@ -557,7 +610,25 @@ is idempotent, so re-reading costs nothing.
   able to buy things — but a live economy should know the difference, and nothing
   currently reports on it.
 
-## Keeper names: the word filter and the moderation desk
+## Moderation: the word filter, reporting, and the desk
+
+A keeper puts **two** things in front of strangers — a name, which is the one piece of free
+text in this game, and a grovement, which is 784 tiles of ground sold with walls, gates and
+fences. `grove.ts` used to argue an arrangement could not be offensive because every piece is
+an id from a catalog we ship; that was true of the pre-placed dots the grove began as and
+stopped being true the day land was sold by the region. Walls tile.
+
+So a report names a **subject**, `name` or `grove`, and everything else about the mechanism is
+shared: one document per (subject, target, reporter), a threshold that counts distinct
+reporters, a per-account daily quota, an audit trail and a review floor. The two subjects are
+separate collections and separate counts, because they are separate judgements; the quota is
+shared, because it is a bound on the reporter's account rather than a budget per subject.
+
+A takedown does one thing and deliberately only one. A **name** resolves to the generated
+handle; a **grovement** publishes an empty `placed` map. In both cases the keeper keeps
+everything on their own screens, keeps their score, their stars, their row and their currency,
+and is told nothing — the alternative is a punishment pipeline, which needs an appeals process
+and a support desk before it is honest.
 
 The filter is three layers and only one of them is a list — see invariants 19g-19i in
 `CLAUDE.md` for the arguments.
@@ -565,7 +636,9 @@ The filter is three layers and only one of them is a list — see invariants 19g
 - `functions/src/profanity.ts`   the fold, and the three matching classes
 - `functions/src/blocklist.ts`   where the list comes from; `config/names` overrides the
                                  compiled `name-blocklist.json`, which is the floor
-- `functions/src/reports.ts`     one report per pair of accounts; auto-hide at the threshold
+- `functions/src/reports.ts`     one report per (subject, pair); auto-hide at the threshold
+- `reportKeeper`                 the callable; takes `{ keeperId, subject }`, an absent subject
+                                 meaning the name. It was `reportKeeperName` until 2026-09-15
 - `Tools/make_name_blocklist.py` rebuilds the list (LDNOOBW, 27 languages, CC-BY-4.0)
 
 Adding a slur, or removing an entry that turned out to refuse an innocent name, is an edit to
@@ -581,3 +654,9 @@ Taking one specific name down is instant and does not go through the list at all
 
 A hidden name keeps its reservation, so nobody else can claim it. A restore records that the
 name was reviewed, so the next single report cannot undo it.
+
+The desk tool reads `nameReports`; a reported **grovement** is `groveReports/{uid}`, in the same
+shape, and the card itself is what a moderator looks at. Clearing `grove.deniedUnix` on the
+account's wallet restores it on that keeper's next publish, exactly as clearing `name.deniedUnix`
+restores a name — and `reviewedAt` on the summary is what stops the next single report undoing
+the review.

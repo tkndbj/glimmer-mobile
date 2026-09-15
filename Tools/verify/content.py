@@ -1,5 +1,6 @@
 """End-to-end check of the shipped content, mirroring LevelValidator.cs
 and ChapterMapValidator.cs."""
+import io
 import json
 import re, math, os, sys
 from collections import deque
@@ -2286,6 +2287,13 @@ def check_hints(progression, warnings):
 #: exactly as a chapter naming an unknown mode is (invariant 20). Mirrors `UtilityKinds`.
 UTILITY_KINDS = {"blast", "mend", "surge", "storm"}
 
+#: The kinds whose magnitude is measured in *hill health* and therefore climbs with a board that
+#: has been made tougher. Mirrors `UtilityUnits.Climbs`, and the reasoning lives on `UtilityUnit`:
+#: a chapter is made harder by surging what its raiders carry, so a flat figure decays on every
+#: chapter after the second and there is no reading anywhere that would say so. `mend` is in ward
+#: health and `surge` is in fuel; neither climbs, and neither has to.
+UTILITY_CLIMBS = {"blast", "storm"}
+
 #: What the build actually carries a picture for. Which utilities exist is content and which
 #: pictures exist is not, so adding one is a build - and an entry with no icon would draw a white
 #: rectangle on the bar (invariant 7b). Mirrors the `Utility/` block in `AssetManifest.UiSprites`.
@@ -2580,6 +2588,143 @@ def check_tasks(progression, keys, utilities, art, warnings):
                     "marks": worth, "marksPerDay": per_day}
 
 
+def check_streak(progression, tasks, keys, warnings):
+    """The streak ladder and the shield, and what one lap is worth in marks.
+
+    Every rule here is one `StreakTable.Resolve` also enforces, plus the two it structurally
+    cannot. **A rung may not name a kind that is retired** - hearts and boosts reach this
+    ladder through a chest tier now - and **a chest rung's tier has to exist in the tasks
+    block**, which no reader of the streak block alone can check.
+
+    It also returns the marks a lap is worth, because a streak chest feeds the season exactly
+    as a task's does (invariant 47) and a season's pace measured without it is a season that
+    finishes sooner than the figure this gate prints.
+    """
+    errors = []
+    streak = progression.get("streak") or {}
+    rungs = streak.get("rungs") or []
+
+    if not rungs:
+        warnings.append("progression.json has no 'streak' block, so the built-in ladder ships")
+        return errors, {}
+
+    if len(rungs) > 30:
+        errors.append(f"the streak ladder lists {len(rungs)} rungs, above the supported 30")
+
+    tier_ids = list((tasks or {}).get("tiers") or [])
+    ranks = {tid: i for i, tid in enumerate(tier_ids)}
+    marks = (tasks or {}).get("marks") or {}
+
+    retired = {"hearts", "heart_boost"}
+    ceilings = {"credits": 2000, "gems": 100}
+
+    pays = 0
+    lap_marks = 0
+    chests = []
+    last = {}
+
+    for i, rung in enumerate(rungs):
+        night = i + 1
+        kind = (rung or {}).get("kind") or ""
+        tier = (rung or {}).get("tier") or ""
+
+        if kind and tier:
+            errors.append(f"streak night {night} names both a chest tier '{tier}' and a reward "
+                          f"kind '{kind}'; a night pays one or the other")
+            continue
+
+        if tier:
+            if tier not in ranks:
+                errors.append(f"streak night {night} pays chest tier '{tier}', which the tasks "
+                              "block does not define; a night paying a chest nobody can price "
+                              "is a claim the server can never confirm")
+                continue
+
+            if tier == tier_ids[0]:
+                warnings.append(f"streak night {night} pays the '{tier}' chest, which is the "
+                                "humblest tier in the game; a streak asks for a run of "
+                                "consecutive days and should pay above it")
+
+            for earlier, before in chests:
+                if ranks[tier] < ranks[before]:
+                    errors.append(f"streak night {night} pays the {tier} chest but night "
+                                  f"{earlier} pays the {before}; a longer streak that is worth "
+                                  "less is a reason to stop rather than to continue")
+                break
+
+            chests.insert(0, (night, tier))
+            lap_marks += marks.get(tier, 0)
+            pays += 1
+            continue
+
+        if not kind:
+            continue
+
+        if kind in retired:
+            errors.append(f"streak night {night} pays '{kind}', which a streak rung may no "
+                          "longer name: the streak pays credits, gems and chests. Name a chest "
+                          "tier instead, so one published disclosure covers every night that "
+                          "pays it")
+            continue
+
+        if kind not in ceilings:
+            errors.append(f"streak night {night} pays '{kind}', which a streak rung may not "
+                          "name; a rung pays credits, gems or a chest tier")
+            continue
+
+        amount = rung.get("amount", 0)
+        if amount < 1:
+            errors.append(f"streak night {night} pays {amount}; leave the rung empty for a "
+                          "night that pays nothing rather than authoring a zero")
+            continue
+
+        if amount > ceilings[kind]:
+            errors.append(f"streak night {night} pays {amount} {kind}, above the supported "
+                          f"{ceilings[kind]}; the client and the server both clamp to that "
+                          "figure, so this would publish a disagreement")
+
+        if kind in last and amount < last[kind][1]:
+            errors.append(f"streak night {night} pays {amount} {kind} but night {last[kind][0]} "
+                          f"pays {last[kind][1]}; a longer streak that is worth less is a "
+                          "reason to stop rather than to continue")
+
+        last[kind] = (night, amount)
+        pays += 1
+
+    if pays == 0:
+        errors.append("the streak ladder pays nothing on any night, so no night is ever "
+                      "collectable and the streak page can only ever be empty")
+
+    if len(rungs) < 3:
+        warnings.append(f"the streak ladder is only {len(rungs)} night(s) long, so the lap comes "
+                        "round almost immediately and stops escalating where a player notices it")
+
+    # The shield. A price the content forgot is a feature that silently disappears from a
+    # screen, which is exactly the failure a gate is for.
+    days = streak.get("shieldDays", 0)
+    gems = streak.get("shieldGems", 0)
+
+    if gems == 0:
+        warnings.append("the streak block authors no shieldGems, so the built-in price ships. "
+                        "Author it explicitly, or author a negative to withdraw the offer")
+    elif gems < 0:
+        warnings.append("the streak block withdraws the shield, so the streak page draws no "
+                        "offer row at all")
+    elif gems > 5000:
+        errors.append(f"the streak shield costs {gems} gems, above the supported 5000")
+
+    if days and not 1 <= days <= 30:
+        errors.append(f"the streak shield covers {days} days, outside 1..30")
+
+    return errors, {
+        "rungs": len(rungs),
+        "marksPerLap": lap_marks,
+        "marksPerDay": lap_marks / float(len(rungs)),
+        "shieldDays": days or 7,
+        "shieldGems": gems if gems > 0 else (0 if gems < 0 else 120),
+    }
+
+
 def check_seasons(manifest, progression, tasks, keys, warnings):
     """The seasons: the ladder, the tiers it names, and whether it can be climbed.
 
@@ -2726,6 +2871,147 @@ HUB_POINTS = 3
 #: single endless run and draws a hub instead of a map (`EndlessHub`), which is what needs the
 #: extra strings below.
 LADDERED_TRACKS = {"main"}
+
+
+# The slots a day has, the waking-day bounds and the pending ceiling, mirrored from
+# `NotificationWindow`. Ceilings rather than preferences: the slate is content and can be
+# retuned by a push, so these are the numbers a push must not be able to move.
+NOTIFY_SLOTS = 3
+NOTIFY_EARLIEST, NOTIFY_LATEST = 8 * 60, 21 * 60 + 30
+NOTIFY_MAX_PENDING = 60
+NOTIFY_TAPER_PER_DAY = 1
+NOTIFY_SLOT_NAMES = ("any", "morning", "afternoon", "evening")
+
+
+def notification_kinds():
+    """The reminder ids this build knows, read out of `NotificationKinds.Id`.
+
+    Parsed rather than hand-copied, which is `rungs.py`'s lesson paid up front: two lists of
+    the same ids drift and *nothing fails*, because each half is internally consistent. Here
+    the drift would be a kind shipped with no strings, which draws an empty notification -
+    and `loc.py` cannot see a derived key at all (invariant 5a).
+    """
+    source = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..",
+                          "Assets", "Game", "Scripts", "Domain", "Notifications",
+                          "NotificationKind.cs")
+    if not os.path.exists(source):
+        return []
+
+    with io.open(source, encoding="utf-8") as handle:
+        text = handle.read()
+
+    return re.findall(r'case NotificationKind\.\w+:\s*return "([a-z0-9_]+)";', text)
+
+
+def check_notifications(progression, keys, warnings):
+    """The reminder slate: what the phone says while nobody is playing.
+
+    Everything here is invisible to every other gate, and each in its own way.
+
+    * **Every kind's two lines are derived from its permanent id** (`notify.{id}.title` and
+      `.body`), so `loc.py` cannot see them - and a notification with an empty title is one
+      the operating system draws as a blank row.
+    * **A slot hour is a number a content push can move**, so the waking-day bound is checked
+      here rather than trusted. Three in the morning is an uninstall, not a reminder.
+    * **The pending ceiling is enforced by silence.** iOS keeps the 64 soonest pending local
+      notifications and drops the rest with no error and no log line, so `horizonDays` times
+      `perDay` overflowing it is a schedule that works everywhere except on iPhone, a week
+      out, for the player who has already stopped playing.
+    * **A kind named twice** would have one cooldown governing two rows.
+
+    Asked of every kind the *build* knows rather than only of the authored rows, because the
+    built-in slate ships inside the app and is what a first launch - and a malformed block -
+    falls back to.
+    """
+    errors = []
+    known = notification_kinds()
+
+    if not known:
+        warnings.append("could not read NotificationKind.cs; the reminder copy was not checked")
+        return errors
+
+    for kind in known:
+        for half in ("title", "body"):
+            key = "notify.%s.%s" % (kind, half)
+            if key not in keys:
+                errors.append("notification '%s' needs loc key '%s'" % (kind, key))
+
+    block = progression.get("notifications")
+    if not block:
+        warnings.append("progression.json has no 'notifications' block; the built-in slate ships")
+        return errors
+
+    per = block.get("perDay", 3)
+    if per < 1 or per > NOTIFY_SLOTS:
+        errors.append("notifications perDay is %s; a day holds %s slots"
+                      % (per, NOTIFY_SLOTS))
+
+    # The pending count is no longer perDay x horizon: the schedule thins to one a day past
+    # `taperAfterDays`, which is what buys a three-week reach out of a one-week budget. Mirrored
+    # from `NotificationTable.Pending`, because the ceiling it is checked against is enforced by
+    # iOS in silence and a wrong sum here fails nothing while losing the back half on one
+    # platform.
+    horizon = block.get("horizonDays", 21)
+    taper = block.get("taperAfterDays", 7)
+    full = min(taper, horizon)
+    pending = full * max(per, 1) + (horizon - full) * NOTIFY_TAPER_PER_DAY
+
+    if horizon < 1 or taper < 1 or pending > NOTIFY_MAX_PENDING:
+        errors.append("notifications horizonDays %s at perDay %s tapering after day %s is %s "
+                      "pending, and iOS drops past %s in silence"
+                      % (horizon, per, taper, pending, NOTIFY_MAX_PENDING))
+
+    if taper >= horizon:
+        errors.append("notifications tapers after day %s but the horizon is %s days, so the "
+                      "taper never begins" % (taper, horizon))
+
+    hours = block.get("hours") or {}
+    named = [hours.get(name) for name in ("morning", "afternoon", "evening")]
+    written = [h for h in named if h is not None]
+    for i, hour in enumerate(written):
+        if hour < NOTIFY_EARLIEST or hour > NOTIFY_LATEST:
+            errors.append("notifications hour %s is outside the waking day (%s..%s minutes "
+                          "past local midnight)" % (hour, NOTIFY_EARLIEST, NOTIFY_LATEST))
+        if i and hour <= written[i - 1]:
+            errors.append("notifications hours must rise through the day; %s does not follow %s"
+                          % (hour, written[i - 1]))
+
+    seen, live = set(), 0
+    for row in block.get("entries") or []:
+        kind = row.get("kind")
+        if kind not in known:
+            errors.append("notifications names kind '%s', which this build has no copy for; "
+                          "the shipped kinds are %s" % (kind, ", ".join(known)))
+            continue
+        if kind in seen:
+            errors.append("notifications lists '%s' twice; one cooldown cannot govern two rows"
+                          % kind)
+        seen.add(kind)
+
+        slot = row.get("slot", "any")
+        if slot not in NOTIFY_SLOT_NAMES:
+            errors.append("notifications row '%s' names slot '%s', which is not one of %s"
+                          % (kind, slot, "/".join(NOTIFY_SLOT_NAMES)))
+
+        if row.get("minDaysBetween", 1) < 1:
+            errors.append("notifications row '%s' has a cooldown under a day, so it could be "
+                          "said twice in one" % kind)
+
+        if not row.get("disabled"):
+            live += 1
+
+    if not live:
+        errors.append("notifications block enables nothing; the built-in slate would ship "
+                      "instead. To send nothing, the player's own switch is the control")
+
+    # Said rather than checked: how often this game speaks is a decision, and the only way to
+    # see it in a diff is to print it.
+    print("  notifications: %d kind(s), %d live, up to %d a day for %d day(s) then %d a day, "
+          "reaching %d day(s) at %d pending of %d"
+          % (len(known), live, per, taper, NOTIFY_TAPER_PER_DAY, horizon, pending,
+             NOTIFY_MAX_PENDING))
+
+    return errors
 
 
 def check_tracks(manifest, keys):
@@ -3361,23 +3647,6 @@ def daily_income(progression):
     """
     credits = gems = 0.0
 
-    # The daily chest ladder is not counted: it is retired in place on this build (see
-    # DailyChests), still seeded so an older client's claims are priced, and paid to nobody
-    # on the build this gate proves. Its successor is the tasks block below.
-
-    rungs = ((progression.get("streak") or {}).get("rungs")) or []
-    if rungs:
-        credits += sum(r.get("amount", 0) for r in rungs if r.get("kind") == "credits") / len(rungs)
-        gems += sum(r.get("amount", 0) for r in rungs if r.get("kind") == "gems") / len(rungs)
-
-    # The tasks: every dealt task's chest at its tier's expectation, the daily slate over a
-    # day and the weekly over seven. Averaged over the whole slate rather than one period's
-    # deal, because which three are dealt rotates and the income is a figure about a player,
-    # not about a Tuesday.
-    tasks = progression.get("tasks") or {}
-    tiers = {t.get("id"): t.get("chest") or {} for t in tasks.get("tiers") or []}
-    per = tasks.get("activePerPeriod", 3)
-
     def expected(chest):
         c = g = 0.0
         for band in chest.get("guaranteed") or []:
@@ -3396,6 +3665,43 @@ def daily_income(progression):
             elif option.get("kind") == "gems":
                 g += mid * share
         return c, g
+
+    # The daily chest ladder is not counted: it is retired in place on this build (see
+    # DailyChests), still seeded so an older client's claims are priced, and paid to nobody
+    # on the build this gate proves. Its successor is the tasks block below.
+
+    # The streak, amortised over its lap. A night pays a figure *or* a chest, and a chest's
+    # worth is an expectation rather than an amount - counting only the figures would
+    # under-read this ladder by the larger half the day chests went on it, and the symptom is
+    # not a wrong log line: every price in this file is checked against the income that has to
+    # pay it, so an under-read income reports companions and homes as further away than they
+    # are.
+    streak = progression.get("streak") or {}
+    rungs = streak.get("rungs") or []
+    tiers = {t.get("id"): t.get("chest") or {} for t in (progression.get("tasks") or {}).get("tiers") or []}
+
+    if rungs:
+        lap_credits = lap_gems = 0.0
+        for rung in rungs:
+            if rung.get("tier"):
+                c, g = expected(tiers.get(rung["tier"], {}))
+                lap_credits += c
+                lap_gems += g
+            elif rung.get("kind") == "credits":
+                lap_credits += rung.get("amount", 0)
+            elif rung.get("kind") == "gems":
+                lap_gems += rung.get("amount", 0)
+
+        credits += lap_credits / len(rungs)
+        gems += lap_gems / len(rungs)
+
+    # The tasks: every dealt task's chest at its tier's expectation, the daily slate over a
+    # day and the weekly over seven. Averaged over the whole slate rather than one period's
+    # deal, because which three are dealt rotates and the income is a figure about a player,
+    # not about a Tuesday.
+    tasks = progression.get("tasks") or {}
+    per = tasks.get("activePerPeriod", 3)
+
 
     for period, days in (("daily", 1), ("weekly", 7)):
         live = [t for t in tasks.get(period) or [] if not t.get("retired")]
@@ -3650,6 +3956,15 @@ def main():
         seen_orders[order] = entry["id"]
 
     summaries = []
+
+    # How much tougher each chapter's raiders are than the baseline, in tenths. Collected here
+    # because it is read out again under the action bar: a utility measured in hill health is
+    # authored against a baseline raider and delivered through the raider's own surge
+    # (`UtilityUnit.Hill`), so what a firepot is *worth* differs per chapter while the authored
+    # figure is the same on all of them - and the authored figure is the only one anybody can see
+    # in the file.
+    chapter_tough = {}
+
     for entry in manifest["chapters"]:
         if entry.get("disabled"):
             continue
@@ -3675,6 +3990,12 @@ def main():
         # The manifest is the authority on membership and order; the body is the
         # authority on content. Sync Manifest generates one from the other, so any
         # disagreement means it was not run.
+        for lv in chapter["levels"]:
+            block = lv.get("siege") or {}
+            if block:
+                chapter_tough[cid] = max(chapter_tough.get(cid, 10),
+                                         block.get("tough") or 10)
+
         listed = entry.get("levels") or []
         authored = [lv["id"] for lv in chapter["levels"]]
         if listed != authored:
@@ -3837,6 +4158,16 @@ def main():
     task_errors, tasks = check_tasks(progression, keys, utilities, art_on_disk(), warnings)
     errors.extend(task_errors)
 
+    # The streak. Its chest rungs name tiers from the tasks block, so it is read after them -
+    # and what a lap is worth in marks is added to the season's pace, because a streak chest
+    # feeds a season exactly as a task's does (invariant 47).
+    streak_errors, streak = check_streak(progression, tasks, keys, warnings)
+    errors.extend(streak_errors)
+
+    if tasks and streak:
+        tasks["marksPerDay"] = tasks.get("marksPerDay", 0.0) + streak.get("marksPerDay", 0.0)
+        tasks["streakMarksPerDay"] = streak.get("marksPerDay", 0.0)
+
     # The seasons. They name their tiers across two files that version independently, so
     # this is the only place a rung paying a chest nobody can price is visible at all.
     season_errors, seasons = check_seasons(manifest, progression, tasks, keys, warnings)
@@ -3851,6 +4182,11 @@ def main():
     # The lanes. Their copy is derived from the track id, so `loc.py` cannot see it either - and
     # a lane with no ladder draws a whole screen out of strings nothing else names.
     errors.extend(check_tracks(manifest, keys))
+
+    # The reminders. Every kind's copy is derived from its permanent id, so `loc.py` cannot see
+    # a word of it - and the slot hours and the pending ceiling are numbers a content push can
+    # move, one of which is enforced by iOS in silence.
+    errors.extend(check_notifications(progression, keys, warnings))
 
     # The keeper walls. One integer in the manifest against every reward rule in
     # progression.json times every glade in the catalog - a sum neither file can do alone.
@@ -3873,6 +4209,28 @@ def main():
                 entry.get("maxHeld", 0),
                 f"{cools}s cooldown" if cools else "no cooldown"))
 
+        # **What each one is worth on the chapters that ship, which is the reading the file
+        # cannot give.** A magnitude measured in hill health is authored against a baseline
+        # raider and every raider takes it through its own surge (`UtilityUnit.Hill`), so one
+        # authored 440 is a different number on every chapter - and the whole reason it is done
+        # that way is that a flat figure decays against a hill that climbs. Printed rather than
+        # asserted: there is nothing here that can be *wrong*, only something nobody can see.
+        climbs = [e for e in ((progression.get("utilities") or {}).get("items") or [])
+                  if e.get("kind") in UTILITY_CLIMBS]
+
+        surged = sorted({t for t in chapter_tough.values() if t > 10})
+
+        if climbs and surged:
+            print("       measured in hill health, so it climbs with the chapter it is used on:")
+            for entry in sorted(climbs, key=lambda e: e.get("order", 0)):
+                base = entry.get("magnitude", 0)
+                ladder = ", ".join(f"{t / 10:g}x {base * t // 10}" for t in surged)
+                print(f"           {entry.get('id', '?'):<10} {base} at the baseline, {ladder}")
+        elif climbs:
+            print("       measured in hill health, so it climbs with the chapter it is used "
+                  "on - no shipped chapter carries a surge yet, so every one is worth what it "
+                  "says")
+
     if wards:
         print("")
         print(f"turrets: {len(wards)} on the shelf, four colours each - "
@@ -3885,7 +4243,15 @@ def main():
               f"{len(tasks['tiers'])} chest tier(s) ({', '.join(tasks['tiers'])})")
         worth = ", ".join(f"{tid} +{n}" for tid, n in tasks["marks"].items())
         print(f"       a claimed chest earns {worth} - about "
-              f"{tasks['marksPerDay']:.1f} a day to a player who claims every one")
+              f"{tasks['marksPerDay']:.1f} a day to a player who claims every one"
+              + (f" ({tasks['streakMarksPerDay']:.1f} of it from the streak)"
+                 if tasks.get("streakMarksPerDay") else ""))
+
+    if streak:
+        print("")
+        print(f"streak: {streak['rungs']} night lap, worth {streak['marksPerLap']} mark(s) a lap"
+              + (f"; a shield costs {streak['shieldGems']} gems for {streak['shieldDays']} days"
+                 if streak['shieldGems'] else "; no shield is sold"))
 
     if seasons:
         print("")
@@ -4003,6 +4369,13 @@ def main():
         step = carry.get("gemsStep", 0)
         if step < 0:
             step = 0
+        factor = carry.get("gemsFactor", 200)
+        if factor < 0:
+            factor = 200
+        # Mirrors ContinueRule.Resolve's bounds exactly. A factor under a hundred hundredths
+        # would be a price that *falls* as more are bought, which is a fail state that stops
+        # binding; over a thousand is a misplaced digit.
+        factor = max(100, min(1000, factor))
         turns = carry.get("turns", 15)
         if turns < 0:
             turns = 15
@@ -4039,9 +4412,30 @@ def main():
             if entry:
                 line += f", or {gems / entry:.0%} of the {entry}-gem entry rung"
             print(line)
-        if step:
-            print(f"       and {step} more each time, so a third continue on one run "
-                  f"costs {gems + step * 2}")
+        # The ladder one run is quoted, printed in full rather than as the two numbers that
+        # produce it - nobody reads a recurrence off a factor and a step, and what a retune
+        # has to be judged against is the sequence a player is actually shown. It mirrors
+        # `ContinueTable.PriceFor`: price = price * factor // 100 + step, clamped at the
+        # 5,000-gem ceiling a published price is bounded by.
+        ceiling = 5_000
+        rungs, spent, price, tops_out = [], 0, gems, 0
+        for taken in range(8):
+            rungs.append(price)
+            spent += price
+            if price >= ceiling and not tops_out:
+                tops_out = taken + 1
+            nxt = price * factor // 100 + step
+            price = ceiling if nxt >= ceiling else (price if nxt <= price else nxt)
+
+        if factor > 100 or step:
+            climb = (f"x{factor / 100:g} each time" if factor > 100
+                     else f"+{step} each time")
+            line = ("       " + climb + " - one run's ladder is "
+                    + ", ".join(str(x) for x in rungs)
+                    + f" gems ({spent} to buy all eight)")
+            if tops_out:
+                line += f", topping out at the {ceiling}-gem ceiling on the {tops_out}th"
+            print(line)
         else:
             print("       flat, so a run may be continued as often as the player can pay")
 

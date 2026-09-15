@@ -206,6 +206,22 @@ namespace GlimmerGrove.Modes
         /// Uses one, and answers what it did.
         ///
         /// <para>
+        /// <b>A magnitude goes in as it was authored and the board converts it.</b> Every damaging
+        /// kind is measured in <c>UtilityUnit.Hill</c> — damage against an unsurged raider — and
+        /// <c>SiegeBoard.Blast</c> and <c>SiegeBoard.Storm</c> put it through each raider's own
+        /// surge. Nothing is scaled here, because here there is no raider to scale it against:
+        /// an endless hill holds wave four and wave forty at once, and one figure for both would
+        /// be wrong for at least one of them.
+        /// </para>
+        /// <para>
+        /// <b>The charge needs no change for it, and that is the check worth doing.</b>
+        /// <see cref="MatchesFor"/> divides by <c>PerfectMatch</c>, and par is the hill's health
+        /// over the same figure (<c>SiegeTuning.Par</c>) — so a surge multiplies what a utility
+        /// delivers and what the level is graded against by the same amount. What it costs the
+        /// grade as a <em>share of par</em> is therefore identical on every chapter, which is the
+        /// whole of why invariant 39 survives a hill that climbs for ever.
+        /// </para>
+        /// <para>
         /// <b>Nothing is taken from the player here.</b> This applies the effect and reports it;
         /// <c>UtilityLedger.TryUse</c> is called by the screen afterwards and only when
         /// <see cref="SiegeUse.Landed"/> is true, so the board is always asked first. Two orders

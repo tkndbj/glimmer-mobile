@@ -32,10 +32,16 @@ namespace GlimmerGrove.Social
     /// currency the server derived. Nothing here is trusted.
     /// </para>
     /// <para>
-    /// <b>Nothing in a card is free text except the name.</b> Every piece and every region is
-    /// an id from a catalog this build ships, so a grove cannot be arranged into something
-    /// offensive — which is why moderation is a name problem here rather than a content
-    /// problem, and why <see cref="GroveNames"/> is the only sanitiser in the feature.
+    /// <b>Nothing in a card is free text except the name</b>, so <see cref="GroveNames"/> is the
+    /// only sanitiser in the feature — there is no string here for anybody to write anything in.
+    /// <b>That is not the same as saying a card cannot carry something offensive.</b> This file
+    /// used to claim exactly that, on the grounds that every piece is an id from a catalog we
+    /// ship; true of the handful of pre-placed dots the grove began as, and false since land was
+    /// sold by the region and walls by the bundle (invariants 16b and 16e). Walls tile.
+    /// Somebody with enough of them writes whatever they like on the ground, every gate in this
+    /// project stays green while they do — nothing here ever opens a picture — and the answer is
+    /// the one the name already had: <see cref="ReportSubject.Grove"/>, reported and taken down
+    /// by the same mechanism, in its own collection because it is its own judgement.
     /// </para>
     /// <para>
     /// <b>Ids this build does not know are kept, not dropped.</b> A visitor a content drop
@@ -122,13 +128,19 @@ namespace GlimmerGrove.Social
 
         readonly HashSet<string> _land;
         readonly Dictionary<string, Placement> _placed;
+        readonly List<string> _companions;
+        readonly List<Wards.WardSlot> _line;
+        readonly int[] _rungs;
 
         public GroveCard(string ownerId, string name, string avatarId, int keeperLevel,
                          long score, int stars, int bestWave, long publishedUnix,
                          string dwellingId,
                          IEnumerable<string> land,
                          IReadOnlyDictionary<string, Placement> placed,
-                         string hallSlot = null, int hallFacing = 0)
+                         string hallSlot = null, int hallFacing = 0,
+                         IReadOnlyList<string> companions = null,
+                         IReadOnlyList<Wards.WardSlot> line = null,
+                         IReadOnlyList<int> rungs = null)
         {
             OwnerId = ownerId ?? string.Empty;
             Name = name ?? string.Empty;
@@ -154,6 +166,39 @@ namespace GlimmerGrove.Social
                 foreach (var pair in placed)
                     if (!string.IsNullOrEmpty(pair.Key) && pair.Value.IsOccupied)
                         _placed[pair.Key] = pair.Value;
+
+            // Sorted, so two devices that bought the same companions in different orders build
+            // the same fingerprint and neither asks for a publish nothing would change. The
+            // server sorts for the same reason; this is not relying on that, because this list
+            // is also built locally from the ledgers.
+            _companions = new List<string>();
+            if (companions != null)
+                foreach (string id in companions)
+                    if (!string.IsNullOrEmpty(id) && !_companions.Contains(id)) _companions.Add(id);
+            _companions.Sort(StringComparer.Ordinal);
+
+            // The seats, in colour order, with a rung beside each. Two lists rather than a pair
+            // type because `WardLine.Resolve` takes exactly this shape — the line a visitor draws
+            // goes through the same resolver the player's own board does, so a turret this build
+            // has never heard of falls back to the starter rather than drawing nothing.
+            _line = new List<Wards.WardSlot>(Wards.WardLine.Colours.Length);
+            var ladder = new int[Wards.WardLine.Colours.Length];
+            for (int i = 0; i < ladder.Length; i++) ladder[i] = Wards.WardStars.Least;
+
+            if (line != null)
+                for (int i = 0; i < line.Count; i++)
+                {
+                    var slot = line[i];
+                    int at = Wards.WardLine.Colours.IndexOf(slot.Colour);
+                    if (at < 0 || !slot.IsValid) continue;
+
+                    _line.Add(slot);
+                    ladder[at] = Wards.WardStars.Sane(rungs != null && i < rungs.Count
+                                                      ? rungs[i]
+                                                      : Wards.WardStars.Least);
+                }
+
+            _rungs = ladder;
         }
 
         /// <summary>
@@ -275,6 +320,75 @@ namespace GlimmerGrove.Social
         GroveOccupancy _occupancy;
         HomesteadCatalog _occupancyCatalog;
 
+        // ------------------------------------------------------ what a profile draws
+        /// <summary>
+        /// The priced companions this keeper bought, as the server counted them.
+        ///
+        /// <para>
+        /// <b>Bought rather than held, and the difference is the free one.</b> A companion with
+        /// no price is held by everybody who has reached its gate, so it is not on the card at
+        /// all — a reader resolves it through
+        /// <see cref="CompanionLedger.IsHeld(AvatarDefinition, int, Func{string, bool})"/> over
+        /// this list, which is the same rule the profile applies to the player in front of it.
+        /// Telling a visitor something every build already knows would be a field that can go
+        /// stale.
+        /// </para>
+        /// <para>
+        /// Ids this build has never heard of are <b>kept</b>, for the reason an unknown piece is:
+        /// a visitor one drop behind must not quietly show a keeper as owning fewer friends than
+        /// they do. <see cref="AvatarCatalog.Find"/> resolves such an id to nothing and the count
+        /// still says how many were published.
+        /// </para>
+        /// </summary>
+        public IReadOnlyList<string> Companions => _companions;
+
+        /// <summary>
+        /// Whether this keeper holds a companion, asked the way their own game asks it.
+        ///
+        /// The one composition of the rule (invariant 15a): the gate alone is
+        /// <see cref="AvatarCatalog.ReachedBy"/> and answers half of it, which is exactly how a
+        /// companion somebody paid for ends up behind a padlock.
+        /// </summary>
+        public bool Holds(AvatarDefinition companion)
+            => CompanionLedger.IsHeld(companion, KeeperLevel, _companions.Contains);
+
+        /// <summary>
+        /// The seats this keeper has arranged, in colour order. Fewer than four when some of the
+        /// line is the roster's starter — see <see cref="Line"/>.
+        /// </summary>
+        public IReadOnlyList<Wards.WardSlot> Seats => _line;
+
+        /// <summary>
+        /// The turret line this keeper carries into a siege, resolved against a catalog.
+        ///
+        /// <para>
+        /// <b>Through <see cref="Wards.WardLine.Resolve"/>, which is the path a board already
+        /// takes.</b> A seat the card does not name, a turret this build has never heard of and
+        /// one that was retired between drops all land on the roster's starter — the same
+        /// fallback the player's own game applies, so a visited line and the line its owner sees
+        /// cannot differ for any reason but the catalog.
+        /// </para>
+        /// <para>
+        /// <b>Ownership is not re-asked and must not be</b>, which inverts
+        /// <c>WardLoadout.Line</c>'s clause on purpose: that one asks what the player in front of
+        /// the device holds *now*, and the only holdings a visitor knows about are their own. The
+        /// server has already refused every seat it could not vouch for (<c>publishedLine</c>), so
+        /// asking again here would draw four starters for everybody.
+        /// </para>
+        /// </summary>
+        public Wards.WardLine Line(Wards.WardCatalog catalog)
+            => Wards.WardLine.Resolve(catalog, _line, null, (model, colour) => StarsOn(colour));
+
+        /// <summary>How far this keeper has taken the turret on a colour. One where they have not.</summary>
+        public int StarsOn(char colour)
+        {
+            int at = Wards.WardLine.Colours.IndexOf(colour);
+            return at < 0 ? Wards.WardStars.Least : _rungs[at];
+        }
+
+        /// <summary>Whether the keeper has arranged anything at all, as opposed to standing four starters.</summary>
+        public bool HasLine => _line.Count > 0;
+
         /// <summary>How many tiles have something on them. For the visit screen's caption.</summary>
         public int OccupiedCount => _placed.Count;
 
@@ -330,12 +444,15 @@ namespace GlimmerGrove.Social
                 placed[slotId] = new Placement(pieceId, 0L, HomesteadLayout.FacingAt(slotId));
             }
 
+            Loadout(Wards.WardLoadout.IdFor, Wards.WardStarLedger.StarsOf,
+                    out var line, out var rungs);
+
             // `HallSlot` rather than a resolved seat: this and `OfSave` have to produce the
             // same fingerprint for the same grove, and only one of them can see the floor's
             // fallback. Absent is the answer for a grove nobody has rearranged, on both sides.
             return Build(catalog, LedgerHoldings.Instance, ownerId, name, avatarId, keeperLevel,
                          EndlessLedger.Best, nowUnix, placed,
-                         HomesteadLayout.HallSlot, HomesteadLayout.HallFacing);
+                         HomesteadLayout.HallSlot, HomesteadLayout.HallFacing, line, rungs);
         }
 
         /// <summary>
@@ -382,10 +499,40 @@ namespace GlimmerGrove.Social
             string stored = save?.wallet?.displayName;
             string name = string.IsNullOrEmpty(stored) ? Persistence.Wallet.DefaultName : stored;
 
+            // The file's own rows, read the way `WardLoadout.LoadFrom` and
+            // `WardStarLedger.LoadFrom` read them — the later row for a colour wins, and a
+            // holding with no row stands at the first star.
+            var chosen = new Dictionary<char, string>(Wards.WardLine.Colours.Length);
+            if (save?.wardLoadout != null)
+                foreach (var row in save.wardLoadout)
+                {
+                    if (row == null || string.IsNullOrEmpty(row.colour)
+                        || string.IsNullOrEmpty(row.ward)) continue;
+
+                    char colour = row.colour[0];
+                    if (Wards.WardLine.Colours.IndexOf(colour) < 0) continue;
+
+                    chosen[colour] = row.ward;
+                }
+
+            var ladder = new Dictionary<string, int>(StringComparer.Ordinal);
+            if (save?.wardStars != null)
+                foreach (var row in save.wardStars)
+                {
+                    if (row == null || string.IsNullOrEmpty(row.ward)) continue;
+                    ladder[row.ward] = row.stars;
+                }
+
+            Loadout(colour => chosen.TryGetValue(colour, out string id) ? id : string.Empty,
+                    (ward, colour) => ladder.TryGetValue(
+                        Wards.WardHolding.Key(ward, colour), out int at)
+                        ? at : Wards.WardStars.Least,
+                    out var line, out var rungs);
+
             return Build(catalog, new SaveHoldings(save, keeperLevel), ownerId, name,
                          save?.wallet?.avatarId ?? string.Empty, keeperLevel,
                          EndlessLedger.BestIn(save), nowUnix, placed,
-                         save?.groveHall, save?.groveHallFacing ?? 0);
+                         save?.groveHall, save?.groveHallFacing ?? 0, line, rungs);
         }
 
         /// <summary>The one builder both readings go through, so they cannot drift.</summary>
@@ -393,7 +540,8 @@ namespace GlimmerGrove.Social
                                string name, string avatarId, int keeperLevel, int bestWave,
                                long nowUnix,
                                IReadOnlyDictionary<string, Placement> placed,
-                               string hallSlot = null, int hallFacing = 0)
+                               string hallSlot, int hallFacing,
+                               IReadOnlyList<Wards.WardSlot> line, IReadOnlyList<int> rungs)
         {
             catalog = catalog ?? HomesteadCatalog.Empty;
 
@@ -415,7 +563,87 @@ namespace GlimmerGrove.Social
                                  land,
                                  placed,
                                  hallSlot,
-                                 hallFacing);
+                                 hallFacing,
+                                 Bought(catalog, held),
+                                 line,
+                                 rungs);
+        }
+
+        /// <summary>
+        /// The priced companions these holdings paid for, read the way the score reads them.
+        ///
+        /// <para>
+        /// <b>Through the catalog's own resident rows rather than over the roster</b>, because
+        /// that is the walk <see cref="GroveScore"/> makes — and the whole point of publishing
+        /// this set is that the portraits a visitor sees and the number under them are one fact.
+        /// A resident with a price is held only when it was bought
+        /// (<see cref="CompanionLedger.IsHeld(AvatarDefinition, int, Func{string, bool})"/>
+        /// resolves to the purchased half for anything <c>IsForSale</c>), so asking
+        /// <see cref="IGroveHoldings.Holds"/> about a priced resident asks exactly "was this
+        /// bought".
+        /// </para>
+        /// <para>
+        /// <b>Free residents are left out</b>, which is what the card means: a companion nobody
+        /// pays for is held by everybody who has reached its gate, so it is resolved by whoever
+        /// draws the card rather than carried on it.
+        /// </para>
+        /// <para>
+        /// This is a <em>prediction</em>, exactly as the score is. The server asks the companion
+        /// gate as well before it publishes one, and this cannot — the ledgers answer for a
+        /// player whose purchases are real, where re-checking a gate would confiscate a companion
+        /// somebody paid for the day the gates are retuned (invariant 15a). They agree for every
+        /// honest save, which is the only kind this device builds a card for.
+        /// </para>
+        /// </summary>
+        static List<string> Bought(HomesteadCatalog catalog, IGroveHoldings held)
+        {
+            var ids = new List<string>();
+            if (catalog == null || held == null) return ids;
+
+            foreach (var piece in catalog.Pieces)
+            {
+                if (!piece.IsResident || !piece.IsForSale) continue;
+                if (!held.Holds(piece)) continue;
+
+                string companionId = GroveResidents.CompanionIdOf(piece.Id);
+                if (!string.IsNullOrEmpty(companionId)) ids.Add(companionId);
+            }
+
+            return ids;
+        }
+
+        /// <summary>
+        /// The seats a stored loadout names, and how far each has been taken.
+        ///
+        /// <para>
+        /// <b>The rows the player actually chose, never the resolved four.</b>
+        /// <c>WardLoadout.Line</c> fills every gap with the roster's starter, which is right for
+        /// a board and wrong for a card: a seat nobody chose would then be published as a
+        /// deliberate choice, and — worse — the fingerprint would change the day the roster's
+        /// starter did, calling every grove in the game changed at once.
+        /// </para>
+        /// <para>
+        /// In colour order, because the fingerprint is ordinal-sorted and a card is compared to
+        /// another card: the save writes rows in colour order too (<c>WardLoadout.Rows</c>), and
+        /// two orders for one line is a publish asked for on every launch.
+        /// </para>
+        /// </summary>
+        static void Loadout(Func<char, string> chosen, Func<string, char, int> stars,
+                            out List<Wards.WardSlot> line, out List<int> rungs)
+        {
+            line = new List<Wards.WardSlot>(Wards.WardLine.Colours.Length);
+            rungs = new List<int>(Wards.WardLine.Colours.Length);
+
+            for (int i = 0; i < Wards.WardLine.Colours.Length; i++)
+            {
+                char colour = Wards.WardLine.Colours[i];
+
+                string ward = chosen(colour);
+                if (string.IsNullOrEmpty(ward)) continue;
+
+                line.Add(new Wards.WardSlot(colour, ward));
+                rungs.Add(Wards.WardStars.Sane(stars(ward, colour)));
+            }
         }
 
         /// <summary>
@@ -465,6 +693,16 @@ namespace GlimmerGrove.Social
             };
 
             foreach (string id in _land) parts.Add("l:" + id);
+
+            // A companion bought and a turret stood are both things a visitor sees on a public
+            // profile, so both owe a publish exactly as a bench does — invariant 19j's fault
+            // arriving through a field rather than through a stale read, which is precisely how
+            // the hall's seat and the endless wave both got onto this list.
+            foreach (string id in _companions) parts.Add("f:" + id);
+
+            foreach (var seat in _line)
+                parts.Add("t:" + seat.Colour + "=" + seat.Ward + "/" + StarsOn(seat.Colour));
+
             foreach (var pair in _placed)
                 parts.Add("p:" + pair.Key + "=" + pair.Value.PieceId
                           + (pair.Value.Facing != 0 ? "/" + pair.Value.Facing : string.Empty));

@@ -155,6 +155,12 @@ SHIMS = [os.path.join(NETFX_SHIMS, "mscorlib.dll"), os.path.join(NETFX_SHIMS, "S
 IOS_XCODE = os.path.join(
     DATA, "PlaybackEngines", "iOSSupport", "UnityEditor.iOS.Extensions.Xcode.dll")
 
+
+# The mobile-notifications package's runtime, present only once the Editor has resolved it.
+# Used as the probe for the two device passes below, exactly as IOS_XCODE is for the iOS one:
+# a machine that has never opened the Editor is a legitimate way to work on this project.
+NOTIFICATIONS_PKG = os.path.join(SCRIPT_ASMS, "Unity.Notifications.Unified.dll")
+
 # Order matters: each entry may reference the outputs of the ones above it.
 ASSEMBLIES = [
     ("domain", dict(
@@ -205,12 +211,55 @@ ASSEMBLIES = [
         refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS
              + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud"),
     )),
+    ("notify", dict(
+        out="GlimmerGrove.Notifications",
+        src=sources("Assets/Game/Scripts/Notifications"),
+        # No GLIMMER_NOTIFICATIONS here, for the reason the iap, privacy and telemetry
+        # entries give: com.unity.mobile.notifications is a UPM package with no DLL on disk
+        # until the Editor resolves it. What this proves is the property that keeps a fresh
+        # clone compiling — that the binding still satisfies INotificationScheduler with the
+        # package absent, so the boot path has something to bind and the game sends nothing
+        # rather than failing to build. The platform half is compiled by the Editor.
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS + compiled("GlimmerGrove.Domain"),
+    )),
+    ("notify-android", dict(
+        out="GlimmerGrove.Notifications.Android",
+        src=sources("Assets/Game/Scripts/Notifications"),
+        # **The same sources a third time, and the pass that would have caught the bug.**
+        # The `notify` entry above deliberately compiles *without* the package, which proves
+        # the fresh-clone property and is therefore the one thing that can never fail the way
+        # a device does: with the define unset it compiles the null branch, so the whole
+        # platform half — the `using`, the API calls, the enum spellings — is invisible to it.
+        # That is a check that cannot fail (invariant 19e's shape), and it shipped a CS0234
+        # straight to an APK build: `versionDefines` sets a define and adds no assembly
+        # reference, so the package was installed, the define was on, and the namespace did
+        # not exist.
+        #
+        # This pass turns the define on and puts the package's assemblies on the reference
+        # list, which is what the player build really does.
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS + compiled("GlimmerGrove.Domain"),
+        defines=DEFINES + ["GLIMMER_NOTIFICATIONS", "UNITY_ANDROID"],
+        needs=NOTIFICATIONS_PKG,
+    )),
+    ("notify-ios", dict(
+        out="GlimmerGrove.Notifications.iOS",
+        src=sources("Assets/Game/Scripts/Notifications"),
+        # And again for iOS, which is not redundant for `editor-ios`'s reason: reading the
+        # current permission without prompting is the one thing the unified API cannot do, so
+        # it is written twice behind `#if UNITY_ANDROID` / `#elif UNITY_IOS` — and the Android
+        # pass above compiles *none* of the iOS half. Without this the first machine to
+        # compile it would be a Mac, twenty minutes into an Xcode build.
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS + compiled("GlimmerGrove.Domain"),
+        defines=DEFINES + ["GLIMMER_NOTIFICATIONS", "UNITY_IOS"],
+        needs=NOTIFICATIONS_PKG,
+    )),
     ("pres", dict(
         out="GlimmerGrove.Presentation",
         src=sources("Assets/Game/Scripts/Presentation"),
         refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS
              + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud", "GlimmerGrove.Ads",
-                        "GlimmerGrove.Privacy", "GlimmerGrove.Telemetry"),
+                        "GlimmerGrove.Privacy", "GlimmerGrove.Telemetry",
+                        "GlimmerGrove.Notifications"),
     )),
     ("authoring", dict(
         out="GlimmerGrove.Authoring",
@@ -246,6 +295,20 @@ ASSEMBLIES = [
         defines=DEFINES + ["UNITY_EDITOR", "UNITY_IOS"],
         # Skipped, not failed, when the iOS module is not installed.
         needs=IOS_XCODE,
+    )),
+    ("editor-notify", dict(
+        out="GlimmerGrove.Editor.Notifications",
+        src=sources("Assets/Game/Editor"),
+        # The editor assembly again with the notifications package on its reference list, for
+        # the reason `notify-android` exists one entry up: the ordinary editor pass compiles
+        # `NotificationSetup` with `GLIMMER_NOTIFICATIONS` unset, which is the branch that
+        # only logs a warning — so every call into `NotificationSettings` is invisible to it,
+        # and the first machine to compile them would be whoever pressed Build.
+        refs=ENGINE_EDITOR + PKG_EDITOR + [NETSTANDARD] + SHIMS
+             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Authoring", "GlimmerGrove.Cloud",
+                        "GlimmerGrove.Ads", "GlimmerGrove.Privacy", "GlimmerGrove.Presentation"),
+        defines=DEFINES + ["UNITY_EDITOR", "UNITY_ANDROID", "GLIMMER_NOTIFICATIONS"],
+        needs=NOTIFICATIONS_PKG,
     )),
     ("tests", dict(
         out="GlimmerGrove.Tests",
@@ -526,6 +589,58 @@ def check_dto_nulls(files):
     return problems
 
 
+# ------------------------------------------------- a balance readout has to be watched
+# A currency pill is built out of `Profile.Coins` and is a photograph from that moment on.
+# What makes it a readout is a subscription to the two events that can move it, and for a long
+# time every screen wrote that subscription by hand - with the result that four of the seven
+# rows in the game were wrong in four different ways. The loadout registered nothing and
+# repainted nothing, so a turret bought or upgraded left the purse above it showing what the
+# player held *before* they spent it until they walked out of the screen and back in; the tasks
+# page registered all three pills and repainted none; and the streak and season pages watched
+# credits and gems while drawing a hearts pill neither of them ever wrote to.
+#
+# **Not one of those is visible to anything else here.** A stale number is a correct number that
+# has stopped being true: the file compiles, the screen validates, the render mirror draws it,
+# and a fixture asserting the pill says what the wallet holds passes, because the wallet has not
+# moved during the test. The instrument was somebody buying a turret and looking up.
+#
+# So the cue is attached rather than written (`WalletWatch`), and this is the rule that keeps it
+# attached: whoever registers a readout with `ResourceSlots` in a file must, in the same file,
+# say which currencies that file draws. It is a per-file check with no type behind it, which is
+# exactly as strong as it needs to be - registration and attachment are two lines in the same
+# builder, and a screen that has one and not the other is a screen somebody stopped halfway.
+#
+# **What it cannot see is a readout that was never registered at all**, which is what the
+# loadout's was. A scanner finds a wrong name and can never find a missing case (invariant 39l),
+# so the other half of this rule is that `ResourceSlots.Register` is the only way a balance pill
+# is built - and the way to keep that true is to keep the registry the one writer of these
+# labels, never a `Text` field a screen sets itself.
+REGISTERS = re.compile(r"\bResourceSlots\s*\.\s*Register\s*\(")
+WATCHES = re.compile(r"\bWalletWatch\s*\.\s*Attach\s*\(")
+
+
+def check_wallet_watch(files):
+    problems = []
+
+    for path in files:
+        name = path.replace("\\", "/")
+        if name.endswith("/WalletWatch.cs") or name.endswith("/ResourceSlots.cs"):
+            continue
+
+        text = without_comments(io.open(path, encoding="utf-8", errors="replace").read())
+
+        hit = REGISTERS.search(text)
+        if not hit or WATCHES.search(text):
+            continue
+
+        line = text[:hit.start()].count("\n") + 1
+        problems.append("%s:%d  registers a balance readout and never attaches a WalletWatch - "
+                        "a pill nothing subscribes for is a photograph of the wallet"
+                        % (name, line))
+
+    return problems
+
+
 def main():
     wanted = [a.lower() for a in sys.argv[1:]]
     print("Unity: %s" % DATA)
@@ -554,7 +669,11 @@ def main():
         for line in dtos:
             print("  dto     FAILED  " + line)
 
-        if problems or boards or dtos:
+        wallets = check_wallet_watch(every)
+        for line in wallets:
+            print("  wallet  FAILED  " + line)
+
+        if problems or boards or dtos or wallets:
             ok = False
 
     print("OK" if ok else "FAILED")

@@ -31,18 +31,48 @@ namespace GlimmerGrove.Progression
         public const long DefaultGems = 20L;
 
         /// <summary>
-        /// What each further continue on the same run adds to the price. Zero ships, so the
-        /// price is flat and a run may be continued as often as the player can pay for.
+        /// What each further continue on the same run adds to the price, <em>after</em> the
+        /// factor has been applied. Zero ships, so the escalation is purely geometric.
         ///
         /// <para>
-        /// It exists — as one integer, defaulting to the behaviour that has no escalation at
-        /// all — because an escalating continue price is the single commonest retune in this
-        /// genre, and the shape of the offer decides whether that retune is a content push or
-        /// a store review. Nothing reads it today beyond <see cref="ContinueTable.PriceFor"/>,
-        /// and that is the point: the lever is built, set to off, and costs four lines.
+        /// It is the addend of the one recurrence <see cref="ContinueTable.PriceFor"/> runs —
+        /// see <see cref="DefaultGemsFactor"/> for why the two are one rule rather than two
+        /// dials. Kept at zero and kept readable because a published table still carries the
+        /// key, and because a flat surcharge on top of a doubling price is a retune somebody
+        /// may want without a store review.
         /// </para>
         /// </summary>
         public const long DefaultGemsStep = 0L;
+
+        /// <summary>
+        /// What each continue already taken multiplies the next one's price by, in hundredths.
+        /// Two hundred ships: the price <b>doubles</b> every time, so one run's ladder is
+        /// 20, 40, 80, 160, 320 gems and on.
+        ///
+        /// <para>
+        /// <b>Hundredths rather than a float, for the reason a threshold is</b> (invariant 22's
+        /// hard-won fact): two runtimes round a float differently, and a price is something a
+        /// player counts towards. <c>200</c> is exactly twice; <c>1.20f</c> is not exactly 1.20
+        /// on any of the three code generators this game ships through.
+        /// </para>
+        /// <para>
+        /// <b>Why it is geometric rather than the linear step that was already here.</b> A flat
+        /// surcharge is overtaken by the player's balance — twenty, thirty, forty on a run is a
+        /// ladder somebody holding a bulk pack simply walks up, so the fail state stops binding
+        /// after the fourth or fifth purchase and a lost run becomes a shop transaction with no
+        /// ceiling (invariant 5d, asked of a price). Doubling ends the ladder by arithmetic
+        /// instead: the fifth continue costs sixteen times the first, so there is always a
+        /// number of second chances beyond which the honest answer is to play the board again.
+        /// </para>
+        /// <para>
+        /// <b>And it is one recurrence with two parameters rather than two escalation rules.</b>
+        /// Each continue multiplies the price and then adds the step, so a factor of 100 with a
+        /// step is exactly the linear ladder this shipped with, and a factor with no step is a
+        /// pure doubling. Two independent dials each claiming to decide the price is the shape
+        /// this file refuses everywhere else — one number, asked once.
+        /// </para>
+        /// </summary>
+        public const long DefaultGemsFactor = 200L;
 
         /// <summary>
         /// Turns a glade's continue hands over.
@@ -134,12 +164,22 @@ namespace GlimmerGrove.Progression
         public const int DefaultWards = 4;
 
         /// <summary>
-        /// Dearest a continue may be published at.
+        /// Dearest a continue may be published at, and the ceiling a climbing price tops out at.
         ///
         /// A sanity bound rather than a design one, and it is deliberately far above anything
         /// sensible: the failure it guards is a misplaced zero in a content push, which would
         /// otherwise put a price on the panel that no player could ever meet and turn every
         /// defeat into a dead end.
+        ///
+        /// <para>
+        /// <b>It now binds a second thing, and where it binds is stated rather than left to be
+        /// discovered.</b> The shipped ladder doubles from twenty, so it reaches this ceiling on
+        /// the <em>ninth</em> continue of one run (5,120 clamped to 5,000) and is flat above it.
+        /// Getting there means having spent 5,100 gems inside a single lost run — more than the
+        /// largest pack in the shop holds — so nothing real touches it, and both content gates
+        /// print the ladder and say where it tops out (invariant 37cc: a ceiling that binds is
+        /// a ceiling doing a ratio's job, and this one is checked rather than assumed).
+        /// </para>
         /// </summary>
         public const long MaxGems = 5_000L;
 
@@ -155,6 +195,29 @@ namespace GlimmerGrove.Progression
         /// that could overflow.
         /// </summary>
         public const long MaxGemsStep = 500L;
+
+        /// <summary>
+        /// Least the price may be published to climb by, in hundredths: a hundred, which holds
+        /// it still.
+        ///
+        /// <para>
+        /// Refused rather than clamped downward for the reason a free continue is refused. A
+        /// factor below a hundred is a price that gets <em>cheaper</em> the more second chances
+        /// somebody has already bought, which is a fail state that stops binding after the
+        /// fourth purchase — invariant 5d's complaint about a rule that rejects nothing, said
+        /// about a price. A published table that asks for it is named and clamped to flat.
+        /// </para>
+        /// </summary>
+        public const long MinGemsFactor = 100L;
+
+        /// <summary>
+        /// Most the price may be published to climb by, in hundredths: ten times per continue.
+        ///
+        /// A sanity bound of <see cref="MaxGems"/>' kind rather than a design one — at ten
+        /// times, the second continue on a run already costs more than the largest gem pack in
+        /// the shop, so anything above this is a misplaced digit rather than a tuning.
+        /// </summary>
+        public const long MaxGemsFactor = 1_000L;
     }
 
     /// <summary>
@@ -186,14 +249,15 @@ namespace GlimmerGrove.Progression
     /// </summary>
     public sealed class ContinueTable
     {
-        ContinueTable(bool enabled, long gems, long gemsStep, int turns, int ink, int motes,
-                      int tiles, int taps, int moves, int wards)
+        ContinueTable(bool enabled, long gems, long gemsStep, long gemsFactor, int turns,
+                      int ink, int motes, int tiles, int taps, int moves, int wards)
         {
             Moves = moves;
             Wards = wards;
             Enabled = enabled;
             Gems = gems;
             GemsStep = gemsStep;
+            GemsFactor = gemsFactor;
             Turns = turns;
             Ink = ink;
             Motes = motes;
@@ -217,8 +281,16 @@ namespace GlimmerGrove.Progression
         /// <summary>What the first continue on a run costs, in gems.</summary>
         public long Gems { get; }
 
-        /// <summary>What each continue already taken adds to the next one's price.</summary>
+        /// <summary>
+        /// What each continue already taken adds to the next one's price, after the factor.
+        /// </summary>
         public long GemsStep { get; }
+
+        /// <summary>
+        /// What each continue already taken multiplies the next one's price by, in hundredths.
+        /// 200 ships, so the price doubles. See <see cref="ContinueLimits.DefaultGemsFactor"/>.
+        /// </summary>
+        public long GemsFactor { get; }
 
         /// <summary>Turns a glade's continue hands over, above whatever it took to un-lose it.</summary>
         public int Turns { get; }
@@ -249,6 +321,7 @@ namespace GlimmerGrove.Progression
         public static readonly ContinueTable Default =
             new ContinueTable(true,
                               ContinueLimits.DefaultGems, ContinueLimits.DefaultGemsStep,
+                              ContinueLimits.DefaultGemsFactor,
                               ContinueLimits.DefaultTurns, ContinueLimits.DefaultInk,
                               ContinueLimits.DefaultMotes, ContinueLimits.DefaultTiles,
                               ContinueLimits.DefaultTaps, ContinueLimits.DefaultMoves,
@@ -257,6 +330,7 @@ namespace GlimmerGrove.Progression
         /// <summary>A rule with the feature switched off, for a file that asks for that.</summary>
         public static readonly ContinueTable Off =
             new ContinueTable(false, ContinueLimits.DefaultGems, ContinueLimits.DefaultGemsStep,
+                              ContinueLimits.DefaultGemsFactor,
                               ContinueLimits.DefaultTurns, ContinueLimits.DefaultInk,
                               ContinueLimits.DefaultMotes, ContinueLimits.DefaultTiles,
                               ContinueLimits.DefaultTaps, ContinueLimits.DefaultMoves,
@@ -266,29 +340,77 @@ namespace GlimmerGrove.Progression
         /// What the next continue costs, given how many this run has already had.
         ///
         /// <para>
+        /// One recurrence, applied once per continue already taken: <c>price = price ×
+        /// factor ÷ 100 + step</c>. At the shipped 200 and 0 that is a doubling — 20, 40, 80,
+        /// 160, 320 — and at 100 and a step it is exactly the linear ladder this shipped
+        /// with, which is why the two are one rule rather than two dials that could disagree
+        /// about what a continue costs.
+        /// </para>
+        /// <para>
         /// Integer arithmetic and a clamp, for <c>ChapterGateTable.RequiredStars</c>' reason:
         /// a price is something a player counts towards, and two runtimes round a float
         /// differently — which this project has already paid for once, in a generator that
-        /// dealt two different boards for one seed.
+        /// dealt two different boards for one seed. The factor is hundredths and the divide
+        /// is last, which is the same rule invariant 37bh is: ten per cent of 8 taken as a
+        /// float truncates back to 8, and a star somebody paid for buys nothing.
         /// </para>
         /// <para>
-        /// Saturating rather than wrapping. Nothing bounds <paramref name="taken"/> — a run
-        /// may be continued as often as somebody can pay — so the one arithmetic here that
-        /// could run away is bounded by the same ceiling a published price is.
+        /// Saturating rather than wrapping, and <b>it returns early rather than iterating a
+        /// count nothing bounds</b>. A run may be continued as often as somebody can pay, so
+        /// <paramref name="taken"/> is attacker-shaped in the only sense that matters here —
+        /// a loop that ran it out would be a frozen board over a defeat panel. Every branch
+        /// that cannot climb any further answers at once: the flat case in closed form, a
+        /// price at the ceiling, and a factor that truncates back to where it started (101
+        /// hundredths of 20 is 20 in integer arithmetic, and no number of continues changes
+        /// that).
+        /// </para>
+        /// <para>
+        /// Overflow is unreachable rather than guarded, which is deliberate — a check that
+        /// can only ever answer no is not a check (invariant 35c). <see cref="Gems"/> is
+        /// clamped to <see cref="ContinueLimits.MaxGems"/> and <see cref="GemsFactor"/> to
+        /// <see cref="ContinueLimits.MaxGemsFactor"/> by the only thing that builds a table,
+        /// and the loop returns the moment a price reaches the ceiling, so the largest product
+        /// this arithmetic can ever form is five million.
         /// </para>
         /// </summary>
         public long PriceFor(int taken)
         {
-            if (taken <= 0 || GemsStep <= 0L) return Gems;
+            if (taken <= 0) return Gems;
 
-            // Guarded before the multiply rather than after it: `taken * GemsStep` is what
-            // would overflow, and a wrapped price is a *cheap* continue rather than a dear
-            // one, which is the direction that costs money.
-            long headroom = ContinueLimits.MaxGems - Gems;
-            if (taken > headroom / GemsStep) return ContinueLimits.MaxGems;
+            long factor = GemsFactor < ContinueLimits.MinGemsFactor
+                              ? ContinueLimits.MinGemsFactor : GemsFactor;
 
-            long price = Gems + taken * GemsStep;
-            return price > ContinueLimits.MaxGems ? ContinueLimits.MaxGems : price;
+            if (factor == ContinueLimits.MinGemsFactor)
+            {
+                if (GemsStep <= 0L) return Gems;                   // flat, whatever was bought
+
+                // Closed form rather than `taken` turns of a loop that adds a constant.
+                // Guarded before the multiply for the reason a wrapped price is worse than a
+                // clamped one: it would be a *cheap* continue, which is the direction that
+                // costs money.
+                long headroom = ContinueLimits.MaxGems - Gems;
+                if (taken > headroom / GemsStep) return ContinueLimits.MaxGems;
+
+                long flat = Gems + taken * GemsStep;
+                return flat > ContinueLimits.MaxGems ? ContinueLimits.MaxGems : flat;
+            }
+
+            long price = Gems;
+            for (int i = 0; i < taken; i++)
+            {
+                long next = price * factor / 100L + GemsStep;
+
+                if (next >= ContinueLimits.MaxGems) return ContinueLimits.MaxGems;
+
+                // A factor that truncates back to where it started climbs no further, however
+                // many are bought. Answering now rather than spinning out a count nothing
+                // bounds, for the same arithmetic in the other direction.
+                if (next <= price) return price;
+
+                price = next;
+            }
+
+            return price;
         }
 
         /// <summary>
@@ -330,6 +452,7 @@ namespace GlimmerGrove.Progression
 
             long gems = dto.gems < 0L ? ContinueLimits.DefaultGems : dto.gems;
             long step = dto.gemsStep < 0L ? ContinueLimits.DefaultGemsStep : dto.gemsStep;
+            long factor = dto.gemsFactor < 0L ? ContinueLimits.DefaultGemsFactor : dto.gemsFactor;
             int turns = dto.turns < 0 ? ContinueLimits.DefaultTurns : dto.turns;
             int ink = dto.ink < 0 ? ContinueLimits.DefaultInk : dto.ink;
             int motes = dto.motes < 0 ? ContinueLimits.DefaultMotes : dto.motes;
@@ -364,6 +487,26 @@ namespace GlimmerGrove.Progression
                 step = ContinueLimits.MaxGemsStep;
             }
 
+            // Below a hundred hundredths the price *falls* as more are bought, which is the
+            // one setting here that would make the fail state stop binding altogether. Named
+            // and clamped to flat rather than honoured.
+            if (factor < ContinueLimits.MinGemsFactor)
+            {
+                problems.Add($"continueRun gemsFactor is {factor}, below the " +
+                             $"{ContinueLimits.MinGemsFactor} hundredths that holds a price " +
+                             "still - a continue that gets cheaper the more of them one run " +
+                             "has bought is a fail state that stops binding; clamped to flat");
+                factor = ContinueLimits.MinGemsFactor;
+            }
+
+            if (factor > ContinueLimits.MaxGemsFactor)
+            {
+                problems.Add($"continueRun gemsFactor is {factor}, above the " +
+                             $"{ContinueLimits.MaxGemsFactor} hundredths a price may climb by " +
+                             "per continue; clamped");
+                factor = ContinueLimits.MaxGemsFactor;
+            }
+
             turns = Bound(turns, "turns", ContinueLimits.DefaultTurns, problems);
             ink = Bound(ink, "ink", ContinueLimits.DefaultInk, problems);
             motes = Bound(motes, "motes", ContinueLimits.DefaultMotes, problems);
@@ -372,8 +515,8 @@ namespace GlimmerGrove.Progression
             moves = Bound(moves, "moves", ContinueLimits.DefaultMoves, problems);
             wards = Bound(wards, "wards", ContinueLimits.DefaultWards, problems);
 
-            return new ContinueTable(true, gems, step, turns, ink, motes, tiles, taps, moves,
-                                     wards);
+            return new ContinueTable(true, gems, step, factor, turns, ink, motes, tiles, taps,
+                                     moves, wards);
         }
 
         /// <summary>

@@ -625,8 +625,9 @@ namespace GlimmerGrove.EditorTools
         }
 
         /// <summary>
-        /// Gems an engaged player collects in a day: every chest's expected gems plus a
-        /// streak rung amortised over the ladder's lap.
+        /// Gems an engaged player collects in a day: every task chest's expected gems plus a
+        /// streak night amortised over the ladder's lap — which since the ladder pays chests
+        /// is itself a chest expectation as often as it is a figure.
         ///
         /// The gem half of <see cref="DailyCreditIncome"/>, and it exists for the same
         /// reason — a price is only meaningful beside the income that has to pay it, and
@@ -638,20 +639,39 @@ namespace GlimmerGrove.EditorTools
 
             daily += TaskIncome(table.Tasks, ExpectedGems);
 
-            var streak = table.Streak;
-            if (streak.Length > 0)
-            {
-                long lap = 0;
-                for (int night = 1; night <= streak.Length; night++)
-                {
-                    var rung = streak.Rung(night);
-                    if (rung.Kind == ChestDropKind.Gems) lap += rung.Amount;
-                }
-
-                daily += lap / streak.Length;
-            }
+            daily += StreakIncome(table.Streak, ChestDropKind.Gems, ExpectedGems);
 
             return daily;
+        }
+
+        /// <summary>
+        /// What one night of the streak pays in one currency, amortised over the lap.
+        ///
+        /// <para>
+        /// Two halves, because a night pays a figure <em>or</em> a chest, and a chest's worth
+        /// is an expectation rather than an amount. Counting only the figures would have
+        /// under-read this ladder by the larger half the day chests went on it, and the
+        /// symptom is not a wrong log line: every price in this file is checked against the
+        /// income that has to pay it, so an under-read income reports companions and homes as
+        /// further away than they are.
+        /// </para>
+        /// </summary>
+        static long StreakIncome(StreakTable streak, ChestDropKind kind,
+                                 Func<ChestDefinition, long> worth)
+        {
+            if (streak == null || streak.Length <= 0) return 0;
+
+            long lap = 0;
+
+            for (int night = 1; night <= streak.Length; night++)
+            {
+                var rung = streak.Rung(night);
+
+                if (rung.IsChest) lap += worth(rung.Tier.Chest);
+                else if (rung.Kind == kind) lap += rung.Amount;
+            }
+
+            return lap / streak.Length;
         }
 
         /// <summary>
@@ -934,9 +954,13 @@ namespace GlimmerGrove.EditorTools
 
             foreach (var item in utilities.Items)
                 Debug.Log($"[Glimmer] utility '{item.Id}': {UtilityKinds.Id(item.Kind)} " +
-                          $"{item.Magnitude}, hold up to {item.MaxHeld}, " +
+                          $"{item.Magnitude} {UtilityUnits.Of(item.Kind)}, " +
+                          $"hold up to {item.MaxHeld}, " +
                           (item.ForSale ? $"{item.GemPrice} gem(s)" : "chests only") +
-                          (item.Cools ? $", cools {item.CooldownSeconds}s" : ", no cooldown"));
+                          (item.Cools ? $", cools {item.CooldownSeconds}s" : ", no cooldown") +
+                          (UtilityUnits.Climbs(item.Kind)
+                               ? " - climbs with the chapter it is used on"
+                               : string.Empty));
         }
 
         /// <summary>
@@ -1550,11 +1574,52 @@ namespace GlimmerGrove.EditorTools
             if (!verbose) return;
 
             Debug.Log($"[Glimmer] continue: {carryOn.Gems} gem(s) for +{carryOn.Turns} turn(s) " +
-                      $"on a glade, +{carryOn.Taps} tap(s) on a thicket" +
-                      (carryOn.GemsStep > 0L
-                           ? $"; +{carryOn.GemsStep} each time, so a third on one run costs " +
-                             carryOn.PriceFor(2)
-                           : "; flat, so a run may be continued as often as the player can pay"));
+                      $"on a glade, +{carryOn.Taps} tap(s) on a thicket; " + Ladder(carryOn));
+        }
+
+        /// <summary>
+        /// What one run's continues cost in order, and where that ladder stops climbing.
+        ///
+        /// <para>
+        /// Printed rather than asserted, and printed in full rather than as the two numbers
+        /// that produce it. A factor in hundredths and a step is a recurrence, and nobody
+        /// reads a recurrence off two integers — the thing a retune has to be judged against
+        /// is the sequence a player is actually quoted, so that is what the gate says. It is
+        /// also the one reading that shows <c>ContinueLimits.MaxGems</c> binding, which is
+        /// invariant 37cc's rule: a ceiling that binds is checked rather than discovered.
+        /// </para>
+        /// </summary>
+        static string Ladder(ContinueTable carryOn)
+        {
+            long first = carryOn.PriceFor(0);
+            if (carryOn.PriceFor(1) == first && carryOn.PriceFor(50) == first)
+                return $"{first} gems flat, so a run may be continued as often as the player " +
+                       "can pay";
+
+            var rungs = new System.Text.StringBuilder();
+            long spent = 0L;
+            int topsOutAt = 0;
+
+            for (int taken = 0; taken < 8; taken++)
+            {
+                long price = carryOn.PriceFor(taken);
+                spent += price;
+
+                if (taken > 0) rungs.Append(", ");
+                rungs.Append(price);
+
+                if (topsOutAt == 0 && price >= ContinueLimits.MaxGems) topsOutAt = taken + 1;
+            }
+
+            string climb = carryOn.GemsFactor > ContinueLimits.MinGemsFactor
+                               ? $"x{carryOn.GemsFactor / 100m} each time"
+                               : $"+{carryOn.GemsStep} each time";
+
+            return $"{climb} - one run's ladder is {rungs} gems ({spent} to buy all eight)" +
+                   (topsOutAt > 0
+                        ? $", topping out at the {ContinueLimits.MaxGems}-gem ceiling on the " +
+                          $"{topsOutAt}th"
+                        : $", and it reaches the {ContinueLimits.MaxGems}-gem ceiling later");
         }
 
         /// <summary>
@@ -1958,11 +2023,12 @@ namespace GlimmerGrove.EditorTools
         /// The streak ladder, checked for the things the reader cannot know.
         ///
         /// <para>
-        /// <c>StreakTable</c> already refuses anything unreadable — an unknown kind, a zero,
-        /// a ladder longer than the cap. What is left is the shape, which is a design
-        /// question a reader has no opinion about: a rung that pays less than an earlier one
-        /// of the same kind, a lap so short that it comes round before a player notices it,
-        /// and a lap that pays nothing at all.
+        /// <c>StreakTable</c> already refuses anything unreadable — an unknown kind, a retired
+        /// one, a zero, a tier the tasks block does not define, a ladder longer than the cap.
+        /// What is left is the shape, which is a design question a reader has no opinion
+        /// about: a rung that pays less than an earlier one of the same kind, a chest humbler
+        /// than one earlier in the lap, a lap so short that it comes round before a player
+        /// notices it, and a lap that pays nothing at all.
         /// </para>
         /// <para>
         /// It also prints the ladder, and now prints what the lap is worth. A streak is the
@@ -1993,7 +2059,26 @@ namespace GlimmerGrove.EditorTools
                 for (int earlier = night - 1; earlier >= 1; earlier--)
                 {
                     var before = streak.Rung(earlier);
-                    if (!before.IsValid || before.Kind != rung.Kind) continue;
+                    if (!before.IsValid) continue;
+
+                    // A chest is compared against the chest before it and a figure against the
+                    // figure before it. The two are not comparable at all — what a chest holds
+                    // is a roll, so "is a gold chest worth more than eight hundred credits" is a
+                    // question with no answer a gate could check — which is why the ladder
+                    // climbs in two independent runs rather than one.
+                    if (rung.IsChest != before.IsChest) continue;
+
+                    if (rung.IsChest)
+                    {
+                        if (rung.Tier.Rank < before.Tier.Rank)
+                            result.Errors.Add($"streak night {night} pays the {rung.Tier.Id} chest but " +
+                                              $"night {earlier} pays the {before.Tier.Id}; a longer " +
+                                              "streak that is worth less is a reason to stop rather " +
+                                              "than to continue");
+                        break;
+                    }
+
+                    if (before.Kind != rung.Kind) continue;
 
                     if (rung.Amount < before.Amount)
                         result.Errors.Add($"streak night {night} pays {rung} but night {earlier} pays " +
@@ -2003,10 +2088,36 @@ namespace GlimmerGrove.EditorTools
                 }
             }
 
+            // The humblest chest in the game is what a daily task pays for two runs. A streak
+            // asks for a run of consecutive days, which is the hardest thing this game asks of
+            // anybody, so a night paying the bottom rung is a reward that reads as a penalty.
+            // A warning rather than an error: it is a tuning opinion, and the tier ladder is
+            // content that could grow a rung below today's bottom one.
+            var tiers = ProgressionRules.Table.Tasks.Tiers;
+            string humblest = tiers.Count > 0 ? tiers[0].Id : null;
+
+            if (humblest != null)
+                for (int night = 1; night <= streak.Length; night++)
+                {
+                    var rung = streak.Rung(night);
+                    if (rung.IsChest && rung.Tier.Id == humblest)
+                        result.Warnings.Add($"streak night {night} pays the '{humblest}' chest, which " +
+                                            "is the humblest tier in the game; a streak asks for a " +
+                                            "run of consecutive days and should pay above it");
+                }
+
+            // The shield: the one thing on the streak page that is for sale. A price the
+            // content forgot is a feature that silently disappears from a screen, which is
+            // exactly the failure a gate is for — and it is a warning rather than an error
+            // because withdrawing the offer deliberately is a legitimate content decision.
+            if (!streak.SellsShield)
+                result.Warnings.Add("the streak block sells no shield (shieldGems is zero), so the " +
+                                    "streak page draws no offer row at all. Set a price to put it back");
+
             // What one lap hands over, split by who adjudicates it. The currency half is the
             // half that has a server obligation attached, which is what the note below is for.
             long credits = 0, gems = 0;
-            int paying = 0;
+            int paying = 0, chests = 0;
 
             for (int night = 1; night <= streak.Length; night++)
             {
@@ -2014,6 +2125,7 @@ namespace GlimmerGrove.EditorTools
                 if (!rung.IsValid) continue;
 
                 paying++;
+                if (rung.IsChest) { chests++; continue; }
                 if (rung.Kind == ChestDropKind.Credits) credits += rung.Amount;
                 if (rung.Kind == ChestDropKind.Gems) gems += rung.Amount;
             }
@@ -2037,15 +2149,17 @@ namespace GlimmerGrove.EditorTools
 
             Debug.Log(line.ToString());
 
-            if (credits <= 0 && gems <= 0) return;
+            if (credits <= 0 && gems <= 0 && chests <= 0) return;
 
             // Said every time rather than only on a change, because the failure it warns
             // about is silent: the client draws this ladder from the file, the server pays
             // from config/progression, and a lap retuned here without a re-seed pays the old
             // figure into a wallet while the board advertises the new one.
-            Debug.Log($"[Glimmer] one lap pays {credits} credits and {gems} gems. Both are granted " +
-                      "by the server from config/progression — run firebase/seed/seed-config.mjs " +
-                      "after this change or players will be paid the previous ladder.");
+            Debug.Log($"[Glimmer] one lap pays {credits} credits, {gems} gems and {chests} chest(s); " +
+                      $"a shield costs {streak.ShieldGems} gems for {streak.ShieldDays} days. The " +
+                      "currency and the chests are granted by the server from config/progression — run " +
+                      "firebase/seed/seed-config.mjs after this change or players will be paid the " +
+                      "previous ladder.");
         }
 
         /// <summary>
@@ -3142,9 +3256,10 @@ namespace GlimmerGrove.EditorTools
         }
 
         /// <summary>
-        /// Credits an engaged player collects in a day without watching a video: every daily
-        /// chest's guaranteed contents plus its expected bonus, and a streak rung amortised
-        /// over the ladder's lap.
+        /// Credits an engaged player collects in a day without watching a video: every task
+        /// chest's guaranteed contents plus its expected bonus, and a streak night amortised
+        /// over the ladder's lap — which since the ladder pays chests is itself a chest
+        /// expectation as often as it is a figure.
         ///
         /// Read from the published tables rather than written down, so a retune moves this
         /// with it — the same rule every explanatory panel in the game follows.
@@ -3158,18 +3273,7 @@ namespace GlimmerGrove.EditorTools
             // over seven. The daily *ladder* this replaced no longer pays anybody on this build.
             daily += TaskIncome(table.Tasks, ExpectedCredits);
 
-            var streak = table.Streak;
-            if (streak.Length > 0)
-            {
-                long lap = 0;
-                for (int night = 1; night <= streak.Length; night++)
-                {
-                    var rung = streak.Rung(night);
-                    if (rung.Kind == ChestDropKind.Credits) lap += rung.Amount;
-                }
-
-                daily += lap / streak.Length;
-            }
+            daily += StreakIncome(table.Streak, ChestDropKind.Credits, ExpectedCredits);
 
             return daily;
         }
@@ -3282,6 +3386,21 @@ namespace GlimmerGrove.EditorTools
             {
                 Require(table, model.NameKey, $"turret '{model.Id}'", result);
                 Require(table, model.NoteKey, $"turret '{model.Id}'", result);
+            }
+
+            // A reminder's two lines are derived from its kind's permanent id, so the source
+            // scan below sees neither — and a notification whose title does not resolve is a
+            // blank row in somebody's shade, drawn by the operating system with the app not
+            // running, which is the least observable failure in this whole project.
+            //
+            // Asked of every kind this build knows rather than of the authored slate, because
+            // the built-in table ships inside the app and is what a first launch and a
+            // malformed block both fall back to.
+            foreach (var kind in Notifications.NotificationKinds.All)
+            {
+                string id = Notifications.NotificationKinds.Id(kind);
+                Require(table, Notifications.NotificationKinds.TitleKey(kind), $"reminder '{id}'", result);
+                Require(table, Notifications.NotificationKinds.BodyKey(kind), $"reminder '{id}'", result);
             }
 
             // Companion names are derived from the id like a level's, so the source scan

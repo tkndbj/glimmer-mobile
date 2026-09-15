@@ -52,6 +52,11 @@ DERIVED_PREFIXES = ("level.", "chapter.", "ui.companion.", "ui.avatar.", "ui.tip
                     # 5a): `task.{id}.name` (with an optional `.name_one`) and `chest.{id}.name`.
                     # Checked by content.py, which knows the ids.
                     "task.", "chest.",
+                    # A reminder's two lines are derived from its kind's permanent id
+                    # (`NotificationKinds.TitleKey`), which is what lets a content push
+                    # reorder the slate without shipping a sentence. content.py walks the
+                    # kinds and proves both halves of every one resolves.
+                    "notify.",
                     "ui.piece.", "ui.land.", "ui.shelf.",
                     # A product and a good are named from their permanent id for the reason
                     # a glade is (invariant 5a): anything holding the id can name the thing

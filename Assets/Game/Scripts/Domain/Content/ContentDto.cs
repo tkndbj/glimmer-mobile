@@ -1005,6 +1005,106 @@ namespace GlimmerGrove.Content
 
         /// <summary>The task slates and their chest ladder. Optional; see <see cref="TaskTableDto"/>.</summary>
         public TaskTableDto tasks;
+
+        /// <summary>
+        /// Which reminders the phone sends and when. Optional; see <see cref="NotificationsDto"/>.
+        ///
+        /// <b>The one block in this file that reaches no server.</b> Nothing here is
+        /// adjudicated, claimed or paid — a notification is a thing a device says to its own
+        /// owner — so <c>seed-config.mjs</c> does not publish it and <c>firestore.rules</c>
+        /// has nothing to learn about it. Its push path is the remote-content one, the same
+        /// path a chapter body takes.
+        /// </summary>
+        public NotificationsDto notifications;
+    }
+
+    /// <summary>
+    /// The notification slate: which kinds are sent, how they rank, and the hours of the
+    /// player's own day they are sent at.
+    ///
+    /// <para>
+    /// There is deliberately no text here. A notification's copy is derived from its kind's
+    /// permanent id (<c>NotificationKinds.TitleKey</c>) and resolved through the string table,
+    /// so a content push can switch a reminder off, reorder the ladder or move the hours — and
+    /// cannot write a sentence, because a sentence has to be translated and translations ship
+    /// in the build. Invariant 39c's split, said about words instead of pictures.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class NotificationsDto
+    {
+        /// <summary>The most this game may say in one local day. Unwritten reads as -1 and inherits.</summary>
+        public int perDay = -1;
+
+        /// <summary>
+        /// How many days ahead the schedule reaches. Unwritten inherits.
+        ///
+        /// Bounded by <c>NotificationWindow.MaxPending</c> times <see cref="perDay"/>, because
+        /// iOS keeps the 64 soonest pending local notifications and drops the rest in silence.
+        /// </summary>
+        public int horizonDays = -1;
+
+        /// <summary>
+        /// How many days keep the full <see cref="perDay"/> before the schedule thins to one a
+        /// night. Unwritten reads as -1 and inherits.
+        ///
+        /// What it really tunes is <em>reach</em>: the ceiling is a count of pending
+        /// notifications, so a flat three a day spends the whole allowance inside a week, and
+        /// tapering spends it over three. Past the horizon this scheme is silent.
+        /// </summary>
+        public int taperAfterDays = -1;
+
+        /// <summary>The three times of day. Optional; the built-in hours stand without it.</summary>
+        public NotificationHoursDto hours;
+
+        /// <summary>The slate. Order is immaterial; <c>priority</c> is the ranking.</summary>
+        public NotificationEntryDto[] entries;
+
+        /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
+        public bool IsAuthored => entries != null || hours != null || perDay > 0
+                               || horizonDays > 0 || taperAfterDays > 0;
+    }
+
+    /// <summary>
+    /// The three slot hours, in minutes past <em>local</em> midnight.
+    ///
+    /// Minutes rather than an hour, so 19:30 is expressible; local rather than UTC, because
+    /// 09:00 UTC is three in the morning for a third of the world. Held inside
+    /// <c>NotificationWindow</c>'s waking-day bounds, which a content push cannot move.
+    /// </summary>
+    [Serializable]
+    public sealed class NotificationHoursDto
+    {
+        public int morning = -1;
+        public int afternoon = -1;
+        public int evening = -1;
+
+        public bool IsAuthored => morning >= 0 || afternoon >= 0 || evening >= 0;
+    }
+
+    /// <summary>
+    /// One reminder. <c>kind</c> is a <c>NotificationKinds.Id</c> and is permanent — it names
+    /// the loc keys the copy is drawn from and the analytics series an open is recorded
+    /// against — <c>slot</c> is one of <c>any</c>/<c>morning</c>/<c>afternoon</c>/<c>evening</c>,
+    /// <c>priority</c> decides a contested slot, and <c>minDaysBetween</c> is what stops the
+    /// same sentence arriving every day for a week.
+    /// </summary>
+    [Serializable]
+    public sealed class NotificationEntryDto
+    {
+        public string kind;
+        public string slot;
+        public int priority;
+        public int minDaysBetween = 1;
+
+        /// <summary>
+        /// Takes this kind out of the slate while keeping its row.
+        ///
+        /// Written as <c>disabled</c> rather than <c>enabled</c> for <c>ManifestChapterDto</c>'s
+        /// reason: <c>JsonUtility</c> reads an absent bool as <c>false</c>, so the unwritten
+        /// state has to be the one that means "ordinary".
+        /// </summary>
+        public bool disabled;
     }
 
     /// <summary>
@@ -1448,10 +1548,26 @@ namespace GlimmerGrove.Content
         public long gems = -1L;
 
         /// <summary>
-        /// What each continue already taken adds to the next one's price. 0 is flat, which
-        /// is what ships — a run may be continued as often as the player can pay for.
+        /// What each continue already taken adds to the next one's price, <em>after</em>
+        /// <see cref="gemsFactor"/> has been applied. 0 is what ships, so the escalation is
+        /// purely geometric.
         /// </summary>
         public long gemsStep = -1L;
+
+        /// <summary>
+        /// What each continue already taken multiplies the next one's price by, in hundredths.
+        /// 200 ships, so the price <b>doubles</b> every time: 20, 40, 80, 160, 320 gems on one
+        /// run. 100 holds it still, which with a <see cref="gemsStep"/> is the linear ladder
+        /// this block shipped with.
+        ///
+        /// <para>
+        /// -1 inherits, which is the doubling. A published table written before this key
+        /// existed therefore starts doubling the moment a client that knows about it reads it
+        /// — deliberate, because the alternative is a live document silently holding the price
+        /// flat on every device until somebody remembers to re-push it.
+        /// </para>
+        /// </summary>
+        public long gemsFactor = -1L;
 
         /// <summary>Turns a glade's continue hands over, above whatever it took to un-lose it.</summary>
         public int turns = -1;
@@ -1719,31 +1835,67 @@ namespace GlimmerGrove.Content
     public sealed class StreakDto
     {
         /// <summary>
-        /// Night one first. An entry with no <c>kind</c> pays nothing, which is how a night
-        /// that only marks time is authored.
+        /// Night one first. An entry with neither a <c>kind</c> nor a <c>tier</c> pays
+        /// nothing, which is how a night that only marks time is authored.
         ///
         /// The list is one <em>lap</em> rather than the whole ladder: night eight pays what
         /// night one pays, for ever. So its length is also the length of the board a player
         /// sees, and lengthening it lengthens the week.
         /// </summary>
         public StreakRungDto[] rungs;
+
+        /// <summary>
+        /// How many calendar days a bought shield covers, counting the day it was bought.
+        /// Absent is <c>StreakRules.DefaultShieldDays</c>.
+        ///
+        /// Content rather than a constant, which is why no string in this game says "seven":
+        /// every sentence about the shield takes this number as an argument.
+        /// </summary>
+        public int shieldDays;
+
+        /// <summary>
+        /// What a shield costs in gems. Absent is <c>StreakRules.DefaultShieldGems</c>; an
+        /// explicit <b>zero withdraws the offer</b>, which is the one thing a missing field
+        /// must not be able to do by accident.
+        ///
+        /// It is an ordinary gem debit (invariant 18) rather than anything the server
+        /// adjudicates, so this price is not published and is not part of any wire contract —
+        /// the shield grants no currency and keeps a streak inside the same one-night-a-day
+        /// bound an unprotected one is already held to.
+        /// </summary>
+        public int shieldGems;
     }
 
     /// <summary>
-    /// One day of the streak ladder. <c>kind</c> reuses the chest drop vocabulary, and
-    /// <c>amount</c> reads as hearts or as hours depending on which.
+    /// One day of the streak ladder: credits, gems, or a chest.
     ///
-    /// <b>Currency is allowed, and it is adjudicated.</b> A currency rung is claimed as
+    /// <para>
+    /// <b>A rung names a <c>kind</c> and an <c>amount</c>, or a <c>tier</c>, never both.</b>
+    /// The tier is an id out of the <c>tasks</c> block's chest ladder, so a streak night that
+    /// pays a royal chest is the <em>same</em> authored chest a weekly task pays — one
+    /// published disclosure, one retune (invariant 45).
+    /// </para>
+    /// <para>
+    /// <b>Currency is adjudicated.</b> A rung is claimed as
     /// <c>streak:{day}:{night}:{currency}</c> and paid from the server's own copy of this
-    /// ladder, so retuning it here and forgetting to re-seed means the server pays the old
-    /// figure — see <c>StreakTable</c> for the whole path, and run the seeder after any
-    /// change. The per-kind ceilings in <c>StreakRules</c> apply on both sides.
+    /// ladder — a chest rung out of the same id, re-rolled rather than believed — so retuning
+    /// it here and forgetting to re-seed means the server pays the old figure. See
+    /// <c>StreakTable</c> for the whole path, and run the seeder after any change. The
+    /// per-kind ceilings in <c>StreakRules</c> apply on both sides.
+    /// </para>
+    /// <para>
+    /// <c>hearts</c> and <c>heart_boost</c> are <b>refused by name</b> here: they reach this
+    /// ladder through a chest tier now. See <c>StreakRules.IsRetiredKind</c>.
+    /// </para>
     /// </summary>
     [Serializable]
     public sealed class StreakRungDto
     {
         public string kind;
         public int amount;
+
+        /// <summary>A chest tier id from the <c>tasks</c> block, or empty for a currency rung.</summary>
+        public string tier;
     }
 
     /// <summary>

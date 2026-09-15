@@ -36,6 +36,7 @@ const {
   groveWorth, keeperLevel, starsFor, bestWave, MAX_WAVE,
   sanitiseName, isNameAllowed, publicName, boardName, fallbackName,
   BOARD_IDS, deciles, optedIn, saveRevision,
+  buildCard, heldCompanions, publishedLine, WARD_STARS_LEAST, WARD_STARS_MOST,
 } = await import(pathToFileURL(compiled).href);
 
 const namesModule = join(REPO, "firebase", "functions", "lib", "names.js");
@@ -454,7 +455,177 @@ function writable(value) {
   return Object.values(value).every(writable);
 }
 
-console.log(`\n${pass} passed, ${fail} failed`);
+// ------------------------------------------------------- what a public profile is told
+//
+// `companions` and `line` are the two fields a public profile draws that nothing else on the
+// card carries, and both are server-only by nature: no client ever publishes one. They are
+// pinned here because every failure in either is **silent** — a wrong filter draws a portrait
+// or a turret that is simply not there, on somebody else's screen, and no gate in this project
+// ever opens a card.
+console.log("\nthe companions a card publishes");
+{
+  const config = groveConfig();
+
+  // The roster the vectors author. `monarch` is free; the rest are priced and gated.
+  const priced = Object.keys(config.companions).sort();
+  check("the vectors price more than one companion", priced.length >= 2, priced.join(","));
+
+  const all = heldCompanions(new Set([...priced, "monarch", "no_such_friend"]), config, 99);
+  check("the free companion is not published — a visitor's own roster resolves it",
+        !all.includes("monarch"));
+  check("nor is an id the catalog has never heard of", !all.includes("no_such_friend"));
+  equal("and everything priced and owned is", all.join(","), priced.join(","));
+
+  // Sorted rather than left in the save's order, so two devices that bought the same companions
+  // in different orders publish byte-identical cards and neither churns a write.
+  const shuffled = heldCompanions(new Set([...priced].reverse()), config, 99);
+  equal("in a stable order whatever order the save wrote them", shuffled.join(","), priced.join(","));
+
+  // The gate, asked before anything else. A save naming a companion whose gate its own keeper
+  // level has not reached cannot have come about honestly, so it is dropped outright — which is
+  // exactly what `groveWorth` does with the same row, because it is the same walk.
+  const gated = priced.filter((id) => (config.companions[id].level ?? 0) > 1);
+  check("the vectors gate at least one companion", gated.length >= 1, gated.join(","));
+
+  const junior = heldCompanions(new Set(priced), config, 1);
+  for (const id of gated) {
+    check(`a level-1 save publishes no '${id}'`, !junior.includes(id));
+  }
+
+  // The set the card draws is the set the score counted. Two filters over one rule is how a
+  // visitor comes to see a portrait the number beside it was never told about.
+  const save = { companionsOwned: priced };
+  const worth = groveWorth(save, config, 1, 10_000_000);
+  const counted = junior.reduce((sum, id) => sum + config.companions[id].cost, 0);
+  equal("and the drawn set is exactly the priced set", worth.bought, counted);
+}
+
+console.log("\nthe turret line a card publishes");
+{
+  // A roster of the shape `seed-config.mjs` publishes: id -> the keeper level that opens it.
+  const config = {
+    ...groveConfig(),
+    wards: {
+      bolt: { level: 0, free: true },
+      siphon: { level: 2, free: false },
+      spectrum: { level: 40, free: false },
+    },
+  };
+
+  const line = (save, level = 99, cfg = config) => publishedLine(save, cfg, level);
+
+  const full = {
+    wardLoadout: [
+      { colour: "b", ward: "siphon" },
+      { colour: "r", ward: "bolt" },
+    ],
+    wardsOwned: ["siphon:b"],
+    wardStars: [{ ward: "siphon:b", stars: 4 }],
+  };
+
+  const seats = line(full);
+  equal("emitted in colour order, never the save's row order",
+        seats.map((s) => s.c).join(""), "rb");
+  equal("the turret on each seat", seats.map((s) => s.w).join(","), "bolt,siphon");
+
+  // The starter is on the roster at level nought, so a seat standing it is published like any
+  // other — and `wardsOwned` never mentions it, which is what an unbought free turret looks
+  // like in every save in the game.
+  equal("the free turret needs no holding", seats[0].w, "bolt");
+
+  equal("the rung is read off the holding, not the turret", seats[1].s, 4);
+  equal("and a seat with no row is one star", seats[0].s, 1);
+
+  // Bought per colour. This is the one place a stored choice could otherwise put a turret on a
+  // seat nobody paid for, which is the whole of what `WardHolding` exists for.
+  equal("a turret held on another colour is not published",
+        line({ wardLoadout: [{ colour: "b", ward: "siphon" }], wardsOwned: ["siphon:r"] }).length, 0);
+
+  // A row with no colour on it is what a build that owned turrets outright wrote, and the
+  // honest reading is "on all four". A reader that checked only the exact key would quietly
+  // lose seats off cards belonging to players who bought before colours existed.
+  equal("a bare holding covers every colour",
+        line({ wardLoadout: [{ colour: "b", ward: "siphon" }], wardsOwned: ["siphon"] }).length, 1);
+
+  // The gate, and the one forgery about a line a visitor could actually catch as a lie.
+  equal("a turret above this keeper's level is not published",
+        line({ wardLoadout: [{ colour: "y", ward: "spectrum" }], wardsOwned: ["spectrum:y"] },
+             20).length, 0);
+  equal("and is published once they reach it",
+        line({ wardLoadout: [{ colour: "y", ward: "spectrum" }], wardsOwned: ["spectrum:y"] },
+             40).length, 1);
+
+  // Omitted rather than corrected, which is what lets this function know nothing about which
+  // turret is the starter: a visiting client resolves a missing seat through `WardLine.Resolve`
+  // exactly as its owner's own game does.
+  equal("a turret this roster has never heard of is omitted",
+        line({ wardLoadout: [{ colour: "r", ward: "retired" }], wardsOwned: ["retired:r"] }).length, 0);
+
+  equal("a malformed colour is skipped",
+        line({ wardLoadout: [{ colour: "rg", ward: "bolt" }] }).length, 0);
+  equal("and a malformed row",
+        line({ wardLoadout: [null, 7, { ward: "bolt" }] }).length, 0);
+
+  // The client's own reader takes the last row for a colour (`WardLoadout.LoadFrom`), and two
+  // implementations of one rule that disagree about a malformed input is the drift invariant 9a
+  // is about — cheaper to agree than to find out later which half was right.
+  equal("a duplicated colour resolves the way the client's reader does",
+        line({ wardLoadout: [{ colour: "r", ward: "spectrum" }, { colour: "r", ward: "bolt" }] })[0].w,
+        "bolt");
+
+  // A rung outside the ladder cannot have come from this build. Clamped rather than refused,
+  // because the seat itself is honest and the number is a drawing.
+  equal("a rung above the ladder is clamped",
+        line({ ...full, wardStars: [{ ward: "siphon:b", stars: 99 }] })[1].s, WARD_STARS_MOST);
+  equal("and one below it",
+        line({ ...full, wardStars: [{ ward: "siphon:b", stars: 0 }] })[1].s, WARD_STARS_LEAST);
+
+  // A deployment whose `config/grove` predates the roster publishes no line at all, rather than
+  // an unvouched one. Absent has to keep meaning what it meant.
+  const stale = { ...config };
+  delete stale.wards;
+  equal("a stale seed publishes no line", line(full, 99, stale).length, 0);
+}
+
+console.log("\nthe card a public profile reads");
+{
+  const config = {
+    ...groveConfig(),
+    wards: { bolt: { level: 0, free: true }, siphon: { level: 2, free: false } },
+  };
+  const worth = groveWorth({}, config, 1, 0);
+
+  const save = {
+    wallet: { avatarId: "cinder" },
+    companionsOwned: Object.keys(config.companions),
+    wardLoadout: [{ colour: "r", ward: "siphon" }],
+    wardsOwned: ["siphon:r"],
+    homesteadPlaced: [{ slot: "4,4", piece: "bench" }],
+  };
+
+  const card = buildCard("uid-1", save, config, worth, 99, 1_700_000_000, "Fern Willow");
+  check("a card carries the companions", Array.isArray(card.companions) && card.companions.length > 0);
+  check("and the line", Array.isArray(card.line) && card.line.length === 1);
+  equal("and the arrangement", Object.keys(card.placed).length, 1);
+
+  // Absent rather than empty, which is what every card written before this deployment says and
+  // is the same answer. Firestore refuses `undefined`, so these are spread rather than written.
+  const bare = buildCard("uid-2", {}, config, worth, 1, 1_700_000_000, null);
+  check("a keeper who has bought nothing carries no companions", !("companions" in bare));
+  check("and one who has arranged no line carries none", !("line" in bare));
+
+  // The whole of what a grove takedown does. `publishableName`'s fall-through wearing different
+  // clothes: read here rather than at the call site, so the report path and `publishGrove`
+  // cannot come to disagree about what a denial means.
+  const denied = buildCard("uid-1", save, config, worth, 99, 1_700_000_000, "Fern Willow",
+                           undefined, true);
+  equal("a denied arrangement publishes no arrangement", Object.keys(denied.placed).length, 0);
+  equal("and keeps the name", denied.name, "Fern Willow");
+  equal("the score", denied.score, worth.score);
+  check("the companions", Array.isArray(denied.companions) && denied.companions.length > 0);
+  check("and the line", Array.isArray(denied.line) && denied.line.length === 1);
+}
+
 // ------------------------------------------------------------------ the revision
 //
 // What `publishGrove` reports beside the card, so the client can prove the card was built
@@ -469,4 +640,5 @@ equal("a negative revision reports nought", saveRevision({ cloud: { revision: -3
 equal("an unreadable revision reports nought", saveRevision({ cloud: { revision: "later" } }), 0);
 equal("a cloud block that is not an object reports nought", saveRevision({ cloud: 7 }), 0);
 
+console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

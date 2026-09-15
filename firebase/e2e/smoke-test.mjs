@@ -627,6 +627,66 @@ check(creditsOf(preFarmed.body)?.grantedBaseline === creditsBefore + rungOne,
 check(rejectedBy(preFarmed.body).includes(`streak:${today + 7}:8:credits`),
       "and is refused rather than left pending");
 
+// ------------------------------------------------------- the chest nights
+//
+// A streak night can pay a chest, which is the one rung shape the unit tests cannot see
+// end to end: the ladder lives in `config/progression` and the tier it names lives in the
+// *tasks* block of the same document, published by the same run of the seeder. A rung
+// naming a tier that block does not define leaves every claim against it **unconfirmed**
+// for ever (invariant 13a) — the safe half, and it pays nobody.
+//
+// What cannot be exercised here is a chest night actually being *paid*. A fresh account's
+// floor is seeded to yesterday, so the only night it may claim today is night one, and no
+// ladder worth shipping puts a chest there. That the roll matches is pinned by the shared
+// vectors on both implementations instead.
+const publishedStreak = (async () => {
+  const body = await publishedConfig.clone().json().catch(() => null);
+  const rungs = body?.fields?.streak?.mapValue?.fields?.rungs?.arrayValue?.values ?? [];
+  const tiers = body?.fields?.tasks?.mapValue?.fields?.tiers?.arrayValue?.values ?? [];
+
+  return {
+    rungs: rungs.map((r) => r?.mapValue?.fields ?? {}),
+    tierIds: tiers.map((t) => t?.mapValue?.fields?.id?.stringValue).filter(Boolean),
+    shieldGems: Number(body?.fields?.streak?.mapValue?.fields?.shieldGems?.integerValue ?? 0),
+    shieldDays: Number(body?.fields?.streak?.mapValue?.fields?.shieldDays?.integerValue ?? 0),
+  };
+})();
+
+const ladder = await publishedStreak;
+const chestNights = ladder.rungs
+  .map((r, i) => ({ night: i + 1, tier: r?.tier?.stringValue }))
+  .filter((r) => r.tier);
+
+check(chestNights.length > 0,
+      "the published ladder pays a chest on at least one night",
+      `${ladder.rungs.length} rung(s), none naming a tier`);
+
+check(chestNights.every((r) => ladder.tierIds.includes(r.tier)),
+      "and every tier it names is one the published tasks block defines",
+      `named ${chestNights.map((r) => r.tier).join(",")} against ${ladder.tierIds.join(",")}`);
+
+// Hearts and boosts reach this ladder through a chest now, and are refused by name at
+// authoring. A published rung still naming one is a seeder run from an older tree.
+check(!ladder.rungs.some((r) => ["hearts", "heart_boost"].includes(r?.kind?.stringValue)),
+      "and no rung names a kind the streak retired");
+
+if (chestNights.length > 0) {
+  const chest = chestNights[0];
+  const early = await call("claimAwards", { awards: [night(today, chest.night, "credits")] });
+
+  check(rejectedBy(early.body).includes(`streak:${today}:${chest.night}:credits`),
+        `a chest night (${chest.night}) is refused on a fresh account's first day`,
+        "the floor is seeded to yesterday, so only night one is reachable today");
+}
+
+// The shield is an ordinary gem spend that stores one date in the save: it grants no
+// currency and gates no payout, so nothing about it is adjudicated. Its two numbers are
+// published for completeness, and the only thing worth checking is that they arrived —
+// a support question about "why did my streak break" is answerable from them.
+check(ladder.shieldGems > 0 && ladder.shieldDays > 0,
+      "the shield's price and window reached config/progression",
+      `${ladder.shieldGems} gems for ${ladder.shieldDays} day(s)`);
+
 // ---------------------------------------------------------------- task chests
 console.log("task chests");
 
@@ -819,6 +879,90 @@ check(Number(card?.fields?.wave?.integerValue ?? 0) === 23,
 check(card?.fields?.league === undefined,
       "and no longer carries a league", JSON.stringify(card?.fields?.league));
 
+// ------------------------------------------------------- what a public profile reads
+//
+// Two fields the card grew for `PublicProfileScreen`, and the whole reason they are checked
+// live rather than only in the shared vectors: both are built from save keys nothing else on
+// the card reads (`wardLoadout`, `wardsOwned`, `wardStars`), against a `config/grove` the
+// seeder has to have published a turret roster into. A vector builds its own input; only a
+// real run sees the shape Firestore actually wrote.
+
+const cardCompanions = (card?.fields?.companions?.arrayValue?.values ?? [])
+  .map((v) => v.stringValue);
+
+// The save above claimed the entire companion catalog and this account has cleared one glade,
+// so the gated ones are dropped outright — `heldCompanions` asks the gate before anything
+// else, exactly as the score does. The set drawn and the set counted are one walk, which is
+// what stops a visitor seeing a portrait the number beside it was never told about.
+check(cardCompanions.length < companionIds.length,
+      "a forged companion set is published gated, not whole",
+      `${cardCompanions.length} of ${companionIds.length}`);
+
+const wardRoster = groveConfig?.fields?.wards?.mapValue?.fields ?? {};
+const wardIds = Object.keys(wardRoster);
+
+check(wardIds.length > 0,
+      "config/grove carries the turret roster (re-seed if this is red)",
+      `${wardIds.length} turret(s)`);
+
+if (wardIds.length > 0) {
+  // The free turret — level 0 and no price — which every account stands and which appears in
+  // nobody's `wardsOwned`. Publishing a line that dropped it would drop the one seat every
+  // player in the game has.
+  const freeWard = wardIds.find(
+    (id) => wardRoster[id]?.mapValue?.fields?.free?.booleanValue === true);
+
+  // And one behind a gate this account cannot have reached, held on a seat it did not buy.
+  const gatedWard = wardIds.find(
+    (id) => Number(wardRoster[id]?.mapValue?.fields?.level?.integerValue ?? 0) >= 20);
+
+  check(!!freeWard && !!gatedWard,
+        "the roster has a free turret and a gated one to test against",
+        `${freeWard} / ${gatedWard}`);
+
+  const lineWrite = await fetch(
+    `${FS}/players/${uid}?updateMask.fieldPaths=wardLoadout` +
+    `&updateMask.fieldPaths=wardsOwned&updateMask.fieldPaths=wardStars`,
+    {
+      method: "PATCH", headers: json,
+      body: JSON.stringify({ fields: {
+        wardLoadout: { arrayValue: { values: [
+          { mapValue: { fields: { colour: { stringValue: "r" },
+                                  ward: { stringValue: freeWard } } } },
+          { mapValue: { fields: { colour: { stringValue: "g" },
+                                  ward: { stringValue: gatedWard } } } },
+        ] } },
+        // Held on green, so the only thing that can drop it is the keeper gate.
+        wardsOwned: { arrayValue: { values: [{ stringValue: `${gatedWard}:g` }] } },
+        wardStars: { arrayValue: { values: [
+          { mapValue: { fields: { ward: { stringValue: `${gatedWard}:g` },
+                                  stars: { integerValue: "4" } } } },
+        ] } },
+      } }),
+    }
+  );
+  check(lineWrite.ok, "a client may write its own loadout", String(lineWrite.status));
+
+  const relined = await call("publishGrove", {});
+  check(relined.status === 200, "and publishGrove takes it", String(relined.status));
+
+  const lined = await (await fetch(`${FS}/groves/${uid}`, { headers: bearer })).json();
+  const seats = (lined?.fields?.line?.arrayValue?.values ?? [])
+    .map((v) => v.mapValue?.fields ?? {});
+
+  check(seats.length === 1, "a line is published with only the seats the server can vouch for",
+        JSON.stringify(seats));
+
+  check(seats[0]?.c?.stringValue === "r" && seats[0]?.w?.stringValue === freeWard,
+        "the free turret needs no holding, so its seat stands", JSON.stringify(seats[0]));
+
+  // The one forgery about a line a visitor could catch as a lie: a level-1 keeper standing a
+  // turret whose rung opens at twenty. Dropped outright rather than drawn, and the visiting
+  // client fills the gap with its own roster's starter.
+  check(!seats.some((s) => s?.w?.stringValue === gatedWard),
+        "a turret above this keeper's level is not published", JSON.stringify(seats));
+}
+
 // Placed after the forged-grove assertions rather than before them, and that is not
 // housekeeping: these cases rewrite the player's grove sets to isolate the arithmetic, so
 // running them first left every assertion above reading a grove this section had emptied.
@@ -972,6 +1116,50 @@ check(visited.ok, "another keeper may read this grove's card", String(visited.st
 // separate document — see invariant 19.
 const peekSave = await fetch(`${FS}/players/${uid}`, { headers: visitor });
 check(peekSave.status === 403, "and cannot read the save behind it", String(peekSave.status));
+
+// ------------------------------------------------------------- the release gate
+console.log("\nrelease");
+
+// Read with no Authorization header at all, which is the point of the case rather than a
+// shortcut. A forced update exists because something about an old client no longer works
+// against this deployment, and if that something is ever authentication then a gate behind
+// `signedIn()` is a gate that cannot close on the builds it was written for.
+const releaseAnon = await fetch(`${FS}/config/release`);
+check(releaseAnon.ok || releaseAnon.status === 404,
+      "config/release is readable with no session at all", String(releaseAnon.status));
+
+// A client that could write this could wall every other player out of the game, which makes
+// it the one config document whose write rule protects other people rather than the economy.
+const forgeRelease = await fetch(`${FS}/config/release?updateMask.fieldPaths=android`, {
+  method: "PATCH", headers: json,
+  body: JSON.stringify({ fields: { android: { mapValue: { fields: {
+    minimum: { integerValue: "999999" },
+    store: { stringValue: "https://example.invalid" },
+  } } } } }) });
+check(forgeRelease.status === 403, "and no client may write it", String(forgeRelease.status));
+
+// If it has been seeded, the shape has to be one the client can act on. A minimum with no
+// store link is a wall with no door: the client refuses it outright (so the wall silently
+// never appears) and `seed-release.mjs` refuses to publish it — this is the third place, and
+// the only one that sees what is actually in the database.
+if (releaseAnon.ok) {
+  const published = (await releaseAnon.json())?.fields ?? {};
+
+  for (const platform of ["android", "ios"]) {
+    const block = published[platform]?.mapValue?.fields;
+    if (!block) {
+      check(true, `config/release names no ${platform} block, so nothing is forced there`);
+      continue;
+    }
+
+    const minimum = Number(block.minimum?.integerValue ?? 0);
+    const store = block.store?.stringValue ?? "";
+
+    check(minimum === 0 || store.startsWith("https://"),
+          `${platform}'s wall names a store link a device will open`,
+          `minimum ${minimum}, store '${store}'`);
+  }
+}
 
 // -------------------------------------------------------------- keeper names
 console.log("\nnames");
@@ -1127,26 +1315,69 @@ check(reportWrite.status === 403, "and cannot write one", String(reportWrite.sta
 // again, which is why this runs first.)
 await call("publishGrove", {});
 
-const reported = await callAs("reportKeeperName", { keeperId: uid }, second.idToken);
+const reported = await callAs("reportKeeper", { keeperId: uid }, second.idToken);
 check(reported.body?.result?.outcome === "reported", "a keeper can report another's name",
       JSON.stringify(reported.body?.result));
 
 // Idempotent on the pair, which is what makes the control safe to tap twice and what makes the
 // threshold count *people* rather than taps.
-const again = await callAs("reportKeeperName", { keeperId: uid }, second.idToken);
+const again = await callAs("reportKeeper", { keeperId: uid }, second.idToken);
 check(again.body?.result?.outcome === "duplicate", "and reporting the same name twice is one",
       JSON.stringify(again.body?.result));
 
+// The other subject. A keeper puts a name *and* an arrangement in front of strangers, and the
+// two are separate judgements in separate collections — so reporting one must leave the other
+// untouched and must not read as a duplicate of it.
+const groveReported = await callAs(
+  "reportKeeper", { keeperId: uid, subject: "grove" }, second.idToken);
+check(groveReported.body?.result?.outcome === "reported",
+      "and can report their grovement, which is a separate judgement",
+      JSON.stringify(groveReported.body?.result));
+
+const groveAgain = await callAs(
+  "reportKeeper", { keeperId: uid, subject: "grove" }, second.idToken);
+check(groveAgain.body?.result?.outcome === "duplicate",
+      "idempotent on the pair and the subject together",
+      JSON.stringify(groveAgain.body?.result));
+
+// `groveReports` is server-only in both directions for `nameReports`' reasons, and the rules
+// name it explicitly rather than leaning on the catch-all — a collection nobody wrote a rule
+// for is a collection nobody thought about.
+const groveReportRead = await fetch(`${FS}/groveReports/${uid}`, { headers: bearer });
+check(groveReportRead.status === 403 || groveReportRead.status === 404,
+      "a client cannot read a grovement report summary", String(groveReportRead.status));
+
+const groveReportWrite = await fetch(`${FS}/groveReports/${uid}`, {
+  method: "PATCH", headers: json,
+  body: JSON.stringify({ fields: { reports: { integerValue: "99" } } }),
+});
+check(groveReportWrite.status === 403, "and cannot write one", String(groveReportWrite.status));
+
+// A subject this deployment has never heard of is refused rather than defaulted: a client one
+// drop ahead asking for something the server cannot take down must be told nothing happened,
+// not told its report was counted.
+const unknownSubject = await callAs(
+  "reportKeeper", { keeperId: uid, subject: "avatar" }, second.idToken);
+check(unknownSubject.status === 400, "an unknown report subject is refused",
+      `${unknownSubject.status} ${JSON.stringify(unknownSubject.body?.error?.status ?? "")}`);
+
+// And an absent subject is the name, which is what every client written before grovements
+// could be reported means — the reason this callable kept its id (invariant 1).
+const legacySubject = await callAs("reportKeeper", { keeperId: uid }, second.idToken);
+check(legacySubject.body?.result?.outcome === "duplicate",
+      "an absent subject is still the name, so an older client is answered as before",
+      JSON.stringify(legacySubject.body?.result));
+
 // Reporting yourself is answered exactly as a real report is. The client is told nothing it
 // could use to probe the moderation state — see NameReportOutcome.
-const self = await call("reportKeeperName", { keeperId: uid });
+const self = await call("reportKeeper", { keeperId: uid });
 check(self.status === 200, "reporting yourself is answered rather than refused",
       String(self.status));
 
-const noKeeper = await call("reportKeeperName", {});
+const noKeeper = await call("reportKeeper", {});
 check(noKeeper.status === 400, "a report with no keeper is rejected", String(noKeeper.status));
 
-const unpublished = await call("reportKeeperName", { keeperId: `nobody-${RUN_TAG}` });
+const unpublished = await call("reportKeeper", { keeperId: `nobody-${RUN_TAG}` });
 check(unpublished.body?.result?.outcome === "reported",
       "reporting an account with no card says nothing about whether it exists",
       JSON.stringify(unpublished.body?.result));

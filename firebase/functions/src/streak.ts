@@ -36,13 +36,37 @@
  * matches `DailyRules.DayKeyFor` on the client.
  */
 
-/** Mirrors `ChestDropKinds`. Never renamed or reused — a published ladder names these. */
+import { subjectSeed, Rolls } from "./random";
+import { ChestConfig, RolledDrop, rollChestWith } from "./daily";
+import { findTier, TaskConfig } from "./tasks";
+
+/**
+ * Mirrors `ChestDropKinds`. Never renamed or reused — a published ladder names these.
+ *
+ * `hearts` and `heart_boost` are **retired on the client** (`StreakRules.IsRetiredKind`):
+ * a night pays credits, gems or a chest now, and everything a chest can hold reaches this
+ * ladder through the tier. They stay in this list because it is a *wire* vocabulary — a
+ * rolled-back client can still publish a ladder naming one, and `usableStreakConfig`
+ * answering null for that ladder would leave every night of every account **unconfirmed**
+ * rather than degrading. Neither ever paid currency, so neither has ever moved a balance
+ * here.
+ */
 export const STREAK_KINDS = ["credits", "gems", "hearts", "heart_boost"] as const;
 export type StreakKind = (typeof STREAK_KINDS)[number];
 
+/**
+ * One night of the ladder: a figure, or a chest.
+ *
+ * A rung carries `kind`+`amount` **or** `tier`, never both — mirrors `StreakRung` on the
+ * client. A chest night names a tier out of the `tasks` block's chest ladder, so it is
+ * *recomputed* (like a task's chest) on top of being *bounded* (like a night), and the
+ * claim id never had to learn anything: `streak:{day}:{night}:{currency}` already carries
+ * everything either shape needs, because the rung decides which shape it is.
+ */
 export interface StreakRung {
   kind: StreakKind | "";
   amount: number;
+  tier?: string;
 }
 
 export interface StreakConfig {
@@ -80,6 +104,12 @@ export const MAX_STREAK_DAYS_BEHIND = 400;
 /** Keeps a claimed night's id bounded without capping how long a streak may run. */
 const MAX_NIGHT = 100000;
 
+/** Matches `TaskDefinition.MaxIdLength`, which is what a chest tier id is. */
+const MAX_TIER_ID = 32;
+
+/** Matches `DailyStreak.SeedTag`. Contract (invariant 9c). */
+export const STREAK_SEED_TAG = "streak";
+
 // ------------------------------------------------------------------------ the ladder
 /**
  * What the `night`th night pays, counting from 1.
@@ -89,21 +119,32 @@ const MAX_NIGHT = 100000;
  * instead would pay a different reward from the one the board drew, every lap, for ever.
  */
 export function rungFor(config: StreakConfig, night: number): StreakRung {
-  if (!Number.isInteger(night) || night < 1) return { kind: "", amount: 0 };
+  const nothing: StreakRung = { kind: "", amount: 0 };
+
+  if (!Number.isInteger(night) || night < 1) return nothing;
 
   const rungs = config.rungs;
-  if (!Array.isArray(rungs) || rungs.length === 0) return { kind: "", amount: 0 };
+  if (!Array.isArray(rungs) || rungs.length === 0) return nothing;
 
   const rung = rungs[(night - 1) % rungs.length];
-  if (!rung || !rung.kind) return { kind: "", amount: 0 };
+  if (!rung) return nothing;
+
+  // A chest night. The tier is resolved against the published task tiers by the caller,
+  // because the two blocks are seeded together and a tier this ladder names but that block
+  // does not hold is a claim to leave *unconfirmed* rather than refuse (invariant 13a).
+  if (typeof rung.tier === "string" && rung.tier.length > 0) {
+    return { kind: "", amount: 0, tier: rung.tier };
+  }
+
+  if (!rung.kind) return nothing;
 
   const amount = Math.floor(rung.amount);
-  if (!Number.isFinite(amount) || amount < 1) return { kind: "", amount: 0 };
+  if (!Number.isFinite(amount) || amount < 1) return nothing;
 
   return { kind: rung.kind, amount: Math.min(amount, maxFor(rung.kind)) };
 }
 
-/** What one night is worth in one currency. Zero when it pays something else. */
+/** What one *currency* night is worth in one currency. Zero when it pays something else. */
 export function streakCurrencyValue(
   config: StreakConfig,
   night: number,
@@ -111,6 +152,82 @@ export function streakCurrencyValue(
 ): number {
   const rung = rungFor(config, night);
   return rung.kind === currency ? rung.amount : 0;
+}
+
+// ---------------------------------------------------------------------- the chest night
+/**
+ * The subject half of the seed. Mirrors `DailyStreak.Subject`: `{dayKey}:{night}`.
+ *
+ * The night's own calendar day, not today's — the client rolls it the same way, so a night
+ * collected a week late rolls what it always would have. Contract.
+ */
+export function streakSubject(dayKey: number, night: number): string {
+  return `${dayKey}:${night}`;
+}
+
+class StreakRandom extends Rolls {
+  constructor(playerKey: string, subject: string, stream: number) {
+    super(subjectSeed(playerKey, STREAK_SEED_TAG, subject, stream));
+  }
+}
+
+/** Everything in one streak night's chest, for one account. */
+export function rollStreakChest(
+  chest: ChestConfig,
+  playerKey: string,
+  dayKey: number,
+  night: number
+): RolledDrop[] {
+  const subject = streakSubject(dayKey, night);
+  return rollChestWith(chest, (stream) => new StreakRandom(playerKey, subject, stream));
+}
+
+/** What one streak night's chest is worth in one currency. Zero when it holds none. */
+export function streakChestValue(
+  chest: ChestConfig,
+  playerKey: string,
+  dayKey: number,
+  night: number,
+  currency: string
+): number {
+  let total = 0;
+  for (const drop of rollStreakChest(chest, playerKey, dayKey, night)) {
+    if (drop.kind === currency) total += drop.amount;
+  }
+  return total;
+}
+
+/**
+ * What a night is worth in one currency, whichever shape it is.
+ *
+ * <p>The one place the two shapes meet, so no caller has to know that a streak rung can be
+ * a chest. Returns 0 — never a guess — when the rung names a tier the published task block
+ * does not hold; the caller leaves such a claim <b>unconfirmed</b> rather than refusing it,
+ * because that is a client on a content pack this server has not been seeded with, and
+ * throwing away a reward the player earned is worse than paying it late (invariant 13a).</p>
+ */
+export function streakNightValue(
+  ladder: StreakConfig,
+  tasks: TaskConfig | null,
+  playerKey: string,
+  dayKey: number,
+  night: number,
+  currency: string
+): { amount: number; tierId: string; priceable: boolean } {
+  const rung = rungFor(ladder, night);
+
+  if (!rung.tier) {
+    return { amount: rung.kind === currency ? rung.amount : 0, tierId: "", priceable: true };
+  }
+
+  const tier = tasks ? findTier(tasks, rung.tier) : null;
+  if (!tier) return { amount: 0, tierId: rung.tier, priceable: false };
+
+  return {
+    amount: streakChestValue(tier.chest, playerKey, dayKey, night, currency),
+    tierId: rung.tier,
+    priceable: true,
+  };
 }
 
 /** Guards a config document that predates the streak block, or was seeded badly. */
@@ -127,6 +244,17 @@ export function usableStreakConfig(config: unknown): StreakConfig | null {
 
   for (const rung of c.rungs) {
     if (!rung || typeof rung !== "object") return null;
+
+    const tier = rung.tier;
+    if (tier !== undefined && (typeof tier !== "string" || tier.length > MAX_TIER_ID)) return null;
+    if (typeof tier === "string" && tier.length > 0) {
+      // A chest night pays whatever its tier rolls, which is never nothing — every tier
+      // guarantees at least one band (`usableTaskConfig`).
+      if (rung.kind) return null;                     // one shape or the other, never both
+      pays = true;
+      continue;
+    }
+
     if (rung.kind && !STREAK_KINDS.includes(rung.kind as StreakKind)) return null;
     if (rung.kind && rungFor({ rungs: [rung] }, 1).amount > 0) pays = true;
   }
@@ -192,21 +320,41 @@ export const NO_STREAK_FLOOR: StreakFloor = { paidThroughDay: 0, paidNight: 0 };
 /**
  * Whether a claim is one an honest player could have arrived at, given what we last paid.
  *
- * <p>Two ways to satisfy it, and between them they describe every legitimate streak:</p>
+ * <p>Three ways to satisfy it, and between them they describe every legitimate streak:</p>
  *
  * <ul>
- *   <li><b>Continuing.</b> The night advances by exactly as many days as have passed:
- *   we paid night 5 on Monday, so Tuesday is night 6 and Thursday is night 8. This also
- *   accepts a claim dated *before* the floor — two devices submitting the same backlog in
- *   different orders — because the arithmetic works in both directions.</li>
+ *   <li><b>Continuing.</b> The night <em>climbs</em>, and no faster than the calendar: we
+ *   paid night 5 on Monday, so Thursday may be night 6, 7 or 8, and may not be night 9.</li>
+ *   <li><b>Backfilled.</b> A claim dated <em>before</em> the floor — two devices submitting
+ *   the same backlog in different orders — has to add up exactly, because there is no slack
+ *   to spend running backwards.</li>
  *   <li><b>Restarted.</b> The streak broke, so the night is low again. It may be no
  *   longer than the days that have elapsed since we last paid: a streak that began after
  *   Monday cannot be six nights old on Wednesday.</li>
  * </ul>
  *
- * <p>What it refuses is the only thing worth refusing: a night that is higher than the
- * calendar allows. Claiming night seven every morning fails the first test (seven is not
- * six plus one) and the second (seven nights have not elapsed since yesterday).</p>
+ * <p><b>Why the first one is a band rather than an equality, and why that costs nothing.</b>
+ * It used to demand `night === paidNight + elapsed`, which is right for a streak that is fed
+ * every single day and wrong for one that was <em>protected</em>: a shield keeps a streak
+ * alive across days nobody played and deliberately buys no nights (`DailyStreak.Advance`),
+ * so a player back after five protected days claims night 21 on the seventh day — one night
+ * on, seven days on. The old rule refused that permanently, and the client drops a refused
+ * claim (`CloudWalletState.RejectedGrantIds`), so it would have been a reward somebody paid
+ * a hundred and twenty gems to keep and then silently lost.</p>
+ *
+ * <p>The security is unchanged, and it is worth being exact about why, because the obvious
+ * worry is that a band lets a save editor <em>stall</em> on the ladder's best rung. It does
+ * not: the night must <b>strictly increase</b>. Together the two halves say that over any
+ * window of D days an account gets at most D claims and the night advances by at least one
+ * per claim and by at most D in total — so reaching a given rung still costs exactly as many
+ * days as it costs an honest player, and skipping the cheap rungs in between costs the days
+ * you skipped. Which is the whole sentence this file exists to enforce: a forged streak buys
+ * nothing an honest one does not.</p>
+ *
+ * <p>Note the shield itself is nowhere in this rule, and needs to be nowhere. It is an
+ * ordinary gem spend on the client (invariant 18) that stores one date in the save; nothing
+ * about it reaches this server as a permission, because there is nothing for a permission to
+ * gate — the rate bound above holds whether or not anybody paid for anything.</p>
  *
  * <p>A zero floor — an account this server has never paid a streak night for — accepts
  * anything, once. That is deliberate. Every player who upgrades into this build arrives
@@ -222,8 +370,16 @@ export function advances(floor: StreakFloor, dayKey: number, night: number): boo
 
   const elapsed = dayKey - floor.paidThroughDay;
 
-  if (night === floor.paidNight + elapsed) return true;   // an unbroken run
-  return elapsed > 0 && night <= elapsed;                 // a run that restarted
+  // Running backwards, or the same day twice: exact, with no band to spend. Re-submitting
+  // the night we just paid lands here and is permitted on purpose — it is stopped one layer
+  // up by `grantLog/{id}`, which is the layer that also stops it across devices, across
+  // reinstalls and after a dropped reply.
+  if (elapsed <= 0) return night === floor.paidNight + elapsed;
+
+  // Continuing: climbing, and no faster than the calendar.
+  if (night > floor.paidNight && night <= floor.paidNight + elapsed) return true;
+
+  return night <= elapsed;                                // a run that restarted
 }
 
 /** The floor after paying a night, which only ever moves forward. */

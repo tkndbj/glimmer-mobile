@@ -1435,6 +1435,13 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
     grid = lay.grid
     charms = charms or {}
 
+    # **Every damage figure on this picture, painted last.** It mirrors the view's own layer
+    # order rather than the order the code happens to run in (invariant 44d): `SiegeView.Number`
+    # builds onto `_figures`, which is made after `_fx` and after `_sky`, so nothing drawn on this
+    # board is ever over a number. A mirror that painted them where they were computed would
+    # answer the wrong question about the one picture it exists to answer it about.
+    figures = []
+
     left, bottom, right, top = inset()
     host = (CANVAS[0] - left - right, CANVAS[1] - top - bottom)
 
@@ -1510,7 +1517,7 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         ly = hill_top + (hill_foot - hill_top) * march
 
         cx, cy = at(lx, ly)
-        mob.append((cx, cy))
+        mob.append((cx, cy, letter))
         # **Sized by its own height with the width following the picture**, which is
         # `SiegeView.Frame` and was not what this drew. A square box fits a *wide* reel by its
         # width and draws it short - and a bulwark is the widest thing on this hill, because it is
@@ -1622,7 +1629,7 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
             stood_here = (line or LINE)[i % len(line or LINE)]
 
             cx, cy = at(wx, line_y + cell * 1.0)
-            tx, ty = mob[i % len(mob)]
+            tx, ty, _ = mob[i % len(mob)]
 
             # A different beat per ward, so one picture shows the whole event rather than four
             # copies of one instant.
@@ -1660,7 +1667,13 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
             # The tally floating off it. Two of the four are drawn as doubles, because the
             # elemental double is the rule this mode is about and it has to read as a different
             # kind of number rather than as a bigger one.
-            damage(sheet, tx, ty - cell * 0.7, (14, 6, 22, 8)[i % 4], i % 2 == 0, cell)
+            #
+            # **Collected rather than painted here**, so that every figure lands above every
+            # effect - `SiegeView._figures`, the layer built last for exactly this reason. Painted
+            # in place, a number would be covered by whatever is drawn after it, which is the
+            # fault this mirrors: on a stormglass that is a dozen beams and a dozen scorches
+            # arriving over the top of it inside half a second.
+            figures.append((tx, ty - cell * 0.7, (14, 6, 22, 8)[i % 4], i % 2 == 0))
 
     # **Both of the hill's captions, together, because apart they say nothing.** Each was
     # individually well placed and the pair overlapped on every shape; drawing only the chain is
@@ -1811,7 +1824,7 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         thicks = beam_thicks()
         layers = ((thicks[0], 107, True), (thicks[1], 242, True), (thicks[2], 242, False))
 
-        for n, (tx, ty) in enumerate(mob):
+        for n, (tx, ty, wears) in enumerate(mob):
             letter = lay.wards[n % len(lay.wards)] if lay.wards else "r"
             hue = TINTS[siege.LETTERS.index(letter)]
 
@@ -1837,6 +1850,24 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
 
             # Where it lands - `SiegeView.Scorch`, the charm's own burst rather than a bolt's.
             put(sheet, loudest("hit_%s" % letter), tx, ty, cell * 1.9, cell * 1.9)
+
+            # **What it took, which is the whole point of stopping the board for it.** A
+            # stormglass is the biggest number in the mode and it is the one moment the whole
+            # game stops for, so a figure that cannot be read there is the payoff saying nothing.
+            # `SiegeView.Number` tallies every ward's bolt into one climbing figure per raider,
+            # so what stands over a raider is the line's whole answer to it rather than a figure
+            # per beam.
+            #
+            # **The arithmetic is `SiegeBoard.Volley`'s, at the starter line's own weight** - four
+            # standing wards, rank nought, one star: the ward wearing the charm's colour throws
+            # `CharmVolleyOwn` and every other throws `CharmVolley`, at 40 on a raider of that
+            # ward's colour and 20 off it. That is the worst case for legibility, because a bought
+            # and cogged line draws bigger numbers. Gold on every one of them, and that is not a
+            # mistake in the mirror: a tally goes gold if *any* hit in it was a double
+            # (`Number`'s `running.Weak |= weak`), and in a volley every raider is answered by its
+            # own ward.
+            charm = grid.cells[volley] if grid.cells[volley] in siege.LETTERS else "r"
+            figures.append((tx, ty - cell * 0.7, 140 if wears == charm else 120, True))
 
         # And the stone opening fire: a white core over a wide bloom, because what leaves here is
         # every ward at once and no one colour may own it.
@@ -1884,6 +1915,12 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
                         outline=tint + (216,), width=max(2, int(cell * 0.05)))
 
         put(sheet, sprite("gem_cog"), cx, cy, cell * 0.86, cell * 0.86)
+
+    # ------------------------------------------------------------------ the damage figures
+    # **Last of everything on the hill**, which is the whole of what `SiegeView._figures` is: a
+    # number is a readout rather than an effect, so nothing drawn on this board may cover one.
+    for fx, fy, total, weak in figures:
+        damage(sheet, fx, fy, total, weak, cell)
 
     # ------------------------------------------------------------------ the fuel tubes
     # **Drawn after the field, because the view draws them after the field** (`SiegeView.Compose`
@@ -1966,7 +2003,7 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
     # Bolts falling on the raiders the item killed, drawn at three points of one reel so a still
     # picture shows the strike arriving, at its loudest, and going out.
     if storm and mob:
-        for i, (mx, my) in enumerate(mob[:storm]):
+        for i, (mx, my, _) in enumerate(mob[:storm]):
             struck(sheet, mx, my, cell, (2, 6, 11, 8)[i % 4], at(0, hill_top)[1])
     elif aim == "wards":
         ward_rings(sheet, span, cell, line_y, len(lay.wards), at)

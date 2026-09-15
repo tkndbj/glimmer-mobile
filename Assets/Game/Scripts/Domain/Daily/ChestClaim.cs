@@ -60,6 +60,23 @@ namespace GlimmerGrove.Daily
                 () => TaskLedger.TryClaim(task, out var drops) ? drops : null);
         }
 
+        /// <summary>
+        /// One night of the streak ladder, when that night pays a chest.
+        ///
+        /// Invalid for a night that pays a figure — the streak page throws those to the
+        /// wallet itself — which is the honest answer rather than a chest panel wrapped
+        /// around a number: a ceremony whose reel is a lid opening has nothing to open when
+        /// the reward was never in a chest.
+        /// </summary>
+        public static ChestClaim ForStreakNight(int night)
+        {
+            var rung = DailyStreak.Ladder.Rung(night);
+            if (!rung.IsChest) return default;
+
+            return new ChestClaim(rung.Tier,
+                () => DailyStreak.TryCollect(night, out var drops) ? drops : null);
+        }
+
         /// <summary>One rung of a season's ladder, on one of its two tracks.</summary>
         public static ChestClaim ForSeason(GroveEvent season, EventMilestone rung, SeasonTrack track)
         {

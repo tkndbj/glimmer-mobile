@@ -1,0 +1,33 @@
+{
+  "_comment": [
+    "What the deployment requires of a client, per store. Published by seed-release.mjs.",
+    "",
+    "`minimum` is the oldest build still allowed to run, as a major.minor.patch version — the",
+    "same string as bundleVersion in Player Settings. A build equal to it is allowed; anything",
+    "older meets the wall. \"0.0.0\" means nothing is forced, which is the ordinary state and the",
+    "one this ships in.",
+    "",
+    "Raise a platform's minimum only once that platform's store is actually serving the build,",
+    "which is the whole reason these are separate: Apple review runs days behind a Play rollout,",
+    "so the normal state of a release is Android raised and iOS still at the old number.",
+    "",
+    "`store` is where a walled player is sent. It must be https — a scheme link that the device",
+    "cannot claim opens nothing at all, which is a dead button on a panel that has only the one.",
+    "A platform with a minimum and no store link is refused by the tool and ignored by the",
+    "client: a wall with no door cannot be opened from the player's side by any build.",
+    "",
+    "To lift every wall in the world: set both minimums back to \"0.0.0\" and re-publish, or",
+    "delete config/release outright. Either reaches a stuck device on its next check."
+  ],
+
+  "android": {
+    "minimum": "0.0.0",
+    "store": "https://play.google.com/store/apps/details?id=com.tekoworld.glimmergroove"
+  },
+
+  "ios": {
+    "_store": "The numeric Apple id is minted by App Store Connect and is derivable from nothing in the build, so it is typed once here. The link 404s in a browser until the listing is public, which does not matter: it is only ever opened by a player who has met a wall, and a wall is only raised once Apple is serving the build.",
+    "minimum": "0.0.0",
+    "store": "https://apps.apple.com/app/id6804516450"
+  }
+}

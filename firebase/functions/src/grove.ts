@@ -62,6 +62,24 @@ export const GROVE_PATHS = {
   ranksConfig: "config/groveRanks",
 };
 
+/**
+ * One turret's row of the published roster.
+ *
+ * <b>`free` is carried rather than derived, and that is invariant 16j's trap said about a
+ * shelf.</b> A free turret is held by everybody and never appears in `wardsOwned` at all, so a
+ * line standing one would be silently dropped by an ownership test — the whole roster reading as
+ * unowned for the one turret every account has. The predicate that means "free" has to be
+ * written down where every caller sees it, not re-derived from a price that a second currency
+ * will one day make ambiguous.
+ */
+export interface GroveWardEntry {
+  /** The keeper level that opens this rung. Nought is ungated. */
+  level: number;
+
+  /** True when nothing has to be paid for it, in any currency. Mirrors `WardModel.IsStarter`. */
+  free: boolean;
+}
+
 /** The grove catalog, published by the seeder from `homestead.json` and the manifest. */
 export interface GroveConfig {
   /** `groveVersion` from the manifest, so a stale seed is visible in the document. */
@@ -120,6 +138,32 @@ export interface GroveConfig {
    * public score that a forged `homesteadStock` row buys for nothing.
    */
   dwellingLevels?: Record<string, number>;
+
+  /**
+   * Turret id -> the keeper level that opens its rung on the shelf. Absent means ungated.
+   *
+   * **A third additive map rather than a widening**, which is `bundles`' bargain for
+   * `dwellingLevels`' reason: a function deployed before the turret line was published ignores
+   * it and writes exactly the card it wrote yesterday, and a function reading a config seeded
+   * before this field existed sees no roster and publishes no line. Neither side has to be
+   * deployed first.
+   *
+   * <b>It is the whole of what the server knows about turrets, and that is deliberate.</b> A
+   * line is a *picture* — it orders no board, pays nothing and is worth nothing to forge, which
+   * is the same reading `placed` has carried since the card shipped. What the roster buys is the
+   * one forgery a visitor could actually catch as a lie: a level-two keeper standing the
+   * forty-gate turret. So the gate is asked (and asked **before** anything else, which is
+   * `groveWorth`'s companion clause) and ownership is not, because nothing this server holds
+   * implies a turret was bought — `wardsOwned` is client-written exactly as `companionsOwned`
+   * is, and unlike a companion a turret has no price in the grove catalog to clamp against.
+   *
+   * The day a line reaches a board, a match-up or anything that pays, this stops being
+   * defensible — the sentence `bestWave` carries, for the same reason.
+   *
+   * An entry per turret rather than a bare level, because `free` has to travel with it — see
+   * {@link GroveWardEntry}.
+   */
+  wards?: Record<string, GroveWardEntry>;
 
   /** The star ladder, ascending. What a grove's worth is banded into on a card. */
   stars: number[];
@@ -460,11 +504,12 @@ export function groveWorth(
   // come about honestly, so that entry is dropped outright rather than clamped down. That
   // is strictly tighter than clamping — a level-1 save claiming the 30,000-credit companion
   // now scores nothing for it instead of scoring whatever it could afford.
-  for (const [id, entry] of Object.entries(grove.companions)) {
-    if (!entry || typeof entry.cost !== "number" || entry.cost <= 0) continue;
-    if (!companions.has(id)) continue;
-
-    if (level >= Math.floor(entry.level ?? 0)) bought += entry.cost;
+  //
+  // **Walked through `heldCompanions` rather than inline**, because the card draws this set and
+  // the score counts it, and two walks over one rule is how a visitor comes to see a portrait
+  // the number beside it was never told about.
+  for (const id of heldCompanions(companions, grove, level)) {
+    bought += Math.floor(grove.companions[id].cost);
   }
 
   const ceiling = affordable > 0 ? Math.floor(affordable) : 0;
@@ -479,6 +524,223 @@ export function groveWorth(
     stars: starsFor(score, grove.stars ?? []),
     clamped: allowed < bought,
   };
+}
+
+/**
+ * The priced companions a save may honestly be said to own, in catalog order.
+ *
+ * <b>One walk, read twice.</b> `groveWorth` prices it and `buildCard` publishes it, which is
+ * what makes the portraits on a public profile and the number under them the same fact — the
+ * alternative is two filters that agree until one of them is edited, and the symptom is a
+ * stranger's screen showing a companion the score never counted.
+ *
+ * Three clauses and all three belong to the score:
+ *
+ *   * **priced only**, because a free companion is worth nothing and is held by *everybody* who
+ *     has reached its gate — so it is not in `config/grove` at all, and a visitor's own client
+ *     resolves it from its own roster (`CompanionLedger.IsHeld`) rather than being told;
+ *   * **owned**, from the client-written set, which is what a purchase is;
+ *   * **gated**, asked before anything else, because a save naming a companion whose gate its
+ *     own keeper level has not reached cannot have come about honestly.
+ *
+ * Sorted rather than left in the save's order, so two devices that bought the same companions
+ * in different orders publish byte-identical cards and neither churns a write.
+ */
+export function heldCompanions(
+  owned: Set<string>, grove: GroveConfig, level: number
+): string[] {
+  const out: string[] = [];
+
+  for (const [id, entry] of Object.entries(grove.companions)) {
+    if (!entry || typeof entry.cost !== "number" || entry.cost <= 0) continue;
+    if (!owned.has(id)) continue;
+    if (level < Math.floor(entry.level ?? 0)) continue;
+
+    out.push(id);
+  }
+
+  out.sort();
+  return out;
+}
+
+// ------------------------------------------------------------------------- the line
+
+/**
+ * The colours a turret line may be drawn on, in the order the save writes them.
+ * Mirrors `WardLine.Colours`.
+ */
+export const WARD_COLOURS = "rgby";
+
+/** The rungs a turret may be upgraded to. Mirrors `WardStars.Least` and `WardStars.Most`. */
+export const WARD_STARS_LEAST = 1;
+export const WARD_STARS_MOST = 5;
+
+/** What separates a turret's id from the colour it was bought for. Mirrors `WardHolding.Mark`. */
+const WARD_HOLDING_MARK = ":";
+
+/** One seat of a published line: the colour, the turret standing on it, and its rung. */
+export interface CardSeat {
+  /** One of {@link WARD_COLOURS}. */
+  c: string;
+
+  /** The turret's permanent id. */
+  w: string;
+
+  /** 1..5. Written out even at one, because a seat costs the same either way and absent is a branch. */
+  s: number;
+}
+
+/**
+ * Whether a save's `wardsOwned` covers a turret on a colour. Mirrors `WardHolding.Covers`.
+ *
+ * <b>The bare-id clause is the half that matters.</b> A row with no colour on it is what a build
+ * that owned turrets outright wrote, and under a per-colour rule the honest reading is "on all
+ * four" — a reader that checked only the exact key would quietly confiscate every holding
+ * written before colours existed, which on a card is a line that silently loses seats.
+ */
+function ownsWard(
+  owned: Set<string>, entry: GroveWardEntry, id: string, colour: string
+): boolean {
+  // A turret nobody has to pay for is held by everybody and is never written into `wardsOwned`,
+  // so asking the set about one answers "no" for the turret every account in the game stands.
+  if (entry.free) return true;
+
+  return owned.has(id) || owned.has(id + WARD_HOLDING_MARK + colour);
+}
+
+/** The rung a save claims for one holding. Mirrors `WardStarLedger.StarsOf` and its clamp. */
+function starsOf(save: Record<string, unknown>, id: string, colour: string): number {
+  const rows = save.wardStars;
+  if (!Array.isArray(rows)) return WARD_STARS_LEAST;
+
+  // Keyed on the *holding* rather than on the turret, because a turret is bought per colour and
+  // upgraded per seat — `WardStarDto.ward` is `{id}:{colour}`. The rules cap the array at 128;
+  // walking no further is belt and braces against a document written before that cap existed.
+  const key = id + WARD_HOLDING_MARK + colour;
+
+  for (const raw of rows.slice(0, 128)) {
+    const row = raw as { ward?: unknown; stars?: unknown } | null;
+    if (!row || typeof row !== "object") continue;
+    if (row.ward !== key) continue;
+
+    const stars = Math.floor(Number(row.stars ?? 0));
+    if (!Number.isFinite(stars)) return WARD_STARS_LEAST;
+
+    return Math.min(Math.max(stars, WARD_STARS_LEAST), WARD_STARS_MOST);
+  }
+
+  // Absent means one star — what a turret bought before the ladder shipped means, and what a
+  // rolled-back client writes. There is no sentinel and there never was one.
+  return WARD_STARS_LEAST;
+}
+
+/**
+ * The turret line a card carries: the seats this save may honestly be said to have arranged.
+ *
+ * <b>A seat the server cannot vouch for is omitted rather than corrected</b>, and that is what
+ * lets this function know nothing about which turret is the starter. A visiting client resolves
+ * a missing seat through `WardLine.Resolve`, which is the path every board in the game already
+ * takes for a turret that was renamed, retired or never held — so an omitted seat draws the
+ * starter, which is exactly what its owner's own game draws.
+ *
+ * Three refusals, in the order they are asked:
+ *
+ *   * the roster has never heard of the id (a retired turret, or a save from a newer drop);
+ *   * the save does not hold it **on that colour** — a turret is bought per colour
+ *     (`WardHolding`), and this is the one place a stored choice could otherwise put one on a
+ *     seat nobody paid for;
+ *   * the keeper level has not reached its rung, which is `groveWorth`'s companion clause and
+ *     the one forgery about a line a visitor could catch as a lie.
+ *
+ * Emitted in colour order rather than in the save's row order, so two devices that arranged the
+ * same line publish byte-identical cards.
+ */
+export function publishedLine(
+  save: Record<string, unknown>, grove: GroveConfig, level: number
+): CardSeat[] {
+  const roster = grove.wards;
+  if (!roster || typeof roster !== "object") return [];
+
+  const rows = save.wardLoadout;
+  if (!Array.isArray(rows)) return [];
+
+  const owned = idSet(save.wardsOwned, 256);
+
+  // Colour → chosen turret. A duplicated colour resolves the way the client's own reader does
+  // (`WardLoadout.LoadFrom`): the last row wins.
+  const chosen = new Map<string, string>();
+
+  // The rules cap the array at 8.
+  for (const raw of rows.slice(0, 8)) {
+    const row = raw as { colour?: unknown; ward?: unknown } | null;
+    if (!row || typeof row !== "object") continue;
+
+    const colour = typeof row.colour === "string" ? row.colour : "";
+    const ward = typeof row.ward === "string" ? row.ward : "";
+
+    if (colour.length !== 1 || !WARD_COLOURS.includes(colour)) continue;
+    if (ward.length === 0 || ward.length > 64) continue;
+
+    chosen.set(colour, ward);
+  }
+
+  const out: CardSeat[] = [];
+
+  for (const colour of WARD_COLOURS) {
+    const ward = chosen.get(colour);
+    if (!ward) continue;
+
+    const entry = roster[ward];
+    if (!entry || typeof entry !== "object") continue;      // not on the roster we published
+    if (!ownsWard(owned, entry, ward, colour)) continue;    // not held on this seat
+    if (level < Math.floor(entry.level ?? 0)) continue;     // not reached
+
+    out.push({ c: colour, w: ward, s: starsOf(save, ward, colour) });
+  }
+
+  return out;
+}
+
+// ------------------------------------------------------- the arrangement's own takedown
+
+/**
+ * What the wallet records about this account's published *arrangement*.
+ *
+ * <b>Why a grove can be reported at all, when this file's own header says it cannot be.</b>
+ * That header argued a grove "cannot be arranged into something offensive", because every piece
+ * is an id from a catalog we ship. That was true of the handful of pre-placed dots the grove
+ * shipped with and is false of a 28×28 floor sold with walls, gates and fences (invariants 16b
+ * and 16e): walls tile, so a player with enough of them can write whatever they like on the
+ * ground — and every gate in this project stays green while they do, because nothing here ever
+ * opens a picture (invariant 32b, on somebody else's screen).
+ *
+ * It lives on the wallet beside the name's holding for that holding's reason: `publishGrove`
+ * already opens the wallet, so honouring a takedown on the one path that has to costs no read
+ * at all, where a flag anywhere else would be a document read per player per publish for ever
+ * to carry one bit that is almost always nought.
+ */
+export interface GroveHolding {
+  /** When the arrangement was taken off the boards, or 0 if it never was. */
+  deniedUnix: number;
+}
+
+/** Reads what the wallet says about this account's arrangement. Adds no read of its own. */
+export function heldGrove(walletData: Record<string, unknown> | undefined): GroveHolding | null {
+  const raw = walletData?.grove as Partial<GroveHolding> | undefined;
+  if (!raw || typeof raw !== "object") return null;
+
+  return { deniedUnix: Math.floor(Number(raw.deniedUnix ?? 0)) };
+}
+
+/**
+ * Whether this account's arrangement has been taken off the boards.
+ *
+ * Written as a predicate so a caller cannot get the sense of it backwards, which is `isDenied`'s
+ * rule and for its reason: the obvious `holding.deniedUnix > 0` is exactly the expression
+ * somebody writes as `!holding.deniedUnix` at the fourth call site.
+ */
+export function isGroveDenied(holding: GroveHolding | null | undefined): boolean {
+  return !!holding && Math.floor(Number(holding.deniedUnix ?? 0)) > 0;
 }
 
 // ----------------------------------------------------------------------------- names
@@ -716,6 +978,34 @@ export interface GroveCardDoc {
    */
   wave?: number;
 
+  /**
+   * The priced companions this keeper owns, as permanent ids — what a public profile draws.
+   *
+   * <b>Exactly the set `groveWorth` counted</b> (`heldCompanions`), so the portraits and the
+   * number under them are one fact rather than two filters that agree until one is edited.
+   *
+   * <b>The free companion is deliberately absent.</b> It has no price, so it is not in
+   * `config/grove` at all, and it is held by everybody who has reached its gate — a visitor's
+   * own client resolves it through `CompanionLedger.IsHeld` over its own roster, which is the
+   * same rule it applies to the player in front of it. Telling a visitor something every
+   * account already knows would be a field that can go stale.
+   *
+   * Absent rather than empty for a keeper who has bought none, which is what every card written
+   * before this deployment says and is the same answer.
+   */
+  companions?: string[];
+
+  /**
+   * The turret line this keeper carries into a siege: colour, turret and rung, in colour order.
+   *
+   * Only the seats the server can vouch for (`publishedLine`); a seat it cannot is **omitted**,
+   * and a visiting client fills it with its own roster's starter exactly as its owner's game
+   * does. Absent for a keeper who has never arranged one, and absent on a deployment whose
+   * `config/grove` carries no turret roster — a stale seed publishes no line rather than an
+   * unvouched one.
+   */
+  line?: CardSeat[];
+
   /** The grove catalog this was scored against, so a stale seed is diagnosable. */
   catalogVersion: number;
 }
@@ -751,7 +1041,8 @@ export function buildCard(
   level: number,
   nowUnix: number,
   confirmedName: string | null,
-  list?: PreparedBlocklist
+  list?: PreparedBlocklist,
+  groveDenied = false
 ): GroveCardDoc {
   const wallet = (save.wallet ?? {}) as Record<string, unknown>;
 
@@ -785,8 +1076,18 @@ export function buildCard(
     }
   }
 
+  // **An arrangement taken off the boards publishes no arrangement**, which is
+  // `publishableName`'s fall-through wearing different clothes and is the whole mechanism of a
+  // grove takedown. It is deliberately the *only* thing a takedown costs: the keeper keeps their
+  // grove on their own screens, their name, their score, their stars and their row, exactly as a
+  // reported name keeps everything but its place on a board. A withdrawal would be a punishment
+  // pipeline, and this file's own header says why we do not have one.
+  //
+  // Read here rather than at the call site so that the report path and `publishGrove` cannot
+  // come to disagree about what a denial does — a rule with two readers and no home is a rule
+  // with two answers.
   const placed: Record<string, CardPlacement> = {};
-  const rows = Array.isArray(save.homesteadPlaced) ? save.homesteadPlaced : [];
+  const rows = groveDenied || !Array.isArray(save.homesteadPlaced) ? [] : save.homesteadPlaced;
 
   for (const raw of rows) {
     const row = raw as { slot?: unknown; piece?: unknown; facing?: unknown } | null;
@@ -817,6 +1118,12 @@ export function buildCard(
   // board's index — see `GroveCardDoc.wave`.
   const wave = bestWave(save);
 
+  // Both spread for Firestore's reason and omitted when empty for the document's: a card with
+  // no companions and no line is what every card written before this deployment is, and absent
+  // has to keep meaning exactly that.
+  const companions = heldCompanions(idSet(save.companionsOwned, 256), grove, level);
+  const line = publishedLine(save, grove, level);
+
   return {
     name: boardName(confirmedName, uid, list),
     avatar: typeof wallet.avatarId === "string" ? wallet.avatarId.slice(0, 64) : "",
@@ -828,6 +1135,8 @@ export function buildCard(
     placed,
     ...hallSeat(save),
     ...(wave > 0 ? { wave } : {}),
+    ...(companions.length > 0 ? { companions } : {}),
+    ...(line.length > 0 ? { line } : {}),
     builtUnix: nowUnix,
     catalogVersion: Math.floor(grove.version ?? 0),
   };

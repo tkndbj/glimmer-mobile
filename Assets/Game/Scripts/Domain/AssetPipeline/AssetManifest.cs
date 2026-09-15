@@ -281,6 +281,14 @@ namespace GlimmerGrove.AssetPipeline
             "ic_check", "ic_stars", "ic_gear", "ic_play", "ic_close", "ic_plus", "ic_search",
             "ic_heart", "ic_gem", "ic_chest", "ic_chest_open", "ic_key", "ic_gift", "ic_star3d",
             "ic_profile", "ic_pencil", "ic_power", "ic_heart_boost",
+
+            // The update wall's mark (invariant 49). **Global rather than scoped**, and
+            // this is the clearest case in the list: the wall is raised over whatever
+            // screen the player is standing on, by a poll that knows nothing about which
+            // scopes are held, so a mark filed with any one screen would be asked for on
+            // screens that do not hold it — and an `Image` with no sprite is a white
+            // rectangle (invariant 7b) on the one panel a player cannot dismiss.
+            "ic_update",
             "seal_gold", "crest_gold", "bar_track", "bar_fill",
 
             // The three marks the Infinite lane's hub reads its lines against

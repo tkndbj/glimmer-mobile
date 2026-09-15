@@ -76,6 +76,116 @@ namespace GlimmerGrove.Utilities
     }
 
     /// <summary>
+    /// What a utility's authored magnitude is <em>measured in</em> — and therefore whether it
+    /// climbs with a board that has been made tougher.
+    ///
+    /// <para>
+    /// <b>The one rule that makes this mode's numbers last for ever.</b> A chapter is made harder
+    /// by surging what its raiders carry (invariant 37by) and an endless lane surges every wave,
+    /// so the hill's numbers climb without bound while the line's do not. A magnitude is therefore
+    /// only meaningful <em>against</em> something, and which something decides everything: 440
+    /// means "two creepers and a bit" and stays true for ever if it climbs with a creeper, and
+    /// decays to nothing if it does not. A chapter twenty that carried three times the health
+    /// would have a firepot worth two thirds of what it is worth today, a stormcall that stopped
+    /// being the answer to a wave of armour, and a bomb nobody would cross the board to tap.
+    /// </para>
+    /// <para>
+    /// <b>So a magnitude is authored against the baseline and converted at the point of
+    /// contact</b>, never at authoring time and never per chapter: content keeps writing 440, and
+    /// every raider takes it through <c>SiegeSurge.Hurt</c> — the same multiplier its own health
+    /// went through. Nothing has to be retuned when a chapter ships, there is no second number to
+    /// keep in step, and the share is exact by construction rather than by anybody remembering.
+    /// </para>
+    /// <para>
+    /// <b>Why not scale a utility with the player's line instead.</b> It is the obvious answer and
+    /// it is the wrong one twice over. A utility bought with gems is the escape hatch for somebody
+    /// who has <em>not</em> bought turrets, so paying out least to exactly the player who needs it
+    /// most inverts what it is for; and the charge against the grade is
+    /// <c>ceil(damage / PerfectMatch)</c>, so a purchase-sized firepot would make a purchase
+    /// decide a graded number — which is the one thing invariant 37bb keeps par on the baseline
+    /// bolt to prevent, on a figure that reaches a public board (19a). A free payoff scales with
+    /// the line (invariant 37cg, the stormglass); a bought one scales with the board.
+    /// </para>
+    /// <para>
+    /// <b>Derived from the kind rather than authored</b>, for <see cref="UtilityKind"/>'s own
+    /// reason: what a kind <em>means</em> is code. A content push may retune 440 and may not
+    /// decide what 440 is measured in.
+    /// </para>
+    /// </summary>
+    public enum UtilityUnit
+    {
+        /// <summary>Nothing measurable. What <see cref="UtilityKind.None"/> answers.</summary>
+        None = 0,
+
+        /// <summary>
+        /// Raider health, against an unsurged raider. <b>Climbs with the board it is used on.</b>
+        /// </summary>
+        Hill = 1,
+
+        /// <summary>
+        /// Ward health. <b>Never climbs</b>, and does not have to: a ward's stones are a fixed 14
+        /// and a raider's blow is never surged (invariant 37by, "health only"), so a mending is
+        /// worth the same share of the line on every chapter that will ever ship.
+        /// </summary>
+        Ward = 2,
+
+        /// <summary>
+        /// Fuel. <b>Never climbs</b>, and must not: fuel becomes bolts at the line's own weight
+        /// and is bounded by <c>SiegeTuning.WardCapacity</c>, so a surged pour would be a pour
+        /// into a tube that cannot hold it. What a surge buys is the line's output, so it is worth
+        /// exactly what the line is worth — which is the shelf's question (invariant 42) and not
+        /// this one.
+        /// </summary>
+        Fuel = 3,
+    }
+
+    /// <summary>
+    /// Which unit each kind's magnitude is in.
+    ///
+    /// <para>
+    /// <b>The gate is a fixture rather than the compiler, and that is worth saying plainly.</b>
+    /// C# does not check a <c>switch</c> statement for exhaustiveness, so a kind added next year
+    /// compiles perfectly and falls through to <see cref="UtilityUnit.None"/> — which reads as
+    /// "does not climb" and is exactly the silent decay this enum exists to stop.
+    /// <c>SiegeUtilityScaleTests.EveryUtilityKindDeclaresWhatItsMagnitudeIsMeasuredIn</c> walks
+    /// the enum and is what actually refuses it. Claiming the compiler does it would be the
+    /// worse failure of the two: a guard nobody checks because they were told it was automatic.
+    /// </para>
+    /// </summary>
+    public static class UtilityUnits
+    {
+        /// <summary>
+        /// The unit <paramref name="kind"/>'s magnitude is measured in.
+        ///
+        /// <b>Exhaustive on purpose, with no useful <c>default</c></b> — invariant 44e's rule
+        /// about a <c>switch</c> whose default is a real answer: a new damaging kind falling
+        /// through to "does not climb" would be the exact fault this enum exists to stop, and it
+        /// would be invisible until a chapter years from now surged past it.
+        /// </summary>
+        public static UtilityUnit Of(UtilityKind kind)
+        {
+            switch (kind)
+            {
+                case UtilityKind.Blast: return UtilityUnit.Hill;
+                case UtilityKind.Storm: return UtilityUnit.Hill;
+                case UtilityKind.Mend: return UtilityUnit.Ward;
+                case UtilityKind.Surge: return UtilityUnit.Fuel;
+                case UtilityKind.None: return UtilityUnit.None;
+                default: return UtilityUnit.None;
+            }
+        }
+
+        /// <summary>
+        /// Whether this kind's magnitude climbs with the board it is used on.
+        ///
+        /// Asked by the content gates, which print what each utility is worth against every
+        /// shipped chapter's own toughness — the one reading that shows a retune's real effect,
+        /// since the authored figure is the same on all of them.
+        /// </summary>
+        public static bool Climbs(UtilityKind kind) => Of(kind) == UtilityUnit.Hill;
+    }
+
+    /// <summary>
     /// What a utility is aimed at. Decides which targeting the board offers and nothing else.
     /// </summary>
     public enum UtilityTarget

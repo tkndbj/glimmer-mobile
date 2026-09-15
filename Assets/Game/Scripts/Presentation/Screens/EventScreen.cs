@@ -193,6 +193,13 @@ namespace GlimmerGrove
             Pill(ResourceSlots.Kind.Gems, 232f, py, Pal.Bloom, Art.S("Ui/ic_gem"),
                  Compact.Number(Profile.Gems), v => Compact.Number(v));
 
+            // **All three, including the hearts.** This page used to watch credits and gems by
+            // hand and draw a hearts pill it never wrote to — hearts move on a refill timer
+            // rather than on a spend, so it was the one of the three that could go stale while
+            // somebody sat here reading the ladder.
+            WalletWatch.Attach(this, ResourceSlots.Kind.Hearts, ResourceSlots.Kind.Credits,
+                               ResourceSlots.Kind.Gems);
+
             return y + ChromeSize + 16f;
         }
 
@@ -416,7 +423,6 @@ namespace GlimmerGrove
             SeasonLedger.Changed += OnChanged;
             CloudSaveService.IdentityChanged += OnIdentity;
             CloudSaveService.Synced += OnSynced;
-            PlayerProgression.Changed += OnWallet;
         }
 
         void OnDisable()
@@ -424,7 +430,6 @@ namespace GlimmerGrove
             SeasonLedger.Changed -= OnChanged;
             CloudSaveService.IdentityChanged -= OnIdentity;
             CloudSaveService.Synced -= OnSynced;
-            PlayerProgression.Changed -= OnWallet;
             _generation++;
         }
 
@@ -452,18 +457,6 @@ namespace GlimmerGrove
         }
 
         void OnSynced() { if (!_claiming) Repaint(); }
-
-        /// <summary>
-        /// The wallet moved. Written through <see cref="ResourceSlots.Repaint"/> rather than
-        /// straight onto the label, because a payout owns the readout while its tokens are in
-        /// the air: writing the true figure mid-cascade jumps the pill forward and the next
-        /// token drags it back down.
-        /// </summary>
-        void OnWallet()
-        {
-            ResourceSlots.Repaint(ResourceSlots.Kind.Credits, Profile.Coins);
-            ResourceSlots.Repaint(ResourceSlots.Kind.Gems, Profile.Gems);
-        }
 
         /// <summary>
         /// The ladder follows the scroll, and the clock ticks once a second.

@@ -34,7 +34,7 @@ import {
 import {
   advances, isStreakGrantId, MAX_STREAK_DAYS_AHEAD, MAX_STREAK_DAYS_BEHIND,
   parseStreakClaim, raise, readSavedStreak, saveSupports, StreakClaim,
-  streakCurrencyValue, usableStreakConfig,
+  streakNightValue, usableStreakConfig,
 } from "./streak";
 import {
   allowsTask, findTask, findTier, insideWindow, isTaskGrantId, noteUndealt,
@@ -50,7 +50,7 @@ import { rebuildStats } from "./stats";
 import {
   DEFAULT_KEEPER_CURVE, GROVE_PATHS, GroveCardDoc, KeeperCurve,
   assertUsableGroveConfig, buildCard, derivedXp, groveWorth, keeperLevel,
-  optedIn, rebuildGroveRanks, saveRevision, withdrawCard,
+  optedIn, heldGrove, isGroveDenied, rebuildGroveRanks, saveRevision, withdrawCard,
 } from "./grove";
 import {
   ClaimOutcome, NameHolding, RENAME_COOLDOWN_SECONDS, claimName as claimName_, heldName, nameKey, publishableName,
@@ -59,7 +59,12 @@ import { loadNameConfig } from "./blocklist";
 import {
   AppleRevocationKeys, accountExists, deleteAccount as deleteAccount_, usableAppleKeys,
 } from "./account";
-import { reportName, ReportOutcome } from "./reports";
+// `reportKeeper as reportKeeper_`, which is `claimName`'s convention two lines up and for its
+// reason: the exported callable now carries the same name as the transaction it runs, and
+// without the alias the function body calls itself.
+import {
+  reportKeeper as reportKeeper_, ReportOutcome, ReportSubject, parseSubject,
+} from "./reports";
 import {
   WHEEL_MIN_PERCENT, applyWheelPercent, readWheelPosition, usableWheelConfig, wheelPercent,
 } from "./wheel";
@@ -621,8 +626,25 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
           });
         }
 
-        amount = streakCurrencyValue(ladder!, award.claim.night, award.currency);
-        detail = { night: award.claim.night };
+        // What the night is worth, whichever shape the rung is. A chest night is
+        // *recomputed* here exactly as a task's chest is — the client's figure is a
+        // prediction (invariant 10a) — on top of being bounded by `advances` above, which
+        // makes it the best-defended reward on this ladder rather than the loosest.
+        const night = streakNightValue(ladder!, tasks, uid, award.claim.dayKey,
+                                       award.claim.night, award.currency);
+
+        if (!night.priceable) {
+          // The rung names a chest tier config/progression's tasks block does not hold.
+          // Unconfirmed rather than refused: it is either a content pack the client fetched
+          // before the seeder ran, or a forged id — and the first must not be thrown away
+          // for the sake of the second, which pays nothing either way (13a).
+          logger.error("a streak night names a chest tier config/progression does not hold; " +
+                       "leaving it unconfirmed", { uid, id: award.id, tier: night.tierId });
+          continue;
+        }
+
+        amount = night.amount;
+        detail = { night: award.claim.night, tier: night.tierId };
       } else if (award.kind === "mark") {
         const mark = award.claim as MarkClaim;
         const season = usableSeason(config, mark.seasonId);
@@ -1422,8 +1444,13 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
   // through to the generated handle, exactly as an unnamed keeper's does. Reading the field
   // directly would republish a name a moment after it was taken down, on this player's very
   // next sync, and nothing else would ever notice.
+  // `isGroveDenied` rather than a field read, and the argument is `publishableName`'s word for
+  // word: an arrangement reported past the threshold publishes no arrangement, and reading the
+  // flag anywhere but through the predicate is how a takedown gets undone by this player's very
+  // next sync with nothing anywhere noticing. The wallet is already open, so it costs no read.
   const card = buildCard(
-    uid, save, groveConfig, worth, level, nowUnix, publishableName(holding), list
+    uid, save, groveConfig, worth, level, nowUnix, publishableName(holding), list,
+    isGroveDenied(heldGrove(walletDoc as Record<string, unknown> | undefined))
   );
 
   await db.doc(GROVE_PATHS.card(uid)).set(card);
@@ -1511,30 +1538,46 @@ export const claimName = onCall(callOptions, async (request): Promise<{
 });
 
 /**
- * Reports another keeper's published name.
+ * Reports another keeper's published **name** or **arrangement**.
  *
- * <b>The request carries one id and nothing else</b> — no reason, no category, no free text.
- * That is deliberate and it is what keeps this endpoint uninteresting to attack: there is
- * nothing in the body to forge, nothing to store that a stranger wrote, and no way to report a
- * name that is not actually on a board, because the server reads the card itself.
+ * <b>The request carries one id and one of two words</b> — no reason, no category, no free
+ * text. That is deliberate and it is what keeps this endpoint uninteresting to attack: there is
+ * nothing in the body to forge, nothing to store that a stranger wrote, and no way to report
+ * something that is not actually on a board, because the server reads the card itself.
+ *
+ * <b>It was `reportKeeperName`, and renaming it was the one thing about this that had a
+ * deadline.</b> A callable's name is not an id anything is keyed on — no save, no document, no
+ * store registration and no analytics ordinal carries it, which is what separates it from a
+ * level id, a board id or a product id (invariant 1). It is an HTTPS path, so the whole cost of
+ * a rename is a deploy, an IAM invoker binding and a delete — **today**, with no client shipped.
+ * After launch it is a coordinated rollout with a window in which somebody's report 404s.
+ * Cheap now and expensive later is this project's tiebreaker, and a name that says it only
+ * reports a name would have been wrong for the life of the deployment.
+ *
+ * <b>The subject stays in the body rather than in the name</b>, which is what keeps a third one
+ * to a single word and no ops at all.
  *
  * <b>Every outcome is a success and the client is told almost nothing.</b> A report that was a
  * duplicate, a report that hit the threshold and a report of a keeper with no chosen name all
  * come back as `reported`, because the alternative leaks moderation state to the person best
  * placed to game it: a caller who can tell "counted" from "already hidden" can binary-search
  * the threshold, and one who can tell "counted" from "nothing to report" learns which accounts
- * are worth brigading. The two answers a player can act on are kept — they reported this name
- * before, and they have filed a day's worth — because both change what the button should say.
+ * are worth brigading. The two answers a player can act on are kept — they reported this before,
+ * and they have filed a day's worth — because both change what the button should say.
+ *
+ * <b>A subject this deployment has never heard of is refused, not defaulted.</b> A client one
+ * drop ahead asking to report something this build cannot take down must be told nothing
+ * happened; answering "reported" would be the one place the collapse above became a lie.
  *
  * See `reports.ts` for why the auto-hide is safe to run without a human in front of it.
  */
-export const reportKeeperName = onCall(callOptions, async (request): Promise<{
+export const reportKeeper = onCall(callOptions, async (request): Promise<{
   outcome: "reported" | "duplicate" | "throttled";
 }> => {
   const uid = requireUid(request);
   const db = getFirestore();
 
-  const body = (request.data ?? {}) as { keeperId?: unknown };
+  const body = (request.data ?? {}) as { keeperId?: unknown; subject?: unknown };
 
   // Bounded before anything is read, so an oversized body cannot be used to make the function
   // do work. A uid is an opaque provider token, so the only thing worth asserting about it is
@@ -1544,14 +1587,19 @@ export const reportKeeperName = onCall(callOptions, async (request): Promise<{
     throw new HttpsError("invalid-argument", "a keeper id is required");
   }
 
+  const subject: ReportSubject | null = parseSubject(body.subject);
+  if (subject === null) {
+    throw new HttpsError("invalid-argument", "unknown report subject");
+  }
+
   const nowUnix = Math.floor(Date.now() / 1000);
   const { reportThreshold } = await loadNameConfig(db, nowUnix);
 
-  const result = await reportName(db, uid, targetUid, nowUnix, reportThreshold);
+  const result = await reportKeeper_(db, uid, targetUid, subject, nowUnix, reportThreshold);
 
   if (result.outcome === "hidden") {
-    logger.warn("keeper name hidden by reports", {
-      uid: targetUid, reports: result.reports, threshold: reportThreshold,
+    logger.warn("keeper content hidden by reports", {
+      uid: targetUid, subject, reports: result.reports, threshold: reportThreshold,
     });
   }
 
@@ -1594,7 +1642,7 @@ export const withdrawGrove = onCall(callOptions, async (request): Promise<{ with
  * retry safe rather than merely tolerable.
  *
  * <b>The reply is one boolean.</b> The full {@link DeletionReport} goes to the log, where
- * support can read it; the client is told only that it worked, for `reportKeeperName`'s
+ * support can read it; the client is told only that it worked, for `reportKeeper`'s
  * reason — `nameRetained` would tell a player their name had been reported, which is not
  * something a deletion is entitled to disclose.
  *

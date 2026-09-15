@@ -46,10 +46,18 @@ namespace GlimmerGrove.Modes
         /// yet, so it is not drawn there, and burning something the player cannot see is the
         /// class of fault invariant 32c refuses.
         /// </para>
+        /// <para>
+        /// <b><paramref name="baseline"/> is damage against an unsurged raider, and every raider
+        /// takes it through its own surge</b> — see <see cref="SiegeSurge.Hurt"/>, and
+        /// <c>UtilityUnit.Hill</c> for the rule this is one half of. That is what keeps a firepot
+        /// worth the same share of a raider on chapter one and on chapter forty, and worth the
+        /// same share of wave ninety as of wave one in an endless run, where the two are standing
+        /// on the hill together.
+        /// </para>
         /// </summary>
-        public int Blast(int lane, int row, int damage, List<SiegeStrike> into)
+        public int Blast(int lane, int row, int baseline, List<SiegeStrike> into)
         {
-            if (damage <= 0) return 0;
+            if (baseline <= 0) return 0;
             if (lane < 0 || lane >= SiegeTuning.Lanes) return 0;
             if (row < 0 || row >= SiegeTuning.BlastRows) return 0;
 
@@ -68,6 +76,9 @@ namespace GlimmerGrove.Modes
                 // nothing is there is what this replaced.
                 if (!SiegeTuning.Caught(raider.Kind, raider.Lane, raider.March, lane, row))
                     continue;
+
+                // Through this raider's own surge, exactly as its health was (invariant 39a).
+                int damage = raider.Surge.Hurt(baseline);
 
                 int took = damage < raider.Health ? damage : raider.Health;
                 absorbed += took;
@@ -104,10 +115,18 @@ namespace GlimmerGrove.Modes
         /// <em>colour</em>; a storm has no colour, so there is nothing for the soak to be measured
         /// against. See <see cref="SiegeKind.Bulwark"/>.
         /// </para>
+        /// <para>
+        /// <b>A surge <em>is</em> read, and it has to be for the same reason the shield is not.</b>
+        /// <paramref name="baseline"/> is damage against an unsurged raider and every raider takes
+        /// it through its own (<see cref="SiegeSurge.Hurt"/>), which is what keeps
+        /// <c>UtilityKind.Storm</c>'s own promise true for ever: it hurts a boss and never fells
+        /// one, because that is a <em>ratio</em> rather than a number, and a flat figure would
+        /// stop being either the day a chapter carried a surge.
+        /// </para>
         /// </summary>
-        public int Storm(int damage, List<SiegeStrike> into)
+        public int Storm(int baseline, List<SiegeStrike> into)
         {
-            if (damage <= 0) return 0;
+            if (baseline <= 0) return 0;
 
             int first = into != null ? into.Count : 0;
             int absorbed = 0;
@@ -123,6 +142,9 @@ namespace GlimmerGrove.Modes
                 // also the only utility that can answer a field raider at all, which is the
                 // escape hatch that keeps a board with an awkward colour winnable.
                 if (!raider.Alive || raider.Wait > 0f) continue;
+
+                // Through this raider's own surge, exactly as its health was (invariant 39a).
+                int damage = raider.Surge.Hurt(baseline);
 
                 int took = damage < raider.Health ? damage : raider.Health;
                 absorbed += took;

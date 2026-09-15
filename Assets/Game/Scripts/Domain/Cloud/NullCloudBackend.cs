@@ -86,6 +86,24 @@ namespace GlimmerGrove.Cloud
                                new Dictionary<Content.LevelId, Social.LevelStats>()));
 
         /// <summary>
+        /// A failure rather than "nothing is required", and the distinction is the whole reason
+        /// <c>ReleaseGate.Apply</c> is only ever called for a successful read.
+        ///
+        /// <para>
+        /// With no backend there is no deployment, so this knows nothing about what any release
+        /// requires — which is not the same as knowing that it requires nothing. Answering
+        /// success here would have a build with no Firebase in it <em>clear</em> a wall that a
+        /// previous build had legitimately been told about, which is a way of turning the
+        /// feature off by downgrading. The gate holds what it holds, and the game is completely
+        /// playable through this exactly as it is through every other method here.
+        /// </para>
+        /// </summary>
+        public Task<(CloudResult result, Release.ReleaseRequirement requirement)> ReadReleaseAsync(
+            string platform, CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                               Release.ReleaseRequirement.None));
+
+        /// <summary>
         /// With no backend there is no board, and that is the correct behaviour rather than a
         /// degraded one: the leaderboard tab reads every one of these as "not available here"
         /// and says so, exactly as the account panel does. Nothing in the game becomes
@@ -117,8 +135,8 @@ namespace GlimmerGrove.Cloud
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
                                 NameClaim.Unavailable));
 
-        public Task<(CloudResult result, NameReportOutcome outcome)> ReportKeeperNameAsync(
-            string keeperId, CancellationToken cancellation = default)
+        public Task<(CloudResult result, NameReportOutcome outcome)> ReportKeeperAsync(
+            string keeperId, ReportSubject subject, CancellationToken cancellation = default)
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
                                 NameReportOutcome.Unavailable));
 

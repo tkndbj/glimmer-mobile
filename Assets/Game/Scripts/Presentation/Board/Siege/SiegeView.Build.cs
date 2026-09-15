@@ -120,6 +120,20 @@ namespace GlimmerGrove
             _sky = Layer("Sky");
             _sky.gameObject.AddComponent<RectMask2D>();
 
+            // **A damage figure is a readout, not an effect, so it is the last thing built and
+            // nothing on this board is ever drawn over one.** Sharing `_fx` was right for as long
+            // as the busiest thing here was a lit line — hits land 55ms apart at one raider and a
+            // `Pop` is a cell wide, so a number was covered by very little for very little time.
+            // A stormglass is not that: it throws every standing ward at every raider inside half
+            // a second, so each beam, each two-cell scorch and each landing reel is a new sibling
+            // over the top of every figure already standing. The number was drawn, was correct,
+            // and was buried about thirty milliseconds after it appeared — which on a screen the
+            // whole game stops for reads as a payoff that does not say what it did.
+            //
+            // Above `_sky` as well as `_fx`, because a stormcall's lightning is the other thing
+            // big enough to cover one. The layer holds nothing but figures, so it costs one node.
+            _figures = Layer("Figures");
+
             Ground();
             Line();
             Sockets();

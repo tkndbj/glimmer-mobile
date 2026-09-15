@@ -436,12 +436,37 @@ namespace GlimmerGrove
             var row = UIKit.Row("Balances", Safe, new Vector2(640f, 68f), new Vector2(.5f, 1f),
                                 new Vector2(0f, -208f), 14f);
 
-            Balance(row, Pal.Gold, null, Compact.Number(Profile.Coins));
-            Balance(row, Pal.Bloom, "ic_gem", Compact.Number(Profile.Gems));
+            Balance(row, ResourceSlots.Kind.Credits, Pal.Gold, null,
+                    Compact.Number(Profile.Coins), Compact.Number);
+            Balance(row, ResourceSlots.Kind.Gems, Pal.Bloom, "ic_gem",
+                    Compact.Number(Profile.Gems), Compact.Number);
+
+            // **And the two are watched, which is the whole of what was wrong here.** This row
+            // was built once out of `Profile.Coins` and never written to again — so a turret
+            // bought or a star upgraded debited the wallet, repainted the cell, repainted the
+            // line, and left the purse over all of it reading what the player held before they
+            // spent it. It came back the moment the screen was left and re-entered, which is the
+            // tell: the number was never wrong, it had simply stopped being asked for. See
+            // `WalletWatch`, which is where the subscription lives now for every screen that
+            // draws one of these.
+            WalletWatch.Attach(this, ResourceSlots.Kind.Credits, ResourceSlots.Kind.Gems);
         }
 
-        /// <summary>One balance pill. The shop's, without the flare registry a shelf needs.</summary>
-        static void Balance(Transform row, Color tint, string icon, string value)
+        /// <summary>
+        /// One balance pill, registered with <see cref="ResourceSlots"/> as it is built.
+        ///
+        /// <para>
+        /// <b>Registered rather than drawn and forgotten</b>, which buys two things that are
+        /// really one. It makes the registry the single writer of this readout, so
+        /// <see cref="WalletWatch"/> can repaint it without a field to reach through and without
+        /// stepping on a payout that is walking the number somewhere
+        /// (<c>ResourceSlots.Claim</c>). And it gives anything drawn <em>over</em> this screen a
+        /// place to land: gems bought from the shelf's own out-of-funds panel arrive through the
+        /// receipt queue, and a cascade with nowhere to fly pays silently.
+        /// </para>
+        /// </summary>
+        static void Balance(Transform row, ResourceSlots.Kind kind, Color tint, string icon,
+                            string value, System.Func<long, string> format)
         {
             var pill = UIKit.Img("Pill", row, Art.S("Ui/" + Skins.Trough), Color.white,
                                  new Vector2(206f, 62f), new Vector2(.5f, .5f), Vector2.zero);
@@ -449,6 +474,16 @@ namespace GlimmerGrove
             var edge = UIKit.Img("Edge", pill.transform, Art.RoundOutline(20, 2.5f),
                                  Pal.A(tint, .45f));
             UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
+
+            // The soft light a landing token flares, behind the glyph and at the glyph's own
+            // anchor. It is the third row in the game to carry one and the reason
+            // `ResourceSlots.Slot.Rest` is captured rather than assumed: this pill is 62 tall
+            // against the shop's 74, so its halo is narrower, and a flare returning to a figure
+            // the registry had made up would leave whichever row disagreed permanently the wrong
+            // brightness.
+            var glow = UIKit.Img("Glow", pill.transform, Art.Glow(84, 2f), Pal.A(tint, .22f),
+                                 new Vector2(84f, 84f), new Vector2(0f, .5f), new Vector2(36f, 0f));
+            glow.raycastTarget = false;
 
             var glyph = UIKit.Img("Icon", pill.transform,
                                   icon == null ? null : Art.S("Ui/" + icon), Color.white,
@@ -458,10 +493,12 @@ namespace GlimmerGrove
 
             if (icon == null) Flipbook.Attach(glyph, "Ui/Coin", 11f);
 
-            UIKit.Shrinkable(
+            var text = UIKit.Shrinkable(
                 UIKit.Titled("V", pill.transform, value, 28, Pal.Cream, TextAnchor.MiddleCenter,
                              new Vector2(112f, 42f), new Vector2(.5f, .5f), new Vector2(16f, 0f),
                              3f, 3f), 18);
+
+            ResourceSlots.Register(kind, (RectTransform)glyph.transform, text, glow, tint, format);
         }
 
         public override bool OnBack() { Flow.Go<LevelsScreen>(); return true; }
