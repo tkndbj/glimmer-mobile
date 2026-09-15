@@ -235,7 +235,17 @@ namespace GlimmerGrove
         public static Text Titled(string name, Transform parent, string text, int size, Color colour,
                                   TextAnchor anchor = TextAnchor.MiddleCenter,
                                   Vector2 boxSize = default, Vector2 anchorPt = default, Vector2 pos = default,
-                                  float outline = 4f, float shadow = 5f, bool wrap = false,
+                                  // 2 and 3 rather than 4 and 5. **The weight a caption reads
+                                  // at is the face plus its border, and this is the half that
+                                  // is ours.** The outline is drawn on every side of every
+                                  // stem, so at 4 it was adding more dark mass to a 24pt
+                                  // caption than the letter's own stem carried — which reads
+                                  // as a heavy *font*, and sent one face swap down the wrong
+                                  // road entirely. Changing it here reaches all 241 callers at
+                                  // once, exactly as re-cutting `btn_green` reaches every
+                                  // button (44); the thirty that pass their own numbers keep
+                                  // them, which is right — those are the places that asked.
+                                  float outline = 2f, float shadow = 3f, bool wrap = false,
                                   bool rich = false)
         {
             var t = Label(name, parent, text, size, colour, anchor, boxSize, anchorPt, pos, wrap: wrap);

@@ -78,6 +78,15 @@ REPO = Path(__file__).resolve().parent.parent
 OUT = REPO / "Assets" / "Game" / "Fonts" / "GameFont.ttf"
 LOC = REPO / "Assets" / "StreamingAssets" / "Content" / "loc" / "en.json"
 
+#: How much to take off every edge of every glyph, in font units (0 = leave the face alone).
+#: Titan One is a single-weight face, so there is no lighter cut to switch to; the operation
+#: that gets one is an erosion - stroke the fill's own edge at 2xTHIN, which straddles it, and
+#: subtract that band. **Measured rather than eyeballed**: at 14 the text carries 86% of the
+#: ink it did and its stem goes 54px -> 48px at a 200px draw. The side effect is that the
+#: baseline is an edge too, so letters lose height as well as weight - about 4% here - which
+#: is uniform, so nothing misaligns.
+THIN = 14.0
+
 #: Axes to pin, for a variable source. Empty for a static one like Titan One. A variable font
 #: dropped in unpinned renders at its *default* instance in Unity's legacy `Font` — Light, for
 #: most families — which is a change nothing fails on and everything looks wrong after.
@@ -306,9 +315,65 @@ def build(source: Path) -> bytes:
     f.setGlyphOrder(glyf.glyphOrder)
     print("  built %d accented glyph(s); %d could not be composed here" % (built, unbuildable))
 
+    if THIN:
+        thinned, kept = _thin(f, THIN)
+        print("  thinned %d glyph(s) by %g units, kept %d as-is" % (thinned, THIN, kept))
+
     buf = io.BytesIO()
     f.save(buf)
     return buf.getvalue()
+
+
+def _thin(f, d: float) -> tuple[int, int]:
+    """Erode every simple glyph inward by `d`, which is how a single-weight face gets lighter.
+
+    **Only simple glyphs.** The accented letters built above are composites pointing at these
+    same bases and marks, so they thin for free and stay in step by construction - an accent
+    cannot drift away from the letter it sits on, because it is the same outline.
+
+    A stem thinner than 2d would erode to nothing, so such a glyph is kept fat rather than
+    shipped with a hole in it.
+    """
+    try:
+        import pathops
+    except ImportError:
+        sys.exit("skia-pathops is needed to thin the font: pip install --user skia-pathops")
+    from fontTools.pens.ttGlyphPen import TTGlyphPen
+    from fontTools.pens.cu2quPen import Cu2QuPen
+
+    glyf, gs = f["glyf"], f.getGlyphSet()
+    done = kept = 0
+    for name in f.getGlyphOrder():
+        g = glyf[name]
+        if g.numberOfContours in (0, -1):          # empty, or a composite: leave it
+            continue
+
+        path = pathops.Path()
+        gs[name].draw(path.getPen(glyphSet=gs))
+        path.simplify()
+
+        ring = pathops.Path()
+        ring.addPath(path)
+        ring.stroke(2 * d, pathops.LineCap.BUTT_CAP, pathops.LineJoin.MITER_JOIN, 4.0)
+
+        # `difference` takes contours and an output pen, not two Paths - it is
+        # `functools.partial(_do, DIFFERENCE)`, so the arity is easy to get wrong and the
+        # failure is a silent "nothing was eroded" rather than an exception.
+        thin = pathops.Path()
+        try:
+            pathops.difference(path.contours, ring.contours, thin.getPen())
+        except Exception:
+            kept += 1
+            continue
+        if not list(thin.contours):
+            kept += 1
+            continue
+
+        pen = TTGlyphPen(gs)
+        thin.draw(Cu2QuPen(pen, 0.6))              # well under a pixel at any UI size
+        glyf[name] = pen.glyph()
+        done += 1
+    return done, kept
 
 
 def cmap_of(data: bytes) -> set[int]:
@@ -436,7 +501,7 @@ def main() -> int:
         return 0 if ok else 1
 
     OUT.write_bytes(data)
-    print("wrote %s (%d bytes)" % (OUT, len(data)))
+    print("wrote %s (%d bytes), thinned by %g" % (OUT, len(data), THIN))
     return 0
 
 
