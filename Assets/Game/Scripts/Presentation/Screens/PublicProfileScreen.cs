@@ -643,7 +643,17 @@ namespace GlimmerGrove
             if (_card.IsValid) _status.text = string.Empty;
             else if (_fetching) _status.text = Loc.Get("ui.board.loading");
             else if (!GroveBoard.IsAvailable) _status.text = Loc.Get("ui.board.offline");
-            else if (_failed) _status.text = Loc.Get("ui.visit.gone");
+
+            // **The fourth state this method's own summary claimed to have, and did not.** A
+            // card that could not be fetched was reported as `ui.visit.gone` — "this keeper is
+            // no longer on the boards" — whichever way the request had failed, so a player who
+            // opened a row in a tunnel was told something false about another person, in a
+            // sentence with no hint that the phone was the problem. The failure is the same
+            // `CloudResult` either way and nothing in it distinguishes them, which is why the
+            // radio is what separates the two sentences here.
+            else if (_failed)
+                _status.text = Loc.Get(Net.Offline ? "ui.visit.no_connection" : "ui.visit.gone");
+
             else _status.text = Loc.Get("ui.board.loading");
         }
 

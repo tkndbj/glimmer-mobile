@@ -4,6 +4,7 @@
     python Tools/render_shop.py                 # the gem shelf
     python Tools/render_shop.py --shelf coins   # any shelf in progression.json
     python Tools/render_shop.py --all           # every shelf, side by side
+    python Tools/render_shop.py --offline       # what a shelf says with no connection
 
 **Why this exists.** Nothing in this project can open a PNG on the way to a build, and the
 Editor cannot photograph a `ScreenSpaceOverlay` canvas — so a storefront's *look* is judged
@@ -41,7 +42,17 @@ REPO = K.REPO
 UI = K.UI
 
 # ShopScreen
-HEADER, TABROW = 300.0, 132.0
+# `ShopScreen.HeaderHeight` / `TabRow`. TABROW was 132 against the screen's 156 for as long
+# as this mirror has existed, and it is not a cosmetic drift: the tab row is top-pivoted, so
+# its height *is* where its lower edge falls, and every question about what clears the
+# buttons was being asked 24 units too high. It hid a summary line drawing through the
+# bottom of five of them, which took a device to find.
+HEADER, TABROW = 300.0, 156.0
+
+# `ShopScreen.SummaryH` / `SummaryGap` / `SummaryRow` - the reserved band the store's one
+# sentence lives in, between the tabs and the first row of cards.
+SUMMARY_H, SUMMARY_GAP = 48.0, 14.0
+SUMMARY_ROW = SUMMARY_GAP + SUMMARY_H + SUMMARY_GAP
 RESTORE = 92.0
 COLUMNS, CELLW, CELLH = 2, 508.0, 560.0
 
@@ -314,6 +325,39 @@ def container_card(sheet, x, top, rung_at, cap, price, badge):
 
 # --------------------------------------------------------------------------- the screen
 SHELVES = ["gems", "coins", "bundles", "supplies", "utilities"]
+
+# `ShopScreen.EmptyDrop` / `EmptyBoxH` / `EmptyY` - the centred sentence an unreachable
+# shelf carries, and how far under the top of the shelf its first line sits.
+EMPTY_DROP, EMPTY_BOX_W, EMPTY_BOX_H = 120.0, 880.0, 140.0
+
+
+def strings():
+    """`loc/en.json`, so a sentence here is the sentence the phone draws."""
+    import json as _json
+    table = _json.loads(
+        (REPO / 'Assets' / 'StreamingAssets' / 'Content' / 'loc' / 'en.json')
+        .read_text(encoding='utf-8'))
+    return {e['key']: e['text'] for e in table['entries']}
+
+
+LOCS = strings()
+
+
+def txt(key):
+    return LOCS.get(key, key)
+
+
+def store_news(shelf, offline):
+    """`ShopScreen.StoreNews` - the one thing this screen can say about the store.
+
+    Silent unless it has news, which is why the shelf's own name is no longer drawn on
+    this line. The two gem-priced shelves never speak for the store at all: the kit asks
+    it nothing, and supplies' money half is simply absent when the store has not answered,
+    so there is no dead card for a sentence to have to explain.
+    """
+    if not offline or shelf in ('supplies', 'utilities'):
+        return ''
+    return txt('ui.shop.no_connection')
 TAB_GLYPH = {"gems": "ic_gem", "coins": "Shop/pouch", "bundles": "ic_gift",
              "supplies": "ic_heart", "utilities": "Utility/firepot"}
 
@@ -393,9 +437,13 @@ def supplies(sheet, top, shift):
                        f"${p['referenceUsdCents'] / 100:.2f}", badge)
 
 
-def screen(shelf):
+def screen(shelf, offline=False):
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
-    K.room(sheet)
+    # `ShopScreen.Build` calls `Scenery.Plain`, not `Scenery.Room`. This drew the forest
+    # for as long as the mirror has existed, and it is not a cosmetic drift: a sentence
+    # judged against a busy painted ground is judged against a screen the game does not
+    # draw, which is exactly the lie a mirror may never tell (44d).
+    K.plain(sheet)
 
     # ---- the header band, then the rail over it
     fade = Image.new("RGBA", (W, int(HEADER + TABROW)), (0, 0, 0, 0))
@@ -428,36 +476,86 @@ def screen(shelf):
         K.paste(sheet, K.fit(K.load("Hud/add")[0], (50, 50)), cx + 228 / 2 - 2, 228)
 
     # ---- the tabs, which are the nav bar's own caps one level down
+    # `ShopScreen.ShelfTab` - a rounded plate with a seat rim, the glyph over the top of it and
+    # the name inside. It drew a pair of the kit's round caps here, which is what this row used
+    # to be and has not been for some time: a cap is a disc and a tab is a plate 138 units tall,
+    # so the mirror's tab row ended in a different place from the screen's (44d).
     step = min(230.0, 1020.0 / len(SHELVES))
+    plate_w, plate_h = step - 12, TABROW - 18
     for i, name in enumerate(SHELVES):
         cx = W / 2 + (i - (len(SHELVES) - 1) * .5) * step
+        cy = HEADER + TABROW / 2 - 4
         live = name == shelf
-        cap = K.fit(K.load("Hud/cap_on" if live else "Hud/cap_off")[0], (TABROW - 6, TABROW - 6))
-        K.paste(sheet, cap, cx, HEADER + TABROW / 2)
+
+        tab = Image.new("RGBA", (int(plate_w), int(plate_h)), (0, 0, 0, 0))
+        td = ImageDraw.Draw(tab)
+        td.rounded_rectangle([0, 0, plate_w - 1, plate_h - 1], radius=30, fill=(23, 38, 71, 255))
+        td.rounded_rectangle([2, 2, plate_w - 3, plate_h - 3], radius=30,
+                             outline=(5, 15, 33, 217), width=4)
+        if live:
+            td.rounded_rectangle([0, 0, plate_w - 1, plate_h - 1], radius=30,
+                                 outline=(*K.SUN, 255), width=6)
+        K.paste(sheet, tab, cx, cy)
+
         try:
-            mark = K.fit(Image.open(UI / f"{TAB_GLYPH[name]}.png").convert("RGBA"),
-                         (TABROW - 74, TABROW - 74))
+            mark = K.fit(Image.open(UI / f"{TAB_GLYPH[name]}.png").convert("RGBA"), (100, 100))
             if not live:
                 mark.putalpha(mark.split()[3].point(lambda v: int(v * .55)))
-            K.paste(sheet, mark, cx, HEADER + TABROW / 2)
+            K.paste(sheet, mark, cx, cy - 30)
         except FileNotFoundError:
             pass
 
+        K.shrunk(sheet, txt("ui.shop.tab_%s" % name).upper(), cx, cy + plate_h / 2 - 22,
+                 step - 26, 30, 23, 15,
+                 fill=K.CREAM if live else (205, 215, 232), outline=2)
 
-    K.text(sheet, shelf.upper(), W / 2, HEADER + TABROW + 22, 26,
-           fill=(255, 245, 225), outline=2)
 
     # ---- the grid
-    top = HEADER + TABROW + 44
-    rows = products(shelf)
+    top = HEADER + TABROW + SUMMARY_ROW
+    rows = [] if offline else products(shelf)
     rungs = LADDER.get(shelf, 3)
 
     # The free spot, and everything under it shifted by one cell. `ShopScreen.Bind` does the
     # shift the same way and for the same reason, so the two lists cannot come apart.
+    # The free card is drawn live whatever the network is doing (invariant 18g), so a
+    # shelf carrying one is *not* empty when the store is unreachable - which is exactly
+    # why `PaintNews` counts rows rather than products before it centres anything.
     ad = ad_offer(shelf)
     shift = 1 if ad else 0
     if ad:
         ad_card(sheet, W / 2 - CELLW / 2, top, shelf, ad[0], ad[1])
+
+    news = store_news(shelf, offline)
+    centre = bool(news) and (shift + len(rows)) == 0 and shelf != 'supplies'
+
+    # `ShopScreen.PaintNews` - one sentence, two places, never both. A shelf with cards on
+    # it carries it as a footnote under the tabs; a shelf with nothing on it is a blank
+    # page, and a blank page is the question, so the answer goes in the middle of it.
+    if news and not centre:
+        # Centred in `SUMMARY_ROW`, exactly as `ShopScreen` places it: the tab row's lower edge,
+        # then the gap, then half the line. Written at 22 below the tabs it sat *inside* them.
+        px = K.shrunk(sheet, news, W / 2, HEADER + TABROW + SUMMARY_GAP + SUMMARY_H / 2,
+                      880, SUMMARY_H, 30, 20, fill=K.SUN, outline=2)
+        print("  store line: settled at %dpx against a floor of 20, in a band from %d to %d"
+              % (px, HEADER + TABROW, HEADER + TABROW + SUMMARY_ROW))
+
+    if centre:
+        # On a plate, because this screen is a place rather than a list: amber text laid
+        # straight over the painted forest is a line nobody can read, which is what this
+        # mirror said the first time it drew one. `ShopScreen.BuildGrid`.
+        cy = top + EMPTY_DROP + EMPTY_BOX_H / 2
+        plate = Image.new("RGBA", (int(EMPTY_BOX_W), int(EMPTY_BOX_H)), (0, 0, 0, 0))
+        pd = ImageDraw.Draw(plate)
+        pd.rounded_rectangle([0, 0, EMPTY_BOX_W - 1, EMPTY_BOX_H - 1],
+                             radius=24, fill=(13, 23, 46, 219))
+        pd.rounded_rectangle([1, 1, EMPTY_BOX_W - 2, EMPTY_BOX_H - 2],
+                             radius=24, outline=(*K.SUN, 102), width=3)
+        K.paste(sheet, plate, W / 2, cy)
+
+        px = K.shrunk(sheet, news, W / 2, cy, EMPTY_BOX_W - 60, EMPTY_BOX_H - 28, 30, 19,
+                      fill=(255, 243, 220), outline=3)
+        print('  unreachable shelf: the sentence settled at %dpx against a floor of 19'
+              % px)
 
     if shelf == "supplies":
         supplies(sheet, top, shift)
@@ -510,17 +608,19 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--shelf", default="gems", choices=SHELVES)
     ap.add_argument("--all", action="store_true")
+    ap.add_argument("--offline", action="store_true",
+                    help="the store never answered - what an unreachable shelf says")
     ap.add_argument("--out", type=Path, default=Path("shop.png"))
     args = ap.parse_args()
 
     if args.all:
         shelves = [s for s in SHELVES if s in LADDER or s == "supplies"]
-        sheets = [screen(s) for s in shelves]
+        sheets = [screen(s, args.offline) for s in shelves]
         out = Image.new("RGB", (W * len(sheets), H))
         for i, one in enumerate(sheets):
             out.paste(one, (i * W, 0))
     else:
-        out = screen(args.shelf)
+        out = screen(args.shelf, args.offline)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)

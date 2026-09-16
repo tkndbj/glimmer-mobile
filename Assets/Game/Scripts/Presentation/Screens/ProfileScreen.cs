@@ -655,10 +655,19 @@ namespace GlimmerGrove
             int best = EndlessLedger.Best;
             int top = GroveRanks.Waves.TopPercent(best);
 
+            // The connection case sits *under* the percentile rather than over it, which is the
+            // whole of what makes it safe to add. A standing this device already has is still
+            // true in a tunnel — the distribution is a document read minutes ago and the best
+            // wave is read out of the save — so a phone with no signal must not replace a
+            // correct number with an apology. What it may replace is the one branch that means
+            // "we have no percentile for you": "the standing arrives with the next tally" is a
+            // promise about a job that has not run, and offline we did not get far enough to
+            // know whether it has.
             string line = !GroveBoard.IsAvailable ? Loc.Get("ui.board.offline")
                         : !GroveBoard.OptedIn ? Loc.Get("ui.board.opted_out")
                         : best <= 0 ? Loc.Get("ui.board.unranked")
                         : top > 0 ? Loc.Format("ui.board.top_percent", top)
+                        : Net.Offline ? Loc.Get("ui.board.no_connection")
                         : Loc.Get("ui.board.building");
 
             UIKit.Shrinkable(

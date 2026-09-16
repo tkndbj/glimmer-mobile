@@ -1161,7 +1161,20 @@ namespace GlimmerGrove
             var state = StateOf(tile.Night);
             bool waiting = state == Night.Waiting;
             bool kept = state == Night.Kept;
-            bool lit = waiting && tile.Night == DailyStreak.FirstPending;
+
+            // **A night that is owed and cannot yet be handed over.** A rung paying a chest
+            // needs an account id to roll it against, because the server re-rolls the same
+            // chest from the same seed and pays what *it* gets — so before the first sign-in
+            // there is nothing honest to open (`RewardSeed.IsAdjudicable`). It is asked of the
+            // rung rather than of the page, because a night paying a figure needs none of that
+            // and must not be held up by it.
+            bool blocked = waiting && tile.Rung.IsChest && !DailyStreak.CanClaimChests;
+
+            // **The light comes off a row that will refuse, and this is the half that matters
+            // more than the words.** The halo and the turning fan are the loudest thing on the
+            // page and the page has exactly one at a time (48i) — pointed at a tap that answers
+            // with an apology, they are the game asking for something it is about to refuse.
+            bool lit = waiting && !blocked && tile.Night == DailyStreak.FirstPending;
 
             if (tile.Group) tile.Group.alpha = state == Night.Ahead ? .74f : 1f;
 
@@ -1173,9 +1186,15 @@ namespace GlimmerGrove
 
             // The right end carries one answer at a time, and the order is the order a player
             // needs them in: something to do, then something done, then when it will be.
-            if (tile.Collect) tile.Collect.gameObject.SetActive(waiting);
+            //
+            // A blocked night takes the *pill* rather than a greyed key, and that is the same
+            // choice the shelf made about its padlock strip (42e): the green key is this page's
+            // one instruction, so a dead one on the single row that ought to be offering
+            // something reads as broken, where the pill is already the widget for "this row can
+            // do nothing right now, and here is why".
+            if (tile.Collect) tile.Collect.gameObject.SetActive(waiting && !blocked);
             if (tile.Seal) tile.Seal.gameObject.SetActive(kept);
-            if (tile.Mark) tile.Mark.gameObject.SetActive(!waiting && !kept);
+            if (tile.Mark) tile.Mark.gameObject.SetActive(blocked || (!waiting && !kept));
 
             if (tile.Mark && tile.Mark.gameObject.activeSelf)
             {
@@ -1189,11 +1208,18 @@ namespace GlimmerGrove
                     // for key-shaped literals and a concatenated key is invisible to it.
                     int away = tile.Night - _days;
 
-                    text.text = (state == Night.Tonight ? Loc.Get("ui.streak.tonight")
+                    // A blocked night answers *what to do* rather than *when*, which is the
+                    // shelf's rule about a padlock strip saying "Level 26" rather than LOCKED
+                    // (42e): one word that says a player cannot have this and not what would
+                    // change that is half a sentence. Amber rather than the schedule's quiet
+                    // cream, because it is news rather than a date.
+                    text.text = (blocked ? Loc.Get("ui.streak.needs_connection")
+                               : state == Night.Tonight ? Loc.Get("ui.streak.tonight")
                                : away <= 1 ? Loc.Get("ui.streak.in_one")
                                : Loc.Format("ui.streak.in_many", away)).ToUpperInvariant();
 
-                    text.color = state == Night.Tonight ? Pal.Aqua : Pal.A(Pal.Cream, .60f);
+                    text.color = blocked ? Pal.Sun
+                               : state == Night.Tonight ? Pal.Aqua : Pal.A(Pal.Cream, .60f);
                 }
             }
 

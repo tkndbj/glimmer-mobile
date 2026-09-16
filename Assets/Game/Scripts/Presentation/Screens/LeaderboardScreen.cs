@@ -259,7 +259,17 @@ namespace GlimmerGrove
 
             if (!GroveBoard.IsAvailable) _empty.text = Loc.Get("ui.board.offline");
             else if (_fetching) _empty.text = Loc.Get("ui.board.loading");
-            else if (_failed) _empty.text = Loc.Get("ui.board.failed");
+
+            // **A fetch that failed because this phone has no signal is a different sentence
+            // from one that failed, and only one of them tells the player what to do.** Both
+            // are true when the radio is off; "the boards could not be reached, try again in a
+            // moment" reads as *the game is broken* to somebody sitting in a tunnel, and it is
+            // the reading they keep, because they will not try again in a moment. The radio is
+            // asked *after* the request has already failed rather than before it is made —
+            // see `Net`, which may never refuse anything, only explain something that has.
+            else if (_failed)
+                _empty.text = Loc.Get(Net.Offline ? "ui.board.no_connection" : "ui.board.failed");
+
             else _empty.text = Loc.Get("ui.board.no_rows");
         }
 

@@ -107,7 +107,21 @@ namespace GlimmerGrove
             public RectTransform Seal;
             public Btn Tap;
             public CanvasGroup Group;
-            public TaskState Painted;
+
+            /// <summary>
+            /// Whether the light is running on this row right now.
+            ///
+            /// <para>
+            /// It used to be the <c>TaskState</c> this row was last drawn in, compared against
+            /// <c>Ready</c> — which was the same answer for as long as "ready" and "offerable"
+            /// were the same thing, and stopped being one when a chest began waiting on an
+            /// account id. A row that turned ready with no account never lit, correctly, and
+            /// then could never light: the state had not moved, so the transition that starts
+            /// the tweens could not fire when the sign-in landed. <b>Guard the thing that is
+            /// actually being turned on and off</b>, not a state it used to agree with.
+            /// </para>
+            /// </summary>
+            public bool Lit;
             public float Track;
             public Image Pool;
             public Image Rim;
@@ -123,11 +137,23 @@ namespace GlimmerGrove
         bool _claiming;
         AssetHold _reels;
 
+        /// <summary>
+        /// The "connect once" plate, or null on every account that has ever been online.
+        /// Built at most once per visit; see <see cref="BuildConnectBanner"/>.
+        /// </summary>
+        ConnectBanner _connect;
+
         protected override void Build()
         {
             _rows.Clear();
             _clocks.Clear();
             _tallies.Clear();
+
+            // Dropped with them, because `Rebuild` calls `Build` again on this same instance
+            // when the slate turns over: a banner kept from the last pass is a reference to a
+            // destroyed object, and one kept after the gate has opened is a stale sentence that
+            // `BuildConnectBanner` would never overwrite because it returns early.
+            _connect = null;
 
             // The profile's ground rather than the hub's world. `Scenery.Room` is a painting of
             // somewhere — a forest with a bridge in it — and this page is a list of plates laid
@@ -141,6 +167,7 @@ namespace GlimmerGrove
             float y = 22f;
             y = BuildHeader(y);
             y = BuildLadder(y);
+            y = BuildConnectBanner(y);
             BuildSlates(y);
 
             NavBar.Build(Content, NavBar.Tab.Home);
@@ -222,6 +249,30 @@ namespace GlimmerGrove
         /// costs the page nothing in height. The subtitle stays with the banner it explains.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// The standing "connect once" plate, under the chest box and above the slates.
+        ///
+        /// <para>
+        /// <b>Under the chests on purpose.</b> The box is what the plate is *about* — those are
+        /// the chests that cannot be opened yet — so the sentence sits directly beneath the
+        /// pictures it explains, where the ladder's own "tap a chest" line already lives. Above
+        /// the slates, because the slates scroll and a note about why nothing can be claimed
+        /// must not be something a player has to scroll to find.
+        /// </para>
+        /// <para>
+        /// <b>Built only while the gate is shut</b>, which decides the offset the list below
+        /// starts at. The only transition is the one that takes it away — see
+        /// <see cref="ConnectBanner.Show"/>.
+        /// </para>
+        /// </summary>
+        float BuildConnectBanner(float y)
+        {
+            if (TaskLedger.CanClaim) return y;
+
+            _connect = ConnectBanner.Build(Safe, Width, y);
+            return y + ConnectBanner.Height + ConnectBanner.Gap;
+        }
+
         float BuildHeader(float y)
         {
             // The ribbon's own row, with the two corner buttons standing in it.
@@ -599,6 +650,10 @@ namespace GlimmerGrove
         /// </summary>
         void Repaint()
         {
+            // The one transition this plate has: a first-ever sign-in landing while somebody is
+            // standing here. It only ever goes down, never up, so nothing below it has to move.
+            _connect?.Show(!TaskLedger.CanClaim);
+
             foreach (var row in _rows) Paint(row);
 
             foreach (var period in TaskPeriods.All)
@@ -661,12 +716,23 @@ namespace GlimmerGrove
 
             if (row.Group) row.Group.alpha = claimed ? .62f : 1f;
             if (row.Seal) row.Seal.gameObject.SetActive(claimed);
+
+            // Still a button while the chest is held up, deliberately. Tapping it is what
+            // raises the sentence explaining why (see Claim), and a row that simply stopped
+            // responding would be the broken button invariant 16o is about — the hint under it
+            // says the same thing, but a player whose finger is already moving reads the toast.
             if (row.Tap) row.Tap.gameObject.SetActive(ready);
 
+            // **The light says "this one is yours to take", so it may only be drawn where that
+            // is true.** A finished task whose chest is waiting on an account id is ready and
+            // not offerable, and lighting it would be the page asking for a tap it is about to
+            // answer with an apology — the same rule the streak board's halo follows.
+            bool offerable = ready && TaskLedger.CanClaim;
+
             // The chest lights and breathes only when it can be taken, and only starts
-            // doing so on the paint that made it ready — a breathe restarted on every
+            // doing so on the paint that made it offerable — a breathe restarted on every
             // repaint is a chest that jumps each time a counter moves.
-            if (ready && row.Painted != TaskState.Ready)
+            if (offerable && !row.Lit)
             {
                 if (row.Halo) Tween.Tint(row.Halo.GetComponent<Image>(), Pal.A(Pal.Gold, .55f), .4f);
                 if (row.Chest)
@@ -676,17 +742,17 @@ namespace GlimmerGrove
                 }
                 if (row.Card) row.Card.color = Color.white;
                 Shine(row, true);
+                row.Lit = true;
             }
-            else if (!ready && row.Painted == TaskState.Ready)
+            else if (!offerable && row.Lit)
             {
                 if (row.Halo) Tween.Tint(row.Halo.GetComponent<Image>(), Pal.A(Pal.Gold, 0f), .3f);
                 if (row.Chest) Tween.KillChannel(row.Chest.transform, "breathe");
                 Shine(row, false);
+                row.Lit = false;
             }
 
             if (claimed && row.Chest) row.Chest.color = new Color(.78f, .82f, .88f, 1f);
-
-            row.Painted = state;
         }
 
         /// <summary>

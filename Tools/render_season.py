@@ -354,7 +354,35 @@ def rung_card(sheet, y, index, rung, marks, owned):
     return y + ROW_H + ROW_GAP
 
 
-def page(owned=False, marks=62):
+
+
+# `ConnectBanner` - the standing plate on an account that has never been online, drawn under
+# the pass here and under the chest box on the tasks page. Its height decides where the ladder
+# below starts, so a mirror that skipped it would draw a page nobody with a fresh install sees.
+CONNECT_H, CONNECT_GAP = 104.0, 14.0
+
+
+def connect_banner(sheet, y, width):
+    """`ConnectBanner.Build` - amber plate, key, one wrapped sentence."""
+    cy = y + CONNECT_H / 2
+    K.paste(sheet, K.skin("Hud/plate_orange", width, CONNECT_H), W / 2, cy)
+
+    left = W / 2 - width / 2
+    K.paste(sheet, K.glow(200, 2.0, K.SUN, .26), left + 92, cy)
+
+    mark = Image.open(K.UI / "ic_key.png").convert("RGBA")
+    K.paste(sheet, K.tint(K.fit(mark, (64, 64)), K.CREAM), left + 92, cy)
+
+    text_w = width - 184
+    px = K.shrunk_left(sheet, txt("ui.chest.connect_once"), left + 160,
+                       cy - (CONNECT_H - 24) / 2, text_w, CONNECT_H - 24, 26, 17,
+                       fill=K.CREAM, outline=3)
+    print("  connect banner: settled at %dpx against a floor of 17" % px)
+
+    return y + CONNECT_H + CONNECT_GAP
+
+
+def page(owned=False, marks=62, offline=False):
     sheet = Image.new("RGBA", (W, H), (0, 0, 0, 255))
     K.plain(sheet)
 
@@ -365,6 +393,8 @@ def page(owned=False, marks=62):
     y = header(sheet, y)
     y = hero(sheet, y, marks, rungs, top)
     y = pass_banner(sheet, y, owned)
+    if offline:
+        y = connect_banner(sheet, y, WIDTH)
     y = headings(sheet, y)
 
     # The list starts on the rung the screen focuses: the first with something unopened.
@@ -383,12 +413,15 @@ def main():
     parser.add_argument("--owned", action="store_true", help="draw it with the pass unlocked")
     parser.add_argument("--marks", type=int, default=62, help="how far up the ladder to draw")
     parser.add_argument("--contact", action="store_true", help="both states side by side")
+    parser.add_argument("--offline", action="store_true",
+                        help="an account that has never been online: the connect-once banner")
     args = parser.parse_args()
 
     OUT.mkdir(parents=True, exist_ok=True)
 
     if args.contact:
-        shots = [page(False, args.marks), page(True, args.marks)]
+        shots = [page(False, args.marks, args.offline),
+                 page(True, args.marks, args.offline)]
         sheet = Image.new("RGBA", (W * len(shots) + 40 * (len(shots) + 1), H + 80), (16, 18, 26, 255))
         for i, shot in enumerate(shots):
             sheet.alpha_composite(shot, (40 + i * (W + 40), 40))
@@ -396,7 +429,7 @@ def main():
         sheet.convert("RGB").save(path, quality=94)
     else:
         path = OUT / ("season_owned.png" if args.owned else "season.png")
-        page(args.owned, args.marks).convert("RGB").save(path, quality=94)
+        page(args.owned, args.marks, args.offline).convert("RGB").save(path, quality=94)
 
     print("wrote %s" % path)
 

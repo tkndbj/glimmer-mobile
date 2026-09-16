@@ -77,6 +77,12 @@ namespace GlimmerGrove
         EventProgress _progress;
         SeasonLadder _ladder;
 
+        /// <summary>
+        /// The "connect once" plate, or null on every account that has ever been online.
+        /// Built at most once per visit; see <see cref="BuildConnectBanner"/>.
+        /// </summary>
+        ConnectBanner _connect;
+
         Image _bar;
         RectTransform _fill, _mark;
 
@@ -129,6 +135,11 @@ namespace GlimmerGrove
             _season = GroveEvents.Featured;
             if (_season == null) { _retreat = true; return; }
 
+            // Dropped for `TasksScreen.Build`'s reason: a banner kept across a rebuild is either
+            // a destroyed object or a sentence `BuildConnectBanner` will not overwrite, since it
+            // returns early once the gate has opened.
+            _connect = null;
+
             // The quiet ground every screen that is a list rather than a place stands on. A
             // season is a list of rewards; the painting belongs on the hub and the map.
             Scenery.Plain(Content);
@@ -138,6 +149,7 @@ namespace GlimmerGrove
             y = BuildHeader(y);
             y = BuildHero(y);
             y = BuildPassBanner(y);
+            y = BuildConnectBanner(y);
             y = BuildHeadings(y);
 
             _ladder = new SeasonLadder(OnRungTapped);
@@ -345,6 +357,31 @@ namespace GlimmerGrove
         /// when it is bought: an offer while it is not held, a plain "unlocked" strip once it
         /// is. A season with no product draws neither and the row costs nothing.
         /// </summary>
+        /// <summary>
+        /// The standing "connect once" plate, under the pass and above the ladder.
+        ///
+        /// <para>
+        /// <b>Built only while the gate is shut, and the gate never shuts again.</b> Asked
+        /// here rather than in the repaint because the answer decides how much room the ladder
+        /// below starts at: a band that can appear later would have to relay the whole page,
+        /// and the only transition that exists is the one that takes it *away* (see
+        /// <see cref="ConnectBanner.Show"/>).
+        /// </para>
+        /// <para>
+        /// Under the pass rather than over it, because the pass is what the page is selling and
+        /// this is a note about the page. Above the ladder rather than below it, because the
+        /// ladder scrolls and a sentence explaining why nothing on it can be taken must not be
+        /// something a player has to scroll to find.
+        /// </para>
+        /// </summary>
+        float BuildConnectBanner(float y)
+        {
+            if (SeasonLedger.CanClaim) return y;
+
+            _connect = ConnectBanner.Build(Safe, Width, y);
+            return y + ConnectBanner.Height + ConnectBanner.Gap;
+        }
+
         float BuildPassBanner(float y)
         {
             if (!_season.HasPremium) return y;
@@ -598,6 +635,10 @@ namespace GlimmerGrove
             if (this == null || _season == null || Content == null) return;
 
             _progress = GroveEvents.ProgressOf(_season);
+
+            // The one transition this plate has: a first-ever sign-in landing while somebody is
+            // standing here. It only ever goes down, never up, so nothing below it has to move.
+            _connect?.Show(!SeasonLedger.CanClaim);
 
             PaintMark();
 

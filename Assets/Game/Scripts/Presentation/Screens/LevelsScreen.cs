@@ -1570,9 +1570,18 @@ namespace GlimmerGrove
             // on the day it means least and gone on the day it means most. The padlocked row is
             // still there to be found in the meantime; what is withheld is the game pointing at
             // it (invariant 43d, and 37cl's rule about a tip with nothing to ring).
+            //
+            // **And offered from the ordinary ladder alone.** The lesson's whole sentence is
+            // *there is another lane and this pill is how you reach it*, so a player standing on
+            // the Infinite hub has already been told it by having got there — the pill is the
+            // only door in. Raised there anyway it says "tap here to play Normal" over the
+            // control the player used a second ago, which reads as the game explaining the tap it
+            // just watched. It is **held over rather than spent**, so somebody who arrives by the
+            // padlock lifting still meets it the next time they are on a map (37cl's rule about a
+            // kind with nothing to ring, said about a lesson that has nothing left to say).
             var other = OtherLane();
 
-            if (!other.Equals(Lane) && TrackSwitch.IsOpen(_index, Mode, other))
+            if (Lane.IsMain && !other.Equals(Lane) && TrackSwitch.IsOpen(_index, Mode, other))
                 ScreenLessons.Offer(queue, Mechanic.MapTrack, _tracks, Loc.Get(other.NameKey));
             ScreenLessons.Offer(queue, Mechanic.ModeSwitch, _modes);
 

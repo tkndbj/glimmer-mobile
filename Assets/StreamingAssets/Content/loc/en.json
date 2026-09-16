@@ -1467,7 +1467,7 @@
     },
     {
       "key": "track.infinite.tagline",
-      "text": "the waves never stop — how far can you hold?"
+      "text": "the waves never stop"
     },
     {
       "key": "track.main.name",
@@ -1926,6 +1926,10 @@
       "text": "Reading the boards..."
     },
     {
+      "key": "ui.board.no_connection",
+      "text": "No connection. The boards need one."
+    },
+    {
       "key": "ui.board.no_rows",
       "text": "Nobody has been ranked here yet. Be the first."
     },
@@ -1984,6 +1988,10 @@
     {
       "key": "ui.chest.collect",
       "text": "COLLECT"
+    },
+    {
+      "key": "ui.chest.connect_once",
+      "text": "Go online once and your chests unlock. After that they open offline, forever."
     },
     {
       "key": "ui.chest.hearts_ceiling",
@@ -4162,6 +4170,10 @@
       "text": "Not enough credits"
     },
     {
+      "key": "ui.shop.no_connection",
+      "text": "No connection. The store needs one to show prices."
+    },
+    {
       "key": "ui.shop.offline",
       "text": "The store cannot be reached right now"
     },
@@ -4332,6 +4344,10 @@
     {
       "key": "ui.streak.kept_waiting",
       "text": "{0} days running — a reward is waiting"
+    },
+    {
+      "key": "ui.streak.needs_connection",
+      "text": "connect once"
     },
     {
       "key": "ui.streak.none",
@@ -4852,6 +4868,10 @@
     {
       "key": "ui.visit.loading",
       "text": "Walking over to their groove…"
+    },
+    {
+      "key": "ui.visit.no_connection",
+      "text": "No connection. Their page will load when you are back online."
     },
     {
       "key": "ui.visit.report",

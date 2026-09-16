@@ -74,9 +74,45 @@ namespace GlimmerGrove
         /// </summary>
         const float NoticeH = 74f, NoticeGap = 14f;
 
+        /// <summary>
+        /// The band under the tab row that the store's one sentence lives in, and the room
+        /// either side of it.
+        ///
+        /// <para>
+        /// <b>It was 44 with the line sitting 21 units inside the tabs.</b> The tab row is
+        /// anchored to the top of the safe area with a <em>top</em> pivot, so it runs from
+        /// <c>-HeaderHeight</c> down to <c>-(HeaderHeight + TabRow)</c> and its cells are the
+        /// full height of it — while the sentence was placed at <c>-HeaderHeight - TabRow + 4</c>,
+        /// which is four units <em>above</em> that lower edge before its own box is counted.
+        /// It drew through the bottom of five buttons, on every shelf that had anything to
+        /// say, for as long as the line has existed.
+        /// </para>
+        /// <para>
+        /// <b>Reserved rather than squeezed into the gap that was there.</b> Sized so the
+        /// sentence clears the buttons above and the first row of cards below by the same
+        /// <see cref="SummaryGap"/>, which is what makes it a band rather than a number that
+        /// happened to fit. Everything below is measured from it, so the grid, the guest
+        /// notice and the empty plate cannot fall out of step with it.
+        /// </para>
+        /// </summary>
+        const float SummaryH = 48f, SummaryGap = 14f;
+
+        /// <summary>The whole band: the gap above, the line, and the gap below.</summary>
+        const float SummaryRow = SummaryGap + SummaryH + SummaryGap;
+
         RectTransform _viewport, _tabs;
         GridView _grid;
         Text _summary;
+
+        /// <summary>
+        /// The centred sentence an empty shelf carries. Built once and left blank, because a
+        /// label created when a shelf empties is a label that arrives a frame after the cards
+        /// leave. See <see cref="PaintNews"/> for when it is the one that speaks.
+        /// </summary>
+        Text _empty;
+
+        /// <summary>The plate that sentence stands on. Shown and hidden with it.</summary>
+        Image _emptyPlate;
         Btn _restore, _notice;
 
         readonly List<StoreProduct> _products = new List<StoreProduct>();
@@ -348,7 +384,7 @@ namespace GlimmerGrove
         {
             _notice = UIKit.Button("GuestNotice", Safe, Art.Round(18), new Vector2(1000f, NoticeH),
                                    new Vector2(.5f, 1f),
-                                   new Vector2(0f, -(HeaderHeight + TabRow + 44f) - NoticeH * .5f),
+                                   new Vector2(0f, -(HeaderHeight + TabRow + SummaryRow) - NoticeH * .5f),
                                    OnNoticeTapped);
 
             var plate = _notice.GetComponent<Image>();
@@ -430,7 +466,16 @@ namespace GlimmerGrove
                         && (!OnSupplies || HasMoneyOnShelf());
             if (_notice.gameObject.activeSelf != show) _notice.gameObject.SetActive(show);
 
-            float top = -HeaderHeight - TabRow - 44f - (show ? NoticeH + NoticeGap : 0f);
+            float top = -HeaderHeight - TabRow - SummaryRow - (show ? NoticeH + NoticeGap : 0f);
+
+            // **The empty sentence follows the shelf's top edge from here, because here is the
+            // one place that edge is decided.** Written anywhere else it would be a second copy
+            // of this sum, and the two would agree right up until the day somebody sees the
+            // guest notice over an unreachable shelf — at which point the message explaining
+            // why the page is blank would be drawn straight through the bar above it. Set
+            // before the early return, so it is right even on the call where nothing moved.
+            if (_empty) _empty.rectTransform.anchoredPosition = new Vector2(0f, EmptyY(top));
+
             if (Mathf.Approximately(_viewport.offsetMax.y, top)) return false;
 
             _viewport.offsetMax = new Vector2(_viewport.offsetMax.x, top);
@@ -550,11 +595,20 @@ namespace GlimmerGrove
                 _tabViews[shelf] = new ShelfTab(_tabs, shelf, step, x, () => Show(shelf));
             }
 
+            // Centred in its own reserved band, so the only way it can touch the buttons above
+            // or the cards below is if `SummaryRow` stops being the sum of its own parts.
+            // Written as that sum rather than as a figure for exactly that reason — a position
+            // typed as a number is a position that survives the band being retuned.
+            //
+            // The box is centre-pivoted (`UIKit.Box` always is, 44d), so this is the middle of
+            // the line and the gap above it has to be counted in: the band's top edge is the
+            // tab row's bottom, then `SummaryGap`, then half the line.
             _summary = UIKit.Shrinkable(
-                UIKit.Titled("Summary", Safe, string.Empty, 26,
-                             new Color(1f, .96f, .88f, .74f), TextAnchor.MiddleCenter,
-                             new Vector2(880f, 34f), new Vector2(.5f, 1f),
-                             new Vector2(0f, -HeaderHeight - TabRow + 4f), 3f, 0f), 17);
+                UIKit.Titled("Summary", Safe, string.Empty, 30,
+                             new Color(1f, .96f, .88f, .86f), TextAnchor.MiddleCenter,
+                             new Vector2(880f, SummaryH), new Vector2(.5f, 1f),
+                             new Vector2(0f, -(HeaderHeight + TabRow + SummaryGap + SummaryH * .5f)),
+                             3f, 0f), 20);
 
             PaintTabs();
         }
@@ -571,13 +625,81 @@ namespace GlimmerGrove
         {
             _viewport = UIKit.Node("Viewport", Safe);
             _viewport.offsetMin = new Vector2(0f, NavBar.Height + RestoreRow);
-            _viewport.offsetMax = new Vector2(0f, -HeaderHeight - TabRow - 44f);
+            _viewport.offsetMax = new Vector2(0f, -HeaderHeight - TabRow - SummaryRow);
 
             _grid = GridView.Attach(_viewport, Columns, CellW, CellH,
                                     parent => new ShopCell(this, parent));
 
+            // The centred sentence for a shelf with nothing on it.
+            //
+            // **A sibling of the viewport rather than a child of it**, which is the difference
+            // between a message and a row: the viewport is a `ScrollRect` whose content the
+            // grid owns and recycles, so anything parented inside it either scrolls away or is
+            // rebound out of existence the next time the shelf changes.
+            //
+            // It cannot overlap the cards, because it is only ever written to when there are
+            // none (`PaintNews`), and it cannot overlap the notice bar, because its y is set
+            // from the viewport's own top edge in the one place that edge is decided. Both are
+            // structural rather than a margin somebody chose.
+            // **On a plate, because a sentence this screen is *about* is not a caption.** The
+            // boards draw their empty line straight onto the ground and get away with it: it
+            // is one of five states a list can be in and it is read in passing. This one is
+            // the entire content of the page — a shelf with nothing on it and no explanation
+            // is the blank screen invariant 18f and `AdOfferState` both exist to prevent — so
+            // it is given the furniture every other sentence in this game stands on.
+            //
+            // The ground underneath is `Scenery.Plain` (see `Build`), which is quiet enough
+            // that the plate is a choice rather than a rescue. That is worth writing down,
+            // because the render mirror drew this screen on `Scenery.Room` — a painted forest
+            // the shop has not stood on — for as long as it has existed, and a plate argued
+            // for against *that* picture would have been an argument about a screen the game
+            // does not draw. Fixed in `render_shop.py` in the same change (44d).
+            _emptyPlate = UIKit.Img("EmptyPlate", Safe, Art.Round(24),
+                                    new Color(.05f, .09f, .18f, .86f),
+                                    new Vector2(EmptyBoxW, EmptyBoxH), new Vector2(.5f, 1f),
+                                    new Vector2(0f, EmptyY(_viewport.offsetMax.y)));
+
+            var emptyEdge = UIKit.Img("Edge", _emptyPlate.transform, Art.RoundOutline(24, 2.5f),
+                                      Pal.A(Pal.Sun, .40f));
+            UIKit.StretchTo((RectTransform)emptyEdge.transform, 0, 0, 0, 0);
+
+            // Centred in its own plate, which is the arrangement with no pivot arithmetic in
+            // it at all: `UIKit.Box` always pivots at centre (44d), so a `MiddleCenter` label
+            // filling a centre-pivoted plate lands where the plate is and nowhere else. The
+            // same sentence anchored `UpperCenter` against a drop would start half a box high
+            // — the sign error that put the update wall's line through its own mark (49h).
+            _empty = UIKit.Shrinkable(
+                UIKit.Titled("Empty", _emptyPlate.transform, string.Empty, 30,
+                             Pal.A(Pal.Cream, .94f), TextAnchor.MiddleCenter,
+                             new Vector2(EmptyBoxW - 60f, EmptyBoxH - 28f),
+                             new Vector2(.5f, .5f), Vector2.zero, 3f, 0f, wrap: true), 19);
+
+            _emptyPlate.gameObject.SetActive(false);
+
             BuildRestore();
         }
+
+        /// <summary>
+        /// How far under the top of the shelf the empty sentence's plate begins. Far enough
+        /// not to read as a caption hanging off the tab row, and nowhere near far enough to be
+        /// mistaken for centred in the page — a message a player has to hunt for is the fault
+        /// it exists to fix.
+        /// </summary>
+        const float EmptyDrop = 120f;
+
+        /// <summary>
+        /// The plate the sentence stands on. Deep enough for three lines of a translation at
+        /// the floor size, because <c>UIKit.Shrinkable</c> truncates what will not fit and
+        /// does it silently (invariant 19n).
+        /// </summary>
+        const float EmptyBoxW = 880f, EmptyBoxH = 140f;
+
+        /// <summary>
+        /// Where the empty sentence's plate is anchored, given the top edge of the shelf.
+        /// Half a plate, because <c>UIKit.Box</c> pivots at centre and the drop is measured to
+        /// the plate's top edge.
+        /// </summary>
+        static float EmptyY(float shelfTop) => shelfTop - EmptyDrop - EmptyBoxH * .5f;
 
         const float RestoreRow = 92f;
 
@@ -703,7 +825,7 @@ namespace GlimmerGrove
             }
 
             PaintTabs();
-            PaintSummary();
+            PaintNews();
             PaintNotice();
 
             _grid.Show(ShelfRows());
@@ -732,7 +854,7 @@ namespace GlimmerGrove
             else _grid.Refresh();
 
             PaintTabs();
-            PaintSummary();
+            PaintNews();
 
             // The three balance pills are deliberately not written here. They are watched by
             // `WalletWatch`, which repaints through the registry rather than onto the labels —
@@ -749,57 +871,104 @@ namespace GlimmerGrove
         /// shop that cannot reach the store and a shop that is simply still loading look
         /// identical from a blank card, and only one of them is worth waiting for.
         /// </summary>
-        void PaintSummary()
+        /// <summary>
+        /// What this screen has to say about the store as a whole, or nothing.
+        ///
+        /// <para>
+        /// **Silent unless it has news, which is what "remove the captions" means without also
+        /// removing the reporting.** It used to name the shelf on every shelf — a caption
+        /// repeating the word already written on the tab above it — and the tabs now carry
+        /// their own names, so the routine cases have nothing to say. What is left are the
+        /// states a player genuinely cannot work out from the cards: the ways the store itself
+        /// can be unreachable. A shop that cannot say "we cannot reach the store" is a shop
+        /// whose buttons look broken.
+        /// </para>
+        /// <para>
+        /// It answers the sentence and not where it is drawn, because there are two places it
+        /// can go and only one rule for choosing between them. See <see cref="PaintNews"/>.
+        /// </para>
+        /// </summary>
+        (string text, Color colour) StoreNews()
         {
-            if (!_summary) return;
-
-            // **The line is silent unless it has news, which is what "remove the captions"
-            // means without also removing the reporting.** It used to name the shelf on every
-            // shelf — a caption repeating the word already written on the tab above it — and
-            // the tabs now carry their own names, so the routine cases have nothing to say.
-            // What is left are the four states a player genuinely cannot work out from the
-            // cards: the refill this account's containers are measured against, and the three
-            // ways the store itself can be unreachable. A shop that cannot say "we cannot
-            // reach the store" is a shop whose buttons look broken.
-            _summary.text = string.Empty;
-
             // The supplies shelf used to answer with the refill its containers are measured
             // against. It says nothing now: it was the last of the captions and the cards do
-            // carry their own numbers. The line is kept for the three ways the store itself can
-            // be unreachable, which is the only thing here a player cannot work out from a card.
-            if (OnSupplies) return;
+            // carry their own numbers. Its money half is the heart containers, and when the
+            // store has not answered they are simply not on the shelf — so there is never a
+            // dead card here for a sentence to have to explain.
+            if (OnSupplies) return (string.Empty, Pal.Cream);
 
             // The kit shelf never asks the store anything, so it must never be labelled with
             // the store's state: "we cannot reach the shop" over a page of cards that work is
-            // the sentence that teaches somebody the screen is broken. It now says nothing at
-            // all, which is the same rule with nothing left to say.
-            if (OnUtilities) return;
+            // the sentence that teaches somebody the screen is broken. It says nothing at all,
+            // which is the same rule with nothing left to say.
+            if (OnUtilities) return (string.Empty, Pal.Cream);
 
             switch (StoreService.Status)
             {
                 case StoreStatus.Unavailable:
-                    _summary.text = Loc.Get("ui.shop.unavailable");
-                    _summary.color = Pal.A(Pal.Cream, .60f);
-                    break;
+                    return (Loc.Get("ui.shop.unavailable"), Pal.A(Pal.Cream, .60f));
 
                 case StoreStatus.Connecting:
-                    _summary.text = Loc.Get("ui.shop.connecting");
-                    _summary.color = Pal.A(Pal.Aqua, .90f);
-                    break;
+                    return (Loc.Get("ui.shop.connecting"), Pal.A(Pal.Aqua, .90f));
 
                 case StoreStatus.Offline:
-                    _summary.text = Loc.Get("ui.shop.offline");
-                    _summary.color = Pal.A(Pal.Sun, .90f);
-                    break;
+                    // **Two sentences, because the player can do something about one of them.**
+                    // The store refuses to connect for a phone in a tunnel and for a store
+                    // having a bad afternoon, and `StoreStatus` cannot tell them apart — the
+                    // SDK reports one failure either way. "The store cannot be reached right
+                    // now" is true of both and actionable for neither; a player with no signal
+                    // is owed the half they can fix. The radio is read only *after* the connect
+                    // has already failed, which is the one thing `Net` may be used for.
+                    return (Loc.Get(Net.Offline ? "ui.shop.no_connection" : "ui.shop.offline"),
+                            Pal.A(Pal.Sun, .90f));
 
                 default:
                     // A purchase the server has not finished with is the one thing here worth
                     // interrupting for; a shelf that is simply working says nothing.
-                    if (!StoreService.HasUnredeemed) break;
-                    _summary.text = Loc.Get("ui.shop.awaiting");
-                    _summary.color = Pal.A(Pal.Sun, .95f);
-                    break;
+                    if (!StoreService.HasUnredeemed) return (string.Empty, Pal.Cream);
+                    return (Loc.Get("ui.shop.awaiting"), Pal.A(Pal.Sun, .95f));
             }
+        }
+
+        /// <summary>
+        /// Draws <see cref="StoreNews"/> in whichever of its two places is right, and blanks
+        /// the other.
+        ///
+        /// <para>
+        /// <b>One sentence, two places, one rule — never both.</b> A shelf with cards on it
+        /// carries the news in the thin line under the tabs, where it is a footnote to a page
+        /// that is working. A shelf with <em>nothing</em> on it is a blank page, and a blank
+        /// page is itself the question the player is asking, so the answer belongs in the
+        /// middle of it at a size somebody will read. Two labels holding one sentence at once
+        /// is how a screen comes to look like it is repeating itself.
+        /// </para>
+        /// <para>
+        /// <b>Nothing on it means nothing, including the free card.</b> The coins and hearts
+        /// shelves each stand a rewarded video in their first spot and it is drawn live
+        /// whatever the network is doing (invariant 18g) — so those shelves are not empty when
+        /// the store is unreachable, they are a shelf with one card on it, and a banner across
+        /// the middle of them would be drawn straight over it. <see cref="ShelfRows"/> counts
+        /// that card, which is exactly why this asks it rather than counting products.
+        /// </para>
+        /// </summary>
+        void PaintNews()
+        {
+            var (text, colour) = StoreNews();
+            bool centre = text.Length > 0 && ShelfRows() == 0;
+
+            if (_summary)
+            {
+                _summary.text = centre ? string.Empty : text;
+                _summary.color = colour;
+            }
+
+            if (_empty) _empty.text = centre ? text : string.Empty;
+
+            // The plate goes with the sentence rather than standing empty, which is the whole
+            // of why it is hidden rather than merely blanked: a dark slab across a working
+            // shelf reads as a card that failed to load.
+            if (_emptyPlate && _emptyPlate.gameObject.activeSelf != centre)
+                _emptyPlate.gameObject.SetActive(centre);
         }
 
         void PaintTabs()

@@ -48,6 +48,9 @@ ROW_H = 168.0
 ROW_GAP = 14.0
 WIDTH = 1000.0
 
+# `TasksScreen`'s own `TextW`, and the hint box it builds inside it.
+HINT_W, HINT_H = 520.0, 30.0
+
 # TasksScreen.BuildLadder — the pack, sharing HomeScreen.BuildChestRow's shape
 CHEST_TALL, CHEST_SHORT = 196.0, 136.0
 CHEST_DIP, CHEST_FLOOR, CHEST_OVERLAP = 20.0, -70.0, -.05
@@ -231,9 +234,19 @@ def bar(sheet, cx, cy, width, fill01):
 
 
 def row_card(sheet, y, task, state):
-    """One task row. `state` is 'counting', 'ready' or 'claimed'."""
+    """One task row.
+
+    `state` is 'counting', 'ready', 'held' or 'claimed'.
+
+    'held' is finished and not yet claimable: the chest is rolled from the account id so the
+    server can recompute it, and before the first sign-in there is nothing honest to open
+    (`TaskLedger.CanClaim`). It carries the sentence and **not** the light, because a light
+    is the page asking for a tap it is about to answer with an apology - see
+    `TasksScreen.Paint`, where the same rule decides the streak board's halo.
+    """
     cy = y + ROW_H / 2
     ready = state == "ready"
+    held = state == "held"
 
     if ready:
         # `TasksScreen.Shine` — the pool, drawn under every card, at the top of its swell
@@ -270,9 +283,23 @@ def row_card(sheet, y, task, state):
     bar(sheet, text_x + track / 2, cy + 22, track, done / float(task["target"]))
     K.text(sheet, "%d / %d" % (done, task["target"]), text_x + track + 12, cy + 22, 24, anchor="l")
 
-    hint = txt("ui.tasks.tap_to_claim") if ready else txt("ui.tasks.claimed") if state == "claimed" else ""
+    hint = (txt("ui.tasks.tap_to_claim") if ready
+            else txt("ui.chest.needs_connection") if held
+            else txt("ui.tasks.claimed") if state == "claimed" else "")
     if hint:
-        K.text(sheet, hint, text_x, cy + 56, 22, fill=K.GOLD if ready else (255, 243, 220), outline=0)
+        # `TasksScreen` builds this as a **MiddleLeft** `Shrinkable` in a 520x30 box
+        # (`TextW`), so it runs rightwards from the text column and shrinks to 13 rather
+        # than spilling. Drawn centred here it ran *leftwards off the card* - which looked
+        # like a copy fault the moment a longer sentence arrived and was a mirror fault all
+        # along (44d). `shrunk_left` is the shape that matches, and it returns the size it
+        # settled on: "13 against a floor of 13" is the tell that a string has outgrown the
+        # column and `UIKit.Shrinkable` is about to truncate it silently (19n).
+        px = K.shrunk_left(sheet, hint, text_x, cy + 56 - HINT_H / 2, HINT_W, HINT_H, 22, 13,
+                           fill=K.GOLD if ready else K.SUN if held else (255, 243, 220),
+                           outline=0)
+        if px <= 13:
+            print("  hint '%s' settled at %dpx against a floor of 13 - it has outgrown the "
+                  "column" % (hint, px))
 
     right = W / 2 + WIDTH / 2
     tier = task["tier"]
@@ -295,7 +322,35 @@ def heading(sheet, y, period):
     return y + HEADING_H
 
 
-def page():
+
+
+# `ConnectBanner` - the standing plate on an account that has never been online, drawn under
+# the chest box here and under the pass on the season page. Its height decides where the list
+# below starts, so a mirror that skipped it would draw a page nobody with a fresh install sees.
+CONNECT_H, CONNECT_GAP = 104.0, 14.0
+
+
+def connect_banner(sheet, y, width):
+    """`ConnectBanner.Build` - amber plate, key, one wrapped sentence."""
+    cy = y + CONNECT_H / 2
+    K.paste(sheet, K.skin("Hud/plate_orange", width, CONNECT_H), W / 2, cy)
+
+    left = W / 2 - width / 2
+    K.paste(sheet, K.glow(200, 2.0, K.SUN, .26), left + 92, cy)
+
+    mark = Image.open(K.UI / "ic_key.png").convert("RGBA")
+    K.paste(sheet, K.tint(K.fit(mark, (64, 64)), K.CREAM), left + 92, cy)
+
+    text_w = width - 184
+    px = K.shrunk_left(sheet, txt("ui.chest.connect_once"), left + 160,
+                       cy - (CONNECT_H - 24) / 2, text_w, CONNECT_H - 24, 26, 17,
+                       fill=K.CREAM, outline=3)
+    print("  connect banner: settled at %dpx against a floor of 17" % px)
+
+    return y + CONNECT_H + CONNECT_GAP
+
+
+def page(offline=False):
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
     K.plain(sheet)
     K.rail(sheet, top=True)
@@ -303,12 +358,15 @@ def page():
     y = 22.0
     y = header(sheet, y)
     y = ladder(sheet, y)
+    if offline:
+        y = connect_banner(sheet, y, WIDTH)
 
     y += 8
-    states = ["ready", "counting", "claimed"]
+    # Four of the states a row can be in, so one page shows every one of them.
+    states = ["ready", "counting", "claimed", "held"]
     for period in ("daily", "weekly"):
         y = heading(sheet, y, period)
-        for i, task in enumerate(TASKS[period][:3]):
+        for i, task in enumerate(TASKS[period][:len(states)]):
             row_card(sheet, y, task, states[i])
             y += ROW_H + ROW_GAP
         y += 18
@@ -440,11 +498,13 @@ def main():
     ap.add_argument("--odds", nargs="?", const="royal", default=None,
                     help="the panel a chest on the ladder opens (wood/silver/gold/royal)")
     ap.add_argument("--contact", action="store_true", help="the page and all four panels")
+    ap.add_argument("--offline", action="store_true",
+                    help="an account that has never been online: the connect-once banner")
     ap.add_argument("--out", type=Path, default=Path("tasks.png"))
     args = ap.parse_args()
 
     if args.contact:
-        shots = [page()] + [odds_shot(t["id"]) for t in TASKS["tiers"]]
+        shots = [page(args.offline)] + [odds_shot(t["id"]) for t in TASKS["tiers"]]
         cell = 540
         sheet = Image.new("RGB", (cell * len(shots), int(cell * H / W)), K.GROUND)
         for i, s in enumerate(shots):
@@ -455,7 +515,7 @@ def main():
         print("  %s panel %.0f tall (tallest a centred panel may be: %.0f)"
               % (args.odds, odds_height(args.odds), TALLEST))
     else:
-        out = page()
+        out = page(args.offline)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)

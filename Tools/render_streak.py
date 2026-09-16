@@ -6,7 +6,7 @@
     python Tools/render_streak.py --state none    # a player who has never held one
     python Tools/render_streak.py --state shield  # a protected streak, the offer row bought
     python Tools/render_streak.py --state week2   # the second lap, so the board is nights 8-14
-    python Tools/render_streak.py --contact       # all five side by side
+    python Tools/render_streak.py --contact       # all six side by side
 
 **Why this exists.** Every question this page raises is a picture. Is the count the hero, or
 is the board? Is a chest night told apart from a credit night at a tile's width? Does the
@@ -300,9 +300,18 @@ def aura(sheet, cx, cy, size):
 
 
 def row(sheet, cx, cy, night, rung, state, days):
-    """One night's row. `state` is 'kept', 'waiting', 'lit', 'tonight' or 'ahead'."""
+    """One night's row.
+
+    `state` is 'kept', 'waiting', 'lit', 'blocked', 'tonight' or 'ahead'.
+
+    'blocked' is a night that is owed and cannot be handed over yet: a rung paying a
+    chest needs an account id to roll it against, so before the first sign-in there is
+    nothing honest to open (`DailyStreak.CanClaimChests`). It draws no key and no light
+    and answers in the pill, which is what the screen does - see `StreakScreen.Paint`.
+    """
     lit = state == "lit"
     kept = state == "kept"
+    blocked = state == "blocked"
     waiting = state in ("lit", "waiting")
 
     if state == "ahead":
@@ -367,7 +376,9 @@ def row(sheet, cx, cy, night, rung, state, days):
     else:
         bx = cx + WIDTH / 2 - 130
         away = night - days
-        if state == "tonight":
+        if blocked:
+            words, fill = txt("ui.streak.needs_connection"), K.SUN
+        elif state == "tonight":
             words, fill = txt("ui.streak.tonight"), K.AQUA
         elif away <= 1:
             words, fill = txt("ui.streak.in_one"), (255, 243, 220)
@@ -405,7 +416,8 @@ def board(sheet, top, first, states, days):
     # night one, so the mirror has to scroll the same way or it draws a page nobody sees.
     offset = 0.0
     if tall > band:
-        want = next((i for i, st in enumerate(states["rows"]) if st == "lit"), -1)
+        want = next((i for i, st in enumerate(states["rows"])
+                     if st in ("lit", "blocked")), -1)
         if want >= 0:
             offset = max(0.0, min(want * (ROW_H + ROW_GAP) - (band - ROW_H) * .5, tall - band))
 
@@ -430,7 +442,7 @@ def footer(sheet):
 
 # ------------------------------------------------------------------- the states
 def shot(state):
-    """One page. The states are the five a player can actually be in."""
+    """One page. The states are the six a player can actually be in."""
     n = len(RUNGS)
 
     if state == "none":
@@ -442,6 +454,12 @@ def shot(state):
     elif state == "shield":
         days, first, lit, kept, cta, held, line, colour = 9, 8, -1, 2, False, True, \
             txt("ui.streak.shield_left_many", 4), K.MINT
+    elif state == "offline":
+        # A chest night waiting on an account id. Rung index 2 is the silver chest, so
+        # this is the pending night being a chest rather than a figure - which is the
+        # only way the state is reachable at all.
+        days, first, lit, kept, cta, held, line, colour = 2, 1, 2, 2, False, False, \
+            txt("ui.streak.waiting_one"), K.GOLD
     elif state == "week2":
         days, first, lit, kept, cta, held, line, colour = 11, 8, 3, 3, False, False, \
             txt("ui.streak.waiting_one"), K.GOLD
@@ -453,7 +471,7 @@ def shot(state):
     for i in range(n):
         night = first + i
         if i == lit:
-            rows.append("lit")
+            rows.append("blocked" if state == "offline" else "lit")
         elif night <= days and i < kept:
             rows.append("kept")
         elif night == days + 1:
@@ -479,13 +497,13 @@ def shot(state):
     return sheet.convert("RGB")
 
 
-STATES = ("live", "risk", "none", "shield", "week2")
+STATES = ("live", "risk", "none", "shield", "week2", "offline")
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--state", choices=STATES, default="live")
-    ap.add_argument("--contact", action="store_true", help="all five states side by side")
+    ap.add_argument("--contact", action="store_true", help="all six states side by side")
     ap.add_argument("--out", type=Path, default=Path("streak.png"))
     args = ap.parse_args()
 
