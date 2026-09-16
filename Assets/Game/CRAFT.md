@@ -939,6 +939,41 @@ say.
   way for one draft; the owner's verdict was one line, and there was nothing else on the machine to
   swap in — see **Picking a boss body when the packs are empty** below.
 
+**Surveying the packs before concluding there is nothing left (37db).** Everything below about
+baking a cast is history: the 3D cast was withdrawn, and the reason it was ever reached for is that
+this project had *written down* that every character pack here except the insects was drawn
+side-view. Four of them are head-on, which is twenty bodies nobody had opened. The survey is a
+command now — **`python Tools/make_siege_art.py --survey`**, which draws one frame of every body in
+every character pack on the machine and prints, per pack, **how tall its shortest body really is
+and what upscale reaching `CAST` would take**.
+
+- **The shortest body decides, not the tallest.** Every body in a cast is cut to the same height, so
+  the worst upscale in the pack is the one that has to be affordable. The first pass of this sheet
+  quoted the tallest and made a pack needing 3.5x read as needing 1.8x.
+- **Deshadow before measuring.** A pack that bakes an ellipse under its bodies inflates every frame,
+  so a raw bounding box flatters the same number again.
+- **Facing is asked before sharpness, and getting that order wrong cost a second cast.** The
+  survey's own numbers said the true top-down pack (ten neighbourhood zombies, the view this board
+  actually has) is drawn at 51–98 pixels a body — 2.5–3.4x to reach `CAST` where every other cast
+  is cut down or nearly so — so it was passed over for a high-resolution pack drawn in
+  three-quarter and profile. The owner withdrew that in one line: *they look sideway, my other
+  characters look downwards as they walk.*
+- **And then check what the pack was exported *from*.** Those 51 pixels were an export decision,
+  not the art: the same zip holds `Ai/*.ai` (Illustrator files are PDF streams, so PyMuPDF opens
+  them) and a Spine rig. Re-baked from the vectors at the height the board draws them, the cast's
+  interior line work goes from **8.0** to **22–27** against the skeletons' 17.1 — sharper than
+  the sheet-cut casts rather than softer. `Tools/spine_bake.py`, proved against the pack's own
+  exported frames with `--verify`. **An unsharp mask recovers a fifth of that gap and no more**,
+  which is the tell that the detail was never in the PNG. <br>**Every cast this game ships is square-on**: an
+  insect from directly above, a blob and a skeleton head-on, each mirror-symmetric about its own
+  middle. It is the most visible property a cast has and the first three all had it by luck of the
+  packs, so nobody had written it down. **A flat cartoon body inside a heavy dark outline carries
+  an upscale; nothing recovers a body facing the wrong way.** The zombies are the fourth chapter's
+  cast.
+- **Watch what a body is carrying above its head.** The view sizes a body by its *frame*, so four
+  of those ten — balloons, propeller beanies — stand 98 pixels of which barely half is creature,
+  and would walk down the hill at six tenths of the size of their own wave. Six were used.
+
 **Picking a boss body when the packs are empty (37bx).** Five 2D boss bodies exist on this machine and
 three chapters have taken one each; the character packs beyond them hold eighty-odd small cartoon blobs
 and ten neighbourhood zombies, and the only unused bodies in the two packs the bosses come from are two
@@ -951,18 +986,24 @@ more than the body.
   reads as a *friendly RPG mascot*. **Projecting sideways is necessary and is not sufficient**, and the
   second half is only ever visible on the board.
 - **A bake and a cut pack frame a body completely differently.** These 2D packs leave about a third of
-  the frame empty (their bodies fill 0.65–0.69 of it); `SiegeCastBake` trims to its own alpha and fills
-  0.93. The view sizes a body by its *frame*, so the same `TallOf` draws a baked body half again as
-  tall. **Measure a new reel's fill against the set before trusting that number.**
+  the frame empty (their bodies fill 0.65–0.69 of it); a render trimmed to its own alpha fills 0.93.
+  The view sizes a body by its *frame*, so the same `TallOf` draws a baked body half again as tall —
+  which is why the three baked bosses carried *smaller* numbers than the five around them, and why
+  withdrawing the bake put all eight back on one ladder. **Measure a new reel's fill against the set
+  before trusting that number.**
 - **And a slim body needs a bigger number than a wide one.** At a drawn height that already made it the
   tallest of the six, a robed humanoid still read as slighter than the barrels with arms beside it. Mass
   is not height, and only the board says which one you have.
 
-**Baking a cast from 3D (37at).** The market has no more top-down casts and the reason is structural:
-"top-down" in an asset store nearly always means a three-quarter RPG view. So a second cast is rendered
-out of rigged CC0 models at this board's own camera — the oldest technique in the genre, and one step
-over from what the VFX bake already does. What ships is PNG reels; no model, rig or animator reaches a
-build, and the models live under an `Editor` folder, which Unity excludes from players.
+**Baking a cast from 3D — *withdrawn*, and kept for what it taught (37at, 37db).** The owner withdrew
+both baked casts and all three baked bosses; `SiegeCastBake`, its models and its reels are off disk.
+The premise was that the market has no more top-down casts, which is true, and that there was nothing
+else on this machine to cast a chapter from, which was not — see the survey above.
+
+**Nothing below is a live recipe.** It is kept because most of it is not about baking: the framing
+rules, the keyline, the rim light and the "pixel churn is not legibility" finding all apply to any
+render this project ever takes, and the day somebody reaches for a bake again this is the list of
+what it costs.
 
 - **Edit mode does not skin.** `SampleAnimation` poses the bone **transforms**, and skinning is
   dispatched by the player loop, which is not running — so a `Camera.Render()` driven from a menu item
@@ -1203,20 +1244,15 @@ copy nothing keeps in step.
   it is wide; a band that had understated the header by a whole pill; and the whole first cut of the
   screen, which was text and loose icons on a flat ground and was rejected on sight (43b).
 - `Glimmer Grove ▸ Art ▸ Bake Siege Projectiles` / `Bake Turret Projectiles` / `Bake Elemental
-  Projectiles` / `Bake Storm Strike` / `Bake Siege Cast (3D)`, each with a `Verify` that re-bakes and
-  compares within a tolerance (two GPUs are not obliged to rasterise a triangle identically), and
-  `Survey Projectile Pack` / `Survey Siege Cast Angles (3D)`, which are how one of these is *chosen* —
-  their names say a family and their thumbnails are grey cubes. **Re-run `Addressables ▸ Sync All
-  Assets` after a bake, and save**: the importer hook does not fire on files a tool wrote while the
-  Editor was busy.
-  <br>**Two bars on a baked body, and they ask different questions.** `Moves` asks whether the reel
-  differs from a photograph — the guard against a clip that bound to nothing, which renders twelve
-  identical frames of a bind pose. `Strides` asks whether a *walk* reads as one, and it exists
-  because the first question cannot see the second: the bonecaller's `Walking_A` changed 78% of its
-  own pixels and still slid, because a robe swaying on the spot moves every pixel it owns while the
-  feet stay put. The measurement is **vertical** — a foot-locked cycle has to raise and drop the
-  pelvis, and that projects at any pitch, where a stride's forward travel is along the body's own
-  occluded axis. Against its own drawn height, every running body in this cast bobs 3.9–7.7% and
-  swings its feet 16–36%; the walk that shipped bobbed **0.80%**. The bar is two per cent, and it
-  is still only the difference between a gait and a sway — whether a gait is any *good* needs
-  `render_siege.py --warlord walk` and somebody looking at it (37cu).
+  Projectiles` / `Bake Storm Strike`, each with a `Verify` that re-bakes and compares within a
+  tolerance (two GPUs are not obliged to rasterise a triangle identically), and `Survey Projectile
+  Pack`, which is how one of these is *chosen* — their names say a family and their thumbnails are
+  grey cubes. **Re-run `Addressables ▸ Sync All Assets` after a bake, and save**: the importer hook
+  does not fire on files a tool wrote while the Editor was busy.
+  <br>**The cast bake and its two bars are gone with it** (37db). They are worth remembering as a
+  pair, because the second exists only because the first cannot see what it is about: `Moves` asked
+  whether a reel differs from a photograph, and `Strides` asked whether a *walk* reads as one — a
+  robe swaying on the spot changed 78% of its own pixels and still slid. The measurement that
+  separates them is **vertical**, because a foot-locked cycle raises and drops the pelvis and that
+  projects at any pitch, where a stride's forward travel is along the body's own occluded axis.
+  **Any render of a walking body wants that question asked**, whatever it was rendered from.

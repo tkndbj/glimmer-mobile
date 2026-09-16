@@ -291,8 +291,29 @@ namespace GlimmerGrove.Tests
             // to the reader: two red tests on the one guard that stops the client and the
             // server paying different amounts (invariant 9a), which is exactly the guard
             // nobody can afford to be in the habit of ignoring.
+            //
+            // **And it happened again**, with the tasks and notifications blocks, for the same
+            // reason and with the same cost: both are Editor-only fixtures (they read JSON
+            // through `JsonUtility`), so the offline runner skips them and nobody sees the red
+            // until somebody opens the Editor - invariant 29e, which is precisely about a gate
+            // nobody runs on the way past. The list below is the price of the exact-sentence
+            // match, and the match is what keeps a *malformed* block failing; what changed is
+            // that the assertion now tells the next person which of the two they are looking at.
             var unexpected = problems.FindAll(p => !IsAbsentBlockNote(p));
-            Assert.IsEmpty(unexpected, string.Join("; ", unexpected));
+
+            // **The message says what to do, because this has now been the failure twice.** A
+            // block added to the reader emits an absent-note this list has never heard of, and
+            // what that looks like is the reward vectors going red for a reason that has nothing
+            // to do with rewards - so the next reader is told the two things they need rather
+            // than left to infer them from a sentence about chest tiers.
+            Assert.IsEmpty(unexpected,
+                           "the progression reader reported something these vectors did not "
+                           + "expect.\nIf the sentence below is a *new block* saying it was "
+                           + "absent and fell back, this file simply has not been told about it: "
+                           + "add it to IsAbsentBlockNote, exactly as written, and say in a "
+                           + "comment why the vectors do not carry it.\nIf it is anything else, "
+                           + "it is a real fault in the block it names.\n\n"
+                           + string.Join("\n", unexpected));
 
             return table;
         }
@@ -315,7 +336,16 @@ namespace GlimmerGrove.Tests
             // to put out of step with the first, which is the whole reason the daily, ad and
             // streak blocks are absent too.
             || problem == "utilities block lists no items; using the built-in catalog"
-            || problem == "wards block lists no models; using the built-in roster";
+            || problem == "wards block lists no models; using the built-in roster"
+            // And the two added with the tasks page and the reminders. A task chest is pinned by
+            // `taskChestCases` in this same file and by three more copies of the generator
+            // (invariant 45c); a reminder is pinned by `NotificationTests` and by `content.py`,
+            // which errors on a kind whose derived strings do not resolve. Neither is part of
+            // the reward curve these vectors exist to hold the client and the server to.
+            || problem == "tasks block lists no chest tiers; using the built-in table"
+            || problem == "notifications block enables nothing; the built-in slate ships "
+                        + "instead. To send nothing at all, the player's own switch is the "
+                        + "control — see NotificationOptIn";
 
         static IChapterMap ChaptersFrom(VectorFile file)
         {

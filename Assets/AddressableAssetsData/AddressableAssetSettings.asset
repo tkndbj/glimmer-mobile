@@ -71,10 +71,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 47c46bda514740a4dbc05a44d4a23ac8, type: 2}
   - {fileID: 11400000, guid: 4d5a579f47b771f40be12597dc3a83b4, type: 2}
   - {fileID: 11400000, guid: 0a877d0e8dd7b05409edd6e3049d86d2, type: 2}
+  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
   - {fileID: 11400000, guid: 984a834b48cbf384482d9e2e9aebfe5d, type: 2}
   - {fileID: 11400000, guid: 82cde781aeb2b8c47a1f377b73392623, type: 2}
   - {fileID: 11400000, guid: b92e976ef28c68c42becd8a3e8622ca7, type: 2}
-  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
   - {fileID: 11400000, guid: c16506114107c604fb3ea68f212e0b4a, type: 2}
   - {fileID: 11400000, guid: eb66a2de3aecee54b8958759c2eff7bc, type: 2}
   - {fileID: 11400000, guid: 3443c775a1c727145bcd87368713f7dd, type: 2}
@@ -126,109 +126,9 @@ MonoBehaviour:
     - Art/Fx/Victory
     - Art/Ui/Coin
     - Art/Ui/Flame
-    - Art/Board/duskcap
-    - Art/Homestead/Waterfall
-    - Art/Homestead/Anim/banner_crimson
-    - Art/Homestead/Anim/banner_gold
-    - Art/Homestead/Anim/candle
-    - Art/Homestead/Anim/crystal
-    - Art/Homestead/Anim/crystal_shards
-    - Art/Homestead/Anim/flag_red
-    - Art/Homestead/Anim/lantern
-    - Art/Homestead/Anim/torch
-    - Art/Homestead/Anim/torch_low
-    - Art/Homestead/Anim/torch_tall
-    - Art/Homestead/Anim/waterfall
-    - Art/Homestead/Anim/well
-    - Art/Fx/shatter
-    - Art/Fx/fire
-    - Art/Fx/smoke
-    - Fx/Bench/Hits
-    - Fx/Bench/Muzzles
-    - Fx/Bench/Projectiles
-    - Art/Fx/Nova/boom_fire
-    - Art/Fx/Nova/boom_gold
-    - Art/Fx/Nova/boom_red
-    - Art/Fx/Nova/boom_smoke
-    - Art/Fx/Nova/boom_spark
-    - Art/Nova/bolt
-    - Art/Nova/brute
-    - Art/Nova/brute_dead
-    - Art/Nova/brute_hit
-    - Art/Nova/collector
-    - Art/Nova/drone
-    - Art/Nova/mon1
-    - Art/Nova/mon1_jump
-    - Art/Nova/mon2
-    - Art/Nova/mon2_jump
-    - Art/Nova/mon3
-    - Art/Nova/mon3_jump
-    - Art/Fx/Quarry/boom_fire
-    - Art/Fx/Quarry/boom_gold
-    - Art/Fx/Quarry/boom_red
-    - Art/Fx/Quarry/boom_smoke
-    - Art/Fx/Quarry/boom_spark
-    - Art/Quarry/bolt
-    - Art/Quarry/brute
-    - Art/Quarry/brute_dead
-    - Art/Quarry/brute_hit
-    - Art/Quarry/collector
-    - Art/Quarry/drone
-    - Art/Quarry/mon1
-    - Art/Quarry/mon1_jump
-    - Art/Quarry/mon2
-    - Art/Quarry/mon2_jump
-    - Art/Quarry/mon3
-    - Art/Quarry/mon3_jump
-    - Art/Fx/March/boom_fire
-    - Art/Fx/March/boom_gold
-    - Art/Fx/March/boom_red
-    - Art/Fx/March/boom_smoke
-    - Art/Fx/March/boom_spark
-    - Art/March/bolt
-    - Art/March/brute
-    - Art/March/brute_dead
-    - Art/March/brute_hit
-    - Art/March/collector
-    - Art/March/drone
-    - Art/March/mon1
-    - Art/March/mon1_jump
-    - Art/March/mon2
-    - Art/March/mon2_jump
-    - Art/March/mon3
-    - Art/March/mon3_jump
-    - Art/Ember/bolt
-    - Art/Ember/collector
-    - Art/Ember/mon1
-    - Art/Ember/mon1_jump
-    - Art/Ember/mon2
-    - Art/Ember/mon2_jump
-    - Art/Ember/mon3
-    - Art/Ember/mon3_jump
-    - Art/Ember/warden
-    - Art/Ember/warden_dead
-    - Art/Ember/warden_hit
-    - Art/Fx/Ember/boom_blue
-    - Art/Fx/Ember/boom_fire
-    - Art/Fx/Ember/boom_gold
-    - Art/Fx/Ember/boom_smoke
-    - Art/Fx/Ember/boom_violet
-    - Art/Fx/Kindle/flare_bloom
-    - Art/Fx/Kindle/flare_cold
-    - Art/Fx/Kindle/flare_warm
-    - Art/Kindle/mon1
-    - Art/Kindle/mon1_jump
-    - Art/Kindle/mon2
-    - Art/Kindle/mon2_jump
-    - Art/Kindle/mon3
-    - Art/Kindle/mon3_jump
-    - Art/Siege/mon1
-    - Art/Siege/mon2
     - Art/Prism/mon3
-    - Art/Siege/brute
     - Art/Fx/Prism/flare_bloom
     - Art/Prism/mon1_jump
-    - Art/Siege/mon3
     - Art/Prism/mon2
     - Art/Fx/Siege/boom_fire
     - Art/Prism/mon3_jump
@@ -237,11 +137,7 @@ MonoBehaviour:
     - Art/Fx/Siege/boom_smoke
     - Art/Fx/Prism/flare_warm
     - Art/Fx/Siege/flash
-    - Art/Siege/fire2
-    - Art/Siege/fire3
     - Art/Fx/Siege/pop
-    - Art/Siege/fire4
-    - Art/Siege/fire1
     - Art/Fx/Siege/hit_g
     - Art/Fx/Siege/muzzle_b
     - Art/Fx/Siege/muzzle_r
@@ -259,7 +155,6 @@ MonoBehaviour:
     - Art/Fx/Siege/spell_muzzle
     - Art/Siege/boss
     - Art/Siege/boss_cast
-    - Art/Siege/boss_walk
     - Art/Fx/Siege/omen
     - Art/Fx/Siege/omen_muzzle
     - Art/Fx/Siege/omen_hit
@@ -285,7 +180,6 @@ MonoBehaviour:
     - Art/Siege/fire5_y
     - Art/Siege/over
     - Art/Siege/over_cast
-    - Art/Siege/over_walk
     - Art/Fx/Siege/hex
     - Art/Fx/Siege/hex_hit
     - Art/Fx/Siege/hex_muzzle
@@ -293,10 +187,8 @@ MonoBehaviour:
     - Art/Fx/Siege/roar_muzzle
     - Art/Siege/blight
     - Art/Siege/blight_cast
-    - Art/Siege/blight_walk
     - Art/Siege/bringer
     - Art/Siege/bringer_cast
-    - Art/Siege/bringer_walk
     - Art/Siege/brute_y
     - Art/Siege/bulwark_g
     - Art/Siege/brute_g
@@ -310,19 +202,6 @@ MonoBehaviour:
     - Art/Siege/mon_g
     - Art/Siege/brute_b
     - Art/Fx/Siege/storm
-    - Art/Fx/Siege/storm_hit
-    - Art/Siege/bruteB_b
-    - Art/Siege/bruteB_g
-    - Art/Siege/bruteB_r
-    - Art/Siege/bruteB_y
-    - Art/Siege/bulwarkB_b
-    - Art/Siege/bulwarkB_g
-    - Art/Siege/bulwarkB_r
-    - Art/Siege/bulwarkB_y
-    - Art/Siege/monB_b
-    - Art/Siege/monB_g
-    - Art/Siege/monB_r
-    - Art/Siege/monB_y
     - Art/Siege/thief_b
     - Art/Siege/thief_g
     - Art/Siege/thief_r
@@ -411,63 +290,6 @@ MonoBehaviour:
     - Art/Siege/Wards/spectrum_g_fire
     - Art/Siege/Wards/spectrum_r_fire
     - Art/Siege/Wards/spectrum_y_fire
-    - Art/Fx/Siege/muzzle_spectrum
-    - Art/Fx/Siege/hit_harpoon
-    - Art/Fx/Siege/muzzle_cleaver
-    - Art/Fx/Siege/muzzle_ember
-    - Art/Fx/Siege/hit_glacier
-    - Art/Fx/Siege/shot_howitzer
-    - Art/Fx/Siege/shot_mortar
-    - Art/Fx/Siege/muzzle_lance
-    - Art/Fx/Siege/muzzle_glacier
-    - Art/Fx/Siege/shot_rime
-    - Art/Fx/Siege/hit_mortar
-    - Art/Fx/Siege/shot_lance
-    - Art/Fx/Siege/shot_harpoon
-    - Art/Fx/Siege/muzzle_pyre
-    - Art/Fx/Siege/hit_arcstorm
-    - Art/Fx/Siege/hit_apex
-    - Art/Fx/Siege/shot_siphon
-    - Art/Fx/Siege/shot_prism
-    - Art/Fx/Siege/shot_ember
-    - Art/Fx/Siege/muzzle_arcstorm
-    - Art/Fx/Siege/shot_breaker
-    - Art/Fx/Siege/muzzle_beacon
-    - Art/Fx/Siege/shot_leech
-    - Art/Fx/Siege/hit_cleaver
-    - Art/Fx/Siege/shot_cleaver
-    - Art/Fx/Siege/shot_apex
-    - Art/Fx/Siege/hit_spark
-    - Art/Fx/Siege/muzzle_siphon
-    - Art/Fx/Siege/hit_spectrum
-    - Art/Fx/Siege/shot_pyre
-    - Art/Fx/Siege/shot_arcstorm
-    - Art/Fx/Siege/hit_siphon
-    - Art/Fx/Siege/shot_spark
-    - Art/Fx/Siege/hit_pyre
-    - Art/Fx/Siege/muzzle_leech
-    - Art/Fx/Siege/muzzle_lighthouse
-    - Art/Fx/Siege/muzzle_rime
-    - Art/Fx/Siege/hit_ember
-    - Art/Fx/Siege/hit_lance
-    - Art/Fx/Siege/shot_spectrum
-    - Art/Fx/Siege/muzzle_prism
-    - Art/Fx/Siege/muzzle_apex
-    - Art/Fx/Siege/shot_beacon
-    - Art/Fx/Siege/hit_lighthouse
-    - Art/Fx/Siege/shot_glacier
-    - Art/Fx/Siege/hit_beacon
-    - Art/Fx/Siege/hit_breaker
-    - Art/Fx/Siege/hit_rime
-    - Art/Fx/Siege/muzzle_breaker
-    - Art/Fx/Siege/hit_prism
-    - Art/Fx/Siege/muzzle_mortar
-    - Art/Fx/Siege/muzzle_spark
-    - Art/Fx/Siege/muzzle_howitzer
-    - Art/Fx/Siege/hit_leech
-    - Art/Fx/Siege/muzzle_harpoon
-    - Art/Fx/Siege/hit_howitzer
-    - Art/Fx/Siege/shot_lighthouse
     - Art/Fx/Siege/shot_pyre_r
     - Art/Fx/Siege/muzzle_cleaver_g
     - Art/Fx/Siege/shot_spark_y
@@ -504,15 +326,12 @@ MonoBehaviour:
     - Art/Fx/Siege/hit_arcstorm_b
     - Art/Fx/Siege/hit_mortar_r
     - Art/Fx/Siege/muzzle_pyre_r
-    - Art/Fx/Siege/muzzle_breaker_g
     - Art/Fx/Siege/hit_lance_b
     - Art/Fx/Siege/muzzle_beacon_b
     - Art/Fx/Siege/muzzle_spectrum_r
-    - Art/Fx/Siege/shot_breaker_y
     - Art/Fx/Siege/shot_beacon_g
     - Art/Fx/Siege/shot_leech_y
     - Art/Fx/Siege/muzzle_siphon_g
-    - Art/Fx/Siege/shot_breaker_g
     - Art/Fx/Siege/shot_apex_r
     - Art/Fx/Siege/shot_howitzer_g
     - Art/Fx/Siege/hit_spark_b
@@ -558,7 +377,6 @@ MonoBehaviour:
     - Art/Fx/Siege/hit_cleaver_g
     - Art/Fx/Siege/muzzle_lance_g
     - Art/Fx/Siege/hit_glacier_r
-    - Art/Fx/Siege/shot_breaker_r
     - Art/Fx/Siege/shot_pyre_b
     - Art/Fx/Siege/hit_spectrum_g
     - Art/Fx/Siege/muzzle_lance_y
@@ -568,7 +386,6 @@ MonoBehaviour:
     - Art/Fx/Siege/hit_siphon_y
     - Art/Fx/Siege/shot_ember_r
     - Art/Fx/Siege/muzzle_rime_y
-    - Art/Fx/Siege/hit_breaker_g
     - Art/Fx/Siege/shot_arcstorm_b
     - Art/Fx/Siege/shot_spark_b
     - Art/Fx/Siege/muzzle_siphon_r
@@ -590,7 +407,6 @@ MonoBehaviour:
     - Art/Fx/Siege/muzzle_rime_r
     - Art/Fx/Siege/shot_spark_g
     - Art/Fx/Siege/hit_leech_y
-    - Art/Fx/Siege/hit_breaker_r
     - Art/Fx/Siege/hit_prism_b
     - Art/Fx/Siege/hit_arcstorm_y
     - Art/Fx/Siege/shot_pyre_y
@@ -627,10 +443,7 @@ MonoBehaviour:
     - Art/Fx/Siege/hit_lance_r
     - Art/Fx/Siege/hit_beacon_b
     - Art/Fx/Siege/muzzle_ember_r
-    - Art/Fx/Siege/hit_breaker_b
-    - Art/Fx/Siege/shot_breaker_b
     - Art/Fx/Siege/muzzle_pyre_g
-    - Art/Fx/Siege/muzzle_breaker_r
     - Art/Fx/Siege/shot_spectrum_g
     - Art/Fx/Siege/muzzle_harpoon_y
     - Art/Fx/Siege/muzzle_prism_y
@@ -644,7 +457,6 @@ MonoBehaviour:
     - Art/Fx/Siege/muzzle_howitzer_y
     - Art/Fx/Siege/muzzle_prism_r
     - Art/Fx/Siege/shot_howitzer_r
-    - Art/Fx/Siege/muzzle_breaker_y
     - Art/Fx/Siege/hit_prism_y
     - Art/Fx/Siege/shot_lighthouse_b
     - Art/Fx/Siege/shot_lance_y
@@ -687,9 +499,7 @@ MonoBehaviour:
     - Art/Fx/Siege/muzzle_beacon_y
     - Art/Fx/Siege/muzzle_mortar_g
     - Art/Fx/Siege/muzzle_arcstorm_g
-    - Art/Fx/Siege/muzzle_breaker_b
     - Art/Fx/Siege/shot_siphon_r
-    - Art/Fx/Siege/hit_breaker_y
     - Art/Fx/Siege/shot_ember_g
     - Art/Fx/Siege/muzzle_cleaver_r
     - Art/Fx/Siege/muzzle_spark_g
@@ -708,18 +518,6 @@ MonoBehaviour:
     - Art/Fx/Siege/shot_bolt_g
     - Art/Fx/Siege/shot_bolt_r
     - Art/Fx/Siege/shot_bolt_y
-    - Art/Siege/kayBrute_b
-    - Art/Siege/kayBrute_g
-    - Art/Siege/kayBrute_r
-    - Art/Siege/kayBrute_y
-    - Art/Siege/kayBulwark_b
-    - Art/Siege/kayBulwark_g
-    - Art/Siege/kayBulwark_r
-    - Art/Siege/kayBulwark_y
-    - Art/Siege/kayMon_b
-    - Art/Siege/kayMon_g
-    - Art/Siege/kayMon_r
-    - Art/Siege/kayMon_y
     - Art/Homestead/target
     - Art/Homestead/house_large_red
     - Art/Homestead/mine
@@ -749,7 +547,6 @@ MonoBehaviour:
     - Art/Homestead/watchtower
     - Art/Homestead/stone_pile
     - Art/Siege/broodBrute_y
-    - Art/Homestead/barracks
     - Art/Homestead/crate_empty
     - Art/Homestead/crate_wares
     - Art/Homestead/village_well
@@ -794,7 +591,6 @@ MonoBehaviour:
     - Art/Homestead/sawmill
     - Art/Homestead/pennant_blue
     - Art/Homestead/stage_tiered
-    - Art/Homestead/citadel
     - Art/Homestead/home_barracks
     - Art/Homestead/home_farmhouse
     - Art/Homestead/home_cottage
@@ -830,7 +626,6 @@ MonoBehaviour:
     - Art/Siege/caller_cast
     - Art/Siege/maw
     - Art/Siege/maw_cast
-    - Art/Siege/caller_walk
     - Art/Fx/Siege/charm_blast_b
     - Art/Fx/Siege/charm_blast_g
     - Art/Fx/Siege/charm_blast_r
@@ -841,54 +636,40 @@ MonoBehaviour:
     - Art/Chests/silver
     - Art/Chests/gold
     - Art/Siege/laser
-    - Art/Siege/kayMon_r_swing
-    - Art/Siege/kayBrute_y_swing
-    - Art/Siege/ironBrute_g_swing
-    - Art/Siege/kayBrute_r_swing
-    - Art/Siege/ironMon_g_swing
-    - Art/Siege/snare_walk
-    - Art/Siege/ironBulwark_b
     - Art/Siege/clad
-    - Art/Siege/ironBulwark_y_swing
-    - Art/Siege/ironMon_y_swing
-    - Art/Siege/clad_walk
-    - Art/Siege/ironBulwark_g
-    - Art/Siege/kayBulwark_g_swing
-    - Art/Siege/ironBrute_b_swing
-    - Art/Siege/kayBulwark_y_swing
-    - Art/Siege/ironBrute_g
-    - Art/Siege/ironBrute_y
-    - Art/Siege/ironMon_y
     - Art/Siege/clad_cast
-    - Art/Siege/ironBrute_r_swing
-    - Art/Siege/ironBulwark_r
-    - Art/Siege/ironMon_r
     - Art/Siege/snare_cast
-    - Art/Siege/ironBulwark_y
-    - Art/Siege/ironBulwark_r_swing
-    - Art/Siege/ironMon_b_swing
-    - Art/Siege/ironBulwark_g_swing
     - Art/Siege/snare
-    - Art/Siege/ironBulwark_b_swing
-    - Art/Siege/ironBrute_r
-    - Art/Siege/kayBulwark_b_swing
-    - Art/Siege/kayMon_g_swing
-    - Art/Siege/kayMon_b_swing
-    - Art/Siege/ironBrute_b
-    - Art/Siege/ironMon_r_swing
-    - Art/Siege/kayMon_y_swing
-    - Art/Siege/ironMon_g
-    - Art/Siege/ironBrute_y_swing
-    - Art/Siege/kayBulwark_r_swing
-    - Art/Siege/ironMon_b
-    - Art/Siege/kayBrute_b_swing
-    - Art/Siege/kayBrute_g_swing
     - Art/Fx/Siege/quake_hit
     - Art/Fx/Siege/snare_muzzle
     - Art/Fx/Siege/snare_hit
     - Art/Fx/Siege/snare
     - Art/Fx/Siege/quake
     - Art/Fx/Siege/quake_muzzle
+    - Art/Siege/rabbleBrute_b
+    - Art/Siege/rabbleBrute_b_swing
+    - Art/Siege/rabbleBrute_g
+    - Art/Siege/rabbleBrute_g_swing
+    - Art/Siege/rabbleBrute_r
+    - Art/Siege/rabbleBrute_r_swing
+    - Art/Siege/rabbleBrute_y
+    - Art/Siege/rabbleBrute_y_swing
+    - Art/Siege/rabbleBulwark_b
+    - Art/Siege/rabbleBulwark_b_swing
+    - Art/Siege/rabbleBulwark_g
+    - Art/Siege/rabbleBulwark_g_swing
+    - Art/Siege/rabbleBulwark_r
+    - Art/Siege/rabbleBulwark_r_swing
+    - Art/Siege/rabbleBulwark_y
+    - Art/Siege/rabbleBulwark_y_swing
+    - Art/Siege/rabbleMon_b
+    - Art/Siege/rabbleMon_b_swing
+    - Art/Siege/rabbleMon_g
+    - Art/Siege/rabbleMon_g_swing
+    - Art/Siege/rabbleMon_r
+    - Art/Siege/rabbleMon_r_swing
+    - Art/Siege/rabbleMon_y
+    - Art/Siege/rabbleMon_y_swing
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1c550e3b8c7244948b0ae7d2fbce14c6, type: 2}

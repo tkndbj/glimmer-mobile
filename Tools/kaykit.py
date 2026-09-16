@@ -21,7 +21,7 @@ once somewhere else:
   * **One extent across every facing.** A model rendered four times and trimmed four
     times comes out at four sizes, so a piece changes size when the player turns it.
     `Extent.over` measures the union and every facing is drawn into it — which is
-    `SiegeCastBake.one_canvas`'s rule, arrived at from the same direction.
+    `make_siege_art.one_canvas`'s rule, arrived at from the same direction.
   * **Nearest-neighbour texture sampling.** These atlases are *palette grids*: flat
     blocks of colour packed a few pixels apart. Bilinear sampling across a block
     boundary invents a colour that is in neither block, which reads as a coloured

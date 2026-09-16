@@ -1779,34 +1779,22 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Gravemaw ? 3.2f
              : kind == SiegeKind.Boss ? 3.1f
              : kind == SiegeKind.Blightcaller ? 3.0f
-             // **The odd one out, and the number is about the *body* rather than the frame.**
-             // Every other row here is a reel cut from a 2D pack, where the shared canvas leaves
-             // about a third of the frame empty - measured, those five bodies fill 0.65 to 0.69 of
-             // their own frames, so a ladder of frame heights is a ladder of drawn sizes as well.
-             // A bonecaller is rendered out of 3D (`SiegeCastBake`) and trimmed to its own alpha,
-             // so it fills **0.93**: at 3.6 it would be drawn half again as tall as an overlord.
-             // 3.0 puts its body at 2.82 cells against an overlord's 2.35, which is the ladder this
-             // comment is really about - and the margin is deliberate, because it is a *slim*
-             // body among wide ones: at equal drawn height a robed humanoid has half the visual
-             // mass of a barrel with arms, and the finale has to be the biggest thing on the hill
-             // rather than merely the tallest number in this switch.
-             : kind == SiegeKind.Bonecaller ? 3.0f
 
-             // **Both baked, so both carry the bonecaller's discount and for the same reason** -
-             // a reel trimmed to its own alpha fills about 0.93 of its frame where a 2D cut fills
-             // two thirds, so the same number here draws a bigger body.
+             // **The three that stopped being baked, and putting them back on this ladder is
+             // the whole of what that cost.** They were rendered out of rigged 3D and trimmed to
+             // their own alpha, so they filled 0.93 of their frames where a 2D cut fills 0.65 to
+             // 0.69 - which meant they had to be given *smaller* numbers here than the five
+             // around them to land on a comparable body. The bake is withdrawn
+             // (`make_siege_art.BOSS_SET`), so the discount goes with it and all eight bosses
+             // are one ladder again: a ladder with two scales in it has a step nobody can see,
+             // and what a player reads first about which boss has arrived is this switch.
              //
-             // **And they are not the same number, because they are not the same shape.** A
-             // shackler is a `Rig_Medium` archer - the slightest body in either pack, and slighter
-             // still than the robed caller - so it takes the ladder's floor and gets its width
-             // from a drawn bow rather than from its shoulders (`SiegeCastBake`). An ironclad is
-             // the only body in this mode on `Rig_Large`: it stands 4.5 units by 5.8 in the
-             // model, wider than it is tall, which no other body here is at any pose. It is drawn
-             // *shorter* than an overlord on purpose - the mass is already there, and matching
-             // the tallest row would put a body two thirds again as wide at the same height,
-             // which is a boss that stops fitting the hill (invariant 37u).
-             : kind == SiegeKind.Ironclad ? 3.2f
-             : kind == SiegeKind.Shackler ? 2.9f
+             // **An ironclad tops it**, because it is the fourth chapter's finale and the
+             // biggest fight in the mode; a bonecaller sits just under, being the third's; and a
+             // shackler takes a rung-five rung beside the warlord, which is what it is.
+             : kind == SiegeKind.Ironclad ? 3.5f
+             : kind == SiegeKind.Bonecaller ? 3.4f
+             : kind == SiegeKind.Shackler ? 3.1f
 
              : kind == SiegeKind.Bulwark ? 1.85f
              : kind == SiegeKind.Bomber ? 1.30f

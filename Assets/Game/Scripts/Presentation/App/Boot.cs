@@ -351,9 +351,51 @@ namespace GlimmerGrove
                 }
             }
 
+            /// <summary>
+            /// Losing focus is not leaving, so this flushes and does nothing else.
+            ///
+            /// <para>
+            /// <b>It used to call <see cref="Persist"/>, and that ran the whole of it twice on
+            /// every single backgrounding.</b> Android raises <c>OnApplicationFocus(false)</c>
+            /// and <c>OnApplicationPause(true)</c> together on the way out, so a rewarded video
+            /// — which is a fullscreen Activity taking the foreground — armed the reminder
+            /// schedule twice: two <c>CancelAllScheduledNotifications</c> and twice the plan's
+            /// alarms handed to <c>AlarmManager</c>, 28 of them on a shipped schedule, on the
+            /// main thread during <c>onPause</c>.
+            /// </para>
+            /// <para>
+            /// <b>What that cost is not the work, it is the window.</b> <c>Arm</c> cancels the
+            /// whole schedule and then writes it again, so between those two calls the device
+            /// has <em>no</em> reminders pending — and nothing else in the game ever arms one
+            /// (invariant 50d: this is the only caller). A process killed inside that gap loses
+            /// the player's entire schedule silently, and it does not come back until they open
+            /// the game again and background it again, which is precisely the player a reminder
+            /// exists to reach. Backgrounding under a video ad is the likeliest moment in the
+            /// whole app to be killed, so running the cancel-and-rewrite twice there doubled the
+            /// exposure for no benefit whatever: <c>Rearm</c> is a pure function of the save and
+            /// the clock (invariant 50c), so the second pass could only ever land the schedule
+            /// the first one had already written.
+            /// </para>
+            /// <para>
+            /// Splitting them is what invariant 50d already says — <b>armed when the app is
+            /// backgrounded and at no other time</b> — and focus is the wrong question for it,
+            /// because plenty of things take focus without the app going anywhere: the
+            /// notification shade, a runtime permission dialog, the UMP consent form and the
+            /// store's own payment sheet all raise this and never raise a pause. Re-arming three
+            /// weeks of reminders because somebody glanced at their notifications is work that
+            /// should never have been asked for.
+            /// </para>
+            /// <para>
+            /// The flush stays, and it is the half worth keeping here: it is the cheapest
+            /// insurance in the app, it is dirty-gated so it costs nothing when nothing changed,
+            /// and a focus loss really can be the last callback before the process is killed.
+            /// Which of the two callbacks lands first does not matter — the first one to write
+            /// clears <c>_dirty</c> and the second returns immediately.
+            /// </para>
+            /// </summary>
             void OnApplicationFocus(bool focused)
             {
-                if (!focused) Persist();
+                if (!focused) SaveService.Flush();
             }
 
             void OnApplicationQuit() => SaveService.Flush();

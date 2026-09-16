@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import json
 import math
 import re
 import sys
@@ -93,6 +94,15 @@ SURVIVAL = Path(r"C:\Users\Digikey\Downloads")
 #: the tool passes when it is absent exactly as it does for the others.
 GEMPACK = Path(r"C:\Users\Digikey\Downloads\craftpix-net-668473-rpg-gems-icons-pack")
 
+#: The seventh folder: the head-on cartoon monster packs the **fourth** chapter is cast out
+#: of, and the two the three re-cut bosses come from.
+#:
+#: **A seventh root rather than a copy, for the reason the second through sixth exist** -
+#: copying a licensed pack so one path works is a second copy nothing keeps in step.
+#: `--cartoon` moves it, and the tool passes when it is absent exactly as it does for the
+#: others.
+CARTOON = Path(r"C:\Users\Digikey\Downloads\2D ASSETS")
+
 #: Which of the hundred, and it is a decision a picture made.
 #:
 #: **The glyph sits on a turret's chassis at about half a cell, and at that size detail is mush.**
@@ -136,7 +146,62 @@ TURRETS = "craftpix-net-715522-turrets-asset-pack-for-merge-shooter.zip"
 
 #: The top-down tower-defence pack, for its grass. It is the only ground in any of these packs
 #: drawn to be looked down on, which is what this hill is.
+#: The top-down tower-defence pack: its grass, and **the fourth chapter's whole cast**.
+#:
+#: <b>It is the one pack on this machine drawn walking *toward* the camera</b>, which is the
+#: only view this board has and the property every shipped cast shares: an insect is seen
+#: from above, a blob and a skeleton are square-on, and all three are mirror-symmetric about
+#: their own middle because that is what a body facing you looks like. Ten bodies, in three
+#: views each; `FRONT` is the one that matters.
+#:
+#: <b>It was rejected once, on a number, and the number was the wrong thing to weigh.</b> Its
+#: bodies are 53 to 73 pixels tall against a raider cut at `CAST`, so they upscale 2.5x to
+#: 3.4x where every other cast here is cut *down* or nearly so - and the first replacement
+#: cast was chosen on that alone, out of a pack drawn in three-quarter and side profile. The
+#: owner's verdict was immediate and is the rule: <b>a cast that faces the wrong way is not
+#: a cast, however sharp it is.</b> Flat vector art inside a heavy dark outline carries an
+#: upscale better than anything else could; facing is not recoverable at any resolution.
 FIELD = "craftpix-net-869102-tower-defense-neighborhood-top-down-2d-asset-pack.zip"
+
+#: Where the pack keeps its ten bodies, and the view of each that this board draws.
+#:
+#: **`Front view` is the walk toward the viewer** - down the hill, at the ward line. The pack
+#: also draws a side and a back view for a game whose lanes turn corners; this one does not.
+#: The rig, the vector art and the animation the fourth chapter's cast is baked from.
+#:
+#: <b>Baked rather than cut, and that is this pack's whole reason for being usable.</b> Its
+#: exported PNG frames are 50 to 73 pixels a body against a raider cut at `CAST`, so cutting them
+#: means a 2.5x to 3.4x upscale - measured, the interior line work carries **8.0** against the
+#: bone cast's 17.1 and the insects' 27.6, and an unsharp mask recovers less than a fifth of that
+#: gap because the detail is not in the file. The pack also ships the artwork as **vectors** and
+#: the walk as a **Spine rig**, so the frames can be re-baked at whatever size this board wants:
+#: at the height a raider is cut, the same measurement reads **30.8**.
+#:
+#: `Tools/spine_bake.py` is the baker, and it is held to the pack's own exported frames rather
+#: than to anybody's eye - see `RABBLE_ANIM`.
+RABBLE_RIG = "Json Atlas/Zombies/Zombies%02d/zombies%02d.json"
+RABBLE_ART = "Ai/Enemy Characters.ai"
+RABBLE_PARTS = "Spine/Enemy/zombies%02d/Images/"
+
+#: Which animation of the three the board draws. See `FIELD`.
+RABBLE_ANIM = "Front view walk"
+
+#: The slots this cast never draws.
+#:
+#: <b>`Bg` is a layout guide</b> - a 160x162 rectangle the pack exports its frames against, which
+#: is how the export box is known at all. <b>The `shade*` slots are the pack's baked ground
+#: shadow</b>, and dropping them is strictly better than `deshadow`: that function has to guess a
+#: shadow out of an alpha threshold and an ink colour and leaves the feathered rim behind by
+#: design, where a rig knows which *part* the shadow is. The view draws its own under every
+#: raider (`SiegeView.Hatch`).
+RABBLE_SKIP = ("Bg", "shade", "shade2", "shade3")
+
+#: How finely the vector art is rasterised before it is placed, in DPI.
+#:
+#: **Ten times PDF's own 72**, which puts every part well above the size it is ever drawn at, so
+#: the only resampling that decides the result is the one `spine_bake.draw` does into the frame.
+#: Higher costs bake time and changes nothing on screen.
+RABBLE_DPI = 720
 
 #: The merge-shooter kit, for one thing: a white ring of debris that tints to anything, which is
 #: what a matched gem comes apart into.
@@ -193,16 +258,86 @@ WARLORDS = "Png/Bos%02d"
 #: camera and stand upright, exactly as the brood's blobs do, so the hill still reads as one place.
 #:
 #: <b>And it is the first pack here whose raiders carry a second animation worth drawing.</b> Every
-#: body ships a walk and an <em>attack</em>; see `BONE_SWING`.
+#: body ships a walk and an <em>attack</em>; see `SWING_ANIM`.
 #:
 #: <b>Only its five enemies are read.</b> Its wizard was this chapter's boss for one draft and was
 #: withdrawn by the owner; see `BOSS_SET`.
 WIZARD = "graphicriver-wPfi16JK-survival-wizard.zip"
 
-#: Where the pack keeps its five skeletons. **Its wizard is deliberately not read**: it was this
-#: chapter's boss for one draft and the owner's verdict on it was one line - wrong, use something
-#: else - so the bonecaller is rendered out of rigged 3D instead (`SiegeCastBake`). See `BOSS_SET`.
+#: Where the pack keeps its five skeletons. **Its wizard is deliberately not read**: it was
+#: this chapter's boss for one draft and the owner's verdict on it was one line - wrong, use
+#: something else. What replaced it is a body from a monster pack (`MONS_V4`), by way of a
+#: bake that was itself withdrawn. See `BOSS_SET`.
 BONES = "Survival Wizard/Png/Enemies/E%d"
+
+#: The quirky-monsters pack. **Cut from nothing and kept in the survey on purpose.**
+#:
+#: <b>It was the fourth chapter's cast for one drop and the owner withdrew it in one line:
+#: the bodies face sideways.</b> They do - a caterpillar in pure profile, a robot with a
+#: cannon across its chest, a goblin turned three-quarter - and every cast this game ships is
+#: square-on, because a hill is looked down on and a raider walks toward the player. It was
+#: picked for the opposite reason: it is high resolution where the pack that faces the right
+#: way is not, and **sharpness was weighed above facing, which is the wrong way round.**
+#:
+#: It stays in `CHARACTER_PACKS` so the next person meets it with that written under it.
+QUIRK = "craftpix-net-731843-quirky-monsters-game-asset-pack-v19.zip"
+
+#: Where that pack keeps its five bodies. **Read by `--survey` alone.**
+QUIRK_BODY = "Png/Monster %d"
+
+#: Which animation inside a body folder is its walk, and which is what it swings at the line.
+#:
+#: <b>The swing is a raider's second reel, and it is here because two of the five packs drew
+#: one.</b> Every raider that reaches the ward line stands there hitting it every
+#: `SiegeTuning.BlowEvery` until something kills it - and for two chapters what that looked
+#: like was a walk cycle looping in place against a turret, which is invariant 37u's
+#: complaint (a body doing the wrong thing where it stands) arriving through the art.
+#:
+#: <b>Short on purpose.</b> A swing is six frames against a walk's twelve: it is played at
+#: the line, where a body is at its smallest and there are up to five of them, and every
+#: frame is a texture that is resident for the whole run. The insects and the brood have no
+#: swing at all and fall back to their walk (`SiegeMode.CastSwing` answers an empty address),
+#: which is exactly what they do today - so this costs those two chapters nothing.
+#:
+#: <b>The same two words name a boss's second reel</b> (`BOSS_SWING`), because every pack
+#: here that draws an attack files it under the same name.
+WALK_ANIM, SWING_ANIM = "/Walk", "/Attack"
+
+#: What a **boss** throws in, inside its own body folder. Spelled out separately because
+#: `BOSS_SET` names a whole path per row rather than a body plus a suffix - the five blob
+#: bosses have exactly one animation each and no suffix to add.
+BOSS_SWING = SWING_ANIM
+
+#: Two of the four head-on cartoon monster packs on this machine, which is where the three
+#: bosses that used to be baked out of 3D come from.
+#:
+#: <b>They were written off in this file for a year as "side-view" and they are not</b> - the
+#: `v1` to `v4` packs are drawn head-on, exactly as `WIZARD`'s skeletons and the brood are,
+#: and only `v6` and `v7` really face sideways. That mistake is what the bake was
+#: commissioned around: `BOSS_SET` recorded "there is nothing else on this machine" when
+#: there were twenty unused bodies in these four zips. **Rendered, not remembered** - the
+#: survey sheet is `Tools/siege_pack_survey.png`.
+#:
+#: <b>Only bosses come from here and never a raider</b>, deliberately: these are round
+#: cartoon blobs with arms and mouths, which is exactly what the <em>second</em> chapter's
+#: brood already is (`BROOD_SET`), so a chapter cast out of them would be Broodmarch again
+#: in new colours - invariant 37z's complaint asked of a chapter. A boss is the one thing
+#: that may be a blob without saying anything about the wave behind it, because it is three
+#: times the size and holds the middle of the hill.
+MONS_V1 = "craftpix-net-167954-monster-v1-character-sprites.zip"
+MONS_V4 = "craftpix-net-894353-monster-v4-character-sprites.zip"
+
+#: The other four in the family. **Nothing is cut from these** - they are named so `--survey`
+#: draws them, which is the whole point of that flag: the claim "there is nothing else on this
+#: machine" is only worth anything if somebody can re-run the look that produced it.
+MONS_V2 = "craftpix-net-154190-monster-v2-character-sprites.zip"
+MONS_V3 = "craftpix-net-205925-monster-v3-character-sprites.zip"
+MONS_V6 = "craftpix-net-534332-monster-v6-sprite-set.zip"
+MONS_V7 = "craftpix-net-925935-monster-v7-sprite-pack.zip"
+
+#: How those two name their bodies. `v1` is the odd one out and this is the pack's own
+#: spelling - a body identified by a guess is a folder that is simply not there.
+HORDE_V1, HORDE_V4 = "PNG/MonsterV%d", "PNG/Monster %d"
 
 #: The ten small monsters in `KIT`, which is the same zip the gem debris comes from. They are the
 #: other half of the second chapter's cast and they are drawn by the same hand as `MONSTERS` -
@@ -261,6 +396,7 @@ WARD_PLATE = 372
 #: is <b>the finale and the only rung that wears it</b>. Rung five keeps the plainest floor of the
 
 import make_siege_ground as ground_art
+import spine_bake
 
 #: The value ladder every ground is put on, and the cast's own ladder is what decides it.
 #:
@@ -580,6 +716,21 @@ WARBRINGER = 360
 #: cut - see `BOSS_SET`.
 GRAVEMAW = 350
 
+#: How tall the three bosses that were **re-cut from 2D** are, in pixels.
+#:
+#: <b>They were baked out of rigged 3D until this drop and carried a discount for it.</b> A
+#: reel trimmed to its own alpha fills about 0.93 of its frame where a 2D cut fills two
+#: thirds, so the three baked bosses were given a *smaller* `SiegeTuning.TallOf` than the
+#: 2D five to land on the same drawn body. The bake is gone, so the discount goes with it
+#: and all eight bosses are back on one ladder - a simplification rather than a retune:
+#: what a player reads first about which boss has arrived is that ladder, and a ladder with
+#: two scales in it has a step nobody can see.
+#:
+#: The numbers are `SiegeTuning.TallOf` at this file's own 114 pixels a cell, exactly as
+#: every row above: a shackler at 3.1 cells, a bonecaller at 3.4 and an ironclad at 3.5, so
+#: nothing is ever upscaled by the view.
+SHACKLER, BONECALLER, IRONCLAD = 350, 390, 400
+
 #: The four bosses: a body reel, a cast reel, and how tall each is cut.
 #:
 #: <b>Not insects, and that is the whole of what this table is for.</b> They were four insects out
@@ -628,14 +779,11 @@ GRAVEMAW = 350
 #: look like; the <b>bonecaller</b> is the survival pack's own caster, and a robed figure with a
 #: staff standing at the head of a skeleton horde needs no explaining at all.
 #:
-#: <b>The bonecaller is not in this table, and that is the whole of what the sixth boss cost.</b>
-#: It was the survival pack's own robed caster for one draft; the owner's verdict was one line -
-#: wrong, use something else - and there is nothing else. Surveyed: the five 2D boss bodies on this
-#: machine are all four chapters' worth already, the monster packs hold eighty-odd small cartoon
-#: blobs and none of them is boss-shaped, and the only unused bodies in the two packs these bosses
-#: come from are two plain eggs and a money bag. So it is <b>rendered out of rigged 3D</b> at this
-#: board's own camera by `SiegeCastBake`, which is invariant 37at's answer arriving a second time
-#: for the same structural reason - the market has no more of these.
+#: <b>The bonecaller, the shackler and the ironclad are in this table now, and for a while
+#: they were not.</b> All three were rendered out of rigged 3D on the grounds that there was
+#: nothing left to cut: "the monster packs hold eighty-odd small cartoon blobs and none of
+#: them is boss-shaped". That survey was wrong twice - it counted the `v1` to `v4` packs as
+#: side-view when they are head-on, and it never opened them. See `MONS_V1`.
 BOSS_SET = {
     "blight":  dict(pack=MONSTERS, body=WARLORDS % 2, cast=None, tall=BLIGHT),
     "boss":    dict(pack=MONSTERS, body=WARLORDS % 3, cast=None, tall=BOSS),
@@ -643,18 +791,58 @@ BOSS_SET = {
     "over":    dict(pack=MONSTERS, body=WARLORDS % 4, cast=None, tall=OVERLORD),
 
     "maw":     dict(pack=MONSTERS, body=WARLORDS % 1, cast=None, tall=GRAVEMAW),
+
+    # ------------------------------------------------- the three that stopped being baked
+    #
+    # **These were rendered out of rigged 3D and are cut from flat packs now**, which is the
+    # one entry in this table that undoes a decision rather than making one. The argument
+    # for the bake was that there was nothing left to cut - and there were twenty unused
+    # head-on bodies in the four monster packs this file had written off as side-view (see
+    # `MONS_V1`). The owner withdrew the baked bodies; measured afterwards they also read as
+    # *smudges* beside the bone cast, because a low-poly render carries no outline and every
+    # 2D body in this game does.
+    #
+    # **Each is chosen against the cast it stands in front of** - this table's own rule, and
+    # the one the warbringer was re-picked for. A bonecaller faces white bone, so it is deep
+    # blue and horned; a shackler and an ironclad stand in front of the rabble, so neither
+    # may be a small upright body carrying a prop.
+    #
+    # **And all three carry a real cast reel rather than `pulse`'s synthesised rear-up**,
+    # which is the first time this table has had one: each of these packs draws an `Attack`.
+    # A bought gesture beats a generated one (see `boss_reels`), and the three were picked
+    # for what each gesture *does* - a horned caster throwing its arms up, a tongue lashing
+    # out of a mouth, a helmed body lunging - because a boss is told apart by its verb and a
+    # verb has to be drawn (invariant 37z).
+
+    # The blue horned demon: arms raised, horns projecting sideways, which is the one thing
+    # a silhouette can do that survives this camera (invariant 37bx). Against a cast of
+    # white bone it is the furthest thing in the pack from what it is raising.
+    "caller":  dict(pack=MONS_V4, body=HORDE_V4 % 2, cast=HORDE_V4 % 2 + BOSS_SWING,
+                    tall=BONECALLER),
+
+    # The tongue. It is the only body in either pack whose attack throws something *out* of
+    # it and pulls it back, which is what a bind looks like - and a wide low blob is nothing
+    # like the four upright bodies the rabble sends in front of it.
+    "snare":   dict(pack=MONS_V1, body=HORDE_V1 % 4, cast=HORDE_V1 % 4 + BOSS_SWING,
+                    tall=SHACKLER),
+
+    # The helm. An ironclad is the one boss in this mode whose *mechanic* is armour - only
+    # the ward wearing its colour can touch it - so the body has to say plating before the
+    # first bolt bounces, and this is the only one of the twenty wearing a hard shell with
+    # horns and side guards over it rather than merely being round.
+    "clad":    dict(pack=MONS_V1, body=HORDE_V1 % 5, cast=HORDE_V1 % 5 + BOSS_SWING,
+                    tall=IRONCLAD),
 }
 
-# **The bonecaller is not here, and that is the one boss in this mode this tool does not cut.** It
-# was the survival pack's own robed caster and the owner's verdict was one line: wrong, use
-# something else. There is nothing else on this machine - surveyed, the 2D character packs hold
-# eighty-odd small cartoon monsters and ten neighbourhood zombies, none of them boss-shaped, and
-# the five blob bosses take every body the top-down monster pack has. So it is **rendered out of
-# rigged 3D** at this board's own camera by `SiegeCastBake`, which is invariant 37at's answer
-# arriving a second time for the same structural reason: the market has no more of these.
+# **Every boss in this mode is cut here now, and for one drop three of them were not.** The
+# bonecaller, the shackler and the ironclad were baked out of rigged 3D by an Editor tool
+# because this file had recorded that there was nothing left on the machine to cut them from.
+# There was: twenty unused head-on bodies in four monster packs (`MONS_V1`). The bake is
+# withdrawn, the models are off disk, and the whole of what it cost to undo was three rows in
+# the table above - which is the bargain a table is for.
 #
-# **Its reels are therefore owned by the Editor bake and must not be cut here**, or two tools write
-# one folder and `--check` fails against whichever ran last.
+# **One tool owns one folder**, which is the rule that note really established: two tools
+# writing `Art/Siege/caller` means `--check` fails against whichever ran last.
 
 #: The second chapter's twelve raiders: which pack a body comes from, and where in it.
 #:
@@ -736,20 +924,55 @@ BONE_SET = {
     "boneBulwark_y": BONES % 4,
 }
 
-#: Which animation of a body is its walk, and which is its swing at the line.
+#: The **fourth** chapter's twelve raiders: six bodies, every one of them walking toward you.
 #:
-#: <b>The swing is the first second reel any raider in this mode has had, and it is here because
-#: this is the first pack that drew one.</b> Every raider that reaches the ward line stands there
-#: hitting it every `SiegeTuning.BlowEvery` until something kills it - and for two chapters what
-#: that looked like was a walk cycle looping in place against a turret, which is invariant 37u's
-#: complaint (a body doing the wrong thing where it stands) arriving through the art.
+#: <b>Facing is the first question and it outranks everything else.</b> Every cast this game
+#: ships is drawn square-on - an insect from directly above, a blob and a skeleton head-on - so
+#: each body is mirror-symmetric about its own middle and reads as coming *down the hill at the
+#: player*. This pack is the only one on the machine drawn that way (see `FIELD`), and the cast
+#: that shipped before it was not: a first replacement was chosen out of a high-resolution pack
+#: drawn in three-quarter and profile, and the owner withdrew it on sight. **Sharpness was
+#: weighed above facing and that is the wrong way round** - an upscale costs a flat cartoon body
+#: inside a heavy outline very little, and no resolution recovers a body that is facing the wrong
+#: way.
 #:
-#: <b>Short on purpose.</b> A swing is six frames against a walk's twelve: it is played at the
-#: line, where a body is at its smallest and there are up to five of them, and every frame is a
-#: texture that is resident for the whole run. The insects and the brood have no swing at all and
-#: fall back to their walk (`SiegeMode.CastSwing` answers an empty address), which is exactly what
-#: they do today - so this costs those two chapters nothing.
-BONE_WALK, BONE_SWING = "/Walk", "/Attack"
+#: <b>Six bodies of the ten, and the four left out are a framing decision rather than a taste
+#: one.</b> `SiegeView` sizes a body by its *frame*, so a silhouette carrying something tall above
+#: its head is drawn with the creature itself small: measured, the two balloon bodies stand 98
+#: pixels of which barely half is zombie, against 53 to 73 for the six below where the body fills
+#: 0.92 to 0.95 of the frame. Those four would walk down the hill at about six tenths of the size
+#: of the rest of their own wave.
+#:
+#: <b>The kind is said by what a body is wearing or carrying</b>, which is this pack's own
+#: drawing and needed no interpretation: a **manhole cover** and a **padded helmet** are the two
+#: that are plainly armoured, so they are the bulwarks; a **sledgehammer** and a tall **bearskin**
+#: are the heaviest silhouettes, so they are the brutes; and the two slightest - bare-headed, and
+#: a thin traffic cone - creep. Two bodies per kind is `BONE_SET`'s bargain, with its rule: where
+#: a body is worn twice the two colours it wears are opposite ones, because pairing red with
+#: amber would put one silhouette on the two hues this palette keeps closest together (37ak).
+#:
+#: <b>What this cast costs is the upscale, and it is written down rather than glossed</b>: these
+#: reach `CAST` at 2.5x to 3.4x where the insects reach it at 1.6x and the skeletons are cut
+#: *down*. It is the worst in the mode and it was accepted with that known.
+RABBLE_SET = {
+    # creepers - the two slightest, wearing nothing that reads as armour
+    "rabbleMon_r":     5,
+    "rabbleMon_g":     2,
+    "rabbleMon_b":     5,
+    "rabbleMon_y":     2,
+
+    # brutes - the heaviest silhouettes: a sledgehammer, and a tall bearskin
+    "rabbleBrute_r":   3,
+    "rabbleBrute_g":   6,
+    "rabbleBrute_b":   3,
+    "rabbleBrute_y":   6,
+
+    # bulwarks - the two carrying plate: a manhole cover held up, and a padded helmet
+    "rabbleBulwark_r": 1,
+    "rabbleBulwark_g": 4,
+    "rabbleBulwark_b": 1,
+    "rabbleBulwark_y": 4,
+}
 
 #: How hard this cast's saturation is floored, against `CAST_SAT_FLOOR`'s 0.30 for the other two.
 #:
@@ -766,7 +989,7 @@ BONE_WALK, BONE_SWING = "/Walk", "/Attack"
 #: in it, which is the flattening `CAST_PULL`'s note is about arriving through saturation instead.
 BONE_SAT_FLOOR = 0.60
 
-#: How many frames a swing keeps. See `BONE_SWING`.
+#: How many frames a swing keeps. See `SWING_ANIM`.
 SWING_FRAMES = 6
 
 #: How far a synthesised cast reel surges, and how far down the hill it leans.
@@ -1685,6 +1908,14 @@ SHADOW_ALPHA, SHADOW_INK = 200, 24
 #: "anything dark and see-through" would eat the drawing's own line.
 SHADE_VIOLET = (85, 63, 136)
 
+#: The same fact about the quirky pack, measured the same way: one dark plum at partial
+#: alpha. Measured across all five bodies, every shaded pixel is within a unit of this.
+SHADE_PLUM = (29, 4, 53)
+
+#: And about the two head-on monster packs the re-cut bosses come from: a dark warm umber,
+#: constant to under two units across every body in both zips.
+SHADE_UMBER = (55, 20, 3)
+
 #: What each pack bakes under a body, as (ink, tolerance), so one table decides what `deshadow`
 #: cuts out of each rather than every call site remembering.
 #:
@@ -1700,6 +1931,18 @@ PACK_SHADE = {
     MONSTERS: (SHADE_VIOLET, SHADOW_INK),
     KIT: (SHADE_VIOLET, SHADOW_INK),
     MERGE: ((0, 0, 0), SHADOW_INK),
+    QUIRK: (SHADE_PLUM, SHADOW_INK),
+    MONS_V1: (SHADE_UMBER, SHADOW_INK),
+    MONS_V4: (SHADE_UMBER, SHADOW_INK),
+
+    # Read by `--survey` alone, so that the height it prints is a *body* rather than a body
+    # plus the ellipse under it - which is the number that decides whether a pack can cast a
+    # chapter here, and the one the first pass of that survey got flatteringly wrong.
+    MONS_V2: (SHADE_UMBER, SHADOW_INK),
+    MONS_V3: (SHADE_UMBER, SHADOW_INK),
+    MONS_V6: (SHADE_UMBER, SHADOW_INK),
+    MONS_V7: (SHADE_UMBER, SHADOW_INK),
+    FIELD: ((0, 0, 0), SHADOW_INK),
     WIZARD: ((0, 0, 0), 0),
 }
 
@@ -1724,6 +1967,22 @@ def cast_frames(z, folder, count=FRAMES, tall=CAST, ink=(0, 0, 0), tol=SHADOW_IN
     return [im.resize(size, Image.LANCZOS) for im in frames]
 
 
+#: How far a synthesised lunge carries a body toward the viewer, and how far down the hill.
+#:
+#: <b>`BOSS_RISE`'s argument asked of a raider.</b> A body seen from above that throws itself
+#: forward does not change shape, it changes *size* - so the fourth chapter's pack, whose rig
+#: draws a walk and nothing else, can still swing at the line rather than looping its walk
+#: against a turret, which is invariant 37u's complaint arriving through the art. Smaller than a
+#: boss's rear-up because a raider is drawn at a cell and a bit and there are up to five of them
+#: at the line: at a boss's 0.17 the whole rank pulses.
+#:
+#: <b>Built from the cut frames rather than from the source</b>, so the body inside the lunge is
+#: the same pixels at the same size as the body inside the walk. `pulse` grows the canvas
+#: symmetrically about its own middle and `SiegeView.Wear` draws a swing at its own frame's
+#: height, so the two cancel and the raider neither jumps nor resizes when it arrives.
+LUNGE_RISE, LUNGE_LEAN = 0.11, 0.04
+
+
 def walk_and_swing(z, folder, tall, ink, tol):
     """A raider's two reels: what it walks in, and what it swings in at the ward line.
 
@@ -1744,8 +2003,9 @@ def walk_and_swing(z, folder, tall, ink, tol):
     <b>A body with no attack animation gets one reel and no swing</b>, which is what the insects and
     the brood do - `SiegeMode.CastSwing` answers an empty address for them and the view keeps
     walking, exactly as it does today.
+
     """
-    walk = deshadow([read(z, n) for n in spaced(ordered(z, folder + BONE_WALK), FRAMES)], ink, tol)
+    walk = deshadow([read(z, n) for n in spaced(ordered(z, folder + WALK_ANIM), FRAMES)], ink, tol)
     if not walk:
         return [], []
 
@@ -1761,7 +2021,7 @@ def walk_and_swing(z, folder, tall, ink, tol):
                 tall if high is None else max(1, int(high * ratio)))
         return [im.crop(box).resize(size, Image.LANCZOS) for im in frames]
 
-    swing = deshadow([read(z, n) for n in spaced(ordered(z, folder + BONE_SWING), SWING_FRAMES)],
+    swing = deshadow([read(z, n) for n in spaced(ordered(z, folder + SWING_ANIM), SWING_FRAMES)],
                      ink, tol)
 
     if not swing:
@@ -1784,6 +2044,51 @@ def walk_and_swing(z, folder, tall, ink, tol):
         raise SystemExit("a swing reel's canvas does not contain every frame of it")
 
     return cut(walk, home), cut(swing, box, box[3] - box[1])
+
+
+def rabble_reels(zips, index, tall, frames_kept):
+    """One rabble body's walk, baked from vector art at the size this board draws it.
+
+    <b>Two passes, because the scale is a measurement rather than a number.</b> The first bakes
+    the cycle at 1:1 to find how tall the body really is across every frame; the second bakes at
+    whatever ratio puts that at `tall`. Doing it the other way - baking at a fixed scale and
+    resizing - would throw away the whole point of having vectors.
+
+    <b>The crop is the union over the cycle</b>, exactly as `cast_frames` and `walk_and_swing`
+    take theirs, so the body neither moves nor resizes between frames.
+    """
+    rig = spine_bake.Rig(json.loads(zips["rig"]))
+    rig.slots = [s for s in rig.slots if s["name"] not in RABBLE_SKIP]
+
+    guide = rig.attachments["Bg"]["Bg"]
+    box = (guide["x"] - guide["width"] / 2.0, guide["y"] - guide["height"] / 2.0,
+           guide["x"] + guide["width"] / 2.0, guide["y"] + guide["height"] / 2.0)
+
+    wanted = sorted({p[0] for i in range(frames_kept)
+                     for p in rig.placements(RABBLE_ANIM,
+                                             rig.duration(RABBLE_ANIM) * i / float(frames_kept))})
+    parts = spine_bake.match_parts(zips["pages"], zips["exported"], wanted)
+
+    probe = spine_bake.frames(rig, parts, RABBLE_ANIM, frames_kept, box, 1.0, supersample=1)
+    home = box_of(probe)
+    if home is None:
+        return []
+
+    ratio = tall / float(home[3] - home[1])
+    full = spine_bake.frames(rig, parts, RABBLE_ANIM, frames_kept, box, ratio)
+
+    here = box_of(full)
+    cut = [im.crop(here) for im in full]
+
+    # The two passes disagree by a pixel or so, because a bbox at 1:1 is a coarse ruler. Land it
+    # exactly, so every cast in this mode is the same height and `SiegeView.Frame` can size a
+    # body by it.
+    high = cut[0].height
+    if high != tall:
+        wide = max(1, int(round(cut[0].width * tall / float(high))))
+        cut = [im.resize((wide, tall), Image.LANCZOS) for im in cut]
+
+    return cut
 
 
 def centroid(im):
@@ -2038,8 +2343,13 @@ def build():
     if match3 is None or blasts is None or turrets is None or kit is None:
         return None
 
-    # The third chapter's twelve raiders and the boss that raises them.
+    # The third chapter's twelve raiders.
     wizard = zipped(WIZARD, SURVIVAL)
+
+    # The fourth chapter's five, and the two packs the three re-cut bosses come from. Absent
+    # is a checkout without them rather than a mistake, exactly as every root above.
+    field = zipped(FIELD, SOURCE)
+    horde1, horde4 = zipped(MONS_V1, CARTOON), zipped(MONS_V4, CARTOON)
 
     # The bosses and half the second chapter's cast live here. Absent, this is a checkout without
     # the pack rather than a mistake - the same bargain every art tool in this project strikes -
@@ -2047,9 +2357,12 @@ def build():
     if monsters is None or wizard is None:
         return None
 
+    if field is None or horde1 is None or horde4 is None:
+        return None
+
     #: Which zip a `BROOD_SET` row names. A table of bodies has to say which pack each is in, and
     #: one dict is how it says it without a branch per row.
-    packs = {KIT: kit, MONSTERS: monsters}
+    packs = {KIT: kit, MONSTERS: monsters, MONS_V1: horde1, MONS_V4: horde4}
 
     made = {}
 
@@ -2267,7 +2580,48 @@ def build():
                     im, hue, pull=CAST_PULL, sat_gain=CAST_SAT_GAIN, sat_floor=BONE_SAT_FLOOR,
                     val_gain=gain, val_lift=CAST_VAL_LIFT)
 
-    # The six bosses: two reels each, both off one canvas so none of them jumps or changes size
+    # The fourth chapter's cast, out of the top-down tower-defence pack, and a second reel per
+    # body exactly as the skeletons have - the same five lines, because a cast set is a *table*
+    # and not a code path, which is `BROOD_SET`'s claim holding a third time. Its saturation
+    # floor is `CAST_SAT_FLOOR` rather than the bone cast's, because these bodies are painted
+    # rather than bone white; and its swing is **built** rather than cut, because this pack draws
+    # a walk and nothing else (`LUNGE_RISE`).
+    pages = spine_bake.pages_of(field.read(RABBLE_ART), RABBLE_DPI)
+
+    # **Baked once per body rather than once per row**, because half this table is one body in a
+    # second colour: twelve rows draw six bodies (`RABBLE_SET`), and a bake is the most expensive
+    # thing this tool does - it rasterises the vector source and walks the rig. The colour is
+    # applied *after*, so the reels can be shared; `hued` returns new images and neither it nor
+    # `value_gain` touches what it is given.
+    baked = {}
+
+    for key, body in RABBLE_SET.items():
+        hue = hues.get(key[-1])
+
+        if body not in baked:
+            prefix = RABBLE_PARTS % body
+            exported = {n[len(prefix):-4]: read(field, n) for n in field.namelist()
+                        if n.startswith(prefix) and n.endswith(".png")}
+
+            walk = rabble_reels({"rig": field.read(RABBLE_RIG % (body, body)),
+                                 "pages": pages, "exported": exported}, body, CAST, FRAMES)
+            baked[body] = (walk, pulse(walk, SWING_FRAMES, LUNGE_RISE, LUNGE_LEAN))
+
+        walk, swing = baked[body]
+
+        # **One gain for both reels, measured off the walk.** `value_gain` reads how bright a body
+        # is drawn and lifts it onto `CAST_VALUE`; measured per reel it would answer two different
+        # numbers for one body, and a raider that changed brightness the moment it reached the
+        # line is this file's own complaint about a body that changes size, one channel over.
+        gain = value_gain(walk)
+
+        for suffix, frames in (("", walk), ("_swing", swing)):
+            for i, im in enumerate(frames):
+                made["Siege/%s%s/f%02d.png" % (key, suffix, i)] = im if hue is None else hued(
+                    im, hue, pull=CAST_PULL, sat_gain=CAST_SAT_GAIN, sat_floor=CAST_SAT_FLOOR,
+                    val_gain=gain, val_lift=CAST_VAL_LIFT)
+
+    # The eight bosses: two reels each, both off one canvas so none of them jumps or changes size
     # when it throws. One loop rather than one block per boss, which is what stopped a third and a
     # fourth being expensive - and what makes the *set* something a reader can see at once.
     packs[WIZARD] = wizard
@@ -2491,19 +2845,159 @@ def contact(made):
     print("wrote %s" % out)
 
 
+#: Every character pack on this machine, and where each one lives. `--survey` draws them.
+#:
+#: <b>This table exists because the sentence it replaces was wrong for a year.</b> This file
+#: recorded that the only top-down cast here was the insects and that the other packs were
+#: "eighty-three side-view cartoon characters" - and on the strength of that a whole Editor tool
+#: was written to render a cast out of rigged 3D, and two chapters shipped bodies the owner then
+#: withdrew. Four of those packs are drawn <em>head-on</em>, which is the view two of the three
+#: shipped casts already use; one holds ten true top-down bodies. Nobody had opened them.
+#:
+#: <b>So the survey is a command rather than a paragraph</b> (invariant 32b: no gate in this
+#: project opens a PNG, so the only answer to "what does this pack look like" is a picture).
+#: It takes a minute and it is the first thing to run before anybody concludes there is nothing
+#: left to cast a chapter from.
+#:
+#: Each row is (zip, root, how it names a body, which animations to try). A pack that is not on
+#: this machine is skipped, exactly as every other source here is.
+CHARACTER_PACKS = (
+    (MONS_V1, "CARTOON", "PNG/MonsterV%d", "monster v1 - head-on, the shackler and ironclad"),
+    (MONS_V2, "CARTOON", "PNG/Monster %d", "monster v2 - head-on"),
+    (MONS_V3, "CARTOON", "PNG/Monster %d", "monster v3 - head-on"),
+    (MONS_V4, "CARTOON", "PNG/Monster %d", "monster v4 - head-on, the bonecaller"),
+    (MONS_V6, "CARTOON", "Png/Mons %d", "monster v6 - SIDE-VIEW, unusable here"),
+    (MONS_V7, "CARTOON", "Png/Mons %d", "monster v7 - SIDE-VIEW, unusable here"),
+    (QUIRK, "CARTOON", QUIRK_BODY, "quirky v19 - SIDE-ON, withdrawn, do not cast from it"),
+    (WIZARD, "SURVIVAL", "Survival Wizard/Png/Enemies/E%d", "survival wizard - the bone cast"),
+    (MONSTERS, "ENEMIES", "Png/Monster%02d", "top-down monsters - half the brood"),
+
+    # The sci-fi half of the shelf. **Nothing here will ever cast a chapter and they are drawn
+    # anyway**, which is the whole point of this table: the reason the bake was commissioned is
+    # that somebody summarised these packs from memory instead of opening them. A survey that
+    # leaves out the rows it expects to reject is the same mistake with better intentions.
+    ("craftpix-net-603718-alien-v1-enemy-sprite-set.zip", "SOURCE", "PNG/Alien%d",
+     "alien v1 - head-on, sci-fi"),
+    ("craftpix-net-259073-alien-v2-enemy-sprite-set.zip", "SOURCE", "PNG/Alien%d",
+     "alien v2 - head-on, sci-fi"),
+    ("craftpix-net-424965-alien-v3-enemy-character-sprites.zip", "SOURCE", "PNG/Alien%02d",
+     "alien v3 - head-on, sci-fi"),
+    ("craftpix-net-515480-alien-v4-character-sprites.zip", "SOURCE", "PNG/Alien%02d",
+     "alien v4 - head-on, sci-fi"),
+    ("craftpix-net-104412-alien-v5-enemy-sprite-set.zip", "SOURCE", "PNG/Alien%02d",
+     "alien v5 - head-on, sci-fi"),
+    ("craftpix-net-374435-robots-v1-enemy-sprite-set.zip", "SOURCE", "PNG/Char%02d",
+     "robot v1 - head-on, sci-fi"),
+    ("craftpix-net-422037-robots-v2-enemy-sprite-set.zip", "SOURCE", "PNG/Char%02d",
+     "robot v2 - head-on, sci-fi"),
+    ("craftpix-net-684986-robot-v3-enemy-character-sprites.zip", "SOURCE", "PNG/Char%02d",
+     "robot v3 - head-on, sci-fi"),
+    ("craftpix-net-248806-robots-v4-game-sprite-set.zip", "SOURCE", "PNG/Char%02d",
+     "robot v4 - head-on, sci-fi"),
+    ("craftpix-net-422064-robot-v5-character-sprites.zip", "SOURCE", "PNG/Char%02d",
+     "robot v5 - head-on, sci-fi"),
+    ("craftpix-net-310523-3-robot-character-sprite-set.zip", "SOURCE", "PNG/Character%d",
+     "3-robot set - head-on, sci-fi"),
+    (FIELD, "SOURCE", "Png/Zombies/Zombies%02d/Front view",
+     "neighbourhood TD - TOP-DOWN, the rabble (baked from its vectors, not these)"),
+)
+
+#: Which animation of a body the survey tries, in order. The packs disagree about the word and
+#: some bodies fly rather than walk.
+SURVEY_ANIMS = ("/Walk", "/Moving", "/FlyMove", "/Idle", "")
+
+
+def survey():
+    """Draw one frame of every body in every character pack, at the size the board draws a raider.
+
+    <b>The instrument the bake was commissioned for want of.</b> It answers the only two
+    questions that decide whether a pack can cast a chapter here - which way the bodies face, and
+    how many pixels tall they really are - and it answers the second one <em>in the label</em>,
+    because that is the one a picture cannot show: a body upscaled 3.3x to reach `CAST` looks
+    fine in a contact sheet and soft on a phone.
+    """
+    roots = {"SOURCE": SOURCE, "TOWER": TOWER, "ENEMIES": ENEMIES, "SURVIVAL": SURVIVAL,
+             "CARTOON": CARTOON}
+
+    rows = []
+    for name, root, shape, label in CHARACTER_PACKS:
+        z = zipped(name, roots[root])
+        if z is None:
+            continue
+
+        ink, tol = PACK_SHADE.get(name, ((0, 0, 0), SHADOW_INK))
+
+        bodies = []
+        for i in range(1, 11):
+            for anim in SURVEY_ANIMS:
+                frames = [read(z, n) for n in spaced(ordered(z, shape % i + anim), 1)]
+                if frames:
+                    # **Deshadowed, or the height printed below is a body plus the ellipse the
+                    # pack bakes under it** - which on the top-down zombies is more than twice
+                    # the body and is exactly the number this survey exists to get right.
+                    bodies.append(deshadow(frames, ink, tol)[0])
+                    break
+
+        if bodies:
+            rows.append((label, bodies))
+
+    if not rows:
+        print("no character packs on this machine - nothing to survey")
+        return
+
+    cell = 190
+    wide = max(len(b) for _, b in rows)
+    sheet = Image.new("RGBA", (cell * wide, cell * len(rows)), (24, 26, 32, 255))
+    pen = ImageDraw.Draw(sheet)
+
+    for r, (label, bodies) in enumerate(rows):
+        heights = []
+        for c, im in enumerate(bodies):
+            box = im.getbbox()
+            if box is None:
+                continue
+
+            body = im.crop(box)
+            heights.append(body.height)
+
+            ratio = min((cell - 26.0) / body.width, (cell - 26.0) / body.height)
+            thumb = body.resize((max(1, int(body.width * ratio)),
+                                 max(1, int(body.height * ratio))), Image.LANCZOS)
+            sheet.alpha_composite(thumb, (c * cell + (cell - thumb.width) // 2,
+                                          r * cell + (cell - thumb.height) // 2 + 8))
+
+        # **The number, because the picture cannot show it, and it is the *shortest* body that
+        # decides.** Every body in a cast is cut to `CAST`, so the worst upscale in the pack is
+        # the one that has to be affordable - quoting the tallest is how a pack whose smallest
+        # body needs 3.3x reads as needing 1.8x, which is the flattering half of exactly the
+        # mistake this survey exists to stop.
+        low, high = (min(heights), max(heights)) if heights else (1, 1)
+        pen.text((4, r * cell + 3),
+                 "%s   -  %d bodies, %d-%dpx (up to %.2fx to reach %d)"
+                 % (label, len(bodies), low, high, CAST / float(max(1, low)), CAST),
+                 fill=(255, 224, 120, 255))
+
+    out = REPO / "Tools" / "siege_cast_survey.png"
+    sheet.convert("RGB").save(out)
+    print("wrote %s" % out)
+
+
 def main():
-    global SOURCE, TOWER, ENEMIES, ICONS, SURVIVAL, GEMPACK
+    global SOURCE, TOWER, ENEMIES, ICONS, SURVIVAL, GEMPACK, CARTOON
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--contact", action="store_true")
+    ap.add_argument("--survey", action="store_true",
+                    help="draw every character pack on this machine - see CHARACTER_PACKS")
     ap.add_argument("--source", default=str(SOURCE))
     ap.add_argument("--tower", default=str(TOWER))
     ap.add_argument("--enemies", default=str(ENEMIES))
     ap.add_argument("--icons", default=str(ICONS))
     ap.add_argument("--survival", default=str(SURVIVAL))
     ap.add_argument("--gems", default=str(GEMPACK))
+    ap.add_argument("--cartoon", default=str(CARTOON))
     args = ap.parse_args()
 
     SOURCE = Path(args.source)
@@ -2512,6 +3006,11 @@ def main():
     ICONS = Path(args.icons)
     SURVIVAL = Path(args.survival)
     GEMPACK = Path(args.gems)
+    CARTOON = Path(args.cartoon)
+
+    if args.survey:
+        survey()
+        return
 
     made = build()
 

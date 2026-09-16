@@ -243,7 +243,7 @@ namespace GlimmerGrove.EditorTools
         /// different cast depending on which chapter asks and the Editor's catalog index had no
         /// answer, so twelve reels shipped addressed, audited <b>green</b>, and reached a device as
         /// raiders with no body and a health bar floating where each should have been —
-        /// <c>No Location found for Key=Art/Siege/kayBrute_b</c>, twelve times. The root was fixed
+        /// <c>No Location found for Key=Art/Siege/boneBrute_b</c>, twelve times. The root was fixed
         /// in <c>AddressableAddresses.FrameFolders</c>; this is what says so if it happens again.
         /// </para>
         /// </summary>

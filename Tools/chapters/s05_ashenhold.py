@@ -12,18 +12,29 @@ brought a **shackler** and an **ironclad**, and what each of them takes is writt
 `SiegeKind`. The alternative was relaxing invariant 37z so a verb could come round again, which is
 the same as telling a player who has met a smite that they have not met a smite.
 
-**What else is new is a cast, and it is the first one in this mode that is somebody rather than
-something.** Insects, blobs and skeletons are all *things*; a warband of a rogue, a barbarian and
-an engineer is a raid rather than an infestation. It is baked out of the same CC0 models the
-Infinite lane's cast comes from (`SiegeCastBake`) and shares **no body** with it, because that lane
-is one tap away on the same map (invariant 43) - so the obvious bulwark in the pack, a knight, was
-already standing over there and the engineer takes the shield instead.
+**What else is new is a cast, and the thing that decides a cast is which way it faces.** Every
+body this game sends down a hill is square-on - an insect from directly above, a blob and a
+skeleton head-on, each mirror-symmetric about its own middle - so it reads as coming at the
+player. The rabble is six scavengers in scrap armour out of the one pack here drawn that way: a
+manhole cover and a padded helmet are the bulwarks, a sledgehammer and a bearskin the brutes, and
+the two slightest creep (`make_siege_art.RABBLE_SET`).
 
-**And every raider in this mode is now armed.** KayKit hangs a weapon off the rig's own hand socket
-rather than modelling it into the mesh, so an unarmed cast was the pack's default and not its
-intent: for two chapters the Infinite lane's raiders reached the ward line and went on running on
-the spot against it. They carry a weapon and cut a second reel now, which is invariant 37u's
-complaint answered in the art it was really about.
+**This chapter shipped two casts before it and the owner withdrew both.** The first was rendered
+out of rigged 3D, on a written-down survey claiming there was nothing on the machine to cut from;
+four packs are head-on and nobody had opened them, so the survey is a command now
+(`make_siege_art.py --survey`). The second was cut from a high-resolution pack drawn in
+three-quarter and profile, chosen because the top-down pack upscales 2.5x to 3.4x - and the
+verdict was one line: *they look sideway, my other characters look downwards as they walk*.
+**Facing outranks sharpness.** A flat cartoon body inside a heavy outline carries an upscale; no
+resolution recovers a body facing the wrong way.
+
+**The raiders still swing at the line**, and this pack draws a walk and nothing else - so the
+swing is *built*: the body throws itself at the viewer and settles, which from this camera is what
+a lunge is.
+
+**And the two bosses are cut from flat packs now too.** A shackler and an ironclad were baked
+beside the cast; they are a lashing tongue and a horned helm out of the monster packs
+(`make_siege_art.BOSS_SET`), each chosen against the wave it stands in front of.
 
 **Where the difficulty comes from.** Every constant in this mode is shared by all four chapters
 (`SiegeTuning`), so a retune aimed at this one would retune the other three - which is why

@@ -265,6 +265,21 @@ namespace GlimmerGrove.EditorTools
             if (schema == null) return false;
 
             bool wanted = WantedBy(target);
+
+            // **A bench build fills the group here, because nothing else will any more.** The
+            // full sweep used to file the pack unconditionally, which leaked a gitignored pack
+            // into a tracked asset (`AddressableSync`); it skips a bench nobody asked for now, so
+            // the one moment that must not find an empty group is this one. Syncing before the
+            // switch is flipped means a build with the define on cannot ship an empty bundle, and
+            // nobody has to remember a menu item on the day they need the bench (invariant 7a).
+            if (wanted)
+            {
+                var summary = new AddressableRegistry.Summary();
+                Sync(settings, ref summary);
+                CapTextures();
+                AddressableRegistry.Commit(settings, summary);
+            }
+
             if (schema.IncludeInBuild == wanted) return wanted;
 
             schema.IncludeInBuild = wanted;

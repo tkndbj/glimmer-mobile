@@ -30,6 +30,24 @@ RUNGS = 40
 STEP = 5
 DAYS = 42
 
+#: The season's id, and whether it comes round again.
+#:
+#: **A repeating season draws its name from a pool and a fixed one does not, and that is the
+#: whole difference these two constants carry.** `content.py` asks for `ui.season.{n}.name` and
+#: `ui.season.blurb` when `repeats` is set, and for `ui.event.{id}.name` and `.blurb` when it is
+#: not - so getting this wrong is not a cosmetic drift, it is two content errors and a build the
+#: gate refuses.
+#:
+#: **They are here because the season changed under this tool and nobody told it.** It was
+#: written for a one-off called `first_watch`; the shipped season became a repeating `watch`, and
+#: this file went on writing the old shape. `--check` had been red ever since, and the remedy it
+#: prints - "re-run without --check" - *reverted the feature*: a repeating season back to a
+#: single one, with its two loc keys now missing. A generator whose own advice undoes a shipped
+#: change is worse than no generator, which is why the id is a constant now rather than a literal
+#: in two places.
+SEASON_ID = "watch"
+REPEATS = True
+
 #: What the pass costs, in gems.
 #:
 #: Gems rather than money: a pass is an ordinary spend now (invariant 18), so it is priced
@@ -64,15 +82,47 @@ def build():
         for rung in range(1, RUNGS + 1)
     ]
 
-    return {
-        "id": "first_watch",
+    block = {
+        "id": SEASON_ID,
         "icon": "watch",
         "passGems": PASS_GEMS,
         "startUnix": START,
         "endUnix": END,
         "disabled": False,
-        "milestones": milestones,
     }
+
+    # Written only when it is true, and *before* the milestones, so the block this writes is
+    # byte-for-byte the one on disk rather than merely equal to it.
+    if REPEATS:
+        block["repeats"] = True
+
+    block["milestones"] = milestones
+    return block
+
+
+def rewrite(path, data):
+    """Write `data` to `path`, and **only if the file does not already say it**.
+
+    <b>A generator that reformats a file it had nothing to change is a generator nobody dares
+    run.</b> `progression.json` is hand-formatted where it is meant to be read - the notification
+    slate is a column-aligned table - and `json.dumps` expands every one of those rows onto six
+    lines. Re-running this tool with nothing to do produced a seventy-six line diff in a block it
+    does not own, which is noise at best and, in a tree somebody else is reading, a change that
+    has to be reviewed and decided about before it can be dismissed.
+
+    <b>The comparison is on the parsed content rather than on the text</b>, which is what makes
+    that safe: formatting is ignored, so a file that already says the right thing is left exactly
+    as its author left it, and a real change still writes.
+    """
+    if path.exists():
+        try:
+            if json.loads(path.read_text(encoding='utf-8')) == data:
+                return False
+        except ValueError:
+            pass                       # unreadable is a reason to write, not a reason to stop
+
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding='utf-8')
+    return True
 
 
 def main():
@@ -86,11 +136,12 @@ def main():
 
     if args.check:
         wanted = build()
-        shipped = next((e for e in manifest.get('events') or [] if e.get('id') == 'first_watch'), None)
+        shipped = next((e for e in manifest.get('events') or [] if e.get('id') == SEASON_ID), None)
         problems = []
 
         if shipped != wanted:
-            problems.append("manifest.json's first_watch block is not what this tool writes")
+            problems.append(f"manifest.json's {SEASON_ID!r} block is not what this tool writes "
+                            f"(shipped: {'absent' if shipped is None else 'different'})")
 
         for tier in progression['tasks']['tiers']:
             if tier.get('marks') != MARKS.get(tier['id']):
@@ -110,13 +161,12 @@ def main():
     # file exactly where it was. `--check` is what said so, which is the whole reason a
     # generator has one.
     manifest['events'] = [build()]
-
-    MANIFEST.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+    rewrite(MANIFEST, manifest)
 
     progression = json.loads(PROGRESSION.read_text(encoding='utf-8'))
     for tier in progression['tasks']['tiers']:
         tier['marks'] = MARKS[tier['id']]
-    PROGRESSION.write_text(json.dumps(progression, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+    rewrite(PROGRESSION, progression)
 
     free = {}
     paid = {}
@@ -124,10 +174,21 @@ def main():
         free[tier_for(rung, True)] = free.get(tier_for(rung, True), 0) + 1
         paid[tier_for(rung, False)] = paid.get(tier_for(rung, False), 0) + 1
 
-    print(f"season first_watch: {RUNGS} rungs, {STEP} marks apart, top at {RUNGS * STEP}")
+    print(f"season {SEASON_ID}{' (repeating)' if REPEATS else ''}: {RUNGS} rungs, "
+          f"{STEP} marks apart, top at {RUNGS * STEP}")
     print(f"  window {DAYS} days: {START} -> {END}")
     print(f"  free column {free}")
     print(f"  pass column {paid}")
 
 
-main()
+# **Guarded, because this module's `main` *writes*.** Without it, `import author_season` - which
+# any diagnostic, any sibling tool and any future `--check` harness might reasonably do - runs
+# `main()` with whatever `sys.argv` happens to be. With no `--check` in it that is the write
+# path, so merely importing this file rewrites `manifest.json` and `progression.json`.
+#
+# That is not hypothetical: it happened, silently, in the middle of an unrelated drop. The tell
+# was this file's own summary printing before the importer's first line, and what it left behind
+# was a repeating season reverted to the single-season shape and two content errors in a gate
+# that had been green all day. Every other tool here is guarded; this was the one that was not.
+if __name__ == "__main__":
+    main()

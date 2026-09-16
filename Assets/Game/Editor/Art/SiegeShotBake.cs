@@ -120,6 +120,27 @@ namespace GlimmerGrove.EditorTools
             public string Muzzle, Hit;
 
             /// <summary>
+            /// Whether this spell is thrown at <b>nothing</b>, so it has no flight to bake.
+            ///
+            /// <para>
+            /// <b>Two of the eight bosses aim at the hill rather than at a ward</b> — a roar goes
+            /// out over the whole line and a devour takes what is lying on the ground — so what
+            /// the view draws is a ring opening and a flat wash over the floor, and nothing ever
+            /// crosses the board (<c>SiegeView.Roar</c>). Their muzzle and impact are the whole
+            /// drawing; the projectile in between is a reel nobody can ask for.
+            /// </para>
+            /// <para>
+            /// <b>It is a field rather than an omission, because the bake had no way to say
+            /// it.</b> `BakeSpell` writes a flight for every row, so the unused one shipped:
+            /// addressed frame by frame, carrying no label (it is not in
+            /// <c>AddressableAddresses.FrameFolders</c>, so nothing can load it as a reel), and
+            /// built into a bundle for the life of the game. The audit had been reporting it as
+            /// dead weight in as many words.
+            /// </para>
+            /// </summary>
+            public bool Grounded;
+
+            /// <summary>
             /// Whether this reel is baked <b>white in all four ward colours</b> rather than graded
             /// onto each one.
             ///
@@ -561,7 +582,8 @@ namespace GlimmerGrove.EditorTools
         /// </para>
         /// </summary>
         static readonly Shot Roar =
-            new Shot { Key = "roar", Prefab = "vfx_Projectile_Wind01", Hue = Pal.Radiance };
+            new Shot { Key = "roar", Prefab = "vfx_Projectile_Wind01", Hue = Pal.Radiance,
+                       Grounded = true };
 
         /// <summary>
         /// What a <b>shackler</b> looses, and it is the first thing a boss in this mode throws
@@ -577,12 +599,19 @@ namespace GlimmerGrove.EditorTools
         /// right answer rather than the last one left.
         /// </para>
         /// <para>
-        /// <b>An arrow, because the body loosing it is an archer</b> (<c>SiegeCastBake</c>). A
-        /// shackler's whole silhouette is a drawn bow, so a sun or an orb coming off it would be
-        /// the boss and its spell disagreeing about what it is — which is invariant 33e asked of
-        /// the pair rather than of the effect alone. <b>The prefab is a candidate until the
-        /// contact sheet says otherwise</b>: no gate here opens a PNG (32b), so
-        /// <c>Siege Projectile Contact Sheet</c> is what picks between the pack's three arrows.
+        /// <b>A bolt rather than a sun or an orb, because what it throws is a chain</b> — a
+        /// shackler takes no health at all and simply stops a ward firing, so the one thing the
+        /// flight must not read as is magic landing on a turret (invariant 33e asked of the boss
+        /// and its spell together rather than of the effect alone).
+        /// </para>
+        /// <para>
+        /// <b>It was picked when the body loosing it was a drawn bow, and that body is gone.</b>
+        /// A shackler was rendered out of rigged 3D as an archer; the bake was withdrawn and it
+        /// is a flat cut now (<c>make_siege_art.BOSS_SET</c>) whose attack lashes rather than
+        /// looses. Iron still reads — a bolt on a chain is what the mechanic is — but <b>this is
+        /// the one prefab in this file whose body changed underneath it</b>, so it is owed a look
+        /// on <c>Siege Projectile Contact Sheet</c> beside the new stand. No gate here opens a
+        /// PNG (32b).
         /// </para>
         /// </summary>
         static readonly Shot Snare =
@@ -1661,10 +1690,13 @@ namespace GlimmerGrove.EditorTools
             //
             // It also does the job invariant 33e asks of anything the boss brings: a slow round
             // orb is a different *kind* of object from four streaking comets, not a bigger one.
-            made[thrown.Key] =
-                Capture(stage, cam, prefab, thrown.Hue, SpellFrames, seconds,
-                        Mathf.Max(1f, Reflected(prefab, "speed", 30f)), warm,
-                        .5f, SpellTall, SpellTall, SpellTall, 1f, 1f, comet: false);
+            // **A spell aimed at the hill has no flight**, and baking one anyway is how an
+            // unloadable reel came to ship in a bundle. See `Shot.Grounded`.
+            if (!thrown.Grounded)
+                made[thrown.Key] =
+                    Capture(stage, cam, prefab, thrown.Hue, SpellFrames, seconds,
+                            Mathf.Max(1f, Reflected(prefab, "speed", 30f)), warm,
+                            .5f, SpellTall, SpellTall, SpellTall, 1f, 1f, comet: false);
 
             var muzzle = Companion(prefab, "muzzlePrefab");
             if (muzzle != null)

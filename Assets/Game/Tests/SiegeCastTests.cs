@@ -7,7 +7,8 @@ using NUnit.Framework;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// The five casts a siege can draw, and the ways a cast can silently stop being drawable.
+    /// The five casts a siege can draw — four a chapter picks from and the Infinite lane's
+    /// medley — and the ways a cast can silently stop being drawable.
     ///
     /// <para>
     /// <b>This is <c>SiegeGroundTests</c>'s question asked of the raiders.</b> A rung's ground is
@@ -38,7 +39,17 @@ namespace GlimmerGrove.Tests
     {
         static readonly int[] Sets =
         {
-            SiegeMode.Insects, SiegeMode.Baked, SiegeMode.Brood, SiegeMode.Bones, SiegeMode.Iron,
+            SiegeMode.Insects, SiegeMode.Medley, SiegeMode.Brood, SiegeMode.Bones,
+            SiegeMode.Rabble,
+        };
+
+        /// <summary>
+        /// The four a <b>chapter</b> can draw. The medley is not one of them: it is dealt out of
+        /// these and is the Infinite lane's alone.
+        /// </summary>
+        static readonly int[] Chapters =
+        {
+            SiegeMode.Insects, SiegeMode.Brood, SiegeMode.Bones, SiegeMode.Rabble,
         };
 
         static readonly SiegeKind[] Bodies =
@@ -129,18 +140,22 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// No two casts share a reel.
+        /// No two <b>chapter</b> casts share a reel.
         ///
         /// <b>The property rather than a table</b> (invariant 44e): two casts that overlap are two
         /// chapters that look the same on the bodies they share, and the whole reason a second cast
         /// exists is that they should not.
+        ///
+        /// <b>The medley is deliberately excluded and is checked the other way round below</b>
+        /// (<see cref="TheMedleyIsDealtOutOfTheChapterCasts"/>): the Infinite lane draws every
+        /// body the player has already fought, so every one of its reels is some chapter's.
         /// </summary>
         [Test]
-        public void NoTwoCastsShareABody()
+        public void NoTwoChapterCastsShareABody()
         {
             var owner = new Dictionary<string, int>();
 
-            foreach (int set in Sets)
+            foreach (int set in Chapters)
                 foreach (var request in SiegeMode.CastArt(set))
                 {
                     if (owner.TryGetValue(request.Address, out int already))
@@ -148,6 +163,69 @@ namespace GlimmerGrove.Tests
 
                     owner[request.Address] = set;
                 }
+        }
+
+        /// <summary>
+        /// **The medley is dealt out of the four chapter casts and owns no reel of its own.**
+        ///
+        /// <para>
+        /// That is the whole of what makes the Infinite lane free: it loads twelve reels as every
+        /// chapter does and all twelve are already on disk for a chapter, where the cast it
+        /// replaced was twenty-four reels nothing else drew. A row here that named art of its own
+        /// would be that cost coming back with nothing announcing it.
+        /// </para>
+        /// <para>
+        /// <b>And every slot is dealt from the cast its own square names</b>, which is what stops
+        /// the walk and the swing coming from different families — a body that loaded one
+        /// family's walk and another's swing would change into a different animal at the ward
+        /// line.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheMedleyIsDealtOutOfTheChapterCasts()
+        {
+            var chapters = new HashSet<string>();
+
+            foreach (int set in Chapters)
+            {
+                foreach (var request in SiegeMode.CastArt(set)) chapters.Add(request.Address);
+
+                var swings = SiegeMode.CastSwingArt(set);
+                if (swings == null) continue;
+
+                foreach (var request in swings) chapters.Add(request.Address);
+            }
+
+            foreach (var request in SiegeMode.CastArt(SiegeMode.Medley))
+                Assert.That(chapters.Contains(request.Address), Is.True,
+                            $"the medley draws {request.Address}, which no chapter cast owns");
+
+            foreach (var request in SiegeMode.CastSwingArt(SiegeMode.Medley))
+                Assert.That(string.IsNullOrEmpty(request.Address)
+                            || chapters.Contains(request.Address), Is.True,
+                            $"the medley swings {request.Address}, which no chapter cast owns");
+        }
+
+        /// <summary>
+        /// **Every family the main ladder sends turns up on the Infinite hill**, which is the one
+        /// thing the arithmetic above cannot say and the whole reason this lane draws a medley: a
+        /// square that dealt three slots to one cast and none to another would load, index, draw
+        /// and read as an ordinary chapter's wave.
+        /// </summary>
+        [Test]
+        public void TheMedleyDrawsFromEveryChapterCast()
+        {
+            var drawn = new HashSet<string>();
+            foreach (var request in SiegeMode.CastArt(SiegeMode.Medley)) drawn.Add(request.Address);
+
+            foreach (int set in Chapters)
+            {
+                bool any = false;
+                foreach (var request in SiegeMode.CastArt(set))
+                    any |= drawn.Contains(request.Address);
+
+                Assert.That(any, Is.True, $"the medley sends no body from cast {set}");
+            }
         }
 
         /// <summary>
@@ -172,8 +250,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The three chapters this game ships draw <b>different</b> casts, and the Infinite lane
-        /// draws the baked one.
+        /// The four chapters this game ships draw <b>different</b> casts, and the Infinite lane
+        /// draws the medley.
         ///
         /// <b>The fact, not the arithmetic</b> — the arithmetic is checked above, and this is what a
         /// reader actually wants to know. It is also what catches a re-ordered
@@ -191,8 +269,11 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SiegeMode.Bones, SiegeMode.CastFor(GameTrack.Main, 2),
                             "Barrowfell does not draw the bone cast");
 
-            Assert.AreEqual(SiegeMode.Baked, SiegeMode.CastFor(GameTrack.Infinite, 0),
-                            "the Infinite lane does not draw the baked cast");
+            Assert.AreEqual(SiegeMode.Rabble, SiegeMode.CastFor(GameTrack.Main, 3),
+                            "Ashenhold does not draw the rabble");
+
+            Assert.AreEqual(SiegeMode.Medley, SiegeMode.CastFor(GameTrack.Infinite, 0),
+                            "the Infinite lane does not draw the medley");
         }
 
         /// <summary>
@@ -210,15 +291,24 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// **A cast that swings names one reel per body, in the same order it names its walks** —
-        /// or names none at all, which is what two of the four do.
+        /// **A cast that swings names one reel per body, in the same order it names its walks**
+        /// — or names none at all, or, in exactly one case, names nothing for a body whose pack
+        /// drew no attack.
         ///
         /// <para>
-        /// <b>Null and a full twelve are the only two legal answers</b>, and that is the whole of
-        /// what this checks. A partial table would index correctly for the rows it had and answer
-        /// an address that is not on disk for the rest — which loads as nothing, and an
-        /// <c>Image</c> with a null sprite is a white rectangle over a raider standing at the ward
-        /// line (invariant 7b), on the rungs where the line is already being lost.
+        /// <b>What must never happen is an address that is neither empty nor on disk</b>: that
+        /// loads as nothing, and an <c>Image</c> with a null sprite is a white rectangle over a
+        /// raider standing at the ward line (invariant 7b), on the rungs where the line is
+        /// already being lost. So the check is that every non-empty entry is one this cast also
+        /// loads, that the table is the full twelve when there is one at all, and that no two
+        /// slots share a reel.
+        /// </para>
+        /// <para>
+        /// <b>The gap is the medley's</b> and it is honest rather than convenient: two of the
+        /// four families it is dealt from have no attack animation in their packs, so six of its
+        /// twelve bodies keep walking at the line — which is exactly what those two chapters do
+        /// today. <c>CastSwing</c> answering empty is already the "this does not swing" reply for
+        /// a whole cast; this is the same reply one body at a time.
         /// </para>
         /// </summary>
         [Test]
@@ -243,7 +333,8 @@ namespace GlimmerGrove.Tests
                                 + $"{SiegeMode.CastBodies}, so the index CastSwing rests on is off");
 
                 var loaded = new HashSet<string>();
-                foreach (var request in swings) loaded.Add(request.Address);
+                foreach (var request in swings)
+                    if (!string.IsNullOrEmpty(request.Address)) loaded.Add(request.Address);
 
                 var seen = new HashSet<string>();
 
@@ -252,20 +343,28 @@ namespace GlimmerGrove.Tests
                     {
                         string address = SiegeMode.CastSwing(set, kind, colour);
 
-                        Assert.IsNotEmpty(address,
-                                          $"cast {set} swings nothing for a {kind} in colour "
-                                          + $"{Wards.WardLine.Colours[colour]}");
+                        // A body that does not swing says so with an empty address and the view
+                        // keeps walking. Only the medley has one (see the remarks).
+                        if (string.IsNullOrEmpty(address))
+                        {
+                            Assert.AreEqual(SiegeMode.Medley, set,
+                                            $"cast {set} swings nothing for a {kind} in colour "
+                                            + $"{Wards.WardLine.Colours[colour]}, and only the "
+                                            + "medley is allowed a gap");
+                            continue;
+                        }
 
                         Assert.That(loaded.Contains(address), Is.True,
                                     $"cast {set} swings {address} and never loads it");
 
-                        seen.Add(address);
+                        Assert.That(seen.Add(address), Is.True,
+                                    $"cast {set} swings {address} for two different bodies, so "
+                                    + "the array is not in the order CastSwing assumes");
                     }
 
-                Assert.AreEqual(SiegeMode.CastBodies, seen.Count,
-                                $"cast {set} swings {seen.Count} distinct reels for "
-                                + $"{SiegeMode.CastBodies} slots, so the array is not in the order "
-                                + "CastSwing assumes");
+                Assert.AreEqual(loaded.Count, seen.Count,
+                                $"cast {set} loads {loaded.Count} swing reels and draws "
+                                + $"{seen.Count} of them");
             }
         }
 
@@ -310,6 +409,7 @@ namespace GlimmerGrove.Tests
             {
                 SiegeKind.Boss, SiegeKind.Overlord, SiegeKind.Blightcaller,
                 SiegeKind.Warbringer, SiegeKind.Gravemaw, SiegeKind.Bonecaller,
+                SiegeKind.Shackler, SiegeKind.Ironclad,
             };
 
             foreach (var kind in bosses)

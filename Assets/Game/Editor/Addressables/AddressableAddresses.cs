@@ -154,7 +154,7 @@ namespace GlimmerGrove.EditorTools
             // Measured, that shipped: the second siege cast came back labelless, so twelve reels
             // were addressed, audited green and **unloadable**, and what reached a device was
             // raiders with no body and a health bar floating where each should have been, with
-            // `No Location found for Key=Art/Siege/kayBrute_b` in the log. `Art` is the mode's
+            // `No Location found for Key=Art/Siege/boneBrute_b` in the log. `Art` is the mode's
             // whole art with nothing asking, which is exactly the set this needs.
             foreach (var mode in Content.LevelModes.All)
                 foreach (var request in mode.Art)

@@ -129,6 +129,13 @@ namespace GlimmerGrove.EditorTools
                 : $"[Glimmer] {missing.Count} of {expected.Count} expected asset(s) missing");
 
             GroveBrowseAtlases.Audit(content.Homestead);
+
+            // The import rules as well as the addresses. An asset can be present, addressed and
+            // loadable and still be three times the texture memory it should be, which no other
+            // check here can see — see ArtImportRules.Audit.
+            var drift = ArtImportRules.Audit();
+            foreach (var d in drift) Debug.LogError("[Glimmer] " + d);
+            if (drift.Count == 0) Debug.Log("[Glimmer] art import rules: every texture agrees");
         }
 
         /// <summary>
@@ -215,6 +222,44 @@ namespace GlimmerGrove.EditorTools
         }
 
         /// <summary>
+        /// Folder under <c>Art/</c> to the compression grade it imports at. Anything unlisted
+        /// takes <see cref="TextureImporterCompression.Compressed"/>.
+        ///
+        /// <para>
+        /// <b>A grade is a block size, and the block is absolute rather than relative to the
+        /// texture.</b> On Android with ASTC pinned (<c>DevBuild.PinTextureCompression</c>),
+        /// <c>Compressed</c> is ASTC 6x6 at 3.56 bpp and <c>CompressedHQ</c> is ASTC 4x4 at 8
+        /// bpp — so a 6x6 block eats a far larger share of a 256-pixel flipbook frame than of a
+        /// 2048 backdrop. That is why the two small folders below are graded up while the large
+        /// ones are not: it is the *cap* that decides, not the subject.
+        /// </para>
+        /// <para>
+        /// <b>Measured, never argued</b> (44b), with
+        /// <c>Tools/compare_texture_formats.py --measure --contact</c>, source against ASTC,
+        /// worst file per folder: backdrops 49.5 dB, Ui/Hud 52.2, Fx/Victory 44.3, Map 43.7, Ui
+        /// 43.0, Chests 42.3 — all at or above the 41.1 dB the turrets already ship at and were
+        /// judged clean on a phone. <c>Companions</c> came out at 39.5 and <c>Critters</c> at
+        /// <b>33.8</b>, visibly blockier on the contact sheet, and both are small and
+        /// soft-edged. At 4x4 they measure 48–56 dB, which is effectively lossless, and the two
+        /// folders together are 19 MB — so the grade costs about 2 MB against the alternative of
+        /// shipping the one folder anybody could fault.
+        /// </para>
+        /// </summary>
+        static readonly (string Folder, TextureImporterCompression Grade)[] Grades =
+        {
+            ("/Art/Critters/", TextureImporterCompression.CompressedHQ),
+            ("/Art/Companions/", TextureImporterCompression.CompressedHQ),
+        };
+
+        internal static TextureImporterCompression GradeFor(string path)
+        {
+            foreach (var grade in Grades)
+                if (path.Contains(grade.Folder)) return grade.Grade;
+
+            return TextureImporterCompression.Compressed;
+        }
+
+        /// <summary>
         /// Re-imports every art texture whose size cap has drifted from the rule above.
         ///
         /// <para>
@@ -248,7 +293,7 @@ namespace GlimmerGrove.EditorTools
                 var importer = AssetImporter.GetAtPath(path) as TextureImporter;
                 if (importer == null) continue;
 
-                if (importer.maxTextureSize != CapFor(path)) stale.Add(path);
+                if (Disagrees(importer, path)) stale.Add(path);
             }
 
             if (stale.Count == 0)
@@ -265,6 +310,7 @@ namespace GlimmerGrove.EditorTools
                 {
                     var importer = (TextureImporter)AssetImporter.GetAtPath(path);
                     importer.maxTextureSize = CapFor(path);
+                    importer.textureCompression = GradeFor(path);
                     importer.SaveAndReimport();
                 }
             }
@@ -277,6 +323,76 @@ namespace GlimmerGrove.EditorTools
             Debug.Log($"[Glimmer] art import rules: {stale.Count} of {guids.Length} texture(s) re-imported");
         }
 
+        /// <summary>
+        /// Whether this texture's importer has drifted from the rules above.
+        ///
+        /// One predicate, shared by <see cref="Reapply"/> and <see cref="Audit"/> on purpose:
+        /// a repair and the gate that proves the repair happened must not be able to disagree
+        /// about what "correct" is, or the gate goes green on a file the repair skips.
+        /// </summary>
+        static bool Disagrees(TextureImporter importer, string path)
+            => importer.maxTextureSize != CapFor(path)
+            || importer.textureCompression != GradeFor(path);
+
+        /// <summary>
+        /// Proves no texture under <c>Art/</c> ships against the rules, and is wired into the
+        /// build gate rather than left to a menu item.
+        ///
+        /// <para>
+        /// <b>This is invariant 7a's second half.</b> The preprocessor makes the fault
+        /// unlikely; it cannot make it impossible, because a preprocessor fires on first import
+        /// only — so art that landed before a rule changed keeps what it was given, silently,
+        /// and silence is exactly how 175 MB of uncompressed textures came to be resident on
+        /// every device. Making an error unlikely is not proving it did not happen.
+        /// </para>
+        /// <para>
+        /// An <b>error</b> rather than a warning, and the repair is one menu item, because the
+        /// two ways this fails are a build too large for Play's ceiling and a process the OS
+        /// kills after a video ad. Neither announces itself, and neither is visible in a
+        /// screenshot, a compile or a content validation.
+        /// </para>
+        /// <para>
+        /// Deliberately scoped to <c>Assets/Game/Art</c>. The grove shop's atlas *sources* live
+        /// under <c>Assets/Game/Generated/GroveThumbs</c> and are uncompressed on purpose — see
+        /// <c>GroveBrowseAtlases.Configure</c>, where compressing a source would be decompressed
+        /// into the atlas and compressed again for one extra round of artefacts. They are
+        /// outside this walk and outside the preprocessor's, which is why neither needs to know
+        /// about the other.
+        /// </para>
+        /// </summary>
+        public static List<string> Audit()
+        {
+            var errors = new List<string>();
+            var guids = AssetDatabase.FindAssets("t:Texture2D", new[] { "Assets/Game/Art" });
+            int drifted = 0;
+
+            foreach (var guid in guids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid).Replace('\\', '/');
+                if (AssetImporter.GetAtPath(path) is not TextureImporter importer) continue;
+                if (!Disagrees(importer, path)) continue;
+
+                drifted++;
+
+                // Only the first few by name. A rule change touches hundreds at once, and a
+                // console with four hundred identical errors in it is one nobody reads to the
+                // end — the count and the repair are what the reader actually needs.
+                if (drifted <= 5)
+                    errors.Add($"art import rules: '{path}' imports at " +
+                               $"{importer.maxTextureSize}/{importer.textureCompression} " +
+                               $"where the rule says {CapFor(path)}/{GradeFor(path)}");
+            }
+
+            if (drifted > 5)
+                errors.Add($"art import rules: {drifted - 5} further texture(s) disagree, not listed");
+
+            if (drifted > 0)
+                errors.Add($"art import rules: {drifted} of {guids.Length} texture(s) disagree with " +
+                           "the folder rules; run Glimmer Grove ▸ Reapply Art Import Rules");
+
+            return errors;
+        }
+
         void OnPreprocessTexture()
         {
             var p = assetPath.Replace('\\', '/');
@@ -286,6 +402,16 @@ namespace GlimmerGrove.EditorTools
             // The size cap is applied even to a texture already marked as a sprite, because
             // that is the case this rule exists for: art imported before the cap existed.
             ti.maxTextureSize = CapFor(p);
+
+            // **And the grade, for the same reason and a worse history.** Everything below the
+            // early return is skipped for a texture Unity already calls a Sprite, which is most
+            // of them — so for as long as compression was set down there it was set on almost
+            // nothing, and 382 files kept whatever their `.meta` happened to carry. What they
+            // carried was `Uncompressed`: 6% of the art library holding 49% of its texture
+            // memory, 175 MB where ASTC wants 20. `DevBuild.PinTextureCompression` could never
+            // have caught it either — pinning the *format family* to ASTC does nothing to a
+            // texture that has asked not to be compressed at all.
+            ti.textureCompression = GradeFor(p);
 
             if (ti.textureType == TextureImporterType.Sprite) return;
             ti.textureType = TextureImporterType.Sprite;

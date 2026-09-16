@@ -60,10 +60,23 @@ namespace GlimmerGrove.EditorTools
                 AddressableRegistry.PruneEmptyChapterGroups(settings, ref summary);
 
                 // The bench's pack is outside the managed folders on purpose, so the loop above
-                // cannot see it and the importer hook never will either. It is swept here rather
-                // than left to its own menu item for this file's own reason: a repair somebody
-                // has to remember is a repair that does not happen.
-                VfxBenchGroup.Sync(settings, ref summary);
+                // cannot see it and the importer hook never will either.
+                //
+                // **And it is swept only when this build actually wants the bench**, which is the
+                // one place in this file that deliberately does *less* than it can. The pack is
+                // gitignored, exactly as the CraftPix packs are - so on a machine that has
+                // imported it an unconditional sweep files a hundred and seventy-five entries
+                // pointing at assets nobody else has into a **tracked** group asset. A clone then
+                // gets a group full of missing references, which is the failure this project
+                // already knows by heart: a dead Addressables entry fails `BuildPlayer` rather
+                // than the game.
+                //
+                // Nothing has to be remembered for it, which is what that rule is really about
+                // (invariant 7a): `VfxBenchGroup.Gate` syncs the bench at build time when the
+                // define is on, so a bench build cannot ship an empty bundle, and
+                // `Addressables > Sync VFX Bench` is there for working on it interactively.
+                if (VfxBenchGroup.WantedBy(EditorUserBuildSettings.selectedBuildTargetGroup))
+                    VfxBenchGroup.Sync(settings, ref summary);
             }
             finally
             {

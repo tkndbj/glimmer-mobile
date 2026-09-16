@@ -596,11 +596,13 @@ namespace GlimmerGrove
         /// <summary>
         /// What this raider swings at the ward line, or <b>null</b> when its cast drew none.
         ///
-        /// <b>Null is the answer for two of the three casts and it is not a failure</b> — the
-        /// insects and the brood have no attack animation, so their bodies keep walking where they
-        /// stand exactly as they always have. Asking the address first and the library second is
-        /// what keeps a cast with no swing from ever requesting a reel that is not on disk: an
-        /// <c>Image</c> with no sprite is a white rectangle over a raider (invariant 7b).
+        /// <b>Null is an ordinary answer and not a failure</b> — the insects and the brood have no
+        /// attack animation in their packs, so their bodies keep walking where they stand exactly
+        /// as they always have, and <b>six of the Infinite lane's twelve</b> are dealt from those
+        /// two and answer the same way one body at a time (<c>SiegeMode.MedleySwings</c>). Asking
+        /// the address first and the library second is what keeps any of them from requesting a
+        /// reel that is not on disk: an <c>Image</c> with no sprite is a white rectangle over a
+        /// raider (invariant 7b).
         /// </summary>
         Sprite[] Swing(SiegeRaider raider)
         {
@@ -612,7 +614,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Which cast this level draws — one of <see cref="SiegeMode.Insects"/>,
-        /// <see cref="SiegeMode.Brood"/> or <see cref="SiegeMode.Baked"/>.
+        /// <see cref="SiegeMode.Brood"/> or <see cref="SiegeMode.Medley"/>.
         ///
         /// <para>
         /// <b>Decided by <see cref="SiegeMode.CastFor"/> and nowhere else</b>, because the same

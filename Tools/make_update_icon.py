@@ -75,7 +75,7 @@ def cut(z):
     """The arrow, trimmed to its own alpha and centred in a square.
 
     Trimmed because the pack pads its artboards and an untrimmed sprite draws the arrow
-    smaller than the box it was given — the fault `SiegeCastBake` records about a body framed
+    smaller than the box it was given — the fault `make_siege_art.one_canvas` records about a body framed
     around its own halo. Centred in a square so the panel can size it on one axis and get the
     same picture on every display.
     """

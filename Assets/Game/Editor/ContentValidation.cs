@@ -3653,6 +3653,13 @@ namespace GlimmerGrove.EditorTools
             var errors = new List<string>(result.Errors);
             var warnings = new List<string>(result.Warnings);
 
+            // And that the art is imported the way the folder rules say. This one is not about
+            // whether an asset is *there* — it is about what it costs once it is, which nothing
+            // else in this gate can see: an uncompressed texture validates, addresses, loads and
+            // draws perfectly while taking several times the memory it should. See
+            // ArtImportRules.Audit for why a preprocessor alone cannot be the answer (7a).
+            errors.AddRange(ArtImportRules.Audit());
+
 #if GLIMMER_HAS_ADDRESSABLES
             // Before the audit, because it changes what is in the build. The VFX bench is a
             // developer tool sitting on two hundred megabytes of licensed particle art, and this

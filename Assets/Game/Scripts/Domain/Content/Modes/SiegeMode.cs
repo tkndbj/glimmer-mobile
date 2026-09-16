@@ -356,7 +356,6 @@ namespace GlimmerGrove.Content
                 case SiegeKind.Bonecaller:
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("caller")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("caller_cast")));
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("caller_walk")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("roar_muzzle")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("roar_hit")));
                     break;
@@ -373,7 +372,6 @@ namespace GlimmerGrove.Content
                 case SiegeKind.Shackler:
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("snare")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("snare_cast")));
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("snare_walk")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("snare")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("snare_muzzle")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("snare_hit")));
@@ -382,7 +380,6 @@ namespace GlimmerGrove.Content
                 case SiegeKind.Ironclad:
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("clad")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("clad_cast")));
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("clad_walk")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("quake")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("quake_muzzle")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("quake_hit")));
@@ -518,45 +515,6 @@ namespace GlimmerGrove.Content
         };
 
         /// <summary>
-        /// The baked cast: the twelve bodies the <b>Infinite</b> lane draws instead of the
-        /// insects.
-        ///
-        /// <para>
-        /// <b>Baked out of 3D rather than bought</b> (<c>SiegeCastBake</c>), which is what this
-        /// seam was re-opened for. The insect roster is one pack of fifteen and there is no second
-        /// one on this machine — "top-down" in the sprite market nearly always means a
-        /// three-quarter RPG view, and true overhead only reads for creatures whose silhouette
-        /// <em>is</em> their back (37ar). Rendering a rigged model makes the angle a decision
-        /// rather than a purchase, which is the same technique <c>SiegeShotBake</c> already uses
-        /// for the bought VFX pack and the one Clash Royale's whole cast is made with.
-        /// </para>
-        /// <para>
-        /// <b>By track rather than by chapter ordinal, and that is a trial rather than a rule.</b>
-        /// Invariant 7c's arithmetic is what a cast should hang on once one is settled; hanging it
-        /// on the track puts the two one tap apart, so the authored chapter's insects and the baked
-        /// cast can be compared without leaving the mode. If the bake is kept this goes back to an
-        /// ordinal; if it is not, this row and twelve reels are the whole of what has to be undone.
-        /// </para>
-        /// </summary>
-        static readonly AssetRequest[] SecondCast =
-        {
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_y")),
-
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_y")),
-
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_y")),
-        };
-
-        /// <summary>
         /// The bone cast: the twelve bodies the <b>third</b> chapter draws.
         ///
         /// <para>
@@ -632,94 +590,172 @@ namespace GlimmerGrove.Content
         };
 
         /// <summary>
-        /// What the <b>baked</b> cast swings at the ward line.
+        /// The <b>rabble</b>: the twelve bodies the fourth chapter draws.
         ///
-        /// <b>New with the fourth chapter, and it is a fix to a cast that had already
-        /// shipped.</b> These bodies are rendered from rigged models, so a swing was always
-        /// available and was simply never cut — for two chapters the Infinite lane's raiders
-        /// reached the ward line and went on running on the spot against it, which is invariant
-        /// 37u's complaint arriving through the art. The bake now hangs a weapon off the rig's own
-        /// hand socket and cuts a second reel from the shared melee library
-        /// (<c>SiegeCastBake.Body.Swing</c>); nothing about the runtime changed.
+        /// <para>
+        /// <b>Every one of them walks toward the camera, which is the property every cast here
+        /// has and the one nobody had written down.</b> An insect is seen from directly above, a
+        /// blob and a skeleton head-on; all three are mirror-symmetric about their own middle,
+        /// because that is what a body facing you looks like. This is the only pack on the
+        /// machine drawn that way, and the cast that shipped before it was not — it was cut from
+        /// a high-resolution pack drawn in three-quarter and profile, and the owner withdrew it
+        /// in one line. <b>Facing outranks sharpness</b>: a flat cartoon body inside a heavy
+        /// outline carries an upscale, and no resolution recovers a body facing the wrong way.
+        /// </para>
+        /// <para>
+        /// <b>Its kinds are said by what a body is wearing</b>, which is the pack's own drawing:
+        /// a manhole cover and a padded helmet are the bulwarks, a sledgehammer and a bearskin
+        /// the brutes, and the two slightest creep. <b>Its swing is built rather than cut</b> —
+        /// the pack draws a walk and nothing else, so the body throws itself at the viewer and
+        /// settles, which from this camera is what a lunge is
+        /// (<c>make_siege_art.walk_and_swing</c>).
+        /// </para>
+        /// <para>
+        /// <b>Both this cast and the three bosses replaced bodies rendered out of rigged 3D</b>
+        /// (<c>SiegeCastBake</c>, withdrawn). The bake existed because this project had recorded
+        /// that every character pack on the machine except the insects was drawn side-view — and
+        /// four of them are head-on, which is twenty bodies nobody had opened
+        /// (<c>make_siege_art.MONS_V1</c>). <b>Its known cost is the upscale</b>: 2.5x–3.4x to
+        /// reach <c>CAST</c>, the worst in the mode. See <c>make_siege_art.RABBLE_SET</c>.
+        /// </para>
+        /// <para>
+        /// <b>It shares no body with any other cast</b>, which is what the Infinite lane's medley
+        /// is allowed to break and a chapter is not: the lane is one tap from this chapter on the
+        /// same map (invariant 43), so what a chapter sends has to be its own.
+        /// </para>
         /// </summary>
-        static readonly AssetRequest[] BakedSwings =
+        static readonly AssetRequest[] RabbleCast =
         {
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_r_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_g_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_b_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayMon_y_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleMon_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleMon_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleMon_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleMon_y")),
 
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_r_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_g_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_b_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBrute_y_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBrute_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBrute_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBrute_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBrute_y")),
 
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_r_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_g_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_b_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("kayBulwark_y_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBulwark_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBulwark_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBulwark_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBulwark_y")),
         };
 
         /// <summary>
-        /// The <b>iron</b> cast: the twelve bodies the fourth chapter draws.
+        /// What the rabble swings at the ward line. See <see cref="BoneSwings"/>.
+        ///
+        /// <b>Its pack draws an attack for every body</b>, which is what kept this chapter's
+        /// swing when the bake it used to come from was withdrawn — a rendered body could always
+        /// be given one, so the question there was only whether somebody cut it; for a bought
+        /// sheet it is whether the pack drew one at all.
+        /// </summary>
+        static readonly AssetRequest[] RabbleSwings =
+        {
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleMon_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleMon_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleMon_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleMon_y_swing")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBrute_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBrute_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBrute_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBrute_y_swing")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBulwark_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBulwark_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBulwark_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("rabbleBulwark_y_swing")),
+        };
+
+        /// <summary>
+        /// Which cast each of the medley's twelve slots is dealt from, in
+        /// <see cref="CastArt"/>'s own order: four creepers, then four brutes, then four
+        /// bulwarks, each in <c>WardLine.Colours</c> order.
         ///
         /// <para>
-        /// <b>A living warband, which is the one thing the three casts before it are not.</b>
-        /// Insects, blobs and skeletons are all <em>things</em>; none of them is somebody who
-        /// chose to come. The chapter reads as a raid rather than an infestation and the bodies
-        /// are the whole of what says so — a rogue with two daggers creeps, a barbarian behind a
-        /// two-handed axe is a brute, and an engineer behind a spiked pavise is a bulwark: invariant
-        /// 37bu's vocabulary said twice over, once by the body and once by what it is holding.
-        /// </para>
-        /// <para>
-        /// <b>Baked from the same pack as the Infinite lane's and sharing no body with it</b>, for
-        /// the reason that lane is one tap from this chapter on the same map (invariant 43): the
-        /// obvious bulwark in the pack is a knight, and a knight is already standing over there.
-        /// See <c>SiegeCastBake.IronRoster</c>.
+        /// <b>A Latin square rather than a list, and it is the arrangement that carries the
+        /// idea.</b> Every family appears three times, once as a creeper, once as a brute and
+        /// once as a bulwark; every kind holds all four families; no colour draws the same
+        /// family twice. What a player sees on the Infinite hill is therefore insects, blobs,
+        /// skeletons and the rabble walking down it together, in every role — which is what an
+        /// endless watch <em>is</em>, and it is the one place in this mode where sharing a body
+        /// with a chapter is the point rather than the fault (compare <see cref="RabbleCast"/>).
         /// </para>
         /// </summary>
-        static readonly AssetRequest[] IronCast =
+        static readonly int[] MedleyOrder =
         {
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_y")),
-
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_y")),
-
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_r")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_g")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_b")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_y")),
+            Insects, Brood,   Bones,   Rabble,     // creepers  r g b y
+            Brood,   Bones,   Rabble,  Insects,    // brutes
+            Bones,   Rabble,  Insects, Brood,      // bulwarks
         };
 
-        /// <summary>What the iron cast swings. See <see cref="BakedSwings"/>.</summary>
-        static readonly AssetRequest[] IronSwings =
+        /// <summary>
+        /// The twelve bodies the <b>Infinite</b> lane draws.
+        ///
+        /// <para>
+        /// <b>Derived from the four chapter casts rather than written out, which is the whole
+        /// point.</b> A thirteenth to twenty-fourth reel written down here would be twelve more
+        /// names to keep in step with the arrays above — and the day one of those casts is
+        /// re-cut, the lane would go on naming a reel nobody writes any more. Indexing the very
+        /// arrays <see cref="CastArt"/> hands out makes that unrepresentable, exactly as
+        /// <see cref="CastAddress"/> made the view's old copy of the names unrepresentable.
+        /// </para>
+        /// <para>
+        /// <b>It costs no art at all</b>, which is what paid for the cast it replaced being
+        /// withdrawn: the lane loads twelve reels as every chapter does, and all twelve are
+        /// already on disk for a chapter. The bake it replaced was twenty-four reels and
+        /// sixteen megabytes of PNG that nothing else in the game drew.
+        /// </para>
+        /// <para>
+        /// <b>Declared after every cast it reads</b>, because a static initialiser runs in
+        /// textual order and one that ran first would deal twelve nulls.
+        /// </para>
+        /// </summary>
+        static readonly AssetRequest[] MedleyCast = Dealt(false);
+
+        /// <summary>
+        /// What the medley swings, with an <b>empty</b> entry for a body whose pack drew no
+        /// attack.
+        ///
+        /// <b>The one partial swing table in this mode, and it is honest rather than
+        /// convenient</b>: the insects and the brood have no attack animation at all, so those
+        /// six slots have nothing to name and say so. <see cref="CastSwing"/> answers empty for
+        /// them and the view keeps walking — which is exactly what those two chapters do today.
+        /// </summary>
+        static readonly AssetRequest[] MedleySwings = Dealt(true);
+
+        /// <summary>
+        /// One of the medley's two arrays, dealt out of <see cref="MedleyOrder"/>.
+        ///
+        /// <b>A method rather than two initialisers</b>, so the walk and the swing cannot be
+        /// dealt from different squares — which would load one family's body and swing another's
+        /// at the ward line.
+        /// </summary>
+        static AssetRequest[] Dealt(bool swinging)
         {
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_r_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_g_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_b_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironMon_y_swing")),
+            var into = new AssetRequest[CastBodies];
 
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_r_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_g_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_b_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBrute_y_swing")),
+            for (int i = 0; i < CastBodies; i++)
+            {
+                var from = swinging ? CastSwingArt(MedleyOrder[i]) : CastArt(MedleyOrder[i]);
 
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_r_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_g_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_b_swing")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("ironBulwark_y_swing")),
-        };
+                // Default is an empty address, which is the "this body does not swing" answer
+                // `CastSwing` already gives — never a made-up name.
+                into[i] = from != null && from.Count > i ? from[i] : default;
+            }
+
+            return into;
+        }
 
         /// <summary>The insects, which are what a siege draws unless something says otherwise.</summary>
         public const int Insects = 0;
 
-        /// <summary>The cast rendered out of 3D. See <see cref="SecondCast"/>.</summary>
-        public const int Baked = 1;
+        /// <summary>
+        /// The Infinite lane's medley — one body from each of the four chapter casts,
+        /// dealt across the twelve slots. See <see cref="MedleyCast"/>.
+        /// </summary>
+        public const int Medley = 1;
 
         /// <summary>The blob brood. See <see cref="BroodCast"/>.</summary>
         public const int Brood = 2;
@@ -727,8 +763,8 @@ namespace GlimmerGrove.Content
         /// <summary>The skeletons. See <see cref="BoneCast"/>.</summary>
         public const int Bones = 3;
 
-        /// <summary>The warband. See <see cref="IronCast"/>.</summary>
-        public const int Iron = 4;
+        /// <summary>The rabble. See <see cref="RabbleCast"/>.</summary>
+        public const int Rabble = 4;
 
         /// <summary>How many casts this mode ships.</summary>
         public const int CastSets = 5;
@@ -742,7 +778,7 @@ namespace GlimmerGrove.Content
         /// year costs no cast at all</b>, and no chapter can ship drawing bodies nobody chose. A
         /// third pack lengthens this array and changes nothing else.
         /// </summary>
-        static readonly int[] MainCasts = { Insects, Brood, Bones, Iron };
+        static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble };
 
         /// <summary>
         /// How many casts the main ladder draws from before it starts again.
@@ -766,11 +802,12 @@ namespace GlimmerGrove.Content
         /// to decide what to preload and <c>SiegeScreen</c> asks it to decide what to draw.
         /// </para>
         /// <para>
-        /// <b>The Infinite lane is the one answer that is not arithmetic</b>, and it is a trial
-        /// rather than a rule (see <see cref="SecondCast"/>): hanging the baked cast on the track
-        /// puts it one tap from the authored chapters so the two can be judged against each other
-        /// without leaving the mode. If the bake is kept, this line goes and the bake takes a place
-        /// in <see cref="MainCasts"/>.
+        /// <b>The Infinite lane is the one answer that is not arithmetic</b>, and it is a fact
+        /// about that lane rather than a stopgap: it has one chapter and no ordinal to do
+        /// arithmetic on (invariant 43), and what it draws is a <em>medley</em> of the four
+        /// chapter casts rather than a cast of its own (see <see cref="MedleyCast"/>). A lane
+        /// whose waves never stop sends everything the player has already fought, which is the
+        /// one place in this mode where sharing a body with a chapter is the point.
         /// </para>
         /// <para>
         /// <b>An unknown chapter answers with the insects</b>, because <c>ChapterOrderOf</c> reports
@@ -780,7 +817,7 @@ namespace GlimmerGrove.Content
         /// </summary>
         public static int CastFor(GameTrack track, int ordinal)
         {
-            if (track == GameTrack.Infinite) return Baked;
+            if (track == GameTrack.Infinite) return Medley;
             if (ordinal < 0) return Insects;
 
             return MainCasts[ordinal % MainCasts.Length];
@@ -797,10 +834,10 @@ namespace GlimmerGrove.Content
         {
             switch (set)
             {
-                case Baked: return SecondCast;
+                case Medley: return MedleyCast;
                 case Brood: return BroodCast;
                 case Bones: return BoneCast;
-                case Iron: return IronCast;
+                case Rabble: return RabbleCast;
                 default: return InsectCast;
             }
         }
@@ -820,8 +857,8 @@ namespace GlimmerGrove.Content
         /// the insects and the brood it is whether the pack drew one at all.
         public static IReadOnlyList<AssetRequest> CastSwingArt(int set)
             => set == Bones ? BoneSwings
-             : set == Baked ? BakedSwings
-             : set == Iron ? IronSwings : null;
+             : set == Medley ? MedleySwings
+             : set == Rabble ? RabbleSwings : null;
 
         /// <summary>
         /// The address one raider's swing reel is at, or <b>empty</b> when this cast has none.
@@ -838,7 +875,15 @@ namespace GlimmerGrove.Content
             int row = kind == SiegeKind.Bulwark ? 2 : kind == SiegeKind.Brute ? 1 : 0;
             int at = colour < 0 || colour >= colours ? 0 : colour;
 
-            return art[row * colours + at].Address;
+            // **A single slot may be empty, which is what the medley needs and no other
+            // cast uses.** Two of the four families it is dealt from have no attack
+            // animation in their packs at all, so six of its twelve bodies swing and six
+            // keep walking — and "keep walking" is already the answer this method gives
+            // for a whole cast with no swings, so it is the same answer one body at a
+            // time. What must never happen is an address that is *not* empty and not on
+            // disk: that loads as nothing, and an `Image` with a null sprite is a white
+            // rectangle over a raider at the ward line (invariant 7b).
+            return art[row * colours + at].Address ?? string.Empty;
         }
 
         /// <summary>How many bodies a cast holds: three kinds in four colours.</summary>
@@ -932,12 +977,27 @@ namespace GlimmerGrove.Content
                     // **And every swing reel**, for the same reason: this is the question about
                     // what *exists*, and a reel never named here ships addressed, grouped, built
                     // into a bundle and impossible to load (invariant 37at).
-                    var swings = CastSwingArt(set);
-                    if (swings != null) list.AddRange(swings);
+                    Reels(list, CastSwingArt(set));
                 }
 
                 return list;
             }
+        }
+
+        /// <summary>
+        /// Add every reel in a list that names one, skipping the slots that name nothing.
+        ///
+        /// <b>A gap is legal in exactly one table</b> (<see cref="MedleySwings"/>) and it
+        /// must never reach the loader: an <c>AssetRequest</c> with no address is a warm-up
+        /// for a key that does not exist, which fails at load with a message naming nothing
+        /// a reader could act on.
+        /// </summary>
+        static void Reels(List<AssetRequest> into, IReadOnlyList<AssetRequest> reels)
+        {
+            if (reels == null) return;
+
+            for (int i = 0; i < reels.Count; i++)
+                if (!string.IsNullOrEmpty(reels[i].Address)) into.Add(reels[i]);
         }
 
         public override IReadOnlyList<AssetRequest> ArtFor(ChapterBody chapter)
@@ -958,8 +1018,7 @@ namespace GlimmerGrove.Content
 
             list.AddRange(CastArt(cast));
 
-            var swing = CastSwingArt(cast);
-            if (swing != null) list.AddRange(swing);
+            Reels(list, CastSwingArt(cast));
 
             var seen = new HashSet<SiegeKind>();
 

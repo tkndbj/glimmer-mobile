@@ -324,14 +324,6 @@ RANK_TINTS = [(158, 173, 189), (217, 140, 82), (219, 227, 240), (255, 204, 77), 
 #: less than the screen cannot report what the screen gets wrong.
 SHADOW_DROP, SHADOW_WIDE, SHADOW_TALL, BODY_LIFT = 0.21, 0.78, 0.37, 0.04
 
-#: The same three for a body that *stands* on the ground rather than lying on it -
-#: `SiegeView.StandingDrop` and its neighbours, mirrored. The numbers above are an insect's,
-#: whose picture is its own footprint; a baked humanoid has its feet at the bottom edge of the
-#: frame, so its shadow goes most of a half-height below the middle or it is drawn inside the
-#: knees. **This picture has to know which cast it is drawing**, or it draws the fault it exists
-#: to catch (invariant 44d): a mirror that under-draws sends you off to fix what was never broken.
-STANDING_DROP, STANDING_WIDE, STANDING_TALL, STANDING_ALPHA = 0.44, 0.86, 0.26, 0.62
-
 
 def body_fill(boss):
     return 0.72 if boss else 0.94
@@ -348,13 +340,16 @@ def body_fill(boss):
 SHADOW_ALPHA, SHADOW_POWER = 0.55, 0.25
 
 
-def shadow(sheet, cx, cy, wide, tall, boss=False, upright=False):
-    """The soft dark blob under a raider, drawn where `SiegeView.Hatch` puts it."""
+def shadow(sheet, cx, cy, wide, tall, boss=False):
+    """The soft dark blob under a raider, drawn where `SiegeView.Hatch` puts it.
+
+    **One set of numbers for every cast**, which is what withdrawing the baked one bought back:
+    that cast was rendered at this board's rake with its feet at the bottom edge of the picture,
+    so it needed a contact shadow most of a half-height down and carried four constants of its
+    own. Every body this mode draws now is a flat cut from a bought sheet.
+    """
     body = tall * body_fill(boss)
-    drop = STANDING_DROP if upright else SHADOW_DROP
-    across = STANDING_WIDE if upright else SHADOW_WIDE
-    deep = STANDING_TALL if upright else SHADOW_TALL
-    alpha = STANDING_ALPHA if upright else SHADOW_ALPHA
+    drop, across, deep, alpha = SHADOW_DROP, SHADOW_WIDE, SHADOW_TALL, SHADOW_ALPHA
     w, h = max(2, int(wide * across)), max(2, int(body * deep))
 
     ys, xs = [(i + 0.5) / h * 2 - 1 for i in range(h)], [(i + 0.5) / w * 2 - 1 for i in range(w)]
@@ -371,16 +366,34 @@ def shadow(sheet, cx, cy, wide, tall, boss=False, upright=False):
                                  int(cy - h / 2 - BODY_LIFT * tall + body * drop)))
 
 
-#: Which cast is being drawn: the insects, or the one baked out of 3D (`SiegeCastBake`).
+#: Which cast is being drawn. The empty string is the insects, which is what a chapter draws
+#: unless something says otherwise.
 #:
-#: **By track, mirroring `SiegeView.CastSet`** — the authored chapter sends insects and the
-#: Infinite lane sends the baked cast, so `--wave` draws what that lane really draws. Set by
-#: `main`; a board drawn without one is the authored chapter's.
+#: **Mirroring `SiegeMode.CastFor`** - a chapter's cast is arithmetic on its ordinal and the
+#: Infinite lane draws a *medley*, so `--wave` draws what that lane really draws. Set by `main`;
+#: a board drawn without one is the authored chapter's.
 CAST = ""
+
+#: The Infinite lane's square, mirroring `SiegeMode.MedleyOrder`: which family each kind draws in
+#: each colour. Rows are creepers, brutes, bulwarks; columns are `siege.LETTERS`.
+#:
+#: **Written out rather than derived**, exactly as `CHAPTER_CASTS` is and for its reason: this
+#: tool has no catalog, and a mirror that computes the answer a second way is a mirror that can
+#: quietly draw a hill the game does not (invariant 44d).
+MEDLEY = (
+    ("",       "brood",  "bone",   "rabble"),
+    ("brood",  "bone",   "rabble", ""),
+    ("bone",   "rabble", "",       "brood"),
+)
+
+#: Which row of `MEDLEY` a kind reads, in `SiegeMode.CastAddress`'s own order.
+MEDLEY_ROWS = {"mon": 0, "brute": 1, "bulwark": 2}
 
 
 def skin(kind, colour):
-    return "%s%s_%s" % (CAST, kind if not CAST else kind[0].upper() + kind[1:],
+    cast = MEDLEY[MEDLEY_ROWS[kind]][colour] if CAST == "medley" else CAST
+
+    return "%s%s_%s" % (cast, kind if not cast else kind[0].upper() + kind[1:],
                         siege.LETTERS[colour])
 
 
@@ -730,18 +743,15 @@ def warlord(sheet, draw_on, kind, colour, wards, span, cell, hill_top, hill_foot
     # `--warlord walk` is the entrance.
     stem = look["stem"]
 
-    # **Three reels for a boss that was rendered out of 3D and two for one that was cut from a 2D
-    # pack**, which is a fact about the art rather than about the kind (`SiegeView.WalkReel`). A
-    # pack drew each of its bosses one animation, so standing and walking are one picture for
-    # four of the six; a baked body genuinely stands still when it stops, so it carries a walk of
-    # its own and `caller_walk` is the only one on disk. Falling back to the stand is the same
-    # answer the view gives, and it is what keeps `--warlord walk` a legal thing to ask of every
-    # boss rather than a flag that draws nothing for four of them.
+    # **Two reels per boss, and there used to be a third.** Every pack here draws its bosses one
+    # animation, so standing and walking are one picture and the board is the only thing that
+    # moves it (`SiegeView.WalkReel`). Three of the eight were rendered out of rigged 3D for one
+    # drop and did genuinely stand still when they arrived, so they carried a walk of their own;
+    # that bake is withdrawn, and `--warlord walk` went with it rather than being left as a flag
+    # that silently draws the stand (invariant 44e).
     body = None
     if casting == "cast":
         body = reel(stem + "_cast")
-    elif casting == "walk":
-        body = reel(stem + "_walk")
 
     if body is None:
         body = reel(stem)
@@ -1526,7 +1536,7 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         # check it.
         body = reel(skin("bulwark" if bulwark else "brute" if brute else "mon", colour))
         wide = tall if body is None else tall * body.width / body.height
-        shadow(sheet, cx, cy, wide, tall, upright=CAST == "kay")
+        shadow(sheet, cx, cy, wide, tall)
         put(sheet, body, cx, cy - BODY_LIFT * tall, wide, tall)
 
         # The gem over its head, which is the third of the three things that say its colour.
@@ -2050,7 +2060,8 @@ CHAPTER_CASTS = {
     "s01_thornwatch": "",
     "s03_broodmarch": "brood",
     "s04_barrowfell": "bone",
-    "s02_endlesswatch": "kay",
+    "s05_ashenhold": "rabble",
+    "s02_endlesswatch": "medley",
 }
 
 
@@ -2338,14 +2349,14 @@ def main():
                     help="how many of the first wave to stand on the hill")
     ap.add_argument("--no-bolts", action="store_true",
                     help="draw the board with nothing in flight")
-    ap.add_argument("--warlord", default="cast", choices=("cast", "idle", "walk", "storm"),
+    ap.add_argument("--warlord", default="cast", choices=("cast", "idle", "storm"),
                     help="draw the boss winding up (cast), standing (idle), walking on "
                          "(walk), or the frame its volley leaves (storm)")
     ap.add_argument("--cooling", nargs="?", const="firepot=6,stormcall=22", default="",
                     help="draw slots mid-cooldown, as id=seconds pairs; bare gives a sample")
     ap.add_argument("--no-bar", action="store_true",
                     help="draw the board without the utility bar under it")
-    ap.add_argument("--cast", default="", choices=("", "kay", "brood", "bone"),
+    ap.add_argument("--cast", default="", choices=("", "brood", "bone", "rabble", "medley"),
                     help="which cast to draw: the insects (default) or the 3D bake, which is "
                          "what the Infinite lane draws")
     ap.add_argument("--wave", type=int, default=1,
@@ -2468,11 +2479,11 @@ def main():
     # other on the same rung.
     #
     # **It used to read `"kay" if args.wave else ""`, and `--wave` defaults to one**, so the
-    # condition was true on every run this tool has ever made: the authored chapter has been drawn
-    # with the Infinite lane's baked cast since that cast was added, in the one picture this mode
-    # has for everything a number cannot see. That is invariant 44d's own trap - a render that
-    # draws something other than the screen sends you off to fix what was never broken - and the
-    # lane needed no special case at all, because it is a chapter and the chapter decides.
+    # condition was true on every run this tool had made: the authored chapter was drawn with the
+    # Infinite lane's cast, in the one picture this mode has for everything a number cannot see.
+    # That is invariant 44d's own trap - a render that draws something other than the screen sends
+    # you off to fix what was never broken - and the lane needed no special case at all, because
+    # it is a chapter and the chapter decides.
     global CAST
 
     shots = []

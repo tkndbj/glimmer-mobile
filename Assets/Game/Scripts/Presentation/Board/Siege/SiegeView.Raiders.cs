@@ -50,28 +50,23 @@ namespace GlimmerGrove
             // than the body and inflate every frame). A beetle's sits about a fifth of its own
             // height below its middle and is about as wide as it is; `ShadowDrop`, `ShadowWide`
             // and `ShadowTall` are that, against the *body* rather than against the frame.
-            // **And the baked cast is upright, so it takes the numbers the insects replaced.**
-            // The paragraph above is about a body whose picture *is* its footprint; a KayKit
-            // humanoid rendered at this board's 22° is the other thing entirely — the feet are at
-            // the bottom of the picture and the shadow goes under them, which is precisely the
-            // case the 0.46 figure was right for. Left on the insects' numbers it sat inside the
-            // hips, which on a hill reads as a man hovering an inch above the grass. `Standing`
-            // is that, and it is chosen by which cast is drawn rather than by kind, because it is
-            // a fact about how the art was made.
+            //
+            // **One set of numbers for every cast, which is what withdrawing the baked one
+            // bought back.** A KayKit humanoid rendered at this board's 22° was the other thing
+            // entirely — its feet were at the bottom edge of the picture, so it needed a contact
+            // shadow most of a half-height down and carried a second set of constants and a
+            // branch to choose between them. Every body this mode draws now is a flat cut from a
+            // bought sheet, head-on or from above, and the skeletons have been shipping on these
+            // numbers since the third chapter.
             float wide = Frame(mob.Playing, tall);
             float body = tall * BodyFill(raider.Boss);
-            bool upright = CastSet == SiegeMode.Baked && !raider.Boss;
-
-            float drop = upright ? StandingDrop : ShadowDrop;
-            float across = upright ? StandingWide : ShadowWide;
-            float deep = upright ? StandingTall : ShadowTall;
 
             mob.Shadow = UIKit.Img("Shadow", mob.Node, Art.Glow(64, ShadowFalloff),
-                                   new Color(0f, 0f, 0f, upright ? StandingInk : ShadowInk),
-                                   new Vector2(wide * across, body * deep));
+                                   new Color(0f, 0f, 0f, ShadowInk),
+                                   new Vector2(wide * ShadowWide, body * ShadowTall));
             mob.Shadow.raycastTarget = false;
             mob.Shadow.rectTransform.anchoredPosition =
-                new Vector2(0f, BodyLift * tall - body * drop);
+                new Vector2(0f, BodyLift * tall - body * ShadowDrop);
 
             // **A raider is drawn in its own paint, and the wash and the coat that used to
             // say its colour are gone.** They were a wash behind the body and a 62% multiply over
@@ -246,33 +241,26 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The reel a boss walks on in, and <b>null</b> for a boss whose cast drew only one.
+        /// The reel a boss walks on in, and <b>null</b> for a boss whose pack drew only one —
+        /// which today is every one of them.
         ///
         /// <para>
-        /// <b>Three cases now, and the split is exactly the 2D/3D one.</b> The five bosses cut
-        /// from flat packs have a single reel that is their walk and their stand at once — they
-        /// never stop cycling, so nothing about them wants a second — where a boss rendered out of
-        /// rigged 3D (invariant 37bx) genuinely stands still when it arrives and therefore needs
-        /// both. Answering null for the rest is what keeps this a fact about the art rather than a
-        /// rule everything has to satisfy.
+        /// <b>The seam rather than the feature, and it is kept on purpose.</b> All eight bosses
+        /// are cut from flat packs whose bodies cycle in place, so each one's single reel is its
+        /// walk and its stand at once and <c>Mob.Playing</c> falls through to the idle. Three of
+        /// them were rendered out of rigged 3D until the bake was withdrawn, and a rendered body
+        /// really does stand still when it arrives — so this is the one place that would have to
+        /// change if a boss ever gets a walk of its own again, and it is one line.
         /// </para>
         /// <para>
-        /// Written out per kind rather than assembled from <see cref="CastReel"/>'s key plus a
-        /// suffix, for the reason every reel name in this file is: a name built at its call site
-        /// is a name <c>Tools/verify/artnames.py</c> cannot hold to disk, and an <c>Image</c> with
-        /// no sprite is a white rectangle three cells tall over the hill (invariant 7b).
+        /// <b>What it must not become is a fallback to the idle.</b> Answering the stand here
+        /// would make <c>SiegeView.Clock</c>'s "is it walking" question unanswerable, and the
+        /// thing that would look like is a boss holding the middle of the hill playing the reel
+        /// it walked on in with — invariant 37u's fault, which is what <c>Mob.Walking</c> was
+        /// added to fix.
         /// </para>
         /// </summary>
-        static Sprite[] WalkReel(SiegeKind kind)
-        {
-            switch (kind)
-            {
-                case SiegeKind.Bonecaller: return Reel("caller_walk");
-                case SiegeKind.Shackler: return Reel("snare_walk");
-                case SiegeKind.Ironclad: return Reel("clad_walk");
-                default: return null;
-            }
-        }
+        static Sprite[] WalkReel(SiegeKind kind) => null;
 
         /// <summary>How fast a warlord's own frames run. Slow, because it is a heavy thing.</summary>
         ///
@@ -307,35 +295,6 @@ namespace GlimmerGrove
         /// floating, which is what was reported.
         /// </summary>
         const float ShadowDrop = .21f, ShadowWide = .78f, ShadowTall = .37f;
-
-        /// <summary>
-        /// The same three, for a body that is standing on the ground rather than lying on it.
-        ///
-        /// <para>
-        /// <b>An offset is a fact about what the body is</b> — which is this invariant's own rule
-        /// (37as), and the baked cast is the case it was written *against*. A top-down insect's
-        /// picture is its footprint, so its shadow sits a fifth of its height below its middle; a
-        /// humanoid rendered at 22° has its feet at the bottom edge of the picture, so its shadow
-        /// sits most of a half-height below the middle or it is drawn inside the knees. Measured
-        /// off the baked reels: the feet occupy the bottom eighth of a trimmed frame, which puts
-        /// the contact point at 0.44 of the body below its middle.
-        /// </para>
-        /// <para>
-        /// <b>Wider than it is deep, because it is an ellipse seen at a rake.</b> A shadow on the
-        /// ground under a near-side-on camera is foreshortened in depth and not in width — the
-        /// insects' near-circle is what a plan view gives you and is wrong here. And it is
-        /// <b>darker</b>: a standing body's contact shadow is the only thing saying it is touching
-        /// the hill at all, where a prone insect has its whole silhouette doing that job.
-        /// </para>
-        /// <para>
-        /// A boss keeps the insect numbers, because the four bosses are still insects and are
-        /// drawn from the other cast whatever <see cref="CastSet"/> says.
-        /// </para>
-        /// </summary>
-        const float StandingDrop = .44f, StandingWide = .86f, StandingTall = .26f;
-
-        /// <summary>How dark a standing body's contact shadow is. See <see cref="StandingDrop"/>.</summary>
-        const float StandingInk = .62f;
 
         /// <summary>
         /// How dark the shadow is at its middle, and how fast it falls off to nothing.

@@ -99,7 +99,7 @@ def cut(z):
 
     Trimmed because the pack pads its artboards — this one by 34 pixels of nothing on the left
     alone — and an untrimmed sprite draws the crown smaller than the box it was given, which is
-    the fault `SiegeCastBake` records about a body framed around its own halo. Centred in a
+    the fault `make_siege_art.one_canvas` records about a body framed around its own halo. Centred in a
     square so both callers can size it on one axis and get the same picture.
 
     **`preserveAspect` is what the call sites then owe it**: the crown is wider than it is tall,
