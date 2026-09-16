@@ -84,7 +84,16 @@ service cloud.firestore {
                // Which lessons the player has been shown. Client-owned and harmless —
                // it buys nothing — but bounded anyway, because an unbounded array the
                // client controls is a way to make the document expensive to read.
-               && (!('tipsSeen' in d) || (d.tipsSeen is list && d.tipsSeen.size() <= 64))
+               //
+               // The bound was 64, and on 2026-09-16 the owner's own account crossed it:
+               // the ledger keeps every id it has ever seen, including the lessons of
+               // withdrawn modes, so the longest-played account is the first to reach the
+               // cap — and from that write on the rules refused *every* save for that
+               // account (invariant 12a), which reached the player as "could not save your
+               // progress" on every account switch. The bound now matches
+               // `TipLedger.MaxIds`, the client prunes to it before writing, and
+               // `CloudWireTests` holds the two together.
+               && (!('tipsSeen' in d) || (d.tipsSeen is list && d.tipsSeen.size() <= 256))
                // Today's chest counters. Client-owned and forgeable, and that is
                // accounted for: nothing here decides what a chest pays. The server
                // re-rolls each chest itself and refuses a second grant for the same id,

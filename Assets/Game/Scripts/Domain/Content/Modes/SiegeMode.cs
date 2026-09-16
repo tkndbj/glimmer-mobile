@@ -295,8 +295,18 @@ namespace GlimmerGrove.Content
         /// it: <c>Tools/verify/artnames.py</c> reads literals off the call site, so a key built
         /// from a kind would be twenty-four names nothing checks.
         /// </para>
+        /// <para>
+        /// <b>Public so a fixture can walk every kind through it</b>, which is
+        /// <c>SiegeView.BossKey</c>'s bargain for the same reason one step further along. Three
+        /// of these eight arms named the <em>warbringer's</em> two reels — a gravemaw and a
+        /// bonecaller drew a roar under colours of their own for two chapters, which is invariant
+        /// 37z's fault and the kind of fault that is green on every gate this project has: the
+        /// addresses are real, registered, audited and loaded. What catches it is asking whether
+        /// any two bosses name the same picture, and that question can only be asked here. See
+        /// <c>SiegeArtTests.EveryBossSpellIsItsOwnDrawing</c>.
+        /// </para>
         /// </summary>
-        static void Bosses(SiegeKind kind, List<AssetRequest> into)
+        public static void Bosses(SiegeKind kind, List<AssetRequest> into)
         {
             switch (kind)
             {
@@ -337,14 +347,23 @@ namespace GlimmerGrove.Content
                 // **Two of its three reels, for the warbringer's reason**: a devour is thrown at
                 // the ground the player has been killing over rather than at a ward, so it has no
                 // flight and nothing crosses the hill.
+                //
+                // **And they are its own two, which they were not.** This asked for `roar_muzzle`
+                // and `roar_hit` — the warbringer's — under a colour of its own, and so did the
+                // bonecaller below: three bosses, one drawing, three tints, which is invariant
+                // 37z exactly. Being aimed at no ward is what a devour shares with a roar, and it
+                // is a fact about the rule rather than about the picture. A ring that *closes* is
+                // what a devour looks like; see `SiegeShotBake.Maw`.
                 case SiegeKind.Gravemaw:
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("maw")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("maw_cast")));
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("roar_muzzle")));
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("roar_hit")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("maw_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("maw_hit")));
                     break;
 
-                // The same two, for the same reason: a raise puts bodies at the top of the hill.
+                // The same two and its own two, for the same reasons: a raise puts bodies at the
+                // top of the hill, and it wore the warbringer's reels until the day the drawings
+                // were counted. See `SiegeShotBake.Crypt`.
                 //
                 // **And a third body reel, which this is the one boss in the mode to have.** It
                 // is the only one rendered out of 3D (invariant 37bx), so it is the only one that
@@ -356,8 +375,8 @@ namespace GlimmerGrove.Content
                 case SiegeKind.Bonecaller:
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("caller")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("caller_cast")));
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("roar_muzzle")));
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("roar_hit")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("crypt_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("crypt_hit")));
                     break;
 
                 // **Three body reels each, because both are baked** (invariant 37bx, and the

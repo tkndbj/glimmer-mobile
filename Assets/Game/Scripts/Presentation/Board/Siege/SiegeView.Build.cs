@@ -106,6 +106,26 @@ namespace GlimmerGrove
             _meters = Layer("Meters");
             _fx = Layer("Fx");
 
+            // **The effects layer gets a canvas of its own, and it is the single cheapest thing
+            // in this mode.** Unity rebuilds a canvas's whole geometry whenever any `Graphic` on
+            // it is added, removed, moved or re-tinted — and this board's canvas carries the
+            // ground, the ward line, four fuel tubes, the gem field and a dozen raiders. Every
+            // spark of every boss cast was therefore re-meshing all of that, twenty to forty
+            // times a second, at exactly the moment the mode has the most on screen. A nested
+            // canvas is a rebuild boundary: what happens on `_fx` now stops at `_fx`.
+            //
+            // **`overrideSorting` is deliberately left off.** It would take this layer out of the
+            // parent's ordering and put it at a sorting order of its own, which is how a nested
+            // canvas ends up drawn over the masked layer above it (the stormcall's) or under the
+            // board. Off, it keeps hierarchy order exactly as it had it and buys only the
+            // rebuild boundary, which is the whole of what is wanted.
+            //
+            // **It costs one batch.** Geometry either side of the boundary cannot be batched
+            // together, so the board pays a draw call for it — against a canvas rebuild that
+            // was touching several thousand vertices per spark. No raycaster: everything drawn
+            // here sets `raycastTarget = false`, so there is nothing on this layer to hit.
+            _fx.gameObject.AddComponent<Canvas>().overrideSorting = false;
+
             // **A layer that is clipped to the board, for the one thing that comes from outside
             // it.** Everything else drawn here starts somewhere on the hill and stays there, which
             // is why `_fx` carries no mask and the procedural bolts clamp their own endpoints

@@ -223,7 +223,11 @@ const save = {
     // The lessons already shown and the companions already bought. Here for the reason
     // every block above is: the mapper sends them, so this has to, or nothing checks that
     // the live rules accept them.
-    tipsSeen: { arrayValue: { values: [{ stringValue: "brittle" }] } },
+    // Two hundred of them, deliberately. The ledger keeps every lesson ever seen, withdrawn
+    // modes included, and the rules bounded the list at 64 — the owner's own account crossed
+    // that on 2026-09-16 and lost every save write from then on (invariant 12a). The bound
+    // is `TipLedger.MaxIds` now, and this is what proves the *released* rules honour it.
+    tipsSeen: { arrayValue: { values: Array.from({ length: 200 }, (_, i) => ({ stringValue: `lesson_${i}` })) } },
     companionsOwned: { arrayValue: { values: [{ stringValue: "coral" }] } },
     // The grove: what was bought for it, and where it stands. Same reason again, and it
     // is the newest pair — an unlisted field is refused outright by `hasOnly`, so a rules

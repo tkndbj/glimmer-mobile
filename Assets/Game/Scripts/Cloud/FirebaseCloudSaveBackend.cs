@@ -45,6 +45,31 @@ namespace GlimmerGrove.Cloud
         const string PrivateCollection = "private";
         const string WalletDocument = "wallet";
 
+        /// <summary>
+        /// How long any one call to the SDK may take before it is reported as
+        /// <see cref="CloudFailure.Offline"/> and retried later.
+        ///
+        /// <para>
+        /// <b>Every call, without exception, because the failure is the latch.</b> A Firestore
+        /// write completes only when the backend acknowledges it, so on a connection that drops
+        /// after the request went out it never completes at all — and one call that never
+        /// completes holds <c>CloudSaveService</c>'s sync latch for the life of the process,
+        /// which every later sync, switch and link reports as a failure of its own. A callable
+        /// has a client timeout of its own; the auth exchanges and the document operations do
+        /// not, and it is easier to prove "every call has one" than "the ones that need one
+        /// have one". See <see cref="CloudCancel.Within"/>. The interactive provider sheets are
+        /// the one thing not under a deadline: a player may take as long as they like to pick
+        /// an account, and closing the sheet is its own answer.
+        /// </para>
+        /// </summary>
+        const int ReadSeconds = 30;
+        const int WriteSeconds = 30;
+        const int AuthSeconds = 60;
+        const int CallSeconds = 70;
+
+        /// <summary>A deletion walks several collections; give it the room a cold start needs.</summary>
+        const int DeleteSeconds = 120;
+
         FirebaseApp _app;
         FirebaseAuth _auth;
         FirebaseFirestore _db;
@@ -124,6 +149,25 @@ namespace GlimmerGrove.Cloud
                 _app = FirebaseApp.DefaultInstance;
                 _auth = FirebaseAuth.DefaultInstance;
                 _db = FirebaseFirestore.DefaultInstance;
+
+                // No offline cache, and this is the first thing said to the instance because
+                // it can only be said before anything else is.
+                //
+                // The game has its own local save and its own merge; a sync is pull, join,
+                // push, and every one of them retries on a backoff. Firestore's cache is a
+                // second copy of the same documents that answers when the first cannot, and
+                // every time it has answered it has answered wrongly: a restored Android backup
+                // served another install's name, wallet and roster to a client that could not
+                // authenticate (see LauncherManifest.xml); an offline pull served a stale save
+                // that was then merged and queued as a write nobody could see; and a write
+                // queued while offline survives an account switch in the previous account's
+                // queue and is replayed the next time that account signs in, with a revision
+                // the rules refuse. With the cache off, an offline read fails at once with
+                // Unavailable — which the sync reports as Offline and retries when the app is
+                // next foregrounded — and a write never outlives the call that made it.
+                try { _db.Settings.PersistenceEnabled = false; }
+                catch (Exception e) { Debug.LogWarning("[Cloud] could not turn the Firestore cache off: " + e.Message); }
+
                 _functions = FirebaseFunctions.GetInstance(_app, FunctionsRegion);
 
                 _ready = true;
@@ -146,7 +190,8 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                if (_auth.CurrentUser == null) await _auth.SignInAnonymouslyAsync();
+                if (_auth.CurrentUser == null)
+                    await CloudCancel.Within(_auth.SignInAnonymouslyAsync(), AuthSeconds, cancellation);
 
                 var user = _auth.CurrentUser;
                 if (user == null)
@@ -201,14 +246,16 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                if (_auth.CurrentUser == null) await _auth.SignInAnonymouslyAsync();
+                if (_auth.CurrentUser == null)
+                    await CloudCancel.Within(_auth.SignInAnonymouslyAsync(), AuthSeconds, cancellation);
 
                 var (upgraded, refusal) = await NativeIfRequiredAsync(credential);
                 if (refusal.HasValue) return (refusal.Value, CloudIdentity.None);
                 credential = upgraded;
 
                 if (credential.HasToken)
-                    await _auth.CurrentUser.LinkWithCredentialAsync(ToCredential(credential));
+                    await CloudCancel.Within(_auth.CurrentUser.LinkWithCredentialAsync(ToCredential(credential)),
+                                             AuthSeconds, cancellation);
                 else
                     await _auth.CurrentUser.LinkWithProviderAsync(Provider(credential.ProviderId));
 
@@ -258,7 +305,8 @@ namespace GlimmerGrove.Cloud
                 credential = upgraded;
 
                 if (credential.HasToken)
-                    await _auth.SignInAndRetrieveDataWithCredentialAsync(ToCredential(credential));
+                    await CloudCancel.Within(_auth.SignInAndRetrieveDataWithCredentialAsync(ToCredential(credential)),
+                                             AuthSeconds, cancellation);
                 else
                     await _auth.SignInWithProviderAsync(Provider(credential.ProviderId));
 
@@ -462,8 +510,8 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var snapshot = await CloudCancel.OrGiveUp(
-                    _db.Collection("config").Document("stats").GetSnapshotAsync(), cancellation);
+                var snapshot = await CloudCancel.Within(
+                    _db.Collection("config").Document("stats").GetSnapshotAsync(), ReadSeconds, cancellation);
                 if (!snapshot.Exists) return (CloudResult.Success, empty);
 
                 var document = snapshot.ToDictionary();
@@ -553,8 +601,8 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var snapshot = await CloudCancel.OrGiveUp(
-                    _db.Collection("config").Document("release").GetSnapshotAsync(), cancellation);
+                var snapshot = await CloudCancel.Within(
+                    _db.Collection("config").Document("release").GetSnapshotAsync(), ReadSeconds, cancellation);
 
                 if (!snapshot.Exists) return (CloudResult.Success, Release.ReleaseRequirement.None);
 
@@ -615,7 +663,7 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var snapshot = await CloudCancel.OrGiveUp(PlayerDoc(userId).GetSnapshotAsync(), cancellation);
+                var snapshot = await CloudCancel.Within(PlayerDoc(userId).GetSnapshotAsync(), ReadSeconds, cancellation);
 
                 if (!snapshot.Exists)
                     return (CloudResult.Success, CloudSnapshot.Missing);   // a first sync, not a failure
@@ -647,8 +695,9 @@ namespace GlimmerGrove.Cloud
                     // merge: the snapshot is already the join of local and remote, so a
                     // field-level merge would be a second, weaker merge fighting the
                     // real one.
-                    await PlayerDoc(userId).SetAsync(FirestoreSaveMapper.ToDocument(snapshot),
-                                                     SetOptions.Overwrite);
+                    await CloudCancel.Within(
+                        PlayerDoc(userId).SetAsync(FirestoreSaveMapper.ToDocument(snapshot), SetOptions.Overwrite),
+                        WriteSeconds, cancellation);
                     return CloudResult.Success;
                 }
 
@@ -669,7 +718,7 @@ namespace GlimmerGrove.Cloud
                     }
                 }
 
-                await PlayerDoc(userId).UpdateAsync(updates);
+                await CloudCancel.Within(PlayerDoc(userId).UpdateAsync(updates), WriteSeconds, cancellation);
                 return CloudResult.Success;
             }
             catch (Exception e)
@@ -691,7 +740,7 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var reply = await CallAsync("getWallet", new Dictionary<string, object>());
+                var reply = await CallAsync("getWallet", new Dictionary<string, object>(), cancellation);
                 return (CloudResult.Success, ReadWalletStates(reply));
             }
             catch (Exception e)
@@ -725,7 +774,8 @@ namespace GlimmerGrove.Cloud
                 }
 
                 var reply = await CallAsync("submitSpends",
-                                            new Dictionary<string, object> { { "spends", payload } });
+                                            new Dictionary<string, object> { { "spends", payload } },
+                                            cancellation);
 
                 WarnAboutRejections(reply);
                 return (CloudResult.Success, ReadWalletStates(reply));
@@ -768,7 +818,8 @@ namespace GlimmerGrove.Cloud
                 }
 
                 var reply = await CallAsync("claimAwards",
-                                            new Dictionary<string, object> { { "awards", payload } });
+                                            new Dictionary<string, object> { { "awards", payload } },
+                                            cancellation);
 
                 // A refused claim is handed back on every row rather than warned about and
                 // forgotten: the ledger drops it, or it is resubmitted and refused for ever.
@@ -808,7 +859,7 @@ namespace GlimmerGrove.Cloud
                             { "payload", receipt.Payload ?? string.Empty },
                         }
                     },
-                });
+                }, cancellation);
 
                 return (CloudResult.Success, ReadWalletStates(reply), ReadRedemption(reply));
             }
@@ -881,7 +932,7 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var reply = await CallAsync("publishGrove", new Dictionary<string, object>());
+                var reply = await CallAsync("publishGrove", new Dictionary<string, object>(), cancellation);
 
                 // Absent and zero are different answers. A deployment that predates the field
                 // reports nothing, and the client must not read that as "built from nothing"
@@ -915,7 +966,7 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                await CallAsync("withdrawGrove", new Dictionary<string, object>());
+                await CallAsync("withdrawGrove", new Dictionary<string, object>(), cancellation);
                 return CloudResult.Success;
             }
             catch (Exception e)
@@ -951,8 +1002,8 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var snapshot = await CloudCancel.OrGiveUp(
-                    _db.Collection(NamesCollection).Document(nameKey).GetSnapshotAsync(), cancellation);
+                var snapshot = await CloudCancel.Within(
+                    _db.Collection(NamesCollection).Document(nameKey).GetSnapshotAsync(), ReadSeconds, cancellation);
                 if (!snapshot.Exists) return (CloudResult.Success, string.Empty);
 
                 var data = snapshot.ToDictionary();
@@ -984,7 +1035,7 @@ namespace GlimmerGrove.Cloud
                 var reply = await CallAsync("claimName", new Dictionary<string, object>
                 {
                     { "name", storedName ?? string.Empty },
-                });
+                }, cancellation);
 
                 return (CloudResult.Success, ReadClaim(reply));
             }
@@ -1032,7 +1083,7 @@ namespace GlimmerGrove.Cloud
                     // the server keys a collection on this string, so a tidy-up here would file
                     // every later report into a collection nothing reads.
                     { "subject", Social.ReportSubjects.Wire(subject) },
-                });
+                }, cancellation);
 
                 return (CloudResult.Success, ReadReport(reply));
             }
@@ -1121,8 +1172,8 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var snapshot = await CloudCancel.OrGiveUp(
-                    _db.Collection(GrovesCollection).Document(ownerId).GetSnapshotAsync(), cancellation);
+                var snapshot = await CloudCancel.Within(
+                    _db.Collection(GrovesCollection).Document(ownerId).GetSnapshotAsync(), ReadSeconds, cancellation);
                 if (!snapshot.Exists) return (CloudResult.Success, Social.GroveCard.Empty);
 
                 return (CloudResult.Success, ReadCard(ownerId, snapshot.ToDictionary()));
@@ -1147,8 +1198,8 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var snapshot = await CloudCancel.OrGiveUp(
-                    _db.Collection(BoardsCollection).Document(boardId).GetSnapshotAsync(), cancellation);
+                var snapshot = await CloudCancel.Within(
+                    _db.Collection(BoardsCollection).Document(boardId).GetSnapshotAsync(), ReadSeconds, cancellation);
                 if (!snapshot.Exists)
                     return (CloudResult.Success, new Social.LeaderboardBoard(boardId, null, 0L, 0));
 
@@ -1216,8 +1267,8 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                var snapshot = await CloudCancel.OrGiveUp(
-                    _db.Collection("config").Document("groveRanks").GetSnapshotAsync(), cancellation);
+                var snapshot = await CloudCancel.Within(
+                    _db.Collection("config").Document("groveRanks").GetSnapshotAsync(), ReadSeconds, cancellation);
 
                 // An absent document is the ordinary first-day state rather than a failure: no
                 // job has run yet, so there is nothing to say and every reader draws no standing.
@@ -1446,7 +1497,8 @@ namespace GlimmerGrove.Cloud
                 credential = upgraded;
 
                 if (credential.HasToken)
-                    await user.ReauthenticateAndRetrieveDataAsync(ToCredential(credential));
+                    await CloudCancel.Within(user.ReauthenticateAndRetrieveDataAsync(ToCredential(credential)),
+                                             AuthSeconds, cancellation);
                 else
                     await user.ReauthenticateWithProviderAsync(Provider(credential.ProviderId));
 
@@ -1518,7 +1570,7 @@ namespace GlimmerGrove.Cloud
                 if (!string.IsNullOrEmpty(appleAuthorizationCode))
                     payload["appleAuthorizationCode"] = appleAuthorizationCode;
 
-                await CallAsync("deleteAccount", payload);
+                await CallAsync("deleteAccount", payload, cancellation, DeleteSeconds);
             }
             catch (Exception e)
             {
@@ -1530,7 +1582,7 @@ namespace GlimmerGrove.Cloud
                 // Out first, unconditionally. SignInAsync only mints an anonymous account when
                 // nobody is signed in, and the user it is holding right now is the deleted one.
                 _auth.SignOut();
-                await _auth.SignInAnonymouslyAsync();
+                await CloudCancel.Within(_auth.SignInAnonymouslyAsync(), AuthSeconds, cancellation);
             }
             catch (Exception e)
             {
@@ -1542,9 +1594,12 @@ namespace GlimmerGrove.Cloud
         }
 
         // ------------------------------------------------------------- plumbing
-        async Task<IDictionary<string, object>> CallAsync(string name, Dictionary<string, object> data)
+        async Task<IDictionary<string, object>> CallAsync(
+            string name, Dictionary<string, object> data,
+            CancellationToken cancellation = default, int seconds = CallSeconds)
         {
-            var result = await _functions.GetHttpsCallable(name).CallAsync(data);
+            var result = await CloudCancel.Within(_functions.GetHttpsCallable(name).CallAsync(data),
+                                                  seconds, cancellation);
             return result.Data as IDictionary<string, object>;
         }
 
@@ -1671,6 +1726,13 @@ namespace GlimmerGrove.Cloud
             // real network failures. See CloudCancel for what a token can and cannot do here.
             if (inner is OperationCanceledException)
                 return CloudResult.Failed(CloudFailure.Cancelled, "the caller gave up");
+
+            // A deadline, not a choice: the network did not answer in time. Retryable and
+            // expected, which is exactly what Offline means to the scheduler — and the one
+            // answer that keeps a hung write from being reported as anything a player has to
+            // act on. See CloudCancel.Within.
+            if (inner is TimeoutException)
+                return CloudResult.Failed(CloudFailure.Offline, inner.Message);
 
             if (TryAuthError(inner, out var authError))
             {

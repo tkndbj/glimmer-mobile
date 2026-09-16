@@ -2036,6 +2036,33 @@ namespace GlimmerGrove.Modes
              : SiegeSpell.Smite;
 
         /// <summary>
+        /// Whether this boss's spell touches the ward line at all — which is <b>not</b> the same
+        /// question as <see cref="AimsAtAWard"/>, and the gap between them is exactly one boss.
+        ///
+        /// <para>
+        /// <b>A roar aims at no ward and reaches every one of them.</b> It is booked as four
+        /// records, one per post, so everything that draws at a post runs for a rally and must
+        /// not run for a devour or a raise — those two land on the hill the player has been
+        /// killing over and never come near the line.
+        /// </para>
+        /// <para>
+        /// <b>It exists so that a drawing can refuse rather than carry a dead arm.</b>
+        /// <c>SiegeView.Aftermath</c> paints what a spell leaves on a *post*; a devour and a raise
+        /// reach it only if somebody moves an early return in <c>Smite</c>, at which point they
+        /// would fall into its <c>default</c> — the overlord's fan — and throw lightning between
+        /// four turrets that had not been touched. That is precisely what they did for two
+        /// chapters. Two arms breaking on nothing would fix it and leave unreachable code
+        /// defended by a comment; asking one named rule at the top fixes it and says why.
+        /// </para>
+        /// </summary>
+        public static bool ReachesTheLine(SiegeKind kind)
+        {
+            var craft = SpellOf(kind);
+
+            return craft != SiegeSpell.Devour && craft != SiegeSpell.Raise;
+        }
+
+        /// <summary>
         /// Whether this boss's spell is aimed at a ward at all.
         ///
         /// <b>A warbringer's is not</b>, and that is the one clause the cast/flight/land spine

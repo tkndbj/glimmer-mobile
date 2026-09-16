@@ -21,7 +21,38 @@ namespace GlimmerGrove.Persistence
     /// </summary>
     public static class TipLedger
     {
+        /// <summary>
+        /// The most lesson ids a save may carry on the wire.
+        ///
+        /// <para>
+        /// <b>Matches the bound in <c>firestore.rules</c>, and has to.</b> <c>hasOnly</c> is an
+        /// allow-list over the whole document, so a list one entry longer than the rules permit
+        /// does not lose that entry — it loses <em>every</em> save write for that account, for
+        /// ever, with nothing on any screen saying so (invariant 12a). That is exactly what
+        /// happened on 2026-09-16: the ledger keeps every id it has ever seen, including the
+        /// lessons of every withdrawn mode, so the longest-played account crossed the old bound
+        /// of 64 first, and from that write on every push was refused by the security rules and
+        /// every account switch away from it failed to secure the grove. The bound is
+        /// generous against anything the game can teach, the writer prunes to it rather than
+        /// trusting it, and <c>CloudWireTests</c> holds this constant to the rules file.
+        /// </para>
+        /// </summary>
+        public const int MaxIds = 256;
+
         static readonly HashSet<string> _seen = new HashSet<string>(System.StringComparer.Ordinal);
+
+        static HashSet<string> _live, _retired;
+
+        static HashSet<string> Live => _live ??= IdsOf(Mechanic.All);
+        static HashSet<string> Retired => _retired ??= IdsOf(Mechanic.Retired);
+
+        static HashSet<string> IdsOf(Mechanic[] mechanics)
+        {
+            var ids = new HashSet<string>(System.StringComparer.Ordinal);
+            foreach (var mechanic in mechanics)
+                if (mechanic.IsValid) ids.Add(mechanic.Id);
+            return ids;
+        }
 
         public static bool HasSeen(Mechanic mechanic)
             => mechanic.IsValid && _seen.Contains(mechanic.Id);
@@ -67,10 +98,19 @@ namespace GlimmerGrove.Persistence
             // the delta check does not report a change that is only ordering.
             var ids = new List<string>(_seen);
             ids.Sort(System.StringComparer.Ordinal);
-            dto.tipsSeen = ids.ToArray();
+            dto.tipsSeen = Bounded(ids);
         }
 
-        /// <summary>The union of two devices' lessons. Seeing something cannot be undone.</summary>
+        /// <summary>
+        /// The union of two devices' lessons. Seeing something cannot be undone.
+        ///
+        /// <para>
+        /// Bounded here as well as in <see cref="WriteInto"/>, and it is not belt and braces:
+        /// the merged file the sync pushes is built by <c>SaveMerge.Join</c> straight from this
+        /// answer and never passes through the ledger, so a cap applied only on the ledger's
+        /// own write would leave the one document that reaches the server unbounded.
+        /// </para>
+        /// </summary>
         internal static string[] Join(string[] mine, string[] other)
         {
             var union = new SortedSet<string>(System.StringComparer.Ordinal);
@@ -81,9 +121,35 @@ namespace GlimmerGrove.Persistence
             if (other != null)
                 foreach (var id in other) if (!string.IsNullOrEmpty(id)) union.Add(id);
 
-            var result = new string[union.Count];
-            union.CopyTo(result);
-            return result;
+            return Bounded(new List<string>(union));
+        }
+
+        /// <summary>
+        /// At most <see cref="MaxIds"/> of the ids given, which must arrive sorted.
+        ///
+        /// <para>
+        /// Under the cap nothing is touched, so no player who has ever existed sees a change
+        /// from this. Over it, ids go in the order that costs the least: every retired lesson
+        /// first, because no build will teach one again; then every id this build does not
+        /// recognise, which is a withdrawn mode's lesson or a newer build's — the second is
+        /// re-taught once on that build, and that is the whole price of a cap. A live lesson
+        /// is never dropped, and <c>TipLedgerTests</c> proves the live set fits with room.
+        /// </para>
+        /// </summary>
+        internal static string[] Bounded(List<string> sorted)
+        {
+            if (sorted.Count <= MaxIds) return sorted.ToArray();
+
+            var kept = new List<string>(sorted);
+            kept.RemoveAll(id => Retired.Contains(id));
+
+            if (kept.Count > MaxIds) kept.RemoveAll(id => !Live.Contains(id));
+
+            // Unreachable while the live set fits under the cap, which the test holds; kept so
+            // the promise this method makes to the security rules cannot depend on a test.
+            if (kept.Count > MaxIds) kept.RemoveRange(MaxIds, kept.Count - MaxIds);
+
+            return kept.ToArray();
         }
     }
 }

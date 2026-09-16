@@ -156,6 +156,12 @@ Grove, and the bundle id can never move.
    document, so a client writing an unlisted key **loses every save write**, and rules deploy before the
    client. A field riding inside an existing map costs no rules release, which is why the season's pass flag
    and the streak's fourth date are shaped that way.
+12b. **Every list the rules bound is capped by the client first, and the gate holds each pair.**
+   `size() <= N` refuses the *whole* write, so a list one entry over its bound is an account that
+   never saves again and no screen says so — the lesson ledger keeps withdrawn modes' lessons for
+   ever, crossed 64 on the owner's own account on 2026-09-16, and only an account switch said
+   anything. A writer caps what it sends (`TipLedger.MaxIds`), the rules' bound is never the
+   smaller, and `CloudWireTests` reads `firestore.rules` to hold the two together, offline.
 13. **A reward is derivable, adjudicated, third-party, or not currency.** Currency the client hands out
    must reach the server as something it can *recompute*, something a *third party* reports, or something it
    can *bound* so tightly that forging it buys nothing.
@@ -731,6 +737,11 @@ guess — verify offline.
 - **Map seats:** `python Tools/make_map_seats.py --check` proves the seats are still what the paintings say;
   `--contact` draws every map with its chain on it, which is the gate that matters. `content.py` proves the
   seats clear each other. Re-run `--write` and then every chapter generator after any map painting change.
+- **Effect reels:** `Tools/verify/fxreels.py` proves every baked reel is a *picture* — it measures the lit
+  box against the frame at the reel's loudest moment and refuses a sliver. `artnames.py` proves a name
+  resolves and nothing proved the thing behind it was visible; three of 266 reels were threads, all three
+  boss spells (37de). It says nothing about whether a reel is the **right** picture — that is a contact
+  sheet and an eye.
 - **Sprite names:** `Tools/verify/artnames.py` proves every sprite a *call site* asks for exists on disk.
   **A constant is invisible to it**, so routing sprites through a skin table gives up the gate — the chain
   is closed by `SkinsTests`, which walks `Skins` by reflection against what the manifest loads.

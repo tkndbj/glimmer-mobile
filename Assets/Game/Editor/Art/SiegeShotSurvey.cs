@@ -47,19 +47,49 @@ namespace GlimmerGrove.EditorTools
         const float SurveyHeadAt = .78f;
 
         [MenuItem("Glimmer Grove/Art/Survey Projectile Pack", false, 33)]
-        public static void Survey()
+        public static void Survey() => SurveyFolder("Projectiles", "siege_pack_survey");
+
+        /// <summary>
+        /// The pack's <b>impacts</b>, which is where a player is actually looking.
+        ///
+        /// <b>Owed since this file was written, and the debt came due on an ironclad.</b> A
+        /// projectile is the part of a three-part event a player watches for four tenths of a
+        /// second; the impact is the part drawn five cells wide at the moment the damage lands,
+        /// and it was the half of the pack that could not be surveyed at all. So an impact was
+        /// chosen by reading the prefab's *name* — and all three of the pack's slashes are a
+        /// vertical line, so `Hit_Slash03` shipped as a hairline down a turret, which is
+        /// `Shot.Hit`'s own note recording the identical fault on the cleaver a chapter earlier.
+        /// <b>Twice is a missing command, not two mistakes</b> (invariant 37db).
+        /// </summary>
+        [MenuItem("Glimmer Grove/Art/Survey Impact Pack", false, 37)]
+        public static void SurveyHits() => SurveyFolder("Hits", "siege_hit_survey");
+
+        /// <summary>The pack's muzzle flashes, for <see cref="SurveyHits"/>' reason.</summary>
+        [MenuItem("Glimmer Grove/Art/Survey Muzzle Pack", false, 38)]
+        public static void SurveyMuzzles() => SurveyFolder("Muzzles", "siege_muzzle_survey");
+
+        /// <summary>
+        /// Every prefab in one of the pack's three folders, laid out on one sheet.
+        ///
+        /// <b>The folder is a parameter because the pack has three of them</b> and a bolt, a
+        /// flash and an impact are three separate decisions — <see cref="Shot.Muzzle"/> and
+        /// <see cref="Shot.Hit"/> exist precisely so a row can take its flight from one family
+        /// and its companions from another, which is a choice nobody can make without seeing all
+        /// three sets.
+        /// </summary>
+        static void SurveyFolder(string folder, string sheet)
         {
             var names = new List<string>();
 
             foreach (var guid in AssetDatabase.FindAssets(
-                         "t:GameObject", new[] { VfxBench.PackRoot + "/Projectiles" }))
+                         "t:GameObject", new[] { VfxBench.PackRoot + "/" + folder }))
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 if (path.EndsWith(".prefab")) names.Add(Path.GetFileNameWithoutExtension(path));
             }
 
             names.Sort(System.StringComparer.Ordinal);
-            SurveyThese(names, "siege_pack_survey");
+            SurveyThese(names, sheet);
         }
 
         /// <summary>

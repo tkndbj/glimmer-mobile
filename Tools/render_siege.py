@@ -681,9 +681,31 @@ BOSSES = {
     "overlord": dict(hold=0.38, tall=3.5, stem="over", fx="omen", fire=(255, 116, 212)),
     # `Pal.Verdant` and `Pal.Glass` - the two that land on the hill rather than on the line, so
     # neither can be read as "this hurts the green ward more" (`SiegeView.Casting`).
-    "gravemaw": dict(hold=0.62, tall=3.2, stem="maw", fx="roar", fire=(84, 228, 140)),
-    "bonecaller": dict(hold=0.40, tall=3.0, stem="caller", fx="roar", fire=(220, 235, 245)),
+    #
+    # **Both said `fx="roar"` until the day the drawings were counted, and that is a mirror
+    # telling a comfortable lie about the screen** (invariant 44d). It was a true mirror when it
+    # was written - the game really did draw a gravemaw and a bonecaller in the warbringer's two
+    # reels under colours of their own - so this table was quietly the only written-down record of
+    # invariant 37z being broken, and it read as a palette decision. Each has its own pair now
+    # (`SiegeShotBake.Maw`, `.Crypt`).
+    "gravemaw": dict(hold=0.62, tall=3.2, stem="maw", fx="maw", fire=(84, 228, 140)),
+    "bonecaller": dict(hold=0.40, tall=3.0, stem="caller", fx="crypt", fire=(220, 235, 245)),
+    # `Pal.Dormant` and `Pal.Radiance` - iron and dust. **Two chapters late**: the fourth
+    # chapter's pair shipped with no row here at all, so `--warlord cast` could not draw either
+    # of them and the one gate that can see a boss's cast has never been pointed at half the
+    # bosses in the game.
+    "shackler": dict(hold=0.52, tall=3.0, stem="snare", fx="snare", fire=(58, 80, 100)),
+    "ironclad": dict(hold=0.44, tall=3.3, stem="clad", fx="quake", fire=(255, 244, 206)),
 }
+
+#: Which bosses are aimed at no ward, and therefore draw a pair of reels where they stand rather
+#: than something crossing the hill - `SiegeTuning.AimsAtAWard`, mirrored.
+#:
+#: **A set rather than a test on `fx == "roar"`**, which is the clause the game itself had to
+#: correct on the same day: naming one of the three grounded bosses and letting the other two
+#: fall through whichever branch they happened to land in is how two of them came to draw a flat
+#: ground wash standing upright in the air.
+GROUNDED = ("roar", "maw", "crypt")
 
 
 def warlord(sheet, draw_on, kind, colour, wards, span, cell, hill_top, hill_foot, line_y, at,
@@ -815,9 +837,9 @@ def warlord(sheet, draw_on, kind, colour, wards, span, cell, hill_top, hill_foot
     # **A roar is thrown at nothing**, so what is drawn for a warbringer is its ring going out over
     # the hill rather than a ring closing on a ward - which is the one thing a picture of this mode
     # can say about a boss that takes ground instead of health.
-    if look["fx"] == "roar":
-        for name, size in (("roar_hit", 7.0), ("roar_muzzle", 9.0)):
-            ring = loudest(name)
+    if look["fx"] in GROUNDED:
+        for suffix, size in (("_hit", 7.0), ("_muzzle", 9.0)):
+            ring = loudest(look["fx"] + suffix)
             if ring is not None:
                 put(sheet, ring, cx, cy + tall * 0.1, cell * size, cell * size)
         return
@@ -995,7 +1017,10 @@ def storm(sheet, kind, look, fire, hand, target, cell, span, sky, hill, at, ward
     # `SiegeView.Leaving` - the pack's muzzle, and bolts thrown off the hand. A warbringer's muzzle
     # reel is spoken for: `Roar` draws it flat over the ground, so drawing it upright here as well
     # would be the same picture twice, once wrong.
-    if kind != "warbringer":
+    # `SiegeView.Leaving` - the three grounded bosses lay their own muzzle reel *flat* over the
+    # ground, so drawing it upright here as well is the same picture twice, once wrong. Asked of
+    # the set rather than of one name, which is the correction the game itself needed.
+    if look["fx"] not in GROUNDED:
         flare = loudest(look["fx"] + "_muzzle")
         if flare is not None:
             put(sheet, flare, hand[0], hand[1], cell * 4.6 * scale, cell * 4.6 * scale)
@@ -1055,8 +1080,8 @@ def storm(sheet, kind, look, fire, hand, target, cell, span, sky, hill, at, ward
     elif kind == "warbringer":
         # **A storm over the whole hill**, because a roar is aimed at nothing and the one thing it
         # has to say is that everything out there is about to move.
-        for name, size in (("roar_hit", 7.0), ("roar_muzzle", 9.0)):
-            ring = loudest(name)
+        for suffix, size in (("_hit", 7.0), ("_muzzle", 9.0)):
+            ring = loudest(look["fx"] + suffix)
             if ring is not None:
                 put(sheet, ring, hand[0], hand[1], cell * size, cell * size)
 
@@ -1071,6 +1096,27 @@ def storm(sheet, kind, look, fire, hand, target, cell, span, sky, hill, at, ward
             y = hill[1] + (hill[0] - hill[1]) * (0.3 + i * 0.35)
             bolt(sheet, at(-span[0] * 0.5, y), at(span[0] * 0.5, y),
                  fire, cell * 0.05, cell, jag=0.5, forks=3)
+
+    elif kind == "shackler":
+        # **One shot, straight, and a chain paying out behind it.** Everything else thrown at a
+        # ward here is a volley because everything else is a bombardment; a bind is one arrow
+        # finding one turret, so the straightness *is* the reading and it takes no bow at all.
+        if orb is not None:
+            put(sheet, orb, *fly(0.74, 0.0), cell * 1.15, cell * 1.15)
+
+        for i in range(3):
+            bolt(sheet, hand, target, fire, cell * 0.05 * (1 + i * 0.35), cell, jag=0.02, forks=0)
+
+    elif kind == "ironclad":
+        # **One heavy thing, thrown high and arriving downward.** An axe is the only thing in the
+        # mode that has to read as *falling*, so it leaves from above the boss's head and bows
+        # hard - what the eye follows is a rise and a drop rather than a crossing.
+        if orb is not None:
+            put(sheet, orb, *fly(0.68, -1.1), cell * 1.9, cell * 1.9)
+
+        for _ in range(3):
+            strike(sheet, (wx + random.uniform(-cell * 0.5, cell * 0.5), wy), fire,
+                   cell * 0.08, cell, sky)
 
     else:
         # **Double rockets** - the finale's spell takes a rank as well as health, so it is the one
@@ -1146,6 +1192,13 @@ BOSS_BANNER = {
     "warlord": "THE WARLORD",
     "warbringer": "THE WARBRINGER",
     "overlord": "THE OVERLORD",
+    "gravemaw": "THE GRAVEMAW",
+    "bonecaller": "THE BONECALLER",
+    # **Neither of these carries "THE", and that is what `loc/en.json` says.** A mirror
+    # that tidies a string is a mirror answering a question about the screen out of its
+    # own head (invariant 44d).
+    "shackler": "SHACKLER",
+    "ironclad": "IRONCLAD",
 }
 
 

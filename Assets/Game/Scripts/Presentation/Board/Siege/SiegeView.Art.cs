@@ -746,30 +746,42 @@ namespace GlimmerGrove
             }
         }
 
+        /// <summary>
+        /// The flash at the caster's own hand, and <b>one reel per boss</b>.
+        ///
+        /// <b>Three of the eight shared this and it was the warbringer's.</b> A gravemaw and a
+        /// bonecaller were drawn in <c>roar_muzzle</c> and <c>roar_hit</c> under colours of their
+        /// own, which is invariant 37z's fault said about the drawing rather than about the fight:
+        /// what the three have in common is that they are aimed at no ward, and that is a fact
+        /// about the *rule* rather than about what the spell looks like. They have their own now
+        /// (<c>SiegeShotBake.Maw</c>, <c>.Crypt</c>) — a ring that closes for a maw, a spectral
+        /// bloom for a raise, and the roar's shockwave left to the roar.
+        /// </summary>
         static Sprite[] SpellMuzzleArt(SiegeKind kind)
         {
             switch (kind)
             {
                 case SiegeKind.Overlord: return Blast("omen_muzzle");
                 case SiegeKind.Blightcaller: return Blast("hex_muzzle");
-                case SiegeKind.Warbringer:
-                case SiegeKind.Gravemaw:
-                case SiegeKind.Bonecaller: return Blast("roar_muzzle");
+                case SiegeKind.Warbringer: return Blast("roar_muzzle");
+                case SiegeKind.Gravemaw: return Blast("maw_muzzle");
+                case SiegeKind.Bonecaller: return Blast("crypt_muzzle");
                 case SiegeKind.Shackler: return Blast("snare_muzzle");
                 case SiegeKind.Ironclad: return Blast("quake_muzzle");
                 default: return Blast("spell_muzzle");
             }
         }
 
+        /// <summary>What lands, and <b>one reel per boss</b>. See <see cref="SpellMuzzleArt"/>.</summary>
         static Sprite[] SpellHitArt(SiegeKind kind)
         {
             switch (kind)
             {
                 case SiegeKind.Overlord: return Blast("omen_hit");
                 case SiegeKind.Blightcaller: return Blast("hex_hit");
-                case SiegeKind.Warbringer:
-                case SiegeKind.Gravemaw:
-                case SiegeKind.Bonecaller: return Blast("roar_hit");
+                case SiegeKind.Warbringer: return Blast("roar_hit");
+                case SiegeKind.Gravemaw: return Blast("maw_hit");
+                case SiegeKind.Bonecaller: return Blast("crypt_hit");
                 case SiegeKind.Shackler: return Blast("snare_hit");
                 case SiegeKind.Ironclad: return Blast("quake_hit");
                 default: return Blast("spell_hit");

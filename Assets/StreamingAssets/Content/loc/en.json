@@ -1487,11 +1487,11 @@
     },
     {
       "key": "ui.account.adopt_cost",
-      "text": "{0} finished levels here belong to no account, so they stay on this phone"
+      "text": "{0} finished levels on this phone will not move to that account"
     },
     {
       "key": "ui.account.adopt_warning",
-      "text": "this part cannot be undone"
+      "text": "this cannot be undone"
     },
     {
       "key": "ui.account.adopted_found",
@@ -1503,11 +1503,11 @@
     },
     {
       "key": "ui.account.cancelled",
-      "text": "no account chosen  ·  nothing was changed"
+      "text": "no account chosen  ·  nothing changed"
     },
     {
       "key": "ui.account.choose",
-      "text": "which account should this phone play?"
+      "text": "choose the account to play on this phone"
     },
     {
       "key": "ui.account.failed",
@@ -1519,15 +1519,11 @@
     },
     {
       "key": "ui.account.guest",
-      "text": "you are not signed in"
+      "text": "not signed in  ·  your progress is only on this phone"
     },
     {
-      "key": "ui.account.guest_body",
-      "text": "Your progress is saved only on this phone. If you lose it or reinstall the game, your progress is gone. Sign in to save it online."
-    },
-    {
-      "key": "ui.account.guest_body_purchase",
-      "text": "Thank you! What you just bought belongs to an account, not to this phone. Sign in now and it is safe if you lose this phone or reinstall the game. Without it, it cannot be brought back."
+      "key": "ui.account.guest_purchase",
+      "text": "sign in to keep what you bought"
     },
     {
       "key": "ui.account.later",
@@ -1535,27 +1531,19 @@
     },
     {
       "key": "ui.account.linked",
-      "text": "your progress is saved online"
-    },
-    {
-      "key": "ui.account.linked_body",
-      "text": "Your progress is backed up. You can play on your other devices, and you can switch to another account on this phone whenever you like."
+      "text": "signed in  ·  your progress is saved online"
     },
     {
       "key": "ui.account.linked_ok",
-      "text": "done  ·  your progress is now saved online"
+      "text": "done  ·  your progress is saved online"
     },
     {
       "key": "ui.account.mismatch",
-      "text": "your last account change did not finish"
-    },
-    {
-      "key": "ui.account.mismatch_body",
-      "text": "Nothing has been lost. Choose the account you want to play on this phone and it will carry on from there."
+      "text": "your last account change did not finish  ·  choose an account"
     },
     {
       "key": "ui.account.not_secured",
-      "text": "we could not save your groove just now, so nothing was changed  ·  please try again when you are online"
+      "text": "could not save your progress  ·  please try again"
     },
     {
       "key": "ui.account.offline",
@@ -1567,39 +1555,27 @@
     },
     {
       "key": "ui.account.same_account",
-      "text": "that is the account you are already playing"
+      "text": "you are already playing this account"
     },
     {
       "key": "ui.account.securing",
-      "text": "saving your groove..."
+      "text": "saving your progress..."
     },
     {
       "key": "ui.account.switch",
       "text": "SWITCH ACCOUNT"
     },
     {
-      "key": "ui.account.switch_body",
-      "text": "Pick the account you want to play here. This groove is saved online first, and a copy stays on this phone, so coming back to it later is one tap."
-    },
-    {
-      "key": "ui.account.switch_safe",
-      "text": "nothing is lost either way  ·  you can switch back any time"
-    },
-    {
       "key": "ui.account.switched_new",
-      "text": "signed in  ·  this account has no groove yet, so here is a new one"
+      "text": "signed in  ·  this account has no progress yet"
     },
     {
       "key": "ui.account.switched_pending",
-      "text": "signed in  ·  if this account has a groove it will load once you are online"
+      "text": "signed in  ·  your progress will load once you are online"
     },
     {
       "key": "ui.account.taken",
-      "text": "that account already has its own groove"
-    },
-    {
-      "key": "ui.account.taken_body",
-      "text": "The progress on this phone does not belong to any account yet, so it cannot be moved into that one. You can play that account here instead, and it keeps everything it already has."
+      "text": "that account already has its own progress"
     },
     {
       "key": "ui.account.title",

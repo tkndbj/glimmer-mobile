@@ -86,6 +86,90 @@ namespace GlimmerGrove.Cloud
             await work;
         }
 
+        /// <summary>
+        /// Waits for <paramref name="work"/> for at most <paramref name="seconds"/>, or until
+        /// the caller gives up, whichever comes first.
+        ///
+        /// <para>
+        /// <b>Why a deadline exists at all.</b> A Firestore write completes when the backend
+        /// acknowledges it and not before — offline, or on a connection that drops after the
+        /// request went out, the task simply never finishes. Every sync runs under one latch,
+        /// so one write that never finishes is a latch that is never released: every later
+        /// sync answers <c>Busy</c>, a switch waits its ten seconds and reports that the grove
+        /// could not be saved, and linking reports that a sync is running — for the life of the
+        /// process. A callable has a client timeout of its own, an auth exchange does not, and
+        /// nothing here should have to know which is which.
+        /// </para>
+        /// <para>
+        /// A deadline throws <see cref="TimeoutException"/>, which <c>Classify</c> reports as
+        /// <c>Offline</c>: retryable and expected, because that is what it is. The caller's own
+        /// token still throws <see cref="OperationCanceledException"/>, which stays
+        /// <c>Cancelled</c>. The work is not abandoned — nothing here can abandon it — so a
+        /// write that lands late lands with a stale revision, and the security rules refuse
+        /// it, which is the correct ending for a write nobody is waiting for.
+        /// </para>
+        /// </summary>
+        public static async Task<T> Within<T>(Task<T> work, int seconds, CancellationToken cancellation)
+        {
+            if (work == null) return default;
+            if (work.IsCompleted) return await work;
+
+            cancellation.ThrowIfCancellationRequested();
+
+            using (var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(seconds)))
+            using (var either = CancellationTokenSource.CreateLinkedTokenSource(cancellation, deadline.Token))
+            {
+                var abandoned = new TaskCompletionSource<bool>(
+                    TaskCreationOptions.RunContinuationsAsynchronously);
+
+                using (either.Token.Register(() => abandoned.TrySetResult(true)))
+                {
+                    if (await Task.WhenAny(work, abandoned.Task).ConfigureAwait(false) != work)
+                    {
+                        Observe(work);
+
+                        if (cancellation.IsCancellationRequested)
+                            throw new OperationCanceledException(cancellation);
+
+                        throw new TimeoutException($"no answer within {seconds}s");
+                    }
+                }
+            }
+
+            return await work;
+        }
+
+        /// <summary>The same for work with no answer.</summary>
+        public static async Task Within(Task work, int seconds, CancellationToken cancellation)
+        {
+            if (work == null) return;
+            if (work.IsCompleted) { await work; return; }
+
+            cancellation.ThrowIfCancellationRequested();
+
+            using (var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(seconds)))
+            using (var either = CancellationTokenSource.CreateLinkedTokenSource(cancellation, deadline.Token))
+            {
+                var abandoned = new TaskCompletionSource<bool>(
+                    TaskCreationOptions.RunContinuationsAsynchronously);
+
+                using (either.Token.Register(() => abandoned.TrySetResult(true)))
+                {
+                    if (await Task.WhenAny(work, abandoned.Task).ConfigureAwait(false) != work)
+                    {
+                        Observe(work);
+
+                        if (cancellation.IsCancellationRequested)
+                            throw new OperationCanceledException(cancellation);
+
+                        throw new TimeoutException($"no answer within {seconds}s");
+                    }
+                }
+            }
+
+            await work;
+        }
+
         static void Observe(Task work)
             => work.ContinueWith(t => { _ = t.Exception; },
                                  CancellationToken.None,

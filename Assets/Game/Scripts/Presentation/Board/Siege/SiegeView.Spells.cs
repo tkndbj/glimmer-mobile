@@ -124,6 +124,31 @@ namespace GlimmerGrove
             }, mob.Node);
         }
 
+        /// <summary>
+        /// Whether a reel is a comet — a head with a tail behind it — rather than something
+        /// round, answered from the art and from nothing else.
+        ///
+        /// <b>Halfway between the only two shapes the bake cuts</b>, so it cannot be a close
+        /// call, and the gap is arithmetic rather than a hope. An orb takes
+        /// <c>leanest == longest == 1</c>, which <c>SiegeShotBake.Shape</c> returns outright, so
+        /// its frame is square to the pixel. A comet is clamped to <c>LeanestShot</c>..
+        /// <c>LongestShot</c> and then quantised by <c>Pixels</c> to a multiple of sixteen inside
+        /// <c>NarrowestShot</c>..<c>WidestShot</c> — so the leanest frame that can actually be
+        /// written is 384 / 224 = <b>1.71</b>, not 1.6. The realised set is {1.0} and
+        /// [1.71, 6.86], with nothing in between, and 1.3 sits three tenths clear of both ends.
+        /// That gap is what makes reading the sprite safe where a table of kinds would be a
+        /// second opinion — see the call in <see cref="Hurl"/>.
+        /// </summary>
+        static bool Tailed(Sprite[] frames)
+        {
+            if (frames == null || frames.Length == 0) return false;
+
+            var first = frames[0];
+            if (first == null || first.rect.width <= 0f) return false;
+
+            return first.rect.height / first.rect.width > 1.3f;
+        }
+
         /// <summary>How low a boss's magic sounds. Bigger things speak lower.</summary>
         static float Pitch(SiegeKind kind)
             => kind == SiegeKind.Overlord ? .50f
@@ -266,11 +291,19 @@ namespace GlimmerGrove
             if (frames == null || frames.Length == 0)
                 frames = new[] { Art.Glow(96, 2.0f) };
 
-            // **Half again the width of a ward's bolt, and anchored at its middle rather than at
-            // `HeadAt`.** A boss's spell is an orb rather than a comet — it is baked square
-            // (`SiegeShotBake.BakeSpell`), so there is no head leading a trail to step back from.
+            // **Half again the width of a ward's bolt, and anchored wherever its own picture
+            // says.** Most of these are orbs — baked square, so the thing *is* the frame and its
+            // middle is where it is. Two are not: a shackler looses an arrow and an ironclad
+            // brings a blade down, and a comet's frame is mostly the tail behind the head, so
+            // anchoring one at its middle would draw it half a length past wherever it had got to.
+            //
+            // **Read off the sprite rather than switched on the kind**, which is `Lend`'s own rule
+            // one step further: the bake decides orb or comet (`SiegeShotBake.Shot.Comet`) and a
+            // second table here saying which is which is a second opinion that goes stale the
+            // first time a row is re-baked. The aspect cannot be ambiguous — a square frame is 1.0
+            // and the leanest comet the bake will ever cut is 1.6.
             var puff = Lend(frames, Color.white, Cell * ThrownAt(kind) * scale, from, angle, 30f,
-                            true, .5f);
+                            true, Tailed(frames) ? HeadAt : .5f);
             Glow(puff, fire, Cell * 3f * BurstAt(kind) * scale);
 
             var node = puff.Node;
@@ -308,10 +341,23 @@ namespace GlimmerGrove
 
                 // A wake of embers behind it, thinned to about twenty a second so a three-orb
                 // volley is a trail of sparks rather than a wall of them.
-                if (_fx != null && Time.unscaledTime - trail > .05f)
+                //
+                // **One pooled ember rather than a general-purpose burst, and that is worth
+                // 108 GameObjects a cast** — see `SiegeView.Cinder`, which records what this line
+                // used to cost and why the cost landed on the whole board's geometry rather than
+                // here. It also reads better: what a wake wants is a thinning line of embers
+                // falling away from the head, and what it was getting was a radial scatter with a
+                // glow core in the middle of it, fired twenty-seven times over four tenths of a
+                // second. A trail is a direction, and a burst has none.
+                if (Time.unscaledTime - trail > .05f)
                 {
                     trail = Time.unscaledTime;
-                    Burst.Sparks(_fx, at, fire, 2, Cell * .7f, Cell * .12f, .24f);
+
+                    var back = (from - to).normalized * Cell * .55f;
+                    back += new Vector2(Random.Range(-Cell * .2f, Cell * .2f),
+                                        Random.Range(-Cell * .2f, Cell * .2f));
+
+                    Cinder(at, fire, Cell * .26f, .3f, back);
                 }
             }, node).Delay(delay).OnDone(() => Give(puff));
         }
@@ -359,6 +405,144 @@ namespace GlimmerGrove
 
             ShakeBoard(24f);
             Audio.Sfx("boom", .75f, .52f);
+        }
+
+        /// <summary>
+        /// A gravemaw's mouth opening on the ground it is standing on.
+        ///
+        /// <para>
+        /// <b><see cref="Roar"/> read backwards, and that is the design rather than a saving.</b>
+        /// The two are the mode's only pair of spells that throw nothing and land nowhere, so the
+        /// one thing separating them has to be the thing they are: a roar is pressure going out
+        /// and a devour is a pull coming in. Same two reels used the same two ways — one upright
+        /// on the caster, one flat over the ground — and then the rings run the other way and the
+        /// hill is drawn *up* the board instead of the board being shoved off it.
+        /// </para>
+        /// <para>
+        /// <b>Its own reels now.</b> This wore the warbringer's for two chapters under a green
+        /// tint, which is invariant 37z's fault exactly: the picture was a shockwave with shards
+        /// in it, which is a thing being pushed away, drawn over a spell whose whole meaning is
+        /// that nothing gets away. See <c>SiegeShotBake.Maw</c>.
+        /// </para>
+        /// </summary>
+        void Maw(Vector2 at, SiegeKind kind)
+        {
+            var fire = Casting(kind);
+
+            // The floor going first, and wider than the mouth — a pull is felt further out than
+            // it is seen, which is the reading a roar gets from the same pair the other way up.
+            var ground = SpellMuzzleArt(kind);
+            if (ground != null && ground.Length > 0)
+                Ends(Lend(ground, Pal.A(fire, .85f), Cell * 8.2f,
+                          at + new Vector2(0f, Cell * .22f), 0f, 30f, false, .5f), .55f);
+
+            var mouth = SpellHitArt(kind);
+            if (mouth != null && mouth.Length > 0)
+                Ends(Lend(mouth, Color.white, Cell * 5.4f, at, 0f, 32f, false, .5f), .5f);
+
+            // Three rings **closing**, widest first, a beat apart. The roar's three open and each
+            // is wider than the last; these arrive from further out each time and shrink onto the
+            // thing doing it, which is the same grammar saying the opposite word.
+            for (int i = 0; i < 3; i++)
+                Swallow(at, Pal.Lift(fire, .3f), 4.6f + i * 2.4f, .42f, i * .1f);
+
+            // The hill itself starting to go. These are the motes a wind-up drags in
+            // (`SiegeView.Drawn`), spent here at four times the count and from twice as far —
+            // what a player has to understand in this half-second is that the *ground* is moving,
+            // so that when `Swallowed` takes their cogs and firepots a moment later it reads as
+            // this having happened rather than as things vanishing.
+            for (int i = 0; i < 14; i++)
+            {
+                float when = i * .022f;
+                float turn = Random.Range(0f, Mathf.PI * 2f);
+                var away = new Vector2(Mathf.Cos(turn), Mathf.Sin(turn) * .55f)
+                           * Cell * Random.Range(3.4f, 6.2f);
+
+                Tween.After(when, () => { if (_fx != null) Drawn(at, away, fire); }, _fx);
+            }
+
+            ShakeBoard(16f);
+            Audio.Sfx("whoosh", .8f, .4f);
+        }
+
+        /// <summary>One ring arriving from outside and closing onto the thing that opened it.</summary>
+        void Swallow(Vector2 at, Color tint, float from, float seconds, float delay)
+        {
+            var ring = UIKit.Img("Swallow", _fx, Art.Ring(128, 10f), Pal.A(tint, 0f),
+                                 new Vector2(Cell * 1.4f, Cell * 1.4f));
+            ring.raycastTarget = false;
+            ring.rectTransform.anchoredPosition = at;
+
+            var rt = ring.rectTransform;
+
+            Tween.Run(seconds, Ease.InQuad, t =>
+            {
+                if (!rt) return;
+
+                rt.localScale = Vector3.one * Mathf.Lerp(from, .6f, t);
+
+                // Brightening as it closes rather than fading as it goes, which is the other half
+                // of reading as a pull: a shockwave spends itself on the way out and this arrives.
+                ring.color = Pal.A(tint, t < .25f ? t / .25f * .85f : .85f * (1f - (t - .25f) / .75f * .35f));
+            }, ring, "swallow").Delay(delay)
+             .OnDone(() => { if (ring) Destroy(ring.gameObject); });
+        }
+
+        /// <summary>
+        /// A bonecaller reaching for the top of the hill, drawn the instant the spell leaves it.
+        ///
+        /// <b>The quieter half of a raise, deliberately.</b> What the player has to watch is the
+        /// crest, because that is where the bodies arrive and that is a thing they will have to
+        /// answer — so the caster gets a bloom and a reach and the crest gets the rest of it on
+        /// the arrival (<see cref="Rise"/>), which is also the beat the raiders are hatched on.
+        /// Drawing the loud half here would put the ceremony half a second before the event.
+        /// </summary>
+        void Crypt(Vector2 at, SiegeKind kind)
+        {
+            var fire = Casting(kind);
+
+            var bloom = SpellHitArt(kind);
+            if (bloom != null && bloom.Length > 0)
+                Ends(Lend(bloom, Color.white, Cell * 4.4f, at, 0f, 32f, false, .5f), .45f);
+
+            var crest = new Vector2(0f, MarchY(SiegeTuning.RaiseAt));
+
+            // The reach. Two flickers rather than a held line, for the tether's reason — a line
+            // that stays lit is a beam, and the beams on this board come the other way.
+            for (int i = 0; i < 2; i++)
+                Arc(at, crest, fire, Cell * .05f, .26f, 2, .5f, i * .12f);
+
+            ShakeBoard(9f);
+            Audio.Sfx("whoosh", .6f, 1.3f);
+        }
+
+        /// <summary>
+        /// The aegis, drawn on the ironclad and never on the line.
+        ///
+        /// <b>A verb with no event is a contradiction, and this is the drawing's half of the
+        /// answer.</b> What an aegis does is refuse three quarters of the line — it is a rule
+        /// about what may hurt the *boss*, and it takes nothing from any ward — so a drawing at a
+        /// post would be the picture inventing a threat that the rules do not contain. A ring
+        /// closing over the thing it protects is a sentence this board has already taught with
+        /// <see cref="Brace"/>, said here about armour rather than about a shout.
+        /// </summary>
+        void Guard(Mob mob, Vector2 at, Color fire)
+        {
+            if (mob == null || mob.Node == null) return;
+
+            var ring = UIKit.Img("Guard", _fx, Art.Ring(128, 16f), Pal.A(fire, 0f),
+                                 new Vector2(Cell * 1.6f, Cell * 1.6f));
+            ring.raycastTarget = false;
+            ring.rectTransform.anchoredPosition = at;
+
+            var rt = ring.rectTransform;
+
+            Tween.Run(.42f, Ease.OutCubic, t =>
+            {
+                if (!rt) return;
+                rt.localScale = Vector3.one * Mathf.Lerp(3.4f, 2.2f, t);
+                ring.color = Pal.A(fire, t < .3f ? t / .3f * .8f : .8f * (1f - (t - .3f) / .7f));
+            }, ring, "guard").OnDone(() => { if (ring) Destroy(ring.gameObject); });
         }
 
         /// <summary>
@@ -472,8 +656,15 @@ namespace GlimmerGrove
             // Inward rather than outward, which is the whole difference between this and a roar:
             // a ring that closes on the thing casting it is a pull, and a ring that opens off it
             // is a push. Nothing here travels anywhere, so the direction is the sentence.
-            Pop(at, fire, 3.2f, .32f);
-            Burst.Sparks(_fx, at, fire, 14, Cell * 2.6f, Cell * .22f, .5f);
+            //
+            // **The mouth is `Maw`'s and the swallowing is `Swallowed`'s; this is the shutting.**
+            // One last ring closing tight as the loose things reach it, which is the beat that
+            // joins the two — before this it was a `Pop` and a scatter of sparks, which is to say
+            // that the moment a gravemaw eats the player's cogs was drawn out of two primitives
+            // and no art at all (invariant 47i).
+            Swallow(at, Pal.Lift(fire, .35f), 3.6f, .3f, 0f);
+            Pop(at, fire, 2.4f, .28f);
+            Burst.Sparks(_fx, at, fire, 12, Cell * 2.2f, Cell * .2f, .45f);
 
             Audio.Sfx("boom", .5f, .62f);
         }
@@ -490,6 +681,8 @@ namespace GlimmerGrove
         /// </summary>
         void Rise(Mob caster, Color fire)
         {
+            var kind = caster != null ? caster.Kind : SiegeKind.Bonecaller;
+
             if (caster != null && caster.Node != null)
             {
                 var at = caster.Node.anchoredPosition;
@@ -500,8 +693,34 @@ namespace GlimmerGrove
             // The top of the hill, which is where `SiegeTuning.RaiseAt` puts them.
             var crest = new Vector2(0f, MarchY(SiegeTuning.RaiseAt));
 
+            // **The loud half, and it is the one that had no art in it.** A shockwave and a
+            // scatter of sparks is a primitive and a primitive (invariant 47i) — so the moment a
+            // bonecaller puts a fresh group at the top of the hill, which is the single biggest
+            // thing that boss does to a run, was two circles. The bloom is drawn widest here
+            // because this is the beat the bodies are hatched on, and the ground wash under it is
+            // what makes them read as coming *up* rather than as having walked on.
+            var ground = SpellMuzzleArt(kind);
+            if (ground != null && ground.Length > 0)
+                Ends(Lend(ground, Pal.A(fire, .8f), Cell * 9f,
+                          crest + new Vector2(0f, Cell * .2f), 0f, 30f, false, .5f), .55f);
+
+            var bloom = SpellHitArt(kind);
+            if (bloom != null && bloom.Length > 0)
+                Ends(Lend(bloom, Color.white, Cell * 6.4f, crest, 0f, 32f, false, .5f), .5f);
+
             Shockwave(crest, fire, 7.5f, .55f);
             Burst.Sparks(_fx, crest, fire, 22, Cell * 5f, Cell * .28f, .7f);
+
+            // Shards coming up out of the ground on the spot the bodies will stand on. Upward
+            // only — a raise is the one thing on this board that arrives from *under* it, and
+            // that is the half-second the reading has to happen in.
+            for (int i = 0; i < 7; i++)
+            {
+                var spot = crest + new Vector2(Random.Range(-Cell * 2.6f, Cell * 2.6f), 0f);
+
+                Arc(spot + new Vector2(0f, -Cell * .5f), spot + new Vector2(0f, Cell * 1.5f),
+                    fire, Cell * .05f, .28f, 1, .35f, i * .045f);
+            }
 
             ShakeBoard(12f);
             Audio.Sfx("boom", .62f, 1.25f);

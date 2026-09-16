@@ -12,6 +12,7 @@ python Tools/verify/names.py              # the keeper-name fold, on Unity's own
 python Tools/verify/difficulty.py         # what each glade actually asks of a player
 python Tools/verify/sfxnames.py           # every sound the code plays exists, and vice versa
 python Tools/verify/artnames.py           # every sprite the code asks for exists
+python Tools/verify/fxreels.py            # every baked effect reel is a picture, not a thread
 ```
 
 `names.py` is the one that runs the shipped code on **Unity's Mono** as well as on the
@@ -32,6 +33,15 @@ suite runs through the other side; the prototype modes have no vector file and a
 carries a **play** as well as a par, because two copies can agree about what a board costs and
 still disagree about what happened on the way. `keeper.py`, `bud.py`, `march.py`, `ember.py` and
 `bud-vectors.json` all went with their modes.
+
+`fxreels.py` is the layer under `artnames.py`, and it was written the day that gap cost three
+reels. `artnames.py` proves a name resolves; nothing proved the picture behind it was visible.
+Three of the 266 baked reels on disk were threads — a shackler's arrow filled **2.1 %** of its
+own frame across, which on the board is two hundredths of a cell — and every one of them was a
+boss spell, addressed, registered, audited, loaded and drawn. It measures the lit bounding box
+at each reel's **loudest** frame (never frame nought: these open on a wind-up and close on
+drifting smoke) and refuses anything under the floor. What it cannot say is whether a reel is
+the *right* picture; that is a contact sheet and an eye (invariant 32b).
 
 `artnames.py` closes the same gap for sprites, and it was written the day it cost
 something: `MarchView.Boom` asked for `Art/March/boom_fire` when the explosions live

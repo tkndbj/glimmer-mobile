@@ -40,7 +40,8 @@ namespace GlimmerGrove
         /// </summary>
         public static GameMode Read(CatalogIndex index)
         {
-            string raw = PlayerPrefs.GetString(Key, string.Empty);
+            // Through MapMemory, so the answer belongs to the account asking — see that class.
+            string raw = MapMemory.Read(Key);
 
             // **Nothing remembered is answered before anything is parsed, and it has to be.**
             // `GameMode.TryParse` answers *true* for an empty string, with the glade — because a
@@ -73,7 +74,7 @@ namespace GlimmerGrove
         {
             if (!mode.IsValid) return;
 
-            DevicePrefs.WriteString(Key, mode.Value);
+            MapMemory.Write(Key, mode.Value);
         }
     }
 
@@ -107,7 +108,7 @@ namespace GlimmerGrove
         {
             if (index == null || !mode.IsValid) return GameTrack.Main;
 
-            string raw = PlayerPrefs.GetString(KeyFor(mode), string.Empty);
+            string raw = MapMemory.Read(KeyFor(mode));
 
             // Nothing remembered is answered before anything is parsed, for `ModeChoice.Read`'s
             // reason: `GameTrack.TryParse` answers *true* for an empty string with the main track,
@@ -130,7 +131,7 @@ namespace GlimmerGrove
         {
             if (!mode.IsValid) return;
 
-            DevicePrefs.WriteString(KeyFor(mode), track.Value);
+            MapMemory.Write(KeyFor(mode), track.Value);
         }
     }
 }

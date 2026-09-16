@@ -131,9 +131,12 @@ namespace GlimmerGrove.Cloud
         /// grove with nothing in it is a warning nobody reads on the grove that has everything.
         /// </para>
         /// <para>
-        /// Cleared glades are the headline, and the three purchased sets are here because they
-        /// are the parts that are <em>not</em> recoverable by playing again — everything else in
-        /// the save is derived from the star ledger and comes back with it.
+        /// Cleared glades are the headline, and the purchased sets are here because they are
+        /// the parts that are <em>not</em> recoverable by playing again — everything else in
+        /// the save is derived from the star ledger and comes back with it. The turret line and
+        /// the heart containers are the two that cost something a player would mind: gems and
+        /// real money. The grove's sets are deliberately not asked — the Grovement is held and
+        /// nothing about an account is decided by it any more.
         /// </para>
         /// <para>
         /// Counted off the records rather than through <c>PlayerProgression</c>, which drops any
@@ -145,8 +148,8 @@ namespace GlimmerGrove.Cloud
         public static bool HoldsAGrove
             => PlayerProgress.ClearedCount > 0
             || Progression.CompanionLedger.BoughtCount > 0
-            || Homestead.HomesteadLedger.BoughtCount > 0
-            || Homestead.GroveLand.BoughtCount > 0;
+            || Wards.WardLedger.BoughtCount > 0
+            || HeartContainerLedger.OwnedCount > 0;
 
         /// <summary>Chosen once, in <c>Boot</c>, before anything asks for a sync.</summary>
         public static void UseBackend(ICloudSaveBackend backend)
@@ -779,8 +782,14 @@ namespace GlimmerGrove.Cloud
 
             string userId = CloudState.UserId;
 
+            // Every failure stops the sync, and a refused read most of all. This line used to
+            // let a `Rejected` pull through as "nothing on the server", which turned the push
+            // below into a full overwrite of whatever the server held with whatever this
+            // device held — on a fresh install, an empty grove over a full one. A missing
+            // document is not a failure (the backend answers success with no snapshot), so
+            // there is no honest reason left for a failed read to be treated as one.
             var (pull, snapshot) = await _backend.PullAsync(userId, cancellation);
-            if (!pull.Ok && pull.Failure != CloudFailure.Rejected) return pull;
+            if (!pull.Ok) return pull;
 
             // The local snapshot is taken after the pull, so anything the player did
             // while the request was in flight is included rather than overwritten.

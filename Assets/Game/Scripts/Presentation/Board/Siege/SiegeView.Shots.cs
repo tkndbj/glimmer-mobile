@@ -151,6 +151,118 @@ namespace GlimmerGrove
             _spare.Push(puff);
         }
 
+        // ------------------------------------------------------------------ the wake
+        /// <summary>One ember in a trail. Pooled for <see cref="Cinder"/>'s reason.</summary>
+        sealed class Ember
+        {
+            public Image Img;
+            public RectTransform Node;
+            public bool Out;
+        }
+
+        readonly Stack<Ember> _cinders = new Stack<Ember>(48);
+
+        /// <summary>
+        /// One ember dropped behind something crossing the hill.
+        ///
+        /// <para>
+        /// <b>This exists because the thing it replaces was the most expensive drawing in the mode
+        /// and one of the least visible.</b> A boss's orb used to drop its wake through
+        /// <c>Burst.Sparks</c>, which is a fine general-purpose burst and builds <b>a host, two
+        /// sparks and a core glow — four GameObjects and three <c>Image</c>s — per call</b>, none
+        /// of them pooled. <c>Hurl</c> called it every fiftieth of a second for the whole flight,
+        /// and a warlord throws three orbs: <b>27 calls, 108 GameObjects and 81 <c>Image</c>s
+        /// created and destroyed inside 0.45 s</b>, on top of everything else a cast draws. What
+        /// a player got for it was a scatter of two-pixel dots on a lit hill.
+        /// </para>
+        /// <para>
+        /// <b>And the cost was never the GameObjects, it was the canvas.</b> Every `Image` added,
+        /// removed or re-tinted marks its canvas dirty, and this board's canvas holds the ground,
+        /// the ward line, the fuel tubes, the gem field and a dozen raiders — so each of those 81
+        /// forced a rebuild of the whole board's geometry. That is why the loudest moment in the
+        /// mode was also the one that hitched. <see cref="SiegeView.Build"/> now gives the effects
+        /// layer a canvas of its own as well, so a rebuild this does cause stops at the layer.
+        /// </para>
+        /// <para>
+        /// <b>Pooled and never destroyed</b>, so a cast allocates nothing at all once the pool is
+        /// warm — the same bargain <see cref="Lend"/> already made for the reels, made again one
+        /// size down. Given back on a timer rather than on a callback, for <see cref="Ends"/>'
+        /// reason: a tween whose image has been torn down never finishes, and a widget never
+        /// handed back is a leak on a board that asks for twenty a second.
+        /// </para>
+        /// </summary>
+        void Cinder(Vector2 at, Color tint, float size, float life, Vector2 drift)
+        {
+            if (_fx == null) return;
+
+            var ember = _cinders.Count > 0 ? _cinders.Pop() : Kindle();
+            if (ember.Node == null) return;
+
+            ember.Out = true;
+
+            var img = ember.Img;
+            var rt = ember.Node;
+
+            rt.gameObject.SetActive(true);
+            rt.anchoredPosition = at;
+            rt.sizeDelta = new Vector2(size, size);
+            rt.localScale = Vector3.one;
+
+            var lit = Pal.Lift(tint, .4f);
+
+            // **Every tween on an ember is owned by its node, and that is load-bearing rather
+            // than tidy.** `Tween.KillAll` matches owners by reference, so hosting the animation
+            // on the `Image` and the safety timer on the `RectTransform` means <see cref="Douse"/>
+            // cancels one of them and not the other — and a timer that outlives the hand-back is
+            // a timer that fires on the *next* ember. This pool is a stack and the wake emits
+            // every 50 ms, so the ember handed back is the very next one lent: the stale timer
+            // landed 60 ms into a fresh 300 ms life and put it out at a fifth of its age. It
+            // reads as a wake that stutters, which is indistinguishable from an effect that is
+            // simply thin. <see cref="Ends"/> and <see cref="Give"/> got this right next door by
+            // using one owner throughout, which is the only reason it is right here.
+            Tween.Run(life, Ease.OutQuad, t =>
+            {
+                if (!rt) return;
+
+                rt.anchoredPosition = at + drift * t;
+                rt.localScale = Vector3.one * Mathf.Lerp(1f, .15f, t * t);
+                img.color = Pal.A(lit, 1f - t * t);
+            }, rt, "cinder").OnDone(() => Douse(ember));
+
+            // **The only guarantee, and it is not belt and braces** (<see cref="Ends"/>' reason):
+            // `Tw.Kill` runs the revert and deliberately does *not* raise `OnDone`, so an ember
+            // whose tween is killed — by a screen change, or by `Douse` itself — would never be
+            // handed back. The pool would drain silently and <see cref="Kindle"/> would allocate
+            // for ever, which is the leak this whole class exists to end. `Douse` is idempotent,
+            // so the two cannot double up.
+            Tween.After(life + .06f, () => Douse(ember), rt);
+        }
+
+        Ember Kindle()
+        {
+            var img = UIKit.Img("Cinder", _fx, Art.Spark(64), Color.clear,
+                                new Vector2(1f, 1f), new Vector2(.5f, .5f), Vector2.zero);
+            img.raycastTarget = false;
+
+            return new Ember { Img = img, Node = img.rectTransform };
+        }
+
+        void Douse(Ember ember)
+        {
+            if (ember == null || !ember.Out) return;
+            ember.Out = false;
+
+            if (!ember.Node) return;
+
+            // The node, because that is what every tween on an ember is owned by — see
+            // <see cref="Cinder"/> for what killing the other one bought.
+            Tween.KillAll(ember.Node);
+            ember.Img.color = Color.clear;
+            ember.Node.gameObject.SetActive(false);
+
+            _cinders.Push(ember);
+        }
+
         /// <summary>The bolt itself: the turret's own comet, aimed, with a light under its head.</summary>
         Puff Round(Wards.WardModel model, int colour, Color tint, Vector2 at, float angle)
         {

@@ -141,6 +141,39 @@ namespace GlimmerGrove.EditorTools
             public bool Grounded;
 
             /// <summary>
+            /// Whether this spell's source is a <b>comet</b> — a head with a tail behind it —
+            /// rather than an orb, and therefore framed round the head instead of square.
+            ///
+            /// <para>
+            /// <b>The fifth telling of invariant 37k's sliver, and the first one that is not a
+            /// hand-fix.</b> <see cref="BakeSpell"/> framed every spell square because the thing
+            /// it was written for is a sun, and the note on it says so in as many words. Two rows
+            /// added later are not suns: a shackler looses an <em>arrow</em> and an ironclad
+            /// brings a <em>blade</em> down, and both came out of a 384-square frame as a thread
+            /// down the middle of nothing —
+            /// <c>snare</c> at <b>2.1 %</b> of its own frame across and <c>quake</c> at
+            /// <b>5.2 %</b>, against a median of 17 % for the 266 reels on disk. On the board
+            /// that is an arrow two hundredths of a cell wide. Both shipped.
+            /// </para>
+            /// <para>
+            /// <b>So it is a field, for the reason <see cref="Toward"/> is one</b>: how a source
+            /// has to be framed is a fact about <em>that source</em>, not about which table it
+            /// sits in. The same square framing that is right for <c>Sun01</c> is wrong for
+            /// <c>MagicArrow02</c>, and there is nothing a bake can read off a prefab that
+            /// answers it — the survey sheet renders both perfectly well as comets, which is
+            /// exactly why looking at the pack never caught this.
+            /// </para>
+            /// <para>
+            /// <b>The view needs no matching flag, and deliberately.</b> <c>SiegeView.Hurl</c>
+            /// anchors a square reel at its middle and a comet at <c>HeadAt</c>, and it decides
+            /// which by reading the <em>aspect off the sprite</em> — so this table stays the one
+            /// place the decision is made and a re-bake cannot leave the drawing holding the old
+            /// answer. <c>Tools/verify/fxreels.py</c> is what proves the result is a picture.
+            /// </para>
+            /// </summary>
+            public bool Comet;
+
+            /// <summary>
             /// Whether this reel is baked <b>white in all four ward colours</b> rather than graded
             /// onto each one.
             ///
@@ -614,8 +647,16 @@ namespace GlimmerGrove.EditorTools
         /// PNG (32b).
         /// </para>
         /// </summary>
+        /// <para>
+        /// <b>A comet, and it took a gate to notice.</b> An arrow is a head with a shaft behind
+        /// it, and framed square by <see cref="BakeSpell"/> it baked at <b>2.1 %</b> of its own
+        /// frame across — the thinnest reel in the game by a factor of fifteen, drawn on the hill
+        /// as a thread two hundredths of a cell wide, shipped, and green on every check this
+        /// project had. See <see cref="Shot.Comet"/> and <c>Tools/verify/fxreels.py</c>.
+        /// </para>
         static readonly Shot Snare =
-            new Shot { Key = "snare", Prefab = "vfx_Projectile_MagicArrow02", Hue = Pal.Dormant };
+            new Shot { Key = "snare", Prefab = "vfx_Projectile_MagicArrow02", Hue = Pal.Dormant,
+                       Comet = true };
 
         /// <summary>
         /// What an <b>ironclad</b> lands when it brings its axe down.
@@ -633,8 +674,90 @@ namespace GlimmerGrove.EditorTools
         /// <b>Also a candidate until it has been looked at</b>, for <see cref="Snare"/>'s reason.
         /// </para>
         /// </summary>
+        /// <para>
+        /// <b>A comet for the snare's reason, and the one row here that also had to replace its
+        /// impact.</b> <c>Slash03</c>'s flight is a crescent blade with the streaks of the swing
+        /// behind it — right, and 8 : 1, so framed square it baked at <b>5.2 %</b> across. Its
+        /// impact is worse and cannot be framed out of it: all three of the pack's slash impacts
+        /// are a <em>vertical line</em>, which baked to <b>3.1 %</b> across and drew on the board
+        /// as a hairline down the turret. <b>That is the cleaver's fault a second time</b>, in the
+        /// same file, under the same comment that records fixing it — and the cleaver's fix was
+        /// exactly this: keep the flight, name a different impact.
+        /// </para>
+        /// <para>
+        /// <b>Dust and shards, because that is what mass landing on something throws.</b>
+        /// <c>Hit_Capsule01</c> is a smoke ring with embers in it and hard chips flung outward;
+        /// graded to <see cref="Pal.Radiance"/> it is stone and dust, and it is the only impact in
+        /// this pack that has <em>weight</em> rather than light. Nothing else in the mode uses it,
+        /// so an ironclad cannot be confused with anything — which is invariant 37z's requirement
+        /// that the difference be a shape and not a tint, and the reason it can go on sharing a
+        /// hue with the roar two chapters away.
+        /// </para>
+        /// <para>
+        /// <b><c>Hit_Cube02</c> was baked first and looked at, which is the only reason it is not
+        /// in this game.</b> Its name says rubble and its picture is a stack of white boxes — the
+        /// pack's low-poly debris mesh, drawn large, reading as geometry rather than as stone.
+        /// Every number was healthy: 26 % ink, two thirds of its frame, straight through the gate
+        /// that had just caught the hairline it replaced. <b>A gate proves a reel is a picture and
+        /// can never prove it is the right one</b> (invariant 32b), and the contact sheet took one
+        /// look.
+        /// </para>
         static readonly Shot Quake =
-            new Shot { Key = "quake", Prefab = "vfx_Projectile_Slash03", Hue = Pal.Radiance };
+            new Shot { Key = "quake", Prefab = "vfx_Projectile_Slash03", Hue = Pal.Radiance,
+                       Comet = true, Hit = "vfx_Hit_Capsule01" };
+
+        /// <summary>
+        /// What a <b>gravemaw</b> opens when it eats the hill, and it is the first of two rows
+        /// that exist to end three bosses sharing one drawing.
+        ///
+        /// <para>
+        /// <b>Three of the eight wore the warbringer's reels, separated by a run-time hue.</b>
+        /// That is invariant 37z's fault in its purest form — the rule is written about bosses
+        /// and this is the drawing half of it — and the code that did it said so out loud: the
+        /// gravemaw and the bonecaller were scoped to <c>roar_muzzle</c> and <c>roar_hit</c>
+        /// because both are <see cref="Shot.Grounded"/> and the roar was the grounded row that
+        /// already existed. Grounded is what they have in common with a roar. It is not what they
+        /// <em>are</em>.
+        /// </para>
+        /// <para>
+        /// <b>A ring that closes, because a devour is a pull.</b> The whole difference between
+        /// this and a roar is direction — a roar pushes outward off the thing casting it and this
+        /// draws inward onto it (<c>SiegeView.Feed</c>) — so what it wants is a ring with a
+        /// current in it rather than a shockwave with shards. <c>Spiral02</c>'s impact is that,
+        /// and <see cref="Pal.Verdant"/> is the sicklier green on the wheel, which is the colour
+        /// a mouth should be.
+        /// </para>
+        /// <para>
+        /// <b>Grounded, so only two of its three reels are baked</b> — nothing crosses the hill,
+        /// and a flight reel nothing can ask for is a bundle entry for the life of the game.
+        /// </para>
+        /// </summary>
+        static readonly Shot Maw =
+            new Shot { Key = "maw", Prefab = "vfx_Projectile_Spiral02", Hue = Pal.Verdant,
+                       Grounded = true };
+
+        /// <summary>
+        /// What a <b>bonecaller</b> opens when it raises a group, and the second row ending the
+        /// shared drawing <see cref="Maw"/> describes.
+        ///
+        /// <para>
+        /// <b>Spectral rather than pressure, which is the whole point of not being a roar.</b>
+        /// <c>Ghostly02</c>'s impact is a soft burst that blooms and hangs rather than snapping
+        /// outward, and it is the only thing in this pack that looks like something arriving from
+        /// somewhere else. Graded to <see cref="Pal.Glass"/> — the field's own ice white against
+        /// the roar's warm <see cref="Pal.Radiance"/> — it is the light the dead come up in.
+        /// </para>
+        /// <para>
+        /// <b>`crypt` rather than `bone`, because the cast is already called that.</b> The
+        /// bonecaller's body reels are <c>caller</c> and its raised bodies are the chapter's
+        /// <c>bone*</c> roster; a third thing spelt <c>bone</c> would collide with a name in the
+        /// same folder. An art address is permanent (invariant 1's reach), so it is worth one
+        /// minute of thought.
+        /// </para>
+        /// </summary>
+        static readonly Shot Crypt =
+            new Shot { Key = "crypt", Prefab = "vfx_Projectile_Ghostly02", Hue = Pal.Glass,
+                       Grounded = true };
 
         /// <summary>
         /// What a <b>charm</b> goes off in: one big radial detonation, in each of the four gem
@@ -902,7 +1025,7 @@ namespace GlimmerGrove.EditorTools
         /// Which half of the mode's projectile art a run touches.
         ///
         /// <b>Separable because the two halves are baked differently and change for different
-        /// reasons.</b> The elemental four and the bosses' four are graded into a colour and have
+        /// reasons.</b> The elemental four and the bosses' eight are graded into a colour and have
         /// been stable for chapters; the roster's nineteen are bleached and are the ones being
         /// tuned. Re-baking everything to iterate on one of them would rewrite thirty reels nobody
         /// asked to change, and <see cref="Verify"/> would then be comparing a fresh bake against
@@ -911,7 +1034,7 @@ namespace GlimmerGrove.EditorTools
         [System.Flags]
         enum Parts
         {
-            Elemental = 1,      // the starter's four, and the four spells the bosses throw
+            Elemental = 1,      // the starter's four, and the eight spells the bosses throw
             Roster = 2,         // one effect per bought turret
             Strike = 4,         // the stormcall, out of a different pack and graded its own way
             Charm = 8,          // the one detonation a charm goes off in, in four gem colours
@@ -928,7 +1051,7 @@ namespace GlimmerGrove.EditorTools
         public static void Contact() => Run(write: false, contact: true, parts: Parts.Elemental);
 
         /// <summary>
-        /// Bakes only the four elemental bolts and the four boss spells — see <see cref="Parts"/>.
+        /// Bakes only the four elemental bolts and the eight boss spells — see <see cref="Parts"/>.
         ///
         /// <b>Narrow because the roster is 228 reels and these are twelve.</b> The other two parts
         /// already had an entry of their own and this did not, so the only way to re-bake a
@@ -1051,12 +1174,19 @@ namespace GlimmerGrove.EditorTools
                 BakeOne(stage, cam, prefab, shot, made);
             }
 
-            // **One row per boss, and four rather than two.** A chapter shipped two bosses
+            // **One row per boss, and eight rather than four.** A chapter shipped two bosses
             // sharing a body reel and separated by a run-time hue; this is the same fault's
-            // other half — two spells that were one prefab at two colours. Each of the four
+            // other half — two spells that were one prefab at two colours. Each of the eight
             // now throws a different *kind* of object, which is invariant 33e's test asked of
             // the thing the author places rather than of the thing the player makes.
-            foreach (var thrown in new[] { Hex, Spell, Roar, Omen, Snare, Quake })
+            //
+            // **Eight because the last two were added the day the count was checked.** Six rows
+            // served eight bosses: `Maw` and `Crypt` are the gravemaw's and the bonecaller's,
+            // which had been wearing the warbringer's two reels under their own colours for two
+            // chapters. `SiegeArtTests.EveryBossSpellIsItsOwnDrawing` is what keeps the count
+            // honest now, because a ninth boss sharing an eighth's reels is green everywhere
+            // else — it loads, it draws, and it is the wrong picture.
+            foreach (var thrown in new[] { Hex, Spell, Roar, Omen, Snare, Quake, Maw, Crypt })
             {
                 var warlord = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(thrown.Prefab));
 
@@ -1290,12 +1420,7 @@ namespace GlimmerGrove.EditorTools
             float authored = Mathf.Max(1f, Reflected(prefab, "speed", 30f));
             float warm = WarmFor(TrailOf(prefab));
 
-            var seen = Sample(stage, prefab, authored, warm, ShotSeconds, SiegeView.HeadAt);
-
-            float want = seen.Across * 2f * WantedShot * SiegeView.HeadAt;
-            float speed = seen.Behind > .05f
-                ? authored * Mathf.Clamp(want / seen.Behind, SlowestBake, FastestBake)
-                : authored;
+            float speed = Trailing(stage, prefab, authored, warm, ShotSeconds);
 
             // The slim is the bolt's alone: a flash and an impact are radial, and squeezing a
             // radial burst makes an ellipse out of it (see <see cref="Shot.Slim"/>).
@@ -1371,13 +1496,9 @@ namespace GlimmerGrove.EditorTools
             // trail is depends on how fast the thing is flying, and how fast it should fly depends
             // on how much room its trail has — so the first pass flies it as authored purely to
             // find out how big the head reads and how far the tail runs, and the second one flies
-            // it at whatever makes that tail fit a comet-shaped frame.
-            var seen = Sample(stage, prefab, authored, warm, ShotSeconds, SiegeView.HeadAt);
-
-            float want = seen.Across * 2f * WantedShot * SiegeView.HeadAt;
-            float speed = seen.Behind > .05f
-                ? authored * Mathf.Clamp(want / seen.Behind, SlowestBake, FastestBake)
-                : authored;
+            // it at whatever makes that tail fit a comet-shaped frame. See `Trailing`, which is
+            // this and is shared with the two spells that are comets.
+            float speed = Trailing(stage, prefab, authored, warm, ShotSeconds);
 
             // The row's own, never this file's elemental pair: see <see cref="Shots"/> for why
             // three of the four are carried the whole way and one is not.
@@ -1692,24 +1813,118 @@ namespace GlimmerGrove.EditorTools
             // orb is a different *kind* of object from four streaking comets, not a bigger one.
             // **A spell aimed at the hill has no flight**, and baking one anyway is how an
             // unloadable reel came to ship in a bundle. See `Shot.Grounded`.
-            if (!thrown.Grounded)
-                made[thrown.Key] =
-                    Capture(stage, cam, prefab, thrown.Hue, SpellFrames, seconds,
-                            Mathf.Max(1f, Reflected(prefab, "speed", 30f)), warm,
-                            .5f, SpellTall, SpellTall, SpellTall, 1f, 1f, comet: false);
+            float authored = Mathf.Max(1f, Reflected(prefab, "speed", 30f));
 
-            var muzzle = Companion(prefab, "muzzlePrefab");
+            // The row's grade where it states one, this file's lean where it does not. All three
+            // reels of a spell take the same recipe: a boss's flight, its flash and its impact are
+            // one event and the first thing a player would notice about three different grades is
+            // that they were three.
+            var recipe = Spellwork(thrown.Hue, thrown.Toward, thrown.Keep, thrown.Floor);
+
+            if (!thrown.Grounded)
+                made[thrown.Key] = thrown.Comet
+
+                    // **Framed round its head, and flown at whatever makes its tail fit** — the
+                    // two decide each other, so the speed is found the way `BakeOne` finds it
+                    // rather than taken as authored. A comet flown at its authored speed into a
+                    // frame sized for an orb is how both of these came out as threads.
+                    ? Capture(stage, cam, prefab, thrown.Hue, SpellFrames, seconds,
+                              Trailing(stage, prefab, authored, warm, seconds), warm,
+                              SiegeView.HeadAt, SpellTall, NarrowestShot, WidestShot,
+                              LeanestShot, LongestShot, comet: true, recipe: recipe)
+
+                    : Capture(stage, cam, prefab, thrown.Hue, SpellFrames, seconds,
+                              authored, warm,
+                              .5f, SpellTall, SpellTall, SpellTall, 1f, 1f, comet: false,
+                              recipe: recipe);
+
+            var muzzle = Companion(prefab, thrown.Muzzle, "muzzlePrefab");
             if (muzzle != null)
                 made[thrown.Key + "_muzzle"] =
                     Capture(stage, cam, muzzle, thrown.Hue, SpellBurstFrames, Burst(muzzle), 0f, 0f,
                             SiegeView.MuzzleAt, SpellBurst, NarrowestMuzzle, SpellBurst,
-                            LeanestMuzzle, LongestMuzzle, comet: false);
+                            LeanestMuzzle, LongestMuzzle, comet: false, recipe: recipe);
 
-            var hit = Companion(prefab, "hitPrefab");
+            var hit = Companion(prefab, thrown.Hit, "hitPrefab");
             if (hit != null)
                 made[thrown.Key + "_hit"] =
                     Capture(stage, cam, hit, thrown.Hue, SpellBurstFrames, Burst(hit), 0f, 0f,
-                            .5f, SpellBurst, SpellBurst, SpellBurst, 1f, 1f, comet: false);
+                            .5f, SpellBurst, SpellBurst, SpellBurst, 1f, 1f, comet: false,
+                            recipe: recipe);
+        }
+
+        /// <summary>
+        /// A companion effect: the row's own override where it names one, and the prefab's own
+        /// otherwise.
+        ///
+        /// <b>The boss rows could not say this and the roster rows always could</b>, which is the
+        /// whole of why an ironclad's axe landed as a two-pixel line. <see cref="Shot.Muzzle"/>
+        /// and <see cref="Shot.Hit"/> exist precisely for "the flight is right and its companions
+        /// are not" — the cleaver's note records the case being met and fixed — and
+        /// <see cref="BakeSpell"/> simply never read them, so the one table that most needed the
+        /// escape hatch was the one table without it.
+        /// </summary>
+        static GameObject Companion(GameObject prefab, string named, string field)
+        {
+            if (!string.IsNullOrEmpty(named))
+            {
+                var own = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(named));
+
+                if (own != null) return own;
+
+                // Named and absent is a typo, never a checkout without the pack: the pack being
+                // absent is reported once by the caller and every prefab in it goes missing
+                // together. Falling back silently would bake the wrong picture under the right
+                // name, which is the one outcome no gate here can see.
+                Debug.LogWarning($"[siege shots] {named} is not in this project — " +
+                                 $"falling back to the prefab's own {field}.");
+            }
+
+            return Companion(prefab, field);
+        }
+
+        /// <summary>
+        /// How fast a comet has to fly for its tail to fit the frame it is about to be given.
+        ///
+        /// <b>Lifted out of <see cref="BakeOne"/> the day a second path needed it.</b> Every trail
+        /// in this pack is a world-space system emitting per second, so the length one smears over
+        /// is speed times particle lifetime — which makes framing and flight two halves of one
+        /// decision, and makes a comet flown at its authored speed into a frame chosen for
+        /// something else the bug the bench shipped once already. The band is
+        /// <see cref="SlowestBake"/>..<see cref="FastestBake"/> for that reason: outside it the
+        /// flames pile onto the head and the comet becomes an oval with debris round it.
+        /// </summary>
+        static float Trailing(Transform stage, GameObject prefab, float authored, float warm,
+                              float seconds)
+        {
+            var seen = Sample(stage, prefab, authored, warm, seconds, SiegeView.HeadAt);
+
+            if (seen.Behind <= .05f) return authored;
+
+            float want = seen.Across * 2f * WantedShot * SiegeView.HeadAt;
+
+            // **Rounded to hundredths, because this number multiplies every frame's position and
+            // the measurement behind it is not bit-stable.** `Sample` reads `Renderer.bounds`
+            // after simulating, and a GPU is not obliged to land a bounds query on the same last
+            // bit twice — normally invisible, because <see cref="CompareAll"/> allows six levels
+            // of drift. Here it is not invisible: the factor scales *distance travelled*, so a
+            // difference in its last digit puts the head a fraction further along on frame one
+            // and a multiple of that fraction further along on frame seventeen. Measured on the
+            // ironclad's blade, which drifted 6.2 levels at frame 3 and 8.5 by frame 17 —
+            // monotonically, which is the signature of a speed and never of a rasteriser.
+            //
+            // **Thousandths, which is the finest grid that still absorbs the wobble** — and the
+            // fineness is the point rather than a detail. The noise being removed is a last-bit
+            // difference, parts per million; a grid a thousand times coarser than that is ample.
+            // The first cut used *hundredths*, which is also ample and perturbs the value ten
+            // times as far — far enough to push a reel sitting near a quantisation boundary in
+            // `Pixels` across it. That is not theoretical: it re-framed eight shipped frost
+            // turret reels from 128 to 112 pixels wide, drawing every one of them 14 % longer,
+            // as a side effect of a change whose whole purpose was to stop framing moving.
+            // **Quantise as finely as the noise allows, never as coarsely as it tolerates.**
+            float factor = Mathf.Clamp(want / seen.Behind, SlowestBake, FastestBake);
+
+            return authored * (Mathf.Round(factor * 1000f) / 1000f);
         }
 
         // ------------------------------------------------------------------ the rig
@@ -1783,18 +1998,44 @@ namespace GlimmerGrove.EditorTools
         static Book Capture(Transform stage, Camera cam, GameObject prefab, Color hue, int frames,
                             float seconds, float speed, float warm, float head, int tallPx,
                             int narrowest, int widest, float leanest, float longest,
-                            bool comet)
+                            bool comet, Recipe? recipe = null)
             => CaptureAll(stage, cam, prefab,
-                          new[]
-                          {
-                              new Recipe
-                              {
-                                  Hue = hue, Toward = Toward, White = MostWhite, Floor = Muted,
-                                  Lift = Lift, Bloom = 0f,
-                              },
-                          },
+                          new[] { recipe ?? Spellwork(hue, 0f, 0f, 0f) },
                           frames, seconds, speed, warm, head, tallPx, narrowest, widest,
                           leanest, longest, comet)[0];
+
+        /// <summary>
+        /// How a <b>spell</b> is graded: this file's own lean, with the row allowed to overrule
+        /// any of the three numbers.
+        ///
+        /// <para>
+        /// <b><see cref="Shot"/> has carried <see cref="Shot.Toward"/>, <see cref="Shot.Keep"/>
+        /// and <see cref="Shot.Floor"/> since the day their note was written, and
+        /// <see cref="BakeSpell"/> has never read one of them.</b> That note says, in as many
+        /// words, that how far a source must be carried is a fact about <em>that source</em> — and
+        /// then the boss table, which is the one table whose eight rows come from eight unrelated
+        /// families, was wired to a single constant. It is the third field on this row to turn out
+        /// to be decorative (see <see cref="Companion"/> for the muzzle and the impact), and all
+        /// three are the same omission: the spell path was written when there was one spell.
+        /// </para>
+        /// <para>
+        /// <b>Nought means "this file's own", so no row's picture moves.</b> <see cref="Toward"/>
+        /// is a 38 % lean, which is right only where the pack already draws roughly the hue being
+        /// graded to; <see cref="RosterToward"/> is 84 % and exists for a source that arrives in
+        /// the wrong colour entirely. Today every boss row wants the lean and every boss row gets
+        /// it — <see cref="Verify"/> proves that, because a changed number would rewrite every
+        /// reel it touches. What has changed is that the next one can say otherwise.
+        /// </para>
+        /// </summary>
+        static Recipe Spellwork(Color hue, float toward, float keep, float floor) => new Recipe
+        {
+            Hue = hue,
+            Toward = toward > 0f ? toward : Toward,
+            White = keep > 0f ? keep : MostWhite,
+            Floor = floor > 0f ? floor : Muted,
+            Lift = Lift,
+            Bloom = 0f,
+        };
 
         /// <summary>
         /// One reel graded the way a <em>strike</em> is: the loudest thing this mode ever draws.
@@ -2141,7 +2382,17 @@ namespace GlimmerGrove.EditorTools
             float tall = Mathf.Max(behind / Mathf.Max(.05f, head),
                                    seen.Ahead / Mathf.Max(.05f, 1f - head));
 
-            return Mathf.Clamp(tall / wide, leanest, longest);
+            // **Rounded for <see cref="Trailing"/>'s reason, one step further downstream.** This
+            // aspect is handed to <see cref="Pixels"/>, which quantises it to a multiple of
+            // sixteen — so almost every value maps to the same width and a few sit exactly on a
+            // boundary. For those, a last-bit difference in a bounds query is not a fraction of a
+            // level of drift: it is a **different texture size**, which `CompareAll` can only
+            // report as 255/255 and which reads as the art having been replaced. Measured on the
+            // gravemaw's ground wash, which flipped width between two bakes in the same call.
+            // **Thousandths for <see cref="Trailing"/>'s reason, and this is where that reason was
+            // learned**: rounding here to hundredths moved eight frost reels across a boundary in
+            // <see cref="Pixels"/> and made them 14 % longer on the board.
+            return Mathf.Round(Mathf.Clamp(tall / wide, leanest, longest) * 1000f) / 1000f;
         }
 
         /// <summary>
@@ -2206,10 +2457,17 @@ namespace GlimmerGrove.EditorTools
             var roots = Roots(shot);
             var raw = new Color[frames][];
 
+            // The effect's own clock, which every frame of this loop advances and every render
+            // reads. See <see cref="Clock"/> for why it exists at all.
+            float clock = 0f;
+
+            HoldClock();
+
             try
             {
                 Start(roots);
                 Advance(shot, roots, warm, speed);
+                clock += warm;
 
                 for (int f = 0; f < frames; f++)
                 {
@@ -2225,16 +2483,112 @@ namespace GlimmerGrove.EditorTools
                     cam.transform.position = aim - look * Vector3.forward * back;
                     cam.transform.rotation = look;
 
+                    Clock(clock);
                     cam.Render();
                     raw[f] = ReadBack(rt, pixels);
 
                     Advance(shot, roots, seconds / frames, speed);
+                    clock += seconds / frames;
                 }
             }
-            finally { Object.DestroyImmediate(shot); }
+            finally { Object.DestroyImmediate(shot); ReleaseClock(); }
 
             return raw;
         }
+
+        /// <summary>
+        /// Pins the shader clock to the effect's <b>own</b> elapsed time for one render, and hands
+        /// it back to the engine when the bake is done.
+        ///
+        /// <para>
+        /// <b>Fixing every particle seed was necessary and was not sufficient</b>, and the gap
+        /// between those two is why <see cref="Verify"/> had quietly stopped meaning anything.
+        /// <see cref="Spawn"/> sets <c>useAutoRandomSeed = false</c> on every system, so the
+        /// particles are identical run to run — but four of this pack's seven shader graphs
+        /// (<c>MasterScroll01/02/03</c> and <c>MasterScrollManual</c>) scroll their textures off a
+        /// <b>Time</b> node, and in the Editor that is the wall clock since the Editor started.
+        /// So every bake rendered the same particles through a texture at a different scroll
+        /// phase, and a scroll moves *everywhere at once*: two bakes four minutes apart differed
+        /// by a mean of <b>12.8 levels</b> on a ward's bolt, against <see cref="CompareAll"/>'s
+        /// tolerance of six. The check was reporting correct art as drifted, and there is no
+        /// tolerance that separates "the scroll is at a different phase" from "somebody changed
+        /// the prefab" — they are the same picture-wide difference.
+        /// </para>
+        /// <para>
+        /// <b>Driven by the simulated clock rather than frozen at nought</b>, which is the whole
+        /// point: a frozen scroll would be reproducible and would also stop the texture moving
+        /// across the reel, which is half of what makes these effects read as flowing. Advancing
+        /// it by the same step the particles advance by makes the scroll part of the bake, and
+        /// makes it identical on every machine on every run.
+        /// </para>
+        /// <para>
+        /// <b>A negative time hands the clock back</b>, and the <c>finally</c> is not tidiness:
+        /// <c>_Time</c> is a global, so a bake that threw with it pinned would leave every
+        /// scrolling material in the Editor frozen at whatever instant it died on — a Scene view
+        /// that has stopped animating with no error to explain it.
+        /// </para>
+        /// </summary>
+        static void Clock(float t)
+        {
+            // Unity's own layout, which these graphs' Time node reads through: (t/20, t, t*2, t*3)
+            // for `_Time`, and the sine and cosine of t in the two companions. All four of this
+            // pack's scrolling graphs read the plain **Time** slot, which is `_Time.y`; the other
+            // two are set so a graph that ever reaches for sine or cosine time is pinned as well.
+            Shader.SetGlobalVector(TimeId, new Vector4(t / 20f, t, t * 2f, t * 3f));
+            Shader.SetGlobalVector(SinId, new Vector4(Mathf.Sin(t / 8f), Mathf.Sin(t / 4f),
+                                                      Mathf.Sin(t / 2f), Mathf.Sin(t)));
+            Shader.SetGlobalVector(CosId, new Vector4(Mathf.Cos(t / 8f), Mathf.Cos(t / 4f),
+                                                      Mathf.Cos(t / 2f), Mathf.Cos(t)));
+        }
+
+        static Vector4 _wasTime, _wasSin, _wasCos;
+        static bool _clockHeld;
+
+        /// <summary>
+        /// Remembers the shader clock so <see cref="ReleaseClock"/> can put it back.
+        ///
+        /// <para>
+        /// <b>This exists because the first version asserted something false and the assertion was
+        /// the exact hazard it was written to warn about.</b> <see cref="Clock"/> used to "release"
+        /// by writing nought, under a comment claiming the engine rewrites `_Time` before every
+        /// frame it renders so there was nothing worth restoring. Measured instead of argued:
+        /// setting `_Time` to a sentinel and reading it back <b>on a later frame</b> returns the
+        /// sentinel. Unity does not put that global back. So the bake was not releasing the clock,
+        /// it was pinning every scrolling material in the project at time nought and walking away
+        /// — which is a Scene view that has quietly stopped animating, with no error, exactly the
+        /// failure the old comment described in the course of dismissing it.
+        /// </para>
+        /// <para>
+        /// <b>Save and restore, rather than a value this file invents.</b> Whatever was there
+        /// before the bake is the only honest answer, because nothing here knows what else has
+        /// written to it or what reads it next. Held across nested <see cref="Roll"/> calls by the
+        /// latch, so the two passes of one capture save once and restore once.
+        /// </para>
+        /// </summary>
+        static void HoldClock()
+        {
+            if (_clockHeld) return;
+
+            _wasTime = Shader.GetGlobalVector(TimeId);
+            _wasSin = Shader.GetGlobalVector(SinId);
+            _wasCos = Shader.GetGlobalVector(CosId);
+            _clockHeld = true;
+        }
+
+        /// <summary>Puts the shader clock back. See <see cref="HoldClock"/>.</summary>
+        static void ReleaseClock()
+        {
+            if (!_clockHeld) return;
+
+            Shader.SetGlobalVector(TimeId, _wasTime);
+            Shader.SetGlobalVector(SinId, _wasSin);
+            Shader.SetGlobalVector(CosId, _wasCos);
+            _clockHeld = false;
+        }
+
+        static readonly int TimeId = Shader.PropertyToID("_Time");
+        static readonly int SinId = Shader.PropertyToID("_SinTime");
+        static readonly int CosId = Shader.PropertyToID("_CosTime");
 
         /// <summary>When an effect starts and stops being worth a frame.</summary>
         struct Live { public float Skip, Window; public int First, Last; }

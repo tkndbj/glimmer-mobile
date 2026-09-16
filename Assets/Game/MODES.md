@@ -446,6 +446,64 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    pre-rendered PNG is somebody else's export decision, not the art**: this pack shipped `.ai` vectors and a
    Spine rig beside the small PNGs, so frames are re-baked at whatever height the board wants
    (`Tools/spine_bake.py`). **Look for what the pack was exported *from*.**
+37dc. **A boss's spell is a drawing of its own, and sharing one is invariant 37z's fault said about the
+   picture.** Three of the eight wore the warbringer's two reels under colours of their own — a gravemaw
+   and a bonecaller are *grounded*, which is a fact about the rule and never about what the spell looks
+   like. Every gate was green, because a shared address is real, registered, audited, loaded and drawn.
+   What sees it is a **collision**: `SiegeArtTests.EveryBossSpellIsItsOwnDrawing` walks
+   `SiegeMode.Bosses` and refuses two bosses naming one picture.
+37dd. **A `switch` on the caster is the same trap as a `switch` with a live `default` (44e), and four
+   bosses paid it.** Only four of the eight had an arm in `SiegeView.Unleash` and `Aftermath`; the rest
+   fell into the overlord's, so two bosses that throw *nothing* launched the overlord's pair of rockets
+   at themselves, drawn as `Art.Glow` because `SpellArt` correctly answered null. **A clause naming one
+   of a family and letting the rest fall through is a clause that has already gone stale** — ask
+   `SiegeTuning.AimsAtAWard`, never a list of kinds.
+37de. **A reel has to be a *picture*, and that is measurable.** `Tools/verify/fxreels.py` measures every
+   baked reel's lit box against its own frame; of 266 on disk three were slivers and all three were boss
+   spells (`snare` at **2.1 %** across, an arrow two hundredths of a cell wide on the board). **Framing is
+   a fact about the source**, so it is a field on the row (`Shot.Comet`) rather than one policy for a whole
+   table — the same move `Shot.Toward` already made. **And a gate can only ever prove a reel is a picture,
+   never that it is the right one**: `Hit_Cube02` passed it at 26 % and is a stack of white boxes.
+37dg. **Fixing every particle seed makes a bake reproducible in its *particles* and says nothing about
+   its *pixels*.** `Spawn` has cleared `useAutoRandomSeed` for chapters, and `Verify Siege Projectiles` was
+   still failing on correct art: four of this pack's seven shader graphs scroll off a **Time** node, which
+   in the Editor is the wall clock, so every bake rendered the same particles through a texture at a
+   different phase — a mean of **12.8 levels** on a ward's bolt against a tolerance of six. A scroll moves
+   *everywhere at once*, so no tolerance can separate it from a real change. The bake pins `_Time` to the
+   effect's **own** simulated clock (`Clock`), advancing with the particles rather than frozen, and hands
+   it back in a `finally`. **"Hands it back" has to mean restoring what was there**, and the first cut
+   wrote *nought* under a comment asserting the engine rewrites `_Time` every frame so nothing was worth
+   saving. Measured: set `_Time` to a sentinel, read it back a frame later, the sentinel is still there.
+   Unity does not put that global back — so the bake was pinning every scrolling material in the project
+   at time nought and walking away, which is the exact failure the comment described while dismissing it.
+   **An assertion in a comment is not a measurement, wherever it appears.**
+37dh. **A derived float that decides a pixel must be quantised, and the tell is drift that *grows with the
+   frame index*.** Two reels survived the clock fix. `Sample` reads `Renderer.bounds` after simulating and
+   a GPU need not land that on the same last bit twice — harmless anywhere else, fatal in two places: the
+   speed a comet is flown at **multiplies distance travelled**, so the ironclad's blade drifted 6.2 levels
+   at frame 3 and 8.5 by frame 17, monotonically; and the aspect handed to `Pixels` is quantised to
+   sixteens, so a reel sitting on a boundary changes **texture size** and reports as 255/255, which reads
+   as the art having been replaced. Both are rounded to hundredths now — far finer than the bands they sit
+   in, so nothing about the framing moves. **The signature is the shape of the drift, not its size.**
+   **Quantise as finely as the noise allows, never as coarsely as it tolerates.** The first cut rounded to
+   *hundredths* — ample for a last-bit wobble, and ten times coarser than needed, which pushed eight
+   shipped frost turret reels across a boundary in `Pixels` and drew every one of them **14 % longer**: a
+   change whose entire purpose was to stop framing moving, moving framing. Thousandths absorbs the same
+   noise and perturbs the value a tenth as far. **It was not, however, what moved the frost reels** — that
+   was the clock pin itself: a different scroll phase is different *rendered content*, so the measured
+   shape genuinely differs and eight reels land on the other side of a 16-pixel step. Diagnosed, changed,
+   re-baked, hypothesis wrong. The granularity rule above stands on its own merits; the frost reels are a
+   real consequence of determinism and a taste call for the owner (`Tools/siege_frost_rebake.png`). **It is still a mitigation and not a proof** — rounding
+   moves the knife edge rather than removing it, and the cause of the wobble in `Renderer.bounds` is
+   unknown. What makes that acceptable is that the bake is *provably* repeatable (three runs agreeing to
+   the decimal) and `Verify` now says so loudly.
+37df. **A wake is a direction and a burst has none — and the cheap-looking one was the expensive one.**
+   A boss's orb dropped its trail through `Burst.Sparks` every 50 ms, which builds four GameObjects a
+   call and pools none: **108 of them inside 0.45 s** for a warlord's three orbs, to draw a scatter of
+   dots. **The cost lands on the canvas, not on the objects** — every `Image` added or re-tinted re-meshes
+   its whole canvas, and this one carries the ground, the line, the field and a dozen raiders. Pooled
+   embers (`SiegeView.Cinder`) and **a nested `Canvas` on the effects layer** fix both halves; the canvas
+   costs one batch and `overrideSorting` must stay **off**, or the layer leaves the parent's draw order.
 38. **A mode hides behind one manifest boolean, and deleting one is a session.** Hidden is `"disabled":
    true` and nothing else; deleted means class, board, view, screen, validator, reading, bodies, art,
    mirrors and tools all go, with the ids spent.

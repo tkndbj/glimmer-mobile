@@ -55,7 +55,8 @@ namespace GlimmerGrove
     /// levels". None of it was true — both accounts belonged to the same person, the twenty-six
     /// glades were on the server and on the phone, and the only thing that had gone wrong was
     /// one document read. The states that produced those sentences are gone (see
-    /// <c>SaveService.SwitchTo</c>); what remains says only what it can stand behind.
+    /// <c>SaveService.SwitchTo</c>); what remains says only what it can stand behind — and says
+    /// it in one sentence per state, at the owner's instruction (see <see cref="Build"/>).
     /// </para>
     /// </summary>
     public sealed class AccountOverlay : ModalView
@@ -102,9 +103,9 @@ namespace GlimmerGrove
         // guessed. Mixing top-anchored text with bottom-anchored buttons is what let the
         // stakes line and the sign-in buttons occupy the same forty pixels.
         const float TopMargin = 100f, BottomMargin = 56f;
-        const float StatusH = 52f, LabelH = 40f, WhyH = 150f, LineH = 60f;
+        const float StatusH = 96f, LabelH = 40f, LineH = 60f;
         const float ButtonH = 118f, WarnH = 44f, CloseH = 124f;
-        const float AfterStatus = 12f, AfterLabel = 16f, AfterWhy = 16f, AfterLine = 20f;
+        const float AfterStatus = 12f, AfterLabel = 28f, AfterLine = 20f;
         const float BetweenButtons = 14f, AfterButtons = 22f, BeforeClose = 12f;
 
         /// <summary>
@@ -129,8 +130,8 @@ namespace GlimmerGrove
         /// <para>
         /// Measured before anything is built, the way <c>WinOverlay</c> measures a victory:
         /// the height of this panel depends on what it is saying, and the alternative —
-        /// reserving room for the tallest state — leaves a visible hole in the three states
-        /// that are shorter, of which the signed-in one is what most players see most often.
+        /// reserving room for the tallest state — leaves a visible hole in the states that
+        /// are shorter, of which the signed-in one is what most players see most often.
         /// </para>
         /// </summary>
         readonly List<float> _gaps = new List<float>();
@@ -138,6 +139,17 @@ namespace GlimmerGrove
         float _cursor;
         int _row;
 
+        /// <summary>
+        /// One sentence, the account it is about, and the buttons. Nothing else.
+        ///
+        /// <para>
+        /// It used to carry a paragraph under the sentence in every state, and a second
+        /// reassurance line under that while choosing. The owner's instruction was to say
+        /// the thing directly and stop, and the paragraphs were doing the opposite: a player
+        /// worried about their progress read four sentences to find the one that answered
+        /// them. Every state now has exactly one sentence, and it is the one that answers.
+        /// </para>
+        /// </summary>
         protected override void Build()
         {
             bool available = CloudSaveService.IsAvailable;
@@ -151,18 +163,12 @@ namespace GlimmerGrove
             bool contested = _stage == Stage.Contested;
             bool choosing = _stage == Stage.Choosing;
 
-            // Not a warning and not a decision — the one fact a player switching between two of
-            // their own accounts actually needs, and the one the panel used to withhold. Both
-            // sides of a switch said "your progress is saved online" and neither said which
-            // grove was on the phone.
+            // The one fact a player switching between two of their own accounts needs: which
+            // one this phone is on. Both sides of a switch used to say "saved online" and
+            // neither said which account.
             string account = linked || choosing ? CloudSaveService.AccountLabel : string.Empty;
             bool showAccount = !contested && !string.IsNullOrEmpty(account);
 
-            // PlayerProgress rather than PlayerProgression in the adopt-cost line below. The
-            // derived total drops any glade the catalog has not loaded, which is right for the
-            // reward arithmetic and wrong for a sentence: a panel that told somebody they had
-            // nothing to lose because the content index was a moment late would be wrong in the
-            // one direction this screen must never be wrong in.
             bool showSwitch = linked && !choosing;
             bool showProviders = available && !contested && (choosing || mismatched || !linked);
 
@@ -185,11 +191,9 @@ namespace GlimmerGrove
                 height += h + gap;
             }
 
-            Row(StatusH, AfterStatus);
+            Row(StatusH, showAccount ? AfterStatus : AfterLabel);
             if (showAccount) Row(LabelH, AfterLabel);
-            Row(WhyH, AfterWhy);
             if (costly) Row(LineH, AfterLine);
-            if (choosing) Row(LineH, AfterLine);
             if (contested) Row(ButtonH, costly ? BetweenButtons : AfterButtons);
             if (costly) Row(WarnH, AfterButtons);
             if (showSwitch) Row(ButtonH, AfterButtons);
@@ -208,11 +212,21 @@ namespace GlimmerGrove
             // Contested outranks unfinished, and the order is the point: this prompt can be
             // reached from a device whose last change did not finish, and saying so there is
             // true and useless. The player is being asked one question and it is this one.
+            //
+            // Written out rather than composed from the reason, because a key built by
+            // concatenation is invisible to the build gate's string scanner and ships missing
+            // in whichever language nobody tested — WinOverlay.RankKeys' rule. A purchase
+            // swaps the guest sentence for the one about money, because somebody who has just
+            // paid is not thinking about levels, and what they bought is the one thing no
+            // amount of playing earns back.
+            bool afterPurchase = Reason == AccountPromptTrigger.Purchase;
+
             string statusKey = !available ? "ui.account.unavailable"
                              : contested ? "ui.account.taken"
                              : mismatched ? "ui.account.mismatch"
                              : choosing ? "ui.account.choose"
                              : linked ? "ui.account.linked"
+                             : afterPurchase ? "ui.account.guest_purchase"
                              : "ui.account.guest";
 
             // Moss rather than Mint, and every green on this panel is the same decision. Mint
@@ -225,7 +239,7 @@ namespace GlimmerGrove
                            linked || choosing ? Pal.Moss : available ? Pal.Rose
                                               : new Color(.52f, .40f, .31f, .9f),
                            StatusH, TextAnchor.MiddleCenter, 2f);
-            Fit(_status, 26, 34);
+            Fit(_status, 24, 34);
 
             // An address, so it is dimmer and smaller than everything else here and never
             // wraps — a long one is elided by the fitter rather than pushed onto a line that
@@ -234,39 +248,14 @@ namespace GlimmerGrove
                 Fit(Line("Account", account, 26, new Color(.44f, .32f, .24f, .78f),
                          LabelH, TextAnchor.MiddleCenter, 0f), 18, 26);
 
-            // --------------------------------------------------------------------- body
-            // Written out rather than composed from the reason, because a key built by
-            // concatenation is invisible to the build gate's string scanner and ships missing
-            // in whichever language nobody tested — WinOverlay.RankKeys' rule.
-            bool afterPurchase = Reason == AccountPromptTrigger.Purchase;
-
-            string bodyKey = contested ? "ui.account.taken_body"
-                           : mismatched ? "ui.account.mismatch_body"
-                           : choosing ? "ui.account.switch_body"
-                           : linked ? "ui.account.linked_body"
-                           : afterPurchase ? "ui.account.guest_body_purchase"
-                           : "ui.account.guest_body";
-
-            Fit(Line("Why", Loc.Get(bodyKey), 26, new Color(.44f, .32f, .24f, .95f),
-                     WhyH, TextAnchor.UpperCenter, 0f), 20, 26);
-
             // Named concretely rather than as "your progress". Somebody three weeks in
             // deserves to see the three weeks before they tap, and the other account's
             // contents cannot be shown at all — reading it requires signing in as it,
             // which is the irreversible step itself.
             if (costly)
                 Fit(Line("AdoptCost",
-                         Loc.Format("ui.account.adopt_cost",
-                                    PlayerProgress.ClearedCount, PlayerProgression.Level.Level),
+                         Loc.Format("ui.account.adopt_cost", PlayerProgress.ClearedCount),
                          26, new Color(.62f, .26f, .24f), LineH, TextAnchor.UpperCenter, 0f), 20, 26);
-
-            // The one thing a player needs to believe before tapping a provider on this
-            // panel, and the one thing that distinguishes this from signing out: the grove
-            // they are leaving is kept — on the server and on this phone — and coming back
-            // to it is one tap.
-            if (choosing)
-                Fit(Line("Safe", Loc.Get("ui.account.switch_safe"), 26, Pal.Moss,
-                         LineH, TextAnchor.MiddleCenter, 0f), 20, 26);
 
             // ------------------------------------------------------------------ buttons
             if (contested)

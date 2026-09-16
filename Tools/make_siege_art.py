@@ -103,6 +103,22 @@ GEMPACK = Path(r"C:\Users\Digikey\Downloads\craftpix-net-668473-rpg-gems-icons-p
 #: others.
 CARTOON = Path(r"C:\Users\Digikey\Downloads\2D ASSETS")
 
+#: The eighth folder: the **top-down boss packs**, which is where every boss in this mode that is
+#: not one of the five merge-shooter blobs now comes from.
+#:
+#: <b>This root is what closed the one hole the seventh opened.</b> `CARTOON` holds head-on
+#: bodies - the packs are drawn facing the viewer at eye level, not looked down on - and for one
+#: drop three bosses were cut from it because the survey said there was nothing else. There is:
+#: seven packs of top-down units, twenty-one bodies, each with Front, Back, Left and Right and a
+#: real attack in every direction. The owner bought them when the angle was finally named as the
+#: fault, and the whole of what it cost to undo the head-on cut was three rows in `BOSS_SET` -
+#: which is the bargain a table is for, recorded here for the second time.
+#:
+#: **An eighth root rather than a copy, for the reason the second through seventh exist** -
+#: copying a licensed pack so one path works is a second copy nothing keeps in step. `--units`
+#: moves it, and the tool passes when it is absent exactly as it does for the others.
+UNITS = Path(r"C:\Users\Digikey\Downloads\units")
+
 #: Which of the hundred, and it is a decision a picture made.
 #:
 #: **The glyph sits on a turret's chassis at about half a cell, and at that size detail is mush.**
@@ -303,9 +319,23 @@ QUIRK_BODY = "Png/Monster %d"
 #: here that draws an attack files it under the same name.
 WALK_ANIM, SWING_ANIM = "/Walk", "/Attack"
 
-#: What a **boss** throws in, inside its own body folder. Spelled out separately because
-#: `BOSS_SET` names a whole path per row rather than a body plus a suffix - the five blob
-#: bosses have exactly one animation each and no suffix to add.
+#: What a **boss** throws in, inside its own body folder.
+#:
+#: <b>A row in `BOSS_SET` names an animation, never a character folder, and that rule was
+#: learned the expensive way.</b> This note used to read "the five blob bosses have exactly one
+#: animation each and no suffix to add", which was true of the five `MONSTERS` rows and silently
+#: false of the three added from the head-on packs three drops later: `PNG/MonsterV5` holds
+#: *four* animations, so `ordered` collected all 72 frames of Attack, Idle, Jump and Walk and
+#: sorted them by trailing number, interleaving four gestures into one reel. `spaced` then took
+#: twelve evenly through the mixture, so the bonecaller, the shackler and the ironclad each
+#: shipped a walk that cut between a jump and a lunge every frame: the body travelled **116 px
+#: between consecutive frames** against the 0.5 px the five sound reels hold, wandered out of its
+#: lane and off its footing, and read as a boss pasted on the wall at the wrong angle.
+#:
+#: <b>Nothing numeric could catch it and `--check` reproduced it perfectly</b>, which is what
+#: `ordered`'s own docstring warns about one level down: the frames are all present, all the right
+#: size, and a scrambled reel is reproduced as faithfully as a correct one. The measurement that
+#: sees it is frame-to-frame centroid travel, and `Tools/verify/fxreels.py` asks it now.
 BOSS_SWING = SWING_ANIM
 
 #: Two of the four head-on cartoon monster packs on this machine, which is where the three
@@ -324,6 +354,9 @@ BOSS_SWING = SWING_ANIM
 #: in new colours - invariant 37z's complaint asked of a chapter. A boss is the one thing
 #: that may be a blob without saying anything about the wave behind it, because it is three
 #: times the size and holds the middle of the hill.
+#: <b>Nothing is cut from either any more.</b> They cast the bonecaller, the shackler and the
+#: ironclad for one drop; all three are top-down bodies now (`UNIT_PACKS`). They stay named so
+#: `--survey` still draws them, which is this file's standing rule about rejected packs.
 MONS_V1 = "craftpix-net-167954-monster-v1-character-sprites.zip"
 MONS_V4 = "craftpix-net-894353-monster-v4-character-sprites.zip"
 
@@ -334,6 +367,32 @@ MONS_V2 = "craftpix-net-154190-monster-v2-character-sprites.zip"
 MONS_V3 = "craftpix-net-205925-monster-v3-character-sprites.zip"
 MONS_V6 = "craftpix-net-534332-monster-v6-sprite-set.zip"
 MONS_V7 = "craftpix-net-925935-monster-v7-sprite-pack.zip"
+
+#: The seven top-down unit packs, and the three that cast a boss.
+#:
+#: <b>Every one of these is drawn looked-down-on</b>, which is the single property the whole
+#: shelf above fails and the reason this root exists. They also share one shape: a body is a
+#: named folder holding `Front`, `Back`, `Left` and `Right` crossed with Idle, Walking, Running,
+#: Attacking, Hurt and Dying - so a boss's two reels are two folders rather than a folder plus a
+#: guess, which is exactly the mistake that shipped three broken bosses (see `BOSS_SWING`).
+MYTH = "craftpix-net-270646-mythology-2d-character-assets-anubis-medusa-horus.zip"
+BOSSPACK2 = "craftpix-net-191083-top-down-fantasy-boss-characters-pack-2-yeti-ogre-cyclops.zip"
+BONEUNITS = "craftpix-net-229181-top-down-skeleton-characters-pack-wizard-knight-archer.zip"
+
+#: The other four, named so `--survey` draws them. Nothing is cut from these yet, and between
+#: them they are twelve more top-down bodies - which is what a fifth chapter's bosses come out
+#: of without a purchase.
+BOSSPACK3 = "craftpix-net-545831-top-down-boss-characters-pack-3-rock-earth-ice-monsters.zip"
+ANCIENTS = "craftpix-net-947906-ancient-mythology-boss-characters-top-down-asset-pack.zip"
+WIZUNITS = "craftpix-net-954187-top-down-wizard-characters-pack-male-veteran-female.zip"
+MERGETURRETS = "craftpix-net-715522-turrets-asset-pack-for-merge-shooter.zip"
+
+#: How a unit pack names a body's two reels. <b>The direction is part of the path</b>, and
+#: `Front` is the one this board wants: a raider walks *down* the hill toward the player, so the
+#: face it shows is its front. The other three directions are drawn and unused - the board never
+#: turns a body - which is the one thing these packs carry that this mode has no use for.
+UNIT_WALK = "%s/PNG/PNG Sequences/Front - Walking"
+UNIT_CAST = "%s/PNG/PNG Sequences/Front - Attacking"
 
 #: How those two name their bodies. `v1` is the odd one out and this is the pack's own
 #: spelling - a body identified by a guess is a folder that is simply not there.
@@ -814,24 +873,54 @@ BOSS_SET = {
     # out of a mouth, a helmed body lunging - because a boss is told apart by its verb and a
     # verb has to be drawn (invariant 37z).
 
-    # The blue horned demon: arms raised, horns projecting sideways, which is the one thing
-    # a silhouette can do that survives this camera (invariant 37bx). Against a cast of
-    # white bone it is the furthest thing in the pack from what it is raising.
-    "caller":  dict(pack=MONS_V4, body=HORDE_V4 % 2, cast=HORDE_V4 % 2 + BOSS_SWING,
-                    tall=BONECALLER),
+    # ---------------------------------------------- the three cut from the top-down units
+    #
+    # **All three take `pulse`'s synthesised rear-up, and these packs draw a real attack.**
+    # That looks like the wrong way round - a bought gesture beats a generated one, and this
+    # table says so - so it is the one decision here that is a measurement rather than a
+    # preference. `boss_reels` warns about it directly: the canvas is shared, whatever the
+    # gesture reaches sets the frame, and the view sizes a body by its *frame*, so a reel that
+    # flings something far out "draws the boss smaller for its whole life in exchange for a few
+    # frames of reach". These three fling further than the blobs do, and it is not a small
+    # effect. Frame fill, and the body it leaves on the ladder `SiegeTuning.TallOf` sets:
+    #
+    #     reel                    real attack        pulse
+    #     bonecaller       0.65 -> 2.21 cells   0.73 -> 2.48
+    #     shackler         0.65 -> 2.01         0.73 -> 2.28
+    #     ironclad         0.60 -> 2.10         0.73 -> 2.55
+    #
+    # With the bought gesture an **ironclad draws the same body as a blightcaller** - the
+    # finale of the mode tying its gentlest boss - because an overhead axe is mirrored on both
+    # axes and takes a fifth of the frame with it. With the pulse all eight sit on one
+    # monotonic ladder ending where `TallOf` says it ends, and the construction is the same one
+    # the five blobs use. The Front-Attacking reels stay unused in the packs; the day
+    # `one_canvas` can size a cast reel apart from a stand reel without the body changing size,
+    # they are three rows away.
 
-    # The tongue. It is the only body in either pack whose attack throws something *out* of
-    # it and pulls it back, which is what a bind looks like - and a wide low blob is nothing
-    # like the four upright bodies the rabble sends in front of it.
-    "snare":   dict(pack=MONS_V1, body=HORDE_V1 % 4, cast=HORDE_V1 % 4 + BOSS_SWING,
-                    tall=SHACKLER),
+    # **A skeleton at the head of a skeleton horde**, which is the one boss here whose body
+    # names its own wave rather than standing apart from it. That is a departure from this
+    # table's rule and it is deliberate: the rule exists so a boss is not read as *a bigger
+    # copy* of the raider, and the separation here is carried by the hat and the robe rather
+    # than by being a different animal. A bonecaller raises the dead; what raises a skeleton
+    # horde is a skeleton that got there first.
+    "caller":  dict(pack=BONEUNITS, body=UNIT_WALK % "Skeleton Wizard",
+                    cast=None, tall=BONECALLER),
 
-    # The helm. An ironclad is the one boss in this mode whose *mechanic* is armour - only
-    # the ward wearing its colour can touch it - so the body has to say plating before the
-    # first bolt bounces, and this is the only one of the twenty wearing a hard shell with
-    # horns and side guards over it rather than merely being round.
-    "clad":    dict(pack=MONS_V1, body=HORDE_V1 % 5, cast=HORDE_V1 % 5 + BOSS_SWING,
-                    tall=IRONCLAD),
+    # **The god of the dead, over a rabble of the undead.** A shackler binds a ward rather
+    # than breaking it, and Anubis is the one body in these packs whose whole myth is holding
+    # the dead to a judgement. The ears are the point at this size: they project *sideways*,
+    # which invariant 37bx says is the one thing a silhouette can do that survives this
+    # camera, and black over a blue-green rabble is a value no raider in the chapter wears.
+    "snare":   dict(pack=MYTH, body=UNIT_WALK % "Anubis",
+                    cast=None, tall=SHACKLER),
+
+    # **Full plate, because the mechanic is armour.** An ironclad is the one boss in this
+    # mode whose rule is its shell - only the ward wearing its colour may touch it - so the
+    # body has to say plating before the first bolt bounces off it, and a horned helm over a
+    # banded cuirass says it without a word. It is also the heaviest silhouette on the shelf,
+    # which is what the last rung of the last chapter should be.
+    "clad":    dict(pack=BOSSPACK2, body=UNIT_WALK % "Armored Ogre",
+                    cast=None, tall=IRONCLAD),
 }
 
 # **Every boss in this mode is cut here now, and for one drop three of them were not.** The
@@ -1944,6 +2033,18 @@ PACK_SHADE = {
     MONS_V7: (SHADE_UMBER, SHADOW_INK),
     FIELD: ((0, 0, 0), SHADOW_INK),
     WIZARD: ((0, 0, 0), 0),
+
+    # **The unit packs bake no ground shadow at all**, measured rather than assumed: a walking
+    # Anubis is 34,422 opaque pixels against 1,117 partial ones, and those are the antialiased
+    # rim. A tolerance of nought is how this table says "there is nothing here to remove" -
+    # the same answer `WIZARD` gives - and it matters, because a deshadow run against a pack
+    # that bakes none eats the body's own soft edge.
+    MYTH: ((0, 0, 0), 0),
+    BOSSPACK2: ((0, 0, 0), 0),
+    BONEUNITS: ((0, 0, 0), 0),
+    BOSSPACK3: ((0, 0, 0), 0),
+    ANCIENTS: ((0, 0, 0), 0),
+    WIZUNITS: ((0, 0, 0), 0),
 }
 
 
@@ -2351,6 +2452,10 @@ def build():
     field = zipped(FIELD, SOURCE)
     horde1, horde4 = zipped(MONS_V1, CARTOON), zipped(MONS_V4, CARTOON)
 
+    # The three top-down unit packs the bosses are cut from. Absent is a checkout without them
+    # rather than a mistake, exactly as every root above.
+    myth, boss2, boneunits = zipped(MYTH, UNITS), zipped(BOSSPACK2, UNITS), zipped(BONEUNITS, UNITS)
+
     # The bosses and half the second chapter's cast live here. Absent, this is a checkout without
     # the pack rather than a mistake - the same bargain every art tool in this project strikes -
     # so it is answered by cutting neither, and `--check` then has nothing to hold them to.
@@ -2360,9 +2465,13 @@ def build():
     if field is None or horde1 is None or horde4 is None:
         return None
 
+    if myth is None or boss2 is None or boneunits is None:
+        return None
+
     #: Which zip a `BROOD_SET` row names. A table of bodies has to say which pack each is in, and
     #: one dict is how it says it without a branch per row.
-    packs = {KIT: kit, MONSTERS: monsters, MONS_V1: horde1, MONS_V4: horde4}
+    packs = {KIT: kit, MONSTERS: monsters, MONS_V1: horde1, MONS_V4: horde4,
+             MYTH: myth, BOSSPACK2: boss2, BONEUNITS: boneunits}
 
     made = {}
 
@@ -2900,11 +3009,28 @@ CHARACTER_PACKS = (
      "3-robot set - head-on, sci-fi"),
     (FIELD, "SOURCE", "Png/Zombies/Zombies%02d/Front view",
      "neighbourhood TD - TOP-DOWN, the rabble (baked from its vectors, not these)"),
+
+    # **The top-down shelf, and the answer to the row above it.** Every body here is looked
+    # down on, which is the property the whole cartoon half of this table fails. Three of the
+    # twenty-one cast a boss; the other eighteen are what a fifth chapter comes out of.
+    (BONEUNITS, "UNITS", ("Skeleton Archer", "Skeleton Knight", "Skeleton Wizard"),
+     "skeleton units - TOP-DOWN, the bonecaller"),
+    (MYTH, "UNITS", ("Anubis", "Horus", "Medusa"),
+     "mythology units - TOP-DOWN, the shackler"),
+    (BOSSPACK2, "UNITS", ("Armored Ogre", "Cyclops", "Yeti"),
+     "fantasy bosses 2 - TOP-DOWN, the ironclad"),
+    (BOSSPACK3, "UNITS", ("Earth Monster", "Ice Monster", "Rock Monster"),
+     "fantasy bosses 3 - TOP-DOWN, spare"),
+    (ANCIENTS, "UNITS", ("Minotaur", "Pharaoh", "Zeus"),
+     "ancient mythology bosses - TOP-DOWN, spare"),
+    (WIZUNITS, "UNITS", ("Wizard Female", "Wizard Male", "Wizard Veteran"),
+     "wizard units - TOP-DOWN, spare"),
 )
 
 #: Which animation of a body the survey tries, in order. The packs disagree about the word and
 #: some bodies fly rather than walk.
-SURVEY_ANIMS = ("/Walk", "/Moving", "/FlyMove", "/Idle", "")
+SURVEY_ANIMS = ("/Walk", "/Moving", "/FlyMove", "/Idle",
+                "/PNG/PNG Sequences/Front - Walking", "")
 
 
 def survey():
@@ -2917,7 +3043,7 @@ def survey():
     fine in a contact sheet and soft on a phone.
     """
     roots = {"SOURCE": SOURCE, "TOWER": TOWER, "ENEMIES": ENEMIES, "SURVIVAL": SURVIVAL,
-             "CARTOON": CARTOON}
+             "CARTOON": CARTOON, "UNITS": UNITS}
 
     rows = []
     for name, root, shape, label in CHARACTER_PACKS:
@@ -2927,10 +3053,17 @@ def survey():
 
         ink, tol = PACK_SHADE.get(name, ((0, 0, 0), SHADOW_INK))
 
+        # **A shape is either a number pattern or a list of names**, because the two families of
+        # pack on this machine name their bodies differently: the cartoon packs count (`Monster
+        # 3`) and the unit packs spell (`Armored Ogre`). One branch here rather than a second
+        # survey, so the sheet stays one picture - which is the only thing that makes it useful.
+        stems = list(shape) if isinstance(shape, (tuple, list)) else [shape % i
+                                                                     for i in range(1, 11)]
+
         bodies = []
-        for i in range(1, 11):
+        for stem in stems:
             for anim in SURVEY_ANIMS:
-                frames = [read(z, n) for n in spaced(ordered(z, shape % i + anim), 1)]
+                frames = [read(z, n) for n in spaced(ordered(z, stem + anim), 1)]
                 if frames:
                     # **Deshadowed, or the height printed below is a body plus the ellipse the
                     # pack bakes under it** - which on the top-down zombies is more than twice
@@ -2983,7 +3116,7 @@ def survey():
 
 
 def main():
-    global SOURCE, TOWER, ENEMIES, ICONS, SURVIVAL, GEMPACK, CARTOON
+    global SOURCE, TOWER, ENEMIES, ICONS, SURVIVAL, GEMPACK, CARTOON, UNITS
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true")
@@ -2998,6 +3131,7 @@ def main():
     ap.add_argument("--survival", default=str(SURVIVAL))
     ap.add_argument("--gems", default=str(GEMPACK))
     ap.add_argument("--cartoon", default=str(CARTOON))
+    ap.add_argument("--units", default=str(UNITS))
     args = ap.parse_args()
 
     SOURCE = Path(args.source)
@@ -3007,6 +3141,7 @@ def main():
     SURVIVAL = Path(args.survival)
     GEMPACK = Path(args.gems)
     CARTOON = Path(args.cartoon)
+    UNITS = Path(args.units)
 
     if args.survey:
         survey()

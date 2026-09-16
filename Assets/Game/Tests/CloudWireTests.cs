@@ -20,9 +20,41 @@ namespace GlimmerGrove.Tests
     {
         static string RepoPath(params string[] parts)
         {
-            var path = new List<string> { Application.dataPath, ".." };
+            var path = new List<string> { RepoRoot() };
             path.AddRange(parts);
             return Path.GetFullPath(Path.Combine(path.ToArray()));
+        }
+
+        /// <summary>
+        /// The checkout, found without the engine when there is none.
+        ///
+        /// <para>
+        /// <c>Application.dataPath</c> is a native call, and the offline runner has no engine
+        /// behind it — so every test here that reads the rules file used to be one that "needs
+        /// the Editor", which for a gate whose whole job is to fail before the Editor is opened
+        /// is the same as not having it (the lesson of 29e). The runner is started from the
+        /// checkout, so walking up from the working directory to the folder holding
+        /// <c>firebase/</c> answers the same path; the engine's answer is preferred when it is
+        /// there, because a batch-mode test run's working directory is wherever Unity was
+        /// launched from.
+        /// </para>
+        /// </summary>
+        static string RepoRoot()
+        {
+            string root = null;
+
+            try { root = Path.GetFullPath(Path.Combine(Application.dataPath, "..")); }
+            catch (System.Exception) { }
+
+            if (root != null && Directory.Exists(Path.Combine(root, "firebase"))) return root;
+
+            string dir = Directory.GetCurrentDirectory();
+            while (!string.IsNullOrEmpty(dir) && !Directory.Exists(Path.Combine(dir, "firebase")))
+                dir = Path.GetDirectoryName(dir);
+
+            Assert.IsFalse(string.IsNullOrEmpty(dir), "could not find the checkout from " +
+                                                       Directory.GetCurrentDirectory());
+            return dir;
         }
 
         static SaveFileDto Populated()
@@ -279,6 +311,71 @@ namespace GlimmerGrove.Tests
                 Assert.IsTrue(allowed.Contains(key),
                               $"the client writes '{key}', which firestore.rules would reject — " +
                               "every push would fail with permission-denied");
+        }
+
+        /// <summary>
+        /// Every list the rules bound is bounded by the client first, and the client's bound
+        /// is never the larger.
+        ///
+        /// <para>
+        /// The keys test above proves a field is <em>allowed</em>; this proves it stays allowed
+        /// as it grows. The rules bound each list with <c>size() &lt;= N</c>, and because
+        /// <c>wellFormed()</c> is one expression over the whole document, a list one entry
+        /// over its bound does not lose that entry — it loses every save write for that account,
+        /// for ever, with no screen saying so (invariant 12a). That is exactly how the lesson
+        /// ledger failed on 2026-09-16: the rules said 64, the client said nothing, and the
+        /// longest-played account was the first to cross it. Every bound below is now paired
+        /// with the constant the client caps the list at, read out of the rules file so a
+        /// change to either side alone fails here.
+        /// </para>
+        /// <para>
+        /// Lists with no constant of their own are bounded by content — the companion roster,
+        /// the heart-container products, the ad placements, the grove's regions and floor — and
+        /// their bounds are generous by an order of magnitude against what ships.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryListTheClientWritesFitsTheBoundTheRulesEnforce()
+        {
+            string rules = File.ReadAllText(RepoPath("firebase", "firestore.rules"));
+
+            int Bound(string expression)
+            {
+                var match = Regex.Match(rules, Regex.Escape(expression) + @"\.size\(\)\s*<=\s*(?<n>\d+)");
+                Assert.IsTrue(match.Success, $"could not find a size bound for '{expression}' in firestore.rules");
+                return int.Parse(match.Groups["n"].Value);
+            }
+
+            var pairs = new (string field, string expression, int clientCap)[]
+            {
+                ("tipsSeen",      "d.tipsSeen",      TipLedger.MaxIds),
+                ("homesteadStock","d.homesteadStock", Homestead.GroveStock.MaxIds),
+                ("homesteadOwned","d.homesteadOwned", Homestead.GroveStock.MaxIds),
+                ("utilityStock",  "d.utilityStock",  Utilities.UtilityStock.MaxIds),
+                ("wardsOwned",    "d.wardsOwned",    Wards.WardCatalog.MaxModels * Wards.WardLine.Colours.Length),
+                ("wardLoadout",   "d.wardLoadout",   Wards.WardLine.Colours.Length),
+                ("endlessBest",   "d.endlessBest",   Progression.EndlessLedger.MaxRows),
+                ("wardStars",     "d.wardStars",     Wards.WardStarLedger.MaxRows),
+                ("events",        "d.events",        Events.SeasonLedger.MaxSeasons),
+                ("levels",        "d.levels",        FirestoreSaveMapper.MaxLevelsPerDocument),
+                ("tasks.counts",  "p.counts",        Tasks.TaskLedger.MaxGoals),
+                ("tasks.claimed", "p.claimed",       Tasks.TaskLedger.MaxClaimed),
+            };
+
+            foreach (var (field, expression, clientCap) in pairs)
+            {
+                int bound = Bound(expression);
+                Assert.LessOrEqual(clientCap, bound,
+                                   $"the client may write {clientCap} '{field}' rows and the rules allow {bound} — " +
+                                   "every save write for an account at the cap would be refused");
+            }
+
+            // The one scalar with the same failure shape: a schema bump past the rules' ceiling
+            // would refuse every write from the build that made it.
+            var schema = Regex.Match(rules, @"d\.schemaVersion\s*<=\s*(?<n>\d+)");
+            Assert.IsTrue(schema.Success, "could not find the schemaVersion ceiling in firestore.rules");
+            Assert.LessOrEqual(SaveSchema.Version, int.Parse(schema.Groups["n"].Value),
+                               "SaveSchema.Version is past the ceiling firestore.rules allows");
         }
 
         /// <summary>

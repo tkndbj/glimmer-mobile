@@ -154,6 +154,13 @@ namespace GlimmerGrove.Persistence
         static void Invalidate() => _cachedAgainst = null;
 
         /// <summary>True when this account holds a container and it has not been refunded.</summary>
+        /// <summary>
+        /// How many containers this account has ever redeemed, refunded ones included. A count
+        /// of purchases rather than of capacity, for the account screens that ask whether
+        /// there is anything on this device that money bought.
+        /// </summary>
+        public static int OwnedCount => _held.Count;
+
         public static bool IsHeld(string productId)
             => !string.IsNullOrEmpty(productId)
                && _held.Contains(productId) && !_revoked.Contains(productId);

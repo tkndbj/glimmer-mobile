@@ -65,7 +65,9 @@ namespace GlimmerGrove
         {
             if (index == null || !mode.IsValid) return null;
 
-            string raw = PlayerPrefs.GetString(KeyFor(mode, track), string.Empty);
+            // Through MapMemory, so an account only ever gets back the chapter it left — see
+            // that class for the switch that opened a new account's map on the old one's chapter.
+            string raw = MapMemory.Read(KeyFor(mode, track));
             if (!ChapterId.TryParse(raw, out var id, out _)) return null;
 
             var entry = index.FindChapter(id);
@@ -89,7 +91,7 @@ namespace GlimmerGrove
         {
             if (chapter == null || !chapter.Id.IsValid || !chapter.Mode.IsValid) return;
 
-            DevicePrefs.WriteString(KeyFor(chapter.Mode, chapter.Track), chapter.Id.Value);
+            MapMemory.Write(KeyFor(chapter.Mode, chapter.Track), chapter.Id.Value);
         }
     }
 }

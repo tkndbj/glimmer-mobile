@@ -578,12 +578,91 @@ namespace GlimmerGrove
                     break;
                 }
 
+                // ---------------------------------------------------------- the gravemaw
+                // **A ring that closes, which is the entire difference between this and a roar.**
+                // A roar pushes outward off the thing casting it; a devour pulls the hill into it.
+                // Nothing crosses the board either way, so the only thing a player can read is
+                // *direction* — and for two chapters this drew the overlord's double launch, at a
+                // boss that throws nothing, so the two orbs were built with no art behind them
+                // (`SpellArt` answers null for a grounded boss), fell back to `Art.Glow`, and
+                // were flown from the boss to the boss. Two grey blobs pulsing in place.
+                case SiegeKind.Gravemaw:
+                {
+                    Maw(from, kind);
+                    break;
+                }
+
+                // ---------------------------------------------------------- the bonecaller
+                // **Two places at once, because that is what a raise is**: a light at the caster
+                // and a light at the top of the hill where the bodies come up, reaching for each
+                // other across the board. The crest's half is the louder and it is drawn on the
+                // arrival rather than here (<see cref="Rise"/>), because that is the beat the
+                // raiders are actually hatched on.
+                case SiegeKind.Bonecaller:
+                {
+                    Crypt(from, kind);
+                    break;
+                }
+
+                // ---------------------------------------------------------- the shackler
+                // **One shot, straight, and a chain paying out behind it.** Everything else on
+                // this board that is thrown at a ward is a *volley* — three orbs, a pair of
+                // rockets, a chain of lightning — because everything else is a bombardment. A
+                // bind is one arrow finding one turret and holding it, so drawing it as a spread
+                // would be the picture saying the opposite of the rule. The straightness *is* the
+                // reading, which is why it takes no bow at all.
+                case SiegeKind.Shackler:
+                {
+                    Hurl(from, to, kind, flight, 0f, 1f, 0f);
+
+                    // The chain: a taut line snapping tighter behind the arrow three times over
+                    // the flight, in iron rather than in fire. `Arc` with no forks is a straight
+                    // line, which is the one time in this file that is what is wanted — a bolt
+                    // of lightning jags and a chain does not.
+                    for (int i = 0; i < 3; i++)
+                        Arc(from, to, fire, Cell * .05f * (1f + i * .35f), .2f, 0, .02f,
+                            flight * (.18f + i * .26f));
+
+                    break;
+                }
+
+                // ---------------------------------------------------------- the ironclad
+                // **One heavy thing, thrown high and arriving downward.** An axe is the only
+                // thing in the mode that has to read as *falling*, so it leaves from above the
+                // boss's head and bows hard: what the eye follows is a rise and a drop rather
+                // than a crossing, and at the ward it is the one impact here that throws rubble.
+                case SiegeKind.Ironclad:
+                {
+                    Hurl(from + new Vector2(0f, Cell * 2.1f), to, kind, flight, -1.1f, 1f, 0f);
+
+                    // The aegis, said on the boss and never on the line. The spell takes no
+                    // health from a ward and its rule is about what may hurt *it* — so the one
+                    // honest place to draw it is round the thing it protects, and a ring closing
+                    // on a boss is a sentence this board has already taught (`Brace`).
+                    Guard(mob, from, fire);
+
+                    for (int i = 0; i < 3; i++)
+                        Strike(to + new Vector2(Random.Range(-Cell * .5f, Cell * .5f), 0f),
+                               fire, Cell * .08f, flight * (.52f + i * .16f), .26f);
+                    break;
+                }
+
                 // ---------------------------------------------------------- the overlord
                 // **Double rockets, and they are the reason it is drawn last.** The finale's spell
                 // takes a rank as well as health, so it is the one that has to look like more than
                 // a bigger smite: two orbs launch sideways out of it, bow hard in opposite
                 // directions and converge on the ward together, with a bolt riding down between
                 // them.
+                //
+                // **`default` is the overlord's and that is a fault this switch has already
+                // paid for** (invariant 44e). Four bosses added after it were drawn as an
+                // overlord for two chapters because nobody had to write a case to get one. It
+                // stays `default` rather than becoming `case Overlord:` for one reason only:
+                // a ninth boss with no arm must draw *something*, and an overlord's launch is
+                // the most generic thing here. What stops that being the quiet answer again is
+                // `SiegeArtTests.EveryBossSpellIsItsOwnDrawing`, which fails on a boss wearing
+                // another boss's reels — the drawing half of invariant 37z, held by a fixture
+                // rather than by whoever next reads this file.
                 default:
                 {
                     Hurl(from, to, kind, flight, -1.35f, .85f, 0f);
@@ -610,11 +689,20 @@ namespace GlimmerGrove
         {
             float scale = BurstAt(kind);
 
-            // **A warbringer's muzzle reel is spoken for**, and this is the one branch in the file
-            // that has to know it: <see cref="Roar"/> draws that reel *flat over the ground*, which
-            // is the whole of how a roar reads as pressure crossing the hill. Drawing it upright
-            // here as well would be the same picture twice, once wrong.
-            if (kind != SiegeKind.Warbringer)
+            // **The three grounded bosses' muzzle reels are spoken for**, and this is the one
+            // branch in the file that has to know it. Each of the three lays its own reel *flat
+            // over the ground* — a roar as pressure crossing the hill (<see cref="Roar"/>), a
+            // devour as the floor going (<see cref="Maw"/>), a raise as the ground opening at the
+            // crest (<see cref="Rise"/>) — and flat is the whole of why any of them reads as
+            // happening *on* the hill. Drawing the same reel upright here as well would be the
+            // same picture twice, once wrong.
+            //
+            // **Asked of the rule rather than listed**, which is the fix `SiegeView.Cast` already
+            // had to make on the line beside it: a list of the kinds that happen to be grounded
+            // today is a clause that goes stale the next time one is added, and this one had
+            // already gone stale once — it named the warbringer alone, so the two bosses added
+            // after it drew a flat ground wash standing upright in the air.
+            if (SiegeTuning.AimsAtAWard(kind))
             {
                 var muzzle = SpellMuzzleArt(kind);
                 if (muzzle != null && muzzle.Length > 0)
@@ -665,6 +753,14 @@ namespace GlimmerGrove
         /// </summary>
         void Aftermath(SiegeKind kind, int ward, Vector2 at, Color fire)
         {
+            // **Asked once, at the top, rather than carried as two arms that break on nothing.**
+            // Everything below paints a *post*; a devour and a raise land on the hill and never
+            // touch the line, so there is nothing here for them to be drawn on. `Smite` already
+            // hands both off to `Feed` and `Rise` before this is reached — this is what stops
+            // that being the only thing standing between them and the `default` arm, which is the
+            // overlord's fan and is what they really drew for two chapters (invariant 44e).
+            if (!SiegeTuning.ReachesTheLine(kind)) return;
+
             switch (kind)
             {
                 case SiegeKind.Blightcaller:
@@ -704,6 +800,49 @@ namespace GlimmerGrove
                         along.Add(new Vector2(PostX(i), _lineY + Cell * .45f));
 
                     Chain(along, fire, Cell * .055f, .24f, .26f, 0f, 1);
+                    break;
+                }
+
+                case SiegeKind.Shackler:
+                {
+                    // **Iron closing round the post, and it is the only aftermath here drawn as a
+                    // shape rather than as light.** A bind takes nothing — no health, no fuel, no
+                    // rank — so a burst of any weight would be the drawing overstating the rule
+                    // (the same argument `Snuffed` and `Chained` already make). Four short links
+                    // laid in a ring round the chassis say *held*, which is the whole verb, and
+                    // the standing state `Charge` keeps on the post is what the player really
+                    // reads afterwards.
+                    for (int i = 0; i < 4; i++)
+                    {
+                        float turn = i / 4f * Mathf.PI * 2f + Mathf.PI * .25f;
+                        float next = (i + 1) / 4f * Mathf.PI * 2f + Mathf.PI * .25f;
+
+                        var a = at + new Vector2(Mathf.Cos(turn), Mathf.Sin(turn) * .5f) * Cell * .5f;
+                        var b = at + new Vector2(Mathf.Cos(next), Mathf.Sin(next) * .5f) * Cell * .5f;
+
+                        Arc(a, b, fire, Cell * .05f, .34f, 0, .02f, i * .05f);
+                    }
+                    break;
+                }
+
+                case SiegeKind.Ironclad:
+                {
+                    // **Dust along the ground, because what landed was mass.** Every other
+                    // aftermath in this switch goes up or outward; a slam's goes *sideways at the
+                    // foot of the post*, which is the one direction that says weight. Nothing
+                    // reaches the other turrets — an aegis is a rule about what may hurt the
+                    // ironclad and it does nothing to the line, so a fan to every ward (which is
+                    // what this drew as an overlord) was the picture inventing a threat.
+                    for (int i = 0; i < 2; i++)
+                    {
+                        float away = (i == 0 ? -1f : 1f) * Cell * 1.9f;
+
+                        Arc(at + new Vector2(0f, -Cell * .35f),
+                            at + new Vector2(away, -Cell * .3f),
+                            fire, Cell * .06f, .3f, 1, .4f, .04f);
+                    }
+
+                    Shockwave(at + new Vector2(0f, -Cell * .35f), Pal.Lift(fire, .3f), 4.4f, .42f);
                     break;
                 }
 
