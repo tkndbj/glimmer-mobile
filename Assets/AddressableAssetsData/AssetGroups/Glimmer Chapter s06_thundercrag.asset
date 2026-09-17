@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter s06_thundercrag
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter s06_thundercrag
+  m_GUID: 60e8fc0333ec58744bcdaa5d6fa02e21
+  m_SerializeEntries:
+  - m_GUID: 0453b12ae677b5d44934383945e17c46
+    m_Address: Art/Map/map5_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 06a4f70a4cddbad40b74ca4e1337dcc8
+    m_Address: Art/Map/map5_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0c0146e635582e4439c9036327b35439
+    m_Address: Art/Map/map5_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4ef5665692f022d48bd17db757a065b9
+    m_Address: Art/Map/map5_strip4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8d93bb946b10f24429bb0cc87ca3db3e
+    m_Address: Art/Map/map5_strip5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e049b25998e00b6489aaff5fc41b5dbd
+    m_Address: Art/Map/map5_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 23c58d837d2712f4ca1d0bd93e79f2b7, type: 2}
+    - {fileID: 11400000, guid: d12767e5ea767714e943477586948dd8, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter s06_thundercrag_BundledAssetGroupSchema
+    - Glimmer Chapter s06_thundercrag_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

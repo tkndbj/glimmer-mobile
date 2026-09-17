@@ -148,7 +148,41 @@ def lit(rgb, value, sat=None):
 
 
 def opened(root, spec):
-    """One source picture, from a file or a `+`-joined stack of layer files.
+    """One source picture: `|`-joined tiles, each a `+`-joined stack of layer files.
+
+    **Two joins, because a pack can be layered and tiled at once and they are different
+    questions.** `+` composites pictures of the same size on top of each other — sky,
+    then ground, then decorations — and `|` stands whole pictures **on** each other, the
+    first at the foot of the map, which is the order the strips themselves are cut in.
+    A tiled pack is how the fifth ordinal's map arrives: `craftpix-161519` paints its
+    lava tower as two 1536x2048 boards with a rope bridge leaving the top of one and
+    arriving at the bottom of the other, and either alone is a 4:3 picture that no
+    number of 1080x1200 strips can be cut from without throwing half its width away.
+
+    See `_tile` for the layer rules, which are unchanged.
+    """
+    tiles = [_tile(root, part) for part in spec.split("|") if part.strip()]
+    if len(tiles) == 1:
+        return tiles[0]
+
+    # Widths are made to agree on the widest, rather than refused: two boards of one pack
+    # are the same size in every pack seen here, and a pack that ever disagreed would be
+    # saying something about its own art rather than about this code.
+    width = max(t.size[0] for t in tiles)
+    scaled = [t if t.size[0] == width else
+              t.resize((width, int(round(t.size[1] * width / float(t.size[0])))), Image.LANCZOS)
+              for t in tiles]
+
+    board = Image.new("RGB", (width, sum(t.size[1] for t in scaled)))
+    y = board.size[1]
+    for tile in scaled:                                    # first named is the foot
+        y -= tile.size[1]
+        board.paste(tile, (0, y))
+    return board
+
+
+def _tile(root, spec):
+    """One picture, from a file or a `+`-joined stack of layer files.
 
     <b>A layer PNG is mostly holes, and `convert("RGB")` fills them with whatever
     happened to be under the alpha.</b> Three of the eight sources named in

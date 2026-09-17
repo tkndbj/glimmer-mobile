@@ -81,25 +81,15 @@ namespace GlimmerGrove
             // stood in front of and the one the roar a beat earlier promised (`SiegeView.Turned`).
             Gather(mob, cast.Opens ? 1.4f : 1f);
 
-            // The tell. **Nothing is ever drawn on the ward itself** — an aimed spell is announced
-            // from the caster's end, by the gather above and the tether below. A roar has no target
-            // at all, so what closes is a ring on the warbringer itself, which says "something is
-            // about to happen *here*" about the boss and never about the line.
+            // The tell. **Nothing is ever drawn on the ward itself, and no ring is drawn on
+            // the boss either** — an aimed spell is announced from the caster's end, by the
+            // gather above and the tether below. A roar has no target at all, so what it gets
+            // of its own is the brace, and nothing is drawn round it.
             //
-            // **It belongs to the roar, not to "everything that is not aimed", and that
-            // distinction was bought by two bosses shipping wearing it.** A ring was drawn for the
-            // one spell in the mode that has nothing else to say — a warbringer's rally throws no
-            // object, lights no tether and lands on the whole line at once — and `!aimed` then
-            // silently collected the two crafts added after it. A devour and a raise both throw
-            // something the player can watch (the cogs going, the bodies arriving), both have a
-            // fourteen-frame cast reel of their own on top of the gather and the storm, and
-            // neither needs a seven-cell circle closing over the hill to say a spell is coming.
-            // Reported from play on the bonecaller, in one sentence: *what the hell is that*.
-            //
-            // It was worse than redundant on those two, in the way invariant 37z predicts: the
-            // ring took `Casting(Warbringer)` rather than the caster's own colour, so a boss with
-            // a palette of its own was announcing itself in another boss's.
-            if (cast.Craft == SiegeSpell.Rally) Brace(mob, from);
+            // **A circle closing over a boss has been withdrawn from every spell in the mode.**
+            // It said nothing the gather and the storm were not already saying, and it read as
+            // a shape laid over the board rather than as something the boss was doing.
+            if (cast.Craft == SiegeSpell.Rally) Brace(mob);
 
             // **The storm the wind-up is actually made of** (see `SiegeView.Storm`): crackle
             // accelerating over the whole window, motes dragged in off the hill, and — for a boss
@@ -188,47 +178,16 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The tell a warbringer wears, which is a ring closing on <em>itself</em>.
+        /// The tell a warbringer wears: it braces itself before it goes.
         ///
-        /// A roar has no target, so the thing a player has to read is not "which ward" but "how
-        /// long" — and the answer to it is not a mending, it is a firepot into whatever the roar
-        /// is about to set running. <b>The one ring left on this board that belongs to a boss</b>,
-        /// and it is drawn on the boss: a ring that closes means something is about to happen
-        /// *here*, which is only ever honest over the thing doing it.
-        ///
-        /// <para>
-        /// <b>The roar's alone.</b> See the one call site for the two bosses that wore it for a
-        /// chapter each by standing on the wrong side of a <c>!aimed</c>.
-        /// </para>
+        /// <b>No ring.</b> A roar has no target, so the thing a player has to read is not
+        /// "which ward" but "how long" — and that window is said by the gather and the storm
+        /// (<see cref="Winding"/>), both of which are on the boss already. What is left here is
+        /// the anticipation, which is the one bit a boss that throws nothing has to work with.
         /// </summary>
-        void Brace(Mob mob, Vector2 at)
+        void Brace(Mob mob)
         {
-            // The caster's own fire, rather than the warbringer's written out. It is the same
-            // colour today, because a warbringer is the only thing that calls this — and a
-            // constant that is right only because of where it happens to be called from is what
-            // put another boss's colour on the bonecaller.
-            var ring = UIKit.Img("Brace", _fx, Art.Ring(128, 12f),
-                                 Pal.A(Casting(mob.Kind), .9f),
-                                 new Vector2(Cell * 1.4f, Cell * 1.4f));
-            ring.raycastTarget = false;
-            ring.rectTransform.anchoredPosition = at;
-
-            var rt = ring.rectTransform;
-
-            Tween.Run(SiegeTuning.BossTell, Ease.Linear, t =>
-            {
-                if (!rt) return;
-                rt.localScale = Vector3.one * Mathf.Lerp(5.2f, 1.8f, t);
-                rt.localRotation = Quaternion.Euler(0f, 0f, t * 160f);
-            }, ring).OnDone(() =>
-            {
-                if (!ring) return;
-                Tween.Fade(ring, 0f, SiegeTuning.BossFlight)
-                     .OnDone(() => { if (ring) Destroy(ring.gameObject); });
-            });
-
-            // It braces itself before it goes: the body squashes down into the roar, which is the
-            // one bit of anticipation a boss that never throws anything has to work with.
+            // The body squashes down into the roar.
             if (mob.Body != null)
                 Tween.Punch(mob.Body.transform, .09f, SiegeTuning.BossTell * .6f);
         }
@@ -403,17 +362,6 @@ namespace GlimmerGrove
                 Ends(Lend(ground, Pal.A(fire, .8f), Cell * 9f, at + new Vector2(0f, Cell * .3f),
                           0f, 30f, false, .5f), .55f);
 
-            // Three rings rather than one, a beat apart, so it reads as a shout rather than as a
-            // single burst - and each is wider than the last, which is the shape of something
-            // spreading over ground rather than exploding on it.
-            for (int i = 0; i < 3; i++)
-            {
-                float wait = i * .11f;
-                float size = 5.4f + i * 2.6f;
-
-                Tween.After(wait, () => Shockwave(at, Pal.Lift(fire, .35f), size, .46f), _fx);
-            }
-
             Burst.Sparks(_fx, at, fire, 18, Cell * 3.4f, Cell * .26f, .55f);
 
             ShakeBoard(24f);
@@ -428,8 +376,8 @@ namespace GlimmerGrove
         /// The two are the mode's only pair of spells that throw nothing and land nowhere, so the
         /// one thing separating them has to be the thing they are: a roar is pressure going out
         /// and a devour is a pull coming in. Same two reels used the same two ways — one upright
-        /// on the caster, one flat over the ground — and then the rings run the other way and the
-        /// hill is drawn *up* the board instead of the board being shoved off it.
+        /// on the caster, one flat over the ground — and the hill is drawn *up* the board
+        /// instead of the board being shoved off it.
         /// </para>
         /// <para>
         /// <b>Its own reels now.</b> This wore the warbringer's for two chapters under a green
@@ -453,12 +401,6 @@ namespace GlimmerGrove
             if (mouth != null && mouth.Length > 0)
                 Ends(Lend(mouth, Color.white, Cell * 5.4f, at, 0f, 32f, false, .5f), .5f);
 
-            // Three rings **closing**, widest first, a beat apart. The roar's three open and each
-            // is wider than the last; these arrive from further out each time and shrink onto the
-            // thing doing it, which is the same grammar saying the opposite word.
-            for (int i = 0; i < 3; i++)
-                Swallow(at, Pal.Lift(fire, .3f), 4.6f + i * 2.4f, .42f, i * .1f);
-
             // The hill itself starting to go. These are the motes a wind-up drags in
             // (`SiegeView.Drawn`), spent here at four times the count and from twice as far —
             // what a player has to understand in this half-second is that the *ground* is moving,
@@ -476,29 +418,6 @@ namespace GlimmerGrove
 
             ShakeBoard(16f);
             Audio.Sfx("whoosh", .8f, .4f);
-        }
-
-        /// <summary>One ring arriving from outside and closing onto the thing that opened it.</summary>
-        void Swallow(Vector2 at, Color tint, float from, float seconds, float delay)
-        {
-            var ring = UIKit.Img("Swallow", _fx, Art.Ring(128, 10f), Pal.A(tint, 0f),
-                                 new Vector2(Cell * 1.4f, Cell * 1.4f));
-            ring.raycastTarget = false;
-            ring.rectTransform.anchoredPosition = at;
-
-            var rt = ring.rectTransform;
-
-            Tween.Run(seconds, Ease.InQuad, t =>
-            {
-                if (!rt) return;
-
-                rt.localScale = Vector3.one * Mathf.Lerp(from, .6f, t);
-
-                // Brightening as it closes rather than fading as it goes, which is the other half
-                // of reading as a pull: a shockwave spends itself on the way out and this arrives.
-                ring.color = Pal.A(tint, t < .25f ? t / .25f * .85f : .85f * (1f - (t - .25f) / .75f * .35f));
-            }, ring, "swallow").Delay(delay)
-             .OnDone(() => { if (ring) Destroy(ring.gameObject); });
         }
 
         /// <summary>
@@ -527,35 +446,6 @@ namespace GlimmerGrove
 
             ShakeBoard(9f);
             Audio.Sfx("whoosh", .6f, 1.3f);
-        }
-
-        /// <summary>
-        /// The aegis, drawn on the ironclad and never on the line.
-        ///
-        /// <b>A verb with no event is a contradiction, and this is the drawing's half of the
-        /// answer.</b> What an aegis does is refuse three quarters of the line — it is a rule
-        /// about what may hurt the *boss*, and it takes nothing from any ward — so a drawing at a
-        /// post would be the picture inventing a threat that the rules do not contain. A ring
-        /// closing over the thing it protects is a sentence this board has already taught with
-        /// <see cref="Brace"/>, said here about armour rather than about a shout.
-        /// </summary>
-        void Guard(Mob mob, Vector2 at, Color fire)
-        {
-            if (mob == null || mob.Node == null) return;
-
-            var ring = UIKit.Img("Guard", _fx, Art.Ring(128, 16f), Pal.A(fire, 0f),
-                                 new Vector2(Cell * 1.6f, Cell * 1.6f));
-            ring.raycastTarget = false;
-            ring.rectTransform.anchoredPosition = at;
-
-            var rt = ring.rectTransform;
-
-            Tween.Run(.42f, Ease.OutCubic, t =>
-            {
-                if (!rt) return;
-                rt.localScale = Vector3.one * Mathf.Lerp(3.4f, 2.2f, t);
-                ring.color = Pal.A(fire, t < .3f ? t / .3f * .8f : .8f * (1f - (t - .3f) / .7f));
-            }, ring, "guard").OnDone(() => { if (ring) Destroy(ring.gameObject); });
         }
 
         /// <summary>
@@ -658,7 +548,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// A gravemaw feeding: the ring it opens, drawn where it stands.
+        /// A gravemaw feeding, drawn where it stands.
         ///
         /// <b>Quiet, for the douse's reason</b> - it takes no ward health at all, so a drawing
         /// that shook the board would be the picture overstating the rule. What has to be noticed
@@ -671,16 +561,10 @@ namespace GlimmerGrove
 
             var at = caster.Node.anchoredPosition;
 
-            // Inward rather than outward, which is the whole difference between this and a roar:
-            // a ring that closes on the thing casting it is a pull, and a ring that opens off it
-            // is a push. Nothing here travels anywhere, so the direction is the sentence.
-            //
             // **The mouth is `Maw`'s and the swallowing is `Swallowed`'s; this is the shutting.**
-            // One last ring closing tight as the loose things reach it, which is the beat that
-            // joins the two — before this it was a `Pop` and a scatter of sparks, which is to say
-            // that the moment a gravemaw eats the player's cogs was drawn out of two primitives
-            // and no art at all (invariant 47i).
-            Swallow(at, Pal.Lift(fire, .35f), 3.6f, .3f, 0f);
+            // A burst where the loose things reach it, which is the beat that joins the two.
+            // No ring: a circle closing on a boss has been withdrawn from every spell in the
+            // mode, here as in `Brace`.
             Pop(at, fire, 2.4f, .28f);
             Burst.Sparks(_fx, at, fire, 12, Cell * 2.2f, Cell * .2f, .45f);
 

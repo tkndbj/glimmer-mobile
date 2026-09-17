@@ -64,8 +64,9 @@ CHAPTER = "s06_thundercrag"
 
 #: This chapter's place inside its own mode and track, which is what decides its map, its skies, its
 #: grounds, its cast and its charms (invariant 7c, `SiegeMode.CastFor`, `SiegeCharms.Upto`). Five,
-#: because it is the fifth Thornwatch chapter on the main ladder - so it draws `map1` again
-#: (`mapart.map_of` wraps at four paintings), the first block of forty skies again, and the wild.
+#: because it is the fifth Thornwatch chapter on the main ladder - so it draws `map5`, the lava
+#: crag, the first block of forty skies again (there are only forty, so the skies wrap where the
+#: maps no longer do), and the wild.
 #:
 #: The id says `s06` because `s02` is the Infinite lane, which is a *track* rather than a place in
 #: this ladder. An id is permanent and arbitrary; the ordinal is derived, and it is the ordinal that

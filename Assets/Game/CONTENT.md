@@ -141,9 +141,11 @@ Two consequences worth holding on to:
    302 units up, a plate hangs 227 down, so a node straight above another needs 529 units
    of drop where the discs alone need 220). More levels means more `mapStrips`, not tighter packing — which in
    practice means **the map decides how long a chapter is**, and the map is the one at
-   this chapter's ordinal: six strips at ordinal 1 and 4, four at ordinal 2, five at
-   ordinal 3 (`mapart.STRIPS`). Those counts are facts about the four paintings rather
-   than preferences — `make_chapter_art.py` scales a source to *whole* strips, so a count
+   this chapter's ordinal: six strips at ordinal 1 and 4, four at ordinal 2 and 5, five
+   at ordinal 3 (`mapart.STRIPS`). Those counts are facts about the five paintings rather
+   than preferences — except `map5`'s, which is the one decided by the *chain*: three strips
+   cannot seat ten nodes at all and six crops the painting down to its road, so four is what is
+   left — — `make_chapter_art.py` scales a source to *whole* strips, so a count
    that leaves the scaled source narrower than 1080 stretches the map sideways, and the
    Amberwood's 892x4745 source is 1128 wide at five strips and would have stretched by a
    fifth at four. **A chapter at a new ordinal is the only thing that needs a map cut**,

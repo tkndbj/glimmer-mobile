@@ -34,13 +34,25 @@ job, `ChapterIndexEntry`), and this file writes bodies.
 #: How many strips each ordinal's map is cut into. A fact about the painting rather than a
 #: preference: `make_chapter_art.py` scales a source to *whole* strips, so the same picture
 #: at six strips instead of four is 1.5x zoomed and loses 40% of its width off the sides.
-#: These are the counts the four paintings were cut at and look right at.
+#: These are the counts the five paintings were cut at and look right at.
 #:
 #: A chapter's map height is its strip count x 1200 canvas units, and `mapX`/`mapY` are
 #: fractions of it - so changing one of these numbers changes every distance on the maps of
 #: every chapter at that ordinal. `ChapterMapValidator` is what proves the nodes still
 #: clear each other afterwards.
-STRIPS = {1: 6, 2: 4, 3: 5, 4: 6}
+#:
+#: `map5` is the one whose count was decided by the *chain* rather than by the picture, and a
+#: strip count is also a **zoom**. It arrives as two 1536x2048 boards tiled end to end
+#: (`make_chapter_art.opened`), so the stack is 1536x4096: at three strips it keeps 80% of the
+#: painting's width, at four 60%, at six 40%.
+#:
+#: **Four.** Three cannot seat ten nodes at all - `make_map_seats.py` refused rung nine at every
+#: stride, because 3600 units less the marker's 700 of headroom is not enough climb for ten nodes
+#: that have to alternate sides to clear each other's record marks (`ChapterMap`'s crown rule
+#: needs 529 units between two less than 384 apart across the map). Six fits a chain straight up
+#: the road and was cut and rejected by the owner: at 40% the crop throws away the volcano, the
+#: side falls and the outer lava lakes, and what is left does not read as the same place.
+STRIPS = {1: 6, 2: 4, 3: 5, 4: 6, 5: 4}
 
 #: Skies per chapter. Every chapter shipped so far has exactly ten levels; a chapter with
 #: more wraps round inside its own block rather than borrowing the next ordinal's, so two
@@ -129,6 +141,18 @@ SEATS = {
         (0.732, 0.806, False),
         (0.356, 0.833, False),
     ),
+    5: (
+        (0.460, 0.066, False),
+        (0.477, 0.129, False),
+        (0.741, 0.201, False),
+        (0.532, 0.285, False),
+        (0.563, 0.386, False),
+        (0.584, 0.457, False),
+        (0.622, 0.570, False),
+        (0.320, 0.653, False),
+        (0.585, 0.734, False),
+        (0.590, 0.792, False),
+    ),
 }
 
 #: Where the end-of-chapter marker stands on each map, found the same way.
@@ -137,6 +161,7 @@ MARKERS = {
     2: (0.660, 0.854, False),
     3: (0.826, 0.883, False),
     4: (0.712, 0.903, False),
+    5: (0.660, 0.854, False),
 }
 
 

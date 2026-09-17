@@ -141,13 +141,6 @@ namespace GlimmerGrove
             ShakeBoard(24f + 6f * phase);
             Flow.Flash(Pal.A(fire, 1f), .30f + .08f * phase, .4f);
 
-            for (int i = 0; i < 3; i++)
-            {
-                float wait = i * .11f;
-                float size = 5.2f + i * 2.4f;
-                Tween.After(wait, () => Shockwave(at, Pal.Lift(fire, .35f), size, .46f), _fx);
-            }
-
             Burst.Sparks(_fx, at, fire, 22, Cell * 3.6f, Cell * .26f, .6f);
             Crackle(mob, fire, 2.2f, 4);
 

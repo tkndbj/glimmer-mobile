@@ -107,6 +107,27 @@ NUDGE = {
         7: (0, -32), 8: (-101, 0), 9: (60, 0), 10: (0, -90),
         "marker": (80, 0),
     },
+    5: {
+        # **Authored by the owner in centimetres, off a phone**, and converted at **167 canvas
+        # units to the centimetre**: `Boot` scales the canvas on width alone
+        # (`matchWidthOrHeight = 0`) against a reference width of `ChapterMap.Width`, so 1080
+        # units *is* the screen whatever the phone, and a 6.1" screen is 6.45 cm across (Pixel 8
+        # 6.41, Galaxy S23 6.45, iPhone 15 Pro 6.51). Down is -y.
+        #
+        # **Every one of these is inward, and the chain was already at the inward limit** - see
+        # `ACCEPTED_OVERLAPS` for what that costs and who decided to pay it.
+        #
+        # The foot's 100 is not the owner's and is kept: this is a siege chapter's map and the
+        # loadout bar stands in the bottom of it (see `EDGE_MARGIN`).
+        1: (-251, 100),      # level 41, 1.5 cm left
+        2: (167, 0),         # level 42, 1 cm right
+        4: (251, 0),         # level 44, 1.5 cm right
+        5: (-167, 0),        # level 45, 1 cm left
+        6: (335, -167),      # level 46, 2 cm right and 1 cm down
+        7: (-84, 0),         # level 47, 0.5 cm left
+        9: (-167, 0),        # level 49, 1 cm left
+        10: (335, 0),        # level 50, 2 cm right
+    },
     4: {
         1: (-33, 58),         # level 31
         2: (70, 0),
@@ -120,6 +141,21 @@ NUDGE = {
         10: (0, 0),            # right is blocked by the marker’s own mark
     },
 }
+
+
+#: Maps whose nudges the owner has signed off **knowing they overlap**, so the check above says
+#: so rather than refusing.
+#:
+#: `map5` is the only entry and it is not a loophole, it is a decision with a name on it. Its
+#: painting draws one road, straight up the middle, and the owner wants the chain on the road.
+#: `ChapterMap`'s crown rule says two nodes less than 384 units apart across the map need 529 of
+#: drop between them, and this map's rungs are 278-509 apart - so a chain on a central road is a
+#: chain whose plates sit on each other's record-and-rank marks, and there is no cut of this
+#: painting that is both tall enough to fix it and wide enough to still be the place. Asked for
+#: twice, in those terms, and confirmed. **The build gate still says it** (`ChapterMapValidator`
+#: warns), which is the right place for it to be said: this file's job is to stop a nudge
+#: colliding *by accident*.
+ACCEPTED_OVERLAPS = {5}
 
 
 def nudged(which: int, rung, seat):
@@ -160,7 +196,16 @@ GROUND = {
     2: [(199, 243, 146), (213, 253, 153)],
     3: [(171, 161, 99), (163, 151, 93)],
     4: [(124, 89, 100), (234, 163, 87)],
+    5: [(67, 77, 89), (63, 72, 84)],
 }
+
+# `map5` is the one painting here whose **road cannot be used**, and that is a fact about the
+# picture rather than a preference. Its path is a chain of dark stepping slabs laid across the
+# crag, and a slab's own top runs (24, 30, 38) to (39, 46, 53) while the cliff faces beside it
+# are (33, 39, 45) - three apart from the middle of that gradient, which is `map1`'s teal
+# failure again with no tolerance small enough to separate them. So what is listed is the
+# **lit top face of the crag**, (67, 77, 89), which is 38 clear of both and is the surface the
+# slabs are laid on: a node stands on the rock the path runs over rather than on the path.
 
 #: Where a node may stand **on the water**, and the whole of why `map1` is not like the other
 #: three.
@@ -179,6 +224,7 @@ STREAM = {
     2: [],
     3: [],
     4: [],
+    5: [],
 }
 
 #: What each painting draws **instead of land**: sea, sky, lake, chasm, void.
@@ -204,6 +250,7 @@ VOID = {
     2: [(0, 174, 239), (122, 213, 246), (234, 253, 249)],
     3: [(0, 174, 239), (122, 213, 246), (234, 253, 249)],
     4: [(251, 176, 64), (247, 148, 29), (255, 242, 0), (234, 253, 249)],
+    5: [(255, 223, 87), (240, 150, 30), (202, 108, 9)],
 }
 
 # `map4`'s own shadow deliberately does not appear above, and that is the correction worth
@@ -226,7 +273,7 @@ VOID = {
 #: at 12 its seatable ground fell from 8.1% to 5.4% and it could not seat ten nodes at all.
 #: A flat-colour map wants a tight tolerance and a shaded one wants a loose one; there is no
 #: number that is right for both.
-TOLERANCE = {1: 12}
+TOLERANCE = {1: 12, 5: 12}
 DEFAULT_TOLERANCE = 26
 
 
@@ -724,6 +771,10 @@ def apply_nudges(which: int, places, marker, height: float):
 
     for i, seat in enumerate(moved):
         if not _separated(seat, moved[:i] + moved[i + 1:] + [moved_marker], height):
+            if which in ACCEPTED_OVERLAPS:
+                print(f"  map{which}: rung {i + 1} overlaps a neighbour - accepted, see "
+                      f"ACCEPTED_OVERLAPS")
+                continue
             raise SystemExit(
                 f"  map{which}: the nudge on rung {i + 1} puts it on top of another node - "
                 f"shrink it, or move the one it collides with too")

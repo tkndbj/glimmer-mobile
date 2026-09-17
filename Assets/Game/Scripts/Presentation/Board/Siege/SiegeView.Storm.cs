@@ -638,12 +638,6 @@ namespace GlimmerGrove
                 {
                     Hurl(from + new Vector2(0f, Cell * 2.1f), to, kind, flight, -1.1f, 1f, 0f);
 
-                    // The aegis, said on the boss and never on the line. The spell takes no
-                    // health from a ward and its rule is about what may hurt *it* — so the one
-                    // honest place to draw it is round the thing it protects, and a ring closing
-                    // on a boss is a sentence this board has already taught (`Brace`).
-                    Guard(mob, from, fire);
-
                     for (int i = 0; i < 3; i++)
                         Strike(to + new Vector2(Random.Range(-Cell * .5f, Cell * .5f), 0f),
                                fire, Cell * .08f, flight * (.52f + i * .16f), .26f);

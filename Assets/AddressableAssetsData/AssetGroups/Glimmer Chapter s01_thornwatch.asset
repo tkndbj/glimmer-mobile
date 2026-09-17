@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter s01_thornwatch
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter s01_thornwatch
+  m_GUID: e407d82b53f3ffc4491182dd58d78199
+  m_SerializeEntries:
+  - m_GUID: 0f62723584f54f8011a04dde90efc13b
+    m_Address: Art/Map/map1_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1a158e089440f7146b1a8f742abf4b84
+    m_Address: Art/Map/map1_strip4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 519453f73f0d6cd4aa843d5c2edcad6d
+    m_Address: Art/Map/map1_strip5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6bd1e279517059ffd82412677d275239
+    m_Address: Art/Map/map1_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c55d3f8c3c5f84c458c6fc4f600155d0
+    m_Address: Art/Map/map1_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dfbf61084bad150138874059e8c6a223
+    m_Address: Art/Map/map1_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 084264bf582247d47b63d775df9663bb, type: 2}
+    - {fileID: 11400000, guid: 486a8bf1c64fcf34a9dacc4b79cc7409, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter s01_thornwatch_BundledAssetGroupSchema
+    - Glimmer Chapter s01_thornwatch_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

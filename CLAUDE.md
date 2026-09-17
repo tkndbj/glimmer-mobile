@@ -992,7 +992,8 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock.**
 Par is derived; star lines are multiples of it. **Par is never monotonic within a chapter** — par is length,
 not difficulty. Every siege authors `budgetFactor: -1`. Chapter art is generated and **shared by ordinal**
-(7c): four maps and forty skies serve every chapter of every mode.
+(7c): five maps and forty skies serve every chapter of every mode — `map5` is the lava crag, cut
+for ordinal 5 and the one source here that is **tiled** (two boards joined end to end).
 
 ### The numbers
 

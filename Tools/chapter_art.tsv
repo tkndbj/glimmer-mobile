@@ -46,6 +46,11 @@ c02_millvale	craftpix-net-567563-the-top-down-level-map-asset-pack/Png/LevelSele
 c03_amberwood	craftpix-net-144512-vector-top-down-level-map-asset-pack/Png/Level map.png
 # map4 — six strips. Drawn by c04_nightbriar, and by whatever fourth chapter comes next.
 c04_nightbriar	craftpix-net-998887-top-down-dark-level-map-asset-pack/Png/Level map.png
+# map5 — three strips, and the one source here that is **tiled**: two 1536x2048 boards,
+# `01` at the foot and `02` above it, joined by `|`. A rope bridge leaves the top of one
+# and arrives at the bottom of the other, so the seam is a crossing rather than a join.
+# Drawn by s06_thundercrag, and by whatever fifth chapter comes next.
+s06_thundercrag	craftpix-161519-free-lava-fields-level-map-2d-backgrounds/_PNG/01/layers/l1_sky.png+craftpix-161519-free-lava-fields-level-map-2d-backgrounds/_PNG/01/layers/l2_ground.png+craftpix-161519-free-lava-fields-level-map-2d-backgrounds/_PNG/01/layers/l3_decorations.png|craftpix-161519-free-lava-fields-level-map-2d-backgrounds/_PNG/02/layers/l1_sky.png+craftpix-161519-free-lava-fields-level-map-2d-backgrounds/_PNG/02/layers/l2_ground.png+craftpix-161519-free-lava-fields-level-map-2d-backgrounds/_PNG/02/layers/l3_decorations.png
 f01_lightfall	-
 f02_glasswater	-
 f03_whorlwater	-

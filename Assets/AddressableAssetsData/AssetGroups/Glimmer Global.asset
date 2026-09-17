@@ -1860,11 +1860,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/maw
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0f62723584f54f8011a04dde90efc13b
-    m_Address: Art/Map/map1_strip0
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0f69154ddc971f7448b3c339d797a558
     m_Address: Art/Fx/Siege/shot_rime_r/f11
     m_ReadOnly: 0
@@ -3487,11 +3482,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/Wards/beacon_r_fire
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1a158e089440f7146b1a8f742abf4b84
-    m_Address: Art/Map/map1_strip4
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1a1830dd3639d0f4cbc7790731e6c4ae
     m_Address: Art/Siege/Wards/apex_r
@@ -11098,11 +11088,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/wildBrute_y
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 519453f73f0d6cd4aa843d5c2edcad6d
-    m_Address: Art/Map/map1_strip5
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 519b85cfbf5aa8e4ab8d43dcb23bbca8
     m_Address: Art/Siege/wildBulwark_b_swing/f02
     m_ReadOnly: 0
@@ -14769,11 +14754,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/boulder_muzzle
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6bd1e279517059ffd82412677d275239
-    m_Address: Art/Map/map1_strip2
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6bda33beb7674764ea53bfaf25ae4818
     m_Address: Art/Fx/Siege/shot_spectrum_b/f04
@@ -27232,11 +27212,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/muzzle_howitzer_g
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c55d3f8c3c5f84c458c6fc4f600155d0
-    m_Address: Art/Map/map1_strip3
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c55ff5eaa1642d142a5963f81ead6386
     m_Address: Art/Siege/Wards/bolt_r
     m_ReadOnly: 0
@@ -30869,11 +30844,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/boneBrute_r_swing
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: dfbf61084bad150138874059e8c6a223
-    m_Address: Art/Map/map1_strip1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dfce0d3910f42074d83aa82cdfa239e8
     m_Address: Art/Fx/Siege/shot_leech_b/f01

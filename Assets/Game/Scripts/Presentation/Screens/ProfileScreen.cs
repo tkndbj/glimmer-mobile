@@ -208,10 +208,10 @@ namespace GlimmerGrove
 
             _cursor = -Gap;
             BuildKeeperCard();
+            BuildAccountCard();
             BuildRecordCard();
             BuildCompanionCard();
             BuildBoardCard();
-            BuildAccountCard();
             _stack.sizeDelta = new Vector2(0f, -_cursor + Gap);
 
             // Straight to the content rather than through verticalNormalizedPosition, which a
@@ -348,7 +348,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------ the record
         void BuildRecordCard()
         {
-            var card = Section("Record", 430f, 1);
+            var card = Section("Record", 430f, 2);
             CardTitle(card, "ui.profile.record", CardWidth);
 
             // Shown against the total the catalog holds, which is where the home screen's
@@ -436,7 +436,7 @@ namespace GlimmerGrove
         // -------------------------------------------------------- the companions
         void BuildCompanionCard()
         {
-            var card = Section("Companions", 340f, 2);
+            var card = Section("Companions", 340f, 3);
             int level = Profile.Rank;
 
             CardTitle(card, "ui.profile.companions", CardWidth);
@@ -639,7 +639,7 @@ namespace GlimmerGrove
         /// </summary>
         void BuildBoardCard()
         {
-            var card = Section("Boards", 330f, 3);
+            var card = Section("Boards", 330f, 4);
             CardTitle(card, "ui.board.title", CardWidth);
 
             var glyph = UIKit.Img("Glyph", card, Art.S("Ui/ic_trophy"), Color.white,
@@ -760,7 +760,7 @@ namespace GlimmerGrove
                          + (available ? ManageH + (deletable ? BetweenButtons + DeleteH : 0f) : 0f)
                          + FootMargin;
 
-            var card = Section("Account", height, 4);
+            var card = Section("Account", height, 1);
             CardTitle(card, "ui.profile.account", CardWidth);
 
             float cursor = TitleRow;
