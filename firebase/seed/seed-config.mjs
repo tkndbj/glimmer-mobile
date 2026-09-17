@@ -350,6 +350,7 @@ function buildProgressionConfig() {
           events: readEvents(manifest, tierIds),
           tasks,
           streak: readStreak(progression, tierIds),
+          referral: readReferral(progression, tasks.tiers.map((t) => t.id), levelChapters),
         };
       })(),
       keeper: readKeeperCurve(progression),
@@ -1130,6 +1131,62 @@ const RETIRED_STREAK_KINDS = new Set(["hearts", "heart_boost"]);
 
 /** Mirrors `StreakRules`. See `readStreak`. */
 const MAX_STREAK_RUNGS = 30;
+
+/**
+ * Refer-a-friend (invariant 51): the milestone chapter, the cap and the two payments.
+ *
+ * Flat, by the owner's decision on 2026-09-17: every finished invitee pays the referrer
+ * `perInvitee` and the invitee is paid `invitee` on finishing. `tierIds` is the published
+ * tasks block's own ladder, for `readStreak`'s reason: a payment naming a tier nothing defines
+ * is a chest the server can never price. The milestone has to be a chapter the manifest ships
+ * *enabled* — `levelChapters` is built from those alone — because a milestone behind a
+ * disabled chapter is a payout nobody can reach.
+ *
+ * Absent, or `withdrawn`, withdraws the feature server-side: every referral callable then
+ * answers an empty state and pays nothing. Said out loud, because "the invite page stopped
+ * paying" is otherwise a silent symptom of an edit to the wrong file.
+ */
+function readReferral(progression, tierIds, levelChapters) {
+  const block = progression.referral;
+
+  if (!block || block.withdrawn) {
+    console.log("  note: progression.json has no live 'referral' block, so the referral callables " +
+                "answer an empty state and pay nothing.");
+    return null;
+  }
+
+  const chapter = String(block.milestoneChapter ?? "");
+  if (!chapter) throw new Error("referral block names no milestoneChapter");
+  if (!Object.values(levelChapters).includes(chapter)) {
+    throw new Error(`referral milestoneChapter '${chapter}' is not an enabled chapter in the manifest; ` +
+                    "a milestone nobody can reach is a payout nobody can earn");
+  }
+
+  const payment = (raw, role) => {
+    const tier = String(raw?.tier ?? "");
+    if (!tierIds.includes(tier)) {
+      throw new Error(`referral ${role} tier '${tier}' is not a tier the tasks block defines`);
+    }
+    const count = raw?.count === undefined ? 1 : Math.floor(raw.count);
+    if (!Number.isInteger(count) || count < 1 || count > 4) {
+      throw new Error(`referral ${role} pays ${raw?.count} chests; it must be 1..4`);
+    }
+    return { tier, count };
+  };
+
+  const invitee = payment(block.invitee, "invitee");
+  const perInvitee = payment(block.perInvitee, "perInvitee");
+
+  const maxBound = Math.floor(block.maxBound ?? 0);
+  if (!Number.isInteger(maxBound) || maxBound < 1 || maxBound > 500) {
+    throw new Error(`referral maxBound is ${block.maxBound}; it must be 1..500`);
+  }
+
+  console.log(`  referral: milestone '${chapter}', ${perInvitee.count}x '${perInvitee.tier}' to the referrer ` +
+              `per finished invitee up to ${maxBound}, ${invitee.count}x '${invitee.tier}' to the invitee`);
+
+  return { milestoneChapter: chapter, maxBound, invitee, perInvitee };
+}
 
 function maxStreakAmount(kind) {
   if (kind === "credits") return 2000;

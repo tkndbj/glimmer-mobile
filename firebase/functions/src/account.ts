@@ -65,6 +65,7 @@ import { PATHS } from "./config";
 import { GROVE_PATHS, BOARD_ROWS } from "./grove";
 import { NAME_PATHS, NameDoc, heldName, isDenied } from "./names";
 import { REPORT_PATHS, REPORT_SUBJECTS } from "./reports";
+import { deleteReferral } from "./referral";
 
 /**
  * Who a retained-but-orphaned name reservation belongs to.
@@ -93,6 +94,9 @@ export interface DeletionReport {
 
   /** The save document and its subcollections are gone. */
   saveRemoved: boolean;
+
+  /** The referral code released and the bindings removed. */
+  referralRemoved: boolean;
 
   /** Reports filed *against* this account, removed with it. */
   reportsRemoved: boolean;
@@ -128,6 +132,7 @@ function emptyReport(): DeletionReport {
     nameReleased: "",
     nameRetained: "",
     saveRemoved: false,
+    referralRemoved: false,
     reportsRemoved: false,
     appleRevoked: false,
     appleSkipped: "",
@@ -411,6 +416,11 @@ export async function deleteAccount(request: DeleteRequest): Promise<DeletionRep
   if (name.retained.length === 0) {
     report.reportsRemoved = await deleteReportsAgainst(db, uid);
   }
+
+  // 3b. The referral code and the binding. Before the save, because nothing here depends
+  //     on it, and after the name, because it is the same shape of reservation: a document
+  //     keyed on a string only this account may release (see `deleteReferral`).
+  report.referralRemoved = await deleteReferral(db, uid);
 
   // 4. The save, the wallet, the spend log and the grant log.
   report.saveRemoved = await deleteSave(db, uid);

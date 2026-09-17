@@ -317,6 +317,21 @@ KIT = [
     Piece("cartoon", "Artboard 32 copy 2", "plate_violet", 1.0, slice_x=True, slice_y=True,
           trim=True, hue=0.782, pull=1.0, sat=1.10),
 
+    # **The fifth is the blue one taken down, and it is a *card* rather than a fourth hue.**
+    # The tasks page is a list of reward cards, and `card` - the kit's sunk navy - draws a row
+    # that is a container and nothing else. What the owner asked for is what the profile's
+    # sections wear: the mould, with its two-tone face, its lit top edge and its turning
+    # keyline, in a blue dark enough that a list of six of them still reads as a list rather
+    # than as six bright plates fighting the wall behind them.
+    #
+    # `dim` rather than a second hue, deliberately: this *is* `plate_blue`, so a re-cut that
+    # moves the profile's boxes moves these with them, and the two can never drift into two
+    # blues. Half is measured rather than typed - the face lands at (5, 78, 124), which is
+    # between `card`'s (7, 30, 69) and `plate_blue`'s (10, 155, 248) and above the wall the
+    # tasks page stands on. `Tools/render_tasks.py` is what says whether that is right.
+    Piece("cartoon", "Artboard 32 copy 2", "plate_navy", 1.0, slice_x=True, slice_y=True,
+          trim=True, hue=0.565, pull=1.0, sat=1.14, dim=.50),
+
     # **The fourth is the Battle key's own colour, and it exists because a banner is not a
     # pill.** A glade's name plate is 340x62 - 5.5:1, against the mould's 2.4:1 - and the owner
     # asked for it to wear what the hub's affirmative wears. `btn_gold` cannot: sliced on x

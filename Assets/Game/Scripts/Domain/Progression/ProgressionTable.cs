@@ -9,6 +9,7 @@ using GlimmerGrove.Utilities;
 using GlimmerGrove.Wards;
 using UnityEngine;
 using TaskTable = GlimmerGrove.Tasks.TaskTable;   // the property below is also called Tasks
+using ReferralTable = GlimmerGrove.Referral.ReferralTable;   // and Referral
 
 namespace GlimmerGrove.Progression
 {
@@ -89,7 +90,7 @@ namespace GlimmerGrove.Progression
                          StoreCatalog store,
                          AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
                          ContinueTable carryOn, UtilityCatalog utilities,
-                         WardCatalog wards, TaskTable tasks)
+                         WardCatalog wards, TaskTable tasks, ReferralTable referral)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -107,6 +108,7 @@ namespace GlimmerGrove.Progression
             Utilities = utilities ?? UtilityCatalog.Default;
             Wards = wards ?? WardCatalog.Default;
             Tasks = tasks ?? TaskTable.Default;
+            Referral = referral ?? ReferralTable.Default;
         }
 
         /// <summary>
@@ -125,6 +127,9 @@ namespace GlimmerGrove.Progression
         /// that never changes.
         /// </summary>
         public TaskTable Tasks { get; }
+
+        /// <summary>Refer-a-friend: the milestone, the referrer's ladder and the invitee's chest.</summary>
+        public ReferralTable Referral { get; }
 
         /// <summary>
         /// The utilities a player may hold, published with the curve for the chest table's
@@ -272,7 +277,8 @@ namespace GlimmerGrove.Progression
             carryOn: ContinueTable.Default,
             utilities: UtilityCatalog.Default,
             wards: WardCatalog.Default,
-            tasks: TaskTable.Default);
+            tasks: TaskTable.Default,
+            referral: ReferralTable.Default);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -508,6 +514,11 @@ namespace GlimmerGrove.Progression
             // remember to retune beside the first.
             var streak = StreakTable.Resolve(dto.streak, tasks.Tier, problems);
 
+            // And the referral ladder, which names the same tiers for the same reason. Read
+            // after the slates so a rung can be priced; an unreadable block costs the live
+            // ladder and never the screen, and an authored-empty one withdraws the feature.
+            var referral = ReferralTable.Resolve(dto.referral, tasks.Tier, problems);
+
             // And the slate that decides what the phone says while nobody is playing. It sets
             // its own static rather than riding this table's constructor, which is
             // `WardStars.Resolve` two lines up in spirit and for its reason: nothing that asks
@@ -518,7 +529,7 @@ namespace GlimmerGrove.Progression
 
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
-                          store, prompts, chapterGate, carryOn, utilities, wards, tasks);
+                          store, prompts, chapterGate, carryOn, utilities, wards, tasks, referral);
             return true;
         }
 
@@ -531,7 +542,8 @@ namespace GlimmerGrove.Progression
                                       StoreCatalog store,
                                       AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
                                       ContinueTable carryOn, UtilityCatalog utilities,
-                                      WardCatalog wards, TaskTable tasks)
+                                      WardCatalog wards, TaskTable tasks,
+                                      ReferralTable referral)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -550,7 +562,7 @@ namespace GlimmerGrove.Progression
 
             return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
                                         golden, hearts, hints, store, prompts,
-                                        chapterGate, carryOn, utilities, wards, tasks);
+                                        chapterGate, carryOn, utilities, wards, tasks, referral);
         }
     }
 }

@@ -430,6 +430,32 @@ service cloud.firestore {
       }
     }
 
+    // ------------------------------------------------------------ referrals
+    // Refer-a-friend (invariant 51). One document per account carrying both halves — the
+    // code it holds and the code it typed — one document per code so uniqueness is held by
+    // a document id (19d), and one row per invitee under the referrer.
+    //
+    // Server-only in **both** directions, for the reports' reason. Not client-written: the
+    // counts a chest is paid on are counts of *other* accounts' play, and a count the client
+    // writes is a chest anybody can pay themselves. Not client-readable: the document names
+    // the referrer, and the code owner's document names every invitee — a caller who could
+    // read it learns who typed their code, which is more than the feature ever promised
+    // anybody. The three callables tell a client only its own state and its own code.
+    //
+    // Named here even though the catch-all denies them, so the next collection copies a
+    // block that says why.
+    match /referrals/{uid} {
+      allow read, write: if false;
+
+      match /invitees/{inviteeUid} {
+        allow read, write: if false;
+      }
+    }
+
+    match /referralCodes/{code} {
+      allow read, write: if false;
+    }
+
     // ------------------------------------------------------------- receipts
     // Keyed globally rather than per player, because the attack is redeeming one
     // real purchase across many accounts. Never readable by a client: knowing which

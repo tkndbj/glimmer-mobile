@@ -16,7 +16,7 @@ namespace GlimmerGrove.Cloud
     /// refactor. Everything that would otherwise be written twice — the merge, the
     /// ledger arithmetic, the retry policy — is already exercised against this.
     /// </summary>
-    public sealed class NullCloudBackend : ICloudSaveBackend, Social.IGroveBoardBackend
+    public sealed class NullCloudBackend : ICloudSaveBackend, Social.IGroveBoardBackend, Referral.IReferralBackend
     {
         public bool IsAvailable => false;
 
@@ -173,5 +173,21 @@ namespace GlimmerGrove.Cloud
             CancellationToken cancellation = default)
             => Task.FromResult(CloudResult.Failed(CloudFailure.Unauthenticated,
                                                   "no cloud backend configured"));
+
+        // ------------------------------------------------------------ referrals
+        public Task<(CloudResult result, Referral.ReferralReply reply)> ReadReferralAsync(
+            CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                new Referral.ReferralReply()));
+
+        public Task<(CloudResult result, Referral.ReferralReply reply)> RedeemReferralAsync(
+            string code, CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                new Referral.ReferralReply()));
+
+        public Task<(CloudResult result, Referral.ReferralReply reply)> ClaimReferralAsync(
+            Referral.ReferralClaimKind kind, int goal, int index, CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                new Referral.ReferralReply()));
     }
 }

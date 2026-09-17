@@ -1308,6 +1308,30 @@ namespace GlimmerGrove.Cloud
             return (CloudResult.Success, redemption ?? CloudRedemption.Nothing);
         }
 
+        /// <summary>
+        /// The same gate a purchase redemption passes before it is allowed to move money,
+        /// for a call outside this class that pays into the ledgers — a referral chest,
+        /// which the server pays on request (invariant 51). <c>repair: false</c> for
+        /// <see cref="RedeemPurchaseAsync"/>'s reason: a device caught between two accounts
+        /// must not have another account's balances adopted into this one's ledgers.
+        /// </summary>
+        internal static Task<CloudResult> AuthoriseForCallAsync(CancellationToken cancellation)
+        {
+            if (!IsAvailable) return Task.FromResult(CloudResult.Failed(CloudFailure.Offline, "no cloud backend"));
+            return AuthoriseAsync(cancellation, repair: false);
+        }
+
+        /// <summary>
+        /// Adopts balances a callable outside this class answered with. The one door onto
+        /// <see cref="ApplyWalletStates"/> from elsewhere in Domain, so every reply that
+        /// carries a wallet is applied by the same code and raises the same events.
+        /// </summary>
+        internal static void AdoptWalletStates(List<CloudWalletState> wallets)
+        {
+            if (wallets == null || wallets.Count == 0) return;
+            ApplyWalletStates(wallets);
+        }
+
         static void ApplyWalletStates(List<CloudWalletState> wallets)
         {
             if (wallets == null) return;

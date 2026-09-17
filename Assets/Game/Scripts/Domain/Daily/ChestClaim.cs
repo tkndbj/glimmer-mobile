@@ -77,6 +77,22 @@ namespace GlimmerGrove.Daily
                 () => DailyStreak.TryCollect(night, out var drops) ? drops : null);
         }
 
+        /// <summary>
+        /// A referral chest the server has already agreed to pay.
+        ///
+        /// The closure is <c>ReferralPayout.Land</c>: the server rolled the chest and moved
+        /// the currency before this panel opened, and what is left to do at the start of the
+        /// ceremony is bank the rest of the drops and adopt the balances — inside the claim,
+        /// so the payout's snapshot of the pills is taken before the grant lands. It answers
+        /// null when there is nothing for this device to bank (invariant 51), which the
+        /// panel shows by closing.
+        /// </summary>
+        public static ChestClaim ForReferral(ChestTier tier, Func<List<ChestDrop>> land)
+        {
+            if (tier == null || land == null) return default;
+            return new ChestClaim(tier, land);
+        }
+
         /// <summary>One rung of a season's ladder, on one of its two tracks.</summary>
         public static ChestClaim ForSeason(GroveEvent season, EventMilestone rung, SeasonTrack track)
         {

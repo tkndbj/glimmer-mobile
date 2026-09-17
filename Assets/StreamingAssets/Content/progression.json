@@ -1031,6 +1031,13 @@
       }
     ]
   },
+  "referral": {
+    "milestoneChapter": "s01_thornwatch",
+    "maxBound": 50,
+    "shareLink": "",
+    "invitee": { "tier": "royal", "count": 2 },
+    "perInvitee": { "tier": "royal", "count": 2 }
+  },
   "notifications": {
     "perDay": 3,
     "horizonDays": 21,

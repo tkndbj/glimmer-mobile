@@ -1,0 +1,23 @@
+{
+  "_": "The referral code fold, pinned on both runtimes (invariant 9a): ReferralCode.Normalise / IsValid on the client and normaliseCode / isValidCode in referral.ts. `typed` is what a player typed, `folded` what reaches the server, `valid` whether a code of that shape could ever have been minted. Alphabet 23456789ABCDEFGHJKMNPQRSTUVWXYZ, eight symbols.",
+  "alphabet": "23456789ABCDEFGHJKMNPQRSTUVWXYZ",
+  "length": 8,
+  "cases": [
+    { "typed": "ABCD-EFGH", "folded": "ABCDEFGH", "valid": true },
+    { "typed": "abcd efgh", "folded": "ABCDEFGH", "valid": true },
+    { "typed": "  abcd.efgh ", "folded": "ABCDEFGH", "valid": true },
+    { "typed": "ab_cd-ef gh", "folded": "ABCDEFGH", "valid": true },
+    { "typed": "2345WXYZ", "folded": "2345WXYZ", "valid": true },
+    { "typed": "ABCDEFG", "folded": "ABCDEFG", "valid": false },
+    { "typed": "ABCDEFGHJ", "folded": "ABCDEFGHJ", "valid": false },
+    { "typed": "ABCD0EFG", "folded": "ABCD0EFG", "valid": false },
+    { "typed": "ABCDOEFG", "folded": "ABCDOEFG", "valid": false },
+    { "typed": "ABCD1EFG", "folded": "ABCD1EFG", "valid": false },
+    { "typed": "ABCDIEFG", "folded": "ABCDIEFG", "valid": false },
+    { "typed": "ABCDLEFG", "folded": "ABCDLEFG", "valid": false },
+    { "typed": "", "folded": "", "valid": false },
+    { "typed": "----", "folded": "", "valid": false },
+    { "typed": "abcdefghabcdefghabcdefghabcdefghXYZ", "folded": "ABCDEFGHABCDEFGHABCDEFGHABCDEFGH", "valid": false },
+    { "typed": "ÄBCDEFGH", "folded": "ÄBCDEFGH", "valid": false }
+  ]
+}

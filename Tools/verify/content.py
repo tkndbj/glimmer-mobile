@@ -2922,6 +2922,147 @@ NOTIFY_TAPER_PER_DAY = 1
 NOTIFY_SLOT_NAMES = ("any", "morning", "afternoon", "evening")
 
 
+#: Every loc key the invite page, its code panel and its info panel resolve. Listed rather
+#: than scraped, for the reminder kinds' reason: three of them are *formatted* with the
+#: milestone chapter's name and `loc.py` cannot see which.
+#: The profile's invite card carries no strings at all any more - it is one painted banner
+#: on a plate (`ProfileScreen.BuildInviteCard`), so `ui.profile.invite`, `.invite_hint` and
+#: `.invite_button` are spent. A retired loc key may be re-minted (invariant 5f), so they are
+#: dropped rather than listed anywhere.
+REFERRAL_KEYS = (
+    "ui.referral.title", "ui.referral.subtitle", "ui.referral.your_code",
+    "ui.referral.code_unknown", "ui.referral.copied", "ui.referral.share",
+    "ui.referral.share_title", "ui.referral.share_text", "ui.referral.share_text_bare",
+    "ui.referral.tally", "ui.referral.offer_title", "ui.referral.offer_hint",
+    "ui.referral.enter", "ui.referral.welcome_title", "ui.referral.welcome_hint",
+    "ui.referral.welcome_done_hint", "ui.referral.settling", "ui.referral.heading",
+    "ui.referral.friend_n", "ui.referral.pays", "ui.referral.opened", "ui.referral.collect",
+    "ui.referral.progress", "ui.referral.not_yet", "ui.referral.unknown_rung",
+    "ui.referral.code_title", "ui.referral.code_hint", "ui.referral.code_rule",
+    "ui.referral.redeem", "ui.referral.redeeming", "ui.referral.redeem_bound",
+    "ui.referral.redeem_bad_code", "ui.referral.redeem_unknown", "ui.referral.redeem_own",
+    "ui.referral.redeem_already", "ui.referral.redeem_full", "ui.referral.redeem_too_late",
+    "ui.referral.redeem_no_save", "ui.referral.redeem_unavailable", "ui.referral.info_title",
+    "ui.referral.info_share_title", "ui.referral.info_share_body",
+    "ui.referral.info_finish_title", "ui.referral.info_finish_body",
+    "ui.referral.info_pay_title", "ui.referral.info_pay_body",
+)
+
+
+def check_referral(manifest, progression, tasks, keys, warnings):
+    """Refer-a-friend (invariant 51): the milestone, the two payments and what they are worth.
+
+    Every rule here is one `ReferralTable.Resolve` also enforces, plus the two it
+    structurally cannot. **The milestone chapter has to be shipped, enabled and free to
+    enter** - it is named in progression.json and lives in manifest.json, and a milestone
+    behind a disabled chapter or a keeper wall is a payout nobody can reach. **Every
+    payment's tier has to exist in the tasks block.**
+
+    It also prints what one finished invitee pays each side, because a referral chest grows
+    no season and the figure that matters is the one the owner signed off.
+    """
+    errors = []
+    block = progression.get("referral")
+
+    if not block:
+        warnings.append("progression.json has no 'referral' block, so the built-in table ships")
+        return errors, {}
+
+    if block.get("withdrawn"):
+        warnings.append("progression.json withdraws the referral (withdrawn: true), so the invite "
+                        "page is not offered")
+        return errors, {}
+
+    ranks = {t.get("id"): i for i, t in enumerate((progression.get("tasks") or {}).get("tiers") or [])}
+    tiers = {t.get("id"): t.get("chest") or {} for t in (progression.get("tasks") or {}).get("tiers") or []}
+
+    def expected(chest):
+        c = g = 0.0
+        for band in chest.get("guaranteed") or []:
+            mid = (band.get("min", 0) + band.get("max", 0)) * 0.5
+            if band.get("kind") == "credits":
+                c += mid
+            elif band.get("kind") == "gems":
+                g += mid
+        options = chest.get("options") or []
+        total = sum(max(1, o.get("weight", 1)) for o in options) or 1
+        for option in options:
+            mid = (option.get("min", 0) + option.get("max", 0)) * 0.5
+            share = max(1, option.get("weight", 1)) / total
+            if option.get("kind") == "credits":
+                c += mid * share
+            elif option.get("kind") == "gems":
+                g += mid * share
+        return c, g
+
+    # The milestone: a chapter the manifest ships, enabled, on the main track, and open to a
+    # brand-new player. The first chapter of a mode is always open (invariant 21); a later
+    # one costs stars from the one before it, which is a warning rather than an error - it is
+    # reachable, only slower.
+    chapter_id = block.get("milestoneChapter") or ""
+    listed = {e.get("id"): e for e in (manifest or {}).get("chapters") or [] if e.get("id")}
+    entry = listed.get(chapter_id)
+
+    if not entry:
+        errors.append(f"referral milestoneChapter '{chapter_id}' is not a chapter manifest.json lists")
+    else:
+        if entry.get("disabled"):
+            errors.append(f"referral milestoneChapter '{chapter_id}' is disabled in the manifest; "
+                          "an invitee can never reach it")
+        if (entry.get("minKeeperLevel") or 0) > 0:
+            errors.append(f"referral milestoneChapter '{chapter_id}' is behind keeper level "
+                          f"{entry.get('minKeeperLevel')}; a milestone behind a wall is a payout "
+                          "nobody new can earn")
+        if (entry.get("track") or "main") != "main":
+            errors.append(f"referral milestoneChapter '{chapter_id}' is on the '{entry.get('track')}' "
+                          "track; a milestone is a chapter of the ordinary ladder")
+
+        mode = entry.get("mode")
+        siblings = [e for e in listed.values()
+                    if e.get("mode") == mode and not e.get("disabled")
+                    and (e.get("track") or "main") == "main"]
+        first = min(siblings, key=lambda e: e.get("order", 0)) if siblings else None
+        if first and first.get("id") != chapter_id:
+            warnings.append(f"referral milestoneChapter '{chapter_id}' is not the first chapter of its "
+                            f"mode ('{first.get('id')}' is); an invitee has to clear that one first")
+
+    def payment(role):
+        raw = block.get(role) or {}
+        tier = raw.get("tier") or ""
+        count = raw.get("count", 1)
+        if tier not in ranks:
+            errors.append(f"referral {role} tier '{tier}' is not a tier the tasks block defines")
+            return tier, 0, 0.0, 0.0
+        if not isinstance(count, int) or count < 1 or count > 4:
+            errors.append(f"referral {role} pays {count} chests; it must be 1..4")
+            return tier, 0, 0.0, 0.0
+        c, g = expected(tiers.get(tier, {}))
+        return tier, count, c * count, g * count
+
+    invitee = payment("invitee")
+    per = payment("perInvitee")
+
+    max_bound = block.get("maxBound", 0)
+    if not isinstance(max_bound, int) or max_bound < 1 or max_bound > 500:
+        errors.append(f"referral maxBound is {max_bound}; it must be 1..500")
+
+    link = block.get("shareLink") or ""
+    if link and not link.startswith("https://"):
+        errors.append(f"referral shareLink '{link}' is not an https link")
+
+    for key in REFERRAL_KEYS:
+        if key not in keys:
+            errors.append(f"missing string '{key}' (the invite page)")
+
+    return errors, {
+        "milestone": chapter_id,
+        "maxBound": max_bound,
+        "perTier": per[0], "perCount": per[1], "perCredits": per[2], "perGems": per[3],
+        "inviteeTier": invitee[0], "inviteeCount": invitee[1],
+        "inviteeCredits": invitee[2], "inviteeGems": invitee[3],
+    }
+
+
 def notification_kinds():
     """The reminder ids this build knows, read out of `NotificationKinds.Id`.
 
@@ -4212,6 +4353,12 @@ def main():
     season_errors, seasons = check_seasons(manifest, progression, tasks, keys, warnings)
     errors.extend(season_errors)
 
+    # Refer-a-friend. Its milestone is a chapter in the manifest named from progression.json,
+    # its tiers are the tasks block's, and its copy is formatted with a chapter's name - three
+    # files, and no one of them can check another (invariant 51).
+    referral_errors, referral = check_referral(manifest, progression, tasks, keys, warnings)
+    errors.extend(referral_errors)
+
     # The turret roster. Checked here rather than nowhere: its art addresses are *built* from an
     # id (`WardModel.ArtFor`), so `artnames.py` cannot see them, and its loc keys are derived from
     # one, so `loc.py` cannot either.
@@ -4314,6 +4461,17 @@ def main():
             else:
                 print(f"       it runs ONCE and then nothing follows it; the hub's box goes the "
                       f"day the last chest is claimed")
+
+    if referral:
+        print("")
+        print(f"referral: every friend who finishes '{referral['milestone']}' pays the referrer "
+              f"{referral['perCount']}x {referral['perTier']} (about {int(referral['perCredits'])} "
+              f"credit(s), {referral['perGems']:.1f} gem(s)), up to {referral['maxBound']} friends a code")
+        print(f"          the invitee opens {referral['inviteeCount']}x {referral['inviteeTier']} "
+              f"(about {int(referral['inviteeCredits'])} credit(s), {referral['inviteeGems']:.1f} gem(s))")
+        print(f"          the cap is worth about {int(referral['perCredits'] * referral['maxBound'])} "
+              f"credit(s) and {referral['perGems'] * referral['maxBound']:.0f} gem(s) to one referrer")
+        print("          a referral chest grows no season, by the owner's decision (invariant 51)")
 
     if shop:
         shelves = ", ".join(f"{n} {shelf}" for shelf, n in sorted(shop["shelves"].items()))

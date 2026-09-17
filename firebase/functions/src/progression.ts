@@ -19,6 +19,8 @@
  */
 
 import { logger } from "firebase-functions";
+
+import type { ReferralConfig } from "./referral";
 import { Rolls, subjectSeed } from "./random";
 
 export interface RewardRule {
@@ -62,6 +64,14 @@ export interface ProgressionConfig {
    * `earnedCredits` any more: a season pays chests, which are claims (see `season.ts`).
    */
   events?: EventConfig[];
+
+  /**
+   * Refer-a-friend, if the seeder has published it: the milestone chapter, the cap and the
+   * two chests. Absent means the three referral callables answer `unknown` and pay nothing,
+   * which is the fail-closed answer — a ladder the server was never told about is not one
+   * it may guess at.
+   */
+  referral?: ReferralConfig;
 }
 
 /**

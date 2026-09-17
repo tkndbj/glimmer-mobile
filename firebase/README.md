@@ -75,7 +75,8 @@ firebase.json            deploy config
 functions/src/
   index.ts               getWallet, submitSpends, claimAwards, redeemPurchase,
                          adReward, appleNotification, sweepVoidedPurchases, publishGroveStats,
-                         publishGrove, withdrawGrove, publishGroveRanks, claimName
+                         publishGrove, withdrawGrove, publishGroveRanks, claimName,
+                         getReferral, redeemReferral, claimReferral
   progression.ts         server-side derivation — mirrors ProgressionLedger.cs
   daily.ts               daily chest generator — mirrors DailyChestTable.cs
   streak.ts              streak ladder and the rule that bounds a night — mirrors StreakTable.cs
@@ -83,6 +84,8 @@ functions/src/
   products.ts            what a product grants — read from config/products, never from the client
   refunds.ts             reversing a purchase a store took back
   names.ts               keeper-name reservations — uniqueness held by a document id
+  referral.ts            refer-a-friend: codes keyed on themselves, the milestone judged off
+                         the save, and chests paid on request rather than claimed
   wallet.ts              balance arithmetic over the private wallet document
   grove.ts               the public boards: what a grove is worth (recomputed, never
                          believed), the public form of a name, and the daily ranking job
@@ -483,6 +486,45 @@ Between them, a forged streak earns exactly what an honest one does. Three detai
 - **Re-seed after retuning the ladder.** The board draws from the shipped file, the wallet is
   credited from `config/progression`. Skip the seed and those are two different numbers in
   front of the same player. `Validate Content` prints what one lap pays and says so.
+
+## Refer a friend
+
+A player's code is minted by `getReferral` on the first ask and held at
+`referralCodes/{code}` — keyed on itself, so uniqueness is the document id's (the same
+argument as names). `referrals/{uid}` carries both halves of one account's state: the code it
+holds with its counts, and the code it typed with whether its milestone is reached. Nothing
+about either is client-readable or client-writable; the three callables tell a client only its
+own state.
+
+**A referral chest is paid on request, never claimed.** Every other chest is rolled on the
+device and submitted with a derived id, so it can be opened on a plane; a referral chest
+cannot be, because the count it pays on — how many *other* accounts cleared the milestone —
+lives nowhere but here. So `claimReferral` rolls the chest (`referral` tag, subject
+`rung:{friend}:{n}` or `invitee:{n}`), records the grant at
+`grantLog/referral:{subject}:{currency}`, moves the money and answers with the drops and the
+balances. Idempotent twice over: the grant document and the `paid` list on the referral
+document. A `referral:` id arriving at `claimAwards` is refused outright, like an `ad:` id.
+
+**The milestone is settled on the invitee's read.** `getReferral` judges the invitee's
+chapter off the save this server holds and, in the same transaction, credits the referrer.
+The client asks after a settled sync and once when it has never asked — deliberately not a
+trigger on every save write, which is a function invocation per sync at any player count for
+a question with one answer per account.
+
+**What bounds it**: the payout is flat and published in `config/progression.referral` —
+`perInvitee` chests to the referrer for each finished invitee up to `maxBound`, `invitee`
+chests to the invitee — so the most one code can ever pay is arithmetic; a binding is refused
+for an account that has already cleared the milestone or has no save; and the referrer is paid
+once per *account* that cleared ten rungs of the first chapter, which is the one bound that
+costs a forger real play. No season mark is ever written by a referral chest (invariant 51).
+
+**Deleting an account** releases its code (only if the code's document names it), removes the
+row it holds under its referrer, and deletes its own document recursively. The referrer's
+counts stay: a chest already paid is not un-paid by the invitee leaving, and the slot the
+binding consumed does not reopen for a second account.
+
+Run `node firebase/functions/test/referral.mjs` for the pure half and the smoke test for the
+live half (thirty-two cases, two accounts).
 
 ## Two invariants, and how they are held
 

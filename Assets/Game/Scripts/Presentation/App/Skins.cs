@@ -204,6 +204,26 @@ namespace GlimmerGrove
         public const string PlateViolet = "Hud/plate_violet";
 
         /// <summary>
+        /// <see cref="PlateBlue"/> taken down in value: the same mould, the same blue, dark
+        /// enough to be a row in a list rather than a plate on a hub.
+        ///
+        /// <para>
+        /// <b>It is a card, not a fourth hue.</b> The tasks page is a list of reward cards and
+        /// <see cref="Card"/> draws each one as a container and nothing else — no lit top edge,
+        /// no two-tone face, no keyline that turns with the colour, which are the three things
+        /// that made the profile's sections read as objects. Drawn in <see cref="PlateBlue"/>
+        /// itself, six of them fight the wall they stand on; halved, the face lands between
+        /// <see cref="Plate"/> and the bright mould and the list reads as a list.
+        /// </para>
+        /// <para>
+        /// Cut from <see cref="PlateBlue"/>'s own hue and saturation with nothing but a
+        /// <c>dim</c>, so a re-cut that moves the profile's boxes moves these with them and
+        /// the two can never drift into two blues.
+        /// </para>
+        /// </summary>
+        public const string PlateNavy = "Hud/plate_navy";
+
+        /// <summary>
         /// The same mould in <see cref="Battle"/>'s own colour, for a box the pill cannot be
         /// drawn in.
         ///

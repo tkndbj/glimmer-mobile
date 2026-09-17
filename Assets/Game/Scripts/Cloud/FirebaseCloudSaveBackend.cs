@@ -36,7 +36,8 @@ namespace GlimmerGrove.Cloud
     /// than an exception.
     /// </para>
     /// </summary>
-    public sealed class FirebaseCloudSaveBackend : ICloudSaveBackend, Social.IGroveBoardBackend
+    public sealed class FirebaseCloudSaveBackend : ICloudSaveBackend, Social.IGroveBoardBackend,
+                                                   Referral.IReferralBackend
     {
         /// <summary>Must match <c>REGION</c> in the functions' config.ts.</summary>
         public const string FunctionsRegion = "europe-west1";
@@ -1594,6 +1595,167 @@ namespace GlimmerGrove.Cloud
         }
 
         // ------------------------------------------------------------- plumbing
+        // ---------------------------------------------------------------- referrals
+        /// <summary>
+        /// Reads the referral state, minting a code on the first ask. A function rather than a
+        /// document read because the read <em>settles</em>: the server judges the invitee's
+        /// milestone off the save it holds while it answers, and a client that could read the
+        /// document could not make that happen.
+        /// </summary>
+        public async Task<(CloudResult result, Referral.ReferralReply reply)> ReadReferralAsync(
+            CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), new Referral.ReferralReply());
+
+            try
+            {
+                var reply = await CallAsync("getReferral", new Dictionary<string, object>(), cancellation);
+                return (CloudResult.Success, ReadReferral(reply));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "read referral"), new Referral.ReferralReply());
+            }
+        }
+
+        public async Task<(CloudResult result, Referral.ReferralReply reply)> RedeemReferralAsync(
+            string code, CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), new Referral.ReferralReply());
+
+            try
+            {
+                var reply = await CallAsync("redeemReferral", new Dictionary<string, object>
+                {
+                    { "code", code ?? string.Empty },
+                }, cancellation);
+
+                return (CloudResult.Success, ReadReferral(reply));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "redeem referral"), new Referral.ReferralReply());
+            }
+        }
+
+        /// <summary>
+        /// Asks the server to pay a chest. The server rolls it, records the grant against a
+        /// derived id and answers with the drops and the balances (invariant 51); the client
+        /// predicts nothing. The kind and the goal ride in the body under the spellings
+        /// <c>referral.ts</c> parses.
+        /// </summary>
+        public async Task<(CloudResult result, Referral.ReferralReply reply)> ClaimReferralAsync(
+            Referral.ReferralClaimKind kind, int goal, int index, CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), new Referral.ReferralReply());
+
+            try
+            {
+                var reply = await CallAsync("claimReferral", new Dictionary<string, object>
+                {
+                    { "kind", kind == Referral.ReferralClaimKind.Invitee ? "invitee" : "rung" },
+                    { "goal", goal },
+                    { "index", index },
+                }, cancellation);
+
+                return (CloudResult.Success, ReadReferral(reply));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "claim referral"), new Referral.ReferralReply());
+            }
+        }
+
+        /// <summary>
+        /// Reads a referral reply. Every call answers the state after it, so one reader
+        /// serves all three; the redeem outcome and the claim outcome are read when present
+        /// and left at <c>Unavailable</c> otherwise. A spelling this build does not know reads
+        /// as <c>Unavailable</c> rather than as any real answer, because every real answer
+        /// changes what a screen draws.
+        /// </summary>
+        static Referral.ReferralReply ReadReferral(IDictionary<string, object> reply)
+        {
+            var read = new Referral.ReferralReply();
+            if (reply == null) return read;
+
+            if (reply.TryGetValue("state", out object rawState) && rawState is IDictionary<string, object> state)
+            {
+                var paid = new List<string>();
+                if (state.TryGetValue("paid", out object rawPaid) && rawPaid is IEnumerable<object> paidList)
+                {
+                    foreach (var p in paidList)
+                        if (p is string subject && subject.Length > 0) paid.Add(subject);
+                }
+
+                read.State = new Referral.ReferralState(
+                    state.TryGetValue("code", out object code) ? code as string : string.Empty,
+                    (int)ReadLong(state, "bound"),
+                    (int)ReadLong(state, "finished"),
+                    paid.ToArray(),
+                    ReadBool(state, "referred"),
+                    ReadBool(state, "milestoneReached"),
+                    ReadBool(state, "canRedeem"),
+                    SaveSchema.NowUnix());
+            }
+
+            switch (reply.TryGetValue("outcome", out object o) ? o as string : null)
+            {
+                case "bound":            read.Redeem = Referral.ReferralRedeemOutcome.Bound; break;
+                case "unknown_code":     read.Redeem = Referral.ReferralRedeemOutcome.UnknownCode; break;
+                case "own_code":         read.Redeem = Referral.ReferralRedeemOutcome.OwnCode; break;
+                case "already_referred": read.Redeem = Referral.ReferralRedeemOutcome.AlreadyReferred; break;
+                case "full":             read.Redeem = Referral.ReferralRedeemOutcome.Full; break;
+                case "too_late":         read.Redeem = Referral.ReferralRedeemOutcome.TooLate; break;
+                case "no_save":          read.Redeem = Referral.ReferralRedeemOutcome.NoSave; break;
+            }
+
+            switch (reply.TryGetValue("claim", out object c) ? c as string : null)
+            {
+                case "paid":         read.Claim = Referral.ReferralClaimOutcome.Paid; break;
+                case "already_paid": read.Claim = Referral.ReferralClaimOutcome.AlreadyPaid; break;
+                case "not_yet":      read.Claim = Referral.ReferralClaimOutcome.NotYet; break;
+                case "unknown":      read.Claim = Referral.ReferralClaimOutcome.Unknown; break;
+            }
+
+            if (reply.TryGetValue("drops", out object rawDrops) && rawDrops is IEnumerable<object> drops)
+            {
+                foreach (var element in drops)
+                {
+                    if (!(element is IDictionary<string, object> drop)) continue;
+
+                    var kind = Daily.ChestDropKinds.Parse(drop.TryGetValue("kind", out object k) ? k as string : null);
+                    int amount = (int)ReadLong(drop, "amount");
+                    string item = drop.TryGetValue("item", out object it) ? it as string : null;
+
+                    // A kind this build cannot name is dropped rather than drawn as a white
+                    // rectangle (7b). The currency behind it is in the wallet reply regardless.
+                    if (kind == Daily.ChestDropKind.None || amount <= 0) continue;
+                    read.Drops.Add(new Daily.ChestDrop(kind, amount, item));
+                }
+            }
+
+            read.Wallets = ReadWalletStates(reply);
+            return read;
+        }
+
+        static bool ReadBool(IDictionary<string, object> map, string key)
+            => map.TryGetValue(key, out object value) && value is bool b && b;
+
+        static long ReadLongValue(object value)
+        {
+            switch (value)
+            {
+                case long l: return l;
+                case int i: return i;
+                case double d: return (long)d;
+                case string s: return long.TryParse(s, out long parsed) ? parsed : 0;
+                default: return 0;
+            }
+        }
+
         async Task<IDictionary<string, object>> CallAsync(
             string name, Dictionary<string, object> data,
             CancellationToken cancellation = default, int seconds = CallSeconds)

@@ -144,6 +144,7 @@ namespace GlimmerGrove
             // save. Wired once, here, for the reason above; a no-op in a build with no
             // backend, because everything behind it checks IsAvailable.
             Social.GroveBoard.Attach();
+            Referral.ReferralLedger.Attach();
 
             // Rewarded ads, chosen the same way and inert by the same default. Two gates,
             // not one: the SDK has to be compiled in *and* a real app key has to exist.

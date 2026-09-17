@@ -3902,6 +3902,190 @@
       "text": "every keeper level earned"
     },
     {
+      "key": "ui.referral.title",
+      "text": "Invite Friends"
+    },
+    {
+      "key": "ui.referral.subtitle",
+      "text": "Share your code. When a friend finishes {0}, you both open chests."
+    },
+    {
+      "key": "ui.referral.your_code",
+      "text": "Your code"
+    },
+    {
+      "key": "ui.referral.code_unknown",
+      "text": "Connect to get your code"
+    },
+    {
+      "key": "ui.referral.copied",
+      "text": "Code copied"
+    },
+    {
+      "key": "ui.referral.share",
+      "text": "Share"
+    },
+    {
+      "key": "ui.referral.share_title",
+      "text": "Invite a friend to Gemfire"
+    },
+    {
+      "key": "ui.referral.share_text",
+      "text": "Play Gemfire with me! Enter my code {0} when you start and we both get chests. {1}"
+    },
+    {
+      "key": "ui.referral.share_text_bare",
+      "text": "Play Gemfire with me! Enter my code {0} when you start and we both get chests."
+    },
+    {
+      "key": "ui.referral.tally",
+      "text": "{0} of {1} friends joined · {2} finished {3}"
+    },
+    {
+      "key": "ui.referral.offer_title",
+      "text": "Got a friend's code?"
+    },
+    {
+      "key": "ui.referral.offer_hint",
+      "text": "Enter it before you finish {0} and you both get chests."
+    },
+    {
+      "key": "ui.referral.enter",
+      "text": "Enter code"
+    },
+    {
+      "key": "ui.referral.welcome_title",
+      "text": "Welcome chests"
+    },
+    {
+      "key": "ui.referral.welcome_hint",
+      "text": "Finish {0} to open them"
+    },
+    {
+      "key": "ui.referral.welcome_done_hint",
+      "text": "Your friend's gift for finishing {0}"
+    },
+    {
+      "key": "ui.referral.settling",
+      "text": "Syncing"
+    },
+    {
+      "key": "ui.referral.heading",
+      "text": "Friends who finished {0}"
+    },
+    {
+      "key": "ui.referral.collect",
+      "text": "Collect"
+    },
+    {
+      "key": "ui.referral.progress",
+      "text": "{0}/{1}"
+    },
+    {
+      "key": "ui.referral.not_yet",
+      "text": "Not yet. The game is still catching up with your friends."
+    },
+    {
+      "key": "ui.referral.unknown_rung",
+      "text": "This chest isn't on offer any more."
+    },
+    {
+      "key": "ui.referral.code_title",
+      "text": "Enter code"
+    },
+    {
+      "key": "ui.referral.code_hint",
+      "text": "ABCD-EFGH"
+    },
+    {
+      "key": "ui.referral.code_rule",
+      "text": "{0} letters and numbers, from a friend who plays"
+    },
+    {
+      "key": "ui.referral.redeem",
+      "text": "Redeem"
+    },
+    {
+      "key": "ui.referral.redeeming",
+      "text": "Checking…"
+    },
+    {
+      "key": "ui.referral.redeem_bound",
+      "text": "You're in! Finish {0} and you both get chests."
+    },
+    {
+      "key": "ui.referral.redeem_bad_code",
+      "text": "That's not a code. Check it and try again."
+    },
+    {
+      "key": "ui.referral.redeem_unknown",
+      "text": "Nobody has that code."
+    },
+    {
+      "key": "ui.referral.redeem_own",
+      "text": "That's your own code."
+    },
+    {
+      "key": "ui.referral.redeem_already",
+      "text": "You've already used a friend's code."
+    },
+    {
+      "key": "ui.referral.redeem_full",
+      "text": "That friend has all the invites they can take."
+    },
+    {
+      "key": "ui.referral.redeem_too_late",
+      "text": "Codes are for new players, and you've already finished {0}."
+    },
+    {
+      "key": "ui.referral.redeem_no_save",
+      "text": "Play a level first, then try again."
+    },
+    {
+      "key": "ui.referral.redeem_unavailable",
+      "text": "Couldn't reach the server. Try again in a moment."
+    },
+    {
+      "key": "ui.referral.info_title",
+      "text": "How it works"
+    },
+    {
+      "key": "ui.referral.info_share_title",
+      "text": "Share your code"
+    },
+    {
+      "key": "ui.referral.info_share_body",
+      "text": "Send it to a friend who hasn't played yet. They enter it when they start."
+    },
+    {
+      "key": "ui.referral.info_finish_title",
+      "text": "They finish {0}"
+    },
+    {
+      "key": "ui.referral.info_finish_body",
+      "text": "Once your friend clears every level of {0}, you both open chests. Theirs are theirs; yours come with every friend who finishes."
+    },
+    {
+      "key": "ui.referral.friend_n",
+      "text": "Friend {0}"
+    },
+    {
+      "key": "ui.referral.pays",
+      "text": "{0}× {1}"
+    },
+    {
+      "key": "ui.referral.opened",
+      "text": "{0} of {1} opened"
+    },
+    {
+      "key": "ui.referral.info_pay_title",
+      "text": "Every friend pays"
+    },
+    {
+      "key": "ui.referral.info_pay_body",
+      "text": "Each friend who finishes {0} earns you {1}. Up to {2} friends can use your code, and chests here never count towards the season."
+    },
+    {
       "key": "ui.rank.motes",
       "text": "{0} motes"
     },

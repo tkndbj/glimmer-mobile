@@ -1049,6 +1049,12 @@ namespace GlimmerGrove.Content
         public TaskTableDto tasks;
 
         /// <summary>
+        /// Refer-a-friend: the milestone an invitee has to reach, the ladder the referrer
+        /// climbs and the chest the invitee gets. Optional; see <see cref="ReferralDto"/>.
+        /// </summary>
+        public ReferralDto referral;
+
+        /// <summary>
         /// Which reminders the phone sends and when. Optional; see <see cref="NotificationsDto"/>.
         ///
         /// <b>The one block in this file that reaches no server.</b> Nothing here is
@@ -1791,6 +1797,45 @@ namespace GlimmerGrove.Content
         public int target;
         public string tier;
         public bool retired;
+    }
+
+    /// <summary>
+    /// The refer-a-friend block. Read by <c>ReferralTable.Resolve</c>; published by
+    /// <c>seed-config.mjs</c> as <c>config/progression.referral</c>, because every number in
+    /// it is adjudicated on the server and the client's copy only ever draws.
+    ///
+    /// <para>
+    /// <c>milestoneChapter</c> is the chapter an invitee has to clear before either side is
+    /// paid, named rather than derived so a content push can move it. <c>maxBound</c> is how
+    /// many invitees may ever bind to one code — bound, not finished, because a list that
+    /// only grows on the invitee's play would be a list with no ceiling. <c>perInvitee</c> is
+    /// what the referrer opens for each invitee who clears it; <c>invitee</c> what the
+    /// invitee opens on clearing it. Each names a tier of the <c>tasks</c> block (invariant 45)
+    /// and a count. <c>withdrawn</c> takes the feature off the screen without deleting the
+    /// block.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class ReferralDto
+    {
+        public string milestoneChapter;
+        public int maxBound;
+        public string shareLink;
+        public ReferralPaymentDto invitee;
+        public ReferralPaymentDto perInvitee;
+        public bool withdrawn;
+
+        /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
+        public bool IsAuthored => maxBound > 0 || withdrawn || !string.IsNullOrEmpty(milestoneChapter);
+    }
+
+    [Serializable]
+    public sealed class ReferralPaymentDto
+    {
+        public string tier;
+
+        /// <summary>How many chests of that tier. Absent reads as one.</summary>
+        public int count;
     }
 
     /// <summary>

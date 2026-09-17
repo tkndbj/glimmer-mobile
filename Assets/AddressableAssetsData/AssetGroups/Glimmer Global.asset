@@ -9286,6 +9286,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_lance_r
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 44698a41d6d91cbade3cad044425f8b4
+    m_Address: Art/Ui/Hud/plate_navy
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 44866aaa16265134cac5c3173c8dc1b6
     m_Address: Art/Siege/rabbleMon_r_swing/f05
     m_ReadOnly: 0

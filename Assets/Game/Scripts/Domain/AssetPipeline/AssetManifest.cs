@@ -372,16 +372,22 @@ namespace GlimmerGrove.AssetPipeline
             "Hud/cap_on", "Hud/cap_off",
             "Hud/add", "Hud/burst", "Hud/btn_gold",
             "Hud/plate_blue", "Hud/plate_orange", "Hud/plate_violet", "Hud/plate_gold",
+            "Hud/plate_navy",
             "ic_nav_home", "ic_nav_shop", "ic_nav_grove",
             "ic_nav_ranks", "ic_nav_profile", "ic_battle", "ic_chest_wood", "ic_streak", "ic_padlock",
             "Hud/lander", "Hud/beam", "Hud/room",
 
-            // The hub's second door: one painted banner, drawn on the kit's blue plate
-            // (`HomeScreen.BuildChallenges`). **Global for the same reason as the line above
-            // it** — it is on the first screen after the splash, and an `Image` whose sprite has
-            // not arrived is a white rectangle rather than a blank (invariant 7b), which here
-            // would be a 900-unit white bar across the bottom of the hub at every launch.
-            "challenges",
+            // The two painted banners, each drawn on the kit's blue plate and each the whole
+            // of the control it is (`HomeScreen.BuildChallenges`, `ProfileScreen.BuildInviteCard`).
+            // **Global for the same reason as the line above it** — one is on the first screen
+            // after the splash and the other is one tap from every screen in the game, and an
+            // `Image` whose sprite has not arrived is a white rectangle rather than a blank
+            // (invariant 7b), which here would be a 900-unit white bar across a card.
+            //
+            // Both are 2048x768 sources capped to 1024 by the `/Art/Ui/` folder rule, so the
+            // pair costs about 350 KB resident at ASTC 6x6 — which is what makes global the
+            // cheap answer rather than the lazy one.
+            "challenges", "refer",
 
             // The task chests, closed, and the goal glyphs the shared icon set has no picture
             // for. Global for the streak flame's reason: the hub draws all four chests on the

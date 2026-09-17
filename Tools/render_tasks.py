@@ -44,12 +44,29 @@ CHROME = 92.0
 BANNER_H = 138.0
 LADDER_H = 252.0
 HEADING_H = 76.0
-ROW_H = 168.0
+ROW_H = 210.0
 ROW_GAP = 14.0
 WIDTH = 1000.0
 
-# `TasksScreen`'s own `TextW`, and the hint box it builds inside it.
-HINT_W, HINT_H = 520.0, 30.0
+# `TasksScreen.BuildRow` - the reward card's own furniture. `TEXT_X`/`TEXT_W` are the
+# column between the seat and the chest; `HINT_W`/`HINT_H` is the box the hint shrinks in.
+SEAT, GLYPH, SEAT_X = 148.0, 98.0, 96.0
+TEXT_X, TEXT_W = 190.0, 570.0
+HINT_W, HINT_H = TEXT_W, 32.0
+
+#: `TasksScreen.ChestTall` and `ChestX`. A *drawn* height, for `StreakScreen.RewardTall`'s
+#: reason: the closed chest carries the lid's headroom, so a box set straight from a height
+#: draws it two thirds the size the number says and floats it high. `ChestPack` owns the
+#: conversion and this mirror crops to alpha, so it draws the *drawn* size directly - and the
+#: halo goes on the drawn middle rather than on the sprite's (invariant 44d).
+ROW_CHEST_TALL, ROW_CHEST_X = 156.0, 112.0
+
+#: `TasksScreen`'s seal - the mint disc and its tick, stamped on the lower-right of the drawn
+#: chest once a task is paid. Drawn here because the chest it is placed against just moved, and
+#: a mirror that skips a piece cannot say whether the piece landed on it (invariant 44d).
+SEAL, SEAL_TICK, SEAL_X, SEAL_Y = 80.0, 46.0, 72.0, 52.0
+CHEST_FILL, CHEST_WIDE = 155.0 / 244.0, 151.0 / 155.0
+CHEST_LIFT, CHEST_ASPECT = 38.5 / 155.0, 176.0 / 244.0
 
 # TasksScreen.BuildLadder — the pack, sharing HomeScreen.BuildChestRow's shape
 CHEST_TALL, CHEST_SHORT = 196.0, 136.0
@@ -110,6 +127,27 @@ def chest_art():
 
 
 ART = chest_art()
+
+
+def pack_numbers():
+    """`ChestPack.Fill`, `Wide`, `Lift` and `Aspect`, measured off the PNGs the game ships.
+
+    The C# constants are typed from these four and `ChestPack`'s doc claims "the four tiers
+    agree to a pixel", so this measures **every** tier and returns the widest reading of each:
+    an average would hide one icon drifting, which is the only failure worth printing. Nothing
+    else can say the constants have gone stale after a re-cut (invariant 44b: measured, not
+    typed), and it is printed rather than asserted, because a chest icon is allowed to change -
+    what is not allowed is for it to change quietly.
+    """
+    out = []
+    for tier in TASKS["tiers"]:
+        im, box = ART[tier["id"]]
+        tall = float(box[3] - box[1])
+        out.append((tall / im.height,
+                    (box[2] - box[0]) / tall,
+                    ((box[1] + box[3]) / 2.0 - im.height / 2.0) / tall,
+                    im.width / float(im.height)))
+    return [max(col) for col in zip(*out)]
 
 
 def pack(ids, tall, short, dip, floor, overlap):
@@ -253,7 +291,10 @@ def row_card(sheet, y, task, state):
         pool = K.glow(420, 1.35, K.SUN, .85).resize((int(WIDTH + 150), int(ROW_H + 130)), Image.LANCZOS)
         K.paste(sheet, pool, W / 2, cy)
 
-    card = K.skin("Hud/card", WIDTH, ROW_H)
+    # `Skins.PlateNavy` - the mould the profile's sections wear, halved in value. The kit's
+    # `Hud/card` is flat and unlit; this one has the two-tone face and the lit top edge, which
+    # is the whole of what makes a row read as a thing holding a prize.
+    card = K.skin("Hud/plate_navy", WIDTH, ROW_H)
     if state == "claimed":
         card = K.tint(card, (170, 175, 190))
     K.paste(sheet, card, W / 2, cy)
@@ -265,23 +306,23 @@ def row_card(sheet, y, task, state):
         d.rounded_rectangle(box, radius=30, outline=(255, 244, 206, 255), width=7)
 
     left = W / 2 - WIDTH / 2
-    K.paste(sheet, K.skin("Hud/slot", 124, 124), left + 84, cy)
+    K.paste(sheet, K.skin("Hud/slot", int(SEAT), int(SEAT)), left + SEAT_X, cy)
     try:
         glyph = Image.open(K.UI / ("%s.png" % GOAL_ICON.get(task["goal"], "ic_gift"))).convert("RGBA")
-        K.paste(sheet, K.fit(glyph, (82, 82)), left + 84, cy - 2)
+        K.paste(sheet, K.fit(glyph, (int(GLYPH), int(GLYPH))), left + SEAT_X, cy - 2)
     except FileNotFoundError:
         pass
 
-    text_x, text_w = left + 166, 520.0
+    text_x, text_w = left + TEXT_X, TEXT_W
     name = txt("task.%s.name" % task["id"], task["target"])
-    K.text(sheet, name, text_x, cy - 36, 29, anchor="l")
+    K.text(sheet, name, text_x, cy - 50, 32, anchor="l")
 
     track = text_w - 130
     # A counting row has to be *genuinely* short of its target, or the mirror draws a row it
     # calls unfinished with a full green bar — which is the one thing this picture is for.
     done = task["target"] if state != "counting" else min(task["target"] - 1, max(0, task["target"] * 2 // 5))
-    bar(sheet, text_x + track / 2, cy + 22, track, done / float(task["target"]))
-    K.text(sheet, "%d / %d" % (done, task["target"]), text_x + track + 12, cy + 22, 24, anchor="l")
+    bar(sheet, text_x + track / 2, cy + 12, track, done / float(task["target"]))
+    K.text(sheet, "%d / %d" % (done, task["target"]), text_x + track + 12, cy + 12, 26, anchor="l")
 
     hint = (txt("ui.tasks.tap_to_claim") if ready
             else txt("ui.chest.needs_connection") if held
@@ -294,21 +335,32 @@ def row_card(sheet, y, task, state):
         # along (44d). `shrunk_left` is the shape that matches, and it returns the size it
         # settled on: "13 against a floor of 13" is the tell that a string has outgrown the
         # column and `UIKit.Shrinkable` is about to truncate it silently (19n).
-        px = K.shrunk_left(sheet, hint, text_x, cy + 56 - HINT_H / 2, HINT_W, HINT_H, 22, 13,
+        px = K.shrunk_left(sheet, hint, text_x, cy + 54 - HINT_H / 2, HINT_W, HINT_H, 24, 14,
                            fill=K.GOLD if ready else K.SUN if held else (255, 243, 220),
                            outline=0)
-        if px <= 13:
-            print("  hint '%s' settled at %dpx against a floor of 13 - it has outgrown the "
+        if px <= 14:
+            print("  hint '%s' settled at %dpx against a floor of 14 - it has outgrown the "
                   "column" % (hint, px))
 
     right = W / 2 + WIDTH / 2
     tier = task["tier"]
-    im, box = ART[tier]
-    h = 133.0
-    w = h * (box[2] - box[0]) / float(box[3] - box[1])
+    h = ROW_CHEST_TALL
+    w = h * CHEST_WIDE
     if ready:
-        K.paste(sheet, K.glow(230, 2.0, K.GOLD, .55), right - 96, cy)
-    K.paste(sheet, drawn(tier, w, h, state != "claimed"), right - 96, cy)
+        K.paste(sheet, K.glow(int(h * 2), 2.0, K.GOLD, .55), right - ROW_CHEST_X, cy)
+    K.paste(sheet, drawn(tier, w, h, state != "claimed"), right - ROW_CHEST_X, cy)
+
+    if state == "claimed":
+        d = ImageDraw.Draw(sheet)
+        cx, sy = right - SEAL_X, cy + SEAL_Y
+        d.ellipse([cx - SEAL / 2, sy - SEAL / 2, cx + SEAL / 2, sy + SEAL / 2],
+                  fill=K.MINT + (255,))
+        try:
+            tick = Image.open(K.UI / "ic_check.png").convert("RGBA")
+            K.paste(sheet, K.tint(K.fit(tick, (int(SEAL_TICK), int(SEAL_TICK))), (255, 255, 255)),
+                    cx, sy)
+        except FileNotFoundError:
+            pass
 
 
 def heading(sheet, y, period):
@@ -502,6 +554,10 @@ def main():
                     help="an account that has never been online: the connect-once banner")
     ap.add_argument("--out", type=Path, default=Path("tasks.png"))
     args = ap.parse_args()
+
+    fill, wide, lift, aspect = pack_numbers()
+    print("  fill %.4f  wide %.4f  lift %.4f  aspect %.4f"
+          "   (ChestPack: 0.6352 / 0.9742 / 0.2484 / 0.7213)" % (fill, wide, lift, aspect))
 
     if args.contact:
         shots = [page(args.offline)] + [odds_shot(t["id"]) for t in TASKS["tiers"]]

@@ -600,6 +600,31 @@ is where they are written down, not what they mean.
    an alarm.** And the remote kill switch is `ContentConfig.RemoteBaseUrl`, which needs a CDN that does not
    exist; until then the quietening lever is an app update.
 
+### Inviting friends
+
+51. **A referral is a fact about two accounts, so the whole of it is server-owned and none of it is in the
+   save.** How many strangers typed a code and how many cleared a chapter are counts of *other* people's
+   play — the stored count 11b refuses, and one no merge could join. `referrals/{uid}` carries both halves
+   (the code held, the code typed), `referralCodes/{code}` holds uniqueness by document id (19d), and the
+   device keeps a per-account cache for drawing (8b's shape). **A referral chest is paid on request, never
+   claimed**: the count it pays on lives nowhere but the server, so `claimReferral` rolls the chest,
+   records `grantLog/referral:{subject}:{currency}` and moves the money in one transaction; the client
+   banks what is not currency, exactly once, by `ReferralLanding`'s in-flight note. A `referral:` id at
+   `claimAwards` is refused like an `ad:` id. **And a referral chest grows no season**, by the owner's
+   decision on 2026-09-17: a marketing reward is not play, and a ladder climbable by posting a code is a
+   ladder that pays the wrong people. Nothing calls `SeasonLedger.NoteChest` for it.
+51a. **The milestone is a named chapter, judged off the save the server holds, and settled on the invitee's
+   read** — never on a save trigger, which is an invocation per sync at any player count for a question
+   with one answer per account. The client asks after a *settled* sync (19j) once per server revision, and
+   once ever on a device that has never asked. `content.py` proves the chapter is shipped, enabled, on the
+   main track and behind no keeper wall.
+51b. **The payout is flat and names tiers (45), the cap is on *bound* invitees, and the share sheet never
+   sees the address book.** Two royal chests to each side per finished invitee, by the owner's decision on
+   2026-09-17 after a ladder was built and rejected as too small; a payment is a tier and a count, and the
+   most one code can pay is the cap times the count. A cap on finished invitees is a list with no ceiling;
+   a referral that reads contacts is the one shape that costs a permission and a review question on both
+   stores. The share sheet costs neither, and the Android chooser needs no plugin.
+
 ### Art credits
 
 46. **An art credit belongs wherever its licence says, and for this game that is nowhere in the app.**
@@ -1026,17 +1051,23 @@ after any change**. Only the shapes that are not obvious from the files are wort
 
 ### Backend
 
-Firebase project `glimmer-groove-1cd60`, Firestore `eur3`, Node 22 in `europe-west1`. **Fourteen
+Firebase project `glimmer-groove-1cd60`, Firestore `eur3`, Node 22 in `europe-west1`. **Seventeen
 functions**: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`, `adReward`, `appleNotification`,
 `sweepVoidedPurchases`, `publishGroveStats`, `publishGrove`, `withdrawGrove`, `publishGroveRanks`,
-`claimName`, `reportKeeper`, `deleteAccount`. **`firebase functions:list` is the authority** — a fifteenth,
+`claimName`, `reportKeeper`, `deleteAccount`, and the three referral callables `getReferral`,
+`redeemReferral`, `claimReferral` (deployed 2026-09-17). **`firebase functions:list` is the authority** — a fifteenth,
 `eventPass`, was deployed and later deleted while never appearing in any list here. `firebase/README.md` is
-the guide; `firebase/e2e/smoke-test.mjs` is **132/132 live** (2026-09-15) and
+the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-17) and
 `firebase/e2e/delete-account.mjs` **14/14**. Client half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 13.15.0 as vendored UPM tarballs under `GooglePackages/` (gitignored — run `pwsh GooglePackages/fetch.ps1`
 on a fresh clone).
 
 ## Owed
+
+**The referral drop went live on 2026-09-17**: rules released, the three callables and `deleteAccount`
+deployed by name with invoker bindings, re-seeded, smoke test 166/166 and delete-account 14/14 live,
+`ReferralTests` green in the Editor. What has never run: the share sheet on a device, on either platform
+— `GlimmerShare.mm` has never been compiled by Xcode — and a real invitee typing a real code.
 
 **Money paths that have never executed.** A real receipt reaching `redeemPurchase` and a real impression
 reaching `adReward`. Both are fully built and deployed and **neither has ever run once**, which reads as
@@ -1108,7 +1139,8 @@ no translation until the art is re-cut — the only string in the game outside i
 an analytics event, one per feature: how many **shields** are bought while the streak is *not* at risk; how
 long a finished **task** sits unclaimed; how long a **stormglass** stands before it is matched; how often a
 **siege** run ends with the line down rather than the hill cleared, and how much of a boss's health the ward
-of its own colour took; how many accounts open the **Infinite hub** while it is still shut; how many people
+of its own colour took; how many accounts open the **Infinite hub** while it is still shut; how many **referral codes** are
+shared against how many are ever typed, and how many typed codes reach the milestone; how many people
 who have run the lane ever open the **second board tab**; and the share of installs that turn **reminders**
 off within a week (watch the permission grant rate first, because it is asked once). Two specific doubts:
 Barrowfell reads 47 of 90 on the starter after the ending fix (37ct) and is meant to read as *hard* rather

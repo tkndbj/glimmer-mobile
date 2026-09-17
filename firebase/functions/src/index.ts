@@ -75,6 +75,10 @@ import {
   parseMarkClaim, parsePassSpendId, passPrice, usableSeason,
 } from "./season";
 import {
+  ReferralClaimKind, claimReferral as claimReferral_, getReferral as getReferral_,
+  isReferralGrantId, redeemReferral as redeemReferral_, usableReferralConfig,
+} from "./referral";
+import {
   deriveEarned,
   loadProgressionConfig,
   readWallet,
@@ -445,6 +449,15 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
     // left pending: a claim that will never confirm is a claim resubmitted forever.
     if (isAdGrantId(id)) {
       logger.warn("refused an ad award submitted as a claim", { uid, id });
+      rejected.push(id);
+      return [];
+    }
+
+    // A referral chest is paid by `claimReferral` on request and never claimed (invariant
+    // 51), for the ad's reason: the count it pays on lives only here. Refused rather than
+    // left pending, because a claim that will never confirm is resubmitted for ever.
+    if (isReferralGrantId(id)) {
+      logger.warn("refused a referral award submitted as a claim", { uid, id });
       rejected.push(id);
       return [];
     }
@@ -1572,6 +1585,111 @@ export const claimName = onCall(callOptions, async (request): Promise<{
  *
  * See `reports.ts` for why the auto-hide is safe to run without a human in front of it.
  */
+// ------------------------------------------------------------------ referrals
+/**
+ * The account's referral state: its code (minted on the first ask), what the code has
+ * done, and — for an account that typed somebody's code — whether its own milestone is
+ * reached. The read *settles*: if the save this server holds shows the milestone cleared,
+ * the referrer is credited in the same transaction. See `referral.ts` for why that is
+ * a call the client makes rather than a trigger on the save.
+ *
+ * Fails closed when the block is unpublished: every reply carries an empty state and the
+ * claims answer `unknown`, so a client ahead of the seeder draws a page that pays nothing
+ * rather than one that promises something.
+ */
+export const getReferral = onCall(callOptions, async (request): Promise<{
+  state: unknown;
+}> => {
+  const uid = requireUid(request);
+  const db = getFirestore();
+
+  const config = await loadProgressionConfig();
+  const referral = usableReferralConfig(config.referral);
+  if (!referral) {
+    logger.error("config/progression has no usable referral block; answering an empty state", { uid });
+    return { state: emptyReferralState() };
+  }
+
+  return { state: await getReferral_(db, uid, config, referral) };
+});
+
+/** Binds the caller to a code's owner. `{ code }`, typed as the player typed it. */
+export const redeemReferral = onCall(callOptions, async (request): Promise<{
+  outcome: string;
+  state: unknown;
+}> => {
+  const uid = requireUid(request);
+  const db = getFirestore();
+
+  // Bounded before it is read, so an oversized body cannot be used to make the function do
+  // work. `normaliseCode` bounds it again; this is only about what crosses the wire.
+  const raw = (request.data as { code?: unknown })?.code;
+  const typed = typeof raw === "string" ? raw.slice(0, 64) : "";
+
+  const config = await loadProgressionConfig();
+  const referral = usableReferralConfig(config.referral);
+  if (!referral) {
+    logger.error("config/progression has no usable referral block; refusing the code", { uid });
+    return { outcome: "unknown_code", state: emptyReferralState() };
+  }
+
+  const { outcome, state } = await redeemReferral_(db, uid, typed, config, referral);
+  return { outcome, state };
+});
+
+/**
+ * Pays one referral chest on request: `{ kind: "rung", goal, index }` — the index-th chest
+ * for the goal-th finished invitee — or `{ kind: "invitee", index }`.
+ * The server rolls the chest, records the grant and answers with the drops and the
+ * balances; the client banks what is not currency (invariant 51).
+ */
+export const claimReferral = onCall(callOptions, async (request): Promise<{
+  claim: string;
+  state: unknown;
+  drops: unknown[];
+  wallets: WalletReply[];
+}> => {
+  const uid = requireUid(request);
+  const db = getFirestore();
+
+  const body = (request.data ?? {}) as { kind?: unknown; goal?: unknown; index?: unknown };
+  const kind: ReferralClaimKind = body.kind === "invitee" ? "invitee" : "rung";
+  const goal = typeof body.goal === "number" && Number.isInteger(body.goal) && body.goal > 0
+    ? Math.min(body.goal, 100000) : 0;
+  const index = typeof body.index === "number" && Number.isInteger(body.index) && body.index > 0
+    ? Math.min(body.index, 100) : 1;
+
+  if (kind === "rung" && goal <= 0) {
+    throw new HttpsError("invalid-argument", "a rung claim names which finished invitee");
+  }
+
+  const config = await loadProgressionConfig();
+  const referral = usableReferralConfig(config.referral);
+  const tasks = usableTaskConfig((config as { tasks?: unknown }).tasks);
+
+  if (!referral || !tasks) {
+    logger.error("config/progression has no usable referral or tasks block; paying nothing", { uid, kind, goal });
+    return { claim: "unknown", state: emptyReferralState(), drops: [], wallets: [] };
+  }
+
+  const reply = await claimReferral_(db, uid, kind, goal, index, config, referral, tasks);
+
+  return {
+    claim: reply.claim,
+    state: reply.state,
+    drops: reply.drops,
+    wallets: reply.wallet ? toReply(reply.wallet, {}) : [],
+  };
+});
+
+/** What a client is told when the block is unpublished: nothing, honestly. */
+function emptyReferralState() {
+  return {
+    code: "", bound: 0, finished: 0, paid: [],
+    referred: false, milestoneReached: false, canRedeem: false,
+  };
+}
+
 export const reportKeeper = onCall(callOptions, async (request): Promise<{
   outcome: "reported" | "duplicate" | "throttled";
 }> => {

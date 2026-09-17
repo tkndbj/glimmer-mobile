@@ -1535,5 +1535,179 @@ const withdrawAgain = await call("withdrawGrove", {});
 check(withdrawAgain.status === 200, "withdrawing a card that is already gone succeeds",
       String(withdrawAgain.status));
 
+
+// ------------------------------------------------------------------ referrals
+console.log("\nreferrals");
+
+// The published block, read live for the reason the tasks block is: the suite hard-codes
+// nothing the catalog decides, and the milestone's level ids come off the same map that
+// derives credits.
+const referralConfig = await (async () => {
+  const body = await publishedConfig.clone().json().catch(() => null);
+  const fields = body?.fields?.referral?.mapValue?.fields;
+  if (!fields) { check(false, "config/progression carries a referral block"); return null; }
+  return decodeFirestore({ mapValue: { fields } });
+})();
+
+if (referralConfig) {
+  const levelMap = await (async () => {
+    const body = await publishedConfig.clone().json().catch(() => null);
+    return decodeFirestore({ mapValue: { fields: body?.fields?.levelChapters?.mapValue?.fields ?? {} } });
+  })();
+  const milestoneIds = Object.entries(levelMap)
+    .filter(([, chapter]) => chapter === referralConfig.milestoneChapter).map(([id]) => id);
+  check(milestoneIds.length > 0, `the milestone '${referralConfig.milestoneChapter}' has levels`,
+        String(milestoneIds.length));
+
+  const CODE = /^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{8}$/;
+
+  // The code is minted on the first ask and the same on the second.
+  const mine = await call("getReferral", {});
+  const myState = mine.body?.result?.state ?? {};
+  check(mine.status === 200 && CODE.test(myState.code ?? ""), "getReferral mints a code",
+        JSON.stringify(myState));
+  check(myState.bound === 0 && myState.finished === 0 && myState.referred === false,
+        "a fresh account has bound nobody", JSON.stringify(myState));
+  check(myState.canRedeem === true, "and may still type a code", JSON.stringify(myState));
+
+  const again = await call("getReferral", {});
+  check(again.body?.result?.state?.code === myState.code, "the code is minted once");
+
+  // Refusals, each a word the client has a sentence for.
+  const own = await call("redeemReferral", { code: myState.code });
+  check(own.body?.result?.outcome === "own_code", "an account cannot type its own code",
+        JSON.stringify(own.body?.result?.outcome));
+
+  const nobody = await call("redeemReferral", { code: "ZZZZ-ZZZZ" });
+  check(nobody.body?.result?.outcome === "unknown_code", "a code nobody holds is unknown",
+        JSON.stringify(nobody.body?.result?.outcome));
+
+  const notACode = await call("redeemReferral", { code: "hello there 0O1I" });
+  check(notACode.body?.result?.outcome === "unknown_code", "a string that is not a code is unknown too",
+        JSON.stringify(notACode.body?.result?.outcome));
+
+  // The second keeper types it. Folded on the way in: lower case with a hyphen reaches the
+  // same document.
+  const typed = myState.code.slice(0, 4).toLowerCase() + "-" + myState.code.slice(4);
+  const bound = await callAs("redeemReferral", { code: typed }, second.idToken);
+  check(bound.body?.result?.outcome === "bound", "a second keeper binds to the code",
+        JSON.stringify(bound.body?.result));
+  check(bound.body?.result?.state?.referred === true && bound.body?.result?.state?.canRedeem === false,
+        "and is told so", JSON.stringify(bound.body?.result?.state));
+
+  const boundAgain = await callAs("redeemReferral", { code: typed }, second.idToken);
+  check(boundAgain.body?.result?.outcome === "already_referred", "one referrer for life",
+        JSON.stringify(boundAgain.body?.result?.outcome));
+
+  const afterBind = await call("getReferral", {});
+  check(afterBind.body?.result?.state?.bound === 1, "the referrer sees one bound",
+        JSON.stringify(afterBind.body?.result?.state));
+
+  // Nothing is paid before the milestone.
+  const early = await call("claimReferral", { kind: "rung", goal: 1, index: 1 });
+  check(early.body?.result?.claim === "not_yet", "a friend's chest is not paid before they finish",
+        JSON.stringify(early.body?.result?.claim));
+
+  const earlyInvitee = await callAs("claimReferral", { kind: "invitee", index: 1 }, second.idToken);
+  check(earlyInvitee.body?.result?.claim === "not_yet", "nor are the welcome chests",
+        JSON.stringify(earlyInvitee.body?.result?.claim));
+
+  // The second keeper clears the milestone - every level of it, on the save the server holds.
+  const cleared = Object.fromEntries(milestoneIds.map((id) => [id, { mapValue: { fields: {
+    stars: { integerValue: "1" }, bestMoves: { integerValue: "20" }, clears: { integerValue: "1" },
+    firstClearedUnix: { integerValue: "1700000000" }, lastPlayedUnix: { integerValue: "1700000000" },
+  } } }]));
+  const secondCleared = await fetch(`${FS}/players/${second.localId}?updateMask.fieldPaths=levels`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${second.idToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ fields: { levels: { mapValue: { fields: cleared } } } }),
+  });
+  check(secondCleared.ok, "the second keeper's save clears the milestone", String(secondCleared.status));
+
+  // Settled on the invitee's next read, not on the write (invariant 19j's shape).
+  const settled = await callAs("getReferral", {}, second.idToken);
+  check(settled.body?.result?.state?.milestoneReached === true, "the invitee's read settles the milestone",
+        JSON.stringify(settled.body?.result?.state));
+
+  const credited = await call("getReferral", {});
+  check(credited.body?.result?.state?.finished === 1, "and the referrer is credited one finished",
+        JSON.stringify(credited.body?.result?.state));
+
+  // The invitee's chests: each paid once, the same drops on a retry, the second a different chest.
+  const inviteeCount = referralConfig.invitee?.count ?? 1;
+  const welcome = await callAs("claimReferral", { kind: "invitee", index: 1 }, second.idToken);
+  check(welcome.body?.result?.claim === "paid" && (welcome.body?.result?.drops?.length ?? 0) > 0,
+        "the invitee's first chest is paid with drops", JSON.stringify(welcome.body?.result?.claim));
+  check(Array.isArray(welcome.body?.result?.wallets) && welcome.body.result.wallets.length > 0,
+        "and answers with the balances");
+
+  const welcomeAgain = await callAs("claimReferral", { kind: "invitee", index: 1 }, second.idToken);
+  check(welcomeAgain.body?.result?.claim === "already_paid" &&
+        JSON.stringify(welcomeAgain.body?.result?.drops) === JSON.stringify(welcome.body?.result?.drops),
+        "a retry answers already_paid with the same drops", JSON.stringify(welcomeAgain.body?.result?.claim));
+
+  if (inviteeCount > 1) {
+    const welcomeTwo = await callAs("claimReferral", { kind: "invitee", index: 2 }, second.idToken);
+    check(welcomeTwo.body?.result?.claim === "paid", "the invitee's second chest is paid too",
+          JSON.stringify(welcomeTwo.body?.result?.claim));
+    check((welcomeTwo.body?.result?.state?.paid ?? []).includes("invitee:2"),
+          "and the state lists both", JSON.stringify(welcomeTwo.body?.result?.state?.paid));
+  }
+  const welcomePast = await callAs("claimReferral", { kind: "invitee", index: inviteeCount + 1 }, second.idToken);
+  check(welcomePast.body?.result?.claim === "unknown", "a chest past the payment's count is unknown",
+        JSON.stringify(welcomePast.body?.result?.claim));
+
+  // The referrer's chests for friend one: the server's own figure lands in the wallet.
+  const before = creditsOf((await call("getWallet", {})).body)?.grantedBaseline ?? 0;
+  const first = await call("claimReferral", { kind: "rung", goal: 1, index: 1 });
+  const firstCredits = (first.body?.result?.drops ?? []).filter((d) => d.kind === "credits")
+    .reduce((sum, d) => sum + d.amount, 0);
+  check(first.body?.result?.claim === "paid", "friend one's first chest is paid", JSON.stringify(first.body?.result?.claim));
+  check(creditsOf(first.body)?.grantedBaseline === before + firstCredits,
+        "and the wallet rose by exactly the chest's credits",
+        `before ${before}, drops ${firstCredits}, after ${creditsOf(first.body)?.grantedBaseline}`);
+
+  const firstAgain = await call("claimReferral", { kind: "rung", goal: 1, index: 1 });
+  check(firstAgain.body?.result?.claim === "already_paid", "a chest is paid once",
+        JSON.stringify(firstAgain.body?.result?.claim));
+
+  const perCount = referralConfig.perInvitee?.count ?? 1;
+  if (perCount > 1) {
+    const secondChest = await call("claimReferral", { kind: "rung", goal: 1, index: 2 });
+    check(secondChest.body?.result?.claim === "paid", "friend one's second chest is paid separately",
+          JSON.stringify(secondChest.body?.result?.claim));
+  }
+
+  const friendTwo = await call("claimReferral", { kind: "rung", goal: 2, index: 1 });
+  check(friendTwo.body?.result?.claim === "not_yet", "friend two's chest waits for a second friend",
+        JSON.stringify(friendTwo.body?.result?.claim));
+
+  const pastCap = await call("claimReferral", { kind: "rung", goal: referralConfig.maxBound + 1, index: 1 });
+  check(pastCap.body?.result?.claim === "unknown", "a friend past the cap is unknown",
+        JSON.stringify(pastCap.body?.result?.claim));
+
+  const notInvited = await call("claimReferral", { kind: "invitee", index: 1 });
+  check(notInvited.body?.result?.claim === "unknown", "an account nobody referred has no welcome chest",
+        JSON.stringify(notInvited.body?.result?.claim));
+
+  // A referral grant id is paid on request and never claimed (invariant 51).
+  const forged = await call("claimAwards", { awards: [
+    { id: "referral:rung:3:1:credits", claimedAmount: 9999, unix: 1700000000, reason: "referral_chest" },
+  ] });
+  check((forged.body?.result?.rejected ?? []).includes("referral:rung:3:1:credits"),
+        "a referral id submitted as a claim is refused", JSON.stringify(forged.body?.result?.rejected));
+
+  // Server-only in both directions.
+  const peek = await fetch(`${FS}/referrals/${uid}`, { headers: bearer });
+  check(peek.status === 403, "a client cannot read its own referral document", String(peek.status));
+  const peekCode = await fetch(`${FS}/referralCodes/${myState.code}`, { headers: bearer });
+  check(peekCode.status === 403, "nor a code's document", String(peekCode.status));
+  const forgeCount = await fetch(`${FS}/referrals/${uid}?updateMask.fieldPaths=finished`, {
+    method: "PATCH", headers: json,
+    body: JSON.stringify({ fields: { finished: { integerValue: "50" } } }),
+  });
+  check(forgeCount.status === 403, "and cannot write a count", String(forgeCount.status));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

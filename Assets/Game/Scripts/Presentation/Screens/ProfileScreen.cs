@@ -7,6 +7,8 @@ using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Social;
 using GlimmerGrove.Progression;
+using GlimmerGrove.Referral;
+using GlimmerGrove.Content;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -210,6 +212,7 @@ namespace GlimmerGrove
             BuildKeeperCard();
             BuildAccountCard();
             BuildRecordCard();
+            BuildInviteCard();
             BuildCompanionCard();
             BuildBoardCard();
             BuildDeleteRow();
@@ -260,16 +263,46 @@ namespace GlimmerGrove
                                  new Vector2(CardWidth, height), new Vector2(.5f, 1f),
                                  new Vector2(0f, _cursor - height * .5f));
 
+            Seated(card.transform, height, order);
+            return (RectTransform)card.transform;
+        }
+
+        /// <summary>
+        /// The same card, as a button: one plate that <em>is</em> the control rather than a
+        /// plate with a control on it.
+        ///
+        /// <para>
+        /// The hub's second door is built this way (<c>HomeScreen.BuildChallenges</c>) and this
+        /// is the second of them, so the two go through one shape. A card carrying a painted
+        /// banner has nothing on it to press <em>except</em> the banner, and a key drawn inside
+        /// one would be a smaller target for the only thing the card does — the tasks page's
+        /// rule about a row being its own button, one size up.
+        /// </para>
+        /// </summary>
+        Btn SectionKey(string name, float height, int order, Action tap)
+        {
+            var card = UIKit.Button(name, _stack, Art.S("Ui/" + Skins.PlateBlue),
+                                    new Vector2(CardWidth, height), new Vector2(.5f, 1f),
+                                    new Vector2(0f, _cursor - height * .5f), tap);
+
+            // A press-scale that squashes a plate this wide reads as the screen flinching
+            // rather than as a key going down. The hub holds its banner's at the same number.
+            card.PressScale = .985f;
+
+            Seated(card.transform, height, order);
+            return card;
+        }
+
+        /// <summary>Moves the cursor past a card just built, and plays its entrance.</summary>
+        void Seated(Transform card, float height, int order)
+        {
             _cursor -= height + Gap;
 
             // Only on the way in. A redraw leaves the card at full size — see _entered.
-            if (!_entered)
-            {
-                card.transform.localScale = Vector3.zero;
-                Tween.Pop(card.transform, 0f, .55f, .08f + order * .07f);
-            }
+            if (_entered) return;
 
-            return (RectTransform)card.transform;
+            card.localScale = Vector3.zero;
+            Tween.Pop(card, 0f, .55f, .08f + order * .07f);
         }
 
         static void CardTitle(Transform card, string key, float width)
@@ -344,6 +377,93 @@ namespace GlimmerGrove
                              25, new Color(1f, .95f, .84f, .5f), TextAnchor.MiddleLeft,
                              new Vector2(612f, 32f), new Vector2(.5f, .5f), new Vector2(178f, -128f), 3f, 0f);
             }
+        }
+
+        // ----------------------------------------------------------- inviting
+        /// <summary>How far inside the plate the banner's window sits. See BuildInviteCard.</summary>
+        const float BannerInset = 8f;
+
+        /// <summary>
+        /// How far the banner swells and how long it takes. See <see cref="BuildInviteCard"/>
+        /// for why the picture is cut oversize by exactly this much.
+        /// </summary>
+        const float BannerSwell = .03f, BannerPeriod = 3.6f;
+
+        /// <summary>
+        /// The way to the invite page, on the one page in the game about who the player is: one
+        /// painted banner that is the whole card and the whole button.
+        ///
+        /// <para>
+        /// A card rather than a row in Settings for the account card's reason: a feature that
+        /// pays chests and is three taps deep in a preferences panel is a feature nobody
+        /// finds. Drawn only where a backend exists and the content offers a ladder
+        /// (<see cref="ReferralLedger.IsAvailable"/>); a card promising chests a server cannot
+        /// pay would be the one lie this page could tell about money.
+        /// </para>
+        /// <para>
+        /// <b>It is the hub's second door, built twice</b> — the same plate, the same window
+        /// cut with a <c>Mask</c>, the same cover-fit, at the owner's instruction. What it
+        /// costs is the one thing that shape costs: the words are <em>painted into the
+        /// picture</em>, so this control and the hub's are the only two in the game outside
+        /// invariant 6, and neither is translated until its art is re-cut. The title, the
+        /// milestone sentence and the key it replaced were all loc keys; the page it opens
+        /// still says all three.
+        /// </para>
+        /// <para>
+        /// <b>The swell is why the picture is cut <em>smaller</em> than the window, which is the
+        /// opposite of what it looks like it should be.</b> The banner's ground is transparent —
+        /// the plate behind it is the card's colour — so a trough that pulls the art inside the
+        /// window exposes nothing; what the swell can do is push it <em>out</em>, and at the
+        /// crest a cover-fitted banner runs 29 units past the window and the mask takes a slice
+        /// off the leaves at each end. Cut at <c>1 / (1 + swell)</c> the crest is exactly the
+        /// window, so the sides are never cut at any point in the breath and the mask is there
+        /// to guarantee it rather than to do it. Invariant 44a's rule in a second costume: size
+        /// a thing for the size it has to draw at, not for the size it sits at.
+        /// </para>
+        /// </summary>
+        void BuildInviteCard()
+        {
+            if (!ReferralLedger.IsAvailable) return;
+
+            const float InviteH = 300f;
+            var card = SectionKey("Invite", InviteH, 3, () => Flow.Go<ReferralScreen>());
+
+            // The window. `showMaskGraphic` is false, so the plate is not painted twice; the
+            // near-nothing alpha is what writes the stencil. See `HomeScreen.BuildChallenges`
+            // for why this plate is deliberately *not* graded uncompressed to cut it.
+            var clip = UIKit.Img("Clip", card.transform, Art.S("Ui/" + Skins.PlateBlue),
+                                 new Color(1f, 1f, 1f, .004f));
+            var crt = (RectTransform)clip.transform;
+            UIKit.StretchTo(crt, BannerInset, BannerInset, BannerInset, BannerInset);
+            clip.type = Image.Type.Sliced;
+            clip.raycastTarget = false;
+            clip.gameObject.AddComponent<Mask>().showMaskGraphic = false;
+
+            var banner = Art.S("Ui/refer");
+            float aspect = banner != null && banner.rect.height > 0f
+                         ? banner.rect.width / banner.rect.height
+                         : 0f;
+
+            // Cover: the larger of the two scales that fill an axis, then taken back down so
+            // the *crest* of the breath is what fits. An address that has not arrived leaves the
+            // plate plain rather than drawing a white bar (invariant 7b).
+            float windowW = CardWidth - BannerInset * 2f, windowH = InviteH - BannerInset * 2f;
+            float drawnW = windowW, drawnH = aspect > 0f ? drawnW / aspect : 0f;
+            if (drawnH < windowH) { drawnH = windowH; drawnW = drawnH * aspect; }
+
+            float seated = 1f / (1f + BannerSwell);
+            drawnW *= seated;
+            drawnH *= seated;
+
+            var art = UIKit.Img("Banner", crt, banner, Color.white,
+                                new Vector2(drawnW, drawnH), new Vector2(.5f, .5f), Vector2.zero);
+            art.raycastTarget = false;
+            art.enabled = aspect > 0f;
+
+            // Slow, and on the picture rather than on the card: a plate that breathed would
+            // move against the two cards it is stacked between, where a picture breathing
+            // behind a fixed window is the card's own light moving.
+            if (art.enabled) Tween.Breathe(art.transform, BannerSwell, BannerPeriod);
         }
 
         // ------------------------------------------------------------ the record

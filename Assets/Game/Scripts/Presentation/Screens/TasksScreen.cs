@@ -46,7 +46,7 @@ namespace GlimmerGrove
         const float ChromeSize = 92f;
         const float LadderH = 252f;
         const float HeadingH = 76f;
-        const float RowH = 168f;
+        const float RowH = 210f;
         const float RowGap = 14f;
         const float Width = 1000f;
 
@@ -565,7 +565,13 @@ namespace GlimmerGrove
                                  new Vector2(Width + 150f, RowH + 130f), Top,
                                  new Vector2(0f, -(y + RowH * .5f)));
 
-            var card = UIKit.Img("Row_" + task.Id, list, Art.S("Ui/" + Skins.Card), Color.white,
+            // **The reward card, on the mould the profile's sections wear rather than the
+            // kit's sunk navy.** A `Skins.Card` row is a container: flat, unlit, with nothing
+            // at its edge but the keyline. `Skins.PlateNavy` is the same piece the profile
+            // draws its boxes from, halved in value so six of them on one page still read as a
+            // list - and what that buys is the lit top edge and the two-tone face, which is
+            // what makes a row read as a *thing holding a prize* rather than as a table cell.
+            var card = UIKit.Img("Row_" + task.Id, list, Art.S("Ui/" + Skins.PlateNavy), Color.white,
                                  new Vector2(Width, RowH), Top, new Vector2(0f, -(y + RowH * .5f)));
             row.Card = card;
             row.Root = (RectTransform)card.transform;
@@ -573,24 +579,27 @@ namespace GlimmerGrove
 
             // The goal's picture, on the kit's own inset seat.
             var seat = UIKit.Img("Seat", row.Root, Art.S("Ui/" + Skins.Slot), Color.white,
-                                 new Vector2(124f, 124f), Left, new Vector2(84f, 0f));
+                                 new Vector2(148f, 148f), Left, new Vector2(96f, 0f));
             var glyph = UIKit.Img("Glyph", seat.transform, Art.S(TaskGoals.Icon(task.Goal)), Color.white,
-                                  new Vector2(82f, 82f), Centre, new Vector2(0f, 2f));
+                                  new Vector2(98f, 98f), Centre, new Vector2(0f, 2f));
             glyph.preserveAspect = true;
 
-            const float TextX = 166f;
-            const float TextW = 520f;
+            // The column between the seat and the chest. Both ends are measured off the two
+            // pictures rather than typed: the seat's right edge is 96 + 74, and the chest's
+            // left edge is `Width` + ChestX - ChestW * .5f.
+            const float TextX = 190f;
+            const float TextW = 570f;
 
             UIKit.Shrinkable(
-                UIKit.Titled("Title", row.Root, task.Title, 29, Pal.Cream,
-                             TextAnchor.MiddleLeft, new Vector2(TextW, 40f), Left,
-                             new Vector2(TextX + TextW * .5f, 36f), 3f, 3f), 17);
+                UIKit.Titled("Title", row.Root, task.Title, 32, Pal.Cream,
+                             TextAnchor.MiddleLeft, new Vector2(TextW, 44f), Left,
+                             new Vector2(TextX + TextW * .5f, 50f), 3f, 3f), 18);
 
             // The bar: the kit's trough and fill, left-pivoted so the fill grows from the
             // seat outward, and the count written beside it rather than on it.
             row.Track = TextW - 130f;
             var trough = UIKit.Img("Trough", row.Root, Art.S("Ui/" + Skins.Trough), Color.white,
-                                   new Vector2(row.Track, 30f), Left, new Vector2(TextX + row.Track * .5f, -22f));
+                                   new Vector2(row.Track, 30f), Left, new Vector2(TextX + row.Track * .5f, -12f));
             var fill = UIKit.Img("Fill", trough.transform, Art.S("Ui/" + Skins.Fill), BarOrange,
                                  new Vector2(0f, BarH), Left, new Vector2(4f, 0f));
             row.Fill = (RectTransform)fill.transform;
@@ -598,28 +607,51 @@ namespace GlimmerGrove
             row.Bar = fill;
 
             row.Count = UIKit.Shrinkable(
-                UIKit.Titled("Count", row.Root, string.Empty, 24, Pal.Cream, TextAnchor.MiddleLeft,
-                             new Vector2(124f, 32f), Left, new Vector2(TextX + row.Track + 12f + 62f, -22f), 3f, 3f), 14);
+                UIKit.Titled("Count", row.Root, string.Empty, 26, Pal.Cream, TextAnchor.MiddleLeft,
+                             new Vector2(124f, 34f), Left, new Vector2(TextX + row.Track + 12f + 62f, -12f), 3f, 3f), 15);
 
             row.Hint = UIKit.Shrinkable(
-                UIKit.Titled("Hint", row.Root, string.Empty, 22, Pal.Gold, TextAnchor.MiddleLeft,
-                             new Vector2(TextW, 30f), Left, new Vector2(TextX + TextW * .5f, -56f), 0f, 0f), 13);
+                UIKit.Titled("Hint", row.Root, string.Empty, 24, Pal.Gold, TextAnchor.MiddleLeft,
+                             new Vector2(TextW, 32f), Left, new Vector2(TextX + TextW * .5f, -54f), 0f, 0f), 14);
 
-            // The chest it pays, at the far end. Lit and breathing when it can be taken.
+            // **The chest it pays, at the far end, and it is the reason the row grew.** The
+            // prize is what the page is for (invariant 45h: a prize is a picture and a sentence,
+            // not a bullet point), and it was the smallest picture on a row whose glyph, bar and
+            // two lines of text are all about it.
+            //
+            // <b>`ChestTall` is a *drawn* height, converted by `ChestPack` — which is what the
+            // old numbers were not.</b> A closed chest is frame nought of its opening reel, so a
+            // 176x244 sprite carries the lid's headroom: a box typed straight at 96x133 drew a
+            // chest 84 units tall, a third smaller than the box said, and hung it 21 units below
+            // where the anchor claimed it was. The hub, the streak board and the pack at the top
+            // of this very page all convert; this one row did not. 128 drawn is half again what
+            // was really there, and the sprite's box round it is 202 tall — which fits inside
+            // `RowH` because a third of that box's height is headroom above the lid.
+            const float ChestTall = 156f;
+            const float ChestX = -112f;
+
+            var chestBox = new Vector2(ChestTall / ChestPack.Fill * ChestPack.Aspect,
+                                       ChestTall / ChestPack.Fill);
+            var chestAt = new Vector2(ChestX, ChestTall * ChestPack.Lift);
+
+            // On the drawn chest's own middle rather than the sprite's, or the light sits a
+            // fifth of a chest above the thing it is lighting.
             var halo = UIKit.Img("Halo", row.Root, Art.Glow(128, 2f), Pal.A(Pal.Gold, 0f),
-                                 new Vector2(230f, 230f), new Vector2(1f, .5f), new Vector2(-96f, 0f));
+                                 new Vector2(ChestTall * 2f, ChestTall * 2f),
+                                 new Vector2(1f, .5f), new Vector2(ChestX, 0f));
             row.Halo = (RectTransform)halo.transform;
 
             var chest = UIKit.Img("Chest", row.Root, Art.S(task.Tier.Icon), Color.white,
-                                  new Vector2(96f, 133f), new Vector2(1f, .5f), new Vector2(-96f, 2f));
+                                  chestBox, new Vector2(1f, .5f), chestAt);
             chest.preserveAspect = true;
             row.Chest = chest;
 
-            // The seal a paid task wears over its chest.
+            // The seal a paid task wears over its chest - on the lower-right of the drawn
+            // chest, so it still reads as stamped *on* it rather than beside it.
             var seal = UIKit.Img("Seal", row.Root, Art.Disc(96), Pal.Mint,
-                                 new Vector2(64f, 64f), new Vector2(1f, .5f), new Vector2(-64f, -34f));
+                                 new Vector2(80f, 80f), new Vector2(1f, .5f), new Vector2(-72f, -52f));
             var tick = UIKit.Img("Tick", seal.transform, Art.S("Ui/ic_check"), Color.white,
-                                 new Vector2(38f, 38f), Centre, Vector2.zero);
+                                 new Vector2(46f, 46f), Centre, Vector2.zero);
             tick.preserveAspect = true;
             row.Seal = (RectTransform)seal.transform;
             row.Seal.gameObject.SetActive(false);
