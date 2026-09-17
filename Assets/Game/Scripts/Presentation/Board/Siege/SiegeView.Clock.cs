@@ -533,7 +533,7 @@ namespace GlimmerGrove
                 // chain's reason: the frame the last piece comes off is the frame the ward may
                 // fire again, and a widget latched on the tap would be a pile still drawn over
                 // a post that is already answering.
-                Heaped(post, ward);
+                Heaped(post, ward, i);
 
                 // Cream, then gold, then ember: the line says how close it is to going in the
                 // one place a player is already looking.

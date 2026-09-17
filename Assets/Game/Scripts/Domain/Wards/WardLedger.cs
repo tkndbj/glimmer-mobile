@@ -140,6 +140,12 @@ namespace GlimmerGrove.Wards
         /// all four seats - which is buying one decision and receiving four. See
         /// <see cref="WardHolding"/>.
         /// </para>
+        /// <para>
+        /// <b>A legendary is the one turret that is still bought outright, and it needs no clause
+        /// of its own here.</b> Its row is bare (<c>WardHolding.Row</c>) and the bare-id test
+        /// below - written for a file from before colours existed - already answers true on every
+        /// seat. That is the whole reason the legendary band cost this ledger one word.
+        /// </para>
         /// </summary>
         public static bool IsHeld(WardModel model, char colour) => IsHeld(model, colour, Holds);
 
@@ -257,14 +263,25 @@ namespace GlimmerGrove.Wards
 
             // The spend reason carries the seat as well as the turret, because support reading a
             // debit has to know which of the four a player paid for.
-            string row = WardHolding.Key(model.Id, colour);
+            //
+            // **`Row` rather than `Key`, which is the whole of what a legendary costs this
+            // file.** A legendary wears no colour, so it is bought once and its row carries none
+            // (`WardHolding.Row`) — and `IsHeld` below already reads a bare row as every colour,
+            // because that is what a build written before colours existed wrote. So the purchase
+            // lands on all four seats by a clause that has been here since colours shipped, and
+            // nothing about the union merge, the schema or the rules moves.
+            string row = WardHolding.Row(model, colour);
 
             if (!PlayerProgression.TrySpend(offer.Currency, offer.Cost, SpendReason + row))
                 return false;
 
             _bought.Add(row);
 
-            Telemetry.Track("ward_bought", "ward", model.Id, "colour", colour.ToString(),
+            // **The seat a legendary was bought from is still worth recording and is not a
+            // colour**: it is bought once for all four, so a colour letter here would read in
+            // analytics as "this legendary belongs to red".
+            Telemetry.Track("ward_bought", "ward", model.Id,
+                            "colour", model.Colourless ? "any" : colour.ToString(),
                             "cost", offer.Cost, "currency", offer.Currency, "level", keeperLevel);
 
             SaveService.Save();

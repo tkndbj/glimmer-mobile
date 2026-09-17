@@ -1292,6 +1292,26 @@ namespace GlimmerGrove.Content
 
         /// <summary>Where it sits on the shelf: 1 up, no gaps and no ties.</summary>
         public int order;
+
+        /// <summary>
+        /// Whether it wears no colour: bought once rather than once per seat, stands on any seat,
+        /// and fires at everything on the hill. See <c>WardModel.Legendary</c>.
+        ///
+        /// <para>
+        /// <b>Authored rather than read off the rung</b>, because <c>WardTier</c> is punctuation
+        /// over the shelf's order and a band that silently decided what a turret <em>does</em>
+        /// would make a re-rung shelf change four turrets' rules. Both content gates refuse a
+        /// legendary outside the legendary band and anything else inside it
+        /// (<c>WardCatalog.LadderProblem</c>).
+        /// </para>
+        /// <para>
+        /// <b>False is the honest default and needs no migration</b> - it is what a file written
+        /// before the band existed means, and what <c>JsonUtility</c> writes into a field an
+        /// older file never had. It is the one place in this DTO where the zero value is also the
+        /// answer (compare <c>minLevel</c>, where nought is a real state).
+        /// </para>
+        /// </summary>
+        public bool legendary;
     }
 
     /// <summary>

@@ -45,6 +45,36 @@ namespace GlimmerGrove.Wards
         public static string Key(string id, char colour)
             => string.IsNullOrEmpty(id) ? string.Empty : id + Mark + colour;
 
+        /// <summary>
+        /// The row this turret is written down under, on this seat — and the one place the
+        /// per-colour rule has an exception.
+        ///
+        /// <para>
+        /// <b>A legendary is written bare</b> (<see cref="WardModel.Legendary"/>): it wears no
+        /// colour, so it is bought once and stands on any seat. That needs no new spelling and no
+        /// schema version, because a bare id has always meant <em>every colour</em> here — it is
+        /// what a build that owned turrets outright wrote, and it is the only reading a union
+        /// merge could safely give one. <see cref="Covers"/> already honours it, so a legendary is
+        /// held on all four seats by the rule that was written for a file from 2026.
+        /// </para>
+        /// <para>
+        /// <b>Every writer goes through this and no writer spells <see cref="Key"/> itself</b>,
+        /// which is invariant 15a's lesson about a rule with two halves: a purchase written one
+        /// way and a star ledger keyed the other is a turret somebody paid for whose upgrades
+        /// belong to a row nothing reads.
+        /// </para>
+        /// </summary>
+        public static string Row(WardModel model, char colour)
+            => model == null ? string.Empty
+             : model.Colourless ? model.Id
+             : Key(model.Id, colour);
+
+        /// <summary>The same row for a colour index (0..3).</summary>
+        public static string Row(WardModel model, int colour)
+            => model == null ? string.Empty
+             : model.Colourless ? model.Id
+             : Key(model.Id, colour);
+
         /// <summary>The row saying this turret is held on this colour index (0..3).</summary>
         public static string Key(string id, int colour)
             => Key(id, WardLine.Colours[colour < 0 || colour >= WardLine.Colours.Length

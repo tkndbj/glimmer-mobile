@@ -144,9 +144,11 @@ LEVELS = (
          waves=["rgbyrgby", "RGby#rrgby", "rgby#brgbyby", "RGbyrgby"]),
 
     # **The colossus, and it is the first boss in this mode the player fights with their hands.**
-    # Every boulder buries a ward under three pieces of rubble that only taps clear, so the
-    # finale asks the one question the mode has never asked - *dig, or match* - while a hill
-    # with armour in it is still coming. It wears blue, which decides nothing (37dn).
+    # Every boulder buries a ward under three pieces of rubble and lands the heaviest blow in
+    # the mode, so the finale asks the one question the mode has never asked - *dig, or match*
+    # - while a hill with armour in it is still coming. A pile weathers off by itself inside
+    # `SiegeTuning.ColossusBury`, so the question is how long a post is down rather than
+    # whether it comes back at all. It wears blue, which decides nothing (37dn).
     dict(id="s06_cragheart", seed=180995, swaps=6, charms="plsfh",
          wards="rgby", gems="rgby", cogs=25, boss="colossus:b",
          waves=["rgbyrgby", "RGby#rrgby", "RGbyrgby"]),

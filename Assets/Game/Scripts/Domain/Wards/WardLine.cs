@@ -189,14 +189,26 @@ namespace GlimmerGrove.Wards
         {
             var list = new List<AssetPipeline.AssetRequest>(Colours.Length * 5);
 
+            // **Four seats and never four of anything else.** A line may stand the same turret
+            // twice and, since the legendary band, may stand one whose four colours are one
+            // address (`WardModel.Colourless`) - so the same request can arrive up to four times.
+            // That is a duplicate claim on a scope rather than four things loading, and it is
+            // dropped here rather than relied on being dropped downstream.
+            var asked = new HashSet<string>(StringComparer.Ordinal);
+
+            void Ask(AssetPipeline.AssetRequest request)
+            {
+                if (asked.Add(request.Address)) list.Add(request);
+            }
+
             for (int i = 0; i < _byColour.Length; i++)
             {
                 char colour = Colours[i];
 
-                list.Add(AssetPipeline.AssetRequest.Sprite(
+                Ask(AssetPipeline.AssetRequest.Sprite(
                     AssetPipeline.AssetManifest.SiegeArt(_byColour[i].ArtFor(colour))));
 
-                list.Add(AssetPipeline.AssetRequest.SpriteSet(
+                Ask(AssetPipeline.AssetRequest.SpriteSet(
                     AssetPipeline.AssetManifest.SiegeArt(_byColour[i].FireFor(colour))));
 
                 // **The three reels a turret throws, and only for the ones that own a set.** The
@@ -207,13 +219,13 @@ namespace GlimmerGrove.Wards
                 // and that turret draws nothing at all.
                 if (!_byColour[i].OwnShot) continue;
 
-                list.Add(AssetPipeline.AssetRequest.SpriteSet(
+                Ask(AssetPipeline.AssetRequest.SpriteSet(
                     AssetPipeline.AssetManifest.SiegeFx(_byColour[i].ShotFor(colour))));
 
-                list.Add(AssetPipeline.AssetRequest.SpriteSet(
+                Ask(AssetPipeline.AssetRequest.SpriteSet(
                     AssetPipeline.AssetManifest.SiegeFx(_byColour[i].MuzzleFor(colour))));
 
-                list.Add(AssetPipeline.AssetRequest.SpriteSet(
+                Ask(AssetPipeline.AssetRequest.SpriteSet(
                     AssetPipeline.AssetManifest.SiegeFx(_byColour[i].HitFor(colour))));
             }
 

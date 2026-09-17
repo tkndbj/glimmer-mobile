@@ -208,17 +208,23 @@ namespace GlimmerGrove
         /// enough to be a row in a list rather than a plate on a hub.
         ///
         /// <para>
-        /// <b>It is a card, not a fourth hue.</b> The tasks page is a list of reward cards and
-        /// <see cref="Card"/> draws each one as a container and nothing else — no lit top edge,
-        /// no two-tone face, no keyline that turns with the colour, which are the three things
-        /// that made the profile's sections read as objects. Drawn in <see cref="PlateBlue"/>
-        /// itself, six of them fight the wall they stand on; halved, the face lands between
-        /// <see cref="Plate"/> and the bright mould and the list reads as a list.
+        /// <b>It is a card, not a fourth hue, and it is what every reward row in this game is
+        /// drawn on</b> — the tasks page, the streak board, the season ladder and the invite
+        /// board. All four used <see cref="Card"/> (the invite board was missed by the first
+        /// sweep and joined them after the owner played it), which draws a row as a container
+        /// and nothing else: no lit top
+        /// edge, no two-tone face, no keyline that turns with the colour, which are the three
+        /// things that make the profile's sections read as objects. Drawn in
+        /// <see cref="PlateBlue"/> itself, six of them fight the wall they stand on.
         /// </para>
         /// <para>
         /// Cut from <see cref="PlateBlue"/>'s own hue and saturation with nothing but a
-        /// <c>dim</c>, so a re-cut that moves the profile's boxes moves these with them and
-        /// the two can never drift into two blues.
+        /// <c>dim</c> — which keeps hue and HSV saturation exactly, so this really is that
+        /// colour and a re-cut that moves the profile's boxes moves these with them. <b>How far
+        /// down was chosen by looking and the first answer was wrong</b>: halved, it reads as a
+        /// muted steel rather than as a darker blue. At .72 the face lands at (7, 111, 178),
+        /// between <see cref="Plate"/> and the bright mould, and still plainly the profile's
+        /// colour. See <c>make_hud_kit_art.py</c>.
         /// </para>
         /// </summary>
         public const string PlateNavy = "Hud/plate_navy";

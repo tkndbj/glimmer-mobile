@@ -1,7 +1,7 @@
 namespace GlimmerGrove.Wards
 {
     /// <summary>
-    /// Which band of the shelf a turret stands in: three groups a player can name, with a header
+    /// Which band of the shelf a turret stands in: four groups a player can name, with a header
     /// drawn between them.
     ///
     /// <para>
@@ -32,11 +32,22 @@ namespace GlimmerGrove.Wards
     /// the owner asked. It would be tempting to <em>derive</em> the first from the currency and
     /// leave the second typed — one rule, two spellings, which is worse than two of the same.
     /// </para>
+    /// <para>
+    /// <b>The fourth band is LEGENDARY, and it is the one band that is also a <em>rule</em> — but
+    /// the rule is not read off here.</b> A legendary turret wears no colour, stands on any seat
+    /// and fires at anything on the hill (<c>WardModel.Legendary</c>), and that is an authored
+    /// flag on the model rather than a reading of its rung: this type has said since it was
+    /// written that a band is not a price and not a stat, and a band that silently decided what a
+    /// turret <em>does</em> would be exactly that. What the band still owns is the header and the
+    /// stretch of keeper levels under it; what holds the two together is
+    /// <see cref="WardCatalog.LadderProblem"/>, which refuses a legendary outside this band and
+    /// anything else inside it.
+    /// </para>
     /// </summary>
     public static class WardTier
     {
         /// <summary>How many bands the shelf is read in.</summary>
-        public const int Count = 3;
+        public const int Count = 4;
 
         /// <summary>
         /// The shelf rung each band <em>starts</em> at, lowest first.
@@ -45,13 +56,14 @@ namespace GlimmerGrove.Wards
         /// widens that band instead of shifting every boundary after it — which is the same reason
         /// a chapter's levels are a list and its gate is a rule.
         /// </summary>
-        static readonly int[] Opens = { 1, 11, 18 };
+        static readonly int[] Opens = { 1, 11, 18, 21 };
 
         /// <summary>
         /// The keeper level each band's rungs stand at or above, lowest first.
         ///
         /// <para>
-        /// <b>The owner's three stretches: under twenty, twenty to thirty, thirty to forty.</b>
+        /// <b>The owner's four stretches: under twenty, twenty to thirty, thirty to forty, and
+        /// forty-five up.</b>
         /// A band's rungs may ask for anything from its own opening level up to the level the
         /// band above it opens at, exclusive — and the top band up to <see cref="TopLevel"/>.
         /// </para>
@@ -65,7 +77,7 @@ namespace GlimmerGrove.Wards
         /// only ever asked to climb.
         /// </para>
         /// </summary>
-        static readonly int[] Gates = { 1, 20, 30 };
+        static readonly int[] Gates = { 1, 20, 30, 45 };
 
         /// <summary>
         /// The highest keeper level any rung of the shelf may ask for.
@@ -74,8 +86,13 @@ namespace GlimmerGrove.Wards
         /// boundary: it says how far up the game's own progression the shelf is allowed to
         /// reach, so a retune that put a turret at level ninety would be refused rather than
         /// shipping a padlock nobody alive can open.
+        ///
+        /// <b>It moved from forty to sixty when the legendary band opened</b>, which is the one
+        /// edit a new band costs beyond two array entries — and it is worth saying that the
+        /// number has stopped meaning "the top of tier three": band three's ceiling is now one
+        /// under band four's gate, exactly as every other boundary already was.
         /// </summary>
-        public const int TopLevel = 40;
+        public const int TopLevel = 60;
 
         /// <summary>
         /// Which band <paramref name="model"/> stands in, one to <see cref="Count"/>.
@@ -151,7 +168,8 @@ namespace GlimmerGrove.Wards
             {
                 case 1: return "ui.loadout.tier1";
                 case 2: return "ui.loadout.tier2";
-                default: return "ui.loadout.tier3";
+                case 3: return "ui.loadout.tier3";
+                default: return "ui.loadout.tier4";
             }
         }
     }

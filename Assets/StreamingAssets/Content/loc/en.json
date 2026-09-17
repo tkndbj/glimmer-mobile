@@ -3118,6 +3118,10 @@
       "text": "joined your line"
     },
     {
+      "key": "ui.loadout.legendary",
+      "text": "Wears no colour. Stands on any slot and fires at every raider."
+    },
+    {
       "key": "ui.loadout.level",
       "text": "Level {0}"
     },
@@ -3156,6 +3160,10 @@
     {
       "key": "ui.loadout.tier3",
       "text": "TIER III"
+    },
+    {
+      "key": "ui.loadout.tier4",
+      "text": "LEGENDARY"
     },
     {
       "key": "ui.loadout.title",
@@ -5095,7 +5103,7 @@
     },
     {
       "key": "ui.tip.siege_rubble.body",
-      "text": "A boulder has buried this turret. It keeps everything it had, but it cannot fire.\n\nTap the rubble three times to dig it out."
+      "text": "A boulder has buried this turret. It keeps everything it had, but it cannot fire.\n\nThe stone slides off on its own in a few seconds. Tap it three times to free the turret now."
     },
     {
       "key": "ui.tip.siege_rubble.title",
@@ -5442,6 +5450,14 @@
       "text": "Ignores armour. +50% damage to armoured raiders."
     },
     {
+      "key": "ward.eclipse.name",
+      "text": "Eclipse"
+    },
+    {
+      "key": "ward.eclipse.note",
+      "text": "Chains to 6 more raiders at devastating power."
+    },
+    {
       "key": "ward.ember.name",
       "text": "Ember"
     },
@@ -5506,6 +5522,14 @@
       "text": "Hits everything next to the target."
     },
     {
+      "key": "ward.permafrost.name",
+      "text": "Permafrost"
+    },
+    {
+      "key": "ward.permafrost.note",
+      "text": "Slows the target by 80% for 4s."
+    },
+    {
       "key": "ward.prism.name",
       "text": "Prism"
     },
@@ -5520,6 +5544,30 @@
     {
       "key": "ward.pyre.note",
       "text": "Sets the target on fire for 4s. Burns twice as hot."
+    },
+    {
+      "key": "ward.pyroclast.name",
+      "text": "Pyroclast"
+    },
+    {
+      "key": "ward.pyroclast.note",
+      "text": "Sets the target on fire for 6s. A torrent of flame."
+    },
+    {
+      "key": "ward.railgun.name",
+      "text": "Railgun"
+    },
+    {
+      "key": "ward.railgun.note",
+      "text": "Every 3rd shot runs the whole lane, harder."
+    },
+    {
+      "key": "ward.ricochet.name",
+      "text": "Ricochet"
+    },
+    {
+      "key": "ward.ricochet.note",
+      "text": "The shot bounces on to 5 more raiders."
     },
     {
       "key": "ward.rime.name",
@@ -5552,6 +5600,46 @@
     {
       "key": "ward.spectrum.note",
       "text": "Stuns the target for 1s."
+    },
+    {
+      "key": "ward.starfall.name",
+      "text": "Starfall"
+    },
+    {
+      "key": "ward.starfall.note",
+      "text": "Calls down a star on everything around the target."
+    },
+    {
+      "key": "ward.stasis.name",
+      "text": "Stasis"
+    },
+    {
+      "key": "ward.stasis.note",
+      "text": "Stops the target dead for 1.4s."
+    },
+    {
+      "key": "ward.sunderer.name",
+      "text": "Sunderer"
+    },
+    {
+      "key": "ward.sunderer.note",
+      "text": "Ignores armour. Triple damage to armoured raiders."
+    },
+    {
+      "key": "ward.tempest.name",
+      "text": "Tempest"
+    },
+    {
+      "key": "ward.tempest.note",
+      "text": "Chains lightning to 4 more raiders, harder."
+    },
+    {
+      "key": "ward.wellspring.name",
+      "text": "Wellspring"
+    },
+    {
+      "key": "ward.wellspring.note",
+      "text": "Gets heavy fuel back on every kill."
     }
   ]
 }

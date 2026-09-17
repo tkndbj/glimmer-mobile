@@ -348,13 +348,24 @@ namespace GlimmerGrove
                          new Color(.34f, .22f, .12f), TextAnchor.MiddleCenter, outline: 0f, shadow: 2f);
 
             // experience toward the next keeper level
+            //
+            // **The column clears the level badge, and that is what these numbers are.** The
+            // badge hangs off the medallion's bottom-right corner, so its right edge lands at
+            // -126 while this column used to start at -128: the XP figure and the next-title
+            // line both began *inside* the disc, and both sit squarely in its vertical band.
+            // The column keeps its right edge (484) and gives up its left, which is the only
+            // half that collides — widening the card or moving the badge would move something
+            // that is already where it belongs.
+            const float XpLeft = -64f, XpRight = 484f;
+            const float XpW = XpRight - XpLeft, XpX = (XpLeft + XpRight) * .5f;
+
             var track = UIKit.Img("XpTrack", card, Art.S("Ui/" + Skins.Trough), Color.white,
-                                  new Vector2(612f, 40f), new Vector2(.5f, .5f), new Vector2(178f, -34f));
+                                  new Vector2(XpW, 40f), new Vector2(.5f, .5f), new Vector2(XpX, -34f));
             var fill = UIKit.Img("XpFill", track.transform, Art.S("Ui/" + Skins.Fill), Pal.Mint,
                                  new Vector2(0f, 30f), new Vector2(0f, .5f), new Vector2(5f, 0f));
             var fillRT = (RectTransform)fill.transform;
             fillRT.pivot = new Vector2(0f, .5f);
-            float full = 602f * level.Progress01;
+            float full = (XpW - 10f) * level.Progress01;
             Tween.Run(.85f, Ease.OutCubic, t =>
             {
                 if (!fillRT) return;
@@ -362,20 +373,24 @@ namespace GlimmerGrove
                 fill.color = Color.Lerp(Pal.Aqua, Pal.Mint, t);
             }, fill).Delay(.35f);
 
+            // White, and no outline. Both of these were dimmed cream (.72 and .5) carrying the
+            // 3-unit dark border, which on this plate is more dark mass than the stem itself —
+            // the two lines read as smudges rather than as sentences. The shadow stays; it is
+            // what lifts a light line off the plate without thickening it.
             UIKit.Titled("XpText", card,
                          level.IsMaxLevel
                              ? Loc.Get("ui.profile.xp_max")
                              : Loc.Format("ui.profile.xp", level.XpIntoLevel, level.XpForNextLevel),
-                         27, new Color(1f, .96f, .86f, .72f), TextAnchor.MiddleLeft,
-                         new Vector2(612f, 34f), new Vector2(.5f, .5f), new Vector2(178f, -84f), 3f, 0f);
+                         27, Color.white, TextAnchor.MiddleLeft,
+                         new Vector2(XpW, 34f), new Vector2(.5f, .5f), new Vector2(XpX, -84f), 0f, 2f);
 
             int nextTier = KeeperTitle.NextTierLevel(level.Level);
             if (nextTier > 0)
             {
                 UIKit.Titled("NextTitle", card,
                              Loc.Format("ui.profile.next_title", Loc.Get(KeeperTitle.KeyFor(nextTier)), nextTier),
-                             25, new Color(1f, .95f, .84f, .5f), TextAnchor.MiddleLeft,
-                             new Vector2(612f, 32f), new Vector2(.5f, .5f), new Vector2(178f, -128f), 3f, 0f);
+                             25, Color.white, TextAnchor.MiddleLeft,
+                             new Vector2(XpW, 32f), new Vector2(.5f, .5f), new Vector2(XpX, -128f), 0f, 2f);
             }
         }
 
@@ -899,20 +914,24 @@ namespace GlimmerGrove
             if (showAccount)
             {
                 UIKit.Shrinkable(
-                    UIKit.Titled("Account", card, account, 26, new Color(1f, .96f, .88f, .62f),
+                    UIKit.Titled("Account", card, account, 26, Color.white,
                                  TextAnchor.MiddleCenter, new Vector2(CardWidth - 160f, AccountH),
                                  new Vector2(.5f, 1f), new Vector2(0f, -(cursor + AccountH * .5f)),
-                                 3f, 0f),
+                                 0f, 2f),
                     18);
 
                 cursor += AccountH + AfterAccount;
             }
 
+            // White, no outline, for the XP line's reason and one more: this is the longest
+            // sentence on the page and the only wrapped one, so the border was being drawn
+            // round every stem of two full lines of 25pt text. It is the sentence a player
+            // opens this card to read.
             UIKit.Titled("Why", card, Loc.Get(mismatched ? "ui.profile.mismatch_hint"
                                              : linked ? "ui.profile.linked_hint" : "ui.profile.guest_hint"),
-                         25, new Color(1f, .96f, .88f, .58f), TextAnchor.UpperCenter,
+                         25, Color.white, TextAnchor.UpperCenter,
                          new Vector2(800f, HintH), new Vector2(.5f, 1f),
-                         new Vector2(0f, -(cursor + HintH * .5f)), 3f, 0f, wrap: true);
+                         new Vector2(0f, -(cursor + HintH * .5f)), 0f, 2f, wrap: true);
 
             cursor += HintH + AfterHint;
 

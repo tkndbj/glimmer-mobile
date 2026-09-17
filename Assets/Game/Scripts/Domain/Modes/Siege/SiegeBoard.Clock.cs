@@ -514,6 +514,13 @@ namespace GlimmerGrove.Modes
                 // ever be a frame ahead of the other.
                 if (ward.Bound > 0f) ward.Bound = Math.Max(0f, ward.Bound - dt);
 
+                // **And a buried one weathers here too, for the third time for the same reason.**
+                // A boulder holds a post for `SiegeTuning.ColossusBury` seconds at the outside;
+                // `Fuelled` is false while a piece still stands, so the frame the last one slips
+                // is the frame the ward may fire again — whether the clock took it or the player
+                // did (`SiegeWard.Dig`).
+                ward.Weather(dt);
+
                 if (!ward.Fuelled) { ward.Cool = 0f; continue; }
 
                 ward.Cool -= dt;
@@ -632,7 +639,17 @@ namespace GlimmerGrove.Modes
                 // into nothing on the player's behalf (37bq's fault from the other side).
                 if (raider.Untouchable) continue;
 
-                if (raider.Colour == ward.Colour)
+                // **A legendary ward treats every raider on the hill as its own colour**, which
+                // is the one turret the lock does not hold (`SiegeWard.Unbound`). It is asked
+                // here rather than by comparing colours at the call site for `ReachTenths`'
+                // reason: "may this ward fire at this" is one question and lives in one place, so
+                // the thing that aims and the thing that weighs the bolt cannot come to disagree.
+                //
+                // **A boss is still last, and the argument is unchanged.** It holds the middle of
+                // the hill while its escort walks at the line, so a line that turned to face it
+                // would be a line taken apart by the wave in front of it - true of a legendary
+                // exactly as of anything else.
+                if (ward.Unbound ? !raider.Boss : raider.Colour == ward.Colour)
                 {
                     if (own == null || raider.March > own.March) own = raider;
                     continue;
@@ -863,12 +880,20 @@ namespace GlimmerGrove.Modes
 
                     // **A boulder wants the ward about to fire**, for the douse's reason: what a
                     // burial costs is what the buried ward was about to do, so the fullest tube
-                    // is the one worth burying. **A buried ward is never chosen twice** - the
-                    // rubble is set, not stacked (`SiegeWard.Bury`), so a second boulder on the
-                    // same post would be the boss doing nothing (`CastRetry` holds the cast).
+                    // is the one worth burying. **A buried ward is never chosen over a clear
+                    // one** - the rubble is refused, not stacked (`SiegeWard.Bury`), so a second
+                    // boulder on the same post would start no seconds.
+                    //
+                    // **It falls through to one anyway when every post is buried**, which is the
+                    // ironclad's clause and is here for a harder reason than its own: a refusal
+                    // here is `CastRetry`, and a boss that can find nothing to aim at while the
+                    // line it buried cannot fire is both sides standing still - reported from
+                    // play as *I cannot shoot and he does not attack*. A colossus with nowhere to
+                    // throw throws at the freshest post and takes its `CastOf` like any other
+                    // spell (37dn); the burial is what it cannot repeat, never the blow.
                     case SiegeSpell.Bury:
-                        if (ward.Buried) continue;
-                        rank = (long)(ward.Fuel * 1000f) * 64L + ward.Health;
+                        rank = (ward.Buried ? 0L : 1L << 40)
+                             + (long)(ward.Fuel * 1000f) * 64L + ward.Health;
                         break;
 
                     default:

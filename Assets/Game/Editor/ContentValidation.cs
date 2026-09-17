@@ -1022,7 +1022,13 @@ namespace GlimmerGrove.EditorTools
                     result.Errors.Add($"turret '{model.Id}' has no shelf thumbnail at " +
                                       $"'{AssetManifest.WardThumb(model.Id)}'");
 
-                for (int i = 0; i < WardLine.Colours.Length; i++)
+                // **A legendary is cut once rather than once per colour** (`WardModel.ArtFor`),
+                // so asking about all four would report one missing picture as four missing
+                // pictures - which is a build gate telling somebody to look in four places for
+                // one file.
+                int seats = model.Colourless ? 1 : WardLine.Colours.Length;
+
+                for (int i = 0; i < seats; i++)
                 {
                     char colour = WardLine.Colours[i];
 
@@ -1052,7 +1058,8 @@ namespace GlimmerGrove.EditorTools
                         if (!Addressed(reel))
                             result.Errors.Add(
                                 $"turret '{model.Id}' has no projectile reel at '{reel}'; run " +
-                                "Art ▸ Bake Turret Projectiles");
+                                (model.Legendary ? "Tools/make_legend_fx.py --write"
+                                                 : "Art ▸ Bake Turret Projectiles"));
                 }
 
             }

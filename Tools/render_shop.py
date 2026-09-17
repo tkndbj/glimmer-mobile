@@ -49,12 +49,34 @@ UI = K.UI
 # bottom of five of them, which took a device to find.
 HEADER, TABROW = 300.0, 156.0
 
-# `ShopScreen.SummaryH` / `SummaryGap` / `SummaryRow` - the reserved band the store's one
+# `ShopScreen.SummaryH` / `SummaryGap` / `SummaryLine` / `QuietRow` - the band the store's one
 # sentence lives in, between the tabs and the first row of cards.
+#
+# **It collapses when there is no sentence**, which is the whole of what this mirror is for
+# here: the screen is silent on almost every visit, and reserving the full band always paid 76
+# units of dead air under the biggest picture on the page. `summary_row()` is `SummaryRow`.
 SUMMARY_H, SUMMARY_GAP = 48.0, 14.0
-SUMMARY_ROW = SUMMARY_GAP + SUMMARY_H + SUMMARY_GAP
+SUMMARY_LINE = SUMMARY_GAP + SUMMARY_H + SUMMARY_GAP
+QUIET_ROW = 20.0
+
+
+def summary_row(saying):
+    """`ShopScreen.SummaryRow` - the band as it stands, given whether the line is drawn."""
+    return SUMMARY_LINE if saying else QUIET_ROW
 RESTORE = 92.0
 COLUMNS, CELLW, CELLH = 2, 508.0, 560.0
+
+# `ShopScreen.ReferW` / `ReferH` / `ReferGap` - the invite banner's reserved band, between the
+# tabs and the store's one sentence. The whole point of drawing it here is the question the
+# owner asked when they asked for it: does it clear the buttons above and the line below. Both
+# edges come out of the same sum the screen uses, so neither can be answered by accident.
+REFER_W, REFER_H, REFER_GAP = CELLW * COLUMNS, 256.0, 16.0
+REFER_ROW = REFER_GAP + REFER_H + REFER_GAP
+SHELF_TOP = HEADER + TABROW + REFER_ROW
+
+# `ProfileScreen.BannerInset` / `BannerSwell` - the window, and how far the picture swells
+# inside it. Drawn at the crest, which is the phase that decides whether anything is cut.
+BANNER_INSET, BANNER_SWELL = 8.0, .03
 
 # ProductCard / ProductCardBadges
 PLATE_X, PLATE_Y = 34.0, 40.0
@@ -437,6 +459,48 @@ def supplies(sheet, top, shift):
                        f"${p['referenceUsdCents'] / 100:.2f}", badge)
 
 
+def invite_banner(sheet):
+    """`ShopScreen.BuildInvite` - the profile's card, on the storefront.
+
+    The banner's ground is transparent, so the plate behind it is what the picture stands on;
+    it is cut at `1 / (1 + swell)` so the *crest* of the breath is what fits the window, and
+    drawn here at that crest, because the one phase worth a picture is the one that decides
+    whether the mask cuts anything.
+    """
+    cy = HEADER + TABROW + REFER_GAP + REFER_H / 2
+    K.paste(sheet, K.skin("Hud/plate_blue", REFER_W, REFER_H), W / 2, cy)
+
+    try:
+        banner = Image.open(UI / "refer.png").convert("RGBA")
+    except FileNotFoundError:
+        return
+
+    win_w, win_h = REFER_W - 2 * BANNER_INSET, REFER_H - 2 * BANNER_INSET
+    dw, dh = win_w, win_w / (banner.width / banner.height)
+    if dh < win_h:
+        dh, dw = win_h, win_h * (banner.width / banner.height)
+    # Cut so the crest fits, then drawn *at* the crest - which is the cover fit exactly, and
+    # that identity is the whole design: at the top of the breath the banner is precisely the
+    # window and never a pixel past it.
+    seated = 1 / (1 + BANNER_SWELL)
+    crest = 1 + BANNER_SWELL
+    art = banner.resize((max(1, int(dw * seated * crest)), max(1, int(dh * seated * crest))),
+                        Image.LANCZOS)
+
+    # The `Mask`: everything outside the inset window is cut.
+    layer = Image.new("RGBA", (int(REFER_W), int(REFER_H)), (0, 0, 0, 0))
+    layer.alpha_composite(art, ((layer.width - art.width) // 2, (layer.height - art.height) // 2))
+    window = Image.new("L", layer.size, 0)
+    ins = int(BANNER_INSET)
+    window.paste(255, (ins, ins, layer.width - ins, layer.height - ins))
+    layer.putalpha(Image.composite(layer.getchannel("A"), Image.new("L", layer.size, 0), window))
+    K.paste(sheet, layer, W / 2, cy)
+
+    print("  invite banner: tabs end at %d, banner %d..%d, then the band (%d quiet, %d saying)"
+          % (HEADER + TABROW, HEADER + TABROW + REFER_GAP,
+             HEADER + TABROW + REFER_GAP + REFER_H, QUIET_ROW, SUMMARY_LINE))
+
+
 def screen(shelf, offline=False):
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
     # `ShopScreen.Build` calls `Scenery.Plain`, not `Scenery.Room`. This drew the forest
@@ -510,8 +574,10 @@ def screen(shelf, offline=False):
                  fill=K.CREAM if live else (205, 215, 232), outline=2)
 
 
+    # ---- the invite banner, directly under the tabs
+    invite_banner(sheet)
+
     # ---- the grid
-    top = HEADER + TABROW + SUMMARY_ROW
     rows = [] if offline else products(shelf)
     rungs = LADDER.get(shelf, 3)
 
@@ -522,22 +588,30 @@ def screen(shelf, offline=False):
     # why `PaintNews` counts rows rather than products before it centres anything.
     ad = ad_offer(shelf)
     shift = 1 if ad else 0
-    if ad:
-        ad_card(sheet, W / 2 - CELLW / 2, top, shelf, ad[0], ad[1])
 
+    # **Asked before anything is placed**, because the answer decides where the shelf starts -
+    # `ShopScreen.Repaint` orders `PaintNews` before `PaintNotice` for exactly this reason.
     news = store_news(shelf, offline)
     centre = bool(news) and (shift + len(rows)) == 0 and shelf != 'supplies'
+    saying = bool(news) and not centre
+    top = SHELF_TOP + summary_row(saying)
+
+    if ad:
+        ad_card(sheet, W / 2 - CELLW / 2, top, shelf, ad[0], ad[1])
 
     # `ShopScreen.PaintNews` - one sentence, two places, never both. A shelf with cards on
     # it carries it as a footnote under the tabs; a shelf with nothing on it is a blank
     # page, and a blank page is the question, so the answer goes in the middle of it.
-    if news and not centre:
-        # Centred in `SUMMARY_ROW`, exactly as `ShopScreen` places it: the tab row's lower edge,
+    if saying:
+        # Centred in the band, exactly as `ShopScreen` places it: the tab row's lower edge,
         # then the gap, then half the line. Written at 22 below the tabs it sat *inside* them.
-        px = K.shrunk(sheet, news, W / 2, HEADER + TABROW + SUMMARY_GAP + SUMMARY_H / 2,
+        px = K.shrunk(sheet, news, W / 2, SHELF_TOP + SUMMARY_GAP + SUMMARY_H / 2,
                       880, SUMMARY_H, 30, 20, fill=K.SUN, outline=2)
         print("  store line: settled at %dpx against a floor of 20, in a band from %d to %d"
-              % (px, HEADER + TABROW, HEADER + TABROW + SUMMARY_ROW))
+              % (px, SHELF_TOP, top))
+    else:
+        print("  no store line: the band collapses to %d, so the shelf starts at %d "
+              "instead of %d" % (QUIET_ROW, top, SHELF_TOP + SUMMARY_LINE))
 
     if centre:
         # On a plate, because this screen is a place rather than a list: amber text laid

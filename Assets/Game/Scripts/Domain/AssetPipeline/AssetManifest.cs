@@ -130,6 +130,11 @@ namespace GlimmerGrove.AssetPipeline
                     char colour = Wards.WardLine.Colours[i];
                     list.Add(AssetRequest.Sprite(SiegeArt(model.ArtFor(colour))));
                     list.Add(AssetRequest.SpriteSet(SiegeArt(model.FireFor(colour))));
+
+                    // A legendary wears no colour, so its four "colours" are one address
+                    // (`WardModel.ArtFor`). Asked once rather than four times, because what this
+                    // list feeds is an audit that would otherwise report three phantom uses.
+                    if (model.Colourless) break;
                 }
 
                 // Its projectile, flash and impact, in all four ward colours. A model with no
@@ -144,6 +149,11 @@ namespace GlimmerGrove.AssetPipeline
                     list.Add(AssetRequest.SpriteSet(SiegeFx(model.ShotFor(colour))));
                     list.Add(AssetRequest.SpriteSet(SiegeFx(model.MuzzleFor(colour))));
                     list.Add(AssetRequest.SpriteSet(SiegeFx(model.HitFor(colour))));
+
+                    // Three reels for the whole band rather than twelve: a legendary throws no
+                    // ward colour, so `WardModel.ShotFor` answers one address for all four
+                    // (`Tools/make_legend_fx.py`).
+                    if (model.Colourless) break;
                 }
             }
 
@@ -178,7 +188,13 @@ namespace GlimmerGrove.AssetPipeline
                 if (model == null || string.IsNullOrEmpty(model.Id)) continue;
 
                 for (int i = 0; i < Wards.WardLine.Colours.Length; i++)
+                {
                     list.Add(AssetRequest.Sprite(WardArt(model, i)));
+
+                    // One picture for the whole band, which is what makes a shelf of thirty cost
+                    // the loadout no more than a shelf of twenty did (`WardModel.Colourless`).
+                    if (model.Colourless) break;
+                }
             }
 
             return list;

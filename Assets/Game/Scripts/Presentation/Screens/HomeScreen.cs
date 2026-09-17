@@ -339,7 +339,7 @@ namespace GlimmerGrove
         {
             public string TierId;
             public Image Img;
-            public RectTransform Halo, Shine;
+            public RectTransform Halo;
             public bool Lit;
         }
 
@@ -398,21 +398,31 @@ namespace GlimmerGrove
             _taskBeacon = FeatureBeacon(_tasksPanel);
 
             // Everything that reaches past the plate's edge is clipped here: the rays, the
-            // shelf's light, the sparks. The plate's own rounded corners are the mask's, near
-            // enough — the rays are far dimmer than the keyline at that radius.
-            var clip = UIKit.Node("Clip", card.transform);
-            UIKit.StretchTo(clip, 6f, 6f, 6f, 6f);
-            clip.gameObject.AddComponent<RectMask2D>();
+            // shelf's light, the sparks.
+            //
+            // **Cut to the plate's own shape rather than to its rect**, which is the fix the
+            // owner asked for. A `RectMask2D` is a rectangle, and this plate is a rounded
+            // rectangle: at every corner the rays ran out past the painted face and sat in the
+            // notch between the keyline and the box, which reads as the light escaping the
+            // card. "Near enough" was the note the first version left itself, and it was not.
+            // The mould's own sprite is the mask now — the same stencil the challenge banner is
+            // cut with, `showMaskGraphic` false so the plate is not painted twice and the
+            // near-nothing alpha doing the writing.
+            var clip = UIKit.Img("Clip", card.transform, Art.S("Ui/" + Skins.PlateViolet),
+                                 new Color(1f, 1f, 1f, .004f));
+            var crt = (RectTransform)clip.transform;
+            UIKit.StretchTo(crt, 6f, 6f, 6f, 6f);
+            clip.type = Image.Type.Sliced;
+            clip.raycastTarget = false;
+            clip.gameObject.AddComponent<Mask>().showMaskGraphic = false;
 
-            // A burst of rays turning slowly behind the chests, which is what makes a row of
-            // pictures read as treasure rather than as an inventory. Warm on the violet, and
-            // low: it is a light source, not a pattern. Centred on the pack rather than on the
-            // plate, because it is the pack's own light.
-            var rays = UIKit.Img("Rays", clip, Art.Rays(512, 14), Pal.A(Pal.Sun, .22f),
-                                 new Vector2(860f, 860f), new Vector2(.5f, .5f), new Vector2(0f, -34f));
-            Tween.Run(36f, Ease.Linear,
-                      t => { if (rays) rays.transform.localRotation = Quaternion.Euler(0, 0, t * 360f); },
-                      rays, "spin").Loop(-1, false);
+            // **There is no turning starburst behind the chests, and that is the owner's call
+            // after playing it.** A slow rotation is a thing that never stops moving on the one
+            // screen a player sits on between runs, and on a box that already breathes, bobs its
+            // chests and lights a rim when something is waiting it was the movement with nothing
+            // to say — the pack reads as treasure from the shelf under it and the chests
+            // themselves. The tasks page keeps its own (`TasksScreen.BuildLadder`): that one is
+            // entered deliberately and left, where this one is standing furniture.
 
             // The shelf: the pool the chests stand in, so they read as placed rather than
             // floating on the plate. **It is a shadow rather than a light, and that is the
@@ -420,11 +430,14 @@ namespace GlimmerGrove
             // warm glow over it is invisible at any alpha worth using (44g from the other
             // end: you cannot light a bright colour, you can only darken it), while a pool
             // under the feet reads immediately.
-            UIKit.Img("Shelf", clip, Art.Glow(128, 1.7f), new Color(.16f, .02f, .24f, .34f),
+            UIKit.Img("Shelf", crt, Art.Glow(128, 1.7f), new Color(.16f, .02f, .24f, .34f),
                       new Vector2(840f, 170f), new Vector2(.5f, .5f), new Vector2(0f, -84f));
 
-            Fireflies.Spawn(clip, 10, new Color(1f, .92f, .62f), 3f, 9f);
+            Fireflies.Spawn(crt, 10, new Color(1f, .92f, .62f), 3f, 9f);
 
+            // After the clip, so the pack stands in front of every light inside it. The chests
+            // are *not* children of the mask: a chest is the thing the card is about and may
+            // never be cut by the shape the light is cut by.
             BuildChestRow(card.transform, ProgressionRules.Table.Tasks.Tiers);
 
             // The name, across the top. **The whole title, not a corner label** — it is the one
@@ -505,9 +518,9 @@ namespace GlimmerGrove
         /// <para>
         /// <paramref name="at"/> is where the <em>drawn</em> chest's middle goes and
         /// <paramref name="tall"/> is how tall it is drawn; the sprite is hung higher and
-        /// larger than both (see <see cref="ChestPack.Fill"/>). The halo and the shine are children
-        /// of the sprite and so are pushed back down by hand — a glow centred on a box a
-        /// quarter of which is empty is a glow that lights the air above a chest.
+        /// larger than both (see <see cref="ChestPack.Fill"/>). The halo is a child of the
+        /// sprite and so is pushed back down by hand — a glow centred on a box a quarter of
+        /// which is empty is a glow that lights the air above a chest.
         /// </para>
         /// </summary>
         HubChest BuildHubChest(Transform host, ChestTier tier, Vector2 at, float tall, int index)
@@ -519,19 +532,21 @@ namespace GlimmerGrove
                                 at + new Vector2(0f, tall * ChestPack.Lift));
             img.preserveAspect = true;
 
+            // A glow and nothing turning. **The four capsules that used to revolve behind a lit
+            // chest went with the card's own starburst**, and for the same reason: this box sits
+            // on the screen a player returns to between every run, and a light that is
+            // permanently in motion there is movement with nothing to say. What is left says
+            // the same thing without it — the halo, the breathe and the corner's count.
             var halo = UIKit.Halo(img.transform, Pal.Gold, tall * 1.9f, .55f);
-            var shine = Shine(img.transform, tall * 1.6f, index * .6f);
             ((RectTransform)halo.transform).anchoredPosition = new Vector2(0f, -tall * ChestPack.Lift);
-            shine.anchoredPosition = new Vector2(0f, -tall * ChestPack.Lift);
             halo.gameObject.SetActive(false);
-            shine.gameObject.SetActive(false);
 
             Tween.Bob((RectTransform)img.transform, 2f, 3.4f + index * .35f, index * .8f);
 
             return new HubChest
             {
                 TierId = tier.Id, Img = img,
-                Halo = (RectTransform)halo.transform, Shine = shine, Lit = false,
+                Halo = (RectTransform)halo.transform, Lit = false,
             };
         }
 
@@ -580,7 +595,6 @@ namespace GlimmerGrove
 
                 chest.Lit = on;
                 chest.Halo.gameObject.SetActive(on);
-                chest.Shine.gameObject.SetActive(on);
                 chest.Img.color = on ? Color.white : new Color(.90f, .92f, .96f, 1f);
 
                 Tween.KillChannel(chest.Img.transform, "breathe");
@@ -601,29 +615,6 @@ namespace GlimmerGrove
                 foreach (var task in TaskLedger.Active(period))
                     if (TaskLedger.StateOf(task) == TaskState.Ready) lit.Add(task.Tier.Id);
             return lit;
-        }
-
-        /// <summary>
-        /// Four soft capsules turning behind a lit chest. Cheap, and it reads as light
-        /// coming off the thing rather than a ring drawn round it.
-        /// </summary>
-        static RectTransform Shine(Transform parent, float size, float phase)
-        {
-            var rays = UIKit.Box("Shine", parent, Vector2.one * size, new Vector2(.5f, .5f), Vector2.zero);
-            rays.SetAsFirstSibling();
-
-            for (int i = 0; i < 4; i++)
-            {
-                var ray = UIKit.Img("r" + i, rays, Art.SoftCapsule(40, 200), Pal.A(Pal.Sun, .22f),
-                                    new Vector2(size * .16f, size * 1.15f), new Vector2(.5f, .5f), Vector2.zero);
-                ray.transform.localRotation = Quaternion.Euler(0, 0, i * 45f);
-            }
-
-            Tween.Run(9f, Ease.Linear,
-                      t => { if (rays) rays.localRotation = Quaternion.Euler(0, 0, t * 360f + phase * 40f); },
-                      rays.gameObject, "spin").Loop(-1, false);
-
-            return rays;
         }
 
         /// <summary>

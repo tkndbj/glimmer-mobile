@@ -1564,8 +1564,9 @@ namespace GlimmerGrove.Modes
         /// <b>Health between an ironclad's and an overlord's, and the slowest walk in the
         /// mode</b>, because it is the biggest body on the hill (<see cref="TallOf"/>) and a
         /// thing that size arriving at a run would read as a raider. What makes it the finale
-        /// is not the number either: it is that every boulder is a post the player has to dig
-        /// out with their hands (<see cref="RubbleTaps"/>) while the hill is still coming.
+        /// is not the number either: it is that every boulder takes a post off the line for
+        /// <see cref="ColossusBury"/> seconds, which the player can cut short with their hands
+        /// (<see cref="RubbleTaps"/>) while the hill is still coming.
         /// </para>
         /// </summary>
         public const int ColossusHealth = 5800;
@@ -1575,22 +1576,71 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// Seconds between one boulder and the next.
         ///
-        /// <b>Longer than a bind's chain lasts a ward, on purpose.</b> A shackler's chain runs
-        /// out before its next arrow (<c>AShacklersChainAlwaysRunsOutBeforeTheNextOne</c>);
-        /// rubble does not run out at all, so the cadence has to leave a player who digs at once
-        /// (three taps, about a second) comfortably clear before the next boulder, or the line
-        /// buries faster than hands can clear it. At 6 a player digging at once has most of a
-        /// whole line's fire between boulders; one who never digs loses a post a cast. Measured
-        /// through <c>EveryShippedBossRungIsAFight</c>: at 5.5 and 6400 health the finale fell at
-        /// no rhythm, because every beat spent digging is a beat the boss is not being hurt in.
+        /// <para>
+        /// <b>Longer than a burial lasts a ward, on purpose</b> — the shackler's rule
+        /// (<c>AShacklersChainAlwaysRunsOutBeforeTheNextOne</c>) reaches this boss too, and it
+        /// reaches it for a harder reason than pacing: a boulder that outlasts its own cadence
+        /// is a line that buries one post at a time until none of them answers, and a hill with
+        /// nothing left to bury is a boss holding its cast (<see cref="CastRetry"/>) over a
+        /// player who cannot fire. That is a stalemate rather than a fight, and it is what this
+        /// pairing refuses by arithmetic: at the fastest pace a phase can set
+        /// (<see cref="PhasePaceHundredths"/>) a burial's ceiling is still under one cadence, so
+        /// one post at a time is the most this boss can hold and the line always answers — held
+        /// by <c>ABuriedLineAlwaysHasPostsLeftStanding</c> rather than by this note.
+        /// Measured through <c>EveryShippedBossRungIsAFight</c>: at 5.5 and 6400
+        /// health the finale fell at no rhythm, because every beat spent digging is a beat the
+        /// boss is not being hurt in.
+        /// </para>
+        /// <para>
+        /// <b>It came up from 6 as <see cref="ColossusCast"/> doubled, and the pair is the
+        /// point.</b> The owner's reading was that a boulder <em>hits very low</em>, and the
+        /// answer to that is not more damage a second — at 4 a blow every 6 seconds the finale
+        /// fell at none of nine rhythms, which is the wall this gate exists to refuse. A heavier
+        /// blow thrown less often reads as the biggest body on the hill and holds the rung where
+        /// it was: measured, 2 of 9 at both (2, 6) and (4, 7.5), and 1 of 9 at (3, 6), (4, 7) and
+        /// (5, 9). <b>Damage is the feel and the cadence is the budget</b>, and they move
+        /// together or the fight does.
+        /// </para>
         /// </summary>
-        public const float ColossusCastEvery = 6f;
-
-        /// <summary>What one boulder takes off the ward it lands on.</summary>
-        public const int ColossusCast = 2;
+        public const float ColossusCastEvery = 7.5f;
 
         /// <summary>
-        /// Taps it takes to dig a buried ward out.
+        /// Seconds a boulder holds a post off the line, and the ceiling on a burial.
+        ///
+        /// <para>
+        /// <b>Rubble runs out on the clock, and the reason is the one failure a mechanic may
+        /// never have: it stopped being a fight.</b> A burial used to end only when the player
+        /// dug it out, so a line nobody dug was a line that went quiet post by post — and with
+        /// every post buried the boss had nothing left to aim at and held its cast for ever
+        /// (<see cref="CastRetry"/>). Neither side could act: reported from play as
+        /// <em>I cannot shoot and he does not attack</em>. The clock is what makes that
+        /// unreachable, and it is the owner's figure (2026-09-17).
+        /// </para>
+        /// <para>
+        /// <b>Four seconds is the ceiling rather than the duration</b>, which is what keeps the
+        /// player's hands in the mechanic: a piece slips off by itself every
+        /// <see cref="RubblePiece"/> seconds and a tap takes one off at once, so digging is
+        /// still the difference between a post that is back in a breath and one that is back in
+        /// four. That is a burial keeping its verb — attention, the currency this mode's clock
+        /// prices (37bl) — and losing only the part of it that could wall a run.
+        /// </para>
+        /// </summary>
+        public const float ColossusBury = 4f;
+
+        /// <summary>
+        /// What one boulder takes off the ward it lands on.
+        ///
+        /// <b>Doubled from 2 on the owner's reading that it hit far too lightly</b>, and paid for
+        /// with <see cref="ColossusCastEvery"/> rather than taken free — see that note for the
+        /// nine-rhythm sweep behind the pair. Four of a ward's <see cref="WardHealth"/> 14 is the
+        /// heaviest base figure any boss here lands — only a drain goes past it, and only by
+        /// what the player was holding (<see cref="ThundererDrain"/>) — which is what the biggest
+        /// body on the hill should land.
+        /// </summary>
+        public const int ColossusCast = 4;
+
+        /// <summary>
+        /// Taps it takes to dig a buried ward out, and the pieces a boulder leaves.
         ///
         /// <b>Three, because one is a dismissal and five is a chore.</b> A single tap would make
         /// a burial the same cost as a bomb; five taps on a phone at the ward line is long
@@ -1599,6 +1649,17 @@ namespace GlimmerGrove.Modes
         /// number a thumb clears in under a second while the eye stays on the hill.
         /// </summary>
         public const int RubbleTaps = 3;
+
+        /// <summary>
+        /// Seconds one piece of rubble stands before it slips off by itself.
+        ///
+        /// <b>Derived from the ceiling and the pile rather than typed</b>, so the two can never
+        /// come to disagree about how long a burial is: a pile of <see cref="RubbleTaps"/>
+        /// pieces weathering at this rate is exactly <see cref="ColossusBury"/> seconds, and
+        /// moving either figure moves the other with it. It is a clock rather than a threshold,
+        /// which is the one thing a float is allowed to decide here.
+        /// </summary>
+        public const float RubblePiece = ColossusBury / RubbleTaps;
 
         // ------------------------------------------------------------------ the fight
         /// <summary>

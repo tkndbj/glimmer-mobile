@@ -50,18 +50,38 @@ namespace GlimmerGrove
         const float ChromeSize = 92f;
         const float BannerH = 138f;
         const float HeroH = 300f;
-        const float OfferH = 168f;
         const float HeadingH = 62f;
         const float Width = 1000f;
 
-        /// <summary>One friend is one row, the full width of the page — the streak's row (48g).</summary>
-        const float RowH = 156f;
+        /// <summary>
+        /// One friend is one row, the full width of the page — the streak's row (48g), and the
+        /// tasks page's card.
+        ///
+        /// <para>
+        /// <b>The same height as a task's row, deliberately.</b> This board is a list of chests
+        /// and so is that one; a reward row that is two thirds the size of the reward row two
+        /// taps away is two answers to a question the kit settles once (invariant 44). What the
+        /// extra forty units buy is the thing the page is actually about: the chest grows with
+        /// the row, from 88 drawn to <see cref="RewardTall"/>.
+        /// </para>
+        /// </summary>
+        const float RowH = 196f;
         const float RowGap = 12f;
 
-        /// <summary>The well a reward stands in, and its drawn height. See <see cref="ChestPack"/>.</summary>
-        const float SeatSize = 124f, SeatX = 106f, RewardTall = 88f;
+        /// <summary>
+        /// The offer band between the hero and the board.
+        ///
+        /// <b>The same height as a row, because in one of its two shapes it <em>is</em> one</b> —
+        /// the welcome chests are furnished by <see cref="Furnish"/> exactly as a friend's row
+        /// is, so a band shorter than a row would draw the same furniture in a smaller box and
+        /// the seat would stand proud of its own plate.
+        /// </summary>
+        const float OfferH = RowH;
 
-        const float TextX = 196f, TextW = 450f;
+        /// <summary>The well a reward stands in, and its drawn height. See <see cref="ChestPack"/>.</summary>
+        const float SeatSize = 160f, SeatX = 118f, RewardTall = 124f;
+
+        const float TextX = 220f, TextW = 450f;
 
         /// <summary>The code well and the share key on the hero, side by side.</summary>
         const float CodeW = 470f, CodeH = 96f, ShareW = 300f, ShareH = 104f;
@@ -395,22 +415,27 @@ namespace GlimmerGrove
 
             if (_offer == Offer.Code)
             {
+                // On the seat's own column, so the two shapes this band can take start their
+                // picture in the same place — `Furnish` puts the welcome row's well at SeatX.
                 UIKit.Img("Glow", plate.transform, Art.Glow(128, 2f), Pal.A(Pal.Aqua, .24f),
-                          new Vector2(262f, 262f), Left, new Vector2(112f, 0f));
+                          new Vector2(286f, 286f), Left, new Vector2(SeatX, 0f));
                 var key = UIKit.Img("Key", plate.transform, Art.S("Ui/ic_key"), Color.white,
-                                    new Vector2(118f, 118f), Left, new Vector2(112f, 0f));
+                                    new Vector2(132f, 132f), Left, new Vector2(SeatX, 0f));
                 key.preserveAspect = true;
 
-                const float HintW = 470f;
+                // The row's own text column, rather than a width of its own: the seat moved
+                // right when the well grew, and a second figure would have kept the sentence
+                // where it was and run it into the ENTER key.
+                const float HintW = TextW;
                 float hx = TextX + HintW * .5f;
 
                 UIKit.Shrinkable(
                     UIKit.Titled("Title", plate.transform, Loc.Get("ui.referral.offer_title"), 36, Pal.Cream,
-                                 TextAnchor.MiddleLeft, new Vector2(HintW, 44f), Left, new Vector2(hx, 24f), 3f, 3f), 20);
+                                 TextAnchor.MiddleLeft, new Vector2(HintW, 44f), Left, new Vector2(hx, 30f), 3f, 3f), 20);
                 UIKit.Shrinkable(
                     UIKit.Titled("Hint", plate.transform, Loc.Format("ui.referral.offer_hint", _chapterName), 23,
                                  Pal.A(Pal.Cream, .82f), TextAnchor.MiddleLeft, new Vector2(HintW, 34f), Left,
-                                 new Vector2(hx, -24f), 3f, 0f), 14);
+                                 new Vector2(hx, -28f), 3f, 0f), 14);
 
                 var enter = UIKit.TextButton("Enter", plate.transform, Skins.Alternate, Loc.Get("ui.referral.enter"), 30,
                                              new Vector2(272f, 104f), Right, new Vector2(-150f, 0f), EnterCode);
@@ -530,7 +555,14 @@ namespace GlimmerGrove
             tile.Pool = UIKit.Img("Light_" + friend, lights, Art.Glow(128, 1.35f), Pal.A(Pal.Sun, 0f),
                                   new Vector2(Width + 150f, RowH + 130f), Top, new Vector2(0f, cy));
 
-            var card = UIKit.Img("F" + friend, parent, Art.S("Ui/" + Skins.Card), Color.white,
+            // `Skins.PlateNavy`, which is what every reward row in this game is drawn on — the
+            // tasks page, the streak board and the season ladder. This board was the one left
+            // on `Skins.Card`, and the difference is not a shade: a card is a *container*, flat
+            // and unlit with nothing at its edge but a keyline, and at the .74 an unreached row
+            // is faded to it reads as a hole with the wall showing through. The plate carries
+            // the lit top edge and the two-tone face that make a row read as a thing holding a
+            // prize. One name, re-cut once (invariant 44).
+            var card = UIKit.Img("F" + friend, parent, Art.S("Ui/" + Skins.PlateNavy), Color.white,
                                  new Vector2(Width, RowH), Top, new Vector2(0f, cy));
             tile.Card = card;
             tile.Root = (RectTransform)card.transform;
@@ -567,18 +599,19 @@ namespace GlimmerGrove
             if (tile.Payment.Count > 1)
             {
                 var badge = UIKit.Img("Count", tile.Root, Art.Disc(64), Pal.Gold,
-                                      new Vector2(46f, 46f), Left, new Vector2(SeatX + SeatSize * .5f - 10f, -SeatSize * .5f + 12f));
-                tile.Count = UIKit.Titled("N", badge.transform, "x" + tile.Payment.Count, 24,
+                                      new Vector2(54f, 54f), Left,
+                                      new Vector2(SeatX + SeatSize * .5f - 14f, -SeatSize * .5f + 16f));
+                tile.Count = UIKit.Titled("N", badge.transform, "x" + tile.Payment.Count, 27,
                                           new Color(.30f, .20f, .05f), TextAnchor.MiddleCenter, outline: 0f, shadow: 0f);
             }
 
             tile.Title = UIKit.Shrinkable(
-                UIKit.Titled("Title", tile.Root, title, 31, Pal.Cream, TextAnchor.MiddleLeft,
-                             new Vector2(TextW, 42f), Left, new Vector2(TextX + TextW * .5f, 26f), 3f, 3f), 18);
+                UIKit.Titled("Title", tile.Root, title, 32, Pal.Cream, TextAnchor.MiddleLeft,
+                             new Vector2(TextW, 44f), Left, new Vector2(TextX + TextW * .5f, 32f), 3f, 3f), 18);
 
             tile.Sub = UIKit.Shrinkable(
                 UIKit.Titled("Sub", tile.Root, string.Empty, 25, Pal.A(Pal.Cream, .84f), TextAnchor.MiddleLeft,
-                             new Vector2(TextW, 36f), Left, new Vector2(TextX + TextW * .5f, -22f), 3f, 3f), 15);
+                             new Vector2(TextW, 36f), Left, new Vector2(TextX + TextW * .5f, -28f), 3f, 3f), 15);
 
             var collect = UIKit.Img("Collect", tile.Root, Art.S("Ui/" + Skins.Affirm), Color.white,
                                     new Vector2(212f, 84f), Right, new Vector2(-130f, 0f));
@@ -675,7 +708,16 @@ namespace GlimmerGrove
                     tile.Sub.text = pays;
             }
 
-            if (tile.Group) tile.Group.alpha = reached ? 1f : .74f;
+            // **The tasks page's rule, not the streak board's, and the difference is what this
+            // board looks like on the account that matters.** Both were `ahead ? .74f : 1f`,
+            // which works on the streak board because at most a night or two is ahead and the
+            // rest of the list is solid beside it. Here *every* row is ahead until a friend
+            // finishes — so a new player, who is the whole audience for an invite page, met a
+            // board of ghosts with the wall showing through it. A task's row dims only when it
+            // is **spent**, and that reads correctly at any mix: a paid row steps back, and
+            // everything still owed is a solid card. What says "not yet" is the count on the
+            // right and the cool tint on the reward, both of which are drawn either way.
+            if (tile.Group) tile.Group.alpha = done ? .62f : 1f;
             if (tile.Tap) tile.Tap.gameObject.SetActive(waiting);
             if (tile.Collect) tile.Collect.gameObject.SetActive(waiting);
             if (tile.Seal) tile.Seal.gameObject.SetActive(done);
@@ -702,7 +744,13 @@ namespace GlimmerGrove
             }
 
             if (tile.Title) tile.Title.color = lit ? Pal.Gold : done ? Pal.Mint : Pal.Cream;
-            if (tile.Icon) tile.Icon.color = done ? new Color(.90f, .94f, 1f, 1f) : Color.white;
+            // Full colour only where there is something to take; the cool grey is the tasks
+            // ladder's own tint for a chest that is not yours yet, and it is what carries the
+            // "not reached" reading now the card itself no longer fades for it.
+            if (tile.Icon)
+                tile.Icon.color = done ? new Color(.90f, .94f, 1f, 1f)
+                                : reached ? Color.white
+                                : new Color(.78f, .82f, .90f, 1f);
 
             Shine(tile, lit);
         }

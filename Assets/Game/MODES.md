@@ -587,9 +587,19 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    simulation cannot see the verb**, because the model player throws every charge the moment it is
    armed; what it measures is the smite, and the fight gate is what proves the boss fights.
 37dq. **The tenth is the player's *hands*.** A **colossus** buries a ward under `RubbleTaps` pieces
-   of rubble that only taps clear: the ward keeps fuel, rank and charges and cannot fire, a second
-   boulder goes elsewhere, and nothing lifts it on the clock - a burial is a bind bought back with
-   attention, which is the one currency this mode's clock prices (37bl). **A dig is answered on the
+   of rubble: the ward keeps fuel, rank and charges and cannot fire, and a second boulder goes
+   elsewhere - a burial is a bind bought back with attention, which is the one currency this mode's
+   clock prices (37bl). **But a burial that only hands could lift was a stalemate, and that is the
+   one failure a verb may not have**: a line nobody dug went quiet post by post, and with nothing
+   left to bury the boss held its cast (`CastRetry`) - reported from play as *I cannot shoot and he
+   does not attack*. So a piece weathers off every `RubblePiece` seconds and a pile is gone inside
+   `ColossusBury` (**four**, the owner's figure), a boulder is **refused on a post already buried**
+   rather than re-setting its clock, and a cast that finds every post buried **throws at one
+   anyway** - the burial is what a colossus cannot repeat, never the blow. **Damage and cadence
+   moved together** (2 every 6s to **4 every 7.5s**, the owner's reading that it hit far too
+   lightly): at 4 every 6s the finale fell at none of nine rhythms, which is the wall
+   `EveryShippedBossRungIsAFight` exists to refuse; at 4 every 7.5 it reads where it shipped (2 of
+   9). **A dig is answered on the
    call and never on the next report** (the overcharge's shape): a tap lands between two steps of
    the clock and `Advance` clears the report on its way in, so a record written by the tap would be
    gone before the view read it - which is exactly how the first fixture failed. **The model player
@@ -689,6 +699,29 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    being asked.** The prices **continue the credit ladder rather than converting at the shop's rate**, or
    the shelf would get cheaper halfway up. It cost no code and no re-seed. **What it does cost is the gem
    sink.**
+42g. **A legendary turret wears no colour, and that one fact is three rules at once** — it is bought once
+   rather than once per seat, it is cut once rather than four times, and it fires at **everything** on the
+   hill. Spelled three times they could drift, so it is **one authored flag** (`WardModel.Legendary`) and
+   never a reading of the rung: `WardTier` is punctuation over the shelf's order, so a band that decided
+   what a turret *does* would make a re-rung shelf silently change four turrets' rules. What holds the
+   flag to the LEGENDARY header is `WardCatalog.LadderProblem`, in **both directions**.
+42h. **It cost the save nothing, and that is the whole reason the shape was chosen.** A legendary's row in
+   `wardsOwned` is the **bare id**, which has meant *every colour* since colours shipped — it is what a
+   build that owned turrets outright wrote and the only reading a union merge could safely give one — so
+   there is no schema version, no `hasOnly` release and no migration. The **star ledger had to learn the
+   same clause**, on the client and on the server, or a five-star legendary publishes at one star on all
+   four seats with nothing saying so.
+42i. **It is still strictly an addition, and that is arithmetic rather than an argument.** Par is the
+   hill's health over a perfect match computed against the baseline bolt, so a turret reaching every
+   colour only ever fires bolts that would otherwise not have been fired: a run ends sooner and par
+   over-states what a good one needs. **No star line moves.** The band sits at keeper 45–60 and is priced
+   in **gems**, which is what fills the hole 42f left.
+42j. **The band could not be drawn from the projectile pack, and that is a fact about the pack.** It holds
+   twenty families and the roster wears nineteen, so ten more would be ten *third variants* — the same
+   silhouette in a different hue, which is 37z in one sentence. They are **drawn** instead
+   (`Tools/make_legend_fx.py`, numpy and Pillow, offline with `--check` and `--contact`), which also buys
+   what a bake cannot: a legendary can be a **behaviour** rather than a shape — lightning that forks
+   differently every frame, a shot that visibly bounces, a jet whose turbulence scrolls.
 43. **A mode may have a second ladder, and it is a *track* rather than a mode or a chapter.** `GameTrack`
    is one level finer than `GameMode`, the index lanes on the **pair**, and `ChaptersIn(mode)` answers the
    **main** track alone.

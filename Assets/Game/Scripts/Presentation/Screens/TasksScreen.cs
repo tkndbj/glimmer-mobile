@@ -364,6 +364,14 @@ namespace GlimmerGrove
         /// every chest here is a <em>button</em>, and four buttons that overlap are four targets
         /// whose edges belong to whichever was drawn last.
         /// </para>
+        /// <para>
+        /// <b>The pack has one entrance and it belongs to the plate.</b> Each chest used to pop
+        /// in on a stagger of its own, <em>inside</em> a plate that was popping at the same time,
+        /// so four springs with overshoot were nested in a fifth — and on a ready chest the
+        /// breathe made it a third tween on the same property. What a player saw was the row
+        /// loading twice. One pop on the box brings the whole pack in together, which is what the
+        /// hub's card has always done with the same arithmetic.
+        /// </para>
         /// </summary>
         float BuildLadder(float y)
         {
@@ -420,16 +428,20 @@ namespace GlimmerGrove
                     var halo = UIKit.Halo(btn.transform, Pal.Gold, seat.Tall * 1.9f, .5f);
                     ((RectTransform)halo.transform).anchoredPosition =
                         new Vector2(0f, -seat.Tall * ChestPack.Lift);
+
+                    // **Started here and not a line earlier, which is what the flicker was.**
+                    // A breathe writes `localScale` every frame from the size it captured when
+                    // it began, and a pop writes `localScale` every frame from nought — two
+                    // tweens on one property, on separate channels so neither kills the other,
+                    // so the chest was drawn at the pop's size on one frame and at full size on
+                    // the next for the whole half-second the pack came in. It read exactly as
+                    // the row loading twice.
                     Tween.Breathe(btn.transform, .06f, 1.6f, seat.Index * .4f);
                 }
                 else
                 {
                     btn.GetComponent<Image>().color = new Color(.90f, .92f, .96f, 1f);
                 }
-
-                btn.transform.localScale = Vector3.zero;
-                Tween.Pop(btn.transform, 0f, .5f, .18f + seat.Index * .07f)
-                     .OnDone(() => { if (btn) btn.Rehome(); });
             }
 
             UIKit.Shrinkable(
@@ -438,6 +450,7 @@ namespace GlimmerGrove
                              new Vector2(Width - 80f, 30f), Centre,
                              new Vector2(0f, -LadderH * .5f + 22f), 3f, 3f), 14);
 
+            // The pack's whole entrance, and the only one on it. See the remarks above.
             plate.transform.localScale = Vector3.zero;
             Tween.Pop(plate.transform, 0f, .5f, .10f);
 

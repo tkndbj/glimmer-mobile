@@ -92,8 +92,8 @@ STAR_GAP = 0.22
 STARS_MOST = 5
 
 # WardTier.Opens / .Gates — the shelf rung each band starts at, and its keeper wall.
-TIER_OPENS = (1, 11, 18)
-TIER_NAMES = {1: "TIER I", 2: "TIER II", 3: "TIER III"}
+TIER_OPENS = (1, 11, 18, 21)
+TIER_NAMES = {1: "TIER I", 2: "TIER II", 3: "TIER III", 4: "LEGENDARY"}
 
 # Skins
 PLATE_BLUE, PLATE_ORANGE = "Hud/plate_blue", "Hud/plate_orange"
@@ -216,7 +216,11 @@ def ward_cell(sheet, model, at, cw, names, colour, level, held, stars, standing)
         ImageDraw.Draw(sheet).rounded_rectangle(
             [x + 2, y + 2, x + cw - 3, y + cellh - 3], radius=24, outline=PLATE_EDGE, width=6)
 
-    art = sprite(f"../Siege/Wards/{model['id']}_{colour}", icon_box)
+    # **A legendary wears no colour** (`WardModel.ArtFor`), so its picture carries no colour
+    # letter - and the mirror has to know, or it draws a white box on ten of the thirty cells and
+    # reports the shelf as broken. `content.py` is what proves the address is really there.
+    worn = "" if model.get("legendary") else "_" + colour
+    art = sprite(f"../Siege/Wards/{model['id']}{worn}", icon_box)
     if art:
         K.paste(sheet, art, x + cw / 2, y + ICON_TOP * SCALE + icon_box / 2)
 

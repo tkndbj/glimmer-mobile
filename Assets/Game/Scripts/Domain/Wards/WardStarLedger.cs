@@ -15,6 +15,15 @@ namespace GlimmerGrove.Wards
     /// at is already "this turret, on this seat", and the stars on it are that seat's.
     /// </para>
     /// <para>
+    /// <b>And that is why a bare row is read here exactly as <c>wardsOwned</c> reads one.</b> A
+    /// legendary turret is bought once rather than once per seat (<c>WardModel.Legendary</c>), so
+    /// its row carries no colour — and a reader that asked only for <c>{id}:{colour}</c> would
+    /// hand a legendary somebody had taken to five stars back at one, on all four seats, with
+    /// nothing saying so. <see cref="StarsOf(string, char)"/> falls back to the bare row and
+    /// <see cref="Raise"/> writes whichever <c>WardHolding.Row</c> says, which is one rule with
+    /// the writing and the reading on the same side of it.
+    /// </para>
+    /// <para>
     /// <b>A star count only ever rises, which is the whole reason it is storable.</b> Invariant 11b
     /// refuses a stored count outright: two devices showing 3 and 0 are equally consistent with
     /// "one spent three" and "one has not heard yet". An upgrade cannot be undone, so the join is
@@ -82,11 +91,18 @@ namespace GlimmerGrove.Wards
         /// through <c>WardStars.Sane</c>, so a turret is always standing somewhere on the ladder.
         /// </summary>
         public static int StarsOf(string id, char colour)
-            => string.IsNullOrEmpty(id)
-             ? WardStars.Least
-             : Stars.TryGetValue(WardHolding.Key(id, colour), out int stars)
-             ? WardStars.Sane(stars)
-             : WardStars.Least;
+        {
+            if (string.IsNullOrEmpty(id)) return WardStars.Least;
+
+            // The seat's own row first, then the bare one — which is a legendary's row and is
+            // also what a file written before colours existed holds. Taking the seat's first
+            // means a per-colour row always wins where both somehow exist, which is the reading
+            // that can never confiscate an upgrade somebody bought for one seat.
+            if (Stars.TryGetValue(WardHolding.Key(id, colour), out int stars))
+                return WardStars.Sane(stars);
+
+            return Stars.TryGetValue(id, out int bare) ? WardStars.Sane(bare) : WardStars.Least;
+        }
 
         /// <summary>See <see cref="StarsOf(string, char)"/>.</summary>
         public static int StarsOf(WardModel model, char colour)
@@ -99,17 +115,31 @@ namespace GlimmerGrove.Wards
         /// <summary>
         /// Records a star bought. Never lowers one, and never past the top.
         ///
+        /// <para>
         /// <b>The ledger does not take the money.</b> Who may pay, and whether they can, is the
         /// caller's question and is asked through <c>PlayerProgression.TrySpend</c> — a ledger
         /// that debited would be a second place a purchase happens, and two of those is two
         /// chances to charge for one thing (invariant 23's argument about the continue).
+        /// </para>
+        /// <para>
+        /// <b>It takes the model rather than its id, because only the model knows which row it
+        /// owns</b> — a legendary is written bare (<see cref="WardHolding.Row"/>). Every writer
+        /// takes this overload; the id one is kept for a caller that has nothing else, and writes
+        /// the per-colour row.
+        /// </para>
         /// </summary>
+        public static bool Raise(WardModel model, char colour, int stars)
+            => model != null && Raise(WardHolding.Row(model, colour), stars);
+
+        /// <summary>See <see cref="Raise(WardModel, char, int)"/>.</summary>
         public static bool Raise(string id, char colour, int stars)
+            => Raise(WardHolding.Key(id, colour), stars);
+
+        static bool Raise(string key, int stars)
         {
-            if (string.IsNullOrEmpty(id)) return false;
+            if (string.IsNullOrEmpty(key)) return false;
 
             stars = WardStars.Sane(stars);
-            string key = WardHolding.Key(id, colour);
 
             if (Stars.TryGetValue(key, out int held) && held >= stars) return false;
             if (stars <= WardStars.Least) return false;

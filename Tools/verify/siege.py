@@ -241,10 +241,12 @@ BOSSES = {
     #: `SiegeTuning.ThundererDrain` more off it - so its `cast` is the *floor* of what it takes,
     #: which is all par ever counts (a thrown charge lands at full weight, exactly as
     #: `PERFECT_MATCH` assumes). A **colossus** buries a ward under `RubbleTaps` pieces of rubble
-    #: the player digs off by hand; the ward keeps everything and cannot fire until it is clear.
-    #: Neither touches par.
+    #: the player digs off by hand - or waits out, since a pile weathers off inside
+    #: `SiegeTuning.ColossusBury`; the ward keeps everything and cannot fire until it is clear.
+    #: Its `cast` is the heaviest base blow in the mode and still touches nothing here:
+    #: neither of these two reaches par.
     "thunderer": {"health": 3800, "cast": 2, "spell": "drain"},
-    "colossus": {"health": 5800, "cast": 2, "spell": "bury"},
+    "colossus": {"health": 5800, "cast": 4, "spell": "bury"},
 }
 
 #: `SiegeTuning.RaiseSize` and `.Raises` - how many creepers one raise puts on the hill, and how

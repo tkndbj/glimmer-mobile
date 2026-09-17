@@ -187,7 +187,18 @@ namespace GlimmerGrove
 
             // What it does, in the roster's own words. Above the stage, because a player reads the
             // sentence once and then watches the thing fire.
-            var note = UIKit.Label("Note", panel, Loc.Get(Model.NoteKey), 30, Pal.A(Ink, .84f),
+            //
+            // **A legendary earns a second sentence, and it is the only turret on the shelf that
+            // needs one.** Every other card is read against a rule the player already knows - a
+            // turret is bought for a seat and fires at that colour - so its note only has to say
+            // what the *ability* adds. This band suspends that rule, and a band header reading
+            // LEGENDARY cannot say which rule it is suspending. Two whole sentences joined rather
+            // than one built out of fragments, which is invariant 6's line: a key is never
+            // concatenated, and two keys that each resolve to a sentence may stand together.
+            string says = Loc.Get(Model.NoteKey);
+            if (Model.Legendary) says += "\n" + Loc.Get("ui.loadout.legendary");
+
+            var note = UIKit.Label("Note", panel, says, 30, Pal.A(Ink, .84f),
                                    TextAnchor.UpperCenter, new Vector2(PanelW - 150f, NoteH),
                                    new Vector2(.5f, 1f), new Vector2(0f, -NoteMid), wrap: true);
             UIKit.Shrinkable(note, 22);

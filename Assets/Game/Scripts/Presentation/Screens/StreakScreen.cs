@@ -86,8 +86,15 @@ namespace GlimmerGrove
         /// (<see cref="FocusOnPending"/>) rather than to the top — a page whose one action is
         /// below the fold is a page with no action on it.
         /// </para>
+        /// <para>
+        /// <b>Taller again after the owner played it</b>, and for the season ladder's reason
+        /// rather than a second one: the row is a picture of a prize, and at 156 with an 88
+        /// reward in it the prize was the smallest thing on the card. The page already scrolls,
+        /// so the change buys a bigger picture and costs nothing but how many rows a phone shows
+        /// at once. The reward grows with it — see <see cref="RewardTall"/>.
+        /// </para>
         /// </summary>
-        const float RowH = 156f;
+        const float RowH = 184f;
         const float RowGap = 12f;
 
         /// <summary>
@@ -102,10 +109,10 @@ namespace GlimmerGrove
         /// converts once, here as on the hub and the tasks page.
         /// </para>
         /// </summary>
-        const float SeatSize = 124f, SeatX = 106f, RewardTall = 88f;
+        const float SeatSize = 148f, SeatX = 114f, RewardTall = 110f;
 
         /// <summary>Where the sentence starts, and how much of the row it may have.</summary>
-        const float TextX = 196f, TextW = 450f;
+        const float TextX = 206f, TextW = 450f;
 
         static readonly Vector2 Top = new Vector2(.5f, 1f);
         static readonly Vector2 Left = new Vector2(0f, .5f);
@@ -842,11 +849,12 @@ namespace GlimmerGrove
             entry.Pool = UIKit.Img("Light_" + night, lights, Art.Glow(128, 1.35f), Pal.A(Pal.Sun, 0f),
                                    new Vector2(Width + 150f, RowH + 130f), Top, new Vector2(0f, cy));
 
-            // `Skins.Card` and not `Skins.Panel`, which is the opposite of what a *tile* wanted:
-            // a card is the kit's darkest plate, which reads as a hole at 240 square on a blue
-            // ground and reads as a row at 1000 wide with a picture and a sentence on it. The
-            // tasks page and the season ladder are the same plate for the same reason.
-            var card = UIKit.Img("N" + night, parent, Art.S("Ui/" + Skins.Card), Color.white,
+            // `Skins.PlateNavy` and not `Skins.Panel`, which is the opposite of what a *tile*
+            // wanted: a plate reads as a hole at 240 square on a blue ground and reads as a row
+            // at 1000 wide with a picture and a sentence on it. The tasks page and the season
+            // ladder are the same plate for the same reason — one reward row means one thing
+            // across this game, so all three are re-cut by one name (invariant 44).
+            var card = UIKit.Img("N" + night, parent, Art.S("Ui/" + Skins.PlateNavy), Color.white,
                                  new Vector2(Width, RowH), Top, new Vector2(0f, cy));
             entry.Card = card;
             entry.Root = (RectTransform)card.transform;
@@ -862,12 +870,12 @@ namespace GlimmerGrove
             entry.Title = UIKit.Shrinkable(
                 UIKit.Titled("Title", entry.Root, Loc.Format("ui.streak.day_n", night).ToUpperInvariant(),
                              31, Pal.Cream, TextAnchor.MiddleLeft, new Vector2(TextW, 42f), Left,
-                             new Vector2(TextX + TextW * .5f, 26f), 3f, 3f), 18);
+                             new Vector2(TextX + TextW * .5f, 30f), 3f, 3f), 18);
 
             entry.Sub = UIKit.Shrinkable(
                 UIKit.Titled("Sub", entry.Root, Says(entry.Rung), 25, Pal.A(Pal.Cream, .84f),
                              TextAnchor.MiddleLeft, new Vector2(TextW, 36f), Left,
-                             new Vector2(TextX + TextW * .5f, -22f), 3f, 3f), 15);
+                             new Vector2(TextX + TextW * .5f, -26f), 3f, 3f), 15);
 
             // --- the right end, three answers and one of them showing
             //

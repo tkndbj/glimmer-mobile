@@ -418,6 +418,11 @@ namespace GlimmerGrove
             switch (model.Order)
             {
                 case 11: case 14: case 15: case 17: return 2;
+                // **The legendary band's own twin**, read off `make_siege_art.LEGEND_MODELS`
+                // exactly as the seven above are read off `WARD_MODELS`: the merge-shooter pack
+                // draws one hull with two separated barrels and nine with a single mount, so this
+                // is one entry rather than a band.
+                case 21: return 2;
                 default: return 1;
             }
         }

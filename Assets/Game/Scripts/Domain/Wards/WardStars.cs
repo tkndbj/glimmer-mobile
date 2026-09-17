@@ -53,6 +53,12 @@ namespace GlimmerGrove.Wards
         /// the cost of reaching stars two, three, four and five for a band-<c>t</c> turret.
         /// </para>
         /// <para>
+        /// <b>And there is a row per band rather than a row per turret</b>, which is what makes
+        /// adding a band here two lines instead of thirty: <see cref="WardTier.Count"/> is the
+        /// length both this table and the authored one are held to, so a band with no prices is
+        /// refused at read time rather than shipping a turret nobody can upgrade.
+        /// </para>
+        /// <para>
         /// <b>Written out rather than generated from a curve.</b> They are the owner's numbers and
         /// a curve that happened to fit them today would quietly disagree the first time one was
         /// retuned — which is <c>HomesteadRegion</c>'s argument about an authored ladder
@@ -64,6 +70,13 @@ namespace GlimmerGrove.Wards
             new[] {  2000,  5000, 12000,  30000 },   // tier I
             new[] {  4000, 10000, 28000,  60000 },   // tier II
             new[] { 10000, 28000, 60000, 150000 },   // tier III
+            // **Legendary, and the band that keeps the credit sink open above the gem shelf.**
+            // A legendary is bought with gems (`WardCatalog.Default`), so without a row here the
+            // one part of the shelf a long-running account can still reach for would be free to
+            // take to the top - and the ladder is the largest credit sink in the game precisely
+            // because nothing else at this end of it is. Four rungs, the band's own multiple of
+            // the one below it, exactly as tiers two and three are of tier one.
+            new[] { 25000, 70000, 160000, 400000 },  // tier IV
         };
 
         /// <summary>

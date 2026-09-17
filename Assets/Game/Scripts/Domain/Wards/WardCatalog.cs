@@ -60,10 +60,20 @@ namespace GlimmerGrove.Wards
         ///
         /// The loadout screen browses these in a grid off a single atlas
         /// (<c>AssetLibrary.AtlasSprite</c>, invariant 16c), so the bound that matters is the
-        /// atlas rather than the walk. Thirty-two is generous against twenty and small enough that
-        /// every walk here is trivial.
+        /// atlas rather than the walk.
+        ///
+        /// <para>
+        /// <b>Forty, and the number is a rules bound rather than a taste.</b> It was thirty-two
+        /// against a roster of twenty; the legendary band makes it thirty, and forty leaves the
+        /// same headroom. What it may not exceed is <c>firestore.rules</c>' bound on
+        /// <c>wardsOwned</c> divided by four - a turret is bought per colour, so the worst case a
+        /// client can write is this times <see cref="WardLine.Colours"/>, which is exactly the
+        /// pair <c>CloudWireTests</c> holds together offline (invariant 12b). Forty times four is
+        /// a hundred and sixty, which is the bound the rules carry today, so raising this again
+        /// is a rules release <em>before</em> a client one.
+        /// </para>
         /// </summary>
-        public const int MaxModels = 32;
+        public const int MaxModels = 40;
 
         readonly WardModel[] _models;
         readonly Dictionary<string, WardModel> _byId;
@@ -277,6 +287,34 @@ namespace GlimmerGrove.Wards
             new WardModel("howitzer",   WardAbility.Splash, 7,  1, 1400,    0, 30, 18, 11, 12),
             new WardModel("arcstorm",   WardAbility.Chain,  8,  3, 1600,    0, 35, 19, 10, 10),
             new WardModel("apex",       WardAbility.Chain, 10,  3, 2000,    0, 40, 20, 11, 10),
+            // ---- legendary: colourless, and the only turrets that break the lock ------------
+            // **What a legendary buys is *reach across the board* rather than a bigger number.**
+            // Every other turret on this shelf fires at one colour and is bought for one seat; a
+            // legendary wears none, stands on any seat and answers anything on the hill
+            // (`WardModel.Legendary`). That is the largest thing this mode has ever sold, which
+            // is why the band sits at keeper forty-five and above and is priced in **gems** - the
+            // shipped shelf is priced entirely in credits, so this is also what fills the gem
+            // hole the all-credit re-pricing left.
+            //
+            // **It is still an addition, and that is not an argument but an arithmetic.** Par is
+            // the hill's health over a perfect match computed against the baseline bolt, so a
+            // turret reaching every colour only ever fires bolts that would otherwise not have
+            // been fired: a run ends sooner and par over-states what a good one needs, which is
+            // the direction invariant 22 says to err in. **No star line moves.**
+            //
+            // **The order within the band is the shelf's own rule**, cheapest first and reach
+            // last: a chain, a bouncing chain, fire, cold, armour, a stop, a lane, a box, fuel,
+            // and then the widest chain in the game.
+            new WardModel("tempest",    WardAbility.Chain, 12,  4, 1800,    0, 45, 21, 14, 14, true),
+            new WardModel("ricochet",   WardAbility.Chain, 14,  5, 2100,    0, 46, 22, 15, 13, true),
+            new WardModel("pyroclast",  WardAbility.Ember, 12, 60, 2400,    0, 48, 23, 17, 12, true),
+            new WardModel("permafrost", WardAbility.Frost,  8, 40, 2800,    0, 50, 24, 15, 16, true),
+            new WardModel("sunderer",   WardAbility.Rend,  16,  0, 3200,    0, 52, 25, 20, 11, true),
+            new WardModel("stasis",     WardAbility.Stun,   0, 14, 3600,    0, 53, 26, 16, 15, true),
+            new WardModel("railgun",    WardAbility.Pierce,16,  3, 4000,    0, 55, 27, 18, 12, true),
+            new WardModel("starfall",   WardAbility.Splash,12,  2, 4500,    0, 56, 28, 17, 13, true),
+            new WardModel("wellspring", WardAbility.Siphon,14,  0, 5000,    0, 58, 29, 16, 18, true),
+            new WardModel("eclipse",    WardAbility.Chain, 16,  6, 6000,    0, 60, 30, 22, 16, true),
         });
 
         // ------------------------------------------------------------- building
@@ -403,9 +441,20 @@ namespace GlimmerGrove.Wards
                     return Default;
                 }
 
+                if (entry.legendary && entry.gemPrice <= 0 && entry.coinPrice <= 0)
+                {
+                    // A free turret that ignored the colour lock would be handed to every player
+                    // on every seat at the first launch, which is the mode's central rule given
+                    // away rather than sold (invariant 5d, asked of the thing a shelf exists for).
+                    problems.Add($"wards entry '{entry.id}' is legendary and free; a turret that " +
+                                 "wears no colour and answers the whole hill is the dearest thing " +
+                                 "on this shelf and may not be the starter");
+                    return Default;
+                }
+
                 var model = new WardModel(entry.id, ability, entry.magnitude, entry.extent,
                                           entry.gemPrice, entry.coinPrice, entry.minLevel,
-                                          entry.order, entry.power, entry.guard);
+                                          entry.order, entry.power, entry.guard, entry.legendary);
 
                 starter |= model.IsStarter;
                 models.Add(model);
@@ -458,6 +507,12 @@ namespace GlimmerGrove.Wards
         /// which is very nearly always a typed digit rather than a decision.
         /// </para>
         /// <para>
+        /// <b>And there is a third now: the legendary flag and the legendary band are one
+        /// fact.</b> <see cref="WardModel.Legendary"/> is authored rather than derived from the
+        /// rung, for <see cref="WardTier"/>'s own reason — a band is punctuation and may not
+        /// decide what a turret does — so something has to hold the two together, and this is it.
+        /// </para>
+        /// <para>
         /// <b>And every wall has to stand inside its own band, which is the rule the removal
         /// left uncovered.</b> With nothing forcing the order, the three headers are all a player
         /// has to go on — TIER II now means "this stretch of the shelf opens between keeper level
@@ -491,6 +546,22 @@ namespace GlimmerGrove.Wards
                            $"keeper level {opens} and {closes}, and asks for {model.MinLevel}; " +
                            "a band is the only thing saying when a stretch of the shelf opens " +
                            "now that no rung is sealed behind another";
+
+                // **The legendary flag and the legendary band have to be one fact**, which is
+                // what makes it safe for `WardModel.Legendary` to be authored rather than read
+                // off the rung. A turret that ignored the colour lock under a TIER II header
+                // would be the mode's central rule quietly suspended where nothing says so; a
+                // turret in the legendary band that still obeyed it would be the header lying
+                // the other way. Refused in both directions, by both content gates.
+                if (model.Legendary != (band == WardTier.Count))
+                    return model.Legendary
+                         ? $"turret '{model.Id}' is legendary and stands in band {band}; a turret " +
+                           $"that wears no colour belongs under the band {WardTier.Count} header " +
+                           "and nowhere else, because that header is the only thing telling a " +
+                           "player the colour lock is off"
+                         : $"turret '{model.Id}' stands in band {WardTier.Count} and is not " +
+                           "legendary; every rung under that header wears no colour, so one that " +
+                           "does is a turret a player cannot tell from the four beside it";
 
                 highest = model.MinLevel;
                 below = model.Id;

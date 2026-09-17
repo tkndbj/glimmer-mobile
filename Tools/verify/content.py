@@ -2876,6 +2876,15 @@ WARD_COLOURS = "rgby"
 #: colour. Named rather than derived; see the note in `check_wards`.
 WARD_ELEMENTAL = "breaker"
 
+#: `WardTier.Count` - the band a legendary stands in, and the only band any of them may stand in.
+#:
+#: **The flag and the band have to be one fact**, which is `WardCatalog.LadderProblem`'s third
+#: rule and is the whole reason `legendary` is authored rather than read off the rung: a band is
+#: punctuation over the shelf's order (`WardTier` says so in as many words), so deriving "this
+#: turret ignores the colour lock" from "its order is at least twenty-one" would make a re-rung
+#: shelf silently change what four turrets *do*. Refused in both directions below.
+WARD_LEGEND_BAND = 4
+
 #: `WardModel.Baseline` - the tenths a turret neither tougher nor harder-hitting than the free one
 #: carries, and what an unauthored `power` or `guard` means.
 WARD_BASELINE = 10
@@ -2885,11 +2894,11 @@ WARD_LEAST_GUARD = 7
 
 #: `WardTier.Count` and `WardStars.Steps` - how many bands the shelf is read in, and how many
 #: upgrades there are (one fewer than there are stars).
-WARD_TIERS = 3
+WARD_TIERS = 4
 WARD_STAR_STEPS = 4
 
 #: `WardTier.Opens` - the shelf rung each band starts at, lowest first.
-WARD_TIER_OPENS = (1, 11, 18)
+WARD_TIER_OPENS = (1, 11, 18, 21)
 
 #: `WardTier.Gates` and `WardTier.TopLevel` - the keeper level each band's rungs stand at or
 #: above, and the highest level the top band may ask for.
@@ -2899,8 +2908,8 @@ WARD_TIER_OPENS = (1, 11, 18)
 #: with the seal gone at the owner's decision, a keeper level is the whole of what opens a rung
 #: and the header is the only thing saying when a stretch of the shelf opens. A rung authored
 #: outside its band parses, prices, validates and plays - what it does is put a lie in a header.
-WARD_TIER_GATES = (1, 20, 30)
-WARD_TOP_LEVEL = 40
+WARD_TIER_GATES = (1, 20, 30, 45)
+WARD_TOP_LEVEL = 60
 
 
 #: `EndlessHubLayout.Points` - how many short lines a hub says about the lane it draws.
@@ -3368,6 +3377,10 @@ def check_wards(progression, keys, warnings, art):
 
         known.add(wid)
 
+        # Read here rather than beside the addresses it decides, because three checks below ask
+        # it and one of them runs before the art does.
+        legend = bool(entry.get("legendary"))
+
         ability = entry.get("ability") or "none"
         if ability not in WARD_ABILITIES:
             warnings.append(f"wards entry '{wid}' names unknown ability '{ability}'; it fires a "
@@ -3413,10 +3426,21 @@ def check_wards(progression, keys, warnings, art):
                           f"{WARD_LEAST_GUARD}; a turret may be a fragile choice and may not be "
                           "an impossible one")
 
+        if legend and gem <= 0 and coin <= 0:
+            errors.append(f"wards entry '{wid}' is legendary and free; a turret that wears no "
+                          "colour and answers the whole hill is the dearest thing on this shelf "
+                          "and may not be the starter")
+
         starter = starter or (gem <= 0 and coin <= 0)
 
-        for colour in WARD_COLOURS:
-            for address in (f"Siege/Wards/{wid}_{colour}", f"Siege/Wards/{wid}_{colour}_fire"):
+        # **A legendary is cut once rather than once per colour** (`WardModel.ArtFor`): it wears
+        # no ward colour, so its picture, its recoil and its three reels carry no colour letter.
+        # Walked as a one-entry list rather than as a branch inside the loop, so the addresses
+        # below are built in exactly one place whichever kind of turret this is.
+        suffixes = [""] if legend else ["_" + c for c in WARD_COLOURS]
+
+        for suffix in suffixes:
+            for address in (f"Siege/Wards/{wid}{suffix}", f"Siege/Wards/{wid}{suffix}_fire"):
                 if address not in art:
                     errors.append(f"wards entry '{wid}' has no art at '{address}' - a picture is "
                                   "not content, so adding a turret is a build")
@@ -3431,10 +3455,11 @@ def check_wards(progression, keys, warnings, art):
                 continue
 
             for kind in ("shot", "muzzle", "hit"):
-                address = f"Fx/Siege/{kind}_{wid}_{colour}"
+                address = f"Fx/Siege/{kind}_{wid}{suffix}"
                 if address not in art:
                     errors.append(f"wards entry '{wid}' has no projectile reel at '{address}' - "
-                                  "run Art > Bake Turret Projectiles")
+                                  + ("run Tools/make_legend_fx.py --write" if legend
+                                     else "run Art > Bake Turret Projectiles"))
 
         if f"Ui/Wards/{wid}" not in art:
             errors.append(f"wards entry '{wid}' has no shelf thumbnail at 'Ui/Wards/{wid}'")
@@ -3561,6 +3586,16 @@ def check_wards(progression, keys, warnings, art):
                           f"between keeper level {opens} and {closes}, and asks for {level}; a "
                           "band is the only thing saying when a stretch of the shelf opens now "
                           "that no rung is sealed behind another")
+            break
+
+        # `WardCatalog.LadderProblem`'s third rule, offline. See `WARD_LEGEND_BAND`.
+        if bool(entry.get("legendary")) != (band == WARD_LEGEND_BAND):
+            errors.append(
+                f"wards entry '{entry.get('id')}' is legendary and stands in band {band}"
+                if entry.get("legendary") else
+                f"wards entry '{entry.get('id')}' stands in band {WARD_LEGEND_BAND} and is not "
+                "legendary; every rung under that header wears no colour, so one that does is a "
+                "turret a player cannot tell from the four beside it")
             break
 
         highest, below = level, entry.get("id")
@@ -4418,9 +4453,20 @@ def main():
                   "says")
 
     if wards:
+        models = (progression.get("wards") or {}).get("models") or []
+        legends = [m for m in models if m.get("legendary")]
+
         print("")
-        print(f"turrets: {len(wards)} on the shelf, four colours each - "
-              "a run loads the four a player stood on the line")
+        print(f"turrets: {len(wards)} on the shelf - {len(wards) - len(legends)} bought per "
+              f"colour, {len(legends)} legendary and bought once; a run loads the four a player "
+              "stood on the line")
+
+        if legends:
+            gems = sum(int(m.get("gemPrice") or 0) for m in legends)
+            walls = [int(m.get("minLevel") or 0) for m in legends]
+            print(f"       the legendary band wears no colour, stands on any seat and fires at "
+                  f"every raider - {gems} gem(s) to own it all, behind keeper level "
+                  f"{min(walls)} to {max(walls)}")
 
     if tasks:
         slates = ", ".join(f"{n} {period}" for period, n in sorted(tasks["slates"].items()))

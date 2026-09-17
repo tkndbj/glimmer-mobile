@@ -43,8 +43,16 @@ namespace GlimmerGrove
         /// scrolling one. The chest is what sets the floor: drawn smaller than this it stops
         /// being a picture of treasure and becomes an inventory icon (invariant 45g's whole
         /// argument, on a row rather than an arch).
+        ///
+        /// <para>
+        /// <b>The floor moved up, on the owner's verdict after playing it.</b> A rung pays a
+        /// chest and the chest was the smallest thing on the card that named it; 164 with a 97
+        /// chest in it read as a table of contents. The row is a scrolling list, so the whole
+        /// cost of the change is how many rungs a phone shows at once — one fewer — against a
+        /// prize that is now a picture. See <see cref="ChestTall"/> for the other half.
+        /// </para>
         /// </summary>
-        public const float RowHeight = 164f;
+        public const float RowHeight = 192f;
         public const float RowGap = 14f;
         public const float Pitch = RowHeight + RowGap;
 
@@ -59,8 +67,41 @@ namespace GlimmerGrove
         const float DiscX = -404f;
         const float GoalX = -330f;
 
-        /// <summary>The chest, at the aspect the closed icon is cut to (176:244).</summary>
-        static readonly Vector2 ChestSize = new Vector2(110f, 152f);
+        /// <summary>
+        /// How tall the chest is <em>drawn</em>, and the sprite box and offset that produces.
+        ///
+        /// <para>
+        /// <b>This row typed its own box and was the last screen in the game still doing it.</b>
+        /// A closed chest is frame nought of its opening reel, so the 176x244 sprite carries the
+        /// lid's headroom: a box set straight to 110x152 draws a chest 97 tall — two thirds of
+        /// what the number says — and hangs it <b>24 units below</b> the middle of the cell it
+        /// claims to be centred in, which is what "the chests are not centred in their cards"
+        /// was. The hub, the tasks page and the streak board all convert through
+        /// <see cref="ChestPack"/>; this one did not, and nothing could see it because
+        /// <c>render_season.py</c> crops the icon to its own alpha before drawing it and so drew
+        /// the picture the screen was supposed to be drawing (invariant 48j, the same trap from
+        /// the other end).
+        /// </para>
+        /// <para>
+        /// So the height here is a <em>drawn</em> height, the sprite's box is derived from it and
+        /// the sprite is hung <see cref="ChestPack.Lift"/> of that height higher, which puts the
+        /// drawn chest on the cell's own middle. The box overhangs the card at the top by the
+        /// headroom it carries; nothing is clipped, because that part of the sprite is empty.
+        /// </para>
+        /// </summary>
+        const float ChestTall = 122f;
+
+        static readonly Vector2 ChestBox =
+            new Vector2(ChestTall / ChestPack.Fill * ChestPack.Aspect, ChestTall / ChestPack.Fill);
+
+        static readonly Vector2 ChestAt = new Vector2(0f, ChestTall * ChestPack.Lift);
+
+        /// <summary>
+        /// The seal and the padlock, on the lower right of the <em>drawn</em> chest rather than
+        /// of its sprite — measured off <see cref="ChestTall"/> so a retune takes them with it,
+        /// which is what a hand-typed pair of offsets stopped doing the moment the chest grew.
+        /// </summary>
+        static readonly Vector2 StampAt = new Vector2(ChestTall * .46f, -ChestTall * .42f);
 
         static readonly Vector2 Centre = new Vector2(.5f, .5f);
         static readonly Vector2 Left = new Vector2(0f, .5f);
@@ -72,6 +113,13 @@ namespace GlimmerGrove
         /// <summary>One track's chest inside one row.</summary>
         sealed class Cell
         {
+            /// <summary>
+            /// The cell's own box, centred on the drawn chest. What anything <em>outside</em>
+            /// this type is handed (<see cref="ChestOf"/>), because the chest's own transform is
+            /// the sprite's box and that sits a fifth of a chest higher than the picture in it.
+            /// </summary>
+            public RectTransform Host;
+
             public Image Chest;
             public Image Halo;
             public RectTransform Seal;
@@ -175,7 +223,11 @@ namespace GlimmerGrove
             row.Pool = UIKit.Img("Light", _lights, Art.Glow(128, 1.35f), Pal.A(Pal.Sun, 0f),
                                  new Vector2(_width + 150f, RowHeight + 130f), Top, Vector2.zero);
 
-            var card = UIKit.Img("Rung", _list, Art.S("Ui/" + Skins.Card), Color.white,
+            // `Skins.PlateNavy` — the profile's own blue box, darker. One reward row means one
+            // thing across this game, so the season's ladder, the streak's board and the tasks
+            // page draw the same card (invariant 44: the way to restyle every screen at once is
+            // to re-cut what a name points at). See `Skins.PlateNavy`.
+            var card = UIKit.Img("Rung", _list, Art.S("Ui/" + Skins.PlateNavy), Color.white,
                                  new Vector2(_width, RowHeight), Top, Vector2.zero);
             row.Root = (RectTransform)card.transform;
 
@@ -217,23 +269,27 @@ namespace GlimmerGrove
             var cell = new Cell();
             var host = UIKit.Box("C_" + SeasonTracks.Id(track), row.Root, new Vector2(240f, RowHeight - 12f),
                                  Centre, new Vector2(x, 0f));
+            cell.Host = host;
 
+            // On the drawn chest's own middle — which is this host's middle, because the sprite
+            // is the thing that moves (see ChestTall). A halo centred on the sprite's box would
+            // light the empty air the lid opens into.
             cell.Halo = UIKit.Img("Halo", host, Art.Glow(128, 2f), Pal.A(Pal.Gold, 0f),
-                                  new Vector2(240f, 240f), Centre, Vector2.zero);
+                                  new Vector2(ChestTall * 2f, ChestTall * 2f), Centre, Vector2.zero);
 
-            cell.Chest = UIKit.Img("Chest", host, null, Color.white, ChestSize, Centre, Vector2.zero);
+            cell.Chest = UIKit.Img("Chest", host, null, Color.white, ChestBox, Centre, ChestAt);
             cell.Chest.preserveAspect = true;
 
             var seal = UIKit.Img("Seal", host, Art.Disc(96), Pal.Mint,
-                                 new Vector2(58f, 58f), Centre, new Vector2(50f, -46f));
+                                 new Vector2(64f, 64f), Centre, StampAt);
             var tick = UIKit.Img("Tick", seal.transform, Art.S("Ui/ic_check"), Color.white,
-                                 new Vector2(34f, 34f), Centre, Vector2.zero);
+                                 new Vector2(38f, 38f), Centre, Vector2.zero);
             tick.preserveAspect = true;
             cell.Seal = (RectTransform)seal.transform;
             cell.Seal.gameObject.SetActive(false);
 
             cell.Lock = UIKit.Img("Lock", host, Art.S("Ui/ic_lock"), Pal.A(Pal.Cream, .92f),
-                                  new Vector2(46f, 46f), Centre, new Vector2(50f, -46f));
+                                  new Vector2(52f, 52f), Centre, StampAt);
             cell.Lock.preserveAspect = true;
             cell.Lock.gameObject.SetActive(false);
 
@@ -256,14 +312,20 @@ namespace GlimmerGrove
         }
 
         // -------------------------------------------------------------------- reading
-        /// <summary>Which rung a row is drawing, so the caller can find a card to burst on.</summary>
+        /// <summary>
+        /// Which rung a row is drawing, so the caller can find a card to burst on.
+        ///
+        /// <b>The cell rather than the chest image</b>, because the image is the sprite's box
+        /// and that is hung a fifth of a chest above the picture inside it — sparks thrown from
+        /// it come out of the air over the lid rather than off the chest.
+        /// </summary>
         public RectTransform ChestOf(int index, SeasonTrack track)
         {
             foreach (var row in _rows)
             {
                 if (row.Index != index) continue;
                 var cell = track == SeasonTrack.Pass ? row.Pass : row.Free;
-                return cell.Chest ? (RectTransform)cell.Chest.transform : null;
+                return cell.Host ? cell.Host : null;
             }
 
             return null;

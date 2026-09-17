@@ -172,15 +172,21 @@ def tasks(sheet, ready=("silver",), verbose=False):
     cy = TASKS_Y
     K.paste(sheet, K.skin("Hud/" + "plate_violet", ROW_WIDTH, TASKS_H), W / 2, cy)
 
-    # the rays and the shelf, both clipped to the plate in the game (RectMask2D)
-    plate = Image.new("RGBA", (int(ROW_WIDTH) - 12, int(TASKS_H) - 12), (0, 0, 0, 0))
-    fan = K.rays(256, 14).resize((860, 860), Image.LANCZOS)
-    tinted = Image.new("RGBA", fan.size, (*K.SUN, 0))
-    tinted.putalpha(fan.point(lambda v: int(v * .22)))
-    plate.alpha_composite(tinted, (plate.width // 2 - 430, plate.height // 2 - 430 + 34))
+    # The shelf, clipped in the game to the *plate's own shape* rather than to its rect - a
+    # `Mask` cut from `Hud/plate_violet`, not a `RectMask2D`. A rectangle let the light sit in
+    # the notch between the keyline and the box at all four corners, and this mirror drew the
+    # same rectangle, so it agreed with the fault instead of reporting it.
+    #
+    # **The turning starburst went with the screen's**, in the same change - a mirror still
+    # drawing a piece the screen has dropped is worse than no mirror at all (invariant 44d).
+    mould = K.skin("Hud/plate_violet", int(ROW_WIDTH) - 12, int(TASKS_H) - 12)
+    plate = Image.new("RGBA", mould.size, (0, 0, 0, 0))
 
     shelf = K.glow(170, 1.7, (41, 5, 61), .34).resize((840, 170), Image.LANCZOS)
     plate.alpha_composite(shelf, (plate.width // 2 - 420, plate.height // 2 - 85 + 84))
+    # The stencil is the mould's own alpha, so the shine stops exactly where the plate does.
+    plate.putalpha(Image.composite(plate.getchannel("A"),
+                                   Image.new("L", plate.size, 0), mould.getchannel("A")))
     K.paste(sheet, plate, W / 2, cy)
 
     tiers = ["wood", "silver", "gold", "royal"]

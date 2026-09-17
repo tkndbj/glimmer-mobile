@@ -230,6 +230,12 @@ namespace GlimmerGrove.Modes
                 post.Charges = 0;
                 post.Dark = 0f;
                 post.Bound = 0f;
+
+                // **And the stone comes off with them**, because a post that fell under a
+                // boulder would otherwise be raised already buried - a mending that buys back a
+                // turret which cannot fire is a mending that bought a picture.
+                post.Rubble = 0;
+                post.Settling = 0f;
                 post.Cool = 0f;
 
                 return raised;
@@ -334,6 +340,11 @@ namespace GlimmerGrove.Modes
                 post.Charges = 0;
                 post.Dark = 0f;
                 post.Bound = 0f;
+
+                // The stone too, for `Mend`'s reason: a line raised under rubble is a line that
+                // cannot fire, and a continue may buy a finish (invariant 23).
+                post.Rubble = 0;
+                post.Settling = 0f;
                 post.Cool = 0f;
 
                 raised++;

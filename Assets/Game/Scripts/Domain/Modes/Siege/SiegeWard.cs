@@ -133,13 +133,29 @@ namespace GlimmerGrove.Modes
         /// Pieces of rubble standing on this ward, having been buried by a colossus. Nought is
         /// a clear post.
         ///
-        /// <b>A count of taps rather than a countdown</b>, and that is the whole difference
-        /// between this and <see cref="Bound"/>: a chain runs out on the clock and a burial runs
-        /// out when the player has dug, so the two are two fields for the reason <see cref="Dark"/>
-        /// and <see cref="Bound"/> are. What a buried ward keeps is everything - fuel poured in
-        /// banks, charges wait - exactly as a chained one does; what it costs is the taps.
+        /// <para>
+        /// <b>A count of pieces rather than a countdown, and both ends take them off</b>: a tap
+        /// takes one at once (<see cref="Dig"/>) and the clock takes one every
+        /// <see cref="SiegeTuning.RubblePiece"/> seconds on its own
+        /// (<see cref="Weather"/>). The pieces are the state and the clock only decides
+        /// <em>when</em> the next one slips, which is what keeps a burial's length decided by an
+        /// integer rather than by a float comparison.
+        /// </para>
+        /// <para>
+        /// What a buried ward keeps is everything - fuel poured in banks, charges wait - exactly
+        /// as a chained one does; what it costs is the seconds, and what a player's hands buy is
+        /// how few of them.
+        /// </para>
         /// </summary>
         public int Rubble;
+
+        /// <summary>
+        /// Seconds until the next piece of rubble slips off by itself.
+        ///
+        /// <b>Meaningless while <see cref="Rubble"/> is nought</b>, and zeroed with it, so a
+        /// clear post carries no half-run clock into the next boulder.
+        /// </summary>
+        public float Settling;
 
         /// <summary>Whether it is standing, loaded, and under rubble. See <see cref="Rubble"/>.</summary>
         public bool Buried => Alive && Rubble > 0;
@@ -157,7 +173,7 @@ namespace GlimmerGrove.Modes
         /// to it lives.
         /// </para>
         /// <para>
-        /// <b>It is its own colour and nothing else, and the shelf no longer has a way to widen
+        /// <b>It is its own colour and nothing else, and no <em>ability</em> has a way to widen
         /// that.</b> A prism used to reach the next colour round for a share of a hit; with a line
         /// standing one turret per colour, the seat beside it was already answering that colour at
         /// full weight, so what the ability bought was the moments its own colour happened to be
@@ -165,8 +181,20 @@ namespace GlimmerGrove.Modes
         /// <see cref="Wards.WardAbility.Stun"/> on both its rungs (invariant 5d, asked of a
         /// purchase).
         /// </para>
+        /// <para>
+        /// <b>A legendary is the one turret the lock does not hold, and it is a property of the
+        /// model rather than of an ability.</b> That distinction is the whole reason the prism's
+        /// failure does not repeat: a part-weight reach at one neighbouring colour bought nothing
+        /// because the seat beside it already answered that colour in full, where a turret that
+        /// answers <em>everything</em> at full weight changes what a whole line is for. It is
+        /// sold at the top of the shelf behind keeper forty-five and above
+        /// (<c>WardModel.Legendary</c>), and it is strictly additive: every bolt it lands is one
+        /// that would not otherwise have been fired, so par - which is counted against the
+        /// baseline bolt - only ever over-states what a good run needs.
+        /// </para>
         /// </summary>
-        public int ReachTenths(int colour) => colour == Colour ? 10 : 0;
+        public int ReachTenths(int colour)
+            => Model.Legendary || colour == Colour ? 10 : 0;
 
         /// <summary>
         /// What a bolt from this ward is worth against <paramref name="at"/>, in tenths. Nought
@@ -206,6 +234,15 @@ namespace GlimmerGrove.Modes
         /// kills the boss, in white numbers, at half the rate.
         /// </summary>
         public bool Doubles(SiegeRaider at) => ReachTenths(at) >= 10;
+
+        /// <summary>
+        /// Whether this ward will fire at anything on the hill rather than at its own colour.
+        ///
+        /// <b>A fact about what is standing here, asked once</b> - the aim and the reach are two
+        /// readings of one rule, and `SiegeBoard.Aim` had to learn it too. Read off the model, so
+        /// a fixture that stands a legendary gets the same answer the board does.
+        /// </summary>
+        public bool Unbound => Model.Legendary;
 
         /// <summary>
         /// Whether this ward can hurt <paramref name="colour"/> at all.
@@ -315,24 +352,70 @@ namespace GlimmerGrove.Modes
         public void Shackle() => Bound = SiegeTuning.ShacklerBind;
 
         /// <summary>
-        /// Buries this ward: what a colossus's boulder does when it lands.
+        /// Buries this ward: what a colossus's boulder does when it lands. Answers whether a
+        /// fresh pile really landed.
         ///
-        /// <b>Set, never added</b>, for the hourglass's reason: a second boulder on a ward still
-        /// under the first is a fresh pile rather than a taller one, so a colossus cannot bury a
-        /// post so deep that no amount of tapping reaches it.
+        /// <b>Refused on a post already buried, never set back to full.</b> It was "set, never
+        /// added" for the hourglass's reason — a taller pile is a post no amount of tapping
+        /// reaches — and a set is now a refusal for a second one: rubble runs out on the clock
+        /// (<see cref="SiegeTuning.ColossusBury"/>), so a boulder that re-set a standing pile
+        /// would hold a post off the line for longer than that ceiling, and the ceiling is the
+        /// whole of what makes a burial a beat rather than a wall. The boulder still lands its
+        /// blow; what it does not do is start the seconds again.
         /// </summary>
-        public void Bury() => Rubble = SiegeTuning.RubbleTaps;
+        public bool Bury()
+        {
+            if (Buried) return false;
+
+            Rubble = SiegeTuning.RubbleTaps;
+            Settling = SiegeTuning.RubblePiece;
+            return true;
+        }
+
+        /// <summary>
+        /// Runs a burial down on the clock: a piece slips off every
+        /// <see cref="SiegeTuning.RubblePiece"/> seconds until the post is clear.
+        ///
+        /// <para>
+        /// <b>The whole pile weathers in whole pieces</b>, so what the clock does and what a tap
+        /// does are the same event and the view draws one picture for both (a stone leaving).
+        /// </para>
+        /// <para>
+        /// <b>The remainder is carried rather than dropped</b> (<c>Settling +=</c>), so a coarse
+        /// step of the clock takes as many pieces as it has earned and a burial is never
+        /// stretched by the frame rate — the same reason <see cref="Fill"/> carries its
+        /// overflow.
+        /// </para>
+        /// </summary>
+        public void Weather(float dt)
+        {
+            if (dt <= 0f || Rubble <= 0) return;
+
+            Settling -= dt;
+
+            while (Settling <= 0f && Rubble > 0)
+            {
+                Rubble--;
+                Settling += SiegeTuning.RubblePiece;
+            }
+
+            if (Rubble <= 0) Settling = 0f;
+        }
 
         /// <summary>
         /// Takes one piece of rubble off, answering whether one came off.
         ///
-        /// The player's half of a burial. Nought is the floor, so a tap on a clear post is
-        /// refused rather than counted.
+        /// The player's half of a burial, and the half that is worth having: the clock would
+        /// take this piece eventually, and a tap takes it now. Nought is the floor, so a tap on
+        /// a clear post is refused rather than counted.
         /// </summary>
         public bool Dig()
         {
             if (Rubble <= 0) return false;
+
             Rubble--;
+            if (Rubble <= 0) Settling = 0f;
+
             return true;
         }
 

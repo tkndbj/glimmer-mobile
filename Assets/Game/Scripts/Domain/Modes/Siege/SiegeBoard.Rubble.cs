@@ -13,6 +13,12 @@ namespace GlimmerGrove.Modes
     /// the resource a colossus is built to take (<see cref="SiegeKind.Colossus"/>).
     /// </para>
     /// <para>
+    /// <b>It buys seconds rather than the post</b>, since the pile weathers on its own inside
+    /// <see cref="SiegeTuning.ColossusBury"/> (<c>SiegeWard.Weather</c>). That is what a burial
+    /// lost when it stopped being able to wall a run, and it is all it lost: the fastest post
+    /// back on the line is still the one the player dug.
+    /// </para>
+    /// <para>
     /// <b>Refused rather than counted on a clear post</b>, for <see cref="Overcharge"/>'s reason:
     /// a tap that does nothing has to say so, or the view draws a dig on a post that was never
     /// buried and the player learns that tapping turrets is a thing.

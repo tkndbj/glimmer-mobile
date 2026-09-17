@@ -74,8 +74,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7f3d03fc69db15549a1a7fd6d2dd93f0, type: 2}
   - {fileID: 11400000, guid: 82cde781aeb2b8c47a1f377b73392623, type: 2}
   - {fileID: 11400000, guid: b92e976ef28c68c42becd8a3e8622ca7, type: 2}
-  - {fileID: 11400000, guid: c16506114107c604fb3ea68f212e0b4a, type: 2}
   - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
+  - {fileID: 11400000, guid: c16506114107c604fb3ea68f212e0b4a, type: 2}
   - {fileID: 11400000, guid: eb66a2de3aecee54b8958759c2eff7bc, type: 2}
   - {fileID: 11400000, guid: 4d5a579f47b771f40be12597dc3a83b4, type: 2}
   - {fileID: 11400000, guid: 3443c775a1c727145bcd87368713f7dd, type: 2}
@@ -709,6 +709,46 @@ MonoBehaviour:
     - Art/Fx/Siege/levin
     - Art/Fx/Siege/boulder
     - Art/Fx/Siege/boulder_hit
+    - Art/Fx/Siege/shot_stasis
+    - Art/Fx/Siege/shot_sunderer
+    - Art/Fx/Siege/hit_eclipse
+    - Art/Fx/Siege/hit_pyroclast
+    - Art/Fx/Siege/muzzle_tempest
+    - Art/Fx/Siege/hit_sunderer
+    - Art/Fx/Siege/muzzle_eclipse
+    - Art/Fx/Siege/shot_pyroclast
+    - Art/Fx/Siege/muzzle_sunderer
+    - Art/Siege/Wards/eclipse_fire
+    - Art/Fx/Siege/hit_permafrost
+    - Art/Fx/Siege/hit_tempest
+    - Art/Fx/Siege/hit_wellspring
+    - Art/Fx/Siege/shot_eclipse
+    - Art/Fx/Siege/hit_railgun
+    - Art/Fx/Siege/shot_ricochet
+    - Art/Fx/Siege/hit_stasis
+    - Art/Fx/Siege/shot_wellspring
+    - Art/Siege/Wards/pyroclast_fire
+    - Art/Fx/Siege/muzzle_stasis
+    - Art/Siege/Wards/sunderer_fire
+    - Art/Fx/Siege/shot_permafrost
+    - Art/Fx/Siege/muzzle_permafrost
+    - Art/Fx/Siege/shot_tempest
+    - Art/Fx/Siege/shot_starfall
+    - Art/Siege/Wards/tempest_fire
+    - Art/Fx/Siege/muzzle_wellspring
+    - Art/Siege/Wards/stasis_fire
+    - Art/Siege/Wards/permafrost_fire
+    - Art/Fx/Siege/muzzle_ricochet
+    - Art/Fx/Siege/shot_railgun
+    - Art/Siege/Wards/starfall_fire
+    - Art/Fx/Siege/muzzle_starfall
+    - Art/Siege/Wards/railgun_fire
+    - Art/Fx/Siege/hit_starfall
+    - Art/Siege/Wards/ricochet_fire
+    - Art/Fx/Siege/muzzle_pyroclast
+    - Art/Siege/Wards/wellspring_fire
+    - Art/Fx/Siege/hit_ricochet
+    - Art/Fx/Siege/muzzle_railgun
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1c550e3b8c7244948b0ae7d2fbce14c6, type: 2}

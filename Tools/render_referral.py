@@ -44,12 +44,13 @@ MANIFEST = CONTENT / "manifest.json"
 CHROME = 92.0
 BANNER_H = 138.0
 HERO_H = 300.0
-OFFER_H = 168.0
+#: `ReferralScreen.OfferH` - the same as a row, because in one of its two shapes it is one.
+OFFER_H = 196.0
 HEADING_H = 62.0
 WIDTH = 1000.0
-ROW_H, ROW_GAP = 156.0, 12.0
-SEAT_SIZE, SEAT_X, REWARD_TALL = 124.0, 106.0, 88.0
-TEXT_X, TEXT_W = 196.0, 450.0
+ROW_H, ROW_GAP = 196.0, 12.0
+SEAT_SIZE, SEAT_X, REWARD_TALL = 160.0, 118.0, 124.0
+TEXT_X, TEXT_W = 220.0, 450.0
 CODE_W, CODE_H, SHARE_W, SHARE_H = 470.0, 96.0, 300.0, 104.0
 
 #: `ChestPack.Fill` / `Aspect` / `Lift`: a chest is placed in *drawn* units (48j).
@@ -97,11 +98,17 @@ def chest_art():
 ART = chest_art()
 
 
-def drawn(tier, h, lit=True):
+#: `ReferralScreen.Paint`'s three reward tints: full colour where there is something to take,
+#: the cool near-white on a row already paid, and the tasks ladder's grey on one not reached.
+REWARD_TINT = {"paid": (230, 240, 255), "ahead": (199, 209, 230)}
+
+
+def drawn(tier, h, face="lit"):
     im, box = ART[tier]
     w = h * (box[2] - box[0]) / float(box[3] - box[1])
     out = im.crop(box).resize((max(1, int(round(w))), max(1, int(round(h)))), Image.LANCZOS)
-    return out if lit else K.tint(out, (230, 240, 255))
+    tint = REWARD_TINT.get(face)
+    return K.tint(out, tint) if tint else out
 
 
 def icon(name, box):
@@ -195,12 +202,12 @@ def offer_row(sheet, y):
     left = W / 2 - WIDTH / 2
     K.paste(sheet, K.skin("Hud/plate_blue", WIDTH, OFFER_H), W / 2, cy)
 
-    K.paste(sheet, K.glow(262, 2.0, K.AQUA, .24), left + 112, cy)
-    K.paste(sheet, icon("ic_key", (118, 118)), left + 112, cy)
+    K.paste(sheet, K.glow(286, 2.0, K.AQUA, .24), left + SEAT_X, cy)
+    K.paste(sheet, icon("ic_key", (132, 132)), left + SEAT_X, cy)
 
-    hint_w = 470.0
-    K.text(sheet, txt("ui.referral.offer_title"), left + TEXT_X, cy - 24, 36, anchor="l")
-    K.shrunk(sheet, txt("ui.referral.offer_hint", CHAPTER_NAME), left + TEXT_X + hint_w / 2, cy + 24,
+    hint_w = TEXT_W
+    K.text(sheet, txt("ui.referral.offer_title"), left + TEXT_X, cy - 30, 36, anchor="l")
+    K.shrunk(sheet, txt("ui.referral.offer_hint", CHAPTER_NAME), left + TEXT_X + hint_w / 2, cy + 28,
              hint_w, 34, 23, 14, fill=(255, 243, 220), outline=0)
 
     bx = W / 2 + WIDTH / 2 - 150
@@ -245,20 +252,31 @@ def aura(sheet, cx, cy, size):
     sheet.alpha_composite(lit, (int(cx - fan.width / 2), int(cy - fan.height / 2)))
 
 
-def row(sheet, cx, cy, h, plate, tier, count, title, sub, state, mark):
+def row(sheet, cx, cy, h, plate, tier, count, title, sub, state, mark, flat=False):
     """`ReferralScreen.Furnish` + `Paint`.
 
     `state` is 'paid', 'lit', 'waiting' or 'ahead'. One answer at the right end at a time:
     a COLLECT key, a seal, or the pill saying how far along the count is.
+
+    `flat` draws the row without its own `CanvasGroup` fade, so the caller can apply that fade
+    to the finished picture the way a group does - to everything on the card at once, rather
+    than to each piece as it lands. It is a *parameter* rather than a spelling of `state`,
+    because the recursion has to keep drawing the same state: written as a fifth state the row
+    came back with a progress pill where its seal should have been.
     """
     lit = state == "lit"
     paid = state == "paid"
     waiting = state in ("lit", "waiting")
 
-    if state == "ahead" and plate == "Hud/card":
+    # **A paid row is the only one that steps back**, at `Paint`'s .62 - the tasks page's rule.
+    # This used to fade an *unreached* row to .74, which on a board where every row is unreached
+    # is a page of ghosts; the mirror drew that faithfully and nobody read the picture until the
+    # owner played it. See `ReferralScreen.Paint`.
+    if paid and not flat:
         cell = Image.new("RGBA", (int(WIDTH + 200), int(h + 60)), (0, 0, 0, 0))
-        row(cell, cell.width / 2, cell.height / 2, h, plate, tier, count, title, sub, "ahead_flat", mark)
-        cell.putalpha(cell.getchannel("A").point(lambda v: int(v * .74)))
+        row(cell, cell.width / 2, cell.height / 2, h, plate, tier, count, title, sub, state, mark,
+            flat=True)
+        cell.putalpha(cell.getchannel("A").point(lambda v: int(v * .62)))
         sheet.alpha_composite(cell, (int(cx - cell.width / 2), int(cy - cell.height / 2)))
         return
 
@@ -278,17 +296,18 @@ def row(sheet, cx, cy, h, plate, tier, count, title, sub, state, mark):
     if lit:
         aura(sheet, sx, cy, SEAT_SIZE)
     K.paste(sheet, K.skin("Hud/slot", SEAT_SIZE, SEAT_SIZE), sx, cy)
-    K.paste(sheet, drawn(tier, REWARD_TALL, not paid), sx, cy - REWARD_TALL * CHEST_LIFT)
+    K.paste(sheet, drawn(tier, REWARD_TALL, "paid" if paid else "ahead" if not waiting else "lit"),
+            sx, cy - REWARD_TALL * CHEST_LIFT)
 
     # the count, on the well's corner, only when it is more than one
     if count > 1:
-        bx, by = sx + SEAT_SIZE / 2 - 10, cy + SEAT_SIZE / 2 - 12
-        K.paste(sheet, K.round_rect(46, 46, 23, K.GOLD), bx, by)
-        K.text(sheet, "x%d" % count, bx, by, 24, fill=(77, 51, 13), outline=0)
+        bx, by = sx + SEAT_SIZE / 2 - 14, cy + SEAT_SIZE / 2 - 16
+        K.paste(sheet, K.round_rect(54, 54, 27, K.GOLD), bx, by)
+        K.text(sheet, "x%d" % count, bx, by, 27, fill=(77, 51, 13), outline=0)
 
     colour = K.GOLD if lit else (K.MINT if paid else K.CREAM)
-    K.text(sheet, title, left + TEXT_X, cy - 26, 31, fill=colour, anchor="l")
-    K.text(sheet, sub, left + TEXT_X, cy + 22, 25, fill=(255, 243, 220), outline=2, anchor="l")
+    K.text(sheet, title, left + TEXT_X, cy - 32, 32, fill=colour, anchor="l")
+    K.text(sheet, sub, left + TEXT_X, cy + 28, 25, fill=(255, 243, 220), outline=2, anchor="l")
 
     if waiting:
         bx = cx + WIDTH / 2 - 130
@@ -338,7 +357,7 @@ def board(sheet, top, finished, paid):
             sub = txt("ui.referral.opened", opened, count)
         else:
             sub = txt("ui.referral.pays", count, txt("chest.%s.name" % PER_TIER))
-        row(strip, W / 2, i * (ROW_H + ROW_GAP) + ROW_H / 2, ROW_H, "Hud/card", PER_TIER, count,
+        row(strip, W / 2, i * (ROW_H + ROW_GAP) + ROW_H / 2, ROW_H, "Hud/plate_navy", PER_TIER, count,
             txt("ui.referral.friend_n", friend).upper(), sub, state,
             txt("ui.referral.progress", min(finished, friend), friend))
 

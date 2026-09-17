@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using GlimmerGrove.Modes;
@@ -131,6 +132,187 @@ namespace GlimmerGrove.Tests
                 else
                     Assert.AreEqual(SiegeTuning.WardCapacity, held, model.Id);
             }
+        }
+
+        // ------------------------------------------------------------- the legendary band
+        /// <summary>
+        /// <b>A legendary is written down once, and the row it is written down under is the one
+        /// every reader already honoured.</b>
+        ///
+        /// <para>
+        /// A turret is bought per colour, so its row is <c>{id}:{colour}</c>; a legendary wears
+        /// none, so its row is the bare id — which has meant <em>every colour</em> in this file
+        /// since colours shipped, because that is what a build that owned turrets outright wrote
+        /// and the only reading a union merge could safely give one (<c>WardHolding</c>). That is
+        /// the whole reason the band cost the save no schema version and the rules no release.
+        /// </para>
+        /// <para>
+        /// <b>Asked of the ledger's own predicate rather than of a string</b>, because the thing
+        /// that could break is not the spelling: it is a reader that checks the exact key and
+        /// silently stops honouring the bare one, which is invariant 15a's lesson about a rule
+        /// with two halves.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ALegendaryIsHeldOnEverySeatFromOneRow()
+        {
+            var legend = Legendary();
+            var ordinary = WardCatalog.Default.Find("cleaver");
+
+            Assert.IsNotNull(ordinary);
+            Assert.IsFalse(ordinary.Legendary);
+
+            Assert.AreEqual(legend.Id, WardHolding.Row(legend, 'r'), "a legendary carries a seat");
+            Assert.AreEqual("cleaver:r", WardHolding.Row(ordinary, 'r'));
+
+            var bought = new HashSet<string>(StringComparer.Ordinal) { WardHolding.Row(legend, 'r') };
+
+            for (int i = 0; i < WardLine.Colours.Length; i++)
+            {
+                char colour = WardLine.Colours[i];
+
+                Assert.IsTrue(WardLedger.IsHeld(legend, colour, bought.Contains),
+                              $"a legendary bought once is not held on '{colour}'");
+                Assert.IsFalse(WardLedger.IsHeld(ordinary, colour, bought.Contains),
+                               $"a turret nobody bought is held on '{colour}'");
+            }
+        }
+
+        /// <summary>
+        /// <b>A legendary's upgrades are one ladder rather than four, and every seat reads it.</b>
+        ///
+        /// The star ledger keys on the holding (<c>WardStarLedger</c>), so this is the same fact
+        /// as the row above asked of the other half of the feature — and it is the half that
+        /// could fail silently, because a reader that missed the bare row would show a five-star
+        /// legendary at one star on all four seats with nothing saying so.
+        /// </summary>
+        [Test]
+        public void ALegendaryCarriesOneStarLadderForTheWholeLine()
+        {
+            var legend = Legendary();
+
+            WardStarLedger.LoadFrom(new[]
+            {
+                new WardStarDto { ward = WardHolding.Row(legend, 'r'), stars = 4 },
+            });
+
+            for (int i = 0; i < WardLine.Colours.Length; i++)
+                Assert.AreEqual(4, WardStarLedger.StarsOf(legend, WardLine.Colours[i]),
+                                $"seat '{WardLine.Colours[i]}' lost the legendary's ladder");
+
+            // And an ordinary turret is still per seat, or the fallback above would have quietly
+            // widened every holding in the game.
+            WardStarLedger.LoadFrom(new[]
+            {
+                new WardStarDto { ward = "cleaver:r", stars = 5 },
+            });
+
+            Assert.AreEqual(5, WardStarLedger.StarsOf("cleaver", 'r'));
+            Assert.AreEqual(WardStars.Least, WardStarLedger.StarsOf("cleaver", 'b'));
+
+            WardStarLedger.LoadFrom(null);
+        }
+
+        /// <summary>
+        /// <b>The legendary flag and the legendary band are one fact, and the roster is refused
+        /// when they disagree.</b>
+        ///
+        /// <para>
+        /// <c>WardModel.Legendary</c> is authored rather than read off the rung, for
+        /// <c>WardTier</c>'s own reason — a band is punctuation over the shelf's order and may not
+        /// decide what a turret <em>does</em>. So something has to hold the two together, and it
+        /// is <c>WardCatalog.LadderProblem</c>: a turret that ignored the colour lock under a
+        /// TIER II header would be the mode's central rule suspended where nothing says so, and a
+        /// turret in the legendary band that still obeyed it would be the header lying the other
+        /// way. Both directions, because either alone is a hole.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ALegendaryStandsInTheLegendaryBandAndNothingElseDoes()
+        {
+            Assert.IsNull(WardCatalog.Default.LadderProblem(), "the shipped roster is a ladder");
+
+            foreach (var model in WardCatalog.Default.Models)
+                Assert.AreEqual(model.Legendary, WardTier.Of(model) == WardTier.Count,
+                                $"'{model.Id}' is in band {WardTier.Of(model)}");
+
+            // **An ordinary turret standing under the legendary header**, which parses, prices,
+            // validates and plays - and puts a lie in a header. Asked through `Resolve`, because
+            // that is the door content comes in by and the only one a bad file can ever use.
+            var refused = Refusal(m => m.Id == "tempest"
+                                     ? new WardModel(m.Id, m.Ability, m.Magnitude, m.Extent,
+                                                     m.GemPrice, m.CoinPrice, m.MinLevel, m.Order,
+                                                     m.PowerTenths, m.GuardTenths, false)
+                                     : m);
+
+            Assert.IsTrue(refused.Exists(p => p.Contains("legendary")),
+                          "a turret that wears a colour was accepted under LEGENDARY: "
+                          + string.Join(" | ", refused));
+
+            // And a legendary dropped into the band below it.
+            var strayed = Refusal(m => m.Id == "apex"
+                                     ? new WardModel(m.Id, m.Ability, m.Magnitude, m.Extent,
+                                                     m.GemPrice, m.CoinPrice, m.MinLevel, m.Order,
+                                                     m.PowerTenths, m.GuardTenths, true)
+                                     : m);
+
+            Assert.IsTrue(strayed.Exists(p => p.Contains("legendary")),
+                          "a legendary under a TIER III header was accepted: "
+                          + string.Join(" | ", strayed));
+        }
+
+        /// <summary>The first legendary on the shelf, and an assertion that there is one.</summary>
+        static WardModel Legendary()
+        {
+            foreach (var model in WardCatalog.Default.Models)
+                if (model.Legendary) return model;
+
+            Assert.Fail("no turret in the roster is legendary");
+            return null;
+        }
+
+        /// <summary>
+        /// What <c>WardCatalog.Resolve</c> says about the shipped roster with one entry rewritten.
+        ///
+        /// <b>Through <c>Resolve</c> rather than through the private constructor</b>, so what is
+        /// being tested is the door content comes in by — which is the only door a bad file can
+        /// ever use. A refused roster answers the built-in one and names the fault, so what an
+        /// assertion reads is the fault rather than the catalog.
+        /// </summary>
+        static List<string> Refusal(Func<WardModel, WardModel> swap)
+        {
+            var dto = new Content.WardsDto();
+            var rows = new List<Content.WardModelDto>();
+
+            foreach (var model in WardCatalog.Default.Models)
+            {
+                var it = swap(model);
+
+                rows.Add(new Content.WardModelDto
+                {
+                    id = it.Id,
+                    ability = WardAbilities.NameOf(it.Ability),
+                    magnitude = it.Magnitude,
+                    extent = it.Extent,
+                    gemPrice = it.GemPrice,
+                    coinPrice = it.CoinPrice,
+                    minLevel = it.MinLevel,
+                    order = it.Order,
+                    power = it.PowerTenths,
+                    guard = it.GuardTenths,
+                    legendary = it.Legendary,
+                });
+            }
+
+            dto.models = rows.ToArray();
+
+            var problems = new List<string>();
+            var read = WardCatalog.Resolve(dto, problems);
+
+            Assert.AreSame(WardCatalog.Default, read,
+                           "a roster this gate should have refused was accepted");
+
+            return problems;
         }
 
         /// <summary>

@@ -318,19 +318,30 @@ KIT = [
           trim=True, hue=0.782, pull=1.0, sat=1.10),
 
     # **The fifth is the blue one taken down, and it is a *card* rather than a fourth hue.**
-    # The tasks page is a list of reward cards, and `card` - the kit's sunk navy - draws a row
-    # that is a container and nothing else. What the owner asked for is what the profile's
-    # sections wear: the mould, with its two-tone face, its lit top edge and its turning
-    # keyline, in a blue dark enough that a list of six of them still reads as a list rather
-    # than as six bright plates fighting the wall behind them.
+    # Every reward row in this game - the tasks page, the streak board, the season ladder -
+    # used to draw on `card`, the kit's sunk navy, which is a container and nothing else. What
+    # the owner asked for is what the profile's sections wear: the mould, with its two-tone
+    # face, its lit top edge and its turning keyline, in the same blue, darker.
     #
-    # `dim` rather than a second hue, deliberately: this *is* `plate_blue`, so a re-cut that
-    # moves the profile's boxes moves these with them, and the two can never drift into two
-    # blues. Half is measured rather than typed - the face lands at (5, 78, 124), which is
-    # between `card`'s (7, 30, 69) and `plate_blue`'s (10, 155, 248) and above the wall the
-    # tasks page stands on. `Tools/render_tasks.py` is what says whether that is right.
+    # `dim` rather than a second hue, deliberately, and it is not a compromise: a multiply
+    # keeps hue exactly and keeps HSV saturation exactly, so this *is* `plate_blue` and a
+    # re-cut that moves the profile's boxes moves these with them. The two can never drift
+    # into two blues.
+    #
+    # **The amount was chosen by looking, twice.** Half lands the face at (5, 78, 124), which
+    # reads as a muted steel against the bright wall these pages stand on - a darker
+    # *something*, not a darker blue. Swatched at 1.00 / .82 / .72 / .62 / .50 against that
+    # wall, .72 was taken as the deepest that still read as the profile's own colour.
+    #
+    # **The owner played it and asked for brighter, and the swatch run again settles it at
+    # .88.** The question is not how dark the plate may be, it is how close to the wall it may
+    # come: at 1.00 the row *is* the wall's own blue and the card dissolves into the brick
+    # behind it, and .94 is nearly there. .88 lands the face at (0, 132, 218), a clear step up
+    # from .72's (0, 108, 178) and still plainly a plate standing on a wall rather than a hole
+    # in one. `Tools/render_tasks.py`, `render_streak.py`, `render_season.py` and
+    # `render_referral.py` are where that question gets settled, because all four draw it.
     Piece("cartoon", "Artboard 32 copy 2", "plate_navy", 1.0, slice_x=True, slice_y=True,
-          trim=True, hue=0.565, pull=1.0, sat=1.14, dim=.50),
+          trim=True, hue=0.565, pull=1.0, sat=1.14, dim=.88),
 
     # **The fourth is the Battle key's own colour, and it exists because a banner is not a
     # pill.** A glade's name plate is 340x62 - 5.5:1, against the mould's 2.4:1 - and the owner

@@ -616,18 +616,30 @@ function starsOf(save: Record<string, unknown>, id: string, colour: string): num
   // Keyed on the *holding* rather than on the turret, because a turret is bought per colour and
   // upgraded per seat — `WardStarDto.ward` is `{id}:{colour}`. The rules cap the array at 128;
   // walking no further is belt and braces against a document written before that cap existed.
+  //
+  // <b>And a bare row counts, which is `ownsWard`'s clause arriving here.</b> A legendary turret
+  // is bought once rather than once per seat, so its ladder is written under the id alone
+  // (`WardHolding.Row`) — a reader that asked only for `{id}:{colour}` would publish a
+  // five-star legendary at one star on all four seats, with nothing saying so. The per-colour
+  // row is preferred where both somehow exist, which is `WardStarLedger.StarsOf`'s own order.
   const key = id + WARD_HOLDING_MARK + colour;
+  let bare: number | null = null;
 
   for (const raw of rows.slice(0, 128)) {
     const row = raw as { ward?: unknown; stars?: unknown } | null;
     if (!row || typeof row !== "object") continue;
-    if (row.ward !== key) continue;
+    if (row.ward !== key && row.ward !== id) continue;
 
     const stars = Math.floor(Number(row.stars ?? 0));
     if (!Number.isFinite(stars)) return WARD_STARS_LEAST;
 
-    return Math.min(Math.max(stars, WARD_STARS_LEAST), WARD_STARS_MOST);
+    const sane = Math.min(Math.max(stars, WARD_STARS_LEAST), WARD_STARS_MOST);
+
+    if (row.ward === key) return sane;
+    bare = bare === null ? sane : Math.max(bare, sane);
   }
+
+  if (bare !== null) return bare;
 
   // Absent means one star — what a turret bought before the ladder shipped means, and what a
   // rolled-back client writes. There is no sentinel and there never was one.

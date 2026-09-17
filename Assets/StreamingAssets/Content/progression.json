@@ -506,6 +506,14 @@
             60000,
             150000
           ]
+        },
+        {
+          "prices": [
+            25000,
+            70000,
+            160000,
+            400000
+          ]
         }
       ]
     },
@@ -717,6 +725,123 @@
         "power": 11,
         "guard": 10,
         "order": 20
+      },
+      {
+        "id": "tempest",
+        "ability": "chain",
+        "magnitude": 12,
+        "extent": 4,
+        "gemPrice": 1800,
+        "minLevel": 45,
+        "power": 14,
+        "guard": 14,
+        "legendary": true,
+        "order": 21
+      },
+      {
+        "id": "ricochet",
+        "ability": "chain",
+        "magnitude": 14,
+        "extent": 5,
+        "gemPrice": 2100,
+        "minLevel": 46,
+        "power": 15,
+        "guard": 13,
+        "legendary": true,
+        "order": 22
+      },
+      {
+        "id": "pyroclast",
+        "ability": "ember",
+        "magnitude": 12,
+        "extent": 60,
+        "gemPrice": 2400,
+        "minLevel": 48,
+        "power": 17,
+        "guard": 12,
+        "legendary": true,
+        "order": 23
+      },
+      {
+        "id": "permafrost",
+        "ability": "frost",
+        "magnitude": 8,
+        "extent": 40,
+        "gemPrice": 2800,
+        "minLevel": 50,
+        "power": 15,
+        "guard": 16,
+        "legendary": true,
+        "order": 24
+      },
+      {
+        "id": "sunderer",
+        "ability": "rend",
+        "magnitude": 16,
+        "gemPrice": 3200,
+        "minLevel": 52,
+        "power": 20,
+        "guard": 11,
+        "legendary": true,
+        "order": 25
+      },
+      {
+        "id": "stasis",
+        "ability": "stun",
+        "extent": 14,
+        "gemPrice": 3600,
+        "minLevel": 53,
+        "power": 16,
+        "guard": 15,
+        "legendary": true,
+        "order": 26
+      },
+      {
+        "id": "railgun",
+        "ability": "pierce",
+        "magnitude": 16,
+        "extent": 3,
+        "gemPrice": 4000,
+        "minLevel": 55,
+        "power": 18,
+        "guard": 12,
+        "legendary": true,
+        "order": 27
+      },
+      {
+        "id": "starfall",
+        "ability": "splash",
+        "magnitude": 12,
+        "extent": 2,
+        "gemPrice": 4500,
+        "minLevel": 56,
+        "power": 17,
+        "guard": 13,
+        "legendary": true,
+        "order": 28
+      },
+      {
+        "id": "wellspring",
+        "ability": "siphon",
+        "magnitude": 14,
+        "gemPrice": 5000,
+        "minLevel": 58,
+        "power": 16,
+        "guard": 18,
+        "legendary": true,
+        "order": 29
+      },
+      {
+        "id": "eclipse",
+        "ability": "chain",
+        "magnitude": 16,
+        "extent": 6,
+        "gemPrice": 6000,
+        "minLevel": 60,
+        "power": 22,
+        "guard": 16,
+        "legendary": true,
+        "order": 30
       }
     ]
   },

@@ -137,9 +137,51 @@ namespace GlimmerGrove.Wards
         /// <summary>Where it sits on the shelf. Authored, for <c>HomesteadRegion.Order</c>'s reason.</summary>
         public readonly int Order;
 
+        /// <summary>
+        /// Whether this turret wears no colour: it stands on any seat, it was bought once rather
+        /// than once per seat, and it fires at everything on the hill.
+        ///
+        /// <para>
+        /// <b>Three consequences of one fact, which is why it is one field.</b> Every other turret
+        /// is bought for a colour, drawn in that colour and fires only at that colour
+        /// (<see cref="WardHolding"/>, <see cref="ArtFor"/>, <c>SiegeWard.ReachTenths</c>). A
+        /// legendary is the negation of all three at once, and spelling it three times is three
+        /// predicates that can come to disagree — which is precisely how <c>IsStarter</c> was got
+        /// wrong (invariant 16j: "free" was <c>Cost &lt;= 0</c> until a second currency arrived).
+        /// </para>
+        /// <para>
+        /// <b>Authored rather than read off the band, and the band is the reason.</b>
+        /// <see cref="WardTier"/> says in as many words that a band is not a price and not a stat;
+        /// deriving "this turret ignores the colour lock" from "its order is at least twenty-one"
+        /// would make the shelf's punctuation into the mode's central rule, and a re-rung shelf
+        /// would then silently change what four turrets <em>do</em>. So content says so, and both
+        /// content gates refuse a legendary outside the legendary band and anything else inside it
+        /// (<see cref="WardCatalog.LadderProblem"/>).
+        /// </para>
+        /// <para>
+        /// <b>It is still strictly an addition, which is what keeps it out of par's way.</b> Par
+        /// is the hill's health over a perfect match computed against the baseline bolt
+        /// (<see cref="PowerTenths"/>): a turret that reaches every colour only ever fires bolts
+        /// it would otherwise not have fired, so a run ends sooner and par over-states what a good
+        /// one needs — the direction invariant 22 says to err in. Nothing about a star line moves.
+        /// </para>
+        /// </summary>
+        public readonly bool Legendary;
+
+        /// <summary>
+        /// Whether this turret's pictures and reels are cut once rather than once per ward colour.
+        ///
+        /// <b>Named apart from <see cref="Legendary"/> even though it answers the same today</b>,
+        /// because what a reader at an address wants to know is "is this one picture or four" and
+        /// what a reader at the hill wants to know is "does the colour lock hold". Two names, one
+        /// fact, and the day they stop being one fact there is a place to say so.
+        /// </summary>
+        public bool Colourless => Legendary;
+
         public WardModel(string id, WardAbility ability, int magnitude, int extent,
                          int gemPrice, int coinPrice, int minLevel, int order,
-                         int powerTenths = Baseline, int guardTenths = Baseline)
+                         int powerTenths = Baseline, int guardTenths = Baseline,
+                         bool legendary = false)
         {
             Id = id ?? string.Empty;
             Ability = ability;
@@ -149,6 +191,7 @@ namespace GlimmerGrove.Wards
             CoinPrice = coinPrice < 0 ? 0 : coinPrice;
             MinLevel = minLevel < 0 ? 0 : minLevel;
             Order = order;
+            Legendary = legendary;
 
             // **Clamped here rather than checked at a call site**, so "no turret hits softer than
             // the baseline" is a fact about the type and not a rule somebody has to remember. A
@@ -189,11 +232,20 @@ namespace GlimmerGrove.Wards
         /// addresses <c>AssetManifest</c> cannot name — which catches a missing picture and a
         /// misspelled id at once, where a literal only ever catches the second.
         /// </para>
+        /// <para>
+        /// <b>A legendary answers one address for every colour</b>, because it wears none
+        /// (<see cref="Legendary"/>) — one picture and one recoil rather than four of each. Every
+        /// caller here already takes a colour and none of them has to learn about it, which is the
+        /// whole reason the decision lives on the model: the board, the shelf, the preview stage
+        /// and both content gates all ask this and get the right answer without a branch.
+        /// </para>
         /// </summary>
-        public string ArtFor(char colour) => "Wards/" + Id + "_" + colour;
+        public string ArtFor(char colour)
+            => Colourless ? "Wards/" + Id : "Wards/" + Id + "_" + colour;
 
-        /// <summary>The reel it fires with, in this colour.</summary>
-        public string FireFor(char colour) => "Wards/" + Id + "_" + colour + "_fire";
+        /// <summary>The reel it fires with, in this colour. See <see cref="ArtFor"/>.</summary>
+        public string FireFor(char colour)
+            => Colourless ? "Wards/" + Id + "_fire" : "Wards/" + Id + "_" + colour + "_fire";
 
         /// <summary>
         /// The one turret that draws the shared <c>shot_{colour}</c> reels rather than four of its
@@ -280,14 +332,20 @@ namespace GlimmerGrove.Wards
         /// and one that does nothing beyond firing has nothing to depict. Those four are the
         /// elemental bolts the starter has always thrown.
         /// </summary>
+        /// <b>And a legendary's three are cut once</b>, for <see cref="ArtFor"/>'s reason: it
+        /// wears no ward colour, so a per-colour reel would be the same picture written four
+        /// times and four claims on a scope for one thing on the screen (invariant 7b).
         string Reel(string kind, char colour)
-            => OwnShot ? kind + "_" + Id + "_" + colour : kind + "_" + colour;
+            => !OwnShot ? kind + "_" + colour
+             : Colourless ? kind + "_" + Id
+             : kind + "_" + Id + "_" + colour;
 
         /// <summary>The one uncoloured picture the shelf browses it with.</summary>
         public string Thumb => "Wards/" + Id;
 
         public override string ToString()
             => Id + " (" + WardAbilities.NameOf(Ability) + " " + Magnitude + "/" + Extent
-             + ", power " + PowerTenths + ", guard " + GuardTenths + ")";
+             + ", power " + PowerTenths + ", guard " + GuardTenths
+             + (Legendary ? ", legendary" : "") + ")";
     }
 }

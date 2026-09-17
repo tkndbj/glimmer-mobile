@@ -52,15 +52,15 @@ HEADING_H = 62.0
 WIDTH = 1000.0
 
 #: `StreakScreen` - one night is one row, the full width of the page.
-ROW_H, ROW_GAP = 156.0, 12.0
+ROW_H, ROW_GAP = 184.0, 12.0
 
 #: `StreakScreen.SeatSize`, `SeatX`, `RewardTall`, `TextX` and `TextW`. `REWARD_TALL` is a
 #: *drawn* height, which is the only unit a chest and a gem can share - the closed chest carries
 #: the lid's headroom, so a box set straight from a height draws it two thirds the size of the
 #: gem beside it. `ChestPack` owns the conversion and this mirror has to make the same one or it
 #: answers the wrong question about every row that pays a chest (invariant 44d).
-SEAT_SIZE, SEAT_X, REWARD_TALL = 124.0, 106.0, 88.0
-TEXT_X, TEXT_W = 196.0, 450.0
+SEAT_SIZE, SEAT_X, REWARD_TALL = 148.0, 114.0, 110.0
+TEXT_X, TEXT_W = 206.0, 450.0
 CHEST_FILL, CHEST_LIFT = 155.0 / 244.0, 38.5 / 155.0
 PER_ROW = 4
 
@@ -326,7 +326,7 @@ def row(sheet, cx, cy, night, rung, state, days):
             (int(WIDTH + 150), int(ROW_H + 130)), Image.LANCZOS)
         K.paste(sheet, pool, cx, cy)
 
-    card = K.skin("Hud/card", WIDTH, ROW_H)
+    card = K.skin("Hud/plate_navy", WIDTH, ROW_H)
     if kept:
         card = K.tint(card, (230, 240, 255))
     K.paste(sheet, card, cx, cy)
@@ -356,9 +356,9 @@ def row(sheet, cx, cy, night, rung, state, days):
                 else K.tint(K.fit(icon, box), (214, 224, 240)), sx, cy)
 
     title = K.GOLD if lit else ((123, 216, 106) if kept else K.CREAM)
-    K.text(sheet, txt("ui.streak.day_n", night).upper(), left + TEXT_X, cy - 26, 31,
+    K.text(sheet, txt("ui.streak.day_n", night).upper(), left + TEXT_X, cy - 30, 31,
            fill=title, anchor="l")
-    K.text(sheet, says(rung), left + TEXT_X, cy + 22, 25,
+    K.text(sheet, says(rung), left + TEXT_X, cy + 26, 25,
            fill=(255, 243, 220) if not kept else (214, 205, 186), outline=2, anchor="l")
 
     # --- the right end: one answer at a time

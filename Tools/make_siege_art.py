@@ -713,6 +713,39 @@ WARD_MODELS = (
     ("apex",        "T20"),
 )
 
+#: The ten **legendary** turrets, in `WardCatalog.Default` order, and the pack body each wears.
+#:
+#: **A different pack, and that is the point rather than a convenience.** `WARD_MODELS` is twenty
+#: machines out of one kit so that twenty read as a set (see `MERGE`); a legendary has to read as
+#: *not one of them* from across a shelf, and the surest way to say that is a second hand. These
+#: are the merge-shooter pack's own turrets - the same zip the bullets and the muzzle flash
+#: already come from - drawn top-down, facing up the hill, with a ladder built into them exactly
+#: as the kit's is: `Turret01` is a twin-barrel box and `Turret10` is a horned, plated mount with
+#: a crown on it.
+#:
+#: **They are cut uncoloured, which is the whole feature and not a saving.** Every other turret is
+#: hue-rotated onto the seat it stands on (`hued`, `WARD_HUES`), because a ward's colour is the
+#: rule the mode is about. A legendary wears none - it stands on any seat and fires at anything
+#: (`WardModel.Legendary`) - so rotating one onto a seat's hue would be the picture telling a
+#: player the opposite of the rule. What it keeps instead is the pack's own paint, which is four
+#: or five colours a piece and reads on a green hill without help.
+#:
+#: **So this is one picture per model rather than four**, and one recoil rather than four: the
+#: addresses are `Siege/Wards/{id}` and `Siege/Wards/{id}_fire`, which is what `WardModel.ArtFor`
+#: builds for a colourless turret and what both content gates walk.
+LEGEND_MODELS = (
+    ("tempest",    "Turret01"),
+    ("ricochet",   "Turret02"),
+    ("pyroclast",  "Turret03"),
+    ("permafrost", "Turret04"),
+    ("sunderer",   "Turret05"),
+    ("stasis",     "Turret06"),
+    ("railgun",    "Turret07"),
+    ("starfall",   "Turret08"),
+    ("wellspring", "Turret09"),
+    ("eclipse",    "Turret10"),
+)
+
 #: How tall a turret's thumbnail is cut for the loadout shelf.
 #:
 #: **A grid cell draws one at about 150 points against art cut at 500**, so browsing the roster
@@ -1944,6 +1977,46 @@ def undigited(im):
     return out
 
 
+def legend_frames(z, folder):
+    """One legendary turret's whole recoil, cut against **one** box.
+
+    <b>One box over the reel rather than a box per frame</b>, which is the module docstring's own
+    rule and is what `ward_model` cannot do: the merge kit bakes a number plate that overlaps the
+    body, so each of those twenty has to be measured and trimmed one frame at a time. This pack
+    bakes nothing under its turrets and its recoil is entirely *internal* - the barrels flash and
+    the mount stays put, measured at one or two pixels of drift over twenty frames - so the honest
+    cut is the reel's own union box. A box per frame would move the turret a pixel as it fired,
+    which on a line of four is the flicker invariant 37u names.
+
+    **Pinned by its foot into the ward box**, which is `ward_model`'s rule for `ward_model`'s
+    reason: these ten differ at the *top* - a taller barrel, horns, a crown - so a turret that
+    rose off its plinth when the player swapped it would read as the plinth having sunk.
+    """
+    names = sorted(pngs(z, "Png/%s/Shoot/" % folder))
+    if not names:
+        return []
+
+    frames = [read(z, n) for n in names]
+    box = box_of(frames)
+    if box is None:
+        return []
+
+    cut = []
+
+    for im in frames:
+        im = im.crop(box)
+
+        out = Image.new("RGBA", (WARD_W, WARD_H), (0, 0, 0, 0))
+        ratio = min(WARD_W / max(1, im.width), WARD_H / max(1, im.height)) * 0.94
+        im = im.resize((max(1, int(im.width * ratio)), max(1, int(im.height * ratio))),
+                       Image.LANCZOS)
+
+        out.alpha_composite(im, ((WARD_W - im.width) // 2, WARD_H - im.height))
+        cut.append(out)
+
+    return cut
+
+
 def ward_thumb(z, model):
     """The one uncoloured picture the loadout shelf browses a turret with.
 
@@ -2711,6 +2784,32 @@ def build():
 
             for f, frame in enumerate(recoil):
                 made["Siege/Wards/%s_%s_fire/f%02d.png" % (model_id, letter, f)] = hued(frame, hue)
+
+    # **The ten legendary turrets: one picture each, and one recoil each.**
+    #
+    # A legendary wears no colour, so there is nothing to rotate and nothing to write four times
+    # (see `LEGEND_MODELS`). That makes the whole band cost eleven pictures a model against the
+    # roster's forty-one, which is also why the shelf can hold thirty turrets in one scope without
+    # the loadout's memory moving (invariant 7b, `AssetManifest.WardShelfAssets`).
+    #
+    # **Stood on frame nought of its own recoil**, which is `ChestPack`'s rule met here: the idle
+    # the pack ships is a separate drawing at a separate size, so a turret that swapped to it
+    # between shots would change shape every time it fired.
+    for model_id, folder in LEGEND_MODELS:
+        frames = legend_frames(turrets, folder)
+        if not frames:
+            return None
+
+        made["Siege/Wards/%s.png" % model_id] = frames[0]
+
+        for f, frame in enumerate(spaced(frames, FIRE_FRAMES)):
+            made["Siege/Wards/%s_fire/f%02d.png" % (model_id, f)] = frame
+
+        # The shelf's own picture, out of the loadout's scope rather than the board's - the
+        # roster's twenty have one and so does this ten, because the browse grid draws whatever
+        # `AssetManifest.WardThumb` names whether or not anything else uses it today.
+        made["Ui/Wards/%s.png" % model_id] = fit(read(
+            turrets, "Png/%s/Idle/%s-Idle_0.png" % (folder, folder)), THUMB, 0.94)
 
     # **The two insects.** A weaver crawls and a thief hovers; both hold the middle of the hill and
     # work on the field rather than on the line, so what they have to say from across the board is

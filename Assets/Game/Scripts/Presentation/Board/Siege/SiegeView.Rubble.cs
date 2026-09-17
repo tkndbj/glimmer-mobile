@@ -7,7 +7,8 @@ namespace GlimmerGrove
 {
     /// <summary>
     /// What the fifth chapter's two bosses leave on the line: a thunderer's drain leaving a post,
-    /// and a colossus's rubble standing on one until the player digs it off.
+    /// and a colossus's rubble standing on one until the player digs it off - or until it
+    /// weathers off on its own, which is the same picture drawn from the same place.
     ///
     /// <para>
     /// <b>Its own file because the rubble is the one thing on the line the player touches</b>,
@@ -89,22 +90,45 @@ namespace GlimmerGrove
         /// <summary>
         /// Draws the pile the model says is standing on this post - and nothing when none is.
         ///
+        /// <para>
         /// <b>An edge, not a redraw</b>: the widgets are touched only when the count moves, so
         /// this costs nothing on the ordinary frame and cannot fight the arrival or the dig
         /// animations for the same transforms.
+        /// </para>
+        /// <para>
+        /// <b>And the edge is where a piece leaving is drawn, whichever end took it.</b> A tap
+        /// takes one (<c>SiegeBoard.Dig</c>) and the clock takes one every
+        /// <c>SiegeTuning.RubblePiece</c> seconds (<c>SiegeWard.Weather</c>), and to the player
+        /// those are one event - so there is one place that says a stone came off and one that
+        /// says the post is answering again. Drawn per piece lost rather than per call, because
+        /// a coarse step of the clock can take two.
+        /// </para>
         /// </summary>
-        void Heaped(Post post, SiegeWard ward)
+        void Heaped(Post post, SiegeWard ward, int seat)
         {
             if (post == null || post.Heap == null || post.Stones == null || ward == null) return;
 
             int piled = ward.Buried ? ward.Rubble : 0;
             if (piled == post.Piled) return;
 
+            // **A post that fell takes its pile down in silence**, because `Buried` answers false
+            // the moment a ward stops standing: a stone thrown clear of a wreck, and a light
+            // saying it is answering again, would both be lies.
+            //
+            // A landing (nought to a full pile) draws none of this either: `Buried` draws the
+            // arrival, and the loop below has nothing to walk when the count went up.
+            if (ward.Alive)
+                for (int gone = post.Piled - 1; gone >= piled; gone--) Chip(seat, gone);
+
+            bool freed = ward.Alive && piled == 0 && post.Piled > 0;
+
             post.Piled = piled;
             post.Heap.gameObject.SetActive(piled > 0);
 
             for (int i = 0; i < post.Stones.Length; i++)
                 if (post.Stones[i] != null) post.Stones[i].enabled = i < piled;
+
+            if (freed) Freed(post, seat);
         }
 
         /// <summary>
@@ -172,7 +196,7 @@ namespace GlimmerGrove
             var post = _posts[ward];
             if (post == null || post.Node == null) return;
 
-            Heaped(post, _board.Wards[ward]);
+            Heaped(post, _board.Wards[ward], ward);
 
             var at = new Vector2(PostX(ward), _lineY + Cell * .4f);
 
@@ -194,13 +218,12 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// A piece of rubble coming off a post: the stone the tap freed flies clear and the pile
-        /// is one smaller.
+        /// A tap that freed a piece: the post takes the knock and the stone leaves through
+        /// <see cref="Heaped"/>, which is the one place a piece is drawn coming off.
         ///
-        /// <b>A throwaway copy flies, never the widget</b>, because <see cref="Heaped"/> owns the
-        /// widget's visibility and will switch it off on the same frame - a tween on it would be
-        /// a stone vanishing mid-air. The last piece gets a light and a note of its own: that is
-        /// the beat the ward comes back on.
+        /// <b>The tap's own feedback and nothing else</b> - the stone and the beat the ward comes
+        /// back on belong to the pile falling rather than to the finger, or a piece the clock
+        /// weathered off would leave in silence.
         /// </summary>
         void Dug(int ward)
         {
@@ -209,11 +232,30 @@ namespace GlimmerGrove
             var post = _posts[ward];
             if (post == null || post.Node == null || post.Stones == null) return;
 
-            var model = _board.Wards[ward];
+            Tween.Punch(post.Node, .08f, .2f);
+            Audio.SfxVaried("poke", .5f, .08f);
 
-            // The stone that left is the one the count now points past.
-            int gone = model.Rubble;
+            Heaped(post, _board.Wards[ward], ward);
+        }
+
+        /// <summary>
+        /// A piece of rubble coming off a post: the stone flies clear and the pile is one
+        /// smaller. <paramref name="gone"/> is the piece's own index, which is the count the pile
+        /// has fallen to.
+        ///
+        /// <b>A throwaway copy flies, never the widget</b>, because <see cref="Heaped"/> owns the
+        /// widget's visibility and will switch it off on the same frame - a tween on it would be
+        /// a stone vanishing mid-air.
+        /// </summary>
+        void Chip(int ward, int gone)
+        {
+            if (_posts == null || ward < 0 || ward >= _posts.Length) return;
+
+            var post = _posts[ward];
+            if (post == null || post.Node == null) return;
+
             int look = gone < StoneSize.Length ? gone : StoneSize.Length - 1;
+            if (look < 0) return;
 
             var origin = new Vector2(PostX(ward), _lineY + ChargeY - Cell * .04f)
                        + StoneSeat[look] * Cell;
@@ -242,14 +284,20 @@ namespace GlimmerGrove
             }, chip).OnDone(() => { if (chip) Destroy(chip.gameObject); });
 
             Burst.Sparks(_fx, origin, Pal.Rope, 7, Cell * 1.4f, Cell * .16f, .4f);
-            Tween.Punch(post.Node, .08f, .2f);
-            Audio.SfxVaried("poke", .5f, .08f);
+        }
 
-            Heaped(post, model);
+        /// <summary>
+        /// The last piece leaving: the post is answering again, and it says so.
+        ///
+        /// <b>Hung off the pile reaching nought rather than off the tap</b> - a burial that
+        /// weathered off on its own (<c>SiegeWard.Weather</c>) is the same beat to the player as
+        /// one that was dug clear, and a turret coming back with nothing said is a turret the
+        /// player does not know is back.
+        /// </summary>
+        void Freed(Post post, int ward)
+        {
+            if (post == null || post.Node == null) return;
 
-            if (gone > 0) return;
-
-            // The last piece: the post is answering again, and it says so.
             var at = new Vector2(PostX(ward), _lineY + Cell * .5f);
             Pop(at, Pal.Cream, 2.2f, .3f);
             Shockwave(at, Pal.Lift(TintOf(post.Colour), .45f), 2.8f, .36f);

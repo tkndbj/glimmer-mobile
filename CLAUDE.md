@@ -762,6 +762,9 @@ guess — verify offline.
 - **Map seats:** `python Tools/make_map_seats.py --check` proves the seats are still what the paintings say;
   `--contact` draws every map with its chain on it, which is the gate that matters. `content.py` proves the
   seats clear each other. Re-run `--write` and then every chapter generator after any map painting change.
+- **Legendary effect reels:** `python Tools/make_legend_fx.py --check` proves the thirty drawn reels are
+  what the tool draws, `--contact` is the sheet to look at and `--report` prints what `fxreels.py` will
+  measure. It needs no Editor, no GPU and no licensed pack.
 - **Effect reels:** `Tools/verify/fxreels.py` proves every baked reel is a *picture* — it measures the lit
   box against the frame at the reel's loudest moment and refuses a sliver. `artnames.py` proves a name
   resolves and nothing proved the thing behind it was visible; three of 266 reels were threads, all three
@@ -978,8 +981,11 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   dead, and an hourglass stops it in the *model* (37do).
 - **Utilities** — an account-wide action bar (39), dropped by chests and bought with gems, charged against
   the graded count so one can never buy a star.
-- **The turret loadout** — twenty turrets bought per colour, each behind a keeper level and nothing else,
-  upgraded to five stars, previewed firing before purchase, carried in from a readout on the map.
+- **The turret loadout** — **thirty** turrets on a four-band shelf, upgraded to five stars, previewed
+  firing before purchase, carried in from a readout on the map. Twenty are bought **per colour** behind a
+  keeper level; the ten of the **LEGENDARY** band (42g) wear no colour at all — bought once, stood on any
+  seat, and firing at everything on the hill. They are cut from a second turret pack and their thirty
+  effect reels are **drawn** rather than baked (`Tools/make_legend_fx.py`).
 - **The grove** *(held — see the note under **The grove**)* — a village on a 28x28 isometric tile floor
   (784 tiles), 86 pieces rendered from one CC0 pack: a four-rung home ladder ending in a castle, houses,
   civic buildings, walls, gates, trees and props. A piece stands on an authored footprint (1x1 to 4x4) and
@@ -1018,7 +1024,7 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 | `s03_broodmarch` | siege | 10 | 38–59 matches | one new rule (the **lance**), a second cast, a hill that no longer forgives rank one; a blightcaller on 5, a warbringer on 10 |
 | `s04_barrowfell` | siege | 10 | 49–81 matches | the first chapter authored for a *bought* line and the one that deals all three charms: a skeleton cast, armour from rung 2, a gravemaw on 5 and a bonecaller on 10; **the first chapter whose raiders carry a surge** |
 | `s05_ashenhold` | siege | 10 | 49–81 matches | the fourth chapter and the first that cost the mode **code**: the **rabble** cast, armour from rung 1, a **shackler** on 5 and an **ironclad** on 10; **two tenths of surge**; deals the **furnace** |
-| `s06_thundercrag` | siege | 10 | 65–110 matches | the fifth chapter: the **wild** cast of stone golems, a yeti, a minotaur and a mud clod; a **thunderer** on 5 (drains banked charges) and a **colossus** on 10 (buries a turret the player digs out); **three tenths of surge**; deals all five charms, the **hourglass** new |
+| `s06_thundercrag` | siege | 10 | 65–110 matches | the fifth chapter: the **wild** cast of stone golems, a yeti, a minotaur and a mud clod; a **thunderer** on 5 (drains banked charges) and a **colossus** on 10 (buries a turret for four seconds, sooner if the player digs); **three tenths of surge**; deals all five charms, the **hourglass** new |
 | `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 20 | waves that never stop, graded on how far it got, drawing a **medley** of every cast; **both star waves are guesses until somebody plays it**; opens at keeper level 10 |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock.**
@@ -1081,6 +1087,19 @@ Then the standing discipline (`Sync All Assets` → `Audit Addresses` → `Valid
 Art` → EditMode), and **re-seed**: a new chapter's ten level ids reach the server's reward map only
 through `seed-config.mjs`. Nothing else about the drop touches the server.
 
+**The legendary band is cut and has never been in the Editor.** Its art was written with the Editor
+closed, so every one of its pictures is **unaddressed** until `▸ Addressables ▸ Sync All Assets` — which
+is a white rectangle two cells tall on the one object a player watches for a whole run (invariant 7b).
+Then the standing discipline in full (`Sync All Assets` **and save** → `Audit Addresses` → `Validate
+Content` → `Validate Art` → EditMode). **The re-seed is done** — `config/grove.wards` carries all thirty
+as of 2026-09-17, read back and diffed against `progression.json`, with the twenty already there
+unchanged; the live suite was 166/166 after it. What is **still owed is a `publishGrove` deploy**:
+`starsOf` learned the bare star row (42h) and until it ships a published card draws every legendary at
+one star. Deploy by name, read the artifact back, then `firebase/e2e/smoke-test.mjs` again.
+
+**`levin_muzzle` fails `fxreels.py` at 0.76% ink** and was already on disk at HEAD — it is the
+Thundercrag bake above, not the legendary band, and it is the only red reel of the 308.
+
 **Store and platform.**
 - Delete an Apple-linked account on a device and check it leaves **Settings ▸ Sign in with Apple**. Every
   account the live suite makes is anonymous, so Apple's token exchange and revoke have never executed.
@@ -1117,6 +1136,13 @@ honest state rather than a fault to chase. No season rollover has ever happened.
   gems a day to **936 and 12**, and because a claimed chest feeds the season, the 200-mark ladder now
   finishes around **day 27** of its 42-day window rather than day 33.
 - **Is 120 gems and 7 days right for the shield?** About ten days of free play for a week of cover.
+- **Is the legendary band the right size, the right price and the right rule?** Ten turrets that wear no
+  colour, stand on any seat and fire at everything, at 1,800–6,000 gems behind keeper 45–60. It is the
+  largest thing this mode has ever sold and it **suspends the colour lock**, which is the mode's central
+  decision — deliberately, at the top of the shelf, where a player has already made that decision a
+  hundred times. It cannot move a star line (42i), so what it can be wrong about is *feel*: four of them
+  is a line with no wrong answer in it. **Play a rung with four and say whether the mode is still the
+  mode.**
 - **Is the ward shelf's ceiling reachable, and is the credit ladder the right one?** It is now the largest
   credit sink in the game — bigger than the grove's whole catalogue — and its top two bands are shut to
   every player alive. The second question is what fills the **gem** hole the all-credit shelf left.

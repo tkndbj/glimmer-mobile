@@ -6,6 +6,7 @@ using GlimmerGrove.Cloud;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
+using GlimmerGrove.Referral;
 using GlimmerGrove.Store;
 using GlimmerGrove.Utilities;
 using UnityEngine;
@@ -97,8 +98,94 @@ namespace GlimmerGrove
         /// </summary>
         const float SummaryH = 48f, SummaryGap = 14f;
 
-        /// <summary>The whole band: the gap above, the line, and the gap below.</summary>
-        const float SummaryRow = SummaryGap + SummaryH + SummaryGap;
+        /// <summary>The whole band when the line has something to say: gap, line, gap.</summary>
+        const float SummaryLine = SummaryGap + SummaryH + SummaryGap;
+
+        /// <summary>
+        /// And what stands there when it has not.
+        ///
+        /// <para>
+        /// <b>Reserved-always was wrong and the owner caught it by playing.</b> A band is the
+        /// right shape for a sentence that <em>is</em> there — it is what stops the line being
+        /// drawn through the buttons above or the cards below, which is the fault
+        /// <see cref="SummaryH"/> records. But this screen is silent on almost every visit: the
+        /// store answers, every card has a price, and there is no news. So the common case was
+        /// paying 76 units of dead air for a sentence nobody was being shown, right under a
+        /// banner that is already the biggest thing on the page.
+        /// </para>
+        /// <para>
+        /// So the band collapses, and it collapses to <em>something</em> rather than to nought:
+        /// the grid's first row would otherwise sit 16 units under the invite banner, or 16
+        /// under the tab buttons on an account with no invite page, and a card touching the
+        /// control above it reads as a layout that has come apart rather than as a tidy one.
+        /// </para>
+        /// </summary>
+        const float QuietRow = 20f;
+
+        /// <summary>
+        /// Whether the line under the tabs is saying anything right now — set by
+        /// <see cref="PaintNews"/>, which is the one place that decides it, and read by
+        /// <see cref="SummaryRow"/>.
+        /// </summary>
+        bool _saying;
+
+        /// <summary>
+        /// The band under the tabs as it stands this frame.
+        ///
+        /// <b>An instance property rather than a constant</b>, because it moves — everything
+        /// measured from it (the guest bar, the shelf's top edge, the empty plate) is therefore
+        /// re-read on every repaint rather than written down once. <see cref="PaintNotice"/> is
+        /// where that happens, for the reason the sum lives in <see cref="ShelfTop"/>: one
+        /// place decides the shelf's top edge and everything else follows it.
+        /// </summary>
+        float SummaryRow => _saying ? SummaryLine : QuietRow;
+
+        /// <summary>
+        /// The invite banner under the tabs, and the air either side of it.
+        ///
+        /// <para>
+        /// <b>A reserved band, for <see cref="SummaryH"/>'s reason and with its history.</b> The
+        /// store's one sentence used to be squeezed into the gap that happened to be under the
+        /// tabs, and it drew through the bottom of five buttons for as long as the line existed.
+        /// The owner's instruction here was "under the tab buttons, and make sure it never
+        /// overlaps with the texts" — so this is a band that everything below is measured from,
+        /// rather than a card placed at a number that happens to clear things today.
+        /// </para>
+        /// <para>
+        /// As wide as the grid it sits over — <c>CellW * Columns</c> rather than a figure — so a
+        /// shelf retuned to three columns takes the banner with it.
+        /// </para>
+        /// <para>
+        /// <b>The height was cut from 308 after the owner played it</b>, and what decides how far
+        /// it may be cut is the picture rather than the room. The banner covers its window
+        /// width-led (the art is 2.67:1 against a plate half again as wide), so every unit taken
+        /// off the height is a unit cropped off the top and bottom of the art: at 308 the crop
+        /// was a ninth at each end, at 256 it is a sixth, and below about 240 it starts eating
+        /// the megaphone's cone and the chests' feet. Measured against the source rather than
+        /// argued — <c>Tools/render_shop.py</c> draws the crop this number produces.
+        /// </para>
+        /// </summary>
+        const float ReferW = CellW * Columns, ReferH = 256f, ReferGap = 16f;
+
+        /// <summary>
+        /// The whole band, or nought where there is no invite page to reach.
+        ///
+        /// <para>
+        /// Drawn on exactly the rule the profile's card is drawn on
+        /// (<c>ReferralLedger.IsAvailable</c>): a card promising chests a server cannot pay is
+        /// the one lie a storefront must not tell. Nought rather than hidden, because a band
+        /// nothing stands in is a hole in the middle of the shop.
+        /// </para>
+        /// </summary>
+        static float ReferRow => ReferralLedger.IsAvailable ? ReferGap + ReferH + ReferGap : 0f;
+
+        /// <summary>
+        /// The top of everything under the chrome: the header, the tabs, and the invite band if
+        /// there is one. <b>Written once</b>, because the summary line, the guest notice, the
+        /// grid and the empty plate all hang off it and four copies of a sum is four places for
+        /// a band to be forgotten.
+        /// </summary>
+        static float ShelfTop => HeaderHeight + TabRow + ReferRow;
 
         RectTransform _viewport, _tabs;
         GridView _grid;
@@ -353,8 +440,73 @@ namespace GlimmerGrove
 
             BuildBalances();
             BuildTabs();
+            BuildInvite();
             BuildNotice();
         }
+
+        /// <summary>
+        /// The invite banner, directly under the tabs: the profile's card, on the storefront.
+        ///
+        /// <para>
+        /// <b>The same control twice rather than a second drawing of one idea</b> — the same
+        /// painted banner, the same plate, the same window cut with a <c>Mask</c>, the same
+        /// slow swell, the same destination. A shop is where somebody is already thinking about
+        /// what things cost, which is the one place a free source of chests is worth saying out
+        /// loud; and it costs no art, because the picture is already resident
+        /// (<c>AssetManifest</c>).
+        /// </para>
+        /// <para>
+        /// See <c>ProfileScreen.BuildInviteCard</c> for why the banner is cut smaller than its
+        /// window rather than larger, and for the one thing this shape costs: the words are
+        /// painted into the picture, so neither of these two is translated until the art is
+        /// re-cut.
+        /// </para>
+        /// </summary>
+        void BuildInvite()
+        {
+            if (!ReferralLedger.IsAvailable) return;
+
+            var card = UIKit.Button("Invite", Safe, Art.S("Ui/" + Skins.PlateBlue),
+                                    new Vector2(ReferW, ReferH), new Vector2(.5f, 1f),
+                                    new Vector2(0f, -(HeaderHeight + TabRow + ReferGap + ReferH * .5f)),
+                                    () => Flow.Go<ReferralScreen>());
+            card.PressScale = .985f;
+
+            var clip = UIKit.Img("Clip", card.transform, Art.S("Ui/" + Skins.PlateBlue),
+                                 new Color(1f, 1f, 1f, .004f));
+            var crt = (RectTransform)clip.transform;
+            UIKit.StretchTo(crt, BannerInset, BannerInset, BannerInset, BannerInset);
+            clip.type = Image.Type.Sliced;
+            clip.raycastTarget = false;
+            clip.gameObject.AddComponent<Mask>().showMaskGraphic = false;
+
+            var banner = Art.S("Ui/refer");
+            float aspect = banner != null && banner.rect.height > 0f
+                         ? banner.rect.width / banner.rect.height
+                         : 0f;
+
+            float windowW = ReferW - BannerInset * 2f, windowH = ReferH - BannerInset * 2f;
+            float drawnW = windowW, drawnH = aspect > 0f ? drawnW / aspect : 0f;
+            if (drawnH < windowH) { drawnH = windowH; drawnW = drawnH * aspect; }
+
+            float seated = 1f / (1f + BannerSwell);
+            drawnW *= seated;
+            drawnH *= seated;
+
+            var art = UIKit.Img("Banner", crt, banner, Color.white,
+                                new Vector2(drawnW, drawnH), new Vector2(.5f, .5f), Vector2.zero);
+            art.raycastTarget = false;
+            art.enabled = aspect > 0f;
+
+            if (art.enabled) Tween.Breathe(art.transform, BannerSwell, BannerPeriod);
+
+            card.transform.localScale = Vector3.zero;
+            Tween.Pop(card.transform, 0f, .55f, .18f);
+        }
+
+        /// <summary>The banner's window inset, its swell and how long the swell takes.</summary>
+        const float BannerInset = 8f;
+        const float BannerSwell = .03f, BannerPeriod = 3.6f;
 
         /// <summary>
         /// The standing warning on the shelves priced in real money: this phone is not signed
@@ -384,7 +536,7 @@ namespace GlimmerGrove
         {
             _notice = UIKit.Button("GuestNotice", Safe, Art.Round(18), new Vector2(1000f, NoticeH),
                                    new Vector2(.5f, 1f),
-                                   new Vector2(0f, -(HeaderHeight + TabRow + SummaryRow) - NoticeH * .5f),
+                                   new Vector2(0f, -(ShelfTop + SummaryRow) - NoticeH * .5f),
                                    OnNoticeTapped);
 
             var plate = _notice.GetComponent<Image>();
@@ -466,7 +618,21 @@ namespace GlimmerGrove
                         && (!OnSupplies || HasMoneyOnShelf());
             if (_notice.gameObject.activeSelf != show) _notice.gameObject.SetActive(show);
 
-            float top = -HeaderHeight - TabRow - SummaryRow - (show ? NoticeH + NoticeGap : 0f);
+            // **<see cref="ShelfTop"/>, not the two terms it is made of.** This sum used to be
+            // spelled out here and left the invite band out of it, so the first repaint after
+            // the page was built pulled the shelf up over the banner and the top row of cards
+            // was drawn through it — the exact failure the "written once" note on `ShelfTop`
+            // exists to prevent, committed in the one place that did not read it. The mirror
+            // could not see it either, because `render_shop.py` draws no guest notice and so
+            // never walks this path.
+            // The guest bar rides on the band as well, so it is placed here rather than where
+            // it was built: a bar written down once sits at the height the band had on the
+            // frame the screen was made, and the band moves.
+            if (_notice)
+                ((RectTransform)_notice.transform).anchoredPosition =
+                    new Vector2(0f, -(ShelfTop + SummaryRow) - NoticeH * .5f);
+
+            float top = -ShelfTop - SummaryRow - (show ? NoticeH + NoticeGap : 0f);
 
             // **The empty sentence follows the shelf's top edge from here, because here is the
             // one place that edge is decided.** Written anywhere else it would be a second copy
@@ -474,7 +640,17 @@ namespace GlimmerGrove
             // guest notice over an unreachable shelf — at which point the message explaining
             // why the page is blank would be drawn straight through the bar above it. Set
             // before the early return, so it is right even on the call where nothing moved.
-            if (_empty) _empty.rectTransform.anchoredPosition = new Vector2(0f, EmptyY(top));
+            //
+            // **The plate, not the label on it.** This moved `_empty` for as long as the plate
+            // has existed: the sentence used to be a sibling of the viewport and was given a
+            // plate to stand on, which made it a *child* — and `EmptyY` is an absolute y under
+            // the safe area, so writing it onto a child wrote about nine hundred units of local
+            // offset and threw the sentence off the bottom of the plate it was standing on.
+            // Every repaint did it, so the one state this label exists for never drew right.
+            // `EmptyY`'s own summary says "where the plate is anchored", which is what it has
+            // always been for.
+            if (_emptyPlate)
+                _emptyPlate.rectTransform.anchoredPosition = new Vector2(0f, EmptyY(top));
 
             if (Mathf.Approximately(_viewport.offsetMax.y, top)) return false;
 
@@ -607,7 +783,7 @@ namespace GlimmerGrove
                 UIKit.Titled("Summary", Safe, string.Empty, 30,
                              new Color(1f, .96f, .88f, .86f), TextAnchor.MiddleCenter,
                              new Vector2(880f, SummaryH), new Vector2(.5f, 1f),
-                             new Vector2(0f, -(HeaderHeight + TabRow + SummaryGap + SummaryH * .5f)),
+                             new Vector2(0f, -(ShelfTop + SummaryGap + SummaryH * .5f)),
                              3f, 0f), 20);
 
             PaintTabs();
@@ -625,7 +801,7 @@ namespace GlimmerGrove
         {
             _viewport = UIKit.Node("Viewport", Safe);
             _viewport.offsetMin = new Vector2(0f, NavBar.Height + RestoreRow);
-            _viewport.offsetMax = new Vector2(0f, -HeaderHeight - TabRow - SummaryRow);
+            _viewport.offsetMax = new Vector2(0f, -ShelfTop - SummaryRow);
 
             _grid = GridView.Attach(_viewport, Columns, CellW, CellH,
                                     parent => new ShopCell(this, parent));
@@ -845,6 +1021,10 @@ namespace GlimmerGrove
         {
             if (_grid == null) return;
 
+            // News first: it decides whether the line under the tabs is reserving a band, and
+            // `PaintNotice` measures the shelf's top edge from that answer. See `PaintNews`.
+            PaintNews();
+
             bool reflowed = PaintNotice();
 
             // Same list either way, and no entrance either way — Show(animate: false) is the
@@ -854,7 +1034,6 @@ namespace GlimmerGrove
             else _grid.Refresh();
 
             PaintTabs();
-            PaintNews();
 
             // The three balance pills are deliberately not written here. They are watched by
             // `WalletWatch`, which repaints through the registry rather than onto the labels —
@@ -955,6 +1134,14 @@ namespace GlimmerGrove
         {
             var (text, colour) = StoreNews();
             bool centre = text.Length > 0 && ShelfRows() == 0;
+
+            // **What decides the band's height, and why this has to run before
+            // <see cref="PaintNotice"/>.** The line under the tabs is reserved space only while
+            // it is drawn; the sentence in the middle of an empty shelf is not under the tabs at
+            // all, so it collapses the band exactly as silence does. Both callers order the two
+            // this way round deliberately — the other order paints the shelf's top edge from
+            // last frame's answer, which is a band that lags one repaint behind its own line.
+            _saying = !centre && text.Length > 0;
 
             if (_summary)
             {

@@ -492,12 +492,31 @@ namespace GlimmerGrove
                 // moving this, and the sun itself then moved from `prism` to `apex` (37ay) — and
                 // the scale went with the picture, because what wants the room is the sun.
                 case "apex": return 1.55f;
+                // The top of the whole shelf, and a corona rather than a ball: a ring of fire
+                // needs the room a sun needs or it closes up into a dot.
+                case "eclipse": return 1.62f;
                 case "breaker": return 1.24f;   // a wrecking slug, and it has to have weight
                 case "spectrum": return 1.16f;
                 case "harpoon": return 1.10f;
-                default: return 1f;
             }
+
+            // **One step for the whole legendary band rather than ten more rows**, which is this
+            // method's own rule read forwards: a line where every bolt is special is a line where
+            // none of them is, so what the band buys is a single visible step over the shelf
+            // under it, and the one picture that wants more than that is named above.
+            return model.Legendary ? LegendaryBolt : 1f;
         }
+
+        /// <summary>
+        /// How much larger a legendary's bolt is drawn than an ordinary one.
+        ///
+        /// <b>A step a player can see and not one that takes the board over.</b> Four legendaries
+        /// on one line is four of these crossing the hill at once, so the number is set where a
+        /// single one reads as heavier than the turret beside it and four of them still leave the
+        /// raiders visible - which is the same argument <c>BarrelFlare</c> makes about two flashes
+        /// a third of a cell apart, and the direction to move it is **down**.
+        /// </summary>
+        const float LegendaryBolt = 1.18f;
 
         /// <summary>The flash a ward throws as it lets one go. See <see cref="ShotArt"/>.</summary>
         static Sprite[] MuzzleArt(Wards.WardModel model, int colour)

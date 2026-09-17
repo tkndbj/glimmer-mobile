@@ -93,11 +93,15 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// Buries a ward under rubble: it keeps its fuel, its rank and its charges and cannot
-        /// fire until the player has dug it out (<c>SiegeBoard.Dig</c>). The colossus's.
+        /// fire until the pile is off it. The colossus's.
         ///
-        /// <b>Deliberately not a bind with a tap on it.</b> A bind ends on the clock and a burial
-        /// ends when the player says so; the two must not be one field, or a shackle would be
-        /// buyable by tapping and a burial would lift itself.
+        /// <b>Deliberately not a bind with a tap on it.</b> Both end on the clock now
+        /// (<c>SiegeTuning.ColossusBury</c>), because a burial that ended only when the player
+        /// said so could end never; what still separates them is that a chain is seconds the
+        /// player can only wait out and a pile is seconds they can <em>spend</em> — every tap
+        /// (<c>SiegeBoard.Dig</c>) takes a piece the clock would have taken later. So the two
+        /// stay two fields: a surge lifts a douse, nothing lifts a chain, and only hands shorten
+        /// a burial.
         /// </summary>
         Bury,
     }

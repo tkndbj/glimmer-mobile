@@ -241,23 +241,31 @@ namespace GlimmerGrove.Modes
         Thunderer,
 
         /// <summary>
-        /// The colossus: it hurls a boulder that buries a ward, and the player digs it out.
+        /// The colossus: it hurls a boulder that buries a ward, and the player digs it out
+        /// rather than waiting the stone out.
         ///
         /// <para>
         /// <b>The tenth thing there was left to take is the player's <em>hands</em>.</b> Every
         /// other verb here is answered on the gem field or by waiting; a buried ward keeps its
         /// fuel, its rank and its charges and cannot fire (<see cref="SiegeWard.Buried"/>), and
-        /// the only thing that frees it is <c>SiegeTuning.RubbleTaps</c> taps on the post -
-        /// which is the bomber's rule (invariant 40i, the one thing that makes the player touch
-        /// the hill) arriving at the line. A shackle is bought back by nothing and a douse by
-        /// fuel; rubble is bought back by attention, which is the resource this mode's clock
-        /// prices most sharply (invariant 37bl - the clock punishes deliberation).
+        /// what frees it is <c>SiegeTuning.RubbleTaps</c> taps on the post - which is the
+        /// bomber's rule (invariant 40i, the one thing that makes the player touch the hill)
+        /// arriving at the line. A shackle is bought back by nothing and a douse by fuel; rubble
+        /// is bought back by attention, which is the resource this mode's clock prices most
+        /// sharply (invariant 37bl - the clock punishes deliberation).
+        /// </para>
+        /// <para>
+        /// <b>The stone also weathers</b> (<c>SiegeTuning.ColossusBury</c>), and that is a
+        /// ceiling rather than a second answer: a burial nothing but a tap could end was a line
+        /// that went quiet post by post and a boss with nothing left to aim at, which is neither
+        /// side able to act. Four seconds is the most a boulder can cost; digging is what makes
+        /// it cost less.
         /// </para>
         /// <para>
         /// <b>So the decision is dig or match</b>, and it can be wrong both ways (invariant 26h):
         /// three taps spent on a ward whose colour is off the hill is three beats the field went
         /// unplayed, and a ward left buried through a wave is a quarter of the line's answer
-        /// gone for as long as the player looks away. The hold simulation pays for a dig with a
+        /// gone for as long as the player leaves it. The hold simulation pays for a dig with a
         /// beat it would have matched in, which is what makes the verb visible to the sweep.
         /// </para>
         /// <para>

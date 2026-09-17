@@ -116,16 +116,20 @@ namespace GlimmerGrove.Wards
             if (!offer.CanBuy) return false;
 
             // The reason carries the seat and the star, because support reading a debit has to
-            // know which of the four a player paid for and how far up.
-            string row = WardHolding.Key(model.Id, colour);
+            // know which of the four a player paid for and how far up - and for a legendary it
+            // carries no seat at all, because there is one ladder rather than four
+            // (`WardHolding.Row`). The debit's text and the ledger's key are the same string on
+            // purpose: support reading a spend can look the row straight up.
+            string row = WardHolding.Row(model, colour);
 
             if (!PlayerProgression.TrySpend(Currency.Credits, offer.Cost,
                                             SpendReason + row + ":" + offer.Star))
                 return false;
 
-            if (!WardStarLedger.Raise(model.Id, colour, offer.Star)) return false;
+            if (!WardStarLedger.Raise(model, colour, offer.Star)) return false;
 
-            Telemetry.Track("ward_upgraded", "ward", model.Id, "colour", colour.ToString(),
+            Telemetry.Track("ward_upgraded", "ward", model.Id,
+                            "colour", model.Colourless ? "any" : colour.ToString(),
                             "star", offer.Star, "cost", offer.Cost);
 
             SaveService.Save();

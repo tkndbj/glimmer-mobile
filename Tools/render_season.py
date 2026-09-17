@@ -54,14 +54,23 @@ HEADING_H = 62.0
 WIDTH = 1000.0
 
 # SeasonLadder
-ROW_H = 164.0
+ROW_H = 192.0
 ROW_GAP = 14.0
 FREE_X = 20.0
 PASS_X = 310.0
 SPLIT_X = (FREE_X + PASS_X) / 2
 DISC_X = -404.0
 GOAL_X = -330.0
-CHEST_W, CHEST_H = 110.0, 152.0
+
+#: `SeasonLadder.ChestTall` - a *drawn* height, which is the only thing this file can honestly
+#: mirror: it crops the closed icon to its own alpha before drawing it, so it has always drawn
+#: the picture the screen was *meant* to draw and could not see that the screen was hanging the
+#: whole sprite box centred instead (invariant 48j, the same trap from the other end). Now the
+#: screen converts through `ChestPack` and the two agree on purpose rather than by accident.
+CHEST_TALL = 122.0
+
+#: `SeasonLadder.StampAt` - the seal and the padlock, off the drawn chest rather than typed.
+STAMP_X, STAMP_Y = CHEST_TALL * .46, CHEST_TALL * .42
 
 # EventScreen.BarOrange / BarFull / BarH — the tasks page's numbers, deliberately shared.
 BAR_ORANGE = (255, 150, 30)
@@ -130,10 +139,16 @@ def chest_art():
 ART = chest_art()
 
 
-def chest(tier, w, h, face):
-    """One chest at one of the three faces a cell draws. `SeasonLadder.Paint`'s tints."""
+def chest(tier, tall, face):
+    """One chest at one of the three faces a cell draws. `SeasonLadder.Paint`'s tints.
+
+    `tall` is the *drawn* height. The width comes off the art's own alpha box rather than a
+    second constant, so a re-cut at another aspect cannot leave a number here describing the
+    last one (invariant 44b).
+    """
     im, box = ART[tier]
-    out = im.crop(box).resize((max(1, int(round(w))), max(1, int(round(h)))), Image.LANCZOS)
+    wide = tall * (box[2] - box[0]) / float(box[3] - box[1])
+    out = im.crop(box).resize((max(1, int(round(wide))), max(1, int(round(tall)))), Image.LANCZOS)
 
     if face == "ready":
         return out
@@ -321,7 +336,7 @@ def rung_card(sheet, y, index, rung, marks, owned):
         K.paste(sheet, K.glow(180, 1.35, K.SUN, .70).resize(
             (int(WIDTH + 150), int(ROW_H + 130)), Image.LANCZOS), W / 2, cy)
 
-    K.paste(sheet, K.skin("Hud/card", WIDTH, ROW_H), W / 2, cy)
+    K.paste(sheet, K.skin("Hud/plate_navy", WIDTH, ROW_H), W / 2, cy)
 
     K.paste(sheet, K.skin("Hud/slot", 104, 104), left + WIDTH / 2 + DISC_X, cy)
 
@@ -336,20 +351,20 @@ def rung_card(sheet, y, index, rung, marks, owned):
                           (PASS_X, rung["premiumTier"], pass_face)):
         cx = W / 2 + x
         if face == "ready":
-            K.paste(sheet, K.glow(240, 2.0, K.GOLD, .55), cx, cy)
+            K.paste(sheet, K.glow(int(CHEST_TALL * 2), 2.0, K.GOLD, .55), cx, cy)
 
-        K.paste(sheet, chest(tier, CHEST_W, CHEST_H, face), cx, cy)
+        K.paste(sheet, chest(tier, CHEST_TALL, face), cx, cy)
 
         if face == "sealed":
-            seal = Image.new("RGBA", (56, 56), (0, 0, 0, 0))
+            seal = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
             d = ImageDraw.Draw(seal)
-            d.ellipse((0, 0, 55, 55), fill=(*K.MINT, 255))
-            K.paste(sheet, seal, cx + 50, cy + 46)
+            d.ellipse((0, 0, 63, 63), fill=(*K.MINT, 255))
+            K.paste(sheet, seal, cx + STAMP_X, cy + STAMP_Y)
             K.paste(sheet, K.tint(K.fit(Image.open(K.UI / "ic_check.png").convert("RGBA"),
-                                        (34, 34)), (255, 255, 255)), cx + 50, cy + 46)
+                                        (38, 38)), (255, 255, 255)), cx + STAMP_X, cy + STAMP_Y)
         elif face == "locked" and x == PASS_X and not owned:
             K.paste(sheet, K.tint(K.fit(Image.open(K.UI / "ic_lock.png").convert("RGBA"),
-                                        (46, 46)), K.CREAM), cx + 50, cy + 46)
+                                        (52, 52)), K.CREAM), cx + STAMP_X, cy + STAMP_Y)
 
     return y + ROW_H + ROW_GAP
 

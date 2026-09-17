@@ -249,7 +249,21 @@ LINE = ["bolt", "rime", "mortar", "harpoon"]   # shelf rungs 1, 5, 9 and 17
 #: (`rank_art`) and by the badge at its shoulder. Nothing here is tinted, for invariant 37l's
 #: reason - `Image.color` is a multiply and a turret has to read as lit.
 def ward_art(model, colour):
+    if legendary(model):
+        return "Wards/%s" % model
     return "Wards/%s_%s" % (model, colour)
+
+
+def legendary(model_id):
+    """`WardModel.Legendary` - whether this turret wears no ward colour at all.
+
+    <b>Read off `progression.json` rather than typed</b>, exactly as `shelf` reads the rung: the
+    flag is content, and a list here would be the copy that goes stale the first time a drop
+    adds one. What it decides in this file is every address a legendary owns - its picture, its
+    recoil and its three reels are all cut once (`make_legend_fx.py`), so a mirror that asked
+    for `_r` would draw a white box and report the board as broken.
+    """
+    return bool(shelf_rows().get(model_id, {}).get("legendary"))
 
 
 #: `WardModel.Elemental` - the one turret whose bolt is a different element on each colour. Every
@@ -272,7 +286,17 @@ APART_ON_ARRIVAL = 0.8
 #: about the shelf rung rather than about the id (the art tool's rule is that the hull *is* the
 #: rung). Mirrored by shelf position, so it survives the shelf being re-rung the way the game's
 #: own copy does.
-TWIN_RUNGS = (11, 14, 15, 17)
+TWIN_RUNGS = (11, 14, 15, 17, 21)
+
+
+def shelf_rows():
+    """The authored roster, keyed by id. Read once."""
+    if not hasattr(shelf_rows, "_rows"):
+        path = REPO / "Assets" / "StreamingAssets" / "Content" / "progression.json"
+        models = json.loads(path.read_text(encoding="utf-8"))["wards"]["models"]
+        shelf_rows._rows = {m["id"]: m for m in models}
+
+    return shelf_rows._rows
 
 
 def shelf():
@@ -281,12 +305,7 @@ def shelf():
     Read rather than typed, because the whole point of keying barrels on the rung is that the
     shelf can be re-rung - so a list here would be the copy that goes stale.
     """
-    if not hasattr(shelf, "_rungs"):
-        path = REPO / "Assets" / "StreamingAssets" / "Content" / "progression.json"
-        models = json.loads(path.read_text(encoding="utf-8"))["wards"]["models"]
-        shelf._rungs = {m["id"]: int(m.get("order") or 0) for m in models}
-
-    return shelf._rungs
+    return {wid: int(m.get("order") or 0) for wid, m in shelf_rows().items()}
 
 
 def barrels(model_id):
@@ -303,7 +322,29 @@ def shot_key(kind, model, colour):
     """
     if model == ELEMENTAL:
         return "%s_%s" % (kind, colour)
+    if legendary(model):
+        return "%s_%s" % (kind, model)
     return "%s_%s_%s" % (kind, model, colour)
+
+
+#: `SiegeView.BoltScale` - how big each turret's bolt is drawn, as a multiple of the ordinary one.
+#:
+#: <b>Mirrored because it is the one thing about a projectile that is a decision rather than a
+#: bake</b>: every reel is framed round its own content, so how much of a frame an effect fills
+#: says nothing about how big it is on the hill. A mirror that drew every bolt the same size would
+#: report a sun and a dart as the same object, which is precisely the comparison this picture
+#: exists to make.
+BOLT_SCALES = {"apex": 1.55, "eclipse": 1.62, "breaker": 1.24,
+               "spectrum": 1.16, "harpoon": 1.10}
+
+#: What a legendary's bolt is drawn at when it is not named above. `SiegeView.LegendaryBolt`.
+LEGENDARY_BOLT = 1.18
+
+
+def bolt_scale(model):
+    if model in BOLT_SCALES:
+        return BOLT_SCALES[model]
+    return LEGENDARY_BOLT if legendary(model) else 1.0
 
 
 #: `SiegeView.RankTint` - what colour a ward's badge is at this rank. Steel, bronze, silver, gold,
@@ -1755,12 +1796,14 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
                 aimed(sheet, loudest(shot_key("muzzle", stood_here, ward)), mx, my,
                       cell * 2.7 * (0.70 if count > 1 else 1.0), ux, uy, MUZZLE_AT)
                 aimed(sheet, blast(shot_key("shot", stood_here, ward), 6),
-                      mx + dx * along, my + dy * along, cell * 1.0, ux, uy, HEAD_AT)
+                      mx + dx * along, my + dy * along,
+                      cell * bolt_scale(stood_here), ux, uy, HEAD_AT)
 
             dx, dy = tx - cx, ty - cy
             far = math.hypot(dx, dy) or 1.0
             ux, uy = dx / far, dy / far
-            aimed(sheet, loudest(shot_key("hit", stood_here, ward)), tx, ty, cell * 3.2, ux, uy)
+            aimed(sheet, loudest(shot_key("hit", stood_here, ward)), tx, ty,
+                  cell * 3.2 * bolt_scale(stood_here), ux, uy)
 
             # The tally floating off it. Two of the four are drawn as doubles, because the
             # elemental double is the rule this mode is about and it has to read as a different
@@ -2543,7 +2586,8 @@ def main():
     # as a missing one (invariant 7b), so it is refused here instead.
     stood = [s.strip() for s in args.line.split(",")] if args.line else None
     for model in stood or ():
-        if not (ART / "Wards" / ("%s_r.png" % model)).exists():
+        worn = "%s.png" % model if legendary(model) else "%s_r.png" % model
+        if not (ART / "Wards" / worn).exists():
             sys.exit("no turret called %s" % model)
 
     held = {"firepot": 2, "mending": 0, "surge": 5, "stormcall": 1}

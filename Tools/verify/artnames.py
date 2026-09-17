@@ -48,6 +48,7 @@ SCRIPTS = REPO / "Assets" / "Game" / "Scripts"
 EDITOR = REPO / "Assets" / "Game" / "Editor"
 ART = REPO / "Assets" / "Game" / "Art"
 MANIFEST = SCRIPTS / "Domain" / "AssetPipeline" / "AssetManifest.cs"
+GROUPS = REPO / "Assets" / "AddressableAssetsData" / "AssetGroups"
 
 #: What counts as a picture. `.meta` is Unity's and never the asset.
 PICTURES = (".png", ".jpg", ".jpeg", ".psd", ".tga", ".spriteatlasv2")
@@ -60,6 +61,110 @@ ART_ROOT = "Art/"
 #: both, so its shape is taken from whatever wraps it - `AssetLibrary.Frames(...)` on a screen,
 #: and `AssetRequest.SpriteSet(...)` in the list a mode declares its art with.
 FOLDER_CALLS = ("Art.Frames", "AssetLibrary.Frames", "AssetRequest.SpriteSet")
+
+
+def registered():
+    """Every address the Addressables groups carry, read off the group assets.
+
+    <b>On disk is not the same question as addressable, and that gap ships.</b> `exists`
+    proves a sprite is a file; nothing here proved anything could *load* it. The importer
+    hook that registers art fires on reimport only, so art written while the Editor is shut
+    or unfocused - which is every run of the art tools - has a file and no address. The
+    Editor's own audit asks the opposite question (a registered entry whose asset has gone),
+    every offline gate was green, and what reached a phone was
+    `InvalidKeyException: No Location found for Key=Art/Ui/refer` at launch with a plate drawn
+    round nothing. The repair is `Addressables > Sync All Assets`; this is what says it is
+    needed before a build rather than after one.
+
+    Read from the group assets rather than from the built catalog, because the catalog is a
+    build output and the groups are what the build reads.
+    """
+    out = set()
+    for group in sorted(GROUPS.glob("*.asset")):
+        for line in group.read_text(encoding="utf-8", errors="replace").splitlines():
+            stripped = line.strip()
+            if stripped.startswith("m_Address:"):
+                out.add(stripped[len("m_Address:"):].strip())
+    return out
+
+
+def root_of(fn, text):
+    """The prefix under `Art/` that one helper puts in front of its key, or None.
+
+    <b>Separate from `helpers` on purpose.</b> That one only follows a body that names
+    `ArtRoot` itself, so `Ui(key) => UiRoot + key` falls straight through its first guard and
+    never reaches the branch written to resolve it - which is why `Art/Ui/...` is not among
+    the five prefixes it reports. Widening that guard would change which call sites the
+    existing sweep checks, in the same change as a fix for something else; this resolves the
+    handful of roots the preloaded lists hang off and leaves that sweep exactly as it was.
+    """
+    body = re.search(r"public\s+static\s+string\s+%s\s*\(\s*string\s+\w+\s*\)\s*=>\s*([^;]+);"
+                     % re.escape(fn), text)
+    if not body:
+        return None
+    body = body.group(1).strip()
+
+    plain = re.fullmatch(r'ArtRoot\s*\+\s*"([^"]*)"\s*\+\s*\w+', body)
+    if plain:
+        return plain.group(1)
+
+    if re.fullmatch(r"ArtRoot\s*\+\s*\w+", body):
+        return ""
+
+    rooted = re.fullmatch(r"(\w*Root)\s*\+\s*\w+", body)
+    if rooted:
+        const = re.search(r'public\s+const\s+string\s+%s\s*=\s*ArtRoot\s*\+\s*"([^"]*)"'
+                          % re.escape(rooted.group(1)), text)
+        if const:
+            return const.group(1)
+
+    return None
+
+
+def preloaded(prefixes):
+    """Every address `AssetManifest`'s standing lists preload, as (field, address under Art/).
+
+    <b>The list and its root are two different facts and the root is not in the list.</b>
+    `UiSprites` holds `"refer"` and means `Art/Ui/refer`, because one line further down it is
+    wrapped in `Ui(...)`. A first cut of this check pasted `ArtRoot` straight onto the name,
+    got `Art/refer`, found no such file, and skipped it - so the check passed against the very
+    tree that shipped the fault. **A check that cannot fail is not a check.** The wrapper is
+    read off the `foreach` that consumes each list and resolved through `helpers`, so a list
+    added tomorrow is covered by whatever it is wrapped in.
+
+    Lists wrapped in something this cannot resolve - a sound helper, or a shape not written as
+    `foreach (var x in List) ... Fn(x)` - are returned as unreadable rather than guessed at.
+    """
+    text = MANIFEST.read_text(encoding="utf-8")
+
+    wrapper = {}
+    for match in re.finditer(
+            r"foreach\s*\(\s*var\s+\w+\s+in\s+(\w+)\s*\)[^;]*?(\w+)\s*\(\s*\w+\s*\)\s*\)",
+            text):
+        wrapper[match.group(1)] = match.group(2)
+
+    out, unreadable = [], []
+    for match in re.finditer(
+            r"static\s+readonly\s+string\[\]\s+(\w+)\s*=\s*\{(.*?)\};", text, re.S):
+        field, body = match.group(1), match.group(2)
+
+        fn = wrapper.get(field)
+        if fn is None:
+            unreadable.append(field)
+            continue
+
+        prefix = prefixes.get(fn)
+        if prefix is None:
+            prefix = root_of(fn, text)
+        if prefix is None:
+            continue          # a sound or music helper; `sfxnames.py` has those
+
+        # Strip comments first: these lists are more prose than names.
+        body = re.sub("//[^" + chr(10) + "]*", "", body)
+        for name in re.findall(r'"([^"]+)"', body):
+            out.append((field, prefix + name))
+
+    return out, unreadable
 
 
 def helpers():
@@ -263,6 +368,29 @@ def main():
                       "a missing sprite draws as a WHITE RECTANGLE, not as nothing "
                       "(invariant 7b)")
 
+    # ---- and whether anything can actually load them
+    live = registered()
+    standing, unwrapped = preloaded(prefixes)
+    for field in unwrapped:
+        warnings.append(f"AssetManifest.{field} is a preloaded list this cannot follow to a "
+                        "root, so nothing checks that its art is addressable")
+
+    seen = set()
+    for field, name in standing:
+        address = ART_ROOT + name
+        if address in seen:
+            continue
+        seen.add(address)
+
+        if not exists(name, False) and not exists(name, True):
+            continue          # already reported by the sweep above: not this check's question
+
+        if address not in live:
+            errors.append(f"AssetManifest.{field}: {address} is on disk and has no Addressables "
+                          "entry, so nothing can load it - a preload throws InvalidKeyException "
+                          "at launch. Run `Glimmer Grove > Addressables > Sync All Assets` and "
+                          "save (invariant 7a)")
+
     for e in errors:
         print("ERROR " + e)
     for w in warnings:
@@ -283,7 +411,8 @@ def main():
             print(f"        {n} in {where}")
 
     print(f"\n{checked} literal art name(s) checked across "
-          f"{len({w for w, _, _, _ in requests})} file(s), {len(prefixes)} manifest helper(s)"
+          f"{len({w for w, _, _, _ in requests})} file(s), {len(prefixes)} manifest helper(s), "
+          f"{len(seen)} preloaded address(es) against {len(live)} registered"
           f" - {len(errors)} error(s), {len(warnings)} warning(s)")
     return 1 if errors else 0
 

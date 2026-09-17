@@ -121,7 +121,7 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the colossus
         [Test]
-        public void AColossusBuriesAWardAndOnlyDiggingFreesIt()
+        public void AColossusBuriesAWardAndDiggingIsWhatShortensIt()
         {
             var board = SiegeBoard.Build(DuelWith(SiegeKind.Colossus));
             var boss = Standing(board);
@@ -142,11 +142,8 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(ward.Armed, "a buried ward threw a charge");
             Assert.IsFalse(board.Overcharge(landed.Ward, null).Landed);
 
-            // **It never lifts on the clock.** Ten seconds later, with nothing tapped, it stands.
-            for (int i = 0; i < 60 * 10; i++) board.Advance(1f / 60f);
-            Assert.IsTrue(ward.Buried, "rubble ran out on the clock, which is a chain wearing stone");
-            Assert.AreEqual(SiegeTuning.RubbleTaps, ward.Rubble);
-
+            // **Digging is the whole of what a player's hands buy**: three taps and the post is
+            // back at once, long before the clock would have got there.
             for (int tap = SiegeTuning.RubbleTaps; tap > 0; tap--)
             {
                 Assert.IsTrue(board.Dig(landed.Ward), $"tap {tap} was refused on a buried post");
@@ -156,6 +153,39 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(ward.Buried, "three taps did not clear three pieces");
             Assert.IsTrue(ward.Armed, "the charge banked under the rubble was lost");
             Assert.IsFalse(board.Dig(landed.Ward), "a tap on a clear post was counted");
+        }
+
+        /// <summary>
+        /// The ceiling on a burial, which is the rule that keeps the finale a fight: a post
+        /// nobody digs comes back on its own inside <c>SiegeTuning.ColossusBury</c>.
+        ///
+        /// It shipped without one - rubble ended only when the player dug it out - and a line
+        /// left alone went quiet post by post until neither side could act, which is
+        /// <see cref="ABuriedLineAlwaysHasPostsLeftStanding"/>'s subject from the ward's end.
+        /// </summary>
+        [Test]
+        public void RubbleWeathersOffAPostNobodyDigs()
+        {
+            var board = SiegeBoard.Build(DuelWith(SiegeKind.Colossus));
+            Standing(board);
+
+            var landed = Landed(board, SiegeSpell.Bury);
+            var ward = board.Wards[landed.Ward];
+            Assert.IsTrue(ward.Buried);
+
+            Assert.LessOrEqual(SiegeTuning.ColossusBury, 4f,
+                               "a boulder holds a post for longer than the four seconds this "
+                               + "boss was retuned to (the owner's figure, 2026-09-17)");
+
+            // A hair under the ceiling it still stands; a hair past it, it does not - and it is
+            // the clock that took it, because nothing here taps.
+            int steps = (int)(SiegeTuning.ColossusBury * 60f) - 2;
+            for (int i = 0; i < steps; i++) board.Advance(1f / 60f);
+            Assert.IsTrue(ward.Buried, "the stone lifted early, so the ceiling is not the length");
+
+            for (int i = 0; i < 6; i++) board.Advance(1f / 60f);
+            Assert.IsFalse(ward.Buried, "a post nobody dug never came back");
+            Assert.AreEqual(0, ward.Rubble);
         }
 
         [Test]
@@ -168,10 +198,8 @@ namespace GlimmerGrove.Tests
             // The overcharge's shape: a tap lands between two steps of the clock, and the step
             // that follows clears the report on its way in - so the answer has to be the call's.
             Assert.IsTrue(board.Dig(landed.Ward));
-            Assert.AreEqual(SiegeTuning.RubbleTaps - 1, board.Wards[landed.Ward].Rubble);
-            board.Advance(1f / 60f);
             Assert.AreEqual(SiegeTuning.RubbleTaps - 1, board.Wards[landed.Ward].Rubble,
-                            "a step of the clock moved the rubble, which only a tap may");
+                            "a tap's answer waited for the next step of the clock");
         }
 
         [Test]
@@ -188,14 +216,89 @@ namespace GlimmerGrove.Tests
                                + "full and the player's digging was thrown away");
         }
 
+        /// <summary>
+        /// The stalemate, asked as arithmetic: a burial's ceiling against the fastest cadence a
+        /// phase can set decides how many posts can stand buried at one time, and it has to be
+        /// fewer than the line has.
+        ///
+        /// <b>This is the fixture the reported fault needed.</b> Rubble that never lifted buried
+        /// the line one post at a time; with nothing left to bury the boss held its cast
+        /// (<c>SiegeTuning.CastRetry</c>) and nothing on either side could act - <em>I cannot
+        /// shoot and he does not attack</em>. Every gate was green, because no gate asked this.
+        /// </summary>
         [Test]
-        public void AColossusCastsSlowerThanAPlayerCanDig()
+        public void ABuriedLineAlwaysHasPostsLeftStanding()
         {
-            // Three taps at a phone's pace is well under two seconds; a cadence that left less
-            // than that between boulders would bury the line faster than hands can clear it.
-            Assert.GreaterOrEqual(SiegeTuning.ColossusCastEvery, 4f,
-                                  "a colossus throws faster than a buried post can be dug");
+            float quickest = SiegeTuning.ColossusCastEvery;
+
+            for (int phase = 0; phase < SiegeTuning.PhasePaceHundredths.Length; phase++)
+            {
+                float every = SiegeTuning.CastEveryFor(SiegeKind.Colossus, phase);
+                if (every < quickest) quickest = every;
+            }
+
+            // A boulder every `quickest` seconds, each holding a post for `ColossusBury`: the
+            // most that overlap is the ceiling divided by the cadence, rounded up.
+            int atOnce = (int)System.Math.Ceiling(SiegeTuning.ColossusBury / quickest);
+
+            Assert.Less(atOnce, SiegeLayout.WardLetters.Length,
+                        $"a colossus can hold {atOnce} of the line's {SiegeLayout.WardLetters.Length} "
+                        + "posts at once, so a player who does not dig can be left unable to fire "
+                        + "at a boss that has nothing left to aim at");
+        }
+
+        /// <summary>
+        /// And the same stalemate asked of the boss: with every post already buried it throws
+        /// anyway, because a cast that finds nothing to aim at is a cast held for ever
+        /// (<c>SiegeTuning.CastRetry</c>).
+        /// </summary>
+        [Test]
+        public void AColossusWithNowhereToThrowStillLandsItsBlow()
+        {
+            var board = SiegeBoard.Build(DuelWith(SiegeKind.Colossus));
+            Standing(board);
+
+            // The arrangement the clock can no longer reach, held by hand: every post under stone
+            // on every step, so the weathering can never be what lets the boss off. What is being
+            // proved is that the boss does not depend on it.
+            SiegeSpellLanded landed = default;
+            bool seen = false;
+
+            for (int i = 0; i < 60 * 60 && !seen; i++)
+            {
+                for (int w = 0; w < board.Wards.Count; w++) board.Wards[w].Bury();
+
+                var report = board.Advance(1f / 60f);
+
+                for (int k = 0; k < report.Spells.Count; k++)
+                    if (report.Spells[k].Craft == SiegeSpell.Bury)
+                    {
+                        landed = report.Spells[k];
+                        seen = true;
+                    }
+            }
+
+            Assert.IsTrue(seen, "a colossus with every post buried threw nothing inside a minute, "
+                              + "which is a boss and a player both standing still");
+            Assert.AreEqual(SiegeTuning.ColossusCast, landed.Damage,
+                            "its boulder landed and took nothing off the post");
+            Assert.LessOrEqual(board.Wards[landed.Ward].Rubble, SiegeTuning.RubbleTaps,
+                               "the boulder piled a post higher than a boulder may");
+        }
+
+        [Test]
+        public void AColossusCastsSlowerThanABurialLasts()
+        {
+            // Three taps at a phone's pace is well under two seconds, and a stone that has not
+            // been tapped is off the post inside `ColossusBury`: a cadence under either would
+            // bury the line faster than it comes back.
+            Assert.Greater(SiegeTuning.ColossusCastEvery, SiegeTuning.ColossusBury,
+                           "a colossus throws its next boulder while the last one still stands");
             Assert.AreEqual(3, SiegeTuning.RubbleTaps, "a burial is three taps by design (SiegeTuning.RubbleTaps)");
+
+            Assert.AreEqual(SiegeTuning.ColossusBury,
+                            SiegeTuning.RubblePiece * SiegeTuning.RubbleTaps, 1e-4f,
+                            "the pile and the ceiling disagree about how long a burial is");
         }
 
         // ------------------------------------------------------------------ the hourglass and the fight

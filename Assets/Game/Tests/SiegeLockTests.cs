@@ -145,20 +145,31 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the stun
         /// <summary>
-        /// <b>No turret on the shelf reaches a colour that is not its own.</b>
+        /// <b>No turret on the shelf reaches a colour that is not its own — unless it is a
+        /// legendary, in which case it reaches every one of them.</b>
         ///
         /// <para>
-        /// The roster carried one that did — a prism, on both its rungs — and under the lock what
-        /// it bought was the moments its own colour happened to be clear, which the seat beside it
-        /// was already answering at full weight. Withdrawn on the owner's reading (invariant 5d,
-        /// asked of a purchase) and this is what stops it coming back by accident: the lock is a
-        /// property of <em>every</em> model, so a new ability that widened it would be a rule
-        /// nothing else in this file could see.
+        /// The roster carried an ability that widened the lock — a prism, on both its rungs — and
+        /// under the lock what it bought was the moments its own colour happened to be clear,
+        /// which the seat beside it was already answering at full weight. Withdrawn on the
+        /// owner's reading (invariant 5d, asked of a purchase), and this is what stops it coming
+        /// back by accident.
+        /// </para>
+        /// <para>
+        /// <b>The legendary band is the one exception and it is asked for by name, which is the
+        /// whole point of writing it this way.</b> It is a property of the <em>model</em>
+        /// (<c>WardModel.Legendary</c>) and never of an ability, so the two halves are one
+        /// assertion over the whole roster: a new ability that quietly reached a second colour
+        /// would fail the first branch, and a legendary that quietly stopped reaching all four
+        /// would fail the second. Either alone would be a rule nothing else in this file could
+        /// see.
         /// </para>
         /// </summary>
         [Test]
         public void NoTurretOnTheShelfReachesASecondColour()
         {
+            int legends = 0;
+
             foreach (var model in WardCatalog.Default.Models)
             {
                 var ward = new SiegeWard(0, model);
@@ -166,9 +177,64 @@ namespace GlimmerGrove.Tests
                 Assert.AreEqual(10, ward.ReachTenths(0), model.Id);
 
                 for (int colour = 1; colour < SiegeLayout.Letters.Length; colour++)
-                    Assert.AreEqual(0, ward.ReachTenths(colour),
-                                    $"'{model.Id}' fires at a colour it was not bought for");
+                    Assert.AreEqual(model.Legendary ? 10 : 0, ward.ReachTenths(colour),
+                                    model.Legendary
+                                    ? $"legendary '{model.Id}' does not answer every colour"
+                                    : $"'{model.Id}' fires at a colour it was not bought for");
+
+                if (model.Legendary) legends++;
             }
+
+            // A band nothing stands in would make the clause above vacuous, which is the shape
+            // invariant 5d refuses: a check that cannot fail is not a check.
+            Assert.Greater(legends, 0, "no turret in the roster is legendary");
+        }
+
+        /// <summary>
+        /// <b>A legendary shoots a raider of a colour no other seat could have answered.</b>
+        ///
+        /// <para>
+        /// Asked of a played board rather than of <c>SiegeWard.ReachTenths</c>, because the lock
+        /// is spelled in two places and only one of them is that predicate: <c>SiegeBoard.Aim</c>
+        /// picks what a ward fires at, and a ward that reached every colour but aimed at one
+        /// would bank its fuel over a full hill and read as a turret that does not work. The two
+        /// were separate lines when this was written, so this is what holds them together.
+        /// </para>
+        /// <para>
+        /// The line stands the legendary on the <em>red</em> seat and the hill sends nothing red,
+        /// so every bolt it lands is one an ordinary turret on that seat could not have fired —
+        /// which is also the arithmetic that keeps the band out of par's way (invariant 22).
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ALegendaryFiresAtAColourItsSeatCouldNotHaveAnswered()
+        {
+            WardModel legend = null;
+            foreach (var model in WardCatalog.Default.Models)
+                if (model.Legendary) { legend = model; break; }
+
+            Assert.IsNotNull(legend, "no turret in the roster is legendary");
+
+            var line = WardLine.Resolve(WardCatalog.Default,
+                                        new[] { new WardSlot('r', legend.Id) }, (_, __) => true);
+
+            // A hill wearing nothing but green, so every bolt the *red* seat lands is one the
+            // colour lock would have refused.
+            var board = SiegeBoard.Build(Layout(new[] { "gggg" }), line);
+            int red = Plan(board).WardOf('r');
+
+            Assert.IsTrue(board.Wards[red].Unbound, "the red seat is not standing the legendary");
+
+            for (int w = 0; w < board.Wards.Count; w++) Feed(board, w, 20f);
+
+            int fired = 0;
+
+            for (int i = 0; i < 60 * 12; i++)
+                foreach (var bolt in board.Advance(1f / 60f).Bolts)
+                    if (bolt.Ward == red && !bolt.Extra) fired++;
+
+            Assert.Greater(fired, 0,
+                           $"legendary '{legend.Id}' on the red seat never fired at a green hill");
         }
 
         /// <summary>
