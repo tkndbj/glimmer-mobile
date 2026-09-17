@@ -247,6 +247,26 @@ namespace GlimmerGrove.EditorTools
         /// </summary>
         static readonly (string Folder, TextureImporterCompression Grade)[] Grades =
         {
+            // **A stencil is not a picture, and it is the one thing on this list that cannot
+            // be compressed at any grade.** The publisher card's wordmark is drawn twice — once
+            // as a Unity `Mask` whose graphic is never painted, so the shape lives entirely in
+            // its alpha (`StudioIdent`) — and uGUI's mask clips at an alpha of 0.001, which is
+            // to say *any* non-zero texel is a hole in the sheet. Block compression does not
+            // round a transparent texel to transparent: measured through
+            // `astc-encoder`, this file comes back with **3,555** lit texels outside the
+            // lettering at ASTC 6x6, 2,612 at 5x5 and still **467** at 4x4 — every one of them
+            // a pinprick of the neon sweep showing through the black, inside the counters of
+            // the O and the D and scattered round the word. Reported, correctly, as the mark
+            // being corrupted or speckled with dots. There is no grade that fixes it, because
+            // the fault is not that the alpha is *approximate* — it is that the threshold it is
+            // read against is zero. 1,800x161 at RGBA32 is 1.16 MB, on a scope the launch
+            // screen drops when it goes (`SplashScreen._art`).
+            //
+            // **A file rather than a folder, for `/Art/Siege/hill`'s reason** — the loop takes
+            // the first match, so this must stand ahead of any rule for `/Art/Bg/`. Nothing
+            // else in that folder is a mask.
+            ("/Art/Bg/ident_word", TextureImporterCompression.Uncompressed),
+
             ("/Art/Critters/", TextureImporterCompression.CompressedHQ),
             ("/Art/Companions/", TextureImporterCompression.CompressedHQ),
         };

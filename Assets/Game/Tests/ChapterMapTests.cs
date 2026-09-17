@@ -240,6 +240,17 @@ namespace GlimmerGrove.Tests
             Assert.LessOrEqual(ChapterMap.CrownBottom, LevelsScreen.RankMarkBottom,
                                "the standing pill starts below the crown");
 
+            // The record badge stands beside the node rather than over it, so the crown has to
+            // reach down past the node's own centre and out to the badge's far edge. Both ends
+            // matter: the near edge is the disc's and is not the crown's business, the far edge
+            // is what a neighbour's body has to clear.
+            Assert.GreaterOrEqual(ChapterMap.CrownHalfWidth, LevelsScreen.RecordRight,
+                                  "the record badge reaches past the crown");
+            Assert.LessOrEqual(ChapterMap.CrownBottom, -LevelsScreen.RecordBadge.y * .5f,
+                               "the record badge hangs below the crown");
+            Assert.GreaterOrEqual(ChapterMap.CrownTop, LevelsScreen.RecordBadge.y * .5f,
+                                  "the record badge reaches above the crown");
+
             float pillTop = LevelsScreen.RankMarkBottom + LevelsScreen.RankMarkTwoLine.y;
             float medalTop = LevelsScreen.RankMarkBottom + LevelsScreen.RankMarkTwoLine.y * .5f
                              + LevelsScreen.MedalY + LevelsScreen.MedalSize * .5f;

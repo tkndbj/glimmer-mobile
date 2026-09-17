@@ -101,7 +101,7 @@
         /// divides one of these back out again.
         /// </para>
         /// </summary>
-        public const float ArtWidth = 941f, ArtHeight = 1672f;
+        public const float ArtWidth = 887f, ArtHeight = 1774f;
 
         /// <summary>
         /// How far down the picture the wordmark's lowest ink reaches, as a fraction of its
@@ -109,8 +109,8 @@
         ///
         /// <para>
         /// Measured off the art rather than judged: the lettering plus its dark rim ends at
-        /// about 677 of 1672 rows, and the glow and the burst's lower spike below that are not
-        /// ink and may be drawn over. <b>Anything that re-cuts or replaces the cover has to
+        /// about 745 of 1774 rows, and the glow and the burst's lower spike below that (which
+        /// reaches 775) are not ink and may be drawn over. <b>Anything that re-cuts or replaces the cover has to
         /// re-measure this</b>, because it is the one number here that a wrong value moves the
         /// bar straight onto the word, on every device at once, with nothing to say so.
         /// </para>
@@ -124,14 +124,19 @@
         /// would be drawn across the muzzle flash of the red turret. See <see cref="Fit"/>.
         /// </para>
         /// </summary>
-        public const float WordFootUv = .405f;
+        public const float WordFootUv = .420f;
 
         /// <summary>
         /// Where the wordmark's highest ink starts, same space — the top of the dark burst the
         /// lettering is set on, not the top of the letters, because the burst is part of the
         /// mark and a crop through its spikes reads as damage.
+        ///
+        /// <para>
+        /// 444 of 1774 rows: the first row of the burst's upper spikes, not the first row of
+        /// a letter.
+        /// </para>
         /// </summary>
-        public const float WordHeadUv = .210f;
+        public const float WordHeadUv = .250f;
 
         /// <summary>The middle of the mark, so the two ends cannot be centred on separately.</summary>
         public const float MarkCentreUv = (WordHeadUv + WordFootUv) * .5f;
@@ -172,7 +177,7 @@
         /// wordmark is.
         /// </para>
         /// </summary>
-        public const float WordLeftUv = .085f, WordRightUv = .918f;
+        public const float WordLeftUv = .095f, WordRightUv = .908f;
 
         /// <summary>
         /// The least clear air the wordmark keeps from the side of the screen.

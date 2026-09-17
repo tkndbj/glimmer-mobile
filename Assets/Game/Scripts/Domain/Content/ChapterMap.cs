@@ -42,10 +42,20 @@ namespace GlimmerGrove.Content
         public const float MinimumNodeSeparation = NodeDiameter + NodeClearance;
 
         /// <summary>
-        /// What rides above a glade: the standing mark — record and rank — that
-        /// <c>LevelsScreen.RankMark</c> hangs over a cleared node. A rectangle centred on the
-        /// node, <see cref="CrownHalfWidth"/> either side of it and reaching from
-        /// <see cref="CrownBottom"/> to <see cref="CrownTop"/> above its centre.
+        /// What a cleared glade wears: the standing mark that <c>LevelsScreen.Standing</c> hangs
+        /// over it and the record badge <c>LevelsScreen.RecordTag</c> stands beside it. One
+        /// rectangle covering both, centred on the node, <see cref="CrownHalfWidth"/> either
+        /// side of it and reaching from <see cref="CrownBottom"/> to <see cref="CrownTop"/>.
+        ///
+        /// <para>
+        /// <b><see cref="CrownBottom"/> is negative, and that is the badge.</b> The record used
+        /// to be the bottom line of the pill above the node and is now a tag beside it, level
+        /// with the disc - so the box this rule tests had to come down past the node's own
+        /// centre. It did not have to get any <em>wider</em>: the badge was sized to finish at
+        /// <see cref="CrownHalfWidth"/>, measured against the shipped seats, because a wider box
+        /// refuses eight of them across three maps and re-deriving <c>mapart.SEATS</c> moves
+        /// nodes on chapters nobody asked about.
+        /// </para>
         ///
         /// <para>
         /// Named here because the disc was the only footprint the clearance check knew, and
@@ -58,7 +68,7 @@ namespace GlimmerGrove.Content
         /// a top-tier mark is deliberately not counted: it is light, not a thing.
         /// </para>
         /// </summary>
-        public const float CrownHalfWidth = 204f, CrownBottom = 106f, CrownTop = 302f;
+        public const float CrownHalfWidth = 204f, CrownBottom = -52f, CrownTop = 302f;
 
         /// <summary>
         /// A perch's own body — rock, disc and the name plate under it — as the rectangle

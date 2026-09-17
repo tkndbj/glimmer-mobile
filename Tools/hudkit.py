@@ -311,9 +311,19 @@ def shrunk_left(sheet, s, left, top, box_w, box_h, size, floor, fill=CREAM, outl
 
 # --------------------------------------------------------------------------- furniture
 def room(sheet):
-    """`Scenery.Room` — the world, enveloped to the canvas, lightly shaded, vignetted."""
-    im = Image.open(HUD / "room.png").convert("RGBA")
-    s = max(W / im.width, H / im.height) * 1.06
+    """`Scenery.Room` — the world, enveloped to the canvas, lightly shaded, vignetted.
+
+    **`Bg/hub_room`, not `Hud/room`.** The interface kit ships a room of its own and this drew
+    that one for as long as it existed, which is a picture of a screen the game does not draw
+    (invariant 44d) — and it drew it on the one screen whose whole backdrop is the thing being
+    judged. `Scenery.Room` names `Bg/hub_room` and has since the kit landed.
+
+    The 1.04 is `Scenery.Room`'s own `localScale`, which is there so the parallax has somewhere
+    to travel; it is not a crop margin, and a mirror that rounds it to 1.06 reports clearance at
+    the edges that the screen does not have.
+    """
+    im = Image.open(REPO / "Assets" / "Game" / "Art" / "Bg" / "hub_room.png").convert("RGBA")
+    s = max(W / im.width, H / im.height) * 1.04
     im = im.resize((int(im.width * s), int(im.height * s)), Image.LANCZOS)
     sheet.alpha_composite(im, ((W - im.width) // 2, (H - im.height) // 2))
 

@@ -5188,6 +5188,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/thunder_cast
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 262bba15042b63385707178e7777b5ac
+    m_Address: Art/Ui/Hud/plate_gold
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 262d48eb009e1584b97c6de04e36cfed
     m_Address: Art/Siege/broodMon_g/f02
     m_ReadOnly: 0
@@ -22165,6 +22170,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_pyre_y
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9fd6a677985ba8047aa3539ab4fb7024
+    m_Address: Art/Ui/challenges
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9fd88e9a513c61c4f97e496111ca60e9
     m_Address: Art/Fx/Siege/muzzle_cleaver_y/f07

@@ -51,6 +51,30 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// The unit alone - "Moves", "Turns", "Motes" - for a readout that writes the count and
+        /// the word on separate lines.
+        ///
+        /// <para>
+        /// <b>A third form on the same stem, not a word cut out of the sentence.</b> The map's
+        /// record badge is 108 units wide (<c>LevelsScreen.RecordBadge</c>), which will not hold
+        /// "42 moves" on one line at a size anybody can read - so it writes the number large and
+        /// the unit under it. Splitting <c>Loc.Format</c>'s output on a space would work in
+        /// English and nowhere else, and it would break the moment a translation put the unit
+        /// first. The stem convention is the one <see cref="RecordKey"/> already uses.
+        /// </para>
+        /// <para>
+        /// It carries no placeholder, so it is a plain <c>Loc.Get</c> - and
+        /// <c>Tools/verify/loc.py</c> counts placeholders against arguments, which is what would
+        /// catch a <c>_unit</c> string that was given one by mistake.
+        /// </para>
+        /// </summary>
+        public static string RecordUnitKey(LevelId level)
+        {
+            var mode = Content.LevelModes.Find(ModeOf(level));
+            return (mode != null ? mode.RecordStem : "ui.rank.record") + "_unit";
+        }
+
+        /// <summary>
         /// The mode a level belongs to, or the ordinary one when the catalog cannot say.
         ///
         /// Falling back rather than refusing matters here: this is called while a victory panel

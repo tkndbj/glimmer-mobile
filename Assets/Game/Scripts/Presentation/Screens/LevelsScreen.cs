@@ -217,7 +217,22 @@ namespace GlimmerGrove
         /// <c>ChapterMapTests</c> reads both and holds them to each other.
         /// </summary>
         public const float NodeWidth = 360f;
-        public const float PlateWidth = 340f, PlateHeight = 62f, PlateY = -196f;
+
+        /// <remarks>
+        /// <b><c>PlateY</c> came up from -196 at the owner's instruction</b>, after playing the
+        /// fifth chapter: a banner that hangs a disc's height under its own node reads as
+        /// belonging to whatever is beneath it, and on a map whose rungs are close it lands
+        /// inside the standing mark of the glade below. At -152 its top edge sits 23 units under
+        /// the disc, so it reads as attached to the node it names.
+        ///
+        /// <b><c>ChapterMap.BodyBelow</c> is deliberately <em>not</em> brought down with it.</b>
+        /// It is a bound rather than a mirror - <c>ChapterMapTests</c> asserts it is at least
+        /// this reach, not that it equals it - so leaving it at 227 keeps every clearance rule
+        /// exactly as strict as it was and moves no seat on any map. Tightening it would relax
+        /// <c>Overshadows</c>, which would re-derive <c>mapart.SEATS</c> and move nodes on
+        /// chapters nobody asked about.
+        /// </remarks>
+        public const float PlateWidth = 340f, PlateHeight = 62f, PlateY = -152f;
 
         /// <summary>
         /// Seconds between one glade popping in and the next, and the longest the whole
@@ -788,6 +803,30 @@ namespace GlimmerGrove
         /// </remarks>
         public const float RankMarkBottom = 106f;
         public static readonly Vector2 RankMarkTwoLine = new Vector2(408f, 196f);
+
+        /// <summary>
+        /// The record badge: the count and its unit, on two lines, beside the node.
+        ///
+        /// <para>
+        /// <b>It came off the top of the node at the owner's instruction, and the width is the
+        /// part that was not a choice.</b> A mark beside a disc lives in the same rectangle
+        /// <see cref="ChapterMap"/> already proves clear (<c>CrownHalfWidth</c>, 204 either
+        /// side), and every unit of badge past that is a unit the collision rule has to grow
+        /// by — which re-derives <c>mapart.SEATS</c> and moves nodes on chapters nobody asked
+        /// about. Measured against the shipped seats: at 204 nothing on any map breaks, at 240
+        /// eight seats across three maps do. So the badge runs from the disc's edge to the
+        /// crown's, and the only number that moved in Domain is <c>CrownBottom</c>, which had
+        /// to come down past the node because the badge is level with it.
+        /// </para>
+        /// <para>
+        /// <b>Two lines rather than "42 moves" on one</b>, which is what makes 108 units
+        /// enough: the count reads at a glance and the unit is a caption under it.
+        /// </para>
+        /// </summary>
+        public const float RecordLeft = 96f, RecordRight = 204f;
+        public static readonly Vector2 RecordBadge = new Vector2(RecordRight - RecordLeft, 104f);
+
+        /// <summary>The standing's pill, when the shorter shape is all there is to draw.</summary>
         static readonly Vector2 RankMarkOneLine = new Vector2(344f, 74f);
 
         /// <summary>Medal disc size, and how far above the pill centre it sits.</summary>
@@ -842,7 +881,75 @@ namespace GlimmerGrove
                       : band == Social.RankBand.Top25 ? Pal.Parchment
                       : new Color(1f, .95f, .86f, .82f);
 
-            var size = ranked ? RankMarkTwoLine : RankMarkOneLine;
+            // **Two marks now, because they are two things.** The record is a result and it is
+            // the half that says something on a brand new install with no backend at all, so it
+            // is drawn always, beside the node, where it covers nothing. The standing is an
+            // award, it needs a sentence ("You are in the top 25%" is 358 units at 32pt) and it
+            // is drawn over the node only when there is a population to be ranked against.
+            RecordTag(parent, id, moves, delay);
+            if (ranked) Standing(parent, band, ink, top, delay);
+        }
+
+        /// <summary>
+        /// The record, beside the node: the count, and its unit under it.
+        ///
+        /// <para>
+        /// <b>The unit is its own key rather than the tail of the sentence.</b> A record reads
+        /// "42 moves" everywhere else in the game and that string cannot be split, so a mode's
+        /// stem carries a third form - <c>_unit</c>, beside the <c>_one</c> that already exists
+        /// (<see cref="RunWording.RecordUnitKey"/>). Nothing is concatenated and nothing is
+        /// parsed back out of a formatted sentence, which is what invariant 6 is really about.
+        /// </para>
+        /// </summary>
+        static void RecordTag(Transform parent, LevelId id, int moves, float delay)
+        {
+            var host = UIKit.Node("Record", parent);
+            host.anchorMin = host.anchorMax = host.pivot = new Vector2(.5f, .5f);
+            host.sizeDelta = RecordBadge;
+            host.anchoredPosition = new Vector2(RecordLeft + RecordBadge.x * .5f, 0f);
+
+            var bg = UIKit.Img("Pill", host, Art.S("Ui/" + Skins.PlateOrange), Color.white,
+                               RecordBadge, new Vector2(.5f, .5f), Vector2.zero);
+
+            float face = RecordBadge.y * UIKit.PillFaceLift;
+            float inner = RecordBadge.x - 16f;
+
+            var count = UIKit.Titled("Count", bg.transform, moves.ToString(), 38, Pal.Cream,
+                                     TextAnchor.MiddleCenter, new Vector2(inner, 46f),
+                                     new Vector2(.5f, .5f), new Vector2(0f, 18f + face), 3f, 2f);
+            UIKit.Shrinkable(count, 22);
+
+            var unit = UIKit.Titled("Unit", bg.transform, Loc.Get(RunWording.RecordUnitKey(id)),
+                                    24, new Color(1f, .96f, .88f, .86f), TextAnchor.MiddleCenter,
+                                    new Vector2(inner, 34f),
+                                    new Vector2(.5f, .5f), new Vector2(0f, -20f + face), 3f, 2f);
+            UIKit.Shrinkable(unit, 15);
+
+            host.localScale = Vector3.zero;
+            Tween.Pop(host, 0f, .55f, .18f + delay + .16f);
+        }
+
+        /// <summary>
+        /// The standing over a cleared glade: a struck medal over the sentence saying where the
+        /// run placed.
+        ///
+        /// <para>
+        /// <b>This is the <em>crown</em> <see cref="ChapterMap"/> carries</b>
+        /// (<c>CrownHalfWidth</c>, <c>CrownBottom</c>, <c>CrownTop</c>), and
+        /// <c>ChapterMapValidator</c> refuses any perch - a glade's or the end-of-chapter
+        /// marker's - whose body would stand on it. Resize it here and
+        /// <c>ChapterMapTests</c> names the Domain number that stopped covering it.
+        /// </para>
+        /// <para>
+        /// <b>It lost its record line when the record moved out</b>, so it is the same pill in
+        /// the same place, shorter. The width is measured rather than chosen: "You are in the
+        /// top 25%" generates 358px in <c>GameFont</c> at 32pt, so the inner line box has to
+        /// clear that or <see cref="UIKit.Shrinkable"/> folds it.
+        /// </para>
+        /// </summary>
+        static void Standing(Transform parent, Social.RankBand band, Color ink, bool top, float delay)
+        {
+            var size = RankMarkTwoLine;
 
             var host = UIKit.Node("Rank", parent);
             host.anchorMin = host.anchorMax = host.pivot = new Vector2(.5f, .5f);
@@ -850,10 +957,11 @@ namespace GlimmerGrove
             host.anchoredPosition = new Vector2(0f, RankMarkBottom + size.y * .5f);
 
             float lineWidth = size.x - RankMarkPad * 2f;
+            float face = size.y * UIKit.PillFaceLift;
 
             // Radiance behind the whole plate for the top tier. A soft gradient rather than
             // anything with an edge, so it reads as light around an award and can never be
-            // mistaken for a mislaid rectangle — which is the risk with any layer that leaves
+            // mistaken for a mislaid rectangle - which is the risk with any layer that leaves
             // the container it belongs to.
             if (top)
             {
@@ -863,60 +971,34 @@ namespace GlimmerGrove
                           size + new Vector2(96f, 76f), new Vector2(.5f, .5f), Vector2.zero);
             }
 
-            var bg = UIKit.Img("Pill", host, Art.Round(22), new Color(.04f, .09f, .13f, .82f),
+            // The banner under the node wears the hub's affirmative and this wears the orange of
+            // the same family, at the owner's instruction - one mould, two hues, which is how
+            // the kit already tells its plates apart (`Skins.PlateOrange`).
+            //
+            // **No traced edge any more**, and that is not a saving: the sprite carries its own
+            // keyline, and the rim this used to draw was tinted by *band*, which put a second
+            // outline a hair off the shape the mould already has. What the band colours now is
+            // the ink, which is where a tier belongs - on the medal and the words, not on a
+            // rectangle.
+            var bg = UIKit.Img("Pill", host, Art.S("Ui/" + Skins.PlateOrange), Color.white,
                                size, new Vector2(.5f, .5f), Vector2.zero);
 
-            var edge = UIKit.Img("Edge", bg.transform, Art.RoundOutline(22, 3f),
-                                 new Color(ink.r, ink.g, ink.b, ranked ? (top ? .68f : .34f) : .18f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
+            Medal(bg.transform, ink, top);
 
-            // The standing, when there is one — a struck medal over two lines of text, which
-            // is the shape a certificate has and the reason this reads as an award rather than
-            // as a caption. Optional, because for most of a catalog on most days there is no
-            // population to compare against.
-            if (ranked)
-            {
-                Medal(bg.transform, ink, top);
+            // **Cream rather than the band's own ink, and that is the plate's doing.** A tier
+            // used to be said twice, by the medal and by the colour of these words, and it
+            // could be: they were set on a near-black pill. On the kit's orange, `Pal.Gold` is
+            // a tint of the thing behind it. So the tier is said by the medal and by the
+            // sentence itself, and the words are simply legible.
+            var line = UIKit.Titled("Band", bg.transform, Loc.Get(Social.RankTier.KeyOf(band)),
+                                    32, Pal.Cream, TextAnchor.MiddleCenter,
+                                    new Vector2(lineWidth, RankMarkLineHeight),
+                                    new Vector2(.5f, .5f), new Vector2(0f, -46f + face), 3f, 3f);
+            UIKit.Shrinkable(line, 20);
 
-                var line = UIKit.Titled("Band", bg.transform, Loc.Get(Social.RankTier.KeyOf(band)),
-                                        32, ink, TextAnchor.MiddleCenter,
-                                        new Vector2(lineWidth, RankMarkLineHeight),
-                                        new Vector2(.5f, .5f), new Vector2(0f, -22f), 3f, 3f);
-                UIKit.Shrinkable(line, 20);
-            }
-
-            // The record always. This is the half that says something on a brand new install
-            // with no backend at all, which is why the mark is no longer conditional on being
-            // ranked — an empty node above a cleared glade was the whole problem. Unranked it
-            // takes a tick rather than a medal: it is a result, and dressing a median run as a
-            // trophy is how a trophy stops meaning anything.
-            if (!ranked)
-            {
-                var tick = UIKit.Img("Cleared", bg.transform, Art.S("Ui/ic_check"),
-                                     new Color(1f, .96f, .88f, .62f), Vector2.one * 34f,
-                                     new Vector2(0f, .5f), new Vector2(38f, 0f));
-                tick.preserveAspect = true;
-            }
-
-            var record = UIKit.Titled("Record", bg.transform,
-                                      Loc.Format(RunWording.RecordKey(id, moves), moves),
-                                      ranked ? 28 : 29,
-                                      new Color(1f, .96f, .88f, ranked ? .80f : .92f),
-                                      TextAnchor.MiddleCenter,
-                                      new Vector2(ranked ? lineWidth : lineWidth - 40f, RankMarkLineHeight),
-                                      new Vector2(.5f, .5f),
-                                      new Vector2(ranked ? 0f : 20f, ranked ? -70f : 0f), 3f, 2f);
-
-            // Both lines shrink rather than overflow. Label defaults to
-            // HorizontalWrapMode.Overflow, which has no clipping at all — so an unshrinkable
-            // line does not get truncated, it simply keeps drawing outside the pill. That is
-            // the other half of why these were hanging out of it, and it is the half a
-            // translation would have reintroduced even with the geometry fixed.
-            UIKit.Shrinkable(record, 19);
-
-            // Its own entrance, a beat after the perch it rides. The perch scales from zero
-            // and takes the mark with it on a first build, but a repaint lands on a perch
-            // already at rest — this is the one path that has to animate either way.
+            // Its own entrance, a beat after the perch it rides. The perch scales from zero and
+            // takes the mark with it on a first build, but a repaint lands on a perch already at
+            // rest - this is the one path that has to animate either way.
             host.localScale = Vector3.zero;
             Tween.Pop(host, 0f, .55f, .18f + delay + .16f);
         }
@@ -997,15 +1079,38 @@ namespace GlimmerGrove
             }
         }
 
+        /// <summary>
+        /// A glade's name banner: the hub's BATTLE key's own mould, at the owner's instruction.
+        ///
+        /// <para>
+        /// <b>A bought mould, not a drawn box.</b> This was <c>Art.Round(20)</c> in a
+        /// three-quarters navy with a traced white rim - the shape <see cref="Skins.PlateBlue"/>
+        /// replaced everywhere else on the hub, and for the same reason (invariant 47i): a
+        /// mould carries a two-tone face, a highlight along its top and a keyline that turns
+        /// with the colour, and a rectangle plus an outline carries none of those however it is
+        /// tinted. Nothing traces a border round it now - the sprite has one, and a second
+        /// outline at a radius the sprite does not have is a halo a hair off the shape.
+        /// </para>
+        /// <para>
+        /// <b>The plate rather than the pill</b>, for the reason written up on
+        /// <see cref="Skins.PlateGold"/>: this box is 5.5:1 and the pill is sliced on x alone.
+        /// </para>
+        /// <para>
+        /// <b>And the caption rides the face.</b> <see cref="UIKit.PillFaceLift"/> is the same
+        /// number the kit's own buttons write their words at - the mould's writable band sits
+        /// a little above its centre, because the bottom of it is a lip. A word set at the
+        /// sprite's centre reads as one that has slipped down.
+        /// </para>
+        /// </summary>
         static void Plate(Transform parent, string text, Color colour, float y)
         {
-            var bg = UIKit.Img("Plate", parent, Art.Round(20), new Color(.04f, .09f, .13f, .74f),
+            var bg = UIKit.Img("Plate", parent, Art.S("Ui/" + Skins.PlateGold), Color.white,
                                new Vector2(PlateWidth, PlateHeight), new Vector2(.5f, .5f), new Vector2(0f, y));
-            var edge = UIKit.Img("Edge", bg.transform, Art.RoundOutline(20, 3f), new Color(1, 1, 1, .16f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
             var t = UIKit.Titled("T", bg.transform, text, 32, colour, TextAnchor.MiddleCenter,
-                                 outline: 3f, shadow: 3f);
-            UIKit.StretchTo((RectTransform)t.transform, 12, 4, 12, 8);
+                                 new Vector2(PlateWidth - 34f, PlateHeight * .78f),
+                                 new Vector2(.5f, .5f),
+                                 new Vector2(0f, PlateHeight * UIKit.PillFaceLift), 3f, 3f);
+            UIKit.Shrinkable(t, 18);
         }
 
         // ---------------------------------------------------------------- chrome

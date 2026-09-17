@@ -1,5 +1,8 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using GlimmerGrove.Ads;
+using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Events;
@@ -7,6 +10,7 @@ using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using GlimmerGrove.Tasks;
+using GlimmerGrove.Wards;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -42,19 +46,13 @@ namespace GlimmerGrove
         /// </summary>
         const float RowTop = 570f;
         const float RowHeight = 300f;
-        const float RowWidth = 960f;    // every element above the hero shares it
+        const float RowWidth = 960f;    // every element above the play key shares it
         const float RowGap = 24f;
 
-        Image _hero;
         RectTransform _tasksPanel;
         RectTransform _resourceRow;
         RectTransform _streakBox;
         RectTransform _focusBox;
-
-        // The shortest gap between two pokes that both get a spray. Above the rate a poke is
-        // deliberately given at, below the rate a held finger produces. See Poke.
-        const float SparkGap = .18f;
-        float _pokedAt = float.NegativeInfinity;
 
         protected override void Build()
         {
@@ -63,8 +61,9 @@ namespace GlimmerGrove
             BuildResources();
             BuildTasks();
             BuildFeature();
-            BuildHero();
+            BuildLoadout();
             BuildPlay();
+            BuildChallenges();
             NavBar.Build(Content, NavBar.Tab.Home);
 
             // Midnight arrives while a screen is open exactly as often as it arrives while
@@ -80,6 +79,9 @@ namespace GlimmerGrove
         {
             TaskLedger.Changed -= OnTasksChanged;
             DailyStreak.Changed -= OnStreakChanged;
+            WardLoadout.Changed -= OnLoadoutChanged;
+
+            _line?.Dispose();
         }
 
         void OnTasksChanged()
@@ -768,9 +770,20 @@ namespace GlimmerGrove
         {
             float vx = -w * .5f + 299f;
 
+            // **The box grew with the type, and it had to.** `UIKit.Shrinkable` is Best Fit,
+            // which takes the largest size that fits in *both* directions — and at 62 this was
+            // height-limited on the nail: Gemfire Display's line box is 72 units at 62pt inside
+            // a box 74 tall. Raising the number alone would have drawn exactly what it drew
+            // before, silently, which is the kind of change that gets reported as "nothing
+            // happened". 92 holds 76pt's 88-unit line with room to spare.
+            //
+            // It grows **upward**: the centre moves by half the extra height, so the bottom
+            // edge stays exactly where it was and the caption under it does not move. There is
+            // 40 units of air between this box and the header above, and the growth spends 18
+            // of it.
             var v = UIKit.Shrinkable(
-                UIKit.Titled("V", card, value, 62, colour, TextAnchor.MiddleCenter,
-                             new Vector2(200f, 74f), new Vector2(.5f, .5f), new Vector2(vx, 20f),
+                UIKit.Titled("V", card, value, 76, colour, TextAnchor.MiddleCenter,
+                             new Vector2(200f, 92f), new Vector2(.5f, .5f), new Vector2(vx, 29f),
                              3f, 4f), 30);
 
             var cap = UIKit.Shrinkable(
@@ -1366,76 +1379,45 @@ namespace GlimmerGrove
             return true;
         }
 
-        // ---------------------------------------------------------------- hero
+        // ----------------------------------------------------- the foot of the hub
         /// <summary>
-        /// The companion, on its rock, between the feature row and the play button.
-        ///
-        /// It sits lower and a tenth smaller than it used to. The two boxes above take the
-        /// space the hero had, and the numbers here are what is left: the rock's foot clears
-        /// the play button and the critter's ears clear the boxes, with about the same margin
-        /// at each end. Everything inside the host is scaled together rather than re-tuned
-        /// one image at a time, so the rock and the critter cannot drift apart.
-        /// </summary>
-        void BuildHero()
-        {
-            var host = UIKit.Box("Hero", Content, new Vector2(620f, 700f), new Vector2(.5f, .5f),
-                                 new Vector2(0f, -150f));
-            var beam = UIKit.Img("Beam", host, Art.S("Ui/" + Skins.Beam),
-                                 new Color(1f, 1f, 1f, .50f),
-                                 new Vector2(408f, 296f), new Vector2(.5f, .5f), new Vector2(0f, 126f));
-            Tween.Run(2.9f, Ease.InOutSine,
-                t => { if (beam) beam.color = new Color(1f, 1f, 1f, Mathf.Lerp(.36f, .58f, t)); },
-                beam, "pulse").Loop(-1, true);
-            // Settled over three passes: three screen pixels down, then thirty, then seven
-            // back up. The canvas is 1080 reference units wide against a taller, denser phone,
-            // so a unit here is rather less than a pixel there — about 2.4 to one, which is the
-            // rate every one of those moves was converted at. The poke target moves with it.
-            _hero = UIKit.Img("Critter", host, null, Color.white,
-                              new Vector2(286f, 286f), new Vector2(.5f, .5f), new Vector2(0f, 5f));
-            _hero.preserveAspect = true;
-            CompanionArt.Paint(_hero, Profile.Avatar, animate: true);
-            UIKit.Halo(host, Pal.Aqua, 500f, .18f).transform.SetAsFirstSibling();
-            var hit = UIKit.Button("Poke", host, Art.Pixel, new Vector2(306f, 306f),
-                                   new Vector2(.5f, .5f), new Vector2(0f, 5f), Poke);
-            hit.GetComponent<Image>().color = new Color(1, 1, 1, 0);
-            hit.ClickSfx = null;
-            hit.PressScale = 1f;
-            host.localScale = Vector3.zero;
-            Tween.Pop(host, 0f, .75f, .42f);
-        }
-
-        /// <summary>
-        /// The companion answers a poke - and answers a held-down finger once per squash
-        /// rather than once per tap.
+        /// What the bottom of the hub is made of, measured up from the nav bar.
         ///
         /// <para>
-        /// The deformation a spammed poke used to produce was <see cref="Tween.Punch"/>'s and
-        /// is fixed there, where every re-punchable control in the game gets it. What is left
-        /// here is the other half of a spammed one: eight sparks and a pop per tap is a dozen
-        /// bursts a second, and <em>celebrate once</em> applies to a poke as much as to a win.
-        /// The squash itself still restarts on every tap, so the critter stays exactly as
-        /// answerable as it looks; only the fanfare has a floor under it, and the floor sits
-        /// above any rate a poke is deliberately given at.
+        /// <b>One stack rather than three anchors, because they have to clear each other.</b>
+        /// Everything here is bottom-anchored on <see cref="View.Content"/> — the nav bar's own
+        /// frame of reference — and each row's centre is the sum of what is under it, so moving
+        /// one number moves the rest rather than leaving a gap for somebody to find on a phone.
+        /// The one thing the arithmetic cannot check is the <em>top</em>: the loadout strip is
+        /// the tallest of the three and the feature row hangs from the other end of the screen,
+        /// so the clearance between them is smallest on the squarest canvas this game is drawn
+        /// on. <c>render_home.py</c> is what looks at it.
         /// </para>
         /// </summary>
-        void Poke()
-        {
-            if (_hero == null) return;
+        const float FootGap = 14f;
+        const float ChallengeW = 960f, ChallengeH = 280f;
 
-            Tween.Punch(_hero.transform, .28f, .5f);
+        /// <summary>How far inside the plate the banner's window sits. See BuildChallenges.</summary>
+        const float BannerInset = 8f;
+        const float PlayW = 620f, PlayH = 178f;
+        const float LineW = 960f;
 
-            if (Time.unscaledTime - _pokedAt < SparkGap) return;
-            _pokedAt = Time.unscaledTime;
+        /// <summary>
+        /// The challenge banner's centre, and the two rows stacked above it.
+        ///
+        /// <b>The key sits above the line rather than between it and the banner</b>, at the
+        /// owner's instruction after playing it: the thing the screen is for wants the top of
+        /// the stack, where the readout under it reads as what the key is about to be spent on.
+        /// </summary>
+        static float ChallengeY => NavBar.Height + FootGap + ChallengeH * .5f;
+        static float LineY => ChallengeY + ChallengeH * .5f + FootGap + LineH * .5f;
+        static float PlayY => LineY + LineH * .5f + FootGap + PlayH * .5f;
 
-            Audio.SfxVaried("poke", .5f, .18f);
-            Burst.Sparks(_hero.transform, new Vector2(0f, 40f), Pal.Gold, 8, 150f, 22f, .6f);
-        }
-
-        // ----------------------------------------------------------- play + nav
         void BuildPlay()
         {
             var play = UIKit.TextButton("Play", Content, Skins.Battle, "BATTLE", 62,
-                                        new Vector2(620f, 178f), new Vector2(.5f, 0f), new Vector2(0f, NavBar.Height + 274f),
+                                        new Vector2(PlayW, PlayH), new Vector2(.5f, 0f),
+                                        new Vector2(0f, PlayY),
                                         () => Flow.Go<LevelsScreen>(), "ic_battle");
 
             // The kit sizes a pill's glyph at a third of its height, which is right for a small
@@ -1459,6 +1441,314 @@ namespace GlimmerGrove
                 Tween.Breathe(play.transform, .03f, 2.1f);
                 Sheen.Attach((RectTransform)play.transform, 3.4f);
             });
+        }
+
+        // -------------------------------------------------------- daily challenges
+        /// <summary>
+        /// The second door out of the hub: one painted banner on the kit's blue plate, with a
+        /// shine crossing it.
+        ///
+        /// <para>
+        /// <b>The picture is the caption.</b> The words <em>Daily Challenges</em> are painted
+        /// into the art, so nothing here writes them a second time — a caption under a banner
+        /// that already says the same thing is the furniture the tasks card had to lose
+        /// (<see cref="BuildTasks"/>). That does cost this control the one thing every other
+        /// string in the game has, which is a translation (invariant 6): <b>the banner is
+        /// English and only English until it is re-cut</b>, and it is named here so that is a
+        /// decision on the record rather than an oversight.
+        /// </para>
+        /// <para>
+        /// <b>The plate is <see cref="Skins.PlateBlue"/> rather than a button face.</b>
+        /// <c>btn_blue</c> is sliced across its width only (its border is <c>15,0,15,0</c>), so
+        /// drawn at this height it stretches its own moulded face by 1.7 and reads as a smeared
+        /// pill — invariant 44a, from the other end. The plate is sliced on all four edges and
+        /// scales to any box, which is what "wide and smooth-cornered" actually needs.
+        /// </para>
+        /// <para>
+        /// <b>The banner <em>covers</em> the plate rather than standing on it</b>, which is the
+        /// owner's call after playing it: fitted inside, the art was an island with a hand's
+        /// width of blue at each end and read as a picture somebody had dropped on a button.
+        /// The art is 2.67:1 and the plate is 3.43:1, so covering is width-led and the crop
+        /// comes off the top and bottom — about a ninth at each end, which is glow and empty
+        /// sky above the lettering and leaf and rock below it.
+        /// </para>
+        /// <para>
+        /// <b>So the plate becomes a window, and the window is cut from its own sprite.</b> A
+        /// <c>Mask</c> whose graphic is the plate clips the picture to exactly the corners the
+        /// plate draws, which is the only way a rounded button can hold a rectangular picture
+        /// without either squashing it or showing its square corners. The scale is read off the
+        /// sprite rather than typed, for <c>IdentWordmark</c>'s reason: a re-cut of the banner
+        /// at another aspect must not leave a number here quietly describing the last one.
+        /// </para>
+        /// <para>
+        /// <b>And the window is <see cref="BannerInset"/> inside the plate rather than flush
+        /// with it.</b> Flush, the picture covered the plate's own painted bevel — the border
+        /// that is what makes the sprite read as a button at all — so the art went right to the
+        /// outside edge and past the curve at the four corners, and was reported as overflowing
+        /// its box. The inset is small on purpose: enough to leave the plate's frame drawn all
+        /// the way round, not enough to turn the picture back into an island.
+        /// </para>
+        /// <para>
+        /// <b>And the halo went with the change rather than being kept.</b> It was a bloom
+        /// around a small picture on a big plate; with the picture covering the plate there is
+        /// nothing of the glow left to see, and the art carries its own.
+        /// </para>
+        /// </summary>
+        void BuildChallenges()
+        {
+            var card = UIKit.Button("Challenges", Content, Art.S("Ui/" + Skins.PlateBlue),
+                                    new Vector2(ChallengeW, ChallengeH), new Vector2(.5f, 0f),
+                                    new Vector2(0f, ChallengeY),
+                                    () => Flow.Go<DailyChallengesScreen>());
+
+            // A press-scale that squashes a plate this wide reads as the screen flinching
+            // rather than as a key going down — the same reason the loadout shelf and the
+            // tasks card both hold theirs near one.
+            card.PressScale = .985f;
+
+            // The window. `showMaskGraphic` is false, so the plate is not painted twice; the
+            // near-nothing alpha is what writes the stencil (`Sheen` cuts its own the same way).
+            //
+            // A compressed sprite used as a stencil leaks a few texels where its alpha should
+            // be nought, which is what `ArtImportRules.Grades` grades the publisher card's
+            // wordmark uncompressed for. It is deliberately *not* worth it here: this plate is
+            // drawn on every screen in the game, the leak is a pixel or two at four corners
+            // rather than a field of holes in a full-screen black sheet, and `Sheen` has cut
+            // this same sprite this same way on every key in the app since the kit landed.
+            var clip = UIKit.Img("Clip", card.transform, Art.S("Ui/" + Skins.PlateBlue),
+                                 new Color(1f, 1f, 1f, .004f));
+            var crt = (RectTransform)clip.transform;
+            UIKit.StretchTo(crt, BannerInset, BannerInset, BannerInset, BannerInset);
+            clip.type = Image.Type.Sliced;
+            clip.raycastTarget = false;
+            clip.gameObject.AddComponent<Mask>().showMaskGraphic = false;
+
+            var banner = Art.S("Ui/challenges");
+            float aspect = banner != null && banner.rect.height > 0f
+                         ? banner.rect.width / banner.rect.height
+                         : 0f;
+
+            // Cover: the larger of the two scales that fill an axis. An address that has not
+            // arrived leaves the plate plain rather than drawing a white bar (invariant 7b).
+            float windowW = ChallengeW - BannerInset * 2f, windowH = ChallengeH - BannerInset * 2f;
+            float drawnW = windowW, drawnH = aspect > 0f ? drawnW / aspect : 0f;
+            if (drawnH < windowH) { drawnH = windowH; drawnW = drawnH * aspect; }
+
+            var art = UIKit.Img("Banner", crt, banner, Color.white,
+                                new Vector2(drawnW, drawnH), new Vector2(.5f, .5f), Vector2.zero);
+            art.raycastTarget = false;
+            art.enabled = aspect > 0f;
+
+            card.transform.localScale = Vector3.zero;
+            Tween.Pop(card.transform, 0f, .7f, .70f).OnDone(() =>
+            {
+                if (!card) return;
+                card.Rehome();
+
+                // The shine the owner asked for, and it is the one this game already has: a
+                // band travelling left to right behind a mask cut to the plate's own shape,
+                // so it cannot spill past the corners. See Sheen.
+                Sheen.Attach((RectTransform)card.transform, 3.1f);
+            });
+        }
+
+        // ------------------------------------------------------------- the loadout
+        /// <summary>
+        /// How big a turret cell on the hub is, how far apart the four stand, and how wide a
+        /// star is drawn under one.
+        ///
+        /// <para>
+        /// <b>The same furniture as the map's shelf and the action bar</b> (<c>LoadoutBar</c>,
+        /// invariant 42b): the kit's card, the seat's own colour on the rim, the turret's real
+        /// sprite and the shelf's own five-star row. A fourth drawing of one object would be a
+        /// fourth thing to keep in step; this is the third place it appears and it is the same
+        /// object in all three, at a smaller size.
+        /// </para>
+        /// <para>
+        /// <b>Turrets only, and the kits stay on the map.</b> A kit is a consumable that runs
+        /// out and is chosen on the way into a run, which is where the shelf that shows it
+        /// stands; the line is a fact about the account, and it is the half a player is proud
+        /// of. The hub has room for one of those.
+        /// </para>
+        /// </summary>
+        const float LineCell = 168f, LineCellGap = 20f, LineStar = 20f;
+
+        /// <summary>
+        /// The strip, top to bottom: air, the caption's band, air, the row of cells, air.
+        ///
+        /// <para>
+        /// <b>Summed rather than typed, because the first cut typed it and was wrong.</b> The
+        /// strip was 206 with a 34-unit caption at the top and a 140 cell hung 14 above the
+        /// middle, which reads as though it fits and does not: <c>UIKit.Box</c> pivots at centre
+        /// (invariant 44d), so the cell's top edge was nine units <em>past</em> the caption's,
+        /// and four turrets were drawn over the word LOADOUT. It was <c>render_home.py</c> that
+        /// said so, which is the whole reason that file exists.
+        /// </para>
+        /// </summary>
+        const float LinePad = 8f, LineHeadH = 34f, LineHeadGap = 8f, LineFoot = 10f;
+
+        static float LineH => LinePad + LineHeadH + LineHeadGap + LineCell + LineFoot;
+
+        /// <summary>Where a cell's centre sits, against the strip's own centre.</summary>
+        static float LineCellY => LineH * .5f - LinePad - LineHeadH - LineHeadGap - LineCell * .5f;
+
+        /// <summary>The four turret pictures, in the order <c>WardLine.Colours</c> names.</summary>
+        readonly System.Collections.Generic.List<Image> _lineArt =
+            new System.Collections.Generic.List<Image>(WardLine.Colours.Length);
+
+        RectTransform _lineHost;
+
+        /// <summary>
+        /// This screen's own hold on the four bodies standing on the line.
+        ///
+        /// <b>Never the map bar's and never a board's</b> — invariant 7b's second rule: an
+        /// address owned by another scope is never re-claimed, so taking one of theirs here
+        /// would drop a live screen's turrets when the hub went away.
+        /// </summary>
+        AssetHold _line;
+
+        /// <summary>
+        /// The four turrets the player is standing on the line and how far each has been taken
+        /// — a readout on the hub, and the door to the shelf that changes it.
+        ///
+        /// <para>
+        /// <b>Built once and dressed when the art lands.</b> An <c>Image</c> with no sprite is a
+        /// white rectangle rather than a blank (invariant 7b), so a cell is off until its
+        /// picture arrives.
+        /// </para>
+        /// </summary>
+        void BuildLoadout()
+        {
+            var host = UIKit.Button("Loadout", Content, Art.S("Ui/" + Skins.Panel),
+                                    new Vector2(LineW, LineH), new Vector2(.5f, 0f),
+                                    new Vector2(0f, LineY),
+                                    () => Flow.Go<LoadoutScreen>());
+            host.PressScale = .985f;
+            _lineHost = (RectTransform)host.transform;
+
+            UIKit.Titled("Head", _lineHost, Loc.Get("ui.loadout.title").ToUpperInvariant(), 28,
+                         Pal.Gold, TextAnchor.MiddleCenter, new Vector2(LineW - 140f, LineHeadH),
+                         new Vector2(.5f, 1f), new Vector2(0f, -(LinePad + LineHeadH * .5f)), 3f, 3f);
+
+            var gear = UIKit.Img("Gear", _lineHost, Art.S("Ui/ic_gear"), Pal.A(Pal.Cream, .7f),
+                                 Vector2.one * LineHeadH, new Vector2(1f, 1f),
+                                 new Vector2(-34f, -(LinePad + LineHeadH * .5f)));
+            gear.preserveAspect = true;
+            gear.raycastTarget = false;
+
+            PaintLoadout();
+
+            // A line re-stood on the shelf, a turret bought, a star spent: all three change
+            // what this says, and all three can happen while the hub is still underneath.
+            WardLoadout.Changed -= OnLoadoutChanged;
+            WardLoadout.Changed += OnLoadoutChanged;
+
+            _lineHost.localScale = Vector3.zero;
+            Tween.Pop(_lineHost, 0f, .6f, .54f);
+
+            Run(LoadLineArt);
+        }
+
+        void OnLoadoutChanged()
+        {
+            if (this == null || !_lineHost) return;
+            PaintLoadout();
+            Run(LoadLineArt);
+        }
+
+        /// <summary>
+        /// Draws the four cells for the line as it stands now.
+        ///
+        /// <para>
+        /// <b>A redraw rather than an entrance</b> (invariant 16d): the cells are remade because
+        /// a whole cell changes when its seat does, and nothing in here animates — the pop
+        /// belongs to <see cref="BuildLoadout"/>, which runs once.
+        /// </para>
+        /// <para>
+        /// The cells are found by name rather than kept in a list, so the caption and the gear
+        /// standing on the same plate are not swept away with them.
+        /// </para>
+        /// </summary>
+        void PaintLoadout()
+        {
+            for (int i = _lineHost.childCount - 1; i >= 0; i--)
+            {
+                var child = _lineHost.GetChild(i);
+                if (child.name.StartsWith("Cell", StringComparison.Ordinal)) Hide(child.gameObject);
+            }
+
+            _lineArt.Clear();
+
+            var line = WardLoadout.Line;
+            int n = WardLine.Colours.Length;
+            float step = LineCell + LineCellGap;
+
+            for (int i = 0; i < n; i++)
+            {
+                float x = (i - (n - 1) * .5f) * step;
+
+                var cell = UIKit.Img("Cell" + i, _lineHost, Art.S("Ui/" + Skins.Card), Color.white,
+                                     Vector2.one * LineCell, new Vector2(.5f, .5f),
+                                     new Vector2(x, LineCellY));
+                cell.raycastTarget = false;
+
+                // The colour of the seat, which is the one thing this row has to say that a
+                // turret's own silhouette does not. `LoadoutBar.BuildTurrets`, at a radius cut
+                // for a cell this size.
+                var rim = UIKit.Img("Rim", cell.transform, Art.RoundOutline(26, 5f),
+                                    Pal.A(SiegeView.TintOf(i), .85f),
+                                    Vector2.one * (LineCell - 10f));
+                rim.raycastTarget = false;
+
+                // Lifted, because the star row stands inside the card under it: a turret centred
+                // in a square cell and a row of stars at its foot are the same pixels.
+                var body = UIKit.Img("Body", cell.transform, null, Color.white,
+                                     Vector2.one * (LineCell - 50f), new Vector2(.5f, .5f),
+                                     new Vector2(0f, 14f));
+                body.preserveAspect = true;
+                body.raycastTarget = false;
+                body.enabled = false;
+                _lineArt.Add(body);
+
+                WardStarRow.Build((RectTransform)cell.transform,
+                                  new Vector2(0f, -LineCell + 26f), line.BuildAt(i).Stars, LineStar);
+            }
+
+            DressLoadout();
+        }
+
+        /// <summary>Puts whichever bodies are already in hand onto the row. <c>LoadoutBar.Dress</c>.</summary>
+        void DressLoadout()
+        {
+            var line = WardLoadout.Line;
+
+            for (int i = 0; i < _lineArt.Count; i++)
+            {
+                var model = line.At(i);
+                if (model == null || _lineArt[i] == null) continue;
+
+                var sprite = AssetLibrary.Sprite(AssetManifest.WardArt(model, i));
+
+                _lineArt[i].sprite = sprite;
+                _lineArt[i].enabled = sprite != null;
+            }
+        }
+
+        async Task LoadLineArt(CancellationToken cancellation)
+        {
+            var line = WardLoadout.Line;
+            var wanted = new System.Collections.Generic.List<AssetRequest>(WardLine.Colours.Length);
+
+            for (int i = 0; i < WardLine.Colours.Length; i++)
+            {
+                var model = line.At(i);
+                if (model != null) wanted.Add(AssetRequest.Sprite(AssetManifest.WardArt(model, i)));
+            }
+
+            _line = _line ?? AssetLibrary.Hold("hub_loadout");
+            await _line.LoadAsync(wanted, null, cancellation);
+
+            if (Living) DressLoadout();
         }
 
         static string NextGladeLine()

@@ -203,6 +203,26 @@ namespace GlimmerGrove
         public const string PlateOrange = "Hud/plate_orange";
         public const string PlateViolet = "Hud/plate_violet";
 
+        /// <summary>
+        /// The same mould in <see cref="Battle"/>'s own colour, for a box the pill cannot be
+        /// drawn in.
+        ///
+        /// <para>
+        /// <b>It is not a fourth hue, it is the affirmative's hue on a plate.</b> A glade's
+        /// name banner is 340x62 and the owner asked for it to wear what the hub's BATTLE key
+        /// wears; <c>btn_gold</c> is sliced across its width only, so at 62 tall it compresses
+        /// its whole 166-tall face by 2.7 and its keyline comes out thin on the top and bottom
+        /// edges and full width on the sides. Sliced both ways the corner stays 15 units at any
+        /// box, which is the only reason this exists (invariant 44a).
+        /// </para>
+        /// <para>
+        /// <b>So the two have to move together.</b> `make_hud_kit_art.py` cuts them from one
+        /// artboard at one hue and one saturation, and a re-cut that moves the key and leaves
+        /// this behind is a banner that no longer matches the button it was asked to match.
+        /// </para>
+        /// </summary>
+        public const string PlateGold = "Hud/plate_gold";
+
         /// <summary>The frame drawn round a plate.</summary>
         public static readonly Color PlateRim = new Color(0.016f, 0.031f, 0.063f, 1f);
 

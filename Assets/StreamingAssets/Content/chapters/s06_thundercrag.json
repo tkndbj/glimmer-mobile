@@ -15,7 +15,7 @@
  "levels": [
   {
    "id": "s06_firstcrag",
-   "mapX": 0.46,
+   "mapX": 0.45,
    "mapY": 0.066,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -111,7 +111,7 @@
   },
   {
    "id": "s06_hollowpeak",
-   "mapX": 0.532,
+   "mapX": 0.56,
    "mapY": 0.285,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -143,7 +143,7 @@
   },
   {
    "id": "s06_thunderhead",
-   "mapX": 0.563,
+   "mapX": 0.551,
    "mapY": 0.386,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -175,7 +175,7 @@
   },
   {
    "id": "s06_glacierwall",
-   "mapX": 0.584,
+   "mapX": 0.603,
    "mapY": 0.457,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -207,7 +207,7 @@
   },
   {
    "id": "s06_stoneward",
-   "mapX": 0.622,
+   "mapX": 0.594,
    "mapY": 0.57,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -272,8 +272,8 @@
   },
   {
    "id": "s06_highpass",
-   "mapX": 0.585,
-   "mapY": 0.734,
+   "mapX": 0.567,
+   "mapY": 0.736,
    "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.48,

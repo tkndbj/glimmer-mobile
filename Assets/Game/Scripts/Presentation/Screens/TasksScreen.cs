@@ -155,12 +155,14 @@ namespace GlimmerGrove
             // `BuildConnectBanner` would never overwrite because it returns early.
             _connect = null;
 
-            // The profile's ground rather than the hub's world. `Scenery.Room` is a painting of
-            // somewhere — a forest with a bridge in it — and this page is a list of plates laid
-            // over the whole width of it, so the picture was only ever visible in the gaps
-            // between rows. `Scenery.Plain` is a uniform pattern that is a *ground* rather than
-            // a place, which is what a page made of furniture wants under it, and it carries no
-            // parallax and no vignette for the same reason.
+            // The profile's ground rather than the hub's. `Scenery.Room` is a *place* — it was
+            // a painted forest, then a plaza — and this page is a list of plates laid over the
+            // whole width of it, so the picture was only ever visible in the gaps between rows.
+            // `Scenery.Plain` is a uniform pattern that is a *ground*, which is what a page made
+            // of furniture wants under it, and it carries no parallax and no vignette for the
+            // same reason. (The two draw the same wall at the moment; see `Scenery.Plain`. The
+            // call site still says which of the two jobs it is asking for, which is what keeps
+            // the day they diverge again a one-line change.)
             Scenery.Plain(Content);
             Fireflies.Spawn(Content, 22, new Color(1f, .93f, .70f), 6f, 22f);
 

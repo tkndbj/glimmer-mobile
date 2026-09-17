@@ -84,8 +84,17 @@ namespace GlimmerGrove
         /// Cool and dark rather than grey: a letter the sweep has left reads as the same light
         /// seen from further away, where a grey one reads as a letter somebody forgot to light.
         /// </para>
+        /// <para>
+        /// <b>It was <c>#123E63</c> and was too dark to read the word by.</b> The sweep is
+        /// narrow enough to travel, so at any instant most of the mark is lit by this and
+        /// nothing else — and against the curtain's black, a navy that dark spelt out three
+        /// letters at a time with the rest merely implied. Raised until every letter reads at
+        /// every position of the band (<c>render_splash.py --ident</c>, four values drawn side
+        /// by side), and no further: past about <c>#3A82B4</c> the fill starts competing with
+        /// the sweep, and a card where the light does not visibly *arrive* is a gradient.
+        /// </para>
         /// </summary>
-        static readonly Color Ambient = Pal.Hex("#123E63");
+        static readonly Color Ambient = Pal.Hex("#2A6E9E");
 
         static readonly Color RuleInk = Pal.Hex("#2F6E8C");
 

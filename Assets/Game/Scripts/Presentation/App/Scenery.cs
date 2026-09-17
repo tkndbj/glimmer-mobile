@@ -179,6 +179,15 @@ namespace GlimmerGrove
 
             // No parallax and no vignette. The pattern is uniform, so drifting it says nothing
             // and darkening its corners darkens a colour that was chosen.
+            //
+            // **`Bg/plain` and `Bg/hub_room` are the same picture today**, at the owner's
+            // instruction: every screen is the one blue wall, so the hub and the pages off it
+            // read as one place. They are still two addresses, and deliberately — that is the
+            // seam that lets the hub be re-cut as somewhere without touching six list screens,
+            // and it has been used once already. What it costs while they agree is one
+            // full-screen texture resident twice, which is about two thirds of a megabyte.
+            // What distinguishes the two is the *treatment* rather than the art:
+            // `Room` carries a dim, a vignette and a parallax and this carries none.
             return host;
         }
 

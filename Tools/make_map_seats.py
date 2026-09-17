@@ -58,7 +58,7 @@ WIDTH = 1080.0
 STRIP_HEIGHT = 1200.0
 NODE_DIAMETER = 196.0
 MIN_SEPARATION = NODE_DIAMETER + 24.0        # ChapterMap.MinimumNodeSeparation
-CROWN_HALF, CROWN_BOTTOM, CROWN_TOP = 204.0, 106.0, 302.0
+CROWN_HALF, CROWN_BOTTOM, CROWN_TOP = 204.0, -52.0, 302.0   # the record badge stands beside
 BODY_HALF, BODY_BELOW, BODY_ABOVE = 180.0, 227.0, 118.0
 TEASER_X = 0.66
 TEASER_GAP = 0.22
@@ -117,15 +117,20 @@ NUDGE = {
         # **Every one of these is inward, and the chain was already at the inward limit** - see
         # `ACCEPTED_OVERLAPS` for what that costs and who decided to pay it.
         #
+        # The second round is in **pixels**, off the phone, and a pixel is a canvas unit here for
+        # the same reason a centimetre is 167 of them: 1080 units is the screen. They are folded
+        # into the figures below rather than kept as a second column, because a seat is one
+        # number and a running total of corrections is a thing that can disagree with itself.
+        #
         # The foot's 100 is not the owner's and is kept: this is a siege chapter's map and the
         # loadout bar stands in the bottom of it (see `EDGE_MARGIN`).
-        1: (-251, 100),      # level 41, 1.5 cm left
+        1: (-261, 100),      # level 41, 1.5 cm left then 10 px further
         2: (167, 0),         # level 42, 1 cm right
-        4: (251, 0),         # level 44, 1.5 cm right
-        5: (-167, 0),        # level 45, 1 cm left
-        6: (335, -167),      # level 46, 2 cm right and 1 cm down
-        7: (-84, 0),         # level 47, 0.5 cm left
-        9: (-167, 0),        # level 49, 1 cm left
+        4: (281, 0),         # level 44, 1.5 cm right then 15 px, then 15 px more
+        5: (-180, 0),        # level 45, 1 cm left then 5 px, then 8 px more
+        6: (355, -167),      # level 46, 2 cm right then 10 px twice over, and 1 cm down
+        7: (-114, 0),        # level 47, 0.5 cm left then 15 px twice over
+        9: (-187, 10),       # level 49, 1 cm left then 10 px twice over, and 10 px up
         10: (335, 0),        # level 50, 2 cm right
     },
     4: {

@@ -1381,7 +1381,7 @@ TEASER_GAP, TEASER_HEADROOM, TEASER_X = 0.22, 700.0, 0.66
 # ChapterMap.Crown*/Body*: what a cleared glade draws above its disc (record and rank), and
 # what any perch - a glade's or the marker's - hangs below and above its own centre. The disc
 # distance above is not what collides; these are.
-CROWN_HALF_WIDTH, CROWN_BOTTOM, CROWN_TOP = 204.0, 106.0, 302.0
+CROWN_HALF_WIDTH, CROWN_BOTTOM, CROWN_TOP = 204.0, -52.0, 302.0
 BODY_HALF_WIDTH, BODY_BELOW, BODY_ABOVE = 180.0, 227.0, 118.0
 
 

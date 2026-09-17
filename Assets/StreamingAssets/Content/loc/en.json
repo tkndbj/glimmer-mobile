@@ -2054,6 +2054,14 @@
       "text": "Paid on top of what this glade earned."
     },
     {
+      "key": "ui.challenges.soon",
+      "text": "New challenges are being prepared. Check back soon."
+    },
+    {
+      "key": "ui.challenges.title",
+      "text": "Daily Challenges"
+    },
+    {
       "key": "ui.chest.always",
       "text": "Always"
     },
@@ -3936,6 +3944,18 @@
     {
       "key": "ui.rank.top50",
       "text": "You are in the top 50%"
+    },
+    {
+      "key": "ui.rank.record_unit",
+      "text": "Turns"
+    },
+    {
+      "key": "ui.rank.moves_unit",
+      "text": "Moves"
+    },
+    {
+      "key": "ui.rank.motes_unit",
+      "text": "Motes"
     },
     {
       "key": "ui.report.body",

@@ -869,6 +869,11 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   *draws* and what its shaders *sample*. **Before naming a texture after the effect you want, render it.**
 - **A flood keyer is the wrong tool for an object whose *edge is a glow*, and it fails by keeping almost
   nothing.** A keyer is a question about an edge, not about a colour.
+- **A texture used as a `Mask` may not be compressed at any grade**, because uGUI clips a mask at an alpha
+  of 0.001 and block compression does not round a transparent texel back to transparent. The publisher
+  card's wordmark came back with 3,555 lit texels outside the lettering at ASTC 6x6 and still 467 at 4x4 —
+  every one a pinprick of the sweep through the black sheet, reported as the mark being speckled with dots.
+  The folder rule carries a file-level `Uncompressed` entry for it.
 
 **Platform, store and backend**
 
@@ -965,7 +970,9 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **Economy** — real-money shop (Unity IAP 5.4.2), gems as the soft sink, rewarded ads, refund sweeps,
   server-adjudicated grants, a gem-priced doubling continue (23c) and a bonus wheel (25).
 - **The front of the game** — one bought interface kit (44), cut by `Tools/make_hud_kit_art.py`; the display
-  face is Titan One shipped as **Gemfire Display** (46a).
+  face is Titan One shipped as **Gemfire Display** (46a). The hub's foot is one stack measured up from the
+  nav bar: the turret line as a readout, the Battle key, and a painted **Daily Challenges** banner that
+  opens a screen with nothing in it yet. No companion stands on the hub.
 - **Reminders** — two to three local notifications a day, scheduled on the device and costing the server
   nothing at any player count (50). Ten kinds; three local slots (09:30 / 13:30 / 19:30) for a week, then
   one a day out to **twenty-one**, re-armed every time the app is backgrounded.
@@ -1091,6 +1098,11 @@ honest state rather than a fault to chase. No season rollover has ever happened.
   baseline moves (37ch).
 - **Should a raider be framed to its body?** The pack feathers its baked shadow out to alpha 1, so every
   insect is framed around a halo and drawn smaller than it could be.
+
+**Daily Challenges is an empty room.** `DailyChallengesScreen` is the hub banner's destination and draws
+its chrome and one sentence; nothing else in the game references it, so filling it in is one file. Its
+banner is a **painted** picture with the English words in it (`Art/Ui/challenges`), so that one control has
+no translation until the art is re-cut — the only string in the game outside invariant 6.
 
 **Play it.** None of the retention features or the last two chapters have been played. The questions worth
 an analytics event, one per feature: how many **shields** are bought while the streak is *not* at risk; how

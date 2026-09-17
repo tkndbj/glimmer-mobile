@@ -40,24 +40,24 @@ COVER = REPO / "Assets" / "Game" / "Art" / "Bg" / "splash_cover.png"
 IDENT = REPO / "Assets" / "Game" / "Art" / "Bg" / "ident_word.png"
 
 # ---------------------------------------------------------------- SplashCover mirror
-ART_W, ART_H = 941.0, 1672.0
-WORD_HEAD_UV, WORD_FOOT_UV = .210, .405
+ART_W, ART_H = 887.0, 1774.0
+WORD_HEAD_UV, WORD_FOOT_UV = .250, .420
 MARK_CENTRE_UV = (WORD_HEAD_UV + WORD_FOOT_UV) * .5
 MARK_ON_CANVAS = .30
-WORD_LEFT_UV, WORD_RIGHT_UV = .085, .918
+WORD_LEFT_UV, WORD_RIGHT_UV = .095, .908
 WORD_MARGIN = 12.0
 BAR_SPAN, BAR_HEIGHT = .68, 28.0
 FOOT, MIN_GAP, PAD = 60.0, 14.0, 10.0
 SIDE_MARGIN, MIN_BAR_WIDTH = 90.0, 240.0
 
-SKY_JOIN, SKY_MID, SKY_TOP = "#02388F", "#022C72", "#021F52"
+SKY_JOIN, SKY_MID, SKY_TOP = "#002C95", "#002377", "#001955"
 
 # ------------------------------------------------------------- IdentWordmark mirror
 WIDTH_FRACTION, MAX_WIDTH, IDENT_MARGIN = .58, 780.0, 112.0
 RULE_OVERHANG, RULE_DROP, RULE_HEIGHT = 18.0, 84.0, 2.0
 BAND_WIDTH, BAND_OVERRUN = .95, .62
 NEON_STOPS = ["#FF2E9A", "#8A5BFF", "#20E0FF", "#4BFFA5", "#FFE24A"]
-AMBIENT = "#123E63"
+AMBIENT = "#2A6E9E"
 
 
 def ident_fit(canvas_width, aspect):

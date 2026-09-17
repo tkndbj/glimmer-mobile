@@ -317,6 +317,19 @@ KIT = [
     Piece("cartoon", "Artboard 32 copy 2", "plate_violet", 1.0, slice_x=True, slice_y=True,
           trim=True, hue=0.782, pull=1.0, sat=1.10),
 
+    # **The fourth is the Battle key's own colour, and it exists because a banner is not a
+    # pill.** A glade's name plate is 340x62 - 5.5:1, against the mould's 2.4:1 - and the owner
+    # asked for it to wear what the hub's affirmative wears. `btn_gold` cannot: sliced on x
+    # only, drawn 62 tall it compresses its whole 166-tall face by 2.7, which thins the keyline
+    # on the top and bottom edges while leaving it full width on the sides. That is invariant
+    # 44a from the squashing end, and the answer is the same one the three plates above are:
+    # slice both ways and the corner stays 15 units at any box.
+    #
+    # `hue` and `sat` are `btn_gold`'s, not the plates' 1.14 - the point is that this *is* the
+    # Battle key's colour, so a re-cut that moves one has to move the other.
+    Piece("cartoon", "Artboard 32 copy 2", "plate_gold", 1.0, slice_x=True, slice_y=True,
+          trim=True, hue=0.119, pull=1.0, sat=0.86),
+
     # ------------------------------------------------------------- the nav caps
     # The bottom bar's five caps, lit and unlit. **Discs, and that is the change a player
     # notices first**: the pack draws a round button as a coloured face inside a thick white

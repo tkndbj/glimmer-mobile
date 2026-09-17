@@ -146,7 +146,7 @@ namespace GlimmerGrove
         /// The picture's own top row, and a shade of it for the sky band to darken into.
         ///
         /// <para>
-        /// <c>#02388F</c> is measured off the frame rather than picked: the top row averages
+        /// <c>#002C95</c> is measured off the frame rather than picked: the top row averages
         /// exactly that. It is seen on any canvas tall enough that the capped zoom leaves a band
         /// of sky above the picture — which, with this frame's wide wordmark, is every phone
         /// taller than about 19:9 — and behind the picture if the sprite is missing altogether.
@@ -155,9 +155,9 @@ namespace GlimmerGrove
         /// nothing else to look at.
         /// </para>
         /// </summary>
-        static readonly Color SkyJoin = Pal.Hex("#02388F");
-        static readonly Color SkyMid = Pal.Hex("#022C72");
-        static readonly Color SkyTop = Pal.Hex("#021F52");
+        static readonly Color SkyJoin = Pal.Hex("#002C95");
+        static readonly Color SkyMid = Pal.Hex("#002377");
+        static readonly Color SkyTop = Pal.Hex("#001955");
 
         Image _cover, _mirror, _veil, _fill, _head, _sheen, _halo, _scrim;
         RectTransform _coverRT, _mirrorRT, _veilRT, _barRT, _fillRT, _headRT, _sheenRT, _haloRT, _scrimRT;

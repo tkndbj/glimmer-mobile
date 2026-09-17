@@ -52,7 +52,7 @@ namespace GlimmerGrove
         const float StatusH = 48f, AccountH = 36f, HintH = 78f;
         const float ManageH = 110f, DeleteH = 68f;
         const float AfterStatus = 12f, AfterAccount = 10f, AfterHint = 30f;
-        const float BetweenButtons = 18f, FootMargin = 32f;
+        const float FootMargin = 32f;
         const float Gap = 28f;
         const float HeaderHeight = 250f;
 
@@ -212,6 +212,7 @@ namespace GlimmerGrove
             BuildRecordCard();
             BuildCompanionCard();
             BuildBoardCard();
+            BuildDeleteRow();
             _stack.sizeDelta = new Vector2(0f, -_cursor + Gap);
 
             // Straight to the content rather than through verticalNormalizedPosition, which a
@@ -743,21 +744,16 @@ namespace GlimmerGrove
             string account = linked ? CloudSaveService.AccountLabel : string.Empty;
             bool showAccount = !string.IsNullOrEmpty(account);
 
-            // Drawn wherever a deletion could possibly succeed — which is wherever there is a
-            // backend, including the mismatched state. See AccountDeletion.Offered.
-            bool deletable = AccountDeletion.Offered(available);
-
             // ------------------------------------------------------------------ measure
             // Every row is stacked from the card's top edge and the card is sized to hold
             // exactly what it draws — the same arrangement AccountOverlay uses, and for its
-            // reason: this card grows a line when the provider names the account and a button
-            // when deletion is offered, so a typed height is a height that ends up printing a
-            // sentence through a button. It already did: the guest hint was drawn tight against
-            // the button under it.
+            // reason: this card grows a line when the provider names the account, so a typed
+            // height is a height that ends up printing a sentence through a button. It already
+            // did: the guest hint was drawn tight against the button under it.
             float height = TitleRow + StatusH + AfterStatus
                          + (showAccount ? AccountH + AfterAccount : 0f)
                          + HintH + AfterHint
-                         + (available ? ManageH + (deletable ? BetweenButtons + DeleteH : 0f) : 0f)
+                         + (available ? ManageH : 0f)
                          + FootMargin;
 
             var card = Section("Account", height, 1);
@@ -812,30 +808,62 @@ namespace GlimmerGrove
                              new Vector2(460f, ManageH), new Vector2(.5f, 1f),
                              new Vector2(0f, -(cursor + ManageH * .5f)),
                              () => Flow.Modal<AccountOverlay>());
+        }
 
-            cursor += ManageH;
+        // ------------------------------------------------------------- deletion
+        /// <summary>
+        /// Ending the account, at the foot of the page and standing on nothing.
+        ///
+        /// <para>
+        /// <b>It is off the account card now, and the point of that is what it is no longer
+        /// beside.</b> That card is about protecting a grove — its heading, its status line and
+        /// its one button all say so — and the control that destroys the grove was standing on
+        /// it, eighteen units under the control that saves it. Two buttons on one plate read as
+        /// two answers to one question, which is exactly the shape a misfire wants. Down here it
+        /// is its own question, asked on its own, after everything else the page has to say.
+        /// </para>
+        /// <para>
+        /// <b>The bottom of the page rather than the bottom of the display.</b> A red key pinned
+        /// over the nav bar would be the most permanent thing on the screen and would follow the
+        /// player past every card — and this page is a scroller, so "the bottom" is a place
+        /// somebody arrives at rather than a place they are held. Both stores require this to be
+        /// <em>reachable</em>; neither asks for it to be in the way.
+        /// </para>
+        /// <para>
+        /// <b>No plate under it.</b> Every other row here is a card because a card is what groups
+        /// things, and there is one thing here — a plate holding one small red button would
+        /// draw more attention to it than the button does.
+        /// </para>
+        /// <para>
+        /// Drawn wherever a deletion could possibly succeed, which is wherever there is a
+        /// backend, including the mismatched state (<c>AccountDeletion.Offered</c>). It stays on
+        /// this page rather than moving into Settings for the reason the account row does: this
+        /// is the one page in the game about <em>who the player is</em>, and burying the control
+        /// that ends an account three taps deep in a preferences panel is how the last one
+        /// stayed unfound — and, for this one, how a review gets refused.
+        /// </para>
+        /// </summary>
+        void BuildDeleteRow()
+        {
+            if (!AccountDeletion.Offered(CloudSaveService.IsAvailable)) return;
 
-            if (!deletable) return;
+            // A gap of its own on top of the stack's own, so it plainly is not part of the card
+            // above it — the one thing this control must never read as is the next row down.
+            _cursor -= Gap;
 
-            cursor += BetweenButtons;
+            var button = UIKit.TextButton("Delete", _stack, "btn_red", Loc.Get("ui.profile.delete"), 26,
+                                          new Vector2(460f, DeleteH), new Vector2(.5f, 1f),
+                                          new Vector2(0f, _cursor - DeleteH * .5f),
+                                          () => Flow.Modal<DeleteAccountOverlay>());
+            UIKit.Shrinkable(button.Label, 16);
 
-            // ---------------------------------------------------------------- deletion
-            // Red, and the only red control in the game outside a defeat: it is the one action
-            // here that cannot be undone by anything — no store re-delivers an account, no
-            // archive restores it, no support path recovers it. It is still the smaller button
-            // of the two and it still sits underneath, because both stores require this to be
-            // *reachable* and neither asks it to compete with the button that protects a grove.
-            //
-            // It lives here rather than in Settings for the reason the account row does: this
-            // is the one card in the game about *who the player is*, and burying the control
-            // that ends an account three taps deep in a preferences panel is how the last one
-            // stayed unfound — and, for this one, how a review gets refused.
-            UIKit.Shrinkable(
-                UIKit.TextButton("Delete", card, "btn_red", Loc.Get("ui.profile.delete"), 26,
-                                 new Vector2(460f, DeleteH), new Vector2(.5f, 1f),
-                                 new Vector2(0f, -(cursor + DeleteH * .5f)),
-                                 () => Flow.Modal<DeleteAccountOverlay>()).Label,
-                16);
+            _cursor -= DeleteH + Gap;
+
+            // The stagger every card gets, and the last beat of it. See Section.
+            if (_entered) return;
+
+            button.transform.localScale = Vector3.zero;
+            Tween.Pop(button.transform, 0f, .55f, .08f + 5 * .07f);
         }
 
         // -------------------------------------------------------------- chrome

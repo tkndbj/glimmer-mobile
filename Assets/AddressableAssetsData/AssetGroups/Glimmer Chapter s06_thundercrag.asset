@@ -30,16 +30,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4ef5665692f022d48bd17db757a065b9
-    m_Address: Art/Map/map5_strip4
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8d93bb946b10f24429bb0cc87ca3db3e
-    m_Address: Art/Map/map5_strip5
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e049b25998e00b6489aaff5fc41b5dbd
     m_Address: Art/Map/map5_strip0
     m_ReadOnly: 0

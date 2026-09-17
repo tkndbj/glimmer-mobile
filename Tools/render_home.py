@@ -39,8 +39,26 @@ TOPBAR_Y, TOPBAR_H = 116.0, 168.0
 RES_Y, RES_H = 254.0, 104.0
 TASKS_Y, TASKS_H = 436.0, 240.0
 ROW_TOP, ROW_HEIGHT, ROW_WIDTH, ROW_GAP = 570.0, 300.0, 960.0, 24.0
-HERO_Y, HERO_W, HERO_H = 150.0, 620.0, 700.0
-PLAY_W, PLAY_H = 600.0, 172.0
+
+# HomeScreen's foot, measured up from the nav bar exactly as the screen measures it. The
+# companion that used to stand between the feature row and the key is gone, and so is the
+# `hero` that drew it here.
+FOOT_GAP = 14.0
+CHALLENGE_W, CHALLENGE_H = 960.0, 280.0
+BANNER_INSET = 8.0
+PLAY_W, PLAY_H = 620.0, 178.0
+LINE_W = 960.0
+LINE_CELL, LINE_CELL_GAP, LINE_STAR = 168.0, 20.0, 20.0
+LINE_PAD, LINE_HEAD_H, LINE_HEAD_GAP, LINE_FOOT = 8.0, 34.0, 8.0, 10.0
+LINE_H = LINE_PAD + LINE_HEAD_H + LINE_HEAD_GAP + LINE_CELL + LINE_FOOT
+LINE_CELL_Y = LINE_H / 2 - LINE_PAD - LINE_HEAD_H - LINE_HEAD_GAP - LINE_CELL / 2
+
+CHALLENGE_Y = K.NAV_HEIGHT + FOOT_GAP + CHALLENGE_H / 2
+LINE_Y = CHALLENGE_Y + CHALLENGE_H / 2 + FOOT_GAP + LINE_H / 2
+PLAY_Y = LINE_Y + LINE_H / 2 + FOOT_GAP + PLAY_H / 2
+
+# SiegeView.Tints, in the order WardLine.Colours names them: Pal.Poppy, Mint, Azure, Amber.
+SEAT_TINTS = [(0xF2, 0x40, 0x4F), (0x7B, 0xD8, 0x6A), (0x4F, 0xC1, 0xFF), (0xFF, 0x8A, 0x2B)]
 
 # HomeScreen.BuildChestRow
 CHEST_TALL, CHEST_SHORT = 188.0, 130.0
@@ -99,13 +117,13 @@ def resources(sheet):
     """`HomeScreen.BuildResources` — three troughs, each with the kit's own "+" on the end."""
     money = [(K.ROSE, "ic_heart", "5/5"), (K.GOLD, "Coin/f0", "12,480"), (K.BLOOM, "ic_gem", "1,240")]
     for i, (colour, glyph, value) in enumerate(money):
-        cx = W / 2 + (i - 1) * 318
-        K.paste(sheet, K.skin("Hud/trough", 276, 84), cx, RES_Y)
+        cx = W / 2 + (i - 1) * 322
+        K.paste(sheet, K.skin("Hud/trough", 304, 96), cx, RES_Y)
 
-        gx = cx - 276 / 2 + 66
+        gx = cx - 304 / 2 + 66
         K.paste(sheet, K.glow(120, 2.0, colour, .30), gx, RES_Y)
         try:
-            K.paste(sheet, K.fit(Image.open(K.UI / f"{glyph}.png").convert("RGBA"), (56, 56)), gx, RES_Y)
+            K.paste(sheet, K.fit(Image.open(K.UI / f"{glyph}.png").convert("RGBA"), (62, 62)), gx, RES_Y)
         except FileNotFoundError:
             pass
 
@@ -304,11 +322,11 @@ def feature(sheet, paired=True):
 
         # the count, and what it counts
         vx = cx - bw / 2 + 299
-        # `FeatureValue` places the count at (vx, +20) and the caption at (vx, -32) in
+        # `FeatureValue` places the count at (vx, +29) and the caption at (vx, -32) in
         # Unity's y-up space, so on an image they are 20 *above* and 32 *below* the
         # card's middle. Drawn both below, they overlap by twelve units — which is what
         # this did, and it read as a bug in the screen rather than in the mirror.
-        K.text(sheet, value, vx, cy - 20, 62, fill=K.CREAM, outline=3)
+        K.text(sheet, value, vx, cy - 29, 76, fill=K.CREAM, outline=3)
         K.text(sheet, caption, vx, cy + 32, 22, fill=capcol, outline=0)
 
         # the strip along the bottom: a line of copy, or a bar with milestone pips on it.
@@ -345,33 +363,177 @@ def feature(sheet, paired=True):
             K.text(sheet, str(badge), bxx, byy, 36, fill=(43, 28, 5), outline=0)
 
 
-def hero(sheet):
-    """`HomeScreen.BuildHero` â€” the beam, the pad, the companion and its name plate."""
-    cx, cy = W / 2, H / 2 + HERO_Y
-    K.paste(sheet, K.glow(500, 2.1, K.AQUA, .18), cx, cy)
-    beam = K.fit(K.load("Hud/beam")[0], (408, 296))
-    K.paste(sheet, K.tint(beam, (255, 255, 255), .50), cx, cy - 126)
-    pad = K.fit(K.load("Hud/lander")[0], (352, 214))
-    K.paste(sheet, pad, cx, cy + 132)
+def loadout(sheet):
+    """`HomeScreen.BuildLoadout` — the four turrets on the line, with their star rungs.
+
+    The stars are read off `WardStarRow`: five always, the earned ones gold and the rest the
+    kit's hollow star, because a row that grew would say how far a player has come and never how
+    far there is to go.
+    """
+    cy = H - LINE_Y
+    K.paste(sheet, K.skin("Hud/panel", LINE_W, LINE_H), W / 2, cy)
+    head_y = cy - LINE_H / 2 + LINE_PAD + LINE_HEAD_H / 2
+    K.text(sheet, "LOADOUT", W / 2, head_y, 28, fill=K.GOLD)
+
     try:
-        critter = Image.open(K.REPO / "Assets" / "Game" / "Art" / "Critters" / "c5" / "f00.png").convert("RGBA")
-        K.paste(sheet, K.fit(critter, (286, 286)), cx, cy - 66)
+        gear = Image.open(K.UI / "ic_gear.png").convert("RGBA")
+        K.paste(sheet, K.tint(K.fit(gear, (LINE_HEAD_H, LINE_HEAD_H)), K.CREAM, .7),
+                W / 2 + LINE_W / 2 - 34, head_y)
     except FileNotFoundError:
         pass
-    K.paste(sheet, K.fit(K.load("Hud/title")[0], (384, 103)), cx, cy + 258)
-    K.text(sheet, "MONARCH", cx, cy + 256, 34, fill=K.SUN)
+
+    step = LINE_CELL + LINE_CELL_GAP
+    starter = _starter_ward()
+
+    for i in range(4):
+        x = W / 2 + (i - 1.5) * step
+        y = cy - LINE_CELL_Y               # the strip's own stack; Unity's y counts up
+        K.paste(sheet, K.skin("Hud/card", LINE_CELL, LINE_CELL), x, y)
+        K.paste(sheet, K.round_rect(LINE_CELL - 10, LINE_CELL - 10, 26, SEAT_TINTS[i], .85, 5), x, y)
+
+        if starter:
+            # AssetManifest.WardArt -> Art/Siege/Wards/{id}_{colour}, which is WardModel.ArtFor.
+            colour = "rgby"[i]
+            try:
+                body = Image.open(K.REPO / "Assets" / "Game" / "Art" / "Siege" / "Wards"
+                                  / f"{starter}_{colour}.png").convert("RGBA")
+                K.paste(sheet, K.fit(body, (LINE_CELL - 50, LINE_CELL - 50)), x, y - 14)
+            except FileNotFoundError:
+                pass
+
+        # WardStarRow, at the size the hub draws it: one star lit, which is what a turret is
+        # worth the moment it is bought (`WardStars.Least`).
+        gap = LINE_STAR * .22
+        width = 5 * LINE_STAR + 4 * gap
+        for j in range(5):
+            sx = x - width / 2 + LINE_STAR / 2 + j * (LINE_STAR + gap)
+            name = "star_full" if j == 0 else "star_empty"
+            try:
+                star = Image.open(K.UI / f"{name}.png").convert("RGBA")
+                K.paste(sheet, K.tint(K.fit(star, (LINE_STAR, LINE_STAR)),
+                                      K.GOLD if j == 0 else (255, 255, 255),
+                                      1.0 if j == 0 else .45),
+                        sx, y + LINE_CELL / 2 - 26)
+            except FileNotFoundError:
+                pass
+
+
+def _starter_ward():
+    """The roster's starter, derived off `progression.json` the way `WardCatalog` derives it.
+
+    A starter is the first model in shelf order that costs nothing in *either* currency
+    (`WardModel.IsStarter`) — never a named default, because a named one is a second place the
+    roster says which turret is free, and the two drift the first time a drop reorders the shelf.
+    Both prices are asked, which is invariant 16j.
+    """
+    import json
+    try:
+        table = json.loads((K.REPO / "Assets" / "StreamingAssets" / "Content"
+                            / "progression.json").read_text(encoding="utf8"))
+    except (FileNotFoundError, ValueError):
+        return None
+
+    rows = sorted(table.get("wards", {}).get("models", []), key=lambda r: r.get("order", 0))
+    for row in rows:
+        if row.get("coinPrice", 0) <= 0 and row.get("gemPrice", 0) <= 0:
+            return row.get("id")
+    return rows[0].get("id") if rows else None
+
+
+def challenges(sheet):
+    """`HomeScreen.BuildChallenges` — the painted banner filling the kit's blue plate.
+
+    **The plate is a window**: a `Mask` cut from the plate's own sprite, with the picture
+    cover-fitted behind it. Mirrored here with the sprite's alpha as the mask, which is the same
+    question uGUI asks — so this is the only picture that can answer whether the crop lands
+    somewhere the art can afford, and whether the rounded corners still read.
+
+    The shine is deliberately absent: `Sheen` is a tween, and this file draws furniture rather
+    than motion (its own header says so).
+    """
+    cy = H - CHALLENGE_Y
+    plate = K.skin("Hud/plate_blue", CHALLENGE_W, CHALLENGE_H)
+    K.paste(sheet, plate, W / 2, cy)
+
+    try:
+        art = Image.open(K.UI / "challenges.png").convert("RGBA")
+    except FileNotFoundError:
+        return
+
+    # The window sits `BANNER_INSET` inside the plate, so the plate's own bevel is drawn all
+    # the way round rather than being covered by the picture.
+    ww, wh = CHALLENGE_W - BANNER_INSET * 2, CHALLENGE_H - BANNER_INSET * 2
+
+    # Cover: the larger of the two scales that fill an axis, which on this art is width-led.
+    cover = max(ww / art.width, wh / art.height)
+    art = art.resize((max(1, int(art.width * cover)), max(1, int(art.height * cover))),
+                     Image.LANCZOS)
+
+    window = Image.new("RGBA", (int(ww), int(wh)), (0, 0, 0, 0))
+    window.alpha_composite(art, ((window.width - art.width) // 2,
+                                 (window.height - art.height) // 2))
+
+    # The mask is the window's own copy of the plate sprite, nine-sliced at the window's size —
+    # so its corner radius is the plate's (a nine-slice never stretches a corner) and the
+    # picture is cut to the same curve, one inset in.
+    mask = K.skin("Hud/plate_blue", ww, wh)
+    window.putalpha(Image.fromarray(
+        (_np().array(window.split()[3], dtype="uint16")
+         * _np().array(mask.split()[3], dtype="uint16") // 255).astype("uint8")))
+
+    K.paste(sheet, window, W / 2, cy)
+
+
+def _np():
+    import numpy
+    return numpy
 
 
 def play(sheet):
-    """`HomeScreen.BuildPlay` — the one control this screen exists to offer."""
-    cy = H - K.NAV_HEIGHT - 190
-    K.paste(sheet, K.glow(760, 2.1, K.SUN, .26), W / 2, cy)
-    K.paste(sheet, K.skin("btn_green", PLAY_W, PLAY_H), W / 2, cy)
-    K.text(sheet, "PLAY", W / 2, cy, 66, outline=4)
+    """`HomeScreen.BuildPlay` — the one control this screen exists to offer.
 
-    ny = H - K.NAV_HEIGHT - 84
-    K.paste(sheet, K.skin("Hud/trough", 640, 62), W / 2, ny)
-    K.text(sheet, "NEXT UP - THE FIRST WATCH", W / 2, ny, 27, fill=(255, 245, 220), outline=0)
+    **`Skins.Battle` and the word BATTLE**, with the kit's own painted glyph beside it at 112
+    rather than at the third-of-the-height a pill gives a small mark. This drew a green PLAY key
+    and a NEXT UP trough under it for as long as it existed, and neither has been on the screen
+    since the siege became the game (invariant 44d).
+    """
+    cy = H - PLAY_Y
+    K.paste(sheet, K.glow(760, 2.1, K.SUN, .26), W / 2, cy)
+    K.paste(sheet, K.skin("Hud/btn_gold", PLAY_W, PLAY_H), W / 2, cy)
+
+    # UIKit.FitLabel: the glyph and the caption are centred as one block, the glyph leading.
+    lift = PLAY_H * .0231
+    gap = 18.0
+    try:
+        icon = K.fit(Image.open(K.UI / "ic_battle.png").convert("RGBA"), (112, 112))
+    except FileNotFoundError:
+        icon = None
+
+    word = K.font(62).getlength("BATTLE")
+    block = (icon.width + gap if icon else 0) + word
+    left = W / 2 - block / 2
+    if icon:
+        K.paste(sheet, icon, left + icon.width / 2, cy - lift)
+        left += icon.width + gap
+    K.text(sheet, "BATTLE", left + word / 2, cy - lift, 62, outline=4)
+
+
+def clearance():
+    """What is left between the feature row and the loadout strip on the squarest phone.
+
+    **The one thing this picture cannot show, because it is drawn at one canvas.** The hub is
+    two fixed stacks growing toward each other — the top one hangs off the safe area and the
+    foot one stands on the nav bar — and the gap between them is whatever the canvas has left.
+    `Layout.CanvasFit` hands anything squarer than 7:4 a widened canvas, so the *shortest* one
+    this game is ever drawn on is exactly 1080 x 1890, and that is the number to print.
+
+    A negative reading is the hub overlapping itself, which is CRAFT.md's own recorded iPad
+    report (the companion drawn 176 units through the streak box) asked before a device asks it.
+    """
+    top = ROW_TOP + ROW_HEIGHT
+    foot = K.NAV_HEIGHT + FOOT_GAP + CHALLENGE_H + FOOT_GAP + PLAY_H + FOOT_GAP + LINE_H
+    shortest = 1890.0
+    return top, foot, shortest - top - foot
 
 
 def screen(paired=True, verbose=False):
@@ -383,8 +545,9 @@ def screen(paired=True, verbose=False):
     resources(sheet)
     tasks(sheet, verbose=verbose)
     feature(sheet, paired)
-    hero(sheet)
     play(sheet)
+    loadout(sheet)
+    challenges(sheet)
     K.navbar(sheet, "home")
     return sheet.convert("RGB")
 
@@ -397,6 +560,11 @@ def main():
     args = ap.parse_args()
 
     out = screen(paired=not args.no_event, verbose=True)
+
+    top, foot, spare = clearance()
+    print(f"  stack: {top:.0f} from the top, {foot:.0f} from the nav bar, "
+          f"{spare:.0f} spare on the squarest phone (1080x1890)"
+          + ("" if spare >= 0 else "   <-- THE HUB OVERLAPS ITSELF"))
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
     print(f"  wrote {args.out}  {out.width}x{out.height}  - look at it")
