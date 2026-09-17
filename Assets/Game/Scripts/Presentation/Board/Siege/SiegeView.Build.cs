@@ -684,7 +684,14 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// One beat of the count-in: the number, its sound, and the flash the last one earns.
+        /// One beat of the count-in: the number and its sound.
+        ///
+        /// <para>
+        /// <b>No screen flash on GO!, at the owner's instruction (2026-09-16).</b> The last beat
+        /// used to throw a gold <c>Flow.Flash</c>, and the first wave's arrival threw a second
+        /// one on the same frame, so a run opened on two whole-screen flashes back to back. Both
+        /// are gone: the number, its bell and the hill starting to walk are the whole cue.
+        /// </para>
         ///
         /// <para>
         /// <b>Not called <c>Beat</c>, which is what it wants to be called.</b> There is already a
@@ -722,9 +729,10 @@ namespace GlimmerGrove
             Tween.Fade(mark, 0f, step * .95f, Ease.InQuad)
                  .OnDone(() => { if (mark) Destroy(mark.gameObject); });
 
-            Audio.Sfx(i > 0 ? "tick" : "bell", i > 0 ? .5f : .8f, i > 0 ? 1f : 1.2f);
-
-            if (i == 0) Flow.Flash(new Color(1f, .86f, .5f), .3f, .35f);
+            // GO! rings `bell` at its cut pitch rather than a fifth up: the clip is a deep timer
+            // bell the owner picked by ear (`Tools/sfx.tsv`), and resampling it up is a
+            // different, smaller bell than the one that was chosen.
+            Audio.Sfx(i > 0 ? "tick" : "bell", i > 0 ? .5f : .8f, 1f);
         }
     }
 }

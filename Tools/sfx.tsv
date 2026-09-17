@@ -52,7 +52,7 @@ chest	BONGS - TIMERS - BELLS - (72)/BONG Clunk Hit 05.wav	0	0.60		8000	stone	A m
 lit	SUCCESS - TUNES - CHEERS - (64)/SUCCESS TUNE Happy Sticks Short 01.wav	0	0.28		11000	mallet	A wooden mallet, so two octaves of transposition still sounds struck rather than sped up.
 chime	BONGS - TIMERS - BELLS - (72)/BONG Bell Timer Hit Short 13.wav	0	0.34		10000	bell	A soft bell with nothing in the fatiguing band.
 chime2	BONGS - TIMERS - BELLS - (72)/BONG Bell Timer Hit Short 09.wav	3	0.40		10000	bell	A minor third above chime, so the two read as question and answer.
-bell	BONGS - TIMERS - BELLS - (72)/BONG Bell Timer Hit Short 05.wav	0	0.40		11000	bell	The brightest of the three bells, because it is the one that means yes.
+bell	BONGS - TIMERS - BELLS - (72)/BONG Bell Timer Hit Deep 03.wav	0			11000	bell	GO! at the top of a siege, and nothing else rings it. The owner picked this source by ear (2026-09-16) in place of the bright short bell. Kept whole: it fires once a run, so `head` has no worst case to hold it under, and a deep bell cut to a tenth of its ring is a thud.
 coin	SUCCESS - PICKUPS - (109)/SUCCESS PICKUP Collect Beep Short 05.wav	2	0.15		11000	bell	The shortest bell here.
 star	SUCCESS - PICKUPS - (109)/SUCCESS PICKUP Collect Beep Short 11.wav	0	0.36		12000	bell	Allowed to glitter. It is the one that should.
 unlock	BONGS - TIMERS - BELLS - (72)/BONG Bell Timer Hit 03.wav	0	0.70		12000	bell	A short bell phrase rather than a single note.

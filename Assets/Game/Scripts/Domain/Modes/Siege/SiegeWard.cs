@@ -174,10 +174,11 @@ namespace GlimmerGrove.Modes
         {
             if (at == null) return 0;
 
-            int share = ReachTenths(at.Colour);
-            if (!SiegeTuning.EveryWardReaches(at.Kind)) return share;
+            // **A boss wears no colour**, so every ward reaches it at full weight
+            // (`SiegeTuning.BossReachTenths`, 37dn) and no ward is doubled against it.
+            if (SiegeTuning.EveryWardReaches(at.Kind)) return SiegeTuning.BossReachTenths;
 
-            return share > SiegeTuning.OffColourTenths ? share : SiegeTuning.OffColourTenths;
+            return ReachTenths(at.Colour);
         }
 
         /// <summary>

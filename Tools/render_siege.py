@@ -835,8 +835,7 @@ def warlord(sheet, draw_on, kind, colour, wards, span, cell, hill_top, hill_foot
                     width=max(2, int(round(r * 7 / 64))))
         sheet.alpha_composite(ring)
 
-    gx = bx - wide / 2 - cell * 0.45
-    put(sheet, sprite(GEM_ART[letter]), gx, by, cell * 0.62, cell * 0.62)
+    # No gem beside the bar: a boss wears no colour (37dn).
 
     if casting not in ("cast", "storm"):
         return

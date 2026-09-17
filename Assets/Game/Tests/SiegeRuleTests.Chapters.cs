@@ -895,8 +895,10 @@ namespace GlimmerGrove.Tests
         /// </para>
         /// </summary>
         [Test]
-        public void OnlyItsOwnColourReachesAnIronclad()
+        public void EveryWardReachesEveryBossAtFullWeightWhateverItWears()
         {
+            // A boss wears no colour (37dn): the ironclad's aegis no longer locks three wards
+            // out, and no ward is doubled against any boss - every one lands the full bolt.
             var line = Bare();
 
             for (int c = 0; c < WardLine.Colours.Length; c++)
@@ -907,22 +909,16 @@ namespace GlimmerGrove.Tests
                 {
                     var clad = new SiegeRaider(0, wears, SiegeKind.Ironclad, 0, 0f);
                     var over = new SiegeRaider(1, wears, SiegeKind.Overlord, 0, 0f);
+                    var creeper = new SiegeRaider(2, wears, SiegeKind.Creeper, 0, 0f);
 
-                    if (c == wears)
-                    {
-                        Assert.Greater(ward.ReachTenths(clad), 0,
-                                       "the ward of an ironclad's own colour cannot hurt it");
-                        continue;
-                    }
+                    Assert.AreEqual(SiegeTuning.BossReachTenths, ward.ReachTenths(clad),
+                                    $"a {WardLine.Colours[c]} ward is not at full weight against an "
+                                    + $"ironclad wearing {WardLine.Colours[wears]}");
+                    Assert.AreEqual(SiegeTuning.BossReachTenths, ward.ReachTenths(over));
+                    Assert.IsTrue(ward.Doubles(over), "a boss is drawn as a full hit from every ward");
 
-                    Assert.AreEqual(0, ward.ReachTenths(clad),
-                                    $"a {WardLine.Colours[c]} ward reaches an ironclad wearing "
-                                    + $"{WardLine.Colours[wears]}, so the aegis rejects nothing");
-
-                    Assert.Greater(ward.ReachTenths(over), 0,
-                                   "every ward still answers every other boss whatever it wears "
-                                   + "(invariant 37bq), so the aegis is the exception rather than "
-                                   + "the new rule");
+                    // And an ordinary raider still keeps the lock (37bl).
+                    Assert.AreEqual(c == wears ? 10 : 0, ward.ReachTenths(creeper));
                 }
             }
         }

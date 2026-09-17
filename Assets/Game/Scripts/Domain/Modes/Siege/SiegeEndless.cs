@@ -338,7 +338,7 @@ namespace GlimmerGrove.Modes
                 for (int i = 0; i < bosses.Count; i++)
                     if (SiegeTuning.EndangersTheLine(bosses[i])) bites = true;
 
-                int escort = bites ? 0 : size;
+                int escort = 0;   // a boss comes in alone (37dn), whatever it takes
                 if (escort > SiegeLayout.MaxRaiders - bosses.Count)
                     escort = SiegeLayout.MaxRaiders - bosses.Count;
                 if (escort < 0) escort = 0;

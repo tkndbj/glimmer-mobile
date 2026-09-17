@@ -145,7 +145,7 @@ USE = {
     "lit":      ((0.92, 3.00), 0.07, "each lamp waking - twelve notes over two octaves"),
     "chime":    ((0.92, 1.90), 0.07, "cascade voice in three modes; every panel entrance"),
     "chime2":   ((1.00, 1.30), 0.05, "confirmation, and the capstone on a reward cascade"),
-    "bell":     ((0.92, 1.70), 0.07, "a dewling waking, once per waking in a cascade"),
+    "bell":     ((1.00, 1.00), 0.00, "GO! at the top of a siege, once a run"),
     "coin":     ((0.92, 1.88), 0.05, "every token landing in a balance - dozens in two seconds"),
     "star":     ((0.92, 1.66), 0.13, "the star row; the hint beckon; rarity stars"),
     "unlock":   ((1.00, 1.06), 0.30, "a plot claimed, a chapter opened, a streak night paid"),

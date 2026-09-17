@@ -218,12 +218,12 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void TheFixtureSiegeIsParThirtyEight()
+        public void TheFixtureSiegeIsParFortySeven()
         {
-            // 12 creepers at 200, 8 brutes at 480 and one warlord at 2050 is 8290, over what a
+            // 12 creepers at 200, 8 brutes at 480 and one warlord at 4100 is 10340, over what a
             // match delivers (220). `Tools/verify/siege.py` prints the same number from the same
             // arithmetic; if these two ever disagree, one of the constants moved in one file only.
-            Assert.AreEqual(38, SiegeTuning.Par(Shipped()));
+            Assert.AreEqual(47, SiegeTuning.Par(Shipped()));
         }
 
         [Test]
@@ -270,14 +270,17 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void NoWardOnTheLineIsStrongAgainstThisWarlordIsRefused()
+        public void ABossOfAColourNoWardCarriesIsAccepted()
         {
-            // A warlord carries the health of four brutes, so answering it at half rate is a duel
-            // nobody could finish - the arithmetic par assumes it is not so.
-            var bad = Layout(Field, "rgy", "rgy", new[] { "rr" }, "warlord:b");
+            // A boss wears no colour (37dn): every ward reaches it at full weight, so the letter
+            // on its token decides nothing about the line and is not held against it. An
+            // ordinary raider of that colour still is.
+            var fine = Layout(Field, "rgy", "rgy", new[] { "rr" }, "warlord:b");
+            Assert.IsNull(fine.Fault, fine.Fault);
 
+            var bad = Layout(Field, "rgy", "rgy", new[] { "bb" }, "warlord:r");
             Assert.IsNotNull(bad.Fault);
-            StringAssert.Contains("warlord", bad.Fault);
+            StringAssert.Contains("raider", bad.Fault);
         }
 
         [Test]
@@ -637,12 +640,21 @@ namespace GlimmerGrove.Tests
             Assert.Greater(board.Raiders.Count, Waves[1].Length,
                            "the two waves should be on the hill together");
 
-            // And every wave, once, in order - a clock that has run past the last one deals no
-            // more.
+            // And every authored wave, once, in order - a clock that has run past the last one
+            // deals no more.
             Frames(board, SiegeTuning.BetweenWaves * 6f);
-            // Four, not three: the warlord is a wave of its own, appended after the authored
-            // ones (see `SiegeLayout.Boss`).
-            Assert.AreEqual(Waves.Length + 1, board.Wave);
+            Assert.AreEqual(Waves.Length, board.Wave);
+
+            // **The warlord is the one wave the clock does not bring** (37dn): it is a wave of
+            // its own, appended after the authored ones (`SiegeLayout.Boss`), and it waits for
+            // the hill to be cleared however long the clock has run.
+            Assert.IsFalse(board.BossWave, "the warlord came onto a hill still walking");
+            Assert.IsNull(board.Warlord);
+
+            foreach (var raider in board.Raiders) { raider.Health = 0; raider.Alive = false; }
+
+            Frames(board, SiegeTuning.Breather + 1f);
+            Assert.AreEqual(Waves.Length + 1, board.Wave, "the warlord did not come once the hill was clear");
             Assert.IsTrue(board.BossWave, "the last wave of this siege is the warlord's");
         }
 
@@ -925,28 +937,25 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SiegeSpell.Rally, SiegeTuning.SpellOf(SiegeKind.Warbringer));
             Assert.AreEqual(SiegeSpell.Sunder, SiegeTuning.SpellOf(SiegeKind.Overlord));
 
-            // Only the blightcaller takes no health at all, which is what stopped "there is a
-            // boss" being a fact the build gate could act on (`ModeValidator.Threatens`).
-            Assert.AreEqual(0, SiegeTuning.CastOf(SiegeKind.Blightcaller));
-            Assert.Greater(SiegeTuning.CastOf(SiegeKind.Overlord), SiegeTuning.CastOf(SiegeKind.Boss));
-
-            // A warbringer's is the smallest of the three that do, because it lands on every ward
-            // rather than on one - the same total spread flat instead of concentrated.
+            // Every boss takes health now (37dn), the blightcaller least, on top of its verb.
+            Assert.AreEqual(SiegeTuning.BlightCast, SiegeTuning.CastOf(SiegeKind.Blightcaller));
+            Assert.Greater(SiegeTuning.CastOf(SiegeKind.Blightcaller), 0);
+            // A warbringer's is under a warlord's because it lands on every ward rather than on
+            // one - the same total spread flat instead of concentrated.
             Assert.Less(SiegeTuning.CastOf(SiegeKind.Warbringer), SiegeTuning.CastOf(SiegeKind.Boss));
 
             // And only three of the four aim at a ward. A roar is thrown at the ground.
             Assert.IsFalse(SiegeTuning.AimsAtAWard(SiegeKind.Warbringer));
             Assert.IsTrue(SiegeTuning.AimsAtAWard(SiegeKind.Blightcaller));
 
-            // A blightcaller cannot bring a ward down however long it stands there, so a level
-            // whose only threat were one could not be lost - which the gate now says out loud.
-            Assert.IsFalse(SiegeTuning.EndangersTheLine(SiegeKind.Blightcaller));
-            Assert.IsTrue(SiegeTuning.EndangersTheLine(SiegeKind.Warbringer),
-                          "a warbringer walks to the line and swings there");
+            // Every boss can bring a ward down now (37dn), so every boss is a threat the gate
+            // can act on (`ModeValidator.Threatens`).
+            Assert.IsTrue(SiegeTuning.EndangersTheLine(SiegeKind.Blightcaller));
+            Assert.IsTrue(SiegeTuning.EndangersTheLine(SiegeKind.Warbringer));
         }
 
         [Test]
-        public void ABlightcallerPutsAWardOutAndTakesNoHealth()
+        public void ABlightcallerPutsAWardOutAndTakesALittleHealth()
         {
             var board = SiegeBoard.Build(Duel("blightcaller:g"));
             Standing(board);
@@ -968,7 +977,8 @@ namespace GlimmerGrove.Tests
                 {
                     var spell = report.Spells[s];
                     Assert.AreEqual(SiegeSpell.Douse, spell.Craft);
-                    Assert.AreEqual(0, spell.Damage, "a douse takes no health");
+                    Assert.AreEqual(SiegeTuning.BlightCast, spell.Damage,
+                                    "a douse takes a little health on top of the fire (37dn)");
 
                     var ward = board.Wards[spell.Ward];
                     Assert.IsTrue(ward.Doused, "the ward it landed on is out");
@@ -984,164 +994,10 @@ namespace GlimmerGrove.Tests
             int left = 0;
             for (int w = 0; w < board.Wards.Count; w++) left += board.Wards[w].Health;
 
-            Assert.AreEqual(whole, left, "no health may leave the line to a blightcaller");
+            Assert.Less(left, whole, "a blightcaller's spell takes health as well as fire");
         }
 
-        /// <summary>
-        /// The blightcaller rung sends it into a hill that is still walking, and that is the whole
-        /// of what was wrong with it.
-        ///
-        /// <para>
-        /// <b>Reported from play as "it attacks my turrets and they lose no health".</b> The first
-        /// half of that is by design and must stay: a blightcaller takes a ward's <em>fire</em>
-        /// rather than its health, which is what makes it a different fight from the warlord
-        /// rather than a weaker one (invariant 37z). The second half was real, and the cause was
-        /// nowhere near the boss — <c>SiegeTuning.RestBefore</c> named the warbringer instead of
-        /// asking the question, so a blightcaller got <c>BossAfter</c>, the longest quiet in the
-        /// mode, and walked onto a hill the player had already cleared. Five seconds of one ward's
-        /// dark costs exactly nothing when there is nothing for it to shoot at, so the boss took
-        /// no health <em>and</em> no time: invariant 5d, arriving through the pacing.
-        /// </para>
-        /// <para>
-        /// So what is pinned is the consequence rather than the constant: at the moment it steps
-        /// onto the hill there is still something on the hill with it.
-        /// </para>
-        /// </summary>
-        /// <summary>
-        /// The blightcaller rung sends it into a hill that is still walking, and that is the whole
-        /// of what was wrong with it.
-        ///
-        /// <para>
-        /// <b>Reported from play as "it attacks my turrets and they lose no health".</b> The first
-        /// half of that is by design and must stay: a blightcaller takes a ward's <em>fire</em>
-        /// rather than its health, which is what makes it a different fight from the warlord
-        /// rather than a weaker one (invariant 37z). The second half was real, and the cause was
-        /// nowhere near the boss — <c>SiegeTuning.RestBefore</c> named the warbringer instead of
-        /// asking the question, so a blightcaller got <c>BossAfter</c>, the longest quiet in the
-        /// mode, and walked onto a hill the player had already cleared. Five seconds of one ward's
-        /// dark costs exactly nothing when there is nothing for it to shoot at, so the boss took
-        /// no health <em>and</em> no time: invariant 5d, arriving through the pacing.
-        /// </para>
-        /// <para>
-        /// So what is pinned is the consequence rather than the constant: at the moment it steps
-        /// onto the hill there is still something on the hill with it.
-        /// </para>
-        /// </summary>
-        [Test]
-        public void TheBlightcallerRungSendsItIntoAHillStillWalking()
-        {
-            const float Frame = 1f / 60f;
 
-            // **Whichever shipped rung sends one, rather than a rung named here.** This is a test
-            // about the *rule* - a boss that cannot bring a ward down rides the head of a wave
-            // instead of walking on alone - and the rung that carried it moved chapters the day the
-            // ladder was re-cut, which failed this test for a reason that had nothing to do with
-            // the rule. A rule pinned to a level id is a rule that breaks when content moves.
-            SiegeLayout plan = null;
-            string sender = null;
-
-            foreach (var rungs in new[] { Chapter, Broodmarch })
-                for (int i = 0; i < rungs.Length && plan == null; i++)
-                {
-                    var built = rungs[i].Built();
-                    if (built.HasBoss && built.BossKind == SiegeKind.Blightcaller)
-                    {
-                        plan = built;
-                        sender = rungs[i].Id;
-                    }
-                }
-
-            Assert.IsNotNull(plan, "no shipped rung sends a blightcaller any more, so this rule "
-                                   + "is no longer exercised by anything a player opens");
-
-            var board = SiegeBoard.Build(plan);
-
-            Assert.AreEqual(SiegeKind.Blightcaller, plan.BossKind,
-                            $"this test is about the rung that sends one ({sender})");
-
-            float since = Unhurried;
-            int company = -1;
-
-            for (int i = 0; i < 60 * 600 && company < 0; i++)
-            {
-                board.Advance(Frame);
-
-                if (board.IsFinished || board.Stranded) break;
-
-                // The frame the boss is first standing on the hill: count what came with it.
-                var raiders = board.Raiders;
-                for (int r = 0; r < raiders.Count && company < 0; r++)
-                {
-                    if (!raiders[r].Boss || !raiders[r].Alive || !raiders[r].OnTheHill) continue;
-
-                    // **Mustered rather than already walking.** Every raider but the first is
-                    // dealt a `SiegeTuning.RaiderSpacing` head start behind the one in front, so
-                    // on the frame the boss steps out its company is on the board and not yet on
-                    // the hill - counting `OnTheHill` here would report an empty hill for every
-                    // wave in the mode.
-                    company = 0;
-                    for (int o = 0; o < raiders.Count; o++)
-                        if (raiders[o].Alive && !raiders[o].Boss) company++;
-                }
-
-                since += Frame;
-                if (since < Unhurried) continue;
-                if (!Aimed(board, out int a, out int b)) continue;
-
-                board.Swap(a, b);
-                since = 0f;
-            }
-
-            Assert.GreaterOrEqual(company, 1,
-                "the blightcaller walked onto an empty hill, where the fire it takes was not "
-                + "going to be shot at anything - so it costs the player nothing at all and reads "
-                + "as a boss that does not work");
-        }
-
-        /// <summary>
-        /// A boss whose spell needs a hill arrives while the last wave is still walking, and one
-        /// that shells the line arrives onto an empty one.
-        ///
-        /// <para>
-        /// <b>The rule was written as "is this a warbringer" and that left the blightcaller
-        /// out.</b> Invariant 43 records the authored ladder as answering "a boss that takes no
-        /// health has to arrive with an escort" with a <em>short quiet</em> — and it did not: a
-        /// blightcaller got <c>BossAfter</c>, the longest quiet in the mode, so it walked onto a
-        /// hill the player had cleared and took fuel that was not going to be shot at anything.
-        /// Keyed on <see cref="SiegeTuning.WantsACrowd"/>, a fifth boss inherits the answer
-        /// without anybody remembering to come back.
-        /// </para>
-        /// </summary>
-        [Test]
-        public void ABossWhoseSpellNeedsAHillComesWhileTheHillIsStillWalking()
-        {
-            Assert.AreEqual(SiegeTuning.CrowdAfter, SiegeTuning.RestBefore(SiegeKind.Warbringer),
-                            "a rally over an empty hill rallies nothing");
-
-            // A blightcaller is not a wave of its own at all - `SiegeLayout` stands it at the head
-            // of the last authored one - so what this quiet is in front of is that wave.
-            Assert.AreEqual(SiegeTuning.BetweenWaves,
-                            SiegeTuning.RestBefore(SiegeKind.Blightcaller),
-                            "a boss that rides a wave takes that wave's own quiet");
-
-            Assert.AreEqual(SiegeTuning.BossAfter, SiegeTuning.RestBefore(SiegeKind.Boss),
-                            "a duel is never stacked on a wave still swinging");
-            Assert.AreEqual(SiegeTuning.BossAfter, SiegeTuning.RestBefore(SiegeKind.Overlord));
-
-            Assert.AreEqual(SiegeTuning.BetweenWaves, SiegeTuning.RestBefore(SiegeKind.Creeper));
-            Assert.AreEqual(SiegeTuning.BetweenWaves, SiegeTuning.RestBefore(SiegeKind.Brute));
-
-            Assert.Less(SiegeTuning.CrowdAfter, SiegeTuning.BetweenWaves,
-                        "the short quiet has to be shorter than an ordinary one, or the wave in "
-                        + "front of it is always gone");
-
-            // And the two questions are genuinely different: a warbringer takes health and still
-            // wants a crowd, so this can never be folded back into `EndangersTheLine`.
-            Assert.IsTrue(SiegeTuning.EndangersTheLine(SiegeKind.Warbringer));
-            Assert.IsTrue(SiegeTuning.WantsACrowd(SiegeKind.Warbringer));
-            Assert.IsFalse(SiegeTuning.WantsACrowd(SiegeKind.Boss));
-            Assert.IsFalse(SiegeTuning.WantsACrowd(SiegeKind.Overlord));
-        }
 
         [Test]
         public void ASurgeLiftsADouseBecauseThatIsWhatMakesItTheAnswer()
@@ -2059,7 +1915,8 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SiegeTuning.OverlordHealth, SiegeTuning.HealthOf(SiegeKind.Overlord));
 
             Assert.Greater(SiegeTuning.OverlordHealth, SiegeTuning.BossHealth);
-            Assert.Greater(SiegeTuning.OverlordCast, SiegeTuning.BossCast);
+            Assert.Less(SiegeTuning.OverlordCastEvery, SiegeTuning.BossCastEvery,
+                        "an overlord stands longer and throws more often");
             Assert.Less(SiegeTuning.OverlordCastEvery, SiegeTuning.BossCastEvery);
 
             // It stops further up the hill, which is the compensation for all three.

@@ -350,6 +350,11 @@ namespace GlimmerGrove.Tests
 
                         Hold(board, rhythm, out int _, b => { var w = b.Warlord; if (w != null) boss = w; });
 
+                        // A boss waits for the hill to be cleared (37dn), so a line that fell to
+                        // the wave before it never meets the boss at all - a lost run, and not a
+                        // reading of the fight.
+                        if (boss == null && board.WardsStanding == 0) continue;
+
                         Assert.IsNotNull(boss, $"{rung.Id}: the boss never walked on at {rhythm}");
 
                         if (!boss.Alive) fell++;

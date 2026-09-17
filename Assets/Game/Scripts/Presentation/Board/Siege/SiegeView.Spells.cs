@@ -617,20 +617,12 @@ namespace GlimmerGrove
             // takes nothing that is drawn anywhere, so the only honest place to put it is the
             // machine itself, and the state `Charge` keeps on the post is what the player really
             // reads. Iron sparks rather than the boss's own fire, because there is no fire in it.
-            if (spell.Craft == SiegeSpell.Bind)
-            {
-                Chained(spell.Ward, fire);
-                return;
-            }
-
-            if (spell.Craft == SiegeSpell.Douse)
-            {
-                Snuffed(spell.Ward, fire);
-                return;
-            }
-
-            // A rank coming off is its own piece of news and gets its own drawing, because it is
-            // the only damage in this mode that cannot be mended back.
+            // **Every spell takes health now (37dn), so every landing is drawn as a hit** - the
+            // verb's own drawing is laid over it rather than replacing it. A rank coming off is
+            // its own piece of news and gets its own drawing, because it is the only damage in
+            // this mode that cannot be mended back.
+            if (spell.Craft == SiegeSpell.Bind) Chained(spell.Ward, fire);
+            if (spell.Craft == SiegeSpell.Douse) Snuffed(spell.Ward, fire);
             if (spell.Sundered) Sundered(spell.Ward, fire);
 
             Tween.Shake(_posts[spell.Ward].Node, Cell * .26f, .38f);
@@ -1136,8 +1128,12 @@ namespace GlimmerGrove
                 // so the fight is not a function of this number).
                 Dilate(.4f, .55f);
             }
-            else
+            else if (wave > 0)
             {
+                // **Not on the first wave.** It steps out on the frame the count-in says GO!,
+                // and a flash here was the second whole-screen flash a run opened on - the owner
+                // asked for the opening to flash nothing (2026-09-16, `CountBeat`). Every later
+                // wave still gets its ember, because that one lands on a hill already in play.
                 Flow.Flash(new Color(1f, .55f, .45f), .18f, .35f);
             }
         }

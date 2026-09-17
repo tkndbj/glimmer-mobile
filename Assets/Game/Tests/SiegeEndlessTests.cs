@@ -238,8 +238,10 @@ namespace GlimmerGrove.Tests
         /// </para>
         /// </summary>
         [Test]
-        public void ABossThatTakesNoHealthNeverArrivesOnAnEmptyHill()
+        public void EveryBossWaveComesAlone()
         {
+            // A boss comes in alone (37dn), on the Infinite lane as on the ladder: no escort,
+            // whatever it takes, because every boss takes health now.
             var layout = Layout();
             var bosses = new List<SiegeKind>();
             int met = 0;
@@ -249,12 +251,6 @@ namespace GlimmerGrove.Tests
                 SiegeEndless.BossesAt(wave, bosses);
                 if (bosses.Count == 0) continue;
 
-                bool bites = false;
-                foreach (var kind in bosses)
-                    if (SiegeTuning.EndangersTheLine(kind)) bites = true;
-
-                if (bites) continue;
-
                 met++;
 
                 var coming = layout.Endless.WaveAt(wave, layout.Seed);
@@ -263,9 +259,7 @@ namespace GlimmerGrove.Tests
                 foreach (var spec in coming)
                     if (!SiegeTuning.IsBoss(spec.Kind)) escort++;
 
-                Assert.Greater(escort, 0,
-                               $"wave {wave} sends a boss that cannot take a ward down, and "
-                               + "nothing for it to take the ward's fire away from");
+                Assert.AreEqual(0, escort, $"wave {wave} sends a boss with company");
 
                 Assert.LessOrEqual(coming.Length, SiegeLayout.MaxRaiders, $"wave {wave}");
             }

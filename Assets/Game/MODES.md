@@ -544,6 +544,24 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    `TallOf` moved by the measured ratio (the mirror's rows, three of them drifted, were re-read off the C#
    in the same change). **What only a render can see**: the guard ring at 14 of 128 was a purple wall a body wide; 7 reads as a halo.
 
+37dn. **A boss comes in alone, wears no colour, and every one of its spells takes health** — the owner's
+   verdict from the first played build of the fight, and four rules follow. **Alone**: a boss is always a
+   wave of its own, and `Muster` holds the clock for it until the hill is cleared (the one wave the mode
+   never stacks on the last; the breather then brings it on) — so the three that rode a wave for company
+   no longer do, an escort on the Infinite lane is nought, and a rally over an empty hill charges nothing
+   (the warbringer's roar is its four-ward smite now; the charge is decoration, accepted). **No colour**:
+   every ward reaches every boss at full weight (`BossReachTenths`), no ward is doubled against one, the
+   ironclad's aegis no longer locks three wards out, the crown wears no gem, and the token's letter is
+   worn by nothing but a bonecaller's raised creepers (the layout's colour check skips a boss; the aegis
+   colour error is gone). **Twice the health** — four times was the ask and was measured first: four wards at full weight are
+   1.6 times the damage a line landed before, not four, so fourfold made a 90-second duel of 35 spells
+   that lost every finale; twice keeps the sweep where the phased fight left it, with the overlord's
+   blow at two and the warbringer's roar at two a ward (a roar over an empty hill charges nothing). **Every spell smites**: the four that took none (`Blight`,
+   `Gravemaw`, `Bonecaller`, `Shackler`) take two on top of their verb, a devour and a raise land theirs
+   on the freshest ward, and every landing is drawn as a hit with the verb's own drawing over it — which
+   is what "I watched him attack but my turrets didn't take any damage" was (the blightcaller, by
+   design, until now). `EndangersTheLine` is true of every boss and `Threatens` follows.
+
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` on rung five or ten, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds
 it to the body); run `python Tools/verify/tests.py SiegeRuleTests` — the fight gate, the chapter sweep

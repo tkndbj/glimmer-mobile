@@ -787,39 +787,37 @@ namespace GlimmerGrove.Tests
         /// right colour's numbers come up gold and everybody else's come up white.
         /// </summary>
         [Test]
-        public void OnlyABosssOwnColourDoublesAgainstIt()
+        public void EveryWardLandsTheFullBoltOnABoss()
         {
+            // A boss wears no colour (37dn): the letter on its token decides nothing, so every
+            // ward fires at it, every bolt is full weight, and none is worth more than another.
             var board = SiegeBoard.Build(Duel("warlord:r"));
             var boss = Standing(board);
-
-            int own = Plan(board).WardOf('r');
+            while (boss.Guarded) board.Advance(1f / 60f);
 
             for (int w = 0; w < board.Wards.Count; w++) Feed(board, w, 20f);
 
-            int owned = 0, other = 0;
+            var fired = new int[board.Wards.Count];
+            int weight = SiegeTuning.DamageTo(SiegeKind.Boss, 0, true);
 
             for (int i = 0; i < 60 * 6; i++)
                 foreach (var bolt in board.Advance(1f / 60f).Bolts)
                 {
                     if (bolt.Extra) continue;
 
-                    if (bolt.Ward == own)
-                    {
-                        Assert.IsTrue(bolt.Weak, "the boss's own colour did not land a double");
-                        owned = bolt.Damage;
-                        continue;
-                    }
+                    Assert.IsTrue(bolt.Weak, "a bolt at a boss did not land at full weight");
 
-                    Assert.IsFalse(bolt.Weak, "a wrong-colour bolt landed as a double");
-                    other = bolt.Damage;
+                    // A bolt that reaches a phase's floor reports what really came off
+                    // (`SiegeBoard.Wound`), which is less than a bolt; every other one is the
+                    // whole bolt, from every ward alike.
+                    Assert.LessOrEqual(bolt.Damage, weight);
+                    if (bolt.Damage == weight) fired[bolt.Ward]++;
                 }
 
-            Assert.Greater(owned, 0, "the ward of the boss's colour never fired");
-            Assert.Greater(other, 0, "no other ward fired");
-            Assert.AreEqual(SiegeTuning.WeakMultiplier * other, owned,
-                            "the boss's own colour is not worth double against it");
+            for (int w = 0; w < fired.Length; w++)
+                Assert.Greater(fired[w], 0, $"ward {w} never landed a full bolt on the boss");
 
-            Assert.AreEqual(0, boss.Colour);
+            Assert.AreEqual(0, boss.Colour, "the token's letter is still read, for a raise");
         }
 
         /// <summary>
@@ -850,8 +848,11 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(10 / SiegeTuning.WeakMultiplier, SiegeTuning.OffColourTenths,
                             "the wrong colour is worth the un-doubled bolt and nothing else");
 
+            // And played: a boss wears no colour (37dn), so every ward pays the full price for
+            // the full bolt it lands - there is no part-weight bolt against a boss any more.
             var board = SiegeBoard.Build(Duel("warlord:r"));
-            Standing(board);
+            var boss = Standing(board);
+            while (boss.Guarded) board.Advance(1f / 60f);
 
             int own = Plan(board).WardOf('r');
             int away = Plan(board).WardOf('b');
@@ -875,10 +876,10 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(ownShots * SiegeTuning.FuelShot(0),
                             ownFuel - board.Wards[own].Fuel, .0001f,
-                            "the boss's own colour did not pay the full price");
-            Assert.AreEqual(awayShots * SiegeTuning.FuelShot(0) / 2f,
+                            "the ward of the token's colour did not pay the full price");
+            Assert.AreEqual(awayShots * SiegeTuning.FuelShot(0),
                             awayFuel - board.Wards[away].Fuel, .0001f,
-                            "a wrong-colour bolt cost more fuel than it was worth");
+                            "another ward paid a part price for a full bolt");
         }
 
         /// <summary>
@@ -891,38 +892,38 @@ namespace GlimmerGrove.Tests
         /// it.
         /// </summary>
         [Test]
-        public void AWardTakesItsOwnColourBeforeTheBoss()
+        public void ABossWaitsUntilTheHillIsClearedAndComesAlone()
         {
-            // A blue boss and a red creeper, so the red ward is offered both at once.
+            // A creeper wave and then a boss (37dn): the boss is not on the hill while the
+            // creeper stands, however long the clock runs, and comes on once it is gone.
             var board = SiegeBoard.Build(Layout(new[] { "r" }, boss: "warlord:b"));
-            var boss = Standing(board);
-
-            int red = Plan(board).WardOf('r');
 
             SiegeRaider creeper = null;
 
-            foreach (var raider in board.Raiders)
-                if (raider.Alive && raider.OnTheHill && raider.Colour == 0 && !raider.Boss)
-                    creeper = raider;
+            for (int i = 0; i < 60 * 30 && creeper == null; i++)
+            {
+                board.Advance(1f / 60f);
+                foreach (var raider in board.Raiders)
+                    if (raider.Alive && raider.OnTheHill && !raider.Boss) creeper = raider;
+            }
 
-            Assert.IsNotNull(creeper, "the red creeper never reached the hill, or died on the way");
+            Assert.IsNotNull(creeper, "the red creeper never reached the hill");
 
-            Feed(board, red, 20f);
+            for (int i = 0; i < 60 * (int)(SiegeTuning.BossAfter + 5f); i++)
+            {
+                board.Advance(1f / 60f);
+                Assert.IsNull(board.Warlord, "the boss came onto a hill still walking");
+            }
 
-            int fired = 0;
+            creeper.Health = 0;
+            creeper.Alive = false;
 
-            for (int i = 0; i < 60 * 4 && creeper.Alive; i++)
-                foreach (var bolt in board.Advance(1f / 60f).Bolts)
-                {
-                    if (bolt.Ward != red || bolt.Extra) continue;
+            var boss = Standing(board);
+            Assert.IsTrue(boss.Boss);
 
-                    fired++;
-                    Assert.AreEqual(creeper.Id, bolt.Raider,
-                                    "a ward took the boss while its own colour was standing");
-                }
-
-            Assert.Greater(fired, 0, "the red ward never fired");
-            Assert.AreEqual(boss.MaxHealth, boss.Health, "the boss was shot at instead");
+            int company = 0;
+            foreach (var raider in board.Raiders) if (raider.Alive && !raider.Boss) company++;
+            Assert.AreEqual(0, company, "the boss did not come alone");
         }
 
         /// <summary>
@@ -933,29 +934,18 @@ namespace GlimmerGrove.Tests
         /// bolt from that ward is really worth, it says both halves of the rule at once.
         /// </summary>
         [Test]
-        public void ABossIsDemandOnEveryWardAndLoudestOnItsOwn()
+        public void ABossIsTheSameDemandOnEveryWard()
         {
             var board = SiegeBoard.Build(Duel("warlord:r"));
             var boss = Standing(board);
 
             int own = Plan(board).WardOf('r');
 
+            // A boss wears no colour (37dn), so it is the whole of itself on every ward.
             for (int w = 0; w < board.Wards.Count; w++)
-                Assert.Greater(board.DemandOf(w), 0,
-                               "a boss is no demand at all on the '"
-                               + SiegeLayout.Letters[board.Wards[w].Colour] + "' ward");
-
-            Assert.AreEqual(boss.Health, board.DemandOf(own),
-                            "the boss's own ward is asked for less than the whole of it");
-
-            for (int w = 0; w < board.Wards.Count; w++)
-            {
-                if (w == own) continue;
-
-                Assert.AreEqual(board.DemandOf(own) / SiegeTuning.WeakMultiplier,
-                                board.DemandOf(w),
-                                "a wrong-colour ward reads as loud as the right one");
-            }
+                Assert.AreEqual(boss.Health, board.DemandOf(w),
+                                "a boss is not the whole of itself on the '"
+                                + SiegeLayout.Letters[board.Wards[w].Colour] + "' ward");
 
             Assert.AreEqual(board.DemandOf(own), board.Busiest);
         }

@@ -205,12 +205,16 @@ BOMBER_HEALTH = 200
 #: both, exactly as it is for a douse, and `endangers` can no longer be read off that column alone
 #: (see below).
 BOSSES = {
-    "blightcaller": {"health": 1250, "cast": 0, "spell": "douse"},
-    "warlord": {"health": 2050, "cast": 3, "spell": "smite"},
-    "warbringer": {"health": 2750, "cast": 1, "spell": "rally"},
-    "overlord": {"health": 3650, "cast": 4, "spell": "sunder"},
-    "gravemaw": {"health": 1500, "cast": 0, "spell": "devour"},
-    "bonecaller": {"health": 3000, "cast": 0, "spell": "raise"},
+    #: **Twice what they were, and every one of them smites (37dn)**: a boss wears no colour, so
+    #: every ward lands full weight on it - 1.6 times the damage a line used to land - and the
+    #: health went up to match a longer fight; fourfold was measured and lost every finale. The
+    #: four that took no health take two now.
+    "blightcaller": {"health": 2500, "cast": 2, "spell": "douse"},
+    "warlord": {"health": 4100, "cast": 3, "spell": "smite"},
+    "warbringer": {"health": 5500, "cast": 2, "spell": "rally"},
+    "overlord": {"health": 7300, "cast": 2, "spell": "sunder"},
+    "gravemaw": {"health": 3000, "cast": 2, "spell": "devour"},
+    "bonecaller": {"health": 6000, "cast": 2, "spell": "raise"},
 
     #: The fourth chapter's two, and between them they take the one thing the first six leave.
     #:
@@ -226,8 +230,8 @@ BOSSES = {
     #: full weight, which is exactly what `PERFECT_MATCH` already assumes of every gem. What its
     #: aegis really costs is the *clock*, and this mode's fail state is a clock rather than a move
     #: budget (invariant 37b), so its health is set under an overlord's to pay for it.
-    "shackler": {"health": 1700, "cast": 0, "spell": "bind"},
-    "ironclad": {"health": 2600, "cast": 2, "spell": "aegis"},
+    "shackler": {"health": 3400, "cast": 2, "spell": "bind"},
+    "ironclad": {"health": 5200, "cast": 2, "spell": "aegis"},
 }
 
 #: `SiegeTuning.RaiseSize` and `.Raises` - how many creepers one raise puts on the hill, and how
@@ -523,16 +527,11 @@ class Layout(object):
         # nothing at all (invariant 5d, reported from play twice). Merging is the endless lane's
         # escort said in the idiom of an authored ladder, and it costs par nothing because the
         # company is the raiders the level already sends.
+        # **A boss is always a wave of its own now (37dn)**: it comes in alone once the hill is
+        # cleared. The riding above is history, kept for why three bosses once had company.
         if self.boss:
-            rides = not endangers(self.boss_kind) and len(self.waves) > 0
-
-            if rides:
-                self.boss_wave = len(self.waves) - 1
-                self.waves = (self.waves[:-1]
-                              + [self.boss + self.waves[-1]])
-            else:
-                self.boss_wave = len(self.waves)
-                self.waves = self.waves + [self.boss]
+            self.boss_wave = len(self.waves)
+            self.waves = self.waves + [self.boss]
 
         # Every wave parsed once into (colour, kind) pairs. Nothing below asks a wave's text
         # how many raiders it holds - see `SHIELD`.
@@ -621,12 +620,14 @@ class Layout(object):
         # is simply never *doubled*, which is a duel fought at half rate from the first bolt to the
         # last with nothing anywhere saying so.
         for w, line in enumerate(self.coming):
-            for colour, kind in line:
+            for i, (colour, kind) in enumerate(line):
+                # A boss wears no colour (37dn), so its letter is not checked against the line.
+                if w == self.boss_wave and i == 0:
+                    continue
                 if colour in self.wards:
                     continue
-                what = self.boss_kind if w == self.boss_wave else kind
-                return ("wave %d sends a '%s' %s and no ward on this line carries '%s', "
-                        "so nothing here is strong against it" % (w + 1, colour, what, colour))
+                return ("wave %d sends a '%s' raider and no ward on this line carries '%s', "
+                        "so nothing here is strong against it" % (w + 1, colour, colour))
 
         return self._settled()
 

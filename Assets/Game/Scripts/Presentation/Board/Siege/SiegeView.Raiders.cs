@@ -212,17 +212,20 @@ namespace GlimmerGrove
             // The gem over its head is the third thing that says its colour, and on the warlord
             // it is the one that has to carry: the body is so large that a 62% coat reads as
             // "purple alien with a red wash" rather than as red.
-            float pip = Cell * (raider.Boss ? .62f : .34f);
+            // **A boss wears no gem, because it wears no colour** (37dn): every ward reaches
+            // it at full weight, so a gem over its bar would be telling the player to feed a
+            // colour that decides nothing.
+            if (!raider.Boss)
+            {
+                float pip = Cell * .34f;
 
-            mob.Pip = UIKit.Img("Pip", perch, GemArt(raider.Colour), Color.white,
-                                new Vector2(pip, pip));
-            mob.Pip.raycastTarget = false;
-            mob.Pip.preserveAspect = true;
-
-            // At the head of the bar for a warlord, over the shoulder for everything else.
-            mob.Pip.rectTransform.anchoredPosition = raider.Boss
-                ? new Vector2(Cell * .34f - Span.x * .30f - pip * .72f, 0f)
-                : new Vector2(-tall * .46f, tall * ReadoutAt(raider));
+                mob.Pip = UIKit.Img("Pip", perch, GemArt(raider.Colour), Color.white,
+                                    new Vector2(pip, pip));
+                mob.Pip.raycastTarget = false;
+                mob.Pip.preserveAspect = true;
+                mob.Pip.rectTransform.anchoredPosition =
+                    new Vector2(-tall * .46f, tall * ReadoutAt(raider));
+            }
 
             mob.Node.localScale = Vector3.one * .5f;
             Tween.Scale(mob.Node, 1f, raider.Boss ? .6f : .3f, Ease.OutBack);

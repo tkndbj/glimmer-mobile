@@ -269,8 +269,21 @@ namespace GlimmerGrove.Modes
         /// thing its verb consists of. See that kind for why the fuel those wards hold is not
         /// lost, and why par is untouched by it.
         /// </para>
-        public static bool EveryWardReaches(SiegeKind kind)
-            => IsBoss(kind) && kind != SiegeKind.Ironclad;
+        public static bool EveryWardReaches(SiegeKind kind) => IsBoss(kind);
+
+        /// <summary>
+        /// A boss wears no colour: every ward reaches it at full weight (37dn).
+        ///
+        /// <b>The owner's verdict, and the arithmetic that came with it.</b> A boss used to be
+        /// doubled by the ward of its own colour and halved by the other three, and the ironclad
+        /// was reachable by its own colour alone; played, that read as three turrets doing
+        /// nothing to the biggest thing on the board. Every ward now lands full weight on every
+        /// boss, and boss health is twice what it was so the fight is not shorter - fourfold was
+        /// measured and lost every finale, because four wards at full weight are 1.6 times the
+        /// damage a line landed before, not four. The colour a level still authors on the token is worn by nothing but a
+        /// bonecaller's raised creepers.
+        /// </summary>
+        public const int BossReachTenths = 10;
 
         /// <summary>
         /// What a bolt of the wrong colour is worth against a boss, in tenths of a full hit.
@@ -945,7 +958,7 @@ namespace GlimmerGrove.Modes
         /// at a quarter more the finale fell from 5 of 9 to 3.</b>
         /// </para>
         /// </summary>
-        public const int BossHealth = 2050;
+        public const int BossHealth = 4100;
 
         /// <summary>
         /// The overlord: the thing the last rung of a chapter ends on.
@@ -969,7 +982,7 @@ namespace GlimmerGrove.Modes
         /// see either number.
         /// </para>
         /// </summary>
-        public const int OverlordHealth = 3650;
+        public const int OverlordHealth = 7300;
 
         public const float OverlordHold = .38f;
         public const float OverlordMarch = 8f;
@@ -1003,11 +1016,13 @@ namespace GlimmerGrove.Modes
         /// twelve or more</b> (<see cref="BossPhases"/>). What made the finale a finale was never
         /// the size of one blow - it is the cadence, the fastest in the mode, and the rank each
         /// phase takes. At five, a fight that ran its course took the line apart at every rhythm
-        /// the sweep plays; at three it held at every one with the line barely bled; four is the
-        /// finale, measured by <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>. Still one
-        /// over a warlord's, which <c>AnOverlordIsAWarlordInUpperCase</c> holds.
+        /// the sweep plays; at three it held at every one with the line barely bled; four was the
+        /// finale for a morning. <b>Two, since the health doubled (37dn)</b>: at twice the health
+        /// it throws seventeen spells a fight, and three apiece lost the finale at six rhythms in
+        /// nine. What makes it the finale is the health, the cadence - the fastest in the mode -
+        /// and the rank each phase takes; <c>AnOverlordIsAWarlordInUpperCase</c> holds those.
         /// </summary>
-        public const int OverlordCast = 4;
+        public const int OverlordCast = 2;
 
         /// <summary>
         /// What an overlord's spell also does: knocks the ward it lands on down a rank.
@@ -1057,7 +1072,7 @@ namespace GlimmerGrove.Modes
         /// be lost, which is invariant 5d asked of a fail state.
         /// </para>
         /// </summary>
-        public const int BlightHealth = 1250;
+        public const int BlightHealth = 2500;
 
         public const float BlightHold = .58f;
         public const float BlightMarch = 7f;
@@ -1112,7 +1127,7 @@ namespace GlimmerGrove.Modes
         /// is too strong shows up there as a line that falls and nowhere else at all.
         /// </para>
         /// </summary>
-        public const int WarbringerHealth = 2750;
+        public const int WarbringerHealth = 5500;
 
         /// <summary>
         /// Where it stops, and it stays there.
@@ -1165,7 +1180,7 @@ namespace GlimmerGrove.Modes
         /// twice as often, which is what was asked for; what the finale meets is the arithmetic it
         /// was tuned on.
         /// </summary>
-        public const int WarbringerCast = 1;
+        public const int WarbringerCast = 2;
 
         /// <summary>
         /// How much faster the hill walks while a warbringer's roar is on it.
@@ -1213,7 +1228,7 @@ namespace GlimmerGrove.Modes
         /// 0.62 puts it among the things the player has been killing.
         /// </para>
         /// </summary>
-        public const int GravemawHealth = 1500;
+        public const int GravemawHealth = 3000;
 
         public const float GravemawHold = .62f;
         public const float GravemawMarch = 7.5f;
@@ -1230,7 +1245,7 @@ namespace GlimmerGrove.Modes
         public const float GravemawCastEvery = 6f;
 
         /// <summary>What one feed takes off a ward: nothing. See <see cref="SiegeSpell.Devour"/>.</summary>
-        public const int GravemawCast = 0;
+        public const int GravemawCast = 2;
 
         // ------------------------------------------------------------------ the bonecaller
         /// <summary>
@@ -1248,7 +1263,7 @@ namespace GlimmerGrove.Modes
         /// the same shape: it holds the middle and the line has to come to it.
         /// </para>
         /// </summary>
-        public const int BonecallerHealth = 3000;
+        public const int BonecallerHealth = 6000;
 
         public const float BonecallerHold = .40f;
         public const float BonecallerMarch = 8f;
@@ -1265,7 +1280,7 @@ namespace GlimmerGrove.Modes
         public const float BonecallerCastEvery = 8f;
 
         /// <summary>What one raise takes off a ward: nothing. See <see cref="SiegeSpell.Raise"/>.</summary>
-        public const int BonecallerCast = 0;
+        public const int BonecallerCast = 2;
 
         /// <summary>
         /// How many raiders one raise puts on the hill, and how many times a bonecaller may do it.
@@ -1302,7 +1317,7 @@ namespace GlimmerGrove.Modes
         /// rides the head of its last authored wave (invariant 37ad), so the line is answering an
         /// ordinary wave at the same time and every point here is a point not spent on that.
         /// </summary>
-        public const int ShacklerHealth = 1700;
+        public const int ShacklerHealth = 3400;
 
         /// <summary>
         /// Where a shackler stops, and it is the furthest back of any boss in the mode.
@@ -1343,7 +1358,7 @@ namespace GlimmerGrove.Modes
         public const float ShacklerBind = 6f;
 
         /// <summary>What one chain takes off a ward: nothing. See <see cref="SiegeSpell.Bind"/>.</summary>
-        public const int ShacklerCast = 0;
+        public const int ShacklerCast = 2;
 
         // ------------------------------------------------------------------ the ironclad
         /// <summary>
@@ -1367,7 +1382,7 @@ namespace GlimmerGrove.Modes
         /// lands is a measurement, not an argument: <c>SiegeRuleTests</c> sweeps the chapter.
         /// </para>
         /// </summary>
-        public const int IroncladHealth = 2600;
+        public const int IroncladHealth = 5200;
 
         /// <summary>Where an ironclad stops. An overlord's ground: it holds the middle.</summary>
         public const float IroncladHold = .42f;
@@ -2296,7 +2311,23 @@ namespace GlimmerGrove.Modes
             => kind == SiegeKind.Overlord ? OverlordCast
              : kind == SiegeKind.Warbringer ? WarbringerCast
              : kind == SiegeKind.Ironclad ? IroncladCast
-             : kind == SiegeKind.Boss ? BossCast : 0;
+             : kind == SiegeKind.Boss ? BossCast
+             : kind == SiegeKind.Blightcaller ? BlightCast
+             : kind == SiegeKind.Gravemaw ? GravemawCast
+             : kind == SiegeKind.Bonecaller ? BonecallerCast
+             : kind == SiegeKind.Shackler ? ShacklerCast
+             : 0;
+
+        /// <summary>
+        /// What a blightcaller's spell takes off the ward it douses.
+        ///
+        /// <b>Every boss spell takes health now, on top of its verb (37dn).</b> Four of the eight
+        /// took none - fire, the ground, the clock, and bodies - and played, that read as a boss
+        /// attacking and the turrets losing nothing, which was reported on the first of them
+        /// twice. The verb is still what tells the bosses apart; the health is what makes each
+        /// of them a threat. Two, under a warlord's three, because the verb is the rest of it.
+        /// </summary>
+        public const int BlightCast = 2;
 
         /// <summary>
         /// Whether this boss puts raiders on the hill.

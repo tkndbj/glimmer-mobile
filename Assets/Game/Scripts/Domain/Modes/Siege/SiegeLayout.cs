@@ -601,12 +601,12 @@ namespace GlimmerGrove.Modes
                 // the idiom of an authored ladder, and it is the cheaper half of the bargain: the
                 // company is the raiders the level already sends, so **par, both star lines and
                 // `RaiderCount` do not move by one**.
-                bool rides = !SiegeTuning.EndangersTheLine(BossKind) && coming.Count > 0;
-
-                BossWave = rides ? coming.Count - 1 : coming.Count;
-
-                if (rides) coming[BossWave] = Boss.ToString() + coming[BossWave];
-                else coming.Add(Boss.ToString());
+                // **A boss is always a wave of its own now (37dn)**: it comes in alone, after
+                // the hill has been cleared (`SiegeBoard.Muster` holds the clock for it), so the
+                // riding above is history. Kept as prose because it explains why three bosses
+                // once had company, and why every boss spell takes health now.
+                BossWave = coming.Count;
+                coming.Add(Boss.ToString());
             }
 
             Waves = coming.ToArray();
@@ -847,22 +847,17 @@ namespace GlimmerGrove.Modes
             for (int w = 0; w < Waves.Length; w++)
                 for (int i = 0; i < Coming[w].Length; i++)
                 {
+                    // **A boss wears no colour** (37dn): every ward reaches it at full weight,
+                    // so the letter on its token decides nothing about the line and is not
+                    // checked against it. A bonecaller's raised creepers still wear it, and
+                    // `ModeValidator.Bossed` warns when no ward does.
+                    if (w == BossWave && i == 0) continue;
+
                     char colour = Coming[w][i].Colour;
                     if (Array.IndexOf(Wards, colour) >= 0) continue;
 
-                    // **The boss is the one this really matters for, and for a different reason
-                    // than it used to be.** Every ward answers a boss now
-                    // (`SiegeTuning.EveryWardReaches`), so a boss of a colour nobody carries is
-                    // killable — it is the one raider on the hill that always is. What it is not
-                    // is *doubleable*: its colour is what decides where the double lands, so a
-                    // line with no ward wearing it is a duel fought at half rate from the first
-                    // bolt to the last, with nothing anywhere saying so.
-                    string what = w == BossWave && i == 0
-                                ? $"a '{colour}' {SiegeTuning.NameOf(BossKind)}"
-                                : "a '" + colour + "' raider";
-
-                    return $"wave {w + 1} sends {what} and no ward on this line carries "
-                         + $"'{colour}', so nothing here is strong against it";
+                    return $"wave {w + 1} sends a '{colour}' raider and no ward on this line "
+                         + $"carries '{colour}', so nothing here is strong against it";
                 }
 
             return Settled();

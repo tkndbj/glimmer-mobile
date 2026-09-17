@@ -169,41 +169,30 @@ namespace GlimmerGrove.Modes
                     continue;
                 }
 
-                // **Two spells that are aimed at the hill rather than at the line**, settled
-                // here for the reason the roar above is: the path below indexes `spell.Ward`, and
-                // both of these carry -1.
-                if (spell.Craft == SiegeSpell.Devour) { Devour(caster); continue; }
-                if (spell.Craft == SiegeSpell.Raise) { Raise(caster); continue; }
+                // **Two spells that are aimed at the hill rather than at the line** do their work
+                // on the hill first, and then smite the freshest ward like any other (37dn): the
+                // verb is what tells the bosses apart, the health is what makes each a threat.
+                // Their hill half is reported by `Devour` and `Raise`; the smite is reported
+                // below as a smite, so the view draws a hit at the post and nothing else.
+                if (spell.Craft == SiegeSpell.Devour) Devour(caster);
+                if (spell.Craft == SiegeSpell.Raise) Raise(caster);
+
+                if (spell.Ward < 0 || spell.Ward >= _wards.Length) continue;
 
                 var ward = _wards[spell.Ward];
                 if (!ward.Alive) continue;
 
-                // Douse takes no health at all, which is why `CastOf` answers nought for it rather
-                // than the rules carrying a second damage table nobody would keep in step.
-                if (spell.Craft == SiegeSpell.Douse)
-                {
-                    ward.Snuff();
-                    _report.Spells.Add(
-                        new SiegeSpellLanded(spell.Raider, spell.Ward, SiegeSpell.Douse, 0, false));
-                    continue;
-                }
+                // **The verb first, then the health, so one record carries both.** A douse empties
+                // the tube, a bind chains the ward and takes nothing off the tube, a sunder takes a
+                // rank on the phase's opener - and every one of them then takes `CastOf` off the
+                // ward, which is what stopped "it attacks and my turrets lose nothing" (37dn).
+                if (spell.Craft == SiegeSpell.Douse) ward.Snuff();
+                if (spell.Craft == SiegeSpell.Bind) ward.Shackle();
 
-                // **A bind settles here beside the douse and takes nothing**, which is the whole
-                // of the difference between the two: `Snuff` empties the tube and `Shackle` does
-                // not touch it. Reported with a nought exactly as a douse is, because what a view
-                // has to draw is a state rather than a number.
-                if (spell.Craft == SiegeSpell.Bind)
-                {
-                    ward.Shackle();
-                    _report.Spells.Add(
-                        new SiegeSpellLanded(spell.Raider, spell.Ward, SiegeSpell.Bind, 0, false));
-                    continue;
-                }
-
-                // A rank is taken *before* the health, so a spell that fells a ward has still
-                // taken the rank it came for — and the view is told both in one record rather than
-                // having to work out which order they happened in.
                 bool sundered = spell.Craft == SiegeSpell.Sunder && spell.Opens && ward.Sunder();
+
+                var craft = spell.Craft == SiegeSpell.Devour || spell.Craft == SiegeSpell.Raise
+                          ? SiegeSpell.Smite : spell.Craft;
 
                 int cast = SiegeTuning.CastOf(caster.Kind);
                 ward.Health -= cast;
@@ -216,7 +205,7 @@ namespace GlimmerGrove.Modes
                     ward.Fuel = 0f;
                 }
 
-                _report.Spells.Add(new SiegeSpellLanded(spell.Raider, spell.Ward, spell.Craft,
+                _report.Spells.Add(new SiegeSpellLanded(spell.Raider, spell.Ward, craft,
                                                         cast, felled, sundered));
             }
         }
@@ -312,6 +301,15 @@ namespace GlimmerGrove.Modes
             // who is *ahead* of it is rewarded with the next wave rather than made to stand and
             // watch an empty field. Note the guard — the shortcut cannot fire before the first
             // wave, because the hill is legitimately empty at the start of every run.
+            // **A boss comes in alone, and it waits for the hill to be cleared (37dn).** The
+            // clock does not run for a boss wave while anything is still walking: this is the
+            // one wave the mode does not stack on the last, so a duel is never fought over a wave
+            // still swinging at the line. The clear-hill shortcut below then brings it on inside
+            // a breather, exactly as it brings on any wave the player is ahead of.
+            if (_wave > 0 && Layout.SizeOf(_wave) > 0 && SiegeTuning.IsBoss(Layout.KindAt(_wave, 0)))
+                for (int i = 0; i < _raiders.Count; i++)
+                    if (_raiders[i].Alive) return;
+
             _rest -= dt;
 
             if (_rest > 0f)
@@ -388,8 +386,11 @@ namespace GlimmerGrove.Modes
                 // was standing there. Recorded only; nothing below reads it.
                 if (boss)
                 {
-                    var own = colour >= 0 && colour < _wards.Length ? _wards[colour] : null;
-                    Attention.BossMet(own != null && own.Fuelled);
+                    // Any ward, because a boss wears no colour (37dn): the question is whether
+                    // the player banked anything ahead of the duel.
+                    bool fuelled = false;
+                    for (int w = 0; w < _wards.Length; w++) if (_wards[w].Fuelled) fuelled = true;
+                    Attention.BossMet(fuelled);
                 }
             }
 
@@ -660,10 +661,11 @@ namespace GlimmerGrove.Modes
                 // opener wants can differ from what an ordinary cast wants (`Wanted`).
                 bool opens = boss.Guarded && !boss.Opening;
 
-                // **A roar is thrown at the hill, so it carries no ward.** Three of the four aim
-                // at the line and one does not, and the difference is asked once here rather than
-                // by every reader of a ward index nobody set.
-                int ward = SiegeTuning.AimsAtAWard(boss.Kind) ? Wanted(craft, boss, opens) : -1;
+                // **A roar is thrown at the hill, so it carries no ward.** Every other spell
+                // carries one now (37dn): the aimed ones the ward their verb wants, and a devour
+                // or a raise the freshest ward, which is where its smite lands. The view still
+                // asks `AimsAtAWard` to decide what to draw crossing the hill.
+                int ward = craft == SiegeSpell.Rally ? -1 : Wanted(craft, boss, opens);
 
                 // **A cast that found nothing to aim at does not spend its cadence.** The timer
                 // used to be re-armed above, before the target was known, so a blightcaller that
@@ -676,7 +678,7 @@ namespace GlimmerGrove.Modes
                 // Re-arming short instead means the spell lands on the frame there is something
                 // to take. It can only ever make a cast arrive *sooner than it would have* and
                 // never more often than the cadence, because a cast that lands re-arms in full.
-                if (ward < 0 && SiegeTuning.AimsAtAWard(boss.Kind))
+                if (ward < 0 && craft != SiegeSpell.Rally)
                 {
                     boss.Spell = SiegeTuning.CastRetry;
                     continue;
