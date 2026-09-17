@@ -6,25 +6,28 @@ using GlimmerGrove.Persistence;
 namespace GlimmerGrove.Progression
 {
     /// <summary>
-    /// How far an endless run has ever got, per level.
+    /// What the Infinite lane leaves behind: how far a run has ever got, and how many waves have
+    /// been seen off altogether.
     ///
     /// <para>
-    /// <b>The one number an endless level leaves behind, and it is a floor.</b> Everything else
-    /// about a run is already recorded by the machinery every other level uses — the heart, the
-    /// chest count, the streak, the star ledger — and none of it fits a board that is never won.
-    /// A wave count is not a grade: it is a high-water mark, so it is one monotonic integer per
-    /// level id joined by <c>max</c>, which is invariant 14a's floor exactly and the only shape
-    /// invariant 11b permits for a number two devices both write.
+    /// <b>Two numbers per level and both are floors.</b> Everything else about a run is already
+    /// recorded by the machinery every other level uses — the heart, the chest count, the streak,
+    /// the star ledger — and none of it fits a board that is never won. Neither of these is a
+    /// grade: a <see cref="Row.Best">best</see> is a high-water mark and a
+    /// <see cref="Row.Waves">lifetime count</see> is a tally of things that happened, so both are
+    /// monotonic integers per level id joined by <c>max</c>, which is invariant 14a's floor
+    /// exactly and the only shape invariant 11b permits for a number two devices both write.
     /// </para>
     /// <para>
-    /// <b>It pays nothing, deliberately, and that is what makes it publishable.</b> Credits and XP
-    /// derive from the star ledger and from nothing else (invariant 9), so an endless run buys a
-    /// place on a board and a number on a map node. Unlike a grove's worth this cannot be
-    /// <em>recomputed</em> by the server — nothing it holds implies how far a run got, which is
-    /// invariant 10d's shape — so the only two defences a public wave has are that it is
-    /// <see cref="MaxWave">bounded</see> and that forging it buys nothing at all. <b>Never make the
-    /// endless board pay</b>: the moment a wave decides currency it becomes a claim with no way to
-    /// adjudicate it (invariant 13).
+    /// <b>The best pays nothing and the lifetime count does, and the split is the whole design.</b>
+    /// The best is what the public board is ordered on, and it must stay unpaid: the server cannot
+    /// recompute a wave, so the two defences a <em>published</em> number has are that it is
+    /// <see cref="MaxWave">bounded</see> and that forging it buys nothing (invariant 19l). The
+    /// lifetime count is never published, and it pays XP at a rate and under a ceiling that are
+    /// both content (<see cref="EndlessRewardTable"/>) — so a forged one buys keeper levels inside
+    /// a range an honest player is drawn in, and buys no currency at all, because credits still
+    /// derive from the star ledger and from nothing else. <b>Never publish the lifetime count, and
+    /// never make the ordered board pay.</b>
     /// </para>
     /// <para>
     /// <b>A level id is permanent and invariant 1 reaches this</b>, the way it reaches the star
@@ -65,9 +68,70 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public const int MaxWave = 9999;
 
-        static readonly Dictionary<string, int> _best = new Dictionary<string, int>(StringComparer.Ordinal);
+        /// <summary>
+        /// The most lifetime waves one row may hold.
+        ///
+        /// <para>
+        /// <b>A structural bound, not the one a player meets.</b> That one is
+        /// <see cref="EndlessRewardTable.MaxWaves"/> and it is content, applied when the XP is
+        /// derived. This is applied when the count is <em>stored</em>, and the two must never be
+        /// the same number: clamping a stored monotonic count against a published one would cut
+        /// it downward on whichever devices had fetched a lowered table, and a count that only
+        /// ever rises is the whole of what makes the merge a <c>max</c> (invariant 11b). See
+        /// <see cref="EndlessLimits.HardMaxWaves"/>.
+        /// </para>
+        /// </summary>
+        public const int MaxLifetimeWaves = EndlessLimits.HardMaxWaves;
 
-        /// <summary>Raised when a best moved, so an open map can redraw its badge.</summary>
+        /// <summary>
+        /// One level's two floors.
+        ///
+        /// <para>
+        /// A struct in one dictionary rather than two dictionaries keyed alike, so the pair cannot
+        /// be written apart — which is <c>invariant 16x</c>'s fault said about a ledger: a value
+        /// and the value derived beside it want one writer, or one of them is stale and nothing
+        /// can see it.
+        /// </para>
+        /// </summary>
+        public readonly struct Row
+        {
+            /// <summary>The furthest a single run has ever got. The board's number.</summary>
+            public readonly int Best;
+
+            /// <summary>Waves seen off across every run ever played here. The XP's number.</summary>
+            public readonly int Waves;
+
+            public Row(int best, int waves)
+            {
+                Best = best < 0 ? 0 : best > MaxWave ? MaxWave : best;
+                Waves = waves < 0 ? 0 : waves > MaxLifetimeWaves ? MaxLifetimeWaves : waves;
+            }
+
+            /// <summary>
+            /// What this row is worth to the reward derivation.
+            ///
+            /// <para>
+            /// <b>The best is a floor under the lifetime count, and that is the migration.</b> A
+            /// save written before this ledger counted lifetime waves has a best and no tally, and
+            /// reading it as nought would tell a player who had already reached wave forty that
+            /// they had never played. Taking the larger of the two is honest in both directions —
+            /// a lifetime total is at least one run's worth by definition — it is idempotent, it
+            /// can only ever rise, and it needs no sentinel and no migration, which is the
+            /// property every other id-keyed section in the save file has.
+            /// </para>
+            /// <para>
+            /// The server applies the identical rule. If it ever stops, the two halves disagree
+            /// about a keeper level and a published card drops what that level gated (19a).
+            /// </para>
+            /// </summary>
+            public int Payable => Waves > Best ? Waves : Best;
+
+            public bool IsEmpty => Best <= 0 && Waves <= 0;
+        }
+
+        static readonly Dictionary<string, Row> _rows = new Dictionary<string, Row>(StringComparer.Ordinal);
+
+        /// <summary>Raised when a best or a tally moved, so an open map can redraw its badge.</summary>
         public static event Action Changed;
 
         /// <summary>
@@ -85,10 +149,14 @@ namespace GlimmerGrove.Progression
 
         /// <summary>The furthest wave this level has ever reached, or nought.</summary>
         public static int BestFor(LevelId level)
-            => level.IsValid && _best.TryGetValue(level.Value, out int wave) ? wave : 0;
+            => level.IsValid && _rows.TryGetValue(level.Value, out var row) ? row.Best : 0;
+
+        /// <summary>Waves seen off on this level across every run, or nought.</summary>
+        public static int WavesFor(LevelId level)
+            => level.IsValid && _rows.TryGetValue(level.Value, out var row) ? row.Payable : 0;
 
         /// <summary>Whether any endless run has ever been finished at all.</summary>
-        public static bool Any => _best.Count > 0;
+        public static bool Any => _rows.Count > 0;
 
         /// <summary>
         /// The furthest wave reached anywhere on the endless lane — the one number the public
@@ -108,8 +176,30 @@ namespace GlimmerGrove.Progression
             get
             {
                 int best = 0;
-                foreach (var pair in _best) if (pair.Value > best) best = pair.Value;
+                foreach (var pair in _rows) if (pair.Value.Best > best) best = pair.Value.Best;
                 return best > MaxWave ? MaxWave : best;
+            }
+        }
+
+        /// <summary>
+        /// Waves seen off across the whole lane, which is what the XP is derived from.
+        ///
+        /// <para>
+        /// <b>A sum where <see cref="Best"/> is a maximum</b>, because the two answer different
+        /// questions: the board asks how far one run got and the reward asks how much was played.
+        /// Summed across rows rather than read off one named level for <see cref="Best"/>'s reason
+        /// — nothing but an endless run writes here — and <c>long</c> because the ceiling is
+        /// applied by <see cref="EndlessRewardTable.XpFor"/> afterwards rather than here, so this
+        /// may legitimately exceed it.
+        /// </para>
+        /// </summary>
+        public static long LifetimeWaves
+        {
+            get
+            {
+                long total = 0L;
+                foreach (var pair in _rows) total += pair.Value.Payable;
+                return total;
             }
         }
 
@@ -140,6 +230,48 @@ namespace GlimmerGrove.Progression
         }
 
         /// <summary>
+        /// Lifetime waves off a save file, read exactly as <c>endlessWaves</c> in
+        /// <c>functions/src/grove.ts</c> reads them — the same rows, the same per-row clamp and
+        /// the same <see cref="Row.Payable">best-as-a-floor</see> rule.
+        ///
+        /// <b>The two must agree</b>, or the server's keeper level and the device's differ and a
+        /// published card drops whatever that level gated (invariant 19a). The shared vectors hold
+        /// the pair.
+        /// </summary>
+        public static long LifetimeWavesIn(SaveFileDto save)
+        {
+            var rows = save?.endlessBest;
+            if (rows == null) return 0L;
+
+            long total = 0L;
+
+            // **The cap bounds the walk, not the tally of rows it accepted**, which is the same
+            // reading `endlessWaves` and `bestWave` take on the server and the same one
+            // `firestore.rules` bounds (`size() <= 64`). The distinction only ever shows on a
+            // malformed document — a refused row near the top would otherwise let this side read
+            // a sixty-fifth that the other side never reaches — and the shared vectors caught
+            // exactly that, which is what they are for. An honest save never has more than
+            // `MaxRows`, because `Sorted` is the only thing that writes one.
+            int walk = rows.Length < MaxRows ? rows.Length : MaxRows;
+
+            for (int i = 0; i < walk; i++)
+            {
+                var row = rows[i];
+                if (row == null || string.IsNullOrEmpty(row.level)) continue;
+
+                // A level id this long cannot have come from a catalog we shipped
+                // (<see cref="LevelId.MaxLength"/>), and the server's half refuses one by the
+                // same measure. This rule is the one place the two sides must agree to the
+                // integer, so the refusals have to match as well as the arithmetic.
+                if (row.level.Length > LevelId.MaxLength) continue;
+
+                total += new Row(row.wave, row.waves).Payable;
+            }
+
+            return total;
+        }
+
+        /// <summary>
         /// Records a run, and answers whether it was a new best.
         ///
         /// <b>A floor and never an assignment.</b> Two devices offline reach wave 14 and wave 9;
@@ -149,11 +281,13 @@ namespace GlimmerGrove.Progression
         public static bool Record(LevelId level, int wave)
         {
             if (!level.IsValid || wave <= 0) return false;
-            if (_best.TryGetValue(level.Value, out int held) && held >= wave) return false;
 
-            if (!_best.ContainsKey(level.Value) && _best.Count >= MaxRows) return false;
+            _rows.TryGetValue(level.Value, out var held);
+            if (held.Best >= wave) return false;
 
-            _best[level.Value] = wave > MaxWave ? MaxWave : wave;
+            if (!_rows.ContainsKey(level.Value) && _rows.Count >= MaxRows) return false;
+
+            _rows[level.Value] = new Row(wave, held.Waves);
             Raise();
 
             // After Changed, so anything redrawing off the badge has the new number before the
@@ -162,6 +296,55 @@ namespace GlimmerGrove.Progression
             catch (Exception e) { UnityEngine.Debug.LogException(e); }
 
             return true;
+        }
+
+        /// <summary>
+        /// Adds a finished run's waves to this level's lifetime tally, and answers the tally
+        /// afterwards.
+        ///
+        /// <para>
+        /// <b>Separate from <see cref="Record"/> because it is unconditional.</b> A run that did
+        /// not beat the best still happened, and it is what the player is paid for — folding this
+        /// into the best's early return is how the tenth run on a good day would have paid nothing.
+        /// </para>
+        /// <para>
+        /// <b>Called once per run, from the one place a run ends</b> (<c>ProtoScreen.Solve</c> by
+        /// way of <c>Finished</c>, guarded by that screen's own <c>_finished</c> latch). A continue
+        /// puts the ward line back up and the same run carries on, so the waves of a continued run
+        /// arrive here once, at the true ending, already totalled by the board.
+        /// </para>
+        /// <para>
+        /// Adds rather than assigns, and saturates at <see cref="MaxLifetimeWaves"/> rather than
+        /// wrapping — a tally that wrapped would fall, and everything downstream of this is a
+        /// <c>max</c> that assumes it cannot.
+        /// </para>
+        /// </summary>
+        public static long Bank(LevelId level, int waves)
+        {
+            if (!level.IsValid) return 0L;
+
+            _rows.TryGetValue(level.Value, out var held);
+            if (waves <= 0) return held.Payable;
+
+            if (!_rows.ContainsKey(level.Value) && _rows.Count >= MaxRows) return held.Payable;
+
+            // **Added to the tally, never to <see cref="Row.Payable"/>, and that distinction is a
+            // bug `EndlessRewardTests.ARunThatBeatNothingStillPays` caught.** `Payable` floors the tally with the best, and `Record`
+            // runs immediately before this on the same run — so a run that set a new best of forty
+            // raised the floor to forty and then had its own forty added on top of it, paying
+            // twice for one watch. The floor is materialised once, where it belongs, at the load
+            // and merge boundary (`Absorb`); by the time anything is banked the tally already
+            // carries it.
+            long total = (long)held.Waves + waves;
+            if (total > MaxLifetimeWaves) total = MaxLifetimeWaves;
+
+            var next = new Row(held.Best, (int)total);
+            if (next.Waves == held.Waves && next.Best == held.Best) return held.Payable;
+
+            _rows[level.Value] = next;
+            Raise();
+
+            return next.Payable;
         }
 
         static void Raise()
@@ -173,66 +356,86 @@ namespace GlimmerGrove.Progression
         // --------------------------------------------------- file bridge (internal)
         internal static void LoadFrom(SaveFileDto dto)
         {
-            _best.Clear();
-
-            var rows = dto?.endlessBest;
-            if (rows != null)
-                foreach (var row in rows)
-                {
-                    if (row == null || string.IsNullOrEmpty(row.level) || row.wave <= 0) continue;
-                    if (_best.TryGetValue(row.level, out int held) && held >= row.wave) continue;
-
-                    _best[row.level] = row.wave;
-                }
-
+            _rows.Clear();
+            Absorb(_rows, dto?.endlessBest);
             Raise();
         }
 
-        internal static void WriteInto(SaveFileDto dto) => dto.endlessBest = Sorted(_best);
+        internal static void WriteInto(SaveFileDto dto) => dto.endlessBest = Sorted(_rows);
 
         /// <summary>
-        /// The larger of each side's bests.
+        /// The larger of each side's floors, taken field by field.
         ///
+        /// <para>
+        /// <b>Per field rather than per row</b>, because the two numbers move independently: a
+        /// device that set a new best while offline and one that played four more ordinary runs
+        /// have each moved one of them, and taking whichever row looked bigger would discard the
+        /// other device's half. Both only ever rise, so a per-field <c>max</c> is well defined
+        /// whichever order the two sides arrive in (invariant 11b).
+        /// </para>
+        /// <para>
         /// <b>No early return for an empty side</b>, which is <c>CompanionLedger.Join</c>'s trap:
         /// handing one array straight back would skip the sort, and <c>SaveDelta</c> walks these
         /// in order — so an unsorted file joined against nothing would read as changed on every
         /// launch and push a write for nothing, for ever.
+        /// </para>
         /// </summary>
         public static EndlessBestDto[] Join(EndlessBestDto[] mine, EndlessBestDto[] other)
         {
-            var best = new Dictionary<string, int>(StringComparer.Ordinal);
+            var rows = new Dictionary<string, Row>(StringComparer.Ordinal);
 
-            Absorb(best, mine);
-            Absorb(best, other);
+            Absorb(rows, mine);
+            Absorb(rows, other);
 
-            return Sorted(best);
+            return Sorted(rows);
         }
 
-        static void Absorb(Dictionary<string, int> into, EndlessBestDto[] rows)
+        static void Absorb(Dictionary<string, Row> into, EndlessBestDto[] rows)
         {
             if (rows == null) return;
 
             foreach (var row in rows)
             {
-                if (row == null || string.IsNullOrEmpty(row.level) || row.wave <= 0) continue;
-                if (into.TryGetValue(row.level, out int held) && held >= row.wave) continue;
+                if (row == null || string.IsNullOrEmpty(row.level)) continue;
 
-                into[row.level] = row.wave;
+                // **The floor is materialised here and nowhere else.** `Row.Payable` is the rule
+                // both halves of the wire derive with, and this is the one place a save is read,
+                // so applying it on the way in leaves an invariant everything downstream can rely
+                // on: an in-memory tally is never below its own best. `Bank` then simply adds,
+                // and the v29 file that arrives with a best and no tally is migrated by being
+                // read — no sentinel, no migration step, and idempotent because taking the
+                // maximum twice is taking it once.
+                var read = new Row(row.wave, row.waves);
+                var arriving = new Row(read.Best, read.Payable);
+                if (arriving.IsEmpty) continue;
+
+                if (into.TryGetValue(row.level, out var held))
+                {
+                    into[row.level] = new Row(
+                        arriving.Best > held.Best ? arriving.Best : held.Best,
+                        arriving.Waves > held.Waves ? arriving.Waves : held.Waves);
+                    continue;
+                }
+
+                into[row.level] = arriving;
             }
         }
 
-        static EndlessBestDto[] Sorted(Dictionary<string, int> best)
+        static EndlessBestDto[] Sorted(Dictionary<string, Row> rows)
         {
-            var keys = new List<string>(best.Keys);
+            var keys = new List<string>(rows.Keys);
             keys.Sort(StringComparer.Ordinal);
 
             int take = keys.Count > MaxRows ? MaxRows : keys.Count;
-            var rows = new EndlessBestDto[take];
+            var written = new EndlessBestDto[take];
 
             for (int i = 0; i < take; i++)
-                rows[i] = new EndlessBestDto { level = keys[i], wave = best[keys[i]] };
+            {
+                var row = rows[keys[i]];
+                written[i] = new EndlessBestDto { level = keys[i], wave = row.Best, waves = row.Waves };
+            }
 
-            return rows;
+            return written;
         }
     }
 }

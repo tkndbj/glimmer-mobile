@@ -157,7 +157,8 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         public static WinRecord Win(LevelDefinition level, int stars, int moves,
-                                    float seconds, int hintsUsed, int route, int lit, int wanted)
+                                    float seconds, int hintsUsed, int route, int lit, int wanted,
+                                    long bonusXp = 0L)
         {
             var before = PlayerProgress.Record(level.Id);
             var tuning = level.Tuning;
@@ -192,7 +193,14 @@ namespace GlimmerGrove
                 ? index.ChapterNeighbour(chapter, +1)
                 : null;
 
-            return new WinRecord(run, streak, reward.Xp, reward.EarnedCredits,
+            // The star ledger's XP plus whatever else this run earned. Nought on every board but
+            // the Infinite lane, and passed in rather than asked for here because this ledger is
+            // mode-blind (invariant 20a) — what it is told is "this run also earned N", not which
+            // mode it came from. See `ProtoScreen.Solve`, which measures it either side of the
+            // fold exactly as `ChapterOpened` above is measured.
+            long xp = reward.Xp + (bonusXp > 0L ? bonusXp : 0L);
+
+            return new WinRecord(run, streak, xp, reward.EarnedCredits,
                                  PlayerProgression.GoldenPercentFor(level.Id),
                                  opened?.Id ?? ChapterId.None);
         }

@@ -1064,6 +1064,47 @@ namespace GlimmerGrove.Content
         /// path a chapter body takes.
         /// </summary>
         public NotificationsDto notifications;
+
+        /// <summary>
+        /// What the Infinite lane pays per wave cleared, and the ceiling on it. Optional; see
+        /// <see cref="Progression.EndlessRewardTable"/>.
+        ///
+        /// <b>The only block here that decides XP outside the star ledger</b>, which is why it
+        /// carries a ceiling at all and why <c>seed-config.mjs</c> publishes it: a keeper level
+        /// the server derives differently from the device is a published card that silently
+        /// drops whatever that level gated (invariant 19a).
+        /// </summary>
+        public EndlessRewardDto endless;
+    }
+
+    /// <summary>
+    /// What a wave seen off on the Infinite lane is worth, and the most that is ever paid.
+    ///
+    /// <para>
+    /// Two numbers, both unwritten as -1 so a partial block inherits rather than zeroing —
+    /// <c>HintsDto</c>'s convention, and important here for the same reason it is there: a field
+    /// <c>JsonUtility</c> never saw reads as nought, and nought is a meaningful value for both
+    /// of these (it withdraws the payment). The default has to be distinguishable from an
+    /// author's decision to stop paying.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class EndlessRewardDto
+    {
+        /// <summary>XP per wave cleared. Unwritten reads as -1 and inherits; 0 stops paying.</summary>
+        public int xpPerWave = -1;
+
+        /// <summary>
+        /// The most lifetime waves ever paid for, across every endless level. Unwritten inherits.
+        ///
+        /// Applied when the XP is derived and never when the count is stored — see
+        /// <c>EndlessLimits.HardMaxWaves</c> for why that distinction is the whole safety of a
+        /// mergeable count.
+        /// </summary>
+        public int maxWaves = -1;
+
+        /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
+        public bool IsAuthored => xpPerWave >= 0 || maxWaves >= 0;
     }
 
     /// <summary>

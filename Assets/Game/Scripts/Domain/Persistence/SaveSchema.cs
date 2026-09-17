@@ -447,8 +447,37 @@ namespace GlimmerGrove.Persistence
         ///      under the id a currency night already used, and what a chest holds has never
         ///      been stored anywhere (<c>DailyChests</c>).
         ///      </para>
+        /// v30 — the Infinite lane counts what it has seen off
+        ///      (<see cref="EndlessBestDto.waves"/>), because it now pays XP for it.
+        ///      <para>
+        ///      <b>The first XP in this game that is not derived from the star ledger</b>, which
+        ///      invariant 9 is written against — so it is worth saying exactly what was and was
+        ///      not given up. What 9 forbids is an <em>accumulator</em>: a number that cannot be
+        ///      merged, cannot be retuned for existing players and cannot be recovered when lost.
+        ///      This is none of those. It is a monotonic count per level joined by <c>max</c>
+        ///      (11b's exception, as <see cref="WardStarDto"/> is), the rate and the ceiling are
+        ///      both content, and the server derives the same figure from the same rows — so a
+        ///      retune moves every player at once and a lost file recomputes to the same answer.
+        ///      </para>
+        ///      <para>
+        ///      <b>What it did give up is that this number cannot be recomputed by the server</b>
+        ///      (invariant 10d's shape), and the two defences left are the ones invariant 13's
+        ///      fourth clause allows: it is <em>bounded</em> so tightly that forging it buys
+        ///      nothing worth having, and it buys no <em>currency</em> at all — credits still
+        ///      derive from the star ledger alone, so a forged tally moves a keeper level inside
+        ///      an honest range and moves no balance. The board that is published still reads
+        ///      <c>wave</c>, which still pays nothing (19l).
+        ///      </para>
+        ///      <para>
+        ///      <b>No migration and no rules release.</b> Absent is floored by the best beside it
+        ///      (see the field), and the field rides inside the existing <c>endlessBest</c> list —
+        ///      which <c>firestore.rules</c> bounds by length without naming a row's fields, so
+        ///      <c>hasOnly</c> has nothing new to learn (12a). The version moves because
+        ///      <see cref="SaveChecksum"/> hashes the serialised object and a v29 file can never
+        ///      match a v30 hash.
+        ///      </para>
         /// </summary>
-        public const int Version = 29;
+        public const int Version = 30;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -1571,8 +1600,37 @@ namespace GlimmerGrove.Persistence
         /// <summary>The level's permanent id. Invariant 1 reaches it.</summary>
         public string level;
 
-        /// <summary>Waves cleared. Only ever rises.</summary>
+        /// <summary>The furthest a single run has ever got. Only ever rises. The board's number.</summary>
         public int wave;
+
+        /// <summary>
+        /// Waves seen off here across every run ever played. Only ever rises.
+        ///
+        /// <para>
+        /// <b>A count, and storable for <see cref="WardStarDto"/>'s reason.</b> Invariant 11b
+        /// refuses a stored count because two devices showing 3 and 0 are equally consistent with
+        /// "one spent three" and "one has not heard yet" — and waves already played cannot be
+        /// un-played, so the join is a per-field <c>max</c> and there is nothing ambiguous about
+        /// it. What it costs is the one thing a <c>max</c> always costs: two devices that each
+        /// play offline contribute the larger of the two tallies rather than the sum. That is the
+        /// same bargain <c>wave</c> beside it has always made, and the alternative — a claim per
+        /// run — is a server round trip for a number nothing adjudicates.
+        /// </para>
+        /// <para>
+        /// <b>Absent means "never counted", and the migration is that <c>wave</c> floors it</b>
+        /// (<c>EndlessLedger.Row.Payable</c>): a file written before this existed has a best and
+        /// no tally, and reading it as nought would tell somebody who had reached wave forty that
+        /// they had never played. Taking the larger of the two is honest both ways, idempotent and
+        /// monotonic, so a v29 file needs no migration and no sentinel.
+        /// </para>
+        /// <para>
+        /// <b>This is the one number in the save file that decides XP without a star behind it</b>
+        /// — see <c>EndlessRewardTable</c> for the ceiling that makes that defensible, and note
+        /// that it is never published: the ordered board reads <c>wave</c> and goes on paying
+        /// nothing (invariant 19l).
+        /// </para>
+        /// </summary>
+        public int waves;
     }
 
     /// <summary>

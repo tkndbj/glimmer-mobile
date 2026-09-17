@@ -72,6 +72,30 @@ export interface ProgressionConfig {
    * it may guess at.
    */
   referral?: ReferralConfig;
+
+  /**
+   * What the Infinite lane pays per wave cleared, and the ceiling on it.
+   *
+   * **Absent falls back to the built-in constants rather than to nothing**, which is the
+   * opposite of what `referral` above it does, and the difference is deliberate. A block the
+   * seeder has not published yet would otherwise make this server derive a *lower* keeper
+   * level than the device does — and `buildCard` drops, rather than clamps, whatever that
+   * level gated (invariant 19a), in silence. Agreeing with the client under a stale deploy is
+   * worth more here than failing closed, because the failure is invisible. Withdrawing the
+   * payment is `xpPerWave: 0`, which is authored and therefore visible in a diff.
+   */
+  endless?: EndlessConfig;
+}
+
+/**
+ * The Infinite lane's rate and ceiling. Mirrors `EndlessRewardTable` on the client, and the
+ * two must move together — see `endlessXp` in `grove.ts`.
+ */
+export interface EndlessConfig {
+  /** XP per wave cleared. 0 stops paying. */
+  xpPerWave: number;
+  /** The most lifetime waves ever paid for, across every endless level. */
+  maxWaves: number;
 }
 
 /**

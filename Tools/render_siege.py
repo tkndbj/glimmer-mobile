@@ -555,6 +555,16 @@ def aimed(sheet, im, hx, hy, wide, ux, uy, head=0.5, fill=1.0):
     cx = hx - ux * back
     cy = hy - uy * back
 
+    # **A crop shrinks the picture; `Image.fillAmount` does not shrink the rect.** The game leaves
+    # the reel's box where it is and simply stops drawing part of it, so the head never moves. A
+    # cropped PIL image pasted at the full frame's centre lands half the missing length too far
+    # back down the shot - which drew every bolt behind where the board puts it, and is the third
+    # time in one drop that a mirror invented a fault (44d). The centre moves toward the head by
+    # half of what was cut.
+    slid = (tall - tall * fill) * 0.5
+    cx += ux * slid
+    cy += uy * slid
+
     sheet.alpha_composite(turned, (int(cx - turned.width / 2), int(cy - turned.height / 2)))
 
 

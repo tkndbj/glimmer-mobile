@@ -245,6 +245,14 @@ service cloud.firestore {
                // the endless board pays nothing. Nothing here changes for it: the rows were
                // already allowed and already capped.
                //
+               // A row also carries `waves` since save v30 - a lifetime tally that *does* pay,
+               // in XP (`EndlessRewardTable`). The sentence above still holds and is worth
+               // reading precisely: the figure that is **published** is still the best (`wave`),
+               // and it still pays nothing. The tally is never published, buys no currency, and
+               // is bounded on both sides. It needed no release here, because it rides inside a
+               // list this rule bounds by *length* without naming a row's fields (invariant 12a's
+               // cheap half) - which is the whole reason it was shaped that way.
+               //
                // The bound matches `EndlessLedger.MaxRows`, and it has to: `hasOnly` is an
                // allow-list over the whole document, so a save the client writes and these rules
                // refuse loses *every* save write (invariant 12a).

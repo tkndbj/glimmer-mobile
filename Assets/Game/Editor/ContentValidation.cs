@@ -267,6 +267,7 @@ namespace GlimmerGrove.EditorTools
             ValidateChapterGate(table.ChapterGate, index, result, verbose);
             ValidateKeeperWalls(table, index, result, verbose);
             ValidateContinue(table.Continue, table.Store, result, verbose);
+            ValidateEndless(table.Endless, table, index, result, verbose);
             ValidateDailyChests(table.Daily, table.Hearts, result, verbose);
             ValidateUtilities(table.Utilities, table.Daily, result, verbose);
             ValidateTasks(table.Tasks, table.Utilities, table.Hearts, result, verbose);
@@ -1549,6 +1550,73 @@ namespace GlimmerGrove.EditorTools
         /// and nobody should have to open a JSON file to find out what it is.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// What the Infinite lane pays, and where its ceiling lands on the keeper curve.
+        ///
+        /// <para>
+        /// <b>The one block in this file that decides XP without a star behind it</b> (invariant
+        /// 9's single exception, see <see cref="EndlessRewardTable"/>), so the figures are
+        /// printed rather than left to be worked out: a rate whose ceiling nobody has read
+        /// against the curve is a keeper ladder climbing at a speed nobody wrote down. It is the
+        /// mirror of the <c>endless xp</c> block in <c>Tools/verify/content.py</c>, and both
+        /// print the same three lines on purpose — this is the only number here a <em>server</em>
+        /// also derives, and the two content gates are where a retune is read.
+        /// </para>
+        /// <para>
+        /// The reader has already clamped anything out of range and said so (every problem it
+        /// raises reaches <see cref="ContentValidationResult"/> through the table build), so what
+        /// is left here is the reading a person has to make: how far the ceiling reaches, and
+        /// against what.
+        /// </para>
+        /// </summary>
+        static void ValidateEndless(EndlessRewardTable endless, ProgressionTable table,
+                                    CatalogIndex index, ContentValidationResult result, bool verbose)
+        {
+            if (endless == null) { result.Errors.Add("progression.json produced no endless rule"); return; }
+
+            // An Infinite lane that pays nothing is a legitimate authoring decision, but a lane
+            // nothing *ships* on is a block tuning a feature that is not there — worth a word,
+            // because it is the only way an author would find out.
+            bool laneShips = false;
+            if (index != null)
+                foreach (var chapter in index.Chapters)
+                    if (chapter != null && !GameTrack.Main.Equals(index.TrackOf(chapter.Id))) { laneShips = true; break; }
+
+            if (!endless.Pays)
+            {
+                if (verbose)
+                    Debug.Log("[Glimmer] endless xp: withdrawn - the Infinite lane pays no XP; " +
+                              "the board, the best wave and the map badge are untouched");
+                return;
+            }
+
+            if (!laneShips)
+                result.Warnings.Add("progression.json pays for endless waves, but no shipped " +
+                                    "chapter stands on a track other than the main one - the " +
+                                    "block is tuning a lane nothing can reach");
+
+            if (!verbose) return;
+
+            long glade = table != null ? table.DefaultRule.XpFor(3) : 0L;
+
+            Debug.Log($"[Glimmer] endless xp: {endless.XpPerWave} xp a wave, capped at " +
+                      $"{endless.MaxWaves:N0} lifetime wave(s) ({endless.MaxXp:N0} xp)");
+
+            if (glade > 0L)
+                Debug.Log($"[Glimmer]        {glade / (double)endless.XpPerWave:0.0} wave(s) is " +
+                          $"worth one three-starred glade ({glade} xp)");
+
+            if (table != null)
+                Debug.Log($"[Glimmer]        the ceiling reaches keeper level " +
+                          $"{table.LevelFor(endless.MaxXp).Level}");
+
+            // Said rather than checked: how many waves a run sees off is a fact about play, and
+            // no gate can know it. The lane is bought at the gate (`HeartStake.IsPaidAtDoor`), so
+            // the heart table paces this and the ceiling only ever bounds a forged save.
+            Debug.Log("[Glimmer]        a watch is bought at the gate, so hearts pace this and " +
+                      "not the ceiling - the ceiling is only ever a bound on a forged save");
+        }
+
         static void ValidateContinue(ContinueTable carryOn, StoreCatalog store,
                                      ContentValidationResult result, bool verbose)
         {

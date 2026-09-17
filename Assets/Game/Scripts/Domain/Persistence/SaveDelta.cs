@@ -379,7 +379,7 @@ namespace GlimmerGrove.Persistence
             {
                 var x = a[i]; var y = b[i];
                 if (x == null || y == null) return x == y;
-                if (!Same(x.level, y.level) || x.wave != y.wave) return false;
+                if (!Same(x.level, y.level) || x.wave != y.wave || x.waves != y.waves) return false;
             }
 
             return true;

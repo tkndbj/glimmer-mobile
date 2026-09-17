@@ -339,6 +339,7 @@ function buildProgressionConfig() {
       daily: readDaily(progression),
       ads: readAds(progression),
       golden: readGolden(progression),
+      endless: readEndless(progression),
       // Read before the calendar and before the streak, because both name chest tiers and
       // the seeder is the one place that can prove a named tier actually exists — a
       // season's ladder lives in the manifest, the streak's in progression.json, the tiers
@@ -704,6 +705,59 @@ function readEvents(manifest, tierIds) {
  * add, and a seeder that quietly published a band under 100 would pay every player holding
  * that glade less than the published reward rule promises.
  */
+/**
+ * What the Infinite lane pays per wave cleared, and the ceiling on it.
+ *
+ * **The only block here that decides XP outside the star ledger**, and the only one whose
+ * absence is silently wrong rather than merely inert: a keeper level this server derives below
+ * the one the device holds is a published card that *drops* whatever that level gated
+ * (invariant 19a), with nothing said anywhere. So this is published whenever the content file
+ * carries it, and the function refuses rather than clamps — a bad number here reaches every
+ * player's keeper level at once and XP is floored, so it cannot be taken back.
+ *
+ * Mirrors `EndlessRewardTable.Resolve` on the client and `DEFAULT_ENDLESS` on the server;
+ * all three carry the same two constants, and a drift between them is what
+ * `endless.mjs` in `functions/test` exists to catch.
+ */
+function readEndless(progression) {
+  const DEFAULT_XP_PER_WAVE = 15;
+  const DEFAULT_MAX_WAVES = 99990;
+  const HARD_MAX_WAVES = 1000000;
+  const MAX_XP_PER_WAVE = 1000;
+
+  const endless = progression.endless;
+
+  // Absent is legitimate and means the built-in figures, which is what a client with no block
+  // also does — see `EndlessRewardTable.Resolve` for why this one agrees rather than failing
+  // closed. Published explicitly so the two halves cannot drift apart on a stale deploy.
+  if (!endless) return { xpPerWave: DEFAULT_XP_PER_WAVE, maxWaves: DEFAULT_MAX_WAVES };
+
+  const read = (raw, fallback, max, name) => {
+    if (raw === undefined || raw === null || Math.floor(Number(raw)) < 0) return fallback;
+
+    const value = Math.floor(Number(raw));
+    if (!Number.isFinite(value)) {
+      throw new Error(`endless ${name} is ${raw}, which is not a number`);
+    }
+    if (value > max) {
+      throw new Error(
+        `endless ${name} is ${value}, above the supported maximum ${max}; XP is floored ` +
+        "(`ProgressionStore`) so a keeper level paid by mistake can never be taken back"
+      );
+    }
+    return value;
+  };
+
+  const xpPerWave = read(endless.xpPerWave, DEFAULT_XP_PER_WAVE, MAX_XP_PER_WAVE, "xpPerWave");
+  const maxWaves = read(endless.maxWaves, DEFAULT_MAX_WAVES, HARD_MAX_WAVES, "maxWaves");
+
+  // A nought in either field means the lane pays nothing, published as authored and not
+  // repaired: `EndlessRewardTable.Resolve` says the same, and the two halves disagreeing about a
+  // keeper level is worse than any guess at what a typo meant (invariant 19a). An *unwritten*
+  // field is -1 and inherits above, so a rate with no bound at all cannot be expressed.
+  return { xpPerWave, maxWaves };
+}
+
 function readGolden(progression) {
   const golden = progression.golden;
 
@@ -1311,6 +1365,17 @@ for (const event of config.events ?? []) {
   }
 }
 if (process.argv.includes("--check")) {
+  // The Infinite lane's figures, printed here as well as by both content gates. It is the only
+  // block this seeder publishes that decides *XP*, and the server deriving a keeper level the
+  // device does not is a published card that silently drops what that level gated (19a) - so
+  // "what did I just agree to send" is worth one line in the one place a deploy reads.
+  const lane = config.endless;
+  console.log(
+    lane.xpPerWave > 0 && lane.maxWaves > 0
+      ? `  endless: ${lane.xpPerWave} xp a wave, capped at ${lane.maxWaves.toLocaleString("en-GB")} ` +
+        `lifetime wave(s) (${(lane.xpPerWave * lane.maxWaves).toLocaleString("en-GB")} xp)`
+      : "  endless: withdrawn - the Infinite lane pays no XP"
+  );
   console.log(`Validated ${levelCount} levels, ${Object.keys(products ?? {}).length} store products and season pass prices. No remote writes.`);
   process.exit(0);
 }
@@ -1343,6 +1408,8 @@ console.log(
   `${config.tasks.daily.length} daily / ${config.tasks.weekly.length} weekly task(s) over ` +
   `${config.tasks.tiers.length} chest tier(s), ` +
   `${config.ads ? Object.keys(config.ads.placements).length : 0} ad placement(s), ` +
+  `endless ${config.endless.xpPerWave} xp/wave capped at ${config.endless.maxWaves} wave(s) ` +
+  `(${config.endless.xpPerWave * config.endless.maxWaves} xp), ` +
   `seeds ${config.seeds.credits} credits / ${config.seeds.gems} gems`
 );
 

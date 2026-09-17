@@ -306,8 +306,13 @@ namespace GlimmerGrove
         /// <summary>
         /// Called once with the graded count, before anything is recorded.
         ///
-        /// The hook a mode uses to keep a reading of its own — an endless lane's high-water wave,
-        /// which is a floor rather than a grade and so has nowhere else to live.
+        /// The hook a mode uses to keep a reading of its own — an endless lane's high-water wave
+        /// and its lifetime tally, both floors rather than grades, with nowhere else to live.
+        ///
+        /// <b>A mode may pay XP from in here</b>, and it does not have to say so: <see cref="Solve"/>
+        /// reads <c>PlayerProgression.EndlessXp</c> either side of this call and hands the
+        /// difference to the ledger. That keeps this class mode-blind — it never learns what was
+        /// banked, only that the derived total moved.
         /// </summary>
         protected virtual void Finished(int count) { }
 
@@ -373,7 +378,15 @@ namespace GlimmerGrove
             int moves = Math.Max(1, Scored(run));
             int stars = Level.Tuning.StarsFor(moves);
 
+            // Measured either side of the fold, for WinRecord.ChapterOpened's reason one line of
+            // reasoning over: by the time a panel is built the transition is over, and a derived
+            // total read afterwards cannot say how much of it this run put there. `Finished` is
+            // where a mode banks anything it keeps, so the window is exactly that one call.
+            long bonusBefore = PlayerProgression.EndlessXp;
+
             Finished(moves);
+
+            long bonusXp = PlayerProgression.EndlessXp - bonusBefore;
 
             // No route, deliberately, and it is the weave's argument: the victory panel's route
             // bar compares a run against the board's own carved solution, and these boards have
@@ -382,7 +395,8 @@ namespace GlimmerGrove
             var done = RunLedger.Win(Level, stars, moves,
                                      Time.unscaledTime - _startedAt, 0,
                                      route: 0,
-                                     lit: run.Goals, wanted: run.Goals);
+                                     lit: run.Goals, wanted: run.Goals,
+                                     bonusXp: bonusXp);
 
             // No fanfare here: the board already played one. ProtoView.Triumph sounds `win` and
             // then waits a beat before handing control back, so a copy at this point is the same

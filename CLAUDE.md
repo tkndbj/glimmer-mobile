@@ -127,6 +127,17 @@ Grove, and the bundle id can never move.
 9b. **`progression.json` versions independently of the catalog.**
 9c. **So does the chest generator** — a pure function of (account, day, index), FNV-1a then xorshift32, all
    32-bit so JavaScript reproduces it exactly. Constants, shifts, stream numbers and modulo are contract.
+9d. **The Infinite lane is the one XP that is not a star, and it is bounded rather than
+   recomputed.** A lifetime wave tally per level (`endlessBest[].waves`, save v30) pays
+   `xpPerWave` up to `maxWaves`, both content. The server cannot recompute a wave, so 13's fourth
+   clause is all there is: the ceiling keeps a forged tally inside an honest range, and it buys no
+   **currency** — credits still derive from the star ledger alone, so a forged tally moves a keeper
+   level and never a balance. **The published board still reads the *best*, and the best still pays
+   nothing** (19l). `ProgressionLedger` is untouched; this is a separate addend in
+   `PlayerProgression`, mirrored by `endlessXp` in `grove.ts`, and the two are held together by
+   `endlessCases` in `grove-vectors.json` — **a disagreement is silent**, because 19a *drops* what
+   the lower level gated. Absent config falls back to the built-in figures on **both** sides for
+   that reason, rather than failing closed.
 10. **The client never raises `grantedBaseline`.** Currency given rather than earned is server-owned,
    enforced by Firestore rules. Receipt validation is idempotent on the store transaction id.
 10a. **An award reaches the player as a claim, not as a balance**, with an id **derived from what earned
@@ -762,6 +773,10 @@ guess — verify offline.
 - **Map seats:** `python Tools/make_map_seats.py --check` proves the seats are still what the paintings say;
   `--contact` draws every map with its chain on it, which is the gate that matters. `content.py` proves the
   seats clear each other. Re-run `--write` and then every chapter generator after any map painting change.
+- **The turret preview panel:** `python Tools/render_ward_preview.py --ward starfall` draws
+  `WardPreviewOverlay`'s firing stage at its own cell, with the barrel marked, at four beats of the
+  flight. **Written because that screen had no mirror at all** and is the one a player decides on a
+  turret from — every question asked of it cost a device build until it existed.
 - **Legendary effect reels:** `python Tools/make_legend_fx.py --check` proves the thirty drawn reels are
   what the tool draws, `--contact` is the sheet to look at and `--report` prints what `fxreels.py` will
   measure. It needs no Editor, no GPU and no licensed pack.
@@ -799,9 +814,19 @@ guess — verify offline.
   `make_notification_icons.py` and `make_chest_art.py` each have `--check` (reproducibility) and `--contact`
   (whether it reads). **`--check` proves reproducibility and says nothing about quality.** Every art tool
   passes with the licensed pack absent, because the PNGs are committed.
+- **That a deploy really carries a fix:** `node firebase/e2e/endless-xp.mjs` publishes the same
+  account twice, with and without a lifetime tally, and compares the two keeper levels against the
+  **published** config. Differential on purpose — a `publishGrove` that has never heard of
+  `endlessXp` answers 200 and writes a valid card, so an absolute check cannot tell the fix from a
+  curve with no band between the figures.
 - **Seeders:** `node firebase/seed/seed-release.mjs --check` (the update wall's only gate — nothing about a
   forced update is content); `npm --prefix firebase/functions run seed -- --check`;
   `Tools/make_name_blocklist.py --check`; `npm --prefix firebase/functions test`.
+- **Endless XP vectors:** `python Tools/make_endless_vectors.py --check` proves the committed
+  `endlessCases` block is what the tool draws. The rule itself runs **offline on both sides** —
+  `EndlessRewardTests` through `TestJson` (no `Application.dataPath`, no `JsonUtility`, so
+  `tests.py` actually runs it — 29e) and `firebase/functions/test/grove.mjs`. It caught three real
+  divergences on its first runs; do not let it become Editor-only.
 - **Chest generator copies:** the shared vectors are written by `Tools/make_task_vectors.py`,
   `Tools/make_mark_vectors.py` and `Tools/make_streak_vectors.py`, each splicing its block from its own
   marker to the end of the file — **so they must run in that order**.
@@ -957,7 +982,7 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **Content pipeline** — levels as data, stable `LevelId`s, manifest-built `CatalogIndex`, lazy chapter
   bodies, `Content ▸ Sync Manifest`, build gate.
 - **Save** — versioned atomic file with checksum, backup rotation, corrupt-file recovery, tested
-  migrations, monotonic merge. **Save schema v28.** Content schema: manifest and chapter bodies **v2**,
+  migrations, monotonic merge. **Save schema v30.** Content schema: manifest and chapter bodies **v2**,
   grove body **v3**.
 - **Cloud** — Firebase (Firestore + Auth + Functions), anonymous by default, Apple/Google linking,
   per-account local archive for switching, debounce/backoff.
@@ -1052,6 +1077,9 @@ after any change**. Only the shapes that are not obvious from the files are wort
   heart containers (18d).
 - **Ads** — four placements, all opt-in, no interstitials. **Bonus wheel** — eight equal slices, mean
   218.75% of the authored amount.
+- **Endless XP** — 15 XP a wave, capped at 99,990 lifetime waves (1,499,850 XP, keeper 146). Ten
+  waves is one three-starred glade. A watch is bought at the gate, so **hearts pace this, not the
+  ceiling** — the ceiling only ever bounds a forged save. All three gates print the figures.
 - **Out of reach on today's content** (which pays for about keeper 13, and about keeper 9 for the grove):
   the turret shelf's tiers two and three, and all three paid home rungs. Deliberate, and the owner's call.
 
@@ -1063,8 +1091,8 @@ functions**: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`, `adRe
 `claimName`, `reportKeeper`, `deleteAccount`, and the three referral callables `getReferral`,
 `redeemReferral`, `claimReferral` (deployed 2026-09-17). **`firebase functions:list` is the authority** — a fifteenth,
 `eventPass`, was deployed and later deleted while never appearing in any list here. `firebase/README.md` is
-the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-17) and
-`firebase/e2e/delete-account.mjs` **14/14**. Client half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
+the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-17),
+`firebase/e2e/delete-account.mjs` **14/14** and `firebase/e2e/endless-xp.mjs` **10/10**. Client half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 13.15.0 as vendored UPM tarballs under `GooglePackages/` (gitignored — run `pwsh GooglePackages/fetch.ps1`
 on a fresh clone).
 
@@ -1074,6 +1102,21 @@ on a fresh clone).
 deployed by name with invoker bindings, re-seeded, smoke test 166/166 and delete-account 14/14 live,
 `ReferralTests` green in the Editor. What has never run: the share sheet on a device, on either platform
 — `GlimmerShare.mm` has never been compiled by Xcode — and a real invitee typing a real code.
+
+**Endless XP went live on 2026-09-17, and no real run has banked a wave.** The lane pays 15 XP a
+wave (9d, save v30). **The server half is done**: `config/progression` re-seeded to v6 carrying the
+`endless` block (read back and diffed against the snapshot — no field lost, only `version` and
+`endless` moved), `publishGrove` deployed by name, artifact proved by
+`firebase/e2e/endless-xp.mjs` **10/10 live**, then `smoke-test.mjs` 166/166 and
+`delete-account.mjs` 14/14, with `functions:list` still naming all seventeen. No
+`firestore.rules` release — the field rides inside `endlessBest`.
+
+**What is left is play.** The one link no gate offline or live can reach is
+`ProtoScreens.Finished` calling `EndlessLedger.Bank` with the board's own `WavesCleared` — the
+live probe writes the save row directly, so it proves the *server* reads a tally and never that
+the *game* writes one. Play one watch and check the victory panel's XP against the waves seen off.
+Nothing has ever tested 15 XP a wave as a *feeling*, either; the pace was reasoned against a table
+and the owner approved it on figures alone.
 
 **Money paths that have never executed.** A real receipt reaching `redeemPurchase` and a real impression
 reaching `adReward`. Both are fully built and deployed and **neither has ever run once**, which reads as

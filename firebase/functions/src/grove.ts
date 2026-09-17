@@ -47,7 +47,7 @@ import { getFirestore, FieldValue, FieldPath } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 
 import {
-  ProgressionConfig, RewardRule, MAX_STARS, MAX_LEVEL_ID_LENGTH, earnedCredits,
+  ProgressionConfig, RewardRule, EndlessConfig, MAX_STARS, MAX_LEVEL_ID_LENGTH, earnedCredits,
 } from "./progression";
 import { PreparedBlocklist, judgeName } from "./profanity";
 import { builtInBlocklist } from "./blocklist";
@@ -410,6 +410,96 @@ export function starsFor(score: number, ladder: number[]): number {
  * and the card disagree for the one account that reaches the ceiling.
  */
 export const MAX_WAVE = 9999;
+
+/**
+ * The most lifetime waves one row may hold, mirroring `EndlessLedger.MaxLifetimeWaves`.
+ *
+ * A *structural* bound, not the one a player meets — that is `config.endless.maxWaves`, which
+ * is content and is applied to the total below. The two must never be the same number: this
+ * one is applied per row so a single absurd value cannot dominate the sum, and the content one
+ * is applied afterwards so lowering it stops paying without ever implying a stored count fell.
+ */
+export const HARD_MAX_LIFETIME_WAVES = 1000000;
+
+/** What ships in the client when no `endless` block has been published. `EndlessLimits`. */
+export const DEFAULT_ENDLESS: EndlessConfig = { xpPerWave: 15, maxWaves: 99990 };
+
+/**
+ * Lifetime waves this save has seen off on the Infinite lane.
+ *
+ * Read exactly as `EndlessLedger.LifetimeWavesIn` reads it, and that is a requirement rather
+ * than a nicety: this figure goes into the keeper level a published card carries, and a keeper
+ * level the two halves disagree about is a card that silently omits whatever that level gated
+ * (invariant 19a). The shared vectors hold the pair.
+ *
+ * **`wave` floors `waves`**, which is the whole migration: a save written before the tally
+ * existed has a best and no count, and reading it as nought would tell somebody who had reached
+ * wave forty that they had never played. The larger of the two is honest both ways, idempotent
+ * and monotonic, so nothing had to be migrated and no sentinel was needed.
+ */
+export function endlessWaves(save: Record<string, unknown>): number {
+  const rows = save.endlessBest;
+  if (!Array.isArray(rows)) return 0;
+
+  let total = 0;
+
+  // The rules cap the array at 64 (`EndlessLedger.MaxRows`); walking no further is belt and
+  // braces against a document written before that cap existed.
+  for (const raw of rows.slice(0, 64)) {
+    const row = raw as { level?: unknown; wave?: unknown; waves?: unknown } | null;
+    if (!row || typeof row !== "object") continue;
+
+    // A row naming nothing is not a run. The length cap is the level ledger's, for its
+    // reason: an id this long cannot have come from a catalog we shipped.
+    const level = typeof row.level === "string" ? row.level : "";
+    if (level.length === 0 || level.length > MAX_LEVEL_ID_LENGTH) continue;
+
+    // **The two fields carry different bounds, and they have to.** A best is the published
+    // figure and has always been capped at `MAX_WAVE`; a tally is a sum of bests and is capped
+    // an order of magnitude higher. `EndlessLedger.Row`'s constructor applies exactly this pair,
+    // and a forged `wave` of fifty thousand has to come back as 9,999 on both sides or the two
+    // keeper levels differ for precisely the save that was tampered with.
+    const best = clampCount(row.wave, MAX_WAVE);
+    const tally = clampCount(row.waves, HARD_MAX_LIFETIME_WAVES);
+
+    total += Math.max(best, tally);
+  }
+
+  return total;
+}
+
+/** One row's count, narrowed and bounded. Anything unreadable is nought, never NaN. */
+function clampCount(raw: unknown, ceiling: number): number {
+  const value = Math.floor(Number(raw ?? 0));
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  return Math.min(value, ceiling);
+}
+
+/**
+ * XP the Infinite lane has paid this save.
+ *
+ * **The one source of XP here that is not the star ledger**, and the only reason it is
+ * defensible is invariant 13's fourth clause: the figure it derives from cannot be recomputed
+ * from anything this server holds, so it is *bounded* instead — tightly enough that forging it
+ * buys a keeper level inside the range an honest player is drawn in — and it buys no currency
+ * at all, because `earnedCredits` still walks the star ledger alone. **The board that is
+ * published still reads `bestWave`, and that still pays nothing** (invariant 19l).
+ *
+ * Separate from `derivedXp` rather than folded into it, for the client's reason: that function
+ * is the rule the shared reward vectors pin against `ProgressionLedger`, and it has to stay a
+ * pure function of the star records.
+ */
+export function endlessXp(save: Record<string, unknown>, config: ProgressionConfig): number {
+  const rule = config.endless ?? DEFAULT_ENDLESS;
+
+  const rate = Math.floor(Number(rule.xpPerWave ?? 0));
+  const ceiling = Math.floor(Number(rule.maxWaves ?? 0));
+  if (!Number.isFinite(rate) || rate <= 0) return 0;
+  if (!Number.isFinite(ceiling) || ceiling <= 0) return 0;
+
+  const waves = Math.min(endlessWaves(save), ceiling);
+  return waves * rate;
+}
 
 export function bestWave(save: Record<string, unknown>): number {
   const rows = save.endlessBest;

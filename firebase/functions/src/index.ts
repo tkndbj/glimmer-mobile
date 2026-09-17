@@ -49,7 +49,7 @@ import {
 import { rebuildStats } from "./stats";
 import {
   DEFAULT_KEEPER_CURVE, GROVE_PATHS, GroveCardDoc, KeeperCurve,
-  assertUsableGroveConfig, buildCard, derivedXp, groveWorth, keeperLevel,
+  assertUsableGroveConfig, buildCard, derivedXp, endlessXp, groveWorth, keeperLevel,
   optedIn, heldGrove, isGroveDenied, rebuildGroveRanks, saveRevision, withdrawCard,
 } from "./grove";
 import {
@@ -1394,7 +1394,17 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
   const config = await loadProgressionConfig();
   const curve = (config as { keeper?: KeeperCurve }).keeper ?? DEFAULT_KEEPER_CURVE;
 
-  const level = keeperLevel(derivedXp(save.levels, config), curve);
+  // The star ledger plus the Infinite lane, which is the one source of XP this server cannot
+  // recompute and so can only bound (`endlessXp`, and invariant 13's fourth clause). The two are
+  // added here rather than inside `derivedXp` because that function is the rule the shared reward
+  // vectors pin against the client's `ProgressionLedger`, and it has to stay a pure function of
+  // the star records.
+  //
+  // **Both halves have to be present or the card is quietly wrong.** A keeper level derived below
+  // the one the device holds does not clamp what it gated, it drops it (19a) — so a deploy that
+  // brings this code without a re-seed of `config/progression` publishes every Infinite player
+  // short. `endlessXp` falls back to the client's own constants for exactly that window.
+  const level = keeperLevel(derivedXp(save.levels, config) + endlessXp(save, config), curve);
 
   // The ceiling on the bought half: everything this account has ever legitimately had to
   // spend. Derived earnings plus whatever the server itself granted — never a number out of

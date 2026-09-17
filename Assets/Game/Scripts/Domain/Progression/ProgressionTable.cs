@@ -90,7 +90,8 @@ namespace GlimmerGrove.Progression
                          StoreCatalog store,
                          AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
                          ContinueTable carryOn, UtilityCatalog utilities,
-                         WardCatalog wards, TaskTable tasks, ReferralTable referral)
+                         WardCatalog wards, TaskTable tasks, ReferralTable referral,
+                         EndlessRewardTable endless)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -109,6 +110,7 @@ namespace GlimmerGrove.Progression
             Wards = wards ?? WardCatalog.Default;
             Tasks = tasks ?? TaskTable.Default;
             Referral = referral ?? ReferralTable.Default;
+            Endless = endless ?? EndlessRewardTable.Default;
         }
 
         /// <summary>
@@ -130,6 +132,24 @@ namespace GlimmerGrove.Progression
 
         /// <summary>Refer-a-friend: the milestone, the referrer's ladder and the invitee's chest.</summary>
         public ReferralTable Referral { get; }
+
+        /// <summary>
+        /// What the Infinite lane pays per wave cleared, and the ceiling on it.
+        ///
+        /// <para>
+        /// <b>Published with the curve because it <em>is</em> the curve seen from a second
+        /// source.</b> Every other block here decides what a glade pays; this is the one thing
+        /// in the game that adds XP without a star behind it, so a client holding a retuned rate
+        /// against an untuned curve is a keeper ladder climbing at a speed nobody wrote down —
+        /// the golden bands' argument, asked of the level rather than of the credits.
+        /// </para>
+        /// <para>
+        /// It also rides here for <see cref="Store"/>'s second reason: the server reads the same
+        /// block, because a published card's keeper level is recomputed there. See
+        /// <see cref="EndlessRewardTable"/>.
+        /// </para>
+        /// </summary>
+        public EndlessRewardTable Endless { get; }
 
         /// <summary>
         /// The utilities a player may hold, published with the curve for the chest table's
@@ -278,7 +298,8 @@ namespace GlimmerGrove.Progression
             utilities: UtilityCatalog.Default,
             wards: WardCatalog.Default,
             tasks: TaskTable.Default,
-            referral: ReferralTable.Default);
+            referral: ReferralTable.Default,
+            endless: EndlessRewardTable.Default);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -519,6 +540,14 @@ namespace GlimmerGrove.Progression
             // ladder and never the screen, and an authored-empty one withdraws the feature.
             var referral = ReferralTable.Resolve(dto.referral, tasks.Tier, problems);
 
+            // And the Infinite lane's rate. The same bargain as every optional block above it —
+            // an unreadable one costs the live tuning and never the feature — with one extra
+            // reason to be careful about the fallback: this is the only block whose absence makes
+            // the *server* compute a different keeper level than the device does, which shows up
+            // as a published card quietly missing whatever that level gated rather than as an
+            // error. See `EndlessRewardTable.Resolve`.
+            var endless = EndlessRewardTable.Resolve(dto.endless, problems);
+
             // And the slate that decides what the phone says while nobody is playing. It sets
             // its own static rather than riding this table's constructor, which is
             // `WardStars.Resolve` two lines up in spirit and for its reason: nothing that asks
@@ -529,7 +558,8 @@ namespace GlimmerGrove.Progression
 
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
-                          store, prompts, chapterGate, carryOn, utilities, wards, tasks, referral);
+                          store, prompts, chapterGate, carryOn, utilities, wards, tasks, referral,
+                          endless);
             return true;
         }
 
@@ -543,7 +573,7 @@ namespace GlimmerGrove.Progression
                                       AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
                                       ContinueTable carryOn, UtilityCatalog utilities,
                                       WardCatalog wards, TaskTable tasks,
-                                      ReferralTable referral)
+                                      ReferralTable referral, EndlessRewardTable endless)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -562,7 +592,8 @@ namespace GlimmerGrove.Progression
 
             return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
                                         golden, hearts, hints, store, prompts,
-                                        chapterGate, carryOn, utilities, wards, tasks, referral);
+                                        chapterGate, carryOn, utilities, wards, tasks, referral,
+                                        endless);
         }
     }
 }

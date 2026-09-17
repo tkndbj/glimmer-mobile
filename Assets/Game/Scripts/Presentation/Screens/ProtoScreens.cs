@@ -361,17 +361,42 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Keeps how far this run got.
+        /// Keeps how far this run got, and adds what it saw off to the lifetime tally.
         ///
-        /// <b>A floor rather than a grade</b> (invariant 14a): the stars are already recorded by
-        /// the ordinary run ledger, and this is the number a board reads — one monotonic integer
-        /// per level, joined by <c>max</c>, paying nothing.
+        /// <para>
+        /// <b>Two floors, and only one of them pays</b> (invariant 14a). The best is the number
+        /// the public board is ordered on and it pays nothing, which is what keeps a figure the
+        /// server cannot recompute safe to publish (invariant 19l). The tally pays XP, at a rate
+        /// and under a ceiling that are both content — see <c>EndlessRewardTable</c>.
+        /// </para>
+        /// <para>
+        /// <b>The tally is banked unconditionally and the best is not</b>, which is the whole
+        /// reason they are two calls: a run that fell short of the best still happened, and
+        /// folding the tally into <c>Record</c>'s early return is how every run after a good one
+        /// would have paid nothing.
+        /// </para>
+        /// <para>
+        /// <b>Banked from the board rather than from <paramref name="count"/>.</b> The count
+        /// arrives floored at one by <c>ProtoScreen.Solve</c>, because a graded count of nought
+        /// is not a grade — so paying on it would pay a wave for a run that saw off none, which
+        /// is the cheapest thing in this game to repeat. <c>WavesCleared</c> is the truth, and it
+        /// is what <see cref="Scored"/> handed over in the first place.
+        /// </para>
+        /// <para>
+        /// Reached once per run, from the one place a run ends: an endless watch finishes when
+        /// the ward line falls (<c>SiegeBoard.IsFinished</c>), a continue puts the line back up
+        /// and the same run carries on, and <c>ProtoScreen</c>'s own latch makes the ending
+        /// single.
+        /// </para>
         /// </summary>
         protected override void Finished(int count)
         {
             if (!Endless || Level == null) return;
 
             EndlessLedger.Record(Level.Id, count);
+
+            var board = _siege != null ? _siege.Siege : null;
+            if (board != null) EndlessLedger.Bank(Level.Id, board.WavesCleared);
         }
 
         /// <summary>

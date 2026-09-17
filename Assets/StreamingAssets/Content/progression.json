@@ -23,6 +23,10 @@
     "creditsFirstClear": 80,
     "creditsPerStar": 40
   },
+  "endless": {
+    "xpPerWave": 15,
+    "maxWaves": 99990
+  },
   "chapterRewards": [
     {
       "chapterId": "c01_shallows",

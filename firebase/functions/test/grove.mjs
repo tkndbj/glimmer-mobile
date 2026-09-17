@@ -37,6 +37,7 @@ const {
   sanitiseName, isNameAllowed, publicName, boardName, fallbackName,
   BOARD_IDS, deciles, optedIn, saveRevision,
   buildCard, heldCompanions, publishedLine, WARD_STARS_LEAST, WARD_STARS_MOST,
+  endlessWaves, endlessXp, DEFAULT_ENDLESS, HARD_MAX_LIFETIME_WAVES,
 } = await import(pathToFileURL(compiled).href);
 
 const namesModule = join(REPO, "firebase", "functions", "lib", "names.js");
@@ -262,6 +263,57 @@ console.log("\nendless best");
   // that cap existed must not be able to cost this an unbounded walk.
   const long = Array.from({ length: 200 }, (_, i) => ({ level: `a${i}`, wave: i }));
   equal("no more rows are read than the rules allow", bestWave({ endlessBest: long }), 63);
+}
+
+// ------------------------------------------------------------------ endless XP
+//
+// The one rule here that turns a save into XP with no star behind it (invariant 9's exception).
+// It is defensible only because it is bounded, so the ceilings are what these cases are really
+// about — and because it buys no currency: `earnedCredits` still walks the star ledger alone.
+//
+// This is the half that decides a *published* keeper level, and a disagreement with the client
+// is silent: `buildCard` drops what the lower level gated rather than clamping it (19a). So the
+// cases come out of the shared file, and Assets/Game/Tests/EndlessRewardTests.cs runs the same
+// ones against `EndlessLedger.LifetimeWavesIn` and `EndlessRewardTable.XpFor`.
+console.log("\nendless xp");
+{
+  equal("the built-in rate is the one the client ships", DEFAULT_ENDLESS.xpPerWave,
+        vectors.endlessDefaults.xpPerWave);
+  equal("the built-in ceiling is the one the client ships", DEFAULT_ENDLESS.maxWaves,
+        vectors.endlessDefaults.maxWaves);
+  equal("the structural per-row ceiling is the one the client ships",
+        HARD_MAX_LIFETIME_WAVES, 1000000);
+
+  for (const c of vectors.endlessCases ?? []) {
+    const save = { endlessBest: c.rows };
+
+    equal(`${c.name} — waves`, endlessWaves(save), c.waves);
+    equal(`${c.name} — xp`, endlessXp(save, { endless: c.config }), c.xp);
+  }
+
+  // Not in the vector file because it is about *absence*, which a case cannot carry: a config
+  // with no `endless` block at all has to pay the built-in figures rather than nothing, or a
+  // server one deploy behind publishes every Infinite player short of where they stand.
+  const played = { endlessBest: [{ level: "s02_endlesswatch", waves: 10 }] };
+  equal("an unseeded config still pays the built-in rate",
+        endlessXp(played, {}), 10 * DEFAULT_ENDLESS.xpPerWave);
+
+  // And the two shapes that are not a block. Both fall back rather than throwing, because this
+  // runs inside a publish that must not fail over tuning.
+  equal("a null endless block falls back", endlessXp(played, { endless: null }),
+        10 * DEFAULT_ENDLESS.xpPerWave);
+  equal("an unreadable rate pays nothing rather than NaN",
+        endlessXp(played, { endless: { xpPerWave: "lots", maxWaves: 100 } }), 0);
+  equal("an unreadable ceiling pays nothing rather than NaN",
+        endlessXp(played, { endless: { xpPerWave: 7, maxWaves: "lots" } }), 0);
+
+  // A save that has never touched the lane must cost nothing and pay nothing, because every
+  // account that has never opened Infinite runs this on every publish.
+  equal("a save with no rows pays nothing", endlessXp({}, { endless: vectors.endlessConfig }), 0);
+  equal("a non-array pays nothing",
+        endlessXp({ endlessBest: 37 }, { endless: vectors.endlessConfig }), 0);
+  equal("a null row is skipped",
+        endlessWaves({ endlessBest: [null, { level: "a", waves: 5 }] }), 5);
 }
 
 // ------------------------------------------------------------------------- names

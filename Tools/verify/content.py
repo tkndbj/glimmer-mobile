@@ -4757,6 +4757,88 @@ def main():
                   f"({entry_pack[0]} for {entry_pack[1]}) - a premium charged at the moment "
                   "a player cannot compare")
 
+    # ------------------------------------------------------------------ the Infinite lane
+    #
+    # The one thing in this game that pays XP with no star behind it (invariant 9's single
+    # exception), so the figures are printed rather than left to be worked out: a rate whose
+    # ceiling nobody has read against the curve is a keeper ladder climbing at a speed nobody
+    # wrote down. The *bounds* are checked here too, because the seeder publishes this block to
+    # the server and XP is floored - a keeper level paid by mistake can never be taken back.
+    #
+    # Mirrors `EndlessLimits` in C# and `readEndless` in seed-config.mjs. All three carry the
+    # same constants; `firebase/shared/grove-vectors.json` holds the arithmetic.
+    ENDLESS_DEFAULT_RATE = 15
+    ENDLESS_DEFAULT_CEILING = 99990
+    ENDLESS_MAX_RATE = 1000
+    ENDLESS_HARD_CEILING = 1000000
+
+    endless_block = progression.get("endless") or {}
+
+    def endless_number(key, fallback, ceiling):
+        raw = endless_block.get(key, -1)
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            errors.append(f"progression endless {key} is {raw!r}, which is not a number")
+            return fallback
+        if value < 0:
+            return fallback                      # unwritten inherits, as the reader does
+        if value > ceiling:
+            errors.append(
+                f"progression endless {key} is {value}, above the supported maximum {ceiling}; "
+                "XP is floored, so a keeper level paid by mistake can never be taken back")
+            return ceiling
+        return value
+
+    endless_rate = endless_number("xpPerWave", ENDLESS_DEFAULT_RATE, ENDLESS_MAX_RATE)
+    endless_ceiling = endless_number("maxWaves", ENDLESS_DEFAULT_CEILING, ENDLESS_HARD_CEILING)
+
+    print()
+    if endless_rate <= 0 or endless_ceiling <= 0:
+        print("endless xp: withdrawn - the Infinite lane pays no XP; the board, the best wave "
+              "and the map badge are untouched")
+    else:
+        endless_max_xp = endless_rate * endless_ceiling
+
+        # Where the ceiling lands on the curve, which is the figure that decides whether the
+        # bound is doing anything at all.
+        band = [int(x) for x in (progression.get("xpToNext") or [])]
+        tail = int(progression.get("tailXpToNext") or 0)
+        step = int(progression.get("tailXpIncrement") or 0)
+        cap = int(progression.get("maxLevel") or 0)
+
+        def keeper_level_for(xp):
+            level, spent = 1, 0
+            while level < cap:
+                cost = (band[level - 1] if level - 1 < len(band)
+                        else tail + step * (level - 1 - len(band)))
+                if spent + cost > xp:
+                    break
+                spent += cost
+                level += 1
+            return level
+
+        print(f"endless xp: {endless_rate} xp a wave, capped at {endless_ceiling:,} lifetime "
+              f"wave(s) ({endless_max_xp:,} xp)")
+
+        # What one glade pays at three stars, so the rate has something to be read against.
+        base = progression.get("rewards") or {}
+        glade_xp = int(base.get("xpFirstClear") or 0) + 3 * int(base.get("xpPerStar") or 0)
+        if glade_xp > 0:
+            print(f"       {glade_xp / endless_rate:.1f} wave(s) is worth one three-starred "
+                  f"glade ({glade_xp} xp)")
+
+        if cap > 0 and (band or tail > 0):
+            print(f"       the ceiling reaches keeper level "
+                  f"{keeper_level_for(endless_max_xp)}, against level {keeper_reach} from three "
+                  "stars on every shipped glade")
+
+        # The lane is bought at the gate (`HeartStake.IsPaidAtDoor`), so the heart table is what
+        # really paces this. Said rather than checked: how many waves a run sees off is a fact
+        # about play, and nothing offline can know it.
+        print("       a watch is bought at the gate, so hearts pace this and not the ceiling - "
+              "the ceiling is only ever a bound on a forged save")
+
     prompts = progression.get("prompts") or {}
     chapter_budget = prompts.get("chapterBudget", 2)
     purchase_budget = prompts.get("purchaseBudget", 3)

@@ -2370,5 +2370,1751 @@
     1000,
     5000,
     20000
+  ],
+  "_endlessComment": [
+    "What the Infinite lane pays, derived twice and pinned here.",
+    "",
+    "`endlessCases` is the only rule in this game that turns a save into XP without a star",
+    "behind it (invariant 9's one exception, see EndlessRewardTable). It runs in C# so the",
+    "game can draw a keeper level offline, and in functions/src/grove.ts so a published card",
+    "carries the same one — and when those two disagree nothing crashes and nothing is",
+    "refused: `buildCard` simply *drops* whatever the lower level gated (invariant 19a), in",
+    "silence, for the players who play the lane most.",
+    "",
+    "Each case is a set of save rows and a config. `waves` is what both sides must read off",
+    "the rows; `xp` is what both must pay for it. The cases that matter most are the two",
+    "ceilings — a best is capped at 9,999 because it is published, a tally an order of",
+    "magnitude higher because it is a sum of bests — and the row cap, where a divergence",
+    "would only ever show up on an account somebody had tampered with.",
+    "",
+    "`endlessDefaults` is what both sides use when no `endless` block has been published.",
+    "They agree on purpose rather than failing closed: a server that is a deploy behind would",
+    "otherwise publish every Infinite player short, with nothing said anywhere.",
+    "",
+    "Written by Tools/make_endless_vectors.py — a third implementation, so a passing case",
+    "has been agreed by three copies that never read each other. Do not hand-edit."
+  ],
+  "endlessDefaults": {
+    "xpPerWave": 15,
+    "maxWaves": 99990
+  },
+  "endlessConfig": {
+    "xpPerWave": 7,
+    "maxWaves": 100
+  },
+  "endlessCases": [
+    {
+      "name": "a save with no endless rows at all",
+      "rows": [],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 0,
+      "xp": 0
+    },
+    {
+      "name": "a row naming no level is not a run",
+      "rows": [
+        {
+          "level": "",
+          "wave": 0,
+          "waves": 900
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 0,
+      "xp": 0
+    },
+    {
+      "name": "a level id no catalog could have shipped is refused",
+      "rows": [
+        {
+          "level": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "wave": 0,
+          "waves": 900
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 0,
+      "xp": 0
+    },
+    {
+      "name": "a row with both floors at nought is not a run",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 0,
+          "waves": 0
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 0,
+      "xp": 0
+    },
+    {
+      "name": "a tally on its own is what is paid",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 0,
+          "waves": 40
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 40,
+      "xp": 280
+    },
+    {
+      "name": "a best on its own floors the tally, which is the migration off a v29 file",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 40,
+          "waves": 0
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 40,
+      "xp": 280
+    },
+    {
+      "name": "a tally under the best is floored by it, because a lifetime is at least one run",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 40,
+          "waves": 9
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 40,
+      "xp": 280
+    },
+    {
+      "name": "a tally over the best is what counts",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 40,
+          "waves": 57
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 57,
+      "xp": 399
+    },
+    {
+      "name": "equal halves pay once rather than twice",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 12,
+          "waves": 12
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 12,
+      "xp": 84
+    },
+    {
+      "name": "every row is summed, where the published board takes a maximum",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 12,
+          "waves": 30
+        },
+        {
+          "level": "s07_second_lane",
+          "wave": 40,
+          "waves": 9
+        },
+        {
+          "level": "s08_third_lane",
+          "wave": 0,
+          "waves": 4
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 74,
+      "xp": 518
+    },
+    {
+      "name": "a negative tally is nought",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 0,
+          "waves": -9
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 0,
+      "xp": 0
+    },
+    {
+      "name": "a negative best is nought, and does not subtract",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": -9,
+          "waves": 20
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 20,
+      "xp": 140
+    },
+    {
+      "name": "a forged best is capped at the published ceiling, not at the tally's",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 1000000000,
+          "waves": 0
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 9999,
+      "xp": 700
+    },
+    {
+      "name": "a forged tally is capped at the structural ceiling",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 0,
+          "waves": 1000000000
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 1000000,
+      "xp": 700
+    },
+    {
+      "name": "the per-row caps apply before the sum, so one absurd row cannot dominate",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 1000000000,
+          "waves": 1000000000
+        },
+        {
+          "level": "s07_second_lane",
+          "wave": 0,
+          "waves": 5
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 1000005,
+      "xp": 700
+    },
+    {
+      "name": "a total under the ceiling pays in full",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 0,
+          "waves": 99
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 99,
+      "xp": 693
+    },
+    {
+      "name": "a total on the ceiling pays in full",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 0,
+          "waves": 100
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 100,
+      "xp": 700
+    },
+    {
+      "name": "a total over the ceiling pays the ceiling",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 0,
+          "waves": 101
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 101,
+      "xp": 700
+    },
+    {
+      "name": "the ceiling is on the total and not on the row",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 0,
+          "waves": 60
+        },
+        {
+          "level": "s07_second_lane",
+          "wave": 0,
+          "waves": 60
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 100
+      },
+      "waves": 120,
+      "xp": 700
+    },
+    {
+      "name": "a rate of nought withdraws the payment without withdrawing the lane",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 0,
+          "waves": 500
+        }
+      ],
+      "config": {
+        "xpPerWave": 0,
+        "maxWaves": 100
+      },
+      "waves": 500,
+      "xp": 0
+    },
+    {
+      "name": "a ceiling of nought pays nothing",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 0,
+          "waves": 500
+        }
+      ],
+      "config": {
+        "xpPerWave": 7,
+        "maxWaves": 0
+      },
+      "waves": 500,
+      "xp": 0
+    },
+    {
+      "name": "no more rows are read than the rules allow",
+      "rows": [
+        {
+          "level": "lane00",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane01",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane02",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane03",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane04",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane05",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane06",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane07",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane08",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane09",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane10",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane11",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane12",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane13",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane14",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane15",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane16",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane17",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane18",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane19",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane20",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane21",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane22",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane23",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane24",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane25",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane26",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane27",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane28",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane29",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane30",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane31",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane32",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane33",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane34",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane35",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane36",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane37",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane38",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane39",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane40",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane41",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane42",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane43",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane44",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane45",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane46",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane47",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane48",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane49",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane50",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane51",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane52",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane53",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane54",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane55",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane56",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane57",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane58",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane59",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane60",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane61",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane62",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane63",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane64",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane65",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane66",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane67",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane68",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane69",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane70",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane71",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane72",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane73",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane74",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane75",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane76",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane77",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane78",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane79",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane80",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane81",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane82",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane83",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane84",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane85",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane86",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane87",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane88",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane89",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane90",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane91",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane92",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane93",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane94",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane95",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane96",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane97",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane98",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane99",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane100",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane101",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane102",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane103",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane104",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane105",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane106",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane107",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane108",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane109",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane110",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane111",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane112",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane113",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane114",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane115",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane116",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane117",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane118",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane119",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane120",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane121",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane122",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane123",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane124",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane125",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane126",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane127",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane128",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane129",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane130",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane131",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane132",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane133",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane134",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane135",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane136",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane137",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane138",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane139",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane140",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane141",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane142",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane143",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane144",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane145",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane146",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane147",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane148",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane149",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane150",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane151",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane152",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane153",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane154",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane155",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane156",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane157",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane158",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane159",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane160",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane161",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane162",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane163",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane164",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane165",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane166",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane167",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane168",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane169",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane170",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane171",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane172",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane173",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane174",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane175",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane176",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane177",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane178",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane179",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane180",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane181",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane182",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane183",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane184",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane185",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane186",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane187",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane188",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane189",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane190",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane191",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane192",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane193",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane194",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane195",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane196",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane197",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane198",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane199",
+          "wave": 0,
+          "waves": 1
+        }
+      ],
+      "config": {
+        "xpPerWave": 1,
+        "maxWaves": 1000000
+      },
+      "waves": 64,
+      "xp": 64
+    },
+    {
+      "name": "a refused row still spends one of the sixty-four, because the cap bounds the walk",
+      "rows": [
+        {
+          "level": "",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane00",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane01",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane02",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane03",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane04",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane05",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane06",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane07",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane08",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane09",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane10",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane11",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane12",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane13",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane14",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane15",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane16",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane17",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane18",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane19",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane20",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane21",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane22",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane23",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane24",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane25",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane26",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane27",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane28",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane29",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane30",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane31",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane32",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane33",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane34",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane35",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane36",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane37",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane38",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane39",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane40",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane41",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane42",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane43",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane44",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane45",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane46",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane47",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane48",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane49",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane50",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane51",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane52",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane53",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane54",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane55",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane56",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane57",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane58",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane59",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane60",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane61",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane62",
+          "wave": 0,
+          "waves": 1
+        },
+        {
+          "level": "lane63",
+          "wave": 0,
+          "waves": 1
+        }
+      ],
+      "config": {
+        "xpPerWave": 1,
+        "maxWaves": 1000000
+      },
+      "waves": 63,
+      "xp": 63
+    },
+    {
+      "name": "the largest total the shipped ceiling allows does not overflow",
+      "rows": [
+        {
+          "level": "s02_endlesswatch",
+          "wave": 0,
+          "waves": 1000000
+        }
+      ],
+      "config": {
+        "xpPerWave": 15,
+        "maxWaves": 99990
+      },
+      "waves": 1000000,
+      "xp": 1499850
+    }
   ]
 }

@@ -20,6 +20,7 @@ namespace GlimmerGrove.Progression
     public static class PlayerProgression
     {
         static ProgressionTotals _totals = ProgressionTotals.Zero;
+        static long _endlessXp;
         static PlayerLevel _level;
         static bool _dirty = true;
         static bool _hooked;
@@ -38,6 +39,12 @@ namespace GlimmerGrove.Progression
             PlayerProgress.Reloaded += Invalidate;
             GameContent.CatalogChanged += Invalidate;
             ProgressionRules.Changed += Invalidate;
+
+            // The one source of XP that is not the star ledger (invariant 9's exception, see
+            // `EndlessRewardTable`). `Changed` rather than `Beaten`, because a run that did not
+            // beat the best still added waves — and because a merge that arrives from the cloud
+            // moves the tally without anybody playing, which the hub's badge has to repaint for.
+            EndlessLedger.Changed += Invalidate;
 
             // A season's chests are claims rather than derived credits, so they already
             // invalidate through `Award`. This is here for the other half — the hub's badge
@@ -60,6 +67,26 @@ namespace GlimmerGrove.Progression
 
         /// <summary>Lifetime XP, floored so it can never fall. See <see cref="ProgressionStore"/>.</summary>
         public static long Xp { get { EnsureFresh(); return _level.TotalXp; } }
+
+        /// <summary>
+        /// The Infinite lane's half of that total, on its own.
+        ///
+        /// <para>
+        /// <b>Exposed because a run has to be able to say what it just earned</b>, and it is
+        /// measured either side of the fold rather than handed along — <c>ProtoScreen.Solve</c>
+        /// reads this before and after <c>Finished</c>, which is exactly how
+        /// <c>WinRecord.ChapterOpened</c> is answered and for the same reason: by the time a panel
+        /// is built the transition is over.
+        /// </para>
+        /// <para>
+        /// <b>Deliberately not folded into <see cref="Totals"/>.</b> <see cref="ProgressionTotals"/>
+        /// is what the star ledger says, it is what the shared reward vectors pin against the
+        /// server's copy (invariant 9a), and <see cref="ProgressionLedger"/> stays a pure function
+        /// of the records alone. Adding a second source inside it would put the Infinite lane into
+        /// a rule that has to be reproducible from the star records and nothing else.
+        /// </para>
+        /// </summary>
+        public static long EndlessXp { get { EnsureFresh(); return _endlessXp; } }
 
         public static PlayerLevel Level { get { EnsureFresh(); return _level; } }
 
@@ -206,10 +233,16 @@ namespace GlimmerGrove.Progression
             _totals = ProgressionLedger.Compute(PlayerProgress.Records, GameContent.Index, table,
                                                 RewardSeed.PlayerKey);
 
+            // The Infinite lane, added here and nowhere else. It is a second *addend* rather than
+            // a second clause inside the ledger, so `_totals` keeps meaning "what the star records
+            // are worth" for every caller that already reads it — and so the rule the server
+            // mirrors stays the one the shared vectors prove. See `EndlessRewardTable`.
+            _endlessXp = table.Endless.XpFor(EndlessLedger.LifetimeWaves);
+
             // Three floors, applied as one: whichever demands the most XP wins, and
             // everything downstream — level, progress bar, remaining XP — then stays
             // internally consistent instead of being patched up afterwards.
-            long effectiveXp = _totals.Xp;
+            long effectiveXp = _totals.Xp + _endlessXp;
             if (ProgressionStore.XpHighWater > effectiveXp) effectiveXp = ProgressionStore.XpHighWater;
 
             long levelFloorXp = table.XpToReach(ProgressionStore.LevelHighWater);

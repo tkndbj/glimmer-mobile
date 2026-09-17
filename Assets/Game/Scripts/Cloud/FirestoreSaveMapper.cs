@@ -450,13 +450,22 @@ namespace GlimmerGrove.Cloud
 
             foreach (var row in rows)
             {
-                if (row == null || string.IsNullOrEmpty(row.level) || row.wave <= 0) continue;
+                if (row == null || string.IsNullOrEmpty(row.level)) continue;
+                if (row.wave <= 0 && row.waves <= 0) continue;
 
-                list.Add(new Dictionary<string, object>
+                var written = new Dictionary<string, object>
                 {
                     { "level", row.level },
                     { "wave", (long)row.wave },
-                });
+                };
+
+                // A nought is absent rather than written, which is 19k's rule and here also
+                // keeps the document the shape a client that predates the tally would write.
+                // Absent is floored by `wave` on the way back in (`EndlessLedger.Row.Payable`),
+                // so nothing is lost by leaving it out.
+                if (row.waves > 0) written["waves"] = (long)row.waves;
+
+                list.Add(written);
             }
 
             return list;
@@ -829,17 +838,29 @@ namespace GlimmerGrove.Cloud
 
                 string level = Str(map, "level");
                 long wave = Long(map, "wave", 0L);
-                if (string.IsNullOrEmpty(level) || wave <= 0L) continue;
+                long waves = Long(map, "waves", 0L);
+                if (string.IsNullOrEmpty(level)) continue;
+                if (wave <= 0L && waves <= 0L) continue;
 
                 rows.Add(new EndlessBestDto
                 {
                     level = level,
-                    wave = wave > int.MaxValue ? int.MaxValue : (int)wave,
+                    wave = Cap(wave),
+                    waves = Cap(waves),
                 });
             }
 
             return rows.ToArray();
         }
+
+        /// <summary>
+        /// A wire integer narrowed to an <c>int</c>, saturating rather than wrapping.
+        ///
+        /// Every number it is used on is a monotonic floor, and a floor that wrapped would
+        /// <em>fall</em> — which is the one thing the merge below it assumes cannot happen.
+        /// </summary>
+        static int Cap(long value)
+            => value <= 0L ? 0 : value > int.MaxValue ? int.MaxValue : (int)value;
 
         /// <summary>The upgrade ladder out of a cloud document, dropping anything malformed.</summary>
         static WardStarDto[] ReadStars(IDictionary<string, object> doc)
