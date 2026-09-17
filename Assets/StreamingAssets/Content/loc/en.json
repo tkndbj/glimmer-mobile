@@ -54,6 +54,10 @@
       "text": "Ashenhold"
     },
     {
+      "key": "chapter.s06_thundercrag.name",
+      "text": "Thundercrag"
+    },
+    {
       "key": "chest.gold.name",
       "text": "Golden Chest"
     },
@@ -990,6 +994,86 @@
       "text": "Armour and bombs on the tightest field yet"
     },
     {
+      "key": "level.s06_boulderrun.name",
+      "text": "Boulder Run"
+    },
+    {
+      "key": "level.s06_boulderrun.tagline",
+      "text": "Four waves. Nothing lets up"
+    },
+    {
+      "key": "level.s06_cragheart.name",
+      "text": "Cragheart"
+    },
+    {
+      "key": "level.s06_cragheart.tagline",
+      "text": "It buries a turret. Dig it out"
+    },
+    {
+      "key": "level.s06_firstcrag.name",
+      "text": "First Crag"
+    },
+    {
+      "key": "level.s06_firstcrag.tagline",
+      "text": "Stone walks. Feed the colour that is coming"
+    },
+    {
+      "key": "level.s06_frostline.name",
+      "text": "Frostline"
+    },
+    {
+      "key": "level.s06_frostline.tagline",
+      "text": "Two golems in every wave"
+    },
+    {
+      "key": "level.s06_glacierwall.name",
+      "text": "Glacier Wall"
+    },
+    {
+      "key": "level.s06_glacierwall.tagline",
+      "text": "Three golems and a bomb"
+    },
+    {
+      "key": "level.s06_highpass.name",
+      "text": "High Pass"
+    },
+    {
+      "key": "level.s06_highpass.tagline",
+      "text": "The longest climb in the mode"
+    },
+    {
+      "key": "level.s06_hollowpeak.name",
+      "text": "Hollow Peak"
+    },
+    {
+      "key": "level.s06_hollowpeak.tagline",
+      "text": "Bombs among the stone. Hold them for the wave"
+    },
+    {
+      "key": "level.s06_mudslide.name",
+      "text": "Mudslide"
+    },
+    {
+      "key": "level.s06_mudslide.tagline",
+      "text": "The clods come in numbers"
+    },
+    {
+      "key": "level.s06_stoneward.name",
+      "text": "Stoneward"
+    },
+    {
+      "key": "level.s06_stoneward.tagline",
+      "text": "One colour at a time, all of it armoured"
+    },
+    {
+      "key": "level.s06_thunderhead.name",
+      "text": "Thunderhead"
+    },
+    {
+      "key": "level.s06_thunderhead.tagline",
+      "text": "It drains what you bank. Throw it first"
+    },
+    {
       "key": "mode.cap.asleep",
       "text": "still asleep"
     },
@@ -1124,6 +1208,14 @@
     {
       "key": "mode.siege.ironclad",
       "text": "IRONCLAD"
+    },
+    {
+      "key": "mode.siege.thunderer",
+      "text": "THE THUNDERER"
+    },
+    {
+      "key": "mode.siege.colossus",
+      "text": "THE COLOSSUS"
     },
     {
       "key": "mode.siege.boss",
@@ -4780,6 +4872,30 @@
     {
       "key": "ui.tip.siege_storm.title",
       "text": "THE STORMGLASS"
+    },
+    {
+      "key": "ui.tip.siege_furnace.body",
+      "text": "Match this one and the turret of its colour is charged to the brim.\n\nTap the bolt on that turret to throw the whole charge — so match the colour of the turret you want loaded."
+    },
+    {
+      "key": "ui.tip.siege_furnace.title",
+      "text": "THE FURNACE"
+    },
+    {
+      "key": "ui.tip.siege_hourglass.body",
+      "text": "Match this one and everything on the hill stands still for a moment while your turrets keep firing.\n\nIt is worth what is walking when it goes, so hold it for a crowd."
+    },
+    {
+      "key": "ui.tip.siege_hourglass.title",
+      "text": "THE HOURGLASS"
+    },
+    {
+      "key": "ui.tip.siege_rubble.body",
+      "text": "A boulder has buried this turret. It keeps everything it had, but it cannot fire.\n\nTap the rubble three times to dig it out."
+    },
+    {
+      "key": "ui.tip.siege_rubble.title",
+      "text": "DIG IT OUT"
     },
     {
       "key": "ui.title.elder",

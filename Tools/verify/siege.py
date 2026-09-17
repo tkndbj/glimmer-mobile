@@ -52,6 +52,8 @@ BOSS_NAMES = {
     "bonecaller": "bonecaller",
     "shackler": "shackler",
     "ironclad": "ironclad",
+    "thunderer": "thunderer",
+    "colossus": "colossus",
 }
 
 #: The colour a boss may wear. Lower case only - case no longer means anything.
@@ -232,6 +234,17 @@ BOSSES = {
     #: budget (invariant 37b), so its health is set under an overlord's to pay for it.
     "shackler": {"health": 3400, "cast": 2, "spell": "bind"},
     "ironclad": {"health": 5200, "cast": 2, "spell": "aegis"},
+
+    #: The fifth chapter's two, and between them they take the two things the first eight leave.
+    #:
+    #: A **thunderer** drains a ward's banked charges and lands each one back as
+    #: `SiegeTuning.ThundererDrain` more off it - so its `cast` is the *floor* of what it takes,
+    #: which is all par ever counts (a thrown charge lands at full weight, exactly as
+    #: `PERFECT_MATCH` assumes). A **colossus** buries a ward under `RubbleTaps` pieces of rubble
+    #: the player digs off by hand; the ward keeps everything and cannot fire until it is clear.
+    #: Neither touches par.
+    "thunderer": {"health": 3800, "cast": 2, "spell": "drain"},
+    "colossus": {"health": 5800, "cast": 2, "spell": "bury"},
 }
 
 #: `SiegeTuning.RaiseSize` and `.Raises` - how many creepers one raise puts on the hill, and how
@@ -329,6 +342,13 @@ STAR_FACTORS = {
 #: par, so Barrowfell's 0.67 would have three-starred almost all of them - invariant 5d
 #: asked of the grade, which is exactly what the shipped ladder did for three chapters.
     4: (0.52, 0.66),
+
+    #: Thundercrag, whose raiders carry **three** tenths more health than the baseline. The same
+    #: argument one rung on: par scales with the surge and a run's flat payments do not, so its
+    #: lines come down again. **Measured on this chapter's own sweep** - see
+    #: `SiegeRuleTests.TheFifthChapterIsFoughtOnABoughtLine` for the spent-share table it was
+    #: read off.
+    5: (0.48, 0.62),
 }
 
 
@@ -340,9 +360,9 @@ def star_factors(ordinal):
 #: `SiegeCharm`, and the letter a chapter body names each one by. In the order they are
 #: introduced, which is a fact rather than a convenience: a chapter deals the first *n* of these,
 #: so this order *is* the ladder and `charms_upto` is the only thing that reads it.
-PRISM, LANCE, STORM = "prism", "lance", "storm"
+PRISM, LANCE, STORM, FURNACE, HOURGLASS = "prism", "lance", "storm", "furnace", "hourglass"
 
-CHARM_ROSTER = (("p", PRISM), ("l", LANCE), ("s", STORM))
+CHARM_ROSTER = (("p", PRISM), ("l", LANCE), ("s", STORM), ("f", FURNACE), ("h", HOURGLASS))
 
 CHARM_LETTERS = "".join(letter for letter, _ in CHARM_ROSTER)
 
@@ -366,6 +386,13 @@ CHARM_OPENING = 2
 #: `SiegeTuning.CharmStorm` and its double against its own colour.
 CHARM_STORM = 300
 CHARM_STORM_OWN_TENTHS = 10 * WEAK_MULTIPLIER
+
+#: `SiegeTuning.FurnaceCharges` and `.HourglassFor` - what the fourth and fifth charms deliver:
+#: one banked overcharge on the ward of the furnace's colour, and a hill stood still for this
+#: many seconds. Neither reaches par (a charge is fuel the tube would have thrown; a stopped hill
+#: is the line's own bolts landing), so both are here for the readouts alone.
+FURNACE_CHARGES = 1
+HOURGLASS_FOR = 3.0
 
 
 def charm_floor(par_moves):

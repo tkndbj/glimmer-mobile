@@ -803,6 +803,40 @@ namespace GlimmerGrove.Modes
         public const int CharmVolley = 1, CharmVolleyOwn = 2;
 
         /// <summary>
+        /// How many overcharges a furnace banks on the ward of its colour when it lands.
+        ///
+        /// <para>
+        /// <b>One, and there is no damage figure here either</b> - <see cref="CharmVolley"/>'s
+        /// argument a fourth time. A charge is that ward's own capacity thrown at that ward's own
+        /// weight (<c>SiegeBoard.Overcharge</c>), so what a furnace is worth is decided by the
+        /// turret the player bought and the rank their cogs paid for, and the charm conjures
+        /// nothing that the tube would not have delivered as bolts. Bounded by
+        /// <see cref="MostCharges"/> exactly as a brimming tube is, so a furnace matched into a
+        /// ward already holding two is refused rather than stacked.
+        /// </para>
+        /// </summary>
+        public const int FurnaceCharges = 1;
+
+        /// <summary>
+        /// How long an hourglass stops the hill, in seconds.
+        ///
+        /// <para>
+        /// <b>Three, and it is measured against the fifth chapter's own gate rather than
+        /// argued</b> (invariant 37j): a lit line lands about four bolts a second per ward, so
+        /// three seconds of a hill that is not getting any closer is roughly one wave's worth
+        /// of free ground - comparable to what a stormglass's volley delivers, which is the
+        /// charm it stands beside. <c>SiegeRuleTests.TheFifthChapterIsFoughtOnABoughtLine</c>
+        /// is the instrument, and the number is retuned there rather than here.
+        /// </para>
+        /// <para>
+        /// <b>A boss's guard runs down through it</b> (<c>SiegeBoard.Guarding</c>), so an
+        /// hourglass sprung on a guarded boss is not three seconds of nothing: the guard still
+        /// drops at its deadline and the line is firing the moment it does.
+        /// </para>
+        /// </summary>
+        public const float HourglassFor = 3f;
+
+        /// <summary>
         /// <b>How long a charm is drawn for is not a number, and that is the correction.</b>
         ///
         /// <para>
@@ -1478,6 +1512,94 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const float BossAfter = 28f;
 
+        // ------------------------------------------------------------------ the thunderer
+        /// <summary>
+        /// The thunderer: the fifth chapter's mid-chapter boss, and the one that takes the
+        /// line's banked charges.
+        ///
+        /// <para>
+        /// <b>Health beside a warlord's, because it is answered the way a warlord is</b> - by
+        /// the whole line, at full weight (37dn) - and a little under it, because what makes it
+        /// a fight is not the number: it is that every charge the player has banked is a number
+        /// the boss can throw back (<see cref="ThundererDrain"/>). A line that throws its
+        /// charges the moment the tell shows fights it at these figures; a line that hoards
+        /// fights something heavier, and chose to.
+        /// </para>
+        /// </summary>
+        public const int ThundererHealth = 3800;
+        public const float ThundererHold = .50f;
+        public const float ThundererMarch = 8f;
+
+        /// <summary>
+        /// Seconds between one drain and the next. Between a warlord's 2.5 and a shackler's 7,
+        /// because each cast is a decision the player has to be given time to make: the tell is
+        /// 1.15s and a charge is thrown in one tap, so a cadence under the warlord's would be a
+        /// boss that takes charges faster than a tube can brim.
+        /// </summary>
+        public const float ThundererCastEvery = 4f;
+
+        /// <summary>What one drain takes off the ward it lands on, before the charges it took.</summary>
+        public const int ThundererCast = 2;
+
+        /// <summary>
+        /// What each banked charge a drain takes adds to its blow.
+        ///
+        /// <para>
+        /// <b>Two a charge, and the ceiling is arithmetic</b>: a ward banks at most
+        /// <see cref="MostCharges"/>, so the heaviest drain in the mode is
+        /// <see cref="ThundererCast"/> + 2 x <see cref="MostCharges"/> = 6 off a ward of
+        /// <see cref="WardHealth"/> 14 - under half a ward in one blow, and only ever off a
+        /// player who was holding two charges through a tell that said <em>throw them</em>.
+        /// A thrown charge lands on the boss at full weight; a held one lands on the line at
+        /// two a piece. That gap is the whole fight.
+        /// </para>
+        /// </summary>
+        public const int ThundererDrain = 2;
+
+        // ------------------------------------------------------------------ the colossus
+        /// <summary>
+        /// The colossus: the fifth chapter's finale, and the one that buries a ward.
+        ///
+        /// <para>
+        /// <b>Health between an ironclad's and an overlord's, and the slowest walk in the
+        /// mode</b>, because it is the biggest body on the hill (<see cref="TallOf"/>) and a
+        /// thing that size arriving at a run would read as a raider. What makes it the finale
+        /// is not the number either: it is that every boulder is a post the player has to dig
+        /// out with their hands (<see cref="RubbleTaps"/>) while the hill is still coming.
+        /// </para>
+        /// </summary>
+        public const int ColossusHealth = 5800;
+        public const float ColossusHold = .40f;
+        public const float ColossusMarch = 9.5f;
+
+        /// <summary>
+        /// Seconds between one boulder and the next.
+        ///
+        /// <b>Longer than a bind's chain lasts a ward, on purpose.</b> A shackler's chain runs
+        /// out before its next arrow (<c>AShacklersChainAlwaysRunsOutBeforeTheNextOne</c>);
+        /// rubble does not run out at all, so the cadence has to leave a player who digs at once
+        /// (three taps, about a second) comfortably clear before the next boulder, or the line
+        /// buries faster than hands can clear it. At 6 a player digging at once has most of a
+        /// whole line's fire between boulders; one who never digs loses a post a cast. Measured
+        /// through <c>EveryShippedBossRungIsAFight</c>: at 5.5 and 6400 health the finale fell at
+        /// no rhythm, because every beat spent digging is a beat the boss is not being hurt in.
+        /// </summary>
+        public const float ColossusCastEvery = 6f;
+
+        /// <summary>What one boulder takes off the ward it lands on.</summary>
+        public const int ColossusCast = 2;
+
+        /// <summary>
+        /// Taps it takes to dig a buried ward out.
+        ///
+        /// <b>Three, because one is a dismissal and five is a chore.</b> A single tap would make
+        /// a burial the same cost as a bomb; five taps on a phone at the ward line is long
+        /// enough that the field goes unplayed for a whole beat, which the hold simulation
+        /// prices by paying a match's beat per tap (<c>SiegeRuleTests.Hold</c>). Three is the
+        /// number a thumb clears in under a second while the eye stays on the hill.
+        /// </summary>
+        public const int RubbleTaps = 3;
+
         // ------------------------------------------------------------------ the fight
         /// <summary>
         /// How many phases a boss fight has, and every one of them is a promise.
@@ -1957,6 +2079,12 @@ namespace GlimmerGrove.Modes
              // the shipped frames before and after, and the number moved by the measured ratio,
              // so the body on the hill is the size it was.
              : kind == SiegeKind.Ironclad ? 3.7f
+
+             // **The fifth chapter's pair, on the same ladder.** A thunderer stands beside the
+             // other rung-five bosses; a colossus tops the whole mode, because it is the
+             // finale of the fifth chapter and the widest body cut yet (`make_siege_art.BOSS_SET`).
+             : kind == SiegeKind.Colossus ? 3.8f
+             : kind == SiegeKind.Thunderer ? 3.3f
              : kind == SiegeKind.Bonecaller ? 3.5f
              : kind == SiegeKind.Shackler ? 3.2f
 
@@ -2167,7 +2295,8 @@ namespace GlimmerGrove.Modes
             => kind == SiegeKind.Boss || kind == SiegeKind.Overlord
             || kind == SiegeKind.Blightcaller || kind == SiegeKind.Warbringer
             || kind == SiegeKind.Gravemaw || kind == SiegeKind.Bonecaller
-            || kind == SiegeKind.Shackler || kind == SiegeKind.Ironclad;
+            || kind == SiegeKind.Shackler || kind == SiegeKind.Ironclad
+            || kind == SiegeKind.Thunderer || kind == SiegeKind.Colossus;
 
         /// <summary>
         /// What each of the four bosses does when its spell lands.
@@ -2197,6 +2326,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Bonecaller ? SiegeSpell.Raise
              : kind == SiegeKind.Shackler ? SiegeSpell.Bind
              : kind == SiegeKind.Ironclad ? SiegeSpell.Aegis
+             : kind == SiegeKind.Thunderer ? SiegeSpell.Drain
+             : kind == SiegeKind.Colossus ? SiegeSpell.Bury
              : SiegeSpell.Smite;
 
         /// <summary>
@@ -2271,6 +2402,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Gravemaw ? GravemawHealth
              : kind == SiegeKind.Shackler ? ShacklerHealth
              : kind == SiegeKind.Ironclad ? IroncladHealth
+             : kind == SiegeKind.Thunderer ? ThundererHealth
+             : kind == SiegeKind.Colossus ? ColossusHealth
              : kind == SiegeKind.Blightcaller ? BlightHealth
              : kind == SiegeKind.Bulwark ? BulwarkHealth
              : kind == SiegeKind.Bomber ? BomberHealth
@@ -2284,6 +2417,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Gravemaw ? GravemawMarch
              : kind == SiegeKind.Shackler ? ShacklerMarch
              : kind == SiegeKind.Ironclad ? IroncladMarch
+             : kind == SiegeKind.Thunderer ? ThundererMarch
+             : kind == SiegeKind.Colossus ? ColossusMarch
              : kind == SiegeKind.Blightcaller ? BlightMarch
              : kind == SiegeKind.Bulwark ? BulwarkMarch
              : kind == SiegeKind.Bomber ? BomberMarch
@@ -2297,6 +2432,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Gravemaw ? GravemawCastEvery
              : kind == SiegeKind.Shackler ? ShacklerCastEvery
              : kind == SiegeKind.Ironclad ? IroncladCastEvery
+             : kind == SiegeKind.Thunderer ? ThundererCastEvery
+             : kind == SiegeKind.Colossus ? ColossusCastEvery
              : kind == SiegeKind.Blightcaller ? BlightCastEvery : BossCastEvery;
 
         /// <summary>
@@ -2311,6 +2448,8 @@ namespace GlimmerGrove.Modes
             => kind == SiegeKind.Overlord ? OverlordCast
              : kind == SiegeKind.Warbringer ? WarbringerCast
              : kind == SiegeKind.Ironclad ? IroncladCast
+             : kind == SiegeKind.Thunderer ? ThundererCast
+             : kind == SiegeKind.Colossus ? ColossusCast
              : kind == SiegeKind.Boss ? BossCast
              : kind == SiegeKind.Blightcaller ? BlightCast
              : kind == SiegeKind.Gravemaw ? GravemawCast
@@ -2370,6 +2509,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Gravemaw ? GravemawHold
              : kind == SiegeKind.Shackler ? ShacklerHold
              : kind == SiegeKind.Ironclad ? IroncladHold
+             : kind == SiegeKind.Thunderer ? ThundererHold
+             : kind == SiegeKind.Colossus ? ColossusHold
              : kind == SiegeKind.Blightcaller ? BlightHold
              : 1f;
 

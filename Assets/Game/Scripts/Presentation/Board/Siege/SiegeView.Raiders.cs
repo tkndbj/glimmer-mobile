@@ -256,6 +256,8 @@ namespace GlimmerGrove
                 case SiegeKind.Bonecaller: return Reel("caller_cast");
                 case SiegeKind.Shackler: return Reel("snare_cast");
                 case SiegeKind.Ironclad: return Reel("clad_cast");
+                case SiegeKind.Thunderer: return Reel("thunder_cast");
+                case SiegeKind.Colossus: return Reel("colossus_cast");
 
                 default: return null;
             }

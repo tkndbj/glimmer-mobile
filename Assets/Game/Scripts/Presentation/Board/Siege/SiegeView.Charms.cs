@@ -389,6 +389,14 @@ namespace GlimmerGrove
                     Storming(spark.Cell, spark.Colour, tint);
                     break;
 
+                case SiegeCharm.Furnace:
+                    Forging(spark.Cell, spark.Colour, tint);
+                    break;
+
+                case SiegeCharm.Hourglass:
+                    Sanding(spark.Cell, spark.Colour, tint);
+                    break;
+
                 case SiegeCharm.Prism:
                     // The wild's own moment: it has no second effect, so what it gets is the
                     // biggest burst on the field in the colour it just chose. A prism that looked

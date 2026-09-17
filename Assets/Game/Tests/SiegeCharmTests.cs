@@ -44,7 +44,7 @@ namespace GlimmerGrove.Tests
             return layout;
         }
 
-        static SiegeBoard Board(string[] rows, string charms = "pls")
+        static SiegeBoard Board(string[] rows, string charms = "plsfh")
             => SiegeBoard.Build(Layout(rows, charms));
 
         /// <summary>
@@ -436,6 +436,140 @@ namespace GlimmerGrove.Tests
         /// <b>And a fallen ward throws nothing</b>, which is what stops a stormglass being worth
         /// the same to a player who is losing as to one who is not.
         /// </summary>
+        // ------------------------------------------------------------------ the furnace
+        [Test]
+        public void AFurnaceBanksAChargeOnTheWardOfItsColourAfterItsGemHasBurst()
+        {
+            var board = Board(Crossed(), "plsfh");
+            for (int i = 0; i < 60 * 8; i++) board.Advance(1f / 60f);
+
+            int own = WardOf('r');
+            Assert.AreEqual(0, board.Wards[own].Charges, "this case assumes an empty tube");
+            Assert.AreEqual('r', board.At(7));
+
+            board.Stand(7, SiegeCharm.Furnace);
+            Assert.IsNotNull(board.Swap(2, 7));
+
+            Assert.AreEqual(0, board.Wards[own].Charges,
+                            "a furnace banked on the frame it was matched, so the charge lands "
+                            + "before the gem that paid for it has burst");
+
+            SiegeForged? forged = null;
+            for (int i = 0; i < 60 && forged == null; i++)
+            {
+                var report = board.Advance(1f / 60f);
+                if (report.Forged.Count > 0) forged = report.Forged[0];
+            }
+
+            Assert.IsNotNull(forged, "a furnace was matched and never landed at all");
+            Assert.AreEqual(own, forged.Value.Ward, "it landed on a ward of another colour");
+            Assert.IsTrue(forged.Value.Banked);
+            Assert.AreEqual(SiegeTuning.FurnaceCharges, board.Wards[own].Charges);
+            Assert.IsTrue(board.Wards[own].Armed, "a banked furnace is not a charge that can be thrown");
+
+            for (int w = 0; w < board.Wards.Count; w++)
+                if (w != own)
+                    Assert.AreEqual(0, board.Wards[w].Charges, "a furnace reached a second ward");
+        }
+
+        [Test]
+        public void AFurnaceOnAFullOrFallenWardIsRefusedAndSaysSo()
+        {
+            var board = Board(Crossed(), "plsfh");
+            for (int i = 0; i < 60 * 8; i++) board.Advance(1f / 60f);
+
+            int own = WardOf('r');
+            board.Wards[own].Charges = SiegeTuning.MostCharges;
+
+            board.Stand(7, SiegeCharm.Furnace);
+            Assert.IsNotNull(board.Swap(2, 7));
+
+            SiegeForged? forged = null;
+            for (int i = 0; i < 60 && forged == null; i++)
+            {
+                var report = board.Advance(1f / 60f);
+                if (report.Forged.Count > 0) forged = report.Forged[0];
+            }
+
+            Assert.IsNotNull(forged, "a refused furnace was not reported, so the view draws nothing");
+            Assert.IsFalse(forged.Value.Banked, "a full ward banked a third charge");
+            Assert.AreEqual(SiegeTuning.MostCharges, board.Wards[own].Charges,
+                            "a furnace stacked past the cap a brimming tube stops at");
+        }
+
+        // ------------------------------------------------------------------ the hourglass
+        [Test]
+        public void AnHourglassStopsTheHillAndTheLineKeepsFiring()
+        {
+            var board = Board(Crossed(), "plsfh");
+            for (int i = 0; i < 60 * 8; i++) board.Advance(1f / 60f);
+            Assert.Greater(board.OnTheHill, 0, "nothing walked on, so this case proves nothing");
+
+            board.Stand(7, SiegeCharm.Hourglass);
+            Assert.IsNotNull(board.Swap(2, 7));
+            Assert.IsFalse(board.Stilled, "the hill stopped on the frame of the swap, before the gem burst");
+
+            float stilled = 0f;
+            for (int i = 0; i < 60 && stilled <= 0f; i++) stilled = board.Advance(1f / 60f).Stilled;
+
+            Assert.AreEqual(SiegeTuning.HourglassFor, stilled, 1e-4f, "an hourglass was matched and never landed");
+            Assert.IsTrue(board.Stilled);
+
+            var marched = new System.Collections.Generic.Dictionary<int, float>();
+            foreach (var raider in board.Raiders)
+                if (raider.Alive && raider.OnTheHill) marched[raider.Id] = raider.March;
+
+            int whole = Standing(board);
+            for (int i = 0; i < 60; i++) board.Advance(1f / 60f);
+
+            Assert.IsTrue(board.Stilled, "the hill walked again inside the first second of a three-second stop");
+            foreach (var raider in board.Raiders)
+                if (marched.TryGetValue(raider.Id, out float was))
+                    Assert.AreEqual(was, raider.March, 1e-5f, $"raider {raider.Id} walked while the hill stood still");
+
+            Assert.Less(Standing(board), whole, "the line fired nothing into a stopped hill");
+
+            for (int i = 0; i < 60 * 3; i++) board.Advance(1f / 60f);
+            Assert.IsFalse(board.Stilled, "the hill never walked again");
+        }
+
+        [Test]
+        public void AnHourglassIsExtendedByASecondAndNeverStacked()
+        {
+            var board = Board(Crossed(), "plsfh");
+            for (int i = 0; i < 60 * 8; i++) board.Advance(1f / 60f);
+
+            board.Stand(7, SiegeCharm.Hourglass);
+            Assert.IsNotNull(board.Swap(2, 7));
+            for (int i = 0; i < 60 && !board.Stilled; i++) board.Advance(1f / 60f);
+            Assert.IsTrue(board.Stilled);
+
+            for (int i = 0; i < 30; i++) board.Advance(1f / 60f);
+            float left = board.StillLeft;
+            Assert.Less(left, SiegeTuning.HourglassFor);
+
+            // A second landing half a second in: the clock is set back to a whole window, not
+            // to a window and a half. The first swap changed the field, so the second is found
+            // rather than typed - with an hourglass stood on every gem, whatever clears springs
+            // one, and two springing in one beat is the stacking this case is about.
+            for (int i = 0; i < board.Count; i++)
+                if (SiegeLayout.IsGem(board.At(i))) board.Stand(i, SiegeCharm.Hourglass);
+
+            bool swapped = false;
+            for (int a = 0; a < board.Count && !swapped; a++)
+            {
+                if (a % board.Width + 1 < board.Width && board.Swap(a, a + 1) != null) swapped = true;
+                else if (a + board.Width < board.Count && board.Swap(a, a + board.Width) != null) swapped = true;
+            }
+            Assert.IsTrue(swapped, "no swap on this field lines anything up");
+
+            for (int i = 0; i < 60 && board.StillLeft <= left; i++) board.Advance(1f / 60f);
+            Assert.Greater(board.StillLeft, left, "the second hourglass never landed");
+
+            Assert.LessOrEqual(board.StillLeft, SiegeTuning.HourglassFor + 1e-4f,
+                               "two hourglasses stacked into a stop longer than one window");
+        }
+
         [Test]
         public void AFallenWardThrowsNothingIntoAVolley()
         {
@@ -765,6 +899,8 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual("p", SiegeCharms.Upto(1));
             Assert.AreEqual("pl", SiegeCharms.Upto(2));
             Assert.AreEqual("pls", SiegeCharms.Upto(3));
+            Assert.AreEqual("plsf", SiegeCharms.Upto(4));
+            Assert.AreEqual("plsfh", SiegeCharms.Upto(5));
 
             // **It runs out, and a fifth chapter has to know that before it is commissioned** —
             // invariant 37br's argument about boss verbs, which is the same argument.

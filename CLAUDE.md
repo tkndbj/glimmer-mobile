@@ -934,16 +934,18 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **Retention** — tasks and the chest ladder (45), the recurring bloom season (47), the streak (48), golden
   levels, percentile standings, per-level records.
 - **One live mode, three hidden.** **Thornwatch**: `s01_thornwatch`, `s03_broodmarch`, `s04_barrowfell`,
-  `s05_ashenhold` (ten rungs each) on the ordinary ladder, and `s02_endlesswatch` on an **Infinite** track
-  beside it. The map draws no *mode* switcher and does draw the **track** switcher; the ordinary ladder
-  draws a map and the Infinite lane draws a **hub**, opening at **keeper level 10**. Four casts and eight
-  boss verbs, one cast per chapter by ordinal: insects, the blob brood, skeletons and the **rabble** — the
-  only cast **baked from vector**. The Infinite lane draws a **medley** of the four chapter casts, so it
-  costs no art of its own.
-- **Charms** — three powers dealt onto ordinary gems, one introduced per chapter: a **prism** (joins a run
+  `s05_ashenhold`, `s06_thundercrag` (ten rungs each) on the ordinary ladder, and `s02_endlesswatch` on an
+  **Infinite** track beside it. The map draws no *mode* switcher and does draw the **track** switcher; the
+  ordinary ladder draws a map and the Infinite lane draws a **hub**, opening at **keeper level 10**. Five
+  casts and ten boss verbs, one cast per chapter by ordinal: insects, the blob brood, skeletons, the
+  **rabble** — the only cast **baked from vector** — and the **wild**, cut from the top-down unit packs.
+  The Infinite lane draws a **medley** of the five chapter casts, so it costs no art of its own.
+- **Charms** — five powers dealt onto ordinary gems, one introduced per chapter: a **prism** (joins a run
   of any colour), a **lance** (its row and column), a **stormglass** (the whole line fires at everything on
-  the hill). One every **112** dealt gems on a window, the first of a run inside **56**. Each is a gem of
-  its own with its own reel; a lance runs the hill in slow motion and a stormglass stops it dead.
+  the hill), a **furnace** (banks a charge on the turret of its colour), an **hourglass** (the hill stands
+  still for three seconds). One every **112** dealt gems on a window, the first of a run inside **56**.
+  Each is a gem of its own with its own reel; a lance runs the hill in slow motion, a stormglass stops it
+  dead, and an hourglass stops it in the *model* (37do).
 - **Utilities** — an account-wide action bar (39), dropped by chests and bought with gems, charged against
   the graded count so one can never buy a star.
 - **The turret loadout** — twenty turrets bought per colour, each behind a keeper level and nothing else,
@@ -983,7 +985,8 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 | `s01_thornwatch` | siege | 10 | 14–57 matches | the verb, the cog, the **prism** from rung 3, the fourth ward, a warlord on 5 and an overlord on 10 |
 | `s03_broodmarch` | siege | 10 | 38–59 matches | one new rule (the **lance**), a second cast, a hill that no longer forgives rank one; a blightcaller on 5, a warbringer on 10 |
 | `s04_barrowfell` | siege | 10 | 49–81 matches | the first chapter authored for a *bought* line and the one that deals all three charms: a skeleton cast, armour from rung 2, a gravemaw on 5 and a bonecaller on 10; **the first chapter whose raiders carry a surge** |
-| `s05_ashenhold` | siege | 10 | 49–81 matches | the fourth chapter and the first that cost the mode **code**: the **rabble** cast, armour from rung 1, a **shackler** on 5 and an **ironclad** on 10; **two tenths of surge** |
+| `s05_ashenhold` | siege | 10 | 49–81 matches | the fourth chapter and the first that cost the mode **code**: the **rabble** cast, armour from rung 1, a **shackler** on 5 and an **ironclad** on 10; **two tenths of surge**; deals the **furnace** |
+| `s06_thundercrag` | siege | 10 | 65–110 matches | the fifth chapter: the **wild** cast of stone golems, a yeti, a minotaur and a mud clod; a **thunderer** on 5 (drains banked charges) and a **colossus** on 10 (buries a turret the player digs out); **three tenths of surge**; deals all five charms, the **hourglass** new |
 | `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 20 | waves that never stop, graded on how far it got, drawing a **medley** of every cast; **both star waves are guesses until somebody plays it**; opens at keeper level 10 |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock.**
@@ -1030,6 +1033,14 @@ on a fresh clone).
 **Money paths that have never executed.** A real receipt reaching `redeemPurchase` and a real impression
 reaching `adReward`. Both are fully built and deployed and **neither has ever run once**, which reads as
 done. Ads *load* on device; no view has ever paid. Do both the day closed testing opens.
+
+**Thundercrag's two spell reels are an Editor bake, and they are not on disk.** `Glimmer Grove ▸ Art ▸
+Bake Thundercrag Spells` writes `levin*` and `boulder*` under `Art/Fx/Siege` (six names `artnames.py` is
+red on until then); look at both on the **Siege Projectile Contact Sheet** before shipping - a batch-mode
+bake on a project copy rendered every frame shader-pink twice, so only the running Editor can do it.
+Then the standing discipline (`Sync All Assets` → `Audit Addresses` → `Validate Content` → `Validate
+Art` → EditMode), and **re-seed**: a new chapter's ten level ids reach the server's reward map only
+through `seed-config.mjs`. Nothing else about the drop touches the server.
 
 **Store and platform.**
 - Delete an Apple-linked account on a device and check it leaves **Settings ▸ Sign in with Apple**. Every

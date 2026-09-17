@@ -188,13 +188,20 @@ namespace GlimmerGrove.Modes
                 // ward, which is what stopped "it attacks and my turrets lose nothing" (37dn).
                 if (spell.Craft == SiegeSpell.Douse) ward.Snuff();
                 if (spell.Craft == SiegeSpell.Bind) ward.Shackle();
+                if (spell.Craft == SiegeSpell.Bury) ward.Bury();
+
+                // **A drain takes the charges first and lands them as its own weight.** Every
+                // charge held is `ThundererDrain` more off the ward, so what a player banked
+                // through the tell is what the bolt is worth - and one thrown before it landed
+                // is on the boss instead.
+                int taken = spell.Craft == SiegeSpell.Drain ? ward.Drain() : 0;
 
                 bool sundered = spell.Craft == SiegeSpell.Sunder && spell.Opens && ward.Sunder();
 
                 var craft = spell.Craft == SiegeSpell.Devour || spell.Craft == SiegeSpell.Raise
                           ? SiegeSpell.Smite : spell.Craft;
 
-                int cast = SiegeTuning.CastOf(caster.Kind);
+                int cast = SiegeTuning.CastOf(caster.Kind) + taken * SiegeTuning.ThundererDrain;
                 ward.Health -= cast;
 
                 bool felled = ward.Health <= 0;
@@ -206,7 +213,7 @@ namespace GlimmerGrove.Modes
                 }
 
                 _report.Spells.Add(new SiegeSpellLanded(spell.Raider, spell.Ward, craft,
-                                                        cast, felled, sundered));
+                                                        cast, felled, sundered, taken));
             }
         }
 
@@ -429,6 +436,11 @@ namespace GlimmerGrove.Modes
             // has fallen, and for the same reason.
             if (_roar > 0f) _roar = Math.Max(0f, _roar - dt);
 
+            // **The hourglass runs down here for the roar's reason**: one number on the board, so
+            // nothing can be left standing still after the window has closed, and the frame it
+            // reaches nought is the frame the hill walks again.
+            if (_still > 0f) _still = Math.Max(0f, _still - dt);
+
             float charge = _roar > 0f ? SiegeTuning.Rally : 1f;
 
             for (int i = 0; i < _raiders.Count; i++)
@@ -437,6 +449,11 @@ namespace GlimmerGrove.Modes
                 if (!raider.Alive) continue;
 
                 if (raider.Flash > 0f) raider.Flash = Math.Max(0f, raider.Flash - dt);
+
+                // **A stopped hill is stopped whole** - the raiders still in the wings as well as
+                // the ones walking, so a wave mustered into the window stands at the crest until
+                // it opens. What still moves is the flash above and everything the line does.
+                if (_still > 0f) continue;
 
                 if (raider.Wait > 0f)
                 {
@@ -649,7 +666,9 @@ namespace GlimmerGrove.Modes
                 // colour is the one thing on the shelf that can take seconds off the finale's
                 // spell rather than health off the boss (invariant 26h - the player decides, and
                 // can be wrong).
-                if (boss.Stunned) continue;
+                // **Nor does a boss cast into a stopped hill**, and its guard has already run down
+                // above (invariant 37dl): an hourglass takes seconds off a fight and never walls it.
+                if (boss.Stunned || _still > 0f) continue;
 
                 boss.Spell -= dt;
                 if (boss.Spell > 0f) continue;
@@ -833,6 +852,25 @@ namespace GlimmerGrove.Modes
                              + ward.Health;
                         break;
 
+                    // **A drain wants the ward holding the most**, which is the one piece of
+                    // information a smite, a douse, a sunder and a bind all read past: the
+                    // charges are the verb, so the ward with none is the last one it wants.
+                    // The freshest breaks a tie, so a line holding nothing is drained like a
+                    // smite - and still smitten, because every spell takes health (37dn).
+                    case SiegeSpell.Drain:
+                        rank = (long)ward.Charges * 64L + ward.Health;
+                        break;
+
+                    // **A boulder wants the ward about to fire**, for the douse's reason: what a
+                    // burial costs is what the buried ward was about to do, so the fullest tube
+                    // is the one worth burying. **A buried ward is never chosen twice** - the
+                    // rubble is set, not stacked (`SiegeWard.Bury`), so a second boulder on the
+                    // same post would be the boss doing nothing (`CastRetry` holds the cast).
+                    case SiegeSpell.Bury:
+                        if (ward.Buried) continue;
+                        rank = (long)(ward.Fuel * 1000f) * 64L + ward.Health;
+                        break;
+
                     default:
                         rank = ward.Health;
                         break;
@@ -858,7 +896,11 @@ namespace GlimmerGrove.Modes
                 // Stopping the march alone would be a stun that costs a raider already at the line
                 // nothing at all — which is the half of the hill it is worth most against, because
                 // that is where a second of quiet is a blow the line did not take.
-                if (raider.Stunned) continue;
+                // **And it does not swing while the hill stands still**, for the stun's reason one
+                // line up: a stop that held the march and left the blows running would cost a
+                // raider already at the line nothing at all, which is the half of the hill an
+                // hourglass is worth most against.
+                if (raider.Stunned || _still > 0f) continue;
 
                 raider.Blow -= dt;
                 if (raider.Blow > 0f) continue;

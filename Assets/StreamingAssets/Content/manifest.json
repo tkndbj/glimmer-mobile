@@ -232,6 +232,26 @@
       ]
     },
     {
+      "id": "s06_thundercrag",
+      "version": 1,
+      "order": 149,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s06_firstcrag",
+        "s06_mudslide",
+        "s06_frostline",
+        "s06_hollowpeak",
+        "s06_thunderhead",
+        "s06_glacierwall",
+        "s06_stoneward",
+        "s06_boulderrun",
+        "s06_highpass",
+        "s06_cragheart"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,

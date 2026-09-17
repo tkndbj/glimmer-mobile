@@ -240,5 +240,16 @@ namespace GlimmerGrove.Modes
         }
 
         internal void PhaseOpened(int phase) => PhasesOpened++;
+
+        /// <summary>Pieces of rubble the player dug off the line, and posts dug fully clear.</summary>
+        public int RubbleDug { get; private set; }
+        public int PostsCleared { get; private set; }
+
+        /// <summary>A tap took a piece of rubble off a ward; <paramref name="cleared"/> when it was the last.</summary>
+        internal void Dug(bool cleared)
+        {
+            RubbleDug++;
+            if (cleared) PostsCleared++;
+        }
     }
 }

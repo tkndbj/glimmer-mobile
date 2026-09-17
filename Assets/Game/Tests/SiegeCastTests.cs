@@ -40,7 +40,7 @@ namespace GlimmerGrove.Tests
         static readonly int[] Sets =
         {
             SiegeMode.Insects, SiegeMode.Medley, SiegeMode.Brood, SiegeMode.Bones,
-            SiegeMode.Rabble,
+            SiegeMode.Rabble, SiegeMode.Wild,
         };
 
         /// <summary>
@@ -50,6 +50,7 @@ namespace GlimmerGrove.Tests
         static readonly int[] Chapters =
         {
             SiegeMode.Insects, SiegeMode.Brood, SiegeMode.Bones, SiegeMode.Rabble,
+            SiegeMode.Wild,
         };
 
         static readonly SiegeKind[] Bodies =
@@ -271,6 +272,8 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(SiegeMode.Rabble, SiegeMode.CastFor(GameTrack.Main, 3),
                             "Ashenhold does not draw the rabble");
+            Assert.AreEqual(SiegeMode.Wild, SiegeMode.CastFor(GameTrack.Main, 4),
+                            "Thundercrag does not draw the wild");
 
             Assert.AreEqual(SiegeMode.Medley, SiegeMode.CastFor(GameTrack.Infinite, 0),
                             "the Infinite lane does not draw the medley");

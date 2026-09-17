@@ -473,6 +473,18 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static readonly Mechanic SiegeStorm = new Mechanic("siege_storm");
 
+        /// <summary>The furnace charm: match it and the turret of its colour is charged to the brim.</summary>
+        public static readonly Mechanic SiegeFurnace = new Mechanic("siege_furnace");
+
+        /// <summary>The hourglass charm: match it and the whole hill stands still.</summary>
+        public static readonly Mechanic SiegeHourglass = new Mechanic("siege_hourglass");
+
+        /// <summary>
+        /// A buried turret: tap the rubble off it. Raised the first time a colossus lands a
+        /// boulder, and pointed at the post it landed on (invariant 6b - the thing to tap).
+        /// </summary>
+        public static readonly Mechanic SiegeRubble = new Mechanic("siege_rubble");
+
         /// <summary>
         /// <b>Retired: no screen raises this and its id must never be reused.</b>
         ///
@@ -810,7 +822,8 @@ namespace GlimmerGrove.Progression
             // remarks above.
             SiegeFuel, SiegeBrim, SiegeSalvage,
             SiegeBomber,
-            SiegePrism, SiegeLance, SiegeStorm,
+            SiegePrism, SiegeLance, SiegeStorm, SiegeFurnace, SiegeHourglass,
+            SiegeRubble,
             ModeSwitch, LuckySpin, Grove,
             GroveShop,
             MapLoadout, MapChapterGate, MapTrack,

@@ -76,16 +76,35 @@ namespace GlimmerGrove.Tests
         /// </summary>
         static readonly Rung[] Ashenhold =
         {
-            new Rung("s05_firstiron", new[] { "ggyyrbry", "grrbgrbg", "yrgbbygr", "ygyyggry", "rygrybyg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBYRGby", "RGBY#rRGbyrg" }, "", 25, 12, 52, 66, "pls"),
-            new Rung("s05_shieldline", new[] { "rrbrggyb", "rgyyrbgb", "ggrbbyrg", "rrygygby", "ygyrrgyy" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY#g#bRGby", "RGbyRGbyrg" }, "", 25, 12, 52, 66, "pls"),
-            new Rung("s05_pikewall", new[] { "bygrgbgy", "ryybyryy", "grbggybg", "bryyrbrr", "gbbgygrg" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGby#g#b#yRGby", "RGByRGbyrg" }, "", 25, 12, 52, 66, "pls"),
-            new Rung("s05_emberrow", new[] { "brbybyby", "bryrbrbg", "yggbrgyr", "rgyryyrg", "rybygbby" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY#g!gRG#bby", "RGby!bRGByby" }, "", 25, 12, 52, 66, "pls"),
-            new Rung("s05_chainfall", new[] { "ybygygrr", "rgbrbbgr", "grgyrbyy", "ygrbggrr", "ybybggyy" }, "rgby", "rgby", new[] { "RGBYRGBy", "RGBY#rRG!bby", "RGby#rRGBy" }, "shackler:g", 25, 12, 52, 66, "pls"),
-            new Rung("s05_ironyard", new[] { "gybgyrbb", "grbrbgrr", "yyggrbgy", "grgbrygb", "bybrgyyg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY#rRGby", "RGby#gRGby", "RGBYRGbyrg" }, "", 25, 12, 52, 66, "pls"),
-            new Rung("s05_hollowvigil", new[] { "bgyryrgb", "rbrbgygr", "rgyggryb", "ggrbyrry", "bygrybgy" }, "rgby", "rgby", new[] { "RRRR#rrrrg", "GGGG#g#ggggb", "BBBB#bbbYYY#yy" }, "", 25, 12, 52, 66, "pls"),
-            new Rung("s05_sunderway", new[] { "rbrgbrrb", "rgbgybyr", "gybrbrgg", "yrgrygyr", "gbgyybbg" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY!gRG#bby", "RGBY#bRGByby" }, "", 25, 12, 52, 66, "pls"),
-            new Rung("s05_longmarch", new[] { "ygygygbr", "rrbgyyby", "bybbrggb", "grrybryy", "bbyrgbyg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY#rRGby", "RGby#gRGby#bby", "RGBYRGby" }, "", 25, 12, 52, 66, "pls"),
-            new Rung("s05_ashenheart", new[] { "bgyyrrbb", "yrrgbyyr", "gygbbgrr", "gybggrbg", "rbbgybbg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY#rRGby", "RGBY#gRG#bby" }, "ironclad:b", 25, 12, 52, 66, "pls"),
+            new Rung("s05_firstiron", new[] { "ggyyrbry", "grrbgrbg", "yrgbbygr", "ygyyggry", "rygrybyg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBYRGby", "RGBY#rRGbyrg" }, "", 25, 12, 52, 66, "plsf"),
+            new Rung("s05_shieldline", new[] { "rrbrggyb", "rgyyrbgb", "ggrbbyrg", "rrygygby", "ygyrrgyy" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY#g#bRGby", "RGbyRGbyrg" }, "", 25, 12, 52, 66, "plsf"),
+            new Rung("s05_pikewall", new[] { "bygrgbgy", "ryybyryy", "grbggybg", "bryyrbrr", "gbbgygrg" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGby#g#b#yRGby", "RGByRGbyrg" }, "", 25, 12, 52, 66, "plsf"),
+            new Rung("s05_emberrow", new[] { "brbybyby", "bryrbrbg", "yggbrgyr", "rgyryyrg", "rybygbby" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY#g!gRG#bby", "RGby!bRGByby" }, "", 25, 12, 52, 66, "plsf"),
+            new Rung("s05_chainfall", new[] { "ybygygrr", "rgbrbbgr", "grgyrbyy", "ygrbggrr", "ybybggyy" }, "rgby", "rgby", new[] { "RGBYRGBy", "RGBY#rRG!bby", "RGby#rRGBy" }, "shackler:g", 25, 12, 52, 66, "plsf"),
+            new Rung("s05_ironyard", new[] { "gybgyrbb", "grbrbgrr", "yyggrbgy", "grgbrygb", "bybrgyyg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY#rRGby", "RGby#gRGby", "RGBYRGbyrg" }, "", 25, 12, 52, 66, "plsf"),
+            new Rung("s05_hollowvigil", new[] { "bgyryrgb", "rbrbgygr", "rgyggryb", "ggrbyrry", "bygrybgy" }, "rgby", "rgby", new[] { "RRRR#rrrrg", "GGGG#g#ggggb", "BBBB#bbbYYY#yy" }, "", 25, 12, 52, 66, "plsf"),
+            new Rung("s05_sunderway", new[] { "rbrgbrrb", "rgbgybyr", "gybrbrgg", "yrgrygyr", "gbgyybbg" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY!gRG#bby", "RGBY#bRGByby" }, "", 25, 12, 52, 66, "plsf"),
+            new Rung("s05_longmarch", new[] { "ygygygbr", "rrbgyyby", "bybbrggb", "grrybryy", "bbyrgbyg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY#rRGby", "RGby#gRGby#bby", "RGBYRGby" }, "", 25, 12, 52, 66, "plsf"),
+            new Rung("s05_ashenheart", new[] { "bgyyrrbb", "yrrgbyyr", "gygbbgrr", "gybggrbg", "rbbgybbg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY#rRGby", "RGBY#gRG#bby" }, "ironclad:b", 25, 12, 52, 66, "plsf"),
+        };
+
+        /// <summary>
+        /// Thundercrag, the fifth chapter: the wild, a thunderer on the fifth rung and a colossus
+        /// on the tenth, every rung dealing all five charms and every raider three tenths tougher
+        /// than the baseline. Held to `s06_thundercrag.json` by `Tools/verify/rungs.py`.
+        /// </summary>
+        static readonly Rung[] Thundercrag =
+        {
+            new Rung("s06_firstcrag", new[] { "ggyybbrg", "yrgygybr", "rrbgrryb", "bgbbygby", "rgyygbrg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY#rRGby", "RGBY#g#bRGbyrg" }, "", 25, 13, 48, 62, "plsfh"),
+            new Rung("s06_mudslide", new[] { "rbyrbygr", "gyybgrby", "bggrrbgb", "rbryygry", "gbbyybby" }, "rgby", "rgby", new[] { "rgbyrgbyrgby", "RGby#rRGbyrg", "RGBY#g#bRGby" }, "", 25, 13, 48, 62, "plsfh"),
+            new Rung("s06_frostline", new[] { "ryrbbygb", "gyyggbrb", "rbryrgyy", "bgbyybrg", "rgrgbrby" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY#g#bRGby", "RGby#r#yRGbyrg" }, "", 25, 13, 48, 62, "plsfh"),
+            new Rung("s06_hollowpeak", new[] { "rbrggybr", "ygyygbry", "bggrbybg", "ryyrgyyr", "gbgybgrr" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY#g!gRG#bby", "RGby!b#rRGByby" }, "", 25, 13, 48, 62, "plsfh"),
+            new Rung("s06_thunderhead", new[] { "bryggyyg", "rgbygbbr", "yyrbyryg", "grgygbgb", "rbybrgyg" }, "rgby", "rgby", new[] { "RGBYRGby", "RGBY#rRG!bby", "RGby#gRGBy" }, "thunderer:y", 25, 13, 48, 62, "plsfh"),
+            new Rung("s06_glacierwall", new[] { "ryrgyrgg", "bbggbybg", "ryybryrb", "gbgrygrb", "grygbggr" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGby#g#b#yRGby", "RGBY!rRG#byrg" }, "", 25, 13, 48, 62, "plsfh"),
+            new Rung("s06_stoneward", new[] { "gbrrgbrr", "bggygybr", "yyrybrgb", "ybbggrry", "rrygbbyb" }, "rgby", "rgby", new[] { "RRRR#rrrrg", "GGGG#g#ggggb", "BBBB#b#bbbYYY#yy" }, "", 25, 13, 48, 62, "plsfh"),
+            new Rung("s06_boulderrun", new[] { "rbbyybry", "yyggyryy", "rbryrbgg", "gbrbgygb", "ryybrrbr" }, "rgby", "rgby", new[] { "RGbyRGby", "RGBY#rRGby", "RGby#g#bRGby", "RGBY!yRGbyrg" }, "", 25, 13, 48, 62, "plsfh"),
+            new Rung("s06_highpass", new[] { "ybgygbgb", "yrgygyrb", "bybbryyg", "bbrgbgbr", "rgyrbggr" }, "rgby", "rgby", new[] { "rgbyrgby", "RGby#rrgby", "rgby#brgbyby", "RGbyrgby" }, "", 25, 13, 48, 62, "plsfh"),
+            new Rung("s06_cragheart", new[] { "brbyyrbb", "gybgyggb", "yrggbrgr", "bgrbgrby", "bbyybgrg" }, "rgby", "rgby", new[] { "rgbyrgby", "RGby#rrgby", "RGbyrgby" }, "colossus:b", 25, 13, 48, 62, "plsfh"),
         };
 
         // ------------------------------------------------------------------ the lines it plays
@@ -178,6 +197,7 @@ namespace GlimmerGrove.Tests
             ("Broodmarch", Broodmarch),
             ("Barrowfell", Barrowfell),
             ("Ashenhold", Ashenhold),
+            ("Thundercrag", Thundercrag),
         };
 
         static Sweep Play(Rung[] chapter, WardLine line)
@@ -868,6 +888,91 @@ namespace GlimmerGrove.Tests
         /// back a tenth of a second before it is chained again is a ward that never fires.
         /// </para>
         /// </summary>
+        [Test]
+        public void TheFifthChapterIsFoughtOnABoughtLine()
+        {
+            const int BareFloor = 26;       // hard, and nobody is walled out
+            const int BoughtFloor = 40;     // clearable once the shelf has been used
+            const int Recovers = 16;        // per cent of the runs the starter loses, at least
+            const int Grades = 3;           // three-starred runs the shelf is worth, at least
+            const string Answers = "cleaver";
+
+            var bare = Play(Thundercrag, Bare());
+            var bought = Play(Thundercrag, Standing(FirstRung));
+            var answered = Play(Thundercrag, Standing(Answers));
+            var before = Play(Ashenhold, Bare());
+
+            var faults = new List<string>();
+
+            if (bare.Walled > 0)
+                faults.Add($"{bare.Walled} rung(s) of Thundercrag are held at no rhythm at all on "
+                           + "the starter line, which is a wall rather than a reason to buy a "
+                           + "turret");
+
+            // **Harder than the fourth chapter, which is what the third step of the surge is
+            // for** (invariant 37bz): a tenth is a cliff, and this chapter stands one further
+            // down it than Ashenhold does.
+            if (bare.Held >= before.Held)
+                faults.Add($"on the starter line Thundercrag held {bare.Held} of {bare.Runs} runs "
+                           + $"against Ashenhold's {before.Held} of {before.Runs} - the fifth "
+                           + "chapter is not harder than the fourth, which is what it is for");
+
+            int losing = bare.Runs - bare.Held;
+            int back = bought.Held - bare.Held;
+
+            if (losing <= 0 || back * 100 < losing * Recovers)
+                faults.Add($"one rung of the shelf moved Thundercrag from {bare.Held} to "
+                           + $"{bought.Held} of {bought.Runs} runs - {back} of the {losing} the "
+                           + $"starter loses, against the {Recovers}% this chapter is authored to "
+                           + "recover");
+
+            if (bought.Starred < bare.Starred + Grades)
+                faults.Add($"one rung of the shelf moved Thundercrag from {bare.Starred} "
+                           + $"three-starred runs to {bought.Starred}, which is under the {Grades} "
+                           + "it is authored to be worth");
+
+            // A chapter built out of stone golems is answered by the ability that beats
+            // armour, exactly as the fourth was (invariant 37da).
+            if (answered.Held <= bought.Held)
+                faults.Add($"'{Answers}', which ignores a bulwark's soak, held {answered.Held} of "
+                           + $"{answered.Runs} runs against '{FirstRung}'s {bought.Held} - so a "
+                           + "chapter built out of stone is not answered by the one ability that "
+                           + "beats armour, and its difficulty is not what it is drawn as");
+
+            if (bare.Held < BareFloor)
+                faults.Add($"on the starter line Thundercrag held {bare.Held} of {bare.Runs} runs "
+                           + $"against a floor of {BareFloor}, so it has become a wall rather than "
+                           + "hard - re-measure before moving the floor");
+
+            if (bought.Held < BoughtFloor)
+                faults.Add($"one rung up the shelf Thundercrag held {bought.Held} of "
+                           + $"{bought.Runs} runs against a floor of {BoughtFloor}, so it is not "
+                           + "doable with a bought line either - re-measure before moving the "
+                           + "floor");
+
+            if (bought.Starred == 0)
+                faults.Add("three stars was out of reach on every rung at every rhythm even one "
+                           + "rung up the shelf, so nobody playing this way ever sees three");
+
+            Assert.IsEmpty(faults,
+                           string.Join("\n", faults)
+                           + $"\n\nThundercrag on the starter ({bare.Held}/{bare.Runs} held, "
+                           + $"{bare.Starred} three-starred):\n" + bare.Table
+                           + $"\nThundercrag on {FirstRung} ({bought.Held}/{bought.Runs} held, "
+                           + $"{bought.Starred} three-starred):\n" + bought.Table
+                           + $"\nThundercrag on {Answers} ({answered.Held}/{answered.Runs} held, "
+                           + $"{answered.Starred} three-starred):\n" + answered.Table
+                           + $"\nAshenhold on the starter for comparison "
+                           + $"({before.Held}/{before.Runs} held):\n" + before.Table);
+
+            System.Console.WriteLine($"Thundercrag on the starter ({bare.Held}/{bare.Runs} held, "
+                                     + $"{bare.Starred} three-starred):\n" + bare.Table
+                                     + $"\nThundercrag on {FirstRung} ({bought.Held}/{bought.Runs} "
+                                     + $"held, {bought.Starred} three-starred):\n" + bought.Table
+                                     + $"\nThundercrag on {Answers} ({answered.Held}/{answered.Runs} "
+                                     + $"held, {answered.Starred} three-starred):\n" + answered.Table);
+        }
+
         [Test]
         public void AShacklersChainAlwaysRunsOutBeforeTheNextOne()
         {

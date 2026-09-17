@@ -209,7 +209,8 @@ GEM_ART = {"r": "gem_r", "g": "gem_g", "b": "gem_b", "y": "gem_y", "*": "gem_cog
 #: jewels, and the owner's verdict was that the charms were the existing gems with an icon on them.
 #: A prism is absent on purpose and always was - it is a face in `GEM_ART`'s sense, because it is
 #: the one gem here that is not a colour.
-CHARM_ART = {siege.LANCE: "gem_lance", siege.STORM: "gem_storm"}
+CHARM_ART = {siege.LANCE: "gem_lance", siege.STORM: "gem_storm",
+             siege.FURNACE: "gem_furnace", siege.HOURGLASS: "gem_hourglass"}
 
 #: `SiegeView.MarkInset` and `.RingInset`, as fractions of a cell.
 #: `SiegeView.CharmInset` and `RingInset` - how big a charmed stone and its halo are drawn.
@@ -381,9 +382,9 @@ CAST = ""
 #: tool has no catalog, and a mirror that computes the answer a second way is a mirror that can
 #: quietly draw a hill the game does not (invariant 44d).
 MEDLEY = (
-    ("",       "brood",  "bone",   "rabble"),
-    ("brood",  "bone",   "rabble", ""),
-    ("bone",   "rabble", "",       "brood"),
+    ("",       "brood",  "bone",   "wild"),
+    ("rabble", "wild",   "",       "brood"),
+    ("bone",   "rabble", "wild",   ""),
 )
 
 #: Which row of `MEDLEY` a kind reads, in `SiegeMode.CastAddress`'s own order.
@@ -701,6 +702,10 @@ BOSSES = {
     # bosses in the game.
     "shackler": dict(hold=0.68, tall=3.2, stem="snare", fx="snare", fire=(58, 80, 100)),
     "ironclad": dict(hold=0.42, tall=3.7, stem="clad", fx="quake", fire=(255, 244, 206)),
+    # `Pal.Sun` and `Pal.Thorn` - lightning and stone, the fifth chapter's pair. Both rows were
+    # written with the bosses rather than two chapters late (the shackler's lesson, one row up).
+    "thunderer": dict(hold=0.50, tall=3.3, stem="thunder", fx="levin", fire=(255, 201, 60)),
+    "colossus": dict(hold=0.40, tall=3.8, stem="colossus", fx="boulder", fire=(138, 112, 96)),
 }
 
 #: Which bosses are aimed at no ward, and therefore draw a pair of reels where they stand rather
@@ -1225,6 +1230,8 @@ BOSS_BANNER = {
     # own head (invariant 44d).
     "shackler": "SHACKLER",
     "ironclad": "IRONCLAD",
+    "thunderer": "THE THUNDERER",
+    "colossus": "THE COLOSSUS",
 }
 
 
@@ -1501,17 +1508,19 @@ def stood_charms(spec, level):
 
     if spec == "auto":
         row = (tall // 2) * wide
-        kinds = (siege.PRISM, siege.LANCE, siege.STORM)
+        kinds = (siege.PRISM, siege.LANCE, siege.STORM, siege.FURNACE, siege.HOURGLASS)
         return {row + 1 + i * 2: kinds[i % len(kinds)] for i in range(min(3, (wide - 1) // 2))}
 
     named = {k: v for v, k in ((siege.PRISM, "prism"), (siege.LANCE, "lance"),
-                               (siege.STORM, "storm"))}
+                               (siege.STORM, "storm"), (siege.FURNACE, "furnace"),
+                               (siege.HOURGLASS, "hourglass"))}
     out = {}
 
     for part in spec.split(","):
         cell, _, kind = part.partition("=")
         if kind.strip() not in named:
-            raise SystemExit("--charms: '%s' is not one of prism, lance, storm" % kind.strip())
+            raise SystemExit("--charms: '%s' is not one of prism, lance, storm, furnace, "
+                             "hourglass" % kind.strip())
         out[int(cell)] = named[kind.strip()]
 
     return out
@@ -2140,6 +2149,7 @@ CHAPTER_CASTS = {
     "s03_broodmarch": "brood",
     "s04_barrowfell": "bone",
     "s05_ashenhold": "rabble",
+    "s06_thundercrag": "wild",
     "s02_endlesswatch": "medley",
 }
 

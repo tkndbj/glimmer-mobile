@@ -121,6 +121,8 @@ namespace GlimmerGrove
             // fuel (invariant 37s): the bolts land when the motes do, and the one thing this may
             // not do is kill a raider before the gem that paid for it has finished bursting.
             Volley(report.Charmed);
+            for (int i = 0; i < report.Forged.Count; i++) Forged(report.Forged[i]);
+            if (report.Stilled > 0f) Stilled(report.Stilled);
             for (int i = 0; i < report.Casts.Count; i++) Cast(report.Casts[i]);
 
             // What a bomber left behind. Drawn after the bolts, so the bomb arrives after the
@@ -340,7 +342,7 @@ namespace GlimmerGrove
                 if (mob.Body != null)
                     mob.Body.color = raider.Flash > 0f
                                    ? Color.Lerp(Color.white, Pal.Cream, raider.Flash * 5f)
-                                   : raider.Stunned ? Stunned : Color.white;
+                                   : raider.Stunned || _board.Stilled ? Stunned : Color.white;
 
                 // **A boss goes back to its own body the frame after a spell finishes, and which
                 // body that is depends on whether it has arrived.**
@@ -360,6 +362,7 @@ namespace GlimmerGrove
                 // the player's turret did.
                 if (mob.Boss && !Throwing(mob))
                     Wear(mob, mob.Walking != null && !raider.InPlace && !raider.Stunned
+                              && !_board.Stilled
                               ? mob.Walking : mob.Idle);
 
                 // **A raider that has arrived swings, and goes back to walking if it is ever
@@ -525,6 +528,12 @@ namespace GlimmerGrove
                     post.Glow.color = Pal.A(Casting(SiegeKind.Shackler), .22f + left * .40f);
                     post.Glow.rectTransform.localScale = Vector3.one * (1.02f + left * .16f);
                 }
+
+                // **The rubble is drawn from the model every frame**, for the douse's and the
+                // chain's reason: the frame the last piece comes off is the frame the ward may
+                // fire again, and a widget latched on the tap would be a pile still drawn over
+                // a post that is already answering.
+                Heaped(post, ward);
 
                 // Cream, then gold, then ember: the line says how close it is to going in the
                 // one place a player is already looking.

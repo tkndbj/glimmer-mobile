@@ -760,6 +760,60 @@ namespace GlimmerGrove.EditorTools
                        Grounded = true };
 
         /// <summary>
+        /// What a <b>thunderer</b> throws: a bolt of lightning, straight down the hill at the
+        /// ward holding the most charges.
+        ///
+        /// <para>
+        /// <b>The pack's second lightning, because the first is spoken for and the third is the
+        /// stormcall's neighbour.</b> Nothing on the line fires a lightning projectile (the
+        /// starter's four are fireballs graded four ways), so a thunderbolt crossing the hill
+        /// is told apart from every bolt by shape alone — invariant 33e's test, a different
+        /// <em>kind</em> of object. Graded to <see cref="Pal.Sun"/>, the storm's own yellow and
+        /// deliberately not the amber ward's: lightning is not a colour rule, and this one lands
+        /// on whichever ward banked the most whatever it wears.
+        /// </para>
+        /// <para>
+        /// <b>A comet, for the snare's reason</b> (<see cref="Shot.Comet"/>): a lightning
+        /// projectile is a head with a long crackling tail, and framed square it would bake as
+        /// the sliver <c>Tools/verify/fxreels.py</c> exists to refuse.
+        /// </para>
+        /// <para>
+        /// <b>A candidate until it has been looked at</b>, exactly as the snare and the quake
+        /// were: the contact sheet is the gate that matters here, and no gate in this project
+        /// opens a PNG (invariant 32b). Bake with <c>Bake Siege Projectiles</c> and look at
+        /// <c>Siege Projectile Contact Sheet</c> before shipping the chapter.
+        /// </para>
+        /// </summary>
+        static readonly Shot Levin =
+            new Shot { Key = "levin", Prefab = "vfx_Projectile_Lightning02", Hue = Pal.Sun,
+                       Comet = true };
+
+        /// <summary>
+        /// What a <b>colossus</b> throws: a boulder, lobbed high and coming down on a ward.
+        ///
+        /// <para>
+        /// <b>A fireball graded to stone</b>, which is not the contradiction it sounds. What the
+        /// pack draws as a fireball is a dense bright head with a trail of embers and smoke
+        /// behind it; pulled the whole way onto <see cref="Pal.Thorn"/> — the dusty brown
+        /// nothing else on this board wears — the head reads as a rock and the trail as the dust
+        /// it sheds, and the second fireball is the heaviest-headed of the three. The ward's own
+        /// bolts are the <em>first</em> fireball graded four ways, so this shares a family with
+        /// them and a shape with none: a boulder is round where a bolt is a streak.
+        /// </para>
+        /// <para>
+        /// <b>Its impact is dust rather than fire, and it is the cleaver's fix a third time.</b>
+        /// A fireball's own impact is a fireball bursting, which on a ward under a boulder would
+        /// say the wrong thing entirely; <c>Hit_Capsule03</c> is a ring of grit and chips, and
+        /// the ironclad's <c>Capsule01</c> is deliberately not reused — two bosses two chapters
+        /// apart may share a hue and must not share a drawing (invariant 37dc).
+        /// </para>
+        /// <para><b>A candidate until it has been looked at</b>, for <see cref="Levin"/>'s reason.</para>
+        /// </summary>
+        static readonly Shot Boulder =
+            new Shot { Key = "boulder", Prefab = "vfx_Projectile_Fireball02", Hue = Pal.Thorn,
+                       Comet = true, Hit = "vfx_Hit_Capsule03" };
+
+        /// <summary>
         /// What a <b>charm</b> goes off in: one big radial detonation, in each of the four gem
         /// colours.
         ///
@@ -1090,6 +1144,56 @@ namespace GlimmerGrove.EditorTools
         public static void BakeCharms() => Run(write: true, contact: false, parts: Parts.Charm);
 
         /// <summary>
+        /// Bakes the fifth chapter's two spells and nothing else - see <see cref="Levin"/> and
+        /// <see cref="Boulder"/>.
+        ///
+        /// <b>Its own entry because the whole elemental pass re-bakes every bolt and every boss
+        /// spell</b>, and a drop that adds two rows should be able to prove exactly those two
+        /// rather than re-write twenty-eight reels that were already looked at (37dg's clock pin
+        /// makes the pass repeatable, and a repeatable pass is still a pass nobody asked for).
+        /// Also the entry a batch-mode run calls (<c>-executeMethod</c>), so the bake can be run
+        /// from a project copy when the Editor is busy.
+        /// </summary>
+        [MenuItem("Glimmer Grove/Art/Bake Thundercrag Spells", false, 37)]
+        public static void BakeThundercrag()
+        {
+            var made = new Dictionary<string, Book>();
+            GameObject stage = null;
+            Camera cam = null;
+
+            try
+            {
+                stage = BuildStage(out cam);
+
+                foreach (var thrown in new[] { Levin, Boulder })
+                {
+                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(thrown.Prefab));
+                    if (prefab == null)
+                        Debug.LogWarning($"[siege shots] {thrown.Prefab} is not in this project — skipped.");
+                    else
+                        BakeSpell(stage.transform, cam, prefab, thrown, made);
+                }
+
+                Finish(made, write: true, contact: false);
+            }
+            finally
+            {
+                if (cam != null && cam.targetTexture != null)
+                {
+                    var rt = cam.targetTexture;
+                    cam.targetTexture = null;
+                    rt.Release();
+                    Object.DestroyImmediate(rt);
+                }
+
+                if (stage != null) Object.DestroyImmediate(stage);
+
+                foreach (var book in made.Values)
+                    if (book != null && book.Sheet != null) Object.DestroyImmediate(book.Sheet);
+            }
+        }
+
+        /// <summary>
         /// Bakes one turret's three reels and nothing else.
         ///
         /// <para>
@@ -1186,7 +1290,11 @@ namespace GlimmerGrove.EditorTools
             // chapters. `SiegeArtTests.EveryBossSpellIsItsOwnDrawing` is what keeps the count
             // honest now, because a ninth boss sharing an eighth's reels is green everywhere
             // else — it loads, it draws, and it is the wrong picture.
-            foreach (var thrown in new[] { Hex, Spell, Roar, Omen, Snare, Quake, Maw, Crypt })
+            // **Ten now**: the fifth chapter's two rows, `Levin` and `Boulder`, were added with
+            // their bosses (`SiegeKind.Thunderer`, `.Colossus`), and the same fixture that counted
+            // the eight holds these to their own drawings.
+            foreach (var thrown in new[] { Hex, Spell, Roar, Omen, Snare, Quake, Maw, Crypt,
+                                           Levin, Boulder })
             {
                 var warlord = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(thrown.Prefab));
 

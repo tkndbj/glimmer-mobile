@@ -121,6 +121,16 @@ namespace GlimmerGrove.Modes
         /// </summary>
         float _roar;
 
+        /// <summary>
+        /// Seconds the hill has left standing still under an hourglass, or nought.
+        ///
+        /// <b>One number on the board, exactly as the roar is</b> (<see cref="_roar"/>): no raider
+        /// holds a copy, so nothing can be left frozen after the window has closed, and a second
+        /// hourglass landing inside the first <em>extends</em> rather than stacks. See
+        /// <see cref="Stilled"/>.
+        /// </summary>
+        float _still;
+
 
         uint _rng;
 
@@ -255,6 +265,20 @@ namespace GlimmerGrove.Modes
 
         /// <summary>The wave now on the hill, counting from one. Nought before the first.</summary>
         public int Wave => _wave;
+
+        /// <summary>
+        /// Whether the hill is standing still under an hourglass (<see cref="SiegeCharm.Hourglass"/>).
+        ///
+        /// <b>What a stopped hill is</b>: nothing on it walks, swings or casts, a boss's guard
+        /// still runs down (invariant 37dl - seconds off a fight are never a wall), and the line
+        /// keeps firing. The wave clock is <em>not</em> held, deliberately: an hourglass sprung
+        /// over an empty hill would otherwise buy a quiet nobody paid for, which is invariant 5d
+        /// asked of the one charm whose decision is <em>when</em>.
+        /// </summary>
+        public bool Stilled => _still > 0f;
+
+        /// <summary>Seconds the hill has left standing still, for a readout. Nought when it walks.</summary>
+        public float StillLeft => _still;
 
         /// <summary>
         /// Seconds of the run's own clock left before the first wave steps out, and nought the

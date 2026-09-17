@@ -222,6 +222,24 @@ namespace GlimmerGrove
                         default: return null;
                     }
 
+                case SiegeCharm.Furnace:
+                    switch (colour)
+                    {
+                        case 0: return Piece("gem_furnace_r");
+                        case 1: return Piece("gem_furnace_g");
+                        case 2: return Piece("gem_furnace_b");
+                        case 3: return Piece("gem_furnace_y");
+                        default: return null;
+                    }
+                case SiegeCharm.Hourglass:
+                    switch (colour)
+                    {
+                        case 0: return Piece("gem_hourglass_r");
+                        case 1: return Piece("gem_hourglass_g");
+                        case 2: return Piece("gem_hourglass_b");
+                        case 3: return Piece("gem_hourglass_y");
+                        default: return null;
+                    }
                 case SiegeCharm.Prism:
                 case SiegeCharm.None:
                 default: return null;
@@ -545,6 +563,8 @@ namespace GlimmerGrove
                 case SiegeKind.Bonecaller: return Reel("caller");
                 case SiegeKind.Shackler: return Reel("snare");
                 case SiegeKind.Ironclad: return Reel("clad");
+                case SiegeKind.Thunderer: return Reel("thunder");
+                case SiegeKind.Colossus: return Reel("colossus");
             }
 
             // **A body per colour, which is what removing the tint bought.** It used to be
@@ -741,6 +761,10 @@ namespace GlimmerGrove
                 // the hill.
                 case SiegeKind.Shackler: return Blast("snare");
                 case SiegeKind.Ironclad: return Blast("quake");
+                // **The fifth chapter's two throw something as well**: a bolt of lightning and
+                // a boulder, both flights of their own (`SiegeShotBake.Levin`, `.Boulder`).
+                case SiegeKind.Thunderer: return Blast("levin");
+                case SiegeKind.Colossus: return Blast("boulder");
 
                 default: return Blast("spell");
             }
@@ -768,6 +792,8 @@ namespace GlimmerGrove
                 case SiegeKind.Bonecaller: return Blast("crypt_muzzle");
                 case SiegeKind.Shackler: return Blast("snare_muzzle");
                 case SiegeKind.Ironclad: return Blast("quake_muzzle");
+                case SiegeKind.Thunderer: return Blast("levin_muzzle");
+                case SiegeKind.Colossus: return Blast("boulder_muzzle");
                 default: return Blast("spell_muzzle");
             }
         }
@@ -784,6 +810,8 @@ namespace GlimmerGrove
                 case SiegeKind.Bonecaller: return Blast("crypt_hit");
                 case SiegeKind.Shackler: return Blast("snare_hit");
                 case SiegeKind.Ironclad: return Blast("quake_hit");
+                case SiegeKind.Thunderer: return Blast("levin_hit");
+                case SiegeKind.Colossus: return Blast("boulder_hit");
                 default: return Blast("spell_hit");
             }
         }
@@ -825,6 +853,15 @@ namespace GlimmerGrove
                 // be read as "this hurts the red ward more", which is the whole constraint.
                 case SiegeKind.Shackler: return Pal.Dormant;
                 case SiegeKind.Ironclad: return Pal.Radiance;
+                // **Lightning and stone, and neither is one of the board's four.** `Sun` is the
+                // storm's own yellow - deliberately not the amber ward's `Amber`, and the one
+                // hue this palette has that reads as lightning rather than as a gem; `Thorn` is
+                // the dusty brown nothing else on this board wears, which is what a boulder is.
+                // A thunderer and the stormcall share a hue two objects apart (a boss's bolt
+                // comes down the hill at a ward; a utility's comes down the sky at the hill),
+                // which is the ironclad-and-roar bargain made once more.
+                case SiegeKind.Thunderer: return Pal.Sun;
+                case SiegeKind.Colossus: return Pal.Thorn;
 
                 // **The two that land on the hill rather than on the line**, which is what lets
                 // them take the two colours left. A devour is `Verdant` and a raise is `Glass`,

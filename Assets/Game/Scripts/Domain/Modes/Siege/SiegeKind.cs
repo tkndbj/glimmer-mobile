@@ -208,5 +208,65 @@ namespace GlimmerGrove.Modes
         /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
         /// </summary>
         Ironclad,
+
+        /// <summary>
+        /// The thunderer: it draws the line's banked charges out and throws them back.
+        ///
+        /// <para>
+        /// <b>The ninth thing there was left to take is the <em>charge</em>, and it is the one
+        /// resource in this mode the player holds by choice.</b> Health, fire, a rank, the clock,
+        /// the ground's loot, the hill's emptiness, the line's seconds and the line's answer were
+        /// all spoken for by the eight before it; an overcharge is a full tube the player has
+        /// chosen not to throw yet (<see cref="SiegeWard.Charges"/>), and nothing on the hill has
+        /// ever been able to touch it. A thunderer's spell lands on the ward holding the most
+        /// and takes every charge it holds - and each charge taken comes back as
+        /// <c>SiegeTuning.ThundererDrain</c> more off that ward, so what the player was saving is
+        /// thrown at them.
+        /// </para>
+        /// <para>
+        /// <b>The decision it asks is the mirror of the ironclad's</b>: the fourth chapter's
+        /// finale taught banking, and this is the boss that punishes hoarding. Throw the charge
+        /// before the bolt lands (the tell is the warning, invariant 37s) and it takes the base
+        /// figure; hold it and the bolt is worth what was held. It is also invariant 37di's
+        /// argument read from the other end - the charges banked through the quiet before a boss
+        /// were what killed eight bosses on the walk in, and this is the one boss that makes
+        /// walking in with two charges banked the wrong idea rather than the only one.
+        /// </para>
+        /// <para>
+        /// <b>Par does not move</b>: what it takes lands on the line, and a charge thrown early
+        /// lands at full weight exactly as <c>PerfectMatch</c> assumes (invariant 37a).
+        /// </para>
+        /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
+        /// </summary>
+        Thunderer,
+
+        /// <summary>
+        /// The colossus: it hurls a boulder that buries a ward, and the player digs it out.
+        ///
+        /// <para>
+        /// <b>The tenth thing there was left to take is the player's <em>hands</em>.</b> Every
+        /// other verb here is answered on the gem field or by waiting; a buried ward keeps its
+        /// fuel, its rank and its charges and cannot fire (<see cref="SiegeWard.Buried"/>), and
+        /// the only thing that frees it is <c>SiegeTuning.RubbleTaps</c> taps on the post -
+        /// which is the bomber's rule (invariant 40i, the one thing that makes the player touch
+        /// the hill) arriving at the line. A shackle is bought back by nothing and a douse by
+        /// fuel; rubble is bought back by attention, which is the resource this mode's clock
+        /// prices most sharply (invariant 37bl - the clock punishes deliberation).
+        /// </para>
+        /// <para>
+        /// <b>So the decision is dig or match</b>, and it can be wrong both ways (invariant 26h):
+        /// three taps spent on a ward whose colour is off the hill is three beats the field went
+        /// unplayed, and a ward left buried through a wave is a quarter of the line's answer
+        /// gone for as long as the player looks away. The hold simulation pays for a dig with a
+        /// beat it would have matched in, which is what makes the verb visible to the sweep.
+        /// </para>
+        /// <para>
+        /// <b>It takes ward health as well</b> (37dn), so it can end a run on its own and gets
+        /// a wave to itself as a finale should - it is the fifth chapter's, and the biggest
+        /// body on the hill.
+        /// </para>
+        /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
+        /// </summary>
+        Colossus,
     }
 }

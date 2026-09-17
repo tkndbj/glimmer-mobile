@@ -126,7 +126,23 @@ namespace GlimmerGrove.Modes
         public bool Shackled => Alive && Bound > 0f;
 
         /// <summary>Whether it can get a bolt away. An upgraded ward needs less to do it.</summary>
-        public bool Fuelled => Alive && !Doused && !Shackled && Fuel >= SiegeTuning.FuelShot(Rank);
+        public bool Fuelled => Alive && !Doused && !Shackled && !Buried
+                            && Fuel >= SiegeTuning.FuelShot(Rank);
+
+        /// <summary>
+        /// Pieces of rubble standing on this ward, having been buried by a colossus. Nought is
+        /// a clear post.
+        ///
+        /// <b>A count of taps rather than a countdown</b>, and that is the whole difference
+        /// between this and <see cref="Bound"/>: a chain runs out on the clock and a burial runs
+        /// out when the player has dug, so the two are two fields for the reason <see cref="Dark"/>
+        /// and <see cref="Bound"/> are. What a buried ward keeps is everything - fuel poured in
+        /// banks, charges wait - exactly as a chained one does; what it costs is the taps.
+        /// </summary>
+        public int Rubble;
+
+        /// <summary>Whether it is standing, loaded, and under rubble. See <see cref="Rubble"/>.</summary>
+        public bool Buried => Alive && Rubble > 0;
 
         /// <summary>What this turret does beyond firing.</summary>
         public Wards.WardAbility Ability => Model.Ability;
@@ -232,7 +248,7 @@ namespace GlimmerGrove.Modes
         /// whose entire verb is the seconds. The charge is kept, not lost: it is there when the
         /// chain comes off.
         /// </summary>
-        public bool Armed => Alive && !Shackled && Charges > 0;
+        public bool Armed => Alive && !Shackled && !Buried && Charges > 0;
 
         /// <summary>
         /// Pours fuel in, and banks a charge for every whole tube it fills.
@@ -297,6 +313,42 @@ namespace GlimmerGrove.Modes
         /// (invariant 26h), and the reason no utility answers this.
         /// </summary>
         public void Shackle() => Bound = SiegeTuning.ShacklerBind;
+
+        /// <summary>
+        /// Buries this ward: what a colossus's boulder does when it lands.
+        ///
+        /// <b>Set, never added</b>, for the hourglass's reason: a second boulder on a ward still
+        /// under the first is a fresh pile rather than a taller one, so a colossus cannot bury a
+        /// post so deep that no amount of tapping reaches it.
+        /// </summary>
+        public void Bury() => Rubble = SiegeTuning.RubbleTaps;
+
+        /// <summary>
+        /// Takes one piece of rubble off, answering whether one came off.
+        ///
+        /// The player's half of a burial. Nought is the floor, so a tap on a clear post is
+        /// refused rather than counted.
+        /// </summary>
+        public bool Dig()
+        {
+            if (Rubble <= 0) return false;
+            Rubble--;
+            return true;
+        }
+
+        /// <summary>
+        /// Takes every banked charge off this ward, answering how many came off.
+        ///
+        /// A thunderer's half of a drain: the charges are not spent and not thrown, they are
+        /// gone, and what they were worth comes back on the ward as damage
+        /// (<c>SiegeTuning.ThundererDrain</c>).
+        /// </summary>
+        public int Drain()
+        {
+            int taken = Charges;
+            Charges = 0;
+            return taken;
+        }
 
         /// <summary>
         /// Knocks a rank off: what an overlord's spell does on top of its damage.

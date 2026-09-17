@@ -17,10 +17,11 @@ namespace GlimmerGrove.Modes
     /// rule at all, and it touches it in one predicate.
     /// </para>
     /// <para>
-    /// <b>Three, and each one takes a different thing</b> — invariant 37z's test about bosses,
+    /// <b>Five, and each one takes a different thing</b> — invariant 37z's test about bosses,
     /// asked of a payoff. A prism decides a <em>colour</em>, a lance decides a piece of the
-    /// <em>board</em>, and a stormglass decides a moment on the <em>hill</em>. Three readings of
-    /// "clears a lot of gems" would be one charm in three tints, which is the failure that rule
+    /// <em>board</em>, a stormglass decides a moment on the <em>hill</em>, a furnace hands the
+    /// <em>line</em> a charge, and an hourglass takes the hill's <em>time</em>. Five readings of
+    /// "clears a lot of gems" would be one charm in five tints, which is the failure that rule
     /// was written for.
     /// </para>
     /// <para>
@@ -102,6 +103,65 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// </summary>
         Storm = 3,
+
+        /// <summary>
+        /// The furnace: when it goes, the ward of its colour banks a whole overcharge on the
+        /// spot, as if a full tube had just been poured into it.
+        ///
+        /// <para>
+        /// <b>The one charm that reaches the <em>line</em>, which is the fourth thing there was
+        /// left to take</b> (invariant 37z's test, asked a fourth time): a prism decides a
+        /// colour, a lance a piece of the board, a stormglass a moment on the hill - and a
+        /// furnace hands the player the mode's own big button, loaded. What it is worth is
+        /// decided by the turret standing there (a charge is that ward's capacity thrown at that
+        /// ward's weight, <c>SiegeBoard.Overcharge</c>), so it scales with the shelf exactly as
+        /// the stormglass was rebuilt to (invariant 37cg) and flattens nothing.
+        /// </para>
+        /// <para>
+        /// <b>Its decision is <em>which colour</em>, and it can be wrong twice over</b>
+        /// (invariant 26h): a furnace matched into a fallen ward is a charge with no turret to
+        /// hold it, and one matched into a ward already holding <c>SiegeTuning.MostCharges</c>
+        /// is a charge that cannot be banked. Both are refused by the ward, and the refusal is
+        /// drawn (<c>SiegeView.Forged</c>), because a payoff that silently did nothing would be
+        /// a broken gem rather than a wrong choice.
+        /// </para>
+        /// <para>
+        /// <b>It lands after the gem has burst and not before</b>, booked on the same clock a
+        /// match's fuel and a stormglass's bolts are (invariant 37s) - so the tube is seen to
+        /// fill from the stone rather than the glyph lighting on the frame of the swap.
+        /// </para>
+        /// </summary>
+        Furnace = 4,
+
+        /// <summary>
+        /// The hourglass: when it goes, the whole hill stands still for
+        /// <c>SiegeTuning.HourglassFor</c> seconds - nothing walks, nothing swings, no boss
+        /// casts - while the line keeps firing.
+        ///
+        /// <para>
+        /// <b>The fifth thing there was left to take is <em>time</em>, and it is the hill's time
+        /// rather than the player's.</b> A shackler takes the line's seconds (invariant 37cw);
+        /// this takes the hill's, which is the mirror image and reads as one: every second the
+        /// hill stands is a second of the line's fire landing on something that is not getting
+        /// any closer. It is a stop rather than a slow, for the reason <c>WardAbility.Stun</c>
+        /// is separated from <c>Frost</c> - a rate is a tuning and a stop is an event.
+        /// </para>
+        /// <para>
+        /// <b>Its decision is <em>when</em>, and an empty hill is the wrong answer</b> - the
+        /// stormglass's own test (invariant 40i's rule about a bomb, arriving on the field): it
+        /// is worth what is walking when it goes, so a player who springs it on a hill nobody
+        /// is on has spent it on nothing, and one who holds it for the crowd has bought the
+        /// line three seconds against the whole of it.
+        /// </para>
+        /// <para>
+        /// <b>It scales with the line by construction</b>: a stopped hill is worth exactly what
+        /// the standing turrets land in the window, so a bought line gets more out of the same
+        /// three seconds than the starter does, which is invariant 37cg met without a number.
+        /// A boss's guard runs down through it (invariant 37dl: seconds off the fight, never a
+        /// wall), so a boss stood still is a boss hurt, not a boss held.
+        /// </para>
+        /// </summary>
+        Hourglass = 5,
     }
 
     /// <summary>
@@ -135,6 +195,8 @@ namespace GlimmerGrove.Modes
             ('p', SiegeCharm.Prism),
             ('l', SiegeCharm.Lance),
             ('s', SiegeCharm.Storm),
+            ('f', SiegeCharm.Furnace),
+            ('h', SiegeCharm.Hourglass),
         };
 
         /// <summary>Every letter a <c>charms</c> field may be written with.</summary>
@@ -178,9 +240,11 @@ namespace GlimmerGrove.Modes
         /// the answer.
         /// </para>
         /// <para>
-        /// <b>It runs out, and that is worth knowing before a fifth chapter is commissioned</b>
-        /// (invariant 37br's argument about boss verbs). Three charms means three chapters before
-        /// the cadence needs a fourth charm, which is code rather than content.
+        /// <b>It runs out, and that is worth knowing before a sixth chapter is commissioned</b>
+        /// (invariant 37br's argument about boss verbs). Five charms means five chapters before
+        /// the cadence needs a sixth charm, which is code rather than content - the fourth and
+        /// fifth (<see cref="SiegeCharm.Furnace"/>, <see cref="SiegeCharm.Hourglass"/>) were the
+        /// bill for the fourth and fifth chapters, paid on 2026-09-16.
         /// </para>
         /// </summary>
         public static string Upto(int ordinal)
@@ -209,7 +273,27 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public static bool Spreads(SiegeCharm charm) => charm == SiegeCharm.Lance;
 
-        /// <summary>Whether this charm's payoff lands on the hill rather than on the field.</summary>
-        public static bool ReachesTheHill(SiegeCharm charm) => charm == SiegeCharm.Storm;
+        /// <summary>
+        /// Whether this charm's payoff lands on the hill rather than on the field.
+        ///
+        /// <b>Two, and they take different things from it</b>: a stormglass takes health off
+        /// everything standing there and an hourglass takes the hill's seconds. Both are booked
+        /// to land after the gem has burst (invariant 37s), which is what this predicate is
+        /// asked for.
+        /// </summary>
+        public static bool ReachesTheHill(SiegeCharm charm)
+            => charm == SiegeCharm.Storm || charm == SiegeCharm.Hourglass;
+
+        /// <summary>
+        /// Whether this charm's payoff lands on the ward line rather than on the field or the
+        /// hill. The furnace, and only the furnace: what it hands over is a charge on a turret.
+        /// </summary>
+        public static bool ReachesTheLine(SiegeCharm charm) => charm == SiegeCharm.Furnace;
+
+        /// <summary>
+        /// Whether this charm stops the hill's clock when it lands. The hourglass alone - see
+        /// <c>SiegeBoard.Stilled</c> for what a stopped hill is.
+        /// </summary>
+        public static bool StopsTheHill(SiegeCharm charm) => charm == SiegeCharm.Hourglass;
     }
 }

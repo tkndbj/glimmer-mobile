@@ -379,9 +379,11 @@ MYTH = "craftpix-net-270646-mythology-2d-character-assets-anubis-medusa-horus.zi
 BOSSPACK2 = "craftpix-net-191083-top-down-fantasy-boss-characters-pack-2-yeti-ogre-cyclops.zip"
 BONEUNITS = "craftpix-net-229181-top-down-skeleton-characters-pack-wizard-knight-archer.zip"
 
-#: The other four, named so `--survey` draws them. Nothing is cut from these yet, and between
-#: them they are twelve more top-down bodies - which is what a fifth chapter's bosses come out
-#: of without a purchase.
+#: The other four, named so `--survey` draws them - and, since the fifth chapter, cut from.
+#: **Seven of the fifteen bodies these packs held cast Thundercrag**: five raiders (`WILD_SET`)
+#: and two bosses (`BOSS_SET`'s thunderer and colossus). Eight are still uncut - the skeleton
+#: knight and archer, Medusa, Horus, the pharaoh and the three wizards - which is what a sixth
+#: chapter comes out of without a purchase.
 BOSSPACK3 = "craftpix-net-545831-top-down-boss-characters-pack-3-rock-earth-ice-monsters.zip"
 ANCIENTS = "craftpix-net-947906-ancient-mythology-boss-characters-top-down-asset-pack.zip"
 WIZUNITS = "craftpix-net-954187-top-down-wizard-characters-pack-male-veteran-female.zip"
@@ -564,7 +566,22 @@ PRISM_GEM = ("PNG/3.png", "a rainbow brilliant")
 CHARM_GEMS = {
     "lance": ("92.png", "a stellated star"),
     "storm": ("23.png", "a vortex orb"),
+
+    # **The fourth and fifth, chosen on the same test** - a silhouette none of the six before
+    # it has. A **furnace** banks a charge on a turret, so it is the one stone in the pack that
+    # is *rough*: a cracked nugget with light in the fissures, which reads as a coal where the
+    # six cut stones read as jewels. An **hourglass** stops the hill, so it is the bicone - two
+    # points meeting at a waist, which is an hourglass's own outline and the only thing in the
+    # pack drawn that way.
+    "furnace": ("22.png", "a cracked molten nugget"),
+    "hourglass": ("43.png", "a bicone, waisted like an hourglass"),
 }
+
+#: What a colossus's boulder leaves on a post: one rough grey stone out of the gem pack, cut
+#: once and drawn three times at three sizes by the view (`SiegeView.Rubble`). A cut rock rather
+#: than three discs, for invariant 47i's reason - a shape assembled out of primitives has no
+#: artist in it, and this one stands on a turret for as long as the player leaves it there.
+RUBBLE_GEM = ("49.png", "a grey rough stone")
 
 #: How far a charmed gem is carried onto the ward colour, and how hard its colour is pushed.
 #:
@@ -790,6 +807,12 @@ GRAVEMAW = 350
 #: nothing is ever upscaled by the view.
 SHACKLER, BONECALLER, IRONCLAD = 350, 390, 400
 
+#: How tall the fifth chapter's two are cut: `SiegeTuning.TallOf` at 114 pixels a cell, as every
+#: row above. A thunderer stands beside the other rung-five bosses at 3.3 cells; a colossus tops
+#: the whole mode at 3.8, because it is the widest body in the unit packs and the fifth chapter's
+#: finale.
+THUNDERER, COLOSSUS = 376, 433
+
 #: The four bosses: a body reel, a cast reel, and how tall each is cut.
 #:
 #: <b>Not insects, and that is the whole of what this table is for.</b> They were four insects out
@@ -921,6 +944,26 @@ BOSS_SET = {
     # which is what the last rung of the last chapter should be.
     "clad":    dict(pack=BOSSPACK2, body=UNIT_WALK % "Armored Ogre",
                     cast=None, tall=IRONCLAD),
+
+    # ------------------------------------------------ the two the fifth chapter brings
+    #
+    # **Both chosen against the wild** - two stone bulwarks, a yeti, a minotaur and a mud clod,
+    # every one of them a monster - so the two bosses standing in front of them are the two
+    # bodies in these packs that are plainly *not* monsters: a god and a giant.
+    #
+    # **Zeus, because the verb is lightning.** A thunderer drains the line's banked charges and
+    # throws them back, and the one body on this shelf whose whole picture is a thunderbolt in a
+    # raised hand needs no explaining. White robes over a hill of stone and moss is a value no
+    # raider in the chapter wears.
+    "thunder": dict(pack=ANCIENTS, body=UNIT_WALK % "Zeus",
+                    cast=None, tall=THUNDERER),
+
+    # **The cyclops, because the verb is a boulder.** A colossus hurls a rock that buries a
+    # ward, so it is the widest body in the packs with the heaviest club - and one eye is the
+    # silhouette that survives this camera: it projects nothing sideways and does not need to,
+    # because the head is a third of the body. Drawn 3.8 cells, the biggest thing in the mode.
+    "colossus": dict(pack=BOSSPACK2, body=UNIT_WALK % "Cyclops",
+                     cast=None, tall=COLOSSUS),
 }
 
 # **Every boss in this mode is cut here now, and for one drop three of them were not.** The
@@ -1077,6 +1120,59 @@ RABBLE_SET = {
 #: body in the pack wearing nothing but bone - stay washed; above it the skull stops having a skull
 #: in it, which is the flattening `CAST_PULL`'s note is about arriving through saturation instead.
 BONE_SAT_FLOOR = 0.60
+
+#: The **fifth** chapter's twelve raiders: five top-down bodies out of the unit packs, and a
+#: second reel per body cut from the packs' own `Front - Attacking`.
+#:
+#: <b>The kind is said by what a body is made of</b>, which is this pack family's own drawing
+#: and needed no interpretation: two bodies are *stone* - a cracked grey golem and a blue ice
+#: golem, plated head to foot - so they are the bulwarks; the two carrying a club and an axe,
+#: the yeti and the minotaur, are the heaviest silhouettes and the brutes; and the mud clod,
+#: round and soft with moss on it, is the one body here that reads as something that comes in
+#: numbers, so it creeps.
+#:
+#: <b>Where a body is worn twice the two colours it wears are opposite ones</b> - `BONE_SET`'s
+#: rule, for `BONE_SET`'s reason: the yeti is red and blue and the minotaur green and amber, the
+#: rock red and blue and the ice green and amber, so no one silhouette sits on the two hues this
+#: palette keeps closest together (37ak).
+#:
+#: <b>Every body faces the camera and walks toward it</b>, which is the property that decided
+#: the cast before anything else did (`survey`, 37db) - these packs draw Front, Back, Left and
+#: Right, and Front is the one this board wants. And every one of them carries a real attack,
+#: cut on the walk's scale (`walk_and_swing`), so the swing is bought rather than built.
+WILD_SET = {
+    # creepers - the mud clod, four times, which is what a swarm of the hill's own ground is
+    "wildMon_r":     (BOSSPACK3, "Earth Monster"),
+    "wildMon_g":     (BOSSPACK3, "Earth Monster"),
+    "wildMon_b":     (BOSSPACK3, "Earth Monster"),
+    "wildMon_y":     (BOSSPACK3, "Earth Monster"),
+
+    # brutes - the two carrying a weapon: a yeti with a club, a minotaur with an axe
+    "wildBrute_r":   (BOSSPACK2, "Yeti"),
+    "wildBrute_g":   (ANCIENTS, "Minotaur"),
+    "wildBrute_b":   (BOSSPACK2, "Yeti"),
+    "wildBrute_y":   (ANCIENTS, "Minotaur"),
+
+    # bulwarks - the two made of stone: a cracked rock golem and a plated ice golem
+    "wildBulwark_r": (BOSSPACK3, "Rock Monster"),
+    "wildBulwark_g": (BOSSPACK3, "Ice Monster"),
+    "wildBulwark_b": (BOSSPACK3, "Rock Monster"),
+    "wildBulwark_y": (BOSSPACK3, "Ice Monster"),
+}
+
+#: How hard the wild's saturation is floored, between the bone cast's 0.60 and the others' 0.30.
+#:
+#: <b>Measured off the two extremes in the set</b>: the rock golem and the yeti are nearly grey
+#: and white, so at 0.30 a red rock and an amber rock are two greys half a hue apart (the bone
+#: cast's finding); the minotaur and the mud clod carry their own brown and green, so at 0.60
+#: the moss and the fur stop having any shading in them. 0.48 is where a red golem is plainly
+#: red and the yeti's fur still has a highlight.
+WILD_SAT_FLOOR = 0.48
+
+#: How the unit packs name a body's two reels, relative to the body's own folder - the same
+#: two paths `UNIT_WALK` and `UNIT_CAST` spell out for a boss, in the shape `walk_and_swing`
+#: wants them.
+UNIT_WALK_ANIM, UNIT_SWING_ANIM = "/PNG/PNG Sequences/Front - Walking", "/PNG/PNG Sequences/Front - Attacking"
 
 #: How many frames a swing keeps. See `SWING_ANIM`.
 SWING_FRAMES = 6
@@ -1519,6 +1615,18 @@ def charm_gem(im, hue):
     """
     return fit(hued(im, hue, pull=CHARM_PULL, sat_gain=CHARM_SAT, sat_floor=CHARM_FLOOR),
                TILE, 0.94)
+
+
+def rubble(im):
+    """The stone a colossus leaves on a post: the pack's grey rock, graded to warm stone.
+
+    Pulled all the way onto one warm hue at a low saturation, so it is plainly *rock* and plainly
+    not one of the four gem colours - a boulder wearing red on a red turret would be a fifth way
+    of saying red. Cut a little under a gem's room, because it is drawn three times over a
+    chassis and the pile has to leave the turret readable under it.
+    """
+    return fit(hued(im, 0.08, pull=1.0, sat_gain=0.30, sat_floor=0.12, val_gain=0.88,
+                    val_lift=0.0), TILE, 0.86)
 
 
 def charm_ring():
@@ -2104,7 +2212,7 @@ def cast_frames(z, folder, count=FRAMES, tall=CAST, ink=(0, 0, 0), tol=SHADOW_IN
 LUNGE_RISE, LUNGE_LEAN = 0.11, 0.04
 
 
-def walk_and_swing(z, folder, tall, ink, tol):
+def walk_and_swing(z, folder, tall, ink, tol, walk_anim=WALK_ANIM, swing_anim=SWING_ANIM):
     """A raider's two reels: what it walks in, and what it swings in at the ward line.
 
     <b>The swing is cut on a bigger canvas at the <em>walk's</em> scale, which is the whole of what
@@ -2126,7 +2234,7 @@ def walk_and_swing(z, folder, tall, ink, tol):
     walking, exactly as it does today.
 
     """
-    walk = deshadow([read(z, n) for n in spaced(ordered(z, folder + WALK_ANIM), FRAMES)], ink, tol)
+    walk = deshadow([read(z, n) for n in spaced(ordered(z, folder + walk_anim), FRAMES)], ink, tol)
     if not walk:
         return [], []
 
@@ -2142,7 +2250,7 @@ def walk_and_swing(z, folder, tall, ink, tol):
                 tall if high is None else max(1, int(high * ratio)))
         return [im.crop(box).resize(size, Image.LANCZOS) for im in frames]
 
-    swing = deshadow([read(z, n) for n in spaced(ordered(z, folder + SWING_ANIM), SWING_FRAMES)],
+    swing = deshadow([read(z, n) for n in spaced(ordered(z, folder + swing_anim), SWING_FRAMES)],
                      ink, tol)
 
     if not swing:
@@ -2509,6 +2617,9 @@ def build():
     # rather than a mistake, exactly as every root above.
     myth, boss2, boneunits = zipped(MYTH, UNITS), zipped(BOSSPACK2, UNITS), zipped(BONEUNITS, UNITS)
 
+    # The two the fifth chapter's cast and its thunderer come from. Absent, the same bargain.
+    ancients, boss3 = zipped(ANCIENTS, UNITS), zipped(BOSSPACK3, UNITS)
+
     # The bosses and half the second chapter's cast live here. Absent, this is a checkout without
     # the pack rather than a mistake - the same bargain every art tool in this project strikes -
     # so it is answered by cutting neither, and `--check` then has nothing to hold them to.
@@ -2521,10 +2632,14 @@ def build():
     if myth is None or boss2 is None or boneunits is None:
         return None
 
+    if ancients is None or boss3 is None:
+        return None
+
     #: Which zip a `BROOD_SET` row names. A table of bodies has to say which pack each is in, and
     #: one dict is how it says it without a branch per row.
     packs = {KIT: kit, MONSTERS: monsters, MONS_V1: horde1, MONS_V4: horde4,
-             MYTH: myth, BOSSPACK2: boss2, BONEUNITS: boneunits}
+             MYTH: myth, BOSSPACK2: boss2, BONEUNITS: boneunits,
+             ANCIENTS: ancients, BOSSPACK3: boss3}
 
     made = {}
 
@@ -2655,6 +2770,10 @@ def build():
 
     made["Siege/charm_ring.png"] = charm_ring()
 
+    # The colossus's rubble, out of the same pack as the charmed stones and absent with it.
+    if gems is not None:
+        made["Siege/rubble.png"] = rubble(Image.open(gems / RUBBLE_GEM[0]).convert("RGBA"))
+
     for i, frame in enumerate(beam()):
         made["Siege/beam/f%02d.png" % i] = frame
 
@@ -2783,7 +2902,35 @@ def build():
                     im, hue, pull=CAST_PULL, sat_gain=CAST_SAT_GAIN, sat_floor=CAST_SAT_FLOOR,
                     val_gain=gain, val_lift=CAST_VAL_LIFT)
 
-    # The eight bosses: two reels each, both off one canvas so none of them jumps or changes size
+    # The fifth chapter's cast, out of the top-down unit packs, and a second reel per body cut
+    # from the packs' own attack - the same lines the bone cast is cut with, because a cast set
+    # is a *table* and not a code path (`BROOD_SET`'s claim, holding a fourth time). **Cut once
+    # per body rather than once per row**, for the rabble's reason: nine of the twelve rows draw
+    # five bodies, and the colour is applied after.
+    wild = {}
+
+    for key, (pack, body) in WILD_SET.items():
+        hue = hues.get(key[-1])
+        ink, tol = PACK_SHADE[pack]
+
+        if body not in wild:
+            wild[body] = walk_and_swing(packs[pack], body, CAST, ink, tol,
+                                        UNIT_WALK_ANIM, UNIT_SWING_ANIM)
+
+        walk, swing = wild[body]
+
+        # **One gain for both reels, measured off the walk**, for the bone cast's reason: a
+        # raider that changed brightness the moment it reached the line is this file's own
+        # complaint about a body that changes size, one channel over.
+        gain = value_gain(walk)
+
+        for suffix, frames in (("", walk), ("_swing", swing)):
+            for i, im in enumerate(frames):
+                made["Siege/%s%s/f%02d.png" % (key, suffix, i)] = im if hue is None else hued(
+                    im, hue, pull=CAST_PULL, sat_gain=CAST_SAT_GAIN, sat_floor=WILD_SAT_FLOOR,
+                    val_gain=gain, val_lift=CAST_VAL_LIFT)
+
+    # The ten bosses: two reels each, both off one canvas so none of them jumps or changes size
     # when it throws. One loop rather than one block per boss, which is what stopped a third and a
     # fourth being expensive - and what makes the *set* something a reader can see at once.
     packs[WIZARD] = wizard
@@ -3071,13 +3218,13 @@ CHARACTER_PACKS = (
     (MYTH, "UNITS", ("Anubis", "Horus", "Medusa"),
      "mythology units - TOP-DOWN, the shackler"),
     (BOSSPACK2, "UNITS", ("Armored Ogre", "Cyclops", "Yeti"),
-     "fantasy bosses 2 - TOP-DOWN, the ironclad"),
+     "fantasy bosses 2 - TOP-DOWN, the ironclad, the colossus, the wild's yeti"),
     (BOSSPACK3, "UNITS", ("Earth Monster", "Ice Monster", "Rock Monster"),
-     "fantasy bosses 3 - TOP-DOWN, spare"),
+     "fantasy bosses 3 - TOP-DOWN, the wild's clod and its two golems"),
     (ANCIENTS, "UNITS", ("Minotaur", "Pharaoh", "Zeus"),
-     "ancient mythology bosses - TOP-DOWN, spare"),
+     "ancient mythology bosses - TOP-DOWN, the thunderer and the wild's minotaur; pharaoh spare"),
     (WIZUNITS, "UNITS", ("Wizard Female", "Wizard Male", "Wizard Veteran"),
-     "wizard units - TOP-DOWN, spare"),
+     "wizard units - TOP-DOWN, spare (a sixth chapter)"),
 )
 
 #: Which animation of a body the survey tries, in order. The packs disagree about the word and

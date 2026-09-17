@@ -173,8 +173,17 @@ namespace GlimmerGrove.Modes
         /// <summary>Whether a rank really came off. Only ever true of a <see cref="SiegeSpell.Sunder"/>.</summary>
         public readonly bool Sundered;
 
+        /// <summary>
+        /// How many banked charges a drain took off the ward, or nought for every other spell.
+        ///
+        /// Carried on the record rather than read off the ward afterwards, because by the time
+        /// the view draws the landing the ward reads nought either way - and what has to be drawn
+        /// is the charges leaving.
+        /// </summary>
+        public readonly int Taken;
+
         public SiegeSpellLanded(int raider, int ward, SiegeSpell craft, int damage, bool felled,
-                                bool sundered = false)
+                                bool sundered = false, int taken = 0)
         {
             Raider = raider;
             Ward = ward;
@@ -182,6 +191,7 @@ namespace GlimmerGrove.Modes
             Damage = damage;
             Felled = felled;
             Sundered = sundered;
+            Taken = taken;
         }
     }
 
@@ -264,6 +274,26 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly List<SiegeBolt> Charmed = new List<SiegeBolt>(16);
 
+        /// <summary>
+        /// A furnace that has landed on the line this step: which ward it reached and whether
+        /// the ward could hold what it brought.
+        ///
+        /// <b>Booked exactly as a stormglass's bolts are</b> (invariant 37s), so it arrives here
+        /// a beat after the gem burst rather than on the frame of the swap - the tube is seen to
+        /// fill from the stone. A refusal is reported as well as a bank, because a charm that
+        /// silently did nothing reads as a broken gem rather than as a wrong choice.
+        /// </summary>
+        public readonly List<SiegeForged> Forged = new List<SiegeForged>(2);
+
+        /// <summary>
+        /// Seconds the hill was just stopped for by an hourglass landing this step, or nought.
+        ///
+        /// <b>The edge rather than the state</b>, for <see cref="Brimmed"/>'s reason: the view
+        /// reads <c>SiegeBoard.Stilled</c> every frame to draw a stopped hill, and what it wants
+        /// here is the frame the stop began on, which is the frame the wave is drawn crossing it.
+        /// </summary>
+        public float Stilled;
+
         /// <summary>The wave that has just stepped out, or -1.</summary>
         public int Wave = -1;
 
@@ -280,13 +310,16 @@ namespace GlimmerGrove.Modes
             Devoured.Clear();
             Brimmed.Clear();
             Charmed.Clear();
+            Forged.Clear();
+            Stilled = 0f;
             Wave = -1;
         }
 
         public bool Any => Bolts.Count > 0 || Blows.Count > 0 || Casts.Count > 0
                         || Spells.Count > 0 || Arrived.Count > 0 || Dropped.Count > 0
                         || Cogs.Count > 0 || Trampled.Count > 0 || Devoured.Count > 0
-                        || Brimmed.Count > 0 || Charmed.Count > 0 || Wave >= 0;
+                        || Brimmed.Count > 0 || Charmed.Count > 0 || Forged.Count > 0
+                        || Stilled > 0f || Wave >= 0;
     }
 
     /// <summary>Fuel a match has earned that has not reached its ward yet.</summary>
@@ -340,6 +373,26 @@ namespace GlimmerGrove.Modes
     /// says what it bought has to be in that colour or it says nothing.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// A furnace landing on the line: the ward it reached, and whether it banked a charge there.
+    ///
+    /// <b><see cref="Banked"/> false is a refusal, not a fault</b> - the ward had fallen, or was
+    /// already holding <c>SiegeTuning.MostCharges</c> - and the view draws it as one, because the
+    /// decision a furnace asks is which colour, and a wrong answer the player cannot see is not a
+    /// decision (invariant 26h).
+    /// </summary>
+    public readonly struct SiegeForged
+    {
+        public readonly int Ward;
+        public readonly bool Banked;
+
+        public SiegeForged(int ward, bool banked)
+        {
+            Ward = ward;
+            Banked = banked;
+        }
+    }
+
     public readonly struct SiegeSpark
     {
         public readonly int Cell;

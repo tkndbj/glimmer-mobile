@@ -321,6 +321,16 @@ namespace GlimmerGrove
             /// <summary>How many overcharges are banked, drawn only when it is more than one.</summary>
             public Text Held;
 
+            // ------------------------------------------------------------ the rubble
+            /// <summary>
+            /// The pile a colossus leaves on this post: one stone drawn three times, and the
+            /// tap target under them. Built with the post and hidden until a boulder lands
+            /// (`SiegeView.Rubble`).
+            /// </summary>
+            public RectTransform Heap;
+            public Image[] Stones;
+            public int Piled;
+
             /// <summary>
             /// The disc behind that number.
             ///

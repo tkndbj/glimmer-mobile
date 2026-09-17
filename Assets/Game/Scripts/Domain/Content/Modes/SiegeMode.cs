@@ -151,6 +151,25 @@ namespace GlimmerGrove.Content
             AssetRequest.Sprite(AssetManifest.SiegeArt("gem_storm_b")),
             AssetRequest.Sprite(AssetManifest.SiegeArt("gem_storm_y")),
 
+            // **The fourth and fifth charms, cut exactly as the second and third are** - a
+            // furnace is a cracked molten nugget and an hourglass a bicone, each hue-rotated into
+            // the four gem colours (`make_siege_art.CHARM_GEMS`). Resident with the field for the
+            // same reason the first three are.
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_furnace_r")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_furnace_g")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_furnace_b")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_furnace_y")),
+
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_hourglass_r")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_hourglass_g")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_hourglass_b")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_hourglass_y")),
+
+            // What a colossus leaves on a post (`SiegeKind.Colossus`): one stone, drawn three
+            // times at three sizes. Resident with the line's furniture rather than scoped to the
+            // chapter that sends the colossus, because the Infinite lane may send one too.
+            AssetRequest.Sprite(AssetManifest.SiegeArt("rubble")),
+
             AssetRequest.Sprite(AssetManifest.SiegeArt("charm_ring")),
 
             // **The beam is a reel now and not a bar.** A still gradient stretched across the row
@@ -402,6 +421,27 @@ namespace GlimmerGrove.Content
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("quake")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("quake_muzzle")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("quake_hit")));
+                    break;
+
+                // **The fifth chapter's two, and both throw something.** A thunderer looses a
+                // bolt at the ward holding the most charges and a colossus lobs a boulder at the
+                // fullest tube, so both have a flight, a flash and a landing of their own
+                // (`SiegeShotBake.Levin`, `.Boulder`) - each a different *kind* of object from
+                // the eight before it, which is invariant 37dc's test asked of the picture.
+                case SiegeKind.Thunderer:
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("thunder")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("thunder_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("levin")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("levin_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("levin_hit")));
+                    break;
+
+                case SiegeKind.Colossus:
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("colossus")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("colossus_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("boulder")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("boulder_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("boulder_hit")));
                     break;
             }
         }
@@ -702,11 +742,50 @@ namespace GlimmerGrove.Content
         /// with a chapter is the point rather than the fault (compare <see cref="RabbleCast"/>).
         /// </para>
         /// </summary>
+        static readonly AssetRequest[] WildCast =
+        {
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildMon_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildMon_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildMon_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildMon_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBrute_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBrute_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBrute_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBrute_y")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBulwark_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBulwark_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBulwark_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBulwark_y")),
+        };
+
+        static readonly AssetRequest[] WildSwings =
+        {
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildMon_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildMon_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildMon_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildMon_y_swing")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBrute_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBrute_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBrute_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBrute_y_swing")),
+
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBulwark_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBulwark_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBulwark_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("wildBulwark_y_swing")),
+        };
+
+        // **Re-dealt over five casts when the wild joined**, so every chapter cast still puts at
+        // least two bodies on the Infinite lane (`SiegeCastTests.TheMedleyDrawsFromEveryChapterCast`).
+        // Which cast lands on which slot is a taste and a table; that every cast lands is a rule.
         static readonly int[] MedleyOrder =
         {
-            Insects, Brood,   Bones,   Rabble,     // creepers  r g b y
-            Brood,   Bones,   Rabble,  Insects,    // brutes
-            Bones,   Rabble,  Insects, Brood,      // bulwarks
+            Insects, Brood,   Bones,   Wild,       // creepers  r g b y
+            Rabble,  Wild,    Insects, Brood,      // brutes
+            Bones,   Rabble,  Wild,    Insects,    // bulwarks
         };
 
         /// <summary>
@@ -785,8 +864,15 @@ namespace GlimmerGrove.Content
         /// <summary>The rabble. See <see cref="RabbleCast"/>.</summary>
         public const int Rabble = 4;
 
+        /// <summary>
+        /// The fifth chapter's cast: five top-down bodies out of the unit packs - two stone
+        /// bulwarks, a yeti and a minotaur for brutes, and a mud clod that creeps
+        /// (`make_siege_art.WILD_SET`).
+        /// </summary>
+        public const int Wild = 5;
+
         /// <summary>How many casts this mode ships.</summary>
-        public const int CastSets = 5;
+        public const int CastSets = 6;
 
         /// <summary>
         /// The casts the <b>main ladder</b> draws from, in the order its chapters meet them.
@@ -797,7 +883,7 @@ namespace GlimmerGrove.Content
         /// year costs no cast at all</b>, and no chapter can ship drawing bodies nobody chose. A
         /// third pack lengthens this array and changes nothing else.
         /// </summary>
-        static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble };
+        static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble, Wild };
 
         /// <summary>
         /// How many casts the main ladder draws from before it starts again.
@@ -857,6 +943,7 @@ namespace GlimmerGrove.Content
                 case Brood: return BroodCast;
                 case Bones: return BoneCast;
                 case Rabble: return RabbleCast;
+                case Wild: return WildCast;
                 default: return InsectCast;
             }
         }
@@ -877,7 +964,8 @@ namespace GlimmerGrove.Content
         public static IReadOnlyList<AssetRequest> CastSwingArt(int set)
             => set == Bones ? BoneSwings
              : set == Medley ? MedleySwings
-             : set == Rabble ? RabbleSwings : null;
+             : set == Rabble ? RabbleSwings
+             : set == Wild ? WildSwings : null;
 
         /// <summary>
         /// The address one raider's swing reel is at, or <b>empty</b> when this cast has none.

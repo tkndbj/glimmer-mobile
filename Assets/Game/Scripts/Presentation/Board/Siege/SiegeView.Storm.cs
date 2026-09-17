@@ -650,6 +650,37 @@ namespace GlimmerGrove
                     break;
                 }
 
+                // ---------------------------------------------------------- the thunderer
+                // **One bolt down the hill and three out of the sky, because what it throws is
+                // weather.** The flight is a comet of lightning flown straight - a thunderbolt
+                // does not bow - with a forked arc snapping between the caster and the ward
+                // twice on the way, so the line the charges will be drawn back along is
+                // already lit before the drain lands (`Drained` draws the return).
+                case SiegeKind.Thunderer:
+                {
+                    Hurl(from, to, kind, flight, 0f, 1f, 0f);
+                    for (int i = 0; i < 2; i++)
+                        Arc(from, to, fire, Cell * .06f, .16f, 3, .40f, flight * (.25f + i * .35f));
+                    for (int i = 0; i < 3; i++)
+                        Strike(to + new Vector2(Random.Range(-Cell * .6f, Cell * .6f), 0f),
+                               fire, Cell * .08f, flight * (.4f + i * .2f), .28f);
+                    break;
+                }
+
+                // ---------------------------------------------------------- the colossus
+                // **One heavy thing, lobbed high and coming down.** The ironclad's axe is the
+                // only other object here that has to read as falling; a boulder is bigger,
+                // slower to the eye and thrown from higher, so it leaves from above the
+                // colossus's shoulder and bows harder than anything else in this switch. Nothing
+                // crackles - stone is not magic - and the rubble it leaves is drawn on landing
+                // (`Buried`), because that is the beat the post stops answering on.
+                case SiegeKind.Colossus:
+                {
+                    Hurl(from + new Vector2(0f, Cell * 2.4f), to, kind, flight, -1.5f, 1f, 0f);
+                    if (mob.Body != null) Tween.Punch(mob.Body.transform, .12f, .3f);
+                    break;
+                }
+
                 // ---------------------------------------------------------- the overlord
                 // **Double rockets, and they are the reason it is drawn last.** The finale's spell
                 // takes a rank as well as health, so it is the one that has to look like more than
@@ -828,6 +859,40 @@ namespace GlimmerGrove
                     break;
                 }
 
+                case SiegeKind.Thunderer:
+                {
+                    // **Lightning crawling over the chassis, upward.** A drain takes what the
+                    // post was holding and `Drained` draws that leaving; what the aftermath owes
+                    // the post is the charge that landed - three short bolts climbing the
+                    // turret rather than falling on it, so a thunderer's landing is told apart
+                    // from a warlord's strikes by direction alone.
+                    for (int i = 0; i < 3; i++)
+                    {
+                        var a = at + new Vector2(Random.Range(-Cell * .35f, Cell * .35f),
+                                                 -Cell * .3f + i * Cell * .25f);
+                        var b = a + new Vector2(Random.Range(-Cell * .3f, Cell * .3f), Cell * .55f);
+                        Arc(a, b, fire, Cell * .05f, .2f, 1, .45f, i * .06f);
+                    }
+                    break;
+                }
+                case SiegeKind.Colossus:
+                {
+                    // **Dust sideways at the foot of the post, wider than the ironclad's**, for
+                    // the same reason and one size up: what landed was a boulder, and the rubble
+                    // it leaves standing (`Buried`) is the picture that lasts. Two rings rather
+                    // than one, a beat apart, because a thing that heavy bounces once.
+                    for (int i = 0; i < 2; i++)
+                    {
+                        float away = (i == 0 ? -1f : 1f) * Cell * 2.3f;
+                        Arc(at + new Vector2(0f, -Cell * .35f),
+                            at + new Vector2(away, -Cell * .28f),
+                            fire, Cell * .07f, .3f, 1, .4f, .03f);
+                    }
+                    Shockwave(at + new Vector2(0f, -Cell * .35f), Pal.Lift(fire, .3f), 5.2f, .42f);
+                    Tween.After(.14f, () => Shockwave(at + new Vector2(0f, -Cell * .35f),
+                                                      Pal.Lift(fire, .25f), 3.4f, .32f), _fx);
+                    break;
+                }
                 case SiegeKind.Ironclad:
                 {
                     // **Dust along the ground, because what landed was mass.** Every other

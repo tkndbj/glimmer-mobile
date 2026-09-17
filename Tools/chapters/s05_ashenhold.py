@@ -105,12 +105,12 @@ LEVELS = (
     # about itself.** Barrowfell opened with no armour at all and brought it on the second rung;
     # these are people who came equipped, and the first rung says so in the one way a first rung
     # may - with the cast and with a single shield in the last wave, rather than with a new rule.
-    dict(id="s05_firstiron", seed=76184, swaps=7, charms="pls",
+    dict(id="s05_firstiron", seed=76184, swaps=7, charms="plsf",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RGbyRGby", "RGBYRGby", "RGBY#rRGbyrg"]),
 
     # Two shields a wave from the second rung, which is where Barrowfell's *worst* rung sat.
-    dict(id="s05_shieldline", seed=76189, swaps=7, charms="pls",
+    dict(id="s05_shieldline", seed=76189, swaps=7, charms="plsf",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RGby#rRGby", "RGBY#g#bRGby", "RGbyRGbyrg"]),
 
@@ -118,7 +118,7 @@ LEVELS = (
     # rule.** A bulwark halves every bolt that is not its own colour, so three of them in three
     # colours is a wave asking the player to feed three specific wards in order while everything
     # else walks - and taking the biggest match on the field is exactly the wrong answer to it.
-    dict(id="s05_pikewall", seed=76422, swaps=7, charms="pls",
+    dict(id="s05_pikewall", seed=76422, swaps=7, charms="plsf",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RGby#rRGby", "RGby#g#b#yRGby", "RGByRGbyrg"]),
 
@@ -126,7 +126,7 @@ LEVELS = (
     # wave rather than tapping it where it fell (invariant 40i: the decision is *when*). A bomb
     # takes a plus of five boxes, and a bulwark standing in it is the one raider a colour match is
     # slowest against.
-    dict(id="s05_emberrow", seed=88211, swaps=6, charms="pls",
+    dict(id="s05_emberrow", seed=88211, swaps=6, charms="plsf",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RGby#rRGby", "RGBY#g!gRG#bby", "RGby!bRGByby"]),
 
@@ -136,27 +136,27 @@ LEVELS = (
     # chain costs is entirely what the chained ward was about to do, so the wave it rides has to be
     # one the line is genuinely answering: the validator refuses this rung if fewer than four
     # raiders come beside it.
-    dict(id="s05_chainfall", seed=92781, swaps=6, charms="pls",
+    dict(id="s05_chainfall", seed=92781, swaps=6, charms="plsf",
          wards="rgby", gems="rgby", cogs=25, boss="shackler:g",
          waves=["RGBYRGBy", "RGBY#rRG!bby", "RGby#rRGBy"]),
 
     # The densest hill in the game: four waves, brutes in every colour, two shields. Nothing to
     # work out and everything to keep up with - a texture a chapter needs one of, and this is
     # Ashenhold's.
-    dict(id="s05_ironyard", seed=94130, swaps=6, charms="pls",
+    dict(id="s05_ironyard", seed=94130, swaps=6, charms="plsf",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RGbyRGby", "RGBY#rRGby", "RGby#gRGby", "RGBYRGbyrg"]),
 
     # **One colour at a time with armour in it.** A bolt is worth double against its own colour, so
     # a wave that is all of one thing is a wave three of the four wards can barely help with - and
     # the shield in each makes the one ward that *can* help the only ward that can.
-    dict(id="s05_hollowvigil", seed=95067, swaps=6, charms="pls",
+    dict(id="s05_hollowvigil", seed=95067, swaps=6, charms="plsf",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RRRR#rrrrg", "GGGG#g#ggggb", "BBBB#bbbYYY#yy"]),
 
     # Armour and bombers together on a tight field, which is the rung where a charge held back is
     # worth a whole wave.
-    dict(id="s05_sunderway", seed=98747, swaps=5, charms="pls",
+    dict(id="s05_sunderway", seed=98747, swaps=5, charms="plsf",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RGby#rRGby", "RGBY!gRG#bby", "RGBY#bRGByby"]),
 
@@ -164,7 +164,7 @@ LEVELS = (
     # is about is attrition rather than a fight: the line has to be fed evenly for the better part
     # of two minutes, and a colour left dark for one wave too long is the colour that takes a ward
     # down.
-    dict(id="s05_longmarch", seed=109462, swaps=5, charms="pls",
+    dict(id="s05_longmarch", seed=109462, swaps=5, charms="plsf",
          wards="rgby", gems="rgby", cogs=25, boss="",
          waves=["RGbyRGby", "RGBY#rRGby", "RGby#gRGby#bby", "RGBYRGby"]),
 
@@ -180,7 +180,7 @@ LEVELS = (
     # than a warning: an ironclad no ward on the line carries could only be reached by overcharges,
     # which is a fight decided by whether the player happened to have banked rather than by what
     # they do about it.
-    dict(id="s05_ashenheart", seed=150049, swaps=5, charms="pls",
+    dict(id="s05_ashenheart", seed=150049, swaps=5, charms="plsf",
          wards="rgby", gems="rgby", cogs=25, boss="ironclad:b",
          waves=["RGbyRGby", "RGBY#rRGby", "RGBY#gRG#bby"]),
 )

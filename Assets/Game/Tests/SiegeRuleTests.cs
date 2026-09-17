@@ -1933,6 +1933,16 @@ namespace GlimmerGrove.Tests
         /// </summary>
         static int Hold(SiegeBoard board, out int seconds) => Hold(board, Unhurried, out seconds);
 
+        /// <summary>The first ward under rubble, in post order, or none.</summary>
+        static bool Buried(SiegeBoard board, out int ward)
+        {
+            for (int w = 0; w < board.Wards.Count; w++)
+                if (board.Wards[w].Buried) { ward = w; return true; }
+
+            ward = -1;
+            return false;
+        }
+
         /// <summary>
         /// The same player at a chosen rhythm.
         ///
@@ -2079,6 +2089,22 @@ namespace GlimmerGrove.Tests
 
                 since += Frame;
                 if (since < rhythm) continue;
+
+                // **A dig is paid for with the beat it would have matched in**, which is the
+                // whole of what makes a colossus's verb visible to this instrument. A tap on
+                // rubble costs the run no match and no fuel - what it costs a player is
+                // attention, and the one currency this model has for attention is its rhythm.
+                // Eager rather than clever, for the bomb's and the cog's reason: it digs the
+                // moment a post is buried, and digs it *clear* - three taps is under a second
+                // for a thumb, which is one beat and not three. Measured the other way (one
+                // piece a beat) the model never matched again once the boulders started, and
+                // the finale read as a wall no player would meet.
+                if (Buried(board, out int under))
+                {
+                    while (board.Dig(under)) { }
+                    since = 0f;
+                    continue;
+                }
 
                 if (!Aimed(board, out int a, out int b)) continue;
 

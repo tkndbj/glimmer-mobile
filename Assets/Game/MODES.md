@@ -562,6 +562,50 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    is what "I watched him attack but my turrets didn't take any damage" was (the blightcaller, by
    design, until now). `EndangersTheLine` is true of every boss and `Threatens` follows.
 
+37do. **A fifth chapter costs what a fourth did, and the bill is written in two places: two boss
+   verbs (37br) and one charm (`SiegeCharms.Upto`).** Paid on 2026-09-16 for both at once, because
+   the fourth chapter had shipped dealing three charms where the ladder said four. **The two new
+   charms take the two things the first three left**: a **furnace** hands the *line* a charge (one
+   banked overcharge on the ward of its colour, refused on a fallen or full ward and the refusal
+   drawn), and an **hourglass** takes the *hill's time* (three seconds standing still while the line
+   fires; the wave clock is deliberately not held, or an empty-hill hourglass would buy a quiet). Both
+   are booked to land with the match's own fuel (37s), a second hourglass **extends rather than
+   stacks**, and both scale with the line without a number - a charge is that ward's capacity at that
+   ward's weight, a stopped hill is worth what the standing turrets land in it (37cg). **A guard runs
+   down through a stopped hill** (37dl). Adding a charm is: a member appended to `SiegeCharm`, a row on
+   `SiegeCharms.Roster`, a case in `SiegeBoard.Spring`, a stone in `make_siege_art.CHARM_GEMS` and
+   `SiegeMode.Cast`, a face in `SiegeView.CharmFace` and `render_siege.CHARM_ART`, a `Sprung` arm, a
+   `Mechanic` and its `Taught` arm, and two loc keys - and every chapter body at or past that ordinal is
+   re-dealt, because the deal picks uniformly over the set it names.
+37dp. **The ninth thing a boss could take is the *charge*, and it is the one resource the player holds
+   by choice.** A **thunderer** drains the ward holding the most banked overcharges and lands each one
+   back as `ThundererDrain` more off it, so the tell is an invitation to throw: a charge thrown lands
+   on the boss at full weight, a charge held lands on the line at two a piece. It is 37di read from
+   the other end - banking through the quiet before a boss is what killed eight of them on the walk
+   in, and this is the boss that makes it the wrong idea. **Bounded by arithmetic**: at most
+   `ThundererCast + 2 x MostCharges` in one blow, held under half a ward by a fixture. **The hold
+   simulation cannot see the verb**, because the model player throws every charge the moment it is
+   armed; what it measures is the smite, and the fight gate is what proves the boss fights.
+37dq. **The tenth is the player's *hands*.** A **colossus** buries a ward under `RubbleTaps` pieces
+   of rubble that only taps clear: the ward keeps fuel, rank and charges and cannot fire, a second
+   boulder goes elsewhere, and nothing lifts it on the clock - a burial is a bind bought back with
+   attention, which is the one currency this mode's clock prices (37bl). **A dig is answered on the
+   call and never on the next report** (the overcharge's shape): a tap lands between two steps of
+   the clock and `Advance` clears the report on its way in, so a record written by the tap would be
+   gone before the view read it - which is exactly how the first fixture failed. **The model player
+   digs a post clear in one beat** (three taps is under a second for a thumb) - measured one piece
+   a beat it never matched again once the boulders started and the finale read as a wall no player
+   would meet; measured one post a beat the finale fell. And the rubble is a **cut rock**, drawn
+   three times at three sizes, never three discs (47i).
+37dr. **The fifth cast is seven of the fifteen unit bodies, and the eight left are the sixth
+   chapter's.** The wild: two stone golems (bulwarks), a yeti and a minotaur (brutes), a mud clod
+   (creeper), Zeus (the thunderer) and a cyclops (the colossus) - every one looked down on and walking
+   toward the player, cut with the packs' own attacks on the walk's scale (37bv). Uncut and spoken
+   for: the skeleton knight and archer, Medusa, Horus, the pharaoh and the three wizards.
+   **The Infinite lane's medley was re-dealt over five casts** so every chapter cast still lands on it,
+   and a fifth ordinal draws `map1` again - the map wraps at four paintings (`mapart.map_of`), so a
+   fifth chapter cost no map cut.
+
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` on rung five or ten, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds
 it to the body); run `python Tools/verify/tests.py SiegeRuleTests` — the fight gate, the chapter sweep

@@ -81,5 +81,24 @@ namespace GlimmerGrove.Modes
         /// shoot, and the view says it by refusing the three wards that cannot answer.
         /// </summary>
         Aegis,
+
+        /// <summary>
+        /// Takes every overcharge a ward has banked and lands them back on it as damage, on top
+        /// of the health it takes anyway. The thunderer's, and aimed at the ward holding the most.
+        ///
+        /// <b>The one spell whose weight the player decides</b>: a ward with nothing banked takes
+        /// the base figure and no more, so the tell is an invitation to throw what is held.
+        /// </summary>
+        Drain,
+
+        /// <summary>
+        /// Buries a ward under rubble: it keeps its fuel, its rank and its charges and cannot
+        /// fire until the player has dug it out (<c>SiegeBoard.Dig</c>). The colossus's.
+        ///
+        /// <b>Deliberately not a bind with a tap on it.</b> A bind ends on the clock and a burial
+        /// ends when the player says so; the two must not be one field, or a shackle would be
+        /// buyable by tapping and a burial would lift itself.
+        /// </summary>
+        Bury,
     }
 }

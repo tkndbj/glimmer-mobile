@@ -770,6 +770,12 @@ namespace GlimmerGrove
             // bomber is never told about a bomb they do not have.
             into.Add(Lesson.Later(Mechanic.SiegeBomber, _siege.LiveBomb()));
 
+            // **And the rubble, pointed at the buried post.** Same shape as the bomb: the thing
+            // to tap exists only once a colossus has landed a boulder, so `SiegeView.Buried`
+            // raises it on the landing and the ring goes round a post that really is under
+            // rubble. A player whose chapters never send a colossus is never told about it.
+            into.Add(Lesson.Later(Mechanic.SiegeRubble, _siege.BuriedWard()));
+
             // **And one per charm this level actually deals.** A lesson is shown once in a
             // player's life, so offering the lance's on a chapter that deals no lance would spend
             // it on something that can never appear - which is the cog's own rule, and the reason
@@ -801,6 +807,8 @@ namespace GlimmerGrove
                 case SiegeCharm.Prism: return Mechanic.SiegePrism;
                 case SiegeCharm.Lance: return Mechanic.SiegeLance;
                 case SiegeCharm.Storm: return Mechanic.SiegeStorm;
+                case SiegeCharm.Furnace: return Mechanic.SiegeFurnace;
+                case SiegeCharm.Hourglass: return Mechanic.SiegeHourglass;
 
                 case SiegeCharm.None:
                 default: return default;

@@ -1,0 +1,341 @@
+{
+ "schemaVersion": 2,
+ "id": "s06_thundercrag",
+ "accent": "#E8615A",
+ "slate": "#1A0F14",
+ "backdrop": "sky_00",
+ "mapStrips": [
+  "map1_strip0",
+  "map1_strip1",
+  "map1_strip2",
+  "map1_strip3",
+  "map1_strip4",
+  "map1_strip5"
+ ],
+ "teaserX": 0.333,
+ "teaserAfloat": true,
+ "levels": [
+  {
+   "id": "s06_firstcrag",
+   "mapX": 0.22,
+   "mapY": 0.094,
+   "afloat": true,
+   "budgetFactor": -1.0,
+   "goldFactor": 0.48,
+   "silverFactor": 0.62,
+   "backdrop": "sky_00",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "ggyybbrg",
+     "yrgygybr",
+     "rrbgrryb",
+     "bgbbygby",
+     "rgyygbrg"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "RGbyRGby",
+     "RGBY#rRGby",
+     "RGBY#g#bRGbyrg"
+    ],
+    "boss": "",
+    "cogs": 25,
+    "charms": "plsfh",
+    "tough": 13
+   }
+  },
+  {
+   "id": "s06_mudslide",
+   "mapX": 0.586,
+   "mapY": 0.119,
+   "afloat": true,
+   "budgetFactor": -1.0,
+   "goldFactor": 0.48,
+   "silverFactor": 0.62,
+   "backdrop": "sky_01",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "rbyrbygr",
+     "gyybgrby",
+     "bggrrbgb",
+     "rbryygry",
+     "gbbyybby"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "rgbyrgbyrgby",
+     "RGby#rRGbyrg",
+     "RGBY#g#bRGby"
+    ],
+    "boss": "",
+    "cogs": 25,
+    "charms": "plsfh",
+    "tough": 13
+   }
+  },
+  {
+   "id": "s06_frostline",
+   "mapX": 0.781,
+   "mapY": 0.194,
+   "afloat": true,
+   "budgetFactor": -1.0,
+   "goldFactor": 0.48,
+   "silverFactor": 0.62,
+   "backdrop": "sky_02",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "ryrbbygb",
+     "gyyggbrb",
+     "rbryrgyy",
+     "bgbyybrg",
+     "rgrgbrby"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "RGby#rRGby",
+     "RGBY#g#bRGby",
+     "RGby#r#yRGbyrg"
+    ],
+    "boss": "",
+    "cogs": 25,
+    "charms": "plsfh",
+    "tough": 13
+   }
+  },
+  {
+   "id": "s06_hollowpeak",
+   "mapX": 0.659,
+   "mapY": 0.291,
+   "afloat": true,
+   "budgetFactor": -1.0,
+   "goldFactor": 0.48,
+   "silverFactor": 0.62,
+   "backdrop": "sky_03",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "rbrggybr",
+     "ygyygbry",
+     "bggrbybg",
+     "ryyrgyyr",
+     "gbgybgrr"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "RGby#rRGby",
+     "RGBY#g!gRG#bby",
+     "RGby!b#rRGByby"
+    ],
+    "boss": "",
+    "cogs": 25,
+    "charms": "plsfh",
+    "tough": 13
+   }
+  },
+  {
+   "id": "s06_thunderhead",
+   "mapX": 0.602,
+   "mapY": 0.409,
+   "afloat": false,
+   "budgetFactor": -1.0,
+   "goldFactor": 0.48,
+   "silverFactor": 0.62,
+   "backdrop": "sky_04",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "bryggyyg",
+     "rgbygbbr",
+     "yyrbyryg",
+     "grgygbgb",
+     "rbybrgyg"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "RGBYRGby",
+     "RGBY#rRG!bby",
+     "RGby#gRGBy"
+    ],
+    "boss": "thunderer:y",
+    "cogs": 25,
+    "charms": "plsfh",
+    "tough": 13
+   }
+  },
+  {
+   "id": "s06_glacierwall",
+   "mapX": 0.611,
+   "mapY": 0.489,
+   "afloat": false,
+   "budgetFactor": -1.0,
+   "goldFactor": 0.48,
+   "silverFactor": 0.62,
+   "backdrop": "sky_05",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "ryrgyrgg",
+     "bbggbybg",
+     "ryybryrb",
+     "gbgrygrb",
+     "grygbggr"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "RGby#rRGby",
+     "RGby#g#b#yRGby",
+     "RGBY!rRG#byrg"
+    ],
+    "boss": "",
+    "cogs": 25,
+    "charms": "plsfh",
+    "tough": 13
+   }
+  },
+  {
+   "id": "s06_stoneward",
+   "mapX": 0.7,
+   "mapY": 0.608,
+   "afloat": true,
+   "budgetFactor": -1.0,
+   "goldFactor": 0.48,
+   "silverFactor": 0.62,
+   "backdrop": "sky_06",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "gbrrgbrr",
+     "bggygybr",
+     "yyrybrgb",
+     "ybbggrry",
+     "rrygbbyb"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "RRRR#rrrrg",
+     "GGGG#g#ggggb",
+     "BBBB#b#bbbYYY#yy"
+    ],
+    "boss": "",
+    "cogs": 25,
+    "charms": "plsfh",
+    "tough": 13
+   }
+  },
+  {
+   "id": "s06_boulderrun",
+   "mapX": 0.284,
+   "mapY": 0.716,
+   "afloat": false,
+   "budgetFactor": -1.0,
+   "goldFactor": 0.48,
+   "silverFactor": 0.62,
+   "backdrop": "sky_07",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "rbbyybry",
+     "yyggyryy",
+     "rbryrbgg",
+     "gbrbgygb",
+     "ryybrrbr"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "RGbyRGby",
+     "RGBY#rRGby",
+     "RGby#g#bRGby",
+     "RGBY!yRGbyrg"
+    ],
+    "boss": "",
+    "cogs": 25,
+    "charms": "plsfh",
+    "tough": 13
+   }
+  },
+  {
+   "id": "s06_highpass",
+   "mapX": 0.578,
+   "mapY": 0.79,
+   "afloat": false,
+   "budgetFactor": -1.0,
+   "goldFactor": 0.48,
+   "silverFactor": 0.62,
+   "backdrop": "sky_08",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "ybgygbgb",
+     "yrgygyrb",
+     "bybbryyg",
+     "bbrgbgbr",
+     "rgyrbggr"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "rgbyrgby",
+     "RGby#rrgby",
+     "rgby#brgbyby",
+     "RGbyrgby"
+    ],
+    "boss": "",
+    "cogs": 25,
+    "charms": "plsfh",
+    "tough": 13
+   }
+  },
+  {
+   "id": "s06_cragheart",
+   "mapX": 0.689,
+   "mapY": 0.868,
+   "afloat": false,
+   "budgetFactor": -1.0,
+   "goldFactor": 0.48,
+   "silverFactor": 0.62,
+   "backdrop": "sky_09",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "brbyyrbb",
+     "gybgyggb",
+     "yrggbrgr",
+     "bgrbgrby",
+     "bbyybgrg"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "rgbyrgby",
+     "RGby#rrgby",
+     "RGbyrgby"
+    ],
+    "boss": "colossus:b",
+    "cogs": 25,
+    "charms": "plsfh",
+    "tough": 13
+   }
+  }
+ ]
+}

@@ -472,6 +472,7 @@ namespace GlimmerGrove.Tests
             yield return ("broodmarch", Broodmarch);
             yield return ("barrowfell", Barrowfell);
             yield return ("ashenhold", Ashenhold);
+            yield return ("thundercrag", Thundercrag);
         }
     }
 }

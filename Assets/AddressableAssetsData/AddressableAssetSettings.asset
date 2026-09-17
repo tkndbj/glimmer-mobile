@@ -69,7 +69,7 @@ MonoBehaviour:
   m_overridePlayerVersion: '[UnityEditor.PlayerSettings.bundleVersion]'
   m_GroupAssets:
   - {fileID: 11400000, guid: 47c46bda514740a4dbc05a44d4a23ac8, type: 2}
-  - {fileID: 11400000, guid: 4d5a579f47b771f40be12597dc3a83b4, type: 2}
+  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
   - {fileID: 11400000, guid: 0a877d0e8dd7b05409edd6e3049d86d2, type: 2}
   - {fileID: 11400000, guid: 984a834b48cbf384482d9e2e9aebfe5d, type: 2}
   - {fileID: 11400000, guid: 82cde781aeb2b8c47a1f377b73392623, type: 2}
@@ -78,7 +78,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: eb66a2de3aecee54b8958759c2eff7bc, type: 2}
   - {fileID: 11400000, guid: 3443c775a1c727145bcd87368713f7dd, type: 2}
   - {fileID: 11400000, guid: d66337f20f2bdd44d867926ead515cc3, type: 2}
-  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
   m_BuildSettings:
     m_LogResourceManagerExceptions: 1
     m_BundleBuildPath: Temp/com.unity.addressables/AssetBundles
@@ -674,6 +673,40 @@ MonoBehaviour:
     - Art/Fx/Siege/crypt_hit
     - Art/Fx/Siege/crypt_muzzle
     - Art/Fx/Siege/maw_muzzle
+    - Art/Siege/wildBrute_g_swing
+    - Art/Siege/wildMon_r
+    - Art/Siege/wildBulwark_y
+    - Art/Siege/colossus_cast
+    - Art/Siege/wildMon_b
+    - Art/Siege/wildBulwark_g
+    - Art/Siege/thunder
+    - Art/Siege/wildBulwark_r
+    - Art/Siege/wildBulwark_g_swing
+    - Art/Siege/wildBrute_r
+    - Art/Siege/wildMon_b_swing
+    - Art/Siege/wildBrute_r_swing
+    - Art/Siege/wildMon_y
+    - Art/Siege/wildBulwark_y_swing
+    - Art/Siege/wildBrute_y_swing
+    - Art/Siege/thunder_cast
+    - Art/Siege/wildBrute_b
+    - Art/Siege/wildMon_g
+    - Art/Siege/wildBulwark_b
+    - Art/Siege/wildMon_r_swing
+    - Art/Siege/wildBrute_g
+    - Art/Siege/wildMon_g_swing
+    - Art/Siege/wildBrute_y
+    - Art/Siege/wildMon_y_swing
+    - Art/Siege/wildBrute_b_swing
+    - Art/Siege/colossus
+    - Art/Siege/wildBulwark_b_swing
+    - Art/Siege/wildBulwark_r_swing
+    - Art/Fx/Siege/levin_muzzle
+    - Art/Fx/Siege/boulder_muzzle
+    - Art/Fx/Siege/levin_hit
+    - Art/Fx/Siege/levin
+    - Art/Fx/Siege/boulder
+    - Art/Fx/Siege/boulder_hit
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1c550e3b8c7244948b0ae7d2fbce14c6, type: 2}

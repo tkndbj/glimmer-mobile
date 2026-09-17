@@ -452,6 +452,8 @@ namespace GlimmerGrove
                 post.Held.rectTransform.anchoredPosition = pipAt;
                 post.Held.enabled = false;
 
+                Rubble(post, seat);
+
                 Badge(post, ward);
 
                 _posts[i] = post;

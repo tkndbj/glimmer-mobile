@@ -46,6 +46,24 @@ namespace GlimmerGrove.Modes
 
         readonly List<Tempest> _storms = new List<Tempest>(2);
 
+        /// <summary>
+        /// A furnace or an hourglass that has gone off and has not landed yet.
+        ///
+        /// <b>One list for the two, and <see cref="Tempest"/> is not folded into it on purpose.</b>
+        /// A stormglass carries a colour and is resolved by <see cref="Volley"/>; these two carry
+        /// the charm they were, because what happens when they land is decided by the kind - a
+        /// furnace reaches a ward and an hourglass reaches the whole hill - and a third list per
+        /// charm would be the shape <see cref="SiegeCharms.Roster"/> exists to avoid.
+        /// </summary>
+        struct Booked
+        {
+            public SiegeCharm Charm;
+            public int Colour;
+            public float In;
+        }
+
+        readonly List<Booked> _booked = new List<Booked>(2);
+
         /// <summary>What this cell is carrying, or <see cref="SiegeCharm.None"/>.</summary>
         public SiegeCharm CharmAt(int index)
             => index >= 0 && index < _charms.Length ? _charms[index] : SiegeCharm.None;
@@ -164,6 +182,21 @@ namespace GlimmerGrove.Modes
                         });
                         break;
 
+                    // **Both booked to land with the match's own fuel** (invariant 37s), for the
+                    // stormglass's reason: the model resolves a swap in an instant and the view
+                    // spends most of a second drawing it, so a charge banked or a hill stopped on
+                    // the frame of the swap would be a payoff arriving before the gem that paid
+                    // for it had burst.
+                    case SiegeCharm.Furnace:
+                    case SiegeCharm.Hourglass:
+                        _booked.Add(new Booked
+                        {
+                            Charm = charm,
+                            Colour = colour,
+                            In = SiegeTuning.FuelLands(beat.Depth - 1),
+                        });
+                        break;
+
                     // **A prism has nothing to do here and says so out loud.** It is answered in
                     // `SiegeLayout.Runs`, and a `default` that silently did nothing would be the
                     // shape invariant 44e is about — the next charm added would fall through it
@@ -259,6 +292,78 @@ namespace GlimmerGrove.Modes
                 _storms.RemoveAt(i);
                 Volley(storm.Colour);
             }
+
+            for (int i = _booked.Count - 1; i >= 0; i--)
+            {
+                var booked = _booked[i];
+                booked.In -= dt;
+
+                if (booked.In > 0f)
+                {
+                    _booked[i] = booked;
+                    continue;
+                }
+
+                _booked.RemoveAt(i);
+
+                if (SiegeCharms.ReachesTheLine(booked.Charm)) Forge(booked.Colour);
+                else if (SiegeCharms.StopsTheHill(booked.Charm)) Still();
+            }
+        }
+
+        /// <summary>
+        /// One furnace landing: the ward of its colour banks a whole charge, or refuses it.
+        ///
+        /// <para>
+        /// <b>Through the same door a full tube goes through and no other.</b> A charge is a
+        /// number on the ward (<see cref="SiegeWard.Charges"/>) bounded by
+        /// <see cref="SiegeTuning.MostCharges"/>, and a furnace writes exactly what
+        /// <see cref="SiegeWard.Fill"/> writes when a tube brims: one more, and never past the
+        /// cap. So what a furnace is worth is what a charge is worth - that ward's capacity at
+        /// that ward's weight, thrown when the player taps it - which is why it scales with the
+        /// shelf and conjures no damage of its own (invariant 39's arithmetic, unchanged).
+        /// </para>
+        /// <para>
+        /// <b>A fallen ward and a full one both refuse it</b>, and the refusal is reported rather
+        /// than swallowed: the decision a furnace asks is which colour, and the wrong answer has
+        /// to be visible (invariant 26h). Reported on <see cref="SiegeReport.Brimmed"/> as well
+        /// when it banks, because that is the edge the overcharge lesson and the glyph's own
+        /// announcement already listen on - a charge is a charge whatever poured it.
+        /// </para>
+        /// </summary>
+        void Forge(int colour)
+        {
+            int at = -1;
+            for (int w = 0; w < _wards.Length; w++)
+                if (_wards[w].Colour == colour) { at = w; break; }
+
+            if (at < 0) return;
+
+            var ward = _wards[at];
+            bool banked = ward.Alive && ward.Charges < SiegeTuning.MostCharges;
+
+            if (banked)
+            {
+                ward.Charges += SiegeTuning.FurnaceCharges;
+                if (ward.Charges > SiegeTuning.MostCharges) ward.Charges = SiegeTuning.MostCharges;
+                _report.Brimmed.Add(at);
+            }
+
+            _report.Forged.Add(new SiegeForged(at, banked));
+        }
+
+        /// <summary>
+        /// One hourglass landing: the hill stands still for <see cref="SiegeTuning.HourglassFor"/>.
+        ///
+        /// <b>Extended rather than stacked</b>, which is the roar's rule (<c>SiegeBoard.Walk</c>)
+        /// read the other way: two hourglasses a beat apart are one stop lasting as long as the
+        /// later one says, not a stop twice as long - a cascade that sprang two would otherwise
+        /// buy six seconds nothing was tuned against.
+        /// </summary>
+        void Still()
+        {
+            if (SiegeTuning.HourglassFor > _still) _still = SiegeTuning.HourglassFor;
+            _report.Stilled = SiegeTuning.HourglassFor;
         }
 
         /// <summary>One stormglass going off: the whole line, at everything on the hill.</summary>

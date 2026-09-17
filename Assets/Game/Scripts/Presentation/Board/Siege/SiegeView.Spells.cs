@@ -155,7 +155,11 @@ namespace GlimmerGrove
         static float Pitch(SiegeKind kind)
             => kind == SiegeKind.Overlord ? .50f
              : kind == SiegeKind.Warbringer ? .55f
-             : kind == SiegeKind.Blightcaller ? .92f : .74f;
+             : kind == SiegeKind.Blightcaller ? .92f
+             // A thunderer's voice is a crack and a colossus's is the lowest thing on the hill,
+             // because it is the biggest thing on it.
+             : kind == SiegeKind.Thunderer ? .66f
+             : kind == SiegeKind.Colossus ? .46f : .74f;
 
         /// <summary>The light a warlord gathers before a spell leaves it, at <paramref name="swell"/> of its size.</summary>
         void Gather(Mob mob, float swell = 1f)
@@ -250,13 +254,20 @@ namespace GlimmerGrove
              // that is not a contradiction, because what the drawing has to say is that the axe
              // came down, and the thing it is really announcing is the aegis it stands behind.
              : kind == SiegeKind.Shackler ? 1.15f
-             : kind == SiegeKind.Ironclad ? 1.9f : 1.6f;
+             : kind == SiegeKind.Ironclad ? 1.9f
+             // A boulder is the largest thing thrown in this mode and reads as mass on the way
+             // down; a levin bolt is drawn a little under a smite's orb because a comet's frame
+             // is mostly tail.
+             : kind == SiegeKind.Colossus ? 2.2f
+             : kind == SiegeKind.Thunderer ? 1.5f : 1.6f;
 
         static float BurstAt(SiegeKind kind)
             => kind == SiegeKind.Overlord ? 1.2f
              : kind == SiegeKind.Blightcaller ? .85f
              : kind == SiegeKind.Shackler ? .8f
-             : kind == SiegeKind.Ironclad ? 1.15f : 1f;
+             : kind == SiegeKind.Ironclad ? 1.15f
+             : kind == SiegeKind.Colossus ? 1.25f
+             : kind == SiegeKind.Thunderer ? 1.05f : 1f;
 
         /// <summary>
         /// One arm of a volley: an orb crossing the hill on a bowed path.
@@ -624,6 +635,14 @@ namespace GlimmerGrove
             if (spell.Craft == SiegeSpell.Bind) Chained(spell.Ward, fire);
             if (spell.Craft == SiegeSpell.Douse) Snuffed(spell.Ward, fire);
             if (spell.Sundered) Sundered(spell.Ward, fire);
+
+            // **A drain is drawn as the charges leaving**, and only when something left: a drain
+            // that found nothing banked is a smite and is drawn as one. **A burial is drawn as
+            // the rubble arriving**, and the standing state the post keeps (`SiegeView.Rubble`)
+            // is what the player reads afterwards.
+            if (spell.Craft == SiegeSpell.Drain && spell.Taken > 0)
+                Drained(spell.Ward, spell.Taken, fire, caster);
+            if (spell.Craft == SiegeSpell.Bury) Buried(spell.Ward, fire);
 
             Tween.Shake(_posts[spell.Ward].Node, Cell * .26f, .38f);
             ShakeBoard(spell.Felled ? 26f : greater ? 20f : 15f);
@@ -1070,6 +1089,8 @@ namespace GlimmerGrove
                 case SiegeKind.Bonecaller: return "mode.siege.bonecaller";
                 case SiegeKind.Shackler: return "mode.siege.shackler";
                 case SiegeKind.Ironclad: return "mode.siege.ironclad";
+                case SiegeKind.Thunderer: return "mode.siege.thunderer";
+                case SiegeKind.Colossus: return "mode.siege.colossus";
 
                 // **The warlord, and it is the only kind that may fall through here.** Invariant
                 // 44e's rule: a `default` that is a real answer hides the case nobody is looking
@@ -1114,7 +1135,8 @@ namespace GlimmerGrove
                 // as the lightest of the four because it is the first one a chapter shows.
                 float weight = kind == SiegeKind.Overlord ? 1f
                              : kind == SiegeKind.Warbringer ? .88f
-                             : kind == SiegeKind.Blightcaller ? .62f : .78f;
+                             : kind == SiegeKind.Blightcaller ? .62f
+                             : kind == SiegeKind.Colossus ? 1f : .78f;
 
                 // Its own voice rather than a firepot's boom pitched down: a boss stepping onto
                 // the hill is the one arrival in the mode that is *news*, and news is said in a
