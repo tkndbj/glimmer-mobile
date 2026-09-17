@@ -134,12 +134,24 @@ namespace GlimmerGrove.Modes
         /// <summary>Seconds from now until it lands. <see cref="SiegeTuning.BossTell"/> of that is the tell.</summary>
         public readonly float In;
 
-        public SiegeCast(int raider, int ward, SiegeSpell craft, float @in)
+        /// <summary>Which phase of the fight this spell belongs to. See <c>SiegeRaider.Phase</c>.</summary>
+        public readonly int Phase;
+
+        /// <summary>
+        /// Whether this is the spell that opens its phase — the one the guard is standing in
+        /// front of, and the one the view draws as a roar rather than as a throw.
+        /// </summary>
+        public readonly bool Opens;
+
+        public SiegeCast(int raider, int ward, SiegeSpell craft, float @in,
+                         int phase = 0, bool opens = false)
         {
             Raider = raider;
             Ward = ward;
             Craft = craft;
             In = @in;
+            Phase = phase;
+            Opens = opens;
         }
     }
 

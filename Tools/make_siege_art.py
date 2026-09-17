@@ -1089,8 +1089,28 @@ SWING_FRAMES = 6
 #: reel is built: the body surges toward the viewer and a little down the hill over the same
 #: `BossTell` window the ring and the crackle already fill, then settles. It is a real gesture
 #: rather than a zoom because that is what the motion <em>is</em> from above; what would be a bug
-#: is a boss that changed size and stayed changed, which is why the pulse is a sine.
+#: is a boss that changed size and stayed changed, which is why the reel ends on the stand.
+#:
+#: <b>The shape of the gesture is a strike, not a sine, and the strike lands on the release.</b>
+#: The first cut was a sine over the tell, which peaks half way through and is back on the
+#: standing pose by the time the spell leaves the boss's hand - so at the one frame the drawing
+#: has to say *thrown*, the body was doing nothing. A strike is three beats: a slow crouch
+#: (`BOSS_CROUCH` smaller, leaning back up the hill) for the first half, a snap out to the full
+#: rise over two frames, a hold at the peak that ends on the reel's second-to-last frame - which
+#: `SiegeView.Cast` plays at `BossTell`, so the peak is the frame `Unleash` fires on - and a
+#: recovery to the stand on the last frame, so the hand-back to the idle reel is not a snap.
+#: The peak is the same number, but the canvas is the union of the frames that happen to sit at
+#: it, so a re-cut can move how much of the frame a body fills by a few per cent - measure the
+#: stand reel's alpha box before and after, and move `SiegeTuning.TallOf` by the ratio.
 BOSS_RISE, BOSS_LEAN = 0.17, 0.05
+
+#: How much smaller the body draws at the bottom of its crouch, and how far back up the hill it
+#: leans there, as fractions of its own size.
+BOSS_CROUCH, BOSS_RECOIL = 0.06, 0.03
+
+#: Where the beats of the strike fall, as fractions of the reel: the crouch ends, the snap ends,
+#: the hold ends. Everything after the hold is the recovery.
+BOSS_BEATS = (0.50, 0.68, 0.90)
 
 #: How much of a real cast animation is kept. See `boss_reels`.
 BOSS_GESTURE = 0.40
@@ -2262,17 +2282,45 @@ def deshadow(frames, ink=(0, 0, 0), tol=SHADOW_INK):
     return out
 
 
+def strike(u, beats=BOSS_BEATS):
+    """Where a body is in its strike at `u` of the reel: `(surge, lean)`, both -1..1.
+
+    `surge` is -1 at the bottom of the crouch, 0 on the stand and 1 at the peak; `lean` runs
+    the same way, back up the hill in the crouch and down it at the peak. See `BOSS_BEATS`.
+    """
+    crouch, snap, hold = beats
+
+    def ease_in_out(x):
+        return x * x * (3.0 - 2.0 * x)
+
+    def ease_out(x):
+        return 1.0 - (1.0 - x) * (1.0 - x)
+
+    if u < crouch:
+        k = ease_in_out(u / crouch)
+        return -k, -k
+    if u < snap:
+        k = ease_out((u - crouch) / (snap - crouch))
+        return -1.0 + 2.0 * k, -1.0 + 2.0 * k
+    if u < hold:
+        return 1.0, 1.0
+    k = ease_in_out((u - hold) / max(1e-6, 1.0 - hold))
+    return 1.0 - k, 1.0 - k
+
+
 def pulse(frames, count, rise, lean):
-    """A cast reel built out of a body reel: the insect surges at the viewer and settles.
+    """A cast reel built out of a body reel: the insect crouches, strikes at the viewer and settles.
 
     <b>Three of the four bosses have exactly one animation in the pack</b>, and a boss that does
     nothing at all when it throws is the last verdict on this mode invited straight back. From
     above, rearing up <em>is</em> a change of size - so the body grows toward the viewer and leans
     a little down the hill over the same window the ring and the crackle already fill.
 
-    <b>A sine, so it begins and ends on the standing pose.</b> A ramp would leave the boss bigger
-    than it started and the snap back would read as the bug invariant 37u names; the legs keep
-    cycling underneath, because the body reel is still being walked through.
+    <b>A strike whose peak is the release</b> - see `BOSS_BEATS` for the three beats and why a
+    sine was the wrong shape. It begins and ends on the standing pose: a reel that left the boss
+    bigger than it started would snap back on the hand-off to the idle, which is the bug
+    invariant 37u names; the legs keep cycling underneath, because the body reel is still being
+    walked through.
     """
     n = max(2, count)
     wide = int(math.ceil(frames[0].width * (1.0 + rise)))
@@ -2280,16 +2328,21 @@ def pulse(frames, count, rise, lean):
 
     out = []
     for i in range(n):
-        t = math.sin(math.pi * i / float(n - 1))
+        # The last frame is the stand, so the hand-off to the idle reel is not a snap; the
+        # second-to-last is the peak's last frame, which is the one the release fires on.
+        u = i / float(n - 1)
+        surge, tilt = strike(u)
         src = frames[min(len(frames) - 1, int(i * len(frames) / float(n)))]
 
-        scale = 1.0 + rise * t
+        scale = 1.0 + (rise * surge if surge >= 0 else BOSS_CROUCH * surge)
         big = src.resize((max(1, int(round(src.width * scale))),
                           max(1, int(round(src.height * scale)))), Image.LANCZOS)
 
+        shift = (lean * high * tilt) if tilt >= 0 else (BOSS_RECOIL * high * tilt)
+
         pane = Image.new("RGBA", (wide, high), (0, 0, 0, 0))
         pane.alpha_composite(big, (int(round((wide - big.width) / 2.0)),
-                                   int(round((high - big.height) / 2.0 + lean * high * t))))
+                                   int(round((high - big.height) / 2.0 + shift))))
         out.append(pane)
 
     return out

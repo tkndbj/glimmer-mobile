@@ -10,6 +10,7 @@ not.
 
     python Tools/verify/tests.py            # everything
     python Tools/verify/tests.py NearMiss   # fixtures matching a substring
+    python Tools/verify/tests.py SiegeRuleTests.EveryShippedBossRungIsAFight   # one test
 
 Exit code is 1 if any test failed.
 """

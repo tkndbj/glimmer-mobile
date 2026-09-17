@@ -49,6 +49,13 @@ namespace GlimmerGrove.Modes
         public int BossesMet { get; private set; }
         public int BossesMetFuelled { get; private set; }
 
+        /// <summary>
+        /// Phases of boss fights that opened, the first included. Over a run that met one boss
+        /// this reads how far into the fight the player got - <c>SiegeTuning.BossPhases</c> is
+        /// the whole of it, and one is a boss that fell on its ground before it turned.
+        /// </summary>
+        public int PhasesOpened { get; private set; }
+
         /// <summary>The run's own clock, which is the only one a bomb's age can be measured on.</summary>
         public float Elapsed { get; private set; }
 
@@ -231,5 +238,7 @@ namespace GlimmerGrove.Modes
             BossesMet++;
             if (fuelled) BossesMetFuelled++;
         }
+
+        internal void PhaseOpened(int phase) => PhasesOpened++;
     }
 }

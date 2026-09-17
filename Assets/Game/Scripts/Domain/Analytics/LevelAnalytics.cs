@@ -297,6 +297,10 @@ namespace GlimmerGrove.Analytics
                 "cogs_trampled", seen.CogsTrampled,
                 "bosses_met", seen.BossesMet,
                 "bosses_met_fuelled", seen.BossesMetFuelled,
+                // How far into its fight each boss got: `SiegeTuning.BossPhases` per boss met
+                // is a fight that ran its course, one per boss is one that fell on its ground
+                // before it ever turned. The one figure that says whether a boss *fought*.
+                "boss_phases", seen.PhasesOpened,
 
                 // **The charms, and the one figure that says whether the stormglass was
                 // understood.** A stormglass is worth what is standing on the hill when it goes,

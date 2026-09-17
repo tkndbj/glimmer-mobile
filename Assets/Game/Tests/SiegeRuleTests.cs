@@ -1289,7 +1289,11 @@ namespace GlimmerGrove.Tests
         public void AFirepotHitsABosssBodyAndNotOnlyThePointItStandsOn()
         {
             var board = SiegeBoard.Build(Duel("warlord:r"));
-            var boss = Standing(board);
+
+            // With its guard down: a firepot on a guarded boss is refused by design
+            // (`SiegeBoard.Wound`), and this test is about where a body is, not whether it can
+            // be hurt.
+            var boss = Unguarded(board);
 
             int feet = SiegeTuning.RowOf(boss.March);
             int lane = boss.Lane;
@@ -1848,6 +1852,10 @@ namespace GlimmerGrove.Tests
                            + $"runs against a floor of {Floor}, so this change loses runs an "
                            + "unhurried player used to win - re-measure before moving the floor");
 
+            // On the console on a pass as well, because this table is the mode's one instrument
+            // and a re-tune wants to read it without first forcing a failure.
+            System.Console.WriteLine("the chapter reads:\n" + table);
+
             Assert.IsEmpty(faults, string.Join("\n", faults) + "\n\nthe chapter reads:\n" + table);
         }
 
@@ -2158,7 +2166,13 @@ namespace GlimmerGrove.Tests
             return whole;
         }
 
-        static int Hold(SiegeBoard board, float rhythm, out int seconds)
+        /// <param name="watch">
+        /// Called once a frame after the board has stepped, so a fixture can read something the
+        /// board forgets - a boss is swept off the list the frame after it falls, and the fight
+        /// gate needs the one it was.
+        /// </param>
+        static int Hold(SiegeBoard board, float rhythm, out int seconds,
+                        System.Action<SiegeBoard> watch = null)
         {
             const float Frame = 1f / 60f;
 
@@ -2172,6 +2186,8 @@ namespace GlimmerGrove.Tests
             {
                 board.Advance(Frame);
                 clock += Frame;
+
+                watch?.Invoke(board);
 
                 if (board.IsFinished || board.Stranded) break;
 

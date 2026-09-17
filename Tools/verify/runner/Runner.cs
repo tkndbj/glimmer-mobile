@@ -66,10 +66,19 @@ static class Runner
         foreach (var type in Types(assembly))
         {
             if (type.IsAbstract || type.IsInterface) continue;
-            if (filter.Length > 0 && type.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0) continue;
+            // `--filter Fixture` matches fixtures by substring; `--filter Fixture.Method` narrows
+            // to the tests whose name contains the second half, so one slow sweep can be re-run
+            // on its own while it is being tuned.
+            int dot = filter.IndexOf('.');
+            string fixtureFilter = dot < 0 ? filter : filter.Substring(0, dot);
+            string testFilter = dot < 0 ? "" : filter.Substring(dot + 1);
+
+            if (fixtureFilter.Length > 0 && type.Name.IndexOf(fixtureFilter, StringComparison.OrdinalIgnoreCase) < 0) continue;
 
             var tests = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
                             .Where(m => Has(m, "TestAttribute") || Has(m, "TestCaseAttribute"))
+                            .Where(m => testFilter.Length == 0
+                                     || m.Name.IndexOf(testFilter, StringComparison.OrdinalIgnoreCase) >= 0)
                             .ToArray();
             if (tests.Length == 0) continue;
 

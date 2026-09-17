@@ -108,11 +108,13 @@ namespace GlimmerGrove.Modes
 
                 int bites = Through(ward, raider, damage);
 
-                int took = bites < raider.Health ? bites : raider.Health;
-                absorbed += took;
+                // Through the one door (`SiegeBoard.Fight.cs`): nought on a boss behind its
+                // guard, clamped at a phase's floor. A strike that took nothing is not recorded,
+                // so the view draws the guard rather than a hit that did nothing.
+                int took = Wound(raider, bites);
+                if (took <= 0) continue;
 
-                raider.Health -= took;
-                raider.Flash = .18f;
+                absorbed += took;
 
                 bool killed = Fell(raider);
 
@@ -131,6 +133,11 @@ namespace GlimmerGrove.Modes
             {
                 var raider = _raiders[i];
                 if (!raider.Alive || !raider.OnTheHill) continue;
+
+                // **A boss that cannot be hurt is not a target for a charge either**, so a tap
+                // with nothing else on the hill is refused and the charge is kept - the guard is
+                // drawn, and the tube is still full when it drops.
+                if (raider.Untouchable) continue;
 
                 if (found == null || raider.March > found.March) found = raider;
             }

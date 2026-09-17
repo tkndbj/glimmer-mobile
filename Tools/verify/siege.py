@@ -208,7 +208,7 @@ BOSSES = {
     "blightcaller": {"health": 1250, "cast": 0, "spell": "douse"},
     "warlord": {"health": 2050, "cast": 3, "spell": "smite"},
     "warbringer": {"health": 2750, "cast": 1, "spell": "rally"},
-    "overlord": {"health": 3650, "cast": 5, "spell": "sunder"},
+    "overlord": {"health": 3650, "cast": 4, "spell": "sunder"},
     "gravemaw": {"health": 1500, "cast": 0, "spell": "devour"},
     "bonecaller": {"health": 3000, "cast": 0, "spell": "raise"},
 

@@ -94,6 +94,16 @@ namespace GlimmerGrove
                                        Pal.A(Casting(raider.Kind), 0f),
                                        new Vector2(tall * 1.5f, tall * 1.5f));
                 mob.Charge.raycastTarget = false;
+
+                // **The guard, built dark for the charge's reason**: it goes up on the frame the
+                // boss stands and again on every phase, and a ring that has to be minted before
+                // it can be seen rising arrives a frame late every time. Under the body, so the
+                // boss stands *in* it rather than behind it - see `SiegeView.Fight`.
+                mob.Ward = UIKit.Img("Guard", mob.Node, Art.Ring(128, 7f),
+                                     Pal.A(Casting(raider.Kind), 0f),
+                                     new Vector2(tall * 1.18f, tall * 1.18f));
+                mob.Ward.raycastTarget = false;
+                mob.Ward.rectTransform.anchoredPosition = new Vector2(0f, BodyLift * tall);
             }
 
             mob.Idle = Skin(raider);
@@ -190,6 +200,14 @@ namespace GlimmerGrove
             mob.Fill.rectTransform.anchorMin = new Vector2(0f, .5f);
             mob.Fill.rectTransform.anchorMax = new Vector2(0f, .5f);
             mob.Fill.rectTransform.anchoredPosition = new Vector2(2f, 0f);
+
+            // **A boss's bar is drawn in phases**, one mark at every threshold
+            // (`SiegeTuning.PhaseFloor`), so the fight's shape is on the readout a player
+            // watches for half a minute: the mark is where the guard will go up, and the one a
+            // blow has just reached is the one that bursts (`SiegeView.Turned`). Over the fill,
+            // in the trough's own ink, so it reads as a notch cut into the bar rather than as a
+            // thing standing on it.
+            if (raider.Boss) mob.Marks = Marks(mob);
 
             // The gem over its head is the third thing that says its colour, and on the warlord
             // it is the one that has to carry: the body is so large that a 62% coat reads as
@@ -505,6 +523,12 @@ namespace GlimmerGrove
         const float FellingFor = 1.45f;
 
         /// <summary>
+        /// How long a boss's fall is watched. Longer than <see cref="FellingFor"/> by the slow
+        /// motion it runs in (`Dilate`), so the ending arrives after the body has gone.
+        /// </summary>
+        const float BossFellingFor = 2.4f;
+
+        /// <summary>
         /// How long an ordinary raider's death is watched before the run may be told.
         ///
         /// Comfortably past <see cref="Die"/>'s own tween rather than exactly it: what the player
@@ -537,25 +561,55 @@ namespace GlimmerGrove
 
         void Fall(Mob mob, Vector2 at)
         {
-            Felling(FellingFor);
+            // Longer than an ordinary raider's, because this is the end of the fight and the
+            // ending waits on it (`Felling`): the slow-motion below runs most of it.
+            Felling(BossFellingFor);
 
             var node = mob.Node;
             var group = UIKit.Group(node);
             var crown = mob.Crown;
+            var fire = Casting(mob.Kind);
 
             // The bar goes with it, and by hand: it hangs off the effects layer rather than off
             // the body, so destroying the body would leave an empty warlord's health bar pinned
-            // across the top of a board with no warlord on it.
+            // across the top of a board with no warlord on it. **It drops as it goes** rather
+            // than fading in place, which is the one motion that reads as a thing coming down.
             if (crown != null)
             {
                 var over = UIKit.Group(crown);
+                Tween.Move(crown, crown.anchoredPosition + new Vector2(0f, -Cell * .45f), .5f,
+                           Ease.InQuad).Delay(.5f);
                 Tween.Fade(over, 0f, .5f).Delay(.5f)
                      .OnDone(() => { if (crown) Destroy(crown.gameObject); });
             }
 
-            Audio.Sfx("boom", .9f, .72f);
-            Flow.Flash(new Color(1f, .82f, .55f), .55f, .5f);
-            ShakeBoard(30f);
+            // **The fall is the one moment the whole hill stops to watch.** A fifth of speed for
+            // most of the death, and the model is handed the seconds (`Dilate`, invariant 37cq),
+            // so nothing about the run is changed by it - the escort of a boss that rode a wave
+            // simply walks through it in slow motion.
+            Dilate(.2f, 1.1f);
+
+            Audio.Sfx("felled", .95f, Pitch(mob.Kind) + .1f);
+            Flow.Flash(Pal.A(Pal.Lift(fire, .5f), 1f), .6f, .55f);
+            ShakeBoard(34f);
+
+            // The guard's ring, if it was still drawn, goes first and outward - the thing that
+            // said "cannot be hurt" coming apart is the first thing a player should see.
+            Unwarded(mob, at, fire);
+
+            // The body burns white and holds there while the bursts go off on it.
+            if (mob.Body != null)
+            {
+                var body = mob.Body;
+                Tween.Run(.45f, Ease.OutQuad, t =>
+                {
+                    if (!body) return;
+                    body.color = Color.Lerp(Color.white, Pal.Radiance, Mathf.PingPong(t * 6f, 1f));
+                }, body, "strobe").OnDone(() => { if (body) body.color = Pal.Radiance; });
+            }
+
+            Announce(Loc.Format("mode.siege.felled", Loc.Get(BossKey(mob.Kind))), Pal.Gold, .70f,
+                    2.2f, true);
 
             for (int i = 0; i < 5; i++)
             {

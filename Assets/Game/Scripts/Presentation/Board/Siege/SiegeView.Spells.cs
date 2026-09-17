@@ -77,7 +77,9 @@ namespace GlimmerGrove
                 else mob.Playing = null;
             }
 
-            Gather(mob);
+            // **The spell that opens a phase gathers more**, because it is the one the guard
+            // stood in front of and the one the roar a beat earlier promised (`SiegeView.Turned`).
+            Gather(mob, cast.Opens ? 1.4f : 1f);
 
             // The tell. **Nothing is ever drawn on the ward itself** — an aimed spell is announced
             // from the caster's end, by the gather above and the tether below. A roar has no target
@@ -155,8 +157,8 @@ namespace GlimmerGrove
              : kind == SiegeKind.Warbringer ? .55f
              : kind == SiegeKind.Blightcaller ? .92f : .74f;
 
-        /// <summary>The light a warlord gathers before a spell leaves it.</summary>
-        void Gather(Mob mob)
+        /// <summary>The light a warlord gathers before a spell leaves it, at <paramref name="swell"/> of its size.</summary>
+        void Gather(Mob mob, float swell = 1f)
         {
             var glow = mob.Charge;
             if (glow == null) return;
@@ -169,7 +171,7 @@ namespace GlimmerGrove
             {
                 if (!glow) return;
                 glow.color = Pal.A(fire, t * .95f);
-                glow.rectTransform.localScale = Vector3.one * Mathf.Lerp(.35f, 1.15f, t);
+                glow.rectTransform.localScale = Vector3.one * Mathf.Lerp(.35f, 1.15f * swell, t);
             }, glow, "gather").OnDone(() =>
             {
                 if (!glow) return;
@@ -637,6 +639,11 @@ namespace GlimmerGrove
             Audio.Sfx("boom", spell.Felled ? .8f : .6f, spell.Felled ? .8f : greater ? .82f : 1f);
 
             if (spell.Felled) Flow.Flash(new Color(1f, .32f, .30f), .34f, .3f);
+
+            // **A beat of slow motion on the blow**, the whole hill together (`Dilate`, invariant
+            // 37cq) - short enough that a fight of a dozen spells does not crawl, and longer on
+            // the one that takes a ward down, which is the heaviest thing that can happen here.
+            Dilate(spell.Felled ? .25f : .45f, spell.Felled ? .45f : .14f);
         }
 
         /// <summary>
@@ -1101,32 +1108,8 @@ namespace GlimmerGrove
             // key built by concatenation is a key the build gate cannot see.
             string banner = BossKey(kind);
 
-            _waveLabel.text = boss ? Loc.Get(banner)
-                                   : Loc.Format("mode.siege.wave", _wave, _board.Waves);
-
-            _waveLabel.color = boss ? Casting(kind) : Pal.Cream;
-            _waveLabel.fontSize = Mathf.RoundToInt(Cell * (boss ? .78f : .46f));
-
-            // **Stacked clear above the chain banner, from the ward line rather than from the
-            // hill's foot.** Those two anchors sit between .45 and .71 of a cell apart depending
-            // on the display, so measuring one caption from each is what let them share a row on
-            // every shape. See `SiegeView.Captions`.
-            var ladder = Caption;
-
-            var group = UIKit.Group(_waveLabel.rectTransform);
-            var rt = _waveLabel.rectTransform;
-
-            Tween.KillAll(_waveLabel);
-            rt.anchoredPosition = new Vector2(0f, ladder.Wave);
-            rt.localScale = Vector3.one * (boss ? WaveSwell : 1f);
-            group.alpha = 0f;
-
-            Tween.Fade(group, 1f, .22f);
-            if (boss) Tween.Scale(rt, 1f, .5f, Ease.OutBack);
-
-            Tween.Move(rt, new Vector2(0f, ladder.Wave + Cell * WaveFloat), boss ? 2.4f : 1.5f,
-                       Ease.OutCubic)
-                 .OnDone(() => Tween.Fade(group, 0f, .4f));
+            Announce(boss ? Loc.Get(banner) : Loc.Format("mode.siege.wave", _wave, _board.Waves),
+                    boss ? Casting(kind) : Pal.Cream, boss ? .78f : .46f, boss ? 2.4f : 1.5f, boss);
 
             // **No sound of its own, except for the warlord.** The first wave steps out on the
             // same frame the countdown says GO!, so a bell there was the same bell twice a frame
@@ -1141,14 +1124,58 @@ namespace GlimmerGrove
                              : kind == SiegeKind.Warbringer ? .88f
                              : kind == SiegeKind.Blightcaller ? .62f : .78f;
 
-                Audio.Sfx("boom", .6f + weight * .35f, Pitch(kind) - .1f);
+                // Its own voice rather than a firepot's boom pitched down: a boss stepping onto
+                // the hill is the one arrival in the mode that is *news*, and news is said in a
+                // voice nothing else uses (`Tools/sfx.tsv`, `boss`).
+                Audio.Sfx("boss", .7f + weight * .3f, Pitch(kind) + .2f);
                 ShakeBoard(14f + weight * 14f);
                 Flow.Flash(Pal.A(Casting(kind), 1f), .34f + weight * .28f, .45f);
+
+                // **And the hill slows as it steps on**, for a beat: the same dilation a charm
+                // buys, spent on the entrance (invariant 37cq - the model is handed the seconds,
+                // so the fight is not a function of this number).
+                Dilate(.4f, .55f);
             }
             else
             {
                 Flow.Flash(new Color(1f, .55f, .45f), .18f, .35f);
             }
+        }
+
+        /// <summary>
+        /// The hill's one banner, saying <paramref name="text"/> in <paramref name="colour"/> at
+        /// <paramref name="size"/> cells, floating up for <paramref name="seconds"/>.
+        ///
+        /// <b>One label for every piece of news the hill has</b> - a wave, a boss arriving, a
+        /// phase turning, a boss falling - so two can never stack, and the newest always wins.
+        /// **Stacked clear above the chain banner, from the ward line rather than from the
+        /// hill's foot.** Those two anchors sit between .45 and .71 of a cell apart depending
+        /// on the display, so measuring one caption from each is what let them share a row on
+        /// every shape. See `SiegeView.Captions`.
+        /// </summary>
+        void Announce(string text, Color colour, float size, float seconds, bool swell)
+        {
+            if (_waveLabel == null) return;
+
+            _waveLabel.text = text;
+            _waveLabel.color = colour;
+            _waveLabel.fontSize = Mathf.RoundToInt(Cell * size);
+
+            var ladder = Caption;
+
+            var group = UIKit.Group(_waveLabel.rectTransform);
+            var rt = _waveLabel.rectTransform;
+
+            Tween.KillAll(_waveLabel);
+            rt.anchoredPosition = new Vector2(0f, ladder.Wave);
+            rt.localScale = Vector3.one * (swell ? WaveSwell : 1f);
+            group.alpha = 0f;
+
+            Tween.Fade(group, 1f, .22f);
+            if (swell) Tween.Scale(rt, 1f, .5f, Ease.OutBack);
+
+            Tween.Move(rt, new Vector2(0f, ladder.Wave + Cell * WaveFloat), seconds, Ease.OutCubic)
+                 .OnDone(() => Tween.Fade(group, 0f, .4f));
         }
 
         void Boom(Vector2 at, Sprite[] frames, float size)

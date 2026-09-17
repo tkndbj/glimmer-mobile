@@ -80,11 +80,14 @@ namespace GlimmerGrove.Modes
                 // Through this raider's own surge, exactly as its health was (invariant 39a).
                 int damage = raider.Surge.Hurt(baseline);
 
-                int took = damage < raider.Health ? damage : raider.Health;
-                absorbed += took;
+                // Through the one door (`SiegeBoard.Fight.cs`): a firepot dropped on a boss
+                // behind its guard takes nothing, is not recorded, and - because `absorbed` is
+                // what the run is charged for (invariant 39) and what hands an unused firepot
+                // back - costs the player nothing either.
+                int took = Wound(raider, damage);
+                if (took <= 0) continue;
 
-                raider.Health -= took;
-                raider.Flash = .18f;
+                absorbed += took;
 
                 bool killed = Fell(raider);
 
@@ -146,11 +149,12 @@ namespace GlimmerGrove.Modes
                 // Through this raider's own surge, exactly as its health was (invariant 39a).
                 int damage = raider.Surge.Hurt(baseline);
 
-                int took = damage < raider.Health ? damage : raider.Health;
-                absorbed += took;
+                // Through the one door (`SiegeBoard.Fight.cs`), for `Blast`'s reason: a storm
+                // over a guarded boss strikes everything else and the boss not at all.
+                int took = Wound(raider, damage);
+                if (took <= 0) continue;
 
-                raider.Health -= took;
-                raider.Flash = .18f;
+                absorbed += took;
 
                 bool killed = Fell(raider);
 

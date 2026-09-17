@@ -762,6 +762,8 @@ guess — verify offline.
   not the bundled .NET — the first version ran on .NET 8, whose ICU agrees with Node, and passed with a
   mapping deleted. **A check that cannot fail is not a check.**
 - **Why a test says "needs the Editor":** `GLIMMER_WHY=1 python Tools/verify/tests.py`.
+- **One test, while tuning:** `python Tools/verify/tests.py SiegeRuleTests.EveryShippedBossRungIsAFight`
+  (`Fixture.Method`, both substrings). The chapter sweep and the fight gate print their tables on a pass.
 - **Renders (the gate that matters for anything judged by eye):** `render_home.py`, `render_shop.py`,
   `render_tasks.py`, `render_season.py`, `render_streak.py`, `render_keeper.py`, `render_endless.py`,
   `render_loadout.py`, `render_siege.py` (`--tablet`, `--warlord`, `--volley`, `--standing`, …), all sharing

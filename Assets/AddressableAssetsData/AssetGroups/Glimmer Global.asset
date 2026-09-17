@@ -4138,6 +4138,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_glacier_b
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 20ca78ff18744e679fa1b9fb5f4933da
+    m_Address: Audio/Sfx/roar
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 20d4cf90fa8a03c48b6c1f492089c0b0
     m_Address: Art/Fx/Siege/charm_blast_r/f07
     m_ReadOnly: 0
@@ -20848,6 +20853,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_harpoon_g
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a1505c4e0b8d4d2391de16bba232230a
+    m_Address: Audio/Sfx/felled
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a15ab3aee8fb6ab45ae671c95fca8480
     m_Address: Art/Fx/Siege/hit_howitzer_y/f10
     m_ReadOnly: 0
@@ -21405,6 +21415,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c4
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5b0f24c00af41ac89cb64bbde3d20b2
+    m_Address: Audio/Sfx/boss
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a5bd82c0912f2654abfe68369b64fe60
     m_Address: Art/Fx/Siege/omen_hit/f10

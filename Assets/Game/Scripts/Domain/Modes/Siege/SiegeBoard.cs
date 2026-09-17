@@ -104,6 +104,9 @@ namespace GlimmerGrove.Modes
             public int Raider, Ward;
             public SiegeSpell Craft;
             public float In;
+
+            /// <summary>Whether this is the spell its phase's guard stands in front of. See <c>Arrive</c>.</summary>
+            public bool Opens;
         }
 
         readonly List<Flight> _spells = new List<Flight>(4);

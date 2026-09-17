@@ -996,11 +996,23 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const float OverlordCastEvery = 2.0f;
 
-        public const int OverlordCast = 5;
+        /// <summary>
+        /// What one overlord spell takes off a ward.
+        ///
+        /// <b>Five while an overlord lived for two or three spells; four now that it lives for
+        /// twelve or more</b> (<see cref="BossPhases"/>). What made the finale a finale was never
+        /// the size of one blow - it is the cadence, the fastest in the mode, and the rank each
+        /// phase takes. At five, a fight that ran its course took the line apart at every rhythm
+        /// the sweep plays; at three it held at every one with the line barely bled; four is the
+        /// finale, measured by <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>. Still one
+        /// over a warlord's, which <c>AnOverlordIsAWarlordInUpperCase</c> holds.
+        /// </summary>
+        public const int OverlordCast = 4;
 
         /// <summary>
         /// What an overlord's spell also does: knocks the ward it lands on down a rank.
         ///
+        /// <para>
         /// <b>It attacks the thing the chapter taught rather than the thing every boss attacks.</b>
         /// A cog is the one upgrade a player <em>earns</em> in this mode (invariant 37w), so the
         /// finale is the one fight where where those cogs went is a question with a wrong answer —
@@ -1009,6 +1021,15 @@ namespace GlimmerGrove.Modes
         /// <see cref="SiegeWard.Sunder"/> and never touches health beyond
         /// <see cref="OverlordCast"/>, so it can neither fell a ward on its own nor make
         /// <c>Stranded</c> anything but the certainty invariant 28f needs.
+        /// </para>
+        /// <para>
+        /// <b>Only the spell that opens a phase sunders</b> - <see cref="BossPhases"/> ranks a
+        /// fight, and the rest of its spells smite. A sunder on every cast was bounded only by
+        /// the overlord's life, and once it lived long enough to fight it stripped every rank off
+        /// the line and the line stopped being able to kill it: the duel ran six hundred seconds
+        /// without ending. Three is a number a player can see coming, because the bar is drawn
+        /// in phases and the roar is the tell.
+        /// </para>
         /// </summary>
         public const int OverlordSunder = 1;
 
@@ -1442,8 +1463,129 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const float BossAfter = 28f;
 
-        /// <summary>Quiet between the warlord reaching its ground and its first spell.</summary>
-        public const float BossWakes = 3.4f;
+        // ------------------------------------------------------------------ the fight
+        /// <summary>
+        /// How many phases a boss fight has, and every one of them is a promise.
+        ///
+        /// <para>
+        /// <b>A boss used to be a raider with a large number on it, and a large number is not a
+        /// fight.</b> Played, it died on the walk in, or on its ground before its first spell
+        /// had left its hand: a fed line lands about 230 damage a second on a lone boss, and the
+        /// overcharges banked through the quiet in front of one deliver more in an instant than
+        /// any boss stands with. Every gate was green, because nothing measured how long a boss
+        /// lived — the hold simulation scored a run <em>better</em> for killing it faster
+        /// (<c>SiegeRuleTests.EveryShippedBossRungIsAFight</c> is the instrument now, and every
+        /// chapter's boss rungs go through it).
+        /// </para>
+        /// <para>
+        /// <b>So a fight is three phases, and a phase is a threshold of health with a guard in
+        /// front of it.</b> A boss walks on <em>untouchable</em>; the moment it reaches its ground
+        /// it opens its first phase, and a phase opens with a guard: the boss cannot be hurt until
+        /// its phase-opening spell has landed (<see cref="GuardMost"/> is the deadline). Then it
+        /// can be hurt down to the next threshold and no further in one blow — what would have
+        /// crossed it is dropped, the next phase opens and the guard goes up again. That is
+        /// invariant 5d asked of a finale: the arrangement it rejects is <em>kill it in one
+        /// dump</em>, which was the only arrangement anybody was ever playing.
+        /// </para>
+        /// <para>
+        /// <b>What a player gets for a phase is a faster boss</b>
+        /// (<see cref="PhasePaceHundredths"/>), so the fight climbs rather than repeats, and the
+        /// last third is the one that is felt. Par does not move: it is the hill's health over
+        /// what a match delivers (invariant 37a) and no phase, guard or cadence is in it. What
+        /// the sweep can see is everything here.
+        /// </para>
+        /// </summary>
+        public const int BossPhases = 3;
+
+        /// <summary>
+        /// Quiet between a phase opening and the spell that opens it being decided.
+        ///
+        /// <b>Short, because the guard is the wait.</b> It replaced a wake of 3.4 seconds that was
+        /// the whole of a player's warning before the first spell — and was also the window in
+        /// which a boss died having done nothing. The warning is the walk-in now, which the boss
+        /// spends untouchable and the view spends on its arrival; what is left is the beat between
+        /// the roar and the throw, and the tell (<see cref="BossTell"/>) still sits on top of it.
+        /// </summary>
+        public const float PhaseWake = .9f;
+
+        /// <summary>
+        /// The cadence of each phase, in hundredths of the kind's own <see cref="CastEveryFor"/>.
+        ///
+        /// <para>
+        /// <b>Faster as it is hurt, and the ladder is the fight.</b> A boss that casts on one
+        /// cadence for its whole life is one fight repeated three times; one that casts at half
+        /// its opening cadence in its last third is a finale. The floor under the last entry is
+        /// still <see cref="BossTell"/> plus <see cref="BossFlight"/>, which is what
+        /// <c>SiegeRuleTests.EveryPhaseCastsFasterThanTheLastAndNoneOverlapsItsOwnTell</c>
+        /// holds.
+        /// </para>
+        /// <para>
+        /// <b>Exactly <see cref="BossPhases"/> entries</b>, and a fixture says so; the two are one
+        /// fact written twice because an array cannot be a <c>const</c>.
+        /// </para>
+        /// </summary>
+        public static readonly int[] PhasePaceHundredths = { 100, 80, 65 };
+
+        /// <summary>
+        /// The least a guard lasts, in seconds from the phase opening.
+        ///
+        /// <para>
+        /// <b>Longer than the spell it stands in front of, and the difference is the fight's
+        /// floor.</b> The opening spell lands at <see cref="PhaseWake"/> +
+        /// <see cref="BossTell"/> + <see cref="BossFlight"/> = 2.5 seconds; a guard that dropped
+        /// on that frame let a player who had banked every charge take a third of the boss the
+        /// same instant, three times over, and an ironclad on its own rung fell in 7.6 seconds
+        /// having done everything the rules promised. So a phase stands at least this long
+        /// whatever the line does, and three of them are the shortest a fight can be — about ten
+        /// seconds standing, plus the walk in. What the extra beat is spent on is the bar: a
+        /// player sees the phase turn before they can hit it.
+        /// </para>
+        /// </summary>
+        public const float GuardLeast = 3.4f;
+
+        /// <summary>
+        /// The most a guard may last, in seconds from the phase opening.
+        ///
+        /// <b>A deadline rather than a duration</b> (invariant 37cq's shape): the guard drops when
+        /// the phase-opening spell has landed and <see cref="GuardLeast"/> has passed, whichever
+        /// is later. A boss that finds nothing to aim at retries every <see cref="CastRetry"/>
+        /// (every ward already dark, every one already chained) and must not stand untouchable
+        /// for as long as that lasts, so the guard drops here whatever happened — and a bonecaller
+        /// that has spent its raises drops it at once, because a guard in front of a spell that
+        /// will never be thrown is a wall (invariant 5d).
+        /// </summary>
+        public const float GuardMost = 4.5f;
+
+        /// <summary>
+        /// The health at which the phase after <paramref name="phase"/> opens, for a boss that
+        /// stood with <paramref name="maxHealth"/>. Nought for the last phase.
+        ///
+        /// <b>Integer arithmetic and thirds from the top</b>, so two devices agree about the
+        /// frame a phase turns on (the runtimes disagree about floats — CLAUDE.md).
+        /// </summary>
+        public static int PhaseFloor(int maxHealth, int phase)
+            => phase >= BossPhases - 1 ? 0
+             : maxHealth * (BossPhases - 1 - phase) / BossPhases;
+
+        /// <summary>
+        /// The fastest any boss may ever cast: the next wind-up may not begin before the last
+        /// spell has landed, or the fight reads as one continuous noise and leaves no window to
+        /// mend the ward being aimed at (see <see cref="BossCastEvery"/>).
+        /// </summary>
+        public const float FastestCast = BossTell + BossFlight;
+
+        /// <summary>
+        /// Seconds between one spell and the next in this phase of this boss's fight, and never
+        /// under <see cref="FastestCast"/> whatever the ladder says.
+        /// </summary>
+        public static float CastEveryFor(SiegeKind kind, int phase)
+        {
+            if (phase < 0) phase = 0;
+            if (phase >= PhasePaceHundredths.Length) phase = PhasePaceHundredths.Length - 1;
+
+            float every = CastEveryFor(kind) * PhasePaceHundredths[phase] / 100f;
+            return every < FastestCast ? FastestCast : every;
+        }
 
         /// <summary>
         /// Seconds between one spell and the next.
@@ -1792,9 +1934,16 @@ namespace GlimmerGrove.Modes
              // **An ironclad tops it**, because it is the fourth chapter's finale and the
              // biggest fight in the mode; a bonecaller sits just under, being the third's; and a
              // shackler takes a rung-five rung beside the warlord, which is what it is.
-             : kind == SiegeKind.Ironclad ? 3.5f
-             : kind == SiegeKind.Bonecaller ? 3.4f
-             : kind == SiegeKind.Shackler ? 3.1f
+             //
+             // **Up a tenth or two when the cast gesture became a strike** (`make_siege_art.pulse`,
+             // 37dm): the canvas is the union of the stand and the throw, so which body frames sit
+             // at the peak decides how much of the frame the body fills, and the re-cut left these
+             // three filling 3-5 % less of theirs (the five above moved under 2 %). Measured off
+             // the shipped frames before and after, and the number moved by the measured ratio,
+             // so the body on the hill is the size it was.
+             : kind == SiegeKind.Ironclad ? 3.7f
+             : kind == SiegeKind.Bonecaller ? 3.5f
+             : kind == SiegeKind.Shackler ? 3.2f
 
              : kind == SiegeKind.Bulwark ? 1.85f
              : kind == SiegeKind.Bomber ? 1.30f

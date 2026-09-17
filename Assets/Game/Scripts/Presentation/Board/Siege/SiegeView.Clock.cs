@@ -92,6 +92,11 @@ namespace GlimmerGrove
             Watching(Time.unscaledDeltaTime);
 
             Follow();
+
+            // The fight's own beats - the plant, each phase turning, the guard going up and
+            // coming down - read off the raiders `Follow` just drew. See `SiegeView.Fight`.
+            Fight(Time.unscaledDeltaTime);
+
             Depth();
             Charge();
 
@@ -311,6 +316,15 @@ namespace GlimmerGrove
                 if (mob.Fill != null)
                 {
                     float share = Mathf.Clamp01(raider.Health / (float)raider.MaxHealth);
+
+                    // **A boss's bar fills as it walks on and is full the frame it stands**,
+                    // which is the genre's own way of saying "this is not yet a thing you can
+                    // hurt" - and it is honest, because on the walk in nothing can hurt it
+                    // (`SiegeRaider.Untouchable`). Read off the march, so the two agree to the
+                    // frame.
+                    if (mob.Boss && !raider.InPlace && raider.Hold > 0f)
+                        share *= Mathf.Clamp01(raider.March / raider.Hold);
+
                     mob.Fill.rectTransform.sizeDelta =
                         new Vector2(mob.Bar.sizeDelta.x * share - 4f, mob.Bar.sizeDelta.y - 4f);
                 }

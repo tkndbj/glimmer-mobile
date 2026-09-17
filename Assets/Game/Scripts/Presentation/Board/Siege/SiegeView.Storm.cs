@@ -373,8 +373,11 @@ namespace GlimmerGrove
                 mob.Crackle = CrackleEvery + Random.Range(0f, CrackleSpread);
 
                 // Quiet, and one bolt: this is a thing breathing rather than a thing casting, and
-                // the wind-up has to stay louder than it or the tell stops being a tell.
-                Crackle(mob, Casting(mob.Kind), .55f, 1);
+                // the wind-up has to stay louder than it or the tell stops being a tell. **Behind
+                // its guard it breathes harder** - two bolts, and still under the wind-up's five
+                // - because a boss that cannot be hurt has to look like it is *doing* something
+                // with the seconds it is being given.
+                Crackle(mob, Casting(mob.Kind), mob.Guarded ? .85f : .55f, mob.Guarded ? 2 : 1);
             }
         }
 

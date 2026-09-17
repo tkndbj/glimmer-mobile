@@ -44,6 +44,38 @@ namespace GlimmerGrove.Modes
         public float Spell;
 
         /// <summary>
+        /// Which phase of its fight this boss is in, from nought. See
+        /// <see cref="SiegeTuning.BossPhases"/> for what a phase is and why there are any.
+        ///
+        /// <b>State rather than an event, deliberately.</b> A phase can turn on a tap — a firepot,
+        /// a bomb, an overcharge — outside <c>Advance</c>, where nothing is reporting, so a view
+        /// that wanted to be told would miss half of them. A view compares this with what it last
+        /// drew (a repaint is a drawing of a state, invariant 48l).
+        /// </summary>
+        public int Phase;
+
+        /// <summary>
+        /// Seconds of guard left, or nought. While it runs the boss cannot be hurt.
+        ///
+        /// <b>A deadline, not a duration</b>: it is set to <see cref="SiegeTuning.GuardMost"/>
+        /// when a phase opens and cleared the moment the phase-opening spell lands, so what it
+        /// counts is the longest a guard may ever stand, never how long it is meant to.
+        /// </summary>
+        public float Guard;
+
+        /// <summary>Whether this phase's opening spell has been decided and is on its way.</summary>
+        public bool Opening;
+
+        /// <summary>Whether this phase's opening spell has landed. The guard waits on it and on <see cref="SiegeTuning.GuardLeast"/>.</summary>
+        public bool Opened;
+
+        /// <summary>Seconds this boss has stood on its ground. Measured for the fight gate.</summary>
+        public float Stood;
+
+        /// <summary>Spells this boss has thrown. Measured for the fight gate.</summary>
+        public int Casts;
+
+        /// <summary>
         /// How many times this boss has raised, which is the one boss counter the rules cap.
         ///
         /// <b>On the raider rather than on the board, because the cap is a fact about the
@@ -133,9 +165,10 @@ namespace GlimmerGrove.Modes
             MaxHealth = Surge.Health(SiegeTuning.HealthOf(kind));
             Health = MaxHealth;
             Blow = SiegeTuning.BlowEvery * .5f;
-            // A boss stands and winds up before its first spell. Nothing else casts, so nothing
-            // else reads this.
-            Spell = SiegeTuning.BossWakes;
+            // A boss's first spell is decided when its first phase opens (`SiegeBoard.OpenPhase`),
+            // which resets this; the value here is only what a boss stood on its ground by hand
+            // would read. Nothing else casts, so nothing else reads it.
+            Spell = SiegeTuning.PhaseWake;
         }
 
         public bool Brute => Kind == SiegeKind.Brute;
@@ -223,5 +256,30 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Whether it has reached the ground it holds and may start casting.</summary>
         public bool InPlace => Alive && OnTheHill && March >= Hold;
+
+        /// <summary>Whether this boss's guard is up. Never true of anything but a boss.</summary>
+        public bool Guarded => Boss && Alive && Guard > 0f;
+
+        /// <summary>
+        /// Whether nothing on the line or in the player's hand can hurt it right now: a boss
+        /// still walking on, or one behind its guard.
+        ///
+        /// <para>
+        /// <b>The one question every source of harm asks</b>, through <c>SiegeBoard.Wound</c>,
+        /// and the one question every aim asks, so a ward with nothing else to shoot at
+        /// <em>banks</em> rather than pours fuel into a thing it cannot hurt — which is the
+        /// ironclad's answer (bank, then dump) made general.
+        /// </para>
+        /// <para>
+        /// It was never asked before, and that is the whole of why a boss died on the walk in.
+        /// </para>
+        /// </summary>
+        public bool Untouchable => Boss && Alive && (!InPlace || Guard > 0f);
+
+        /// <summary>
+        /// The health this boss cannot be taken under in its current phase — the next phase's
+        /// threshold, or nought in the last. See <see cref="SiegeTuning.PhaseFloor"/>.
+        /// </summary>
+        public int PhaseFloor => Boss ? SiegeTuning.PhaseFloor(MaxHealth, Phase) : 0;
     }
 }

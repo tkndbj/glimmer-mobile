@@ -1134,6 +1134,14 @@
       "text": "CHAIN x{0}"
     },
     {
+      "key": "mode.siege.enraged",
+      "text": "ENRAGED"
+    },
+    {
+      "key": "mode.siege.felled",
+      "text": "{0} FALLS"
+    },
+    {
       "key": "mode.siege.go",
       "text": "GO!"
     },

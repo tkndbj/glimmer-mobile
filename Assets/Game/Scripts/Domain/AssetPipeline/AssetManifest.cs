@@ -448,6 +448,7 @@ namespace GlimmerGrove.AssetPipeline
             "unlock", "shatter", "burst", "free", "pop", "pop2", "whoosh", "chest", "win", "star",
             "tick", "tock", "bell", "lit", "chime", "chime2",
             "boom", "mend", "land",
+            "boss", "roar", "felled",
             "gem", "settle", "shot", "zap", "stand", "wear", "arrive",
             "lift", "stow", "chain",
         };

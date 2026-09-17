@@ -296,8 +296,11 @@ namespace GlimmerGrove.Modes
                             if (damage < 1) damage = 1;
                         }
 
-                        raider.Health -= damage;
-                        raider.Flash = .18f;
+                        // Through the one door (`SiegeBoard.Fight.cs`): a volley over a guarded
+                        // boss lands on everything else, and a bolt that took nothing is not
+                        // drawn as a hit.
+                        damage = Wound(raider, damage);
+                        if (damage <= 0) continue;
 
                         bool killed = Fell(raider);
 

@@ -194,8 +194,10 @@ namespace GlimmerGrove.Modes
 
             if (damage < 1) damage = 1;
 
-            other.Health -= damage;
-            other.Flash = .18f;
+            // Through the one door (`SiegeBoard.Fight.cs`). A partner shot that found a boss
+            // behind its guard took nothing and reports nothing, so the view draws the guard.
+            damage = Wound(other, damage);
+            if (damage <= 0) return;
 
             bool killed = Fell(other);
             if (killed) Refund(ward);
@@ -252,7 +254,13 @@ namespace GlimmerGrove.Modes
                 if (took < 1) continue;
 
                 raider.Smoulder -= took;
-                raider.Health -= took;
+
+                // Through the one door (`SiegeBoard.Fight.cs`). A burn on a boss behind its
+                // guard ticks for nothing and the tick is not reported; the seconds still burn
+                // down, so a burn lit before a guard is a burn the guard ate rather than one held
+                // over.
+                took = Wound(raider, took);
+                if (took <= 0) continue;
 
                 bool killed = Fell(raider);
 

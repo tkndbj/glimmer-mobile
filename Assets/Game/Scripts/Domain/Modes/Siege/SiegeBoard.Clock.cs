@@ -126,6 +126,13 @@ namespace GlimmerGrove.Modes
                 var caster = Find(spell.Raider);
                 if (caster == null || !caster.Alive) continue;
 
+                // **The spell that opened a phase has landed**, which is half of what drops the
+                // guard (`Guarding` has the other half) - noted before anything below can
+                // `continue` past it, because a spell aimed at a ward that has since fallen is
+                // dropped and the guard must not stand on a spell that was thrown. What the guard
+                // promised was one spell thrown, not one spell landed.
+                if (spell.Opens) caster.Opened = true;
+
                 // **A roar is aimed at no ward and lands on every one of them.** It is settled
                 // here rather than falling through to the single-target path below, because that
                 // path indexes `spell.Ward` and a roar carries -1. It *restarts* rather than
@@ -196,7 +203,7 @@ namespace GlimmerGrove.Modes
                 // A rank is taken *before* the health, so a spell that fells a ward has still
                 // taken the rank it came for — and the view is told both in one record rather than
                 // having to work out which order they happened in.
-                bool sundered = spell.Craft == SiegeSpell.Sunder && ward.Sunder();
+                bool sundered = spell.Craft == SiegeSpell.Sunder && spell.Opens && ward.Sunder();
 
                 int cast = SiegeTuning.CastOf(caster.Kind);
                 ward.Health -= cast;
@@ -452,6 +459,17 @@ namespace GlimmerGrove.Modes
                 // differ by one number the raider was minted with.
                 raider.March = raider.Hold;
 
+                // **A boss reaching its ground is the first phase opening**, which is the frame
+                // it stops being untouchable and the frame its guard goes up in the same breath
+                // - see `SiegeBoard.Fight.cs`. It is reported in `Arrived` like anything else
+                // reaching where it stops, so the view has one list for "something got there".
+                if (raider.Boss)
+                {
+                    OpenPhase(raider, 0);
+                    _report.Arrived.Add(raider.Id);
+                    continue;
+                }
+
                 if (!raider.AtTheLine) continue;
 
                 raider.Blow = SiegeTuning.BlowEvery;
@@ -519,8 +537,10 @@ namespace GlimmerGrove.Modes
                 ward.Fuel = Math.Max(0f, ward.Fuel - SiegeTuning.FuelShot(ward.Rank, share));
                 ward.Shots++;
 
-                target.Health -= damage;
-                target.Flash = .18f;
+                // Through the one door (`SiegeBoard.Fight.cs`). `Aim` never picks an untouchable
+                // boss, so what comes back differs from `damage` only at a phase's floor - and
+                // what is reported is what landed.
+                damage = Wound(target, damage);
 
                 bool killed = Fell(target);
                 if (killed) Refund(ward);
@@ -587,6 +607,13 @@ namespace GlimmerGrove.Modes
                 var raider = _raiders[i];
                 if (!raider.Alive || !raider.OnTheHill) continue;
 
+                // **A boss that cannot be hurt is not a target**, whatever colour it wears - a
+                // ward with nothing else to shoot at banks, exactly as it does against an
+                // ironclad, rather than spending a tube on a thing behind a guard. Asked before
+                // the colour, because an own-colour bolt at an untouchable boss is fuel converted
+                // into nothing on the player's behalf (37bq's fault from the other side).
+                if (raider.Untouchable) continue;
+
                 if (raider.Colour == ward.Colour)
                 {
                     if (own == null || raider.March > own.March) own = raider;
@@ -610,6 +637,12 @@ namespace GlimmerGrove.Modes
                 // rather than at the line — see `Meddle`.
                 if (!boss.Boss || !boss.Alive || !boss.InPlace) continue;
 
+                boss.Stood += dt;
+
+                // The guard runs down here, on the board's clock, whatever the boss is doing -
+                // see `Guarding` for what drops it and why a stun does not hold it.
+                Guarding(boss, dt);
+
                 // **A stunned boss does not cast**, which is the decision a stun turret is bought
                 // for: a duel is one raider wearing one colour, so standing a stun on *that*
                 // colour is the one thing on the shelf that can take seconds off the finale's
@@ -622,10 +655,15 @@ namespace GlimmerGrove.Modes
 
                 var craft = boss.Spellcraft;
 
+                // The first spell of a phase is the one the guard stands in front of; the guard
+                // drops when it lands (`Arrive`). Decided before the target, because what an
+                // opener wants can differ from what an ordinary cast wants (`Wanted`).
+                bool opens = boss.Guarded && !boss.Opening;
+
                 // **A roar is thrown at the hill, so it carries no ward.** Three of the four aim
                 // at the line and one does not, and the difference is asked once here rather than
                 // by every reader of a ward index nobody set.
-                int ward = SiegeTuning.AimsAtAWard(boss.Kind) ? Wanted(craft, boss) : -1;
+                int ward = SiegeTuning.AimsAtAWard(boss.Kind) ? Wanted(craft, boss, opens) : -1;
 
                 // **A cast that found nothing to aim at does not spend its cadence.** The timer
                 // used to be re-armed above, before the target was known, so a blightcaller that
@@ -649,14 +687,28 @@ namespace GlimmerGrove.Modes
                 // raise would put raiders on a hill nothing priced — and a cast that went through
                 // the tell, the flight and the ring and then raised nothing would be a boss
                 // visibly doing nothing, which is the reading `CastRetry`'s note is about.
-                if (SiegeTuning.Summons(boss.Kind) && boss.Raised >= SiegeTuning.Raises) continue;
+                if (SiegeTuning.Summons(boss.Kind) && boss.Raised >= SiegeTuning.Raises)
+                {
+                    // **A guard in front of a spell that will never be thrown is a wall**
+                    // (invariant 5d), so a bonecaller that has spent its raises drops it at once
+                    // rather than at the deadline.
+                    if (boss.Guarded) Unguard(boss);
+                    continue;
+                }
 
-                boss.Spell = SiegeTuning.CastEveryFor(boss.Kind);
+                // **The cadence is the phase's** (`SiegeTuning.PhasePaceHundredths`), so a boss
+                // in its last third casts at half the rate it opened with - which is the ladder
+                // the fight climbs.
+                boss.Spell = SiegeTuning.CastEveryFor(boss.Kind, boss.Phase);
+                boss.Casts++;
+
+                if (opens) boss.Opening = true;
 
                 float lands = SiegeTuning.BossTell + SiegeTuning.BossFlight;
 
-                _spells.Add(new Flight { Raider = boss.Id, Ward = ward, Craft = craft, In = lands });
-                _report.Casts.Add(new SiegeCast(boss.Id, ward, craft, lands));
+                _spells.Add(new Flight { Raider = boss.Id, Ward = ward, Craft = craft, In = lands,
+                                         Opens = opens });
+                _report.Casts.Add(new SiegeCast(boss.Id, ward, craft, lands, boss.Phase, opens));
             }
         }
 
@@ -717,7 +769,7 @@ namespace GlimmerGrove.Modes
             return many;
         }
 
-        int Wanted(SiegeSpell craft, SiegeRaider caster)
+        int Wanted(SiegeSpell craft, SiegeRaider caster, bool opens)
         {
             int best = -1;
             long most = -1;
@@ -746,8 +798,11 @@ namespace GlimmerGrove.Modes
                         rank = (long)(ward.Fuel * 1000f) * 64L + ward.Health;
                         break;
 
+                    // **Only the opener sunders** (`SiegeTuning.OverlordSunder`), so only the
+                    // opener wants the best turret; every other overlord spell is a smite and
+                    // wants what a smite wants, the freshest.
                     case SiegeSpell.Sunder:
-                        rank = (long)ward.Rank * 64L + ward.Health;
+                        rank = opens ? (long)ward.Rank * 64L + ward.Health : ward.Health;
                         break;
 
                     // **A bind wants the ward the hill most needs answered**, which is the one

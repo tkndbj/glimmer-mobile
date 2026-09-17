@@ -253,6 +253,29 @@ namespace GlimmerGrove
             /// level could only ever send one. See <see cref="SiegeView.FreeCrown"/>.
             /// </summary>
             public int CrownSlot;
+
+            // ---------------------------------------------------------- the fight
+            /// <summary>
+            /// The phase this boss was last drawn in, -1 before it stands. Compared with
+            /// <c>SiegeRaider.Phase</c> every frame, because a phase turns on a tap as readily
+            /// as on a bolt and only a state can be read off both (see `SiegeView.Fight`).
+            /// </summary>
+            public int Phase = -1;
+
+            /// <summary>Whether the guard was up the last time it was drawn.</summary>
+            public bool Guarded;
+
+            /// <summary>Whether the plant has been drawn: the frame it reached its ground.</summary>
+            public bool Arrived;
+
+            /// <summary>The ring that says it cannot be hurt. Dark until the guard goes up.</summary>
+            public Image Ward;
+
+            /// <summary>The marks on its bar where each phase turns, one per threshold.</summary>
+            public Image[] Marks;
+
+            /// <summary>Seconds this boss has been drawn for, which paces the guard's breathing.</summary>
+            public float Drawn;
         }
 
         sealed class Post

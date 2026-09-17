@@ -504,6 +504,59 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    its whole canvas, and this one carries the ground, the line, the field and a dozen raiders. Pooled
    embers (`SiegeView.Cinder`) and **a nested `Canvas` on the effects layer** fix both halves; the canvas
    costs one batch and `overrideSorting` must stay **off**, or the layer leaves the parent's draw order.
+37di. **A boss is a fight, and a fight is a promise the rules keep, not a number the line races.** Eight
+   bosses shipped dying on the walk in or before their first spell — a fed line lands ~230 a second on a
+   lone boss and the charges banked through the quiet before one deliver more in an instant than any boss
+   stood with — and every gate was green because none measured a boss's life. So a boss walks on
+   **untouchable**, opens a **phase** the frame it stands, and a phase opens with a **guard** (nothing
+   can hurt it until its opening spell has landed *and* `GuardLeast` has passed, `GuardMost` the deadline)
+   and closes at a **floor** (`SiegeTuning.PhaseFloor`: thirds from the top, integer arithmetic) that no
+   single blow may cross — the overkill is dropped and the next phase opens, guard up. Three phases, each
+   **faster** (`PhasePaceHundredths`, never under `FastestCast`). 5d asked of a finale: what it rejects is
+   *kill it in one dump*, which was the only arrangement anybody was playing. **Par does not move**; the
+   fight is entirely what the sweep sees. **The gate is `SiegeRuleTests.EveryShippedBossRungIsAFight`**: on
+   every rung that sends a boss, at every rhythm, a boss that fell threw at least a spell a phase and stood
+   at least ten seconds, and it fell at some rhythm; the same file holds the rules one by one.
+37dj. **Every point of harm goes through one door** — `SiegeBoard.Wound` — because eight sites wrote
+   `Health -= damage` themselves and three new rules in eight places is twenty-four ways to disagree. It
+   answers what *really* came off, which is what a utility is charged against (39), so a firepot dropped
+   on a guarded boss costs the run nothing and is handed back. **A boss that cannot be hurt is not a
+   target**: `Aim` and `Furthest` skip it, so a ward banks (the ironclad's answer made general) and a
+   charge tapped over nothing else is refused and kept.
+37dk. **A boss's state is read, never announced.** A phase turns on a bolt inside `Advance` and just as
+   readily on a firepot, a bomb or an overcharge outside it, where nothing is reporting — so the view
+   compares `Phase` and `Guarded` with what it last drew, once a frame (`SiegeView.Fight`), and only the
+   opener is an event (`SiegeCast.Opens`). A view that waited to be told would miss half the turns.
+37dl. **A guard that promised nothing is a wall.** A bonecaller with its raises spent drops its guard at
+   once; one that finds nothing to aim at drops it at the deadline; a stun runs the guard down like any
+   other second. And **only the opener sunders**: a sunder on every cast was bounded only by the
+   overlord's life, and once it lived long enough to fight it stripped every rank and the duel ran six
+   hundred seconds without ending. The finale's blow went 5 → 4 in the same change, measured
+   (`AnUnhurriedPlayerHoldsThisLine`: Thornwatch 78 → 84 of 90, the finale 3 → 6 of 9 with the line bled
+   to 0–16 of 56).
+37dm. **The fight is drawn on its edges, and slow motion is the one instrument on every beat** — the
+   plant, the guard rising and shattering, the roar on each turn (louder each time), the landing, the
+   fall — all through `Dilate`, affordable only because the model is handed the seconds (37cq). The bar is
+   cut into phases and fills on the walk in; the boss has a voice of its own for arriving, roaring and
+   falling (`boss`, `roar`, `felled`), and the synthesised cast gesture is a **strike whose peak is the
+   release**, not a sine that is back on the stand by the time the spell leaves — and **which frames sit at
+   the peak decides the canvas**, so the re-cut left three slim bosses filling 3–5 % less of their frame and
+   `TallOf` moved by the measured ratio (the mirror's rows, three of them drifted, were re-read off the C#
+   in the same change). **What only a render can see**: the guard ring at 14 of 128 was a purple wall a body wide; 7 reads as a halo.
+
+**Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` on rung five or ten, no
+other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds
+it to the body); run `python Tools/verify/tests.py SiegeRuleTests` — the fight gate, the chapter sweep
+and `NoBossVerbIsSentByAnyTwoChapters` are the whole verdict, and a rung on which the boss never fights
+is red, not a note for later. A **kind** (when the verbs are spent, 37br): append the enum member; its
+health, march, hold, cadence and blow beside the others in `SiegeTuning` and its arm in `HealthOf`,
+`MarchOf`, `HoldOf`, `CastEveryFor`, `CastOf`, `SpellOf`; a `SiegeSpell` member and its `Arrive` and
+`Wanted` clauses; the token in `SiegeLayout.BossNames`; body and cast reels in `make_siege_art.BOSS_SET`
+and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a loc key in
+`SiegeView.BossKey`; arms in `Unleash` and `Aftermath` (37dd); a row in `render_siege.BOSSES` and
+`Tools/verify/siege.py`. Every fixture that matters walks the enum (`EveryBoss`, `SiegeArtTests`,
+`SiegeCaptionTests`), so the one you forget is the one that goes red.
+
 38. **A mode hides behind one manifest boolean, and deleting one is a session.** Hidden is `"disabled":
    true` and nothing else; deleted means class, board, view, screen, validator, reading, bodies, art,
    mirrors and tools all go, with the ids spent.

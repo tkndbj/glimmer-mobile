@@ -674,6 +674,11 @@ def banner(sheet, cx, cy, depth, cell, span):
 #: view itself needed: a bool can only ever answer "the other one", and a chapter shipped two
 #: bosses separated by nothing but a hue because of it. None of the four spell colours is one of
 #: the board's four gems, so nothing any of them lights can be read as a colour rule.
+#: `SiegeTuning.BossPhases` and `SiegeView.MarkWide` - how many phases a boss fight has, and how
+#: thick the notch on its bar is, in cells. **A mirror**: it moves in the same change as the C#.
+BOSS_PHASES = 3
+MARK_WIDE = 0.05
+
 BOSSES = {
     "blightcaller": dict(hold=0.58, tall=3.0, stem="blight", fx="hex", fire=(59, 233, 216)),
     "warlord": dict(hold=0.46, tall=3.1, stem="boss", fx="spell", fire=(180, 120, 255)),
@@ -689,13 +694,13 @@ BOSSES = {
     # invariant 37z being broken, and it read as a palette decision. Each has its own pair now
     # (`SiegeShotBake.Maw`, `.Crypt`).
     "gravemaw": dict(hold=0.62, tall=3.2, stem="maw", fx="maw", fire=(84, 228, 140)),
-    "bonecaller": dict(hold=0.40, tall=3.0, stem="caller", fx="crypt", fire=(220, 235, 245)),
+    "bonecaller": dict(hold=0.40, tall=3.5, stem="caller", fx="crypt", fire=(220, 235, 245)),
     # `Pal.Dormant` and `Pal.Radiance` - iron and dust. **Two chapters late**: the fourth
     # chapter's pair shipped with no row here at all, so `--warlord cast` could not draw either
     # of them and the one gate that can see a boss's cast has never been pointed at half the
     # bosses in the game.
-    "shackler": dict(hold=0.52, tall=3.0, stem="snare", fx="snare", fire=(58, 80, 100)),
-    "ironclad": dict(hold=0.44, tall=3.3, stem="clad", fx="quake", fire=(255, 244, 206)),
+    "shackler": dict(hold=0.68, tall=3.2, stem="snare", fx="snare", fire=(58, 80, 100)),
+    "ironclad": dict(hold=0.42, tall=3.7, stem="clad", fx="quake", fire=(255, 244, 206)),
 }
 
 #: Which bosses are aimed at no ward, and therefore draw a pair of reels where they stand rather
@@ -807,6 +812,28 @@ def warlord(sheet, draw_on, kind, colour, wards, span, cell, hill_top, hill_foot
     draw_on.rounded_rectangle([bx - wide / 2 + 2, by - cell * 0.13 + 2,
                                bx - wide / 2 + 2 + wide * 0.64, by + cell * 0.13 - 2],
                               radius=11, fill=(255, 107, 87, 255))
+
+    # `SiegeView.Marks` - the bar is cut into phases (`SiegeTuning.BossPhases`), one notch at
+    # every threshold in the trough's own ink. The notch is placed by the same arithmetic the
+    # fill is drawn with, so it sits on the pixel the fill reaches when the phase turns.
+    for p in range(BOSS_PHASES - 1):
+        share = (BOSS_PHASES - 1 - p) / float(BOSS_PHASES)
+        mx = bx - wide / 2 + 2 + (wide - 4) * share
+        draw_on.rounded_rectangle([mx - cell * MARK_WIDE / 2, by - cell * 0.13 + 1,
+                                   mx + cell * MARK_WIDE / 2, by + cell * 0.13 - 1],
+                                  radius=3, fill=(0, 0, 0, 199))
+
+    # `SiegeView.Warded` - a boss behind its guard stands in a ring of its own fire, the width
+    # of its body and a little more, drawn under the body. `--warlord guard` is the only picture
+    # that says whether the ring reads as "cannot be hurt" over the hill's own noise and whether
+    # it clears the crown above it on every canvas.
+    if casting == "guard":
+        ring = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+        pen = ImageDraw.Draw(ring)
+        r = tall * 1.18 / 2
+        pen.ellipse([cx - r, cy - r, cx + r, cy + r], outline=fire + (204,),
+                    width=max(2, int(round(r * 7 / 64))))
+        sheet.alpha_composite(ring)
 
     gx = bx - wide / 2 - cell * 0.45
     put(sheet, sprite(GEM_ART[letter]), gx, by, cell * 0.62, cell * 0.62)
@@ -2402,8 +2429,8 @@ def main():
                     help="how many of the first wave to stand on the hill")
     ap.add_argument("--no-bolts", action="store_true",
                     help="draw the board with nothing in flight")
-    ap.add_argument("--warlord", default="cast", choices=("cast", "idle", "storm"),
-                    help="draw the boss winding up (cast), standing (idle), walking on "
+    ap.add_argument("--warlord", default="cast", choices=("cast", "idle", "storm", "guard"),
+                    help="draw the boss winding up (cast), standing (idle), behind its guard (guard), walking on "
                          "(walk), or the frame its volley leaves (storm)")
     ap.add_argument("--cooling", nargs="?", const="firepot=6,stormcall=22", default="",
                     help="draw slots mid-cooldown, as id=seconds pairs; bare gives a sample")

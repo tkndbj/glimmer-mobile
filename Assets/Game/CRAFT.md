@@ -877,6 +877,22 @@ strikes over a hill read as **noise** rather than as six things being struck. An
 looking: **a staggered storm constructed up front is several hundred `Image`s and a canvas rebuild
 inside one frame** — defer the construction past the delay, not just the fade.
 
+**The fight, drawn (37dm).** Every beat of a boss fight is read off the model as a state and drawn on
+the edge — `SiegeView.Fight` compares `Phase` and `Guarded` with what the widget last drew — and every
+beat spends the one instrument that costs the run nothing: `Dilate`, which slows the seconds the model is
+handed (37cq). The plant (a ground ring, a punch, .35 for .42 s), the guard rising (a ring under the
+body, `Art.Ring(128, 7f)` at 1.18 of the height — **14 was a purple wall a body wide**, and only the
+render said so), the guard shattering (outward, sparks, `shatter`), the roar on each turn (three rings,
+a flash and a shake that all grow with the phase, the bar's notch bursting, `roar`), the landing (.45 for
+.14 s, .25 for .45 s on a felled ward) and the fall (.2 for 1.1 s, a strobe, the crown dropping,
+`felled`, the banner). The bar is cut into phases (`SiegeView.Marks`, placed by the fill's own
+arithmetic) and fills on the walk in off the march. The synthesised cast gesture (`make_siege_art.pulse`)
+is a **strike** — crouch, snap, hold, recover — whose hold ends on the reel's second-to-last frame,
+which is the frame `Unleash` fires on; the sine it replaced was back on the stand by then. **The canvas is
+the union of the stand and the throw, so which body frames sit at the peak decides how much of the frame
+the body fills** — the re-cut left the three skeletal bosses filling 3–5 % less (the others under 2 %),
+measured off the shipped frames before and after, and `SiegeTuning.TallOf` moved by that ratio. `render_siege.py --warlord guard` is the only picture of the ring.
+
 **Casting a top-down cast (37ar, 37as).** Nine monster packs on this machine hold ninety-six characters
 and not one insect; the only insects anywhere are fifteen in the same kit the turrets come from, and
 they are drawn **top-down**, which is the one view this board has. Sixteen kinds out of fifteen bodies
