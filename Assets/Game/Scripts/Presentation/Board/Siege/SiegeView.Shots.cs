@@ -77,6 +77,12 @@ namespace GlimmerGrove
             puff.Reel.rectTransform.anchoredPosition = new Vector2(0f, -(head - .5f) * tall);
             puff.Reel.color = tint;
 
+            // **Every borrower gets a whole frame back.** Only a bolt in flight draws part of its
+            // reel (`Emerged`), and a pooled widget is one frame away from being a muzzle flash.
+            puff.Reel.type = Image.Type.Simple;
+            puff.Reel.fillAmount = 1f;
+            puff.Reel.rectTransform.localScale = Vector3.one;
+
             puff.Film = Flipbook.Attach(puff.Reel, frames, fps, loop);
             return puff;
         }
@@ -325,6 +331,73 @@ namespace GlimmerGrove
         public const float MuzzleAt = .22f;
 
         /// <summary>
+        /// How much of its trail a bolt has unrolled, having flown <paramref name="flown"/> board
+        /// units with a tail <paramref name="tail"/> long.
+        ///
+        /// <para>
+        /// <b>A bolt used to be drawn at full length on the frame it was fired</b>, and that is
+        /// what "it does not come out of the barrel" turned out to mean. The origin was never
+        /// wrong — measured against the art, <c>_lineY + Cell</c> sits on the barrel mouth of all
+        /// thirty turrets to within a hundredth of a cell. What was wrong is that a comet is
+        /// anchored near its <em>head</em> (<see cref="HeadAt"/>), so the rest of it — three or
+        /// four cells of trail — was painted straight back down through the chassis and out of
+        /// the bottom of the turret. A player reads the whole lit shape, and the whole lit shape
+        /// was the turret with a flame through it.
+        /// </para>
+        /// <para>
+        /// <b>So the trail is as long as the flight so far.</b> That is the honest rule rather
+        /// than a tuned ramp: a comet cannot have more tail than it has travelled, so at the
+        /// muzzle there is a head and nothing behind it, and the trail unrolls out of the barrel
+        /// as the thing moves. It needs no constant per turret and it is right for a short shot
+        /// and a long one, which a fixed ramp is not — the bolts differ by a factor of two in
+        /// length (<see cref="BoltScale"/>) and the hill is deeper on some rungs than others.
+        /// </para>
+        /// <para>
+        /// <b>Cut rather than squashed, which is the correction and the whole of it.</b> This
+        /// shipped as a <em>scale</em> on the reel — the trail compressed toward the head — and
+        /// four turrets came back with "a weird tail at the very first moment". They are exactly
+        /// the four whose art wanders <em>off the centre-line</em>: a chain that forks sideways, a
+        /// shot that zig-zags between bounces, a meteor trailing sparks, a corona with three rays
+        /// across it. Squashing a column is invisible; squashing anything off-axis drags it up
+        /// beside the head and reads as a squiggle at the barrel. The other six are symmetric
+        /// columns and looked fine, which is why only four were reported. <b>A crop distorts
+        /// nothing</b>: the part of the trail that has not happened yet is simply not drawn.
+        /// </para>
+        /// <para>
+        /// <b>The answer is a <c>fillAmount</c>, so it is what the reel <em>draws</em> rather than
+        /// how big it is.</b> <c>Image.Type.Filled</c> generates a quad from the sprite's outer UV
+        /// rect, so it is safe on these reels' tight mesh and exact on their full-rect frames —
+        /// none of <c>Art/Fx/Siege</c> is atlassed. Every borrower of a pooled widget gets
+        /// <c>Simple</c> back from <see cref="Lend"/>, so a flash or an impact can never inherit
+        /// a half-drawn frame.
+        /// </para>
+        /// <para>
+        /// <b>A cut is a straight edge, so it is put where the flash is.</b> Measured, every reel
+        /// in this mode is fully opaque along its trail — there is no depth at which the cut falls
+        /// on faint pixels and no headroom that hides it on its own. What does hide it is the
+        /// muzzle flash, whose ink reaches <c>.58</c> of a cell below the barrel and nearly three
+        /// cells across, so <see cref="HeadRoom"/> is a distance in <em>cells</em> tied to that
+        /// rather than a multiple of the bolt's own width. <see cref="Flash"/> is therefore drawn
+        /// <b>after</b> the bolt, which is also the honest order: a flash is at the barrel and the
+        /// bolt is leaving it.
+        /// </para>
+        /// </summary>
+        public static float Emerged(float flown, float cell, float tall)
+            => tall <= 0f
+             ? 1f
+             : Mathf.Clamp((1f - HeadAt) + (HeadRoom * cell + flown) / tall, 0f, 1f);
+
+        /// <summary>
+        /// How far behind the muzzle a bolt is drawn before it has flown anywhere, in cells.
+        ///
+        /// <b>Comfortably inside the flash that covers it</b> (its ink reaches .58 of a cell below
+        /// the barrel), and enough for the roster's biggest head to straddle the muzzle without
+        /// being sliced. <b>The direction to move it is down</b>: every unit of this is trail
+        /// drawn over the turret, which is the fault the crop exists to fix.
+        /// </summary>
+        const float HeadRoom = .35f;
+
+        /// <summary>
         /// How long a bolt is in the air.
         ///
         /// <para>
@@ -538,11 +611,21 @@ namespace GlimmerGrove
                 // bigger thing - it is that a shot has *four* beats a player can see: the barrel
                 // kicks, the muzzle throws light, something with a tail crosses the hill, and it
                 // arrives.
-                Flash(from, lean, ward.Model, ward.Colour, tint, flare);
-
                 var round = Round(ward.Model, ward.Colour, tint, from, lean);
                 var node = round.Node;
                 bool lands = b == barrels - 1;
+
+                // **The frame's own drawn size.** Read off the widget `Lend` just sized rather
+                // than recomputed from the sprite, so the number that positions the reel and the
+                // number that crops it cannot disagree.
+                var reel = round.Reel;
+                float tall = reel.rectTransform.sizeDelta.y;
+                float span = Vector2.Distance(from, land);
+
+                // Drawn from the top down, which is the end the head is at.
+                reel.type = Image.Type.Filled;
+                reel.fillMethod = Image.FillMethod.Vertical;
+                reel.fillOrigin = (int)Image.OriginVertical.Top;
 
                 Tween.Run(flight, Ease.Linear, t =>
                 {
@@ -553,11 +636,22 @@ namespace GlimmerGrove
                     // you" on a board with no depth - and it is the only thing about the bolt this
                     // class animates, because the fourteen frames under it are doing the rest.
                     node.localScale = Vector3.one * Mathf.Lerp(.86f, 1.12f, t);
+
+                    // **The trail unrolls out of the barrel** (`Emerged`). The reel does not
+                    // move and is not scaled - only the amount of it that is drawn changes, so
+                    // nothing in the picture is ever distorted and the cut edge sits at the
+                    // muzzle rather than travelling with the bolt.
+                    reel.fillAmount = Emerged(span * t, Cell, tall);
                 }, node).OnDone(() =>
                 {
                     Give(round);
                     if (lands) Land(to, tint, ward.Model, ward.Colour, angle, shot);
                 });
+
+                // **After the bolt, so it draws over it** - uGUI paints in sibling order. That is
+                // where the crop's straight edge is hidden (`Emerged`), and it is the honest
+                // order anyway: the flash is at the barrel and the bolt is on its way out of it.
+                Flash(from, lean, ward.Model, ward.Colour, tint, flare);
             }
 
             // **One sound at one pitch for all four wards**, and since `sfx.tsv` moved this

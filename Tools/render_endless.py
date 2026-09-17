@@ -87,9 +87,15 @@ def row_centre(i):
 
 
 # --------------------------------------------------------------- EndlessHub
-#: The three marks, from the skill-icon pack. A phoenix for a fight with no end, rising
-#: bolts for a hill that gets harder, a medal for a place on the boards.
-ICONS = [90, 84, 27]
+#: The three marks. A phoenix for a fight with no end and rising bolts for a hill that gets
+#: harder, both cut from the skill-icon pack by `make_siege_art.HUB_ICONS`; then the wallet's
+#: own heart for what a watch costs, which is shipped art rather than a pack cut.
+#:
+#: An int is a pack index and a string is a path under `Assets/Game/Art`, because the third
+#: mark is a sprite this game already draws everywhere else and re-cutting it from a pack would
+#: be the mirror drawing a picture the screen does not.
+ICONS = [90, 84, "Ui/ic_heart"]
+ART = REPO / "Assets" / "Game" / "Art"
 ICON_PACK = Path(r"C:\Users\Digikey\Downloads\craftpix-net-629015-100-skill-icons-pack-for-rpg")
 
 # --------------------------------------------------------------- LevelsScreen
@@ -173,9 +179,22 @@ def plain(sheet, h):
 
 
 def icon(n):
-    """One skill icon, rounded into a tile the way `make_siege_art.charge` cuts the
-    overcharge glyph - these are painted *on* their ground, so keying one out takes the
-    light with it and leaves a scribble."""
+    """One mark, at the size the seat draws it.
+
+    A **string** is shipped art under `Assets/Game/Art`, drawn as it is - it carries its own
+    alpha and is the same file the game loads. An **int** is a skill-icon index, rounded into a
+    tile the way `make_siege_art.charge` cuts the overcharge glyph: those are painted *on* their
+    ground, so keying one out takes the light with it and leaves a scribble.
+    """
+    if isinstance(n, str):
+        f = ART / (n + ".png")
+        if not f.exists():
+            return None
+
+        im = Image.open(f).convert("RGBA")
+        im.thumbnail((int(ICON_SIZE), int(ICON_SIZE)), Image.LANCZOS)
+        return im
+
     f = ICON_PACK / "PNG" / ("skill icon %d.png" % n)
     if not f.exists():
         return None

@@ -25,17 +25,46 @@ namespace GlimmerGrove.Progression
 
         /// <summary>A glade this player has already finished, free from then on.</summary>
         Replay,
+
+        /// <summary>
+        /// A heart is taken when the run <em>begins</em>, and every ending takes nothing more.
+        ///
+        /// <para>
+        /// <b>What a lane with no ladder costs</b> (invariant 43). A charged run is paid for by
+        /// losing it, which works because a glade is a thing you either finish or fail: the
+        /// stake is the price of failing. An endless lane has no finish, so every run ends in a
+        /// defeat and pricing the defeat would charge a heart for every watch however far it
+        /// got — a lane whose whole subject is going further would take a heart off a player for
+        /// beating their own record. So the watch is bought at the gate and the ending is free,
+        /// which is the same heart either way and says the true thing about what was paid for.
+        /// </para>
+        /// <para>
+        /// <b>It is a fourth value rather than a bool beside <see cref="Charged"/></b> because
+        /// three separate places ask a different question of it — the door asks whether a heart
+        /// is needed, the ending asks whether one is owed, and the panel after a defeat has to
+        /// <em>say</em> which silence it is looking at. Two bools is four states, of which one
+        /// ("free at the door and owed at the ending") is meaningless.
+        /// </para>
+        /// </summary>
+        Entry,
     }
 
     /// <summary>
     /// Which runs cost a heart, and which are free.
     ///
     /// <para>
-    /// <b>The rule, in two clauses.</b> The first <see cref="HeartRules.GraceLevels"/> glades of
+    /// <b>The rule, in two free clauses and one that moves the charge.</b> The first
+    /// <see cref="HeartRules.GraceLevels"/> glades of
     /// the first chapter of <em>each</em> mode cost nothing, however they end; and so does any
     /// glade this player has <em>already finished</em>, for ever. Everything else is unchanged:
     /// a loss, a forfeit and a run the process never finished all cost what they have always
     /// cost.
+    /// </para>
+    /// <para>
+    /// <b>The third clause moves <em>when</em> the heart is taken rather than whether.</b> A lane
+    /// with no ladder (<c>GameTrack.Laddered</c>) is bought at the gate and its ending is free —
+    /// see <see cref="HeartPrice.Entry"/> for why a lane that can only end in a defeat cannot be
+    /// priced on one.
     /// </para>
     /// <para>
     /// <b>Why the opening is free.</b> The heart gate is the only thing in this game that can
@@ -108,6 +137,13 @@ namespace GlimmerGrove.Progression
         public static HeartPrice PriceOf(CatalogIndex index, LevelId level)
         {
             if (!level.IsValid) return HeartPrice.Charged;
+
+            // First, and it has to be. Both clauses below would answer this lane and both would
+            // answer it wrongly: an endless lane's one level is the first of its own lane, and it
+            // is graded on how far it got rather than on finishing, so a single starred run makes
+            // it a "replay" for ever. Either would hand the lane out free from then on.
+            if (IsPaidAtDoor(index, level)) return HeartPrice.Entry;
+
             if (IsOpening(index, level)) return HeartPrice.Opening;
 
             // Deliberately not asked of the index. A clear is the player's own record and means
@@ -118,11 +154,63 @@ namespace GlimmerGrove.Progression
         }
 
         /// <summary>
-        /// Whether this run costs a heart when it goes wrong — the bool half of
-        /// <see cref="PriceOf"/>, for the callers that price something rather than say why.
+        /// Whether a run at this price costs a heart <em>at all</em>, whenever it is taken.
+        ///
+        /// <para>
+        /// What the door, the continue offer and the forfeit confirmation ask, because all three
+        /// are questions about whether anything is at stake rather than about when it is taken.
+        /// </para>
+        /// <para>
+        /// <b>Written as the free values rather than as the paid ones, deliberately.</b> A price
+        /// this method has never heard of reads as costing, which is <see cref="PriceOf"/>'s own
+        /// safe direction one level up: the failure of guessing wrong here is either a player
+        /// charged for a free board or the one rule that can stop somebody playing switched off
+        /// for a whole lane, and only one of those is recoverable.
+        /// </para>
+        /// </summary>
+        public static bool Costs(HeartPrice price)
+            => price != HeartPrice.Opening && price != HeartPrice.Replay;
+
+        /// <summary>
+        /// Whether the heart is taken when the run <em>begins</em>. See <see cref="HeartPrice.Entry"/>.
+        /// </summary>
+        public static bool PaidAtDoor(HeartPrice price) => price == HeartPrice.Entry;
+
+        /// <summary>
+        /// Whether the heart is taken when the run <em>ends</em> — a defeat, a forfeit, or a run
+        /// the process never finished.
+        ///
+        /// <b>Derived from the other two rather than spelt as <c>== Charged</c></b>, for
+        /// <see cref="Costs"/>'s reason: a price nothing here knows about is one that costs and is
+        /// not paid at the door, so it is charged at the ending rather than silently free.
+        /// </summary>
+        public static bool PaidAtEnding(HeartPrice price) => Costs(price) && !PaidAtDoor(price);
+
+        /// <summary>
+        /// Whether this run costs a heart at all — the bool half of <see cref="PriceOf"/>, for the
+        /// callers that price something rather than say why.
         /// </summary>
         public static bool IsFree(CatalogIndex index, LevelId level)
-            => PriceOf(index, level) != HeartPrice.Charged;
+            => !Costs(PriceOf(index, level));
+
+        /// <summary>
+        /// Whether this level is one bought at the gate: a lane with no ladder (invariant 43).
+        ///
+        /// <para>
+        /// <b>Asked of the lane's shape rather than of its id</b>, which is
+        /// <c>GameTrack.Laddered</c> — a fact the lane declares about itself, already relied on to
+        /// decide whether the map draws a chain or a hub. Keying this on <c>GameTrack.Infinite</c>
+        /// by name would be a second reading of the same decision, able to disagree with the first
+        /// on the day a second endless lane ships.
+        /// </para>
+        /// <para>
+        /// A level the index cannot name answers false, which is <see cref="PriceOf"/>'s safe
+        /// direction: it is then priced like every other glade rather than handed a rule nothing
+        /// can confirm applies to it.
+        /// </para>
+        /// </summary>
+        public static bool IsPaidAtDoor(CatalogIndex index, LevelId level)
+            => index != null && index.Contains(level) && !index.TrackOf(level).Laddered;
 
         /// <summary>
         /// Whether a run priced like this may <em>begin</em> at all, with this many hearts in
@@ -151,7 +239,7 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public static bool CanBegin(HeartPrice price, int hearts)
-            => price != HeartPrice.Charged || hearts > 0;
+            => !Costs(price) || hearts > 0;
 
         /// <summary>The same question of a level, for the doors that hold one rather than a price.</summary>
         public static bool CanBegin(CatalogIndex index, LevelId level, int hearts)
@@ -182,9 +270,17 @@ namespace GlimmerGrove.Progression
         /// <c>Wallet.TrySpendHeart</c>), and it may go negative without harm: nothing below one
         /// is allowed to begin a charged run anyway.
         /// </para>
+        /// <para>
+        /// <b>And it is <see cref="PaidAtEnding"/> rather than "costs", because a watch bought at
+        /// the gate has already paid.</b> Its outgoing heart went out when the run began, so the
+        /// wallet being read here has already had it taken — subtracting a second one would refuse
+        /// a restart to a player holding exactly the heart the fresh watch costs, which is the
+        /// gate charging twice for one run. The restart still needs a heart, because the fresh
+        /// watch is bought at the gate like every other.
+        /// </para>
         /// </summary>
         public static bool CanRestart(HeartPrice price, int hearts, bool owed)
-            => CanBegin(price, owed && price == HeartPrice.Charged
+            => CanBegin(price, owed && PaidAtEnding(price)
                                    ? hearts - HeartRules.DefeatCost
                                    : hearts);
 

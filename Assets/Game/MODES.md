@@ -616,6 +616,40 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    and a fifth ordinal draws `map1` again - the map wraps at four paintings (`mapart.map_of`), so a
    fifth chapter cost no map cut.
 
+37ds. **A bolt anchored near its head may not be drawn at full length before it has travelled.** A
+   comet's reel is anchored at `SiegeView.HeadAt`, so three or four cells of trail hang *behind* the
+   anchor - and the anchor is the barrel mouth. Drawn whole on the frame it is fired, every shot in this
+   mode painted its tail straight back down through the chassis and out under the ward line, and what a
+   player reads is the whole lit shape: a turret with a flame through it. Reported in one sentence -
+   **they do not come out of the barrels**. The trail is now **as long as the flight so far**
+   (`SiegeView.Emerged`), which is the honest rule rather than a tuned ramp and needs no constant per
+   turret: at the muzzle there is a head and nothing behind it, and the trail unrolls out of the barrel.
+   The preview stage and `render_siege.py` carry the same rule, because a turret judged on the loadout
+   panel has to leave its barrel the way it does on the hill.
+37du. **Unroll a trail by *cropping* it, never by scaling it — and four turrets is how that was
+   learned.** The first cut squashed the reel toward its head, which is invisible on a symmetric column
+   and mangles anything drawn off the centre-line: a chain that forks sideways, a shot that zig-zags
+   between bounces, a meteor trailing sparks and a corona with rays across it all dragged their tail
+   art up beside the head and read as a **squiggle at the barrel**. Exactly those four were reported and
+   the other six were not, which is the tell. `Image.Type.Filled` crops instead - it draws a quad off
+   the sprite's outer UVs, so it is safe on these reels' tight mesh - and a crop distorts nothing.
+   **Every borrower of a pooled widget gets `Simple` back**, or a flash inherits a half-drawn frame.
+37dv. **A crop is a straight edge, so three things conspire to hide it.** Measured, every reel in this
+   mode was opaque along its whole trail - there is *no* depth at which a cut falls on faint pixels. So
+   `HeadRoom` is a distance in **cells** tied to the muzzle flash's own reach (its ink covers .58 of a
+   cell below the barrel) rather than a multiple of the bolt's width; **`Flash` is drawn after the
+   bolt**, which is the honest order anyway; and in the art a trail now **wanes** along its length
+   (`make_legend_fx.Sheet.wane`) instead of stopping dead at the frame edge. A halo centred on the head
+   must also end above where the cut lands - `make_legend_fx.HALO_FLOOR`, and six of the ten were drawn
+   wider than that and were trimmed. **Check that before widening any glow on a bolt.**
+37dt. **The origin was never wrong, and only a measurement could say so.** `_lineY + Cell` sits on the
+   barrel mouth of all thirty turrets to within a hundredth of a cell - measured off the sprites rather
+   than argued - so the obvious fix (move the muzzle up) would have made it worse. **And the first probe
+   written to look at it was wrong in both directions**: `HeadAt` and `MuzzleAt` are measured from the
+   frame's **bottom**, and a probe that read them from the top drew the bolt three cells high and the
+   flash a cell and a half low. It happened to point at the same conclusion, which is the dangerous
+   case. 44d, met from a third direction: a mirror written to diagnose one fault will invent another.
+
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` on rung five or ten, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds
 it to the body); run `python Tools/verify/tests.py SiegeRuleTests` — the fight gate, the chapter sweep
@@ -741,3 +775,15 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    it" before asking any gate, making the wall dead code on the only lane that has one; the monotonic clause
    reads a second ledger, because an endless run is never *cleared*; and the wall is content, so both gates
    error above the level curve's top and warn above the catalog's.
+43e. **A lane with no ladder is bought at the gate, and every ending of it is free.** A charged run is
+   paid for by *failing* it, which works because a glade is a thing you either finish or fail; a watch has
+   no finish, so every one of them ends in a defeat and pricing the defeat would take a heart off a player
+   for beating their own record. `HeartPrice.Entry` is a fourth price rather than a bool, because the door
+   asks whether a heart is *needed*, the ending asks whether one is *owed*, and the defeat panel has to
+   **say which silence it is looking at**. Three consequences worth their own line: it is asked of
+   `GameTrack.Laddered` rather than of the lane's id, so a second endless lane costs nothing; the charge is
+   in **`RunScreen.Commit`**, the one place that means "the run is now owed for", because three of the four
+   doors into a run never touch `PlayRoute`; and it must be read **before** both free clauses, since the
+   lane's one level is the first of its own lane *and* becomes a finished glade after one starred watch.
+   **Leaving is free and restarting is not** — the fresh watch is bought at the gate like every other — so
+   the two exits are priced apart and the restart's confirmation carries its own sentence.

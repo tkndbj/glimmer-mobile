@@ -1563,7 +1563,7 @@
     },
     {
       "key": "track.infinite.point3",
-      "text": "Earn your spot on the boards."
+      "text": "A heart to enter. Losing costs none."
     },
     {
       "key": "track.infinite.tagline",
@@ -2282,6 +2282,10 @@
       "text": "You have finished this level before, so replaying it is free — no heart, however it goes."
     },
     {
+      "key": "ui.defeat.free_watch",
+      "text": "The heart for this watch went out when it began, so losing it costs nothing more."
+    },
+    {
       "key": "ui.defeat.get_gems",
       "text": "Get gems"
     },
@@ -2520,6 +2524,10 @@
     {
       "key": "ui.forfeit.restart_title",
       "text": "Start again?"
+    },
+    {
+      "key": "ui.forfeit.restart_watch_body",
+      "text": "The heart for this watch is already spent, and starting again costs another. You will get a fresh hill and a fresh wave count."
     },
     {
       "key": "ui.forfeit.stay",

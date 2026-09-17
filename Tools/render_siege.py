@@ -504,7 +504,27 @@ STRIKE_AT = 0.17
 STORM_TALL = 5.0
 
 
-def aimed(sheet, im, hx, hy, wide, ux, uy, head=0.5):
+#: `SiegeView.HeadRoom` - how far behind the muzzle a bolt is drawn before it has flown anywhere,
+#: in **cells**. Small, because it is hidden under the muzzle flash rather than by being deep;
+#: see `SiegeView.Emerged`.
+HEAD_ROOM = 0.35
+
+
+def emerged(flown, cell, tall):
+    """`SiegeView.Emerged` - how much of its own frame a bolt draws, top down.
+
+    <b>Mirrored because the mirror is what found the fault it fixes.</b> A bolt drawn whole on the
+    frame it is fired paints three or four cells of trail straight back down through the turret,
+    so what a player reads is the chassis with a flame through it rather than a barrel firing.
+    What is drawn is the head plus however far the shot has flown; a mirror still drawing the
+    full reel would report a board that no longer exists.
+    """
+    if tall <= 0:
+        return 1.0
+    return max(0.0, min(1.0, (1.0 - HEAD_AT) + (HEAD_ROOM * cell + flown) / tall))
+
+
+def aimed(sheet, im, hx, hy, wide, ux, uy, head=0.5, fill=1.0):
     """Draws a reel frame turned to point along (ux, uy), with its head landing on (hx, hy).
 
     The bolts are baked as tall frames with the comet's head near the top and its trail running
@@ -518,6 +538,13 @@ def aimed(sheet, im, hx, hy, wide, ux, uy, head=0.5):
 
     tall = wide * im.height / im.width
     im = im.resize((max(1, int(wide)), max(1, int(tall))), Image.LANCZOS)
+
+    # **Cropped from the bottom rather than scaled**, which is `SiegeView.Emerged`'s own
+    # correction: squashing a reel drags anything drawn off its centre-line up beside the head.
+    # The turn below happens after, so the cut travels with the shot exactly as it does on the
+    # board.
+    if fill < 1.0:
+        im = im.crop((0, 0, im.width, max(1, int(round(tall * fill)))))
 
     # PIL turns counter-clockwise about the centre, and a picture's y runs down.
     import math
@@ -1793,11 +1820,25 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
                 far = math.hypot(dx, dy) or 1.0
                 ux, uy = dx / far, dy / far
 
+                # **The trail unrolls out of the barrel** (`SiegeView.Emerged`). `along` is how
+                # far down its flight this bolt is caught, so the tail it has grown is the
+                # distance it has covered - which is why the four in this picture, caught at four
+                # different beats, wear four different lengths of trail.
+                # **Named apart from `reel`**, which is a module-level function this same routine
+                # already calls - a local of that name makes Python treat every earlier call in
+                # the function as a read of an unassigned local, which is how this first ran.
+                comet = blast(shot_key("shot", stood_here, ward), 6)
+                fat = bolt_scale(stood_here)
+                boltw = cell * fat
+                bolth = boltw * (comet.height / comet.width) if comet else 0.0
+
+                aimed(sheet, comet, mx + dx * along, my + dy * along,
+                      boltw, ux, uy, HEAD_AT, emerged(far * along, cell, bolth))
+
+                # **After the bolt**, which is `SiegeView.Bolt`'s order: the crop leaves a straight
+                # edge at the barrel and this is what covers it.
                 aimed(sheet, loudest(shot_key("muzzle", stood_here, ward)), mx, my,
                       cell * 2.7 * (0.70 if count > 1 else 1.0), ux, uy, MUZZLE_AT)
-                aimed(sheet, blast(shot_key("shot", stood_here, ward), 6),
-                      mx + dx * along, my + dy * along,
-                      cell * bolt_scale(stood_here), ux, uy, HEAD_AT)
 
             dx, dy = tx - cx, ty - cy
             far = math.hypot(dx, dy) or 1.0

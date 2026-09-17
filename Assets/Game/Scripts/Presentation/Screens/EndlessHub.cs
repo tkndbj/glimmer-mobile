@@ -57,10 +57,20 @@ namespace GlimmerGrove
         /// chain with reflection instead (<c>EndlessHubTests.TheHubsMarksAreGlobalArt</c>).
         /// </para>
         /// <para>
-        /// They are cut by <c>make_siege_art.HUB_ICONS</c>.
+        /// The first two are cut by <c>make_siege_art.HUB_ICONS</c>; the third is the wallet's own
+        /// heart, because the third line is about what a watch costs and a lane that priced its
+        /// entry in a picture nobody else uses would be saying it in a second language.
+        /// </para>
+        /// <para>
+        /// <b><c>ic_rank</c> is no longer read here.</b> The boards line it opened was the one
+        /// thing on this screen the medal directly above already says — the nameplate becomes a
+        /// standing the moment a distribution exists — and the plate holds three rows and not
+        /// four (<see cref="EndlessHubLayout.Points"/>), so saying what a watch costs had to take
+        /// a seat rather than add one. The sprite is still cut, still global and now drawn by
+        /// nothing, which invariant 8d says is a withdrawal owed rather than a state to leave.
         /// </para>
         /// </summary>
-        public static readonly string[] Marks = { "Ui/ic_endless", "Ui/ic_surge", "Ui/ic_rank" };
+        public static readonly string[] Marks = { "Ui/ic_endless", "Ui/ic_surge", "Ui/ic_heart" };
 
         /// <summary>Seconds the starburst takes to turn once. Slow enough to be motion, not spin.</summary>
         const float BurstTurn = 26f;

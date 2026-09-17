@@ -119,11 +119,113 @@ namespace GlimmerGrove.Tests
                 id = "p02_valeheart", order = 40, version = 1, mode = "prism",
                 levels = new[] { "w5", "w6" },
             }, 1);
+
+            // A lane with no ladder, beside the prism mode's ordinary one. One chapter of one
+            // level, which is the shape both free clauses would otherwise answer: it is the
+            // first level of its own lane, and one starred run makes it a glade this player has
+            // already finished.
+            builder.Add(new ManifestChapterDto
+            {
+                id = "p03_endless", order = 50, version = 1, mode = "prism", track = "infinite",
+                levels = new[] { "e1" },
+            }, 1);
+
             return builder.Build();
         }
 
         static bool Free(CatalogIndex index, string level)
             => HeartStake.IsFree(index, LevelId.Parse(level));
+
+        // --------------------------------------------------------- a lane bought at the gate
+        /// <summary>
+        /// <b>A lane with no ladder is paid for when the watch begins, and every ending of it is
+        /// free</b> — invariant 43's price, and the one clause here that moves <em>when</em> the
+        /// heart goes rather than whether.
+        ///
+        /// <para>
+        /// The ordering is the whole test. Both free clauses answer this level and both answer it
+        /// wrongly: it is the first level of its own lane, so the opening window covers it, and it
+        /// is graded on how far the watch got rather than on finishing, so a single starred run
+        /// would make it a replay for ever. Either reading hands an endless lane out free.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AnEndlessLaneIsBoughtAtTheGateAndNeitherFreeClauseTakesIt()
+        {
+            var index = Catalog();
+
+            Grace(3);
+            Assert.AreEqual(HeartPrice.Entry, HeartStake.PriceOf(index, LevelId.Parse("e1")),
+                            "the opening window took the endless lane's only level");
+
+            Finished("e1");
+            Assert.AreEqual(HeartPrice.Entry, HeartStake.PriceOf(index, LevelId.Parse("e1")),
+                            "one starred watch made the lane a free replay for ever");
+
+            // And the ordinary lanes of the same mode are untouched by any of it.
+            Assert.AreEqual(HeartPrice.Opening, HeartStake.PriceOf(index, LevelId.Parse("w1")));
+            Assert.AreEqual(HeartPrice.Charged, HeartStake.PriceOf(index, LevelId.Parse("w5")));
+        }
+
+        [Test]
+        public void AWatchCostsAHeartEvenThoughNoEndingTakesOne()
+        {
+            var index = Catalog();
+
+            Assert.IsFalse(Free(index, "e1"),
+                           "a watch reads as free, so nothing would ask for a heart at the door");
+
+            Assert.IsTrue(HeartStake.Costs(HeartPrice.Entry));
+            Assert.IsTrue(HeartStake.PaidAtDoor(HeartPrice.Entry));
+            Assert.IsFalse(HeartStake.PaidAtEnding(HeartPrice.Entry),
+                           "a defeat on an endless lane would charge a second heart");
+        }
+
+        /// <summary>
+        /// The three predicates, of all four prices at once — which is what stops a fifth being
+        /// added without somebody deciding when its heart goes.
+        /// </summary>
+        [Test]
+        public void EveryPriceSaysWhetherItCostsAndWhenItIsTaken()
+        {
+            Assert.IsTrue(HeartStake.Costs(HeartPrice.Charged));
+            Assert.IsFalse(HeartStake.PaidAtDoor(HeartPrice.Charged));
+            Assert.IsTrue(HeartStake.PaidAtEnding(HeartPrice.Charged));
+
+            foreach (var free in new[] { HeartPrice.Opening, HeartPrice.Replay })
+            {
+                Assert.IsFalse(HeartStake.Costs(free), free.ToString());
+                Assert.IsFalse(HeartStake.PaidAtDoor(free), free.ToString());
+                Assert.IsFalse(HeartStake.PaidAtEnding(free), free.ToString());
+            }
+        }
+
+        [Test]
+        public void AWatchIsRefusedOnAnEmptyBarAndCostsNoSecondHeartToRestart()
+        {
+            Assert.IsFalse(HeartStake.CanBegin(HeartPrice.Entry, 0),
+                           "the one rule that can stop somebody playing is off for the lane");
+            Assert.IsTrue(HeartStake.CanBegin(HeartPrice.Entry, 1));
+
+            // The outgoing watch's heart went out when it began, so the wallet read here has
+            // already had it taken. Subtracting a second would refuse a restart to a player
+            // holding exactly what the fresh watch costs.
+            Assert.IsTrue(HeartStake.CanRestart(HeartPrice.Entry, 1, owed: true),
+                          "a restart was charged twice for one watch");
+            Assert.IsFalse(HeartStake.CanRestart(HeartPrice.Entry, 0, owed: true));
+        }
+
+        /// <summary>
+        /// A level nothing can name is priced like every other glade rather than handed a rule
+        /// nothing can confirm applies to it — <c>PriceOf</c>'s safe direction, at the new clause.
+        /// </summary>
+        [Test]
+        public void ALevelNoIndexCanNameIsNeverBoughtAtTheGate()
+        {
+            Assert.IsFalse(HeartStake.IsPaidAtDoor(null, LevelId.Parse("e1")));
+            Assert.IsFalse(HeartStake.IsPaidAtDoor(Catalog(), LevelId.Parse("nosuchlevel")));
+            Assert.IsFalse(HeartStake.IsPaidAtDoor(Catalog(), LevelId.None));
+        }
 
         // ------------------------------------------------------------------ the window
         [Test]

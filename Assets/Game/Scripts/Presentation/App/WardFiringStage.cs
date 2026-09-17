@@ -605,12 +605,11 @@ namespace GlimmerGrove
                 var land = to + new Vector2(step * SiegeView.ApartOnArrival, 0f);
                 float angle = Aim(from, land);
 
-                Flash(from, angle, extra, flare);
-
                 bool lands = b == barrels - 1;
 
                 if (frames == null || frames.Length == 0)
                 {
+                    Flash(from, angle, extra, flare);
                     if (lands) Land(mark, scale, extra);
                     continue;
                 }
@@ -619,24 +618,40 @@ namespace GlimmerGrove
                                 SiegeView.HeadAt, 30f, true);
                 var halo = Halo(from, scale);
 
+                // The board's own figures, and the board's own crop: a turret previewed here
+                // has to leave its barrel the way it does on the hill, or the panel is flattering
+                // it. See `SiegeView.Emerged`.
+                float boltTall = bolt.rectTransform.sizeDelta.y;
+                float span = Vector2.Distance(from, land);
+
+                bolt.type = Image.Type.Filled;
+                bolt.fillMethod = Image.FillMethod.Vertical;
+                bolt.fillOrigin = (int)Image.OriginVertical.Top;
+
                 Tween.Run(Flight, Ease.Linear, t =>
                 {
                     if (bolt == null) return;
 
                     var at = Vector2.Lerp(from, land, t);
+
                     Head(bolt, at, SiegeView.HeadAt, angle);
 
                     if (halo != null) halo.rectTransform.anchoredPosition = at;
 
                     // The same swell the board draws, which is the only thing `SiegeView` animates
-                    // about a bolt - the frames under it are doing the rest.
+                    // about a bolt - the frames under it are doing the rest - and the same crop.
                     bolt.rectTransform.localScale = Vector3.one * Mathf.Lerp(.86f, 1.12f, t);
+                    bolt.fillAmount = SiegeView.Emerged(span * t, _cell, boltTall);
                 }, bolt).OnDone(() =>
                 {
                     if (bolt != null) Destroy(bolt.gameObject);
                     if (halo != null) Destroy(halo.gameObject);
                     if (lands) Land(mark, scale, extra);
                 });
+
+                // Over the bolt, which is `SiegeView.Bolt`'s order and for its reason: the crop's
+                // straight edge lives at the barrel and this is what covers it.
+                Flash(from, angle, extra, flare);
             }
         }
 

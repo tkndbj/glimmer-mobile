@@ -124,8 +124,15 @@ namespace GlimmerGrove
             /// </summary>
             public readonly HeartPrice Price;
 
-            /// <summary>True when nothing was owed for the loss, whichever clause said so.</summary>
-            public bool WasFree => Price != HeartPrice.Charged;
+            /// <summary>
+            /// True when nothing was owed for the <em>loss</em>, whichever clause said so.
+            ///
+            /// <b>Not the same as the run having been free.</b> A watch on a lane with no ladder
+            /// is bought at the gate (<see cref="HeartPrice.Entry"/>), so it answers true here
+            /// and cost a heart all the same — which is exactly what the panel has to say rather
+            /// than draw a row of hearts reporting a charge that did not happen.
+            /// </summary>
+            public bool WasFree => !HeartStake.PaidAtEnding(Price);
 
             public LossRecord(RunOutcome run, StreakNote streak, int heartsLeft, bool charged,
                               HeartPrice price)
@@ -234,7 +241,9 @@ namespace GlimmerGrove
                                       record.BestMoves, record.Clears + 1, stepsToSolution,
                                       lit, wanted, hintsUsed, seconds, route);
 
-            bool charged = price == HeartPrice.Charged && Wallet.TrySpendHeart();
+            // Only a price paid at the *ending*. A watch bought at the gate has already paid, and
+            // charging here would take a second heart for one run — see HeartPrice.Entry.
+            bool charged = HeartStake.PaidAtEnding(price) && Wallet.TrySpendHeart();
             int left = Wallet.Hearts.Count;
 
             Tasks.TaskLedger.RecordRun(run);

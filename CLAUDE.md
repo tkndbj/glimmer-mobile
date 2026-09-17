@@ -351,7 +351,7 @@ Grove, and the bundle id can never move.
 
 ### Modes — in `Assets/Game/MODES.md`
 
-**Invariants 20–26h, 28–36i and 37–43d live in `Assets/Game/MODES.md`**, which is what a mode is and what a
+**Invariants 20–26h, 28–36i and 37–43e live in `Assets/Game/MODES.md`**, which is what a mode is and what a
 mode costs: the entry tests a new mode must pass, the grading and fail-state rules, the sixteen modes built
 and withdrawn, the three hidden ones, and the whole of Thornwatch (the live mode) including its charms,
 bosses, turret shelf, utilities and the Infinite lane. **Read it before touching a mode, a board, a level's
@@ -1025,7 +1025,7 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 | `s04_barrowfell` | siege | 10 | 49–81 matches | the first chapter authored for a *bought* line and the one that deals all three charms: a skeleton cast, armour from rung 2, a gravemaw on 5 and a bonecaller on 10; **the first chapter whose raiders carry a surge** |
 | `s05_ashenhold` | siege | 10 | 49–81 matches | the fourth chapter and the first that cost the mode **code**: the **rabble** cast, armour from rung 1, a **shackler** on 5 and an **ironclad** on 10; **two tenths of surge**; deals the **furnace** |
 | `s06_thundercrag` | siege | 10 | 65–110 matches | the fifth chapter: the **wild** cast of stone golems, a yeti, a minotaur and a mud clod; a **thunderer** on 5 (drains banked charges) and a **colossus** on 10 (buries a turret for four seconds, sooner if the player digs); **three tenths of surge**; deals all five charms, the **hourglass** new |
-| `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 20 | waves that never stop, graded on how far it got, drawing a **medley** of every cast; **both star waves are guesses until somebody plays it**; opens at keeper level 10 |
+| `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 20 | waves that never stop, graded on how far it got, drawing a **medley** of every cast; **both star waves are guesses until somebody plays it**; opens at keeper level 10; **a heart to enter and none to lose** (43e) |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock.**
 Par is derived; star lines are multiples of it. **Par is never monotonic within a chapter** — par is length,
@@ -1086,6 +1086,14 @@ bake on a project copy rendered every frame shader-pink twice, so only the runni
 Then the standing discipline (`Sync All Assets` → `Audit Addresses` → `Validate Content` → `Validate
 Art` → EditMode), and **re-seed**: a new chapter's ten level ids reach the server's reward map only
 through `seed-config.mjs`. Nothing else about the drop touches the server.
+
+**Every bolt in the siege now leaves its barrel rather than through the chassis** (37ds–37dv) — a comet
+is anchored near its head, so drawn at full length on the frame it was fired its tail was painted back
+down through the turret. The trail is **cropped** to however far the shot has flown, never scaled
+(37du, which cost a round: a squash mangles anything drawn off the centre-line). It is the board, the
+loadout's preview stage and `render_siege.py`, so it wants an eye on a device — **and the one thing to
+look for is the crop's straight edge at the barrel**, which is covered by the muzzle flash and by the
+trail's own fade. If it ever shows, `SiegeView.HeadRoom` is the dial and the direction is down.
 
 **The legendary band is cut and has never been in the Editor.** Its art was written with the Editor
 closed, so every one of its pictures is **unaddressed** until `▸ Addressables ▸ Sync All Assets` — which

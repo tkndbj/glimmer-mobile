@@ -171,6 +171,13 @@ namespace GlimmerGrove
         /// which is <see cref="HeartStake"/>'s safe direction in both places: a glade nothing
         /// can name is priced like every other glade rather than handed out free.
         /// </para>
+        /// <para>
+        /// <b>The latch is written as "anything but charged", which is what makes a watch bought
+        /// at the gate latch too</b> (<see cref="HeartPrice.Entry"/>) — and it has to. That price
+        /// has already taken its heart by the time any ending reads it, so a content push turning
+        /// the lane back into an ordinary charged one mid-watch would charge a second heart for
+        /// one run. Both directions of every other clause are unchanged.
+        /// </para>
         /// </summary>
         protected HeartPrice Price
         {
@@ -193,8 +200,30 @@ namespace GlimmerGrove
         /// <em>in</em> and the way <em>out</em> of a run are priced from one answer: a run nobody
         /// is charged for is a run nobody is sold a continue.
         /// </para>
+        /// <para>
+        /// <b>"Costs a heart", never "is charged at the ending"</b>, and the two stopped being
+        /// the same question when a lane bought at the gate shipped (<see cref="HeartPrice.Entry"/>).
+        /// Everything this answers is about whether anything is at stake — whether a continue is
+        /// worth selling, and whether walking away is worth asking about — and a watch already
+        /// paid for is at stake in exactly the way a charged glade is. What is <em>owed</em> is
+        /// <see cref="OwedAtEnding"/>, which is a different question with a different answer.
+        /// </para>
         /// </summary>
-        protected internal bool Staked => Price == HeartPrice.Charged;
+        protected internal bool Staked => HeartStake.Costs(Price);
+
+        /// <summary>
+        /// Whether a heart is still owed for this run — the half <see cref="Staked"/> used to
+        /// carry on its own, split out when a price paid at the gate arrived.
+        ///
+        /// <para>
+        /// The three places that take a heart for an ending read this and nothing else: the
+        /// marker a crash leaves behind (<see cref="Commit"/>), the abandonment
+        /// (<see cref="Forfeit"/>) and the defeat (<c>RunLedger.Loss</c>, told the price rather
+        /// than asking). A watch bought at the gate answers false to all three, which is what
+        /// makes every way out of it free — including the one no screen ever sees.
+        /// </para>
+        /// </summary>
+        protected internal bool OwedAtEnding => HeartStake.PaidAtEnding(Price);
 
         /// <summary>The level this run is staked on, for <c>RunGuard</c>'s marker.</summary>
         protected internal abstract LevelId StakeLevel { get; }
@@ -308,7 +337,27 @@ namespace GlimmerGrove
             // launch, and Boot claims it before any content has loaded — so nothing there
             // could ask whether the glade was free. Not writing one says it in the only place
             // that still knows.
-            if (Staked) RunGuard.Begin(StakeLevel);
+            //
+            // A watch bought at the gate writes no marker either, and for a stronger reason than
+            // a free glade does: it has already paid, so a marker would charge a *second* heart
+            // at the next launch for a run that owed nothing.
+            if (OwedAtEnding) { RunGuard.Begin(StakeLevel); return; }
+
+            // And here is where a lane with no ladder pays (invariant 43, HeartPrice.Entry).
+            //
+            // **This method is the one place in the game that means "the run is now owed for"**,
+            // which is why the charge is here and not at a door. There are four doors into a run
+            // — the hub's key, the defeat panel's retry, the restart key and the way back from a
+            // continue — and three of them never touch PlayRoute, so a charge written at the
+            // gate would be a charge written three more times or forgotten three times. This runs
+            // once per attempt, whichever door opened it, because the view clears its own
+            // committed flag every time it deals a board.
+            //
+            // TrySpendHeart rather than a refusal: every door has already asked HeartStake.CanBegin
+            // and no board is reached without a heart in hand. If one somehow is, the run is
+            // played and nothing is taken, which is the same direction every other charge in this
+            // file fails in.
+            if (HeartStake.PaidAtDoor(Price)) Wallet.TrySpendHeart();
         }
 
         /// <summary>
@@ -344,7 +393,13 @@ namespace GlimmerGrove
             // question, and whether somebody left one is a fact worth counting whatever it cost.
 
             NoteAbandoned(reason);
-            if (Staked) Wallet.TrySpendHeart();
+
+            // What is *owed*, not what the run cost. A watch bought at the gate is walked away
+            // from for nothing, exactly as it is lost for nothing — the heart went out when it
+            // began, and taking a second one here would price leaving it at twice the price of
+            // playing it out.
+            if (OwedAtEnding) Wallet.TrySpendHeart();
+
             Resolve();
         }
 
@@ -355,6 +410,16 @@ namespace GlimmerGrove
         /// glade the player has already cleared there is nothing to charge, so it does the thing
         /// immediately — a confirmation over a free action is friction that teaches players to
         /// dismiss the one that is not free.
+        ///
+        /// <para>
+        /// <b>The two exits stopped costing the same thing when a lane bought at the gate
+        /// shipped</b> (<see cref="HeartPrice.Entry"/>), so they are priced apart. <em>Leaving</em>
+        /// such a watch takes nothing — its heart went out when it began — so it is walked out of
+        /// without a panel, exactly as a free glade is. <em>Restarting</em> one takes a heart all
+        /// the same, because the fresh watch is bought at the gate like every other, so it is
+        /// still asked about. For every other price the two answers are identical and nothing
+        /// here has moved.
+        /// </para>
         /// </summary>
         protected void ConfirmForfeit(ForfeitOverlay.Kind kind, string reason, Action then)
         {
@@ -368,13 +433,24 @@ namespace GlimmerGrove
             // stopped by a panel warning about a heart nobody is taking is how a player learns
             // the warning means nothing. It is still forfeited, so the abandonment is written
             // down and the run stops being owed for.
-            if (!Staked) { Forfeit(reason); then(); return; }
+            // What *this* exit costs. A restart begins another run, so it is priced by whether a
+            // run costs anything at all; leaving ends this one and nothing else, so it is priced
+            // by what is still owed for it.
+            bool costs = kind == ForfeitOverlay.Kind.Restart ? Staked : OwedAtEnding;
+            if (!costs) { Forfeit(reason); then(); return; }
 
             Latch(true);
+
+            // Whether the heart on the panel's price tag is the one going out now or the one the
+            // fresh run will cost. The tag says -1 either way and is true either way; what it
+            // changes is the sentence, because "starting again costs a heart, the same as running
+            // out of turns" is false on a lane where running out costs nothing.
+            bool prepaid = HeartStake.PaidAtDoor(Price);
 
             Flow.Modal<ForfeitOverlay>(v =>
             {
                 v.Choice = kind;
+                v.Prepaid = prepaid;
                 v.OnConfirm = () => { Forfeit(reason); then(); };
                 v.OnCancel = Resume;
             });

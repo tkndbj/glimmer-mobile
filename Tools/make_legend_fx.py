@@ -101,6 +101,18 @@ MUZZLE_Y = 0.78
 #: invisible at these sizes; it costs four times the memory for a frame that is thrown away.
 SS = 2
 
+#: The deepest a head's halo may reach, as a share of the frame measured from the top.
+#:
+#: <b>A ceiling the board imposes rather than a taste.</b> `SiegeView.Emerged` crops a bolt's trail
+#: at the barrel, and a cut through a wide soft disc is a visible straight edge - so a halo has to
+#: end *above* where the cut lands. The cut sits at `(1 - HeadAt) + HeadRoom / (4 * BoltScale)` of
+#: the frame, which is .254 for a bolt drawn at the band's ordinary size and .234 for the sun,
+#: whose frame is taller in cells. Six of the ten were drawn wider than that and were trimmed;
+#: what they lost in bloom they got back in gain, so none of them is dimmer.
+#:
+#: **Check this before widening any `dot` centred on `HEAD_Y`.**
+HALO_FLOOR = 0.234
+
 
 # --------------------------------------------------------------------------- the kit
 
@@ -225,6 +237,24 @@ class Sheet:
         self.e[y0:y1, x0:x1] += mask[..., None] * (np.asarray(colour, np.float32) * gain)
 
     # -- the conversion -----------------------------------------------------------------------
+    def wane(self, from_depth, keep):
+        """Fades the frame out along its length, from `from_depth` down to `keep` at the bottom.
+
+        <b>Two jobs, and the first is just that a comet's trail should end.</b> These were drawn
+        opaque to the bottom edge, so every one of them stopped rather than faded - which is the
+        one thing a real trail never does. The second is the board's: `SiegeView.Emerged` crops a
+        bolt at the barrel, and a cut is only invisible where there is little left to cut. Measured
+        before this, the alpha at the cut row was **1.0 on every reel in the mode**.
+
+        Applied to the energy rather than to the alpha, so the colour fades with it and a faint
+        tail-end is a faint tail-end rather than a grey one.
+        """
+        h = self.e.shape[0]
+        depth = (np.arange(h, dtype=np.float32) + .5) / h
+        ramp = np.clip((depth - from_depth) / max(1e-6, 1.0 - from_depth), 0.0, 1.0)
+
+        self.e *= (1.0 - (1.0 - keep) * ramp ** 1.3)[:, None, None]
+
     def image(self):
         """The frame as RGBA.
 
@@ -517,7 +547,7 @@ def permafrost(sheet, t, rng):
                      rng.uniform(.7, 1.3) * (1.0 - a * .45), phase=rng.random())
 
     spin = t * 1.1
-    sheet.dot(cx, hy, SHOT_W * .62, ice, .72)
+    sheet.dot(cx, hy, SHOT_W * .52, ice, .78)
     sheet.spikes(cx, hy, 6, 0.0, SHOT_W * .60, SHOT_W * .060, pale, 1.35, phase=spin)
     sheet.spikes(cx, hy, 6, 0.0, SHOT_W * .34, SHOT_W * .040, WHITE, 1.5,
                  phase=spin + math.pi / 6)
@@ -582,7 +612,7 @@ def sunderer(sheet, t, rng):
         sheet.ring(cx, hy, SHOT_W * .43, SHOT_W * .034, WHITE, 1.45,
                    start=a0 - .76, sweep=1.52)
 
-    sheet.dot(cx, hy, SHOT_W * .60, violet, .75)
+    sheet.dot(cx, hy, SHOT_W * .52, violet, .82)
     sheet.dot(cx, hy, SHOT_W * .26, (0.78, 0.52, 1.0), 1.25)
     sheet.dot(cx, hy, SHOT_W * .12, WHITE, 2.0)
 
@@ -654,7 +684,7 @@ def stasis(sheet, t, rng):
 
     sheet.ring(cx, hy, SHOT_W * .36, SHOT_W * .065, pale, 1.55)
     sheet.ring(cx, hy, SHOT_W * .36, SHOT_W * .026, WHITE, 1.3, start=spin, sweep=math.pi * 1.1)
-    sheet.dot(cx, hy, SHOT_W * .66, indigo, .50)
+    sheet.dot(cx, hy, SHOT_W * .52, indigo, .58)
 
 
 def stasis_muzzle(sheet, t, rng):
@@ -784,7 +814,7 @@ def starfall(sheet, t, rng):
                   SHOT_W * rng.uniform(.010, .028), hot,
                   rng.uniform(.8, 1.6) * (1.0 - a * .35))
 
-    sheet.dot(cx, hy, SHOT_W * .52, ember, .62)
+    sheet.dot(cx, hy, SHOT_W * .50, ember, .66)
     sheet.ring(cx, hy, SHOT_W * .21, SHOT_W * .060, hot, 1.5)
     sheet.ring(cx, hy, SHOT_W * .21, SHOT_W * .024, WHITE, 1.2, start=t * 2.0, sweep=math.pi)
 
@@ -854,7 +884,7 @@ def wellspring(sheet, t, rng):
         sheet.path(arc, SHOT_W * .015, pale, 1.30 * (1.0 - p * .30), taper=SHOT_W * .030)
 
     sheet.ring(cx, hy, SHOT_W * .40, SHOT_W * .034, leaf, 1.05, squash=.36)
-    sheet.dot(cx, hy, SHOT_W * .60, leaf, .70)
+    sheet.dot(cx, hy, SHOT_W * .52, leaf, .78)
     sheet.dot(cx, hy, SHOT_W * .25, pale, 1.4)
     sheet.dot(cx, hy, SHOT_W * .12, WHITE, 2.1)
 
@@ -930,7 +960,7 @@ def eclipse(sheet, t, rng):
     sheet.ring(cx, hy, SHOT_W * .40, SHOT_W * .036, WHITE, 1.6)
     sheet.ring(cx, hy, SHOT_W * .40, SHOT_W * .018, WHITE, 1.3,
                start=spin * -1.4, sweep=math.pi * .8)
-    sheet.dot(cx, hy, SHOT_W * .80, (0.85, 0.70, 1.0), .42)
+    sheet.dot(cx, hy, SHOT_W * .44, (0.85, 0.70, 1.0), .58)
 
 
 def eclipse_muzzle(sheet, t, rng):
@@ -1007,13 +1037,43 @@ def seed_of(key, frame):
     return (h ^ (frame * 2654435761)) & 0xFFFFFFFF
 
 
+#: Where a bolt's trail starts fading, and what is left of it at the frame's bottom edge.
+#: See `Sheet.wane`. Shot reels only - a flash and an impact are drawn round a point.
+TRAIL_WANE, TRAIL_KEEP = 0.34, 0.12
+
+
+#: How big and how bright the core every muzzle flash carries at the barrel, as a share of the
+#: burst frame and a gain.
+#:
+#: <b>It is doing two jobs and only one of them is drawing.</b> A flash *should* be brightest where
+#: the barrel is - several of these were rings and fans with a hole in the middle, which is a flash
+#: that looks like it happened somewhere else. And the board crops a bolt's trail at the barrel
+#: (`SiegeView.Emerged`), so the flash is what covers that straight edge: measured, every reel in
+#: this mode is opaque along its whole trail, so there is no cut that hides itself. A dense core
+#: here is what makes `HeadRoom` small enough to be honest.
+MUZZLE_CORE, MUZZLE_CORE_GAIN = 0.16, 1.15
+
+
 def reel(key, draw, w, h, frames):
     """One flipbook, as {relative path: image}."""
     made = {}
 
     for f in range(frames):
+        t = f / max(1, frames - 1)
         sheet = Sheet(w, h)
-        draw(sheet, f / max(1, frames - 1), np.random.default_rng(seed_of(key, f)))
+        draw(sheet, t, np.random.default_rng(seed_of(key, f)))
+
+        # A bolt's trail ends rather than stopping - see `Sheet.wane`. Before the core, because
+        # a flash has no length to fade along.
+        if key.startswith("shot_"):
+            sheet.wane(TRAIL_WANE, TRAIL_KEEP)
+
+        # The core, laid over whatever the flash drew - see `MUZZLE_CORE`. It fades with the
+        # flash rather than outliving it, so what a player reads is still one event.
+        if key.startswith("muzzle_"):
+            sheet.dot(w * .5, h * MUZZLE_Y, w * MUZZLE_CORE * (.70 + .30 * (1.0 - t)),
+                      WHITE, MUZZLE_CORE_GAIN * (1.0 - t * .80), power=1.8)
+
         made["Fx/Siege/%s/f%02d.png" % (key, f)] = sheet.image()
 
     return made

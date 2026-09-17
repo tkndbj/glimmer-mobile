@@ -251,8 +251,16 @@ namespace GlimmerGrove
         /// </summary>
         public HeartPrice Price;
 
-        /// <summary>Whether anything was owed for the run at all, whichever clause said so.</summary>
-        bool WasFree => Price != HeartPrice.Charged;
+        /// <summary>
+        /// Whether anything was owed for <em>this ending</em>, whichever clause said so.
+        ///
+        /// <b>Not whether the run was free.</b> A watch on a lane with no ladder was bought at
+        /// the gate (<c>HeartPrice.Entry</c>) and its defeat takes nothing, so it answers true
+        /// here and cost a heart all the same — which is exactly why the row of hearts is
+        /// replaced by a sentence rather than drawn: nothing in the icons went out just now, and
+        /// a row that drained one would be reporting a charge that did not happen.
+        /// </summary>
+        bool WasFree => !HeartStake.PaidAtEnding(Price);
 
         /// <summary>
         /// The most heart icons this panel will ever draw in a row.
@@ -344,12 +352,21 @@ namespace GlimmerGrove
         /// Written out rather than built from the enum name, for <see cref="TitleKey"/>'s
         /// reason: a concatenated key is invisible to the build's string scanner and ships
         /// missing in whichever language nobody tested. <see cref="HeartPrice.Charged"/> cannot
-        /// reach here — the caller asks only when the run was free — but it answers the free
-        /// opening rather than throwing, because the worst a wrong sentence does on this panel
-        /// is read oddly, and the worst an exception does is eat the defeat screen.
+        /// reach here — the caller asks only when the ending took nothing — but it answers the
+        /// free opening rather than throwing, because the worst a wrong sentence does on this
+        /// panel is read oddly, and the worst an exception does is eat the defeat screen.
+        ///
+        /// <para>
+        /// Three sentences for three silences, and they are not interchangeable: "one of the free
+        /// levels", "you have finished this one before", and "the heart for this watch went out
+        /// when it began". The third is the only one that is not saying the run was free.
+        /// </para>
         /// </summary>
         static string FreeKey(HeartPrice price)
-            => price == HeartPrice.Replay ? "ui.defeat.free_replay" : "ui.defeat.free_glade";
+        {
+            if (price == HeartPrice.Entry) return "ui.defeat.free_watch";
+            return price == HeartPrice.Replay ? "ui.defeat.free_replay" : "ui.defeat.free_glade";
+        }
 
         /// <summary>
         /// One sentence per distance, written out for the same reason

@@ -33,6 +33,25 @@ namespace GlimmerGrove
 
         public Kind Choice = Kind.Leave;
 
+        /// <summary>
+        /// Whether this run was bought at the gate rather than owed for at its ending
+        /// (<c>HeartPrice.Entry</c>) — a lane with no ladder, invariant 43.
+        ///
+        /// <para>
+        /// <b>It changes the sentence and nothing else.</b> The price tag below still says -1 and
+        /// is still true: a restart takes a heart whichever way the run was priced, because the
+        /// fresh one is bought at the gate like every other. What is not true of such a lane is
+        /// the ordinary body's reassurance that this is "the same as running out of turns" —
+        /// running out of turns there costs nothing, and a panel that says otherwise is teaching
+        /// a player a rule the game does not have.
+        /// </para>
+        /// <para>
+        /// Only the restart reads it. Leaving a prepaid run costs nothing, so this panel is never
+        /// raised for it (<c>RunScreen.ConfirmForfeit</c>).
+        /// </para>
+        /// </summary>
+        public bool Prepaid;
+
         /// <summary>Run when the player accepts the price. Never called on a dismissal.</summary>
         public Action OnConfirm;
 
@@ -51,8 +70,11 @@ namespace GlimmerGrove
         static string TitleKey(Kind kind)
             => kind == Kind.Restart ? "ui.forfeit.restart_title" : "ui.forfeit.leave_title";
 
-        static string BodyKey(Kind kind)
-            => kind == Kind.Restart ? "ui.forfeit.restart_body" : "ui.forfeit.leave_body";
+        static string BodyKey(Kind kind, bool prepaid)
+        {
+            if (kind != Kind.Restart) return "ui.forfeit.leave_body";
+            return prepaid ? "ui.forfeit.restart_watch_body" : "ui.forfeit.restart_body";
+        }
 
         static string ConfirmKey(Kind kind)
             => kind == Kind.Restart ? "ui.forfeit.restart_go" : "ui.forfeit.leave_go";
@@ -65,7 +87,7 @@ namespace GlimmerGrove
             MakePanel(new Vector2(880f, 800f), Loc.Get(TitleKey(Choice)), dismissOnScrim: false);
 
             UIKit.Shrinkable(
-                UIKit.Titled("Why", Panel, Loc.Get(BodyKey(Choice)), 32,
+                UIKit.Titled("Why", Panel, Loc.Get(BodyKey(Choice, Prepaid)), 32,
                              new Color(.36f, .25f, .18f), TextAnchor.UpperCenter,
                              new Vector2(680f, 190f), new Vector2(.5f, 1f), new Vector2(0f, -196f),
                              outline: 0f, shadow: 0f, wrap: true), 22);

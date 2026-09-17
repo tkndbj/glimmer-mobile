@@ -98,6 +98,9 @@ namespace GlimmerGrove.Tests
 
         const string Free = "g1", Paid = "g4", Beaten = "g5";
 
+        /// <summary>The only level of a lane with no ladder: bought at the gate, lost for nothing.</summary>
+        const string Watch = "e1";
+
         LevelCatalog _catalogBefore;
         readonly List<StakeProbe> _probes = new List<StakeProbe>();
 
@@ -162,7 +165,10 @@ namespace GlimmerGrove.Tests
             PlayerProgress.LoadFrom(dto);
         }
 
-        /// <summary>One five-glade chapter, so the window covers the first three of it.</summary>
+        /// <summary>
+        /// One five-glade chapter, so the window covers the first three of it — and a lane with
+        /// no ladder beside it, whose one level is bought at the gate (<c>HeartPrice.Entry</c>).
+        /// </summary>
         static CatalogIndex Catalog()
         {
             var builder = new CatalogIndexBuilder();
@@ -170,6 +176,11 @@ namespace GlimmerGrove.Tests
             {
                 id = "c01_one", order = 10, version = 1,
                 levels = new[] { "g1", "g2", "g3", "g4", "g5" },
+            }, 1);
+            builder.Add(new ManifestChapterDto
+            {
+                id = "c02_endless", order = 20, version = 1, track = "infinite",
+                levels = new[] { "e1" },
             }, 1);
             return builder.Build();
         }
@@ -361,6 +372,112 @@ namespace GlimmerGrove.Tests
         //
         // Driven at the screen rather than only at HeartStake, because the three inputs are the
         // screen's: the latched price, whether the run has been committed, and the live wallet.
+
+        // ------------------------------------------------- a watch, bought at the gate
+        //
+        // Invariant 43's lane costs a heart to *enter* and nothing to lose, which is the whole of
+        // what these cases are about. A charged glade is paid for by failing it, and that works
+        // because a glade is a thing you either finish or fail; an endless watch has no finish, so
+        // every run of one ends in a defeat and pricing the defeat would take a heart off a player
+        // for beating their own record.
+        //
+        // Driven at the screen rather than only at HeartStake, because the charge is the screen's:
+        // `Commit` is the one place in the game that means "the run is now owed for", and it is
+        // what the four doors into a run all funnel through.
+
+        [Test]
+        public void AWatchTakesItsHeartWhenTheRunBeginsAndNotWhenItEnds()
+        {
+            Holding(3);
+
+            var probe = On(Watch);
+            Assert.AreEqual(HeartPrice.Entry, probe.Cost, "the fixture wants a lane with no ladder");
+            Assert.IsTrue(probe.Priced, "a watch is at stake even though no ending takes a heart");
+            Assert.AreEqual(3, Wallet.Hearts.Count, "looking at the hub cost a heart");
+
+            probe.Begin();
+            Assert.AreEqual(2, Wallet.Hearts.Count, "the watch was not bought at the gate");
+
+            // Every ending, and all three take nothing. `End` is the win and the defeat both —
+            // RunLedger.Loss is told the price and asks HeartStake.PaidAtEnding, which is the same
+            // answer this screen gives.
+            probe.End();
+            Assert.AreEqual(2, Wallet.Hearts.Count, "the ending charged a second heart");
+        }
+
+        [Test]
+        public void AWatchLeavesNothingForTheNextLaunchToChargeFor()
+        {
+            // The crash path, and the reason it is not merely "free like an opening glade": a
+            // marker here would take a *second* heart at the next launch for a run that has
+            // already paid.
+            Holding(3);
+            On(Watch).Begin();
+
+            Assert.IsFalse(RunGuard.Claim(),
+                           "a watch that the process never finished was written down, so the "
+                           + "next launch charges it again");
+            Assert.AreEqual(2, Wallet.Hearts.Count);
+        }
+
+        [Test]
+        public void WalkingOutOfAWatchIsFreeAndIsNotAskedAbout()
+        {
+            // Leaving takes nothing, so it is walked out of without a panel — the same rule a
+            // glade you have already beaten is walked out of by, and for the same reason: a
+            // confirmation over a free action teaches players to dismiss the one that is not.
+            Holding(3);
+
+            var probe = On(Watch);
+            probe.Begin();
+            probe.WalkAway();
+
+            Assert.IsTrue(probe.Left, "leaving a watch stopped to ask about a heart nobody takes");
+            Assert.AreEqual(2, Wallet.Hearts.Count, "walking away took a second heart");
+            Assert.IsFalse(probe.Begun, "and it is still forfeited rather than left owed for");
+            CollectionAssert.AreEqual(new[] { "back" }, probe.Abandonments);
+        }
+
+        [Test]
+        public void AWatchIsBoughtOnceHoweverOftenTheRunIsCommitted()
+        {
+            // Commit is called on every landed move, not only the first, and the guard that makes
+            // that safe is the one a charged glade's marker relies on. A second charge here is a
+            // heart per match.
+            Holding(3);
+
+            var probe = On(Watch);
+            probe.Begin();
+            probe.Begin();
+            probe.Begin();
+
+            Assert.AreEqual(2, Wallet.Hearts.Count, "a watch was charged more than once");
+        }
+
+        [Test]
+        public void RestartingAWatchBuysAFreshOneAndIsRefusedWithoutAHeart()
+        {
+            // A restart abandons one watch and begins another, and the fresh one is bought at the
+            // gate like every other. The outgoing one owes nothing, so the gate is the bare
+            // wallet rather than the wallet less a defeat — which is what stops it being charged
+            // twice for one run.
+            Holding(2);
+
+            var probe = On(Watch);
+            probe.Begin();
+
+            Assert.AreEqual(1, Wallet.Hearts.Count);
+            Assert.IsTrue(probe.MayRestart, "one heart is exactly what a fresh watch costs");
+
+            var broke = On(Watch);
+            Holding(1);
+            broke.Begin();
+
+            Assert.AreEqual(0, Wallet.Hearts.Count);
+            Assert.IsFalse(broke.MayRestart,
+                           "the one rule that can stop somebody playing is walked past by the "
+                           + "restart key on an endless lane");
+        }
 
         /// <summary>
         /// Puts the wallet at exactly this many hearts, whatever it held before — spent down to
