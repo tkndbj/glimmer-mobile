@@ -4462,11 +4462,32 @@ def main():
               "stood on the line")
 
         if legends:
-            gems = sum(int(m.get("gemPrice") or 0) for m in legends)
             walls = [int(m.get("minLevel") or 0) for m in legends]
+            gems = sum(int(m.get("gemPrice") or 0) for m in legends)
+            coins = sum(int(m.get("coinPrice") or 0) for m in legends)
+
+            # **Priced in whatever the roster prices them in**, rather than in the currency this
+            # band happened to sell in when the line was written. It was gems until 2026-09-18
+            # and is credits now, and a hard-coded unit here would have printed "0 gem(s) to own
+            # it all" for a shelf that had merely moved - a summary that is confidently wrong is
+            # worse than one that is missing, because nobody re-reads a line that looks answered.
+            purse = " and ".join(f"{n:,} {unit}" for n, unit in
+                                 ((coins, "credit(s)"), (gems, "gem(s)")) if n)
+
             print(f"       the legendary band wears no colour, stands on any seat and fires at "
-                  f"every raider - {gems} gem(s) to own it all, behind keeper level "
+                  f"every raider - {purse or 'nothing'} to own it all, behind keeper level "
                   f"{min(walls)} to {max(walls)}")
+
+            # What the band is worth beside the shelf under it, which is the reading neither
+            # figure gives alone: a colour turret is bought once *per colour* and a legendary
+            # once, so the two totals are not comparable until the multiply is done.
+            colour = sum(int(m.get("coinPrice") or 0)
+                         for m in models if not m.get("legendary")) * len(WARD_COLOURS)
+
+            if coins and colour:
+                print(f"       that is {coins / colour:.2f}x the {colour:,} credits the "
+                      f"{len(models) - len(legends) - 1} colour turrets cost across all "
+                      f"{len(WARD_COLOURS)} colours")
 
     if tasks:
         slates = ", ".join(f"{n} {period}" for period, n in sorted(tasks["slates"].items()))

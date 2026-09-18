@@ -152,31 +152,20 @@ namespace GlimmerGrove
             // how the last charm that had to say *something crossed the hill* came to say nothing
             // at all. `heavefront` is drawn as a wall of driven dust with a hard lit edge along
             // its top, so what leads is the edge and what follows is the debris.
-            var frames = Reel("heavefront");
-            var face = frames != null && frames.Length > 0 ? frames[0] : Art.SoftCapsule(64);
+            //
+            // **Drawn by `Wall`, which the hourglass draws with too**, and lent `Color.white`: the
+            // reel is painted white-hot at the lip through amber to rust now, where it used to be
+            // cut white and lent `Pal.Rope` - a dull tan - which is what made a wall of driven
+            // ground read as the same grey smoke as a wall of stopped time.
+            Wall("Heave front", Reel("heavefront"), from, to, over, HeaveFront, 1f, 0f,
+                 shoved > 0 ? .30f : 0f);
 
-            var wall = UIKit.Img("Heave front", _fx, face, Pal.Rope,
-                                 new Vector2(Span.x, Cell * HeaveFront));
-            wall.raycastTarget = false;
-
-            if (frames != null && frames.Length > 0) Flipbook.Attach(wall, frames, 30f, true);
-
-            var rt = wall.rectTransform;
-            rt.anchoredPosition = new Vector2(0f, from);
-
-            Tween.Run(over, Ease.OutQuad, t =>
-            {
-                if (!rt) return;
-                rt.anchoredPosition = new Vector2(0f, Mathf.Lerp(from, to, t));
-
-                // **It broadens as it climbs**, which is what a shock does and what the still
-                // wave was re-cut to do: a front that narrows reads as something running out
-                // rather than as something arriving.
-                rt.localScale = new Vector3(1f, Mathf.Lerp(.74f, 1.26f, t), 1f);
-                wall.color = Pal.A(Pal.Rope, shoved > 0
-                                           ? Mathf.Lerp(1f, .30f, t * t * t)
-                                           : Mathf.Lerp(.9f, 0f, t));
-            }, wall).OnDone(() => { if (wall) Destroy(wall.gameObject); });
+            // **A second wall behind the first on a shove that landed.** The front is what the
+            // ground did; this is the dust still coming up after it, deeper and slower, and it is
+            // the difference between a line crossing the hill and a volume of it being thrown.
+            if (shoved > 0)
+                Wall("Heave dust", Reel("heavefront"), from, to, over * 1.22f,
+                     HeaveFront * 1.9f, .50f, over * .18f);
 
             ShakeBoard(Cell * (shoved > 0 ? .22f : .07f));
 
@@ -185,7 +174,19 @@ namespace GlimmerGrove
             // the one charm where the slow motion is most of what the player gets to see it in
             // (invariant 37cq - the model is handed the seconds, so the line keeps firing through
             // it at the same rate).
+            //
+            // **It lasts the sweep now rather than a third of it.** At three tenths of a second it
+            // was over while the front was still at the foot of the hill, and what the player got
+            // to watch at full speed was the half of the payoff with nothing left in it.
             if (shoved > 0) Dilate(HeavePace, HeaveHold);
+
+            // **And the clock, running backwards** (the owner's instruction, 2026-09-18). The
+            // anvil's stone is a clock face and what the charm does is take ground back, so the
+            // piece that explains it is the hourglass's own dial with its hand going the wrong
+            // way round - `Dial`, `make_siege_art.heavedial`. Only on a shove that moved
+            // something: a face saying *undone* over a hill where nothing was undone would be the
+            // charm claiming a payoff it did not deliver.
+            if (shoved > 0) Dial("heavedial", HeaveGlow, HeaveDialFor);
 
             Audio.Sfx("boom", shoved > 0 ? .78f : .40f, shoved > 0 ? .50f : .82f);
 
@@ -220,26 +221,56 @@ namespace GlimmerGrove
                     // furnace gets.
                     if (boss)
                     {
-                        Shockwave(stood, Pal.Rope, size, .26f);
+                        Shockwave(stood, HeaveGlow, size, .30f);
                         return;
                     }
 
-                    Burst.Sparks(_fx, stood + new Vector2(0f, -Cell * .2f), Pal.Rope,
-                                 7, Cell * size * 1.5f, Cell * .18f, .42f);
-                    Pop(stood, Pal.A(Pal.Rope, .8f), size, .22f);
+                    // **Ember rather than rope, and twice as much of it.** Everything the throw
+                    // drew away from its reel wore `Pal.Rope` - `#D9C39A`, a dull tan - so the
+                    // dust under a body being thrown was the palest thing on a lit board. It is
+                    // the board's own amber now, and the cloud is thrown from under the feet
+                    // upward rather than out, because ground going out from under something
+                    // throws its dust *up*.
+                    Burst.Sparks(_fx, stood + new Vector2(0f, -Cell * .2f), HeaveCore,
+                                 14, Cell * size * 1.8f, Cell * .20f, .58f);
+                    Pop(stood, Pal.A(HeaveGlow, .85f), size * 1.15f, .30f);
                 });
             }
         }
 
-        /// <summary>How long the front takes to cross the hill. The model's own shove, plus a beat
-        /// for the dust to reach the crest after the last body has stopped moving.</summary>
-        static float HeaveSweep => SiegeTuning.AnvilFor + .22f;
+        /// <summary>
+        /// How long the front takes to cross the hill.
+        ///
+        /// <para>
+        /// <b>The dust outlives the shove, and it is allowed to.</b> This was the model's own
+        /// quarter-second plus a fifth - under half a second in total, which is less than a glance
+        /// - on the reasoning that the drawing should end when the thing it draws ends. That is
+        /// right about the *bodies*, which the model is moving and which stop when their debt is
+        /// paid, and wrong about the ground: earth thrown up by a shock is still in the air long
+        /// after the shock has gone, so the front may keep climbing once nothing is moving under
+        /// it. Nothing waits on this - the line has been firing through the whole of it
+        /// (invariant 37cq) - so the only thing a longer sweep costs is that the payoff can be
+        /// seen, which was the complaint.
+        /// </para>
+        /// </summary>
+        static float HeaveSweep => SiegeTuning.AnvilFor + .95f;
 
         /// <summary>How deep the front is drawn, in cells.</summary>
         const float HeaveFront = 1.5f;
 
         /// <summary>The slow motion on a shove: how far the clock is slowed, and for how long.</summary>
-        const float HeavePace = .34f, HeaveHold = .30f;
+        const float HeavePace = .28f, HeaveHold = .95f;
+
+        /// <summary>
+        /// How long the reversed clock hangs over the hill.
+        ///
+        /// <b>Longer than the shove and shorter than an hourglass's window</b>, which is the whole
+        /// of what it has to be: it has to outlast the front it arrives with, or it would break
+        /// while the dust it explains was still climbing; and it may not sit there like a stop,
+        /// because an anvil has not stopped anything. A turn and a half of the hand, which is what
+        /// <c>make_siege_art.DIAL_FRAMES</c> makes of it.
+        /// </summary>
+        static float HeaveDialFor => HeaveSweep + .55f;
 
         /// <summary>
         /// The lean a body wears while it is being thrown, read off the model every frame.

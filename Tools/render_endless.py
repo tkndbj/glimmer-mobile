@@ -106,6 +106,11 @@ CORNER_SIZE, CORNER_X, CORNER_Y = 118.0, 96.0, -132.0
 # key on both tracks, because this screen draws the map and the hub with one set of chrome.
 BOOST_GAP = 18.0
 BOOST_MARK, BOOST_LABEL, BOOST_CLOCK = 46.0, 48.0, 34.0
+BOOST_H = BOOST_MARK + BOOST_CLOCK + 2.0
+# `LevelsScreen.BoostY` — the block's *centre*, because `UIKit.Box` always pivots there. Written
+# in the screen's own shape rather than as the top edge the drawing wants, so a change to either
+# side of the pair is a change to one expression.
+BOOST_Y = CORNER_Y - CORNER_SIZE / 2 - BOOST_GAP - BOOST_H / 2
 STARS_W, STARS_H, STARS_GAP = 196.0, 78.0, 22.0
 PILL_W, PILL_H, MODES_GAP = 372.0, 116.0, 20.0
 MODES_Y = BANNER_Y - BANNER_H / 2 - MODES_GAP - PILL_H / 2
@@ -169,7 +174,7 @@ def boost_readout(sheet, left):
     somebody's artwork. The mirror takes the remaining seconds as an argument because a render
     has no wallet — what it proves is the *placement*, which is the one thing a fixture cannot.
     """
-    top = -(CORNER_Y - CORNER_SIZE / 2) + BOOST_GAP
+    top = -BOOST_Y - BOOST_H / 2
     block_w = BOOST_MARK + BOOST_LABEL
     cx = CORNER_X
 

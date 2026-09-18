@@ -785,10 +785,16 @@ guess — verify offline.
 - **Map seats:** `python Tools/make_map_seats.py --check` proves the seats are still what the paintings say;
   `--contact` draws every map with its chain on it, which is the gate that matters. `content.py` proves the
   seats clear each other. Re-run `--write` and then every chapter generator after any map painting change.
+- **The charm stones:** `python Tools/make_charm_gems.py --check` holds the twelve owner-drawn gems to
+  their size, their room and **their own colour** — a stone filed under the wrong letter draws
+  perfectly, validates green everywhere and pays the wrong ward, and nothing else here could see it.
+  `--contact` is the sheet, with the eight stones already on the board on it for comparison.
 - **The anvil throwing the hill back:** `python Tools/render_siege.py --heaved 0.45` draws the
-  sixth charm's front mid-sweep (37ed). **Draw it against `--stilled` before believing either** —
-  they are the only two things in this mode that cross the hill, they arrive one chapter apart,
-  and the first cut of this one came out as frost.
+  sixth charm's front mid-sweep and the **reversed clock** it now hangs over the hill (37ed).
+  **Draw it against `--stilled` before believing either** — they are the only two things in this
+  mode that cross the hill, they arrive one chapter apart, and the first cut of this one came out
+  as frost. The one thing only a still can answer about the clock is whether a player can tell
+  which way the hand is going **from one frame**: that is the smear and the arrow, and nothing else.
 - **The hourglass stopping the hill:** `python Tools/render_siege.py --stilled 0.6` draws the
   wavefront mid-sweep and the dial it hangs over the hill (37dy, 37dz). **Note the gate gap it
   found:** `fxreels.py` ink-checks `Art/Fx` only, so every reel under `Art/Siege` - `beam`,
@@ -1031,7 +1037,10 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   the first of a run inside **56**. Each is a gem of its own with its own reel; a lance runs the hill in
   slow motion, a stormglass stops it dead, an hourglass stops it in the *model* (37do), and an anvil moves
   it in the model too — the shove is a debt each body works off, so the drawing follows the rules for
-  free (37ee).
+  free (37ee). The **lance, hourglass and anvil stones are owner-drawn** (a star, an hourglass and a clock
+  face, supplied in all four colours) and cut by `Tools/make_charm_gems.py`; the other three are still cut
+  from the gem pack. Both charms that sweep the hill draw a **painted reel lent white** rather than a white
+  reel tinted, and both hang a **clock** — the anvil's runs anti-clockwise (see `CRAFT.md`).
 - **Utilities** — an account-wide action bar (39), dropped by chests and bought with gems, charged against
   the graded count so one can never buy a star.
 - **The turret loadout** — **thirty** turrets on a four-band shelf, upgraded to five stars, previewed
@@ -1129,7 +1138,7 @@ functions**: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`, `adRe
 `redeemReferral`, `claimReferral` (deployed 2026-09-17). **`firebase functions:list` is the authority** — a fifteenth,
 `eventPass`, was deployed and later deleted while never appearing in any list here. `firebase/README.md` is
 the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-17),
-`firebase/e2e/delete-account.mjs` **14/14** and `firebase/e2e/endless-xp.mjs` **10/10**. Client half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
+`firebase/e2e/delete-account.mjs` **14/14** and `firebase/e2e/endless-xp.mjs` **12/12**. Client half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 13.15.0 as vendored UPM tarballs under `GooglePackages/` (gitignored — run `pwsh GooglePackages/fetch.ps1`
 on a fresh clone).
 
@@ -1183,7 +1192,7 @@ boosted run and check the victory panel's new line against the chip above it.
 wave (9d, save v30). **The server half is done**: `config/progression` re-seeded to v6 carrying the
 `endless` block (read back and diffed against the snapshot — no field lost, only `version` and
 `endless` moved), `publishGrove` deployed by name, artifact proved by
-`firebase/e2e/endless-xp.mjs` **10/10 live**, then `smoke-test.mjs` 166/166 and
+`firebase/e2e/endless-xp.mjs` **12/12 live**, then `smoke-test.mjs` 166/166 and
 `delete-account.mjs` 14/14, with `functions:list` still naming all seventeen. No
 `firestore.rules` release — the field rides inside `endlessBest`.
 
@@ -1203,6 +1212,20 @@ a wave as a *feeling*; the pace was reasoned against a table and approved on fig
 **Money paths that have never executed.** A real receipt reaching `redeemPurchase` and a real impression
 reaching `adReward`. Both are fully built and deployed and **neither has ever run once**, which reads as
 done. Ads *load* on device; no view has ever paid. Do both the day closed testing opens.
+
+**The charm re-cut of 2026-09-18 is unaddressed and has never been played.** Three things went in
+together, all with the Editor closed. (1) **The lance, hourglass and anvil stones are owner-drawn
+art now** — twelve PNGs cut by `Tools/make_charm_gems.py`, written over the same twelve addresses,
+so they cost **no Addressables work at all** and are the one part of this that is already live in a
+build. (2) **Both sweeping fronts and both dials are painted reels** rather than white reels tinted,
+and `stillwave` and `heavefront` went from twelve frames to **twenty-four** — so frames `f12`–`f23`
+of each are on disk carrying **neither a `.meta` nor the reel's label**, which is a reel that loads
+its first twelve frames and stops. (3) **`heavedial` is a new reel** — the anvil's clock, running
+anti-clockwise — and is wholly unaddressed, which is a white rectangle four cells wide over the hill
+(invariant 7b). So: `▸ Addressables ▸ Sync All Assets` **and save** → `Audit Addresses` →
+`Validate Art` → EditMode, and then **play an anvil and an hourglass**, because the whole of what
+changed is how long they last and what colour they are, and no gate here can see either. Nothing
+about it touches content or the server.
 
 **Dustcrown shipped on 2026-09-17 and nothing of it has been in the Editor.** The sixth chapter
 (`s07_dustcrown`, ordinal 6, manifest order 151) brings a cast, two bosses, a charm and a map, and
@@ -1280,7 +1303,9 @@ honest state rather than a fault to chase. No season rollover has ever happened.
   finishes around **day 27** of its 42-day window rather than day 33.
 - **Is 120 gems and 7 days right for the shield?** About ten days of free play for a week of cover.
 - **Is the legendary band the right size, the right price and the right rule?** Ten turrets that wear no
-  colour, stand on any seat and fire at everything, at 1,800–6,000 gems behind keeper 45–60. It is the
+  colour, stand on any seat and fire at everything, at **45,000–150,000 credits** behind keeper 45–60
+  (gems until 2026-09-18, at the owner's instruction; a flat **x25** on the authored gem ladder, so its
+  shape is unchanged and one multiplier retunes the band). It is the
   largest thing this mode has ever sold and it **suspends the colour lock**, which is the mode's central
   decision — deliberately, at the top of the shelf, where a player has already made that decision a
   hundred times. It cannot move a star line (42i), so what it can be wrong about is *feel*: four of them
@@ -1288,7 +1313,10 @@ honest state rather than a fault to chase. No season rollover has ever happened.
   mode.**
 - **Is the ward shelf's ceiling reachable, and is the credit ladder the right one?** It is now the largest
   credit sink in the game — bigger than the grove's whole catalogue — and its top two bands are shut to
-  every player alive. The second question is what fills the **gem** hole the all-credit shelf left.
+  every player alive. Since 2026-09-18 **every rung of all thirty is priced in credits**: 946,400 to own
+  the nineteen colour turrets across all four colours, plus 885,000 for the legendary band bought once,
+  which is **1,831,400 before a single upgrade**. So the **gem** hole is now the whole shelf rather than
+  part of it — this mode sells nothing for gems at all, and what fills that is still unanswered.
 - **Are the home ladder's gates reachable?** Keeper 10 / 20 / 40 against content paying for about keeper 9.
 - **Have the charms made the mode too easy?** Three rare free payoffs moved every chapter (Thornwatch
   80 → 87 of 90 on the starter, Broodmarch 63 → 76, Barrowfell 28 → 46) with nothing else retuned. **The

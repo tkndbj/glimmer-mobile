@@ -17,8 +17,14 @@
  * rather than hard-coding 15 is this suite's oldest lesson (see `glades` in smoke-test.mjs):
  * a retune must not turn this red with an answer that is entirely correct.
  *
- * It leaves behind one anonymous account, its save and its published card, exactly as
- * smoke-test.mjs does.
+ * <b>It cleans up after itself, and that is a counted check rather than a best-effort tidy.</b>
+ * This probe publishes a card, and a published card is a row on the Endless Watch board from
+ * the next 04:00 rebuild onwards. Because the last case below forges a tally of 999,999,999 on
+ * purpose, the row it leaves reads "wave 40, keeper 146" — the ceiling doing its job, and
+ * indistinguishable to anyone opening the leaderboard in the game from a cheating stranger on
+ * an unpublished title with one real player. One survived the 2026-09-17 run and had to be
+ * found and removed by hand. A cleanup that failed quietly is how it survived, so this one is
+ * asserted: if the account cannot delete itself, there is litter, and the probe says so.
  */
 
 import { execSync } from "node:child_process";
@@ -221,6 +227,29 @@ const forged = await publishedLevel();
 check(forged === keeperLevelFor(STAR_XP + CEILING * RATE),
       "a forged tally is bounded by the published ceiling",
       `got ${forged}, expected ${keeperLevelFor(STAR_XP + CEILING * RATE)}`);
+
+// ------------------------------------------------------------------ cleaning up
+// `deleteAccount` rather than `withdrawGrove`: it takes the card down, scrubs the uid out of
+// every board in the same pass, and removes the save and the auth user in the order invariant
+// 27 fixes — and it is idempotent, so a retry after a dropped reply costs nothing.
+console.log("\ncleaning up after itself");
+
+const removed = await call("deleteAccount", {});
+check(removed.status === 200 && removed.body?.result?.deleted === true,
+      "the probe's own account deletes itself",
+      `status ${removed.status} ${JSON.stringify(removed.body).slice(0, 200)}`);
+
+// Read with an admin credential rather than this account's own token, for the reason
+// delete-account.mjs gives where it does the same thing: the ID token outlives the account by
+// up to an hour, so a rules-based read would answer the same way whether or not the document
+// survived, and would prove nothing.
+const adminToken = execSync("gcloud auth print-access-token", { encoding: "utf8" }).trim();
+const leftover = await fetch(`${FS}/groves/${uid}`,
+                             { headers: { Authorization: `Bearer ${adminToken}` } });
+
+check(leftover.status === 404,
+      "and its card is gone, so no rebuild can put it back on the board",
+      `groves/${uid} answered ${leftover.status}`);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

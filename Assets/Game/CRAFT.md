@@ -29,6 +29,16 @@ Everything here runs without Unity unless it says otherwise.
   `s01_thornwatch.py`. For Lightfall and every mode dealt by seed the *shape* is drawn by hand and only
   the **fill** is swept — which blend or colour stands where, which blend stands beside a whorl, what the
   board is dealt — the cheap half of the search and the half that decides how a board plays. `*_strings.py` hold the strings belonging to a mode rather than to a level.
+- `Tools/make_charm_gems.py` — cuts the owner-supplied charm stones (the lance's star, the hourglass and
+  the anvil's clock face, each in all four board colours) into `Art/Siege`. Two decisions and no third:
+  trim to the drawing at alpha 8, fit the long edge to 0.94 of a cell — `charm_gem`'s own room, because a
+  charmed stone fitted to a plain gem's box draws visibly smaller than the stones beside it. **No recolour
+  and no grade**: a supplied colour that needed pulling onto the ward hue is a fault to send back rather
+  than one to paint over. `--check` measures each committed stone's own **median hue** against
+  `WARD_HUES`, because twelve files differing by one word in the name is exactly the shape that ships an
+  amber lance addressed as the red one — which draws perfectly, validates green everywhere and pays the
+  wrong ward. The three charms nobody has drawn are still cut from the gem pack by `make_siege_art.py`,
+  and `CHARM_GEMS` names only those, so the two tools never write the same file.
 - `Tools/hollow/` — the Hollow's rule mirror, board generator and `build_chapter.py`. The mirror is never
   authoritative; the shipping C# solver is what `Validate Content` runs.
 - `Tools/render_wheel.py` — draws the bonus wheel exactly as `WheelFace` does, without Unity, for the one
@@ -180,6 +190,48 @@ cutting the sixth chapter's, and both are about the *mask* rather than about the
   (`make_siege_art.gaze`) read fine in a contact sheet at a few pixels across and is a thread on a
   device - which is exactly what `Tools/verify/fxreels.py` floors at 8% of the short side, and the
   reason that gate exists (37de). Cut the shaft at a quarter of its frame and check the number.
+- **And a third, met on 2026-09-18 re-cutting those same two fronts: a product of periodic functions
+  is periodic.** The embers added to the anvil's dust were three high-frequency sines multiplied
+  together, in both axes this time - and came out as a tidy lattice of dashes, which is the picket
+  fence above wearing a different hat. What turbulence needs is a *seeded noise field* upsampled
+  smoothly (`make_siege_art.noisefield`); no arrangement of sines gets there, and seeding it is what
+  keeps `--check` able to reproduce the reel byte for byte.
+
+**A white reel lent a colour can only ever be one hue going grey, and that is why both sweeping charms
+read as smoke.** Invariant 37l cuts a sprite white and tints it because four ward colours have to come
+out of one drawing. Neither of these is one of four: an hourglass's wall and an anvil's are one picture
+each, and they were lent `Pal.Glass` (`#DCEBF5`, a near-white) and `Pal.Rope` (`#D9C39A`, a dull tan).
+`Image.color` is a multiply, so the bright half of each came out near-white and the dim half came out
+grey - reported as *smokey, dead white, like they are not alive*. Both are **painted** now
+(`make_siege_art.ramp`, `STILL_RAMP`, `HEAVE_RAMP`): a white-hot lip burning into saturated azure and
+deep indigo, against a white-hot lip burning into amber and rust, with the view lending `Color.white`
+so the paint survives - the same thing `Hurl` already did for a boss spell. Three rules fell out of it:
+**a leading edge is an edge** (the hourglass's face ran to a seventh of the frame, so a wall that had
+just been painted blue arrived as the white bar it replaced); **the body is most of a front** (it ran
+out at half the depth and the rest was haze, so two thirds of what crossed the hill was a wash); and
+**everything the charm draws away from its reel has to move with it** - every ring, spark, mote and
+screen wash was still `Pal.Glass` and `Pal.Rope`, so the payoff stayed grey however the reel was cut.
+
+**A payoff that lasts less than a glance has not been seen.** Both of these crossed the hill in under
+half a second, each for a locally sound reason - the hourglass's wave because the model has already
+stopped the hill, the anvil's because the model's shove really is a quarter of a second. Both arguments
+are about the *model* and the complaint is about the *drawing*, and the drawing is free: the line has
+been firing through the whole of it (invariant 37cq), so the front may outlive what it draws. They are
+1.05s and 1.2s now, each with a second deeper wall trailing it - one front crossing a hill is a line
+moving, two at different depths is a volume arriving - and the slow motion is spent on the sweep rather
+than on the bang. **And the reel's rate is derived from its own length** (`frames.Length / sweep`)
+rather than typed: it was 30fps against a twelve-frame reel because that came to exactly the old sweep,
+which is two numbers in two files holding one fact.
+
+**A clock is the only shape that says *time*, and a reversed one is the only shape that says *undo*.**
+Both sweeping charms hang a dial over the hill's middle (`SiegeView.Dial`, `make_siege_art.clockface`):
+the hourglass's is ice with its own glass inside it and its hand running forward, the anvil's is ember
+with a reversed arc arrow and its hand running **anti-clockwise** - the owner's instruction, and it
+follows from the stone, because the anvil's gem is a clock face and what the charm gives back is ground.
+One generator and two reels rather than one reel played backwards, because reversing a reel reverses the
+*smear* with it and the hand would drag its wake into the way it was going. The smear and the arrow are
+also the only two things on either face that answer "which way is it going" in a **single frame**, which
+is all a render mirror or a contact sheet can ever show.
 
 ## The palette
 

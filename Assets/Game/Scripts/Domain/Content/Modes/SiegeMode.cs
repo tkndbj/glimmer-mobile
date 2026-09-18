@@ -184,6 +184,12 @@ namespace GlimmerGrove.Content
             AssetRequest.SpriteSet(AssetManifest.SiegeArt("stilldial")),
             AssetRequest.SpriteSet(AssetManifest.SiegeArt("heavefront")),
 
+            // **And the anvil's own face, which is the hourglass's clock running backwards.** A
+            // second reel rather than the first played in reverse, for `SiegeView.Dial`'s reason -
+            // and resident here with the other three, because a charm's payoff may not wait on a
+            // load (the reel is asked for on the frame the model shoves).
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("heavedial")),
+
             // **The beam is a reel now and not a bar.** A still gradient stretched across the row
             // has no event in it, so what a lance read as was a highlighter line appearing over
             // gems that were going anyway; ten frames of a crawling filament is light under

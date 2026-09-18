@@ -853,7 +853,12 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    hill's health over a perfect match computed against the baseline bolt, so a turret reaching every
    colour only ever fires bolts that would otherwise not have been fired: a run ends sooner and par
    over-states what a good one needs. **No star line moves.** The band sits at keeper 45–60 and is priced
-   in **gems**, which is what fills the hole 42f left.
+   in **credits** — gems until 2026-09-18, moved at the owner's instruction as a flat **x25** on the
+   authored gem ladder, so the band's shape is untouched and one multiplier retunes the whole of it.
+   Like 42f it cost no code and **no re-seed**, and for a sharper reason than that one: the server is
+   published only `{level, free}` per turret and `free` is `gems <= 0 && coins <= 0`, so a band that
+   swaps currency without changing its walls publishes a byte-identical `config/grove.wards`. **What it
+   re-opens is the hole 42f named** — this mode now sells nothing for gems at all.
 42j. **The band could not be drawn from the projectile pack, and that is a fact about the pack.** It holds
    twenty families and the roster wears nineteen, so ten more would be ten *third variants* — the same
    silhouette in a different hue, which is 37z in one sentence. They are **drawn** instead

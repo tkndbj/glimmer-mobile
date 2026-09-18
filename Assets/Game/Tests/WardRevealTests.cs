@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GlimmerGrove.Wards;
 using NUnit.Framework;
 
@@ -87,13 +88,28 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheLadderClimbsInsideEachCurrencyAndNeverAcrossThem()
         {
-            // **The half that matters is the second one.** Half this shelf is priced in gems and
-            // half in credits, and 600 gems does not compare with 9,000 credits in either
-            // direction — so a tier derived from a price would stand the dearest turrets in the
-            // game on the bottom rung looking cheap, which is invariant 16j's trap exactly. The
-            // rung is read inside one currency, so the two ladders each climb on their own.
-            AssertClimbs(forGems: false);
-            AssertClimbs(forGems: true);
+            // **The half that matters is the second one.** A gem price and a credit price do not
+            // compare in either direction — 600 gems is not 9,000 credits — so a tier derived
+            // from a price would stand the dearest turrets in the game on the bottom rung looking
+            // cheap, which is invariant 16j's trap exactly. The rung is read inside one currency,
+            // so each ladder climbs on its own.
+            //
+            // **Which currencies the shelf actually sells in is read off the roster rather than
+            // typed**, and that is what kept this a real check when the legendary band moved to
+            // credits on 2026-09-18. A hard-coded `AssertClimbs(forGems: true)` fails outright
+            // once nothing is priced in gems — correctly, it is asserting a ladder that no longer
+            // exists — and the tempting repair is to delete the line, which leaves a rule that
+            // can never fail again if the shelf ever sells for gems a second time.
+            var currencies = new HashSet<bool>();
+
+            foreach (var model in WardLedger.Catalog.Models)
+                if (model != null && !model.IsStarter)
+                    currencies.Add(model.ForGems);
+
+            Assert.IsNotEmpty(currencies, "the roster prices nothing at all, so there is no "
+                                          + "ladder here to climb and this test is measuring air");
+
+            foreach (bool forGems in currencies) AssertClimbs(forGems);
         }
 
         static void AssertClimbs(bool forGems)

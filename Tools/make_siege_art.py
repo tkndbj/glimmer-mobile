@@ -553,37 +553,26 @@ PRISM_GEM = ("PNG/3.png", "a rainbow brilliant")
 #:
 #: **Hue-rotated into each of the four rather than cut in one colour**, so a charm is still worth
 #: the colour it is and a player can still see which ward it feeds. The pull is higher than a
-#: raider's: these two stand *beside* the four gems the colour rule is defined by, so a lance that
+#: raider's: these two stand *beside* the four gems the colour rule is defined by, so a stone that
 #: came out pink where the gem beside it is poppy would be inventing a fifth colour on the one
 #: board that cannot have one.
 #:
-#: **Which two, and why these shapes** (invariant 37z asked of a forty-pixel picture). A **lance**
-#: takes a whole row and a whole column, and a star is the genre's own word for exactly that - so
-#: it is a sharp stellated star, the only thing in the pack whose silhouette is all points. A
-#: **stormglass** makes the line fire at everything on the hill, so it is a *vortex orb*: round,
-#: which none of the four are, with a spiral drawn into it that says something is turning. Neither
-#: can be mistaken for a heart, a cabochon, a rhombus or an emerald-cut, which is the whole test.
+#: **Why these shapes** (invariant 37z asked of a forty-pixel picture). A **stormglass** makes the
+#: line fire at everything on the hill, so it is a *vortex orb*: round, which none of the four are,
+#: with a spiral drawn into it that says something is turning. A **furnace** banks a charge on a
+#: turret, so it is the one stone in the pack that is *rough*: a cracked nugget with light in the
+#: fissures, which reads as a coal where the cut stones read as jewels. Neither can be mistaken for
+#: a heart, a cabochon, a rhombus or an emerald-cut, which is the whole test.
+#:
+#: **The lance, the hourglass and the anvil are not here any more, and that is not a withdrawal.**
+#: All three are drawn art now - a star, an hourglass and a clock face, supplied in all four board
+#: colours - so they are cut by `Tools/make_charm_gems.py` from the owner's own folder and nothing
+#: hue-rotates them. This table names only what is still cut from the pack, so the two tools never
+#: write the same file and both `--check` runs stay honest. Their addresses are unchanged
+#: (`Siege/gem_lance_r` and the rest), which is why the swap cost no Addressables work.
 CHARM_GEMS = {
-    "lance": ("92.png", "a stellated star"),
     "storm": ("23.png", "a vortex orb"),
-
-    # **The fourth and fifth, chosen on the same test** - a silhouette none of the six before
-    # it has. A **furnace** banks a charge on a turret, so it is the one stone in the pack that
-    # is *rough*: a cracked nugget with light in the fissures, which reads as a coal where the
-    # six cut stones read as jewels. An **hourglass** stops the hill, so it is the bicone - two
-    # points meeting at a waist, which is an hourglass's own outline and the only thing in the
-    # pack drawn that way.
     "furnace": ("22.png", "a cracked molten nugget"),
-    "hourglass": ("43.png", "a bicone, waisted like an hourglass"),
-
-    # **The sixth, on the same test, and it is the one shape the pack draws that is not a
-    # jewel at all.** An anvil drives the whole hill back up the slope, so what the stone has
-    # to say before anything else is *weight* - and `95-2` is a long cut bar, flat-sided and
-    # square-ended, which is the only silhouette in a hundred stones that reads as a block
-    # rather than as something faceted. Beside a heart, a cabochon, a rhombus, an
-    # emerald-cut, a brilliant, a star, an orb, a nugget and a bicone it is the one you can
-    # name with the picture turned upside down, which is the whole test.
-    "anvil": ("95-2.png", "a long cut bar"),
 }
 
 #: What a colossus's boulder leaves on a post: one rough grey stone out of the gem pack, cut
@@ -1869,10 +1858,66 @@ def beam():
     return frames
 
 
-#: Frames the hourglass's wavefront is drawn over. Twelve at 30fps is four tenths of a second,
-#: which is exactly `SiegeView.StillSweep` - so the reel plays through once as the wave crosses
-#: the hill and never visibly repeats.
-STILLWAVE_FRAMES = 12
+#: Frames the hourglass's wavefront is drawn over.
+#:
+#: **Twenty-four, and the rate is no longer written down here.** It was twelve at 30fps because
+#: that came to exactly the old `SiegeView.StillSweep` - which pinned the reel's length to a
+#: constant in another file and quietly broke the moment the sweep was slowed. The view now derives
+#: the rate from the reel (`frames.Length / StillSweep`), so this count is free to be whatever the
+#: boil needs and the reel still plays through exactly once however long the wave takes.
+STILLWAVE_FRAMES = 24
+
+
+def noisefield(h, w, seed, rows, cols):
+    """A smooth pseudo-random field: a small seeded grid blown up to the frame.
+
+    **The one thing sines cannot do.** Everything in this file that has to look turbulent was
+    built out of trigonometry, and a product of periodic functions is periodic however cleverly the
+    wavelengths are chosen - which is how `heavefront` came to draw its embers as a lattice of
+    neat dashes twice, once in x alone and once in both axes. A seeded grid has no period at all,
+    and seeding it is what keeps `--check` able to reproduce the reel byte for byte.
+    """
+    rng = np.random.RandomState(seed)
+    small = (rng.rand(rows + 1, cols + 1) * 255.0).astype(np.uint8)
+    return np.asarray(Image.fromarray(small, "L").resize((w, h), Image.BICUBIC),
+                      dtype=np.float32) / 255.0
+
+
+def ramp(t, stops):
+    """A colour ramp along `t`: `(position, rgb)` stops, interpolated.
+
+    **Every front in this mode is painted rather than tinted now, and this is the whole of how.**
+    A sprite cut white and lent a colour by the view can only ever be one hue multiplied down
+    (invariant 37l: `Image.color` is a multiply), so its bright half is the *tint's* colour and
+    its dim half is that colour going grey - which is precisely the "smokey, dead white" the two
+    charm fronts were reported as. A ramp gives a front a hot core and a deep saturated body that
+    are **different hues**, which is what fire and glass actually do and what no single tint can
+    reach. The view lends `Color.white` so the paint survives, exactly as `Hurl` does for a boss
+    spell.
+    """
+    pos = np.array([p for p, _ in stops], np.float32)
+    cols = np.array([c for _, c in stops], np.float32)
+
+    out = np.zeros(t.shape + (3,), np.float32)
+    for i in range(3):
+        out[..., i] = np.interp(t, pos, cols[:, i])
+    return out
+
+
+#: The hourglass's wall, front to back: a white-hot face, then lit glass, then saturated azure,
+#: then the deep indigo it trails off into.
+#:
+#: **Azure is `Pal.Azure` exactly**, because the stop is the one payoff that hangs on the hill for
+#: three seconds and a front that was nearly the board's blue would read as a fifth colour on the
+#: one board that cannot have one (the charmed stones' own rule, said about an effect).
+STILL_RAMP = (
+    (0.00, (255, 255, 255)),
+    (0.10, (222, 250, 255)),
+    (0.30, (150, 232, 255)),
+    (0.62, (79, 193, 255)),
+    (0.86, (58, 110, 226)),
+    (1.00, (34, 44, 140)),
+)
 
 
 def stillwave():
@@ -1899,8 +1944,19 @@ def stillwave():
     over the first half of the reel, so what the player sees is time *freezing* across the hill
     rather than a shape being flown across it.
 
-    White, with no end along its length, like every other sprite the view tints and stretches
-    (invariant 37l, and `laser`'s own note).
+    **And it is painted rather than tinted, which is the second complaint and a separate fault.**
+    Cut white and lent `Pal.Glass` - a near-white `#DCEBF5` - the whole wall was one pale hue
+    multiplied down, so its bright half was off-white and its dim half was grey: reported as
+    *smokey, dead white*. A front has a hot core and a cold deep body and those are two different
+    hues, which no single multiply can reach (invariant 37l is about the four *ward* colours, where
+    one drawing has to become four; this is one drawing and may have its own paint, exactly as a
+    boss spell does). So the depth carries `STILL_RAMP` - white face, lit glass, saturated azure,
+    deep indigo - and the view lends `Color.white`.
+
+    **It is also much thicker.** The body ran out at half the frame and the rest was haze, so
+    two thirds of what crossed the hill was a wash. A wall of stopped time is *solid*: the body
+    now reaches four fifths of the way back at nearly full alpha, faceted in **both** axes so the
+    depth is crystal rather than a gradient.
     """
     long, thick = 512, 128
     y, x = np.mgrid[0:thick, 0:long].astype(np.float32)
@@ -1929,35 +1985,66 @@ def stillwave():
     frames = []
 
     for f in range(STILLWAVE_FRAMES):
+        u = f / (STILLWAVE_FRAMES - 1.0)
         phase = math.tau * f / STILLWAVE_FRAMES
 
-        # The front freezing outward over the first half of the reel, then holding.
-        grow = min(1.0, 0.34 + 1.6 * (f / (STILLWAVE_FRAMES - 1.0)))
+        # The front freezing outward over the first third of the reel, then holding.
+        grow = min(1.0, 0.34 + 2.4 * u)
 
-        # **A solid white bar at the front, not a feathered edge.** This was a soft falloff and
-        # it read as a haze sliding past; what a wall of stopped time needs is a *face* - flat at
-        # full alpha for a real depth, then a shoulder. `laser`'s own lesson about a bar, applied
-        # to the one thing on this board that genuinely is one.
-        flat = np.clip(1.0 - np.clip((d - 0.14) / 0.10, 0.0, 1.0), 0.0, 1.0)
-        edge = np.clip(1.0 - d / 0.30, 0.0, 1.0) ** 1.35
+        # **A solid bar at the front, not a feathered edge.** This was a soft falloff and it read
+        # as a haze sliding past; what a wall of stopped time needs is a *face* - flat at full
+        # alpha for a real depth, then a shoulder. `laser`'s own lesson about a bar, applied to the
+        # one thing on this board that genuinely is one.
+        # **Thin, and it was not.** The face ran to a seventh of the frame with a shoulder behind
+        # it, which over a front drawn one and a half cells deep is a white stripe half a screen
+        # wide - so the wall that had just been painted azure arrived reading as the white bar it
+        # replaced. A leading edge is an *edge*: what carries the colour is the body behind it.
+        flat = np.clip(1.0 - np.clip((d - 0.055) / 0.055, 0.0, 1.0), 0.0, 1.0)
+        edge = np.clip(1.0 - d / 0.19, 0.0, 1.0) ** 1.35
         ticks = across * np.clip(1.0 - d / np.maximum(1e-3, reach * grow), 0.0, 1.0) ** 0.95
         shard = comb * np.clip(1.0 - d / np.maximum(1e-3, ragged * grow), 0.0, 1.0) ** 1.5
-        body = np.clip(1.0 - d / 0.52, 0.0, 1.0) ** 1.7
-        haze = np.clip(1.0 - d, 0.0, 1.0) ** 2.6
+
+        # **The body, and it is the thick half of the complaint.** It ran out at `0.52` on a
+        # square-ish curve, so the back two thirds of the wall was haze and what crossed the hill
+        # was a lit edge with nothing behind it.
+        body = np.clip(1.0 - d / 0.82, 0.0, 1.0) ** 1.05
+        haze = np.clip(1.0 - d, 0.0, 1.0) ** 2.0
+
+        # **Facets, varying in both axes** - `heavefront`'s own lesson, which was learned the hard
+        # way over there: anything built out of `f(x)` alone is a picket fence however finely it is
+        # tuned. These lean back with depth and drift across the reel, so the wall is *crystal*
+        # rather than a gradient and is plainly moving even while it is held.
+        facet = np.clip(0.70 + 0.30 * np.sin(x / 9.7 + d * 6.1 + phase)
+                                   * np.sin(x / 31.0 - d * 3.3 - phase * 0.5), 0.0, 1.0)
 
         # A shimmer running along the front, so a wave held for a beat is never still.
         run = 0.93 + 0.07 * np.sin(x / 19.0 - phase * 2.0)
 
-        a = np.zeros((thick, long, 4), np.float32)
-        a[..., 0] = 255.0
-        a[..., 1] = 255.0
-        a[..., 2] = 255.0
-        a[..., 3] = np.clip(flat * 1.0 + edge * 0.92 + ticks * 1.25 + shard * 1.05
-                            + body * 0.62 + haze * 0.34, 0.0, 1.0) * run * along * 255.0
+        # **One surge travelling the width of the face over the reel.** The front is a straight
+        # line half a screen wide, and a straight line with nothing moving along it is furniture;
+        # this is the one feature that says the wall is carrying something.
+        travel = (x / long) - (u * 1.36 - 0.18)
+        pulse = np.clip(1.0 - np.abs(travel) / 0.16, 0.0, 1.0) ** 2.0
 
-        # The face written back over the top at full, so the front is solid white whatever the sum
-        # came to - `beam`'s rule about a stroke whose brightest pixel is 80%, and the whole of why
-        # this now reads as a wall rather than as a glow.
+        lit = np.clip(flat * 1.00 + edge * 0.95 + ticks * 1.30 + shard * 1.15
+                      + body * facet * 0.98 + haze * 0.44
+                      + pulse * np.maximum(flat, edge) * 0.55, 0.0, 1.0)
+
+        a = np.zeros((thick, long, 4), np.float32)
+
+        # **The paint: cold and saturated behind, white where it is hottest.** The ramp is read off
+        # the depth and then burned toward white by how lit each pixel is, so the face and the
+        # graduations go white-hot while the body stays glass - which is the two-hue reading a
+        # tint cannot produce.
+        heat = np.clip(flat + edge * 0.70 + ticks * 0.90 + pulse * 0.80, 0.0, 1.0)
+        rgb = ramp(np.clip(d / 0.90, 0.0, 1.0), STILL_RAMP)
+        a[..., :3] = rgb + (255.0 - rgb) * (0.80 * heat ** 2.1)[..., None]
+
+        a[..., 3] = lit * run * along * 255.0
+
+        # The face written back over the top at full, so the front is solid whatever the sum came
+        # to - `beam`'s rule about a stroke whose brightest pixel is 80%, and the whole of why this
+        # reads as a wall rather than as a glow.
         a[..., 3] = np.maximum(a[..., 3], np.maximum(flat, edge * 0.85) * along * 255.0)
 
         frames.append(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA"))
@@ -2278,11 +2365,28 @@ def decree_hit():
 
 #: Frames the anvil's front is drawn over.
 #:
-#: **Twelve, against the still wave's own count, and for the opposite reason.** A wall of stopped
-#: time hangs on the hill for three seconds and has to loop without a seam; this crosses the hill
-#: in a quarter of a second (`SiegeTuning.AnvilFor`) and is gone, so what it needs is enough
-#: frames for the dust to visibly boil once rather than a cycle that closes.
-HEAVEFRONT_FRAMES = 12
+#: **Twenty-four, matched to the still wave's, and the rate is derived rather than written down.**
+#: Twelve was chosen against a sweep of under half a second; the sweep is more than twice that now
+#: and the view sets the rate from the reel's own length (`frames.Length / HeaveSweep`), so the
+#: dust boils once across the climb whatever the climb costs.
+HEAVEFRONT_FRAMES = 24
+
+#: The anvil's front, lip to tail: white-hot, then gold, then the molten amber that is `Pal.Amber`
+#: exactly, then ember red, then the deep rust it dies into.
+#:
+#: **The opposite half of `STILL_RAMP`, deliberately.** The two fronts are the only things in this
+#: mode that cross the hill, a player has to tell them apart before either has finished, and the
+#: whole of what they now differ by at a glance is *temperature*: one is glass going to indigo and
+#: the other is fire going to rust. The old pair were both near-white, which is how a wall of
+#: driven earth and a wall of stopped time came to read as the same smoke twice.
+HEAVE_RAMP = (
+    (0.00, (255, 255, 255)),
+    (0.09, (255, 236, 176)),
+    (0.24, (255, 178, 64)),
+    (0.48, (255, 138, 43)),
+    (0.74, (198, 70, 34)),
+    (1.00, (86, 34, 24)),
+)
 
 
 def heavefront():
@@ -2313,8 +2417,16 @@ def heavefront():
     **And it was far too thin.** A front is mostly body: the lip carries the *speed* and the body
     carries the *weight*, and at a tenth of the frame it read as a scratch rather than as a shock.
 
-    White, with no end along its length, like every other sprite the view tints and stretches
-    (invariant 37l).
+    **It is painted rather than tinted now, which is the fault that outlived both of those.** Cut
+    white and lent `Pal.Rope` - a dull tan `#D9C39A` - the whole shock was one desaturated hue
+    multiplied down: bright half beige, dim half grey, reported as *smokey, dead white*. Driven
+    ground is white-hot at the lip and rust in the tail, which is two hues and not one darkened
+    (`ramp`, and `STILL_RAMP`'s note on why one drawing may carry its own paint where four ward
+    colours may not). So the depth carries `HEAVE_RAMP` and the view lends `Color.white`.
+
+    **And embers, which are what tell a shock from smoke.** The body is scattered with hot points
+    that drift back through it over the reel - the one feature here that is *not* a smooth field,
+    and the thing that stops a wall of dust reading as a wall of fog.
     """
     long, thick = 512, 128
     y, x = np.mgrid[0:thick, 0:long].astype(np.float32)
@@ -2327,6 +2439,9 @@ def heavefront():
     # Feathered into nothing at both ends, so a front stretched past the field has no drawn end.
     fade = long * 0.045
     along = np.clip(np.minimum(x, long - 1 - x) / fade, 0.0, 1.0)
+
+    # The embers' own field, cut once and rolled per frame. Seeded, so `--check` reproduces it.
+    embers = noisefield(thick, long, 7, 26, 104)
 
     frames = []
 
@@ -2363,16 +2478,33 @@ def heavefront():
         # because a shock throws the ground up *after* it has passed.
         grow = min(1.0, 0.55 + 1.2 * u)
 
-        a = np.zeros((thick, long, 4), np.float32)
-        a[..., 0] = 255.0
-        a[..., 1] = 255.0
-        a[..., 2] = 255.0
-        a[..., 3] = np.clip(lead * 1.0 + lip * 0.85
-                            + body * mottle * 0.95 * grow + haze * 0.42 * grow,
-                            0.0, 1.0) * along * 255.0
+        # **Embers carried in the body, off a noise field rather than off sines.** The first cut
+        # multiplied three high-frequency sines together, which is the same mistake the body was
+        # re-cut for one paragraph up wearing a different hat: a product of periodic functions is
+        # *periodic*, so what came out was a neat lattice of dashes - a stencil, on the one feature
+        # whose whole job is to be irregular. A seeded field upsampled smoothly has no period in it
+        # at all, and rolling it back through the dust as the reel runs is what makes the embers
+        # travel with the shock rather than sit in it.
+        ember = np.clip((np.roll(embers, int(u * thick * 0.45), axis=0) - 0.70) / 0.30,
+                        0.0, 1.0) * body
 
-        # The lip written back over the top at full, so the leading line is solid white whatever
-        # the sum came to - `beam`'s rule about a stroke whose brightest pixel is 80%.
+        a = np.zeros((thick, long, 4), np.float32)
+
+        lit = np.clip(lead * 1.0 + lip * 0.85
+                      + body * mottle * 1.05 * grow + haze * 0.46 * grow
+                      + ember * 0.85 * grow, 0.0, 1.0)
+
+        # **The paint: white at the lip, amber through the body, rust in the tail** - and burned
+        # back toward white wherever the frame is hottest, so the lip and the embers are the only
+        # places the colour leaves the ramp.
+        heat = np.clip(lead + lip * 0.75 + ember * 1.10, 0.0, 1.0)
+        rgb = ramp(np.clip(d / 0.92, 0.0, 1.0), HEAVE_RAMP)
+        a[..., :3] = rgb + (255.0 - rgb) * (0.84 * heat ** 1.9)[..., None]
+
+        a[..., 3] = lit * along * 255.0
+
+        # The lip written back over the top at full, so the leading line is solid whatever the sum
+        # came to - `beam`'s rule about a stroke whose brightest pixel is 80%.
         a[..., 3] = np.maximum(a[..., 3], np.maximum(lead, lip * 0.8) * along * 255.0)
 
         frames.append(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA"))
@@ -2380,41 +2512,78 @@ def heavefront():
     return frames
 
 
-#: Frames the dial is drawn over.
+#: Frames a dial is drawn over.
 #:
 #: **Twenty-four at 24fps is one second a revolution**, and the minute hand sweeps exactly once
 #: across the reel - so a three second stop is three clean turns and the loop never shows a seam.
 #: Tie these two together before changing either: a hand that does not come back to where it
 #: started is a clock that jumps every time the reel wraps.
-STILLDIAL_FRAMES = 24
+DIAL_FRAMES = 24
+
+#: Both reels are the same clock at the same count, and that is the point rather than a saving:
+#: the anvil's face is the hourglass's face running the other way, so anything that moves one and
+#: not the other is a drift a player would read as two unrelated objects.
+STILLDIAL_FRAMES = HEAVEDIAL_FRAMES = DIAL_FRAMES
+
+#: The hourglass's face: ice, with the sand the one warm thing on it.
+#:
+#: **A face needs two hues or it is a decal.** Drawn white and lent `Pal.Glass` the whole dial was
+#: one near-white multiplied down, which is what "smokey, dead" was about on the piece that is
+#: supposed to *say* what the charm did. The rim and the graduations carry the cold, the hands are
+#: white-hot so they are read first at any size, and the sand is warm - the only warm thing inside
+#: a blue ring, which is why the eye goes to it.
+STILL_DIAL = {
+    "plate": (74, 140, 210),
+    "ring": (150, 234, 255),
+    "tick": (198, 246, 255),
+    "hand": (255, 255, 255),
+    "sand": (255, 198, 96),
+}
+
+#: The anvil's face: the same clock in ember, for `HEAVE_RAMP`'s reason. The two dials differ by
+#: temperature and by which way the hand is going, and by nothing else.
+HEAVE_DIAL = {
+    "plate": (150, 74, 34),
+    "ring": (255, 176, 66),
+    "tick": (255, 216, 146),
+    "hand": (255, 255, 255),
+    "sand": (255, 238, 196),
+}
 
 
-def stilldial():
-    """The dial an hourglass hangs over the hill while the hill is stopped.
+def clockface(spin, paint, glass=True, arrow=False):
+    """One dial: a graduated ring, a running minute hand, and what is inside it.
 
     **The piece that says what happened.** A wavefront sweeping the hill says *something arrived*;
-    only a clock face says *time stopped*, and without it the charm is a blue flash that the player
-    has to be told the meaning of. It is drawn once, held for the whole stop and shattered when the
-    sand runs out, which is the same three-beat shape every other charm here has.
+    only a clock face says *time*, and for both of these charms the time is the entire thing the
+    gem is bought for. It is drawn once, held while the payoff lasts and shattered at the end,
+    which is the same three-beat shape every other charm here has.
 
     **Its hands run, and that is a reversal worth recording.** This shipped frozen, on the
     argument that a ticking clock is a clock that is working and what the charm has to say is that
     it is *not*. The argument is sound and the drawing was dead: a still face over a still hill is
     a decal, and the owner's verdict was that it could not be felt. A minute hand sweeping a full
     turn a second - with the smear that rate needs, or it reads as teleporting - says *time is
-    doing something*, which is what a player is being sold. It is also the only thing on a stopped
-    board that is plainly moving, which is the job the motes were added for.
+    doing something*, which is what a player is being sold.
 
-    **An hourglass inside a graduated ring, and the glass replaced a pair of clock hands.** Hands
-    say *a clock*, which is furniture this game has nowhere else and reads as borrowed; the glass
-    says *this gem*, because it is the shape of the stone the player just matched. The ring's sixty
-    fine graduations and twelve bold ones are the same vocabulary the wavefront carries, so the two
-    read as one object arriving twice.
+    **And `spin` is the whole of what tells the two charms apart on this face** (the owner's
+    instruction, 2026-09-18). An hourglass stops the hill, so its hand runs *forward* - time is
+    being spent and the player is watching it go. An anvil gives ground *back*, and its stone is a
+    clock face, so its hand runs **anti-clockwise**: the one gesture in the whole of human
+    furniture that means *undo*. Everything follows the sign - the hand, the hour hand, the smear
+    it drags and the glint running the other way round the rim - because a hand going one way with
+    a wake going the other is a mistake a player sees before they can name it.
+
+    **The smear is the direction, so it has to be read off one frame.** A still is all a render
+    mirror can produce and all a contact sheet can show, and a hand with no wake says nothing
+    about which way it is going. The anvil's face carries a **reversed arc arrow** as well, for
+    the same reason: it is the only mark on either dial that is legible in a photograph.
 
     **Drawn as an outline rather than a solid.** It hangs over the thing the player is watching, so
     it has to be read through - which is also why `SiegeView.DialInk` holds it well under full.
 
-    White, for the reason everything the view tints is.
+    **Painted rather than tinted**, for `ramp`'s reason: a cold ring with warm sand inside it is
+    two hues, and a multiply can only ever be one.
     """
     side = 256
     y, x = np.mgrid[0:side, 0:side].astype(np.float32)
@@ -2428,9 +2597,13 @@ def stilldial():
     frames = []
 
     def wedge(angle, span_, reach, gain):
-        """The smear a hand drags behind it: a soft fan back from where it is now."""
+        """The smear a hand drags behind it: a soft fan back from where it is now.
+
+        Behind is decided by `spin`, so a hand running backwards drags its wake forwards round
+        the face rather than trailing into the way it is about to go.
+        """
         delta = (ang - angle + math.pi) % math.tau - math.pi
-        behind = np.clip(-delta / max(1e-3, span_), 0.0, 1.0)
+        behind = np.clip(-spin * delta / max(1e-3, span_), 0.0, 1.0)
         return (np.clip(1.0 - behind, 0.0, 1.0) ** 1.6
                 * np.clip(1.0 - r / reach, 0.0, 1.0) ** 0.8
                 * np.clip(r / (reach * 0.16), 0.0, 1.0) * gain)
@@ -2460,15 +2633,16 @@ def stilldial():
     plate = np.clip(1.0 - r / (rim * 1.02), 0.0, 1.0) ** 0.5
 
     # **The glass itself, inside the ring, and it replaced a pair of clock hands.** Hands say
-    # *a clock*, which is a piece of furniture this game has nowhere else and reads as borrowed;
-    # an hourglass says *this gem*, because it is the shape of the stone the player just matched.
-    # Drawn as an outline rather than a solid so the bodies behind it are never hidden - the same
-    # reason the face is held at well under full alpha.
+    # *a clock*, which on its own is a piece of furniture this game has nowhere else; an hourglass
+    # says *this gem*, because it is the shape of the stone the player just matched. Drawn as an
+    # outline rather than a solid so the bodies behind it are never hidden - the same reason the
+    # face is held at well under full alpha. The anvil's stone is itself a clock, so its face
+    # carries none of this and wears the arrow instead.
     glassH = rim * 0.34          # half its height
     waist, mouth = side * 0.012, rim * 0.19
 
     # Half the width the bulb has at this height: a waist in the middle opening to a mouth at
-    # each end, which is two cones meeting - the bicone `make_siege_art.CHARM_GEMS` cuts.
+    # each end, which is two cones meeting - the glass the drawn hourglass stone carries.
     flare = waist + (mouth - waist) * np.clip(np.abs(dy) / glassH, 0.0, 1.0)
     inside = np.abs(dy) <= glassH
 
@@ -2482,21 +2656,50 @@ def stilldial():
     thread = (np.clip(1.0 - np.abs(dx) / 1.9, 0.0, 1.0)
               * np.clip(1.0 - np.abs(dy) / (glassH * 0.92), 0.0, 1.0) ** 0.6)
 
-    glass = walls + caps * 0.95 + thread * 0.55
+    sand = (walls + caps * 0.95 + thread * 0.55) if glass else np.zeros_like(r)
+
+    # **The reversed arc arrow**, which is the only thing on either dial that says which way the
+    # hand is going in a single frame. Three quarters of a turn of band at half the radius, with a
+    # solid head on the end pointing the way `spin` runs.
+    if arrow:
+        arc_r = rim * 0.60
+        start, span_ = -math.pi * 0.62, math.pi * 1.28
+
+        band = np.clip(1.0 - np.abs(r - arc_r) / 3.4, 0.0, 1.0) ** 1.1
+        walk = ((ang - start) * spin) % math.tau
+        mark = band * ((walk > 0.0) & (walk < span_)).astype(np.float32)
+
+        end = start + span_ * spin
+        hx, hy = arc_r * math.cos(end), arc_r * math.sin(end)
+
+        # The way the head points is the tangent at the end of the arc, turned by `spin`.
+        tx, ty = -math.sin(end) * spin, math.cos(end) * spin
+        px, py = dx - hx, dy - hy
+
+        fwd = px * tx + py * ty
+        off = np.abs(-px * ty + py * tx)
+        wide = 9.0 * np.clip(1.0 - fwd / 13.0, 0.0, 1.0)
+
+        head = (np.clip(1.0 - off / np.maximum(1e-3, wide), 0.0, 1.0)
+                * ((fwd >= -2.0) & (fwd <= 13.0)).astype(np.float32))
+
+        turn = np.clip(mark * 0.85 + head, 0.0, 1.0)
+    else:
+        turn = np.zeros_like(r)
 
     hub = np.clip(1.0 - r / (side * 0.034), 0.0, 1.0) ** 1.4
     inner = np.clip(1.0 - np.abs(r - rim * 0.74) / 2.6, 0.0, 1.0) ** 1.3
 
-    for f in range(STILLDIAL_FRAMES):
-        phase = math.tau * f / STILLDIAL_FRAMES
+    def paint_of(key):
+        return np.array(paint[key], np.float32)
 
-        # **The hands run, and that is the owner's call against what this first shipped as.** It
-        # was drawn frozen on the argument that a ticking clock is a working one - true, and it
-        # cost the thing its whole read: a still face over a still hill is a decal. A minute hand
-        # sweeping a full turn a second says *time is doing something*, which is what the charm is.
-        # Twelve o'clock is up, so the sweep runs clockwise from -90 degrees.
-        minute = -math.pi * 0.5 + phase
-        hour = -math.pi * 0.5 + phase / 12.0 + math.pi * 0.35
+    for f in range(DIAL_FRAMES):
+        phase = math.tau * f / DIAL_FRAMES
+
+        # Twelve o'clock is up, so a forward sweep runs clockwise from -90 degrees and a reversed
+        # one runs back from it.
+        minute = -math.pi * 0.5 + spin * phase
+        hour = -math.pi * 0.5 + spin * phase / 12.0 + math.pi * 0.35
 
         hands = (spoke(hour, rim * 0.50, 9.0)
                  + spoke(minute, rim * 0.80, 6.0))
@@ -2505,30 +2708,60 @@ def stilldial():
         # rate reads as a hand teleporting round the face.
         smear = wedge(minute, math.pi * 0.55, rim * 0.80, 0.42)
 
-        # The glint: a short bright arc travelling the rim the other way, so the face is never
-        # symmetrical with the hand.
-        swept = ((ang + phase) % math.tau) / math.tau
+        # The glint: a short bright arc travelling the rim against the hand, so the face is never
+        # symmetrical with it.
+        swept = ((ang + spin * phase) % math.tau) / math.tau
         glint = np.clip(1.0 - swept / 0.10, 0.0, 1.0) ** 2.0
 
         breath = 0.93 + 0.07 * math.sin(phase * 2.0)
 
-        a = np.zeros((side, side, 4), np.float32)
-        a[..., 0] = 255.0
-        a[..., 1] = 255.0
-        a[..., 2] = 255.0
-
         # **Weighted for a face drawn over a lit hill rather than on this sheet.** The rim and the
         # hands carry the shape at a glance and the graduations are what it turns out to be on a
         # second look, so the first two are near solid and the ticks sit under them.
-        lit = (plate * 0.16 + ring * 1.35 + fine * 1.20 + bold * 1.55
-               + glass * 0.85 + hub * 1.2 + inner * 0.34
-               + hands * 1.45 + smear + ring * glint * 1.1)
+        parts = (
+            (plate * 0.16, "plate"),
+            (ring * 1.35 + inner * 0.34, "ring"),
+            (fine * 1.20 + bold * 1.55, "tick"),
+            (sand * 0.85 + turn * 1.30, "sand"),
+            (hands * 1.45 + smear + hub * 1.2, "hand"),
+            (ring * glint * 1.1, "hand"),
+        )
 
+        lit = np.zeros_like(r)
+        rgb = np.zeros((side, side, 3), np.float32)
+
+        for mask, key in parts:
+            lit = lit + mask
+            rgb = rgb + mask[..., None] * paint_of(key)
+
+        # A weighted mean, so a pixel two parts overlap on is the colour of whichever is carrying
+        # it - and never the sum, which would run every crossing to white and put the dial back
+        # where it started.
+        rgb = rgb / np.maximum(lit, 1e-3)[..., None]
+
+        a = np.zeros((side, side, 4), np.float32)
+        a[..., :3] = rgb
         a[..., 3] = np.clip(lit * breath, 0.0, 1.0) * 255.0
+
         frames.append(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA"))
 
     return frames
 
+
+def stilldial():
+    """The dial an hourglass hangs over the hill while the hill is stopped: ice, running forward."""
+    return clockface(1, STILL_DIAL, glass=True, arrow=False)
+
+
+def heavedial():
+    """The dial an anvil hangs over the hill as it throws it: ember, running **backwards**.
+
+    **The same clock the hourglass hangs, and that is the owner's call.** The anvil's stone is a
+    clock face, and what the charm does is take ground back - so the face that explains it is a
+    clock with its hand going the wrong way. The two are told apart by temperature and by
+    direction, which is `HEAVE_RAMP`'s argument arriving on the piece that carries the meaning.
+    """
+    return clockface(-1, HEAVE_DIAL, glass=False, arrow=True)
 
 #: Frames a stormglass's beam is drawn over. Eight at 30fps is a quarter of a second of ripple,
 #: which is about as long as one beam stands at full width before it starts closing.
@@ -3620,10 +3853,11 @@ def build():
     # The cog: the one thing on the field that is not a jewel.
     made["Siege/gem_cog.png"] = cog()
 
-    # **The charms, and every one of the three is now a gem of its own.** A prism is cut from the
-    # same pack as the four and left its own colours; a lance and a stormglass are cut from the gem
-    # icon pack and hue-rotated into each of the four, so the stone is a *different stone* and still
-    # says what the cell is worth. See `CHARM_GEMS` for what replaced the mark and why.
+    # **The charms, and every one of them is a gem of its own.** A prism is cut from the same pack
+    # as the four and left its own colours; a stormglass and a furnace are cut from the gem icon
+    # pack and hue-rotated into each of the four, so the stone is a *different stone* and still says
+    # what the cell is worth. See `CHARM_GEMS` for what replaced the mark and why - and for why the
+    # other three charms are cut by `make_charm_gems.py` instead.
     made["Siege/gem_prism.png"] = fit(read(match3, PRISM_GEM[0]), TILE, 0.88)
 
     # Absent is a checkout without the gem pack, which is the same bargain every other root here
@@ -3657,6 +3891,13 @@ def build():
 
     for i, frame in enumerate(stilldial()):
         made["Siege/stilldial/f%02d.png" % i] = frame
+
+    # **And the anvil's own face, which is the same clock running backwards.** Its own reel rather
+    # than the hourglass's played in reverse: a reversed reel reverses the smear too, so the hand
+    # would drag its wake into the way it was going - and the two have to differ in colour as well
+    # as in direction (`HEAVE_DIAL`, `clockface`).
+    for i, frame in enumerate(heavedial()):
+        made["Siege/heavedial/f%02d.png" % i] = frame
 
     # **What an anvil sends up the hill.** Its own front rather than the still wave re-tinted,
     # which is the same argument the still wave itself is the answer to (invariant 37dy): the two

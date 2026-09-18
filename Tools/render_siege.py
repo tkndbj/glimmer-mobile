@@ -221,13 +221,23 @@ CHARM_ART = {siege.LANCE: "gem_lance", siege.STORM: "gem_storm",
 #: than the stones beside them, which would say a charm is a lesser gem.
 CHARM_INSET, CHARM_RING = 1.06, 1.18
 
-#: `SiegeView.HeaveFront` and `make_siege_art.HEAVEFRONT_FRAMES` - how deep the anvil's front is
-#: drawn, in cells, and how many frames it is cut over. Mirrored rather than imported, exactly as
-#: every other figure in this file is and for its reason: this tool runs with no Unity anywhere.
-HEAVE_FRONT, HEAVE_FRAMES = 1.5, 12
+#: `SiegeView.HeaveFront` - how deep the anvil's front is drawn, in cells. Mirrored rather than
+#: imported, exactly as every other figure in this file is and for its reason: this tool runs with
+#: no Unity anywhere.
+#:
+#: **The frame count is no longer written down here.** It was, against `HEAVEFRONT_FRAMES`, and the
+#: two drifted the moment the reel was re-cut - the mirror then drew frame 11 of a 24-frame reel as
+#: its last, which is a mirror quietly showing half an animation. `frames_in` counts what is on
+#: disk, which is the same thing the view now does (`frames.Length / HeaveSweep`).
+HEAVE_FRONT = 1.5
 
-#: `Pal.Rope` - the sun-bleached stone an anvil's dust is drawn in, and the gorgon's own hue.
-ROPE = (217, 195, 154)
+#: **`Pal.Rope` and `Pal.Glass` are gone from this file, and their absence is the point.** They were
+#: what the anvil's front and the hourglass's front and dial were tinted with here, mirroring a view
+#: that lent the same two colours - a dull tan and a near-white. All four reels carry their own paint
+#: now (`make_siege_art.HEAVE_RAMP`, `STILL_RAMP`) and the view lends `Color.white`, so this mirror
+#: draws them through `faded` rather than `tinted`. Keeping a tint here "just in case" is how a mirror
+#: comes to report exactly the washed-out front the re-cut was for, which is invariant 44d's rule
+#: about a comfortable lie said in reverse.
 
 #: `SiegeLayout.Bomb` - what a bomber drops. Drawn as the firepot the player already owns, which
 #: is what the view draws it as: tapping it throws exactly what a firepot throws, so a second
@@ -360,8 +370,62 @@ def bolt_scale(model):
 #: drawn, and how wide and how lit the dial it hangs over the hill is.
 STILL_FRONT, DIAL_WIDE, DIAL_INK = 1.55, 4.2, 0.84
 
-#: `Pal.Glass` - the one colour the hourglass draws in, and the only cold thing on this board.
-GLASS = (0xDC, 0xEB, 0xF5)
+
+
+def frames_in(name):
+    """How many frames a reel under `Art/Siege` really has.
+
+    **Counted rather than mirrored**, which is the one figure in this file that may not be typed:
+    every other constant here describes a *decision* the game makes and would be wrong to guess,
+    but a reel's length is a fact about a folder, and a typed copy of it goes stale silently the
+    first time the reel is re-cut.
+    """
+    folder = ART / name
+    return len(list(folder.glob("f*.png"))) if folder.is_dir() else 0
+
+
+def faded(im, alpha=1.0):
+    """A painted reel lent `Color.white`: its own paint, at a share of its alpha.
+
+    The mirror of `SiegeView.Wall` and `Dial` handing `Pal.A(Color.white, ink)` to a sprite that
+    carries its own colours. `tinted` is the other case - a reel cut white because four ward
+    colours have to come out of one drawing (invariant 37l).
+    """
+    if alpha >= 1.0:
+        return im.copy()
+
+    out = im.copy()
+    out.putalpha(out.split()[3].point(lambda v: int(v * alpha)))
+    return out
+
+
+def sweep_wall(sheet, at, name, frm, to, t, deep_cells, ink, span, cell, end_ink=0.34):
+    """`SiegeView.Wall` - one painted front, drawn where it stands at `t` of its climb.
+
+    **One routine for both charms, because the view has one.** An hourglass's wall of stopped time
+    and an anvil's wall of driven ground travel, broaden and fade identically and differ only in
+    the reel; two copies here would drift from each other exactly as the two in the view did.
+
+    The position carries the view's own `Ease.OutQuad`. It did not, and that is the class of
+    mirror bug invariant 44d is about - a front drawn at a fraction of the distance the game would
+    not have it at is a picture answering a question nobody asked.
+    """
+    if t <= 0.0:
+        return
+
+    t = min(1.0, t)
+    frames = frames_in(name)
+    face = reel(name, int(t * max(0, frames - 1)))
+    if face is None:
+        return
+
+    deep = cell * deep_cells * (0.80 + (1.24 - 0.80) * t)
+    band = face.resize((int(span[0]), max(1, int(deep))), Image.LANCZOS)
+    band = faded(band, ink + (ink * end_ink - ink) * t * t * t)
+
+    eased = 1.0 - (1.0 - t) * (1.0 - t)
+    x, y = at(0.0, frm + (to - frm) * eased)
+    sheet.alpha_composite(band, (int(x - band.width / 2), int(y - band.height / 2)))
 
 
 def tinted(im, colour, alpha=1.0):
@@ -1914,21 +1978,19 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         # **Named apart from anything this routine already uses.** A local shadows for the whole
         # function in Python, so a name reused here breaks a read further up - which is how both
         # of the last two additions to this file first ran.
-        stillfront = reel("stillwave", int(t * 11))
-        if stillfront is not None:
-            deep = cell * STILL_FRONT * (0.82 + (1.20 - 0.82) * t)
-            stillband = stillfront.resize((int(span[0]), max(1, int(deep))), Image.LANCZOS)
-            stillband = tinted(stillband, GLASS, 1.0 - 0.66 * t * t * t)
-            stillx, stilly = at(0.0, frm + (to - frm) * t)
-            sheet.alpha_composite(stillband, (int(stillx - stillband.width / 2),
-                                              int(stilly - stillband.height / 2)))
+        # **The wake first and the face over it**, in the order `SiegeView.Stilled` builds them:
+        # the deeper, dimmer second wall trails the first by a sixth of the sweep, so at `t` it is
+        # still down the hill. Drawing one wall where the game draws two is a mirror reporting a
+        # thinner payoff than the one that ships (44d).
+        sweep_wall(sheet, at, "stillwave", frm, to,
+                   max(0.0, (t - 0.16) / 1.18), STILL_FRONT * 1.7, 0.52, span, cell)
+        sweep_wall(sheet, at, "stillwave", frm, to, t, STILL_FRONT, 1.0, span, cell)
 
-        stillface = reel("stilldial", int(t * 23))
+        stillface = reel("stilldial", int(t * max(0, frames_in("stilldial") - 1)))
         if stillface is not None:
             dialsize = int(cell * DIAL_WIDE)
             dialx, dialy = at(0.0, (hill_top + hill_foot) * 0.5)
-            dialdisc = tinted(stillface.resize((dialsize, dialsize), Image.LANCZOS),
-                              GLASS, DIAL_INK)
+            dialdisc = faded(stillface.resize((dialsize, dialsize), Image.LANCZOS), DIAL_INK)
             sheet.alpha_composite(dialdisc, (int(dialx - dialsize / 2),
                                              int(dialy - dialsize / 2)))
 
@@ -1943,18 +2005,24 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
     if heaved is not None:
         u = max(0.0, min(1.0, heaved))
 
-        # Named apart from everything this routine already holds, for `--stilled`'s reason: a
-        # local shadows for the whole function in Python.
-        heavefront = reel("heavefront", int(u * (HEAVE_FRAMES - 1)))
-        if heavefront is not None:
-            heavedeep = cell * HEAVE_FRONT * (0.74 + (1.26 - 0.74) * u)
-            heaveband = heavefront.resize((int(span[0]), max(1, int(heavedeep))), Image.LANCZOS)
-            heaveband = tinted(heaveband, ROPE, 1.0 - 0.70 * u * u * u)
+        heavefrom = line_y + cell * 0.5
 
-            heavefrom = line_y + cell * 0.5
-            heavex, heavey = at(0.0, heavefrom + (hill_top - heavefrom) * u)
-            sheet.alpha_composite(heaveband, (int(heavex - heaveband.width / 2),
-                                              int(heavey - heaveband.height / 2)))
+        # The dust behind the front, then the front, then the clock over both - `SiegeView.Heaved`
+        # in the order it builds them.
+        sweep_wall(sheet, at, "heavefront", heavefrom, hill_top,
+                   max(0.0, (u - 0.18) / 1.22), HEAVE_FRONT * 1.9, 0.50, span, cell)
+        sweep_wall(sheet, at, "heavefront", heavefrom, hill_top, u, HEAVE_FRONT, 1.0, span, cell)
+
+        # **The reversed clock, which is the whole reason this flag is worth drawing at a middling
+        # `u`.** The one thing a still frame can be asked about a hand that runs backwards is
+        # whether a player can tell which way it is going *from one frame* - so look at the smear
+        # and the arrow, because at 24fps nothing else answers it.
+        heaveface = reel("heavedial", int(u * max(0, frames_in("heavedial") - 1)))
+        if heaveface is not None:
+            hdsize = int(cell * DIAL_WIDE)
+            hdx, hdy = at(0.0, (hill_top + hill_foot) * 0.5)
+            hddisc = faded(heaveface.resize((hdsize, hdsize), Image.LANCZOS), DIAL_INK)
+            sheet.alpha_composite(hddisc, (int(hdx - hdsize / 2), int(hdy - hdsize / 2)))
 
     # **Both of the hill's captions, together, because apart they say nothing.** Each was
     # individually well placed and the pair overlapped on every shape; drawing only the chain is

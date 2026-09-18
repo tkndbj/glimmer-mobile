@@ -171,9 +171,14 @@ namespace GlimmerGrove
         {
             if (model == null || model.IsStarter) return 1;
 
-            // The two ladders as they are authored: credits are Orders 2..10, gems 11..20. Read
-            // off the roster rather than typed, so a drop that lengthens either one still lands
-            // its turrets across all five tiers instead of bunching them at the bottom.
+            // The ladder as it is authored, read off the roster rather than typed — so a drop
+            // that lengthens it still lands its turrets across all five tiers instead of bunching
+            // them at the bottom, and a shelf selling in two currencies gets a rung per currency
+            // rather than one ladder measured in two kinds of money that do not compare.
+            //
+            // Since 2026-09-18 every turret is priced in credits, so this is one ladder of
+            // Orders 2..30. The split by currency is kept rather than simplified away because it
+            // costs nothing standing and is the whole rule the day a gem price comes back.
             int first = int.MaxValue, last = int.MinValue;
 
             foreach (var other in WardLedger.Catalog.Models)

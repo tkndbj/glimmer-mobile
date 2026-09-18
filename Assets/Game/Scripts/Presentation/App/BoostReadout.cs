@@ -166,7 +166,14 @@ namespace GlimmerGrove
         /// inside a build method are how two rows come to print through one another.
         /// </summary>
         const float MarkSize = 46f, LabelWidth = 48f, ClockHeight = 34f;
-        const float Width = MarkSize + LabelWidth, Height = MarkSize + ClockHeight + 2f;
+        const float Width = MarkSize + LabelWidth;
+
+        /// <summary>
+        /// The whole block's height, public for <c>ModeSwitch.PillHeight</c>'s reason: whoever
+        /// places this has to know it, because <c>UIKit.Box</c> always pivots at centre, and a
+        /// caller typing its own copy would go on placing it against the size it used to be.
+        /// </summary>
+        public const float Height = MarkSize + ClockHeight + 2f;
 
         /// <summary>
         /// The arrow's own green, so the letters and the mark read as one object.

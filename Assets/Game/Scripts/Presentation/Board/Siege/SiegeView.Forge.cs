@@ -253,33 +253,18 @@ namespace GlimmerGrove
             // crossed the hill was a blue stripe. `stillwave` is a wavefront - a hot edge with
             // graduations and shards crystallising behind it - and it is the same vocabulary the
             // dial below carries, so the two read as one thing arriving twice.
-            var frames = Reel("stillwave");
-            var face = frames != null && frames.Length > 0 ? frames[0] : Art.SoftCapsule(64);
+            //
+            // **And it carries its own paint now**, so `Color.white` is lent rather than
+            // `Pal.Glass` imposed: a near-white multiplied down is one hue going grey, which is
+            // what "smokey, dead white" was (`make_siege_art.ramp`).
+            Wall("Still wave", Reel("stillwave"), from, to, StillSweep, StillFront, 1f, 0f);
 
-            var wave = UIKit.Img("Still wave", _fx, face, Pal.Glass,
-                                 new Vector2(Span.x, Cell * StillFront));
-            wave.raycastTarget = false;
-
-            if (frames != null && frames.Length > 0) Flipbook.Attach(wave, frames, 30f, true);
-
-            var rt = wave.rectTransform;
-            rt.anchoredPosition = new Vector2(0f, from);
-
-            Tween.Run(StillSweep, Ease.OutQuad, t =>
-            {
-                if (!rt) return;
-                rt.anchoredPosition = new Vector2(0f, Mathf.Lerp(from, to, t));
-
-                // **It opens rather than closing.** The old front thinned to a third as it went,
-                // which reads as a thing running out of energy; a wall of stopped time should
-                // arrive at the crest as wide as it left the line and simply stop being lit.
-                rt.localScale = new Vector3(1f, Mathf.Lerp(.82f, 1.20f, t), 1f);
-
-                // **It holds its brightness nearly to the crest.** It faded on a square curve and
-                // was gone by halfway, so the half of the sweep a player is actually watching was
-                // a ghost. What ends it is the wave leaving the hill, not the wave giving up.
-                wave.color = Pal.A(Pal.Glass, Mathf.Lerp(1f, .34f, t * t * t));
-            }, wave).OnDone(() => { if (wave) Destroy(wave.gameObject); });
+            // **A second wall a beat behind the first**, shallower and dimmer. One front crossing
+            // a hill is a line moving; two at different depths and speeds is a *volume* of stopped
+            // time arriving, which is the whole of what "thicker" means on a sprite that is one
+            // band however brightly it is drawn.
+            Wall("Still wake", Reel("stillwave"), from, to, StillSweep * 1.18f,
+                 StillFront * 1.7f, .52f, StillSweep * .16f);
 
             // **A ring closing on every body as the wave reaches it**, staggered by how far up
             // the hill it stands - so the stop visibly *travels*, which is the one thing a tint
@@ -299,9 +284,18 @@ namespace GlimmerGrove
                 {
                     if (_fx == null || !node) return;
                     var here = node.anchoredPosition;
-                    Shockwave(here, Pal.Glass, size, .34f);
-                    Burst.Sparks(_fx, here, Pal.Glass, mob.Boss ? 10 : 5, Cell * 1.2f,
-                                 Cell * .14f, .45f);
+
+                    // **Two rings rather than one, and both in glass rather than in white.**
+                    // `Pal.Glass` is `#DCEBF5` - a near-white - so every ring, spark and mote the
+                    // stop drew was the same pale nothing the front was, and the whole payoff
+                    // read as one grey event. The colour is the charm's now, and the second ring
+                    // an instant behind the first is what makes a body look *seized* rather than
+                    // splashed.
+                    Shockwave(here, StillGlow, size, .40f);
+                    Tween.After(.09f, () => Shockwave(here, StillCore, size * .62f, .30f), _fx);
+
+                    Burst.Sparks(_fx, here, StillCore, mob.Boss ? 16 : 8, Cell * 1.35f,
+                                 Cell * .16f, .55f);
                 }, _fx);
             }
 
@@ -319,14 +313,21 @@ namespace GlimmerGrove
                 if (Time.unscaledTime - drift < Mathf.Lerp(.05f, .16f, t)) return;
                 drift = Time.unscaledTime;
                 var spot = new Vector2(Random.Range(-half, half), Random.Range(foot, top));
-                Cinder(spot, Pal.Glass, Cell * .16f, .55f,
+                Cinder(spot, StillGlow, Cell * .22f, .70f,
                        new Vector2(Random.Range(-Cell * .15f, Cell * .15f), Cell * .7f));
             }, _fx);
 
-            Dial(seconds);
+            Dial("stilldial", StillGlow, seconds);
 
-            Flow.Flash(Pal.A(Pal.Glass, .55f), .22f, .30f);
-            Dilate(.45f, .28f);
+            // **The wash is the charm's colour and it lasts long enough to be a colour.** A fifth
+            // of a second of near-white over a lit board is a flicker a player reads as a frame
+            // dropping; half a second of glass says the whole screen went cold.
+            Flow.Flash(Pal.A(StillGlow, .42f), .30f, .55f);
+
+            // **And the slow motion is spent on the sweep rather than on the bang.** A quarter of
+            // a second of it ended while the wave was still a third of the way up the hill.
+            Dilate(.34f, StillSweep * .68f);
+
             ShakeBoard(Cell * .05f);
             Audio.Sfx("shatter", .45f, 1.35f);
 
@@ -336,11 +337,86 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// How long the wave takes to cross the hill. Under half a second, because it is drawn
-        /// on a hill the model has already stopped: a wave that took longer would be a stop that
-        /// visibly arrived late at the crest.
+        /// One front crossing the hill: the drawing both charms that sweep it are made of.
+        ///
+        /// <para>
+        /// <b>Shared because the two fronts are the same object at two temperatures</b> - an
+        /// hourglass's wall of stopped time and an anvil's wall of driven ground travel the same
+        /// way, broaden the same way and end the same way, and everything a player tells them
+        /// apart by is in the reel (<c>make_siege_art.STILL_RAMP</c> against <c>HEAVE_RAMP</c>).
+        /// Two copies of this drifted once already, which is how one came to open as it climbed
+        /// and the other to close.
+        /// </para>
+        /// <para>
+        /// <b>The rate is derived from the reel rather than typed.</b> It was 30fps against a
+        /// twelve-frame reel because that came to exactly the old sweep - two numbers in two files
+        /// holding one fact, and the moment the sweep was slowed the reel looped twice in the
+        /// middle of a single pass. Asking the reel how long it is means the boil plays through
+        /// once however long the climb takes.
+        /// </para>
+        /// <para>
+        /// <b>It is lent <c>Color.white</c>, which is not an oversight.</b> Both reels carry their
+        /// own paint now, and <c>Image.color</c> is a multiply - so anything but white would take
+        /// a hot lip toward its own hue and put back the flat, washed-out front this was re-cut to
+        /// get rid of (invariant 44g, met on an effect).
+        /// </para>
         /// </summary>
-        const float StillSweep = .42f;
+        void Wall(string name, Sprite[] frames, float from, float to, float over, float deep,
+                  float ink, float delay, float endInk = .34f)
+        {
+            if (_fx == null || over <= 0f) return;
+
+            if (delay > 0f)
+            {
+                Tween.After(delay, () => Wall(name, frames, from, to, over, deep, ink, 0f, endInk),
+                            _fx);
+                return;
+            }
+
+            var face = frames != null && frames.Length > 0 ? frames[0] : Art.SoftCapsule(64);
+
+            var wall = UIKit.Img(name, _fx, face, Pal.A(Color.white, ink),
+                                 new Vector2(Span.x, Cell * deep));
+            wall.raycastTarget = false;
+
+            if (frames != null && frames.Length > 0)
+                Flipbook.Attach(wall, frames, frames.Length / over, true);
+
+            var rt = wall.rectTransform;
+            rt.anchoredPosition = new Vector2(0f, from);
+
+            Tween.Run(over, Ease.OutQuad, t =>
+            {
+                if (!rt) return;
+                rt.anchoredPosition = new Vector2(0f, Mathf.Lerp(from, to, t));
+
+                // **It opens rather than closing.** The first cut thinned to a third as it went,
+                // which reads as a thing running out of energy; a front should arrive at the crest
+                // as wide as it left the line and simply stop being lit.
+                rt.localScale = new Vector3(1f, Mathf.Lerp(.80f, 1.24f, t), 1f);
+
+                // **It holds its brightness nearly to the crest.** It faded on a square curve and
+                // was gone by halfway, so the half of the sweep a player is actually watching was
+                // a ghost. What ends it is the front leaving the hill, not the front giving up.
+                wall.color = Pal.A(Color.white, Mathf.Lerp(ink, ink * endInk, t * t * t));
+            }, wall).OnDone(() => { if (wall) Destroy(wall.gameObject); });
+        }
+
+        /// <summary>
+        /// How long the wave takes to cross the hill.
+        ///
+        /// <para>
+        /// <b>Two and a half times what it was, and the old figure's reasoning was the fault.</b>
+        /// It was held under half a second on the argument that the model has already stopped the
+        /// hill, so a slower wave would be a stop visibly arriving late at the crest. True, and
+        /// beside the point: the hill is stopped for three seconds (<c>SiegeTuning.HourglassFor</c>),
+        /// so a wave taking a fifth of that is not late by any measure a player can take - it is
+        /// simply <em>gone before it was seen</em>, which is what "the animation is barely
+        /// visible" was. The thing a charm this rare is bought for cannot be shorter than the
+        /// glance it takes to look up at it.
+        /// </para>
+        /// </summary>
+        const float StillSweep = 1.05f;
 
         /// <summary>How deep the wavefront is drawn, in cells. See <c>make_siege_art.stillwave</c>.</summary>
         const float StillFront = 1.55f;
@@ -358,37 +434,72 @@ namespace GlimmerGrove
         const float DialWide = 4.2f, DialInk = .84f, DialIn = .22f, DialOut = .30f;
 
         /// <summary>
-        /// The clock the hill wears while it is stopped: it arrives with the wave, holds frozen
-        /// for the whole window, and breaks when the sand runs out.
+        /// The colours the two sweeping charms are drawn in away from their reels.
+        ///
+        /// <b>Neither is <c>Pal.Glass</c> or <c>Pal.Rope</c> any more, and that pair was the
+        /// fault.</b> Glass is <c>#DCEBF5</c> and Rope is <c>#D9C39A</c> - a near-white and a dull
+        /// tan - so every ring, spark, mote and wash either charm drew came out pale and grey
+        /// whatever the reel behind it was doing. They are the board's own azure and amber now,
+        /// lifted for the core, which is the same colour the stone the player matched is painted.
+        /// </summary>
+        static readonly Color StillGlow = Pal.Azure,
+                              StillCore = Pal.Lift(Pal.Azure, .45f),
+                              HeaveGlow = Pal.Amber,
+                              HeaveCore = Pal.Lift(Pal.Amber, .42f);
+
+        /// <summary>
+        /// The clock a sweeping charm hangs over the hill: it arrives with the front, runs for as
+        /// long as the payoff lasts, and breaks at the end of it.
         ///
         /// <para>
-        /// <b>What makes the charm legible rather than merely loud.</b> A wavefront says
-        /// <em>something arrived</em>; only a clock face says <em>time stopped</em>, and the stop
-        /// is the entire thing this gem is bought for. Every other charm on this board announces
-        /// itself with a shape a player can name — a lance is a line, a stormglass is a beam, a
-        /// furnace is a nugget going into a turret — and this one had a blue flash.
+        /// <b>What makes a charm legible rather than merely loud.</b> A wavefront says
+        /// <em>something arrived</em>; only a clock face says what the charm did to time, and for
+        /// both of the two that hang one that is the entire thing the gem is bought for. Every
+        /// other charm on this board announces itself with a shape a player can name — a lance is
+        /// a line, a stormglass is a beam, a furnace is a nugget going into a turret — and these
+        /// two had a blue flash and a beige one.
         /// </para>
         /// <para>
-        /// <b>Its hands never move</b> (<c>make_siege_art.stilldial</c>): a ticking clock is a
-        /// working one. What keeps a held sprite from reading as a frozen *game* is the glint
-        /// travelling its rim and the motes still rising off the hill, which is the same rule the
-        /// motes were added for.
+        /// <b>One method and two reels, which is the whole of how the anvil got a clock.</b> An
+        /// hourglass hangs <c>stilldial</c>, whose hand runs forward; an anvil hangs
+        /// <c>heavedial</c>, which is the same face in ember with its hand running
+        /// <em>anti-clockwise</em> and an arrow to say so in a still frame (the owner's
+        /// instruction, 2026-09-18). Reversing the reel here instead would have reversed the
+        /// smear with it, so the hand would drag its wake into the way it was going.
         /// </para>
         /// <para>
-        /// <b>Drawn at the hill's own middle rather than at the stone that sprang it.</b> The stop
-        /// is a fact about the whole hill, and a dial hanging off the field would say it was
-        /// something the gem did to one place.
+        /// <b>Taking the reel as an argument costs a gate, and the cost is already paid.</b>
+        /// <c>artnames.py</c> reads literals at call sites, so <c>Reel(reel)</c> is invisible to
+        /// it exactly as a name routed through a table is (<c>Skins</c>'s own note). Both names
+        /// are still checked, because <c>SiegeMode</c> preloads each of them by hand - which it
+        /// has to anyway, since a charm's payoff may not wait on a load.
+        /// </para>
+        /// <para>
+        /// <b>Its hands run</b> (<c>make_siege_art.clockface</c>), which is a reversal of what
+        /// this shipped as. A still face over a still hill is a decal: the argument that a ticking
+        /// clock is a working one is sound and cost the piece its whole read.
+        /// </para>
+        /// <para>
+        /// <b>Drawn at the hill's own middle rather than at the stone that sprang it.</b> What
+        /// either charm does is a fact about the whole hill, and a dial hanging off the field
+        /// would say it was something the gem did to one place.
         /// </para>
         /// </summary>
-        void Dial(float seconds)
+        void Dial(string reel, Color glow, float seconds)
         {
-            var frames = Reel("stilldial");
+            if (_fx == null) return;
+
+            var frames = Reel(reel);
             if (frames == null || frames.Length == 0) return;
 
             float mid = (_hillTop + _hillFoot) * .5f;
             float size = Cell * DialWide;
 
-            var dial = UIKit.Img("Still dial", _fx, frames[0], Pal.A(Pal.Glass, 0f),
+            // Lent white for `Wall`'s reason: the face carries its own paint (a cold ring with
+            // warm sand in it, or an ember one with an arrow), and a multiply could only flatten
+            // the pair back to one hue. What `glow` still colours is the shockwave and the sparks
+            // the break throws, which are drawn rather than sprited.
+            var dial = UIKit.Img("Dial " + reel, _fx, frames[0], Pal.A(Color.white, 0f),
                                  new Vector2(size, size));
             dial.raycastTarget = false;
             dial.preserveAspect = true;
@@ -402,14 +513,13 @@ namespace GlimmerGrove
 
             var rt = dial.rectTransform;
 
-            // It arrives turning and settles, which is the one moment its hands are allowed to
-            // look like they were moving - and then they never do again.
+            // It arrives turning and settles, which is the face itself doing what its hand does.
             Tween.Run(DialIn, Ease.OutQuad, t =>
             {
                 if (!rt) return;
                 rt.localScale = Vector3.one * Mathf.Lerp(1.70f, 1f, t);
                 rt.localRotation = Quaternion.Euler(0f, 0f, Mathf.Lerp(-34f, 0f, t));
-                dial.color = Pal.A(Pal.Glass, DialInk * Mathf.Sqrt(t));
+                dial.color = Pal.A(Color.white, DialInk * Mathf.Sqrt(t));
             }, dial);
 
             // And it breaks rather than fading: the sand running out is a beat, and the hill
@@ -420,15 +530,15 @@ namespace GlimmerGrove
             {
                 if (!rt) return;
 
-                Shockwave(new Vector2(0f, mid), Pal.Glass, DialWide * .9f, DialOut);
-                Burst.Sparks(_fx, new Vector2(0f, mid), Pal.Glass, 14, size * .55f,
-                             Cell * .18f, .5f);
+                Shockwave(new Vector2(0f, mid), glow, DialWide * .9f, DialOut);
+                Burst.Sparks(_fx, new Vector2(0f, mid), glow, 18, size * .60f,
+                             Cell * .20f, .58f);
 
                 Tween.Run(DialOut, Ease.InQuad, t =>
                 {
                     if (!rt) return;
                     rt.localScale = Vector3.one * Mathf.Lerp(1f, 1.32f, t);
-                    dial.color = Pal.A(Pal.Glass, DialInk * (1f - t));
+                    dial.color = Pal.A(Color.white, DialInk * (1f - t));
                 }, dial).OnDone(() => { if (dial) Destroy(dial.gameObject); });
             }, dial);
         }
