@@ -4547,7 +4547,7 @@
     },
     {
       "key": "ui.shop.tab_utilities",
-      "text": "Kit"
+      "text": "Utilities"
     },
     {
       "key": "ui.shop.thanks",
@@ -5648,6 +5648,54 @@
     {
       "key": "ward.wellspring.note",
       "text": "Gets heavy fuel back on every kill."
+    },
+    {
+      "key": "store.good.xp_boost_day",
+      "text": "A Day of Double XP"
+    },
+    {
+      "key": "ui.shop.xp_boost_note",
+      "text": "Double XP"
+    },
+    {
+      "key": "ui.shop.xp_boost_explain",
+      "text": "Every glade, watch and wave pays {0}% more XP while this is running. It stacks with the boost you can watch for free."
+    },
+    {
+      "key": "ui.shop.xp_boost_left",
+      "text": "Boost running: {0} left"
+    },
+    {
+      "key": "ui.shop.xp_boost_none",
+      "text": "No XP boost running"
+    },
+    {
+      "key": "ui.shop.xp_boost_added",
+      "text": "Double XP for {0} more hours"
+    },
+    {
+      "key": "ui.shop.xp_boost_full",
+      "text": "Your XP boost is already nearly at its limit"
+    },
+    {
+      "key": "ui.ads.xp_boost_title",
+      "text": "Free XP Boost"
+    },
+    {
+      "key": "ui.ads.xp_boost_offer",
+      "text": "+{0}% XP for {1} hours"
+    },
+    {
+      "key": "ui.ads.xp_boost_wait",
+      "text": "Another in {0}"
+    },
+    {
+      "key": "ui.reward.xp_boost",
+      "text": "XP boost"
+    },
+    {
+      "key": "ui.win.xp_boosted",
+      "text": "+{0} XP from your boost ({1}%)"
     }
   ]
 }

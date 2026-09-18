@@ -476,8 +476,48 @@ namespace GlimmerGrove.Persistence
         ///      <see cref="SaveChecksum"/> hashes the serialised object and a v29 file can never
         ///      match a v30 hash.
         ///      </para>
+        /// v31 — the XP boost (<see cref="WalletDto.xpBoostWatchedUntilUnix"/>,
+        ///      <see cref="WalletDto.xpBoostBoughtUntilUnix"/>,
+        ///      <see cref="WalletDto.xpBoostEarned"/>): two windows during which XP is paid at a
+        ///      higher rate, and the bonus they have paid.
+        ///      <para>
+        ///      <b>Two deadlines and a total, which is the only shape a boost on a *derived*
+        ///      number can take.</b> XP is recomputed from the star ledger every time it is read
+        ///      (invariant 9), so there is no running figure for a multiplier to scale — and
+        ///      scaling the derived one while a window was open would make a player's level
+        ///      <em>fall</em> when it closed, which every floor in this file exists to prevent. So
+        ///      the bonus is worked out when it is earned and banked: one monotonic total joined
+        ///      by <c>max</c>, invariant 11b's storable-count exception, the shape
+        ///      <see cref="WardStarDto"/> and <see cref="EndlessBestDto.waves"/> already use.
+        ///      </para>
+        ///      <para>
+        ///      <b>The watched deadline carries two facts and the bought one carries a track.</b>
+        ///      A window is a fixed length, so the watched one also says when it <em>began</em>,
+        ///      and the cooldown on watching another is derived from it rather than stored
+        ///      (<c>XpBoost.WatchedReadyAt</c>) — the streak shield's trick (48c). That only holds
+        ///      while nothing else writes it, which is why a purchase or a gift lands on the
+        ///      bought deadline instead.
+        ///      </para>
+        ///      <para>
+        ///      <b>The bound on the total is proportional rather than flat</b>, and it is the
+        ///      interesting half. A boost can only ever have multiplied XP that was really paid,
+        ///      so the total is clamped on every read to a share of the star ledger's XP plus the
+        ///      Infinite lane's (<c>XpBoost.BonusFrom</c>) — <c>groveWorth</c>'s "clamped to what
+        ///      the account could afford" (19a) said about a multiplier, and far tighter than any
+        ///      absolute ceiling. A forged figure therefore buys a keeper level inside an honest
+        ///      range and buys no <b>currency</b> at all, because credits still derive from the
+        ///      star ledger alone (invariant 13's fourth clause).
+        ///      </para>
+        ///      <para>
+        ///      <b>No migration and no rules release.</b> Absent is nought, which is what every
+        ///      earlier file means and what a rolled-back client writes; and all three ride inside
+        ///      the existing <c>wallet</c> map, whose sub-fields <c>firestore.rules</c> does not
+        ///      name, so <c>hasOnly</c> has nothing new to learn (12a). The version moves because
+        ///      <see cref="SaveChecksum"/> hashes the serialised object and a v30 file can never
+        ///      match a v31 hash.
+        ///      </para>
         /// </summary>
-        public const int Version = 30;
+        public const int Version = 31;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -1087,6 +1127,64 @@ namespace GlimmerGrove.Persistence
         /// compared, and the comparison is correct after a week in the background.
         /// </summary>
         public long heartBoostUntilUnix;
+
+        /// <summary>
+        /// When the <em>watched</em> XP boost runs out, or 0. Monotonic; joined by <c>max</c>.
+        ///
+        /// <para>
+        /// <b>One number carrying two facts</b>, which is the streak shield's trick (invariant
+        /// 48c): the window ends here, and because a window is a fixed length, it also <em>began</em>
+        /// at <c>this - watchedHours</c> — so the cooldown on watching another is derived rather
+        /// than stored (<c>XpBoost.WatchedReadyAt</c>). There is one number, so "when does it end"
+        /// and "when may I watch again" cannot drift apart, and playing inside the window writes
+        /// nothing at all.
+        /// </para>
+        /// <para>
+        /// <b>Only a watched grant may write it.</b> A gift or a purchase lands on
+        /// <see cref="xpBoostBoughtUntilUnix"/>, because anything else moving this deadline would
+        /// move a cooldown it knows nothing about.
+        /// </para>
+        /// </summary>
+        public long xpBoostWatchedUntilUnix;
+
+        /// <summary>
+        /// When the <em>bought</em> XP boost runs out, or 0. Monotonic; joined by <c>max</c>.
+        ///
+        /// The track with no cooldown: bought with gems, and where a future chest or gift lands.
+        /// Separate from the watched deadline rather than sharing one, because the two pay
+        /// different percentages and add together (<c>XpBoostTable.MaxPercent</c>), and because
+        /// only a separate field keeps the derived cooldown above exact.
+        /// </summary>
+        public long xpBoostBoughtUntilUnix;
+
+        /// <summary>
+        /// Bonus XP that boosts have paid, over this account's whole life. Only ever rises.
+        ///
+        /// <para>
+        /// <b>Stored because XP is derived and a boost is not.</b> XP is recomputed from the star
+        /// ledger every time it is read (invariant 9), so there is no running total for a
+        /// multiplier to scale — and scaling the derived figure while a window was open would make
+        /// a player's level <em>fall</em> when it closed. So the bonus is worked out when it is
+        /// earned and remembered, as one monotonic total joined by <c>max</c>: invariant 11b's
+        /// storable-count exception, the shape <see cref="WardStarDto"/> and
+        /// <see cref="EndlessBestDto.waves"/> already use. Two devices that each earn offline
+        /// contribute the larger total rather than the sum, which is what a <c>max</c> always
+        /// costs and what a per-payment claim would cost a server round trip to avoid.
+        /// </para>
+        /// <para>
+        /// <b>The bound on it is proportional, not flat</b> — a boost can only ever have
+        /// multiplied XP that was really paid, so this is clamped on every read to
+        /// <c>(star XP + endless XP) x maxPercent%</c> (<c>XpBoost.BonusFrom</c>), which is
+        /// <c>groveWorth</c>'s "clamped to what the account could afford" said about a multiplier
+        /// (19a). A forged figure therefore buys a keeper level inside an honest range and buys no
+        /// <b>currency</b> at all, because credits still derive from the star ledger alone.
+        /// </para>
+        /// <para>
+        /// Absent is nought, which is what every file written before this means and what a
+        /// rolled-back client writes, so no migration and no sentinel.
+        /// </para>
+        /// </summary>
+        public long xpBoostEarned;
 
         /// <summary>
         /// Every hint ever handed to this player — timer refills, the starting set, a

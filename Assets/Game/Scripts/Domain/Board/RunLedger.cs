@@ -63,6 +63,22 @@ namespace GlimmerGrove
             public readonly int GoldenPercent;
 
             /// <summary>
+            /// How much of <see cref="Xp"/> a running boost paid, and at what percentage.
+            ///
+            /// <para>
+            /// Carried apart from the total rather than folded into it, because a multiplier the
+            /// player cannot see is one they have no reason to buy — the victory panel prints
+            /// "+N" beside the base figure. Nought whenever no window is open, which is also what
+            /// a build with the boost withdrawn reports, so a panel reading it needs no second
+            /// question.
+            /// </para>
+            /// </summary>
+            public readonly long BoostXp;
+
+            /// <summary>The percentage that paid <see cref="BoostXp"/>. 0 when none was running.</summary>
+            public readonly int BoostPercent;
+
+            /// <summary>
             /// The chapter this run's stars opened, or none.
             ///
             /// <para>
@@ -84,7 +100,7 @@ namespace GlimmerGrove
             public readonly ChapterId ChapterOpened;
 
             public WinRecord(RunOutcome run, StreakNote streak, long xp, long credits, int golden,
-                             ChapterId chapterOpened)
+                             ChapterId chapterOpened, long boostXp = 0L, int boostPercent = 0)
             {
                 Run = run;
                 Streak = streak;
@@ -92,6 +108,8 @@ namespace GlimmerGrove
                 Credits = credits;
                 GoldenPercent = golden;
                 ChapterOpened = chapterOpened;
+                BoostXp = boostXp;
+                BoostPercent = boostPercent;
             }
         }
 
@@ -200,9 +218,23 @@ namespace GlimmerGrove
             // fold exactly as `ChapterOpened` above is measured.
             long xp = reward.Xp + (bonusXp > 0L ? bonusXp : 0L);
 
-            return new WinRecord(run, streak, xp, reward.EarnedCredits,
+            // **The one place XP is multiplied.** Every source above is totalled first and boosted
+            // once, so a boost cannot be applied twice to one run and a source added later is
+            // boosted without being taught anything — which is the whole of what `XpBoost.Bank`
+            // is for. It banks the bonus as it computes it, because XP is derived and a boost is
+            // not: there is no running total for a multiplier to scale, so the bonus has to be
+            // remembered at the moment it is earned (invariant 9's exception, see `XpBoost`).
+            //
+            // Asked *after* the run has been recorded, so the percentage is the one that was
+            // running when the board was finished rather than one a window that opened in the
+            // meantime would report.
+            int boostPercent = Progression.XpBoost.Percent;
+            long boostXp = Progression.XpBoost.Bank(xp);
+
+            return new WinRecord(run, streak, xp + boostXp, reward.EarnedCredits,
                                  PlayerProgression.GoldenPercentFor(level.Id),
-                                 opened?.Id ?? ChapterId.None);
+                                 opened?.Id ?? ChapterId.None,
+                                 boostXp, boostPercent);
         }
 
         /// <summary>

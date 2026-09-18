@@ -268,6 +268,7 @@ namespace GlimmerGrove.EditorTools
             ValidateKeeperWalls(table, index, result, verbose);
             ValidateContinue(table.Continue, table.Store, result, verbose);
             ValidateEndless(table.Endless, table, index, result, verbose);
+            ValidateXpBoost(table.XpBoost, table.Ads, result, verbose);
             ValidateDailyChests(table.Daily, table.Hearts, result, verbose);
             ValidateUtilities(table.Utilities, table.Daily, result, verbose);
             ValidateTasks(table.Tasks, table.Utilities, table.Hearts, result, verbose);
@@ -1550,6 +1551,64 @@ namespace GlimmerGrove.EditorTools
         /// and nobody should have to open a JSON file to find out what it is.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// What an XP boost multiplies, how long it runs, and how often one may be watched.
+        ///
+        /// <para>
+        /// The second block here that decides XP outside the star ledger and the first that is a
+        /// <em>multiplier</em>, so the figures are printed rather than left to be worked out — a
+        /// percentage nobody has read against the curve is a keeper ladder climbing at a speed
+        /// nobody wrote down. It is the mirror of the <c>xp boost</c> block in
+        /// <c>Tools/verify/content.py</c>, and both print the same lines on purpose.
+        /// </para>
+        /// <para>
+        /// <b>The one thing checked here rather than printed is the pair of numbers describing
+        /// one window.</b> The advert says what a view pays and the boost block says what the
+        /// rule actually opens; they have to agree, because the cooldown is derived by
+        /// subtracting the boost block's figure from the stored deadline. <c>ProgressionTable</c>
+        /// already refuses the mismatch — this repeats the reading so the gate's own output says
+        /// which two numbers it is talking about.
+        /// </para>
+        /// </summary>
+        static void ValidateXpBoost(XpBoostTable boost, AdRewardTable ads,
+                                    ContentValidationResult result, bool verbose)
+        {
+            if (boost == null) { result.Errors.Add("progression.json produced no xpBoost rule"); return; }
+
+            if (!boost.Pays)
+            {
+                if (verbose)
+                    Debug.Log("[Glimmer] xp boost: withdrawn - nothing multiplies XP");
+                return;
+            }
+
+            var watched = ads != null ? ads.Offer(AdPlacement.XpBoost) : AdOffer.None;
+
+            // A percentage with nothing able to open it is a window that pays on paper only.
+            // A warning rather than an error: withdrawing the advert and keeping the bought
+            // window is a legitimate thing to want, and the shop still sells one.
+            if (boost.OffersWatched && !watched.IsValid)
+                result.Warnings.Add("progression.json pays for a watched XP boost, but no advert " +
+                                    $"placement '{AdPlacement.XpBoost}' offers one - the " +
+                                    "percentage can never be opened by watching");
+
+            if (watched.IsValid && watched.Kind != ChestDropKind.XpBoost)
+                result.Errors.Add($"the '{AdPlacement.XpBoost}' placement pays " +
+                                  $"'{ChestDropKinds.Id(watched.Kind)}'; it has to pay " +
+                                  $"'{ChestDropKinds.XpBoost}' or the advert opens somebody " +
+                                  "else's reward");
+
+            if (!verbose) return;
+
+            Debug.Log($"[Glimmer] xp boost: +{boost.WatchedPercent}% for {boost.WatchedHours}h " +
+                      $"every {boost.WatchedCooldownHours}h watched, +{boost.BoughtPercent}% for " +
+                      $"{boost.BoughtHours}h bought, capped at +{boost.MaxPercent}%");
+
+            Debug.Log("[Glimmer]        the banked bonus is clamped to that share of provable XP, " +
+                      "so a forged figure buys a keeper level inside an honest range and no " +
+                      "currency at all");
+        }
+
         /// <summary>
         /// What the Infinite lane pays, and where its ceiling lands on the keeper curve.
         ///

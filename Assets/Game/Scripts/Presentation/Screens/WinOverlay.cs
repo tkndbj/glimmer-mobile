@@ -67,6 +67,25 @@ namespace GlimmerGrove
         public int GoldenPercent = 100;
 
         /// <summary>
+        /// How much of <see cref="XpGained"/> a running XP boost paid, and at what percentage.
+        ///
+        /// <para>
+        /// <b>Already inside <see cref="XpGained"/></b>, exactly as the golden multiplier is
+        /// already inside <see cref="CreditsGained"/> — the chip counts the total and this line
+        /// says where part of it came from. Saying it is the whole reason a boost is worth
+        /// buying: a multiplier the player never sees is one they have no reason to pay for.
+        /// </para>
+        /// <para>
+        /// Nought whenever no window was open, which is also what a build with the boost
+        /// withdrawn reports, so nothing here needs a second question.
+        /// </para>
+        /// </summary>
+        public long BoostXp;
+
+        /// <summary>The percentage that paid <see cref="BoostXp"/>. 0 when none was running.</summary>
+        public int BoostPercent;
+
+        /// <summary>
         /// The chapter this run's stars opened, or none. Set by the screen from
         /// <c>RunLedger.WinRecord</c>, which is the only place that can tell an opening from a
         /// gate that was already open.
@@ -270,6 +289,11 @@ namespace GlimmerGrove
             // clause anybody has to remember.
             bool paid = XpGained > 0 || CreditsGained > 0;
             bool goldened = paid && GoldenPercent > 100;
+
+            // Both halves asked, not just the percentage: a window can be open and still have
+            // paid nothing, on a replay that beat no record. A line reading "+0 XP from your
+            // boost" is the "+0" the payout chips above are careful not to draw.
+            bool boosted = paid && BoostXp > 0L && BoostPercent > 0;
             bool hint = stars < 3 && Run.Target > 0;
 
             // The player's own record after this run, against everybody else's.
@@ -293,7 +317,7 @@ namespace GlimmerGrove
             // ---------------------------------------------------------- the stack
             float y = StarsBottom;
             float hintY = 0f, youCapY, youBarY = 0f, groveCapY = 0f, groveBarY = 0f;
-            float verdictY = 0f, standY = 0f, payY = 0f, goldY = 0f;
+            float verdictY = 0f, standY = 0f, payY = 0f, goldY = 0f, boostY = 0f;
 
             if (hint) { hintY = y + 24f; y += HintRow; }
 
@@ -311,6 +335,7 @@ namespace GlimmerGrove
             if (ranked) { standY = y + 52f; y += StandRow; }
             if (paid) { payY = y + 70f; y += PayoutRow; }
             if (goldened) { goldY = y + 34f; y += GoldenRow; }
+            if (boosted) { boostY = y + 34f; y += GoldenRow; }
 
             // Offered only on a run that actually paid, which is the honest reading of "on top
             // of what this glade earned" — a replay that beat nothing earns nothing, and a
@@ -491,6 +516,14 @@ namespace GlimmerGrove
                 : null;
             if (goldenLine) goldenLine.transform.localScale = Vector3.zero;
 
+            // The boost's own line, built and beaten exactly as the golden one is — it answers
+            // the same question ("why was that more than usual?") about the other chip.
+            var boostLine = boosted
+                ? Row("Boost", -boostY, Loc.Format("ui.win.xp_boosted", Compact.Number(BoostXp),
+                                                   BoostPercent), 40, Pal.Aqua, 780f, 26)
+                : null;
+            if (boostLine) boostLine.transform.localScale = Vector3.zero;
+
             // ---------------------------------------------------------- the bonus
             if (bonus) BuildBonus(bonusY);
 
@@ -571,6 +604,22 @@ namespace GlimmerGrove
                         Tween.Breathe(goldenLine.transform, .035f, 1.8f);
                         Burst.Sparks(goldenLine.transform, Vector2.zero, Pal.Gold, 18, 300f, 24f, .7f);
                         Flow.Flash(new Color(1f, .93f, .70f), .3f, .5f);
+                    });
+                    payout.Wait(.28f);
+                }
+
+                // After the golden line and before the coins, because it is about the XP chip
+                // that has already flown — the panel reads top to bottom and so does the beat.
+                // Aqua and no flash: the golden line is the rare one and owns the wash, and two
+                // washes in a row on one panel is neither of them being special.
+                if (boostLine)
+                {
+                    payout.Then(goldenLine ? 0f : (xpChip != null ? 0f : StarGap * .8f), () =>
+                    {
+                        if (!boostLine) return;
+                        Tween.Pop(boostLine.transform, 0f, .55f);
+                        Tween.Breathe(boostLine.transform, .035f, 1.8f);
+                        Burst.Sparks(boostLine.transform, Vector2.zero, Pal.Aqua, 14, 260f, 22f, .7f);
                     });
                     payout.Wait(.28f);
                 }

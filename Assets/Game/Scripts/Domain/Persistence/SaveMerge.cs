@@ -345,6 +345,18 @@ namespace GlimmerGrove.Persistence
                 heartBoostUntilUnix = Hearts.JoinBoost(mine.heartBoostUntilUnix,
                                                        other.heartBoostUntilUnix),
 
+                // The XP boost's three, all `max` for the heart boost's reason: a deadline and a
+                // lifetime total both only ever rise, so the join has nothing to decide and is the
+                // same answer whichever order two devices sync in (invariant 11b). What a `max`
+                // costs on the earned total is that two devices playing offline contribute the
+                // larger figure rather than the sum — the same bargain `endlessBest` makes, and
+                // the alternative is a server round trip per payment.
+                xpBoostWatchedUntilUnix = Hearts.JoinBoost(mine.xpBoostWatchedUntilUnix,
+                                                           other.xpBoostWatchedUntilUnix),
+                xpBoostBoughtUntilUnix = Hearts.JoinBoost(mine.xpBoostBoughtUntilUnix,
+                                                          other.xpBoostBoughtUntilUnix),
+                xpBoostEarned = Hearts.JoinBoost(mine.xpBoostEarned, other.xpBoostEarned),
+
                 // Hints join exactly as hearts do, and through the same arithmetic — see
                 // RegenLedger.Join. There is no legacy shape to rebase from here, because a
                 // hint allowance was never written to a save file at all: it was three per

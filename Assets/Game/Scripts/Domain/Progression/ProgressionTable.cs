@@ -91,7 +91,7 @@ namespace GlimmerGrove.Progression
                          AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
                          ContinueTable carryOn, UtilityCatalog utilities,
                          WardCatalog wards, TaskTable tasks, ReferralTable referral,
-                         EndlessRewardTable endless)
+                         EndlessRewardTable endless, XpBoostTable xpBoost)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -111,6 +111,7 @@ namespace GlimmerGrove.Progression
             Tasks = tasks ?? TaskTable.Default;
             Referral = referral ?? ReferralTable.Default;
             Endless = endless ?? EndlessRewardTable.Default;
+            XpBoost = xpBoost ?? XpBoostTable.Default;
         }
 
         /// <summary>
@@ -150,6 +151,19 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public EndlessRewardTable Endless { get; }
+
+        /// <summary>
+        /// What an XP boost is worth and how long it runs.
+        ///
+        /// <para>
+        /// Published with the curve for <see cref="Endless"/>'s reason and one sharper: a
+        /// multiplier <em>on</em> XP is the curve seen from the side, so a client holding a
+        /// retuned percentage against an untuned ladder climbs at a speed nobody wrote down. It
+        /// also prices a shop card and meters an advert, which are the two most retuned surfaces
+        /// in the game — see <see cref="XpBoostTable"/>.
+        /// </para>
+        /// </summary>
+        public XpBoostTable XpBoost { get; }
 
         /// <summary>
         /// The utilities a player may hold, published with the curve for the chest table's
@@ -299,7 +313,8 @@ namespace GlimmerGrove.Progression
             wards: WardCatalog.Default,
             tasks: TaskTable.Default,
             referral: ReferralTable.Default,
-            endless: EndlessRewardTable.Default);
+            endless: EndlessRewardTable.Default,
+            xpBoost: XpBoostTable.Default);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -548,6 +563,29 @@ namespace GlimmerGrove.Progression
             // error. See `EndlessRewardTable.Resolve`.
             var endless = EndlessRewardTable.Resolve(dto.endless, problems);
 
+            // And the multiplier over both of those. Read last of the XP blocks because it is a
+            // percentage *of* them, and the same bargain as every optional block: an unreadable
+            // one costs the live tuning and never the feature.
+            var xpBoost = XpBoostTable.Resolve(dto.xpBoost, problems);
+
+            // **Two numbers describing one window, held together here because nothing else can
+            // see both.** The advert's `amount` is what the content file says a view pays, and
+            // `xpBoost.watchedHours` is the length `XpBoost.GrantWatched` actually opens — it has
+            // to be the table's, because the cooldown is derived by subtracting that same figure
+            // from the stored deadline (`XpBoost.WatchedReadyAt`). If the two drift, the advert
+            // advertises one window, the player gets another, and the cooldown is measured
+            // against a third. An error rather than a warning: the shop card prints one of these
+            // numbers and the rule uses the other.
+            var watchedOffer = ads.Offer(AdPlacement.XpBoost);
+            if (watchedOffer.IsValid && xpBoost.OffersWatched
+                && watchedOffer.Amount != xpBoost.WatchedHours)
+            {
+                problems.Add($"the '{AdPlacement.XpBoost}' advert pays a {watchedOffer.Amount}h " +
+                             $"window but xpBoost.watchedHours is {xpBoost.WatchedHours}; the rule " +
+                             "uses the boost block's figure and derives the cooldown from it, so " +
+                             "the advert would promise a window nobody receives");
+            }
+
             // And the slate that decides what the phone says while nobody is playing. It sets
             // its own static rather than riding this table's constructor, which is
             // `WardStars.Resolve` two lines up in spirit and for its reason: nothing that asks
@@ -559,7 +597,7 @@ namespace GlimmerGrove.Progression
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
                           store, prompts, chapterGate, carryOn, utilities, wards, tasks, referral,
-                          endless);
+                          endless, xpBoost);
             return true;
         }
 
@@ -573,7 +611,8 @@ namespace GlimmerGrove.Progression
                                       AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
                                       ContinueTable carryOn, UtilityCatalog utilities,
                                       WardCatalog wards, TaskTable tasks,
-                                      ReferralTable referral, EndlessRewardTable endless)
+                                      ReferralTable referral, EndlessRewardTable endless,
+                                      XpBoostTable xpBoost)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -593,7 +632,7 @@ namespace GlimmerGrove.Progression
             return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
                                         golden, hearts, hints, store, prompts,
                                         chapterGate, carryOn, utilities, wards, tasks, referral,
-                                        endless);
+                                        endless, xpBoost);
         }
     }
 }

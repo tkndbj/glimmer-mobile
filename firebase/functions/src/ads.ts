@@ -44,6 +44,12 @@ export const AD_PLACEMENTS = [
   "coin_bonus",
   "win_bonus",
   "hint_refill",
+
+  // Pays a window rather than currency, so `adCurrencyOf` answers null for it and the signed
+  // callback grants nothing — exactly as `hint_refill` above. It is named here all the same,
+  // because a placement this list does not know is dropped from the published config by
+  // `sanitiseAds` and refused by a callback that names it.
+  "xp_boost",
 ] as const;
 export type AdPlacementId = (typeof AD_PLACEMENTS)[number];
 

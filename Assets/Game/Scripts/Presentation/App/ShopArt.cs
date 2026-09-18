@@ -167,6 +167,20 @@ namespace GlimmerGrove
             float size = box.rect.width;
             if (size <= 1f) size = 200f;
 
+            if (good.Kind == StoreGoodKind.XpBoost)
+            {
+                // The wordmark rather than the keeper ladder's star. A boost is a rate on
+                // something the player already has, so there is no object to draw — and the star
+                // this used to borrow is the *level* mark, which reads as "a star" on a shelf
+                // where nothing else is one. The letters say what is being multiplied.
+                var mark = UIKit.Img("XpBoost", box, Art.S("Ui/ic_xp_boost"), Color.white,
+                                     Vector2.one * (size * .74f), new Vector2(.5f, .5f), Vector2.zero);
+                mark.preserveAspect = true;
+
+                Tween.Breathe(mark.transform, .035f, 2.6f);
+                return;
+            }
+
             if (good.Kind == StoreGoodKind.HeartBoost)
             {
                 var boost = UIKit.Img("Boost", box, Art.S("Ui/ic_heart_boost"), Color.white,
@@ -222,11 +236,32 @@ namespace GlimmerGrove
 
             Clear(box);
 
-            RewardArt.Token(kind, null, out var token, out var tint);
-            if (token == null) return;
-
             float size = box.rect.width;
             if (size <= 1f) size = 200f;
+
+            // **A drawn picture where there is one, and the composed heap where there is not.**
+            // Three of the four placements now ship a single illustration that already contains
+            // its own play button, so everything below — the heap, the seat, the ring, the mark —
+            // would be drawn *over* a picture that has all of it. A placement with no picture
+            // (the hint refill) still gets the composition, which is why this is a fallback and
+            // not a replacement: taking the old path out would leave that card blank.
+            string drawn = AdPicture(kind);
+            if (drawn != null)
+            {
+                var art = UIKit.Img("AdArt", box, Art.S(drawn), Color.white,
+                                    Vector2.one * (size * 1.22f), new Vector2(.5f, .5f),
+                                    Vector2.zero);
+                art.preserveAspect = true;
+
+                // The same breath the composed mark had, moved onto the whole picture — the
+                // play button is part of the drawing now, so breathing it alone is not possible
+                // and breathing nothing would make the card the one still thing on the shelf.
+                Tween.Breathe(art.transform, .04f, 2.4f);
+                return;
+            }
+
+            RewardArt.Token(kind, null, out var token, out var tint);
+            if (token == null) return;
 
             // **Two, always, and two is the whole of why it is two.** The figure under the
             // picture is the amount — 300 coins is not a pile anybody can draw — so the heap
@@ -256,6 +291,32 @@ namespace GlimmerGrove
             play.preserveAspect = true;
 
             Tween.Breathe(seat.transform, .04f, 2.4f);
+        }
+
+        /// <summary>
+        /// The picture a rewarded video draws, or null when this reward has none.
+        ///
+        /// <para>
+        /// <b>Keyed on what the placement <em>pays</em> rather than on the placement</b>, which is
+        /// the same decision <see cref="RewardArt.Address"/> makes and for the same reason: two
+        /// placements pay credits (the coin shelf and the victory panel) and both should show the
+        /// coins. Keying on the placement would mean two names for one picture and a third to
+        /// remember the day a fifth placement pays something that already has one.
+        /// </para>
+        /// <para>
+        /// Null is a real answer and the caller depends on it — see <see cref="PaintAd"/>. Every
+        /// name here is resident in <c>AssetManifest</c>, so none of them can arrive late.
+        /// </para>
+        /// </summary>
+        static string AdPicture(ChestDropKind kind)
+        {
+            switch (kind)
+            {
+                case ChestDropKind.Credits: return "Ui/ad_coin";
+                case ChestDropKind.Hearts: return "Ui/ad_heart";
+                case ChestDropKind.XpBoost: return "Ui/ad_xp";
+                default: return null;
+            }
         }
 
         /// <summary>

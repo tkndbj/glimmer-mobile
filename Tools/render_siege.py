@@ -347,6 +347,25 @@ def bolt_scale(model):
     return LEGENDARY_BOLT if legendary(model) else 1.0
 
 
+#: `SiegeView.StillFront`, `.DialWide` and `.DialInk` - how deep the hourglass's wavefront is
+#: drawn, and how wide and how lit the dial it hangs over the hill is.
+STILL_FRONT, DIAL_WIDE, DIAL_INK = 1.15, 4.2, 0.62
+
+#: `Pal.Glass` - the one colour the hourglass draws in, and the only cold thing on this board.
+GLASS = (0xDC, 0xEB, 0xF5)
+
+
+def tinted(im, colour, alpha=1.0):
+    """`Image.color` on a white reel: the sprite's own alpha, wearing one colour."""
+    from PIL import Image as _I
+    solid = _I.new("RGBA", im.size, tuple(colour) + (255,))
+    a = im.split()[3]
+    if alpha < 1.0:
+        a = a.point(lambda v: int(v * alpha))
+    solid.putalpha(a)
+    return solid
+
+
 #: `SiegeView.RankTint` - what colour a ward's badge is at this rank. Steel, bronze, silver, gold,
 #: white-hot, climbing in value as well as in hue.
 RANK_TINTS = [(158, 173, 189), (217, 140, 82), (219, 227, 240), (255, 204, 77), (255, 250, 230)]
@@ -1606,7 +1625,7 @@ def stood_charms(spec, level):
 
 def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, line=None,
          burn=None, storm=0, bombs=None, cogs=0, forecast=False, armed=(), charms=None,
-         lance=None, volley=None):
+         lance=None, volley=None, stilled=None):
     lay = layout_of(level)
     grid = lay.grid
     charms = charms or {}
@@ -1866,6 +1885,37 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
             # fault this mirrors: on a stormglass that is a dozen beams and a dozen scorches
             # arriving over the top of it inside half a second.
             figures.append((tx, ty - cell * 0.7, (14, 6, 22, 8)[i % 4], i % 2 == 0))
+
+    # ------------------------------------------------------------------ the hourglass stopping
+    # `SiegeView.Stilled` - the wall of stopped time sweeping the hill and the dial it hangs over
+    # it. **The one payoff in this mode that no picture could look at**: the charm's whole value is
+    # a moment, and a moment is exactly what a still frame is for.
+    if stilled is not None:
+        t = max(0.0, min(1.0, stilled))
+
+        frm = line_y + cell * 0.6
+        to = hill_top
+
+        # **Named apart from anything this routine already uses.** A local shadows for the whole
+        # function in Python, so a name reused here breaks a read further up - which is how both
+        # of the last two additions to this file first ran.
+        stillfront = reel("stillwave", int(t * 11))
+        if stillfront is not None:
+            deep = cell * STILL_FRONT * (0.72 + (1.15 - 0.72) * t)
+            stillband = stillfront.resize((int(span[0]), max(1, int(deep))), Image.LANCZOS)
+            stillband = tinted(stillband, GLASS, 1.0 - 0.88 * t * t)
+            stillx, stilly = at(0.0, frm + (to - frm) * t)
+            sheet.alpha_composite(stillband, (int(stillx - stillband.width / 2),
+                                              int(stilly - stillband.height / 2)))
+
+        stillface = reel("stilldial", int(t * 15))
+        if stillface is not None:
+            dialsize = int(cell * DIAL_WIDE)
+            dialx, dialy = at(0.0, (hill_top + hill_foot) * 0.5)
+            dialdisc = tinted(stillface.resize((dialsize, dialsize), Image.LANCZOS),
+                              GLASS, DIAL_INK)
+            sheet.alpha_composite(dialdisc, (int(dialx - dialsize / 2),
+                                             int(dialy - dialsize / 2)))
 
     # **Both of the hill's captions, together, because apart they say nothing.** Each was
     # individually well placed and the pair overlapped on every shape; drawing only the chain is
@@ -2589,6 +2639,9 @@ def main():
                          "field - every beam open at once, which is what the frozen board "
                          "really shows. The question it answers is density: whether a dozen "
                          "layered beams read as a barrage or as a white smear")
+    ap.add_argument("--stilled", type=float, default=None, metavar="T",
+                    help="draw the hourglass stopping the hill, T of the way through the sweep "
+                         "(0..1) - the wavefront and the dial it hangs over the hill")
     ap.add_argument("--forecast", action="store_true",
                     help="draw the breather's forecast band over the hill - what the next wave is "
                          "bringing, by colour. The one readout that turns 'which colour is "
@@ -2680,7 +2733,7 @@ def main():
                     storm=args.storm, bombs=bombs, cogs=args.cogs, forecast=args.forecast,
                     armed=[int(x) for x in args.armed.split(",") if x.strip()],
                     charms=stood_charms(args.charms, lv), lance=stood_lance(args.lance, lv),
-                    volley=stood_lance(args.volley, lv))
+                    volley=stood_lance(args.volley, lv), stilled=args.stilled)
         if not args.no_bar:
             bar(shot, held, cooling)
         if not args.no_header:

@@ -165,7 +165,13 @@ namespace GlimmerGrove
         /// argued — <c>Tools/render_shop.py</c> draws the crop this number produces.
         /// </para>
         /// </summary>
-        const float ReferW = CellW * Columns, ReferH = 256f, ReferGap = 16f;
+        // **The height is a crop, not a scale.** The banner is fitted to the window's
+        // *width* and masked, so shortening this shows less of the picture rather than a
+        // smaller one — the width is untouched. At 200 the window keeps about half the
+        // art's height, which still holds the whole wordmark and the chests beside it;
+        // measured with `render_shop.py`, which is the only thing that can answer whether
+        // a crop has eaten the lettering.
+        const float ReferW = CellW * Columns, ReferH = 200f, ReferGap = 16f;
 
         /// <summary>
         /// The whole band, or nought where there is no invite page to reach.
@@ -229,7 +235,15 @@ namespace GlimmerGrove
         /// config push switches the whole thing off with no build (<c>AdRewardTable</c>).
         /// </para>
         /// </summary>
-        AdOffer _ad = AdOffer.None;
+        /// <summary>
+        /// The free spots at the head of this shelf, in the order they are drawn.
+        ///
+        /// <b>A list because a shelf may stand more than one</b> (see <c>ShopAdShelf.All</c>), and
+        /// every row below them is shifted by however many are *valid* — a placement the
+        /// published table does not carry is not a hole, it is simply absent, so switching one
+        /// off stays a content push.
+        /// </summary>
+        readonly List<AdOffer> _ads = new List<AdOffer>();
 
         readonly Dictionary<StoreShelf, ShelfTab> _tabViews = new Dictionary<StoreShelf, ShelfTab>();
 
@@ -937,7 +951,18 @@ namespace GlimmerGrove
             // and `AdOffer.IsValid` is what the card and the row count both ask — so switching
             // the offer off is a content push and not a build, and nothing here has to know
             // that it happened.
-            _ad = RewardedAds.Table.Offer(ShopAdShelf.For(_shelf));
+            _ads.Clear();
+            foreach (string placement in ShopAdShelf.All(_shelf))
+            {
+                var offer = RewardedAds.Table.Offer(placement);
+                if (offer.IsValid) _ads.Add(offer);
+            }
+
+            // The goods this shelf sells, whichever shelf it is. Filled before the branch below
+            // because both shelves have some now: hearts and heart boosts are supplies, an XP
+            // boost is a utility (`StoreGoodKinds.ShelfFor`).
+            foreach (var good in catalog.Goods)
+                if (StoreGoodKinds.ShelfFor(good.Kind) == _shelf) _goods.Add(good);
 
             if (OnUtilities)
             {
@@ -961,8 +986,6 @@ namespace GlimmerGrove
                 // they are looking, which is the right way round for a purchase ten times
                 // the price of anything else in the shop. It also leaves the shelf that
                 // shipped exactly where it was.
-                foreach (var good in catalog.Goods) _goods.Add(good);
-
                 // The one shelf that carries real-money products *and* gem-priced goods, so
                 // it is the one shelf that fills both lists. A container the store has never
                 // heard of is left out for the reason a gem pack is: hiding it inside its own
@@ -1011,8 +1034,8 @@ namespace GlimmerGrove
         /// How many cells this shelf shows. Every shelf but one is a single list; supplies is
         /// the goods followed by the heart containers, so its rows are the sum.
         /// </summary>
-        int ShelfRows() => (_ad.IsValid ? 1 : 0)
-                         + (OnUtilities ? _kit.Count
+        int ShelfRows() => _ads.Count
+                         + (OnUtilities ? _goods.Count + _kit.Count
                           : OnSupplies ? _goods.Count + _products.Count
                           : _products.Count);
 
@@ -1275,13 +1298,13 @@ namespace GlimmerGrove
         /// of the coins.
         /// </para>
         /// </summary>
-        void TapAd()
+        void TapAd(int slot)
         {
-            if (!_ad.IsValid) return;
+            if (slot < 0 || slot >= _ads.Count) return;
 
             Flow.Modal<AdOfferOverlay>(panel =>
             {
-                panel.PlacementId = _ad.PlacementId;
+                panel.PlacementId = _ads[slot].PlacementId;
 
                 // The cards carry no balance of their own, but the supplies shelf greys a heart
                 // pack at a full pool and the gem prices are measured against a wallet the
@@ -1409,10 +1432,13 @@ namespace GlimmerGrove
                     case StoreShelf.Gems: return Art.S("Ui/ic_gem");
                     case StoreShelf.Coins: return Art.S("Ui/Shop/pouch");
                     case StoreShelf.Bundles: return Art.S("Ui/ic_gift");
-                    // The firepot, because a tab wears a glyph the game already draws
-                    // somewhere else and this is the one every player of the mode has
-                    // already tapped on the action bar.
-                    case StoreShelf.Utilities: return Art.S("Ui/Utility/firepot");
+                    // **A satchel holding an XP mark, a bomb and a potion**, which is the one
+                    // glyph on this row that says what the whole tab is rather than what one
+                    // thing on it is. It used to be the firepot — a fair choice while the shelf
+                    // was four combat consumables and the tab was called KIT, and the wrong one
+                    // the moment an XP boost moved to the front of it: a bomb described the
+                    // least representative card on the shelf.
+                    case StoreShelf.Utilities: return Art.S("Ui/ic_utilities");
                     default: return Art.S("Ui/ic_heart");
                 }
             }
@@ -1465,15 +1491,18 @@ namespace GlimmerGrove
 
             public RectTransform Root => _card.Root;
 
-            /// <summary>Set when this cell is the shelf's free spot, cleared on every other bind.</summary>
+            /// <summary>Set when this cell is one of the shelf's free spots, cleared on every other bind.</summary>
             bool _isAd;
+
+            /// <summary>Which free spot, when this cell is one. -1 otherwise.</summary>
+            int _adSlot = -1;
 
             public ShopCell(ShopScreen screen, RectTransform parent)
             {
                 _screen = screen;
                 _card = new ProductCard(parent,
                                         new ProductCard.Look(CellW, CellH, decorated: true),
-                                        () => { if (_isAd) _screen.TapAd();
+                                        () => { if (_isAd) _screen.TapAd(_adSlot);
                                                 else if (_kit != null) _screen.TapUtility(_kit);
                                                 else if (_good != null) _screen.TapGood(_good);
                                                 else _screen.Tap(_product); });
@@ -1496,7 +1525,8 @@ namespace GlimmerGrove
                 // every other bind rather than only set on this one — a cell is rebound as the
                 // grid scrolls (invariant 16d), so a latch left standing is a coin pack that
                 // opens a video panel.
-                _isAd = _screen._ad.IsValid && index == 0;
+                _adSlot = index < _screen._ads.Count ? index : -1;
+                _isAd = _adSlot >= 0;
 
                 if (_isAd)
                 {
@@ -1504,15 +1534,30 @@ namespace GlimmerGrove
                     _good = null;
                     _kit = null;
 
-                    _card.Draw(_screen._ad, _screen._shelf);
+                    _card.Draw(_screen._ads[_adSlot], _screen._shelf);
                     return;
                 }
 
-                if (_screen._ad.IsValid) index--;
+                index -= _screen._ads.Count;
 
                 if (_screen.OnUtilities)
                 {
                     _product = null;
+
+                    // **The goods first, then the kit**, which is the order `Reload` fills them
+                    // and the order the shelf is meant to read in: the thing that makes every
+                    // other thing on the tab work faster stands at the front of it.
+                    if (index >= 0 && index < _screen._goods.Count)
+                    {
+                        _kit = null;
+                        _good = _screen._goods[index];
+
+                        _card.Draw(_good, StoreService.OfferForGood(_good));
+                        return;
+                    }
+
+                    index -= _screen._goods.Count;
+
                     _good = null;
                     _kit = index >= 0 && index < _screen._kit.Count ? _screen._kit[index] : null;
 

@@ -411,6 +411,10 @@ namespace GlimmerGrove
                 v.XpGained = done.Xp;
                 v.CreditsGained = done.Credits;
                 v.GoldenPercent = done.GoldenPercent;
+
+                // Already inside `XpGained`; these say how much of it a running boost paid.
+                v.BoostXp = done.BoostXp;
+                v.BoostPercent = done.BoostPercent;
                 v.ChapterOpened = done.ChapterOpened;
             });
         }

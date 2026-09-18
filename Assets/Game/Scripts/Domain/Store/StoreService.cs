@@ -874,6 +874,18 @@ namespace GlimmerGrove.Store
                 if (Wallet.HeartBoostSecondsLeft + good.Amount * 3600L > ceiling)
                     return GoodOfferState.BoostNearlyFull;
             }
+            else if (good.Kind == StoreGoodKind.XpBoost)
+            {
+                // The same refusal as the heart boost above and for its reason: a window that
+                // would run past the ceiling is hours somebody paid for and never receives.
+                // Measured against the *bought* window alone, because that is the one this buys —
+                // a watched window running beside it is free and must not block a purchase.
+                long ceiling = Progression.XpBoostLimits.MaxHours * 3600L;
+                long held = Progression.XpBoost.BoughtUntilUnix - GameClock.NowUnix();
+                if (held < 0L) held = 0L;
+
+                if (held + good.Amount * 3600L > ceiling) return GoodOfferState.BoostNearlyFull;
+            }
 
             if (!PlayerProgression.CanAfford(Currency.Gems, good.Gems)) return GoodOfferState.ShortOfGems;
 
@@ -914,6 +926,11 @@ namespace GlimmerGrove.Store
 
                 case StoreGoodKind.HeartBoost:
                     Wallet.GrantHeartBoost(good.Amount);
+                    break;
+
+                case StoreGoodKind.XpBoost:
+                    // The bought window, which is the one with no cooldown. See `XpBoost`.
+                    Progression.XpBoost.GrantBought(good.Amount);
                     break;
             }
 

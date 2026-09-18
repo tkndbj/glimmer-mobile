@@ -50,6 +50,12 @@ namespace GlimmerGrove.Persistence
         static Hearts _hearts = Hearts.Full;
         static long _heartBoostUntil;
 
+        // The XP boost's three numbers. Two deadlines and one lifetime total, all monotonic and
+        // all joined by `max` (invariant 11b). See `XpBoost` for the rule over them.
+        static long _xpBoostWatchedUntil;
+        static long _xpBoostBoughtUntil;
+        static long _xpBoostEarned;
+
         static Hints _hints = Hints.Full;
 
         // Empty until the player chooses, never DefaultName — see WalletDto.displayName.
@@ -98,6 +104,76 @@ namespace GlimmerGrove.Persistence
         public static long HeartBoostUntilUnix => _heartBoostUntil;
 
         public static bool HeartBoostActive => _heartBoostUntil > GameClock.NowUnix();
+
+        // ------------------------------------------------------------- the XP boost
+        //
+        // Held here rather than in `XpBoost` for one reason: `WriteInto` below builds a brand-new
+        // `WalletDto`, so this class is the single writer of `dto.wallet` and a second owner of
+        // three fields inside it would have them wiped on the next save. `XpBoost` is the rule
+        // over these three numbers; this is where they live. Invariant 16x, arriving as a
+        // question about who writes rather than who reads.
+
+        /// <summary>When the watched XP boost runs out, or 0. See <c>XpBoost</c>.</summary>
+        public static long XpBoostWatchedUntilUnix => _xpBoostWatchedUntil;
+
+        /// <summary>When the bought XP boost runs out, or 0. See <c>XpBoost</c>.</summary>
+        public static long XpBoostBoughtUntilUnix => _xpBoostBoughtUntil;
+
+        /// <summary>Bonus XP boosts have paid over this account's life. Only ever rises.</summary>
+        public static long XpBoostEarned => _xpBoostEarned;
+
+        /// <summary>
+        /// Starts, or extends, the watched XP boost.
+        ///
+        /// <see cref="GrantHeartBoost"/>'s rule and its reason — extends rather than replaces, so
+        /// a window won while one runs never takes time away — with the ceiling expressed in the
+        /// same shape. <b>Only this writes the watched deadline</b>, which is what keeps
+        /// <c>XpBoost.WatchedReadyAt</c>'s derived cooldown exact.
+        /// </summary>
+        public static void GrantXpBoostWatched(long hours) => GrantXpBoost(ref _xpBoostWatchedUntil, hours);
+
+        /// <summary>Starts, or extends, the bought XP boost. The track with no cooldown.</summary>
+        public static void GrantXpBoostBought(long hours) => GrantXpBoost(ref _xpBoostBoughtUntil, hours);
+
+        static void GrantXpBoost(ref long deadline, long hours)
+        {
+            if (hours <= 0L) return;
+
+            long now = GameClock.NowUnix();
+            long from = deadline > now ? deadline : now;
+            long until = from + hours * 3600L;
+
+            // The same ceiling shape the heart boost uses: no sequence of awards may stack into a
+            // permanent one. Expressed against `now` rather than against the deadline, so a window
+            // already at the ceiling stops growing instead of creeping.
+            long ceiling = now + Progression.XpBoostLimits.MaxHours * 3600L;
+            if (until > ceiling) until = ceiling;
+
+            if (until <= deadline) return;
+
+            deadline = until;
+            SaveService.Save();
+        }
+
+        /// <summary>
+        /// Raises the banked boost bonus, and answers whether it moved.
+        ///
+        /// <b>A floor and never an assignment</b>, for every other monotonic number in this file's
+        /// reason: a device handed a larger total by a merge must not push its own smaller one
+        /// back over it. Saturates at <c>XpBoostLimits.HardMaxBonusXp</c> rather than wrapping — a
+        /// total that wrapped would <em>fall</em>, and the merge below assumes it cannot.
+        /// </summary>
+        public static bool RaiseXpBoostEarned(long total)
+        {
+            if (total <= _xpBoostEarned) return false;
+
+            _xpBoostEarned = total > Progression.XpBoostLimits.HardMaxBonusXp
+                ? Progression.XpBoostLimits.HardMaxBonusXp
+                : total;
+
+            SaveService.Save();
+            return true;
+        }
 
         /// <summary>Seconds of boost left, for a countdown. 0 when none is running.</summary>
         public static long HeartBoostSecondsLeft
@@ -427,6 +503,13 @@ namespace GlimmerGrove.Persistence
             // starts the clock from the next read rather than back-paying the gap.
             _heartBoostUntil = w.heartBoostUntilUnix < 0 ? 0L : w.heartBoostUntilUnix;
 
+            // Negative or absent is nought, which is what every file written before the XP boost
+            // shipped means and what a rolled-back client writes — so no migration and no
+            // sentinel. See `XpBoost` for why a boost has to bank rather than multiply.
+            _xpBoostWatchedUntil = w.xpBoostWatchedUntilUnix < 0 ? 0L : w.xpBoostWatchedUntilUnix;
+            _xpBoostBoughtUntil = w.xpBoostBoughtUntilUnix < 0 ? 0L : w.xpBoostBoughtUntilUnix;
+            _xpBoostEarned = w.xpBoostEarned < 0 ? 0L : w.xpBoostEarned;
+
             _hearts = ReadHearts(w).At(GameClock.NowUnix(), _heartBoostUntil);
             _hints = ReadHints(w).At(GameClock.NowUnix());
 
@@ -546,6 +629,11 @@ namespace GlimmerGrove.Persistence
                 heartsNextRefillUnix = _hearts.NextRefillUnix,
 
                 heartBoostUntilUnix = _heartBoostUntil,
+
+                // The XP boost. Two deadlines and the lifetime bonus they have paid.
+                xpBoostWatchedUntilUnix = _xpBoostWatchedUntil,
+                xpBoostBoughtUntilUnix = _xpBoostBoughtUntil,
+                xpBoostEarned = _xpBoostEarned,
 
                 // The hint ledger. No derived mirror beside it, unlike hearts: a build that
                 // predates this one had nothing to read a hint count into, so there is

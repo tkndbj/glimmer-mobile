@@ -347,6 +347,15 @@ namespace GlimmerGrove.Ads
             // life in exchange for a grant that is refused. See HintLimits.DefaultCeiling.
             if (offer.Kind == ChestDropKind.Hints) return !Wallet.Hints.IsAtCeiling;
 
+            // An XP boost is metered rather than capped, and the cooldown is the offer: "every
+            // four hours" is what the card says, so showing it inside the window is showing
+            // something that cannot be taken. Asked here rather than at the call site because
+            // this is the one place that decides whether an offer is honest, and a second copy
+            // of the rule would be the fault invariant 5b describes.
+            //
+            // The daily cap still applies on top, and is the table's rather than this rule's.
+            if (offer.Kind == ChestDropKind.XpBoost) return Progression.XpBoost.WatchedReady;
+
             return true;
         }
 
@@ -517,6 +526,24 @@ namespace GlimmerGrove.Ads
         static void Apply(ChestDrop drop, AdImpression impression, long now)
         {
             if (!drop.IsValid) return;
+
+            // **The one kind whose *track* depends on who is paying, so it is decided here.**
+            // An XP boost has two windows: a watched one, metered by a cooldown derived from its
+            // own deadline, and a bought one with no cooldown. A view opens the watched window —
+            // that is what the cooldown exists to meter — while a chest gifting the same kind
+            // opens the bought one, which is `BankedDrop`'s case below. Routing both through the
+            // shared switch would put every gift on the metered track and silently move the
+            // cooldown, which is precisely what `XpBoost.WatchedReadyAt` cannot survive.
+            //
+            // The window's *length* is not taken from `drop.Amount`. It has to be the boost
+            // table's own figure or the derived cooldown is measured against a number the
+            // deadline was not built from; the two are held together by `ProgressionTable`, which
+            // errors when they drift. See `XpBoost.GrantWatched`.
+            if (drop.Kind == ChestDropKind.XpBoost)
+            {
+                Progression.XpBoost.GrantWatched();
+                return;
+            }
 
             // Everything banked — hearts, a boost, a hint, a utility — is applied by one
             // shared switch rather than by a copy here. This one used to be that copy, and

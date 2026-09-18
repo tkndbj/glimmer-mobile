@@ -382,6 +382,15 @@ namespace GlimmerGrove.Store
 
         /// <summary>Hours of faster refill, extending any boost already running.</summary>
         HeartBoost,
+
+        /// <summary>
+        /// A window during which XP is paid at a higher rate. Amount is the duration in hours,
+        /// so the shelf is authored the way it reads — <see cref="HeartBoost"/>'s convention.
+        ///
+        /// Bought with gems and never with money, which is invariant 18 exactly: a real-money
+        /// product grants currency and nothing else, so a boost is a gem sink like every other.
+        /// </summary>
+        XpBoost,
     }
 
     /// <summary>The permanent ids a content file uses for good kinds. See <c>ChestDropKinds</c>.</summary>
@@ -389,11 +398,33 @@ namespace GlimmerGrove.Store
     {
         public const string Hearts = "hearts";
         public const string HeartBoost = "heart_boost";
+        public const string XpBoost = "xp_boost";
+
+        /// <summary>
+        /// The shelf a good of this kind is sold on.
+        ///
+        /// <para>
+        /// <b>A fact about the good rather than a line in the screen</b>, because three places
+        /// need the same answer and they are in three assemblies: the shelf that lists it, the
+        /// card that takes its accent colour from it, and <c>render_shop.py</c>, which mirrors
+        /// both. Written once here, a good moved between shelves moves everywhere; written at the
+        /// call sites, it moves on the list and keeps the old shelf's colour.
+        /// </para>
+        /// <para>
+        /// <b>Hearts are supplies and an XP boost is a utility</b>, which is a decision about
+        /// where a player goes looking rather than about what the thing is. Somebody who wants
+        /// hearts wants the hearts tab; somebody who wants to get further faster is on the tab
+        /// that already sells the firepot and the mend.
+        /// </para>
+        /// </summary>
+        public static StoreShelf ShelfFor(StoreGoodKind kind)
+            => kind == StoreGoodKind.XpBoost ? StoreShelf.Utilities : StoreShelf.Supplies;
 
         public static StoreGoodKind Parse(string id)
         {
             if (string.Equals(id, Hearts, StringComparison.Ordinal)) return StoreGoodKind.Hearts;
             if (string.Equals(id, HeartBoost, StringComparison.Ordinal)) return StoreGoodKind.HeartBoost;
+            if (string.Equals(id, XpBoost, StringComparison.Ordinal)) return StoreGoodKind.XpBoost;
             return StoreGoodKind.None;
         }
 

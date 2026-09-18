@@ -51,6 +51,10 @@ TURRET_WIDE, TURRET_TALL, TURRET_FOOT = 1.72, 2.15, 0.10
 BAND_TOP, BAND_CLEAR = 1.6, 0.60
 BOLT_WIDE, MUZZLE_WIDE, HIT_WIDE = 1.0, 2.7, 3.2
 
+#: `.Flight`, `.ExtraGap` and `.ExtraBolt` - how long a bolt is in the air, how far behind the
+#: primary each extra follows, and how much smaller an extra is drawn.
+FLIGHT, EXTRA_GAP, EXTRA_BOLT = 0.34, 0.13, 0.74
+
 #: `SiegeView.HeadAt` / `.MuzzleAt` / `.HeadRoom`, and `.BoltScale`'s named rungs.
 HEAD_AT, MUZZLE_AT, HEAD_ROOM = 0.82, 0.22, 0.35
 BOLT_SCALES = {"apex": 1.55, "eclipse": 1.62, "breaker": 1.24,
@@ -198,23 +202,30 @@ def draw(wid, beats, out):
                                   Image.LANCZOS)
                 stage.alpha_composite(r, (int(px - r.width / 2), int(py - r.height / 2)))
 
-        # One bolt, at this beat, at the primary mark.
-        lx, ly, _ = placed[0]
-        dx, dy = lx - mx, ly - my
-        far = math.hypot(dx, dy) or 1.0
-        ux, uy = dx / far, dy / far
+        # **The whole volley, which is what the panel shows.** `WardFiringStage.Volley` fires the
+        # primary and then each extra `ExtraGap` later, so at any instant the bolts are at
+        # different points of the same `Flight` - which is why the panel holds three streaks of
+        # three different lengths and why a still of it is hard to read without this.
+        for m, (lx, ly, _) in enumerate(placed):
+            beat = t - m * (EXTRA_GAP / FLIGHT)
+            if beat < 0.0 or beat > 1.0:
+                continue
 
-        reel = at_beat(shot, t)
-        wide = CELL * BOLT_WIDE * scale
-        tall = wide * reel.height / reel.width if reel else 0.0
+            dx, dy = lx - mx, ly - my
+            far = math.hypot(dx, dy) or 1.0
+            ux, uy = dx / far, dy / far
 
-        aimed(stage, reel, mx + dx * t, my + dy * t, wide, ux, uy, HEAD_AT,
-              emerged(far * t, CELL, tall))
+            reel = at_beat(shot, beat)
+            wide = CELL * BOLT_WIDE * scale * (1.0 if m == 0 else EXTRA_BOLT)
+            tall = wide * reel.height / reel.width if reel else 0.0
 
-        # Over the bolt, which is `WardFiringStage.Shoot`'s order: the crop's straight edge lives
-        # at the barrel and this is what covers it.
-        aimed(stage, at_beat(muzz, min(1.0, t * 3.0)), mx, my, CELL * MUZZLE_WIDE, ux, uy,
-              MUZZLE_AT)
+            aimed(stage, reel, mx + dx * beat, my + dy * beat, wide, ux, uy, HEAD_AT,
+                  emerged(far * beat, CELL, tall))
+
+            # Over the bolt, which is `WardFiringStage.Shoot`'s order: the crop's straight edge
+            # lives at the barrel and this is what covers it.
+            aimed(stage, at_beat(muzz, min(1.0, beat * 3.0)), mx, my,
+                  CELL * MUZZLE_WIDE * (1.0 if m == 0 else 0.7), ux, uy, MUZZLE_AT)
 
         sheet.alpha_composite(stage, (int(x0), int(y0)))
         pen.rectangle([x0, y0, x0 + STAGE_W - 1, y0 + STAGE_H - 1], outline=(70, 80, 76, 255))

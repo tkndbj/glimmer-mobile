@@ -1768,6 +1768,212 @@ def beam():
     return frames
 
 
+#: Frames the hourglass's wavefront is drawn over. Twelve at 30fps is four tenths of a second,
+#: which is exactly `SiegeView.StillSweep` - so the reel plays through once as the wave crosses
+#: the hill and never visibly repeats.
+STILLWAVE_FRAMES = 12
+
+
+def stillwave():
+    """The wall of stopped time an hourglass sends up the hill.
+
+    **It was the stormglass's `laser` stretched to the width of the board**, and that is the whole
+    complaint: a laser is a *bar*, flat at full alpha across its middle, drawn to be a beam of
+    variable length. Swept up a hill as a wavefront it is a blue stripe sliding past - it has no
+    leading edge, nothing in it that reads as glass, and nothing that says *time*. It is `beam`'s
+    own lesson (a still gradient has no event in it) arriving on the one charm whose whole payoff
+    is a moment.
+
+    **So this is a front rather than a band.** Three things make it one:
+
+    * a **hard hot edge at the top**, which is the direction it travels - a wavefront without a
+      leading edge is a smear;
+    * **graduations** hanging off that edge at a fixed pitch, longer every fourth, which is the
+      one piece of vocabulary that says *clock* rather than *frost*. Nothing else on this board is
+      regularly spaced, so it reads as a made thing;
+    * **shards** of varying height behind them, on a fixed ragged profile, so the body is
+      crystalline rather than a gradient.
+
+    **And it crystallises rather than arriving whole.** `grow` opens the graduations and the shards
+    over the first half of the reel, so what the player sees is time *freezing* across the hill
+    rather than a shape being flown across it.
+
+    White, with no end along its length, like every other sprite the view tints and stretches
+    (invariant 37l, and `laser`'s own note).
+    """
+    long, thick = 512, 96
+    y, x = np.mgrid[0:thick, 0:long].astype(np.float32)
+
+    # 0 at the leading edge, 1 at the trailing one. The view sweeps it upward, so the top of the
+    # sprite is the front.
+    d = y / (thick - 1.0)
+
+    # Feathered into nothing at both ends, so a front stretched past the field has no drawn end.
+    fade = long * 0.045
+    along = np.clip(np.minimum(x, long - 1 - x) / fade, 0.0, 1.0)
+
+    # Where the graduations stand and how far back each one reaches. Every fourth is a long one,
+    # which is what a dial's face does and what stops the pitch reading as a fence.
+    pitch = 17.0
+    step = np.minimum(x % pitch, pitch - (x % pitch))
+    across = np.clip(1.0 - step / 1.7, 0.0, 1.0)
+    longer = (np.floor(x / pitch) % 4.0) < 0.5
+    reach = np.where(longer, 0.58, 0.31)
+
+    # The ragged back edge: two long waves multiplied, so the shards differ all along the front
+    # and the pattern never repeats inside the width.
+    ragged = 0.30 + 0.26 * (np.sin(x / 7.3) * 0.5 + 0.5) * (np.sin(x / 23.0 + 0.6) * 0.5 + 0.5)
+    comb = 0.55 + 0.45 * np.sin(x / 3.1) ** 2
+
+    frames = []
+
+    for f in range(STILLWAVE_FRAMES):
+        phase = math.tau * f / STILLWAVE_FRAMES
+
+        # The front freezing outward over the first half of the reel, then holding.
+        grow = min(1.0, 0.34 + 1.6 * (f / (STILLWAVE_FRAMES - 1.0)))
+
+        edge = np.clip(1.0 - d / 0.17, 0.0, 1.0) ** 1.6
+        ticks = across * np.clip(1.0 - d / np.maximum(1e-3, reach * grow), 0.0, 1.0) ** 1.25
+        shard = comb * np.clip(1.0 - d / np.maximum(1e-3, ragged * grow), 0.0, 1.0) ** 1.5
+        body = np.clip(1.0 - d / 0.52, 0.0, 1.0) ** 1.7
+        haze = np.clip(1.0 - d, 0.0, 1.0) ** 2.6
+
+        # A shimmer running along the front, so a wave held for a beat is never still.
+        run = 0.86 + 0.14 * np.sin(x / 19.0 - phase * 2.0)
+
+        a = np.zeros((thick, long, 4), np.float32)
+        a[..., 0] = 255.0
+        a[..., 1] = 255.0
+        a[..., 2] = 255.0
+        a[..., 3] = np.clip(edge * 1.0 + ticks * 1.00 + shard * 0.80
+                            + body * 0.42 + haze * 0.24, 0.0, 1.0) * run * along * 255.0
+
+        # The edge written back over the top, so the front is solid white whatever the sum came to
+        # - `beam`'s rule about a stroke whose brightest pixel is 80%.
+        a[..., 3] = np.maximum(a[..., 3], edge * along * 255.0)
+
+        frames.append(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA"))
+
+    return frames
+
+
+#: Frames the dial is drawn over. Sixteen at 24fps is two thirds of a second, and the view holds
+#: it for the whole stop - so it loops, which is why what moves on it is a glint and never a hand.
+STILLDIAL_FRAMES = 16
+
+
+def stilldial():
+    """The dial an hourglass hangs over the hill while the hill is stopped.
+
+    **The piece that says what happened.** A wavefront sweeping the hill says *something arrived*;
+    only a clock face says *time stopped*, and without it the charm is a blue flash that the player
+    has to be told the meaning of. It is drawn once, held for the whole stop and shattered when the
+    sand runs out, which is the same three-beat shape every other charm here has.
+
+    **Nothing on it runs, and that is the drawing.** A ticking clock is a clock that is working;
+    what this has to say is that it is *not*. So the sand does not fall, the face is complete, and
+    the only thing alive is a glint travelling the rim - enough that a held sprite is not a still
+    image (`SiegeView.Stilled`'s own rule about a stopped hill needing something that moves), and
+    not so much that it reads as running.
+
+    **An hourglass inside a graduated ring, and the glass replaced a pair of clock hands.** Hands
+    say *a clock*, which is furniture this game has nowhere else and reads as borrowed; the glass
+    says *this gem*, because it is the shape of the stone the player just matched. The ring's sixty
+    fine graduations and twelve bold ones are the same vocabulary the wavefront carries, so the two
+    read as one object arriving twice.
+
+    **Drawn as an outline rather than a solid.** It hangs over the thing the player is watching, so
+    it has to be read through - which is also why `SiegeView.DialInk` holds it well under full.
+
+    White, for the reason everything the view tints is.
+    """
+    side = 256
+    y, x = np.mgrid[0:side, 0:side].astype(np.float32)
+
+    mid = (side - 1) / 2.0
+    dx, dy = x - mid, y - mid
+    r = np.hypot(dx, dy)
+    ang = np.arctan2(dy, dx)
+
+    rim = side * 0.44
+    frames = []
+
+    def spoke(angle, reach, wide, taper=0.55):
+        """A hand: a soft segment out of the middle, thinning along its length."""
+        ux, uy = math.cos(angle), math.sin(angle)
+        along = np.clip(dx * ux + dy * uy, 0.0, reach)
+        off = np.hypot(dx - along * ux, dy - along * uy)
+        thin = wide * (1.0 - taper * (along / max(1e-3, reach)))
+        return (np.clip(1.0 - off / np.maximum(1e-3, thin), 0.0, 1.0) ** 1.4
+                * np.clip(1.0 - along / (reach * 1.02), 0.0, 1.0) ** 0.35)
+
+    # The face, which never changes: a rim, sixty fine graduations and twelve bold ones.
+    ring = np.clip(1.0 - np.abs(r - rim) / 5.0, 0.0, 1.0) ** 1.1
+
+    fine_phase = np.abs(((ang * 60.0 / math.tau) % 1.0) - 0.5)
+    fine = (np.clip((fine_phase - 0.38) / 0.12, 0.0, 1.0)
+            * np.clip(1.0 - np.abs(r - rim * 0.93) / (rim * 0.075), 0.0, 1.0))
+
+    bold_phase = np.abs(((ang * 12.0 / math.tau) % 1.0) - 0.5)
+    bold = (np.clip((bold_phase - 0.33) / 0.17, 0.0, 1.0)
+            * np.clip(1.0 - np.abs(r - rim * 0.86) / (rim * 0.135), 0.0, 1.0))
+
+    # **The glass itself, inside the ring, and it replaced a pair of clock hands.** Hands say
+    # *a clock*, which is a piece of furniture this game has nowhere else and reads as borrowed;
+    # an hourglass says *this gem*, because it is the shape of the stone the player just matched.
+    # Drawn as an outline rather than a solid so the bodies behind it are never hidden - the same
+    # reason the face is held at well under full alpha.
+    glassH = rim * 0.60          # half its height
+    waist, mouth = side * 0.018, rim * 0.34
+
+    # Half the width the bulb has at this height: a waist in the middle opening to a mouth at
+    # each end, which is two cones meeting - the bicone `make_siege_art.CHARM_GEMS` cuts.
+    flare = waist + (mouth - waist) * np.clip(np.abs(dy) / glassH, 0.0, 1.0)
+    inside = np.abs(dy) <= glassH
+
+    walls = np.where(inside,
+                     np.clip(1.0 - np.abs(np.abs(dx) - flare) / 2.6, 0.0, 1.0) ** 1.2, 0.0)
+
+    # The two caps, and the thread of sand that is not running.
+    caps = (np.clip(1.0 - np.abs(np.abs(dy) - glassH) / 3.0, 0.0, 1.0)
+            * np.clip(1.0 - np.abs(dx) / (mouth * 1.12), 0.0, 1.0) ** 0.4)
+
+    thread = (np.clip(1.0 - np.abs(dx) / 1.9, 0.0, 1.0)
+              * np.clip(1.0 - np.abs(dy) / (glassH * 0.92), 0.0, 1.0) ** 0.6)
+
+    glass = walls + caps * 0.95 + thread * 0.55
+
+    hub = np.clip(1.0 - r / (side * 0.030), 0.0, 1.0) ** 1.6
+    inner = np.clip(1.0 - np.abs(r - rim * 0.74) / 2.6, 0.0, 1.0) ** 1.3
+
+    for f in range(STILLDIAL_FRAMES):
+        phase = math.tau * f / STILLDIAL_FRAMES
+
+        # The glint: a short bright arc travelling the rim. The only thing on the face that moves.
+        swept = ((ang - phase) % math.tau) / math.tau
+        glint = np.clip(1.0 - swept / 0.10, 0.0, 1.0) ** 2.0
+
+        breath = 0.90 + 0.10 * math.sin(phase * 2.0)
+
+        a = np.zeros((side, side, 4), np.float32)
+        a[..., 0] = 255.0
+        a[..., 1] = 255.0
+        a[..., 2] = 255.0
+
+        # **Weighted for a face drawn over a lit hill rather than on this sheet.** The rim and the
+        # hands carry the shape at a glance and the graduations are what it turns out to be on a
+        # second look, so the first two are near solid and the ticks sit under them.
+        lit = (ring * 1.15 + fine * 1.05 + bold * 1.30
+               + glass * 1.05 + hub * 0.9 + inner * 0.34
+               + ring * glint * 1.0)
+
+        a[..., 3] = np.clip(lit * breath, 0.0, 1.0) * 255.0
+        frames.append(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA"))
+
+    return frames
+
+
 #: Frames a stormglass's beam is drawn over. Eight at 30fps is a quarter of a second of ripple,
 #: which is about as long as one beam stands at full width before it starts closing.
 LASER_FRAMES = 8
@@ -2880,6 +3086,15 @@ def build():
     # materials** - see `laser`.
     for i, frame in enumerate(laser()):
         made["Siege/laser/f%02d.png" % i] = frame
+
+    # **What an hourglass sends up the hill, and what it hangs over it.** Both are cut here rather
+    # than borrowed: the wave was the stormglass's `laser` stretched to the board's width, which is
+    # a bar sliding past rather than time freezing (see `stillwave`).
+    for i, frame in enumerate(stillwave()):
+        made["Siege/stillwave/f%02d.png" % i] = frame
+
+    for i, frame in enumerate(stilldial()):
+        made["Siege/stilldial/f%02d.png" % i] = frame
 
     charged = charge(icons)
     if charged is not None:

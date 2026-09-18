@@ -27,6 +27,14 @@
     "xpPerWave": 15,
     "maxWaves": 99990
   },
+  "xpBoost": {
+    "watchedPercent": 50,
+    "watchedHours": 2,
+    "watchedCooldownHours": 4,
+    "boughtPercent": 100,
+    "boughtHours": 24,
+    "maxPercent": 150
+  },
   "chapterRewards": [
     {
       "chapterId": "c01_shallows",
@@ -254,6 +262,12 @@
         "kind": "hints",
         "amount": 1,
         "dailyCap": 10
+      },
+      {
+        "id": "xp_boost",
+        "kind": "xp_boost",
+        "amount": 2,
+        "dailyCap": 6
       }
     ],
     "wheel": {
@@ -441,6 +455,12 @@
         "kind": "heart_boost",
         "amount": 72,
         "gems": 75
+      },
+      {
+        "id": "xp_boost_day",
+        "kind": "xp_boost",
+        "amount": 24,
+        "gems": 120
       }
     ]
   },

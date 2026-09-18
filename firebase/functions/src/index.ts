@@ -49,7 +49,7 @@ import {
 import { rebuildStats } from "./stats";
 import {
   DEFAULT_KEEPER_CURVE, GROVE_PATHS, GroveCardDoc, KeeperCurve,
-  assertUsableGroveConfig, buildCard, derivedXp, endlessXp, groveWorth, keeperLevel,
+  assertUsableGroveConfig, buildCard, derivedXp, endlessXp, xpBoostXp, groveWorth, keeperLevel,
   optedIn, heldGrove, isGroveDenied, rebuildGroveRanks, saveRevision, withdrawCard,
 } from "./grove";
 import {
@@ -1404,7 +1404,11 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
   // the one the device holds does not clamp what it gated, it drops it (19a) — so a deploy that
   // brings this code without a re-seed of `config/progression` publishes every Infinite player
   // short. `endlessXp` falls back to the client's own constants for exactly that window.
-  const level = keeperLevel(derivedXp(save.levels, config) + endlessXp(save, config), curve);
+  // The three sources of XP, in the order they depend on each other. The star ledger and the
+  // Infinite lane are what an account can *prove*; the boost is a percentage of those two, so it
+  // is clamped against their sum rather than against a ceiling of its own (`xpBoostXp`).
+  const provableXp = derivedXp(save.levels, config) + endlessXp(save, config);
+  const level = keeperLevel(provableXp + xpBoostXp(save, config, provableXp), curve);
 
   // The ceiling on the bought half: everything this account has ever legitimately had to
   // spend. Derived earnings plus whatever the server itself granted — never a number out of

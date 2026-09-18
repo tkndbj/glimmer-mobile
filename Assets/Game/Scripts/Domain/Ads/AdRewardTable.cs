@@ -208,6 +208,13 @@ namespace GlimmerGrove.Ads
             new AdOffer(AdPlacement.CoinBonus, ChestDropKind.Credits, 1000, 6),
             new AdOffer(AdPlacement.WinBonus, ChestDropKind.Credits, 200, 6),
             new AdOffer(AdPlacement.HintRefill, ChestDropKind.Hints, 1, 5),
+
+            // The amount is the *window*, in hours, exactly as a heart boost authors one. What
+            // the window is worth is not here — that is `XpBoostTable.WatchedPercent`, because a
+            // percentage and a duration are two halves of one decision and splitting them across
+            // two blocks is how they come to disagree. The daily cap is generous because the
+            // binding limit is meant to be the cooldown, not the allowance.
+            new AdOffer(AdPlacement.XpBoost, ChestDropKind.XpBoost, 2, 6),
         }, BonusWheel.Default);
 
         static AdRewardTable Build(int cooldownSeconds, AdOffer[] offers, BonusWheel wheel)

@@ -216,6 +216,13 @@ namespace GlimmerGrove.Cloud
 
                         { "heartBoostUntilUnix", dto.wallet?.heartBoostUntilUnix ?? 0L },
 
+                        // The XP boost. Inside the `wallet` map, which `firestore.rules` bounds
+                        // without naming its fields — so three new numbers on the wire cost no
+                        // rules release (invariant 12a's cheap half).
+                        { "xpBoostWatchedUntilUnix", dto.wallet?.xpBoostWatchedUntilUnix ?? 0L },
+                        { "xpBoostBoughtUntilUnix", dto.wallet?.xpBoostBoughtUntilUnix ?? 0L },
+                        { "xpBoostEarned", dto.wallet?.xpBoostEarned ?? 0L },
+
                         // The hint ledger, whole, for the heart ledger's reason. -1 rather
                         // than 0 for the two counters, so a document written before hints
                         // existed is recognisable as holding no opinion rather than as a
@@ -608,6 +615,9 @@ namespace GlimmerGrove.Cloud
                 dto.wallet.heartsSpent = Long(wallet, "heartsSpent", -1);
                 dto.wallet.heartsDueUnix = Long(wallet, "heartsDueUnix", 0);
                 dto.wallet.heartBoostUntilUnix = Long(wallet, "heartBoostUntilUnix", 0);
+                dto.wallet.xpBoostWatchedUntilUnix = Long(wallet, "xpBoostWatchedUntilUnix", 0);
+                dto.wallet.xpBoostBoughtUntilUnix = Long(wallet, "xpBoostBoughtUntilUnix", 0);
+                dto.wallet.xpBoostEarned = Long(wallet, "xpBoostEarned", 0);
 
                 // -1 when the document predates the hint pool, which SaveMerge reads as "no
                 // opinion" and answers with a full pool. Defaulting to 0 would claim a real

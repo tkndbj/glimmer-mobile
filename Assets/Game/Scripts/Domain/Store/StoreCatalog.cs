@@ -567,8 +567,9 @@ namespace GlimmerGrove.Store
             if (kind == StoreGoodKind.None)
             {
                 problems.Add($"store good '{id}' names unknown kind '{dto.kind}'. Only " +
-                             $"'{StoreGoodKinds.Hearts}' and '{StoreGoodKinds.HeartBoost}' can be bought " +
-                             "with gems — currency cannot, because only the server may grant it");
+                             $"'{StoreGoodKinds.Hearts}', '{StoreGoodKinds.HeartBoost}' and " +
+                             $"'{StoreGoodKinds.XpBoost}' can be bought with gems — currency cannot, " +
+                             "because only the server may grant it");
                 return null;
             }
 

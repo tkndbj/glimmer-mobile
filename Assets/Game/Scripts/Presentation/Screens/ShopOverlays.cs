@@ -38,7 +38,11 @@ namespace GlimmerGrove
         {
             if (Good == null || !Good.IsValid) { Flow.Dismiss(this); return; }
 
-            bool boost = Good.Kind == StoreGoodKind.HeartBoost;
+            // Both boosts are measured in hours and read the same way; what differs is the
+            // sentence and the number beside it. Kept as one flag for the layout and switched
+            // where the words are chosen, so a third kind cannot inherit the wrong copy (44e).
+            bool xp = Good.Kind == StoreGoodKind.XpBoost;
+            bool boost = xp || Good.Kind == StoreGoodKind.HeartBoost;
 
             var panel = MakePanel(new Vector2(PanelW, PanelH), Loc.Get(Good.NameKey));
 
@@ -52,7 +56,7 @@ namespace GlimmerGrove
                 UIKit.Titled("Amount", panel,
                              boost ? Loc.Format("ui.shop.boost_hours", Good.Amount)
                                    : Loc.Format("ui.shop.hearts_count", Good.Amount),
-                             56, boost ? Amber : Rose, TextAnchor.MiddleCenter,
+                             56, xp ? Aqua : boost ? Amber : Rose, TextAnchor.MiddleCenter,
                              new Vector2(700f, 76f), new Vector2(.5f, 1f), new Vector2(0f, -AmountY),
                              outline: 0f, shadow: 2f), 30);
 
@@ -65,9 +69,7 @@ namespace GlimmerGrove
                              outline: 0f, shadow: 0f, wrap: true), 19);
 
             var held = UIKit.Titled("Held", panel,
-                                    boost ? Loc.Format("ui.shop.boost_left",
-                                                       Profile.Countdown(Wallet.HeartBoostSecondsLeft))
-                                          : Loc.Format("ui.shop.hearts_held", Profile.Hearts),
+                                    Held(xp, boost),
                                     26, Pal.A(Ink, .88f), TextAnchor.MiddleCenter,
                                     new Vector2(700f, 46f), new Vector2(.5f, 1f), new Vector2(0f, -HeldY),
                                     outline: 0f, shadow: 0f);
@@ -118,12 +120,46 @@ namespace GlimmerGrove
         static readonly Color Rose = new Color(.70f, .19f, .17f);
         static readonly Color Amber = new Color(.62f, .34f, .08f);
 
+        /// <summary>A darkened aqua, for <see cref="Ink"/>'s reason — the plate is light parchment.</summary>
+        static readonly Color Aqua = new Color(.11f, .40f, .45f);
+
+        /// <summary>
+        /// What the player is holding of whatever this good hands over.
+        ///
+        /// <b>Nought is said rather than left as an empty countdown.</b> A boost that is not
+        /// running reads as "0s left" if the same line is reused, which looks like a bug on the
+        /// one panel asking for money.
+        /// </summary>
+        string Held(bool xp, bool boost)
+        {
+            if (xp)
+            {
+                long left = Progression.XpBoost.SecondsLeft;
+                return left > 0L
+                    ? Loc.Format("ui.shop.xp_boost_left", Profile.Countdown(left))
+                    : Loc.Get("ui.shop.xp_boost_none");
+            }
+
+            return boost
+                ? Loc.Format("ui.shop.boost_left", Profile.Countdown(Wallet.HeartBoostSecondsLeft))
+                : Loc.Format("ui.shop.hearts_held", Profile.Hearts);
+        }
+
         /// <summary>
         /// What the purchase actually does, in the player's terms, derived from the live
         /// heart rules rather than restated. Retuning the gate rewrites this line.
         /// </summary>
         string Explanation(bool boost)
         {
+            if (Good.Kind == StoreGoodKind.XpBoost)
+            {
+                // The published percentage rather than a number typed into the copy, for this
+                // method's whole reason: a panel explaining the game is the first thing to rot
+                // when the game is retuned.
+                return Loc.Format("ui.shop.xp_boost_explain",
+                                  Progression.ProgressionRules.Table.XpBoost.BoughtPercent);
+            }
+
             if (boost)
             {
                 long normal = HeartRules.RefillSeconds / 3600L;
@@ -137,6 +173,28 @@ namespace GlimmerGrove
             return Loc.Format("ui.shop.hearts_explain", Wallet.MaxHearts, HeartRules.Ceiling);
         }
 
+        /// <summary>What the toast says once the debit has gone through.</summary>
+        string Added()
+        {
+            switch (Good.Kind)
+            {
+                case StoreGoodKind.XpBoost: return Loc.Format("ui.shop.xp_boost_added", Good.Amount);
+                case StoreGoodKind.HeartBoost: return Loc.Format("ui.shop.boost_added", Good.Amount);
+                default: return Loc.Format("ui.shop.hearts_added", Good.Amount);
+            }
+        }
+
+        /// <summary>The toast's colour, which is the card's rather than the panel's ink.</summary>
+        Color Tint()
+        {
+            switch (Good.Kind)
+            {
+                case StoreGoodKind.XpBoost: return Pal.Aqua;
+                case StoreGoodKind.HeartBoost: return Pal.Sun;
+                default: return Pal.Rose;
+            }
+        }
+
         void Confirm()
         {
             var state = StoreService.TryBuyGood(Good);
@@ -147,7 +205,8 @@ namespace GlimmerGrove
                 // another device spending. Refusing here rather than trusting the state the
                 // panel was built from is what stops a debit going through on a balance that
                 // no longer covers it.
-                Scenery.Toast(Content, Loc.Get(StoreWording.GoodRefusal(state)), Pal.Sun, 2.6f);
+                Scenery.Toast(Content, Loc.Get(StoreWording.GoodRefusal(state, Good.Kind)),
+                              Pal.Sun, 2.6f);
                 return;
             }
 
@@ -162,11 +221,7 @@ namespace GlimmerGrove
                 var screen = Flow.Current;
                 if (screen == null) return;
 
-                Scenery.Toast(screen.Content,
-                              Good.Kind == StoreGoodKind.HeartBoost
-                                  ? Loc.Format("ui.shop.boost_added", Good.Amount)
-                                  : Loc.Format("ui.shop.hearts_added", Good.Amount),
-                              Good.Kind == StoreGoodKind.HeartBoost ? Pal.Sun : Pal.Rose, 2.4f);
+                Scenery.Toast(screen.Content, Added(), Tint(), 2.4f);
             });
         }
     }

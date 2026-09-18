@@ -21,6 +21,7 @@ namespace GlimmerGrove.Progression
     {
         static ProgressionTotals _totals = ProgressionTotals.Zero;
         static long _endlessXp;
+        static long _boostXp;
         static PlayerLevel _level;
         static bool _dirty = true;
         static bool _hooked;
@@ -45,6 +46,11 @@ namespace GlimmerGrove.Progression
             // beat the best still added waves — and because a merge that arrives from the cloud
             // moves the tally without anybody playing, which the hub's badge has to repaint for.
             EndlessLedger.Changed += Invalidate;
+
+            // The second source of XP that is not a star (see `XpBoost`). A window opening moves
+            // nothing on its own, but the bonus it banks does — and a merge can move the banked
+            // total without anybody playing, which the hub's badge has to repaint for.
+            XpBoost.Changed += Invalidate;
 
             // A season's chests are claims rather than derived credits, so they already
             // invalidate through `Award`. This is here for the other half — the hub's badge
@@ -87,6 +93,19 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public static long EndlessXp { get { EnsureFresh(); return _endlessXp; } }
+
+        /// <summary>
+        /// What XP boosts have paid this account, clamped to what it can prove.
+        ///
+        /// <para>
+        /// A third addend beside the star ledger and the Infinite lane, and the only one that is
+        /// a <em>percentage of the other two</em> — which is why it is clamped against them
+        /// rather than against a flat ceiling (<see cref="XpBoost.BonusFrom"/>). Exposed for the
+        /// same reason <see cref="EndlessXp"/> is: a screen that wants to say where a level came
+        /// from should not have to re-derive it.
+        /// </para>
+        /// </summary>
+        public static long BoostXp { get { EnsureFresh(); return _boostXp; } }
 
         public static PlayerLevel Level { get { EnsureFresh(); return _level; } }
 
@@ -239,10 +258,18 @@ namespace GlimmerGrove.Progression
             // mirrors stays the one the shared vectors prove. See `EndlessRewardTable`.
             _endlessXp = table.Endless.XpFor(EndlessLedger.LifetimeWaves);
 
+            // And what boosts have paid on top of both. Clamped against the two above it rather
+            // than against a ceiling of its own: a boost can only ever have multiplied XP that was
+            // really paid, so anything beyond `provable x maxPercent%` is arithmetically
+            // impossible however it got into the file. That is `groveWorth`'s "clamped to what the
+            // account could afford" (19a) said about a multiplier, and it is a far tighter bound
+            // than any flat figure would be. The server applies the identical clamp.
+            _boostXp = XpBoost.BonusFrom(_totals.Xp + _endlessXp);
+
             // Three floors, applied as one: whichever demands the most XP wins, and
             // everything downstream — level, progress bar, remaining XP — then stays
             // internally consistent instead of being patched up afterwards.
-            long effectiveXp = _totals.Xp + _endlessXp;
+            long effectiveXp = _totals.Xp + _endlessXp + _boostXp;
             if (ProgressionStore.XpHighWater > effectiveXp) effectiveXp = ProgressionStore.XpHighWater;
 
             long levelFloorXp = table.XpToReach(ProgressionStore.LevelHighWater);

@@ -298,6 +298,22 @@ namespace GlimmerGrove.AssetPipeline
             "ic_heart", "ic_gem", "ic_chest", "ic_chest_open", "ic_key", "ic_gift", "ic_star3d",
             "ic_profile", "ic_pencil", "ic_power", "ic_heart_boost",
 
+            // The shop's rewarded-video pictures, one per reward a placement can pay.
+            // **Global rather than scoped**, because the shelf that draws them is the first
+            // thing a player sees when they open the shop and an `Image` with no sprite is a
+            // white rectangle rather than a blank (invariant 7b) — on a card whose whole job is
+            // to be taken. They carry their own play mark, so `ShopArt.PaintAd` draws nothing
+            // over them; a placement with no picture here still gets the composed heap.
+            "ad_coin", "ad_heart", "ad_xp",
+
+            // The utilities tab's own glyph. A tab row is drawn before anything on the shelf is,
+            // so this is global for the pictures' reason one line up.
+            "ic_utilities",
+
+            // The gem-priced XP boost's card glyph, beside `ic_heart_boost` in spirit and drawn
+            // on the same shelf.
+            "ic_xp_boost",
+
             // The update wall's mark (invariant 49). **Global rather than scoped**, and
             // this is the clearest case in the list: the wall is raised over whatever
             // screen the player is standing on, by a poll that knows nothing about which

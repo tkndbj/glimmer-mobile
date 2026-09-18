@@ -340,6 +340,7 @@ function buildProgressionConfig() {
       ads: readAds(progression),
       golden: readGolden(progression),
       endless: readEndless(progression),
+      xpBoost: readXpBoost(progression),
       // Read before the calendar and before the streak, because both name chest tiers and
       // the seeder is the one place that can prove a named tier actually exists — a
       // season's ladder lives in the manifest, the streak's in progression.json, the tiers
@@ -537,10 +538,11 @@ function readStore(progression) {
     if (!/^[a-z0-9_]{1,64}$/.test(String(good?.id ?? ""))) {
       throw new Error(`store good id '${good?.id}' is unusable`);
     }
-    if (good.kind !== "hearts" && good.kind !== "heart_boost") {
+    const GOOD_KINDS = ["hearts", "heart_boost", "xp_boost"];
+    if (!GOOD_KINDS.includes(good.kind)) {
       throw new Error(
-        `store good '${good.id}' names kind '${good.kind}'. Only hearts and heart_boost can be ` +
-        "bought with gems — currency cannot, because only the server may grant it"
+        `store good '${good.id}' names kind '${good.kind}'. Only ${GOOD_KINDS.join(", ")} can ` +
+        "be bought with gems — currency cannot, because only the server may grant it"
       );
     }
     if (!(good.amount > 0) || !(good.gems > 0)) {
@@ -719,6 +721,55 @@ function readEvents(manifest, tierIds) {
  * all three carry the same two constants, and a drift between them is what
  * `endless.mjs` in `functions/test` exists to catch.
  */
+/**
+ * The XP boost's ceiling, published so the server can clamp a stored bonus.
+ *
+ * **Only `maxPercent` goes over.** The windows and the cooldown are facts about offering a
+ * boost, which no server does; this side only answers how much of a stored bonus could honestly
+ * have been earned. Mirrors `XpBoostTable` on the client and `DEFAULT_XP_BOOST` on the server.
+ */
+function readXpBoost(progression) {
+  const DEFAULT_MAX_PERCENT = 150;
+  const MAX_PERCENT = 1000;
+
+  const boost = progression.xpBoost;
+
+  // Absent means the built-in figure, which is what a client with no block also uses — see
+  // `readEndless` below for why this agrees rather than failing closed.
+  if (!boost) return { maxPercent: DEFAULT_MAX_PERCENT };
+
+  const raw = boost.maxPercent;
+  if (raw === undefined || raw === null || Math.floor(Number(raw)) < 0) {
+    return { maxPercent: DEFAULT_MAX_PERCENT };
+  }
+
+  const maxPercent = Math.floor(Number(raw));
+  if (!Number.isFinite(maxPercent)) {
+    throw new Error(`xpBoost maxPercent is ${raw}, which is not a number`);
+  }
+  if (maxPercent > MAX_PERCENT) {
+    throw new Error(
+      `xpBoost maxPercent is ${maxPercent}, above the supported maximum ${MAX_PERCENT}; XP is ` +
+      "floored (`ProgressionStore`) so a keeper level paid by mistake can never be taken back"
+    );
+  }
+
+  // A cap under what one window already pays is a window a player is shown and never given.
+  // Refused here rather than repaired, because the seeder is the last gate before every account.
+  const single = Math.max(
+    Math.floor(Number(boost.watchedPercent ?? 0)) || 0,
+    Math.floor(Number(boost.boughtPercent ?? 0)) || 0
+  );
+  if (maxPercent > 0 && single > maxPercent) {
+    throw new Error(
+      `xpBoost maxPercent is ${maxPercent} but a single window pays ${single}%; the window would ` +
+      "be advertised at a figure the rule refuses to honour"
+    );
+  }
+
+  return { maxPercent };
+}
+
 function readEndless(progression) {
   const DEFAULT_XP_PER_WAVE = 15;
   const DEFAULT_MAX_WAVES = 99990;
@@ -809,8 +860,8 @@ function readAds(progression) {
   // in functions/src/ads.ts. `run_time` stays in the kind list so a stale published config
   // is rejected by the rule below with a sentence naming the real problem, rather than by
   // "unknown reward kind", which reads like a typo.
-  const known = ["heart_refill", "coin_bonus", "win_bonus", "hint_refill"];
-  const kinds = ["credits", "gems", "hearts", "heart_boost", "run_time", "hints"];
+  const known = ["heart_refill", "coin_bonus", "win_bonus", "hint_refill", "xp_boost"];
+  const kinds = ["credits", "gems", "hearts", "heart_boost", "run_time", "hints", "xp_boost"];
 
   // Mirrors the same rule on the client (`AdRewardTable.TryReadOffer`). A kind spent inside
   // a run makes sense only on a placement offered from inside one, and nothing is any more:
@@ -1376,6 +1427,11 @@ if (process.argv.includes("--check")) {
         `lifetime wave(s) (${(lane.xpPerWave * lane.maxWaves).toLocaleString("en-GB")} xp)`
       : "  endless: withdrawn - the Infinite lane pays no XP"
   );
+  console.log(
+    config.xpBoost.maxPercent > 0
+      ? `  xp boost: a stored bonus is clamped to +${config.xpBoost.maxPercent}% of provable XP`
+      : "  xp boost: withdrawn - a stored bonus is worth nothing"
+  );
   console.log(`Validated ${levelCount} levels, ${Object.keys(products ?? {}).length} store products and season pass prices. No remote writes.`);
   process.exit(0);
 }
@@ -1410,6 +1466,7 @@ console.log(
   `${config.ads ? Object.keys(config.ads.placements).length : 0} ad placement(s), ` +
   `endless ${config.endless.xpPerWave} xp/wave capped at ${config.endless.maxWaves} wave(s) ` +
   `(${config.endless.xpPerWave * config.endless.maxWaves} xp), ` +
+  `xp boost capped at +${config.xpBoost.maxPercent}%, ` +
   `seeds ${config.seeds.credits} credits / ${config.seeds.gems} gems`
 );
 

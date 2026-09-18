@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Store;
@@ -35,47 +36,96 @@ namespace GlimmerGrove.Tests
         [Test]
         public void EveryShelfNamesAPlacementThisBuildStillHas()
         {
+            // **`All` rather than `For`, and that is not a tidy-up.** A shelf may stand more than
+            // one video now, and `For` answers only the first — so a second placement retired
+            // under it would go unchecked by exactly the gate written to catch that.
             foreach (var shelf in Shelves)
-            {
-                string placement = ShopAdShelf.For(shelf);
-                if (placement == null) continue;
+                foreach (string placement in ShopAdShelf.All(shelf))
+                    Assert.IsTrue(AdPlacement.IsKnown(placement),
+                                  $"the {shelf} shelf offers '{placement}', which this build has " +
+                                  "retired - the card is not drawn and nothing says so");
+        }
 
-                Assert.IsTrue(AdPlacement.IsKnown(placement),
-                              $"the {shelf} shelf offers '{placement}', which this build has " +
-                              "retired - the card is not drawn and nothing says so");
-            }
+        /// <summary>
+        /// One shelf may not stand the same placement twice, and no two shelves may share one.
+        ///
+        /// <b>Both would draw two identical free cards</b> — on one shelf side by side, across two
+        /// shelves as the same offer in two places — and a player who took it once would find the
+        /// other refused by the cooldown with nothing to explain it. Only reachable since a shelf
+        /// became a list, which is why it is checked since a shelf became a list.
+        /// </summary>
+        [Test]
+        public void NoPlacementStandsOnTwoShelvesOrTwiceOnOne()
+        {
+            var seen = new Dictionary<string, StoreShelf>(StringComparer.Ordinal);
+
+            foreach (var shelf in Shelves)
+                foreach (string placement in ShopAdShelf.All(shelf))
+                {
+                    Assert.IsFalse(seen.TryGetValue(placement, out var already),
+                                   $"'{placement}' stands on both the {already} shelf and the " +
+                                   $"{shelf} shelf, so one offer is drawn as two cards");
+
+                    seen[placement] = shelf;
+                }
         }
 
         [Test]
-        public void TheTwoShelvesThatOfferAVideoAreCoinsAndHearts()
+        public void TheThreeShelvesThatOfferAVideoAreCoinsHeartsAndUtilities()
         {
             // Stated as the pairs rather than as a count, because which shelf gets which
             // placement is the whole decision: a coin shelf offering the heart placement would
             // pay hearts under a card headlined in coins, and every gate here would be green.
+            //
+            // **The utilities shelf joined them when the XP boost moved onto it**, and the rule
+            // the pair follows is `StoreGoodKinds.ShelfFor`: a video stands on the shelf that
+            // sells the thing it pays for. A free XP boost on the hearts tab beside a paid one on
+            // the utilities tab would be one offer in two places.
             Assert.AreEqual(AdPlacement.CoinBonus, ShopAdShelf.For(StoreShelf.Coins));
             Assert.AreEqual(AdPlacement.HeartRefill, ShopAdShelf.For(StoreShelf.Supplies));
+            Assert.AreEqual(AdPlacement.XpBoost, ShopAdShelf.For(StoreShelf.Utilities));
 
             foreach (var shelf in Shelves)
-                if (shelf != StoreShelf.Coins && shelf != StoreShelf.Supplies)
-                    Assert.IsNull(ShopAdShelf.For(shelf),
-                                  $"the {shelf} shelf offers a video, which is a merchandising " +
-                                  "decision nobody has written down");
+                if (shelf != StoreShelf.Coins && shelf != StoreShelf.Supplies
+                    && shelf != StoreShelf.Utilities)
+                    Assert.IsEmpty(ShopAdShelf.All(shelf),
+                                   $"the {shelf} shelf offers a video, which is a merchandising " +
+                                   "decision nobody has written down");
+        }
+
+        /// <summary>
+        /// A video stands where the thing it pays for is sold.
+        ///
+        /// Derived from <c>StoreGoodKinds.ShelfFor</c> rather than restated, so moving a good
+        /// between shelves moves this with it — the fault it guards against is the two drifting
+        /// apart and nobody noticing until a player sees the same offer on two tabs.
+        /// </summary>
+        [Test]
+        public void TheXpVideoStandsWhereTheXpBoostIsSold()
+        {
+            Assert.AreEqual(StoreGoodKinds.ShelfFor(StoreGoodKind.XpBoost),
+                            StoreShelf.Utilities);
+
+            CollectionAssert.Contains(ShopAdShelf.All(StoreGoodKinds.ShelfFor(StoreGoodKind.XpBoost)),
+                                      AdPlacement.XpBoost);
+
+            // And hearts stay where they were, which is the other half of the same rule.
+            Assert.AreEqual(StoreGoodKinds.ShelfFor(StoreGoodKind.Hearts), StoreShelf.Supplies);
+            CollectionAssert.Contains(ShopAdShelf.All(StoreShelf.Supplies), AdPlacement.HeartRefill);
         }
 
         [Test]
         public void TheBuiltInTablePaysEveryShelfThatOffersOne()
         {
             foreach (var shelf in Shelves)
-            {
-                string placement = ShopAdShelf.For(shelf);
-                if (placement == null) continue;
+                foreach (string placement in ShopAdShelf.All(shelf))
+                {
+                    var offer = AdRewardTable.Default.Offer(placement);
 
-                var offer = AdRewardTable.Default.Offer(placement);
-
-                Assert.IsTrue(offer.IsValid,
-                              $"the {shelf} shelf offers '{placement}' and the built-in table " +
-                              "pays it nothing, so the shelf loses a card on a fresh install");
-            }
+                    Assert.IsTrue(offer.IsValid,
+                                  $"the {shelf} shelf offers '{placement}' and the built-in table " +
+                                  "pays it nothing, so the shelf loses a card on a fresh install");
+                }
         }
 
         [Test]

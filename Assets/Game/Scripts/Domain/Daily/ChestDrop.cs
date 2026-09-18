@@ -131,6 +131,32 @@ namespace GlimmerGrove.Daily
         /// </para>
         /// </summary>
         Utility,
+
+        /// <summary>
+        /// A window during which XP is paid at a higher rate. Amount is the duration in hours,
+        /// so the band is authored the way it reads — <see cref="HeartBoost"/>'s convention.
+        ///
+        /// <para>
+        /// <b>Added last, and that is a rule rather than a habit.</b> The values of this enum are
+        /// a contract: they key the daily chest vectors both runtimes are pinned against
+        /// (invariant 9c), so a member inserted anywhere but the end renumbers every kind after
+        /// it and rerolls every unopened chest in the world.
+        /// </para>
+        /// <para>
+        /// Shaped like <see cref="HeartBoost"/>: banked, not currency, and nothing about it
+        /// reaches the server as a <em>grant</em>. It differs from hints and utilities in one way
+        /// worth stating — it does reach a public number, because XP decides a keeper level and a
+        /// keeper level is published (invariant 19a). What makes that safe is not that it is
+        /// invisible but that it is bounded: the bonus it pays is clamped to a fraction of XP the
+        /// account can prove, and it buys no currency at all. See <c>XpBoost</c>.
+        /// </para>
+        /// <para>
+        /// It lands on the <em>bought</em> window rather than the watched one, because the watched
+        /// window's cooldown is derived from its own deadline and a gift moving that deadline
+        /// would move a cooldown it knows nothing about. A gift also should not be metered.
+        /// </para>
+        /// </summary>
+        XpBoost,
     }
 
     /// <summary>
@@ -148,6 +174,7 @@ namespace GlimmerGrove.Daily
         public const string HeartBoost = "heart_boost";
         public const string RunTime = "run_time";
         public const string Hints = "hints";
+        public const string XpBoost = "xp_boost";
         public const string Utility = "utility";
 
         public static ChestDropKind Parse(string id)
@@ -158,6 +185,7 @@ namespace GlimmerGrove.Daily
             if (string.Equals(id, HeartBoost, StringComparison.Ordinal)) return ChestDropKind.HeartBoost;
             if (string.Equals(id, RunTime, StringComparison.Ordinal)) return ChestDropKind.RunTime;
             if (string.Equals(id, Hints, StringComparison.Ordinal)) return ChestDropKind.Hints;
+            if (string.Equals(id, XpBoost, StringComparison.Ordinal)) return ChestDropKind.XpBoost;
             if (string.Equals(id, Utility, StringComparison.Ordinal)) return ChestDropKind.Utility;
             return ChestDropKind.None;
         }
@@ -173,6 +201,7 @@ namespace GlimmerGrove.Daily
                 case ChestDropKind.RunTime: return RunTime;
                 case ChestDropKind.Hints: return Hints;
                 case ChestDropKind.Utility: return Utility;
+                case ChestDropKind.XpBoost: return XpBoost;
                 default: return string.Empty;
             }
         }

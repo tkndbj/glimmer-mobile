@@ -217,6 +217,10 @@ namespace GlimmerGrove
                 case ChestDropKind.HeartBoost: return "Ui/ic_heart_boost";
                 case ChestDropKind.Hints: return "Ui/ic_hint";
 
+                // The keeper ladder's own mark, which is what a boost multiplies. Resident in
+                // `AssetManifest`, so it cannot arrive late and be drawn as a white rectangle.
+                case ChestDropKind.XpBoost: return "Ui/ic_star3d";
+
                 // The item's own picture, which is the one the action bar and the shelf already
                 // draw (`UtilityItem.Art`) — and `AssetManifest` names all four, so it is
                 // resident rather than scoped and cannot arrive late.
@@ -243,7 +247,8 @@ namespace GlimmerGrove
         /// them — "+24" beside a clock face is a fine way to promise twenty-four minutes.
         /// </summary>
         public static string Amount(ChestDrop drop)
-            => drop.Kind == ChestDropKind.HeartBoost ? drop.Amount + "h"
+            => drop.Kind == ChestDropKind.HeartBoost || drop.Kind == ChestDropKind.XpBoost
+                 ? drop.Amount + "h"
              : drop.Kind == ChestDropKind.RunTime ? "+" + drop.Amount + "s"
              : "+" + Compact.Number(drop.Amount);
 

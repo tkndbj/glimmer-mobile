@@ -237,7 +237,7 @@ class Sheet:
         self.e[y0:y1, x0:x1] += mask[..., None] * (np.asarray(colour, np.float32) * gain)
 
     # -- the conversion -----------------------------------------------------------------------
-    def wane(self, from_depth, keep):
+    def wane(self, from_depth, keep=0.0):
         """Fades the frame out along its length, from `from_depth` down to `keep` at the bottom.
 
         <b>Two jobs, and the first is just that a comet's trail should end.</b> These were drawn
@@ -253,7 +253,7 @@ class Sheet:
         depth = (np.arange(h, dtype=np.float32) + .5) / h
         ramp = np.clip((depth - from_depth) / max(1e-6, 1.0 - from_depth), 0.0, 1.0)
 
-        self.e *= (1.0 - (1.0 - keep) * ramp ** 1.3)[:, None, None]
+        self.e *= (1.0 - (1.0 - keep) * ramp ** TRAIL_FALL)[:, None, None]
 
     def image(self):
         """The frame as RGBA.
@@ -459,18 +459,22 @@ def pyroclast(sheet, t, rng):
     hot, mid, deep = (1.0, 0.92, 0.55), (1.0, 0.52, 0.10), (0.85, 0.16, 0.04)
     cx, hy = SHOT_W * .5, SHOT_H * HEAD_Y
 
+    # **It narrows away from the head, and that is the board's rule rather than a flame's.** A
+    # real jet widens as it leaves the nozzle - but this is flown *head first*, so the widening
+    # end is the one that sits at the barrel, where `SiegeView.Emerged` cuts it flat. Drawn the
+    # other way up it is still unmistakably a torrent of fire and it leaves nothing at the cut.
     for i in range(9):
         a = i / 8.0
         y = hy + (SHOT_H * .95 - hy) * a
-        wide = SHOT_W * (.30 + 1.05 * a)
+        wide = SHOT_W * (.78 - .52 * a)
         sheet.cloud(cx + math.sin(a * 5.0 + t * 3.0) * SHOT_W * .07, y,
                     wide, SHOT_H * .16, deep if a > .55 else mid,
-                    .50 * (1.0 - a * .45), rng, cells=5)
+                    .52 * (1.0 - a * .55), rng, cells=5)
 
-    sheet.seg(cx, hy, cx, hy + SHOT_H * .55, SHOT_W * .21, mid, .85,
-              power=1.5, taper=SHOT_W * .42)
-    sheet.seg(cx, hy, cx, hy + SHOT_H * .30, SHOT_W * .10, hot, 1.6,
-              power=1.4, taper=SHOT_W * .20)
+    sheet.seg(cx, hy, cx, hy + SHOT_H * .55, SHOT_W * .34, mid, .85,
+              power=1.5, taper=SHOT_W * .09)
+    sheet.seg(cx, hy, cx, hy + SHOT_H * .30, SHOT_W * .18, hot, 1.6,
+              power=1.4, taper=SHOT_W * .05)
 
     for _ in range(14):
         a = rng.random()
@@ -536,8 +540,8 @@ def permafrost(sheet, t, rng):
         a = (i + 1) / 8.0
         sheet.cloud(cx + math.sin(a * 4.0 + t * 2.0) * SHOT_W * .10,
                     hy + (SHOT_H * .92 - hy) * a,
-                    SHOT_W * (.48 + .48 * a), SHOT_H * .16, ice,
-                    .52 * (1.0 - a * .55), rng, cells=5)
+                    SHOT_W * (.74 - .40 * a), SHOT_H * .16, ice,
+                    .52 * (1.0 - a * .60), rng, cells=5)
 
     for _ in range(13):
         a = rng.random()
@@ -795,24 +799,26 @@ def starfall(sheet, t, rng):
     ember, hot = (1.0, 0.45, 0.06), (1.0, 0.86, 0.40)
     cx, hy = SHOT_W * .5, SHOT_H * HEAD_Y
 
+    # Narrowing away from the head, for `pyroclast`'s reason: the far end is what parks at the
+    # barrel, so it is the end that has to be quiet.
     for i in range(10):
         a = (i + 1) / 10.0
-        sheet.cloud(cx + math.sin(a * 6.0 + t * 4.0) * SHOT_W * .11,
+        sheet.cloud(cx + math.sin(a * 6.0 + t * 4.0) * SHOT_W * .11 * (1.0 - a * .6),
                     hy + (SHOT_H * .96 - hy) * a,
-                    SHOT_W * (.40 + .66 * a), SHOT_H * .17, ember,
-                    .85 * (1.0 - a * .45), rng, cells=5)
+                    SHOT_W * (.86 - .58 * a), SHOT_H * .17, ember,
+                    .88 * (1.0 - a * .55), rng, cells=5)
 
-    sheet.seg(cx, hy, cx, hy + SHOT_H * .62, SHOT_W * .21, ember, 1.05,
-              power=1.4, taper=SHOT_W * .40)
-    sheet.seg(cx, hy, cx, hy + SHOT_H * .34, SHOT_W * .13, hot, 1.30,
-              power=1.4, taper=SHOT_W * .18)
+    sheet.seg(cx, hy, cx, hy + SHOT_H * .62, SHOT_W * .34, ember, 1.05,
+              power=1.4, taper=SHOT_W * .08)
+    sheet.seg(cx, hy, cx, hy + SHOT_H * .34, SHOT_W * .20, hot, 1.30,
+              power=1.4, taper=SHOT_W * .06)
 
     for _ in range(16):
         a = rng.random()
-        sheet.dot(cx + rng.uniform(-1, 1) * SHOT_W * (.14 + .45 * a),
+        sheet.dot(cx + rng.uniform(-1, 1) * SHOT_W * (.34 - .22 * a),
                   hy + (SHOT_H * .96 - hy) * a,
                   SHOT_W * rng.uniform(.010, .028), hot,
-                  rng.uniform(.8, 1.6) * (1.0 - a * .35))
+                  rng.uniform(.8, 1.6) * (1.0 - a * .55))
 
     sheet.dot(cx, hy, SHOT_W * .50, ember, .66)
     sheet.ring(cx, hy, SHOT_W * .21, SHOT_W * .060, hot, 1.5)
@@ -1037,9 +1043,16 @@ def seed_of(key, frame):
     return (h ^ (frame * 2654435761)) & 0xFFFFFFFF
 
 
-#: Where a bolt's trail starts fading, and what is left of it at the frame's bottom edge.
-#: See `Sheet.wane`. Shot reels only - a flash and an impact are drawn round a point.
-TRAIL_WANE, TRAIL_KEEP = 0.34, 0.12
+#: Where a bolt's trail starts fading, what is left of it at the frame's bottom edge, and how
+#: sharply it goes. See `Sheet.wane`. Shot reels only - a flash and an impact are drawn round a
+#: point.
+#:
+#: **The curve bends the way it does because of where the trail is cut.** `SiegeView.Emerged` draws
+#: the reel from its top down to wherever the shot has flown, so the *tail end* of what is drawn is
+#: always parked at the barrel - and a flat cut through something wide, bright and opaque is a slab
+#: lying across the turret's shoulder. A power under one fades hard immediately after the head and
+#: then trails off, which is both what a comet does and what leaves nothing at the cut to see.
+TRAIL_WANE, TRAIL_KEEP, TRAIL_FALL = 0.16, 0.0, 0.75
 
 
 #: How big and how bright the core every muzzle flash carries at the barrel, as a share of the

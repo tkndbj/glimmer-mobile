@@ -194,6 +194,9 @@ namespace GlimmerGrove.Persistence
             if (walletA.heartsSpent != walletB.heartsSpent) return true;
             if (walletA.heartsDueUnix != walletB.heartsDueUnix) return true;
             if (walletA.heartBoostUntilUnix != walletB.heartBoostUntilUnix) return true;
+            if (walletA.xpBoostWatchedUntilUnix != walletB.xpBoostWatchedUntilUnix) return true;
+            if (walletA.xpBoostBoughtUntilUnix != walletB.xpBoostBoughtUntilUnix) return true;
+            if (walletA.xpBoostEarned != walletB.xpBoostEarned) return true;
 
             // The hint ledger, for the reason above it: three counters and no derived count,
             // because the refill deadline moves without the count moving and that is exactly

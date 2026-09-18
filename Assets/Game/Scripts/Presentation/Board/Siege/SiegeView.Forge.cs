@@ -247,11 +247,17 @@ namespace GlimmerGrove
             float from = _lineY + Cell * .6f;
             float to = _hillTop;
 
-            var frames = Reel("laser");
+            // **Its own front, and not the stormglass's beam.** This drew `laser` stretched to
+            // the width of the board, which is a bar sliding past rather than time freezing: a
+            // laser is flat at full alpha across its middle and has no leading edge, so what
+            // crossed the hill was a blue stripe. `stillwave` is a wavefront - a hot edge with
+            // graduations and shards crystallising behind it - and it is the same vocabulary the
+            // dial below carries, so the two read as one thing arriving twice.
+            var frames = Reel("stillwave");
             var face = frames != null && frames.Length > 0 ? frames[0] : Art.SoftCapsule(64);
 
             var wave = UIKit.Img("Still wave", _fx, face, Pal.A(Pal.Glass, .95f),
-                                 new Vector2(Span.x, Cell * .9f));
+                                 new Vector2(Span.x, Cell * StillFront));
             wave.raycastTarget = false;
 
             if (frames != null && frames.Length > 0) Flipbook.Attach(wave, frames, 30f, true);
@@ -263,8 +269,12 @@ namespace GlimmerGrove
             {
                 if (!rt) return;
                 rt.anchoredPosition = new Vector2(0f, Mathf.Lerp(from, to, t));
-                rt.localScale = new Vector3(1f, Mathf.Lerp(1f, .35f, t), 1f);
-                wave.color = Pal.A(Pal.Glass, Mathf.Lerp(.95f, .2f, t));
+
+                // **It opens rather than closing.** The old front thinned to a third as it went,
+                // which reads as a thing running out of energy; a wall of stopped time should
+                // arrive at the crest as wide as it left the line and simply stop being lit.
+                rt.localScale = new Vector3(1f, Mathf.Lerp(.72f, 1.15f, t), 1f);
+                wave.color = Pal.A(Pal.Glass, Mathf.Lerp(1f, .12f, t * t));
             }, wave).OnDone(() => { if (wave) Destroy(wave.gameObject); });
 
             // **A ring closing on every body as the wave reaches it**, staggered by how far up
@@ -309,6 +319,8 @@ namespace GlimmerGrove
                        new Vector2(Random.Range(-Cell * .15f, Cell * .15f), Cell * .7f));
             }, _fx);
 
+            Dial(seconds);
+
             Flow.Flash(Pal.A(Pal.Glass, .55f), .22f, .30f);
             Dilate(.45f, .28f);
             ShakeBoard(Cell * .05f);
@@ -325,5 +337,96 @@ namespace GlimmerGrove
         /// visibly arrived late at the crest.
         /// </summary>
         const float StillSweep = .42f;
+
+        /// <summary>How deep the wavefront is drawn, in cells. See <c>make_siege_art.stillwave</c>.</summary>
+        const float StillFront = 1.15f;
+
+        /// <summary>
+        /// How wide the dial is drawn, how much of it is lit, and how long it takes to arrive and
+        /// to break.
+        ///
+        /// <b>Wide and faint rather than small and solid.</b> It is drawn over the thing the
+        /// player is watching, so it has to be read *through*: at four and a half cells it frames
+        /// the hill rather than sitting on it, and at a little over a third of an alpha the bodies
+        /// under it are never in doubt. The figures are the one part of this that is taste, and
+        /// the direction to move the alpha is down.
+        /// </summary>
+        const float DialWide = 4.2f, DialInk = .62f, DialIn = .26f, DialOut = .30f;
+
+        /// <summary>
+        /// The clock the hill wears while it is stopped: it arrives with the wave, holds frozen
+        /// for the whole window, and breaks when the sand runs out.
+        ///
+        /// <para>
+        /// <b>What makes the charm legible rather than merely loud.</b> A wavefront says
+        /// <em>something arrived</em>; only a clock face says <em>time stopped</em>, and the stop
+        /// is the entire thing this gem is bought for. Every other charm on this board announces
+        /// itself with a shape a player can name — a lance is a line, a stormglass is a beam, a
+        /// furnace is a nugget going into a turret — and this one had a blue flash.
+        /// </para>
+        /// <para>
+        /// <b>Its hands never move</b> (<c>make_siege_art.stilldial</c>): a ticking clock is a
+        /// working one. What keeps a held sprite from reading as a frozen *game* is the glint
+        /// travelling its rim and the motes still rising off the hill, which is the same rule the
+        /// motes were added for.
+        /// </para>
+        /// <para>
+        /// <b>Drawn at the hill's own middle rather than at the stone that sprang it.</b> The stop
+        /// is a fact about the whole hill, and a dial hanging off the field would say it was
+        /// something the gem did to one place.
+        /// </para>
+        /// </summary>
+        void Dial(float seconds)
+        {
+            var frames = Reel("stilldial");
+            if (frames == null || frames.Length == 0) return;
+
+            float mid = (_hillTop + _hillFoot) * .5f;
+            float size = Cell * DialWide;
+
+            var dial = UIKit.Img("Still dial", _fx, frames[0], Pal.A(Pal.Glass, 0f),
+                                 new Vector2(size, size));
+            dial.raycastTarget = false;
+            dial.preserveAspect = true;
+            dial.rectTransform.anchoredPosition = new Vector2(0f, mid);
+
+            // **Under everything else the stop draws**, so the rings closing on each body and the
+            // motes rising read over it rather than through it.
+            dial.transform.SetAsFirstSibling();
+
+            Flipbook.Attach(dial, frames, 24f, true);
+
+            var rt = dial.rectTransform;
+
+            // It arrives turning and settles, which is the one moment its hands are allowed to
+            // look like they were moving - and then they never do again.
+            Tween.Run(DialIn, Ease.OutQuad, t =>
+            {
+                if (!rt) return;
+                rt.localScale = Vector3.one * Mathf.Lerp(1.55f, 1f, t);
+                rt.localRotation = Quaternion.Euler(0f, 0f, Mathf.Lerp(-22f, 0f, t));
+                dial.color = Pal.A(Pal.Glass, DialInk * t);
+            }, dial);
+
+            // And it breaks rather than fading: the sand running out is a beat, and the hill
+            // walking again on a dial that merely dimmed would be the charm ending by omission.
+            float hold = Mathf.Max(0f, seconds - DialOut);
+
+            Tween.After(hold, () =>
+            {
+                if (!rt) return;
+
+                Shockwave(new Vector2(0f, mid), Pal.Glass, DialWide * .9f, DialOut);
+                Burst.Sparks(_fx, new Vector2(0f, mid), Pal.Glass, 14, size * .55f,
+                             Cell * .18f, .5f);
+
+                Tween.Run(DialOut, Ease.InQuad, t =>
+                {
+                    if (!rt) return;
+                    rt.localScale = Vector3.one * Mathf.Lerp(1f, 1.32f, t);
+                    dial.color = Pal.A(Pal.Glass, DialInk * (1f - t));
+                }, dial).OnDone(() => { if (dial) Destroy(dial.gameObject); });
+            }, dial);
+        }
     }
 }

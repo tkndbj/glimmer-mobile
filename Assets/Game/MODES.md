@@ -634,6 +634,22 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    the other six were not, which is the tell. `Image.Type.Filled` crops instead - it draws a quad off
    the sprite's outer UVs, so it is safe on these reels' tight mesh - and a crop distorts nothing.
    **Every borrower of a pooled widget gets `Simple` back**, or a flash inherits a half-drawn frame.
+37dw. **The tail end of a trail is what parks at the barrel, so it has to be the *quietest* part
+   of the reel — and two rounds of fixing the geometry could not fix art drawn the other way up.**
+   The crop draws a reel from its head down to however far the shot has flown, so the far end of
+   what is drawn sits at the muzzle for the whole flight. Measured, two of the ten legendaries were
+   **wider at the tail than at the head** (a jet and a meteor, both drawn widening away from the
+   head the way real exhaust does) and **all ten were fully opaque there** — so what lay across the
+   turret's shoulder was a wide, flat-cut, full-brightness slab. That is what "a weird tail at the
+   very first moment" was, and no amount of moving the cut could have removed it. Trails now
+   **narrow and fade** toward the tail (`make_legend_fx.TRAIL_WANE/TRAIL_FALL`), which is what a
+   comet does anyway. **Check the far end before adding a bolt: it is the end the player sees
+   parked on the turret.**
+37dx. **Two builds said the fix was not landing and the build was not the problem.** Before
+   assuming a stale APK, `global-metadata.dat` inside the shipped `.apk` carries every method name
+   — searching it for the symbol that was added settles in one command whether the code shipped.
+   It had; the geometry was right and the art was wrong, and a third round was spent because the
+   obvious explanation was never tested.
 37dv. **A crop is a straight edge, so three things conspire to hide it.** Measured, every reel in this
    mode was opaque along its whole trail - there is *no* depth at which a cut falls on faint pixels. So
    `HeadRoom` is a distance in **cells** tied to the muzzle flash's own reach (its ink covers .58 of a
@@ -649,6 +665,24 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    frame's **bottom**, and a probe that read them from the top drew the bolt three cells high and the
    flash a cell and a half low. It happened to point at the same conclusion, which is the dangerous
    case. 44d, met from a third direction: a mirror written to diagnose one fault will invent another.
+
+37dy. **The one charm whose whole payoff is a moment was drawn with a borrowed sprite.** An
+   hourglass stops the hill for three seconds, and what announced it was the stormglass's `laser`
+   stretched to the width of the board - a bar is flat at full alpha across its middle and has no
+   leading edge, so what crossed the hill was a blue stripe sliding past. It is `beam`'s own lesson
+   (a still gradient has no event in it) arriving on the most expensive beat in the mode.
+   `make_siege_art.stillwave` is a **front**: a hot edge, graduations hanging off it at a fixed
+   pitch and shards crystallising behind, so time visibly *freezes across* the hill rather than a
+   shape being flown over it.
+37dz. **A wave says something arrived; only a clock says time stopped.** So the stop now hangs a
+   **dial** over the hill for the whole window (`SiegeView.Dial`, `make_siege_art.stilldial`) -
+   a graduated ring with the **hourglass itself** inside it, which is the shape of the stone the
+   player just matched. It replaced a pair of clock hands: hands say *a clock*, which is furniture
+   this game has nowhere else. **Nothing on it runs** - a ticking clock is a working one - and what
+   keeps a held sprite from reading as a frozen *game* is the glint travelling its rim and the
+   motes still rising, which is what the motes were added for. It arrives turning, holds, and
+   **breaks** when the sand runs out, because a charm that ended by fading would end by omission.
+   Drawn as an outline at well under full alpha: it hangs over the thing the player is watching.
 
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` on rung five or ten, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds

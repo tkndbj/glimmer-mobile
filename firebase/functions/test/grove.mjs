@@ -38,6 +38,7 @@ const {
   BOARD_IDS, deciles, optedIn, saveRevision,
   buildCard, heldCompanions, publishedLine, WARD_STARS_LEAST, WARD_STARS_MOST,
   endlessWaves, endlessXp, DEFAULT_ENDLESS, HARD_MAX_LIFETIME_WAVES,
+  xpBoostXp, DEFAULT_XP_BOOST, HARD_MAX_BOOST_XP,
 } = await import(pathToFileURL(compiled).href);
 
 const namesModule = join(REPO, "firebase", "functions", "lib", "names.js");
@@ -314,6 +315,49 @@ console.log("\nendless xp");
         endlessXp({ endlessBest: 37 }, { endless: vectors.endlessConfig }), 0);
   equal("a null row is skipped",
         endlessWaves({ endlessBest: [null, { level: "a", waves: 5 }] }), 5);
+}
+
+// ------------------------------------------------------------------ the XP boost
+//
+// The second rule here that pays XP with no star behind it, and the only one that is a
+// *multiplier*. What is shared is the clamp alone: both sides turn a stored bonus plus a
+// provable XP figure into what is really paid, and the bound is proportional rather than flat
+// because a boost can only ever have multiplied XP that was actually earned.
+//
+// A drift is silent. The card is valid and the keeper level is merely lower, and `buildCard`
+// drops what that level gated rather than clamping it (19a).
+console.log("\nxp boost");
+{
+  equal("the built-in cap is the one the client ships",
+        DEFAULT_XP_BOOST.maxPercent, vectors.xpBoostDefaults.maxPercent);
+  equal("the structural ceiling is the one the client ships", HARD_MAX_BOOST_XP, 1000000000);
+
+  for (const c of vectors.xpBoostCases ?? []) {
+    const save = { wallet: { xpBoostEarned: c.stored } };
+    const config = { xpBoost: { maxPercent: c.maxPercent } };
+
+    equal(c.name, xpBoostXp(save, config, c.provable), c.bonus);
+  }
+
+  // Absence, which a case cannot carry: an unseeded config pays the built-in share rather than
+  // nothing, or a server one deploy behind publishes every boosted player short.
+  const held = { wallet: { xpBoostEarned: 300 } };
+  equal("an unseeded config still clamps at the built-in share",
+        xpBoostXp(held, {}, 10000), 300);
+  equal("a null block falls back", xpBoostXp(held, { xpBoost: null }, 10000), 300);
+
+  // The shapes that are not a wallet. All pay nothing rather than throwing, because this runs
+  // inside a publish that must not fail over a malformed save.
+  equal("a save with no wallet pays nothing", xpBoostXp({}, {}, 10000), 0);
+  equal("a wallet that is not an object pays nothing",
+        xpBoostXp({ wallet: 7 }, {}, 10000), 0);
+  equal("a wallet array pays nothing", xpBoostXp({ wallet: [] }, {}, 10000), 0);
+  equal("an unreadable stored bonus pays nothing",
+        xpBoostXp({ wallet: { xpBoostEarned: "lots" } }, {}, 10000), 0);
+  equal("an unreadable cap pays nothing",
+        xpBoostXp(held, { xpBoost: { maxPercent: "lots" } }, 10000), 0);
+  equal("a fractional stored bonus is floored",
+        xpBoostXp({ wallet: { xpBoostEarned: 99.9 } }, {}, 10000), 99);
 }
 
 // ------------------------------------------------------------------------- names

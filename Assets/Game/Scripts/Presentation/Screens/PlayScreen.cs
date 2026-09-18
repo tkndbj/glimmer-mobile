@@ -861,6 +861,10 @@ namespace GlimmerGrove
                 // whole point of the bonus existing.
                 v.GoldenPercent = done.GoldenPercent;
 
+                // Already inside `XpGained`; these say how much of it a running boost paid.
+                v.BoostXp = done.BoostXp;
+                v.BoostPercent = done.BoostPercent;
+
                 // News rather than a reward, and it can only be told by the ledger - see
                 // RunLedger.WinRecord.ChapterOpened.
                 v.ChapterOpened = done.ChapterOpened;

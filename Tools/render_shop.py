@@ -70,7 +70,7 @@ COLUMNS, CELLW, CELLH = 2, 508.0, 560.0
 # tabs and the store's one sentence. The whole point of drawing it here is the question the
 # owner asked when they asked for it: does it clear the buttons above and the line below. Both
 # edges come out of the same sum the screen uses, so neither can be answered by accident.
-REFER_W, REFER_H, REFER_GAP = CELLW * COLUMNS, 256.0, 16.0
+REFER_W, REFER_H, REFER_GAP = CELLW * COLUMNS, 200.0, 16.0
 REFER_ROW = REFER_GAP + REFER_H + REFER_GAP
 SHELF_TOP = HEADER + TABROW + REFER_ROW
 
@@ -113,13 +113,27 @@ SPOT_ALPHA = .22
 
 # `ShopAdShelf.For` — the two shelves whose first spot is a rewarded video, and what each
 # pays. Read out of `progression.json` rather than typed, for this file's standing rule.
-AD_SHELF = {"coins": "coin_bonus", "supplies": "heart_refill"}
+# `ShopAdShelf.All` — a shelf may stand more than one video, and the supplies shelf stands
+# two. A list rather than one id, because the sort is cheapest first and nothing is cheaper
+# than nothing, so every free offer belongs at the head whether there is one or three.
+AD_SHELF = {"coins": ["coin_bonus"], "supplies": ["heart_refill"],
+            "utilities": ["xp_boost"]}
 
 # `RewardArt.Token` for the two kinds a shelf can pay: credits are frame nought of the
 # spinning coin, hearts are the game's own glyph.
-AD_TOKEN = {"credits": "Coin/f0", "hearts": "ic_heart"}
-AD_UNIT = {"credits": "Coins", "hearts": "Hearts"}
-AD_TINT = {"credits": K.GOLD, "hearts": K.ROSE}
+# `ShopArt.AdPicture` — a drawn illustration per reward, each carrying its own play button.
+# Keyed on what the placement *pays* rather than on the placement, so the coin shelf and the
+# victory panel share one picture. A reward absent here falls back to the composed heap, which is
+# the hint refill's case and the reason that path is still drawn at all.
+AD_PICTURE = {"credits": "ad_coin", "hearts": "ad_heart", "xp_boost": "ad_xp"}
+
+# `StoreGoodKinds.ShelfFor` — a fact about the good rather than a line in the screen, so the
+# mirror asks the same question the shelf does. Anything not named here is a supply.
+GOOD_SHELF = {"xp_boost": "utilities"}
+
+AD_TOKEN = {"credits": "Coin/f0", "hearts": "ic_heart", "xp_boost": "ic_star3d"}
+AD_UNIT = {"credits": "Coins", "hearts": "Hearts", "xp_boost": "XP boost"}
+AD_TINT = {"credits": K.GOLD, "hearts": K.ROSE, "xp_boost": K.AQUA}
 
 
 # --------------------------------------------------------------------------- TokenPile
@@ -215,30 +229,38 @@ def ad_card(sheet, x, top, shelf, kind, amount):
     K.paste(sheet, K.glow(370, 1.6, ACCENT.get(shelf, K.BLOOM), SPOT_ALPHA),
             plate_cx, ptop + ART_DROP)
 
-    # `ShopArt.PaintAd` — the heap, then the play mark standing in it. The box is ART wide,
-    # which is what the fractions below are measured against on both sides. **Two tokens**,
-    # which is the count no pack ladder uses: the picture's job is to be a different card from
-    # the six prices under it, and a heap of three beside a fifteen-heart pack is the same
-    # picture twice (invariant 18e). This mirror is what caught that.
-    token = ART * .44
-    art = Image.open(UI / f"{AD_TOKEN[kind]}.png").convert("RGBA")
-    for dx, dy, tilt in pile(2, token):
-        one = K.fit(art, (token, token)).rotate(tilt, Image.BICUBIC, expand=True)
-        # Unity's y is positive upward and an image's is positive downward, so the lift and
-        # the row step are both negated here - once, at the point of placement. Drawn the
-        # other way up the pyramid stands on its point, which is the one thing about a heap
-        # that is obvious in a picture and invisible in the arithmetic (invariant 44d).
-        K.paste(sheet, one, plate_cx + dx, ptop + ART_DROP - (ART * .06 + dy))
+    # `ShopArt.PaintAd` — a drawn picture where the reward has one, the composed heap where it
+    # does not. Only the *art* differs between the two: the amount, the unit, the green face and
+    # the ribbon under this are the card's and are shared, which is how `ProductCard` has it.
+    if kind in AD_PICTURE:
+        # The illustration carries its own play button, so none of the seat, ring or mark below
+        # is drawn over it. Doing so would put two play marks on one card.
+        drawn = Image.open(UI / f"{AD_PICTURE[kind]}.png").convert("RGBA")
+        K.paste(sheet, K.fit(drawn, (ART * 1.22, ART * 1.22)), plate_cx, ptop + ART_DROP)
+    else:
+        # The box is ART wide, which is what the fractions here are measured against on both
+        # sides. **Two tokens**, which is the count no pack ladder uses: the picture's job is to
+        # be a different card from the six prices under it, and a heap of three beside a
+        # fifteen-heart pack is the same picture twice (invariant 18e). This mirror caught that.
+        token = ART * .44
+        art = Image.open(UI / f"{AD_TOKEN[kind]}.png").convert("RGBA")
+        for dx, dy, tilt in pile(2, token):
+            one = K.fit(art, (token, token)).rotate(tilt, Image.BICUBIC, expand=True)
+            # Unity's y is positive upward and an image's is positive downward, so the lift and
+            # the row step are both negated here - once, at the point of placement. Drawn the
+            # other way up the pyramid stands on its point, which is the one thing about a heap
+            # that is obvious in a picture and invisible in the arithmetic (invariant 44d).
+            K.paste(sheet, one, plate_cx + dx, ptop + ART_DROP - (ART * .06 + dy))
 
-    seat = ART * .34
-    disc = Image.new("RGBA", (int(seat), int(seat)), (0, 0, 0, 0))
-    ImageDraw.Draw(disc).ellipse([0, 0, seat - 1, seat - 1], fill=(*K.MINT, 217))
-    ImageDraw.Draw(disc).ellipse([3, 3, seat - 4, seat - 4], fill=(13, 23, 15, 224))
-    K.paste(sheet, disc, plate_cx, ptop + ART_DROP + ART * .24)
+        seat = ART * .34
+        disc = Image.new("RGBA", (int(seat), int(seat)), (0, 0, 0, 0))
+        ImageDraw.Draw(disc).ellipse([0, 0, seat - 1, seat - 1], fill=(*K.MINT, 217))
+        ImageDraw.Draw(disc).ellipse([3, 3, seat - 4, seat - 4], fill=(13, 23, 15, 224))
+        K.paste(sheet, disc, plate_cx, ptop + ART_DROP + ART * .24)
 
-    play = K.tint(K.fit(Image.open(UI / "ic_play.png").convert("RGBA"), (ART * .17, ART * .17)),
-                  K.CREAM)
-    K.paste(sheet, play, plate_cx + ART * .012, ptop + ART_DROP + ART * .24)
+        play = K.tint(K.fit(Image.open(UI / "ic_play.png").convert("RGBA"),
+                            (ART * .17, ART * .17)), K.CREAM)
+        K.paste(sheet, play, plate_cx + ART * .012, ptop + ART_DROP + ART * .24)
 
     K.text(sheet, f"{amount:,}", plate_cx, pbot - AMOUNT_RISE, 46, fill=AD_TINT[kind], outline=4)
     K.text(sheet, AD_UNIT[kind], plate_cx, pbot - SUB_RISE, 26, fill=(255, 245, 225), outline=2)
@@ -280,7 +302,13 @@ def good_card(sheet, x, top, kind, amount, gems):
 
     K.paste(sheet, K.glow(370, 1.6, ACCENT["supplies"], SPOT_ALPHA), plate_cx, ptop + ART_DROP)
 
-    if kind == "heart_boost":
+    if kind == "xp_boost":
+        # `ShopArt.PaintGood` — the wordmark, because a boost is a rate on something the player
+        # already has and there is no object to draw. The letters say what is multiplied.
+        mark = K.fit(Image.open(UI / "ic_xp_boost.png").convert("RGBA"), (ART * .74, ART * .74))
+        K.paste(sheet, mark, plate_cx, ptop + ART_DROP)
+        headline, unit, tint = f"{amount}h", "Double XP", K.AQUA
+    elif kind == "heart_boost":
         boost = K.fit(Image.open(UI / "ic_heart_boost.png").convert("RGBA"), (ART * .74, ART * .74))
         K.paste(sheet, boost, plate_cx, ptop + ART_DROP)
         headline, unit, tint = f"{amount}h", "Faster hearts", K.SUN
@@ -381,7 +409,7 @@ def store_news(shelf, offline):
         return ''
     return txt('ui.shop.no_connection')
 TAB_GLYPH = {"gems": "ic_gem", "coins": "Shop/pouch", "bundles": "ic_gift",
-             "supplies": "ic_heart", "utilities": "Utility/firepot"}
+             "supplies": "ic_heart", "utilities": "ic_utilities"}
 
 
 def rules():
@@ -396,22 +424,28 @@ def products(shelf):
     return on
 
 
-def ad_offer(shelf):
-    """What this shelf's free spot pays, or None when it has none.
+def ad_offers(shelf):
+    """What this shelf's free spots pay, in the order they are drawn. Empty when it has none.
 
     Read out of the published table rather than typed, for the reason `ShopScreen.Reload`
     reads it there: an offer the table does not carry takes the card off the shelf, so a
     mirror with its own number would go on drawing a card the game had stopped drawing.
+
+    A *list*, because `ShopAdShelf.All` returns one and the supplies shelf stands two. The
+    shift under them is the count rather than a flag, exactly as `ShelfRows` counts it — a
+    mirror that shifted by one where the game shifts by two reports clearance that does not
+    exist, which is the one thing a render mirror must never do.
     """
-    placement = AD_SHELF.get(shelf)
-    if placement is None:
-        return None
+    published = rules().get("ads", {}).get("placements", [])
+    found = []
 
-    for p in rules().get("ads", {}).get("placements", []):
-        if p.get("id") == placement and p.get("kind") in AD_TOKEN and p.get("amount", 0) > 0:
-            return p["kind"], p["amount"]
+    for placement in AD_SHELF.get(shelf, []):
+        for p in published:
+            if p.get("id") == placement and p.get("kind") in AD_TOKEN and p.get("amount", 0) > 0:
+                found.append((p["kind"], p["amount"]))
+                break
 
-    return None
+    return found
 
 
 def rung(tier, size, rungs):
@@ -435,7 +469,8 @@ def supplies(sheet, top, shift):
     never lays out.
     """
     store = rules()["store"]
-    goods = store.get("goods", [])
+    goods = [g for g in store.get("goods", [])
+             if GOOD_SHELF.get(g.get("kind"), "supplies") == "supplies"]
     cans = sorted([p for p in store["products"] if p.get("shelf") == "supplies"],
                   key=lambda p: p.get("referenceUsdCents", 0))
 
@@ -457,6 +492,66 @@ def supplies(sheet, top, shift):
                  "starter": "STARTER"}.get(p.get("badge"))
         container_card(sheet, x, y, n - len(goods), p["heartCapacity"],
                        f"${p['referenceUsdCents'] / 100:.2f}", badge)
+
+
+def utilities(sheet, top, shift):
+    """The utilities shelf: the gem-priced goods sold here, then the action bar's own kit.
+
+    **This shelf had no mirror at all until the XP boost moved onto it**, which is why it is
+    worth one now: it is the shelf whose order was just changed, and "is the thing I moved where
+    I think it is" is the one question a render can answer and nothing else can.
+
+    `ShopCell.Bind` walks the goods first and the kit after, so this does too. A mirror that
+    sorted them by price would draw a shelf the game never lays out.
+    """
+    store = rules()["store"]
+    goods = [g for g in store.get("goods", []) if GOOD_SHELF.get(g.get("kind")) == "utilities"]
+    kit = sorted((rules().get("utilities") or {}).get("items") or [],
+                 key=lambda i: i.get("order", 0))
+
+    for n in range(len(goods) + len(kit)):
+        i = n + shift
+        col, row = i % COLUMNS, i // COLUMNS
+        x = W / 2 + (col - (COLUMNS - 1) * .5) * CELLW
+        y = top + row * CELLH
+        if y + CELLH > H - K.NAV_HEIGHT - RESTORE:
+            break
+
+        if n < len(goods):
+            g = goods[n]
+            good_card(sheet, x, y, g["kind"], g["amount"], g["gems"])
+            continue
+
+        item = kit[n - len(goods)]
+        kit_card(sheet, x, y, item["id"], item.get("gemPrice", 0))
+
+
+def kit_card(sheet, x, top, item, gems):
+    """One utility: `ProductCard.Draw(UtilityItem, ...)` and `ShopArt.PaintKit`.
+
+    The action bar's own picture and nothing else — which is the point of the card, and why
+    `ShopArt` draws no heap or ladder on it: the shelf and the bar are one row of the same four
+    things, so a second arrangement here would be a second thing to learn.
+    """
+    plate_cx, plate_cy = x, top + CELLH / 2
+    K.paste(sheet, K.skin("Hud/card", PLATEW, PLATEH), plate_cx, plate_cy)
+
+    ptop = plate_cy - PLATEH / 2
+    pbot = plate_cy + PLATEH / 2
+
+    K.paste(sheet, K.glow(370, 1.6, ACCENT["utilities"], SPOT_ALPHA), plate_cx, ptop + ART_DROP)
+
+    art = K.fit(Image.open(UI / "Utility" / f"{item}.png").convert("RGBA"), (ART * .74, ART * .74))
+    K.paste(sheet, art, plate_cx, ptop + ART_DROP)
+
+    K.text(sheet, item.upper(), plate_cx, pbot - AMOUNT_RISE, 38, fill=K.SUN, outline=4)
+    K.text(sheet, "Utility", plate_cx, pbot - SUB_RISE, 26, fill=(255, 245, 225), outline=2)
+
+    K.paste(sheet, K.skin("btn_violet", FACEW, FACEH), plate_cx, pbot - FACE_RISE)   # Skins.Gem
+    glyph = FACEH * .34
+    mark = K.fit(Image.open(UI / "ic_gem.png").convert("RGBA"), (glyph, glyph))
+    K.paste(sheet, mark, plate_cx - 60, pbot - FACE_RISE)
+    K.text(sheet, f"{gems:,}", plate_cx + 26, pbot - FACE_RISE, 34, fill=K.CREAM, outline=3)
 
 
 def invite_banner(sheet):
@@ -586,8 +681,8 @@ def screen(shelf, offline=False):
     # The free card is drawn live whatever the network is doing (invariant 18g), so a
     # shelf carrying one is *not* empty when the store is unreachable - which is exactly
     # why `PaintNews` counts rows rather than products before it centres anything.
-    ad = ad_offer(shelf)
-    shift = 1 if ad else 0
+    ads = ad_offers(shelf)
+    shift = len(ads)
 
     # **Asked before anything is placed**, because the answer decides where the shelf starts -
     # `ShopScreen.Repaint` orders `PaintNews` before `PaintNotice` for exactly this reason.
@@ -596,8 +691,14 @@ def screen(shelf, offline=False):
     saying = bool(news) and not centre
     top = SHELF_TOP + summary_row(saying)
 
-    if ad:
-        ad_card(sheet, W / 2 - CELLW / 2, top, shelf, ad[0], ad[1])
+    # The same grid every other cell is placed on, because the free spots *are* cells:
+    # `ShopCell.Bind` indexes one flat list and the first `len(ads)` of them are videos, so
+    # two of them sit side by side in a two-column shelf rather than stacked. Drawn stacked,
+    # this mirror reported a row of clearance the game does not have.
+    for slot, (kind, amount) in enumerate(ads):
+        col, row = slot % COLUMNS, slot // COLUMNS
+        ad_card(sheet, W / 2 + (col - (COLUMNS - 1) * .5) * CELLW, top + row * CELLH,
+                shelf, kind, amount)
 
     # `ShopScreen.PaintNews` - one sentence, two places, never both. A shelf with cards on
     # it carries it as a footnote under the tabs; a shelf with nothing on it is a blank
@@ -633,6 +734,11 @@ def screen(shelf, offline=False):
 
     if shelf == "supplies":
         supplies(sheet, top, shift)
+        K.navbar(sheet, "shop")
+        return sheet.convert("RGB")
+
+    if shelf == "utilities":
+        utilities(sheet, top, shift)
         K.navbar(sheet, "shop")
         return sheet.convert("RGB")
 

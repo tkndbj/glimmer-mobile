@@ -85,6 +85,29 @@ export interface ProgressionConfig {
    * payment is `xpPerWave: 0`, which is authored and therefore visible in a diff.
    */
   endless?: EndlessConfig;
+
+  /**
+   * What an XP boost multiplies and how far it may go.
+   *
+   * Absent falls back to the built-in constants for `endless`'s reason exactly: a block the
+   * seeder has not published yet would otherwise make this server derive a *lower* keeper level
+   * than the device, and `buildCard` drops rather than clamps whatever that level gated
+   * (invariant 19a), in silence.
+   */
+  xpBoost?: XpBoostConfig;
+}
+
+/**
+ * The XP boost's ceiling, as the server needs it.
+ *
+ * **Only `maxPercent` is here, and the omission is the point.** The windows, their lengths and
+ * the cooldown are all facts about *offering* a boost, which no server ever does — this side
+ * only ever answers "how much of the bonus in this save could honestly have been earned", and
+ * that question needs one number. Mirrors `XpBoostTable.MaxPercent`.
+ */
+export interface XpBoostConfig {
+  /** The most every running window may add together, as a percentage. */
+  maxPercent: number;
 }
 
 /**

@@ -379,19 +379,42 @@ namespace GlimmerGrove
 
             bool ready = state == GoodOfferState.Ready;
 
-            Shelf(StoreShelf.Supplies);
+            // The good's own shelf rather than a fixed one: the accent is what tells a card
+            // which tab it belongs to, and a boost sold on the utilities tab wearing the supplies
+            // colour is the card disagreeing with the page it is on.
+            Shelf(StoreGoodKinds.ShelfFor(good.Kind));
 
 
             ShopArt.PaintGood(_art, good);
 
-            _amount.text = good.Kind == StoreGoodKind.HeartBoost
-                ? Loc.Format("ui.shop.boost_hours", good.Amount)
-                : Compact.Number(good.Amount);
-            _amount.color = good.Kind == StoreGoodKind.HeartBoost ? Pal.A(Pal.Sun, 1f)
-                                                                  : Pal.A(Pal.Rose, 1f);
+            // **Switched rather than asked twice with a ternary**, which is invariant 44e's
+            // rule: a two-way test whose `else` is a real answer hides the case nobody is
+            // looking at, and a third kind added to one would have drawn an XP boost as a pile
+            // of hearts — silently, on a card somebody is being asked to pay for.
+            bool hours = good.Kind == StoreGoodKind.HeartBoost || good.Kind == StoreGoodKind.XpBoost;
 
-            _sub.text = Loc.Get(good.Kind == StoreGoodKind.HeartBoost
-                                ? "ui.shop.boost_note" : "ui.shop.hearts");
+            _amount.text = hours ? Loc.Format("ui.shop.boost_hours", good.Amount)
+                                 : Compact.Number(good.Amount);
+
+            switch (good.Kind)
+            {
+                case StoreGoodKind.HeartBoost:
+                    _amount.color = Pal.A(Pal.Sun, 1f);
+                    _sub.text = Loc.Get("ui.shop.boost_note");
+                    break;
+
+                case StoreGoodKind.XpBoost:
+                    // Aqua rather than the heart boost's amber, because the two sit on the same
+                    // shelf and a player scanning it should not have to read to tell them apart.
+                    _amount.color = Pal.A(Pal.Aqua, 1f);
+                    _sub.text = Loc.Get("ui.shop.xp_boost_note");
+                    break;
+
+                default:
+                    _amount.color = Pal.A(Pal.Rose, 1f);
+                    _sub.text = Loc.Get("ui.shop.hearts");
+                    break;
+            }
             _sub.color = Unit;
 
             // A short balance still shows the price. It used to replace it with "not enough
@@ -420,7 +443,7 @@ namespace GlimmerGrove
             // quantity of hearts. It comes off for the two full refusals, which are sentences
             // rather than prices: a gem in front of "your hearts are full" prices the refusal.
             SetPrice(priced ? Loc.Format("ui.shop.gem_price", Compact.Number(good.Gems))
-                            : Loc.Get(StoreWording.GoodRefusal(state)),
+                            : Loc.Get(StoreWording.GoodRefusal(state, good.Kind)),
                      gem: priced);
 
             PaintRibbon(0);

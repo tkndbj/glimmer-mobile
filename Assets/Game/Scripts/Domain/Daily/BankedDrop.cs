@@ -64,6 +64,17 @@ namespace GlimmerGrove.Daily
                     Wallet.GrantHints(drop.Amount);
                     return true;
 
+                case ChestDropKind.XpBoost:
+                    // The bought window, never the watched one — a gift is not metered, and the
+                    // watched deadline carries its own cooldown (`XpBoost.WatchedReadyAt`), so
+                    // anything else writing it would move a cooldown it knows nothing about.
+                    //
+                    // No ceiling question to ask first, unlike hints and utilities: a window
+                    // extends rather than being refused, and `Wallet.GrantXpBoost` caps the total
+                    // span so no sequence of grants stacks into a permanent boost.
+                    Progression.XpBoost.GrantBought(drop.Amount);
+                    return true;
+
                 case ChestDropKind.Utility:
                     // Applied here and now rather than claimed, exactly as hearts and hints are.
                     // A utility is not currency (invariant 13), and what makes that safe rather

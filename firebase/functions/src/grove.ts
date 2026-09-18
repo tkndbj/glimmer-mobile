@@ -47,7 +47,8 @@ import { getFirestore, FieldValue, FieldPath } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 
 import {
-  ProgressionConfig, RewardRule, EndlessConfig, MAX_STARS, MAX_LEVEL_ID_LENGTH, earnedCredits,
+  ProgressionConfig, RewardRule, EndlessConfig, XpBoostConfig,
+  MAX_STARS, MAX_LEVEL_ID_LENGTH, earnedCredits,
 } from "./progression";
 import { PreparedBlocklist, judgeName } from "./profanity";
 import { builtInBlocklist } from "./blocklist";
@@ -489,6 +490,57 @@ function clampCount(raw: unknown, ceiling: number): number {
  * is the rule the shared reward vectors pin against `ProgressionLedger`, and it has to stay a
  * pure function of the star records.
  */
+/** What ships in the client when no `xpBoost` block has been published. `XpBoostLimits`. */
+export const DEFAULT_XP_BOOST: XpBoostConfig = { maxPercent: 150 };
+
+/**
+ * The overflow guard behind the real bound. `XpBoostLimits.HardMaxBonusXp`.
+ */
+export const HARD_MAX_BOOST_XP = 1000000000;
+
+/**
+ * Bonus XP that boosts have paid this save, clamped to what the account can prove.
+ *
+ * **The bound is proportional, and that is the whole design.** A boost can only ever have
+ * multiplied XP that was really paid, so a stored bonus above `provable x maxPercent%` is
+ * arithmetically impossible however it got into the file — which clamps a forged figure to a
+ * multiple of real progress rather than to some generous absolute ceiling. It is the same shape
+ * `groveWorth` uses when it clamps a grove to what the account could afford (invariant 19a), and
+ * far tighter than a flat figure could be.
+ *
+ * `provableXp` is the star ledger's XP plus the Infinite lane's — every source the bonus could
+ * have been a percentage *of*. The client computes the identical clamp from the same two
+ * figures (`XpBoost.BonusFrom`); if the two ever disagree, a published card silently drops
+ * whatever the lower keeper level gated.
+ *
+ * **It pays XP and never currency.** `earnedCredits` still walks the star ledger alone, so a
+ * forged bonus moves a keeper level inside an honest range and moves no balance at all —
+ * invariant 13's fourth clause, the same bargain `endlessXp` below makes.
+ */
+export function xpBoostXp(
+  save: Record<string, unknown>,
+  config: ProgressionConfig,
+  provableXp: number
+): number {
+  const rule = config.xpBoost ?? DEFAULT_XP_BOOST;
+
+  const percent = Math.floor(Number(rule.maxPercent ?? 0));
+  if (!Number.isFinite(percent) || percent <= 0) return 0;
+  if (!Number.isFinite(provableXp) || provableXp <= 0) return 0;
+
+  const wallet = save.wallet;
+  if (!wallet || typeof wallet !== "object" || Array.isArray(wallet)) return 0;
+
+  const held = Math.floor(Number((wallet as { xpBoostEarned?: unknown }).xpBoostEarned ?? 0));
+  if (!Number.isFinite(held) || held <= 0) return 0;
+
+  // The multiply before the divide, and integer throughout: nothing that decides a payment here
+  // may be a float, because the runtimes disagree about them.
+  const ceiling = Math.floor(provableXp * percent / 100);
+
+  return Math.min(held, ceiling, HARD_MAX_BOOST_XP);
+}
+
 export function endlessXp(save: Record<string, unknown>, config: ProgressionConfig): number {
   const rule = config.endless ?? DEFAULT_ENDLESS;
 

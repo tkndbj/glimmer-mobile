@@ -3626,7 +3626,7 @@ def art_on_disk():
     return found
 
 
-GOOD_KINDS = {"hearts", "heart_boost"}
+GOOD_KINDS = {"hearts", "heart_boost", "xp_boost"}
 
 
 def check_store(progression, keys, manifest=None):
@@ -3821,9 +3821,9 @@ def check_store(progression, keys, manifest=None):
 
         kind = good.get("kind")
         if kind not in GOOD_KINDS:
-            errors.append(f"store good '{gid}' names kind '{kind}'. Only hearts and heart_boost "
-                          "can be bought with gems - currency cannot, because only the server "
-                          "may grant it")
+            errors.append(f"store good '{gid}' names kind '{kind}'. Only "
+                          f"{', '.join(sorted(GOOD_KINDS))} can be bought with gems - currency "
+                          "cannot, because only the server may grant it")
             continue
 
         amount = int(good.get("amount") or 0)
@@ -3836,7 +3836,7 @@ def check_store(progression, keys, manifest=None):
             errors.append(f"store good '{gid}' hands over {amount} hearts, above the ceiling of "
                           f"{ceiling}; it can never be bought")
 
-        if kind == "heart_boost" and amount > max_boost:
+        if kind in ("heart_boost", "xp_boost") and amount > max_boost:
             errors.append(f"store good '{gid}' hands over {amount}h of boost, above the "
                           f"{max_boost}h cap; it can never be bought")
 
@@ -4838,6 +4838,100 @@ def main():
         # about play, and nothing offline can know it.
         print("       a watch is bought at the gate, so hearts pace this and not the ceiling - "
               "the ceiling is only ever a bound on a forged save")
+
+    # ------------------------------------------------------------------ the XP boost
+    #
+    # The second thing here that pays XP without a star behind it (invariant 9's exceptions), and
+    # the first that is a *multiplier*, so the figures are printed rather than left to be worked
+    # out: a percentage nobody has read against the curve is a keeper ladder climbing at a speed
+    # nobody wrote down. Mirrors `XpBoostLimits` in C# and `readXpBoost` in seed-config.mjs.
+    XPB_MAX_PERCENT = 1000
+    XPB_MAX_HOURS = 24 * 30
+    XPB_MAX_COOLDOWN_HOURS = 24 * 7
+    XPB_DEFAULTS = {
+        "watchedPercent": 50, "watchedHours": 2, "watchedCooldownHours": 4,
+        "boughtPercent": 100, "boughtHours": 24, "maxPercent": 150,
+    }
+
+    boost_block = progression.get("xpBoost") or {}
+
+    def boost_number(key, ceiling):
+        raw = boost_block.get(key, -1)
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            errors.append(f"progression xpBoost {key} is {raw!r}, which is not a number")
+            return XPB_DEFAULTS[key]
+        if value < 0:
+            return XPB_DEFAULTS[key]                 # unwritten inherits, as the reader does
+        if value > ceiling:
+            errors.append(
+                f"progression xpBoost {key} is {value}, above the supported maximum {ceiling}; "
+                "XP is floored, so a keeper level paid by mistake can never be taken back")
+            return ceiling
+        return value
+
+    watched_pc = boost_number("watchedPercent", XPB_MAX_PERCENT)
+    watched_h = boost_number("watchedHours", XPB_MAX_HOURS)
+    watched_cd = boost_number("watchedCooldownHours", XPB_MAX_COOLDOWN_HOURS)
+    bought_pc = boost_number("boughtPercent", XPB_MAX_PERCENT)
+    bought_h = boost_number("boughtHours", XPB_MAX_HOURS)
+    boost_max_pc = boost_number("maxPercent", XPB_MAX_PERCENT)
+
+    print()
+    if boost_max_pc <= 0 or (watched_pc <= 0 and bought_pc <= 0):
+        print("xp boost: withdrawn - nothing multiplies XP")
+    else:
+        # A cap under one window's own figure is a window a player is shown and never given.
+        single = max(watched_pc, bought_pc)
+        if boost_max_pc < single:
+            errors.append(f"progression xpBoost maxPercent is {boost_max_pc}, below the {single}% "
+                          "a single window already pays; the window would be advertised at a "
+                          "figure the rule refuses to honour")
+
+        print(f"xp boost: +{watched_pc}% for {watched_h}h every {watched_cd}h watched, "
+              f"+{bought_pc}% for {bought_h}h bought, capped at +{boost_max_pc}%")
+
+        # **Two numbers describing one window.** The advert's `amount` is what a view is
+        # advertised to pay; `watchedHours` is the window the rule actually opens, because the
+        # cooldown is derived by subtracting it from the stored deadline. Held together here
+        # exactly as `ProgressionTable` holds them in C# - nothing else can see both.
+        watched_ad = next((p for p in (progression.get("ads") or {}).get("placements") or []
+                           if p.get("id") == "xp_boost"), None)
+
+        if watched_ad is None:
+            if watched_pc > 0:
+                print("       WARNING: nothing advertises the watched window - it pays a "
+                      "percentage no placement can open")
+        else:
+            if watched_ad.get("kind") != "xp_boost":
+                errors.append(f"the 'xp_boost' placement pays '{watched_ad.get('kind')}'; it has "
+                              "to pay 'xp_boost' or the advert opens somebody else's reward")
+
+            ad_hours = int(watched_ad.get("amount") or 0)
+            if watched_pc > 0 and ad_hours != watched_h:
+                errors.append(f"the 'xp_boost' advert pays a {ad_hours}h window but "
+                              f"xpBoost.watchedHours is {watched_h}; the rule uses the boost "
+                              "block's figure and derives the cooldown from it, so the advert "
+                              "would promise a window nobody receives")
+
+            cap = int(watched_ad.get("dailyCap") or 0)
+            # The cooldown is meant to be what binds, not the allowance. A cap under what the
+            # cooldown already allows in a day makes the printed "every N hours" a lie.
+            if watched_cd > 0 and cap > 0 and cap < 24 // max(watched_cd, 1):
+                print(f"       WARNING: dailyCap {cap} bites before the {watched_cd}h cooldown "
+                      f"does, so 'every {watched_cd}h' is not the rate a player experiences")
+
+        if watched_h > 0 and watched_cd > 0 and watched_cd < watched_h:
+            print(f"       WARNING: the {watched_cd}h cooldown is under the {watched_h}h window "
+                  "it meters, so windows overlap and extend")
+
+        # What the two together are worth, which is the figure the economy is actually tuned
+        # against. Said rather than checked - how much a player earns inside a window is a fact
+        # about play and nothing offline can know it.
+        print(f"       a run paying 150 xp pays {150 + 150 * boost_max_pc // 100} with everything "
+              "running; the banked bonus is clamped to that share of provable XP, so a forged "
+              "figure buys a keeper level inside an honest range and no currency at all")
 
     prompts = progression.get("prompts") or {}
     chapter_budget = prompts.get("chapterBudget", 2)

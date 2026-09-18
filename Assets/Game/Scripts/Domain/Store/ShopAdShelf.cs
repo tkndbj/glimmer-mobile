@@ -43,15 +43,42 @@ namespace GlimmerGrove.Store
         /// </summary>
         public static string For(StoreShelf shelf)
         {
+            var stood = All(shelf);
+            return stood.Length > 0 ? stood[0] : null;
+        }
+
+        /// <summary>
+        /// Every placement this shelf stands, in the order they are drawn.
+        ///
+        /// <para>
+        /// <b>A list rather than one, because a shelf can honestly have two free offers</b> — and
+        /// the sort is what says so: everything is ordered cheapest first and nothing is cheaper
+        /// than nothing, so every video belongs at the front whether there is one or three. The
+        /// supplies shelf stands two, a refill and an XP boost, which are different enough that
+        /// offering only the first would be choosing for the player.
+        /// </para>
+        /// <para>
+        /// Order here is the order on the shelf. The refill stays first because it is the one
+        /// with a natural trigger — somebody on this tab is usually out of hearts.
+        /// </para>
+        /// </summary>
+        public static string[] All(StoreShelf shelf)
+        {
             switch (shelf)
             {
-                case StoreShelf.Coins: return AdPlacement.CoinBonus;
-                case StoreShelf.Supplies: return AdPlacement.HeartRefill;
-                default: return null;
+                case StoreShelf.Coins: return new[] { AdPlacement.CoinBonus };
+                case StoreShelf.Supplies: return new[] { AdPlacement.HeartRefill };
+
+                // **The video follows the thing it pays for** (`StoreGoodKinds.ShelfFor`). A free
+                // XP boost on the hearts tab and a paid one on the utilities tab would be one
+                // offer in two places, which is the shelf deciding for the player where to look.
+                case StoreShelf.Utilities: return new[] { AdPlacement.XpBoost };
+
+                default: return System.Array.Empty<string>();
             }
         }
 
         /// <summary>Whether this shelf offers a video at all, before any table is asked.</summary>
-        public static bool Offers(StoreShelf shelf) => For(shelf) != null;
+        public static bool Offers(StoreShelf shelf) => All(shelf).Length > 0;
     }
 }

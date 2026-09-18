@@ -138,6 +138,18 @@ Grove, and the bundle id can never move.
    `endlessCases` in `grove-vectors.json` — **a disagreement is silent**, because 19a *drops* what
    the lower level gated. Absent config falls back to the built-in figures on **both** sides for
    that reason, rather than failing closed.
+9e. **An XP boost multiplies at the moment XP is paid and banks the bonus, because there is no
+   running total to scale.** Scaling the derived figure while a window is open would make a level
+   *fall* when it closed. So `XpBoost.Bank` is **the only multiplier on XP in the game** — every
+   source is totalled first and boosted once, which is what makes a future source work without
+   being taught about boosts. Two windows, each a monotonic deadline joined by `max`: a **watched**
+   one whose cooldown is *derived* from its own deadline (48c's trick, so only a watched grant may
+   write it) and a **bought** one with no cooldown, where a gift lands. They **add** rather than the
+   larger winning, so watching during a bought window is never a trap. **The bound is
+   proportional** — the banked total is clamped on every read to `(star XP + endless XP) x
+   maxPercent%`, which is `groveWorth`'s "clamped to what the account could afford" (19a) said about
+   a multiplier, and far tighter than any flat ceiling. Mirrored by `xpBoostXp` in `grove.ts` and
+   held by `xpBoostCases`.
 10. **The client never raises `grantedBaseline`.** Currency given rather than earned is server-owned,
    enforced by Firestore rules. Receipt validation is idempotent on the store transaction id.
 10a. **An award reaches the player as a claim, not as a balance**, with an id **derived from what earned
@@ -773,6 +785,11 @@ guess — verify offline.
 - **Map seats:** `python Tools/make_map_seats.py --check` proves the seats are still what the paintings say;
   `--contact` draws every map with its chain on it, which is the gate that matters. `content.py` proves the
   seats clear each other. Re-run `--write` and then every chapter generator after any map painting change.
+- **The hourglass stopping the hill:** `python Tools/render_siege.py --stilled 0.6` draws the
+  wavefront mid-sweep and the dial it hangs over the hill (37dy, 37dz). **Note the gate gap it
+  found:** `fxreels.py` ink-checks `Art/Fx` only, so every reel under `Art/Siege` - `beam`,
+  `laser`, `stillwave`, `stilldial` and the whole cast - is checked for *wander* and never for
+  *ink*. All four measure well above the floors today; nothing proves they will.
 - **The turret preview panel:** `python Tools/render_ward_preview.py --ward starfall` draws
   `WardPreviewOverlay`'s firing stage at its own cell, with the barrel marked, at four beats of the
   flight. **Written because that screen had no mirror at all** and is the one a player decides on a
@@ -822,6 +839,9 @@ guess — verify offline.
 - **Seeders:** `node firebase/seed/seed-release.mjs --check` (the update wall's only gate — nothing about a
   forced update is content); `npm --prefix firebase/functions run seed -- --check`;
   `Tools/make_name_blocklist.py --check`; `npm --prefix firebase/functions test`.
+- **XP boost vectors:** `python Tools/make_xpboost_vectors.py --check`. Only the **clamp** is
+  shared, because it is the only half both runtimes compute — the windows and the cooldown are
+  facts about *offering* a boost, which no server does.
 - **Endless XP vectors:** `python Tools/make_endless_vectors.py --check` proves the committed
   `endlessCases` block is what the tool draws. The rule itself runs **offline on both sides** —
   `EndlessRewardTests` through `TestJson` (no `Application.dataPath`, no `JsonUtility`, so
@@ -982,7 +1002,7 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **Content pipeline** — levels as data, stable `LevelId`s, manifest-built `CatalogIndex`, lazy chapter
   bodies, `Content ▸ Sync Manifest`, build gate.
 - **Save** — versioned atomic file with checksum, backup rotation, corrupt-file recovery, tested
-  migrations, monotonic merge. **Save schema v30.** Content schema: manifest and chapter bodies **v2**,
+  migrations, monotonic merge. **Save schema v31.** Content schema: manifest and chapter bodies **v2**,
   grove body **v3**.
 - **Cloud** — Firebase (Firestore + Auth + Functions), anonymous by default, Apple/Google linking,
   per-account local archive for switching, debounce/backoff.
@@ -1080,6 +1100,12 @@ after any change**. Only the shapes that are not obvious from the files are wort
 - **Endless XP** — 15 XP a wave, capped at 99,990 lifetime waves (1,499,850 XP, keeper 146). Ten
   waves is one three-starred glade. A watch is bought at the gate, so **hearts pace this, not the
   ceiling** — the ceiling only ever bounds a forged save. All three gates print the figures.
+- **XP boost** (9e) — **+50% for 2h, watched, once every 4h**; **+100% for 24h, 120 gems**; they add,
+  capped at **+150%**. So a run paying 150 XP pays 375 with both running. The gem window is a
+  `store.goods` row (`xp_boost_day`) and the watched one an ad placement (`xp_boost`), so both are
+  content. **The advert's `amount` and `xpBoost.watchedHours` describe one window and both gates
+  error when they drift** — the cooldown is derived by subtracting the second from the stored
+  deadline, so a mismatch would promise a window nobody receives.
 - **Out of reach on today's content** (which pays for about keeper 13, and about keeper 9 for the grove):
   the turret shelf's tiers two and three, and all three paid home rungs. Deliberate, and the owner's call.
 
@@ -1103,6 +1129,34 @@ deployed by name with invoker bindings, re-seeded, smoke test 166/166 and delete
 `ReferralTests` green in the Editor. What has never run: the share sheet on a device, on either platform
 — `GlimmerShare.mm` has never been compiled by Xcode — and a real invitee typing a real code.
 
+**`ic_xp_boost` is on disk and unaddressed**, and is the only red name left: `artnames.py`
+refuses it until `Addressables > Sync All Assets` **and save** (invariant 7a working rather than a
+fault). The four cut before it — `ad_coin`, `ad_heart`, `ad_xp`, `ic_utilities` — were synced on
+2026-09-17 and are green. All five come out of `Tools/make_ad_art.py` from owner-supplied artwork,
+each with its own long edge, because a tab glyph (~86 drawn), a good's card icon (~222) and a full
+card illustration (~366) are three different sizes and one constant made two of them wrong. The
+adverts carry their own play button, so `ShopArt.PaintAd` draws nothing over one and composes the
+old heap only for a placement with no picture (the hint refill).
+
+**The shop's shelves moved with them.** `KIT` is now **UTILITIES** and leads with the two XP boost
+cards — the free watch and the 120-gem day — with the four consumables under them; hearts and
+heart boosts stayed on `SUPPLIES`. Which shelf a good sits on is `StoreGoodKinds.ShelfFor`, asked
+by the shelf, by the card's accent colour and by `render_shop.py`, and **a video stands where the
+thing it pays for is sold** (`ShopAdShelf.All`, which is a list because a shelf may stand more than
+one). That also retired the "two free cards fill the first row of Supplies" note: Supplies is back
+to one. `render_shop.py` grew a **utilities shelf**, which it never had — that tab was invisible to
+the render until the order on it became a decision worth looking at.
+
+**The XP boost is built and has never been played, and none of its server half is deployed.** Two
+windows (9e, save v31): watch for +50%/2h every 4h, or 120 gems for +100%/24h. Everything offline is
+green — 2,187 tests, the shared clamp on both sides, all three content gates, `render_shop.py`. What
+is **owed before it ships**, in order: (1) **re-seed** — `config/progression` needs the `xpBoost`
+block, the `xp_boost` advert and the good, and a server without them derives a lower keeper level
+than the device, which drops rather than clamps what that level gated (19a); (2) **deploy
+`publishGrove`** again, because `xpBoostXp` is a third addend in its keeper level; (3) no
+`firestore.rules` release — all three fields ride inside the existing `wallet` map. Then play one
+boosted run and check the victory panel's new line against the chip above it.
+
 **Endless XP went live on 2026-09-17, and no real run has banked a wave.** The lane pays 15 XP a
 wave (9d, save v30). **The server half is done**: `config/progression` re-seeded to v6 carrying the
 `endless` block (read back and diffed against the snapshot — no field lost, only `version` and
@@ -1111,12 +1165,18 @@ wave (9d, save v30). **The server half is done**: `config/progression` re-seeded
 `delete-account.mjs` 14/14, with `functions:list` still naming all seventeen. No
 `firestore.rules` release — the field rides inside `endlessBest`.
 
-**What is left is play.** The one link no gate offline or live can reach is
-`ProtoScreens.Finished` calling `EndlessLedger.Bank` with the board's own `WavesCleared` — the
-live probe writes the save row directly, so it proves the *server* reads a tally and never that
-the *game* writes one. Play one watch and check the victory panel's XP against the waves seen off.
-Nothing has ever tested 15 XP a wave as a *feeling*, either; the pace was reasoned against a table
-and the owner approved it on figures alone.
+**Played on 2026-09-17: five waves for 75 XP, on a run below the player's own record.** That is
+the link no gate reaches — the live probe writes the save row over REST, so it proves the *server*
+reads a tally and never that the *game* writes one. It is also the strongest of the two paths to
+have landed on by accident: a run under the best is where `Record` refuses and `Bank` pays anyway,
+which is the case that fails outright if the two are ever fused back together
+(`EndlessRewardTests.ARunThatBeatNothingStillPays`).
+
+**Still unobserved:** a run that *sets* a new best. That is the other half of the same seam — the
+one that double-counted before the fixture caught it, because `Record` raises the best and the
+floor under the tally rises with it — so it is pinned by tests and by nothing a person has seen.
+Beat the record once and check the panel still says waves x 15 exactly. And nothing has tested 15
+a wave as a *feeling*; the pace was reasoned against a table and approved on figures alone.
 
 **Money paths that have never executed.** A real receipt reaching `redeemPurchase` and a real impression
 reaching `adReward`. Both are fully built and deployed and **neither has ever run once**, which reads as

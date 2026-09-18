@@ -1075,6 +1075,64 @@ namespace GlimmerGrove.Content
         /// drops whatever that level gated (invariant 19a).
         /// </summary>
         public EndlessRewardDto endless;
+
+        /// <summary>
+        /// What an XP boost is worth and how long it runs. Optional; see
+        /// <see cref="Progression.XpBoostTable"/>.
+        ///
+        /// The second block here that decides XP outside the star ledger, and it carries the
+        /// same obligation: <c>seed-config.mjs</c> publishes it, because a keeper level the
+        /// server derives differently from the device is a published card that silently drops
+        /// whatever that level gated (invariant 19a).
+        /// </summary>
+        public XpBoostDto xpBoost;
+    }
+
+    /// <summary>
+    /// The XP boost's windows and what they pay.
+    ///
+    /// <para>
+    /// Every field is unwritten as -1 so a partial block inherits rather than zeroing —
+    /// <c>HintsDto</c>'s convention, and load-bearing here because nought is a real decision for
+    /// all of them: a nought percentage withdraws a window, and a nought cooldown makes one
+    /// unmetered. The default has to be distinguishable from the author's choice.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class XpBoostDto
+    {
+        /// <summary>What a watched window adds, as a percentage. Unwritten inherits; 0 withdraws it.</summary>
+        public int watchedPercent = -1;
+
+        /// <summary>How long a watched window runs, in hours.</summary>
+        public int watchedHours = -1;
+
+        /// <summary>
+        /// How long after a watched window <em>starts</em> before another may be taken, in hours.
+        /// The "every N hours" a shop card prints.
+        /// </summary>
+        public int watchedCooldownHours = -1;
+
+        /// <summary>What a bought window adds, as a percentage. Unwritten inherits; 0 withdraws it.</summary>
+        public int boughtPercent = -1;
+
+        /// <summary>How long a bought window runs, in hours.</summary>
+        public int boughtHours = -1;
+
+        /// <summary>
+        /// The most every running window may add together.
+        ///
+        /// <b>It is also the factor the stored bonus is clamped against</b>
+        /// (<c>XpBoost.BonusFrom</c>), so raising it widens what a forged save may claim as well
+        /// as what an honest one may earn. One number for both, so the bound cannot drift away
+        /// from the rule it bounds.
+        /// </summary>
+        public int maxPercent = -1;
+
+        /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
+        public bool IsAuthored => watchedPercent >= 0 || watchedHours >= 0
+                               || watchedCooldownHours >= 0 || boughtPercent >= 0
+                               || boughtHours >= 0 || maxPercent >= 0;
     }
 
     /// <summary>

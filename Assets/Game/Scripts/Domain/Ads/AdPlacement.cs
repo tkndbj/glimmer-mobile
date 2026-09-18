@@ -77,8 +77,31 @@ namespace GlimmerGrove.Ads
         /// </summary>
         public const string HintRefill = "hint_refill";
 
+        /// <summary>
+        /// Offered from the shop, for a window during which XP is paid at a higher rate.
+        ///
+        /// <para>
+        /// <b>Read <see cref="WinBonus"/> above before changing this.</b> That comment refuses to
+        /// multiply what one run earned, because doing it in <em>credits</em> means storing which
+        /// runs were doubled — a forgeable per-level set that pays money. This does multiply, and
+        /// the three things that make it a different question are worth naming: it stores no set
+        /// but a single lifetime total; it pays <b>XP and never currency</b>, so credits still
+        /// derive from the star ledger alone; and the total is clamped to a fraction of XP the
+        /// account can prove, so a forged figure buys a keeper level inside an honest range and
+        /// buys no balance at all. Invariant 13's fourth clause, the same bargain 9d makes.
+        /// </para>
+        /// <para>
+        /// <b>Nothing about it reaches the server as a grant</b>, exactly as
+        /// <see cref="HintRefill"/> does not: a window is not currency, so <c>adCurrencyOf</c>
+        /// answers null for this placement and the signed callback grants nothing. What meters it
+        /// is a cooldown derived from the window's own deadline — see <c>XpBoost.WatchedReadyAt</c>
+        /// — rather than a daily cap alone, because "every four hours" is the offer.
+        /// </para>
+        /// </summary>
+        public const string XpBoost = "xp_boost";
+
         public static readonly string[] All =
-            { HeartRefill, CoinBonus, WinBonus, HintRefill };
+            { HeartRefill, CoinBonus, WinBonus, HintRefill, XpBoost };
 
         /// <summary>
         /// Whether an id names a placement this build knows.

@@ -4116,5 +4116,148 @@
       "waves": 1000000,
       "xp": 1499850
     }
+  ],
+  "_xpBoostComment": [
+    "The XP boost's clamp, derived twice and pinned here.",
+    "",
+    "A boost multiplies XP at the moment it is paid and banks the bonus, because XP is derived",
+    "and there is no running total to scale (invariant 9's second exception, see XpBoost). What",
+    "both runtimes then have to agree on is how much of that banked figure is real: it is",
+    "clamped to `provable x maxPercent%`, where provable is the star ledger's XP plus the",
+    "Infinite lane's. That is a *proportional* bound rather than a flat ceiling — a boost can",
+    "only ever have multiplied XP that was really paid — and it is the same shape groveWorth",
+    "uses to clamp a grove to what the account could afford (19a).",
+    "",
+    "Only the clamp is shared. Windows, cooldowns and percentages are facts about offering a",
+    "boost, which no server does.",
+    "",
+    "A drift here is silent: the card is valid, the keeper level is merely lower, and 19a drops",
+    "what that level gated rather than clamping it.",
+    "",
+    "Written by Tools/make_xpboost_vectors.py — a third implementation. Do not hand-edit."
+  ],
+  "xpBoostDefaults": {
+    "maxPercent": 150
+  },
+  "xpBoostCases": [
+    {
+      "name": "a save that has never earned a bonus",
+      "stored": 0,
+      "provable": 5000,
+      "maxPercent": 150,
+      "bonus": 0
+    },
+    {
+      "name": "a bonus with no provable XP behind it is worth nothing",
+      "stored": 900,
+      "provable": 0,
+      "maxPercent": 150,
+      "bonus": 0
+    },
+    {
+      "name": "a negative stored bonus is nought",
+      "stored": -900,
+      "provable": 5000,
+      "maxPercent": 150,
+      "bonus": 0
+    },
+    {
+      "name": "negative provable XP pays nothing",
+      "stored": 900,
+      "provable": -5000,
+      "maxPercent": 150,
+      "bonus": 0
+    },
+    {
+      "name": "a bonus well under the share is paid in full",
+      "stored": 100,
+      "provable": 5000,
+      "maxPercent": 150,
+      "bonus": 100
+    },
+    {
+      "name": "a bonus exactly on the share is paid in full",
+      "stored": 7500,
+      "provable": 5000,
+      "maxPercent": 150,
+      "bonus": 7500
+    },
+    {
+      "name": "a bonus one over the share is clamped",
+      "stored": 7501,
+      "provable": 5000,
+      "maxPercent": 150,
+      "bonus": 7500
+    },
+    {
+      "name": "a forged bonus is clamped to the share of provable XP",
+      "stored": 1000000000,
+      "provable": 1000,
+      "maxPercent": 150,
+      "bonus": 1500
+    },
+    {
+      "name": "a forged bonus against no progress pays nothing",
+      "stored": 1000000000,
+      "provable": 0,
+      "maxPercent": 150,
+      "bonus": 0
+    },
+    {
+      "name": "a forged bonus against a little progress buys a little",
+      "stored": 1000000000,
+      "provable": 150,
+      "maxPercent": 150,
+      "bonus": 225
+    },
+    {
+      "name": "a withdrawn cap pays nothing at all",
+      "stored": 9000,
+      "provable": 5000,
+      "maxPercent": 0,
+      "bonus": 0
+    },
+    {
+      "name": "the watched window alone",
+      "stored": 9000,
+      "provable": 5000,
+      "maxPercent": 50,
+      "bonus": 2500
+    },
+    {
+      "name": "the bought window alone",
+      "stored": 9000,
+      "provable": 5000,
+      "maxPercent": 100,
+      "bonus": 5000
+    },
+    {
+      "name": "a generous cap widens the share",
+      "stored": 1000000,
+      "provable": 5000,
+      "maxPercent": 1000,
+      "bonus": 50000
+    },
+    {
+      "name": "the share truncates rather than rounding",
+      "stored": 1000000,
+      "provable": 333,
+      "maxPercent": 150,
+      "bonus": 499
+    },
+    {
+      "name": "and again on an awkward percentage",
+      "stored": 1000000,
+      "provable": 777,
+      "maxPercent": 50,
+      "bonus": 388
+    },
+    {
+      "name": "the structural ceiling holds behind the share",
+      "stored": 2000000000,
+      "provable": 1000000000,
+      "maxPercent": 1000,
+      "bonus": 1000000000
+    }
   ]
 }

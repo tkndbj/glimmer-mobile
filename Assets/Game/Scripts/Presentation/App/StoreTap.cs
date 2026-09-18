@@ -128,13 +128,20 @@ namespace GlimmerGrove
         /// Read by the card that draws the refusal on its price face and by the panel that
         /// confirms the purchase, which is why it is neither of theirs.
         /// </summary>
-        public static string GoodRefusal(GoodOfferState state)
+        public static string GoodRefusal(GoodOfferState state,
+                                        StoreGoodKind kind = StoreGoodKind.None)
         {
             switch (state)
             {
                 case GoodOfferState.ShortOfGems: return "ui.shop.need_gems";
                 case GoodOfferState.HeartsNearlyFull: return "ui.shop.hearts_full";
-                case GoodOfferState.BoostNearlyFull: return "ui.shop.boost_full";
+
+                // **The one refusal that needs the kind as well as the state.** Two goods can be
+                // "nearly full" and the sentence is about whichever was tapped; without the kind
+                // a player refused an XP boost is told about their hearts.
+                case GoodOfferState.BoostNearlyFull:
+                    return kind == StoreGoodKind.XpBoost ? "ui.shop.xp_boost_full"
+                                                         : "ui.shop.boost_full";
                 default: return "ui.shop.unknown_product";
             }
         }

@@ -172,6 +172,13 @@ namespace GlimmerGrove.Content
 
             AssetRequest.Sprite(AssetManifest.SiegeArt("charm_ring")),
 
+            // **What an hourglass draws when it lands**: the wall of stopped time it sends up the
+            // hill and the dial it hangs over it. Resident with the charms rather than scoped to
+            // the chapter that deals them, for the reason the five gems are - the Infinite lane
+            // deals every charm too.
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("stillwave")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("stilldial")),
+
             // **The beam is a reel now and not a bar.** A still gradient stretched across the row
             // has no event in it, so what a lance read as was a highlighter line appearing over
             // gems that were going anyway; ten frames of a crawling filament is light under
