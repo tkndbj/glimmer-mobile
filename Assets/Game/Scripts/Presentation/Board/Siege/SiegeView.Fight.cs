@@ -139,7 +139,11 @@ namespace GlimmerGrove
 
             Audio.Sfx("roar", .8f + .1f * phase, Pitch(mob.Kind) + .1f - .06f * phase);
 
-            if (last) Announce(Loc.Get("mode.siege.enraged"), fire, .62f, 1.4f, true);
+            // **The word is white, and the flash above it is the boss's colour.** Same rule
+            // as the arrival banner: a caption in `fire` is unreadable for the half of the
+            // cast whose hue is darker than the hill, and this one lands at the moment the
+            // screen is already wearing that colour anyway.
+            if (last) Announce(Loc.Get("mode.siege.enraged"), Color.white, .62f, 1.4f, true);
         }
 
         /// <summary>

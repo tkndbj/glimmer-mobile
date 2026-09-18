@@ -55,6 +55,17 @@ BOLT_WIDE, MUZZLE_WIDE, HIT_WIDE = 1.0, 2.7, 3.2
 #: primary each extra follows, and how much smaller an extra is drawn.
 FLIGHT, EXTRA_GAP, EXTRA_BOLT = 0.34, 0.13, 0.74
 
+#: `SiegeView.BlazeWide` / `.BlazeSeat`, and `.FootOf`'s two halves (`BodyLift`, `BodyFill`,
+#: `ShadowDrop`) - where a burning target's flame stands and how tall it is drawn.
+#:
+#: <b>Here because the panel's fire is the same widget the hill's is</b>, and `WardFiringStage`
+#: gets both numbers off `SiegeView` rather than holding its own. The first cut of this stood the
+#: flame a whole target above the thing burning, because `UIKit.Box` pivots at centre and the
+#: anchoring was read as a top edge (invariant 44d) - which is exactly the class of fault this
+#: mirror exists to report.
+BLAZE_WIDE, BLAZE_SEAT = 1.16, 0.90
+BODY_LIFT, BODY_FILL, SHADOW_DROP = 0.04, 0.94, 0.21
+
 #: `SiegeView.HeadAt` / `.MuzzleAt` / `.HeadRoom`, and `.BoltScale`'s named rungs.
 HEAD_AT, MUZZLE_AT, HEAD_ROOM = 0.82, 0.22, 0.35
 BOLT_SCALES = {"apex": 1.55, "eclipse": 1.62, "breaker": 1.24,
@@ -74,6 +85,11 @@ def roster():
     models = json.loads((REPO / "Assets/StreamingAssets/Content/progression.json")
                         .read_text(encoding="utf-8"))["wards"]["models"]
     return {m["id"]: m for m in models}
+
+
+def foot_of(tall):
+    """`SiegeView.FootOf` - where a body of this drawn height puts its feet, from its middle."""
+    return BODY_LIFT * tall - tall * BODY_FILL * SHADOW_DROP
 
 
 def bolt_scale(wid):
@@ -148,7 +164,7 @@ def aimed(sheet, im, hx, hy, wide, ux, uy, anchor, fill=1.0):
     sheet.alpha_composite(turned, (int(cx - turned.width / 2), int(cy - turned.height / 2)))
 
 
-def draw(wid, beats, out):
+def draw(wid, beats, out, alight=False):
     info = roster().get(wid)
     if info is None:
         raise SystemExit("no turret called %s" % wid)
@@ -193,6 +209,10 @@ def draw(wid, beats, out):
             my_y = BAND_TOP + (foot - BAND_TOP) * min(1.0, max(0.0, down))
             placed.append((STAGE_W / 2 + across * CELL, my_y * CELL, CELL * size))
 
+        # **The flame, on the panel that sells the turret that lights it.** Drawn before the
+        # bodies would put it behind them; `WardFiringStage.Ablaze` puts it one sibling *after*
+        # the target, so it is drawn here in the same order - the fire is in front of what it is
+        # burning.
         for px, py, size in placed:
             # **Out of `Art/Siege` and not `Art/Fx/Siege`** - a raider is a body, not an effect.
             # Asked for the ward's own colour, which is what the panel stands for most abilities.
@@ -201,6 +221,25 @@ def draw(wid, beats, out):
                 r = raider.resize((int(size), int(size * raider.height / raider.width)),
                                   Image.LANCZOS)
                 stage.alpha_composite(r, (int(px - r.width / 2), int(py - r.height / 2)))
+
+            if not alight or info.get("ability") != "ember":
+                continue
+
+            # `WardFiringStage.Ablaze`: sized by height off the target's own, seated where
+            # `foot_of` says the feet are, and anchored so `BLAZE_SEAT` of its frame lands there.
+            fire = at_beat("burn_r", (t * 1.7) % 1.0)
+            if fire is None:
+                raise SystemExit("no Art/Fx/Siege/burn_r - run: "
+                                 "python Tools/make_burn_fx.py --write")
+
+            fwide = size * BLAZE_WIDE
+            ftall = fwide * fire.height / fire.width
+            f = fire.resize((max(1, int(fwide)), max(1, int(ftall))), Image.LANCZOS)
+
+            # y runs *down* an image and *up* a canvas, so the sign flips here - the other half
+            # of invariant 44d's finding, and the one a mirror gets wrong on its own.
+            fy = py - foot_of(size) - (BLAZE_SEAT - 0.5) * ftall
+            stage.alpha_composite(f, (int(px - f.width / 2), int(fy - f.height / 2)))
 
         # **The whole volley, which is what the panel shows.** `WardFiringStage.Volley` fires the
         # primary and then each extra `ExtraGap` later, so at any instant the bolts are at
@@ -247,10 +286,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ward", default="starfall")
     ap.add_argument("--beats", default="0,0.10,0.28,0.55")
+    ap.add_argument("--alight", action="store_true",
+                    help="draw the flame an ember turret leaves on its target (WardFiringStage."
+                         "Linger), which is the whole of what that rung buys")
     ap.add_argument("--out", default=str(REPO / "Tools" / "out" / "ward_preview.png"))
     a = ap.parse_args()
 
-    draw(a.ward, [float(x) for x in a.beats.split(",")], a.out)
+    draw(a.ward, [float(x) for x in a.beats.split(",")], a.out, a.alight)
 
 
 if __name__ == "__main__":

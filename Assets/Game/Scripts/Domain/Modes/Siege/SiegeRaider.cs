@@ -144,6 +144,19 @@ namespace GlimmerGrove.Modes
         public float Smoulder;
 
         /// <summary>
+        /// Seconds until this burn next pays out. See <c>SiegeTuning.BurnTick</c>.
+        ///
+        /// <b>Armed only where a burn <em>starts</em>, which is the one thing about it that has to
+        /// be right</b> (<see cref="Kindle"/>). An ember ward gets a bolt away every
+        /// <c>SiegeTuning.FireEvery</c> seconds, which is shorter than the cadence — so a counter
+        /// re-armed by every bolt would be pushed past its own boundary for ever and a raider
+        /// under continuous fire would never take a single point of burn. That is
+        /// <see cref="Stagger"/>'s trap read from the opposite side: there a refresh would make an
+        /// ability never end, here it would make one never begin.
+        /// </summary>
+        public float Sear;
+
+        /// <summary>
         /// How much tougher this one is than the level authored it.
         ///
         /// <b>Carried rather than looked up</b>, because it is decided when the raider is minted
@@ -274,14 +287,27 @@ namespace GlimmerGrove.Modes
             return true;
         }
 
-        /// <summary>Sets it burning, keeping the fiercer of what it already had.</summary>
+        /// <summary>
+        /// Sets it burning, keeping the fiercer of what it already had.
+        ///
+        /// <b>The cadence is armed on the edge and never on the refresh</b> — see
+        /// <see cref="Sear"/> for what re-arming it every bolt would cost. <see cref="Smoulder"/>
+        /// is deliberately <em>not</em> cleared here: it is the fraction of a point the last tick
+        /// could not pay, and dropping it on every bolt would quietly shave an ember turret's
+        /// output in exactly the way carrying the remainder exists to prevent.
+        /// </summary>
         public void Kindle(int rate, float seconds, int ward)
         {
             if (rate <= 0 || seconds <= 0f) return;
 
+            if (Burn <= 0f) Sear = SiegeTuning.BurnTick;
+
             if (rate >= BurnRate) { BurnRate = rate; BurnFrom = ward; }
             Burn = Math.Max(Burn, seconds);
         }
+
+        /// <summary>Whether fire is on it right now. What the view draws a flame off.</summary>
+        public bool Alight => Alive && Burn > 0f;
 
         /// <summary>Whether this is a boss of any of the four — the thing that stands and casts.</summary>
         public bool Boss => SiegeTuning.IsBoss(Kind);

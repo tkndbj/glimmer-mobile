@@ -135,7 +135,8 @@ namespace GlimmerGrove
             public char Colour;
             public string Reel;
             public Image Img;
-            public Image Aura;          // a lasting mark: frost, or a burn
+            public Image Aura;          // a lasting mark: a chill, or a stun
+            public Image Blaze;         // the flame, when an ember turret has lit this one
             public Color Rest;
         }
 
@@ -268,8 +269,18 @@ namespace GlimmerGrove
         /// </summary>
         void Compose()
         {
+            // **The lasting marks go with the body, and the aura's did not.** A mark's flame and
+            // its chill glow are siblings of the target rather than children of it, so destroying
+            // the target alone left them standing - which nobody had seen because the only thing
+            // that ever leaked was a soft blue haze behind a turret nobody was looking at any
+            // more. A flame is not that: switching from `pyre` to the turret beside it would have
+            // left a fire burning in mid-air on the panel a purchase is decided from.
             foreach (var mark in _marks)
+            {
+                if (mark.Blaze != null) Destroy(mark.Blaze.gameObject);
+                if (mark.Aura != null) Destroy(mark.Aura.gameObject);
                 if (mark.Img != null) Destroy(mark.Img.gameObject);
+            }
 
             _marks.Clear();
             if (_model == null || _cell <= 0f) return;
@@ -418,6 +429,14 @@ namespace GlimmerGrove
                 AssetRequest.SpriteSet(AssetManifest.SiegeFx(_model.MuzzleFor(colour))),
                 AssetRequest.SpriteSet(AssetManifest.SiegeFx(_model.HitFor(colour))),
             };
+
+            // **The flame an ember leaves behind, which is the whole of what that rung buys.**
+            // Asked only for the three models that set anything alight, exactly as `WardLine.Art`
+            // asks it only for a seat that holds one: this scope is a panel's, so it is the one
+            // place in the game where loading a reel nobody will draw costs a player waiting.
+            if (_model.Ability == WardAbility.Ember)
+                wanted.Add(AssetRequest.SpriteSet(
+                    AssetManifest.SiegeFx(WardModel.BurnFor(colour))));
 
             // Whatever the formation stands, once each. A prism's two colours and a rend's bulwark
             // are different reels from the plain one, and a stage that asked only for its own
@@ -733,10 +752,88 @@ namespace GlimmerGrove
                          seconds);
                     break;
 
+                // **The board's own flame reel rather than a warm glow**, and that is this
+                // panel's whole contract: it is the screen a player decides a nine-thousand-credit
+                // purchase on, so a preview that showed something *like* what an ember does would
+                // be worse than none (see this class's own note). The reel, the seconds and the
+                // firelight on the body are all the ones the hill uses.
                 case WardAbility.Ember:
-                    Aura(mark, new Color(1f, .78f, .52f), new Color(1f, .52f, .18f, .60f), seconds);
+                    Ablaze(mark, seconds);
                     break;
             }
+        }
+
+        /// <summary>
+        /// The mark catching fire, in the ward's own colour, for the seconds the model authors.
+        ///
+        /// <para>
+        /// <b>Every number here is read off <c>SiegeView</c> rather than chosen</b> — the reel, the
+        /// rate it plays at, how tall the fire is drawn against the body and where its seat sits in
+        /// its own frame. A panel that drew a taller, faster or differently-seated flame than the
+        /// board would be the disagreement this widget exists to rule out, and it is the sort that
+        /// nothing offline can see.
+        /// </para>
+        /// <para>
+        /// <b>Built when it catches and destroyed when it goes out</b>, on the same channel the
+        /// aura uses: a volley comes round every second and a burn lasts three to six, so two
+        /// fades running at once would have the mark flickering between two strengths.
+        /// </para>
+        /// </summary>
+        void Ablaze(Mark mark, float seconds)
+        {
+            var frames = AssetLibrary.Frames(AssetManifest.SiegeFx(WardModel.BurnFor(Letter)));
+
+            // A missing reel costs the flame and never a white rectangle (invariant 7b) - the
+            // firelight on the body still says something happened.
+            if (frames != null && frames.Length > 0 && mark.Blaze == null)
+            {
+                // Sized against the target's own width, exactly as the hill sizes it against
+                // a raider's - see `SiegeView.BlazeWide`. A mark is a square box with the body
+                // fitted inside it, so its width is its size.
+                float wide = mark.Size * SiegeView.BlazeWide;
+                float tall = frames[0].rect.width > 0f
+                           ? wide * frames[0].rect.height / frames[0].rect.width : wide;
+
+                // **`UIKit.Box` always pivots at centre** (invariant 44d), so `mark.At` is the
+                // *middle* of the target and not its top - the `(.5, 1)` here is the anchor, which
+                // is which corner of the stage the position is measured from. Getting that round
+                // the wrong way is the fault that note records, and it stood the first cut of this
+                // fire well above the thing it was burning.
+                //
+                // Where the feet are is `SiegeView.FootOf`, the same answer the hill's own shadow
+                // is placed on, and the seat of the flame in its own frame is `BlazeSeat`.
+                mark.Blaze = UIKit.Img("Blaze", _node, frames[0], Color.white,
+                                       new Vector2(wide, tall), new Vector2(.5f, 1f),
+                                       mark.At + new Vector2(
+                                           0f, SiegeView.FootOf(mark.Size)
+                                               + (SiegeView.BlazeSeat - .5f) * tall));
+                mark.Blaze.raycastTarget = false;
+                mark.Blaze.preserveAspect = true;
+                mark.Blaze.transform.SetSiblingIndex(mark.Img.transform.GetSiblingIndex() + 1);
+
+                Flipbook.Attach(mark.Blaze, frames, SiegeView.BlazeFps);
+            }
+
+            var blaze = mark.Blaze;
+            var body = SiegeView.Charred;
+
+            mark.Img.color = body;
+
+            Tween.Run(seconds, Ease.Linear, t =>
+            {
+                // It dies down over the last of the seconds rather than going out, which is what
+                // the board does - see `SiegeView.BlazeOut`.
+                if (blaze != null)
+                    blaze.color = Pal.A(Color.white,
+                                        Mathf.Clamp01((1f - t) * seconds / SiegeView.BlazeOut));
+
+                if (mark.Img != null) mark.Img.color = Color.Lerp(body, mark.Rest, t);
+            }, mark.Img, "aura").OnDone(() =>
+            {
+                if (blaze != null) Destroy(blaze.gameObject);
+                if (mark.Blaze == blaze) mark.Blaze = null;
+                if (mark.Img != null) mark.Img.color = mark.Rest;
+            });
         }
 
         /// <summary>A raider wearing a lasting mark, and shedding it again when it runs out.</summary>

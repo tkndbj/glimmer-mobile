@@ -160,7 +160,36 @@ NUDGE = {
 #: twice, in those terms, and confirmed. **The build gate still says it** (`ChapterMapValidator`
 #: warns), which is the right place for it to be said: this file's job is to stop a nudge
 #: colliding *by accident*.
-ACCEPTED_OVERLAPS = {5}
+#:
+#: `map6` is here only because it **borrows** `map5`'s chain (`BORROWS`), so it inherits that
+#: chain's overlaps along with its seats. It is the same decision, not a second one.
+ACCEPTED_OVERLAPS = {5, 6}
+
+
+#: Maps that stand their chain exactly where another map's chain stands, rather than searching
+#: their own picture for one.
+#:
+#: **One entry, and it is the owner's call rather than a shortcut.** `map5` (the lava crag) and
+#: `map6` (the wasteland mesas) are the two `|`-joined sources cut at four strips, and they are
+#: drawn to one plan: a route up the middle of a stack of plateaus, crossing from one to the
+#: next on a bridge. So the chain that follows `map5`'s road follows `map6`'s too, and it was
+#: looked at before it was believed (`--contact`, which is the gate here).
+#:
+#: **What the search made of `map6` on its own is why.** `GROUND[6]` lists the map's two sand
+#: planes rather than its road, for the reason written there - the road is a *scatter* of
+#: stepping slabs and `DESPECKLE` throws a scatter away - so on this one painting the whole
+#: mesa top is seatable and nothing tells the search where the route is. It therefore fell back
+#: on `XS`, the serpentine, and the serpentine put four of the ten rungs out on side mesas the
+#: trail never reaches: a node on good ground, by every number in this file, and off the way.
+#: That is invariant 8e's fault in the one shape this tool cannot measure its way out of.
+#:
+#: **And it is paid for in the check, not hidden from it.** Because `GROUND[6]` is the sand, a
+#: seat on the slabs or on a bridge deck is *off* ground by that list, so `borrowed` reports
+#: eight of the ten as seats this map's own footing test would refuse - loudly, every run,
+#: rather than quietly passing. That report is the honest state: the numbers say no, the
+#: picture says yes, and the picture was looked at. Re-list `GROUND[6]` as the road and this
+#: whole entry can go.
+BORROWS = {6: 5}
 
 
 def nudged(which: int, rung, seat):
@@ -804,15 +833,64 @@ def apply_nudges(which: int, places, marker, height: float):
     return moved, moved_marker
 
 
+def borrowed(which: int, source: int, score: np.ndarray):
+    """
+    Another map's chain, stood on this one, checked against this one and reported.
+
+    A borrow is an assertion where a search is a derivation, so the two things that made the
+    search trustworthy are kept: every seat is re-checked for clearance on *this* map, and
+    every seat is asked this map's own footing question and the answer is **printed** rather
+    than swallowed. `BORROWS` says why the answer is expected to be no.
+
+    Refused outright if the two maps are not cut to the same height. A seat is a fraction, so
+    the same pair of numbers on a map with a different strip count is a different place in
+    canvas units - which is every distance `ChapterMap` measures.
+    """
+    if mapart.STRIPS[which] != mapart.STRIPS[source]:
+        raise SystemExit(
+            f"  map{which} cannot borrow map{source}: {mapart.STRIPS[which]} strips against "
+            f"{mapart.STRIPS[source]} - a seat is a fraction, so the chain would not land where "
+            f"it was looked at")
+
+    _, _, places, marker = measure(source)
+    places, marker = list(places), marker
+    height = float(score.shape[0])
+
+    for i, seat in enumerate(places):
+        if not _separated(seat, places[:i] + places[i + 1:] + [marker], height):
+            if which not in ACCEPTED_OVERLAPS:
+                raise SystemExit(
+                    f"  map{which}: rung {i + 1} of map{source}'s chain overlaps a neighbour - "
+                    f"the chain does not transfer, seat this map on its own picture")
+
+    off = [str(i + 1) for i, seat in enumerate(places)
+           if score[max(0, min(int(height) - 1, int(round((1.0 - seat[1]) * height)))),
+                    max(0, min(score.shape[1] - 1, int(round(seat[0] * WIDTH))))] < 0.5]
+    print(f"  map{which}: chain borrowed from map{source}" +
+          (f" - rungs {', '.join(off)} stand where this map's own footing test refuses, see "
+           f"BORROWS" if off else ""))
+    return places, marker
+
+
+#: Every map measured once, because a borrow asks for the map it borrows from.
+_MEASURED: dict = {}
+
+
 def measure(which: int):
     """Everything about one map: the picture, its ground, and where the nodes go."""
+    if which in _MEASURED:
+        return _MEASURED[which]
     image = stack(which)
     mask = ground_mask(image, which)
     land = land_mask(image, which)
     score = footing(mask, land, stream_mask(image, which))
-    places, marker = seats_for(which, score, land)
-    places, marker = apply_nudges(which, places, marker, float(score.shape[0]))
-    return image, mask, places, marker
+    if which in BORROWS:
+        places, marker = borrowed(which, BORROWS[which], score)
+    else:
+        places, marker = seats_for(which, score, land)
+        places, marker = apply_nudges(which, places, marker, float(score.shape[0]))
+    _MEASURED[which] = (image, mask, places, marker)
+    return _MEASURED[which]
 
 
 # ---------------------------------------------------------------- the table

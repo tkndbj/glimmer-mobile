@@ -3473,6 +3473,18 @@ def check_wards(progression, keys, warnings, art):
 
         orders.append(int(entry.get("order") or 0))
 
+    # **The four flames, once for the whole roster** - `ContentValidation.ValidateWards`, offline.
+    # A burn is drawn in the colour of the *seat* that lit it (`WardModel.BurnFor`), so the three
+    # ember rungs share four reels rather than owning three sets of their own; asked once, because
+    # reporting one missing reel three times sends somebody looking for three files. What decides
+    # whether it is asked at all is whether the roster can set anything alight.
+    if any((e or {}).get("ability") == "ember" for e in models):
+        for colour in WARD_COLOURS:
+            address = f"Fx/Siege/burn_{colour}"
+            if address not in art:
+                errors.append(f"the roster holds an ember turret and there is no flame at "
+                              f"'{address}' - run python Tools/make_burn_fx.py --write")
+
     if orders and sorted(orders) != list(range(1, len(orders) + 1)):
         errors.append(f"wards orders are {sorted(orders)}; every entry needs its own rung from 1 "
                       "up, or the shelf reshuffles itself under a player on a retune")

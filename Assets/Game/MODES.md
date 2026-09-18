@@ -783,6 +783,44 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    shape drawn on top of the board, which is the verdict that already took every other ring in this mode
    off the hill (37dm's measurement is what is left of it).
 
+37ej. **The hill holds one caption at a time in a place, and none of them may leave the board
+   sideways.** Four things draw across it - the chain banner, the wave banner, the forecast band
+   and the count-in - which is six pairs, and one of them was answered. Measured
+   (`SiegeView.Captions`), the band and the banner share **1.31 cells of row** on a 19.5:9 phone
+   and the count-in and the banner **1.15**, so a boss falling wrote its name through the gem
+   counts, and every run this mode has ever opened drew "WAVE 1 OF 8" over its own GO!. The pairs
+   that can be stacked are stacked by the ladder and **the rest are held** - news outranks a
+   readout and the readout waits, the held thing's *sound* is never given up, and the first wave
+   is not announced at all because GO! already announced it. Sideways is the second half: a
+   caption here is one unbroken line with wrapping off, so one too wide is not clipped, not
+   wrapped and not reported - it is drawn off both ends ("THE BLIGHTCALLER FALLS" measures **9.1
+   cells on a board of 8**). Every one is fitted to `Captions.Room`, and **what gives on a long
+   name is the pop rather than the letters** (`Captions.Pop`), or a boss arrives announced
+   smaller than an ordinary wave. **Only a render can measure the width**, because the answer is
+   the shipped face's own metrics: `render_siege.py --captions`.
+
+37ek. **A lasting ability is a *state* the raider wears, and reporting each tick of one as a bolt is
+   what made an ember turret read as a machine gun.** A `SiegeBolt` means *something left a barrel*,
+   and the view answers one the only way it can - the turret recoils, the muzzle flashes, a comet
+   crosses the hill, something lands. A burn ticked every frame it took a whole point, so one ember
+   seat drew about **thirty complete shots a second out of one barrel**, and the damage-over-time the
+   player had paid for was invisible. **Nothing was wrong with the arithmetic**, which is exactly why
+   no gate and no fixture could see it: the *type* of the record was the bug. It is a `SiegeBurn` now,
+   paid on a cadence (`SiegeTuning.BurnTick`), and the drawing is a **looping reel that stands on the
+   body for as long as the model says it is alight** (`SiegeView.Burn`) with the ticks as small flares
+   over it. Three consequences worth their own lines. **The cadence costs the rule nothing** - the
+   remainder has always been carried, so what a burn is worth over its own seconds is unchanged
+   whether it is handed over in two hundred slivers or six instalments - **and the last instalment is
+   paid on the beat the burn ends**, or a turret quietly pays less than the figure on its card in a
+   way no arithmetic anywhere could see. **The cadence is armed where a burn *starts* and never on
+   the refresh**: a ward fires every `FireEvery`, which is shorter than the tick, so a counter
+   re-armed by every bolt would be pushed past its own boundary for ever and a raider under
+   continuous fire from the turret bought to burn it would take *nothing* - which is `Stagger`'s trap
+   read from the other side, where a refresh makes an ability never end and here it would make one
+   never begin. And **the flame is the player's seat rather than the raider's colour**
+   (`WardModel.BurnFor`), because what a burn has to say is which of the four turrets is being paid
+   for.
+
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` on rung five or ten, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds
 it to the body); **add the chapter to `SiegeRuleTests.ShippedChapters` if it is not there** — that one

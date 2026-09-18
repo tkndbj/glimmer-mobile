@@ -63,6 +63,11 @@ namespace GlimmerGrove
             _forecast = null;
             _forecastGroup = null;
 
+            // With it, or the band's title keeps the size the *last* board fitted it to: the fit
+            // is skipped while the sentence is unchanged, and "NEXT WAVE" is unchanged across a
+            // rebuild that may have moved the cell.
+            _forecastSaid = null;
+
             // **The bands are derived from the cell, not the other way round**, and the
             // arithmetic lives in `Bands.Of` rather than here so a test can sweep the screen
             // shapes a render can only look at one at a time (`SiegeBandTests`).
@@ -168,6 +173,7 @@ namespace GlimmerGrove
             // A fresh board is a fresh count-in. It is not started here: it is read off the
             // board's own quiet every frame the run is allowed to advance. See `CountIn`.
             _counted = 0;
+            _counting = 0f;
         }
 
         /// <summary>
@@ -609,6 +615,15 @@ namespace GlimmerGrove
         int _counted;
 
         /// <summary>
+        /// When the count-in's last number is gone, on the unscaled clock.
+        ///
+        /// <b>A deadline rather than a flag</b>, for `SiegeView.Speaking`'s reason: the number
+        /// ends by fading and nothing is called when it does, so a flag would have to be cleared
+        /// from a callback that a rebuild can outlive. A time cannot be left set.
+        /// </summary>
+        float _counting;
+
+        /// <summary>
         /// Three, two, one, and they come.
         ///
         /// <para>
@@ -651,7 +666,14 @@ namespace GlimmerGrove
             if (want <= _counted) return;
 
             _counted = want;
-            CountBeat(Beats - want, SiegeTuning.FirstWaveAfter / Beats);
+
+            float step = SiegeTuning.FirstWaveAfter / Beats;
+
+            // The whole of the number's life, so anything asking whether the hill is busy gets
+            // the fade as well as the hold. See `Counting`.
+            _counting = Time.unscaledTime + step * .95f;
+
+            CountBeat(Beats - want, step);
         }
 
         /// <summary>
@@ -713,6 +735,9 @@ namespace GlimmerGrove
         /// beat is drawn*, which is the half that decides anything.
         /// </para>
         /// </summary>
+        /// <summary>Whether a count-in number is still on the hill. See <see cref="_counting"/>.</summary>
+        bool Counting => Time.unscaledTime < _counting;
+
         void CountBeat(int i, float step)
         {
             string say = i > 0 ? i.ToString() : Loc.Get("mode.siege.go");
@@ -723,6 +748,11 @@ namespace GlimmerGrove
                                     new Vector2(Span.x, Cell * 2f));
             label.rectTransform.anchoredPosition =
                 new Vector2(0f, (_hillTop + _hillFoot) * .5f);
+
+            // Fitted for the same reason the banners are: "GO!" is three characters in English
+            // and a word in most other languages, drawn here at more than a cell of type and
+            // opened at 2.1 on top of that.
+            UIKit.OneLineLabel(label, CaptionRoom / 2.1f, Mathf.RoundToInt(Cell * CaptionFloor));
 
             var mark = label;
             mark.transform.localScale = Vector3.one * 2.1f;

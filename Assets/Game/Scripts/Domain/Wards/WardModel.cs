@@ -340,6 +340,34 @@ namespace GlimmerGrove.Wards
              : Colourless ? kind + "_" + Id
              : kind + "_" + Id + "_" + colour;
 
+        /// <summary>
+        /// The flame a raider wears while an ember turret's fire is on it, as an
+        /// <c>Fx/Siege</c> key — one reel per <em>ward colour</em>.
+        ///
+        /// <para>
+        /// <b>Per colour and not per model, which is the one place this family differs from
+        /// <see cref="ShotFor"/>.</b> A bolt depicts what a <em>turret</em> does and there are
+        /// three ember rungs, so three reels would be three pictures of one thing; a burn is
+        /// something the <em>raider</em> is wearing, and what a player has to read off it is
+        /// which of their four seats is paying for it. Four reels serve every ember turret that
+        /// will ever ship, and a fourth rung of the family costs no art at all.
+        /// </para>
+        /// <para>
+        /// <b>Static because a burn outlives the model that lit it.</b>
+        /// <c>SiegeRaider.BurnFrom</c> names a ward, and a ward can fall while its fire is still
+        /// on the hill — so the view asks this with a colour in hand rather than with a turret,
+        /// which is the only thing it is ever certain of.
+        /// </para>
+        /// <para>
+        /// <b>Not tinted from one white reel</b>, which is the correction invariant 37l records
+        /// and this file already pays for at <see cref="ShotFor"/>: <c>Image.color</c> is a
+        /// multiply, so it can only vary value, and what makes fire read is variation in
+        /// <em>hue</em> across its own body — a cold outer tongue, a hot middle, a white core.
+        /// A bleached flame worn in four colours is four flat smears.
+        /// </para>
+        /// </summary>
+        public static string BurnFor(char colour) => "burn_" + colour;
+
         /// <summary>The one uncoloured picture the shelf browses it with.</summary>
         public string Thumb => "Wards/" + Id;
 

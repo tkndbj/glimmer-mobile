@@ -86,6 +86,9 @@ namespace GlimmerGrove
         RectTransform _forecast;
         CanvasGroup _forecastGroup;
         Text _forecastTitle, _forecastClock;
+
+        /// <summary>What the band's title last said, so it is fitted once rather than per frame.</summary>
+        string _forecastSaid;
         Image[] _forecastChips;
         Text[] _forecastCounts;
 
@@ -121,8 +124,9 @@ namespace GlimmerGrove
             _forecastTitle = UIKit.Label("Title", _forecast, Loc.Get("mode.siege.next"),
                                          Mathf.RoundToInt(Cell * .34f), Pal.Cream,
                                          TextAnchor.MiddleCenter,
-                                         new Vector2(Span.x, Cell * .6f));
-            _forecastTitle.rectTransform.anchoredPosition = new Vector2(0f, Cell * .85f);
+                                         new Vector2(Span.x, Cell * BandTitleBox));
+            _forecastTitle.rectTransform.anchoredPosition =
+                new Vector2(0f, Cell * BandTitleRise);
 
             int seats = _layout.Wards.Length;
 
@@ -156,8 +160,9 @@ namespace GlimmerGrove
             _forecastClock = UIKit.Label("Clock", _forecast, string.Empty,
                                          Mathf.RoundToInt(Cell * .54f), Pal.Gold,
                                          TextAnchor.MiddleCenter,
-                                         new Vector2(Span.x, Cell * .8f));
-            _forecastClock.rectTransform.anchoredPosition = new Vector2(0f, -Cell * 1.4f);
+                                         new Vector2(Span.x, Cell * BandClockBox));
+            _forecastClock.rectTransform.anchoredPosition =
+                new Vector2(0f, -Cell * BandClockDrop);
         }
 
         /// <summary>
@@ -185,6 +190,18 @@ namespace GlimmerGrove
         /// wrong thing rather than half of the right one.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// Whether the forecast band may be drawn at all.
+        ///
+        /// <b>A static, so the one thing a picture cannot answer can be swept</b> - the same
+        /// bargain <c>Bands.Of</c> and <c>Captions.Of</c> make. Whether two captions overlap is
+        /// arithmetic (<c>SiegeView.Captions</c>), and on every shape this mode is played at the
+        /// band and a banner do; what keeps them apart is this predicate rather than a placement,
+        /// so it is the predicate a fixture has to be able to reach.
+        /// </summary>
+        public static bool BandShows(bool resting, bool over, bool chaining, bool speaking)
+            => resting && !over && !chaining && !speaking;
+
         void Foretell()
         {
             if (_forecastGroup == null || _board == null) return;
@@ -195,9 +212,26 @@ namespace GlimmerGrove
             // started before: without it the band would fade in underneath a banner that has a
             // second still to go. Asked of the banner itself rather than of a flag, so there is
             // nothing to clear — it nulls its own field when it is destroyed.
-            bool show = _board.Resting && !Over && _chain == null;
+            // **And never while the hill is speaking**, which is the other half of the same
+            // rule and the half that was missing. The band is pinned to the middle of the hill
+            // and a banner floats up into it: measured (`SiegeView.Captions`), the two share
+            // 1.31 cells of row on a 19.5:9 phone and 2.17 on a tablet, so "THE GRAVEMAW FALLS"
+            // was drawn through the gem counts every time a boss fell - the fall clears the hill,
+            // which is the same frame the breather starts.
+            //
+            // **The banner wins and the band waits**, which is the opposite way round from the
+            // chain above and is the same principle: what is transient cannot be deferred and a
+            // readout can. Nothing is lost - a breather is four seconds and the longest banner is
+            // 2.4 - and no countdown ever blinks out mid-count, because the only banner that can
+            // arrive over a standing band is a wave's, which ends the breather anyway.
+            bool speaking = Speaking;
+            bool show = BandShows(_board.Resting, Over, _chain != null, speaking);
 
-            _forecastGroup.alpha = Mathf.MoveTowards(_forecastGroup.alpha, show ? 1f : 0f,
+            // Taken down at once rather than faded while a banner stands, so there is no frame
+            // with both of them half drawn on the same row. Everywhere else it fades.
+            _forecastGroup.alpha = speaking
+                                 ? 0f
+                                 : Mathf.MoveTowards(_forecastGroup.alpha, show ? 1f : 0f,
                                                      Time.unscaledDeltaTime * 5f);
 
             if (!show) return;
@@ -213,16 +247,39 @@ namespace GlimmerGrove
             // is given up, and the trade is deliberate.
             bool boss = coming.HasBoss;
 
-            _forecastTitle.text = Loc.Get(boss ? BossKey(coming.Boss) : "mode.siege.next");
-            _forecastTitle.color = boss ? Casting(coming.Boss) : Pal.Cream;
-            _forecastTitle.fontSize = Mathf.RoundToInt(Cell * (boss ? .52f : .34f));
+            string say = Loc.Get(boss ? BossKey(coming.Boss) : "mode.siege.next");
+
+            _forecastTitle.text = say;
+            // **A boss's name is said in white, never in the boss's own colour.** Half this
+            // cast casts in something a caption cannot carry - a shackler's slate
+            // (`Pal.Dormant`) and a colossus's dust (`Pal.Thorn`) are both darker than the
+            // hill behind them - so the loudest news the mode has arrived unreadable
+            // (reported from play, 2026-09-18). The colour still says which boss it is
+            // everywhere it *can* be read: the body, the bolt, the flash and the bar.
+            _forecastTitle.color = boss ? Color.white : Pal.Cream;
+
+            // **Sized and fitted together, and only when the sentence changes.** `Foretell`
+            // repaints every frame the band is up and a fit is a measure of the string against
+            // the face (`UIKit.OneLineLabel`): cheap once, wasteful sixty times a second. The two
+            // are one statement because setting the authored size on every pass while fitting on
+            // some of them is a fit that lasts exactly one frame - the size is the thing the fit
+            // *writes*. The sentence carries the size with it, because the only thing that
+            // changes it is whether a boss is being named.
+            if (say != _forecastSaid)
+            {
+                _forecastSaid = say;
+                _forecastTitle.fontSize = Mathf.RoundToInt(Cell * (boss ? .52f : .34f));
+
+                UIKit.OneLineLabel(_forecastTitle, CaptionRoom,
+                                   Mathf.RoundToInt(Cell * CaptionFloor));
+            }
 
             // **The name stands where the chips were**, rather than staying up at the caption's
             // height with a hole under it: with the row hidden the band would otherwise read as a
             // title, a gap and a clock. One thing in the middle over a countdown is the shape this
             // moment actually is.
             _forecastTitle.rectTransform.anchoredPosition =
-                new Vector2(0f, boss ? Cell * .2f : Cell * .85f);
+                new Vector2(0f, Cell * (boss ? BandBossRise : BandTitleRise));
 
             for (int i = 0; i < _forecastChips.Length; i++)
             {
@@ -257,9 +314,10 @@ namespace GlimmerGrove
 
             _forecastClock.text = left.ToString();
 
-            // The boss's own colour when one is coming, which is what the title is wearing too -
-            // one thing said in two places rather than two things.
-            _forecastClock.color = boss ? Casting(coming.Boss)
+            // White with a boss coming, which is what the title above it is wearing too - one
+            // thing said in two places rather than two things, and the band's own colour has
+            // to be one the band can carry (see the title).
+            _forecastClock.color = boss ? Color.white
                                  : left <= 3 ? Pal.Ember : Pal.Gold;
         }
     }

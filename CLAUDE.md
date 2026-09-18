@@ -806,6 +806,10 @@ guess — verify offline.
   the walk in, every ward at full weight the frame it plants, and a floor no blow crosses until the stand
   settles) and `EveryShippedBossRungIsAFight` plays every shipped rung at nine rhythms. **A new chapter
   costs it one line** - its name in `ShippedChapters` - and the chapter that forgot went unmeasured.
+- **The hill's captions:** `python Tools/render_siege.py --captions` measures every caption a
+  siege can say against the board it is drawn on, at three canvas shapes. **The only gate that can
+  see a caption too wide for the screen**, because nothing clips one - and the only one holding
+  the mirror's boss names to `loc/en.json` (MODES.md 37ej).
 - **The turret preview panel:** `python Tools/render_ward_preview.py --ward starfall` draws
   `WardPreviewOverlay`'s firing stage at its own cell, with the barrel marked, at four beats of the
   flight. **Written because that screen had no mirror at all** and is the one a player decides on a
@@ -813,6 +817,14 @@ guess — verify offline.
 - **Legendary effect reels:** `python Tools/make_legend_fx.py --check` proves the thirty drawn reels are
   what the tool draws, `--contact` is the sheet to look at and `--report` prints what `fxreels.py` will
   measure. It needs no Editor, no GPU and no licensed pack.
+- **The flame a burning raider wears:** `python Tools/make_burn_fx.py --check` proves the four looping
+  reels are what the tool draws; `--report` prints `fxreels.py`'s figures **and the seam** — the step
+  between consecutive frames beside the step across the wrap, which is the one reading only a loop
+  needs and the only reel in this game that has one. `--strip` lays two whole cycles end to end, which
+  is how you *see* a seam; `--contact` is the sheet. Then look at it on the hill
+  (`render_siege.py --alight 3`) and on the panel a turret is bought from
+  (`render_ward_preview.py --ward pyre --alight`) — three wrong cuts of it were caught by a picture and
+  by nothing else.
 - **Effect reels:** `Tools/verify/fxreels.py` proves every baked reel is a *picture* — it measures the lit
   box against the frame at the reel's loudest moment and refuses a sliver. `artnames.py` proves a name
   resolves and nothing proved the thing behind it was visible; three of 266 reels were threads, all three
@@ -1041,6 +1053,12 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   brood, skeletons, the **rabble** — the only cast **baked from vector** — the **wild**, and the **court**,
   both cut from the top-down unit packs. The Infinite lane draws a **medley** of the six chapter casts, so
   it costs no art of its own.
+- **Fire** — the three ember turrets (`ember`, `pyre` and the legendary `pyroclast`) set what they hit
+  alight, and since **2026-09-18** that is a thing you can see: a looping flame stands on the raider for
+  the seconds the model authors, in the colour of the *seat* that lit it, and the burn pays twice a
+  second instead of every frame (37ek). Four reels, drawn offline by `Tools/make_burn_fx.py`, scoped by
+  `WardLine.Art` only for a line that actually holds an ember — so a line with none loads nothing. The
+  same reel is what the loadout's preview panel draws, at the same size and on the same ground.
 - **Charms** — six powers dealt onto ordinary gems, one introduced per chapter: a **prism** (joins a run
   of any colour), a **lance** (its row and column), a **stormglass** (the whole line fires at everything on
   the hill), a **furnace** (banks a charge on the turret of its colour), an **hourglass** (the hill stands
@@ -1229,6 +1247,18 @@ a wave as a *feeling*; the pace was reasoned against a table and approved on fig
 reaching `adReward`. Both are fully built and deployed and **neither has ever run once**, which reads as
 done. Ads *load* on device; no view has ever paid. Do both the day closed testing opens.
 
+**The ember re-cut of 2026-09-18 is unaddressed and has never been played.** Four new reels
+(`burn_r/g/b/y`, twenty-four frames each) went in with the Editor closed, so every one of them is
+**unaddressed** until `▸ Addressables ▸ Sync All Assets` **and save** — which is a white rectangle as
+wide as a raider on every burning body (invariant 7b). Then the standing discipline (`Audit Addresses`
+→ `Validate Content` → `Validate Art` → EditMode). **Nothing about it touches content or the server**,
+and no `progression.json` figure moved: what changed is the *type* of the record a burn tick is
+reported as and the cadence it is paid on, and both content gates already refuse a roster that holds
+an ember with no flame on disk. **What is owed is an eye and a run**: stand `pyre` on a seat and watch
+a wave burn, because the whole of what changed is how it reads — and check the one thing no gate here
+can, that a burning raider's *body* is still legible under its own fire (`SiegeView.BlazeWide` is the
+dial and the direction is down).
+
 **The charm re-cut of 2026-09-18 is unaddressed and has never been played.** Three things went in
 together, all with the Editor closed. (1) **The lance, hourglass and anvil stones are owner-drawn
 art now** — twelve PNGs cut by `Tools/make_charm_gems.py`, written over the same twelve addresses,
@@ -1242,6 +1272,16 @@ anti-clockwise — and is wholly unaddressed, which is a white rectangle four ce
 `Validate Art` → EditMode, and then **play an anvil and an hourglass**, because the whole of what
 changed is how long they last and what colour they are, and no gate here can see either. Nothing
 about it touches content or the server.
+
+**The hill's captions were sorted out on 2026-09-18 and want an eye, not a gate.** Every text on a
+siege board is now fitted to the board (MODES.md 37ej) and no two that can be up together share a row.
+Three things changed that a picture can only half answer. **A long name is smaller**: "THE BLIGHTCALLER
+FALLS" was drawn a cell wider than the screen and now settles at .48 of a cell against .70 - legible,
+and the smallest type the hill says. **A long name opens flatter**: the pop is what gives, so a
+shackler still punches at 1.6 and a blightcaller at 1.15. **And the first wave is not announced at
+all**, because GO! lands on the frame it steps out and the two were drawn through each other on every
+run ever opened - so what to watch for is whether the opening now reads as *quiet* rather than as
+clean. `render_siege.py --captions` measures the widths; nothing can measure those three.
 
 **The boss fight was rebuilt on 2026-09-18, and it has never been played.** The guard in front of
 every stand is gone: a boss is untouchable on the walk in and **hurtable by the whole line from the

@@ -141,6 +141,31 @@ namespace GlimmerGrove
         /// that have the room, which is the same split <c>SiegeBandTests</c> already makes.
         /// </para>
         /// <para>
+        /// <b>Four things can be drawn across this hill, so there are six pairs, and every one of
+        /// them is answered in one place or another.</b> Two of them are separated by this ladder
+        /// and the other four by a hold, because nothing can be stacked clear of a band three
+        /// cells tall on a hill of six:
+        /// <list type="bullet">
+        /// <item>chain x wave - <b>the ladder</b>, which is this struct, swept by
+        /// <c>SiegeCaptionTests</c>. A cascade during a wave's arrival is ordinary.</item>
+        /// <item>chain x forecast band - <b>held</b> (<c>SiegeView.Chain</c>): whichever is
+        /// standing keeps the hill, and the cascade's sound is never given up.</item>
+        /// <item>chain x count-in - <b>held</b>, the same way and for the same reason: the
+        /// opening quiet is 3.4 seconds the player is meant to be matching through.</item>
+        /// <item>wave x forecast band - <b>held</b> (<c>SiegeView.BandShows</c>): the banner is
+        /// news and the band is a readout, so the band waits. This is the pairing a boss falling
+        /// raises, which is what came back from play.</item>
+        /// <item>wave x count-in - <b>never both</b>: the first wave is not announced, because
+        /// GO! lands on the frame it steps out and was already saying so
+        /// (<c>SiegeView.Arrival</c>).</item>
+        /// <item>forecast band x count-in - <b>never both</b>, by the board rather than by the
+        /// screen: <c>SiegeBoard.Resting</c> answers false until a wave has been sent.</item>
+        /// </list>
+        /// <b>And none of them may leave the board sideways</b>, which is a width rather than a
+        /// row: see <see cref="Captions.Room"/> and <see cref="Captions.Pop"/>, measured against
+        /// the shipped face by <c>render_siege.py --captions</c>.
+        /// </para>
+        /// <para>
         /// <b>That shortest hill is the squarest <em>phone</em>, and it used to be a tablet.</b>
         /// Before the field was capped to a phone's width (invariant 37cc, <see cref="CellFor"/>)
         /// a 4:3 left the hill 3.15 cells and could carry neither banner; it carries both now, at
@@ -156,8 +181,23 @@ namespace GlimmerGrove
             public readonly float Chain, ChainLow, ChainHigh;
             public readonly float Wave, WaveLow, WaveHigh;
 
+            /// <summary>
+            /// The forecast band's seat and reach - the third claimant on this hill.
+            ///
+            /// <b>It is on the ladder so that the clash can be <em>measured</em>, not so that it
+            /// can be moved.</b> The band is pinned to the middle of the hill and the banner
+            /// floats up towards it, so on the shapes this mode is actually played at the two
+            /// share between 1.3 and 2.2 cells of row - which is what came back from play as a
+            /// boss's name drawn through the gem counts. Nothing can be stacked out of that: the
+            /// band is 3 cells tall against a hill of 6. So the ladder states the overlap and
+            /// <c>SiegeView.Foretell</c> answers it by holding, and the fixture holds the two
+            /// halves together.
+            /// </summary>
+            public readonly float Band, BandLow, BandHigh;
+
             Captions(float chain, float chainLow, float chainHigh,
-                     float wave, float waveLow, float waveHigh)
+                     float wave, float waveLow, float waveHigh,
+                     float band, float bandLow, float bandHigh)
             {
                 Chain = chain;
                 ChainLow = chainLow;
@@ -165,6 +205,9 @@ namespace GlimmerGrove
                 Wave = wave;
                 WaveLow = waveLow;
                 WaveHigh = waveHigh;
+                Band = band;
+                BandLow = bandLow;
+                BandHigh = bandHigh;
             }
 
             /// <summary>
@@ -177,7 +220,7 @@ namespace GlimmerGrove
             /// a gap that closes while the player is watching.
             /// </para>
             /// </summary>
-            public static Captions Of(float lineY, float cell)
+            public static Captions Of(float lineY, float cell, float hillMid)
             {
                 float chain = lineY + ChainRise * cell;
                 float chainLow = chain - ChainBox * .5f * cell;
@@ -190,8 +233,60 @@ namespace GlimmerGrove
 
                 float wave = chainHigh + CaptionClear * cell + half;
 
+                // The band's reach is read off where its own pieces are seated rather than
+                // typed again here, so `Foresight` and this cannot drift: the title is the
+                // highest thing in it and the clock the lowest.
+                float bandHigh = hillMid + (BandTitleRise + BandTitleBox * .5f) * cell;
+                float bandLow = hillMid - (BandClockDrop + BandClockBox * .5f) * cell;
+
                 return new Captions(chain, chainLow, chainHigh,
-                                    wave, wave - half, wave + WaveFloat * cell + half);
+                                    wave, wave - half, wave + WaveFloat * cell + half,
+                                    hillMid, bandLow, bandHigh);
+            }
+
+            /// <summary>Whether two caption boxes share any part of a row.</summary>
+            public static bool Clash(float aLow, float aHigh, float bLow, float bHigh)
+                => aLow < bHigh && bLow < aHigh;
+
+            /// <summary>
+            /// The width a caption on this hill may draw into.
+            ///
+            /// <b>Every one of them is one unbroken line that simply leaves the screen.</b>
+            /// <c>UIKit.Label</c> wraps only when it is asked to and none of these ask, so a
+            /// caption too wide for the board is not clipped, not wrapped and not reported - it
+            /// is drawn off both sides. "THE BLIGHTCALLER FALLS" measures 9.1 cells against a
+            /// board eight wide, which is how the mode's loudest news came to be the news
+            /// nobody could read. A caption is fitted to this with <c>UIKit.OneLineLabel</c>,
+            /// which shrinks the type rather than breaking the line - the right way round for
+            /// one line of capitals.
+            /// </summary>
+            public static float Room(float spanX, float cell)
+                => Mathf.Max(cell, spanX - cell * CaptionGutter * 2f);
+
+            /// <summary>
+            /// How much a banner may open by, given the room and how wide it is drawn settled.
+            ///
+            /// <para>
+            /// <b>The pop is what gives, never the letters.</b> A banner opens at
+            /// <see cref="WaveSwell"/> and shrinks into place, so its first frame is drawn 1.6x
+            /// wide - a boss's name at full size came in at twelve cells on a board of eight.
+            /// Shrinking the type until the swollen frame fits would leave a boss announced
+            /// <em>smaller</em> than an ordinary wave, which is the wrong thing to spend on the
+            /// one moment this mode has to say "this is not the thing you fought last time".
+            /// So short news still punches at 1.6 and long names open flat.
+            /// </para>
+            /// <para>
+            /// <b>And never flatter than <see cref="WavePopFloor"/></b>, which is bought the
+            /// other way - the caller fits its type to <c>Room / WavePopFloor</c>, so there is
+            /// always that much room left over to open into. A boss that arrives with no
+            /// movement at all reads as a label rather than as an arrival.
+            /// </para>
+            /// </summary>
+            public static float Pop(float room, float wide)
+            {
+                if (!(wide > 0f) || !(room > 0f)) return WaveSwell;
+
+                return Mathf.Clamp(room / wide, 1f, WaveSwell);
             }
         }
 
@@ -208,8 +303,37 @@ namespace GlimmerGrove
         /// <summary>Clear air between one hill caption and the next.</summary>
         const float CaptionClear = .22f;
 
+        /// <summary>
+        /// Where the forecast band's own pieces sit above and below the middle of the hill, and
+        /// how deep each one's box is. <c>Foresight</c> seats them and <c>Captions.Of</c>
+        /// measures the band from the same numbers, so the drawing and the ladder cannot drift.
+        /// </summary>
+        const float BandTitleRise = .85f, BandTitleBox = .60f;
+        const float BandClockDrop = 1.40f, BandClockBox = .80f;
+
+        /// <summary>
+        /// Where the band's title drops to when it is naming a boss instead of carrying a row of
+        /// gem counts - with the row off, the name stands where the chips were.
+        /// </summary>
+        const float BandBossRise = .20f;
+
+        /// <summary>
+        /// Air between a hill caption and the edge of the board, at each end. See
+        /// <see cref="Captions.Room"/>.
+        /// </summary>
+        const float CaptionGutter = .35f;
+
+        /// <summary>
+        /// The smallest a hill caption may be shrunk to, as a share of a cell, and the least a
+        /// banner may open by. See <see cref="Captions.Pop"/>.
+        /// </summary>
+        const float CaptionFloor = .26f, WavePopFloor = 1.15f;
+
         /// <summary>This board's caption ladder. A struct of floats, so it is built on demand.</summary>
-        Captions Caption => Captions.Of(_lineY, Cell);
+        Captions Caption => Captions.Of(_lineY, Cell, (_hillTop + _hillFoot) * .5f);
+
+        /// <summary>The width every caption on this hill is fitted to.</summary>
+        float CaptionRoom => Captions.Room(Span.x, Cell);
 
         // ------------------------------------------------------------------ geometry
         /// <summary>

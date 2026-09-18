@@ -99,6 +99,12 @@ XS = (0.70, 0.28, 0.74, 0.30, 0.72, 0.26, 0.70, 0.32, 0.74, 0.28)
 #: The old table was keyed by strip count because the spacing was arithmetic and only the
 #: height of the map could affect it; these are facts about four particular pictures, and two
 #: paintings cut into six strips have nothing else in common.
+#:
+#: `map5` and `map6` carry the **same ten seats**, and that is a decision rather than a
+#: coincidence: they are the two `|`-joined sources, both cut at four strips, both drawn to one
+#: plan - a route up the middle of a stack of plateaus crossing on bridges - so the chain that
+#: follows the lava crag's road follows the wasteland's too. `make_map_seats.BORROWS` holds the
+#: decision, says what the search made of `map6` alone, and what the borrow costs.
 SEATS = {
     1: (
         (0.220, 0.094, True),
@@ -161,16 +167,16 @@ SEATS = {
         (0.590, 0.792, False),
     ),
     6: (
-        (0.700, 0.025, False),
-        (0.280, 0.112, False),
-        (0.785, 0.234, False),
-        (0.300, 0.315, False),
-        (0.718, 0.426, False),
-        (0.195, 0.514, False),
-        (0.700, 0.566, False),
-        (0.333, 0.650, False),
-        (0.778, 0.725, False),
-        (0.280, 0.802, False),
+        (0.450, 0.066, False),
+        (0.477, 0.129, False),
+        (0.741, 0.201, False),
+        (0.560, 0.285, False),
+        (0.551, 0.386, False),
+        (0.603, 0.457, False),
+        (0.594, 0.570, False),
+        (0.320, 0.653, False),
+        (0.567, 0.736, False),
+        (0.590, 0.792, False),
     ),
 }
 

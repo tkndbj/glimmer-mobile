@@ -1067,6 +1067,33 @@ namespace GlimmerGrove.EditorTools
 
             }
 
+            // **The four flames, once for the whole roster rather than once per ember rung.**
+            // They are addressed per ward *colour* (`WardModel.BurnFor`) because a burn says which
+            // seat is paying for it, so three ember models share four reels - and asking inside the
+            // loop above would report one missing reel three times and send somebody looking for
+            // three files. Asked whenever the roster holds an ember at all, which is what decides
+            // whether anything can ever be set alight.
+            //
+            // An error rather than a warning, for the reason every other reel here is: the name is
+            // built, so `Tools/verify/artnames.py` cannot see it, and what a missing one costs is a
+            // white rectangle a body and a half tall walking down the hill (invariant 7b).
+            foreach (var model in wards.Models)
+            {
+                if (model.Ability != WardAbility.Ember) continue;
+
+                foreach (char colour in WardLine.Colours)
+                {
+                    string blaze = AssetManifest.SiegeFx(WardModel.BurnFor(colour));
+
+                    if (!Addressed(blaze))
+                        result.Errors.Add($"the roster holds an ember turret ('{model.Id}') and " +
+                                          $"there is no flame at '{blaze}'; run " +
+                                          "python Tools/make_burn_fx.py --write");
+                }
+
+                break;
+            }
+
             orders.Sort();
             for (int i = 0; i < orders.Count; i++)
                 if (orders[i] != i + 1)

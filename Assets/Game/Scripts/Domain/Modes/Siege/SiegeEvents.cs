@@ -32,6 +32,50 @@ namespace GlimmerGrove.Modes
         }
     }
 
+    /// <summary>
+    /// A tick of a burn: what fire took off a raider this beat, and which ward lit it.
+    ///
+    /// <para>
+    /// <b>Its own record, and that it was a <see cref="SiegeBolt"/> is the whole of what made an
+    /// ember turret read as a machine gun.</b> A bolt means <em>something left a barrel</em> — the
+    /// view answers one with a recoil, a muzzle flash, a comet crossing the hill and an impact
+    /// (<c>SiegeView.Bolt</c>), which is right for a shot and is a lie about a burn. The burn
+    /// tick reported one every frame it took a whole point, so a single ember turret drew some
+    /// thirty complete shots a second out of one barrel. Reported in exactly those words, and it
+    /// was never a rate: the <em>rules</em> were always a damage-over-time, and only the drawing
+    /// said otherwise.
+    /// </para>
+    /// <para>
+    /// <b>No <c>Weak</c> and no ward-strength question</b>, because a burn is not aimed: it was
+    /// settled when the bolt that lit it landed (<c>SiegeRaider.Kindle</c> keeps the fiercer), and
+    /// asking again here would double a rule that has already been applied.
+    /// </para>
+    /// <para>
+    /// <b><see cref="Ward"/> may be -1</b>, which is <c>SiegeRaider.BurnFrom</c>'s own default: a
+    /// burn whose ward has since fallen still burns, and the view draws it in the colour it
+    /// already wears rather than dropping the tick.
+    /// </para>
+    /// </summary>
+    public readonly struct SiegeBurn
+    {
+        public readonly int Ward, Raider, Damage;
+        public readonly bool Killed;
+
+        /// <summary>
+        /// <b>The ward first, which is <see cref="SiegeBolt"/>'s order and not a coincidence.</b>
+        /// These two are built beside each other and read beside each other, and two records of
+        /// four that differ only in which of the first two ints is which is a call site that
+        /// compiles perfectly and draws fire coming off the wrong body.
+        /// </summary>
+        public SiegeBurn(int ward, int raider, int damage, bool killed)
+        {
+            Ward = ward;
+            Raider = raider;
+            Damage = damage;
+            Killed = killed;
+        }
+    }
+
     /// <summary>A blow that landed on the line, for the view to draw.</summary>
     /// <summary>
     /// What a utility did to one raider - a hit that came from the player's own hand rather
@@ -225,6 +269,17 @@ namespace GlimmerGrove.Modes
     public sealed class SiegeReport
     {
         public readonly List<SiegeBolt> Bolts = new List<SiegeBolt>(16);
+
+        /// <summary>
+        /// Ticks of fire this step. See <see cref="SiegeBurn"/>.
+        ///
+        /// <b>Its own list rather than <see cref="Bolts"/></b>, for <see cref="Charmed"/>'s
+        /// reason said about a lasting state rather than about a volley: the view draws a bolt as
+        /// a journey and a burn as a thing the raider is <em>wearing</em>, and one list could only
+        /// ever be drawn one of those two ways.
+        /// </summary>
+        public readonly List<SiegeBurn> Burns = new List<SiegeBurn>(8);
+
         public readonly List<SiegeBlow> Blows = new List<SiegeBlow>(4);
         public readonly List<SiegeCast> Casts = new List<SiegeCast>(2);
         public readonly List<SiegeSpellLanded> Spells = new List<SiegeSpellLanded>(2);
@@ -330,6 +385,7 @@ namespace GlimmerGrove.Modes
         public void Clear()
         {
             Bolts.Clear();
+            Burns.Clear();
             Blows.Clear();
             Casts.Clear();
             Spells.Clear();
@@ -349,7 +405,7 @@ namespace GlimmerGrove.Modes
             Wave = -1;
         }
 
-        public bool Any => Bolts.Count > 0 || Blows.Count > 0 || Casts.Count > 0
+        public bool Any => Bolts.Count > 0 || Burns.Count > 0 || Blows.Count > 0 || Casts.Count > 0
                         || Spells.Count > 0 || Arrived.Count > 0 || Dropped.Count > 0
                         || Cogs.Count > 0 || Trampled.Count > 0 || Devoured.Count > 0
                         || Brimmed.Count > 0 || Charmed.Count > 0 || Forged.Count > 0

@@ -756,8 +756,11 @@ namespace GlimmerGrove
                                      new Vector2(Span.x, Cell * WaveBox));
             _waveLabel.rectTransform.anchoredPosition = new Vector2(0f, Caption.Wave);
 
-            var group = UIKit.Group(_waveLabel.rectTransform);
-            group.alpha = 0f;
+            // Kept rather than fetched, because `Foretell` asks every frame whether this is
+            // standing - the forecast band may not be drawn on any frame a banner is (invariant
+            // 37n's shape, and `SiegeView.Captions` for the measurement that says so).
+            _waveGroup = UIKit.Group(_waveLabel.rectTransform);
+            _waveGroup.alpha = 0f;
         }
     }
 }

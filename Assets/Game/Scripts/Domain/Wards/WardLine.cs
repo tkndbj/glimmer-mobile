@@ -264,6 +264,22 @@ namespace GlimmerGrove.Wards
                 Ask(AssetPipeline.AssetRequest.SpriteSet(
                     AssetPipeline.AssetManifest.SiegeArt(_byColour[i].FireFor(colour))));
 
+                // **The flame, and only for a seat that can actually light one.** A burn is drawn
+                // in the colour of the ward that lit it (`WardModel.BurnFor`), so the reel a line
+                // needs is decided by *which seats hold an ember* rather than by the mode — a
+                // line with none asks for nothing, which is most lines, and one built entirely of
+                // them asks for four. That is invariant 7b's own bargain said about a lasting
+                // state: memory bounded by what can appear on the screen rather than by how much
+                // content exists.
+                //
+                // It is asked *before* the `OwnShot` clause below on purpose: the elemental
+                // turret is a rend and could one day be an ember, and a reel skipped because of a
+                // decision about *projectiles* would be a raider on fire wearing a white
+                // rectangle (invariant 7b).
+                if (_byColour[i].Ability == WardAbility.Ember)
+                    Ask(AssetPipeline.AssetRequest.SpriteSet(
+                        AssetPipeline.AssetManifest.SiegeFx(WardModel.BurnFor(colour))));
+
                 // **The three reels a turret throws, and only for the ones that own a set.** The
                 // one model that draws the shared elemental reels instead (`WardModel.Elemental`)
                 // takes them from the mode's own cast, where they are resident — asking for them

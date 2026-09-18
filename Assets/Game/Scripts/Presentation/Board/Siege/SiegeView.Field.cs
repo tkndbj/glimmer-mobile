@@ -484,7 +484,13 @@ namespace GlimmerGrove
             // banner that appears half way through its own life reads as a glitch. `Foretell`
             // asks the mirror of this question and the pair of them is the whole rule. **What is
             // never given up is the sound** — the news still arrives.
-            if (_forecastGroup != null && _forecastGroup.alpha > .05f)
+            // **And to the count-in, which is the same rule about the same seat.** The opening
+            // quiet is 3.4 seconds long and the player is meant to be matching through it - the
+            // idle nudge exists to say so - so a cascade landing on "2" is an ordinary event
+            // rather than a rare one, and a count-in number is drawn at over two cells of type
+            // across the middle of the hill. Measured, it and this banner share about six tenths
+            // of a cell on a 19.5:9 phone.
+            if ((_forecastGroup != null && _forecastGroup.alpha > .05f) || Counting)
             {
                 Audio.Sfx("chain", .35f, Mathf.Min(1.6f, .9f + depth * .12f));
                 return;
@@ -515,6 +521,10 @@ namespace GlimmerGrove
             _chain.fontSize = Mathf.RoundToInt(Cell * (.72f + Mathf.Min(depth, 6) * .05f));
             _chain.text = Loc.Format("mode.siege.chain", depth);
             _chain.color = heat;
+
+            // Fitted like every other caption on this hill: it grows with depth and it is a
+            // translated sentence with a number in it, so nothing here is a fixed width.
+            UIKit.OneLineLabel(_chain, CaptionRoom, Mathf.RoundToInt(Cell * CaptionFloor));
 
             var solid = _chain.color;
             solid.a = 1f;

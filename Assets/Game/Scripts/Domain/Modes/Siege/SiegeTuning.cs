@@ -485,6 +485,33 @@ namespace GlimmerGrove.Modes
         public const float StunRest = 1f;
 
         /// <summary>
+        /// How often a burn pays out, in seconds. See <c>SiegeBoard.Smoulder</c>.
+        ///
+        /// <para>
+        /// <b>A cadence rather than a frame, and it costs the rule nothing.</b> A burn is a rate
+        /// per second and the remainder has always been carried (<c>SiegeRaider.Smoulder</c>), so
+        /// what a burn is worth over its own seconds is <c>rate x seconds</c> whether it is handed
+        /// over in two hundred slivers or in six instalments. What the frame spelling *did* cost
+        /// was the drawing: every tick was reported as a bolt, so an ember turret drew a complete
+        /// shot — recoil, muzzle flash, comet, impact — some thirty times a second out of one
+        /// barrel, which is what "they shoot like a machine gun" was. The rate was never the
+        /// fault and must not be reached for.
+        /// </para>
+        /// <para>
+        /// <b>Deliberately not <see cref="FireEvery"/> and deliberately longer than it.</b> A tick
+        /// as quick as a bolt would put a burn's payout back inside the noise of the line's own
+        /// fire, where the whole value of an ember is that it goes on working between shots. Two
+        /// a second reads as a rhythm a player can count.
+        /// </para>
+        /// <para>
+        /// <b>The shortest burn on the shelf is three seconds</b> (<c>ember</c>, extent 30), so
+        /// the cheapest rung still pays six times — a cadence that only paid twice would make the
+        /// *first* rung of the family read as a single delayed hit.
+        /// </para>
+        /// </summary>
+        public const float BurnTick = .5f;
+
+        /// <summary>
         /// Whether this kind stops on the hill and works on the <em>field</em> rather than on the
         /// line.
         ///

@@ -458,6 +458,14 @@ RANK_TINTS = [(158, 173, 189), (217, 140, 82), (219, 227, 240), (255, 204, 77), 
 #: less than the screen cannot report what the screen gets wrong.
 SHADOW_DROP, SHADOW_WIDE, SHADOW_TALL, BODY_LIFT = 0.21, 0.78, 0.37, 0.04
 
+#: `SiegeView.BlazeWide` and `.BlazeSeat` - how wide the flame a burning raider wears is drawn
+#: against the **width** of its body, and where the seat of the fire sits in its own frame.
+#:
+#: <b>Against the width, which is the whole of what the first cut of it got wrong.</b> Every body
+#: on this hill is drawn far wider than it is tall, so a fire scaled by `Mob.Height` is a candle
+#: standing on a beetle four times its width. Nothing numeric could have said so.
+BLAZE_WIDE, BLAZE_SEAT = 1.16, 0.90
+
 
 def body_fill(boss):
     return 0.72 if boss else 0.94
@@ -499,6 +507,15 @@ def shadow(sheet, cx, cy, wide, tall, boss=False):
     sheet.alpha_composite(blob, (int(cx - w / 2),
                                  int(cy - h / 2 - BODY_LIFT * tall + body * drop)))
 
+
+#: How many raiders are drawn wearing an ember turret's flame, nearest the line first. Set by
+#: `main` from `--alight`.
+#:
+#: <b>A count rather than a flag, because the question the picture answers is about a *hill*.</b>
+#: One burning body says whether the fire is the right size; three say whether a wave of them is
+#: still a wave anybody can read - which is the one thing a preview panel cannot be asked, and the
+#: reason this lives here as well as in `render_ward_preview.py`.
+ALIGHT = 0
 
 #: Which cast is being drawn. The empty string is the insects, which is what a chapter draws
 #: unless something says otherwise.
@@ -712,9 +729,26 @@ def struck(sheet, cx, cy, cell, frame, plate_top):
     sheet.alpha_composite(im, (int(cx - im.width / 2), top))
 
 
+#: The face the game draws with (invariant 46a: `Fonts/GameFont` is a role). It is in the repo,
+#: so it is always the one that answers - the fallbacks are for a checkout that has not got it.
+GAME_FONT = REPO / "Assets" / "Game" / "Fonts" / "GameFont.ttf"
+
+
 def face(size):
-    """A bold face for the floating numbers, or None if this machine has none to offer."""
+    """The shipped display face at `size`, or None if this machine has none to offer.
+
+    **The game's own face rather than a bold system one**, because half of what this file is now
+    asked is *how wide* a caption comes out (`fit_line`) - and a width measured in Arial is a
+    width answering a question about a different font. Titan One is a third wider than Arial
+    Bold at the same point size, which is the difference between a caption that fits the board
+    and one drawn off both sides of it.
+    """
     from PIL import ImageFont
+    size = max(1, int(size))
+    try:
+        return ImageFont.truetype(str(GAME_FONT), size)
+    except OSError:
+        pass
     for name in ("arialbd.ttf", "seguibl.ttf", "DejaVuSans-Bold.ttf", "Arial Bold.ttf"):
         try:
             return ImageFont.truetype(name, size)
@@ -765,6 +799,52 @@ CHAIN_RISE, CHAIN_BOX, CHAIN_DRIFT = 2.35, 1.25, 0.30
 WAVE_BOX, WAVE_SWELL, WAVE_FLOAT = 0.90, 1.6, 0.80
 CAPTION_CLEAR = 0.22
 
+#: `SiegeView.CaptionGutter`, `CaptionFloor` and `WavePopFloor` - the air a caption leaves at each
+#: end of the board, the smallest it may be shrunk to, and the least a banner may open by.
+CAPTION_GUTTER, CAPTION_FLOOR, WAVE_POP_FLOOR = 0.35, 0.26, 1.15
+
+#: `SiegeView.Announce`'s own sizes: an ordinary wave, a boss walking on, a boss falling, and the
+#: word a last phase turning says.
+WAVE_SIZE, BOSS_SIZE, FELLED_SIZE, TURN_SIZE = 0.46, 0.78, 0.70, 0.62
+
+
+def caption_room(span, cell):
+    """`SiegeView.Captions.Room` - the width a caption on this hill may draw into."""
+    return max(cell, span[0] - cell * CAPTION_GUTTER * 2)
+
+
+def fit_line(text, size, room, floor):
+    """`UIKit.OneLineLabel` - the largest whole point size at which one line fits `room`.
+
+    The same shape as the view's, because it is the same answer: one ratio off the measured
+    width, then the last point or two walked off by hand, since a face's metrics are per glyph
+    and do not scale evenly.
+    """
+    size = max(1, int(size))
+    floor = max(1, int(floor))
+
+    font = face(size)
+    if font is None:
+        return None, size, 0.0
+
+    wide = font.getlength(text or "")
+    if wide > room > 0:
+        size = max(floor, int(size * room / wide))
+        font = face(size)
+        while size > floor and font.getlength(text or "") > room:
+            size -= 1
+            font = face(size)
+
+    return font, size, font.getlength(text or "")
+
+
+def caption_pop(room, wide):
+    """`SiegeView.Captions.Pop` - how far a banner may open, given what is left of the room."""
+    if wide <= 0 or room <= 0:
+        return WAVE_SWELL
+
+    return min(WAVE_SWELL, max(1.0, room / wide))
+
 
 def captions(line_y, cell):
     """Where the chain banner and the wave banner sit. `SiegeView.Captions.Of`."""
@@ -775,13 +855,26 @@ def captions(line_y, cell):
     return chain, chain_high + CAPTION_CLEAR * cell + half
 
 
-def wave_banner(sheet, cx, cy, text, cell, fill=(242, 236, 220, 255), swell=1.0):
-    """`SiegeView.Arrival` - what the hill says when a wave walks on.
+def wave_banner(sheet, cx, cy, text, cell, span, fill=(242, 236, 220, 255),
+                size=WAVE_SIZE, swell=False):
+    """`SiegeView.Announce` - what the hill says when a wave walks on, or a boss falls.
 
     **Drawn beside the chain banner rather than alone**, because the one thing a picture is needed
     for here is whether the two share a row - and a cascade during a wave's arrival is ordinary.
+
+    **Drawn at the widest frame of the pop**, which is the frame that used to leave the screen: a
+    banner opens at `WAVE_SWELL` and shrinks into place, so a still of the settled size would
+    answer the easy half of the question this picture is now asked.
     """
-    font = face(int(cell * 0.46 * swell))
+    room = caption_room(span, cell)
+    floor = cell * CAPTION_FLOOR
+
+    font, pt, wide = fit_line(text, cell * size,
+                              room / WAVE_POP_FLOOR if swell else room, floor)
+    if font is None:
+        return
+
+    font = face(pt * (caption_pop(room, wide) if swell else 1.0))
     if font is None:
         return
 
@@ -1386,23 +1479,51 @@ def lane_x(span, lane):
 COG_NUDGE = 0.26
 
 
-#: `SiegeView.BossKey` through `loc/en.json` - what each boss is announced as, on the banner when
-#: it walks on and on the forecast that warns it is coming.
-BOSS_BANNER = {
-    "blightcaller": "THE BLIGHTCALLER",
-    "warlord": "THE WARLORD",
-    "warbringer": "THE WARBRINGER",
-    "overlord": "THE OVERLORD",
-    "gravemaw": "THE GRAVEMAW",
-    "bonecaller": "THE BONECALLER",
-    # **Neither of these carries "THE", and that is what `loc/en.json` says.** A mirror
-    # that tidies a string is a mirror answering a question about the screen out of its
-    # own head (invariant 44d).
-    "shackler": "SHACKLER",
-    "ironclad": "IRONCLAD",
-    "thunderer": "THE THUNDERER",
-    "colossus": "THE COLOSSUS",
+#: `SiegeView.BossKey` - which key each boss is announced under. **Written out rather than built
+#: by concatenation**, exactly as the view writes it out (invariant 6), so a boss added without a
+#: key of its own is missing here rather than quietly announced as a warlord.
+BOSS_KEY = {
+    "blightcaller": "mode.siege.blightcaller",
+    "warlord": "mode.siege.boss",
+    "warbringer": "mode.siege.warbringer",
+    "overlord": "mode.siege.overlord",
+    "gravemaw": "mode.siege.gravemaw",
+    "bonecaller": "mode.siege.bonecaller",
+    "shackler": "mode.siege.shackler",
+    "ironclad": "mode.siege.ironclad",
+    "thunderer": "mode.siege.thunderer",
+    "colossus": "mode.siege.colossus",
+    "gorgon": "mode.siege.gorgon",
+    "sunlord": "mode.siege.sunlord",
 }
+
+_LOC = {}
+
+
+def loc(key, *args):
+    """`Loc.Get` / `Loc.Format`, read from the strings the game ships.
+
+    **Read rather than copied**, because the copy went stale: two bosses shipped after the table
+    below was written out by hand and both of them drew as THE WARLORD here, which is the one
+    fault the banner itself exists to stop (`SiegeCaptionTests.EveryBossIsAnnouncedAsItself`)
+    wearing a mirror's clothes.
+    """
+    if not _LOC:
+        rows = json.loads((REPO / "Assets" / "StreamingAssets" / "Content" / "loc"
+                           / "en.json").read_text(encoding="utf-8"))
+        for row in (rows.get("entries", rows) if isinstance(rows, dict) else rows):
+            _LOC[row["key"]] = row["text"]
+
+    said = _LOC.get(key, key)
+    for i, arg in enumerate(args):
+        said = said.replace("{%d}" % i, str(arg))
+
+    return said
+
+
+def boss_banner(kind):
+    """What a boss of `kind` is announced as - `SiegeView.BossKey` through the shipped strings."""
+    return loc(BOSS_KEY.get(kind, "mode.siege.boss"))
 
 
 def foretell(sheet, lay, wave, span, cell, hill_top, hill_foot, at):
@@ -1439,10 +1560,14 @@ def foretell(sheet, lay, wave, span, cell, hill_top, hill_foot, at):
     mid = (hill_top + hill_foot) / 2
     cx, cy = at(0, mid + (cell * 0.2 if facing else cell * 0.85))
 
-    write(sheet, draw_on,
-          BOSS_BANNER.get(facing, "THE WARLORD") if facing else "NEXT WAVE",
-          face(int(cell * (0.52 if facing else 0.34))), cx, cy,
-          BOSSES[facing]["fire"] + (255,) if facing else (242, 236, 220, 255))
+    # Fitted to the board like every other caption on this hill (`SiegeView.Foretell`): a boss's
+    # name is drawn here at half a cell of type and "THE BLIGHTCALLER" is sixteen characters.
+    said = boss_banner(facing) if facing else loc("mode.siege.next")
+    font, _, _ = fit_line(said, cell * (0.52 if facing else 0.34),
+                          caption_room(span, cell), cell * CAPTION_FLOOR)
+
+    write(sheet, draw_on, said, font, cx, cy,
+          (255, 255, 255, 255) if facing else (242, 236, 220, 255))
 
     step = cell * 1.35
     first = -(len(seats) - 1) * step / 2
@@ -1468,7 +1593,7 @@ def foretell(sheet, lay, wave, span, cell, hill_top, hill_foot, at):
     # places is a readout nobody can use.
     sx, sy = at(0, mid - cell * 1.4)
     write(sheet, draw_on, str(int(siege_breather())), face(int(cell * 0.54)), sx, sy,
-          BOSSES[facing]["fire"] + (255,) if facing else (255, 199, 92, 255))
+          (255, 255, 255, 255) if facing else (255, 199, 92, 255))
 
 
 def siege_breather():
@@ -1698,6 +1823,30 @@ def stood_charms(spec, level):
     return out
 
 
+def board_fit(grid):
+    """The room, the cell and the board's span on whatever canvas is set - `SiegeView.Fit`.
+
+    **A function rather than four statements inside `draw`**, because the captions gate asks the
+    same question of three canvases without drawing any of them, and a second copy of this
+    arithmetic is a mirror that can disagree with its own pictures (invariant 44d).
+
+    `SiegeView.CellFor` - the field is laid out to the width a *phone* would have given it,
+    because the extra width on a squarer canvas was bought to buy height and is not the board's
+    to spend (invariant 37cc). Without it a 4:3 tablet draws a 160-unit cell against a phone's
+    124, which puts the field on its `MAX_GEM_BAND` ceiling and leaves the hill 3.2 cells.
+    """
+    left, bottom, right, top = inset()
+    host = (CANVAS[0] - left - right, CANVAS[1] - top - bottom)
+
+    scale = min(1.0, PHONE_WIDTH / CANVAS[0])
+
+    cell = min((host[0] * scale - MARGIN * 2) / grid.w,
+               (host[1] - MARGIN * 2) * MAX_GEM_BAND / grid.h)
+    span = (max(cell * grid.w, host[0] - MARGIN * 2), max(cell * grid.h, host[1] - MARGIN * 2))
+
+    return host, cell, span
+
+
 def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, line=None,
          burn=None, storm=0, bombs=None, cogs=0, forecast=False, armed=(), charms=None,
          lance=None, volley=None, stilled=None, heaved=None):
@@ -1713,17 +1862,7 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
     figures = []
 
     left, bottom, right, top = inset()
-    host = (CANVAS[0] - left - right, CANVAS[1] - top - bottom)
-
-    # `SiegeView.CellFor` - the field is laid out to the width a *phone* would have given it,
-    # because the extra width on a squarer canvas was bought to buy height and is not the board's
-    # to spend (invariant 37cc). Without it a 4:3 tablet draws a 160-unit cell against a phone's
-    # 124, which puts the field on its `MAX_GEM_BAND` ceiling and leaves the hill 3.2 cells.
-    scale = min(1.0, PHONE_WIDTH / CANVAS[0])
-
-    cell = min((host[0] * scale - MARGIN * 2) / grid.w,
-               (host[1] - MARGIN * 2) * MAX_GEM_BAND / grid.h)
-    span = (max(cell * grid.w, host[0] - MARGIN * 2), max(cell * grid.h, host[1] - MARGIN * 2))
+    host, cell, span = board_fit(grid)
 
     gem_band = min(max(cell * grid.h / span[1], 0.28), MAX_GEM_BAND)
     rest = 1.0 - gem_band
@@ -1798,6 +1937,28 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         wide = tall if body is None else tall * body.width / body.height
         shadow(sheet, cx, cy, wide, tall)
         put(sheet, body, cx, cy - BODY_LIFT * tall, wide, tall)
+
+        # **The flame an ember turret leaves on it** (`SiegeView.Ablaze`). Over the body and under
+        # the gem and the health bar below, which is the order the board draws them in and is not
+        # a nicety: fire may cover a raider and may never cover the two readouts on it.
+        #
+        # Sized off the body's own drawn width, seated where `shadow` puts the shadow - the same
+        # `FootOf` both halves of the game ask - and turned in the ward's colour rather than the
+        # raider's, because what a burn says is which of the player's four seats is paying for it.
+        if i < ALIGHT:
+            fire = blast("burn_%s" % siege.LETTERS[i % len(siege.LETTERS)],
+                         (i * 7 + 5) % 24)
+            if fire is None:
+                raise SystemExit("missing Art/Fx/Siege/burn_* - run: "
+                                 "python Tools/make_burn_fx.py --write")
+
+            fwide = wide * BLAZE_WIDE
+            ftall = fwide * fire.height / fire.width
+            foot = BODY_LIFT * tall - tall * body_fill(False) * SHADOW_DROP
+
+            # y runs down an image and up a canvas, so the seat is *subtracted* here - the other
+            # half of invariant 44d's finding, and the one a mirror gets wrong on its own.
+            put(sheet, fire, cx, cy - foot - (BLAZE_SEAT - 0.5) * ftall, fwide, ftall)
 
         # The gem over its head, which is the third of the three things that say its colour.
         cx, cy = at(lx - tall * 0.46, ly + tall * 0.58)
@@ -2038,10 +2199,15 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         wx, wy = at(0, wave_y)
 
         if boss_here:
-            wave_banner(sheet, wx, wy, BOSS_BANNER.get(boss_here[0], "THE WARLORD"), cell,
-                        BOSSES[boss_here[0]]["fire"] + (255,), WAVE_SWELL * 0.78 / 0.46)
-        else:
-            wave_banner(sheet, wx, wy, "WAVE %d OF %d" % (wave, max(wave, len(lay.waves))), cell)
+            wave_banner(sheet, wx, wy, boss_banner(boss_here[0]), cell, span,
+                        (255, 255, 255, 255), BOSS_SIZE, swell=True)
+        elif wave > 1:
+            # **Nothing on wave one, because the screen says nothing there either**: the count-in
+            # has just said GO! on the frame the first raider stepped out (`SiegeView.Arrival`).
+            # A mirror still drawing a caption the board has stopped drawing is worse than one
+            # drawing none (invariant 44d) - `--wave 2` is the picture of an ordinary arrival.
+            wave_banner(sheet, wx, wy,
+                        loc("mode.siege.wave", wave, max(wave, len(lay.waves))), cell, span)
 
     # ------------------------------------------------------------------ the field
     cx, cy = at(0, gem_centre)
@@ -2679,6 +2845,89 @@ def ward_rings(sheet, span, cell, line_y, wards, at):
     sheet.alpha_composite(layer)
 
 
+#: The shapes the captions gate sweeps: the sheet this file draws by default, the tall phone the
+#: mode is played on, and the squarest canvas `CanvasFit` allows. **Held here rather than taken
+#: from the flags**, because the whole point of the sweep is that no single display answers it.
+CAPTION_SHAPES = (("16:9 sheet", CANVAS, SAFE_BOTTOM),
+                  ("19.5:9 phone", PHONE_CANVAS, PHONE_SAFE_BOTTOM),
+                  ("4:3 tablet", TABLET_CANVAS, TABLET_SAFE_BOTTOM))
+
+
+def caption_lines():
+    """Every caption the hill can say, with the size it is said at and whether it opens.
+
+    **All of them, rather than the ones somebody thought of.** The bosses come off `BOSS_KEY`,
+    which is the mirror of the switch the view announces from, so a boss added to the mode turns
+    up here without anybody adding a line - which is the half of this that goes stale otherwise.
+    """
+    said = []
+
+    for kind in BOSS_KEY:
+        said.append(("arrival", boss_banner(kind), BOSS_SIZE, True))
+        said.append(("falls", loc("mode.siege.felled", boss_banner(kind)), FELLED_SIZE, True))
+        said.append(("forecast", boss_banner(kind), 0.52, False))
+
+    said.append(("wave", loc("mode.siege.wave", 10, 12), WAVE_SIZE, False))
+    said.append(("enraged", loc("mode.siege.enraged"), TURN_SIZE, True))
+    said.append(("unsealed", loc("mode.siege.unsealed"), TURN_SIZE, True))
+    said.append(("forecast", loc("mode.siege.next"), 0.34, False))
+    said.append(("chain", loc("mode.siege.chain", 9), 1.02, False))
+    said.append(("count", loc("mode.siege.go"), 1.1, False))
+
+    return said
+
+
+def caption_gate(grid):
+    """Measures every caption on every shape, and says which of them leaves the board.
+
+    **The one gate that can see this at all.** A caption here is one unbroken line with wrapping
+    off (`UIKit.Label`), so a string too wide for the board is not clipped, not wrapped and not
+    reported - it is drawn off both ends, which is how "THE BLIGHTCALLER FALLS" shipped at nine
+    cells on a board of eight. The view fits every one of them now
+    (`SiegeView.Captions.Room`); what nothing in C# can check offline is whether the fit has
+    anything left to give, because that needs the face's own metrics. This has them.
+    """
+    kept, over = CANVAS, []
+
+    for name, canvas, safe in CAPTION_SHAPES:
+        globals()["CANVAS"] = canvas
+        globals()["SAFE_BOTTOM"] = safe
+
+        _, cell, span = board_fit(grid)
+        room = caption_room(span, cell)
+
+        print("\n%-14s cell %5.1f   board %4.2fc   room %4.2fc"
+              % (name, cell, span[0] / cell, room / cell))
+
+        for what, text, size, swell in caption_lines():
+            font, pt, wide = fit_line(text, cell * size,
+                                      room / WAVE_POP_FLOOR if swell else room,
+                                      cell * CAPTION_FLOOR)
+            if font is None:
+                sys.exit("no face on this machine to measure a caption with")
+
+            pop = caption_pop(room, wide) if swell else 1.0
+            drawn = wide * pop
+
+            mark = "  " if drawn <= room + 0.5 else "<-"
+            if drawn > room + 0.5:
+                over.append((name, text))
+
+            print("  %s %-9s %-26s %4.2fc -> %4.2fc  pop %4.2f  drawn %4.2fc"
+                  % (mark, what, text[:26], size, pt / cell, pop, drawn / cell))
+
+    globals()["CANVAS"] = kept
+
+    if over:
+        print("\n%d caption(s) drawn off the board:" % len(over))
+        for name, text in over:
+            print("  %s: %s" % (name, text))
+        return False
+
+    print("\nevery caption fits every shape, at its widest frame.")
+    return True
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--level")
@@ -2707,6 +2956,10 @@ def main():
     ap.add_argument("--storm", type=int, nargs="?", const=3, default=0, metavar="N",
                     help="drop a stormcall bolt on the first N raiders - the only picture that "
                          "says whether a strike lands on the thing it struck")
+    ap.add_argument("--alight", type=int, default=0, metavar="N",
+                    help="draw the first N raiders wearing an ember turret's flame "
+                         "(SiegeView.Ablaze) - the only picture that says whether a hill of "
+                         "burning bodies is still a hill anybody can read")
     ap.add_argument("--burn", metavar="LANE,ROW",
                     help="with --aim hill, light the plus a firepot dropped on that box would "
                          "burn (`SiegeView.Scorch`) - the only picture that says whether five "
@@ -2770,11 +3023,20 @@ def main():
                     help="draw a 4:3 tablet's canvas (1620x2160 units, per `CanvasFit`) rather "
                          "than the 16:9 sheet this file draws by default - the only shape in "
                          "which the board's own bands can be seen at a tablet's proportions")
+    ap.add_argument("--captions", action="store_true",
+                    help="measure every caption the hill can say against the board it is drawn "
+                         "on, at three canvas shapes, and say which of them leaves it - the "
+                         "only gate that can see a caption too wide for the screen, because "
+                         "nothing clips one")
     ap.add_argument("--out", default=str(REPO / "Tools" / "siege_boards.png"))
     args = ap.parse_args()
 
     if args.phone and args.tablet:
         sys.exit("--phone and --tablet are two displays; draw one at a time")
+
+    if args.captions:
+        first = next(iter(levels()))[1]
+        sys.exit(0 if caption_gate(layout_of(first).grid) else 1)
 
     if args.phone:
         globals()["CANVAS"] = PHONE_CANVAS
@@ -2829,7 +3091,9 @@ def main():
     # That is invariant 44d's own trap - a render that draws something other than the screen sends
     # you off to fix what was never broken - and the lane needed no special case at all, because
     # it is a chapter and the chapter decides.
-    global CAST
+    global CAST, ALIGHT
+
+    ALIGHT = args.alight
 
     shots = []
     for rung, chapter, lv in picked:

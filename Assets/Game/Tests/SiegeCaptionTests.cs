@@ -36,7 +36,15 @@ namespace GlimmerGrove.Tests
         const int Rows = 5;
 
         static SiegeView.Captions At(float span)
-            => SiegeView.Captions.Of(SiegeView.Bands.Of(span, Cell, Rows).LineY, Cell);
+        {
+            var bands = SiegeView.Bands.Of(span, Cell, Rows);
+
+            return SiegeView.Captions.Of(bands.LineY, Cell,
+                                         (bands.HillTop + bands.HillFoot) * .5f);
+        }
+
+        /// <summary>A board eight cells wide, which is every siege this mode ships.</summary>
+        const float SpanX = Cell * 8f;
 
         /// <summary>
         /// The one that would have caught it. Both captions are wide centred lines of text, so
@@ -93,7 +101,7 @@ namespace GlimmerGrove.Tests
             foreach (var span in Spans)
             {
                 var bands = SiegeView.Bands.Of(span, Cell, Rows);
-                var c = SiegeView.Captions.Of(bands.LineY, Cell);
+                var c = At(span);
 
                 Assert.Greater(c.ChainLow, bands.LineY,
                                $"the chain banner is drawn into the ward line at span {span}");
@@ -127,12 +135,153 @@ namespace GlimmerGrove.Tests
                 if (span < 1600f) continue;
 
                 var bands = SiegeView.Bands.Of(span, Cell, Rows);
-                var c = SiegeView.Captions.Of(bands.LineY, Cell);
+                var c = At(span);
 
                 Assert.LessOrEqual(c.WaveHigh, bands.HillTop,
                                    $"the wave banner floats off the top of the hill at span {span}");
                 Assert.GreaterOrEqual(c.ChainLow, bands.HillFoot,
                                       $"the chain banner is drawn below the hill at span {span}");
+            }
+        }
+
+        /// <summary>
+        /// The one the forecast band's hold exists for.
+        ///
+        /// <para>
+        /// <b>No arrangement stacks these two clear of each other, and that is the whole reason
+        /// the hold is the answer.</b> The band is pinned to the middle of the hill because that
+        /// is where a player is told to look during a breather, and it is three cells tall
+        /// against a hill of six; the banner rises from the ward line and floats up into it. On
+        /// the shapes this mode is played at they share between 1.3 and 2.2 cells of row — which
+        /// came back from play as a boss's name drawn through the gem counts, because a boss
+        /// falling clears the hill and that is the same frame the breather starts.
+        /// </para>
+        /// <para>
+        /// So this asserts the clash rather than its absence. If somebody re-seats the band one
+        /// day and this fails, the right repair is to read
+        /// <c>SiegeView.BandShows</c> and decide whether the hold is still buying anything —
+        /// not to re-tune a number until this goes green.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void NoArrangementStandsTheBandClearOfTheBanner()
+        {
+            foreach (var span in Spans)
+            {
+                var c = At(span);
+
+                if (span < 1400f) continue;
+
+                Assert.IsTrue(SiegeView.Captions.Clash(c.BandLow, c.BandHigh,
+                                                       c.WaveLow, c.WaveHigh),
+                              $"the band and the wave banner no longer share a row at span "
+                              + $"{span}, so `BandShows` may be buying nothing there");
+            }
+        }
+
+        /// <summary>
+        /// And the hold itself: the band is never drawn on a frame a banner is.
+        ///
+        /// <para>
+        /// <b>Swept rather than looked at</b>, which is this file's whole bargain — a render
+        /// draws one frame of one shape, and what went wrong here was a pairing that only
+        /// happens for two seconds after a boss falls.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheBandIsNeverDrawnWhileTheHillIsSpeaking()
+        {
+            for (int mask = 0; mask < 8; mask++)
+            {
+                bool over = (mask & 1) != 0;
+                bool chaining = (mask & 2) != 0;
+                bool speaking = (mask & 4) != 0;
+
+                bool shown = SiegeView.BandShows(true, over, chaining, speaking);
+
+                if (speaking || chaining || over)
+                    Assert.IsFalse(shown, $"the band is drawn over a banner (over {over}, "
+                                          + $"chain {chaining}, speaking {speaking})");
+                else
+                    Assert.IsTrue(shown, "the band is never drawn at all");
+            }
+
+            Assert.IsFalse(SiegeView.BandShows(false, false, false, false),
+                           "the band is drawn while the hill is still full");
+        }
+
+        /// <summary>
+        /// Every caption on this hill is one unbroken line with nothing to clip it, so what
+        /// keeps it on the board is the room it is fitted to.
+        ///
+        /// <para>
+        /// <b>A gutter at each end rather than the board's full width</b>: a caption drawn to
+        /// the last pixel of the plate reads as a mistake even when it is inside, and the plate
+        /// is not the screen edge on a tablet.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ACaptionIsFittedToLessThanTheBoard()
+        {
+            float room = SiegeView.Captions.Room(SpanX, Cell);
+
+            Assert.Less(room, SpanX, "a caption may use the whole board");
+            Assert.Greater(room, SpanX - Cell * 2f, "the gutter has eaten a cell at each end");
+            Assert.GreaterOrEqual(SiegeView.Captions.Room(Cell * .5f, Cell), Cell,
+                                  "a board narrower than a cell leaves no room to draw into");
+        }
+
+        /// <summary>
+        /// The pop a banner opens at: never wider than the board at its largest frame, never
+        /// flat enough to read as a label.
+        ///
+        /// <para>
+        /// <b>Measured against the ceiling rather than against the constant</b>, so the sweep
+        /// says the same thing if the swell is ever retuned — <c>Pop</c> of a hairline is the
+        /// most it will ever answer, whatever that is.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ABannerNeverOpensWiderThanTheBoard()
+        {
+            float room = SiegeView.Captions.Room(SpanX, Cell);
+            float most = SiegeView.Captions.Pop(room, .01f);
+
+            Assert.Greater(most, 1f, "a banner never opens at all");
+
+            for (float wide = Cell * .25f; wide < SpanX * 2f; wide += Cell * .25f)
+            {
+                float pop = SiegeView.Captions.Pop(room, wide);
+
+                Assert.GreaterOrEqual(pop, 1f, $"a banner {wide / Cell:0.00} cells wide shrinks");
+                Assert.LessOrEqual(pop, most, $"a banner {wide / Cell:0.00} cells wide overshoots");
+
+                if (pop > 1f)
+                    Assert.LessOrEqual(wide * pop, room + .001f,
+                                       $"a banner {wide / Cell:0.00} cells wide opens to "
+                                       + $"{wide * pop / Cell:0.00} against {room / Cell:0.00} "
+                                       + "cells of room");
+            }
+        }
+
+        /// <summary>
+        /// A caption fitted to the room a <em>swelling</em> banner needs still has somewhere to
+        /// open into, which is what stops a boss arriving with no movement at all.
+        /// </summary>
+        [Test]
+        public void ALongNameStillHasRoomToOpenInto()
+        {
+            float room = SiegeView.Captions.Room(SpanX, Cell);
+            float most = SiegeView.Captions.Pop(room, .01f);
+
+            // The longest caption this mode says, fitted the way `Announce` fits it: to the room
+            // left over once the pop has been reserved.
+            for (float floor = 1.05f; floor <= most; floor += .05f)
+            {
+                float fitted = room / floor;
+
+                Assert.GreaterOrEqual(SiegeView.Captions.Pop(room, fitted), floor - .001f,
+                                      $"a caption fitted at a floor of {floor:0.00} opens flat");
             }
         }
 

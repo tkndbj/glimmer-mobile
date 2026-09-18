@@ -119,6 +119,17 @@ namespace GlimmerGrove.AssetPipeline
             var list = new List<AssetRequest>(128);
             if (catalog == null) return list;
 
+            // **The four flames, once for the whole roster** (<c>WardModel.BurnFor</c>). They are
+            // per ward colour rather than per turret, so asking inside the loop would report one
+            // missing reel as three missing reels and tell the audit that thirty models use four
+            // addresses ninety times. Asked unconditionally rather than only when an ember is in
+            // the roster: this list is what says an address is *used* (<see cref="AllGroveAssets"/>),
+            // and a roster with its ember rungs temporarily retuned away would otherwise have
+            // four live reels reported as dead weight and dropped.
+            for (int i = 0; i < Wards.WardLine.Colours.Length; i++)
+                list.Add(AssetRequest.SpriteSet(
+                    SiegeFx(Wards.WardModel.BurnFor(Wards.WardLine.Colours[i]))));
+
             foreach (var model in catalog.Models)
             {
                 if (model == null || string.IsNullOrEmpty(model.Id)) continue;

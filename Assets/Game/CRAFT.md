@@ -1235,6 +1235,43 @@ copy nothing keeps in step.
   candidate over it and re-rendering `render_home.py` / `render_tasks.py` is the whole
   instrument, and a ten-face contact sheet costs about a minute. Nunito Black and Fredoka Bold
   were each cut, installed and rejected on sight before that.
+- `Tools/make_burn_fx.py` — the flame a raider wears while an ember turret's fire is on it, four
+  reels, one per ward colour. **The only looping reel in this mode**, and that is what made it a
+  drawn effect rather than a bake: every bought projectile is an *event* played once, so nothing in
+  the pack has any reason for its last frame to lead back into its first, and a burn stands on a
+  body for up to six seconds — five times round. A seam is a stutter the player sees five times.
+  <br>**How the loop is made is the whole craft of it.** Nothing is random per frame:
+  `make_legend_fx.py` seeds a generator per frame, which is exactly right for lightning (what says
+  lightning is that the next frame is unrelated) and is a **strobe** for fire. Every number is a
+  smooth function of a phase; the only randomness is `spread`, an irrational stride that mixes once
+  per element and then holds still. `t` is `f / FRAMES` and never `f / (FRAMES - 1)` — the last
+  frame of a loop is the one *before* the first, and dividing by `FRAMES - 1` repeats a frame and
+  hitches once a cycle. `--report` prints the mean step between frames beside the step across the
+  wrap: a loop joins exactly when the wrap is no worse than a typical step, and a ratio near one is
+  what to look for. `--strip` lays two whole cycles end to end, which puts the join in the middle of
+  the picture where the eye finds it.
+  <br>**Three wrong cuts, each caught by a picture and by nothing else** (invariant 32b, three
+  times). *A light bulb*: stamped soft dots up a spine accumulate energy fastest where the flame is
+  thickest, so the mass blew out to white with wires coming off it — a flame is a **silhouette**, so
+  the shape is written down as a profile table and filled as a field. *A gas plume*: a plain
+  `(1 - d)` falloff is brightest at the spine and fades all the way out, so the shape had no edge at
+  all — the fill needs a **shoulder** (flat inside `soft`, soft only at the rim) and a **bright band
+  just inside the outline**, because a flame's rim is hotter than what it encloses. *A tent*: with a
+  rim on it, a wide flat foot and long straight flanks trace a triangle, so the profile curves and
+  the envelope carries almost no rim.
+  <br>**And it is a cluster rather than a flame.** Every raider here is a top-down insect drawn far
+  wider than it is tall (a `mon` reel is about 300x180), so one flame stretched across a body is a
+  camp fire. Three fires of different sizes, out of phase and **overlapping enough that their
+  skirts merge**, is one mound with three peaks in it — which is what something burning looks like.
+  Spaced so they cleared each other they read as three camp fires in a row, which the contact sheet
+  said in one glance.
+  <br>**Four reels and not one white one tinted**, which is invariant 37l met for the third time:
+  `Image.color` is a multiply, and what makes fire read is the run of *hues* up its own body — a
+  saturated cooling tip over a hot middle over a white core. That gradient cannot survive a
+  multiply. Each is anchored on the tint `SiegeView.Tints` paints that ward in and then taken hotter
+  toward the middle.
+  <br>Look at it with `--contact` (all four, six frames each) and on the board with
+  `render_siege.py --alight 3` and `render_ward_preview.py --ward pyre --alight`.
 - `Tools/render_siege.py` — the eye for everything no number can see. `--phone` draws a 19.5:9 display
   with a home-indicator strip, which is the one shape that shows the shelf's foot and the three bands'
   real proportions. **Its insets are in the screen's own order (left, bottom, right, top)** and were
@@ -1253,6 +1290,11 @@ copy nothing keeps in step.
   **colour underneath still read with the mark on** — because a charm is still worth its colour and a
   gem whose colour cannot be read is a gem that cannot be aimed. `--charms 27=lance` is for the worst
   pairing, which is white on amber.
+  <br>**`--alight N` puts an ember turret's flame on the first N raiders**, and it is the only
+  picture that can be asked the question a preview panel cannot: *is a hill of burning bodies still
+  a hill anybody can read?* A flame is drawn over the body and under the gem and the health bar,
+  which is the board's own order and is not a nicety — fire may cover a raider and may never cover
+  the two readouts on it. `SiegeView.BlazeWide` is the dial and the direction is down.
 - `Tools/render_grove.py`, `render_prism.py`, `render_home.py`, `render_shop.py` —
   the same job for the map, the grove, Prismvale and the two chrome screens. `hudkit.py` mirrors
   `UIKit` and `Skins` for the last two.

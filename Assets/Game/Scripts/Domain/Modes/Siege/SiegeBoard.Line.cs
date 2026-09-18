@@ -229,6 +229,18 @@ namespace GlimmerGrove.Modes
         /// would make an ember turret worth two-thirds of its authored strength on a fast phone
         /// and nothing at all on a slow one, which is a difficulty that varies with the device.
         /// </para>
+        /// <para>
+        /// <b>It is taken on a cadence and reported as a burn rather than as a bolt</b>
+        /// (<c>SiegeTuning.BurnTick</c>, <see cref="SiegeBurn"/>), and the two halves are one
+        /// change: the damage a burn does over its own seconds is unmoved, because the fraction
+        /// is still carried, and what stops is a turret drawing thirty complete shots a second.
+        /// </para>
+        /// <para>
+        /// <b>The last instalment is paid on the beat the burn ends</b> rather than waiting for a
+        /// boundary that will never come. Without it an ember whose seconds ran out mid-interval
+        /// would silently keep whatever it had accumulated — a turret paying less than the number
+        /// on its card, in a way no arithmetic anywhere else could see.
+        /// </para>
         /// </summary>
         void Smoulder(float dt)
         {
@@ -250,6 +262,20 @@ namespace GlimmerGrove.Modes
                 raider.Burn -= span;
                 raider.Smoulder += raider.BurnRate * span;
 
+                // **The cadence, and the burn ending is a boundary too.** Counted down by the
+                // span the burn really ran rather than by `dt`, so the instalment a burn's last
+                // fraction of a second earns is the fraction it earned.
+                raider.Sear -= span;
+
+                bool ended = raider.Burn <= 0f;
+                if (raider.Sear > 0f && !ended) continue;
+
+                // **`+=` rather than `=`**, so a frame long enough to cross a boundary does not
+                // push the next one a whole interval into the future — which on a slow phone
+                // would make a burn pay fewer instalments than on a fast one, the very drift the
+                // carried remainder exists to refuse.
+                if (!ended) raider.Sear += SiegeTuning.BurnTick;
+
                 int took = (int)raider.Smoulder;
                 if (took < 1) continue;
 
@@ -264,8 +290,7 @@ namespace GlimmerGrove.Modes
 
                 bool killed = Fell(raider);
 
-                _report.Bolts.Add(new SiegeBolt(raider.BurnFrom, raider.Id, took, false, killed,
-                                                true));
+                _report.Burns.Add(new SiegeBurn(raider.BurnFrom, raider.Id, took, killed));
             }
         }
 

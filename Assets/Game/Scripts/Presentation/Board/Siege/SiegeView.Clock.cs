@@ -93,6 +93,13 @@ namespace GlimmerGrove
 
             Follow();
 
+            // **What is on fire, which is a state rather than an event** - the flame a burning
+            // raider wears is put up, kept and taken down off `SiegeRaider.Alight` every frame
+            // (`SiegeView.Burn`). After `Follow`, because it is placed against a body that has
+            // already been moved this frame; before `Depth`, because that re-orders the hill and
+            // a widget built after it would spend a frame at the wrong depth.
+            Burning(Time.unscaledDeltaTime);
+
             // The fight's own beats - the plant, each phase turning, the guard going up and
             // coming down - read off the raiders `Follow` just drew. See `SiegeView.Fight`.
             Fight(Time.unscaledDeltaTime);
@@ -115,6 +122,12 @@ namespace GlimmerGrove
 
             if (report.Wave >= 0) Arrival(report.Wave);
             for (int i = 0; i < report.Bolts.Count; i++) Bolt(report.Bolts[i]);
+
+            // **And what fire took, which is deliberately not a bolt** (invariant 7b's cousin, met
+            // on a drawing rather than on an address): a burn ticks twice a second for up to six
+            // seconds, and drawing each tick as a shot leaving a barrel is what made an ember
+            // turret read as a machine gun. See `SiegeView.Burned`.
+            for (int i = 0; i < report.Burns.Count; i++) Burned(report.Burns[i]);
 
             // **The volley a stormglass loosed, as one event.** It is drawn here rather than with
             // the beat that sprang it because the model books it exactly as it books a match's
@@ -360,10 +373,18 @@ namespace GlimmerGrove
                 // hill having jammed rather than as something the player's turret did — the class
                 // of fault invariant 20g is about, met on a purchase. The flash wins while it is
                 // running, because a hit landing is the newer piece of news.
+                //
+                // **And a burning one is drawn in its own firelight**, which is the third state
+                // this one expression answers and is ordered under the other two on purpose: a
+                // hit landing is the newer piece of news, and a stun is a *rule* a player has to
+                // be able to read off a body that is also on fire. The flame itself is drawn
+                // whatever this says (`SiegeView.Burning`), so a stunned raider that is burning
+                // still visibly burns - what it loses is only the warm cast on its own body.
                 if (mob.Body != null)
                     mob.Body.color = raider.Flash > 0f
                                    ? Color.Lerp(Color.white, Pal.Cream, raider.Flash * 5f)
-                                   : raider.Stunned || _board.Stilled ? Stunned : Color.white;
+                                   : raider.Stunned || _board.Stilled ? Stunned
+                                   : raider.Alight ? Scorched(raider) : Color.white;
 
                 // **A boss goes back to its own body the frame after a spell finishes, and which
                 // body that is depends on whether it has arrived.**

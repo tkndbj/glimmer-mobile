@@ -236,6 +236,36 @@ namespace GlimmerGrove
             /// <summary>The light it gathers before a spell leaves. Only a warlord has one.</summary>
             public Image Charge;
 
+            // ---------------------------------------------------------- on fire
+            /// <summary>
+            /// The flame an ember turret's burn stands on this body, and the light it throws on
+            /// the ground under it. Both <b>null</b> unless it is alight. See
+            /// <c>SiegeView.Burning</c>.
+            ///
+            /// <b>Built when it catches and destroyed when it goes out</b>, rather than built for
+            /// every raider and hidden: that is invariant 48i's rule, and a hill sends twelve
+            /// bodies of which usually none is burning.
+            /// </summary>
+            public Image Blaze, Coals;
+
+            /// <summary>
+            /// Which ward colour its fire is drawn in, which is <b>not</b> its own colour.
+            ///
+            /// A burn is drawn in the colour of the seat that lit it (<c>WardModel.BurnFor</c>) —
+            /// that is what tells the player which of their four turrets is being paid for — and a
+            /// raider's own colour is what decides who may hit it. Remembered here because
+            /// <c>SiegeRaider.BurnFrom</c> names a ward that can fall while its fire is still
+            /// burning, and a flame that changed hue because a turret died would be saying
+            /// something that is not true.
+            /// </summary>
+            public int Burns;
+
+            /// <summary>Seconds this fire has been drawn, which paces it catching.</summary>
+            public float Alight;
+
+            /// <summary>Seconds until it sheds its next ember. See <c>SiegeView.EmberEvery</c>.</summary>
+            public float Ashes;
+
             /// <summary>
             /// Seconds until this boss crackles again. See <c>SiegeView.Ambient</c>.
             ///
@@ -418,6 +448,12 @@ namespace GlimmerGrove
         readonly List<Mob> _order = new List<Mob>(24);
         Post[] _posts;
         Text _waveLabel;
+
+        /// <summary>
+        /// The banner's fader, kept so <c>Foretell</c> can ask whether the hill is speaking.
+        /// See <c>SiegeView.Speaking</c>.
+        /// </summary>
+        CanvasGroup _waveGroup;
 
         float _hillTop, _hillFoot, _lineY, _gemCentre;
 

@@ -1019,8 +1019,24 @@ namespace GlimmerGrove
             // key built by concatenation is a key the build gate cannot see.
             string banner = BossKey(kind);
 
+            // **The first wave is not announced, because the count-in has just announced it.**
+            // GO! lands on the frame the first raider steps out, by design (`CountIn`) - so
+            // "WAVE 1 OF 8" was a second caption saying the same thing, drawn through the first
+            // one for the whole of its fade: the two share 1.15 cells of row on a 19.5:9 phone,
+            // on every run this mode has ever opened. The count is on the header throughout
+            // (`SiegeScreen.Readouts`) for anybody who wants it.
+            //
+            // **A boss still speaks**, which costs nothing today and is the clause that matters
+            // later: no shipped chapter stands one on its first wave, and one that did would be
+            // the one arrival in this mode that must never be silent.
+            if (!boss && wave <= 0) return;
+
+            // **In white rather than in the boss's own colour**, for the reason `Foretell`
+            // gives: half the cast casts in a hue darker than the hill it is announced over,
+            // so the name went unread. What says which boss it is is everything else about
+            // the arrival - the flash, the shake, the voice and the body.
             Announce(boss ? Loc.Get(banner) : Loc.Format("mode.siege.wave", _wave, _board.Waves),
-                    boss ? Casting(kind) : Pal.Cream, boss ? .78f : .46f, boss ? 2.4f : 1.5f, boss);
+                    boss ? Color.white : Pal.Cream, boss ? .78f : .46f, boss ? 2.4f : 1.5f, boss);
 
             // **No sound of its own, except for the warlord.** The first wave steps out on the
             // same frame the countdown says GO!, so a bell there was the same bell twice a frame
@@ -1077,22 +1093,49 @@ namespace GlimmerGrove
             _waveLabel.color = colour;
             _waveLabel.fontSize = Mathf.RoundToInt(Cell * size);
 
+            // **Fitted to the board every time it is said, because the string is not the same
+            // length twice** - "WAVE 3 OF 8" is five cells and "THE BLIGHTCALLER FALLS" is nine
+            // on a board of eight, and a caption here is one unbroken line with nothing to stop
+            // it leaving the screen (`Captions.Room`). Fitted against the room a *swelling*
+            // banner still has to open into, so the pop below is never bought with a frame drawn
+            // off the sides.
+            float room = CaptionRoom;
+
+            UIKit.OneLineLabel(_waveLabel, swell ? room / WavePopFloor : room,
+                               Mathf.RoundToInt(Cell * CaptionFloor));
+
             var ladder = Caption;
 
             var group = UIKit.Group(_waveLabel.rectTransform);
             var rt = _waveLabel.rectTransform;
 
+            // **And it opens only as far as what is left allows** (`Captions.Pop`): a short
+            // name still punches at `WaveSwell`, a long one opens flat, and neither is ever
+            // drawn wider than the board. The ladder above reserves the swollen box either way,
+            // so a banner that opens less than it might still clears the chain.
+            float pop = swell ? Captions.Pop(room, _waveLabel.preferredWidth) : 1f;
+
             Tween.KillAll(_waveLabel);
             rt.anchoredPosition = new Vector2(0f, ladder.Wave);
-            rt.localScale = Vector3.one * (swell ? WaveSwell : 1f);
+            rt.localScale = Vector3.one * pop;
             group.alpha = 0f;
 
             Tween.Fade(group, 1f, .22f);
-            if (swell) Tween.Scale(rt, 1f, .5f, Ease.OutBack);
+            if (pop > 1f) Tween.Scale(rt, 1f, .5f, Ease.OutBack);
 
             Tween.Move(rt, new Vector2(0f, ladder.Wave + Cell * WaveFloat), seconds, Ease.OutCubic)
                  .OnDone(() => Tween.Fade(group, 0f, .4f));
         }
+
+        /// <summary>
+        /// Whether a banner is standing on the hill.
+        ///
+        /// <b>Asked of the widget rather than of a flag</b>, for `Chain`'s reason: a banner ends
+        /// by fading, and every way it can end - the fade running out, a newer banner taking the
+        /// label, the board being dealt again - leaves the fader at nought with nothing to
+        /// remember to clear. A flag would have to be cleared on all three.
+        /// </summary>
+        bool Speaking => _waveGroup != null && _waveGroup.alpha > .01f;
 
         void Boom(Vector2 at, Sprite[] frames, float size)
         {
@@ -1162,6 +1205,7 @@ namespace GlimmerGrove
                 running.Until = Time.unscaledTime + TallyFor;
 
                 Paint(running);
+                Inside(running);
                 Punch(running);
                 Rise(running);
                 return;
@@ -1191,11 +1235,42 @@ namespace GlimmerGrove
             tally.Rt.anchoredPosition =
                 at + new Vector2(Random.Range(-Cell * .3f, Cell * .3f), Cell * .45f);
 
+            Paint(tally);
+            Inside(tally);
+
             _tally[raider] = tally;
 
-            Paint(tally);
             Punch(tally);
             Rise(tally);
+        }
+
+        /// <summary>
+        /// Holds a floating figure inside the board.
+        ///
+        /// <para>
+        /// <b>A number is drawn where the body it came off is standing, and the outer lanes are
+        /// nearly at the edge.</b> Four figures at the size a big tally reaches is two cells of
+        /// type; on lane nought that is drawn half a cell past the plate, with nothing to clip
+        /// it - the same overflow the captions had, arriving from the other direction. So the
+        /// figure is nudged back along the row rather than shrunk: it is still over its own
+        /// raider at the edge of the board, which is the only place it could be.
+        /// </para>
+        /// <para>
+        /// <b>Re-asked whenever it grows</b>, because a tally climbs while it stands: a hit that
+        /// takes 8 to 1,240 makes the same figure three times wider on the spot.
+        /// </para>
+        /// </summary>
+        void Inside(Tally tally)
+        {
+            if (!tally.Label || !tally.Rt) return;
+
+            // The drift is spent before the clamp rather than after it, so a figure that leans
+            // outwards on its float cannot lean back over the edge.
+            float room = (CaptionRoom - tally.Label.preferredWidth) * .5f - Cell * .10f;
+            if (room <= 0f) room = 0f;
+
+            var at = tally.Rt.anchoredPosition;
+            tally.Rt.anchoredPosition = new Vector2(Mathf.Clamp(at.x, -room, room), at.y);
         }
 
         /// <summary>The figure, sized by what it has come to. A big number is a big number.</summary>

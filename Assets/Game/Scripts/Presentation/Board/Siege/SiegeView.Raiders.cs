@@ -359,6 +359,26 @@ namespace GlimmerGrove
         static float BodyFill(bool boss) => boss ? .72f : .94f;
 
         /// <summary>
+        /// Where a body of this drawn height puts its feet, measured from the middle of its own
+        /// node — which is the ground everything standing under it is placed on.
+        ///
+        /// <para>
+        /// <b>One answer, because there are now three callers.</b> <c>Hatch</c> puts the shadow
+        /// there, <c>SiegeView.Ablaze</c> seats a burning body's flame there, and
+        /// <c>WardFiringStage</c> seats the same flame on the loadout's preview panel. Three
+        /// spellings of <c>BodyLift x tall - body x ShadowDrop</c> is three chances for a fire to
+        /// stand somewhere its own shadow does not.
+        /// </para>
+        /// <para>
+        /// <b>Public for <c>WardFiringStage</c></b>, which is <see cref="TintOf"/>'s note again:
+        /// that panel draws a turret's ability outside a board and may not hold a second opinion
+        /// about where the floor is.
+        /// </para>
+        /// </summary>
+        public static float FootOf(float tall, bool boss = false)
+            => BodyLift * tall - tall * BodyFill(boss) * ShadowDrop;
+
+        /// <summary>
         /// Puts one of a raider's reels on its body, and remembers which.
         ///
         /// <para>
