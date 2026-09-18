@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using GlimmerGrove.Modes;
 using UnityEngine;
 using UnityEngine.UI;
@@ -675,6 +675,37 @@ namespace GlimmerGrove
                     break;
                 }
 
+                // ---------------------------------------------------------- the gorgon
+                // **One ray, straight, and nothing else.** Every other flight in this switch is
+                // a thrown object - orbs, an arrow, an axe, a boulder, a thunderbolt - and this
+                // one is a *look*: it arrives all at once along a line that does not bow, with
+                // two narrowing arcs running down it so the eye is carried to the post rather
+                // than following a projectile there. What lands is a mask (`Masked`), and a mask
+                // has to read as having been *aimed* rather than lobbed.
+                case SiegeKind.Gorgon:
+                {
+                    Hurl(from, to, kind, flight, 0f, 1f, 0f);
+                    for (int i = 0; i < 2; i++)
+                        Arc(from, to, fire, Cell * .05f, .10f, 1, .24f,
+                            flight * (.30f + i * .30f));
+                    break;
+                }
+
+                // ---------------------------------------------------------- the sunlord
+                // **Nothing crosses the hill at all, which is the point of it.** A sentence is
+                // passed on somebody; it is not thrown at them. What leaves the caster is a
+                // column of light going *up*, and what arrives at the post comes down out of the
+                // sky a beat later (`Condemned`) - so the two ends of the spell are drawn at two
+                // ends of the screen and the player's eye is taken from the boss to their own
+                // line, which is exactly where the answer has to be found.
+                case SiegeKind.Sunlord:
+                {
+                    Strike(from, fire, Cell * .12f, 0f, .34f);
+                    Hurl(from, new Vector2(from.x, _hillTop), kind, flight * .6f, 0f, .8f, 0f);
+                    if (mob.Body != null) Tween.Punch(mob.Body.transform, .14f, .26f);
+                    break;
+                }
+
                 // ---------------------------------------------------------- the overlord
                 // **Double rockets, and they are the reason it is drawn last.** The finale's spell
                 // takes a rank as well as health, so it is the one that has to look like more than
@@ -887,6 +918,20 @@ namespace GlimmerGrove
                                                       Pal.Lift(fire, .25f), 3.4f, .32f), _fx);
                     break;
                 }
+                // **A gorgon leaves the mask closing**, which is the whole of its verb: the
+                // lasting state is the grey coat `Charge` keeps on the post from the model, and
+                // what this adds is the moment it arrived.
+                case SiegeKind.Gorgon:
+                    Masked(ward, fire);
+                    break;
+
+                // **A sunlord leaves the seal falling.** It is the only aftermath in this switch
+                // that draws something arriving from *above* the post rather than off the boss,
+                // for `Unleash`'s reason one method up.
+                case SiegeKind.Sunlord:
+                    Condemned(ward, fire);
+                    break;
+
                 case SiegeKind.Ironclad:
                 {
                     // **Dust along the ground, because what landed was mass.** Every other

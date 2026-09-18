@@ -226,6 +226,52 @@ namespace GlimmerGrove.Modes
             Steady = seconds + SiegeTuning.StunRest;
         }
 
+        /// <summary>
+        /// Ground this body still owes back to <see cref="SiegeCharm.Anvil"/>, as a share of the
+        /// hill, worked off in <c>SiegeBoard.Walk</c> at <c>SiegeTuning.AnvilPace</c>.
+        ///
+        /// <b>A debt rather than a position, and that is the whole of why it is a field.</b> The
+        /// view draws a raider wherever the model says it is, once a frame, so a knock-back
+        /// written straight into <see cref="March"/> would move a hill of bodies between two
+        /// frames - which reads as a glitch rather than as a blow. Carried here, the shove is
+        /// something the model does over a quarter of a second and the drawing follows it for
+        /// free, exactly as every other thing on this hill is followed.
+        /// </summary>
+        public float Heave;
+
+        /// <summary>Whether this body is being driven back up the slope right now.</summary>
+        public bool Shoved => Alive && Heave > 0f;
+
+        /// <summary>
+        /// Drives this body back up the slope by <paramref name="share"/> of the hill, or as far
+        /// as the crest, whichever is less.
+        ///
+        /// <para>
+        /// <b>A boss does not move, and it is refused here rather than at the call site</b> so
+        /// that every future way of shoving the hill inherits the rule. A boss's whole fight is
+        /// measured from where it stands - <see cref="InPlace"/> opens its first phase, a guard
+        /// and a floor run from that moment (invariant 37di) - so a boss driven off its ground
+        /// would be a boss whose fight restarts, which is not what anybody matching a gem asked
+        /// for. It is also what makes the charm's own decision real (invariant 26h): a boss wave
+        /// is a wave of its own (invariant 37dn), so an anvil spent on one buys nothing.
+        /// </para>
+        /// <para>
+        /// <b>Something still in the wings is not on the hill</b>, so it is refused too: a wave
+        /// mustered but not yet walked on has no ground to lose, and pushing its <c>Wait</c> back
+        /// would be the charm quietly rewriting the level's own schedule.
+        /// </para>
+        /// </summary>
+        public bool Shove(float share)
+        {
+            if (!Alive || Boss || !OnTheHill || share <= 0f) return false;
+
+            float room = March - Heave;
+            if (room <= 0f) return false;
+
+            Heave += room < share ? room : share;
+            return true;
+        }
+
         /// <summary>Sets it burning, keeping the fiercer of what it already had.</summary>
         public void Kindle(int rate, float seconds, int ward)
         {

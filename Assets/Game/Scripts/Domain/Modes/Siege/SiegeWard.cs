@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace GlimmerGrove.Modes
@@ -301,9 +301,32 @@ namespace GlimmerGrove.Modes
         /// charges are bounded and fuel is not a leak.
         /// </para>
         /// </summary>
-        public bool Fill(float fuel)
+        public bool Fill(float fuel) => Fill(fuel, out _);
+
+        /// <summary>
+        /// Pours fuel in, answering whether a charge was banked and whether this pour paid off a
+        /// sunlord's seal (<see cref="Doomed"/>).
+        ///
+        /// <b>The toll is counted here rather than at the two call sites</b>, because there are
+        /// two of them - a match's own fuel and a utility's - and a rule about "fuel reaching a
+        /// ward" written twice is a rule that will be true in one of them. The overload above
+        /// exists so a caller that genuinely has no way to report a broken seal cannot silently
+        /// lose one: it has to say so.
+        /// </summary>
+        public bool Fill(float fuel, out bool redeemed)
         {
+            redeemed = false;
             if (fuel <= 0f) return false;
+
+            if (Doomed)
+            {
+                Toll += fuel;
+                if (Toll >= Capacity)
+                {
+                    Absolve();
+                    redeemed = true;
+                }
+            }
 
             Fuel += fuel;
 
@@ -350,6 +373,107 @@ namespace GlimmerGrove.Modes
         /// (invariant 26h), and the reason no utility answers this.
         /// </summary>
         public void Shackle() => Bound = SiegeTuning.ShacklerBind;
+
+        /// <summary>
+        /// Seconds this ward is left stone-struck under a gorgon's glare
+        /// (<see cref="SiegeSpell.Glare"/>). See <see cref="Glared"/>.
+        /// </summary>
+        public float Stone;
+
+        /// <summary>
+        /// Whether a gorgon's glare is on this ward: it still fires on its own cadence and still
+        /// burns the fuel each shot costs, and nothing leaves the barrel.
+        ///
+        /// <para>
+        /// <b>The third way of taking a turret out of a fight, and the three must not be folded
+        /// into one</b> (invariant 37cw's rule about a douse and a shackle, asked a third time).
+        /// A <b>douse</b> takes what is already in the tube and is answered by pouring more in; a
+        /// <b>shackle</b> takes the seconds and hands the fuel back, so it <em>banks</em>; a
+        /// <b>glare</b> takes the fuel as it arrives, so the only answer is to stop feeding this
+        /// colour and feed another. Three verbs, three different things for the player to do, and
+        /// a single "the ward is out" field would have made them one.
+        /// </para>
+        /// <para>
+        /// <b>It is not <see cref="Fuelled"/>'s business</b>, unlike the other two: a glared ward
+        /// <em>is</em> fuelled and <em>does</em> fire, which is the whole picture the verb is
+        /// made of - a turret working perfectly and achieving nothing. What it costs is settled
+        /// in <c>SiegeBoard.Shoot</c>, where the fuel is spent and the bolt is not built, and
+        /// only when there was something to fire at: a glare over an empty hill takes nothing,
+        /// because there was nothing to take.
+        /// </para>
+        /// </summary>
+        public bool Glared => Alive && Stone > 0f;
+
+        /// <summary>Lays a gorgon's glare on this ward. See <see cref="Glared"/>.</summary>
+        public void Glare() => Stone = SiegeTuning.GorgonGlare;
+
+        /// <summary>
+        /// Seconds left on the sunlord's seal (<see cref="SiegeSpell.Doom"/>), and how much fuel
+        /// has been poured into this ward since it landed.
+        ///
+        /// <b>Two numbers because the seal is a question with a deadline</b>: <see cref="Sealed"/>
+        /// is how long is left to answer it and <see cref="Toll"/> is how much of the answer has
+        /// been paid. Both are reset together by <see cref="Absolve"/>, so a ward can never carry
+        /// a part-paid toll into a second seal.
+        /// </summary>
+        public float Sealed;
+
+        /// <summary>Fuel poured into this ward since the seal landed. See <see cref="Sealed"/>.</summary>
+        public float Toll;
+
+        /// <summary>
+        /// Whether the sunlord's seal is on this ward: fill its tube before the seal runs out or
+        /// it falls.
+        ///
+        /// <para>
+        /// <b>The first verb in this mode that can be answered, and that is the point of it.</b>
+        /// Every other thing a boss takes is suffered - a rank, a charge, a tube, six seconds,
+        /// the use of your hands - and the player's only reply is to keep playing. A seal is a
+        /// task: fill <em>this</em> ward, now, whatever else you were doing. What it takes is the
+        /// player's own agenda, which is the one thing nine bosses leave alone, and it is the
+        /// right thing for the last rung of the last chapter to take.
+        /// </para>
+        /// <para>
+        /// <b>What answers it is a tube's worth of fuel rather than a banked charge</b>, which
+        /// looks like the same thing and is not: a ward already holding
+        /// <see cref="SiegeTuning.MostCharges"/> cannot bank another (<see cref="Fill"/>), so a
+        /// seal answered by banking would be unanswerable on exactly the ward a careful player
+        /// had been feeding. The toll counts fuel in, and nothing else.
+        /// </para>
+        /// <para>
+        /// <b>It can never be the last standing ward</b>, refused where the target is chosen
+        /// (<c>SiegeBoard.Wanted</c>) and again here: a verb that could end a run on its own would
+        /// be a fail state the player was not playing against, and the line still comes down the
+        /// way it always has - one blow at a time.
+        /// </para>
+        /// </summary>
+        public bool Doomed => Alive && Sealed > 0f;
+
+        /// <summary>How much of the seal's toll is paid, nought to one, for the readout.</summary>
+        public float Paid => Capacity <= 0f ? 0f : (Toll < Capacity ? Toll / Capacity : 1f);
+
+        /// <summary>
+        /// Lays the sunlord's seal on this ward, unless it already carries one.
+        ///
+        /// <b>Refused rather than re-set</b>, which is the boulder's rule (<see cref="Bury"/>) for
+        /// the boulder's reason: a second seal that restarted the clock would be a verb the player
+        /// could never finish answering, and a boss that seems to do nothing.
+        /// </summary>
+        public bool Condemn()
+        {
+            if (!Alive || Doomed) return false;
+
+            Sealed = SiegeTuning.DoomFor;
+            Toll = 0f;
+            return true;
+        }
+
+        /// <summary>Lifts the seal, paid or expired. See <see cref="Doomed"/>.</summary>
+        public void Absolve()
+        {
+            Sealed = 0f;
+            Toll = 0f;
+        }
 
         /// <summary>
         /// Buries this ward: what a colossus's boulder does when it lands. Answers whether a

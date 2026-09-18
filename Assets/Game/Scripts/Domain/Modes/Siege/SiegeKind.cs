@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace GlimmerGrove.Modes
@@ -276,5 +276,60 @@ namespace GlimmerGrove.Modes
         /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
         /// </summary>
         Colossus,
+
+        /// <summary>
+        /// The gorgon: its glare turns a ward stone-struck - it keeps firing on its own cadence,
+        /// burns the fuel every shot costs, and nothing leaves the barrel
+        /// (<see cref="SiegeSpell.Glare"/>).
+        ///
+        /// <para>
+        /// <b>The eleventh thing a boss could take is the ward's <em>work</em></b>, and it is the
+        /// last of the three ways a turret can be taken out of a fight (invariant 37cw's rule,
+        /// asked a third time). A douse takes what is in the tube and is answered by pouring more
+        /// in; a shackle takes the seconds and banks the fuel; a glare takes the fuel <em>as it
+        /// arrives</em>, so the only answer is to stop feeding that colour and feed another. The
+        /// three are three different instructions to the player, which is what stops them being
+        /// one verb in three tints (invariant 37z).
+        /// </para>
+        /// <para>
+        /// <b>It is the one verb whose cost the player sets</b>, which is the thunderer's shape
+        /// read the other way round: a thunderer punishes what was banked, a gorgon punishes what
+        /// is poured. A player who reads the mask and feeds elsewhere pays nothing at all for it;
+        /// one who keeps feeding the colour they had planned to feed pays every gem of it.
+        /// </para>
+        /// <para>
+        /// <b>It smites like every other spell</b> (37dn), so a rung sent nothing but this could
+        /// still be lost, and <c>EndangersTheLine</c> is true of it.
+        /// </para>
+        /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
+        /// </summary>
+        Gorgon,
+
+        /// <summary>
+        /// The sunlord: it seals a ward and gives the player a deadline - fill that ward's tube
+        /// before the seal runs out or the ward falls (<see cref="SiegeSpell.Doom"/>).
+        ///
+        /// <para>
+        /// <b>The twelfth thing a boss could take is the player's own <em>agenda</em>, and it is
+        /// the first verb in this mode that can be answered.</b> Every other one is suffered: a
+        /// rank, a charge, a tube, six seconds, the use of your hands - and the reply is to keep
+        /// playing. A seal is a task with a clock on it, which makes it the only boss verb that
+        /// says <em>do this now</em>, and the right thing for the last rung of the last chapter
+        /// to ask.
+        /// </para>
+        /// <para>
+        /// <b>It is not a gravemaw's devour with extra steps</b>, and the difference is exactly
+        /// invariant 37z's test - what does it take. A devour takes a ward, full stop; a seal
+        /// takes the next few matches, and takes a ward only from a player who spent them
+        /// somewhere else. One is a loss and the other is a decision.
+        /// </para>
+        /// <para>
+        /// <b>It can never seal the last ward standing</b> (<c>SiegeWard.Doomed</c>), so it
+        /// cannot end a run on its own: the line still comes down one blow at a time, which is
+        /// the fail state the player has been playing against for six chapters.
+        /// </para>
+        /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
+        /// </summary>
+        Sunlord,
     }
 }

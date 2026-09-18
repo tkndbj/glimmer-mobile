@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using GlimmerGrove.Modes;
@@ -107,6 +107,25 @@ namespace GlimmerGrove.Tests
             new Rung("s06_cragheart", new[] { "brbyyrbb", "gybgyggb", "yrggbrgr", "bgrbgrby", "bbyybgrg" }, "rgby", "rgby", new[] { "rgbyrgby", "RGby#rrgby", "RGbyrgby" }, "colossus:b", 25, 13, 48, 62, "plsfh"),
         };
 
+        /// <summary>
+        /// Dustcrown, the sixth chapter: the court, a gorgon on the fifth rung and a sunlord on
+        /// the tenth, every rung dealing all six charms and every raider four tenths tougher than
+        /// the baseline. Held to `s07_dustcrown.json` by `Tools/verify/rungs.py`.
+        /// </summary>
+        static readonly Rung[] Dustcrown =
+        {
+            new Rung("s07_firstdune", new[] { "yrybrbgb", "rggrgbrr", "rbbyrgyr", "gbggygyb", "grrgyrbb" }, "rgby", "rgby", new[] { "RGbyrgbyr", "RGby#rRGby", "RGBY#g#bRGbyr" }, "", 25, 14, 45, 59, "plsfha"),
+            new Rung("s07_bonefield", new[] { "ryggyrrb", "yyrrgybb", "gbbybygy", "bryggrbb", "gygbbrgy" }, "rgby", "rgby", new[] { "rgbyrgbyrgby", "RGby#rRGby", "RGBY#g#bRGbyr" }, "", 25, 14, 45, 59, "plsfha"),
+            new Rung("s07_saltpan", new[] { "yrrggygb", "bybgbrby", "gygrygrr", "gbbrygyg", "rgygrbyr" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY#g#bRGby", "RGby#r#yRGbyr" }, "", 25, 14, 45, 59, "plsfha"),
+            new Rung("s07_dryreach", new[] { "ybyrgbry", "bryrgbbr", "gbgyyrgg", "ggybrrgb", "bybrbybr" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY#g!gRG#bby", "RGby!b#rRGByby" }, "", 25, 14, 45, 59, "plsfha"),
+            new Rung("s07_gorgongate", new[] { "yygyyggr", "rbbrrbyr", "ygbygryg", "yryrgbgb", "bgybybgy" }, "rgby", "rgby", new[] { "RGbyRGby", "RGby#rRG!bby", "RGby#gRGby" }, "gorgon:g", 25, 14, 45, 59, "plsfha"),
+            new Rung("s07_sunscour", new[] { "ybygbbyr", "rrgrrggr", "yybgrgyy", "yrrbybrg", "rgybygrb" }, "rgby", "rgby", new[] { "RRRR#rrrrg", "GGGG#g#ggggb", "BBBB#b#bbbYYY#y#yy" }, "", 25, 14, 45, 59, "plsfha"),
+            new Rung("s07_glassridge", new[] { "rybbrggb", "ggrygbry", "rrbgybby", "bryygrgr", "gbgbrryy" }, "rgby", "rgby", new[] { "RGbyRGby", "RGby#g#b#yrgby", "RGBY!rRG#by" }, "", 25, 14, 45, 59, "plsfha"),
+            new Rung("s07_duststorm", new[] { "gyybbggb", "bbrgrybr", "rgygbbgb", "ygryrgyg", "ybybrrby" }, "rgby", "rgby", new[] { "RGbyrgby", "RGBY#rRGby", "RGby#g#brgby", "RGBY!yRGby" }, "", 25, 14, 45, 59, "plsfha"),
+            new Rung("s07_thelongwalk", new[] { "rbyybybb", "ygyrgrrb", "grbgybgg", "brryyryg", "yygbbyrb" }, "rgby", "rgby", new[] { "rgbyrgby", "RGby#rrgby", "rgby#brgbyby", "RGBYrgbyr" }, "", 25, 14, 45, 59, "plsfha"),
+            new Rung("s07_crownfall", new[] { "yygbbryb", "brrybgbr", "yyggrgyb", "bbyrybry", "rrgrybgb" }, "rgby", "rgby", new[] { "rgbyrgby", "rgby#rrgby", "RGbyrgby" }, "sunlord:y", 25, 14, 45, 59, "plsfha"),
+        };
+
         // ------------------------------------------------------------------ the lines it plays
         /// <summary>
         /// The four turrets a player who has bought nothing stands: the free bolt, four times.
@@ -198,6 +217,7 @@ namespace GlimmerGrove.Tests
             ("Barrowfell", Barrowfell),
             ("Ashenhold", Ashenhold),
             ("Thundercrag", Thundercrag),
+            ("Dustcrown", Dustcrown),
         };
 
         static Sweep Play(Rung[] chapter, WardLine line)
@@ -971,6 +991,116 @@ namespace GlimmerGrove.Tests
                                      + $"held, {bought.Starred} three-starred):\n" + bought.Table
                                      + $"\nThundercrag on {Answers} ({answered.Held}/{answered.Runs} "
                                      + $"held, {answered.Starred} three-starred):\n" + answered.Table);
+        }
+
+        /// <summary>
+        /// The sixth chapter, measured the way the fourth and fifth were: harder than the one
+        /// before it on the starter, clearable one rung up the shelf, and answered by the ability
+        /// its material asks for.
+        ///
+        /// <para>
+        /// <b>Every figure below is read off this chapter's own sweep</b> and none of them is
+        /// carried over from Thundercrag's, which is invariant 37cb said about a gate rather than
+        /// about a star line: a surge moves what a chapter holds, so a floor copied from the
+        /// chapter before it is a floor measuring the wrong thing.
+        /// </para>
+        /// <para>
+        /// <b>What it cannot see is either of the two new verbs.</b> The model player pours into
+        /// whichever ward its rhythm sends it to and digs nothing, so a glare's real cost - the
+        /// player *choosing* to feed elsewhere - and a seal's - dropping everything to fill one
+        /// tube - are both invisible here. What this measures is the hill; what proves the bosses
+        /// fight is <c>EveryShippedBossRungIsAFight</c>, and what proves the verbs are
+        /// <c>SiegeRuleTests.Dustcrown</c>.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheSixthChapterIsFoughtOnABoughtLine()
+        {
+            // **Every one of these is read off this chapter's own sweep**, taken on 2026-09-17
+            // and printed by the WriteLine at the foot of this method: 40 of 90 held on the
+            // starter against Thundercrag's 45, 59 one rung up the shelf, 83 on the ability its
+            // material asks for, and seven and nine three-starred runs on the first two. The
+            // floors sit clear of those rather than on them, because nine rhythms is a sample.
+            const int BareFloor = 30;       // hard, and nobody is walled out (measured 40)
+            const int BoughtFloor = 45;     // clearable once the shelf has been used (59)
+            const int Recovers = 20;        // per cent of the runs the starter loses (38%)
+            const int Grades = 1;           // three-starred runs the shelf is worth (2)
+            const string Answers = "cleaver";
+
+            var bare = Play(Dustcrown, Bare());
+            var bought = Play(Dustcrown, Standing(FirstRung));
+            var answered = Play(Dustcrown, Standing(Answers));
+            var before = Play(Thundercrag, Bare());
+
+            var faults = new List<string>();
+
+            if (bare.Walled > 0)
+                faults.Add($"{bare.Walled} rung(s) of Dustcrown are held at no rhythm at all on "
+                           + "the starter line, which is a wall rather than a reason to buy a "
+                           + "turret");
+
+            // **Harder than the fifth chapter, which is what the fourth step of the surge is
+            // for** (invariant 37bz): a tenth is a cliff, and this chapter stands one further
+            // down it than Thundercrag does.
+            if (bare.Held >= before.Held)
+                faults.Add($"on the starter line Dustcrown held {bare.Held} of {bare.Runs} runs "
+                           + $"against Thundercrag's {before.Held} of {before.Runs} - the sixth "
+                           + "chapter is not harder than the fifth, which is what it is for");
+
+            int losing = bare.Runs - bare.Held;
+            int back = bought.Held - bare.Held;
+
+            if (losing <= 0 || back * 100 < losing * Recovers)
+                faults.Add($"one rung of the shelf moved Dustcrown from {bare.Held} to "
+                           + $"{bought.Held} of {bought.Runs} runs - {back} of the {losing} the "
+                           + $"starter loses, against the {Recovers}% this chapter is authored to "
+                           + "recover");
+
+            if (bought.Starred < bare.Starred + Grades)
+                faults.Add($"one rung of the shelf moved Dustcrown from {bare.Starred} "
+                           + $"three-starred runs to {bought.Starred}, which is under the {Grades} "
+                           + "it is authored to be worth");
+
+            // A chapter built out of plate is answered by the ability that beats armour, exactly
+            // as the fourth and fifth were (invariant 37da).
+            if (answered.Held <= bought.Held)
+                faults.Add($"\'{Answers}\', which ignores a bulwark\'s soak, held {answered.Held} of "
+                           + $"{answered.Runs} runs against \'{FirstRung}\'s {bought.Held} - so a "
+                           + "chapter built out of plate is not answered by the one ability that "
+                           + "beats armour, and its difficulty is not what it is drawn as");
+
+            if (bare.Held < BareFloor)
+                faults.Add($"on the starter line Dustcrown held {bare.Held} of {bare.Runs} runs "
+                           + $"against a floor of {BareFloor}, so it has become a wall rather than "
+                           + "hard - re-measure before moving the floor");
+
+            if (bought.Held < BoughtFloor)
+                faults.Add($"one rung up the shelf Dustcrown held {bought.Held} of "
+                           + $"{bought.Runs} runs against a floor of {BoughtFloor}, so it is not "
+                           + "doable with a bought line either - re-measure before moving the "
+                           + "floor");
+
+            if (bought.Starred == 0)
+                faults.Add("three stars was out of reach on every rung at every rhythm even one "
+                           + "rung up the shelf, so nobody playing this way ever sees three");
+
+            System.Console.WriteLine($"Dustcrown on the starter ({bare.Held}/{bare.Runs} held, "
+                                     + $"{bare.Starred} three-starred):\n" + bare.Table
+                                     + $"\nDustcrown on {FirstRung} ({bought.Held}/{bought.Runs} "
+                                     + $"held, {bought.Starred} three-starred):\n" + bought.Table
+                                     + $"\nDustcrown on {Answers} ({answered.Held}/{answered.Runs} "
+                                     + $"held, {answered.Starred} three-starred):\n" + answered.Table);
+
+            Assert.IsEmpty(faults,
+                           string.Join("\n", faults)
+                           + $"\n\nDustcrown on the starter ({bare.Held}/{bare.Runs} held, "
+                           + $"{bare.Starred} three-starred):\n" + bare.Table
+                           + $"\nDustcrown on {FirstRung} ({bought.Held}/{bought.Runs} held, "
+                           + $"{bought.Starred} three-starred):\n" + bought.Table
+                           + $"\nDustcrown on {Answers} ({answered.Held}/{answered.Runs} held, "
+                           + $"{answered.Starred} three-starred):\n" + answered.Table
+                           + $"\nThundercrag on the starter for comparison "
+                           + $"({before.Held}/{before.Runs} held):\n" + before.Table);
         }
 
         [Test]

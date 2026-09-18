@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace GlimmerGrove.Modes
@@ -84,7 +84,14 @@ namespace GlimmerGrove.Modes
                 // edge is what is reported rather than the state: a tube that has *just* banked one
                 // is the frame the overcharge can be announced on, where asking "is it armed" every
                 // frame would announce it for as long as nobody spent it.
-                if (ward.Fill(charge.Fuel)) _report.Brimmed.Add(charge.Ward);
+                if (ward.Fill(charge.Fuel, out bool redeemed)) _report.Brimmed.Add(charge.Ward);
+
+                // **A paid seal is reported where the fuel lands and nowhere else.** The toll is
+                // counted inside `SiegeWard.Fill` so the two doors fuel comes through cannot
+                // disagree about it; what each door still owes is saying so, because a seal that
+                // broke in silence would be the player paying for something they never saw
+                // happen.
+                if (redeemed) _report.Redeemed.Add(charge.Ward);
             }
 
             // **After the fuel and never before it.** A stormglass and the motes of the match that
@@ -189,6 +196,16 @@ namespace GlimmerGrove.Modes
                 if (spell.Craft == SiegeSpell.Douse) ward.Snuff();
                 if (spell.Craft == SiegeSpell.Bind) ward.Shackle();
                 if (spell.Craft == SiegeSpell.Bury) ward.Bury();
+                if (spell.Craft == SiegeSpell.Glare) ward.Glare();
+
+                // **A seal is refused where it cannot honestly be answered**, and there are two
+                // such places: a ward already sealed (a second clock the player could never
+                // finish - the boulder's rule, `SiegeWard.Condemn`) and the last ward standing
+                // (a verb that could end a run on its own, `SiegeKind.Sunlord`). Both fall
+                // through to the smite below, which is the colossus's clause and is here for its
+                // reason: a boss that can find nothing to do holds its cast for ever
+                // (`SiegeTuning.CastRetry`) and reads as broken.
+                if (spell.Craft == SiegeSpell.Doom && OnTheLine > 1) ward.Condemn();
 
                 // **A drain takes the charges first and lands them as its own weight.** Every
                 // charge held is `ThundererDrain` more off the ward, so what a player banked
@@ -450,6 +467,32 @@ namespace GlimmerGrove.Modes
 
                 if (raider.Flash > 0f) raider.Flash = Math.Max(0f, raider.Flash - dt);
 
+                // **An anvil's shove is worked off before anything else and through a stopped
+                // hill** (`SiegeCharm.Anvil`, `SiegeRaider.Shove`). Two reasons, and neither is
+                // a preference. It is *before* the march because a body cannot be walking down
+                // and being thrown up in the same step, and paying the debt first is what makes
+                // the two states one branch rather than two numbers that could disagree. It is
+                // *through* the stop because the stop is the hill's clock and the shove is the
+                // player's payoff: an hourglass already standing when an anvil lands would
+                // otherwise swallow the shove whole and hand it back three seconds later, which
+                // is a charm eating a charm.
+                if (raider.Heave > 0f)
+                {
+                    float back = dt * SiegeTuning.AnvilPace;
+                    if (back > raider.Heave) back = raider.Heave;
+
+                    raider.Heave -= back;
+                    raider.March -= back;
+                    if (raider.March < 0f) raider.March = 0f;
+
+                    // **A body being thrown is not a body walking**, so it takes no ground this
+                    // step - and it is not at the line either, which is what stops its blows:
+                    // `AtTheLine` reads the march, so a raider shoved off the line puts its
+                    // weapon down for as long as it takes to walk back, with no second rule
+                    // anywhere saying so.
+                    continue;
+                }
+
                 // **A stopped hill is stopped whole** - the raiders still in the wings as well as
                 // the ones walking, so a wave mustered into the window stands at the crest until
                 // it opens. What still moves is the flash above and everything the line does.
@@ -521,6 +564,36 @@ namespace GlimmerGrove.Modes
                 // did (`SiegeWard.Dig`).
                 ward.Weather(dt);
 
+                // **A glare burns down here with the other two, for the other two's reason** -
+                // one place, so none of them can ever be a frame ahead of another. It is not
+                // read by `Fuelled`, though, and that is the verb: a stone-struck ward is
+                // fuelled, does fire and lands nothing (`SiegeWard.Glared`).
+                if (ward.Stone > 0f) ward.Stone = Math.Max(0f, ward.Stone - dt);
+
+                // **And the sunlord's seal, which is the one clock here with an ending of its
+                // own.** The other four expire and hand the ward back; this one expires and
+                // takes it. Settled in the same step it is counted in so the frame it runs out
+                // is the frame the ward falls, and reported like any other thing that happens to
+                // the line - `SiegeSpellLanded` with the seal's own verb, so the view has one
+                // list to read and nothing has to be told twice.
+                if (ward.Sealed > 0f)
+                {
+                    ward.Sealed = Math.Max(0f, ward.Sealed - dt);
+
+                    if (ward.Sealed <= 0f)
+                    {
+                        ward.Absolve();
+                        ward.Health = 0;
+                        ward.Alive = false;
+                        ward.Fuel = 0f;
+                        ward.Charges = 0;
+
+                        _report.Spells.Add(
+                            new SiegeSpellLanded(-1, w, SiegeSpell.Doom, 0, true));
+                        continue;
+                    }
+                }
+
                 if (!ward.Fuelled) { ward.Cool = 0f; continue; }
 
                 ward.Cool -= dt;
@@ -530,6 +603,23 @@ namespace GlimmerGrove.Modes
                 if (target == null) { ward.Cool = 0f; continue; }
 
                 ward.Cool = SiegeTuning.FireEvery;
+
+                // **A stone-struck ward pays for a shot it does not take** (`SiegeSpell.Glare`),
+                // and it pays only when there was something to shoot at - the target is found
+                // first for exactly that reason. What the fuel buys is nothing at all, which is
+                // what makes the verb's answer *feed another colour* rather than *wait*.
+                //
+                // **The full shot's fuel, never a share.** A share is what a part-weight bolt
+                // costs (`SiegeTuning.FuelShot(rank, share)`, invariant 37bq), and this bolt has
+                // no weight at all to be a part of - charging a fraction would be the board
+                // deciding the glare was only partly on.
+                if (ward.Glared)
+                {
+                    ward.Fuel = Math.Max(0f, ward.Fuel - SiegeTuning.FuelShot(ward.Rank));
+                    ward.Shots++;
+                    _report.Stoned.Add(w);
+                    continue;
+                }
 
                 // **What this bolt is worth is asked of the ward, about the raider.** A boss is
                 // answered by the whole line whatever it wears (`SiegeTuning.EveryWardReaches`),
@@ -894,6 +984,33 @@ namespace GlimmerGrove.Modes
                     case SiegeSpell.Bury:
                         rank = (ward.Buried ? 0L : 1L << 40)
                              + (long)(ward.Fuel * 1000f) * 64L + ward.Health;
+                        break;
+
+                    // **A glare wants the fullest tube**, which is the douse's reading with
+                    // the opposite meaning: a douse takes the fuel that is there, and a glare
+                    // burns whatever arrives - so the ward the player is plainly feeding is the
+                    // one worth freezing, because that is the ward the next few matches were
+                    // already going to. An already-glared ward is never chosen twice, for the
+                    // douse's and the bind's reason: there is nothing further to take and a
+                    // second mask reads as the boss doing nothing.
+                    case SiegeSpell.Glare:
+                        if (ward.Glared) continue;
+                        rank = (long)(ward.Fuel * 1000f) * 64L + ward.Health;
+                        break;
+
+                    // **A seal wants the ward the hill is *not* wearing**, which is the bind's
+                    // reading turned over: the toll has to be paid in the sealed ward's own
+                    // colour (invariant 37bl), so the expensive seal is the one on the colour
+                    // nothing on the hill is asking for. `Pressing` answers how badly a colour is
+                    // wanted, so the seal takes the lowest of it and the freshest breaks a tie.
+                    //
+                    // **A sealed ward is never chosen twice and the last one standing never at
+                    // all**, both refused again at the landing (`Arrive`) so neither rule can be
+                    // true in one place and not the other.
+                    case SiegeSpell.Doom:
+                        if (ward.Doomed) continue;
+                        if (OnTheLine <= 1) { rank = ward.Health; break; }
+                        rank = (long)(64 - Pressing(ward.Colour)) * 64L + ward.Health;
                         break;
 
                     default:

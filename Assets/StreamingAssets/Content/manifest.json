@@ -252,6 +252,26 @@
       ]
     },
     {
+      "id": "s07_dustcrown",
+      "version": 1,
+      "order": 151,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s07_firstdune",
+        "s07_bonefield",
+        "s07_saltpan",
+        "s07_dryreach",
+        "s07_gorgongate",
+        "s07_sunscour",
+        "s07_glassridge",
+        "s07_duststorm",
+        "s07_thelongwalk",
+        "s07_crownfall"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,

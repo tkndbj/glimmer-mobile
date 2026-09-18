@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
@@ -834,6 +834,7 @@ namespace GlimmerGrove
                 case SiegeCharm.Storm: return Mechanic.SiegeStorm;
                 case SiegeCharm.Furnace: return Mechanic.SiegeFurnace;
                 case SiegeCharm.Hourglass: return Mechanic.SiegeHourglass;
+                case SiegeCharm.Anvil: return Mechanic.SiegeAnvil;
 
                 case SiegeCharm.None:
                 default: return default;

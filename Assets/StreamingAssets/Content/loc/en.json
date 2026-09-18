@@ -1270,6 +1270,18 @@
       "text": "WAVE {0} OF {1}"
     },
     {
+      "key": "mode.siege.gorgon",
+      "text": "THE GORGON"
+    },
+    {
+      "key": "mode.siege.sunlord",
+      "text": "THE SUNLORD"
+    },
+    {
+      "key": "mode.siege.unsealed",
+      "text": "SEAL BROKEN"
+    },
+    {
       "key": "notify.hearts_full.body",
       "text": "A full bar is waiting. Come and spend it!"
     },
@@ -5118,6 +5130,14 @@
       "text": "DIG IT OUT"
     },
     {
+      "key": "ui.tip.siege_anvil.body",
+      "text": "Match this one and the whole hill is thrown back up the slope.\n\nIt buys your turrets time against whatever was nearly on them, so hold it for something close."
+    },
+    {
+      "key": "ui.tip.siege_anvil.title",
+      "text": "THE ANVIL"
+    },
+    {
       "key": "ui.title.elder",
       "text": "Groove Elder"
     },
@@ -5704,6 +5724,90 @@
     {
       "key": "ui.ads.xp_boost_stacks",
       "text": "Stacks with the boost you can buy"
+    },
+    {
+      "key": "chapter.s07_dustcrown.name",
+      "text": "Dustcrown"
+    },
+    {
+      "key": "level.s07_bonefield.name",
+      "text": "Bonefield"
+    },
+    {
+      "key": "level.s07_bonefield.tagline",
+      "text": "Archers in numbers, and plate behind them"
+    },
+    {
+      "key": "level.s07_crownfall.name",
+      "text": "Crownfall"
+    },
+    {
+      "key": "level.s07_crownfall.tagline",
+      "text": "He seals a turret. Fill it or lose it"
+    },
+    {
+      "key": "level.s07_dryreach.name",
+      "text": "Dry Reach"
+    },
+    {
+      "key": "level.s07_dryreach.tagline",
+      "text": "Bombs among the plate. Hold one for the wave"
+    },
+    {
+      "key": "level.s07_duststorm.name",
+      "text": "Duststorm"
+    },
+    {
+      "key": "level.s07_duststorm.tagline",
+      "text": "Four waves and no quiet in them"
+    },
+    {
+      "key": "level.s07_firstdune.name",
+      "text": "First Dune"
+    },
+    {
+      "key": "level.s07_firstdune.tagline",
+      "text": "The court walks. Nothing here is slow"
+    },
+    {
+      "key": "level.s07_glassridge.name",
+      "text": "Glass Ridge"
+    },
+    {
+      "key": "level.s07_glassridge.tagline",
+      "text": "Three shields in one wave"
+    },
+    {
+      "key": "level.s07_gorgongate.name",
+      "text": "Gorgon Gate"
+    },
+    {
+      "key": "level.s07_gorgongate.tagline",
+      "text": "Her stare wastes what you pour. Feed elsewhere"
+    },
+    {
+      "key": "level.s07_saltpan.name",
+      "text": "Salt Pan"
+    },
+    {
+      "key": "level.s07_saltpan.tagline",
+      "text": "Two shields a wave from here on"
+    },
+    {
+      "key": "level.s07_sunscour.name",
+      "text": "Sunscour"
+    },
+    {
+      "key": "level.s07_sunscour.tagline",
+      "text": "One colour at a time, all of it armoured"
+    },
+    {
+      "key": "level.s07_thelongwalk.name",
+      "text": "The Long Walk"
+    },
+    {
+      "key": "level.s07_thelongwalk.tagline",
+      "text": "The longest climb in the mode"
     }
   ]
 }

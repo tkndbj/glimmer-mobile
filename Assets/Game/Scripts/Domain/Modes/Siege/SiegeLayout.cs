@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace GlimmerGrove.Modes
@@ -200,6 +200,8 @@ namespace GlimmerGrove.Modes
             ("ironclad", SiegeKind.Ironclad),
             ("thunderer", SiegeKind.Thunderer),
             ("colossus", SiegeKind.Colossus),
+            ("gorgon", SiegeKind.Gorgon),
+            ("sunlord", SiegeKind.Sunlord),
         };
 
         /// <summary>The colour a boss may wear. Lower case only — case no longer means anything.</summary>

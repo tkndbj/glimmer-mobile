@@ -54,6 +54,8 @@ BOSS_NAMES = {
     "ironclad": "ironclad",
     "thunderer": "thunderer",
     "colossus": "colossus",
+    "gorgon": "gorgon",
+    "sunlord": "sunlord",
 }
 
 #: The colour a boss may wear. Lower case only - case no longer means anything.
@@ -247,6 +249,24 @@ BOSSES = {
     #: neither of these two reaches par.
     "thunderer": {"health": 3800, "cast": 2, "spell": "drain"},
     "colossus": {"health": 5800, "cast": 4, "spell": "bury"},
+
+    #: The sixth chapter's two, and between them they take the two things the first ten leave.
+    #:
+    #: A **gorgon** turns a ward stone-struck: it keeps firing on its own cadence, keeps burning
+    #: the fuel each shot costs, and lands nothing (`SiegeWard.Glared`). What that is worth is
+    #: decided *after* it lands, by the player, in the colour they choose to feed next - so the
+    #: only figure here is the `cast`, exactly as a douse's and a shackle's are.
+    #:
+    #: A **sunlord** seals a ward: fill its tube inside `SiegeTuning.DoomFor` or it falls. It is
+    #: the one boss verb in this mode with an answer, and it can never seal the last ward
+    #: standing, so it cannot end a run on its own.
+    #:
+    #: **Neither reaches par**, which is why there is no third column for either: par is the
+    #: hill's health over what one match could ideally deliver, and neither adds a body nor heals
+    #: one. What they cost is the *clock*, and this mode's fail state is a clock rather than a
+    #: move budget (invariant 37b).
+    "gorgon": {"health": 4600, "cast": 2, "spell": "glare"},
+    "sunlord": {"health": 6800, "cast": 3, "spell": "doom"},
 }
 
 #: `SiegeTuning.RaiseSize` and `.Raises` - how many creepers one raise puts on the hill, and how
@@ -351,6 +371,18 @@ STAR_FACTORS = {
     #: `SiegeRuleTests.TheFifthChapterIsFoughtOnABoughtLine` for the spent-share table it was
     #: read off.
     5: (0.48, 0.62),
+
+    #: Dustcrown, whose raiders carry **four** tenths more health than the baseline. The same
+    #: argument one rung further on: par scales with the surge and a run's flat payments do not,
+    #: so its lines come down again.
+    #:
+    #: **Measured on this chapter's own sweep** (2026-09-17), which is what
+    #: `SiegeRuleTests.TheSixthChapterIsFoughtOnABoughtLine` prints: clears came in between 35%
+    #: and 88% of par on the starter and 32% to 61% on a bought line, so 0.45 puts three stars
+    #: inside reach of a good run and outside reach of most - seven of forty held runs on the
+    #: starter, fifteen of eighty-three on the ability the chapter's material asks for. A ladder
+    #: with more than one rung in it, which is what 37ca is about.
+    6: (0.45, 0.59),
 }
 
 
@@ -363,8 +395,10 @@ def star_factors(ordinal):
 #: introduced, which is a fact rather than a convenience: a chapter deals the first *n* of these,
 #: so this order *is* the ladder and `charms_upto` is the only thing that reads it.
 PRISM, LANCE, STORM, FURNACE, HOURGLASS = "prism", "lance", "storm", "furnace", "hourglass"
+ANVIL = "anvil"
 
-CHARM_ROSTER = (("p", PRISM), ("l", LANCE), ("s", STORM), ("f", FURNACE), ("h", HOURGLASS))
+CHARM_ROSTER = (("p", PRISM), ("l", LANCE), ("s", STORM), ("f", FURNACE), ("h", HOURGLASS),
+                ("a", ANVIL))
 
 CHARM_LETTERS = "".join(letter for letter, _ in CHARM_ROSTER)
 
@@ -395,6 +429,11 @@ CHARM_STORM_OWN_TENTHS = 10 * WEAK_MULTIPLIER
 #: is the line's own bolts landing), so both are here for the readouts alone.
 FURNACE_CHARGES = 1
 HOURGLASS_FOR = 3.0
+
+#: `SiegeTuning.AnvilHeave` - how far back up the slope the sixth charm drives everything walking,
+#: as a share of the whole hill. It hurts nothing and holds nothing, so it reaches par exactly as
+#: far as the two above it do, which is not at all: it is here for the readouts alone.
+ANVIL_HEAVE = 0.20
 
 
 def charm_floor(par_moves):

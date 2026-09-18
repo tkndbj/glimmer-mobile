@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
@@ -238,6 +238,15 @@ namespace GlimmerGrove
                         case 1: return Piece("gem_hourglass_g");
                         case 2: return Piece("gem_hourglass_b");
                         case 3: return Piece("gem_hourglass_y");
+                        default: return null;
+                    }
+                case SiegeCharm.Anvil:
+                    switch (colour)
+                    {
+                        case 0: return Piece("gem_anvil_r");
+                        case 1: return Piece("gem_anvil_g");
+                        case 2: return Piece("gem_anvil_b");
+                        case 3: return Piece("gem_anvil_y");
                         default: return null;
                     }
                 case SiegeCharm.Prism:
@@ -584,6 +593,8 @@ namespace GlimmerGrove
                 case SiegeKind.Ironclad: return Reel("clad");
                 case SiegeKind.Thunderer: return Reel("thunder");
                 case SiegeKind.Colossus: return Reel("colossus");
+                case SiegeKind.Gorgon: return Reel("gorgon");
+                case SiegeKind.Sunlord: return Reel("sunlord");
             }
 
             // **A body per colour, which is what removing the tint bought.** It used to be
@@ -784,6 +795,11 @@ namespace GlimmerGrove
                 // a boulder, both flights of their own (`SiegeShotBake.Levin`, `.Boulder`).
                 case SiegeKind.Thunderer: return Blast("levin");
                 case SiegeKind.Colossus: return Blast("boulder");
+                // **The sixth chapter's two throw something as well**: a gorgon looses a
+                // ray of stone light down the hill and a sunlord drops a seal onto a post,
+                // so both have a flight and both are drawn crossing the hill.
+                case SiegeKind.Gorgon: return Blast("gaze");
+                case SiegeKind.Sunlord: return Blast("decree");
 
                 default: return Blast("spell");
             }
@@ -813,6 +829,8 @@ namespace GlimmerGrove
                 case SiegeKind.Ironclad: return Blast("quake_muzzle");
                 case SiegeKind.Thunderer: return Blast("levin_muzzle");
                 case SiegeKind.Colossus: return Blast("boulder_muzzle");
+                case SiegeKind.Gorgon: return Blast("gaze_muzzle");
+                case SiegeKind.Sunlord: return Blast("decree_muzzle");
                 default: return Blast("spell_muzzle");
             }
         }
@@ -831,6 +849,8 @@ namespace GlimmerGrove
                 case SiegeKind.Ironclad: return Blast("quake_hit");
                 case SiegeKind.Thunderer: return Blast("levin_hit");
                 case SiegeKind.Colossus: return Blast("boulder_hit");
+                case SiegeKind.Gorgon: return Blast("gaze_hit");
+                case SiegeKind.Sunlord: return Blast("decree_hit");
                 default: return Blast("spell_hit");
             }
         }
@@ -881,6 +901,16 @@ namespace GlimmerGrove
                 // which is the ironclad-and-roar bargain made once more.
                 case SiegeKind.Thunderer: return Pal.Sun;
                 case SiegeKind.Colossus: return Pal.Thorn;
+                // **Limestone and a desert sun, and neither is one of the board's four.**
+                // `Rope` is the sun-bleached stone nothing else here wears, which is what a
+                // gaze *makes* rather than a colour chosen to suit it; `Ember` is the one
+                // hue in this palette that reads as heat off sand, and it is a shade a gem
+                // never is - `Poppy` is a cold red and `Amber` is an orange. A seal is also
+                // drawn as a ring with a countdown in it rather than as a bolt, so the
+                // colour is carrying less of the reading here than anywhere else in this
+                // switch.
+                case SiegeKind.Gorgon: return Pal.Rope;
+                case SiegeKind.Sunlord: return Pal.Ember;
 
                 // **The two that land on the hill rather than on the line**, which is what lets
                 // them take the two colours left. A devour is `Verdant` and a raise is `Glass`,

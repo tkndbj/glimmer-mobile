@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace GlimmerGrove.Modes
@@ -286,6 +286,21 @@ namespace GlimmerGrove.Modes
         public readonly List<SiegeForged> Forged = new List<SiegeForged>(2);
 
         /// <summary>
+        /// Wards that fired into a gorgon's glare this step and landed nothing
+        /// (<see cref="SiegeSpell.Glare"/>), and wards whose sunlord seal was paid off
+        /// (<see cref="SiegeSpell.Doom"/>).
+        ///
+        /// <b>Both are lists of posts rather than events with a payload</b>, because neither
+        /// carries a number: a stone-struck shot is worth nothing by definition, and a paid seal
+        /// is worth exactly the thing that is no longer going to happen. What the view needs is
+        /// which post, and how many times.
+        /// </summary>
+        public readonly List<int> Stoned = new List<int>(4);
+
+        /// <summary>Wards whose seal was paid off this step. See <see cref="Stoned"/>.</summary>
+        public readonly List<int> Redeemed = new List<int>(2);
+
+        /// <summary>
         /// Seconds the hill was just stopped for by an hourglass landing this step, or nought.
         ///
         /// <b>The edge rather than the state</b>, for <see cref="Brimmed"/>'s reason: the view
@@ -293,6 +308,21 @@ namespace GlimmerGrove.Modes
         /// here is the frame the stop began on, which is the frame the wave is drawn crossing it.
         /// </summary>
         public float Stilled;
+
+        /// <summary>
+        /// How far an anvil drove the hill back this step, as a share of the hill
+        /// (<see cref="SiegeCharm.Anvil"/>), and how many bodies it moved.
+        ///
+        /// <b>Two numbers rather than one</b>, because the view needs both answers and they are
+        /// different questions: <c>Heaved</c> is how big the shock is drawn, and <c>Shoved</c> is
+        /// whether there was anything on the hill for it to throw. An anvil sprung over an empty
+        /// hill - or over a boss, which does not move - reports the first and not the second, and
+        /// what the player sees is the refusal rather than nothing at all.
+        /// </summary>
+        public float Heaved;
+
+        /// <summary>How many bodies the anvil moved. See <see cref="Heaved"/>.</summary>
+        public int Shoved;
 
         /// <summary>The wave that has just stepped out, or -1.</summary>
         public int Wave = -1;
@@ -311,7 +341,11 @@ namespace GlimmerGrove.Modes
             Brimmed.Clear();
             Charmed.Clear();
             Forged.Clear();
+            Stoned.Clear();
+            Redeemed.Clear();
             Stilled = 0f;
+            Heaved = 0f;
+            Shoved = 0;
             Wave = -1;
         }
 
@@ -319,7 +353,8 @@ namespace GlimmerGrove.Modes
                         || Spells.Count > 0 || Arrived.Count > 0 || Dropped.Count > 0
                         || Cogs.Count > 0 || Trampled.Count > 0 || Devoured.Count > 0
                         || Brimmed.Count > 0 || Charmed.Count > 0 || Forged.Count > 0
-                        || Stilled > 0f || Wave >= 0;
+                        || Stoned.Count > 0 || Redeemed.Count > 0
+                        || Stilled > 0f || Heaved > 0f || Wave >= 0;
     }
 
     /// <summary>Fuel a match has earned that has not reached its ward yet.</summary>

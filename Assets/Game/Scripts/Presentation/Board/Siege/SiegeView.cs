@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
@@ -149,6 +149,16 @@ namespace GlimmerGrove
             public Image Fill;
             public float Height;
             public bool Falling;
+
+            /// <summary>
+            /// How far this body is tipped back by an anvil's shove, nought to one
+            /// (<see cref="SiegeCharm.Anvil"/>, <c>SiegeView.Anvil</c>).
+            ///
+            /// <b>Kept on the widget rather than tweened</b>, because the shove is a debt the
+            /// *model* works off: the lean is read off it every frame, so the frame the debt
+            /// clears is the frame the body starts standing up again.
+            /// </summary>
+            public float Braced;
 
 
             /// <summary>The warlord's, and null for everything else.</summary>
@@ -361,6 +371,19 @@ namespace GlimmerGrove
             public int Rank = -1;
 
             /// <summary>The shield on its shoulder, and the number written on it.</summary>
+            /// <summary>
+            /// The sunlord's seal standing on this post, and the toll paid into it
+            /// (<see cref="SiegeSpell.Doom"/>).
+            ///
+            /// <b>Built when the seal lands and destroyed when it lifts</b>, rather than built
+            /// for every post and hidden: a widget that is always there and usually invisible is
+            /// one that will one day be drawn when it should not be, and nothing would say so.
+            /// </summary>
+            public Image Seal;
+
+            /// <summary>The toll paid into the seal, drawn inside it. See <see cref="Seal"/>.</summary>
+            public Image Toll;
+
             public RectTransform Crest;
             public Text Tier;
         }

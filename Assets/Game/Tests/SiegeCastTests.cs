@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
 using GlimmerGrove.Modes;
@@ -40,17 +40,17 @@ namespace GlimmerGrove.Tests
         static readonly int[] Sets =
         {
             SiegeMode.Insects, SiegeMode.Medley, SiegeMode.Brood, SiegeMode.Bones,
-            SiegeMode.Rabble, SiegeMode.Wild,
+            SiegeMode.Rabble, SiegeMode.Wild, SiegeMode.Court,
         };
 
         /// <summary>
-        /// The four a <b>chapter</b> can draw. The medley is not one of them: it is dealt out of
+        /// The six a <b>chapter</b> can draw. The medley is not one of them: it is dealt out of
         /// these and is the Infinite lane's alone.
         /// </summary>
         static readonly int[] Chapters =
         {
             SiegeMode.Insects, SiegeMode.Brood, SiegeMode.Bones, SiegeMode.Rabble,
-            SiegeMode.Wild,
+            SiegeMode.Wild, SiegeMode.Court,
         };
 
         static readonly SiegeKind[] Bodies =

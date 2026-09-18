@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter s07_dustcrown
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter s07_dustcrown
+  m_GUID: ffd4845df64c7d84e8f6cf929289a992
+  m_SerializeEntries:
+  - m_GUID: 2a2c2e93bebaa524a99dfe2645336a1c
+    m_Address: Art/Map/map6_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4ce679bc0d6cd0b49b16d17266b76823
+    m_Address: Art/Map/map6_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5df6c9c77efef2d4facdc088991ccf88
+    m_Address: Art/Map/map6_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6c3234edde34b8943a4bc97d8aea5ca4
+    m_Address: Art/Map/map6_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 89a516c92646f9040bd175b6eb0cb5a4, type: 2}
+    - {fileID: 11400000, guid: 882d50431bab12443a3c26e7b5f87337, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter s07_dustcrown_BundledAssetGroupSchema
+    - Glimmer Chapter s07_dustcrown_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

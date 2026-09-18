@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace GlimmerGrove.Modes
 {
@@ -189,6 +189,7 @@ namespace GlimmerGrove.Modes
                     // for it had burst.
                     case SiegeCharm.Furnace:
                     case SiegeCharm.Hourglass:
+                    case SiegeCharm.Anvil:
                         _booked.Add(new Booked
                         {
                             Charm = charm,
@@ -308,6 +309,7 @@ namespace GlimmerGrove.Modes
 
                 if (SiegeCharms.ReachesTheLine(booked.Charm)) Forge(booked.Colour);
                 else if (SiegeCharms.StopsTheHill(booked.Charm)) Still();
+                else if (SiegeCharms.ShovesTheHill(booked.Charm)) Heave();
             }
         }
 
@@ -364,6 +366,38 @@ namespace GlimmerGrove.Modes
         {
             if (SiegeTuning.HourglassFor > _still) _still = SiegeTuning.HourglassFor;
             _report.Stilled = SiegeTuning.HourglassFor;
+        }
+
+        /// <summary>
+        /// One anvil landing: everything walking is driven back up the slope by
+        /// <see cref="SiegeTuning.AnvilHeave"/> of the hill.
+        ///
+        /// <para>
+        /// <b>The debt is written on the bodies and worked off by the clock</b>
+        /// (<see cref="SiegeRaider.Shove"/>, <c>SiegeBoard.Walk</c>), rather than the March being
+        /// rewritten here. A shove applied in one frame is a hill that teleports, because the
+        /// view draws a raider wherever the model says it is; a shove that is a debt is the same
+        /// arithmetic drawn over a quarter of a second, and the hold simulation walks through it
+        /// exactly as a player does.
+        /// </para>
+        /// <para>
+        /// <b>A boss is refused by the raider rather than skipped here</b>, so the one rule that
+        /// matters is written once (invariant 37di: a boss's whole fight is measured from where
+        /// it stands). What this counts is how many bodies it actually moved, because that is
+        /// what decides whether the view draws a shove or a refusal - a payoff that silently did
+        /// nothing would be a broken gem rather than a wrong choice, which is the furnace's own
+        /// rule about a charge that cannot be banked.
+        /// </para>
+        /// </summary>
+        void Heave()
+        {
+            int shoved = 0;
+
+            for (int i = 0; i < _raiders.Count; i++)
+                if (_raiders[i].Shove(SiegeTuning.AnvilHeave)) shoved++;
+
+            _report.Heaved = SiegeTuning.AnvilHeave;
+            _report.Shoved = shoved;
         }
 
         /// <summary>One stormglass going off: the whole line, at everything on the hill.</summary>

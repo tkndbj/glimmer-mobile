@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace GlimmerGrove.Modes
@@ -288,7 +288,13 @@ namespace GlimmerGrove.Modes
             // Through `Fill`, so a surge that tops a tube up banks an overcharge exactly as a
             // match would. Written as `Fuel +=` here it was the one way to fill a ward that could
             // never arm one.
-            post.Fill(given / 10f);
+            post.Fill(given / 10f, out bool redeemed);
+
+            // **A surge pays a seal like any other fuel** (`SiegeSpell.Doom`), and it is reported
+            // here because the toll is counted inside `SiegeWard.Fill` and the *saying so* is
+            // each door's own job. A utility that broke a seal in silence would be the one way
+            // of answering a sunlord that the player could not see working.
+            if (redeemed) _report.Redeemed.Add(ward);
 
             return given;
         }

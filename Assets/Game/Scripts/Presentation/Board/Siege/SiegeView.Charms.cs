@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Modes;
 using GlimmerGrove.Utilities;
@@ -395,6 +395,9 @@ namespace GlimmerGrove
 
                 case SiegeCharm.Hourglass:
                     Sanding(spark.Cell, spark.Colour, tint);
+                    break;
+                case SiegeCharm.Anvil:
+                    Anviling(spark.Cell, spark.Colour, tint);
                     break;
 
                 case SiegeCharm.Prism:

@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
@@ -123,6 +123,21 @@ namespace GlimmerGrove
             Volley(report.Charmed);
             for (int i = 0; i < report.Forged.Count; i++) Forged(report.Forged[i]);
             if (report.Stilled > 0f) Stilled(report.Stilled);
+
+            // **The hill being thrown, on the frame the model threw it** - the stone that paid
+            // for it went off `FuelLands` earlier and was drawn then (`SiegeView.Anvil`). A
+            // shove that moved nothing is drawn too, because a payoff that did nothing in
+            // silence would be a broken gem rather than a wrong choice.
+            if (report.Heaved > 0f) Heaved(report.Heaved, report.Shoved);
+
+            // What a gorgon's glare cost: a shot leaving a stone-struck barrel and shattering.
+            // One per post per beat, so a ward masked through a whole window is seen wasting
+            // every one of the shots it takes.
+            for (int i = 0; i < report.Stoned.Count; i++) Stoned(report.Stoned[i]);
+
+            // And a sunlord's seal paid off, which is the one thing a boss does in this mode that
+            // the player can undo.
+            for (int i = 0; i < report.Redeemed.Count; i++) Redeemed(report.Redeemed[i]);
             for (int i = 0; i < report.Casts.Count; i++) Cast(report.Casts[i]);
 
             // What a bomber left behind. Drawn after the bolts, so the bomb arrives after the
@@ -314,6 +329,12 @@ namespace GlimmerGrove
 
                 mob.Node.anchoredPosition =
                     new Vector2(LaneX(raider.Lane), MarchY(raider.March));
+
+                // **The lean a thrown body wears**, read off the model rather than latched on
+                // the blow - see `SiegeView.Anvil`. The position above is already sliding
+                // backwards, because the shove is a debt the model works off; this is the half
+                // that says the body did not choose to.
+                Braced(mob, raider);
 
                 if (mob.Fill != null)
                 {
@@ -528,6 +549,27 @@ namespace GlimmerGrove
                     post.Glow.color = Pal.A(Casting(SiegeKind.Shackler), .22f + left * .40f);
                     post.Glow.rectTransform.localScale = Vector3.one * (1.02f + left * .16f);
                 }
+
+                // **A stone-struck ward is the third of these and is drawn like neither.** A
+                // douse drains the colour out of the body and a chain lays iron over it; a glare
+                // turns the machine itself to stone, so the coat goes *grey* rather than dark
+                // (invariant 37m is about brightness, and this takes the hue rather than the
+                // light). Read off the model every frame, for the other two's reason: the frame
+                // the mask lifts is the frame the ward is worth feeding again.
+                else if (ward.Glared)
+                {
+                    float left = Mathf.Clamp01(ward.Stone / SiegeTuning.GorgonGlare);
+                    post.Glow.color = Pal.A(Casting(SiegeKind.Gorgon), .20f + left * .42f);
+                    post.Glow.rectTransform.localScale = Vector3.one * (1.03f + left * .14f);
+
+                    if (post.Body != null && !post.Down)
+                        post.Body.color = Color.Lerp(post.Coat, StoneCoat, .30f + left * .55f);
+                }
+
+                // **The seal, which is the one state on a post that is a question rather than a
+                // condition** - so it is drawn as a clock rather than as a colour, and it is
+                // drawn over everything else on the post because it outranks all of it.
+                Warded(post, ward, i);
 
                 // **The rubble is drawn from the model every frame**, for the douse's and the
                 // chain's reason: the frame the last piece comes off is the frame the ward may

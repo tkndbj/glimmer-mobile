@@ -575,6 +575,15 @@ CHARM_GEMS = {
     # pack drawn that way.
     "furnace": ("22.png", "a cracked molten nugget"),
     "hourglass": ("43.png", "a bicone, waisted like an hourglass"),
+
+    # **The sixth, on the same test, and it is the one shape the pack draws that is not a
+    # jewel at all.** An anvil drives the whole hill back up the slope, so what the stone has
+    # to say before anything else is *weight* - and `95-2` is a long cut bar, flat-sided and
+    # square-ended, which is the only silhouette in a hundred stones that reads as a block
+    # rather than as something faceted. Beside a heart, a cabochon, a rhombus, an
+    # emerald-cut, a brilliant, a star, an orb, a nugget and a bicone it is the one you can
+    # name with the picture turned upside down, which is the whole test.
+    "anvil": ("95-2.png", "a long cut bar"),
 }
 
 #: What a colossus's boulder leaves on a post: one rough grey stone out of the gem pack, cut
@@ -846,6 +855,13 @@ SHACKLER, BONECALLER, IRONCLAD = 350, 390, 400
 #: finale.
 THUNDERER, COLOSSUS = 376, 433
 
+#: How tall the sixth chapter's two are cut: `SiegeTuning.TallOf` at 114 pixels a cell, as every
+#: row above. A gorgon stands a shade over the other rung-five bosses at 3.4 cells - the snakes
+#: project sideways rather than upward, so the body reads wider than it is tall and needs the
+#: height to hold its own against a hill of plate. A sunlord is 3.6, under a colossus and over
+#: everything else: a finale, and a man rather than a giant.
+GORGON, SUNLORD = 388, 410
+
 #: The four bosses: a body reel, a cast reel, and how tall each is cut.
 #:
 #: <b>Not insects, and that is the whole of what this table is for.</b> They were four insects out
@@ -997,6 +1013,30 @@ BOSS_SET = {
     # because the head is a third of the body. Drawn 3.8 cells, the biggest thing in the mode.
     "colossus": dict(pack=BOSSPACK2, body=UNIT_WALK % "Cyclops",
                      cast=None, tall=COLOSSUS),
+
+    # ------------------------------------------------ the two the sixth chapter brings
+    #
+    # **Both chosen against the court**, this table's standing rule: the sixth cast is three
+    # robed wizards, a hooded archer, a bone knight and a falcon-headed warrior - six bodies
+    # that are all, in one way or another, *people*. So the two standing in front of them are
+    # the two bodies in these packs that plainly are not: a monster and a king.
+    #
+    # **Medusa, because the verb is a look.** A gorgon's glare turns a ward stone-struck - it
+    # keeps firing and lands nothing - and the one body on this shelf whose entire myth is what
+    # happens when you meet its eye needs no explaining. The snakes are the point at this size:
+    # they project *sideways*, which invariant 37bx says is the one thing a silhouette can do
+    # that survives this camera, and green over a hill of bone and sand is a value no raider in
+    # the chapter wears.
+    "gorgon": dict(pack=MYTH, body=UNIT_WALK % "Medusa",
+                   cast=None, tall=GORGON),
+
+    # **The pharaoh, because the verb is a sentence.** A sunlord seals a ward and gives the
+    # player a deadline to answer it, which is a thing only something with *authority* can
+    # plausibly do - and this is the one body in these packs drawn as a ruler rather than as a
+    # fighter. It is also the widest silhouette left after the cyclops: the nemes headdress is
+    # a triangle half as wide as the body, which is what carries it at the top of the hill.
+    "sunlord": dict(pack=ANCIENTS, body=UNIT_WALK % "Pharaoh",
+                    cast=None, tall=SUNLORD),
 }
 
 # **Every boss in this mode is cut here now, and for one drop three of them were not.** The
@@ -1154,6 +1194,16 @@ RABBLE_SET = {
 #: in it, which is the flattening `CAST_PULL`'s note is about arriving through saturation instead.
 BONE_SAT_FLOOR = 0.60
 
+#: How the unit packs name a body's two reels, relative to the body's own folder - the same
+#: two paths `UNIT_WALK` and `UNIT_CAST` spell out for a boss, in the shape `walk_and_swing`
+#: wants them.
+UNIT_WALK_ANIM, UNIT_SWING_ANIM = "/PNG/PNG Sequences/Front - Walking", "/PNG/PNG Sequences/Front - Attacking"
+
+#: And the one body on the whole shelf that draws its attack under another name, because it has
+#: a bow rather than a weapon. See `COURT_SET`.
+UNIT_SHOOT_ANIM = "/PNG/PNG Sequences/Front - Shooting"
+
+
 #: The **fifth** chapter's twelve raiders: five top-down bodies out of the unit packs, and a
 #: second reel per body cut from the packs' own `Front - Attacking`.
 #:
@@ -1202,10 +1252,61 @@ WILD_SET = {
 #: red and the yeti's fur still has a highlight.
 WILD_SAT_FLOOR = 0.48
 
-#: How the unit packs name a body's two reels, relative to the body's own folder - the same
-#: two paths `UNIT_WALK` and `UNIT_CAST` spell out for a boss, in the shape `walk_and_swing`
-#: wants them.
-UNIT_WALK_ANIM, UNIT_SWING_ANIM = "/PNG/PNG Sequences/Front - Walking", "/PNG/PNG Sequences/Front - Attacking"
+#: The **sixth** chapter's twelve raiders: six top-down bodies out of the unit packs, and a
+#: second reel per body cut from the packs' own `Front - Attacking`.
+#:
+#: <b>The kind is said by what a body is wearing</b>, which is this pack family's own drawing and
+#: needed no interpretation: three robed wizards and a hooded archer carry nothing that reads as
+#: armour, so they creep; a falcon-headed war-god in scale and a pauldron is the heaviest
+#: silhouette here, so it is the brute; and a skeleton in bone plate behind a shield is the one
+#: body plainly *carrying* its armour, so it is the bulwark.
+#:
+#: <b>Four distinct creepers, which no cast before this one has had.</b> The insects manage four,
+#: the brood four, the bones and the rabble two and the wild one; this chapter's swarm is four
+#: different casters, and that is worth having precisely where the swarm is largest. Where a body
+#: is worn twice the two colours it wears are opposite ones - `BONE_SET`'s rule, for `BONE_SET`'s
+#: reason (37ak) - which is why the brute and the bulwark each take red and blue, then green and
+#: amber, rather than any pairing that would put one silhouette on the two closest hues.
+#:
+#: <b>Two of the eight spare bodies are not here, and that is the boss table's doing</b>: Medusa
+#: and the pharaoh stand in front of this cast rather than in it (`BOSS_SET`), which is the rule
+#: that a boss may not be a raider drawn three times the size (invariant 37bd).
+#: <b>A row may name its own attack, and the first cast here that needed to is why.</b> These
+#: packs almost all draw `Front - Attacking`, and the skeleton archer draws `Front - Shooting` -
+#: it has a bow, so the pack called it what it is. `walk_and_swing` answers an <em>empty</em>
+#: swing for a folder that is not there and the build writes nothing, which is exactly the
+#: shape of fault invariant 32b is about: the cast imported, addressed, audited and drew, and
+#: one of the twelve simply never swung. It cost one missing folder in a `git status` to spot
+#: and could as easily have shipped. `court_swings` refuses one now rather than warning.
+COURT_SET = {
+    # creepers - the three wizards and the archer: four robed bodies, nothing armoured
+    "courtMon_r":     (WIZUNITS, "Wizard Male", UNIT_SWING_ANIM),
+    "courtMon_g":     (WIZUNITS, "Wizard Female", UNIT_SWING_ANIM),
+    "courtMon_b":     (WIZUNITS, "Wizard Veteran", UNIT_SWING_ANIM),
+    "courtMon_y":     (BONEUNITS, "Skeleton Archer", UNIT_SHOOT_ANIM),
+
+    # brutes - the war-god, the heaviest silhouette in these packs after the two bosses
+    "courtBrute_r":   (MYTH, "Horus", UNIT_SWING_ANIM),
+    "courtBrute_g":   (MYTH, "Horus", UNIT_SWING_ANIM),
+    "courtBrute_b":   (MYTH, "Horus", UNIT_SWING_ANIM),
+    "courtBrute_y":   (MYTH, "Horus", UNIT_SWING_ANIM),
+
+    # bulwarks - bone plate behind a shield, which is the one body here carrying its armour
+    "courtBulwark_r": (BONEUNITS, "Skeleton Knight", UNIT_SWING_ANIM),
+    "courtBulwark_g": (BONEUNITS, "Skeleton Knight", UNIT_SWING_ANIM),
+    "courtBulwark_b": (BONEUNITS, "Skeleton Knight", UNIT_SWING_ANIM),
+    "courtBulwark_y": (BONEUNITS, "Skeleton Knight", UNIT_SWING_ANIM),
+}
+
+#: How hard the court's saturation is floored, between the wild's 0.48 and the bone cast's 0.60.
+#:
+#: <b>Measured off the two extremes in the set</b>, `WILD_SAT_FLOOR`'s method: the skeleton
+#: knight is bone white and carries no hue at all, so a low floor leaves a red one and an amber
+#: one two creams half a hue apart (the bone cast's own finding); Horus and the three wizards are
+#: painted in strong robes of their own, so a high floor flattens the trim out of them. 0.55 is
+#: where a red knight is plainly red and a wizard's robe still has folds in it.
+COURT_SAT_FLOOR = 0.55
+
 
 #: How many frames a swing keeps. See `SWING_ANIM`.
 SWING_FRAMES = 6
@@ -1858,6 +1959,421 @@ def stillwave():
         # came to - `beam`'s rule about a stroke whose brightest pixel is 80%, and the whole of why
         # this now reads as a wall rather than as a glow.
         a[..., 3] = np.maximum(a[..., 3], np.maximum(flat, edge * 0.85) * along * 255.0)
+
+        frames.append(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA"))
+
+    return frames
+
+
+
+# ---------------------------------------------------------------------- the sixth chapter's spells
+#
+# **Drawn here rather than baked in the Editor, and that is a decision with a bill behind it.**
+# Every boss spell before these six came out of `SiegeShotBake`, which renders a licensed particle
+# pack through a camera - and the fifth chapter's two are *still owed* months later, because a
+# batch-mode bake of that pack renders every frame shader-pink and only a running Editor can cut
+# them (`CLAUDE.md`'s Owed list). A drop whose art cannot be produced without somebody sitting in
+# front of the Editor is a drop that ships with red names in it.
+#
+# So these follow `Tools/make_legend_fx.py`, which made the same move for the legendary band and
+# for the same reason (invariant 42j): numpy and Pillow, offline, `--check` proves reproducibility,
+# and a checkout with no licensed pack anywhere near it still produces every pixel. What it also
+# buys is what a bake cannot - a spell can be a *behaviour* rather than a photographed shape.
+#
+# **Both are drawn in their own colours rather than white.** A ward's bolt is cut white and tinted
+# per colour because there are four of it (invariant 37l); a boss's spell is one picture, and
+# `Hurl` lends it `Color.white` precisely so the reel's own paint survives.
+
+#: Frames a flight is drawn over, and frames a muzzle or a landing is. Matched to what
+#: `SiegeShotBake` cuts, so a reel drawn here and a reel baked there run at one rate.
+SPELL_FRAMES, SPELL_BURST_FRAMES = 18, 16
+
+
+def _canvas(w, h):
+    """An empty RGBA float buffer and the two coordinate grids over it."""
+    y, x = np.mgrid[0:h, 0:w].astype(np.float32)
+    return np.zeros((h, w, 4), np.float32), x, y
+
+
+def _paint(a, mask, rgb, alpha=1.0):
+    """Lays a colour over a buffer, keeping the brighter of what is already there."""
+    m = np.clip(mask * alpha, 0.0, 1.0)
+    for c in range(3):
+        a[..., c] = np.maximum(a[..., c], rgb[c] * m)
+    a[..., 3] = np.clip(a[..., 3] + m, 0.0, 1.0)
+
+
+def _frame(a):
+    out = np.zeros(a.shape, np.float32)
+    out[..., :3] = np.clip(a[..., :3], 0.0, 255.0)
+    out[..., 3] = np.clip(a[..., 3], 0.0, 1.0) * 255.0
+    return Image.fromarray(out.astype(np.uint8), "RGBA")
+
+
+#: The gorgon's colours: sun-bleached limestone for the shaft, a jade iris at its head.
+#:
+#: **Stone first and green second**, which is the way round the verb reads: what a glare *does* is
+#: turn a machine to stone, and the green is the thing doing it. Drawn green-first it would be a
+#: poison bolt, which is a blightcaller's hex one chapter and four verbs away.
+GAZE_STONE, GAZE_IRIS, GAZE_CORE = (214, 200, 168), (126, 196, 132), (255, 252, 240)
+
+#: The sunlord's: gold, with a white-hot core and a deep amber rim.
+DECREE_GOLD, DECREE_CORE, DECREE_RIM = (255, 198, 74), (255, 250, 232), (196, 108, 36)
+
+
+def gaze():
+    """A gorgon's glare crossing the hill: one straight ray with an eye at its head.
+
+    **A ray rather than a thrown object, and that is the whole reading.** Every other flight in
+    this mode is something that was *launched* - orbs, an arrow, an axe, a boulder, a
+    thunderbolt - and they all bow, tumble or trail. A look does none of those: it is simply
+    there, all at once, along a line. So this is drawn as a hard-edged shaft with no wobble in it
+    and an iris at the head that narrows as it flies, which is the one piece of motion in it.
+
+    **It narrows and fades toward the tail** (invariant 37dw), and that is not a taste call: the
+    view crops a comet's trail to however far the shot has flown (`SiegeView.Emerged`), so the far
+    end of what is drawn sits parked on the turret's shoulder for the whole flight. A trail that
+    is opaque and wide at the tail is a flat slab lying across the barrel, which is what two of
+    the ten legendaries shipped as before anybody measured it.
+
+    **The first cut was a hairline and that is a measurement rather than a taste.**
+    `Tools/verify/fxreels.py` floors a reel's short side at 8% of its own frame precisely because
+    a bolt two hundredths of a cell wide is a thread on a device and a picture in a contact sheet
+    (37de). The shaft is a quarter of the frame at the head now, and the eye a third of it.
+    """
+    w, h = 128, 384
+    frames = []
+
+    for f in range(SPELL_FRAMES):
+        u = f / (SPELL_FRAMES - 1.0)
+        a, x, y = _canvas(w, h)
+
+        cx = (w - 1) * 0.5
+        head = (h - 1) * (1.0 - 0.82)          # `SiegeView.HeadAt`, measured from the bottom
+
+        # How far down the shaft each pixel is, nought at the head and one at the tail.
+        along = np.clip((y - head) / (h - 1.0 - head), 0.0, 1.0)
+
+        # **The shaft narrows away from the head**, so the parked end is the thin end.
+        wide = (w * 0.30) * (1.0 - along) ** 0.80 + w * 0.02
+        across = np.abs(x - cx) / np.maximum(1e-3, wide)
+
+        shaft = np.clip(1.0 - across, 0.0, 1.0) ** 0.7
+        core = np.clip(1.0 - across / 0.42, 0.0, 1.0) ** 0.8
+
+        # **And fades along it**, on a curve rather than a line, so the fall is quickest where the
+        # eye is least likely to be looking.
+        wane = (1.0 - along) ** 1.15
+
+        # A ladder of bands running down the shaft, scrolling toward the head: the only thing in
+        # it that moves, so the ray reads as being *sustained* rather than as a still decal.
+        band = 0.78 + 0.22 * np.sin(along * 30.0 - u * 9.0) ** 2
+
+        _paint(a, shaft * wane * band, GAZE_STONE, 0.96)
+        _paint(a, core * wane, GAZE_CORE, 0.92)
+
+        # The iris at the head: a ring that tightens across the reel, which is what a gaze
+        # narrowing looks like from the wrong end of it.
+        r = np.sqrt((x - cx) ** 2 + (y - head) ** 2)
+        eye = w * (0.40 - 0.13 * u)
+        ring = np.clip(1.0 - np.abs(r - eye) / (w * 0.10), 0.0, 1.0) ** 1.1
+        pupil = np.clip(1.0 - r / (w * 0.19), 0.0, 1.0) ** 1.2
+
+        _paint(a, ring, GAZE_IRIS, 1.0)
+        _paint(a, pupil, GAZE_CORE, 1.0)
+
+        # A halo on the head, floored well above where the crop lands (invariant 37dv).
+        halo = np.exp(-(r / (w * 0.46)) ** 2) * 0.62
+        _paint(a, halo, GAZE_IRIS, 0.7)
+
+        frames.append(_frame(a))
+
+    return frames
+
+
+def gaze_muzzle():
+    """The eye opening at the gorgon's own head: rings closing to a point."""
+    w = h = 256
+    frames = []
+
+    for f in range(SPELL_BURST_FRAMES):
+        u = f / (SPELL_BURST_FRAMES - 1.0)
+        a, x, y = _canvas(w, h)
+
+        cx = cy = (w - 1) * 0.5
+        r = np.sqrt((x - cx) ** 2 + (y - cy) ** 2)
+
+        for i in range(3):
+            # Three rings, each starting further out and arriving at the middle in turn.
+            k = np.clip(u * 1.6 - i * 0.16, 0.0, 1.0)
+            at = w * (0.46 - 0.40 * k) * (1.0 - i * 0.12)
+            ring = np.clip(1.0 - np.abs(r - at) / (w * 0.035), 0.0, 1.0) ** 1.3
+            _paint(a, ring, GAZE_IRIS, (1.0 - k * 0.45) * 0.9)
+
+        pupil = np.clip(1.0 - r / (w * (0.05 + 0.13 * (1.0 - u))), 0.0, 1.0) ** 1.2
+        _paint(a, pupil, GAZE_CORE, 1.0)
+        _paint(a, np.exp(-(r / (w * 0.30)) ** 2) * (0.7 - u * 0.3), GAZE_STONE, 0.7)
+
+        frames.append(_frame(a))
+
+    return frames
+
+
+def gaze_hit():
+    """What a glare leaves on a post: stone cracking outward from where it landed."""
+    w = h = 320
+    frames = []
+
+    rng = np.random.RandomState(9061)
+    spokes = rng.uniform(0.0, math.tau, 9)
+    lengths = rng.uniform(0.62, 1.0, 9)
+
+    for f in range(SPELL_BURST_FRAMES):
+        u = f / (SPELL_BURST_FRAMES - 1.0)
+        a, x, y = _canvas(w, h)
+
+        cx = cy = (w - 1) * 0.5
+        dx, dy = x - cx, y - cy
+        r = np.sqrt(dx ** 2 + dy ** 2)
+        ang = np.arctan2(dy, dx)
+
+        # **Cracks rather than a burst**, because what a glare does to a machine is set it. A
+        # ring of sparks would be the drawing saying *an explosion*, which is what every other
+        # landing in this mode already says.
+        for k in range(len(spokes)):
+            off = np.abs(((ang - spokes[k] + math.pi) % math.tau) - math.pi)
+            reach = w * 0.46 * lengths[k] * min(1.0, u * 2.2)
+            line = np.clip(1.0 - off / 0.055, 0.0, 1.0)
+            run = np.clip(1.0 - r / np.maximum(1e-3, reach), 0.0, 1.0) ** 0.7
+            _paint(a, line * run, GAZE_STONE, 0.95 * (1.0 - u * 0.35))
+
+        shock = np.clip(1.0 - np.abs(r - w * 0.46 * u) / (w * 0.05), 0.0, 1.0) ** 1.4
+        _paint(a, shock, GAZE_IRIS, (1.0 - u) * 0.9)
+
+        heart = np.clip(1.0 - r / (w * (0.16 - 0.10 * u)), 0.0, 1.0) ** 1.1
+        _paint(a, heart, GAZE_CORE, 1.0 - u * 0.7)
+
+        frames.append(_frame(a))
+
+    return frames
+
+
+def decree():
+    """A sunlord's seal crossing the hill: a disc of gold with a sentence turning in it.
+
+    **An object rather than a ray, which is the other half of the pair.** A gorgon's spell is a
+    look and this one is a *thing that has been issued* - so it is square-framed, it turns, and it
+    carries a rim the eye can follow round. Nothing about it trails, because nothing about it was
+    thrown.
+    """
+    w = h = 384
+    frames = []
+
+    for f in range(SPELL_FRAMES):
+        u = f / (SPELL_FRAMES - 1.0)
+        a, x, y = _canvas(w, h)
+
+        cx = cy = (w - 1) * 0.5
+        dx, dy = x - cx, y - cy
+        r = np.sqrt(dx ** 2 + dy ** 2)
+        ang = np.arctan2(dy, dx)
+
+        # The rim, and a second one inside it, turning in opposite directions - which is the one
+        # shape in this mode that reads as a *mechanism* rather than as weather.
+        for i, (at, thick, spin, rgb) in enumerate((
+                (0.40, 0.030, 1.0, DECREE_RIM),
+                (0.31, 0.020, -1.6, DECREE_GOLD))):
+            ring = np.clip(1.0 - np.abs(r - w * at) / (w * thick), 0.0, 1.0) ** 1.2
+            teeth = 0.55 + 0.45 * np.sin(ang * (12 + i * 6) + u * math.tau * spin) ** 2
+            _paint(a, ring * teeth, rgb, 0.95)
+
+        # Spokes out of the middle, so the disc reads as a sun as well as a seal.
+        spoke = np.clip(1.0 - np.abs(((ang * 8.0 + u * 2.0) % math.tau) - math.pi) / 0.30,
+                        0.0, 1.0)
+        reach = np.clip(1.0 - r / (w * 0.34), 0.0, 1.0) ** 1.4
+        _paint(a, spoke * reach, DECREE_GOLD, 0.7)
+
+        face = np.clip(1.0 - r / (w * 0.22), 0.0, 1.0) ** 1.1
+        _paint(a, face, DECREE_GOLD, 0.85)
+
+        heart = np.clip(1.0 - r / (w * (0.10 + 0.03 * math.sin(u * math.tau))), 0.0, 1.0) ** 1.0
+        _paint(a, heart, DECREE_CORE, 1.0)
+
+        _paint(a, np.exp(-(r / (w * 0.30)) ** 2) * 0.45, DECREE_GOLD, 0.55)
+
+        frames.append(_frame(a))
+
+    return frames
+
+
+def decree_muzzle():
+    """The sentence being passed: a column of gold going up out of the sunlord."""
+    w, h = 256, 320
+    frames = []
+
+    for f in range(SPELL_BURST_FRAMES):
+        u = f / (SPELL_BURST_FRAMES - 1.0)
+        a, x, y = _canvas(w, h)
+
+        cx = (w - 1) * 0.5
+        foot = h - 1.0
+
+        up = np.clip((foot - y) / (h - 1.0), 0.0, 1.0)
+        top = min(1.0, 0.25 + u * 1.5)
+
+        wide = (w * 0.20) * (1.0 - up * 0.55)
+        across = np.abs(x - cx) / np.maximum(1e-3, wide)
+
+        column = (np.clip(1.0 - across, 0.0, 1.0) ** 0.9
+                  * np.clip(1.0 - np.clip((up - top) / 0.18, 0.0, 1.0), 0.0, 1.0))
+
+        _paint(a, column * (1.0 - u * 0.4), DECREE_GOLD, 0.9)
+        _paint(a, np.clip(1.0 - across / 0.3, 0.0, 1.0) ** 1.2 * column, DECREE_CORE, 0.95)
+
+        # Motes rising inside it, which is what says the column is *carrying* something.
+        motes = 0.5 + 0.5 * np.sin(up * 40.0 - u * 14.0)
+        _paint(a, column * motes * 0.5, DECREE_CORE, 0.6)
+
+        frames.append(_frame(a))
+
+    return frames
+
+
+def decree_hit():
+    """The seal biting a post: a ring stamping down and locking."""
+    w = h = 320
+    frames = []
+
+    for f in range(SPELL_BURST_FRAMES):
+        u = f / (SPELL_BURST_FRAMES - 1.0)
+        a, x, y = _canvas(w, h)
+
+        cx = cy = (w - 1) * 0.5
+        dx, dy = x - cx, y - cy
+        r = np.sqrt(dx ** 2 + dy ** 2)
+        ang = np.arctan2(dy, dx)
+
+        # **It closes and then holds**, which is the opposite of every other landing here: a
+        # burst opens outward and is gone, and a sentence arrives and stays.
+        at = w * (0.46 - 0.16 * min(1.0, u * 1.8))
+        ring = np.clip(1.0 - np.abs(r - at) / (w * 0.042), 0.0, 1.0) ** 1.2
+        teeth = 0.5 + 0.5 * np.sin(ang * 16.0 + u * 3.0) ** 2
+        _paint(a, ring * teeth, DECREE_RIM, 0.95)
+        _paint(a, ring, DECREE_GOLD, 0.8)
+
+        # Four keys driving inward, so the ring reads as locking rather than as shrinking.
+        for k in range(4):
+            off = np.abs(((ang - k * math.tau / 4.0 + math.pi) % math.tau) - math.pi)
+            key = np.clip(1.0 - off / 0.13, 0.0, 1.0)
+            run = np.clip(1.0 - np.abs(r - at * (1.0 - 0.45 * u)) / (w * 0.09), 0.0, 1.0)
+            _paint(a, key * run, DECREE_CORE, 0.9 * (1.0 - u * 0.3))
+
+        heart = np.clip(1.0 - r / (w * (0.08 + 0.10 * u)), 0.0, 1.0) ** 1.2
+        _paint(a, heart, DECREE_CORE, 0.9 - u * 0.4)
+
+        frames.append(_frame(a))
+
+    return frames
+
+
+#: Frames the anvil's front is drawn over.
+#:
+#: **Twelve, against the still wave's own count, and for the opposite reason.** A wall of stopped
+#: time hangs on the hill for three seconds and has to loop without a seam; this crosses the hill
+#: in a quarter of a second (`SiegeTuning.AnvilFor`) and is gone, so what it needs is enough
+#: frames for the dust to visibly boil once rather than a cycle that closes.
+HEAVEFRONT_FRAMES = 12
+
+
+def heavefront():
+    """The wall of driven dust an anvil sends up the hill.
+
+    **Drawn rather than borrowed, which is the hourglass's lesson paid forward** (invariant 37dy):
+    the last charm whose payoff was a moment shipped wearing the stormglass's `laser` stretched
+    across the board, and what crossed the hill was a stripe. A front has to have a front.
+
+    **It is `stillwave`'s opposite in every reading, deliberately.** They are the only two things
+    in this mode that sweep the hill, they arrive one chapter apart, and a player has to tell them
+    apart in the quarter-second before either has finished:
+
+    * a still wave is **cold, regular and crystalline** - a flat face, graduations at a fixed
+      pitch, shards behind. What it says is *a made thing has stopped the clock*;
+    * this is **hot, billowing and turbulent** - a thin lit lip, no repeating feature anywhere in
+      it, and a deep soft body that rolls. What it says is *the ground moved*.
+
+    So the one thing they share is the direction of travel, and everything a player reads off
+    either of them differs.
+
+    **The first cut of this was a comb, and that is worth writing down.** Every term in it varied
+    with *x* alone, so a body meant to read as dust came out as a picket of vertical spikes -
+    frost, which is the one thing it may not be, since frost is the charm it stands beside. The
+    fix is that the turbulence has to vary in **both** axes: a mask built out of `f(x)` is a
+    fence however finely it is tuned, and no amount of choosing frequencies escapes it.
+
+    **And it was far too thin.** A front is mostly body: the lip carries the *speed* and the body
+    carries the *weight*, and at a tenth of the frame it read as a scratch rather than as a shock.
+
+    White, with no end along its length, like every other sprite the view tints and stretches
+    (invariant 37l).
+    """
+    long, thick = 512, 128
+    y, x = np.mgrid[0:thick, 0:long].astype(np.float32)
+
+    # 0 at the leading edge, 1 at the trailing one. The view sweeps it upward, so the top of the
+    # sprite is the front - `stillwave`'s convention, because two fronts drawn to two conventions
+    # is one of them being flipped by whoever draws the second caller.
+    d = y / (thick - 1.0)
+
+    # Feathered into nothing at both ends, so a front stretched past the field has no drawn end.
+    fade = long * 0.045
+    along = np.clip(np.minimum(x, long - 1 - x) / fade, 0.0, 1.0)
+
+    frames = []
+
+    for f in range(HEAVEFRONT_FRAMES):
+        u = f / (HEAVEFRONT_FRAMES - 1.0)
+
+        # **Billows, and every one of them varies in both axes.** Three low-frequency lobes at
+        # incommensurate wavelengths, each sheared by `d` so a lobe leans as it goes back - which
+        # is what stops the body reading as a row of columns and is the whole of what the first
+        # cut got wrong.
+        roll = np.sin(x / 47.0 + d * 2.3 + u * 4.1)
+        swell = np.sin(x / 23.0 - d * 3.1 - u * 2.7)
+        churn = np.sin(x / 13.0 + d * 5.2 + u * 6.3)
+
+        # How deep the dust reaches behind the lip, rolling slowly along it. Deep: a shock is
+        # mostly body, and at a tenth of the frame this read as a scratch.
+        deep = 0.62 + 0.26 * (roll * 0.5 + 0.5) * (0.4 + 0.6 * (swell * 0.5 + 0.5))
+
+        # The lip: thin, hot and slightly uneven, because a perfectly straight shock is a ruler.
+        crest = 0.035 + 0.020 * (churn * 0.5 + 0.5)
+        lead = np.clip(1.0 - d / np.maximum(1e-3, crest), 0.0, 1.0)
+        lip = np.clip(1.0 - d / (crest + 0.085), 0.0, 1.0) ** 1.5
+
+        # The body: deep, soft, and mottled by the three lobes together rather than by any one of
+        # them - so the grain has no direction in it.
+        mottle = 0.58 + 0.42 * ((roll * swell * 0.5 + 0.5) * 0.6
+                                + (churn * 0.5 + 0.5) * 0.4)
+        body = np.clip(1.0 - d / np.maximum(1e-3, deep), 0.0, 1.0) ** 1.15
+
+        # And a wash behind all of it, so the front has no drawn end at its back either.
+        haze = np.clip(1.0 - d, 0.0, 1.0) ** 1.9
+
+        # It opens as it goes: the dust is thin on the first frames and full by the middle,
+        # because a shock throws the ground up *after* it has passed.
+        grow = min(1.0, 0.55 + 1.2 * u)
+
+        a = np.zeros((thick, long, 4), np.float32)
+        a[..., 0] = 255.0
+        a[..., 1] = 255.0
+        a[..., 2] = 255.0
+        a[..., 3] = np.clip(lead * 1.0 + lip * 0.85
+                            + body * mottle * 0.95 * grow + haze * 0.42 * grow,
+                            0.0, 1.0) * along * 255.0
+
+        # The lip written back over the top at full, so the leading line is solid white whatever
+        # the sum came to - `beam`'s rule about a stroke whose brightest pixel is 80%.
+        a[..., 3] = np.maximum(a[..., 3], np.maximum(lead, lip * 0.8) * along * 255.0)
 
         frames.append(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA"))
 
@@ -2939,6 +3455,9 @@ def build():
     # The two the fifth chapter's cast and its thunderer come from. Absent, the same bargain.
     ancients, boss3 = zipped(ANCIENTS, UNITS), zipped(BOSSPACK3, UNITS)
 
+    # And the one the sixth chapter's three creepers come from. Absent, the same bargain.
+    wizunits = zipped(WIZUNITS, UNITS)
+
     # The bosses and half the second chapter's cast live here. Absent, this is a checkout without
     # the pack rather than a mistake - the same bargain every art tool in this project strikes -
     # so it is answered by cutting neither, and `--check` then has nothing to hold them to.
@@ -2954,11 +3473,14 @@ def build():
     if ancients is None or boss3 is None:
         return None
 
+    if wizunits is None:
+        return None
+
     #: Which zip a `BROOD_SET` row names. A table of bodies has to say which pack each is in, and
     #: one dict is how it says it without a branch per row.
     packs = {KIT: kit, MONSTERS: monsters, MONS_V1: horde1, MONS_V4: horde4,
              MYTH: myth, BOSSPACK2: boss2, BONEUNITS: boneunits,
-             ANCIENTS: ancients, BOSSPACK3: boss3}
+             ANCIENTS: ancients, BOSSPACK3: boss3, WIZUNITS: wizunits}
 
     made = {}
 
@@ -3136,6 +3658,13 @@ def build():
     for i, frame in enumerate(stilldial()):
         made["Siege/stilldial/f%02d.png" % i] = frame
 
+    # **What an anvil sends up the hill.** Its own front rather than the still wave re-tinted,
+    # which is the same argument the still wave itself is the answer to (invariant 37dy): the two
+    # are the only things in this mode that sweep the hill, they arrive one chapter apart, and a
+    # player has to tell them apart inside a quarter of a second. See `heavefront`.
+    for i, frame in enumerate(heavefront()):
+        made["Siege/heavefront/f%02d.png" % i] = frame
+
     charged = charge(icons)
     if charged is not None:
         made["Siege/charge.png"] = charged
@@ -3158,6 +3687,16 @@ def build():
     for i in range(FRAMES):
         made["Fx/Siege/pop/f%02d.png" % i] = white(read(kit, pops[min(len(pops) - 1, i * step)]),
                                                    TILE, 1.15)
+
+    # **The sixth chapter's two boss spells, drawn rather than baked.** Every reel above them
+    # comes out of `SiegeShotBake` and a licensed particle pack; these come out of numpy, for the
+    # reason written over `gaze` - a drop whose art needs somebody sitting in front of the Editor
+    # is a drop that ships red.
+    for key, reel in (("gaze", gaze), ("gaze_muzzle", gaze_muzzle), ("gaze_hit", gaze_hit),
+                      ("decree", decree), ("decree_muzzle", decree_muzzle),
+                      ("decree_hit", decree_hit)):
+        for i, frame in enumerate(reel()):
+            made["Fx/Siege/%s/f%02d.png" % (key, i)] = frame
 
     for key, (folder, turns, saturate) in BLAST_SET.items():
         for i, im in enumerate(blast_frames(blasts, folder, turns, saturate)):
@@ -3284,7 +3823,39 @@ def build():
                     im, hue, pull=CAST_PULL, sat_gain=CAST_SAT_GAIN, sat_floor=WILD_SAT_FLOOR,
                     val_gain=gain, val_lift=CAST_VAL_LIFT)
 
-    # The ten bosses: two reels each, both off one canvas so none of them jumps or changes size
+    # The sixth chapter's cast, out of the same top-down unit packs the fifth came from and cut
+    # on the same lines - a cast set is a *table* and not a code path (`BROOD_SET`'s claim,
+    # holding a fifth time). **Cut once per body rather than once per row**: nine of the twelve
+    # rows draw two bodies, and the colour is applied after.
+    court = {}
+
+    for key, (pack, body, attack) in COURT_SET.items():
+        hue = hues.get(key[-1])
+        ink, tol = PACK_SHADE[pack]
+
+        if body not in court:
+            court[body] = walk_and_swing(packs[pack], body, CAST, ink, tol,
+                                         UNIT_WALK_ANIM, attack)
+
+        walk, swing = court[body]
+
+        # **Every body in this cast swings, and it is asserted rather than assumed.** A folder
+        # this pack calls something else answers an empty reel and writes no files, and the
+        # result is a raider that reaches the line and keeps walking - which imports, addresses,
+        # audits and draws. See `COURT_SET`.
+        if not swing:
+            raise SystemExit("%s: '%s' has no frames under %s" % (key, body, attack))
+
+        # **One gain for both reels, measured off the walk**, for the bone cast's reason.
+        gain = value_gain(walk)
+
+        for suffix, frames in (("", walk), ("_swing", swing)):
+            for i, im in enumerate(frames):
+                made["Siege/%s%s/f%02d.png" % (key, suffix, i)] = im if hue is None else hued(
+                    im, hue, pull=CAST_PULL, sat_gain=CAST_SAT_GAIN, sat_floor=COURT_SAT_FLOOR,
+                    val_gain=gain, val_lift=CAST_VAL_LIFT)
+
+    # The twelve bosses: two reels each, both off one canvas so none of them jumps or changes size
     # when it throws. One loop rather than one block per boss, which is what stopped a third and a
     # fourth being expensive - and what makes the *set* something a reader can see at once.
     packs[WIZARD] = wizard

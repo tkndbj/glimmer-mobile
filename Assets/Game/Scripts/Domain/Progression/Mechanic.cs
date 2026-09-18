@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace GlimmerGrove.Progression
 {
@@ -480,6 +480,16 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic SiegeHourglass = new Mechanic("siege_hourglass");
 
         /// <summary>
+        /// The anvil charm: match it and the whole hill is driven back up the slope.
+        ///
+        /// <b>The sentence says what it buys rather than what it does</b>, which is the
+        /// stormglass lesson's rule about the half that can be acted on: "everything is thrown
+        /// back" is a picture the player is about to see anyway, and "so hold it for something
+        /// about to reach you" is the only part of it that changes a decision.
+        /// </summary>
+        public static readonly Mechanic SiegeAnvil = new Mechanic("siege_anvil");
+
+        /// <summary>
         /// A buried turret: tap the rubble off it. Raised the first time a colossus lands a
         /// boulder, and pointed at the post it landed on (invariant 6b - the thing to tap).
         /// </summary>
@@ -822,7 +832,7 @@ namespace GlimmerGrove.Progression
             // remarks above.
             SiegeFuel, SiegeBrim, SiegeSalvage,
             SiegeBomber,
-            SiegePrism, SiegeLance, SiegeStorm, SiegeFurnace, SiegeHourglass,
+            SiegePrism, SiegeLance, SiegeStorm, SiegeFurnace, SiegeHourglass, SiegeAnvil,
             SiegeRubble,
             ModeSwitch, LuckySpin, Grove,
             GroveShop,

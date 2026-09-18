@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Modes;
 using GlimmerGrove.Progression;
@@ -164,6 +164,10 @@ namespace GlimmerGrove.Content
             AssetRequest.Sprite(AssetManifest.SiegeArt("gem_hourglass_g")),
             AssetRequest.Sprite(AssetManifest.SiegeArt("gem_hourglass_b")),
             AssetRequest.Sprite(AssetManifest.SiegeArt("gem_hourglass_y")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_anvil_r")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_anvil_g")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_anvil_b")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_anvil_y")),
 
             // What a colossus leaves on a post (`SiegeKind.Colossus`): one stone, drawn three
             // times at three sizes. Resident with the line's furniture rather than scoped to the
@@ -178,6 +182,7 @@ namespace GlimmerGrove.Content
             // deals every charm too.
             AssetRequest.SpriteSet(AssetManifest.SiegeArt("stillwave")),
             AssetRequest.SpriteSet(AssetManifest.SiegeArt("stilldial")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("heavefront")),
 
             // **The beam is a reel now and not a bar.** A still gradient stretched across the row
             // has no event in it, so what a lance read as was a highlighter line appearing over
@@ -449,6 +454,20 @@ namespace GlimmerGrove.Content
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("boulder")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("boulder_muzzle")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("boulder_hit")));
+                    break;
+                case SiegeKind.Gorgon:
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("gorgon")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("gorgon_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("gaze")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("gaze_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("gaze_hit")));
+                    break;
+                case SiegeKind.Sunlord:
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("sunlord")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("sunlord_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("decree")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("decree_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("decree_hit")));
                     break;
             }
         }
@@ -788,11 +807,43 @@ namespace GlimmerGrove.Content
         // **Re-dealt over five casts when the wild joined**, so every chapter cast still puts at
         // least two bodies on the Infinite lane (`SiegeCastTests.TheMedleyDrawsFromEveryChapterCast`).
         // Which cast lands on which slot is a taste and a table; that every cast lands is a rule.
+        static readonly AssetRequest[] CourtCast =
+        {
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtMon_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtMon_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtMon_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtMon_y")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBrute_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBrute_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBrute_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBrute_y")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBulwark_r")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBulwark_g")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBulwark_b")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBulwark_y")),
+        };
+
+        static readonly AssetRequest[] CourtSwings =
+        {
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtMon_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtMon_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtMon_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtMon_y_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBrute_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBrute_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBrute_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBrute_y_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBulwark_r_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBulwark_g_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBulwark_b_swing")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("courtBulwark_y_swing")),
+        };
+
         static readonly int[] MedleyOrder =
         {
-            Insects, Brood,   Bones,   Wild,       // creepers  r g b y
-            Rabble,  Wild,    Insects, Brood,      // brutes
-            Bones,   Rabble,  Wild,    Insects,    // bulwarks
+            Insects, Brood,   Bones,   Court,      // creepers  r g b y
+            Rabble,  Wild,    Court,   Insects,    // brutes
+            Bones,   Rabble,  Wild,    Brood,      // bulwarks
         };
 
         /// <summary>
@@ -878,8 +929,17 @@ namespace GlimmerGrove.Content
         /// </summary>
         public const int Wild = 5;
 
+        /// <summary>
+        /// The sixth chapter's cast: six top-down bodies out of the same unit packs - a
+        /// falcon-headed war-god for the brutes, a skeleton knight in bone plate for the
+        /// bulwarks, and three robed wizards and a hooded archer that creep
+        /// (`make_siege_art.COURT_SET`). Four distinct creeper bodies, which no cast before it
+        /// has had.
+        /// </summary>
+        public const int Court = 6;
+
         /// <summary>How many casts this mode ships.</summary>
-        public const int CastSets = 6;
+        public const int CastSets = 7;
 
         /// <summary>
         /// The casts the <b>main ladder</b> draws from, in the order its chapters meet them.
@@ -890,7 +950,7 @@ namespace GlimmerGrove.Content
         /// year costs no cast at all</b>, and no chapter can ship drawing bodies nobody chose. A
         /// third pack lengthens this array and changes nothing else.
         /// </summary>
-        static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble, Wild };
+        static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble, Wild, Court };
 
         /// <summary>
         /// How many casts the main ladder draws from before it starts again.
@@ -951,6 +1011,7 @@ namespace GlimmerGrove.Content
                 case Bones: return BoneCast;
                 case Rabble: return RabbleCast;
                 case Wild: return WildCast;
+                case Court: return CourtCast;
                 default: return InsectCast;
             }
         }
@@ -972,7 +1033,8 @@ namespace GlimmerGrove.Content
             => set == Bones ? BoneSwings
              : set == Medley ? MedleySwings
              : set == Rabble ? RabbleSwings
-             : set == Wild ? WildSwings : null;
+             : set == Wild ? WildSwings
+             : set == Court ? CourtSwings : null;
 
         /// <summary>
         /// The address one raider's swing reel is at, or <b>empty</b> when this cast has none.

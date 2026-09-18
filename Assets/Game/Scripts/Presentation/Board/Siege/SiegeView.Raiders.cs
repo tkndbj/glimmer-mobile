@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
@@ -258,6 +258,8 @@ namespace GlimmerGrove
                 case SiegeKind.Ironclad: return Reel("clad_cast");
                 case SiegeKind.Thunderer: return Reel("thunder_cast");
                 case SiegeKind.Colossus: return Reel("colossus_cast");
+                case SiegeKind.Gorgon: return Reel("gorgon_cast");
+                case SiegeKind.Sunlord: return Reel("sunlord_cast");
 
                 default: return null;
             }

@@ -210,7 +210,8 @@ GEM_ART = {"r": "gem_r", "g": "gem_g", "b": "gem_b", "y": "gem_y", "*": "gem_cog
 #: A prism is absent on purpose and always was - it is a face in `GEM_ART`'s sense, because it is
 #: the one gem here that is not a colour.
 CHARM_ART = {siege.LANCE: "gem_lance", siege.STORM: "gem_storm",
-             siege.FURNACE: "gem_furnace", siege.HOURGLASS: "gem_hourglass"}
+             siege.FURNACE: "gem_furnace", siege.HOURGLASS: "gem_hourglass",
+             siege.ANVIL: "gem_anvil"}
 
 #: `SiegeView.MarkInset` and `.RingInset`, as fractions of a cell.
 #: `SiegeView.CharmInset` and `RingInset` - how big a charmed stone and its halo are drawn.
@@ -219,6 +220,14 @@ CHARM_ART = {siege.LANCE: "gem_lance", siege.STORM: "gem_storm",
 #: round where the four are broad: fitted to the same box a star and an orb draw visibly smaller
 #: than the stones beside them, which would say a charm is a lesser gem.
 CHARM_INSET, CHARM_RING = 1.06, 1.18
+
+#: `SiegeView.HeaveFront` and `make_siege_art.HEAVEFRONT_FRAMES` - how deep the anvil's front is
+#: drawn, in cells, and how many frames it is cut over. Mirrored rather than imported, exactly as
+#: every other figure in this file is and for its reason: this tool runs with no Unity anywhere.
+HEAVE_FRONT, HEAVE_FRAMES = 1.5, 12
+
+#: `Pal.Rope` - the sun-bleached stone an anvil's dust is drawn in, and the gorgon's own hue.
+ROPE = (217, 195, 154)
 
 #: `SiegeLayout.Bomb` - what a bomber drops. Drawn as the firepot the player already owns, which
 #: is what the view draws it as: tapping it throws exactly what a firepot throws, so a second
@@ -442,9 +451,9 @@ CAST = ""
 #: tool has no catalog, and a mirror that computes the answer a second way is a mirror that can
 #: quietly draw a hill the game does not (invariant 44d).
 MEDLEY = (
-    ("",       "brood",  "bone",   "wild"),
-    ("rabble", "wild",   "",       "brood"),
-    ("bone",   "rabble", "wild",   ""),
+    ("",       "brood",  "bone",   "court"),
+    ("rabble", "wild",   "court",  ""),
+    ("bone",   "rabble", "wild",   "brood"),
 )
 
 #: Which row of `MEDLEY` a kind reads, in `SiegeMode.CastAddress`'s own order.
@@ -803,6 +812,10 @@ BOSSES = {
     # written with the bosses rather than two chapters late (the shackler's lesson, one row up).
     "thunderer": dict(hold=0.50, tall=3.3, stem="thunder", fx="levin", fire=(255, 201, 60)),
     "colossus": dict(hold=0.40, tall=3.8, stem="colossus", fx="boulder", fire=(138, 112, 96)),
+    # `Pal.Rope` and `Pal.Ember` - sun-bleached limestone and heat off sand, the sixth chapter's
+    # pair. Both rows written with the bosses, for the shackler's reason two comments up.
+    "gorgon": dict(hold=0.52, tall=3.4, stem="gorgon", fx="gaze", fire=(217, 195, 154)),
+    "sunlord": dict(hold=0.44, tall=3.6, stem="sunlord", fx="decree", fire=(255, 107, 87)),
 }
 
 #: Which bosses are aimed at no ward, and therefore draw a pair of reels where they stand rather
@@ -1603,29 +1616,31 @@ def stood_charms(spec, level):
     block = level.get("siege") or {}
     wide, tall = block.get("width") or 0, block.get("height") or 0
 
+    # **The roster, read rather than spelled.** Three copies of it in this one function is three
+    # places a seventh charm has to be remembered, and the first two of them fail by refusing a
+    # name the game deals rather than by drawing the wrong thing - which is a mirror that cannot
+    # be pointed at the board it is a mirror of.
+    kinds = [kind for _, kind in siege.CHARM_ROSTER]
+
     if spec == "auto":
         row = (tall // 2) * wide
-        kinds = (siege.PRISM, siege.LANCE, siege.STORM, siege.FURNACE, siege.HOURGLASS)
         return {row + 1 + i * 2: kinds[i % len(kinds)] for i in range(min(3, (wide - 1) // 2))}
 
-    named = {k: v for v, k in ((siege.PRISM, "prism"), (siege.LANCE, "lance"),
-                               (siege.STORM, "storm"), (siege.FURNACE, "furnace"),
-                               (siege.HOURGLASS, "hourglass"))}
     out = {}
 
     for part in spec.split(","):
         cell, _, kind = part.partition("=")
-        if kind.strip() not in named:
-            raise SystemExit("--charms: '%s' is not one of prism, lance, storm, furnace, "
-                             "hourglass" % kind.strip())
-        out[int(cell)] = named[kind.strip()]
+        if kind.strip() not in kinds:
+            raise SystemExit("--charms: '%s' is not one of %s"
+                             % (kind.strip(), ", ".join(kinds)))
+        out[int(cell)] = kind.strip()
 
     return out
 
 
 def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, line=None,
          burn=None, storm=0, bombs=None, cogs=0, forecast=False, armed=(), charms=None,
-         lance=None, volley=None, stilled=None):
+         lance=None, volley=None, stilled=None, heaved=None):
     lay = layout_of(level)
     grid = lay.grid
     charms = charms or {}
@@ -1916,6 +1931,30 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
                               GLASS, DIAL_INK)
             sheet.alpha_composite(dialdisc, (int(dialx - dialsize / 2),
                                              int(dialy - dialsize / 2)))
+
+    # ------------------------------------------------------------------ the anvil throwing
+    # `SiegeView.Heaved` - the wall of driven dust rolling from the line to the crest. **The same
+    # argument the hourglass's own flag makes**: the charm's whole payoff is a quarter of a second
+    # of model time, and a still frame is exactly what that is for.
+    #
+    # **And the one thing to look at is whether it reads as the *other* front.** A still wave and
+    # this are the only two things in the mode that sweep the hill and they arrive one chapter
+    # apart, so draw them side by side before believing either (`--stilled` against `--heaved`).
+    if heaved is not None:
+        u = max(0.0, min(1.0, heaved))
+
+        # Named apart from everything this routine already holds, for `--stilled`'s reason: a
+        # local shadows for the whole function in Python.
+        heavefront = reel("heavefront", int(u * (HEAVE_FRAMES - 1)))
+        if heavefront is not None:
+            heavedeep = cell * HEAVE_FRONT * (0.74 + (1.26 - 0.74) * u)
+            heaveband = heavefront.resize((int(span[0]), max(1, int(heavedeep))), Image.LANCZOS)
+            heaveband = tinted(heaveband, ROPE, 1.0 - 0.70 * u * u * u)
+
+            heavefrom = line_y + cell * 0.5
+            heavex, heavey = at(0.0, heavefrom + (hill_top - heavefrom) * u)
+            sheet.alpha_composite(heaveband, (int(heavex - heaveband.width / 2),
+                                              int(heavey - heaveband.height / 2)))
 
     # **Both of the hill's captions, together, because apart they say nothing.** Each was
     # individually well placed and the pair overlapped on every shape; drawing only the chain is
@@ -2294,6 +2333,7 @@ CHAPTER_CASTS = {
     "s04_barrowfell": "bone",
     "s05_ashenhold": "rabble",
     "s06_thundercrag": "wild",
+    "s07_dustcrown": "court",
     "s02_endlesswatch": "medley",
 }
 
@@ -2589,9 +2629,9 @@ def main():
                     help="draw slots mid-cooldown, as id=seconds pairs; bare gives a sample")
     ap.add_argument("--no-bar", action="store_true",
                     help="draw the board without the utility bar under it")
-    ap.add_argument("--cast", default="", choices=("", "brood", "bone", "rabble", "medley"),
-                    help="which cast to draw: the insects (default) or the 3D bake, which is "
-                         "what the Infinite lane draws")
+    ap.add_argument("--cast", default="", choices=("", "brood", "bone", "rabble", "wild", "court", "medley"),
+                    help="which cast to draw: the insects (default), one of the five that "
+                         "came after them, or the medley the Infinite lane draws")
     ap.add_argument("--wave", type=int, default=1,
                     help="which Infinite wave to stand on the hill; ignored on the authored "
                          "ladder, whose hill is its last authored wave")
@@ -2639,6 +2679,10 @@ def main():
                          "field - every beam open at once, which is what the frozen board "
                          "really shows. The question it answers is density: whether a dozen "
                          "layered beams read as a barrage or as a white smear")
+    ap.add_argument("--heaved", type=float, default=None, metavar="T",
+                    help="draw an anvil's front mid-sweep, nought at the line and one at the "
+                         "crest - the charm's whole payoff is a moment, so a still frame is what "
+                         "it is for")
     ap.add_argument("--stilled", type=float, default=None, metavar="T",
                     help="draw the hourglass stopping the hill, T of the way through the sweep "
                          "(0..1) - the wavefront and the dial it hangs over the hill")
@@ -2733,7 +2777,8 @@ def main():
                     storm=args.storm, bombs=bombs, cogs=args.cogs, forecast=args.forecast,
                     armed=[int(x) for x in args.armed.split(",") if x.strip()],
                     charms=stood_charms(args.charms, lv), lance=stood_lance(args.lance, lv),
-                    volley=stood_lance(args.volley, lv), stilled=args.stilled)
+                    volley=stood_lance(args.volley, lv), stilled=args.stilled,
+                  heaved=args.heaved)
         if not args.no_bar:
             bar(shot, held, cooling)
         if not args.no_header:

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using GlimmerGrove.Content;
 using GlimmerGrove.Modes;
 using NUnit.Framework;
@@ -44,8 +44,18 @@ namespace GlimmerGrove.Tests
             return layout;
         }
 
-        static SiegeBoard Board(string[] rows, string charms = "plsfh")
-            => SiegeBoard.Build(Layout(rows, charms));
+        /// <summary>
+        /// A board dealing <b>the whole roster</b> unless a case says otherwise.
+        ///
+        /// <b>Derived rather than spelled</b>, and that is a correction: it read <c>"plsfh"</c>,
+        /// so the day a sixth charm was appended this fixture went on dealing five and
+        /// <see cref="ACharmFallsOnceAWindowAndNeverTwoWindowsApart"/> failed saying the roll was
+        /// not choosing evenly - which is true of the board it was handed and says nothing about
+        /// the board the game deals. A fixture that walks <c>SiegeCharms.Roster</c> at one end has
+        /// to read it at the other.
+        /// </summary>
+        static SiegeBoard Board(string[] rows, string charms = null)
+            => SiegeBoard.Build(Layout(rows, charms ?? SiegeCharms.Letters));
 
         /// <summary>
         /// A field with nothing lining up on it, five wide and three tall.
@@ -570,6 +580,141 @@ namespace GlimmerGrove.Tests
                                "two hourglasses stacked into a stop longer than one window");
         }
 
+        // ------------------------------------------------------------------ the anvil
+        [Test]
+        public void AnAnvilDrivesTheWholeHillBackUpTheSlope()
+        {
+            var board = Board(Crossed());
+            for (int i = 0; i < 60 * 8; i++) board.Advance(1f / 60f);
+            Assert.Greater(board.OnTheHill, 0, "nothing walked on, so this case proves nothing");
+
+            var was = new Dictionary<int, float>();
+            foreach (var raider in board.Raiders)
+                if (raider.Alive && raider.OnTheHill) was[raider.Id] = raider.March;
+
+            Assert.Greater(was.Count, 0);
+
+            board.Stand(7, SiegeCharm.Anvil);
+            Assert.IsNotNull(board.Swap(2, 7));
+            Assert.IsFalse(board.Heaving,
+                           "the hill was thrown on the frame of the swap, before the gem burst");
+
+            float heaved = 0f;
+            for (int i = 0; i < 60 && heaved <= 0f; i++) heaved = board.Advance(1f / 60f).Heaved;
+
+            Assert.AreEqual(SiegeTuning.AnvilHeave, heaved, 1e-4f,
+                            "an anvil was matched and never landed");
+
+            // **The shove is worked off over a beat rather than applied in one frame**, which is
+            // the whole reason it is a debt: the view draws a raider wherever the model says it
+            // is, once a frame, so an instant shove is a hill that teleports.
+            Assert.IsTrue(board.Heaving, "the shove landed and nothing was being thrown");
+
+            for (int i = 0; i < 60 && board.Heaving; i++) board.Advance(1f / 60f);
+            Assert.IsFalse(board.Heaving, "the shove never finished");
+
+            int moved = 0;
+
+            foreach (var raider in board.Raiders)
+            {
+                if (!raider.Alive || !was.TryGetValue(raider.Id, out float before)) continue;
+
+                Assert.LessOrEqual(raider.March, before + 1e-4f,
+                                   $"raider {raider.Id} was further down the hill after an anvil");
+
+                if (before - raider.March > 1e-3f) moved++;
+
+                Assert.GreaterOrEqual(raider.March, -1e-4f,
+                                      "a raider was thrown past the crest");
+            }
+
+            Assert.Greater(moved, 0, "an anvil landed on a full hill and moved nothing");
+        }
+
+        /// <summary>
+        /// **An anvil pays in ground and never in damage, and that is what keeps it off par.**
+        /// A stormglass pays in damage and `SiegeTuning.Par` counts it; a shove is worth seconds
+        /// of the *line's* own fire, which par already credits (invariant 37ed).
+        ///
+        /// <b>Asked of the charm's own channel rather than of raider health</b>, and the first
+        /// cut asked the wrong one: the line is firing throughout, so every raider on a live hill
+        /// loses health over any sixty frames whatever the charm did. <c>SiegeReport.Charmed</c>
+        /// is what a charm puts on the hill, so an empty one is the claim - and
+        /// <c>Shoved</c> beside it is the claim that the beat was not simply a dud.
+        /// </summary>
+        [Test]
+        public void AnAnvilPaysInGroundAndNeverInDamage()
+        {
+            var board = Board(Crossed());
+            for (int i = 0; i < 60 * 8; i++) board.Advance(1f / 60f);
+            Assert.Greater(board.OnTheHill, 0, "nothing walked on, so this case proves nothing");
+
+            board.Stand(7, SiegeCharm.Anvil);
+            Assert.IsNotNull(board.Swap(2, 7));
+
+            var charmed = new List<SiegeBolt>();
+            int shoved = 0;
+
+            for (int i = 0; i < 60; i++)
+            {
+                var report = board.Advance(1f / 60f);
+                charmed.AddRange(report.Charmed);
+                if (report.Shoved > shoved) shoved = report.Shoved;
+            }
+
+            Assert.IsEmpty(charmed, "an anvil threw bolts, so it is a stormglass with a shove");
+            Assert.Greater(shoved, 0, "an anvil landed on a full hill and reported nothing moved");
+        }
+
+        [Test]
+        public void AShovedRaiderStopsSwinging()
+        {
+            var board = Board(Crossed());
+
+            // Walk one body all the way to the line, which is where a shove is worth most.
+            for (int i = 0; i < 60 * 60; i++)
+            {
+                board.Advance(1f / 60f);
+
+                bool arrived = false;
+                foreach (var raider in board.Raiders)
+                    if (raider.AtTheLine) arrived = true;
+
+                if (arrived) break;
+            }
+
+            SiegeRaider standing = null;
+            foreach (var raider in board.Raiders) if (raider.AtTheLine) standing = raider;
+
+            Assert.IsNotNull(standing, "nothing reached the line, so this case proves nothing");
+            Assert.IsTrue(standing.Shove(SiegeTuning.AnvilHeave));
+
+            board.Advance(1f / 60f);
+
+            Assert.IsFalse(standing.AtTheLine,
+                           "a raider shoved off the line is still at it, so the shove buys the "
+                           + "line no seconds at all - which is the whole of what it is for");
+        }
+
+        [Test]
+        public void AnAnvilIsWorthMoreSecondsAgainstArmourThanAgainstASwarm()
+        {
+            // **It scales with the board and not with a table** (37ed). The shove is a share of
+            // the hill and `MarchOf` is how long a kind takes to walk it, so the same ground
+            // costs a bulwark more than twice what it costs a creeper - the charm is worth most
+            // against exactly the thing a surged chapter is made of, and nothing says so but this.
+            float creeper = SiegeTuning.AnvilHeave * SiegeTuning.CreeperMarch;
+            float bulwark = SiegeTuning.AnvilHeave * SiegeTuning.BulwarkMarch;
+
+            Assert.Greater(bulwark, creeper * 2f,
+                           "a shove buys the line less than twice as long against a bulwark as "
+                           + "against a creeper, so the charm no longer answers armour");
+
+            Assert.Greater(creeper, SiegeTuning.FireEvery * 4f,
+                           "a shove buys the line under four bolts against the lightest body on "
+                           + "the hill, which is a payoff nobody would hold a gem for");
+        }
+
         [Test]
         public void AFallenWardThrowsNothingIntoAVolley()
         {
@@ -668,7 +813,11 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ACharmFallsOnceAWindowAndNeverTwoWindowsApart()
         {
-            const int Gems = 20000;
+            // **Sixty thousand rather than twenty, and that is the roster growing.** The
+            // per-charm band below is a share of the sample, so a six-way split of 362 charms
+            // has a standard deviation of seven against an even share of sixty - a third either
+            // side is three sigma, which is a gate that flakes. At this sample it is four.
+            const int Gems = 60000;
 
             var board = Board(Quiet());
             var counted = new Dictionary<SiegeCharm, int>();
@@ -705,14 +854,31 @@ namespace GlimmerGrove.Tests
             Assert.Greater(found, want * 3 / 4, $"{found} charms in {Gems} gems against {want}");
             Assert.Less(found, want * 5 / 4, $"{found} charms in {Gems} gems against {want}");
 
+            // **An even share of the roster, with a band round it, and both halves matter.**
+            // It read `want / 6` - five sixths of an even share *of five charms*, written as a
+            // constant - so appending a sixth made the floor 98% of the new even share and the
+            // fixture failed on a sampling wobble rather than on a bias. The share is derived
+            // now, and the band is a third either side: at this sample that is four standard
+            // deviations of a six-way split, so it cannot flake and still refuses a charm that
+            // is dealt half as often as its neighbours.
+            //
+            // **And a ceiling, which was never here.** A floor alone passes a roll that deals
+            // one charm twice as often as the rest, which is the same fault the other way up.
+            int even = want / SiegeCharms.Roster.Length;
+
             for (int i = 0; i < SiegeCharms.Roster.Length; i++)
             {
                 var charm = SiegeCharms.Roster[i].Charm;
                 counted.TryGetValue(charm, out int seen);
 
-                Assert.Greater(seen, want / 6,
-                               $"{charm} came up {seen} times in {found} charms, so the roll is "
-                               + "not choosing evenly between them");
+                Assert.Greater(seen, even * 2 / 3,
+                               $"{charm} came up {seen} times in {found} charms against an even "
+                               + $"share of {even}, so the roll is not choosing evenly between "
+                               + "them");
+
+                Assert.Less(seen, even * 3 / 2,
+                            $"{charm} came up {seen} times in {found} charms against an even "
+                            + $"share of {even}, so the roll is not choosing evenly between them");
             }
         }
 
@@ -901,6 +1067,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual("pls", SiegeCharms.Upto(3));
             Assert.AreEqual("plsf", SiegeCharms.Upto(4));
             Assert.AreEqual("plsfh", SiegeCharms.Upto(5));
+            Assert.AreEqual("plsfha", SiegeCharms.Upto(6));
 
             // **It runs out, and a fifth chapter has to know that before it is commissioned** —
             // invariant 37br's argument about boss verbs, which is the same argument.

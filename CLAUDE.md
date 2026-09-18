@@ -785,6 +785,10 @@ guess — verify offline.
 - **Map seats:** `python Tools/make_map_seats.py --check` proves the seats are still what the paintings say;
   `--contact` draws every map with its chain on it, which is the gate that matters. `content.py` proves the
   seats clear each other. Re-run `--write` and then every chapter generator after any map painting change.
+- **The anvil throwing the hill back:** `python Tools/render_siege.py --heaved 0.45` draws the
+  sixth charm's front mid-sweep (37ed). **Draw it against `--stilled` before believing either** —
+  they are the only two things in this mode that cross the hill, they arrive one chapter apart,
+  and the first cut of this one came out as frost.
 - **The hourglass stopping the hill:** `python Tools/render_siege.py --stilled 0.6` draws the
   wavefront mid-sweep and the dial it hangs over the hill (37dy, 37dz). **Note the gate gap it
   found:** `fxreels.py` ink-checks `Art/Fx` only, so every reel under `Art/Siege` - `beam`,
@@ -1012,18 +1016,22 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **Retention** — tasks and the chest ladder (45), the recurring bloom season (47), the streak (48), golden
   levels, percentile standings, per-level records.
 - **One live mode, three hidden.** **Thornwatch**: `s01_thornwatch`, `s03_broodmarch`, `s04_barrowfell`,
-  `s05_ashenhold`, `s06_thundercrag` (ten rungs each) on the ordinary ladder, and `s02_endlesswatch` on an
-  **Infinite** track beside it. The map draws no *mode* switcher and does draw the **track** switcher; the
-  ordinary ladder draws a map and the Infinite lane draws a **hub**, opening at **keeper level 10**. Five
-  casts and ten boss verbs, one cast per chapter by ordinal: insects, the blob brood, skeletons, the
-  **rabble** — the only cast **baked from vector** — and the **wild**, cut from the top-down unit packs.
-  The Infinite lane draws a **medley** of the five chapter casts, so it costs no art of its own.
-- **Charms** — five powers dealt onto ordinary gems, one introduced per chapter: a **prism** (joins a run
+  `s05_ashenhold`, `s06_thundercrag`, `s07_dustcrown` (ten rungs each) on the ordinary ladder, and
+  `s02_endlesswatch` on an **Infinite** track beside it. The map draws no *mode* switcher and does draw the
+  **track** switcher; the ordinary ladder draws a map and the Infinite lane draws a **hub**, opening at
+  **keeper level 10**. Six casts and twelve boss verbs, one cast per chapter by ordinal: insects, the blob
+  brood, skeletons, the **rabble** — the only cast **baked from vector** — the **wild**, and the **court**,
+  both cut from the top-down unit packs. The Infinite lane draws a **medley** of the six chapter casts, so
+  it costs no art of its own.
+- **Charms** — six powers dealt onto ordinary gems, one introduced per chapter: a **prism** (joins a run
   of any colour), a **lance** (its row and column), a **stormglass** (the whole line fires at everything on
   the hill), a **furnace** (banks a charge on the turret of its colour), an **hourglass** (the hill stands
-  still for three seconds). One every **112** dealt gems on a window, the first of a run inside **56**.
-  Each is a gem of its own with its own reel; a lance runs the hill in slow motion, a stormglass stops it
-  dead, and an hourglass stops it in the *model* (37do).
+  still for three seconds) and an **anvil** (the whole hill is driven back a fifth of the slope, and
+  nothing is hurt — the mode's first *defensive* payoff, 37ed). One every **112** dealt gems on a window,
+  the first of a run inside **56**. Each is a gem of its own with its own reel; a lance runs the hill in
+  slow motion, a stormglass stops it dead, an hourglass stops it in the *model* (37do), and an anvil moves
+  it in the model too — the shove is a debt each body works off, so the drawing follows the rules for
+  free (37ee).
 - **Utilities** — an account-wide action bar (39), dropped by chests and bought with gems, charged against
   the graded count so one can never buy a star.
 - **The turret loadout** — **thirty** turrets on a four-band shelf, upgraded to five stars, previewed
@@ -1070,13 +1078,16 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 | `s04_barrowfell` | siege | 10 | 49–81 matches | the first chapter authored for a *bought* line and the one that deals all three charms: a skeleton cast, armour from rung 2, a gravemaw on 5 and a bonecaller on 10; **the first chapter whose raiders carry a surge** |
 | `s05_ashenhold` | siege | 10 | 49–81 matches | the fourth chapter and the first that cost the mode **code**: the **rabble** cast, armour from rung 1, a **shackler** on 5 and an **ironclad** on 10; **two tenths of surge**; deals the **furnace** |
 | `s06_thundercrag` | siege | 10 | 65–110 matches | the fifth chapter: the **wild** cast of stone golems, a yeti, a minotaur and a mud clod; a **thunderer** on 5 (drains banked charges) and a **colossus** on 10 (buries a turret for four seconds, sooner if the player digs); **three tenths of surge**; deals all five charms, the **hourglass** new |
+| `s07_dustcrown` | siege | 10 | 61–101 matches | the sixth chapter: the **court** cast of three robed wizards, a hooded archer, a falcon-headed war-god and a bone knight; **four tenths of surge**, which is **+40% raider health against the first chapter**; a **gorgon** on 5 (her glare wastes what is poured into a ward) and a **sunlord** on 10 (he seals a ward — fill it or lose it, and never the last one standing); deals all six charms, the **anvil** new |
 | `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 20 | waves that never stop, graded on how far it got, drawing a **medley** of every cast; **both star waves are guesses until somebody plays it**; opens at keeper level 10; **a heart to enter and none to lose** (43e) |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock.**
 Par is derived; star lines are multiples of it. **Par is never monotonic within a chapter** — par is length,
 not difficulty. Every siege authors `budgetFactor: -1`. Chapter art is generated and **shared by ordinal**
-(7c): five maps and forty skies serve every chapter of every mode — `map5` is the lava crag, cut
-for ordinal 5 and the one source here that is **tiled** (two boards joined end to end).
+(7c): six maps and forty skies serve every chapter of every mode — `map5` is the lava crag and `map6` the
+wasteland mesas, cut for ordinals 5 and 6, and the two sources here that are **tiled** (two boards joined
+end to end). The skies wrap at forty where the maps no longer do, so a sixth chapter draws the second
+block again.
 
 ### The numbers
 
@@ -1192,6 +1203,16 @@ a wave as a *feeling*; the pace was reasoned against a table and approved on fig
 **Money paths that have never executed.** A real receipt reaching `redeemPurchase` and a real impression
 reaching `adReward`. Both are fully built and deployed and **neither has ever run once**, which reads as
 done. Ads *load* on device; no view has ever paid. Do both the day closed testing opens.
+
+**Dustcrown shipped on 2026-09-17 and nothing of it has been in the Editor.** The sixth chapter
+(`s07_dustcrown`, ordinal 6, manifest order 151) brings a cast, two bosses, a charm and a map, and
+every pixel of it was written with the Editor closed - so **every one is unaddressed until
+`▸ Addressables ▸ Sync All Assets` and save**, which is a white rectangle on twenty-four raider
+reels, two boss bodies, six spell reels, four gem faces, a front and four map strips (invariant
+7b). Then the standing discipline in full (`Audit Addresses` → `Validate Content` → `Validate Art`
+→ EditMode). **And a re-seed**: a new chapter's ten level ids reach the server's reward map only
+through `seed-config.mjs`, so until it runs every glade in it earns nothing server-side. Nothing
+else about the drop touches the server - no `firestore.rules`, no function deploy.
 
 **Thundercrag's two spell reels are an Editor bake, and they are not on disk.** `Glimmer Grove ▸ Art ▸
 Bake Thundercrag Spells` writes `levin*` and `boulder*` under `Art/Fx/Siege` (six names `artnames.py` is

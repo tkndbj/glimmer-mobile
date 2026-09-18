@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using GlimmerGrove.Wards;
 
@@ -281,6 +281,26 @@ namespace GlimmerGrove.Modes
         public float StillLeft => _still;
 
         /// <summary>
+        /// Whether anything on the hill is still being driven back by an anvil
+        /// (<see cref="SiegeCharm.Anvil"/>).
+        ///
+        /// <b>Derived off the bodies rather than kept as a second timer</b>, which is the roar's
+        /// and the hourglass's rule read once more: the shove is a debt each raider carries and
+        /// works off (<see cref="SiegeRaider.Heave"/>), so there is nothing here that can be left
+        /// standing after the last body has finished being thrown.
+        /// </summary>
+        public bool Heaving
+        {
+            get
+            {
+                for (int i = 0; i < _raiders.Count; i++)
+                    if (_raiders[i].Shoved) return true;
+
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Seconds of the run's own clock left before the first wave steps out, and nought the
         /// instant it has.
         ///
@@ -430,6 +450,27 @@ namespace GlimmerGrove.Modes
                 int n = 0;
                 for (int i = 0; i < _raiders.Count; i++)
                     if (_raiders[i].Alive) n++;
+
+                return n;
+            }
+        }
+
+        /// <summary>
+        /// How many wards are still standing, which is the other half of the run's own ending.
+        ///
+        /// <b>Its own reading beside <see cref="Standing"/> rather than a second use of it</b>,
+        /// because the two count opposite sides and a caller that reached for the wrong one would
+        /// be asking a question that is true most of the time. The sunlord's seal is what wanted
+        /// it (<see cref="SiegeSpell.Doom"/>): a verb that may never take the last ward has to be
+        /// able to count them.
+        /// </summary>
+        int OnTheLine
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 0; i < _wards.Length; i++)
+                    if (_wards[i].Alive) n++;
 
                 return n;
             }

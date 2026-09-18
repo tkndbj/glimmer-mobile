@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace GlimmerGrove.Modes
 {
@@ -17,12 +17,12 @@ namespace GlimmerGrove.Modes
     /// rule at all, and it touches it in one predicate.
     /// </para>
     /// <para>
-    /// <b>Five, and each one takes a different thing</b> — invariant 37z's test about bosses,
+    /// <b>Six, and each one takes a different thing</b> — invariant 37z's test about bosses,
     /// asked of a payoff. A prism decides a <em>colour</em>, a lance decides a piece of the
     /// <em>board</em>, a stormglass decides a moment on the <em>hill</em>, a furnace hands the
-    /// <em>line</em> a charge, and an hourglass takes the hill's <em>time</em>. Five readings of
-    /// "clears a lot of gems" would be one charm in five tints, which is the failure that rule
-    /// was written for.
+    /// <em>line</em> a charge, an hourglass takes the hill's <em>time</em> and an anvil takes its
+    /// <em>ground</em>. Six readings of "clears a lot of gems" would be one charm in six tints,
+    /// which is the failure that rule was written for.
     /// </para>
     /// <para>
     /// <b>Each of them is a decision the player can get wrong</b> (invariant 26h), and that is
@@ -162,6 +162,64 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// </summary>
         Hourglass = 5,
+
+        /// <summary>
+        /// The anvil: when it goes, the line drives the whole hill back up the slope by
+        /// <c>SiegeTuning.AnvilHeave</c> of its length. Nothing is hurt and nothing is held -
+        /// the ground under everything walking is simply taken away from it.
+        ///
+        /// <para>
+        /// <b>The sixth thing there was left to take is <em>distance</em>, and it is the only
+        /// one of the six that answers the mode's own fail state.</b> A prism decides a colour,
+        /// a lance a piece of the board, a stormglass a moment on the hill, a furnace a charge
+        /// on the line and an hourglass the hill's time - every one of them a way of killing
+        /// faster. A siege is lost when the last ward falls (invariant 37b), and until this
+        /// charm nothing in the player's hands addressed that directly: the only answer to
+        /// something already at the line was to kill it before it swung again. An anvil is that
+        /// answer, and it is the reason the charm the sixth chapter deals is the first
+        /// <em>defensive</em> payoff this mode has.
+        /// </para>
+        /// <para>
+        /// <b>It is not the hourglass said twice, and the difference is which board you read.</b>
+        /// An hourglass buys the line three seconds at the range things already stand, so it is
+        /// worth most when the hill is <em>full</em>; an anvil undoes progress, so it is worth
+        /// most when something is <em>close</em>. The two questions a player asks off the hill
+        /// are "is there a crowd" and "is anything about to reach me", and the two charms answer
+        /// one each. A stop is time and a shove is ground: <c>SiegeCharms.StopsTheHill</c> and
+        /// <c>SiegeCharms.ShovesTheHill</c> are two predicates for that reason and never one.
+        /// </para>
+        /// <para>
+        /// <b>What it is worth scales with the line without a number</b> (invariant 37cg), and it
+        /// scales twice over. The seconds it buys are seconds of the standing turrets' fire, so a
+        /// bought line gets more out of the same shove than the starter does; and the shove is a
+        /// share of the <em>hill</em>, so a slow body is pushed back further in time than a quick
+        /// one - a bulwark walks the hill in <c>SiegeTuning.BulwarkMarch</c> seconds against a
+        /// creeper's <c>CreeperMarch</c>, so the same ground costs the armour more than twice as
+        /// long. The charm is worth most against exactly the thing a surged chapter is made of.
+        /// </para>
+        /// <para>
+        /// <b>Its decision is <em>when</em>, and it can be wrong two ways</b> (invariant 26h). An
+        /// anvil sprung over an empty hill throws nothing, which is the stormglass's own test
+        /// (invariant 40i, the decision is <em>when</em>) arriving on the field; and <b>a boss
+        /// does not move</b>, so one spent on a boss wave is spent on a wave the mode never
+        /// stacks anything else onto (invariant 37dn) and buys nothing at all. A boss holding
+        /// its ground is a fact about the fight rather than about this charm - a phase, a guard
+        /// and a floor are all measured from where it stands (invariant 37di) - and the refusal
+        /// is drawn, because a payoff that silently did nothing would be a broken gem rather
+        /// than a wrong choice.
+        /// </para>
+        /// <para>
+        /// <b>The shove is paid out over a moment rather than applied to the model in one
+        /// frame</b>, and that is a rule rather than a flourish: the view draws a raider where
+        /// the model says it is, once a frame, so a knock-back written straight into
+        /// <c>March</c> would teleport a hill of bodies and read as a glitch. The model carries
+        /// the debt (<c>SiegeRaider.Heave</c>) and works it off in <c>Walk</c> at
+        /// <c>SiegeTuning.AnvilPace</c>, so the drawing and the rules agree to the frame and the
+        /// hold simulation sees exactly what a player does (invariant 37cq's discipline: the
+        /// model is handed the seconds).
+        /// </para>
+        /// </summary>
+        Anvil = 6,
     }
 
     /// <summary>
@@ -197,6 +255,7 @@ namespace GlimmerGrove.Modes
             ('s', SiegeCharm.Storm),
             ('f', SiegeCharm.Furnace),
             ('h', SiegeCharm.Hourglass),
+            ('a', SiegeCharm.Anvil),
         };
 
         /// <summary>Every letter a <c>charms</c> field may be written with.</summary>
@@ -240,11 +299,12 @@ namespace GlimmerGrove.Modes
         /// the answer.
         /// </para>
         /// <para>
-        /// <b>It runs out, and that is worth knowing before a sixth chapter is commissioned</b>
-        /// (invariant 37br's argument about boss verbs). Five charms means five chapters before
-        /// the cadence needs a sixth charm, which is code rather than content - the fourth and
-        /// fifth (<see cref="SiegeCharm.Furnace"/>, <see cref="SiegeCharm.Hourglass"/>) were the
-        /// bill for the fourth and fifth chapters, paid on 2026-09-16.
+        /// <b>It runs out, and that is worth knowing before a seventh chapter is
+        /// commissioned</b> (invariant 37br's argument about boss verbs). Six charms means six
+        /// chapters before the cadence needs a seventh, which is code rather than content - the
+        /// fourth and fifth (<see cref="SiegeCharm.Furnace"/>, <see cref="SiegeCharm.Hourglass"/>)
+        /// were the bill for the fourth and fifth chapters, paid on 2026-09-16, and the sixth
+        /// (<see cref="SiegeCharm.Anvil"/>) was the bill for the sixth, paid on 2026-09-17.
         /// </para>
         /// </summary>
         public static string Upto(int ordinal)
@@ -295,5 +355,17 @@ namespace GlimmerGrove.Modes
         /// <c>SiegeBoard.Stilled</c> for what a stopped hill is.
         /// </summary>
         public static bool StopsTheHill(SiegeCharm charm) => charm == SiegeCharm.Hourglass;
+
+        /// <summary>
+        /// Whether this charm drives the hill back up the slope when it lands. The anvil, and
+        /// only the anvil - see <c>SiegeBoard.Heave</c> for what a shoved hill is.
+        ///
+        /// <b>Its own predicate beside <see cref="StopsTheHill"/> rather than folded into it</b>,
+        /// for the reason a douse and a shackle are two fields (invariant 37cw): a stop takes the
+        /// hill's <em>seconds</em> and a shove takes its <em>ground</em>, they are answered by
+        /// the player at opposite moments, and a reader that asked one question about "the charms
+        /// that slow the hill down" would be asking about a category nobody designed.
+        /// </summary>
+        public static bool ShovesTheHill(SiegeCharm charm) => charm == SiegeCharm.Anvil;
     }
 }

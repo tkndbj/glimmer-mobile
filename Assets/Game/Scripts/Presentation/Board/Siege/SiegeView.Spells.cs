@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
@@ -491,6 +491,18 @@ namespace GlimmerGrove
 
             if (spell.Ward < 0) return;
 
+            // **A seal running out is not a spell being cast, and it is the one record in this
+            // list with no caster.** `SiegeBoard.Shoot` reports it with a raider of -1 because
+            // the thing that took the ward is the clock rather than the boss - which may well
+            // have been dead for ten seconds by then. It gets its own drawing and returns: the
+            // path below would otherwise draw a second seal *falling onto* a post that has just
+            // been taken by the first one.
+            if (spell.Craft == SiegeSpell.Doom && spell.Raider < 0)
+            {
+                Sentenced(spell.Ward, fire);
+                return;
+            }
+
             var at = new Vector2(PostX(spell.Ward), _lineY + Cell * .3f);
             bool greater = kind == SiegeKind.Overlord;
 
@@ -975,6 +987,8 @@ namespace GlimmerGrove
                 case SiegeKind.Ironclad: return "mode.siege.ironclad";
                 case SiegeKind.Thunderer: return "mode.siege.thunderer";
                 case SiegeKind.Colossus: return "mode.siege.colossus";
+                case SiegeKind.Gorgon: return "mode.siege.gorgon";
+                case SiegeKind.Sunlord: return "mode.siege.sunlord";
 
                 // **The warlord, and it is the only kind that may fall through here.** Invariant
                 // 44e's rule: a `default` that is a real answer hides the case nobody is looking

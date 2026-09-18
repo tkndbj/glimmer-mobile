@@ -202,6 +202,17 @@ GROUND = {
     3: [(171, 161, 99), (163, 151, 93)],
     4: [(124, 89, 100), (234, 163, 87)],
     5: [(67, 77, 89), (63, 72, 84)],
+
+    # `map6` is the wasteland, and what is listed is its **two sand planes** rather than its
+    # road, for `map5`'s reason: the road here is a scatter of orange stepping slabs
+    # (224, 139, 65) laid *on* the sand, and a scatter is speckle - `DESPECKLE` would throw most
+    # of it away and what survived would seat a node on a single stone. The sand is what the
+    # stones are laid on, so a node stands on the mesa the trail crosses. The two planes are the
+    # lit top (253, 221, 138) and the tier below it (246, 203, 109); they are 29 apart in blue,
+    # so at this map's tolerance they are two colours and both are wanted. The cliff *faces* -
+    # (212, 153, 66) and the browns around it - are 41 or more from either and stay out, which
+    # is what stops a node hanging on the side of a mesa.
+    6: [(253, 221, 138), (246, 203, 109)],
 }
 
 # `map5` is the one painting here whose **road cannot be used**, and that is a fact about the
@@ -230,6 +241,7 @@ STREAM = {
     3: [],
     4: [],
     5: [],
+    6: [],
 }
 
 #: What each painting draws **instead of land**: sea, sky, lake, chasm, void.
@@ -256,6 +268,12 @@ VOID = {
     3: [(0, 174, 239), (122, 213, 246), (234, 253, 249)],
     4: [(251, 176, 64), (247, 148, 29), (255, 242, 0), (234, 253, 249)],
     5: [(255, 223, 87), (240, 150, 30), (202, 108, 9)],
+
+    # `map6`'s void is sky, and it is the widest gradient of any map here: the upper board opens
+    # at a near-black navy and the lower one ends in a pale cyan, so four stops are needed to
+    # close it at `VOID_TOLERANCE`. None of them is within reach of sand or stone, which is the
+    # one thing this list has to be true of (`map4`'s lava is the counter-example).
+    6: [(12, 24, 42), (58, 130, 166), (87, 195, 241), (122, 212, 244)],
 }
 
 # `map4`'s own shadow deliberately does not appear above, and that is the correction worth

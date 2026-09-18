@@ -694,6 +694,66 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    rule applied to the one thing on this board that genuinely is a wall. It also stopped fading on
    a square curve, which had it a ghost by halfway through the very sweep a player is watching.
 
+37ec. **A sixth chapter costs what a fifth did, and the bill came due in the same two places:
+   two boss verbs (37br) and one charm (`SiegeCharms.Upto`).** Paid on 2026-09-17. **The two
+   verbs left were the ones nothing had taken from the *player* rather than from the line**: a
+   **gorgon**'s glare turns a ward stone-struck - it fires on its own cadence, burns the fuel each
+   shot costs and lands nothing - so it takes the ward's *work*, and the only answer is to stop
+   feeding that colour. That is the third way of taking a turret out of a fight and the three must
+   not be folded (37cw's rule, asked again): a douse takes what is in the tube and is answered by
+   pouring more in, a shackle takes the seconds and *banks* the fuel, a glare takes whatever is
+   poured in next. A **sunlord** seals a ward and gives the player twelve seconds to fill its tube
+   or lose it - it takes the player's *agenda*, and **it is the first boss verb in this mode that
+   can be answered**. That is what separates it from a gravemaw's devour, which takes a ward full
+   stop: one is a loss and the other is a decision. **It may never seal the last ward standing**,
+   refused both where the target is chosen and again where it lands, so a verb cannot end a run on
+   its own. **Neither reaches par**, which is what made both affordable.
+37ed. **And the charm left was *distance*, which is the one axis six charms in nothing had
+   touched.** An **anvil** drives everything walking back up the slope by a fifth of the hill
+   (`SiegeTuning.AnvilHeave`) and hurts nothing at all. **It is the first defensive payoff this
+   mode has had**: a siege is lost when the last ward falls (37b), and until it the only answer to
+   something already at the line was to kill it faster. **It is not the hourglass said twice**, and
+   the difference is which board the player reads: an hourglass buys three seconds *at the range
+   things already stand*, so it is worth most on a full hill; an anvil undoes progress, so it is
+   worth most when something is *close*. A stop is time and a shove is ground, so
+   `StopsTheHill` and `ShovesTheHill` are two predicates. **It scales with the line twice over
+   and with no number** (37cg): the seconds it buys are the standing turrets' fire, and the shove
+   is a share of the *hill*, so a bulwark at `BulwarkMarch` is pushed back more than twice as long
+   as a creeper at `CreeperMarch` - the charm is worth most against exactly the thing a surged
+   chapter is made of. **A boss does not move** (37di: a fight is measured from where it stands),
+   so an anvil on a boss wave - which is always a wave of its own (37dn) - buys nothing, and the
+   refusal is drawn.
+37ee. **A knock-back is a debt the model works off, never a position the view is handed.** The
+   view draws a raider wherever the model says it is, once a frame, so a shove written straight
+   into `March` teleports a hill of bodies and reads as a glitch. `SiegeRaider.Heave` carries the
+   ground still owed and `Walk` pays it off at `AnvilPace` - so the drawing follows for free, the
+   hold simulation walks through it exactly as a player does, and a body shoved off the line stops
+   swinging with no second rule saying so (`AtTheLine` reads the march). The lean is the view's
+   and is read off the model every frame, for the douse's and the rubble's reason.
+37ef. **A surge is a cliff and composition on top of one is a wall, and this is the measurement
+   that says so.** The sixth chapter was authored at four tenths of surge *and* four to six more
+   bodies a wave than the fifth, on the reasoning that both levers had always moved together. It
+   held **14 of 90** runs on the starter against Thundercrag's 45, with five rungs held at no
+   rhythm at all. Cut back to the fifth chapter's own composition at the new surge it reads where
+   a sixth chapter should. **At four tenths, the surge is the whole lever**: 37bz measured a tenth
+   as a cliff, and what that means for an author is that a chapter past the fourth gets its
+   difficulty from `ToughnessFor` and its *identity* from its cast, its bosses and its charm.
+37eg. **A boss spell may be drawn rather than baked, and the fifth chapter's reels are the
+   argument.** Every spell reel before the sixth chapter's came out of `SiegeShotBake` and a
+   licensed particle pack, and Thundercrag's two are still owed months later because a batch-mode
+   bake of that pack renders every frame shader-pink - only a running Editor can cut them. A drop
+   whose art cannot be produced without somebody sitting in front of the Editor is a drop that
+   ships with red names in it. The gorgon's and the sunlord's six reels are numpy and Pillow
+   (`make_siege_art.gaze`, `.decree`), which is the move 42j already made for the legendary band
+   and buys the same thing: a spell can be a **behaviour** rather than a photographed shape.
+37eh. **A cast row may name its own attack, and a row that cannot find one is silent.**
+   `walk_and_swing` answers an *empty* swing for an animation folder that is not there and the
+   build writes nothing - so the skeleton archer, whose pack calls its attack `Front - Shooting`
+   rather than `Front - Attacking` because it has a bow, came out of the first cut of the sixth
+   cast with no swing reel at all. It imported, addressed, audited and drew; what it did was reach
+   the line and keep walking. `COURT_SET` carries the animation per row and the build **refuses**
+   a body with no swing rather than warning.
+
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` on rung five or ten, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds
 it to the body); run `python Tools/verify/tests.py SiegeRuleTests` — the fight gate, the chapter sweep

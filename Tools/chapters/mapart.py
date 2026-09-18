@@ -52,7 +52,14 @@ job, `ChapterIndexEntry`), and this file writes bodies.
 #: needs 529 units between two less than 384 apart across the map). Six fits a chain straight up
 #: the road and was cut and rejected by the owner: at 40% the crop throws away the volcano, the
 #: side falls and the outer lava lakes, and what is left does not read as the same place.
-STRIPS = {1: 6, 2: 4, 3: 5, 4: 6, 5: 4}
+#:
+#: `map6` is the second `|`-joined source and is cut at **four** for `map5`'s reasons rather than
+#: by coincidence: it arrives as two 1536x2048 boards, so the stack is 1536x4096 and a strip count
+#: is a zoom (three keeps 80% of the width, four 60%, six 40%). Its chain of mesas runs up the
+#: middle with the floating outliers at the edges, so 60% keeps every stepping-stone road and
+#: throws away only the small islands nothing stands on - and three could not seat ten nodes on
+#: `map5` and cannot here either.
+STRIPS = {1: 6, 2: 4, 3: 5, 4: 6, 5: 4, 6: 4}
 
 #: Skies per chapter. Every chapter shipped so far has exactly ten levels; a chapter with
 #: more wraps round inside its own block rather than borrowing the next ordinal's, so two
@@ -153,6 +160,18 @@ SEATS = {
         (0.567, 0.736, False),
         (0.590, 0.792, False),
     ),
+    6: (
+        (0.700, 0.025, False),
+        (0.280, 0.112, False),
+        (0.785, 0.234, False),
+        (0.300, 0.315, False),
+        (0.718, 0.426, False),
+        (0.195, 0.514, False),
+        (0.700, 0.566, False),
+        (0.333, 0.650, False),
+        (0.778, 0.725, False),
+        (0.280, 0.802, False),
+    ),
 }
 
 #: Where the end-of-chapter marker stands on each map, found the same way.
@@ -162,6 +181,7 @@ MARKERS = {
     3: (0.826, 0.883, False),
     4: (0.712, 0.903, False),
     5: (0.660, 0.854, False),
+    6: (0.660, 0.854, False),
 }
 
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace GlimmerGrove.Modes
@@ -837,6 +837,56 @@ namespace GlimmerGrove.Modes
         public const float HourglassFor = 3f;
 
         /// <summary>
+        /// <see cref="SiegeCharm.Anvil"/> - how far back up the slope the sixth charm drives
+        /// everything walking, as a share of the whole hill, and how fast that ground is given
+        /// back.
+        ///
+        /// <para>
+        /// <b>A share of the hill rather than a number of seconds, and that is what makes it
+        /// scale without a second figure.</b> <see cref="MarchOf"/> is how many seconds a kind
+        /// takes to walk the whole hill, so the same ground costs a bulwark
+        /// <c>BulwarkMarch / CreeperMarch</c> times as long as it costs a creeper - the charm is
+        /// worth most against exactly the armour a surged chapter is made of, and it says so with
+        /// no table. Expressed the other way round it would have been a per-kind row that nobody
+        /// could keep in step with the march.
+        /// </para>
+        /// <para>
+        /// <b>A fifth of the hill, and it is measured against the two things it sits beside.</b>
+        /// At <c>.20</c> it buys a creeper <c>.20 x CreeperMarch</c> = 3.4 s, which is an
+        /// hourglass's window; a brute 6 s and a bulwark 7.8 s. So the floor of what it is worth
+        /// is the charm before it on the ladder and the ceiling is a little over twice that -
+        /// which is the right shape for a charm that costs the player a match on a hill that is
+        /// about to reach them, and the wrong shape for one that could be sprung at any moment
+        /// for the same payoff (invariant 26h).
+        /// </para>
+        /// <para>
+        /// <b><see cref="AnvilPace"/> is a rate, not a duration</b>, so a body knocked back from
+        /// the line and one knocked back from halfway both travel at the speed the shock is drawn
+        /// at. It is quick - the whole shove is over in <c>AnvilHeave / AnvilPace</c> = .25 s -
+        /// and it exists at all because the view draws a raider where the model says it is, once
+        /// a frame: written straight into <c>March</c> the hill would teleport.
+        /// </para>
+        /// </summary>
+        public const float AnvilHeave = .20f;
+
+        /// <summary>
+        /// How fast <see cref="SiegeCharm.Anvil"/>'s debt is worked off, in shares of the hill a
+        /// second. See <see cref="AnvilHeave"/>.
+        /// </summary>
+        public const float AnvilPace = .80f;
+
+        /// <summary>
+        /// How long the board holds still around an anvil's shove, which is the shove itself plus
+        /// the beat the front takes to cross the hill.
+        ///
+        /// <b>Derived from the two constants above rather than typed beside them</b>, for the
+        /// reason every derived figure in this file is: a shove whose drawing outlasted its
+        /// arithmetic would be an animation the rules had already finished with, which is
+        /// invariant 37s read backwards.
+        /// </summary>
+        public const float AnvilFor = AnvilHeave / AnvilPace;
+
+        /// <summary>
         /// <b>How long a charm is drawn for is not a number, and that is the correction.</b>
         ///
         /// <para>
@@ -1650,6 +1700,87 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const int RubbleTaps = 3;
 
+        // ------------------------------------------------ the sixth chapter's two bosses
+        //
+        // **Two verbs is a chapter's price** (invariant 37br), and this is the third time the
+        // bill has come due. Ten verbs served five chapters; a sixth had to bring two more or
+        // repeat a fight, which `SiegeRuleTests.NoBossVerbIsSentByAnyTwoChapters` refuses.
+        //
+        // **Both are cheap in the one currency that matters here: neither reaches par.** Par is
+        // the hill's health over what one match could ideally deliver (`Par`), so a verb that
+        // adds no bodies and heals nothing leaves it exactly where it was - which is what made
+        // the shackler, the ironclad, the thunderer and the colossus affordable, and is the
+        // first question to ask of a thirteenth.
+
+        /// <summary>
+        /// The gorgon (<see cref="SiegeKind.Gorgon"/>): health, where on the hill it stands, how
+        /// fast it walks on, how often it casts, what each cast takes off the ward, and how long
+        /// the glare holds.
+        ///
+        /// <b>Set under an overlord's and over a gravemaw's.</b> A glare costs nothing at all to
+        /// a player who reads it and everything to one who does not
+        /// (<see cref="SiegeSpell.Glare"/>), so it is a rung-five fight rather than a finale: the
+        /// health pays for a duel long enough to make the reading matter twice.
+        /// </summary>
+        public const int GorgonHealth = 4600;
+
+        /// <summary>Where a gorgon stops on the hill. See <see cref="GorgonHealth"/>.</summary>
+        public const float GorgonHold = .52f;
+
+        /// <summary>Seconds a gorgon takes to walk the whole hill. See <see cref="GorgonHealth"/>.</summary>
+        public const float GorgonMarch = 8f;
+
+        /// <summary>Seconds between a gorgon's casts. See <see cref="GorgonHealth"/>.</summary>
+        public const float GorgonCastEvery = 5f;
+
+        /// <summary>What a gorgon's cast takes off the ward it lands on (37dn).</summary>
+        public const int GorgonCast = 2;
+
+        /// <summary>
+        /// Seconds a ward stays stone-struck under a glare (<see cref="SiegeWard.Glared"/>).
+        ///
+        /// <b>Longer than a shackle's <see cref="ShacklerBind"/> on purpose</b>, because it costs
+        /// less: a chain is six seconds a player can do nothing about, and a glare is six seconds
+        /// they can walk away from by feeding another colour. The one that can be answered is the
+        /// one that may last longer.
+        /// </summary>
+        public const float GorgonGlare = 6f;
+
+        /// <summary>
+        /// The sunlord (<see cref="SiegeKind.Sunlord"/>): health, ground, march, cadence and what
+        /// each cast takes off the ward it seals.
+        ///
+        /// <b>Set over every other boss but the overlord.</b> A seal is answerable
+        /// (<see cref="SiegeSpell.Doom"/>), so what it really costs is tempo rather than the
+        /// line - and a finale whose verb can be paid off has to be long enough to ask the
+        /// question more than once.
+        /// </summary>
+        public const int SunlordHealth = 6800;
+
+        /// <summary>Where a sunlord stops on the hill. See <see cref="SunlordHealth"/>.</summary>
+        public const float SunlordHold = .44f;
+
+        /// <summary>Seconds a sunlord takes to walk the whole hill. See <see cref="SunlordHealth"/>.</summary>
+        public const float SunlordMarch = 8.5f;
+
+        /// <summary>Seconds between a sunlord's casts. See <see cref="SunlordHealth"/>.</summary>
+        public const float SunlordCastEvery = 6.5f;
+
+        /// <summary>What a sunlord's cast takes off the ward it seals (37dn).</summary>
+        public const int SunlordCast = 3;
+
+        /// <summary>
+        /// Seconds a sealed ward has to be filled before it falls (<see cref="SiegeWard.Doomed"/>).
+        ///
+        /// <b>Twelve, and it is arithmetic rather than a feel.</b> A tube is
+        /// <see cref="WardCapacity"/> of fuel, a gem is worth <see cref="FuelPerGem"/> and a match
+        /// clears <see cref="MatchGemsTenths"/> tenths of a gem on average - so a tube is about
+        /// two and a half matches <em>of the sealed ward's own colour</em>. Twelve seconds is
+        /// room for four or five matches at this mode's pace, which is enough for a player who
+        /// drops what they were doing and not enough for one who does not notice.
+        /// </summary>
+        public const float DoomFor = 12f;
+
         /// <summary>
         /// Seconds one piece of rubble stands before it slips off by itself.
         ///
@@ -2148,6 +2279,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Thunderer ? 3.3f
              : kind == SiegeKind.Bonecaller ? 3.5f
              : kind == SiegeKind.Shackler ? 3.2f
+             : kind == SiegeKind.Gorgon ? 3.4f
+             : kind == SiegeKind.Sunlord ? 3.6f
 
              : kind == SiegeKind.Bulwark ? 1.85f
              : kind == SiegeKind.Bomber ? 1.30f
@@ -2357,7 +2490,8 @@ namespace GlimmerGrove.Modes
             || kind == SiegeKind.Blightcaller || kind == SiegeKind.Warbringer
             || kind == SiegeKind.Gravemaw || kind == SiegeKind.Bonecaller
             || kind == SiegeKind.Shackler || kind == SiegeKind.Ironclad
-            || kind == SiegeKind.Thunderer || kind == SiegeKind.Colossus;
+            || kind == SiegeKind.Thunderer || kind == SiegeKind.Colossus
+            || kind == SiegeKind.Gorgon || kind == SiegeKind.Sunlord;
 
         /// <summary>
         /// What each of the four bosses does when its spell lands.
@@ -2389,6 +2523,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Ironclad ? SiegeSpell.Aegis
              : kind == SiegeKind.Thunderer ? SiegeSpell.Drain
              : kind == SiegeKind.Colossus ? SiegeSpell.Bury
+             : kind == SiegeKind.Gorgon ? SiegeSpell.Glare
+             : kind == SiegeKind.Sunlord ? SiegeSpell.Doom
              : SiegeSpell.Smite;
 
         /// <summary>
@@ -2465,6 +2601,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Ironclad ? IroncladHealth
              : kind == SiegeKind.Thunderer ? ThundererHealth
              : kind == SiegeKind.Colossus ? ColossusHealth
+             : kind == SiegeKind.Gorgon ? GorgonHealth
+             : kind == SiegeKind.Sunlord ? SunlordHealth
              : kind == SiegeKind.Blightcaller ? BlightHealth
              : kind == SiegeKind.Bulwark ? BulwarkHealth
              : kind == SiegeKind.Bomber ? BomberHealth
@@ -2480,6 +2618,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Ironclad ? IroncladMarch
              : kind == SiegeKind.Thunderer ? ThundererMarch
              : kind == SiegeKind.Colossus ? ColossusMarch
+             : kind == SiegeKind.Gorgon ? GorgonMarch
+             : kind == SiegeKind.Sunlord ? SunlordMarch
              : kind == SiegeKind.Blightcaller ? BlightMarch
              : kind == SiegeKind.Bulwark ? BulwarkMarch
              : kind == SiegeKind.Bomber ? BomberMarch
@@ -2495,6 +2635,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Ironclad ? IroncladCastEvery
              : kind == SiegeKind.Thunderer ? ThundererCastEvery
              : kind == SiegeKind.Colossus ? ColossusCastEvery
+             : kind == SiegeKind.Gorgon ? GorgonCastEvery
+             : kind == SiegeKind.Sunlord ? SunlordCastEvery
              : kind == SiegeKind.Blightcaller ? BlightCastEvery : BossCastEvery;
 
         /// <summary>
@@ -2511,6 +2653,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Ironclad ? IroncladCast
              : kind == SiegeKind.Thunderer ? ThundererCast
              : kind == SiegeKind.Colossus ? ColossusCast
+             : kind == SiegeKind.Gorgon ? GorgonCast
+             : kind == SiegeKind.Sunlord ? SunlordCast
              : kind == SiegeKind.Boss ? BossCast
              : kind == SiegeKind.Blightcaller ? BlightCast
              : kind == SiegeKind.Gravemaw ? GravemawCast
@@ -2572,6 +2716,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Ironclad ? IroncladHold
              : kind == SiegeKind.Thunderer ? ThundererHold
              : kind == SiegeKind.Colossus ? ColossusHold
+             : kind == SiegeKind.Gorgon ? GorgonHold
+             : kind == SiegeKind.Sunlord ? SunlordHold
              : kind == SiegeKind.Blightcaller ? BlightHold
              : 1f;
 

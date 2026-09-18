@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace GlimmerGrove.Modes
@@ -104,5 +104,28 @@ namespace GlimmerGrove.Modes
         /// a burial.
         /// </summary>
         Bury,
+
+        /// <summary>
+        /// Turns a ward stone-struck: it fires on its own cadence, spends the fuel each shot
+        /// costs, and nothing leaves the barrel. The gorgon's, and aimed at the fullest tube.
+        ///
+        /// <b>Deliberately not a douse with a longer clock.</b> A douse takes the fuel that is
+        /// already there and a surge lifts it; a glare takes whatever is poured in next, so what
+        /// it really costs is decided after it lands - by the player, in the colour they choose
+        /// to feed. A ward with nothing coming to it loses nothing to a glare at all.
+        /// </summary>
+        Glare,
+
+        /// <summary>
+        /// Seals a ward: fill its tube before <c>SiegeTuning.DoomFor</c> runs out or it falls.
+        /// The sunlord's, and never aimed at the last ward standing.
+        ///
+        /// <b>The one spell in this mode with an answer.</b> What it takes is the player's next
+        /// few matches rather than anything the line holds, and a player who pays the toll loses
+        /// nothing but the tempo. What makes that a real decision rather than a formality is the
+        /// colour lock (invariant 37bl): the toll must be paid in the sealed ward's own colour,
+        /// so a seal on the colour the hill is <em>not</em> wearing is the expensive one.
+        /// </summary>
+        Doom,
     }
 }
