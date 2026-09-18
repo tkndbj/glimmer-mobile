@@ -172,6 +172,65 @@ namespace GlimmerGrove.Wards
         /// <summary>Whether this exact row is in the purchased set. The predicate, said once.</summary>
         static bool Holds(string row) => _bought.Contains(row);
 
+        /// <summary>
+        /// The most copies of one turret worth owning: one per seat.
+        ///
+        /// <b>A ceiling rather than a taste.</b> A line stands four, so a fifth copy could never
+        /// be put anywhere — and a shelf that took money for one would be selling nothing.
+        /// </summary>
+        public static int MaxCopies => WardLine.Colours.Length;
+
+        /// <summary>
+        /// How many of this turret may stand on the line <em>at once</em>.
+        ///
+        /// <para>
+        /// <b>The rule the whole copy feature is, and it is asked of every turret rather than of
+        /// legendaries alone.</b> A per-colour turret is already bound one to a seat — it is
+        /// bought for red and red is where it may stand (<see cref="WardHolding"/>) — so filling
+        /// a line with four of one turret has always cost four purchases. A colourless one
+        /// escaped that by construction: one bare row is held on all four seats
+        /// (<c>WardHolding.Row</c>), so one payment stood four Eclipses. Counting copies is what
+        /// puts the band back under the rule the rest of the shelf has always obeyed, without
+        /// taking away the thing that makes it a legendary — <em>which</em> seats they stand on
+        /// is still the player's to arrange.
+        /// </para>
+        /// <para>
+        /// <b>So a per-colour turret answers the ceiling and never binds.</b> Anything else would
+        /// be a second gate over a rule that already holds, and it would bind on the one shape it
+        /// must not: a bare row on a <em>colour</em> turret is what a build from before colours
+        /// wrote, means all four, and would read here as a single copy — confiscating three seats
+        /// from somebody who paid for them, which is the confiscation
+        /// <c>WardHolding</c>'s bare-id clause exists to refuse.
+        /// </para>
+        /// <para>
+        /// <b>The starter is four, for the same reason it is never written down</b> (invariant
+        /// 16e's shape): it fills every gap on a line nobody has arranged, so a cap on it would
+        /// be a cap on the fallback.
+        /// </para>
+        /// </summary>
+        public static int Copies(WardModel model) => Copies(model, Holds);
+
+        /// <summary>
+        /// The same count over any purchased set — this ledger's, or one written in a save file.
+        /// One body, so the two cannot come to disagree about how many somebody owns.
+        /// </summary>
+        public static int Copies(WardModel model, Func<string, bool> holds)
+        {
+            if (model == null) return 0;
+            if (model.IsStarter) return MaxCopies;
+            if (!model.Colourless) return MaxCopies;
+            if (holds == null) return 0;
+
+            int copies = 0;
+
+            // Counted from one because the first copy is the bare id, which is every legendary
+            // bought before this shipped (`WardHolding.Copy`).
+            for (int copy = 1; copy <= MaxCopies; copy++)
+                if (holds(WardHolding.Copy(model.Id, copy))) copies++;
+
+            return copies;
+        }
+
         /// <summary>The colour letter for an index, clamped the way the line clamps it.</summary>
         static char Letter(int colour)
             => WardLine.Colours[colour < 0 || colour >= WardLine.Colours.Length ? 0 : colour];
@@ -239,6 +298,56 @@ namespace GlimmerGrove.Wards
         public static WardOffer OfferFor(WardModel model, int colour, int keeperLevel)
             => OfferFor(model, Letter(colour), keeperLevel);
 
+        /// <summary>
+        /// What <em>another</em> copy of this turret costs, for a player who already holds one.
+        ///
+        /// <para>
+        /// <b>A second offer rather than a widening of <see cref="OfferFor"/>, and the reason is
+        /// that "held" has to keep meaning held.</b> Half this feature reads that state to decide
+        /// whether to draw a star ladder, sell the next star or say the turret is on the line —
+        /// so an <c>OfferFor</c> that answered <c>Ready</c> for a turret somebody owns would take
+        /// the upgrade path away from every legendary until four had been bought.
+        /// </para>
+        /// <para>
+        /// <b>Colourless only.</b> A per-colour turret is bought again by being bought on another
+        /// seat, which is <see cref="OfferFor"/> asked with a different colour — there is nothing
+        /// for a second offer to mean, so it says <c>NotForSale</c> rather than quietly charging
+        /// twice for one seat.
+        /// </para>
+        /// <para>
+        /// <b>The same two refusals in the same order</b> (invariant 15a): the keeper gate, which
+        /// money cannot answer, and then the price. The gate cannot normally bite here — they
+        /// passed it to buy the first — but a retuned roster can raise it under somebody, and
+        /// saying the level is the honest answer.
+        /// </para>
+        /// </summary>
+        public static WardOffer OfferAnother(WardModel model, int keeperLevel)
+        {
+            if (model == null || !model.Colourless || model.IsStarter)
+                return new WardOffer(WardPurchaseState.NotForSale, 0L, Currency.Credits, 0L);
+
+            var currency = model.ForGems ? Currency.Gems : Currency.Credits;
+            long balance = currency == Currency.Gems
+                         ? PlayerProgression.Gems : PlayerProgression.Credits;
+            long cost = model.ForGems ? model.GemPrice : model.CoinPrice;
+
+            // **Nothing left to sell rather than nothing to buy.** Four is a seat each, so a
+            // fifth could not be stood anywhere (`MaxCopies`) — and `AlreadyHeld` is the state
+            // every screen already draws as "you have this", which is true.
+            if (Copies(model) >= MaxCopies)
+                return new WardOffer(WardPurchaseState.AlreadyHeld, cost, currency, balance);
+
+            if (cost <= 0)
+                return new WardOffer(WardPurchaseState.NotForSale, 0L, currency, balance);
+
+            if (keeperLevel < model.MinLevel)
+                return new WardOffer(WardPurchaseState.LevelLocked, cost, currency, balance,
+                                     model.MinLevel);
+
+            var state = balance >= cost ? WardPurchaseState.Ready : WardPurchaseState.TooExpensive;
+            return new WardOffer(state, cost, currency, balance, model.MinLevel);
+        }
+
         // ------------------------------------------------------------- writing
         /// <summary>
         /// Buys a turret <em>for one colour</em>, debiting the currency it is priced in and
@@ -261,27 +370,71 @@ namespace GlimmerGrove.Wards
             var offer = OfferFor(model, colour, keeperLevel);
             if (!offer.CanBuy) return false;
 
-            // The spend reason carries the seat as well as the turret, because support reading a
-            // debit has to know which of the four a player paid for.
-            //
             // **`Row` rather than `Key`, which is the whole of what a legendary costs this
-            // file.** A legendary wears no colour, so it is bought once and its row carries none
-            // (`WardHolding.Row`) — and `IsHeld` below already reads a bare row as every colour,
+            // file.** A legendary wears no colour, so its first row carries none
+            // (`WardHolding.Row`) — and `IsHeld` above already reads a bare row as every colour,
             // because that is what a build written before colours existed wrote. So the purchase
-            // lands on all four seats by a clause that has been here since colours shipped, and
-            // nothing about the union merge, the schema or the rules moves.
-            string row = WardHolding.Row(model, colour);
+            // is held on all four seats by a clause that has been here since colours shipped,
+            // and nothing about the union merge, the schema or the rules moves. **How many of
+            // them may *stand* at once is a different question** and is `Copies`: this is the
+            // first, and `TryBuyAnother` sells the rest.
+            return Pay(model, WardHolding.Row(model, colour), offer, colour.ToString(),
+                       keeperLevel);
+        }
+
+        /// <summary>The same purchase for a colour index (0..3).</summary>
+        public static bool TryBuy(WardModel model, int colour, int keeperLevel)
+            => TryBuy(model, Letter(colour), keeperLevel);
+
+        /// <summary>
+        /// Buys <em>another</em> copy of a colourless turret, so one more of it may stand on the
+        /// line.
+        ///
+        /// <b>No colour, because a copy is not bought for a seat</b> — that is the whole of what
+        /// colourless means, and which seats the copies stand on stays an arrangement
+        /// (<c>WardLoadout</c>) rather than a purchase. The row is the next number up
+        /// (<c>WardHolding.Copy</c>), so two devices buying offline on one day land on one copy
+        /// under the union merge rather than on two.
+        /// </summary>
+        public static bool TryBuyAnother(WardModel model, int keeperLevel)
+        {
+            var offer = OfferAnother(model, keeperLevel);
+            if (!offer.CanBuy) return false;
+
+            return Pay(model, WardHolding.Copy(model.Id, Copies(model) + 1), offer, "any",
+                       keeperLevel);
+        }
+
+        /// <summary>
+        /// The debit and the row, which is the only place either happens.
+        ///
+        /// <para>
+        /// <b>The debit goes first and the row is only added if it succeeded</b>, which is
+        /// <c>CompanionLedger.TryBuy</c>'s ordering and its argument: a process killed between
+        /// the two leaves a player who paid and did not receive, which the spend log can see and
+        /// support can put right, where the other order leaves a turret nobody paid for, which is
+        /// indistinguishable from a forgery and therefore invisible.
+        /// </para>
+        /// <para>
+        /// <b>The spend reason is the row</b>, because support reading a debit has to know which
+        /// of the four seats — or which copy — a player paid for.
+        /// </para>
+        /// </summary>
+        static bool Pay(WardModel model, string row, WardOffer offer, string seat, int keeperLevel)
+        {
+            if (string.IsNullOrEmpty(row)) return false;
 
             if (!PlayerProgression.TrySpend(offer.Currency, offer.Cost, SpendReason + row))
                 return false;
 
             _bought.Add(row);
 
-            // **The seat a legendary was bought from is still worth recording and is not a
-            // colour**: it is bought once for all four, so a colour letter here would read in
-            // analytics as "this legendary belongs to red".
+            // **The seat a legendary was bought from is not a colour**: a copy stands wherever
+            // the player puts it, so a colour letter here would read in analytics as "this
+            // legendary belongs to red". The copy number is what is worth recording instead.
             Telemetry.Track("ward_bought", "ward", model.Id,
-                            "colour", model.Colourless ? "any" : colour.ToString(),
+                            "colour", model.Colourless ? "any" : seat,
+                            "copies", Copies(model),
                             "cost", offer.Cost, "currency", offer.Currency, "level", keeperLevel);
 
             SaveService.Save();
@@ -292,10 +445,6 @@ namespace GlimmerGrove.Wards
 
             return true;
         }
-
-        /// <summary>The same purchase for a colour index (0..3).</summary>
-        public static bool TryBuy(WardModel model, int colour, int keeperLevel)
-            => TryBuy(model, Letter(colour), keeperLevel);
 
         static void Raise()
         {

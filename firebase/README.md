@@ -355,6 +355,17 @@ firebase deploy --only functions
 node e2e/smoke-test.mjs             # proves the rules still hold
 ```
 
+**And the differential probes, after anything that touches `publishGrove`.** A card is the one
+thing here that can be wrong while every status code is 200: a bundle that has never heard of a
+fix writes a *valid* card with the old figures in it, so an absolute check cannot tell the two
+apart. Each of these publishes one account twice and compares.
+
+```bash
+node e2e/endless-xp.mjs             # the lane pays per wave, and a forged tally is bounded
+node e2e/ward-copies.mjs            # a colourless turret stands once per copy bought
+node e2e/delete-account.mjs         # and the order a deletion happens in
+```
+
 **Run the smoke test after every deploy.** The security rules are the only part of this
 system nothing else can check: they are evaluated by Firestore, so a mistake in them
 cannot fail a compile, cannot fail the Unity tests, and behaves perfectly in the Editor.

@@ -41,9 +41,49 @@ namespace GlimmerGrove.Wards
         /// </summary>
         public const char Mark = ':';
 
+        /// <summary>
+        /// What separates a turret's id from <em>which copy of it</em> this row is.
+        ///
+        /// <para>
+        /// <b>A second copy is a second row, which is the whole of how a legendary is counted.</b>
+        /// A colourless turret stands on any seat (<see cref="WardModel.Legendary"/>), so one
+        /// purchase used to fill all four — and four Eclipses on a line was one payment. Owning
+        /// is per <em>copy</em> now: the first is the bare id, the second is <c>eclipse#2</c>, and
+        /// a line may stand as many as have been bought.
+        /// </para>
+        /// <para>
+        /// <b>It cost the save nothing, exactly as the bare row did (42h).</b> A copy row is
+        /// another permanent string in a union-joined set, so two devices that each bought a
+        /// second copy offline land on <em>one</em> second copy — which is the per-id <c>max</c>
+        /// invariant 16h gives priced decor, arrived at by the set union rather than by a count.
+        /// There is no schema version, no <c>hasOnly</c> release and no migration, and the rules'
+        /// bound does not move: a legendary now occupies at most four rows, which is what every
+        /// per-colour turret has always occupied.
+        /// </para>
+        /// <para>
+        /// <b>A character an id may never contain</b>, held by both content gates beside
+        /// <see cref="Mark"/> and for the same reason — an id carrying one would make every row
+        /// about it ambiguous, and a save is not the place to find that out.
+        /// </para>
+        /// </summary>
+        public const char CopyMark = '#';
+
         /// <summary>The row saying this turret is held on this colour.</summary>
         public static string Key(string id, char colour)
             => string.IsNullOrEmpty(id) ? string.Empty : id + Mark + colour;
+
+        /// <summary>
+        /// The row saying this is the <paramref name="copy"/>th of this turret the player owns,
+        /// counting from one.
+        ///
+        /// <b>The first copy is the bare id and carries no number</b>, which is what makes this
+        /// additive: every legendary bought before copies existed is copy one, already written,
+        /// already read by <see cref="Covers"/>, and nothing rewrites it.
+        /// </summary>
+        public static string Copy(string id, int copy)
+            => string.IsNullOrEmpty(id) ? string.Empty
+             : copy <= 1 ? id
+             : id + CopyMark + copy.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
         /// <summary>
         /// The row this turret is written down under, on this seat — and the one place the
@@ -51,11 +91,17 @@ namespace GlimmerGrove.Wards
         ///
         /// <para>
         /// <b>A legendary is written bare</b> (<see cref="WardModel.Legendary"/>): it wears no
-        /// colour, so it is bought once and stands on any seat. That needs no new spelling and no
+        /// colour, so what it is bought for is not a seat. That needs no new spelling and no
         /// schema version, because a bare id has always meant <em>every colour</em> here — it is
         /// what a build that owned turrets outright wrote, and it is the only reading a union
         /// merge could safely give one. <see cref="Covers"/> already honours it, so a legendary is
         /// held on all four seats by the rule that was written for a file from 2026.
+        /// </para>
+        /// <para>
+        /// <b>Held on every seat is not the same as standing on every seat, and that is the
+        /// distinction copies buy.</b> This row says the player owns one; how many they own is
+        /// <see cref="Copy"/>, and how many may stand at once is <c>WardLedger.Copies</c>. Four
+        /// Eclipses on a line is four purchases.
         /// </para>
         /// <para>
         /// <b>Every writer goes through this and no writer spells <see cref="Key"/> itself</b>,
@@ -134,7 +180,11 @@ namespace GlimmerGrove.Wards
         {
             if (string.IsNullOrEmpty(row)) return string.Empty;
 
-            return TryRead(row, out string id, out _) ? id : row;
+            if (TryRead(row, out string id, out _)) return id;
+
+            // A copy row is about the same turret as the bare one — see <see cref="CopyMark"/>.
+            int at = row.IndexOf(CopyMark);
+            return at > 0 ? row.Substring(0, at) : row;
         }
 
         /// <summary>
@@ -142,8 +192,13 @@ namespace GlimmerGrove.Wards
         ///
         /// <b>Asked by the content gates rather than at run time</b>: an id carrying the mark
         /// would make every row about it ambiguous, and a save is not the place to discover that.
+        ///
+        /// <b>Both marks, because there are two spellings now</b> (<see cref="CopyMark"/>) — and
+        /// a gate that learned one of them would let the other through on the day it mattered.
         /// </summary>
         public static bool Spellable(string id)
-            => !string.IsNullOrEmpty(id) && id.IndexOf(Mark) < 0;
+            => !string.IsNullOrEmpty(id)
+            && id.IndexOf(Mark) < 0
+            && id.IndexOf(CopyMark) < 0;
     }
 }

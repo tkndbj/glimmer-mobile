@@ -394,11 +394,12 @@ namespace GlimmerGrove.Wards
 
                 if (!WardHolding.Spellable(entry.id))
                 {
-                    // A holding is `{id}:{colour}` (see `WardHolding`), so an id carrying the
-                    // mark would make every row about it ambiguous — and a save is not the place
-                    // to find that out.
-                    problems.Add($"wards entry '{entry.id}' contains '{WardHolding.Mark}', which " +
-                                 "separates a turret from the colour it was bought for");
+                    // A holding is `{id}:{colour}` and a copy is `{id}#{n}` (see
+                    // `WardHolding`), so an id carrying either mark would make every row about
+                    // it ambiguous — and a save is not the place to find that out.
+                    problems.Add($"wards entry '{entry.id}' contains '{WardHolding.Mark}' or " +
+                                 $"'{WardHolding.CopyMark}', which separate a turret from the " +
+                                 "colour it was bought for and from which copy of it a row is");
                     return Default;
                 }
 

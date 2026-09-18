@@ -683,6 +683,60 @@ console.log("\nthe turret line a card publishes");
   equal("a stale seed publishes no line", line(full, 99, stale).length, 0);
 }
 
+console.log("\ncopies of a colourless turret");
+{
+  // `eclipse` is colourless, so one purchase holds it on all four seats and how many may stand
+  // is a count of copies (`WardLedger.Copies`). `siphon` beside it is an ordinary turret, whose
+  // bare row has meant *every colour* since colours shipped and may never be read as one copy.
+  const config = {
+    ...groveConfig(),
+    wards: {
+      bolt: { level: 0, free: true },
+      siphon: { level: 2, free: false },
+      eclipse: { level: 45, free: false, legendary: true },
+    },
+  };
+
+  const everywhere = (ward) => ({
+    wardLoadout: [
+      { colour: "r", ward }, { colour: "g", ward },
+      { colour: "b", ward }, { colour: "y", ward },
+    ],
+  });
+
+  const stood = (owned) =>
+    publishedLine({ ...everywhere("eclipse"), wardsOwned: owned }, config, 99)
+      .map((s) => s.c).join("");
+
+  // The hole this closed: one payment, four Eclipses, and nothing anywhere said so.
+  equal("one copy stands on one seat", stood(["eclipse"]), "r");
+  equal("two copies stand on two", stood(["eclipse", "eclipse#2"]), "rg");
+  equal("three on three", stood(["eclipse", "eclipse#2", "eclipse#3"]), "rgb");
+  equal("and four fill the line",
+        stood(["eclipse", "eclipse#2", "eclipse#3", "eclipse#4"]), "rgby");
+  equal("a turret nobody bought stands nowhere", stood([]), "");
+
+  // The seats kept are the earliest colours, which is `WardLine.Resolve`'s own tie-break: the
+  // client and the server have to drop the *same* seat or a card and the board disagree.
+  equal("a fifth copy buys no fifth seat",
+        stood(["eclipse", "eclipse#2", "eclipse#3", "eclipse#4", "eclipse#5"]), "rgby");
+
+  // And the clause that must not bind. A bare row on a per-colour turret is a file from before
+  // colours existed: it means all four, somebody paid for them, and reading it as a single copy
+  // would take three seats off their card.
+  equal("a bare row on an ordinary turret still covers every seat",
+        publishedLine({ ...everywhere("siphon"), wardsOwned: ["siphon"] }, config, 99).length, 4);
+
+  // Absent means false, which is what a `config/grove` seeded before this field says — and the
+  // direction that never confiscates.
+  const old = {
+    ...config,
+    wards: { ...config.wards, eclipse: { level: 45, free: false } },
+  };
+  equal("a config with no legendary flag caps nothing",
+        publishedLine({ ...everywhere("eclipse"), wardsOwned: ["eclipse"] }, old, 99).length, 4);
+}
+
 console.log("\nthe card a public profile reads");
 {
   const config = {

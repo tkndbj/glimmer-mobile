@@ -841,6 +841,12 @@ guess — verify offline.
   `make_notification_icons.py` and `make_chest_art.py` each have `--check` (reproducibility) and `--contact`
   (whether it reads). **`--check` proves reproducibility and says nothing about quality.** Every art tool
   passes with the licensed pack absent, because the PNGs are committed.
+- **That a copy is counted on the live server:** `node firebase/e2e/ward-copies.mjs` publishes
+  one account's one loadout several times over, with one copy row and with four, and compares the
+  seat counts. **Differential for `endless-xp.mjs`'s reason** — a `publishGrove` that has never
+  heard of copies answers 200 and writes a valid card with four Eclipses on it. It asserts the
+  other direction in the same run: a **bare row on a per-colour turret still means all four
+  seats**, which is the clause a copy rule could break in silence. **16/16 live** (2026-09-18).
 - **That a deploy really carries a fix:** `node firebase/e2e/endless-xp.mjs` publishes the same
   account twice, with and without a lifetime tally, and compares the two keeper levels against the
   **published** config. Differential on purpose — a `publishGrove` that has never heard of
@@ -1045,8 +1051,9 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   the graded count so one can never buy a star.
 - **The turret loadout** — **thirty** turrets on a four-band shelf, upgraded to five stars, previewed
   firing before purchase, carried in from a readout on the map. Twenty are bought **per colour** behind a
-  keeper level; the ten of the **LEGENDARY** band (42g) wear no colour at all — bought once, stood on any
-  seat, and firing at everything on the hill. They are cut from a second turret pack and their thirty
+  keeper level; the ten of the **LEGENDARY** band (42g) wear no colour at all — stood on any seat and
+  firing at everything on the hill, and **bought by the copy** (42k): four Eclipses on a line is four
+  purchases. They are cut from a second turret pack and their thirty
   effect reels are **drawn** rather than baked (`Tools/make_legend_fx.py`).
 - **The grove** *(held — see the note under **The grove**)* — a village on a 28x28 isometric tile floor
   (784 tiles), 86 pieces rendered from one CC0 pack: a four-rung home ladder ending in a castle, houses,
@@ -1088,7 +1095,7 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 | `s05_ashenhold` | siege | 10 | 49–81 matches | the fourth chapter and the first that cost the mode **code**: the **rabble** cast, armour from rung 1, a **shackler** on 5 and an **ironclad** on 10; **two tenths of surge**; deals the **furnace** |
 | `s06_thundercrag` | siege | 10 | 65–110 matches | the fifth chapter: the **wild** cast of stone golems, a yeti, a minotaur and a mud clod; a **thunderer** on 5 (drains banked charges) and a **colossus** on 10 (buries a turret for four seconds, sooner if the player digs); **three tenths of surge**; deals all five charms, the **hourglass** new |
 | `s07_dustcrown` | siege | 10 | 61–101 matches | the sixth chapter: the **court** cast of three robed wizards, a hooded archer, a falcon-headed war-god and a bone knight; **four tenths of surge**, which is **+40% raider health against the first chapter**; a **gorgon** on 5 (her glare wastes what is poured into a ward) and a **sunlord** on 10 (he seals a ward — fill it or lose it, and never the last one standing); deals all six charms, the **anvil** new |
-| `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 20 | waves that never stop, graded on how far it got, drawing a **medley** of every cast; **both star waves are guesses until somebody plays it**; opens at keeper level 10; **a heart to enter and none to lose** (43e) |
+| `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 30 | waves that never stop, graded on how far it got, drawing a **medley** of every cast; **both star waves are guesses until somebody plays it**; opens at keeper level 10; **a heart to enter and none to lose** (43e) |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock.**
 Par is derived; star lines are multiples of it. **Par is never monotonic within a chapter** — par is length,
@@ -1137,8 +1144,9 @@ functions**: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`, `adRe
 `claimName`, `reportKeeper`, `deleteAccount`, and the three referral callables `getReferral`,
 `redeemReferral`, `claimReferral` (deployed 2026-09-17). **`firebase functions:list` is the authority** — a fifteenth,
 `eventPass`, was deployed and later deleted while never appearing in any list here. `firebase/README.md` is
-the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-17),
-`firebase/e2e/delete-account.mjs` **14/14** and `firebase/e2e/endless-xp.mjs` **12/12**. Client half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
+the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-18),
+`firebase/e2e/delete-account.mjs` **14/14**, `firebase/e2e/endless-xp.mjs` **12/12** and
+`firebase/e2e/ward-copies.mjs` **16/16**. Client half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 13.15.0 as vendored UPM tarballs under `GooglePackages/` (gitignored — run `pwsh GooglePackages/fetch.ps1`
 on a fresh clone).
 
@@ -1180,13 +1188,15 @@ the render until the order on it became a decision worth looking at.
 
 **The XP boost is built and has never been played, and none of its server half is deployed.** Two
 windows (9e, save v31): watch for +50%/2h every 4h, or 120 gems for +100%/24h. Everything offline is
-green — 2,187 tests, the shared clamp on both sides, all three content gates, `render_shop.py`. What
-is **owed before it ships**, in order: (1) **re-seed** — `config/progression` needs the `xpBoost`
-block, the `xp_boost` advert and the good, and a server without them derives a lower keeper level
-than the device, which drops rather than clamps what that level gated (19a); (2) **deploy
-`publishGrove`** again, because `xpBoostXp` is a third addend in its keeper level; (3) no
-`firestore.rules` release — all three fields ride inside the existing `wallet` map. Then play one
-boosted run and check the victory panel's new line against the chip above it.
+green — 2,187 tests, the shared clamp on both sides, all three content gates, `render_shop.py`.
+**The server half landed on 2026-09-18** alongside the copy drop: `config/progression` re-seeded to
+v7 carrying `xpBoost.maxPercent 150` and the `xp_boost` advert (read back and diffed — those two
+fields and Dustcrown's ten level ids were the whole change, plus the version), and `publishGrove`
+deployed by name with `xpBoostXp` proved present in the artifact. No `firestore.rules` release — all
+three fields ride inside the existing `wallet` map. The **good** needs no seed: `xp_boost_day` is a
+`store.goods` row spent through `submitSpends`, and the server is published only the clamp, because
+the windows and the cooldown are facts about *offering* a boost (9e). What is left is to **play one
+boosted run** and check the victory panel's new line against the chip above it.
 
 **Endless XP went live on 2026-09-17, and no real run has banked a wave.** The lane pays 15 XP a
 wave (9d, save v30). **The server half is done**: `config/progression` re-seeded to v6 carrying the
@@ -1233,9 +1243,10 @@ every pixel of it was written with the Editor closed - so **every one is unaddre
 `▸ Addressables ▸ Sync All Assets` and save**, which is a white rectangle on twenty-four raider
 reels, two boss bodies, six spell reels, four gem faces, a front and four map strips (invariant
 7b). Then the standing discipline in full (`Audit Addresses` → `Validate Content` → `Validate Art`
-→ EditMode). **And a re-seed**: a new chapter's ten level ids reach the server's reward map only
-through `seed-config.mjs`, so until it runs every glade in it earns nothing server-side. Nothing
-else about the drop touches the server - no `firestore.rules`, no function deploy.
+→ EditMode). **The re-seed is done** — `config/progression` v7 (2026-09-18) carries all ten
+`s07_*` level ids against `s07_dustcrown`, read back and diffed, so every glade in it earns
+server-side now. Nothing else about the drop touches the server - no `firestore.rules`, no function
+deploy.
 
 **Thundercrag's two spell reels are an Editor bake, and they are not on disk.** `Glimmer Grove ▸ Art ▸
 Bake Thundercrag Spells` writes `levin*` and `boulder*` under `Art/Fx/Siege` (six names `artnames.py` is
@@ -1253,15 +1264,40 @@ loadout's preview stage and `render_siege.py`, so it wants an eye on a device �
 look for is the crop's straight edge at the barrel**, which is covered by the muzzle flash and by the
 trail's own fade. If it ever shows, `SiegeView.HeadRoom` is the dial and the direction is down.
 
+**A legendary is bought by the copy as of 2026-09-18, and the server half is live.** One bare row is
+held on all four seats, so one payment stood four Eclipses (42k); the cap is a count of copy rows
+(`eclipse#2`) in the same union-joined set, so it cost **no schema version and no `firestore.rules`
+release**. `publishGrove` was deployed by name and the artifact read back (`copiesOf`,
+`WARD_COPY_MARK`, `entry.legendary` all in the running bundle), `config/grove` was re-seeded and
+**diffed against a snapshot taken before it — exactly 30 fields added, one `legendary` per turret,
+`true` on precisely the ten of the band, nothing else moved**. Offline green (2,214 tests, three
+content gates, 72 function tests, `render_loadout.py`); live green (`ward-copies.mjs` 16/16,
+`smoke-test.mjs` 166/166, `delete-account.mjs` 14/14, `endless-xp.mjs` 12/12).
+**What is left is an eye.** The preview panel's keys have **no render mirror** — the lower one now
+carries a price and a coin — so look at it on a device with a legendary owned and standing, from a
+seat it is not on. And nothing has played a line with two Eclipses on it.
+
 **The legendary band is cut and has never been in the Editor.** Its art was written with the Editor
 closed, so every one of its pictures is **unaddressed** until `▸ Addressables ▸ Sync All Assets` — which
 is a white rectangle two cells tall on the one object a player watches for a whole run (invariant 7b).
 Then the standing discipline in full (`Sync All Assets` **and save** → `Audit Addresses` → `Validate
 Content` → `Validate Art` → EditMode). **The re-seed is done** — `config/grove.wards` carries all thirty
 as of 2026-09-17, read back and diffed against `progression.json`, with the twenty already there
-unchanged; the live suite was 166/166 after it. What is **still owed is a `publishGrove` deploy**:
-`starsOf` learned the bare star row (42h) and until it ships a published card draws every legendary at
-one star. Deploy by name, read the artifact back, then `firebase/e2e/smoke-test.mjs` again.
+unchanged; the live suite was 166/166 after it. **The `publishGrove` deploy landed on
+2026-09-18** — `starsOf` had learned the bare star row (42h) and until it shipped a published card
+drew every legendary at one star; the artifact was read back and the live suite is 166/166 again.
+
+**The eclipse impact was re-cut on 2026-09-18 and has never been played.** It was the loudest picture
+in the mode and that is measured rather than argued (`make_legend_fx.py --report`): **26.19% ink over a
+100% x 100% lit box**, where the next loudest impact of the thirty is 14.77% over 77%. Its outermost
+prism ring stood at .68 of a frame whose edge is at .50, so a third of it was drawn outside the picture
+— a ring with a square crop on it rather than a bigger explosion — and the board then multiplies the
+reel by `SiegeView.BoltScale`, which the sun is given at **1.62** against the band's 1.18. Every radius
+is inside .50 now and the gains are a step down: **13.78% ink over 70.8% x 70.8%**, which is the band
+with `hit_permafrost` and `hit_stasis`, and still the biggest thing the line throws. Nothing about the
+shape, the colours, the count or the timing moved. **Twelve frames at the same twelve addresses**, so it
+costs no Addressables work beyond the sync the band already owes — and `BoltScale` is the dial if it
+wants to come down further.
 
 **`levin_muzzle` fails `fxreels.py` at 0.76% ink** and was already on disk at HEAD — it is the
 Thundercrag bake above, not the legendary band, and it is the only red reel of the 308.
@@ -1306,8 +1342,9 @@ honest state rather than a fault to chase. No season rollover has ever happened.
   colour, stand on any seat and fire at everything, at **45,000–150,000 credits** behind keeper 45–60
   (gems until 2026-09-18, at the owner's instruction; a flat **x25** on the authored gem ladder, so its
   shape is unchanged and one multiplier retunes the band). It is the
-  largest thing this mode has ever sold and it **suspends the colour lock**, which is the mode's central
-  decision — deliberately, at the top of the shelf, where a player has already made that decision a
+  largest thing this mode has ever sold, it is **bought by the copy** since 2026-09-18 (so a line of
+  four of one is four payments, and 885,000 buys the band once rather than a line of it), and it
+  **suspends the colour lock**, which is the mode's central decision — deliberately, at the top of the shelf, where a player has already made that decision a
   hundred times. It cannot move a star line (42i), so what it can be wrong about is *feel*: four of them
   is a line with no wrong answer in it. **Play a rung with four and say whether the mode is still the
   mode.**

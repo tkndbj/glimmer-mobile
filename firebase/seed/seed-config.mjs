@@ -255,6 +255,13 @@ function buildGroveConfig() {
   // stands. Read here as "no price in any currency", which is `WardModel.IsStarter` — and the
   // reason it is read *here* rather than over there is that a second currency makes the
   // predicate ambiguous exactly once, and this is where the file is in hand.
+  //
+  // `legendary` rides beside it for a sharper version of the same reason. A colourless turret is
+  // bought by the *copy* (`WardHolding.Copy`) and so may stand on only as many seats as were
+  // paid for, where every other turret is bound one to a seat by its own colour row — and the
+  // server cannot tell the two apart from a price. Absent has to mean false, and does
+  // (`copiesOf`): a config seeded before this field caps nothing, which is the direction that
+  // never confiscates.
   const wards = {};
   for (const model of progression.wards?.models ?? []) {
     if (!model?.id) continue;
@@ -266,6 +273,7 @@ function buildGroveConfig() {
     wards[model.id] = {
       level: Math.max(0, Math.floor(model.minLevel ?? 0)),
       free: gems <= 0 && coins <= 0,
+      legendary: model.legendary === true,
     };
   }
 

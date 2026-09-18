@@ -3342,8 +3342,9 @@ def check_wards(progression, keys, warnings, art):
       (`WardCatalog.Before`), so reaching a rung means having met every gate under it, and a rung
       asking for a level an earlier one already demanded could never refuse anybody - the
       decoration invariant 5d names.
-    * **An id may not contain `:`**, which separates a turret from the colour it was bought for
-      in `wardsOwned` (`WardHolding`). One that did would make every row about it ambiguous.
+    * **An id may not contain `:` or `#`**, which separate a turret from the colour it was
+      bought for and from *which copy of it* a row is, in `wardsOwned` (`WardHolding`). One that
+      did would make every row about it ambiguous.
     * **At least one turret is free**, or a player who has bought nothing stands an empty line and
       a siege with no line cannot be played.
     """
@@ -3403,9 +3404,11 @@ def check_wards(progression, keys, warnings, art):
                           "turret on the shelf is behind one, so nought is no longer how an "
                           "entry says it is ungated")
 
-        if ":" in wid:
-            errors.append(f"wards entry '{wid}' contains ':', which separates a turret from the "
-                          "colour it was bought for in wardsOwned")
+        for mark, what in ((":", "the colour it was bought for"),
+                           ("#", "which copy of it a row is")):
+            if mark in wid:
+                errors.append(f"wards entry '{wid}' contains '{mark}', which separates a turret "
+                              f"from {what} in wardsOwned")
 
         # **A bolt may never be lighter than the baseline, and toughness may.** Par is the hill's
         # health over a match computed against the baseline bolt, so a turret that hit softer would

@@ -985,23 +985,40 @@ def eclipse_muzzle(sheet, t, rng):
 
 
 def eclipse_hit(sheet, t, rng):
+    """**The same drawing, held inside its own frame.** Three prismatic rings, a wheel of twelve
+    spokes, a warm ring and a white flash - and every one of them was drawn too big.
+
+    <b>It was the loudest picture in the mode and that is measured rather than argued</b>
+    (`--report`): 26.19% ink over a 100% x 100% lit box, where the next loudest impact of the
+    thirty is 14.77% over 77%. Two things made it so. The outermost prism ring stood at .68 of
+    the frame and the frame's own edge is at .50, so a third of that ring was drawn *outside* the
+    picture - which is not a bigger explosion, it is a ring with a square crop on it. And the
+    board multiplies this reel by `SiegeView.BoltScale`, which the sun is given at 1.62 against
+    the band's 1.18, so a frame already full was then drawn a third wider again.
+
+    Every radius is pulled inside .50 and the gains come down a step. Nothing about the shape,
+    the colours, the count or the timing moves - what changes is how much of the hill it covers,
+    which is the whole of what the owner asked for.
+    """
     cx = cy = BURST * .5
     grow = ease(t, 2.3)
 
+    # Inside the frame, and that is a ceiling rather than a taste: a ring wider than .50 is a
+    # ring with a straight edge cut through it by the crop.
     for i, colour in enumerate(PRISM):
-        sheet.ring(cx, cy, BURST * (.24 + .22 * i) * grow, BURST * .022, colour,
-                   1.1 * (1.0 - t))
+        sheet.ring(cx, cy, BURST * (.15 + .13 * i) * grow, BURST * .020, colour,
+                   .95 * (1.0 - t))
 
     for i in range(12):
         a = math.tau * i / 12 + t * .5
-        r = BURST * .48 * grow
-        sheet.seg(cx + math.cos(a) * BURST * .08, cy + math.sin(a) * BURST * .08,
+        r = BURST * .34 * grow
+        sheet.seg(cx + math.cos(a) * BURST * .06, cy + math.sin(a) * BURST * .06,
                   cx + math.cos(a) * r, cy + math.sin(a) * r,
-                  BURST * .020, PRISM[i % 3], 1.1 * (1.0 - t * .8), taper=BURST * .004)
+                  BURST * .017, PRISM[i % 3], .95 * (1.0 - t * .8), taper=BURST * .004)
 
-    sheet.ring(cx, cy, BURST * .18 * (1.0 + t), BURST * .040, (1.0, 0.92, 0.75),
-               1.3 * (1.0 - t))
-    sheet.dot(cx, cy, BURST * .14 * (1.0 - t * .3), WHITE, 2.4 * (1.0 - t))
+    sheet.ring(cx, cy, BURST * .14 * (1.0 + t), BURST * .034, (1.0, 0.92, 0.75),
+               1.1 * (1.0 - t))
+    sheet.dot(cx, cy, BURST * .11 * (1.0 - t * .3), WHITE, 2.0 * (1.0 - t))
 
 
 #: What each legendary throws: the bolt, the flash at the barrel and what it does when it lands.

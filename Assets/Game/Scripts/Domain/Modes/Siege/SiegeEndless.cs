@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace GlimmerGrove.Modes
@@ -179,11 +179,44 @@ namespace GlimmerGrove.Modes
         /// waves and puts an endless run's ceiling inside a minute of the one before it, which
         /// makes every run the same length; a straight line means each wave is a little worse than
         /// the last for as long as a player can hold, which is what a score chase is for.
+        ///
+        /// <para>
+        /// <b>Quartered on 2026-09-18, and the shape is deliberately unchanged.</b> It was twelve
+        /// and four, which is +120% of a raider's base health <em>per wave</em>: wave two already
+        /// carried 2.2x, the wave-four blightcaller 4.6x, and the authored three-star wave 23.8x.
+        /// Against that, the hardest thing an authored chapter ever carries is Dustcrown's flat
+        /// 1.4x (a chapter's <c>tough</c>), so the lane stopped being the siege and became a
+        /// different game inside about ten waves. Both steps were divided by four rather than
+        /// retuned separately, so the 3:1 ratio the mode was tuned around is exactly what it was
+        /// and only the slope moved.
+        /// </para>
+        /// <para>
+        /// <b>Measured rather than argued</b>, which is the only way to say what "slower" bought:
+        /// the per-wave hill the old ramp sent at wave twenty is the one this ramp sends at wave
+        /// <b>forty-one</b>, so the wall is twice as far away in waves and four times as gentle in
+        /// the multiplier. It is not a clean 4x in waves because the <em>muster</em> ramps too
+        /// (<see cref="FirstWave"/> grows to <see cref="MostRaiders"/>), and that half was left
+        /// alone on purpose: more bodies is the ramp a player can see coming, and it has a ceiling.
+        /// </para>
+        /// <para>
+        /// <b>What may not change is that both climb every single wave</b> - the floor on either
+        /// step is one tenth, and <c>SiegeEndlessTests.EveryWaveIsTougherThanTheOneBeforeIt</c> holds it.
+        /// A ramp that stepped every other wave would be two waves that are the same wave, which
+        /// is invariant 5d asked of a slope.
+        /// </para>
         /// </summary>
-        public const int HealthStepTenths = 12;
+        public const int HealthStepTenths = 3;
 
-        /// <summary>How much harder one wave swings than the last, in tenths.</summary>
-        public const int BlowStepTenths = 4;
+        /// <summary>
+        /// How much harder one wave swings than the last, in tenths.
+        ///
+        /// <b>A quarter of what it was, with <see cref="HealthStepTenths"/> and for its reason.</b>
+        /// Health and blow are the two halves of one slope and retuning one alone would change
+        /// which of the two ends a run - a blow ramp ends one suddenly, when a ward that was
+        /// standing falls, and a health ramp ends one gradually, when the line stops keeping up.
+        /// A score chase wants the gradual ending, so the ratio is held where it was.
+        /// </summary>
+        public const int BlowStepTenths = 1;
 
         /// <summary>
         /// What a wave sends before the ramp: raiders, and how many more arrive every two waves.

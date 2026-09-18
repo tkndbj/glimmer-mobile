@@ -1016,9 +1016,10 @@ namespace GlimmerGrove.EditorTools
                                       "is no longer how an entry says it is ungated");
 
                 if (!WardHolding.Spellable(model.Id))
-                    result.Errors.Add($"turret '{model.Id}' contains " +
-                                      $"'{WardHolding.Mark}', which separates a turret from the " +
-                                      "colour it was bought for in wardsOwned");
+                    result.Errors.Add($"turret '{model.Id}' contains '{WardHolding.Mark}' or " +
+                                      $"'{WardHolding.CopyMark}', which separate a turret from " +
+                                      "the colour it was bought for and from which copy of it a " +
+                                      "row is, in wardsOwned");
 
                 if (!Addressed(AssetManifest.WardThumb(model.Id)))
                     result.Errors.Add($"turret '{model.Id}' has no shelf thumbnail at " +

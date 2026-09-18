@@ -4,6 +4,7 @@
     python Tools/render_loadout.py                  # the turret shelf, fresh account
     python Tools/render_loadout.py --level 40       # every wall open
     python Tools/render_loadout.py --held bolt,siphon,beacon --stars 3
+    python Tools/render_loadout.py --level 60 --held eclipse*2 --scroll 4200
     python Tools/render_loadout.py --shelf kit      # the utility shelf
     python Tools/render_loadout.py --columns 4      # what it used to look like
 
@@ -199,7 +200,21 @@ def price_strip(sheet, cx, cy, w, h, text, size, glyph, ink):
             K.paste(sheet, g, cx + shift - run * .5 - size * .57, cy)
 
 
-def ward_cell(sheet, model, at, cw, names, colour, level, held, stars, standing):
+#: `LoadoutScreen.ChipW`, `.ChipH`, `.ChipInset` - the copy count in a cell's top corner.
+CHIP_W, CHIP_H, CHIP_INSET, CHIP_SIZE = 104.0, 56.0, 14.0, 34
+
+
+def copy_chip(sheet, right, top, text):
+    """The count in a cell's top-right corner, as `LoadoutScreen.CopyChip` builds it."""
+    w, h, inset = CHIP_W * SCALE, CHIP_H * SCALE, CHIP_INSET * SCALE
+    cx, cy = right - inset - w / 2, top + inset + h / 2
+
+    sheet.alpha_composite(rounded(int(w), int(h), int(h / 2), (0, 0, 0), 107),
+                          (int(cx - w / 2), int(cy - h / 2)))
+    K.text(sheet, text, cx, cy, pt(CHIP_SIZE * SCALE), fill=K.CREAM, outline=2)
+
+
+def ward_cell(sheet, model, at, cw, names, colour, level, held, stars, standing, copies=1):
     """One turret, drawn exactly as `LoadoutScreen.WardCell` builds it."""
     x, y = at                                               # the cell's top-left
     icon_box = cw * ICON_FRAC
@@ -238,6 +253,19 @@ def ward_cell(sheet, model, at, cw, names, colour, level, held, stars, standing)
            x + cw / 2, y + NAME_Y * SCALE, pt(NAME_SIZE * SCALE), fill=K.CREAM, outline=2)
 
     if held:
+        # **A legendary says how many of it you own** (`LoadoutScreen.CopyChip`). Every other
+        # turret is one to a seat by construction, so "held" is the whole story; a colourless
+        # one is held on all four seats by one purchase and stands on only as many as were paid
+        # for, so the count is the fact a player needs before they tap.
+        #
+        # **The corner, and this mirror is why.** It was drawn as a strip first, which is where
+        # every other number on this cell goes - and the strip spans 374 to 452 of a 470-tall
+        # cell while the stars sit at 395, so it came out straight through them. The two had
+        # never been drawn together before, because a held cell drew stars and no strip and an
+        # unheld one drew a strip and no stars.
+        if model.get("legendary") and (model.get("coinPrice") or model.get("gemPrice")):
+            copy_chip(sheet, x + cw, y, f"x{copies}")
+
         for i in range(STARS_MOST):
             lit = i < stars
             s = sprite("star_full" if lit else "star_empty", STAR_SIZE * SCALE)
@@ -308,7 +336,7 @@ def tier_badge(sheet, tier, y, cw, columns):
 
 
 # --------------------------------------------------------------------------- the screen
-def draw(shelf, level, held, stars, colour, standing, scroll):
+def draw(shelf, level, held, stars, colour, standing, scroll, copies=None):
     cw, columns = CELLW, COLUMNS
     span = columns * cw + (columns - 1) * CELL_GAP_X
     left = W / 2 - span / 2
@@ -371,7 +399,8 @@ def draw(shelf, level, held, stars, colour, standing, scroll):
             continue
 
         ward_cell(grid, model, (left + column * (cw + CELL_GAP_X), y), cw, names, colour,
-                  level, model["id"] in held, stars, model["id"] == standing)
+                  level, model["id"] in held, stars, model["id"] == standing,
+                  (copies or {}).get(model["id"], 1))
 
         column += 1
         if column == columns:
@@ -405,7 +434,8 @@ def main():
     ap.add_argument("--level", type=int, default=9,
                     help="keeper level, which decides every wall (today's content pays for 9)")
     ap.add_argument("--held", default="bolt",
-                    help="comma-separated turret ids drawn as owned")
+                    help="comma-separated turret ids drawn as owned; a legendary may carry how "
+                         "many copies were bought, as `eclipse*3` (`WardLedger.Copies`)")
     ap.add_argument("--standing", default="bolt", help="the turret on this seat")
     ap.add_argument("--stars", type=int, default=1, help="stars on every held turret")
     ap.add_argument("--colour", default="r", choices=tuple("rgby"),
@@ -421,8 +451,17 @@ def main():
     fit(TABLET_CANVAS if a.tablet else
         TALL_TABLET_CANVAS if a.tall_tablet else PHONE_CANVAS, a.columns)
 
-    sheet = draw(a.shelf, a.level, set(x for x in a.held.split(",") if x),
-                 a.stars, a.colour, a.standing, a.scroll)
+    # `id` or `id*n`: one purchase or several. Only a colourless turret can be bought twice,
+    # and the shelf is what says so.
+    held, copies = set(), {}
+    for entry in (x.strip() for x in a.held.split(",")):
+        if not entry:
+            continue
+        wid, _, count = entry.partition("*")
+        held.add(wid)
+        copies[wid] = max(1, int(count)) if count else 1
+
+    sheet = draw(a.shelf, a.level, held, a.stars, a.colour, a.standing, a.scroll, copies)
 
     kind = "tablet" if a.tablet else "tall" if a.tall_tablet else "phone"
     out = Path(a.out) if a.out else REPO / "Tools" / "out" / f"loadout_{a.shelf}_{kind}.png"

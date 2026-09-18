@@ -962,10 +962,16 @@ ENDLESS_BOSSES = ("blightcaller", "warlord", "warbringer", "overlord")
 
 ENDLESS_PAIRS = ((0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3))
 
-HEALTH_STEP_TENTHS = 12
-BLOW_STEP_TENTHS = 4
+#: **Quartered on 2026-09-18 with `SiegeEndless.HealthStepTenths`, and the two move together.**
+#: Twelve and four was +120% of base health per wave, so the lane carried 23.8x at its authored
+#: three-star wave against the 1.4x that is the most any authored chapter ever carries. Both steps
+#: were divided by four so the 3:1 ratio is exactly what it was and only the slope moved; the
+#: per-wave hill the old ramp sent at wave twenty is the one this ramp sends at wave forty-one.
+HEALTH_STEP_TENTHS = 3
+BLOW_STEP_TENTHS = 1
 
-FIRST_WAVE, MOST_RAIDERS = 5, 22
+FIRST_WAVE = 5
+MOST_RAIDERS = 22
 
 BRUTES_FROM, BULWARKS_FROM, BOMBERS_FROM = 3, 6, 9
 
@@ -1033,16 +1039,10 @@ def endless_wave(colours, seed, wave):
     if bosses:
         made = [(_colour(colours, seed, wave, i), kind) for i, kind in enumerate(bosses)]
 
-        # A boss that takes no health arrives with an escort, or it is a wave nothing can go
-        # wrong on - see `SiegeEndless.WaveAt`.
-        if any(kind in BITES for kind in bosses):
-            return made
-
-        escort = max(0, min(size, MAX_RAIDERS - len(bosses)))
-
-        for i in range(len(bosses), len(bosses) + escort):
-            made.append((_colour(colours, seed, wave, i), _kind_at(wave, i, seed)))
-
+        # **A boss comes in alone, whatever it takes** - `SiegeEndless.WaveAt` sends the bosses
+        # and nothing else (invariant 37dn). This mirror still dealt the blightcaller an escort,
+        # which the game stopped sending: the drift was harmless (a gate reading a bigger hill than
+        # ships) and is corrected here rather than left as a second opinion about one rule.
         return made
 
     made = []

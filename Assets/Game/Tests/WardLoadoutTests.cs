@@ -262,6 +262,146 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>The first legendary on the shelf, and an assertion that there is one.</summary>
+        /// <summary>
+        /// <b>One legendary stands on one seat, and a line of four of them is four purchases.</b>
+        ///
+        /// <para>
+        /// This is the hole the copy rule closed. A colourless turret is written into
+        /// <c>wardsOwned</c> as a bare id (<c>WardHolding.Row</c>), which has meant <em>every
+        /// colour</em> since colours shipped - so <c>IsHeld</c> answered true on all four seats
+        /// off one payment, and the most expensive thing in the game furnished a whole line for
+        /// the price of a quarter of it. Every gate was green: the ledger is right, the holding
+        /// is right, and nothing anywhere asked how many of one turret a line may stand.
+        /// </para>
+        /// <para>
+        /// <b>Asked of the count rather than of the spelling</b>, because the spelling is not
+        /// what could break: a reader that took a copy row for a different turret, or one that
+        /// took a <em>bare</em> row on a colour turret for a single copy, would both leave the
+        /// arithmetic looking exactly like this.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ALegendaryStandsOnOneSeatPerCopyBought()
+        {
+            var legend = Legendary();
+            var ordinary = WardCatalog.Default.Find("cleaver");
+
+            var bought = new HashSet<string>(StringComparer.Ordinal);
+
+            Assert.AreEqual(0, WardLedger.Copies(legend, bought.Contains),
+                            "a turret nobody bought is owned nought times");
+
+            bought.Add(WardHolding.Row(legend, 'r'));
+            Assert.AreEqual(1, WardLedger.Copies(legend, bought.Contains),
+                            "the bare row is the first copy");
+
+            for (int copy = 2; copy <= WardLedger.MaxCopies; copy++)
+            {
+                bought.Add(WardHolding.Copy(legend.Id, copy));
+                Assert.AreEqual(copy, WardLedger.Copies(legend, bought.Contains),
+                                $"copy {copy} was bought and is not counted");
+            }
+
+            // **And still held on every seat throughout**, which is the half that must not have
+            // moved: owning is the entitlement and copies are how many may stand at once.
+            for (int i = 0; i < WardLine.Colours.Length; i++)
+                Assert.IsTrue(WardLedger.IsHeld(legend, WardLine.Colours[i], bought.Contains));
+
+            // **A per-colour turret answers the ceiling and is never capped by this**, because
+            // the seat it was bought for is already its cap - and a bare row on one is a file
+            // from before colours existed, which means all four and may not be confiscated.
+            Assert.AreEqual(WardLedger.MaxCopies, WardLedger.Copies(ordinary, _ => false));
+            Assert.AreEqual(WardLedger.MaxCopies, WardLedger.Copies(ordinary, _ => true));
+        }
+
+        /// <summary>
+        /// <b>A copy row is a row about the same turret and nothing else reads it as one.</b>
+        ///
+        /// A copy is spelled with its own mark (<c>WardHolding.CopyMark</c>) precisely so that
+        /// every reader written for a colour holding refuses it rather than guessing: a copy row
+        /// covers no seat by itself, names no colour, and is refused as a turret id by both
+        /// content gates.
+        /// </summary>
+        [Test]
+        public void ACopyRowIsSpelledSoNothingElseMisreadsIt()
+        {
+            Assert.AreEqual("eclipse", WardHolding.Copy("eclipse", 1), "the first copy is bare");
+            Assert.AreEqual("eclipse#2", WardHolding.Copy("eclipse", 2));
+
+            Assert.AreEqual("eclipse", WardHolding.IdOf("eclipse#3"),
+                            "a copy row is about the turret it names");
+            Assert.AreEqual("eclipse", WardHolding.IdOf("eclipse:r"));
+
+            Assert.IsFalse(WardHolding.TryRead("eclipse#2", out _, out _),
+                           "a copy row is not a colour holding");
+            Assert.IsFalse(WardHolding.Covers("eclipse#2", "eclipse", 'r'),
+                           "a copy row covers a seat only through the bare row beside it");
+
+            Assert.IsFalse(WardHolding.Spellable("bad#id"), "the copy mark is refused in an id");
+            Assert.IsFalse(WardHolding.Spellable("bad:id"), "the colour mark is refused in an id");
+            Assert.IsTrue(WardHolding.Spellable("eclipse"));
+
+            // A union of two devices' purchases is a per-turret `max` over the copies, which is
+            // what makes a copy storable at all (invariant 16h, arrived at by the set union).
+            var joined = WardLedger.Join(new[] { "eclipse", "eclipse#2" },
+                                         new[] { "eclipse", "eclipse#2", "eclipse#3" });
+
+            Assert.AreEqual(new[] { "eclipse", "eclipse#2", "eclipse#3" }, joined);
+        }
+
+        /// <summary>
+        /// <b>The board stands no more of a turret than was paid for, and which seats keep it is
+        /// the same on every device.</b>
+        ///
+        /// <para>
+        /// <c>WardLoadout.Choose</c> will not store a seat there is no copy for, so an honest
+        /// file never reaches this - but a merge that dropped a copy row and a hand-edited file
+        /// both have to land on a line that plays. The fallback is the starter, which is what
+        /// every other refusal here falls back to.
+        /// </para>
+        /// <para>
+        /// <b>Colour order, and that is not a detail.</b> The stored arrangement is a dictionary
+        /// on the way here, so a cap applied in walk order would drop a different seat on two
+        /// devices holding the same save - and the seat the server drops
+        /// (<c>publishedLine</c>) walks the colours. The two have to agree, or a card and the
+        /// board behind it show different lines.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ALineStandsNoMoreCopiesThanWereBought()
+        {
+            var catalog = WardCatalog.Default;
+            var legend = Legendary();
+
+            var chosen = new List<WardSlot>();
+            for (int i = 0; i < WardLine.Colours.Length; i++)
+                chosen.Add(new WardSlot(WardLine.Colours[i], legend.Id));
+
+            for (int copies = 0; copies <= WardLine.Colours.Length; copies++)
+            {
+                int owned = copies;
+                var line = WardLine.Resolve(catalog, chosen, (_, __) => true, null, _ => owned);
+
+                int stood = 0;
+                for (int i = 0; i < WardLine.Colours.Length; i++)
+                    if (line.At(i).Id == legend.Id) stood++;
+
+                Assert.AreEqual(copies, stood,
+                                $"{copies} copies bought and {stood} stood on the line");
+
+                // The earliest colours keep it, and the rest fall back to the starter.
+                for (int i = 0; i < WardLine.Colours.Length; i++)
+                    Assert.AreEqual(i < copies ? legend.Id : catalog.Starter.Id, line.At(i).Id,
+                                    $"seat {WardLine.Colours[i]} with {copies} copies bought");
+            }
+
+            // **No cap asked is no cap applied**, which is what every rule test, content gate and
+            // offline mirror plays against, and what a visitor's card resolves through.
+            var uncapped = WardLine.Resolve(catalog, chosen, (_, __) => true);
+            for (int i = 0; i < WardLine.Colours.Length; i++)
+                Assert.AreEqual(legend.Id, uncapped.At(i).Id);
+        }
+
         static WardModel Legendary()
         {
             foreach (var model in WardCatalog.Default.Models)

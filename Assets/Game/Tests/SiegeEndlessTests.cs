@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using GlimmerGrove.Content;
 using GlimmerGrove.Modes;
 using NUnit.Framework;
@@ -133,6 +133,86 @@ namespace GlimmerGrove.Tests
                 Assert.Greater(here.HealthTenths, before.HealthTenths, $"wave {wave}");
                 Assert.Greater(here.BlowTenths, before.BlowTenths, $"wave {wave}");
             }
+        }
+
+        /// <summary>
+        /// The ramp is written down twice - here and in <c>Tools/verify/siege.py</c> - and the two
+        /// copies must be the same two numbers.
+        ///
+        /// <para>
+        /// <b>The offline gate mirrors this rule so it can say what wave forty sends without
+        /// running Unity</b>, which means a retune that moved one copy and not the other would
+        /// leave <c>content.py</c> validating a hill the game does not send. Nothing caught that:
+        /// a drifted mirror compiles, validates green and disagrees silently, which is the shape
+        /// invariant 9a keeps the reward rule's two copies from taking.
+        /// </para>
+        /// <para>
+        /// <b>Read off the file rather than restated</b>, for <c>CloudWireTests</c>' reason - a
+        /// fixture that held a copy of the number would be a third place to drift.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ThePythonMirrorRampIsThisRamp()
+        {
+            string mirror = System.IO.File.ReadAllText(
+                RepoPath("Tools", "verify", "siege.py"));
+
+            Assert.AreEqual(SiegeEndless.HealthStepTenths, Constant(mirror, "HEALTH_STEP_TENTHS"),
+                "Tools/verify/siege.py disagrees with SiegeEndless about the health ramp");
+            Assert.AreEqual(SiegeEndless.BlowStepTenths, Constant(mirror, "BLOW_STEP_TENTHS"),
+                "Tools/verify/siege.py disagrees with SiegeEndless about the blow ramp");
+
+            Assert.AreEqual(SiegeEndless.BossEvery, Constant(mirror, "BOSS_EVERY"),
+                "Tools/verify/siege.py disagrees with SiegeEndless about the boss cadence");
+            Assert.AreEqual(SiegeEndless.PairsAfter, Constant(mirror, "PAIRS_AFTER"),
+                "Tools/verify/siege.py disagrees with SiegeEndless about when pairs begin");
+            Assert.AreEqual(SiegeEndless.PairEvery, Constant(mirror, "PAIR_EVERY"),
+                "Tools/verify/siege.py disagrees with SiegeEndless about the pair cadence");
+
+            Assert.AreEqual(SiegeEndless.FirstWave, Constant(mirror, "FIRST_WAVE"),
+                "Tools/verify/siege.py disagrees with SiegeEndless about the first wave's size");
+            Assert.AreEqual(SiegeEndless.MostRaiders, Constant(mirror, "MOST_RAIDERS"),
+                "Tools/verify/siege.py disagrees with SiegeEndless about the muster's ceiling");
+        }
+
+        /// <summary>One `NAME = 12` off the mirror, as an integer.</summary>
+        static int Constant(string source, string name)
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(
+                source, $@"^{name}\s*=\s*(\d+)",
+                System.Text.RegularExpressions.RegexOptions.Multiline);
+
+            Assert.IsTrue(match.Success, $"could not find '{name}' in Tools/verify/siege.py");
+            return int.Parse(match.Groups[1].Value);
+        }
+
+        /// <summary>
+        /// A path inside the repo, found from the project folder. <c>CloudWireTests.RepoRoot</c>'s
+        /// walk, narrowed to the one folder this fixture needs.
+        /// </summary>
+        static string RepoPath(params string[] parts)
+        {
+            string root = null;
+
+            try { root = System.IO.Path.GetFullPath(
+                      System.IO.Path.Combine(UnityEngine.Application.dataPath, "..")); }
+            catch { /* no player loop under the offline runner */ }
+
+            if (root == null || !System.IO.Directory.Exists(System.IO.Path.Combine(root, "Tools")))
+            {
+                root = System.IO.Directory.GetCurrentDirectory();
+                while (!string.IsNullOrEmpty(root)
+                       && !System.IO.Directory.Exists(System.IO.Path.Combine(root, "Tools")))
+                    root = System.IO.Path.GetDirectoryName(root);
+            }
+
+            Assert.IsFalse(string.IsNullOrEmpty(root),
+                           "could not find the repo root from " +
+                           System.IO.Directory.GetCurrentDirectory());
+
+            var path = new List<string> { root };
+            path.AddRange(parts);
+            return System.IO.Path.GetFullPath(System.IO.Path.Combine(path.ToArray()));
         }
 
         /// <summary>

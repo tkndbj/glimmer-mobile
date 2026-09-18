@@ -848,7 +848,8 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    build that owned turrets outright wrote and the only reading a union merge could safely give one — so
    there is no schema version, no `hasOnly` release and no migration. The **star ledger had to learn the
    same clause**, on the client and on the server, or a five-star legendary publishes at one star on all
-   four seats with nothing saying so.
+   four seats with nothing saying so. **And one ladder is still all a legendary has** (42k): copies are
+   how many may *stand*, never four things to upgrade.
 42i. **It is still strictly an addition, and that is arithmetic rather than an argument.** Par is the
    hill's health over a perfect match computed against the baseline bolt, so a turret reaching every
    colour only ever fires bolts that would otherwise not have been fired: a run ends sooner and par
@@ -865,6 +866,28 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    (`Tools/make_legend_fx.py`, numpy and Pillow, offline with `--check` and `--contact`), which also buys
    what a bake cannot: a legendary can be a **behaviour** rather than a shape — lightning that forks
    differently every frame, a shot that visibly bounces, a jet whose turbulence scrolls.
+42k. **Held on every seat is not the same as standing on every seat, and a legendary is bought by the
+   copy.** One bare row is held on all four (42h), so one payment stood four Eclipses — the line was four
+   turrets and a quarter of the price, and **every gate was green**, because the ledger, the holding and
+   the line are each right and nothing anywhere asked how many of one turret a line may stand. The cap is
+   a **count of copies** (`WardLedger.Copies`), the second is another row in the same union-joined set
+   (`WardHolding.Copy`, `eclipse#2`), and it is the per-id `max` of 16h arrived at by a set union — so
+   again no schema version, no `hasOnly` release and no migration, and the rules' bound does not move: a
+   legendary now occupies at most four rows, which is what every per-colour turret has always occupied.
+   **Only a colourless turret is counted**, because a bare row on any other is a file from before colours
+   existed, means all four and is somebody's purchase. Three places ask: `CanStand` before a seat is
+   stored, `WardLine.Resolve` before the board plays it, and `publishedLine` before a card vouches for it
+   — all three in **colour order**, or two devices and the server drop different seats out of one save.
+   **What it deliberately does not take away is the band's own rule**: which seats the copies stand on is
+   still the player's, so a legendary is still bought for no colour at all.
+42l. **A key that cannot act is worse than one that is not drawn, and owning stopped implying standing.**
+   The panel's lower key was EQUIP over anything held, which is now a button that does nothing on the
+   one band it matters for — so it becomes **the price of the copy that would put it here**
+   (`WardPreviewKeys.Buys`), and buying it stands it in the same tap, because nobody buys a fourth
+   Eclipse to leave it in a drawer. **Not the reveal ceremony**, which says *joined your line* and is a
+   lie about a turret owned for weeks. The shelf says the count in a **corner chip** and not a strip:
+   the strip's band is where the star row already is, drawn together for the first time here, and only
+   `render_loadout.py` could see it.
 43. **A mode may have a second ladder, and it is a *track* rather than a mode or a chapter.** `GameTrack`
    is one level finer than `GameMode`, the index lanes on the **pair**, and `ChaptersIn(mode)` answers the
    **main** track alone.
