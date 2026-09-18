@@ -503,7 +503,11 @@ namespace GlimmerGrove
             float drawnW = windowW, drawnH = aspect > 0f ? drawnW / aspect : 0f;
             if (drawnH < windowH) { drawnH = windowH; drawnW = drawnH * aspect; }
 
-            float seated = 1f / (1f + BannerSwell);
+            // `seated` cuts the picture so the *crest* of its breath is the cover fit exactly
+            // — at the top of the swell the banner is the window and never a pixel past it, which
+            // is the whole reason the swell is safe inside a mask. `BannerFill` is the separate
+            // decision on top: how much of that fit the picture actually draws at.
+            float seated = BannerFill / (1f + BannerSwell);
             drawnW *= seated;
             drawnH *= seated;
 
@@ -521,6 +525,20 @@ namespace GlimmerGrove
         /// <summary>The banner's window inset, its swell and how long the swell takes.</summary>
         const float BannerInset = 8f;
         const float BannerSwell = .03f, BannerPeriod = 3.6f;
+
+        /// <summary>
+        /// How much of the cover fit the picture draws at.
+        ///
+        /// <para>
+        /// <b>1 is the fit exactly</b> — the banner is the window and never a pixel past it —
+        /// and anything under it does two things at once, which is worth knowing before reaching
+        /// for it: the picture pulls in from the window's edges, *and* it un-crops, because a
+        /// cover fit is only cropped in the first place by being larger than what shows. At .9
+        /// the art's own sky reads as a margin rather than the plate showing through, which is
+        /// why it stays a scale rather than becoming a padding.
+        /// </para>
+        /// </summary>
+        const float BannerFill = .90f;
 
         /// <summary>
         /// The standing warning on the shelves priced in real money: this phone is not signed

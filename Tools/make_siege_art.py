@@ -1801,7 +1801,7 @@ def stillwave():
     White, with no end along its length, like every other sprite the view tints and stretches
     (invariant 37l, and `laser`'s own note).
     """
-    long, thick = 512, 96
+    long, thick = 512, 128
     y, x = np.mgrid[0:thick, 0:long].astype(np.float32)
 
     # 0 at the leading edge, 1 at the trailing one. The view sweeps it upward, so the top of the
@@ -1816,7 +1816,7 @@ def stillwave():
     # which is what a dial's face does and what stops the pitch reading as a fence.
     pitch = 17.0
     step = np.minimum(x % pitch, pitch - (x % pitch))
-    across = np.clip(1.0 - step / 1.7, 0.0, 1.0)
+    across = np.clip(1.0 - step / 2.6, 0.0, 1.0)
     longer = (np.floor(x / pitch) % 4.0) < 0.5
     reach = np.where(longer, 0.58, 0.31)
 
@@ -1833,34 +1833,44 @@ def stillwave():
         # The front freezing outward over the first half of the reel, then holding.
         grow = min(1.0, 0.34 + 1.6 * (f / (STILLWAVE_FRAMES - 1.0)))
 
-        edge = np.clip(1.0 - d / 0.17, 0.0, 1.0) ** 1.6
-        ticks = across * np.clip(1.0 - d / np.maximum(1e-3, reach * grow), 0.0, 1.0) ** 1.25
+        # **A solid white bar at the front, not a feathered edge.** This was a soft falloff and
+        # it read as a haze sliding past; what a wall of stopped time needs is a *face* - flat at
+        # full alpha for a real depth, then a shoulder. `laser`'s own lesson about a bar, applied
+        # to the one thing on this board that genuinely is one.
+        flat = np.clip(1.0 - np.clip((d - 0.14) / 0.10, 0.0, 1.0), 0.0, 1.0)
+        edge = np.clip(1.0 - d / 0.30, 0.0, 1.0) ** 1.35
+        ticks = across * np.clip(1.0 - d / np.maximum(1e-3, reach * grow), 0.0, 1.0) ** 0.95
         shard = comb * np.clip(1.0 - d / np.maximum(1e-3, ragged * grow), 0.0, 1.0) ** 1.5
         body = np.clip(1.0 - d / 0.52, 0.0, 1.0) ** 1.7
         haze = np.clip(1.0 - d, 0.0, 1.0) ** 2.6
 
         # A shimmer running along the front, so a wave held for a beat is never still.
-        run = 0.86 + 0.14 * np.sin(x / 19.0 - phase * 2.0)
+        run = 0.93 + 0.07 * np.sin(x / 19.0 - phase * 2.0)
 
         a = np.zeros((thick, long, 4), np.float32)
         a[..., 0] = 255.0
         a[..., 1] = 255.0
         a[..., 2] = 255.0
-        a[..., 3] = np.clip(edge * 1.0 + ticks * 1.00 + shard * 0.80
-                            + body * 0.42 + haze * 0.24, 0.0, 1.0) * run * along * 255.0
+        a[..., 3] = np.clip(flat * 1.0 + edge * 0.92 + ticks * 1.25 + shard * 1.05
+                            + body * 0.62 + haze * 0.34, 0.0, 1.0) * run * along * 255.0
 
-        # The edge written back over the top, so the front is solid white whatever the sum came to
-        # - `beam`'s rule about a stroke whose brightest pixel is 80%.
-        a[..., 3] = np.maximum(a[..., 3], edge * along * 255.0)
+        # The face written back over the top at full, so the front is solid white whatever the sum
+        # came to - `beam`'s rule about a stroke whose brightest pixel is 80%, and the whole of why
+        # this now reads as a wall rather than as a glow.
+        a[..., 3] = np.maximum(a[..., 3], np.maximum(flat, edge * 0.85) * along * 255.0)
 
         frames.append(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA"))
 
     return frames
 
 
-#: Frames the dial is drawn over. Sixteen at 24fps is two thirds of a second, and the view holds
-#: it for the whole stop - so it loops, which is why what moves on it is a glint and never a hand.
-STILLDIAL_FRAMES = 16
+#: Frames the dial is drawn over.
+#:
+#: **Twenty-four at 24fps is one second a revolution**, and the minute hand sweeps exactly once
+#: across the reel - so a three second stop is three clean turns and the loop never shows a seam.
+#: Tie these two together before changing either: a hand that does not come back to where it
+#: started is a clock that jumps every time the reel wraps.
+STILLDIAL_FRAMES = 24
 
 
 def stilldial():
@@ -1871,11 +1881,13 @@ def stilldial():
     has to be told the meaning of. It is drawn once, held for the whole stop and shattered when the
     sand runs out, which is the same three-beat shape every other charm here has.
 
-    **Nothing on it runs, and that is the drawing.** A ticking clock is a clock that is working;
-    what this has to say is that it is *not*. So the sand does not fall, the face is complete, and
-    the only thing alive is a glint travelling the rim - enough that a held sprite is not a still
-    image (`SiegeView.Stilled`'s own rule about a stopped hill needing something that moves), and
-    not so much that it reads as running.
+    **Its hands run, and that is a reversal worth recording.** This shipped frozen, on the
+    argument that a ticking clock is a clock that is working and what the charm has to say is that
+    it is *not*. The argument is sound and the drawing was dead: a still face over a still hill is
+    a decal, and the owner's verdict was that it could not be felt. A minute hand sweeping a full
+    turn a second - with the smear that rate needs, or it reads as teleporting - says *time is
+    doing something*, which is what a player is being sold. It is also the only thing on a stopped
+    board that is plainly moving, which is the job the motes were added for.
 
     **An hourglass inside a graduated ring, and the glass replaced a pair of clock hands.** Hands
     say *a clock*, which is furniture this game has nowhere else and reads as borrowed; the glass
@@ -1899,6 +1911,14 @@ def stilldial():
     rim = side * 0.44
     frames = []
 
+    def wedge(angle, span_, reach, gain):
+        """The smear a hand drags behind it: a soft fan back from where it is now."""
+        delta = (ang - angle + math.pi) % math.tau - math.pi
+        behind = np.clip(-delta / max(1e-3, span_), 0.0, 1.0)
+        return (np.clip(1.0 - behind, 0.0, 1.0) ** 1.6
+                * np.clip(1.0 - r / reach, 0.0, 1.0) ** 0.8
+                * np.clip(r / (reach * 0.16), 0.0, 1.0) * gain)
+
     def spoke(angle, reach, wide, taper=0.55):
         """A hand: a soft segment out of the middle, thinning along its length."""
         ux, uy = math.cos(angle), math.sin(angle)
@@ -1909,23 +1929,27 @@ def stilldial():
                 * np.clip(1.0 - along / (reach * 1.02), 0.0, 1.0) ** 0.35)
 
     # The face, which never changes: a rim, sixty fine graduations and twelve bold ones.
-    ring = np.clip(1.0 - np.abs(r - rim) / 5.0, 0.0, 1.0) ** 1.1
+    ring = np.clip(1.0 - np.abs(r - rim) / 7.5, 0.0, 1.0) ** 0.9
 
     fine_phase = np.abs(((ang * 60.0 / math.tau) % 1.0) - 0.5)
     fine = (np.clip((fine_phase - 0.38) / 0.12, 0.0, 1.0)
-            * np.clip(1.0 - np.abs(r - rim * 0.93) / (rim * 0.075), 0.0, 1.0))
+            * np.clip(1.0 - np.abs(r - rim * 0.93) / (rim * 0.095), 0.0, 1.0))
 
     bold_phase = np.abs(((ang * 12.0 / math.tau) % 1.0) - 0.5)
-    bold = (np.clip((bold_phase - 0.33) / 0.17, 0.0, 1.0)
-            * np.clip(1.0 - np.abs(r - rim * 0.86) / (rim * 0.135), 0.0, 1.0))
+    bold = (np.clip((bold_phase - 0.29) / 0.21, 0.0, 1.0)
+            * np.clip(1.0 - np.abs(r - rim * 0.855) / (rim * 0.165), 0.0, 1.0))
+
+    # A face rather than a hoop: a very faint fill so the dial reads as a disc hanging over the
+    # hill. Low enough that every body under it is still plainly there.
+    plate = np.clip(1.0 - r / (rim * 1.02), 0.0, 1.0) ** 0.5
 
     # **The glass itself, inside the ring, and it replaced a pair of clock hands.** Hands say
     # *a clock*, which is a piece of furniture this game has nowhere else and reads as borrowed;
     # an hourglass says *this gem*, because it is the shape of the stone the player just matched.
     # Drawn as an outline rather than a solid so the bodies behind it are never hidden - the same
     # reason the face is held at well under full alpha.
-    glassH = rim * 0.60          # half its height
-    waist, mouth = side * 0.018, rim * 0.34
+    glassH = rim * 0.34          # half its height
+    waist, mouth = side * 0.012, rim * 0.19
 
     # Half the width the bulb has at this height: a waist in the middle opening to a mouth at
     # each end, which is two cones meeting - the bicone `make_siege_art.CHARM_GEMS` cuts.
@@ -1933,7 +1957,7 @@ def stilldial():
     inside = np.abs(dy) <= glassH
 
     walls = np.where(inside,
-                     np.clip(1.0 - np.abs(np.abs(dx) - flare) / 2.6, 0.0, 1.0) ** 1.2, 0.0)
+                     np.clip(1.0 - np.abs(np.abs(dx) - flare) / 3.2, 0.0, 1.0) ** 1.0, 0.0)
 
     # The two caps, and the thread of sand that is not running.
     caps = (np.clip(1.0 - np.abs(np.abs(dy) - glassH) / 3.0, 0.0, 1.0)
@@ -1944,17 +1968,33 @@ def stilldial():
 
     glass = walls + caps * 0.95 + thread * 0.55
 
-    hub = np.clip(1.0 - r / (side * 0.030), 0.0, 1.0) ** 1.6
+    hub = np.clip(1.0 - r / (side * 0.034), 0.0, 1.0) ** 1.4
     inner = np.clip(1.0 - np.abs(r - rim * 0.74) / 2.6, 0.0, 1.0) ** 1.3
 
     for f in range(STILLDIAL_FRAMES):
         phase = math.tau * f / STILLDIAL_FRAMES
 
-        # The glint: a short bright arc travelling the rim. The only thing on the face that moves.
-        swept = ((ang - phase) % math.tau) / math.tau
+        # **The hands run, and that is the owner's call against what this first shipped as.** It
+        # was drawn frozen on the argument that a ticking clock is a working one - true, and it
+        # cost the thing its whole read: a still face over a still hill is a decal. A minute hand
+        # sweeping a full turn a second says *time is doing something*, which is what the charm is.
+        # Twelve o'clock is up, so the sweep runs clockwise from -90 degrees.
+        minute = -math.pi * 0.5 + phase
+        hour = -math.pi * 0.5 + phase / 12.0 + math.pi * 0.35
+
+        hands = (spoke(hour, rim * 0.50, 9.0)
+                 + spoke(minute, rim * 0.80, 6.0))
+
+        # The smear it drags, which is what sells the speed - a hand drawn with no wake at this
+        # rate reads as a hand teleporting round the face.
+        smear = wedge(minute, math.pi * 0.55, rim * 0.80, 0.42)
+
+        # The glint: a short bright arc travelling the rim the other way, so the face is never
+        # symmetrical with the hand.
+        swept = ((ang + phase) % math.tau) / math.tau
         glint = np.clip(1.0 - swept / 0.10, 0.0, 1.0) ** 2.0
 
-        breath = 0.90 + 0.10 * math.sin(phase * 2.0)
+        breath = 0.93 + 0.07 * math.sin(phase * 2.0)
 
         a = np.zeros((side, side, 4), np.float32)
         a[..., 0] = 255.0
@@ -1964,9 +2004,9 @@ def stilldial():
         # **Weighted for a face drawn over a lit hill rather than on this sheet.** The rim and the
         # hands carry the shape at a glance and the graduations are what it turns out to be on a
         # second look, so the first two are near solid and the ticks sit under them.
-        lit = (ring * 1.15 + fine * 1.05 + bold * 1.30
-               + glass * 1.05 + hub * 0.9 + inner * 0.34
-               + ring * glint * 1.0)
+        lit = (plate * 0.16 + ring * 1.35 + fine * 1.20 + bold * 1.55
+               + glass * 0.85 + hub * 1.2 + inner * 0.34
+               + hands * 1.45 + smear + ring * glint * 1.1)
 
         a[..., 3] = np.clip(lit * breath, 0.0, 1.0) * 255.0
         frames.append(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA"))

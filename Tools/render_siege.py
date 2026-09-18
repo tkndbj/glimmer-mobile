@@ -349,7 +349,7 @@ def bolt_scale(model):
 
 #: `SiegeView.StillFront`, `.DialWide` and `.DialInk` - how deep the hourglass's wavefront is
 #: drawn, and how wide and how lit the dial it hangs over the hill is.
-STILL_FRONT, DIAL_WIDE, DIAL_INK = 1.15, 4.2, 0.62
+STILL_FRONT, DIAL_WIDE, DIAL_INK = 1.55, 4.2, 0.84
 
 #: `Pal.Glass` - the one colour the hourglass draws in, and the only cold thing on this board.
 GLASS = (0xDC, 0xEB, 0xF5)
@@ -1901,14 +1901,14 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         # of the last two additions to this file first ran.
         stillfront = reel("stillwave", int(t * 11))
         if stillfront is not None:
-            deep = cell * STILL_FRONT * (0.72 + (1.15 - 0.72) * t)
+            deep = cell * STILL_FRONT * (0.82 + (1.20 - 0.82) * t)
             stillband = stillfront.resize((int(span[0]), max(1, int(deep))), Image.LANCZOS)
-            stillband = tinted(stillband, GLASS, 1.0 - 0.88 * t * t)
+            stillband = tinted(stillband, GLASS, 1.0 - 0.66 * t * t * t)
             stillx, stilly = at(0.0, frm + (to - frm) * t)
             sheet.alpha_composite(stillband, (int(stillx - stillband.width / 2),
                                               int(stilly - stillband.height / 2)))
 
-        stillface = reel("stilldial", int(t * 15))
+        stillface = reel("stilldial", int(t * 23))
         if stillface is not None:
             dialsize = int(cell * DIAL_WIDE)
             dialx, dialy = at(0.0, (hill_top + hill_foot) * 0.5)

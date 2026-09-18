@@ -4,6 +4,7 @@ using GlimmerGrove.Ads;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Progression;
 using GlimmerGrove.Store;
 using UnityEngine;
 using UnityEngine.UI;
@@ -186,7 +187,7 @@ namespace GlimmerGrove
             // Never dismissed by a stray tap on the scrim when the run behind it is frozen
             // and closing forfeits it. The same judgement DefeatOverlay makes, for the same
             // reason: an accidental dismissal here costs the player the run.
-            MakePanel(new Vector2(PanelW, y), Loc.Get(TitleKey(PlacementId)),
+            MakePanel(new Vector2(PanelW, y), Loc.Get(TitleKey(PlacementId, offer)),
                       dismissOnScrim: true);
 
             BuildRewardCard(offer, cardY);
@@ -288,12 +289,34 @@ namespace GlimmerGrove
         /// Written out rather than built from the placement id, so the loc gate can see
         /// every key. A concatenated key is invisible to the scanner and ships missing.
         /// </summary>
-        static string TitleKey(string placementId)
-            => placementId == AdPlacement.CoinBonus ? "ui.ads.coins_title"
-             : placementId == AdPlacement.WinBonus ? "ui.ads.bonus_title"
-             : placementId == AdPlacement.HintRefill
-                 ? (Wallet.Hints.CanSpend ? "ui.ads.hints_title" : "ui.ads.hints_empty_title")
-             : "ui.ads.hearts_title";
+        /// <summary>
+        /// <b>Every placement is named, and the fallback is the <em>kind</em> rather than
+        /// hearts.</b> This used to end in a bare <c>: "ui.ads.hearts_title"</c>, so the day a
+        /// fifth placement shipped it offered an XP boost under a panel headed "Out of hearts" —
+        /// invariant 44e exactly, a default that is a real answer hiding the case nobody is
+        /// looking at. A placement this build does not name now takes its title from what the
+        /// published table says it pays, which is wrong far more loudly and far less often.
+        /// </summary>
+        internal static string TitleKey(string placementId, AdOffer offer)
+        {
+            if (placementId == AdPlacement.CoinBonus) return "ui.ads.coins_title";
+            if (placementId == AdPlacement.WinBonus) return "ui.ads.bonus_title";
+            if (placementId == AdPlacement.XpBoost) return "ui.ads.xp_boost_title";
+            
+
+            if (placementId == AdPlacement.HintRefill)
+                return Wallet.Hints.CanSpend ? "ui.ads.hints_title" : "ui.ads.hints_empty_title";
+
+            if (placementId == AdPlacement.HeartRefill) return "ui.ads.hearts_title";
+
+            switch (offer.IsValid ? offer.Kind : ChestDropKind.None)
+            {
+                case ChestDropKind.Credits: return "ui.ads.coins_title";
+                case ChestDropKind.Hints: return "ui.ads.hints_title";
+                case ChestDropKind.XpBoost: return "ui.ads.xp_boost_title";
+                default: return "ui.ads.hearts_title";
+            }
+        }
 
         /// <summary>
         /// What the watch button says when it can be pressed, written out for
@@ -308,10 +331,11 @@ namespace GlimmerGrove
         /// still shows the player's own resource rather than falling back to coins on a
         /// hearts panel, which would be a small lie told at the worst moment.
         /// </summary>
-        static ChestDropKind ResourceOf(string placementId)
+        internal static ChestDropKind ResourceOf(string placementId)
             => placementId == AdPlacement.CoinBonus || placementId == AdPlacement.WinBonus
                  ? ChestDropKind.Credits
              : placementId == AdPlacement.HintRefill ? ChestDropKind.Hints
+             : placementId == AdPlacement.XpBoost ? ChestDropKind.XpBoost
              : ChestDropKind.Hearts;
 
         // ------------------------------------------------------------- the prize
@@ -400,6 +424,22 @@ namespace GlimmerGrove
                 facts.Add(new AdFact("ic_plus", Pal.Cream, NextHintLine));
                 facts.Add(new AdFact("ic_hint", Pal.Gold, () => Loc.Get("ui.hints.one_conduit")));
             }
+            else if (placementId == AdPlacement.XpBoost)
+            {
+                // Read from the published table rather than written into the copy, for the
+                // reason every other branch here is: a panel that explains the game is the
+                // first thing to rot when the game is retuned. Both numbers are the ones the
+                // rule actually uses — the percentage and the window come out of `XpBoostTable`,
+                // not out of the advert's own `amount`, because that is the pair the cooldown is
+                // derived against (`ProgressionTable` errors when the two drift).
+                var boost = ProgressionRules.Table.XpBoost;
+
+                facts.Add(new AdFact("ic_star3d", Pal.Aqua,
+                                     () => Loc.Format("ui.ads.xp_boost_offer",
+                                                      boost.WatchedPercent, boost.WatchedHours)));
+                facts.Add(new AdFact("ic_plus", Pal.Cream, NextBoostLine));
+                facts.Add(new AdFact("ic_star", Pal.Gold, () => Loc.Get("ui.ads.xp_boost_stacks")));
+            }
             else
             {
                 facts.Add(new AdFact("ic_heart_boost", Pal.Mint, RegenLine));
@@ -415,6 +455,19 @@ namespace GlimmerGrove
 
             return facts.ToArray();
         }
+
+        /// <summary>
+        /// When another XP boost may be watched, or that one may be taken now.
+        ///
+        /// The cooldown is derived from the window's own deadline (<c>XpBoost.WatchedReadyAt</c>),
+        /// so this reads the same number the offer is gated on — there is no second clock that
+        /// could disagree with the button.
+        /// </summary>
+        static string NextBoostLine()
+            => XpBoost.WatchedReady
+                ? Loc.Get("ui.ads.xp_boost_ready")
+                : Loc.Format("ui.ads.xp_boost_wait",
+                             Profile.Countdown(XpBoost.WatchedReadyInSeconds));
 
         /// <summary>When the next hint lands, or that the pool is already full.</summary>
         static string NextHintLine()

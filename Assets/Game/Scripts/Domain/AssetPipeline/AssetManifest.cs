@@ -314,6 +314,12 @@ namespace GlimmerGrove.AssetPipeline
             // on the same shelf.
             "ic_xp_boost",
 
+            // The map's boost clock, under the back key. Global because the map is one of the
+            // first screens a session touches and the readout appears the moment a window opens
+            // under it — a scoped mark would be a white rectangle on the frame it arrived
+            // (invariant 7b).
+            "ic_boost_up",
+
             // The update wall's mark (invariant 49). **Global rather than scoped**, and
             // this is the clearest case in the list: the wall is raised over whatever
             // screen the player is standing on, by a poll that knows nothing about which

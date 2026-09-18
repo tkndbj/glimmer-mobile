@@ -101,6 +101,11 @@ ICON_PACK = Path(r"C:\Users\Digikey\Downloads\craftpix-net-629015-100-skill-icon
 # --------------------------------------------------------------- LevelsScreen
 BANNER_W, BANNER_H, BANNER_Y = 476.0, 138.0, -142.0
 CORNER_SIZE, CORNER_X, CORNER_Y = 118.0, 96.0, -132.0
+
+# `LevelsScreen.BoostGap` and `BoostReadout`'s own block. The clock hangs under the back
+# key on both tracks, because this screen draws the map and the hub with one set of chrome.
+BOOST_GAP = 18.0
+BOOST_MARK, BOOST_LABEL, BOOST_CLOCK = 46.0, 48.0, 34.0
 STARS_W, STARS_H, STARS_GAP = 196.0, 78.0, 22.0
 PILL_W, PILL_H, MODES_GAP = 372.0, 116.0, 20.0
 MODES_Y = BANNER_Y - BANNER_H / 2 - MODES_GAP - PILL_H / 2
@@ -154,6 +159,30 @@ def ring(size, thickness, colour, alpha):
     d.ellipse([1, 1, size - 2, size - 2], outline=(*colour, int(255 * alpha)),
               width=int(thickness))
     return im
+
+
+def boost_readout(sheet, left):
+    """`BoostReadout` — the green arrow, the letters XP, and how long is left.
+
+    Drawn only when a window is running, which is the widget's own rule: an empty clock is a
+    control that answers no question, and this sits on a painted map where every pixel is
+    somebody's artwork. The mirror takes the remaining seconds as an argument because a render
+    has no wallet — what it proves is the *placement*, which is the one thing a fixture cannot.
+    """
+    top = -(CORNER_Y - CORNER_SIZE / 2) + BOOST_GAP
+    block_w = BOOST_MARK + BOOST_LABEL
+    cx = CORNER_X
+
+    mark = K.fit(Image.open(ART / "Ui" / "ic_boost_up.png").convert("RGBA"), (BOOST_MARK, BOOST_MARK))
+    K.paste(sheet, mark, cx - block_w / 2 + BOOST_MARK / 2, top + BOOST_MARK / 2)
+
+    K.text(sheet, "XP", cx - block_w / 2 + BOOST_MARK + BOOST_LABEL / 2 - 6,
+           top + BOOST_MARK / 2, 34, fill=(146, 226, 122), outline=2)
+
+    hours, minutes = left // 3600, left % 3600 // 60
+    clock = f"{hours}h {minutes:02d}m" if left >= 3600 else f"{left // 60}:{left % 60:02d}"
+    K.text(sheet, clock, cx, top + BOOST_MARK + BOOST_CLOCK / 2 + 2, 30,
+           fill=K.CREAM, outline=2)
 
 
 def rounded(w, h, radius, fill, edge=None):
@@ -329,7 +358,7 @@ def battle(sheet, top, wall=0):
 
 
 # --------------------------------------------------------------- the furniture
-def header(sheet, modes):
+def header(sheet, modes, boost=0):
     """`LevelsScreen.BuildHeader` - what stands above the column and is unchanged by it."""
     fade = Image.new("RGBA", (W, 300), (0, 0, 0, 0))
     d = ImageDraw.Draw(fade)
@@ -339,6 +368,9 @@ def header(sheet, modes):
 
     K.paste(sheet, K.skin("sq_blue", CORNER_SIZE, CORNER_SIZE), CORNER_X, -CORNER_Y)
     K.paste(sheet, K.skin("sq_orange", CORNER_SIZE, CORNER_SIZE), W - CORNER_X, -CORNER_Y)
+
+    if boost:
+        boost_readout(sheet, boost)
 
     K.paste(sheet, K.fit(K.load("Hud/title")[0], (BANNER_W, BANNER_H)), W / 2, -BANNER_Y)
     K.text(sheet, "ENDLESS WATCH", W / 2, -BANNER_Y - 4, 40, fill=(92, 61, 41), outline=0)
@@ -376,7 +408,7 @@ def shelf(sheet, h):
 
 
 # --------------------------------------------------------------- the screen
-def screen(h, played=True, modes=False, wall=0, standing=0):
+def screen(h, played=True, modes=False, wall=0, standing=0, boost=0):
     sheet = Image.new("RGBA", (W, h), (*K.GROUND, 255))
 
     plain(sheet, h)
@@ -389,7 +421,7 @@ def screen(h, played=True, modes=False, wall=0, standing=0):
     points(sheet, top)
     battle(sheet, top, wall)
 
-    header(sheet, modes)
+    header(sheet, modes, boost)
     shelf(sheet, h)
 
     print("  canvas %dx%d   band %.0f   column %.0f   air %.0f above, %.0f below"
@@ -416,6 +448,8 @@ def main():
                          "what it says once enough keepers have run the lane")
     ap.add_argument("--short", action="store_true",
                     help="the squarest canvas this game lays out for, where the band is tightest")
+    ap.add_argument("--boost", type=int, default=0, metavar="SECONDS",
+                    help="draw the XP boost clock under the back key, with this long left")
     ap.add_argument("--out", type=Path, default=Path("endless.png"))
     args = ap.parse_args()
 
@@ -425,7 +459,8 @@ def main():
     out = screen(SHORT_H if args.short else K.H,
                  played=not args.unplayed and args.locked <= 0,
                  modes=args.modeswitch, wall=max(0, args.locked),
-                 standing=max(0, min(99, args.standing)))
+                 standing=max(0, min(99, args.standing)),
+                 boost=max(0, args.boost))
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
     print("  wrote %s  %dx%d  - look at it" % (args.out, out.width, out.height))

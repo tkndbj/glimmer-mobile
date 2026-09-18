@@ -1127,6 +1127,15 @@ namespace GlimmerGrove
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", Vector2.one * CornerSize,
                              new Vector2(0f, 1f), new Vector2(CornerX, CornerY), () => Flow.Go<HomeScreen>());
 
+            // The XP boost's clock, directly under the back key and on both tracks — this screen
+            // draws the chapter map and the Infinite hub, and the chrome is deliberately the same
+            // for both, so one call covers the pair. It takes itself off screen when no boost is
+            // running (`BoostReadout`), which is why it is attached unconditionally rather than
+            // behind a test here: a screen that decided for itself would have to be rebuilt when
+            // a window opens under it.
+            BoostReadout.Attach(this, Safe, new Vector2(0f, 1f),
+                                new Vector2(CornerX, CornerY - CornerSize * .5f - BoostGap));
+
             // What a glade pays, and under what rule — the one thing this screen is full of
             // and cannot draw. A node shows its stars and says nothing about what the stars
             // were worth, or what a second run at a glade already three-starred is worth,
@@ -1290,6 +1299,9 @@ namespace GlimmerGrove
         /// where that corner is would stop agreeing with it the first time either key moved.
         /// </summary>
         const float CornerSize = 118f, CornerX = 96f, CornerY = -132f;
+
+        /// <summary>Air between the back key's lower edge and the boost clock under it.</summary>
+        const float BoostGap = 18f;
 
         /// <summary>
         /// Where the chapter's star count sits: under the "i", right-aligned with it, measured

@@ -78,6 +78,11 @@ SHELF_TOP = HEADER + TABROW + REFER_ROW
 # inside it. Drawn at the crest, which is the phase that decides whether anything is cut.
 BANNER_INSET, BANNER_SWELL = 8.0, .03
 
+# How much of the cover fit the picture actually draws at. 1.0 is the fit exactly — the
+# banner is the window and never a pixel past it — and anything under it pulls the picture
+# in, showing the plate as a frame and un-cropping the art at the same time.
+BANNER_FILL = 0.90
+
 # ProductCard / ProductCardBadges
 PLATE_X, PLATE_Y = 34.0, 40.0
 PLATEW, PLATEH = CELLW - PLATE_X, CELLH - PLATE_Y
@@ -579,8 +584,8 @@ def invite_banner(sheet):
     # window and never a pixel past it.
     seated = 1 / (1 + BANNER_SWELL)
     crest = 1 + BANNER_SWELL
-    art = banner.resize((max(1, int(dw * seated * crest)), max(1, int(dh * seated * crest))),
-                        Image.LANCZOS)
+    art = banner.resize((max(1, int(dw * seated * crest * BANNER_FILL)),
+                         max(1, int(dh * seated * crest * BANNER_FILL))), Image.LANCZOS)
 
     # The `Mask`: everything outside the inset window is cut.
     layer = Image.new("RGBA", (int(REFER_W), int(REFER_H)), (0, 0, 0, 0))

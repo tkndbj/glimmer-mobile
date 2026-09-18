@@ -256,7 +256,7 @@ namespace GlimmerGrove
             var frames = Reel("stillwave");
             var face = frames != null && frames.Length > 0 ? frames[0] : Art.SoftCapsule(64);
 
-            var wave = UIKit.Img("Still wave", _fx, face, Pal.A(Pal.Glass, .95f),
+            var wave = UIKit.Img("Still wave", _fx, face, Pal.Glass,
                                  new Vector2(Span.x, Cell * StillFront));
             wave.raycastTarget = false;
 
@@ -273,8 +273,12 @@ namespace GlimmerGrove
                 // **It opens rather than closing.** The old front thinned to a third as it went,
                 // which reads as a thing running out of energy; a wall of stopped time should
                 // arrive at the crest as wide as it left the line and simply stop being lit.
-                rt.localScale = new Vector3(1f, Mathf.Lerp(.72f, 1.15f, t), 1f);
-                wave.color = Pal.A(Pal.Glass, Mathf.Lerp(1f, .12f, t * t));
+                rt.localScale = new Vector3(1f, Mathf.Lerp(.82f, 1.20f, t), 1f);
+
+                // **It holds its brightness nearly to the crest.** It faded on a square curve and
+                // was gone by halfway, so the half of the sweep a player is actually watching was
+                // a ghost. What ends it is the wave leaving the hill, not the wave giving up.
+                wave.color = Pal.A(Pal.Glass, Mathf.Lerp(1f, .34f, t * t * t));
             }, wave).OnDone(() => { if (wave) Destroy(wave.gameObject); });
 
             // **A ring closing on every body as the wave reaches it**, staggered by how far up
@@ -339,7 +343,7 @@ namespace GlimmerGrove
         const float StillSweep = .42f;
 
         /// <summary>How deep the wavefront is drawn, in cells. See <c>make_siege_art.stillwave</c>.</summary>
-        const float StillFront = 1.15f;
+        const float StillFront = 1.55f;
 
         /// <summary>
         /// How wide the dial is drawn, how much of it is lit, and how long it takes to arrive and
@@ -351,7 +355,7 @@ namespace GlimmerGrove
         /// under it are never in doubt. The figures are the one part of this that is taste, and
         /// the direction to move the alpha is down.
         /// </summary>
-        const float DialWide = 4.2f, DialInk = .62f, DialIn = .26f, DialOut = .30f;
+        const float DialWide = 4.2f, DialInk = .84f, DialIn = .22f, DialOut = .30f;
 
         /// <summary>
         /// The clock the hill wears while it is stopped: it arrives with the wave, holds frozen
@@ -403,9 +407,9 @@ namespace GlimmerGrove
             Tween.Run(DialIn, Ease.OutQuad, t =>
             {
                 if (!rt) return;
-                rt.localScale = Vector3.one * Mathf.Lerp(1.55f, 1f, t);
-                rt.localRotation = Quaternion.Euler(0f, 0f, Mathf.Lerp(-22f, 0f, t));
-                dial.color = Pal.A(Pal.Glass, DialInk * t);
+                rt.localScale = Vector3.one * Mathf.Lerp(1.70f, 1f, t);
+                rt.localRotation = Quaternion.Euler(0f, 0f, Mathf.Lerp(-34f, 0f, t));
+                dial.color = Pal.A(Pal.Glass, DialInk * Mathf.Sqrt(t));
             }, dial);
 
             // And it breaks rather than fading: the sand running out is a beat, and the hill

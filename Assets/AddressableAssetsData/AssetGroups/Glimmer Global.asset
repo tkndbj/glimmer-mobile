@@ -487,6 +487,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/shot_prism_r
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 03c20a042dd74ea4ea79e32cc9993d9d
+    m_Address: Art/Siege/stilldial/f22
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Siege/stilldial
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 03c8bca406710c5479b8345d254464f5
     m_Address: Art/Fx/Siege/muzzle_apex_g/f07
     m_ReadOnly: 0
@@ -1037,6 +1043,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c4
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0886b611fb9f13c45a364a0ce72724be
+    m_Address: Art/Siege/stilldial/f21
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Siege/stilldial
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 088abb5c710ad834a8adc55ea7d6a07d
     m_Address: Art/Fx/Siege/muzzle_stasis/f06
@@ -6279,6 +6291,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_tempest
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a4e17a17c40d7a40a8ee1df72e81646
+    m_Address: Art/Siege/stilldial/f17
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Siege/stilldial
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2a4f9593c187086488e0aead122c0d2d
     m_Address: Art/Siege/Wards/leech_r_fire/f03
@@ -12107,6 +12125,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_mortar_b
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 527474f9f754c8d49b668f782a6a81ea
+    m_Address: Art/Siege/stilldial/f18
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Siege/stilldial
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5284d780f6779184bb383411c040bb74
     m_Address: Art/Siege/fire4_g/f00
@@ -20346,6 +20370,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/shot_apex_b
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 889c9773f46cd437b9f02611e937483b
+    m_Address: Art/Ui/ic_boost_up
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 88a2d80d252e6d0b6c99d5337844b6af
     m_Address: Art/Critters/c1/f15
     m_ReadOnly: 0
@@ -21919,6 +21948,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/weaver_g
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 93d3f6cd26935514498c4a39a255b516
+    m_Address: Art/Siege/stilldial/f16
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Siege/stilldial
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 93d8be3bb1c6af84eb49d06c10cb40f2
     m_Address: Art/Siege/wildBulwark_y/f00
@@ -30439,6 +30474,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cce7caa0992b914408c2440f238fa9cb
+    m_Address: Art/Siege/stilldial/f23
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Siege/stilldial
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cd3e2bd4986de2447a293a55dc67a1c7
     m_Address: Art/Ui/Wards/stasis
     m_ReadOnly: 0
@@ -31544,6 +31585,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/roar_hit
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d466eecd923b571448a3a6e024607219
+    m_Address: Art/Siege/stilldial/f20
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Siege/stilldial
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d46baff8528199443a57e173175cc452
     m_Address: Art/Siege/bringer_cast/f07
     m_ReadOnly: 0
@@ -31709,6 +31756,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/fire2_b
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d5858a92257c0c1459d4542a9f64c250
+    m_Address: Art/Siege/stilldial/f19
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Siege/stilldial
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d58fdc0be571fb54d87afdecca428a70
     m_Address: Art/Fx/Siege/muzzle_spark_g/f00
@@ -32732,6 +32785,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/wildMon_b_swing
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dbc90e27cc385b1448bc593fc7535ea0
+    m_Address: Art/Ui/ic_xp_boost
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dbcf456ffa5f101408b719614f587107
     m_Address: Art/Fx/Siege/shot_stasis/f01

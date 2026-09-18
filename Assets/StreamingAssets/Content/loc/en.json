@@ -5696,6 +5696,14 @@
     {
       "key": "ui.win.xp_boosted",
       "text": "+{0} XP from your boost ({1}%)"
+    },
+    {
+      "key": "ui.ads.xp_boost_ready",
+      "text": "Ready to watch now"
+    },
+    {
+      "key": "ui.ads.xp_boost_stacks",
+      "text": "Stacks with the boost you can buy"
     }
   ]
 }

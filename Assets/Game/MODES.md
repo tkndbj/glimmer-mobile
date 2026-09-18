@@ -677,12 +677,22 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
 37dz. **A wave says something arrived; only a clock says time stopped.** So the stop now hangs a
    **dial** over the hill for the whole window (`SiegeView.Dial`, `make_siege_art.stilldial`) -
    a graduated ring with the **hourglass itself** inside it, which is the shape of the stone the
-   player just matched. It replaced a pair of clock hands: hands say *a clock*, which is furniture
-   this game has nowhere else. **Nothing on it runs** - a ticking clock is a working one - and what
-   keeps a held sprite from reading as a frozen *game* is the glint travelling its rim and the
-   motes still rising, which is what the motes were added for. It arrives turning, holds, and
-   **breaks** when the sand runs out, because a charm that ended by fading would end by omission.
-   Drawn as an outline at well under full alpha: it hangs over the thing the player is watching.
+   player just matched, set inside a graduated ring with a **running minute hand**. It arrives
+   turning, holds, and **breaks** when the sand runs out, because a charm that ended by fading
+   would end by omission.
+37ea. **It was drawn frozen first, and the argument for that was sound and the drawing was
+   dead.** A ticking clock is a clock that is working, and what the charm has to say is that it is
+   *not* - so the first cut held the hands still and let a glint travel the rim. The owner's
+   verdict was that it could not be *felt*: a still face over a still hill is a decal. A minute
+   hand sweeping a full turn a second, with the smear that rate needs or it reads as teleporting,
+   is the only thing plainly moving on a stopped board - which is the job the motes were added
+   for. **`STILLDIAL_FRAMES` and the sweep are one fact**: the hand turns exactly once across the
+   reel, so a loop never shows a seam.
+37eb. **"More white, denser, let me feel it" is a note about *alpha profile*, not about size.**
+   The wavefront was a feathered edge over a haze and read as something sliding past; what it is
+   now is a **face** - flat at full alpha for a real depth, then a shoulder, which is `laser`'s own
+   rule applied to the one thing on this board that genuinely is a wall. It also stopped fading on
+   a square curve, which had it a ghost by halfway through the very sweep a player is watching.
 
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` on rung five or ten, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds

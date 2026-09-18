@@ -1129,14 +1129,25 @@ deployed by name with invoker bindings, re-seeded, smoke test 166/166 and delete
 `ReferralTests` green in the Editor. What has never run: the share sheet on a device, on either platform
 — `GlimmerShare.mm` has never been compiled by Xcode — and a real invitee typing a real code.
 
-**`ic_xp_boost` is on disk and unaddressed**, and is the only red name left: `artnames.py`
+**`ic_boost_up` is on disk and unaddressed**, and is the only red name left: `artnames.py`
 refuses it until `Addressables > Sync All Assets` **and save** (invariant 7a working rather than a
-fault). The four cut before it — `ad_coin`, `ad_heart`, `ad_xp`, `ic_utilities` — were synced on
-2026-09-17 and are green. All five come out of `Tools/make_ad_art.py` from owner-supplied artwork,
+fault). The five cut before it — `ad_coin`, `ad_heart`, `ad_xp`, `ic_utilities`, `ic_xp_boost` —
+were synced on 2026-09-17 and are green. All five come out of `Tools/make_ad_art.py` from owner-supplied artwork,
 each with its own long edge, because a tab glyph (~86 drawn), a good's card icon (~222) and a full
 card illustration (~366) are three different sizes and one constant made two of them wrong. The
 adverts carry their own play button, so `ShopArt.PaintAd` draws nothing over one and composes the
 old heap only for a placement with no picture (the hint refill).
+
+**The map carries the boost's clock.** `BoostReadout` sits under the back key on `LevelsScreen`,
+which draws the chapter map *and* the Infinite hub with one set of chrome — so one attachment
+covers both tracks. It is **watched and ticked**, not drawn (invariant 44j): a window can open
+while the map is standing, and the number moves whether anything happens or not. Two subtleties
+worth keeping: the clock reads the **later** of the two deadlines rather than the next change, or
+it would vanish while a boost was still running; and the **tick** is what takes it off screen,
+because a window closing is not an event — nothing happened, time merely passed. Its mark,
+`ic_boost_up`, is the update wall's own arrow turned over and **hue-rotated** to green by
+`Tools/make_boost_icon.py` — never tinted, because a multiply takes amber to brown (44g) — and it
+is the same drawing on purpose: gold down says *download*, green up says *this is lifting* (49h).
 
 **The shop's shelves moved with them.** `KIT` is now **UTILITIES** and leads with the two XP boost
 cards — the free watch and the 120-gem day — with the four consumables under them; hearts and

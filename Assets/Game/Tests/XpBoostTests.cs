@@ -252,6 +252,48 @@ namespace GlimmerGrove.Tests
                            "for doing well twice");
         }
 
+        // ------------------------------------------------------------- the clock
+        /// <summary>
+        /// What the map's readout hangs on: <c>BoostReadout</c> shows itself when this is above
+        /// nought and takes itself off screen when it reaches it, so the two states have to be
+        /// exactly "a boost is running" and "none is".
+        /// </summary>
+        [Test]
+        public void TheClockIsTheLaterOfTheTwoWindowsAndNoughtWhenNeitherRuns()
+        {
+            Publish(150);
+
+            Assert.AreEqual(0L, XpBoost.SecondsLeft, "nothing is running, so there is no clock");
+
+            XpBoost.GrantWatched();                       // 2h
+            long watched = XpBoost.SecondsLeft;
+            Assert.Greater(watched, 0L);
+
+            XpBoost.GrantBought(24);                      // 24h, which outlasts it
+
+            // **The later deadline, not the next change.** A readout that vanished at the first
+            // expiry while a boost was still running is the stale-readout fault 44j is about.
+            Assert.Greater(XpBoost.SecondsLeft, watched);
+        }
+
+        /// <summary>
+        /// A withdrawn boost stops the clock even with a deadline still stored, so the readout
+        /// does not sit on the map counting down something that pays nothing.
+        /// </summary>
+        [Test]
+        public void AWithdrawnBoostHasNoClockEvenWithAWindowStillOpen()
+        {
+            Publish(150);
+            XpBoost.GrantBought(24);
+            Assert.Greater(XpBoost.SecondsLeft, 0L);
+
+            // The same save, read against a table that pays nothing.
+            Publish(0, watchedPercent: 0, boughtPercent: 0);
+
+            Assert.AreEqual(0, XpBoost.Percent);
+            Assert.AreEqual(0L, XpBoost.SecondsLeft);
+        }
+
         // ------------------------------------------------------------- the cooldown
         /// <summary>
         /// <b>The cooldown is derived from the watched deadline, not stored</b> (invariant 48c's
