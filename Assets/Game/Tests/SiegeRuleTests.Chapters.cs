@@ -123,7 +123,7 @@ namespace GlimmerGrove.Tests
             new Rung("s07_glassridge", new[] { "rybbrggb", "ggrygbry", "rrbgybby", "bryygrgr", "gbgbrryy" }, "rgby", "rgby", new[] { "RGbyRGby", "RGby#g#b#yrgby", "RGBY!rRG#by" }, "", 25, 14, 45, 59, "plsfha"),
             new Rung("s07_duststorm", new[] { "gyybbggb", "bbrgrybr", "rgygbbgb", "ygryrgyg", "ybybrrby" }, "rgby", "rgby", new[] { "RGbyrgby", "RGBY#rRGby", "RGby#g#brgby", "RGBY!yRGby" }, "", 25, 14, 45, 59, "plsfha"),
             new Rung("s07_thelongwalk", new[] { "rbyybybb", "ygyrgrrb", "grbgybgg", "brryyryg", "yygbbyrb" }, "rgby", "rgby", new[] { "rgbyrgby", "RGby#rrgby", "rgby#brgbyby", "RGBYrgbyr" }, "", 25, 14, 45, 59, "plsfha"),
-            new Rung("s07_crownfall", new[] { "yygbbryb", "brrybgbr", "yyggrgyb", "bbyrybry", "rrgrybgb" }, "rgby", "rgby", new[] { "rgbyrgby", "rgby#rrgby", "RGbyrgby" }, "sunlord:y", 25, 14, 45, 59, "plsfha"),
+            new Rung("s07_crownfall", new[] { "yygbbryb", "brrybgbr", "yyggrgyb", "bbyrybry", "rrgrybgb" }, "rgby", "rgby", new[] { "rgbyrgby", "rgby#rrgby", "RGbyrgby" }, "sunlord:y", 40, 14, 45, 59, "plsfha"),
         };
 
         // ------------------------------------------------------------------ the lines it plays

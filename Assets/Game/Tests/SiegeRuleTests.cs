@@ -1146,10 +1146,10 @@ namespace GlimmerGrove.Tests
         {
             var board = SiegeBoard.Build(Duel("warlord:r"));
 
-            // With its guard down: a firepot on a guarded boss is refused by design
-            // (`SiegeBoard.Wound`), and this test is about where a body is, not whether it can
-            // be hurt.
-            var boss = Unguarded(board);
+            // Standing, which is all it takes: a boss is hurtable from the frame it plants, so a
+            // firepot is refused only on the walk in (`SiegeBoard.Wound`) — and this test is
+            // about where a body is, not whether it can be hurt.
+            var boss = Standing(board);
 
             int feet = SiegeTuning.RowOf(boss.March);
             int lane = boss.Lane;

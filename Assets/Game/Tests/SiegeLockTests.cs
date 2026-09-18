@@ -859,7 +859,11 @@ namespace GlimmerGrove.Tests
             // ward fires at it, every bolt is full weight, and none is worth more than another.
             var board = SiegeBoard.Build(Duel("warlord:r"));
             var boss = Standing(board);
-            while (boss.Guarded) board.Advance(1f / 60f);
+
+            // No waiting: a boss is hurtable the frame it plants (`SiegeRaider.Impervious`), and
+            // this used to sit out three and a half seconds of guard before it could measure a
+            // bolt at all.
+            Assert.IsFalse(boss.Impervious, "the boss stood and could not be fired at");
 
             for (int w = 0; w < board.Wards.Count; w++) Feed(board, w, 20f);
 
@@ -918,7 +922,11 @@ namespace GlimmerGrove.Tests
             // the full bolt it lands - there is no part-weight bolt against a boss any more.
             var board = SiegeBoard.Build(Duel("warlord:r"));
             var boss = Standing(board);
-            while (boss.Guarded) board.Advance(1f / 60f);
+
+            // No waiting: a boss is hurtable the frame it plants (`SiegeRaider.Impervious`), and
+            // this used to sit out three and a half seconds of guard before it could measure a
+            // bolt at all.
+            Assert.IsFalse(boss.Impervious, "the boss stood and could not be fired at");
 
             int own = Plan(board).WardOf('r');
             int away = Plan(board).WardOf('b');

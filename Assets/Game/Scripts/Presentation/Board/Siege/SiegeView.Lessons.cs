@@ -170,9 +170,13 @@ namespace GlimmerGrove
 
             var wards = _board.Wards;
 
+            // **The one the player could actually spend right now**, which is the board's answer
+            // and not the tube's (`SiegeBoard.CanOvercharge`): a lesson that rings a turret whose
+            // tap would be refused teaches the refusal, which is the opposite of what a lesson is
+            // for. `Ready` draws the same reading, so the ring lands on a control that is lit.
             for (int i = 0; i < _posts.Length && i < wards.Count; i++)
             {
-                if (!wards[i].Armed) continue;
+                if (!_board.CanOvercharge(i)) continue;
 
                 var post = _posts[i];
                 if (post != null && post.Node != null) return post.Node;

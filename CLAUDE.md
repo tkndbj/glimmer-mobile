@@ -800,6 +800,12 @@ guess — verify offline.
   found:** `fxreels.py` ink-checks `Art/Fx` only, so every reel under `Art/Siege` - `beam`,
   `laser`, `stillwave`, `stilldial` and the whole cast - is checked for *wander* and never for
   *ink*. All four measure well above the floors today; nothing proves they will.
+- **The boss fight:** there is no offline gate on how a fight *feels*, and there is one on every rule it
+  keeps - `python Tools/verify/tests.py SiegeRuleTests` runs the lot and prints the boss-rung table on a
+  pass. `SiegeRuleTests.Fight.cs` holds the four sentences one by one (alone on the hill, untouchable on
+  the walk in, every ward at full weight the frame it plants, and a floor no blow crosses until the stand
+  settles) and `EveryShippedBossRungIsAFight` plays every shipped rung at nine rhythms. **A new chapter
+  costs it one line** - its name in `ShippedChapters` - and the chapter that forgot went unmeasured.
 - **The turret preview panel:** `python Tools/render_ward_preview.py --ward starfall` draws
   `WardPreviewOverlay`'s firing stage at its own cell, with the barrel marked, at four beats of the
   flight. **Written because that screen had no mirror at all** and is the one a player decides on a
@@ -1237,6 +1243,25 @@ anti-clockwise — and is wholly unaddressed, which is a white rectangle four ce
 changed is how long they last and what colour they are, and no gate here can see either. Nothing
 about it touches content or the server.
 
+**The boss fight was rebuilt on 2026-09-18, and it has never been played.** The guard in front of
+every stand is gone: a boss is untouchable on the walk in and **hurtable by the whole line from the
+frame it plants**, and what holds it up is a *floor under its health* instead (MODES.md 37ei). Four
+faults the owner reported went with it, and all four were one rule: turrets that would not fire at a
+boss for three to four seconds at every phase; a spinning **circle** drawn round the boss to explain
+that window (`Art.Ring`, withdrawn from the board and from `render_siege.py` together); an overcharge
+that pulsed and then swallowed the tap for exactly those seconds (`SiegeBoard.CanOvercharge` is one
+reading now, asked by the drawing and by the throw); and a wave that could walk on over a living boss
+on the Infinite lane (`SiegeBoard.BossStanding` holds every wave behind a boss, both lanes). **It is
+difficulty-neutral and that was measured, not argued**: eleven of the twelve shipped boss rungs read
+the same or better, and Dustcrown's sweep moved 40 → 39, 59 → 60 and 83 → 83 of 90. The one rung it
+moved is `s07_crownfall`, which was passing its own gate at **one rhythm of nine** and is a wall on a
+starter line either way — its cog rate went 25 → **40** (the point the lever saturates; par and both
+star lines do not move by one) and it now reads 2 of 9 bare, the same band as the chapter before's
+finale. **What is owed is a device**: the offline gates cannot see whether a boss fight now *feels*
+like a fight, and the two things to watch are the bar resting on its notch while the boss casts (which
+is where the seconds are paid from now) and whether the overcharge button ever goes dark at a moment
+that reads as a bug rather than as the walk in.
+
 **Dustcrown shipped on 2026-09-17 and nothing of it has been in the Editor.** The sixth chapter
 (`s07_dustcrown`, ordinal 6, manifest order 151) brings a cast, two bosses, a charm and a map, and
 every pixel of it was written with the Editor closed - so **every one is unaddressed until
@@ -1355,6 +1380,13 @@ honest state rather than a fault to chase. No season rollover has ever happened.
   which is **1,831,400 before a single upgrade**. So the **gem** hole is now the whole shelf rather than
   part of it — this mode sells nothing for gems at all, and what fills that is still unanswered.
 - **Are the home ladder's gates reachable?** Keeper 10 / 20 / 40 against content paying for about keeper 9.
+- **Is `s07_crownfall` a rung or a wall?** The sixth chapter's finale is held at 2 of 9 rhythms on the
+  starter line and 6 of 9 on a good one, which is a steep "buy a turret" and is the same band as
+  Thundercrag's finale. It stands a **sunlord** at this chapter's surge, which is 9,520 health — half
+  again the largest thing anywhere else in the mode — and its verb takes wards off the line while the
+  player is trying to deliver it. The cog rate carries it (25 → 40, 2026-09-18) and that is the only
+  lever that moved it at all: fewer raiders and fewer brutes changed nothing. Worth a play before it is
+  called tuned.
 - **Have the charms made the mode too easy?** Three rare free payoffs moved every chapter (Thornwatch
   80 → 87 of 90 on the starter, Broodmarch 63 → 76, Barrowfell 28 → 46) with nothing else retuned. **The
   rate is at its floor and the payment does not work** (37co), so more would cost a difficulty rewrite of

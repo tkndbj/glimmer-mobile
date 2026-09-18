@@ -81,13 +81,22 @@ namespace GlimmerGrove.Tests
             var landed = Landed(board, SiegeSpell.Glare);
             var ward = board.Wards[landed.Ward];
 
-            // The boss is the only thing on the hill, and a guarded boss is not a target
-            // (`SiegeBoard.Aim`) - so there is nothing this ward would have fired at.
+            // The boss is the only thing on the hill, and a boss resting on its stand's floor is
+            // not a target (`SiegeBoard.Aim`) - so there is nothing this ward would have fired at.
+            //
+            // **Stood on the floor by hand**, because the only way to reach it by playing is to
+            // out-damage the stand's own clock: once a stand has settled, the frame the line
+            // reaches the floor is the frame the next stand opens and the floor slides away
+            // (`SiegeBoard.Fights`). That is the mode working - a player's bolts are never idle -
+            // and it leaves this fixture nothing to observe unless it arranges the window itself.
+            boss.Health = boss.PhaseFloor;
+            Assert.IsTrue(boss.Impervious, "the boss on its stand's floor could still be hurt");
+
             board.Wards[landed.Ward].Stone = SiegeTuning.GorgonGlare;
             ward.Fuel = ward.Capacity;
             float held = ward.Fuel;
 
-            for (int i = 0; i < 30 && boss.Untouchable; i++) board.Advance(1f / 60f);
+            for (int i = 0; i < 30 && boss.Impervious; i++) board.Advance(1f / 60f);
 
             Assert.AreEqual(held, ward.Fuel, 0.001f,
                             "a glare burned fuel with nothing to fire at, so it takes from a "

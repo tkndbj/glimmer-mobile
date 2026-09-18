@@ -22,10 +22,12 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// The order matters and is the order a player would want: the wave arrives, then the
-        /// raiders walk, then the wards shoot at where the raiders now are, then the warlord casts,
-        /// then whatever reached the line swings. A ward that has just been fuelled therefore gets
-        /// its bolt away in the same step, and a raider killed by that bolt never lands the blow it
-        /// was about to — nor does a warlord killed by it ever start the spell it was about to.
+        /// raiders walk, then the wards shoot at where the raiders now are, then every standing
+        /// boss's fight is brought up to date, then the warlord casts, then whatever reached the
+        /// line swings. A ward that has just been fuelled therefore gets its bolt away in the same
+        /// step, a stand finished by that bolt turns before the boss decides what to throw, and a
+        /// raider killed by it never lands the blow it was about to — nor does a warlord killed by
+        /// it ever start the spell it was about to.
         /// </para>
         /// </summary>
         public SiegeReport Advance(float dt)
@@ -43,6 +45,7 @@ namespace GlimmerGrove.Modes
             Muster(dt);
             Walk(dt);
             Shoot(dt);
+            Fights(dt);
             Conjure(dt);
             Smoulder(dt);
             Swing(dt);
@@ -133,11 +136,11 @@ namespace GlimmerGrove.Modes
                 var caster = Find(spell.Raider);
                 if (caster == null || !caster.Alive) continue;
 
-                // **The spell that opened a phase has landed**, which is half of what drops the
-                // guard (`Guarding` has the other half) - noted before anything below can
+                // **The spell that opened a stand has landed**, which is half of what settles it
+                // (`SiegeTuning.PhaseLeast` is the other half) - noted before anything below can
                 // `continue` past it, because a spell aimed at a ward that has since fallen is
-                // dropped and the guard must not stand on a spell that was thrown. What the guard
-                // promised was one spell thrown, not one spell landed.
+                // dropped and a stand must not be held open on a spell that was thrown. What the
+                // floor promises is one spell thrown, not one spell that found something.
                 if (spell.Opens) caster.Opened = true;
 
                 // **A roar is aimed at no ward and lands on every one of them.** It is settled
@@ -313,9 +316,59 @@ namespace GlimmerGrove.Modes
                                                     SiegeTuning.RaiseSize, false));
         }
 
+        /// <summary>
+        /// Whether a boss is standing on this hill right now — walking on, in place, or mid-fall.
+        ///
+        /// <b>The one reading behind "a boss is alone"</b> (invariant 37dn), asked by
+        /// <see cref="Muster"/> on both sides of a duel: nothing musters onto a hill a boss is
+        /// still on, and a boss does not muster onto a hill anything is still on. Written once so
+        /// the two halves of the rule cannot come to disagree, and asked of the <em>hill</em>
+        /// rather than of the wave table, so it holds for an authored ladder and a derived
+        /// endless lane alike without either being taught about it.
+        /// </summary>
+        public bool BossStanding
+        {
+            get
+            {
+                for (int i = 0; i < _raiders.Count; i++)
+                    if (_raiders[i].Boss && _raiders[i].Alive) return true;
+
+                return false;
+            }
+        }
+
+        /// <summary>Whether anything at all of the raid is still alive on this hill.</summary>
+        bool HillHolds
+        {
+            get
+            {
+                for (int i = 0; i < _raiders.Count; i++)
+                    if (_raiders[i].Alive) return true;
+
+                return false;
+            }
+        }
+
         void Muster(float dt)
         {
             if (_wave >= Layout.WaveCount) return;
+
+            // **Nothing follows a boss onto the hill while it lives (invariant 37dn).**
+            //
+            // A duel is the one wave this mode does not stack on the last, and it has two sides:
+            // the boss must not arrive over a wave still swinging, and a wave must not arrive over
+            // a boss still standing. Only the first was ever written down, which was enough for an
+            // authored ladder — a chapter's boss rides its last wave, so nothing was ever coming
+            // behind it — and was no rule at all on the Infinite lane, where the schedule carries
+            // on regardless and a warbringer spent the back half of its fight inside the next
+            // wave's escort.
+            //
+            // **Asked of the hill rather than of the schedule**, so it is one rule rather than one
+            // per lane: `BossStanding` is a fact about what is standing there, which is the same
+            // question on a ten-rung chapter, on an endless ramp and on whatever a seventh chapter
+            // authors. The clock is held rather than run down (the `return` is above `_rest`), so
+            // the quiet after a duel is a whole quiet and not whatever was left of one.
+            if (BossStanding) return;
 
             // **On a clock, or the moment the hill is empty — whichever comes first.**
             //
@@ -330,9 +383,12 @@ namespace GlimmerGrove.Modes
             // one wave the mode does not stack on the last, so a duel is never fought over a wave
             // still swinging at the line. The clear-hill shortcut below then brings it on inside
             // a breather, exactly as it brings on any wave the player is ahead of.
-            if (_wave > 0 && Layout.SizeOf(_wave) > 0 && SiegeTuning.IsBoss(Layout.KindAt(_wave, 0)))
-                for (int i = 0; i < _raiders.Count; i++)
-                    if (_raiders[i].Alive) return;
+            //
+            // **`BossesIn` rather than the first raider's kind**, so a pair wave (the endless
+            // lane deals two) is held back by the same clause that holds back a lone one. The
+            // wave's own index nought is a boss in every shape either lane authors, but reading
+            // the whole wave is the question actually being asked.
+            if (_wave > 0 && Layout.BossesIn(_wave) > 0 && HillHolds) return;
 
             _rest -= dt;
 
@@ -340,8 +396,7 @@ namespace GlimmerGrove.Modes
             {
                 if (_wave == 0) return;
 
-                for (int i = 0; i < _raiders.Count; i++)
-                    if (_raiders[i].Alive) return;
+                if (HillHolds) return;
 
                 // **A cleared hill buys a breather rather than the next wave.** It used to muster
                 // at once, which rewarded playing well with more pressure and left the run with
@@ -427,7 +482,7 @@ namespace GlimmerGrove.Modes
             // The quiet before whatever is next. Asked of the wave that is *coming* rather than
             // of the one just sent, and per kind, because a warlord wants a long one in front of
             // it and a warbringer wants a short one (`SiegeTuning.RestBefore`).
-            _rest = Layout.SizeOf(_wave) > 0 && SiegeTuning.IsBoss(Layout.KindAt(_wave, 0))
+            _rest = Layout.BossesIn(_wave) > 0
                   ? SiegeTuning.RestBefore(Layout.KindAt(_wave, 0))
                   : SiegeTuning.BetweenWaves;
         }
@@ -520,10 +575,12 @@ namespace GlimmerGrove.Modes
                 // differ by one number the raider was minted with.
                 raider.March = raider.Hold;
 
-                // **A boss reaching its ground is the first phase opening**, which is the frame
-                // it stops being untouchable and the frame its guard goes up in the same breath
-                // - see `SiegeBoard.Fight.cs`. It is reported in `Arrived` like anything else
-                // reaching where it stops, so the view has one list for "something got there".
+                // **A boss reaching its ground is the first stand opening**, which is the frame it
+                // stops being untouchable and the frame every fed ward on the line may fire at it
+                // - see `SiegeBoard.Fight.cs`. There is no beat of hesitation between the two, and
+                // there used to be three and a half seconds of one. It is reported in `Arrived`
+                // like anything else reaching where it stops, so the view has one list for
+                // "something got there".
                 if (raider.Boss)
                 {
                     OpenPhase(raider, 0);
@@ -724,10 +781,16 @@ namespace GlimmerGrove.Modes
 
                 // **A boss that cannot be hurt is not a target**, whatever colour it wears - a
                 // ward with nothing else to shoot at banks, exactly as it does against an
-                // ironclad, rather than spending a tube on a thing behind a guard. Asked before
-                // the colour, because an own-colour bolt at an untouchable boss is fuel converted
-                // into nothing on the player's behalf (37bq's fault from the other side).
-                if (raider.Untouchable) continue;
+                // ironclad, rather than spending a tube on a body nothing can take anything off.
+                // Asked before the colour, because an own-colour bolt at a boss that cannot take
+                // it is fuel converted into nothing on the player's behalf (37bq's fault from the
+                // other side).
+                //
+                // **The window this skips is now the narrow one**: the walk in, and whatever
+                // seconds a line quick enough to reach the stand's floor early has bought itself.
+                // It used to include three to four seconds of guard at every stand, which is what
+                // a player saw as their turrets refusing to fire at the boss.
+                if (raider.Impervious) continue;
 
                 // **A legendary ward treats every raider on the hill as its own colour**, which
                 // is the one turret the lock does not hold (`SiegeWard.Unbound`). It is asked
@@ -764,9 +827,10 @@ namespace GlimmerGrove.Modes
 
                 boss.Stood += dt;
 
-                // The guard runs down here, on the board's clock, whatever the boss is doing -
-                // see `Guarding` for what drops it and why a stun does not hold it.
-                Guarding(boss, dt);
+                // **The stand's own clock is `Fights`', not this one**, and that is deliberate:
+                // it runs on the board's clock whatever the boss is doing - stunned, stopped, or
+                // retrying a cast that finds nothing to aim at - because a stand is a deadline
+                // and a stun is seconds off the fight, never a wall.
 
                 // **A stunned boss does not cast**, which is the decision a stun turret is bought
                 // for: a duel is one raider wearing one colour, so standing a stun on *that*
@@ -782,10 +846,17 @@ namespace GlimmerGrove.Modes
 
                 var craft = boss.Spellcraft;
 
-                // The first spell of a phase is the one the guard stands in front of; the guard
-                // drops when it lands (`Arrive`). Decided before the target, because what an
-                // opener wants can differ from what an ordinary cast wants (`Wanted`).
-                bool opens = boss.Guarded && !boss.Opening;
+                // The first spell of a stand is the one its floor is held for; the stand settles
+                // when it lands (`Arrive`) and `PhaseLeast` has passed. Decided before the
+                // target, because what an opener wants can differ from what an ordinary cast
+                // wants (`Wanted`).
+                //
+                // **Read off the stand rather than off a guard**: this asked `boss.Guarded`,
+                // which meant "the window in which nothing can hurt it", and the two stopped
+                // being the same question the moment the window became a floor. What an opener
+                // is is the first spell of a stand that has not thrown one - true whether or not
+                // the line has already walked the bar down to the notch.
+                bool opens = !boss.Opened && !boss.Opening;
 
                 // **A roar is thrown at the hill, so it carries no ward.** Every other spell
                 // carries one now (37dn): the aimed ones the ward their verb wants, and a devour
@@ -817,10 +888,10 @@ namespace GlimmerGrove.Modes
                 // visibly doing nothing, which is the reading `CastRetry`'s note is about.
                 if (SiegeTuning.Summons(boss.Kind) && boss.Raised >= SiegeTuning.Raises)
                 {
-                    // **A guard in front of a spell that will never be thrown is a wall**
-                    // (invariant 5d), so a bonecaller that has spent its raises drops it at once
-                    // rather than at the deadline.
-                    if (boss.Guarded) Unguard(boss);
+                    // **A floor in front of a spell that will never be thrown is a wall**
+                    // (invariant 5d), so a bonecaller that has spent its raises settles its stand
+                    // at once rather than resting on the notch until the deadline.
+                    Settle(boss);
                     continue;
                 }
 

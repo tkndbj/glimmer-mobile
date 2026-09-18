@@ -95,15 +95,14 @@ namespace GlimmerGrove
                                        new Vector2(tall * 1.5f, tall * 1.5f));
                 mob.Charge.raycastTarget = false;
 
-                // **The guard, built dark for the charge's reason**: it goes up on the frame the
-                // boss stands and again on every phase, and a ring that has to be minted before
-                // it can be seen rising arrives a frame late every time. Under the body, so the
-                // boss stands *in* it rather than behind it - see `SiegeView.Fight`.
-                mob.Ward = UIKit.Img("Guard", mob.Node, Art.Ring(128, 7f),
-                                     Pal.A(Casting(raider.Kind), 0f),
-                                     new Vector2(tall * 1.18f, tall * 1.18f));
-                mob.Ward.raycastTarget = false;
-                mob.Ward.rectTransform.anchoredPosition = new Vector2(0f, BodyLift * tall);
+                // **And nothing else.** A ring used to be minted here beside it - the guard,
+                // which rose out of the body on the frame a boss planted and again at every
+                // phase, spun and breathed while it stood, and flew apart when it dropped. The
+                // guard is a floor under the boss's health now (`SiegeTuning.BossPhases`), so
+                // there is nothing for a ring to say; and it was withdrawn on its own merits as
+                // well, at the owner's instruction, for the reason every other ring in this mode
+                // was: a circle laid over a boss reads as a shape drawn on top of the board
+                // rather than as something the boss is doing (`SiegeView.Cast`).
             }
 
             mob.Idle = Skin(raider);
@@ -599,10 +598,6 @@ namespace GlimmerGrove
             Audio.Sfx("felled", .95f, Pitch(mob.Kind) + .1f);
             Flow.Flash(Pal.A(Pal.Lift(fire, .5f), 1f), .6f, .55f);
             ShakeBoard(34f);
-
-            // The guard's ring, if it was still drawn, goes first and outward - the thing that
-            // said "cannot be hurt" coming apart is the first thing a player should see.
-            Unwarded(mob, at, fire);
 
             // The body burns white and holds there while the bursts go off on it.
             if (mob.Body != null)

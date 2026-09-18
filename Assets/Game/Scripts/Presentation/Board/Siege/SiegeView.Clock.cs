@@ -343,7 +343,7 @@ namespace GlimmerGrove
                     // **A boss's bar fills as it walks on and is full the frame it stands**,
                     // which is the genre's own way of saying "this is not yet a thing you can
                     // hurt" - and it is honest, because on the walk in nothing can hurt it
-                    // (`SiegeRaider.Untouchable`). Read off the march, so the two agree to the
+                    // (`SiegeRaider.Arriving`). Read off the march, so the two agree to the
                     // frame.
                     if (mob.Boss && !raider.InPlace && raider.Hold > 0f)
                         share *= Mathf.Clamp01(raider.March / raider.Hold);

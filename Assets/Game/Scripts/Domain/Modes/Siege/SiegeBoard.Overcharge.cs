@@ -32,6 +32,51 @@ namespace GlimmerGrove.Modes
     public sealed partial class SiegeBoard
     {
         /// <summary>
+        /// Whether tapping <paramref name="ward"/>'s tube right now would actually throw
+        /// something.
+        ///
+        /// <para>
+        /// <b>One reading, asked by the thing that draws the control and by the thing that
+        /// answers it</b> (<c>SiegeView.Ready</c> and <see cref="Overcharge"/>), which is the
+        /// whole of the fix for a tap that worked sometimes and not others. The tube's own
+        /// readiness — a charge banked, not chained, not buried — was all the view ever asked,
+        /// so a lit, pulsing, tappable button quietly refused whenever there was nothing on the
+        /// hill it could hurt. A duel is exactly that hill: one body, and a body that is
+        /// untouchable on the walk in and resting on its stand's floor when the line is ahead of
+        /// it. Reported from play as <em>sometimes I can use it and sometimes I cannot</em>, which
+        /// is precisely what it was.
+        /// </para>
+        /// <para>
+        /// <b>A control that is live and silently refuses is one nobody learns</b> — so the
+        /// refusal moves into the drawing, where the player can see it coming, and the two can
+        /// never disagree because there is only one answer to disagree about.
+        /// </para>
+        /// </summary>
+        public bool CanOvercharge(int ward) => Bolts(ward) > 0 && Furthest() != null;
+
+        /// <summary>
+        /// How many bolts' worth <paramref name="ward"/>'s banked charge is, or nought when there
+        /// is nothing to throw.
+        ///
+        /// <b>Every reason a tap can be refused that is not about the hill</b>, in one place: a
+        /// post that does not exist, a tube that is not armed, and a rank whose arithmetic leaves
+        /// no whole bolt in a charge. Split out so <see cref="CanOvercharge"/> answers exactly
+        /// what <see cref="Overcharge"/> will do rather than most of it — a control that is lit
+        /// and then refuses is the fault this pair exists to close, so "lit" and "lands" have to
+        /// be the same sentence.
+        /// </summary>
+        int Bolts(int ward)
+        {
+            if (ward < 0 || ward >= _wards.Length) return 0;
+
+            var post = _wards[ward];
+            if (!post.Armed) return 0;
+
+            float each = SiegeTuning.FuelShot(post.Rank);
+            return each <= 0f ? 0 : (int)(post.Capacity / each);
+        }
+
+        /// <summary>
         /// Dumps a full tube as one heavy strike on the furthest raider standing, and the box
         /// around it.
         ///
@@ -47,26 +92,26 @@ namespace GlimmerGrove.Modes
         /// banking through a quiet is worth watching when it lets go — and because a relief valve
         /// that answered one raider would not answer a lane.
         /// </para>
+        /// <para>
+        /// <b>Its two refusals are <see cref="CanOvercharge"/>'s two clauses</b>, said in the same
+        /// order, so the control the view draws and the answer this gives can never come apart.
+        /// A refused tap costs the player nothing: the charge is still there.
+        /// </para>
         /// </summary>
         public SiegeUnleash Overcharge(int ward, List<SiegeStrike> into)
         {
-            if (ward < 0 || ward >= _wards.Length) return SiegeUnleash.Refused;
-
-            var post = _wards[ward];
-            if (!post.Armed) return SiegeUnleash.Refused;
+            int bolts = Bolts(ward);
+            if (bolts <= 0) return SiegeUnleash.Refused;
 
             var target = Furthest();
             if (target == null) return SiegeUnleash.Refused;
+
+            var post = _wards[ward];
 
             // **A whole tube's worth of bolts, at this ward's own weight, landing as an own-colour
             // hit does.** The charge *is* a tube - `SiegeWard.Fill` took `Capacity` out of the
             // fuel to make it - so this is exactly what those bolts would have delivered had they
             // been fired one at a time, and neither star line can move for it.
-            float each = SiegeTuning.FuelShot(post.Rank);
-            int bolts = each <= 0f ? 0 : (int)(post.Capacity / each);
-
-            if (bolts <= 0) return SiegeUnleash.Refused;
-
             int heavy = bolts * SiegeTuning.DamageTo(SiegeKind.Creeper, post.Rank, true,
                                                      post.Build);
 
@@ -135,9 +180,10 @@ namespace GlimmerGrove.Modes
                 if (!raider.Alive || !raider.OnTheHill) continue;
 
                 // **A boss that cannot be hurt is not a target for a charge either**, so a tap
-                // with nothing else on the hill is refused and the charge is kept - the guard is
-                // drawn, and the tube is still full when it drops.
-                if (raider.Untouchable) continue;
+                // with nothing else on the hill is refused and the charge is kept. The player
+                // never has to discover that by tapping: `CanOvercharge` is the same reading, and
+                // the control goes dark for exactly these frames.
+                if (raider.Impervious) continue;
 
                 if (found == null || raider.March > found.March) found = raider;
             }

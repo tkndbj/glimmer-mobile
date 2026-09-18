@@ -27,8 +27,19 @@ namespace GlimmerGrove
         /// <summary>
         /// Paints every tube's readiness: the pulse that says a tube may be spent.
         ///
-        /// <b>The raycast is switched with it</b>, so a tube that is not full cannot be tapped at
-        /// all — a control that is live and silently refuses is one nobody learns.
+        /// <para>
+        /// <b>The raycast is switched with it</b>, so a tube that cannot be spent cannot be tapped
+        /// at all — a control that is live and silently refuses is one nobody learns.
+        /// </para>
+        /// <para>
+        /// <b>And "can be spent" is the board's answer, not this file's guess.</b> It read
+        /// <c>ward.Armed</c> — a charge banked, not chained, not buried — which is only half the
+        /// question: <c>SiegeBoard.Overcharge</c> also needs something on the hill it could hurt,
+        /// and against a boss there are frames where there is not (the walk in, and a stand
+        /// already resting on its floor). So the button pulsed, invited a tap and shook it off,
+        /// which is what a player meets as <em>sometimes I can use it and sometimes I cannot</em>.
+        /// One reading, asked here and answered there: <c>SiegeBoard.CanOvercharge</c>.
+        /// </para>
         /// </summary>
         void Ready()
         {
@@ -40,7 +51,7 @@ namespace GlimmerGrove
                 if (post == null || post.Dump == null) continue;
 
                 var ward = _board.Wards[i];
-                bool armed = ward.Armed;
+                bool armed = _board.CanOvercharge(i);
 
                 post.Dump.raycastTarget = armed;
 

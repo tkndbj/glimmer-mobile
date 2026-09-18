@@ -1002,17 +1002,13 @@ def warlord(sheet, draw_on, kind, colour, wards, span, cell, hill_top, hill_foot
                                    mx + cell * MARK_WIDE / 2, by + cell * 0.13 - 1],
                                   radius=3, fill=(0, 0, 0, 199))
 
-    # `SiegeView.Warded` - a boss behind its guard stands in a ring of its own fire, the width
-    # of its body and a little more, drawn under the body. `--warlord guard` is the only picture
-    # that says whether the ring reads as "cannot be hurt" over the hill's own noise and whether
-    # it clears the crown above it on every canvas.
-    if casting == "guard":
-        ring = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
-        pen = ImageDraw.Draw(ring)
-        r = tall * 1.18 / 2
-        pen.ellipse([cx - r, cy - r, cx + r, cy + r], outline=fire + (204,),
-                    width=max(2, int(round(r * 7 / 64))))
-        sheet.alpha_composite(ring)
+    # **No ring.** A boss used to stand in a circle of its own fire while its guard was up, and
+    # `--warlord guard` was the picture that judged it. The guard is a floor under the boss's
+    # health now (`SiegeTuning.BossPhases`) - the line fires at a boss from the frame it plants -
+    # so there is no window for a ring to mark, and the ring itself was withdrawn at the owner's
+    # instruction for the reason every other ring in this mode was: a circle laid over a boss
+    # reads as a shape drawn on top of the board rather than as something the boss is doing. The
+    # mirror drops it in the same change (invariant 44d).
 
     # No gem beside the bar: a boss wears no colour (37dn).
 
@@ -2690,9 +2686,9 @@ def main():
                     help="how many of the first wave to stand on the hill")
     ap.add_argument("--no-bolts", action="store_true",
                     help="draw the board with nothing in flight")
-    ap.add_argument("--warlord", default="cast", choices=("cast", "idle", "storm", "guard"),
-                    help="draw the boss winding up (cast), standing (idle), behind its guard (guard), walking on "
-                         "(walk), or the frame its volley leaves (storm)")
+    ap.add_argument("--warlord", default="cast", choices=("cast", "idle", "storm"),
+                    help="draw the boss winding up (cast), standing (idle), or the frame its "
+                         "volley leaves (storm)")
     ap.add_argument("--cooling", nargs="?", const="firepot=6,stormcall=22", default="",
                     help="draw slots mid-cooldown, as id=seconds pairs; bare gives a sample")
     ap.add_argument("--no-bar", action="store_true",

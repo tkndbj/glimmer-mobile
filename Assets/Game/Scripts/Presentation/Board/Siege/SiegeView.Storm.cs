@@ -373,11 +373,20 @@ namespace GlimmerGrove
                 mob.Crackle = CrackleEvery + Random.Range(0f, CrackleSpread);
 
                 // Quiet, and one bolt: this is a thing breathing rather than a thing casting, and
-                // the wind-up has to stay louder than it or the tell stops being a tell. **Behind
-                // its guard it breathes harder** - two bolts, and still under the wind-up's five
-                // - because a boss that cannot be hurt has to look like it is *doing* something
-                // with the seconds it is being given.
-                Crackle(mob, Casting(mob.Kind), mob.Guarded ? .85f : .55f, mob.Guarded ? 2 : 1);
+                // the wind-up has to stay louder than it or the tell stops being a tell. **In its
+                // last stand it breathes harder** - two bolts, and still under the wind-up's five
+                // - because a boss that has been driven into its final third has to look like it.
+                //
+                // **It read the guard before, which is the one thing it can no longer ask.** A
+                // guard was a window in which nothing could hurt the boss, so breathing harder
+                // through it was the drawing covering for a hill where nothing was happening.
+                // Nothing on this hill is ever idle now, so the harder breath goes where the
+                // fight actually escalates - which is the same phase `SiegeView.Fight` lights the
+                // gather in, and the two read the same number rather than two facts about one
+                // boss.
+                bool enraged = mob.Phase >= SiegeTuning.BossPhases - 1;
+
+                Crackle(mob, Casting(mob.Kind), enraged ? .85f : .55f, enraged ? 2 : 1);
             }
         }
 

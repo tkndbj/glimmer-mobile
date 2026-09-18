@@ -272,19 +272,22 @@ namespace GlimmerGrove
             /// </summary>
             public int Phase = -1;
 
-            /// <summary>Whether the guard was up the last time it was drawn.</summary>
-            public bool Guarded;
-
             /// <summary>Whether the plant has been drawn: the frame it reached its ground.</summary>
             public bool Arrived;
-
-            /// <summary>The ring that says it cannot be hurt. Dark until the guard goes up.</summary>
-            public Image Ward;
 
             /// <summary>The marks on its bar where each phase turns, one per threshold.</summary>
             public Image[] Marks;
 
-            /// <summary>Seconds this boss has been drawn for, which paces the guard's breathing.</summary>
+            /// <summary>
+            /// Seconds this boss has been drawn for, which paces its last stand's low light.
+            ///
+            /// <b>Deliberately no ring any more.</b> A boss behind a guard used to stand in a
+            /// spinning, breathing circle of its own fire; the guard is a floor under its health
+            /// now (<c>SiegeTuning.BossPhases</c>) and the circle went with it, at the owner's
+            /// instruction and on its own merits — what a player read off it was "a shape has
+            /// been laid over the board", which is the same verdict that took every other ring in
+            /// this mode off the hill (see <c>SiegeView.Cast</c>).
+            /// </summary>
             public float Drawn;
         }
 

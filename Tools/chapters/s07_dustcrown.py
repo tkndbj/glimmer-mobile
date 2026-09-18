@@ -160,8 +160,19 @@ LEVELS = (
     # while a hill with plate in it is still coming. It can never seal the last ward standing, so
     # the run still ends the way every run in this mode ends. He wears amber, which decides
     # nothing (37dn).
+    #
+    # **Its cog rate is the chapter's one outlier, and the boss is why.** A sunlord at this
+    # chapter's surge stands with 9,520 health, which is the largest thing in the mode by half
+    # again - and its verb takes wards off the line while the player is trying to deliver it. At
+    # the chapter's ordinary 25 the rung was held at **none** of the forty-nine rhythms
+    # `SiegeRuleTests.Walled` tries on a starter line: a wall rather than a reason to buy a
+    # turret. Measured up the rate, it saturates at 40 - 40, 45 and 50 all read 2 of 9 bare, 3 of
+    # 9 on one bought rung and 6 of 9 on a good one - so 40 is where the lever stops paying
+    # rather than a figure fitted to the gate. **Par and both star lines do not move by one**,
+    # because a cog is a rank the player earns and not health on the hill: the rung asks the most
+    # of the line in the chapter, so it hands the line the most ranks.
     dict(id="s07_crownfall", seed=217358, swaps=5, charms="plsfha",
-         wards="rgby", gems="rgby", cogs=25, boss="sunlord:y",
+         wards="rgby", gems="rgby", cogs=40, boss="sunlord:y",
          waves=["rgbyrgby", "rgby#rrgby", "RGbyrgby"]),
 )
 

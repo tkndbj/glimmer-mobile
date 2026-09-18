@@ -80,10 +80,10 @@ namespace GlimmerGrove.Tests
             var board = SiegeBoard.Build(DuelWith(SiegeKind.Thunderer));
             var boss = Standing(board);
 
-            // Wait out the guard so a charge has something it may land on (`Furthest` skips an
-            // untouchable boss), then bank one and throw it on the frame the tell begins.
-            for (int i = 0; i < 60 * 10 && boss.Guarded; i++) board.Advance(1f / 60f);
-            Assert.IsFalse(boss.Guarded);
+            // A charge has something it may land on the moment the boss plants (`Furthest`
+            // skips only what cannot be hurt), so there is nothing to wait out: bank one and
+            // throw it on the frame the tell begins.
+            Assert.IsFalse(boss.Impervious, "the boss planted and could not be hit");
 
             const int held = 2;
             board.Wards[held].Charges = 1;
@@ -311,14 +311,14 @@ namespace GlimmerGrove.Tests
                       SiegeTuning.NameOf(kind) + ":r", 0, 0, "plsfh");
 
         [Test]
-        public void AnHourglassHoldsABosssSpellAndNotItsGuard()
+        public void AnHourglassHoldsABosssSpellAndNotItsStand()
         {
             var board = SiegeBoard.Build(CrossedDuel(SiegeKind.Boss));
             var boss = Standing(board);
-            Assert.IsTrue(boss.Guarded, "the boss stood with no guard");
+            Assert.IsFalse(boss.Settled, "the boss stood with its first stand already settled");
 
-            // Stopped on the frame it stands: the guard must still run down to its deadline
-            // (invariant 37dl), and no spell may leave while the hill stands still. Stood on the
+            // Stopped on the frame it stands: the stand's clock must still run down to its
+            // deadline (invariant 37dl), and no spell may leave while the hill stands still. On the
             // one cell the fixture's swap clears, so what is under test is the stop, not the deal.
             int casts = boss.Casts;
             board.Stand(7, SiegeCharm.Hourglass);
@@ -338,10 +338,10 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(SiegeTuning.HourglassFor, held, .05f);
 
-            // The guard's deadline is `GuardMost` from the plant, which the stop ran through
+            // The stand's deadline is `PhaseMost` from the plant, which the stop ran through
             // rather than paused; two more seconds is past it whatever the stop cost.
-            for (int i = 0; i < 60 * 2 && boss.Guarded; i++) board.Advance(1f / 60f);
-            Assert.IsFalse(boss.Guarded, "the guard stood past its deadline under an hourglass");
+            for (int i = 0; i < 60 * 2 && !boss.Settled; i++) board.Advance(1f / 60f);
+            Assert.IsTrue(boss.Settled, "the stand held past its deadline under an hourglass");
         }
     }
 }

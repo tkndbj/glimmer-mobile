@@ -6,7 +6,7 @@ using GlimmerGrove.Modes;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The fight, drawn: what a boss looks like arriving, guarded, turning a phase and falling.
+    /// The fight, drawn: what a boss looks like arriving, turning a stand and falling.
     ///
     /// <para>
     /// <b>Every beat here is read off the model as a state and drawn on the edge</b>, never
@@ -19,10 +19,12 @@ namespace GlimmerGrove
     /// <para>
     /// <b>What the beats are for.</b> Played, the bosses died on the walk in or before their
     /// first spell, and what the owner saw was "no boss fight". The rules now promise a walk in
-    /// that cannot be hurt, a guard in front of every phase and a floor under every blow
-    /// (<see cref="SiegeTuning.BossPhases"/>); what this file owes those promises is that each
-    /// of them is <em>visible</em> - a guard nobody can see is a bolt that vanished, and a phase
-    /// nobody can see is a boss that got harder for no reason.
+    /// that cannot be hurt and a floor under every stand (<see cref="SiegeTuning.BossPhases"/>);
+    /// what this file owes those promises is that each of them is <em>visible</em> - and the
+    /// whole of what makes that affordable is that the line is <em>firing</em> throughout. A
+    /// stand is said by the bar walking down to its notch and resting there while the boss casts,
+    /// which is a thing the player is doing; it used to be said by a ring, which was a thing
+    /// drawn over a hill where nothing was happening.
     /// </para>
     /// <para>
     /// <b>Slow motion is the one instrument used on every beat</b>, and it is affordable only
@@ -32,14 +34,11 @@ namespace GlimmerGrove
     /// </summary>
     public sealed partial class SiegeView
     {
-        /// <summary>How thick a phase mark is, in cells, and how far the guard's ring breathes.</summary>
-        const float MarkWide = .05f, GuardBreath = .05f;
-
-        /// <summary>How fast the guard's ring turns, in degrees a second.</summary>
-        const float GuardSpin = 32f;
+        /// <summary>How thick a phase mark is, in cells.</summary>
+        const float MarkWide = .05f;
 
         /// <summary>
-        /// Draws every boss's fight up to date: the plant, the guard, the phase.
+        /// Draws every boss's fight up to date: the plant and the phase.
         ///
         /// Called once a frame after <c>Follow</c>, on the same unscaled seconds every drawing
         /// here runs on (invariant 30h - a modal freezes <c>Time.timeScale</c>).
@@ -76,22 +75,12 @@ namespace GlimmerGrove
                     if (was >= 0) Turned(mob, raider, was, at, fire);
                 }
 
-                // **The guard.** Up on the edge, shattered on the edge, breathing in between.
-                bool guarded = raider.Guarded;
-                if (guarded != mob.Guarded)
-                {
-                    mob.Guarded = guarded;
-                    if (guarded) Warded(mob, fire);
-                    else Unwarded(mob, at, fire);
-                }
-
-                if (guarded && mob.Ward != null)
-                {
-                    var rt = mob.Ward.rectTransform;
-                    rt.localEulerAngles = new Vector3(0f, 0f, mob.Drawn * GuardSpin);
-                    rt.localScale = Vector3.one * (1f + Mathf.Sin(mob.Drawn * 5.2f) * GuardBreath);
-                    mob.Ward.color = Pal.A(fire, .72f + Mathf.Sin(mob.Drawn * 5.2f) * .14f);
-                }
+                // **Nothing here draws a guard, because there is no longer one to draw.** A
+                // boss's stand is a floor under its health, and the line fires at it throughout -
+                // so what says "this stand is not finished" is the bar sitting on its notch and
+                // the boss visibly casting, both of which are already drawn. The ring that used
+                // to spin and breathe here is gone in the same change that took the
+                // invulnerability out of the rules (invariant 37dn's note in `SiegeBoard.Fight`).
 
                 // **The last phase glows.** A boss in its last third keeps a low light in the
                 // glow it gathers spells in, so "enraged" is a thing on the body and not only a
@@ -151,61 +140,6 @@ namespace GlimmerGrove
             Audio.Sfx("roar", .8f + .1f * phase, Pitch(mob.Kind) + .1f - .06f * phase);
 
             if (last) Announce(Loc.Get("mode.siege.enraged"), fire, .62f, 1.4f, true);
-        }
-
-        /// <summary>The guard going up: the ring rises out of the body and settles.</summary>
-        void Warded(Mob mob, Color fire)
-        {
-            var ring = mob.Ward;
-            if (ring == null) return;
-
-            var rt = ring.rectTransform;
-            Tween.KillChannel(ring, "ward");
-
-            rt.localScale = Vector3.one * 1.7f;
-            ring.color = Pal.A(fire, 0f);
-
-            Tween.Run(.28f, Ease.OutBack, t =>
-            {
-                if (!ring) return;
-                rt.localScale = Vector3.one * Mathf.Lerp(1.7f, 1f, t);
-                ring.color = Pal.A(fire, t * .8f);
-            }, ring, "ward");
-
-            Audio.Sfx("mend", .35f, Pitch(mob.Kind) + .4f);
-        }
-
-        /// <summary>
-        /// The guard coming down: the ring flies apart. Drawn on the frame the boss becomes
-        /// touchable, which is the frame a player has been waiting for.
-        /// </summary>
-        void Unwarded(Mob mob, Vector2 at, Color fire)
-        {
-            var ring = mob.Ward;
-            if (ring == null) return;
-
-            var rt = ring.rectTransform;
-            Tween.KillChannel(ring, "ward");
-
-            float from = ring.color.a;
-            if (from <= 0f) return;
-
-            Tween.Run(.3f, Ease.OutCubic, t =>
-            {
-                if (!ring) return;
-                rt.localScale = Vector3.one * Mathf.Lerp(1f, 1.6f, t);
-                ring.color = Pal.A(fire, from * (1f - t));
-            }, ring, "ward").OnDone(() =>
-            {
-                if (!ring) return;
-                rt.localScale = Vector3.one;
-                ring.color = Pal.A(fire, 0f);
-            });
-
-            Burst.Sparks(_fx, at, fire, 12, Cell * 2.2f, Cell * .2f, .45f);
-            Shockwave(at, Pal.Lift(fire, .4f), 3.2f, .3f);
-
-            Audio.Sfx("shatter", .5f, Pitch(mob.Kind) + .25f);
         }
 
         /// <summary>

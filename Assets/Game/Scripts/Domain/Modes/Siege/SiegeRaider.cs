@@ -55,18 +55,20 @@ namespace GlimmerGrove.Modes
         public int Phase;
 
         /// <summary>
-        /// Seconds of guard left, or nought. While it runs the boss cannot be hurt.
+        /// Seconds this stand has held, from the frame its phase opened.
         ///
-        /// <b>A deadline, not a duration</b>: it is set to <see cref="SiegeTuning.GuardMost"/>
-        /// when a phase opens and cleared the moment the phase-opening spell lands, so what it
-        /// counts is the longest a guard may ever stand, never how long it is meant to.
+        /// <b>Counting up rather than down, because it is read against two deadlines.</b> A stand
+        /// settles at <see cref="SiegeTuning.PhaseLeast"/> once its opening spell has landed, and
+        /// at <see cref="SiegeTuning.PhaseMost"/> whatever happened — see <see cref="Settled"/>.
+        /// A single number that both are compared against is one clock rather than two that can
+        /// come apart.
         /// </summary>
-        public float Guard;
+        public float InPhase;
 
         /// <summary>Whether this phase's opening spell has been decided and is on its way.</summary>
         public bool Opening;
 
-        /// <summary>Whether this phase's opening spell has landed. The guard waits on it and on <see cref="SiegeTuning.GuardLeast"/>.</summary>
+        /// <summary>Whether this phase's opening spell has landed. <see cref="Settled"/> waits on it.</summary>
         public bool Opened;
 
         /// <summary>Seconds this boss has stood on its ground. Measured for the fight gate.</summary>
@@ -303,12 +305,60 @@ namespace GlimmerGrove.Modes
         /// <summary>Whether it has reached the ground it holds and may start casting.</summary>
         public bool InPlace => Alive && OnTheHill && March >= Hold;
 
-        /// <summary>Whether this boss's guard is up. Never true of anything but a boss.</summary>
-        public bool Guarded => Boss && Alive && Guard > 0f;
+        /// <summary>
+        /// Whether this boss is still walking on, where nothing at all can hurt it.
+        ///
+        /// <b>The walk-in is the one window with no floor under it</b>, because there is no fight
+        /// yet to have a floor: the boss has not reached its ground, has opened no stand and has
+        /// thrown nothing. It was never asked before, and that is the whole of why a boss died on
+        /// the walk in.
+        /// </summary>
+        public bool Arriving => Boss && Alive && !InPlace;
 
         /// <summary>
-        /// Whether nothing on the line or in the player's hand can hurt it right now: a boss
-        /// still walking on, or one behind its guard.
+        /// Whether this stand has done what it promised: its opening spell has landed and it has
+        /// held <see cref="SiegeTuning.PhaseLeast"/> — or <see cref="SiegeTuning.PhaseMost"/> has
+        /// passed, which is the deadline for a boss that can find nothing to throw at.
+        ///
+        /// <b>Never true of anything but a boss in place</b>, so every caller can ask it without
+        /// first asking what it is talking to.
+        /// </summary>
+        public bool Settled
+            => Boss && Alive && InPlace
+            && ((Opened && InPhase >= SiegeTuning.PhaseLeast) || InPhase >= SiegeTuning.PhaseMost);
+
+        /// <summary>
+        /// The health this boss may not be taken under <em>right now</em>.
+        ///
+        /// <para>
+        /// <b>The stand's own threshold</b> (<see cref="SiegeTuning.PhaseFloor"/>) — and, in the
+        /// last stand, where that threshold is nought, <b>one</b> until the stand has settled. The
+        /// last third would otherwise be the one stand a banked line could end the instant it
+        /// opened, which is the arrangement <see cref="SiegeTuning.BossPhases"/> exists to reject
+        /// and the one that cost three chapters a finale. A boss at one health with an empty bar,
+        /// finishing the spell it had already begun, is the honest drawing of it.
+        /// </para>
+        /// <para>
+        /// <b>Asked as a property rather than written into a field</b>, because a floor is a
+        /// reading of the boss's own state — the phase it is in and whether that stand has settled
+        /// — and a copy of it would be a second opinion that could be a frame stale (invariant
+        /// 16x's shape, said about a fight).
+        /// </para>
+        /// </summary>
+        public int Floor
+        {
+            get
+            {
+                if (!Boss || !Alive) return 0;
+
+                int keep = SiegeTuning.PhaseFloor(MaxHealth, Phase);
+                return keep > 0 || Settled ? keep : 1;
+            }
+        }
+
+        /// <summary>
+        /// Whether nothing on the line or in the player's hand can take anything off it right
+        /// now: a boss still walking on, or one already resting on its stand's floor.
         ///
         /// <para>
         /// <b>The one question every source of harm asks</b>, through <c>SiegeBoard.Wound</c>,
@@ -317,14 +367,22 @@ namespace GlimmerGrove.Modes
         /// ironclad's answer (bank, then dump) made general.
         /// </para>
         /// <para>
-        /// It was never asked before, and that is the whole of why a boss died on the walk in.
+        /// <b>It is the *narrow* window now.</b> It used to include every second of a guard,
+        /// which was three to four out of every stand; what is left is the walk-in and whatever
+        /// seconds a line fast enough to reach the floor early has bought itself. A line that
+        /// cannot chew a third of a boss in <see cref="SiegeTuning.PhaseLeast"/> seconds never
+        /// meets it at all.
         /// </para>
         /// </summary>
-        public bool Untouchable => Boss && Alive && (!InPlace || Guard > 0f);
+        public bool Impervious => Boss && Alive && (Arriving || Health <= Floor);
 
         /// <summary>
         /// The health this boss cannot be taken under in its current phase — the next phase's
         /// threshold, or nought in the last. See <see cref="SiegeTuning.PhaseFloor"/>.
+        ///
+        /// <b>The phase's arithmetic alone</b>, where <see cref="Floor"/> is what the rules will
+        /// actually allow this frame. <c>SiegeBoard.Fights</c> reads this to decide when a stand
+        /// is spent; everything that takes health reads <see cref="Floor"/>.
         /// </summary>
         public int PhaseFloor => Boss ? SiegeTuning.PhaseFloor(MaxHealth, Phase) : 0;
     }

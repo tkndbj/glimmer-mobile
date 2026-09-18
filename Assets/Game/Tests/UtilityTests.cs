@@ -418,18 +418,17 @@ namespace GlimmerGrove.Tests
             Settle(board, SiegeTuning.FirstWaveAfter + 1f);
 
             // Walk on until every authored wave has mustered, then clear the hill: a boss comes
-            // in alone once nothing else stands (37dn), and stands guarded until its opening
-            // spell has landed - a storm on a guarded boss is refused by design.
+            // in alone once nothing else stands (37dn), and is hurtable from the frame it plants.
             Settle(board, SiegeTuning.BetweenWaves * 4f);
             foreach (var raider in board.Raiders) { raider.Health = 0; raider.Alive = false; }
-            Settle(board, SiegeTuning.Breather + SiegeTuning.BossMarch + SiegeTuning.GuardMost + 2f);
+            Settle(board, SiegeTuning.Breather + SiegeTuning.BossMarch + 2f);
 
             SiegeRaider boss = null;
             foreach (var raider in board.Raiders)
                 if (raider.Alive && SiegeTuning.IsBoss(raider.Kind)) boss = raider;
 
             Assert.IsNotNull(boss, "the fixture has to send a boss");
-            Assert.IsFalse(boss.Untouchable, "the boss is still walking on or guarded");
+            Assert.IsFalse(boss.Impervious, "the boss is still walking on");
 
             int was = boss.Health;
             board.Storm(SiegeTuning.BulwarkHealth, null);
