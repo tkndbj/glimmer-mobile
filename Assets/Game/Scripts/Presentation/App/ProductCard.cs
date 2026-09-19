@@ -3,6 +3,7 @@ using GlimmerGrove.Ads;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
+using GlimmerGrove.Progression;
 using GlimmerGrove.Store;
 using GlimmerGrove.Utilities;
 using UnityEngine;
@@ -393,8 +394,19 @@ namespace GlimmerGrove
             // of hearts — silently, on a card somebody is being asked to pay for.
             bool hours = good.Kind == StoreGoodKind.HeartBoost || good.Kind == StoreGoodKind.XpBoost;
 
-            _amount.text = hours ? Loc.Format("ui.shop.boost_hours", good.Amount)
-                                 : Compact.Number(good.Amount);
+            // **The XP boost names itself rather than printing its length**, and it is the one
+            // good on this shelf that has to. "24h" is an honest headline for a heart boost,
+            // whose card picture already says hearts and whose only variable *is* the length;
+            // beside a free two-hour window on the same shelf it says neither what it does nor
+            // how it differs from the card next to it. The percentage comes out of
+            // `XpBoostTable` rather than the copy, for the reason the offer panel's facts do:
+            // both figures are retunable content and a sentence that repeats one of them is the
+            // first thing to rot (invariant 6, and 9e's "the windows are content").
+            _amount.text = good.Kind == StoreGoodKind.XpBoost
+                ? Loc.Format("ui.shop.xp_boost_card",
+                             ProgressionRules.Table.XpBoost.BoughtPercent, good.Amount)
+                : hours ? Loc.Format("ui.shop.boost_hours", good.Amount)
+                        : Compact.Number(good.Amount);
 
             switch (good.Kind)
             {
@@ -407,7 +419,15 @@ namespace GlimmerGrove
                     // Aqua rather than the heart boost's amber, because the two sit on the same
                     // shelf and a player scanning it should not have to read to tell them apart.
                     _amount.color = Pal.A(Pal.Aqua, 1f);
-                    _sub.text = Loc.Get("ui.shop.xp_boost_note");
+
+                    // **No second line, and it is the headline that earned that.** Every other
+                    // card here is a figure over a noun — "5" over "Hearts" — because the figure
+                    // alone says nothing. This one is a sentence, so the noun under it repeated
+                    // a word already in it and answered a question the headline had just
+                    // answered. Blank rather than removed: the label is the same one four other
+                    // card kinds fill, and a card with a hole in its layout is not the same
+                    // thing as a card with one line.
+                    _sub.text = string.Empty;
                     break;
 
                 default:
@@ -496,10 +516,22 @@ namespace GlimmerGrove
 
             ShopArt.PaintAd(_art, offer.Kind);
 
-            _amount.text = Compact.Number(offer.Amount);
+            // **The XP boost names itself**, the same exception the gem-priced one above makes
+            // and for the same reason: every other placement pays a *quantity* — 300 coins, 2
+            // hearts, 1 hint — where this one pays a window, so the bare figure reads as "2" of
+            // nothing. The percentage is `XpBoostTable`'s and never the advert's `amount`,
+            // because that field is the window's *length* and the two are held together by the
+            // content gates rather than by this card (9e).
+            _amount.text = offer.Kind == ChestDropKind.XpBoost
+                ? Loc.Format("ui.shop.xp_boost_card",
+                             ProgressionRules.Table.XpBoost.WatchedPercent, offer.Amount)
+                : Compact.Number(offer.Amount);
             _amount.color = Pal.A(RewardArt.Tint(offer.Kind, null), 1f);
 
-            _sub.text = UnitOf(offer.Kind);
+            // Blank for the XP boost, for the reason the gem-priced one above is: its headline
+            // is a sentence and the noun under it was a word out of that sentence. Every other
+            // placement pays a quantity and still needs the noun.
+            _sub.text = offer.Kind == ChestDropKind.XpBoost ? string.Empty : UnitOf(offer.Kind);
             _sub.color = Unit;
 
             Face(Skins.Affirm, live: true);

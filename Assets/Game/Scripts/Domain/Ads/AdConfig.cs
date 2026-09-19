@@ -85,6 +85,27 @@ namespace GlimmerGrove.Ads
         public const string IosHintRefill = "zfhlojgq1syec60g";
 
         /// <summary>
+        /// Added 2026-09-19, and the reason this comment exists: the XP boost placement
+        /// shipped with no ad unit <em>at all</em>. It was absent from <see cref="AdUnits"/>,
+        /// so the provider created no rewarded unit for it, <c>IsReady</c> answered false for
+        /// ever and <c>ShowAsync</c> answered "no such placement" — with <b>nothing logged</b>,
+        /// because the provider's "no ad unit id for this platform" warning only fires for a
+        /// placement that is in the dictionary with an empty id. On screen that is
+        /// indistinguishable from a market with no demand, which is how it survived a ship.
+        /// <c>RewardedAdTests.EveryPlacementHasAnAdUnitEntry</c> is what stops the next one.
+        ///
+        /// <para>
+        /// Both dashboard units carry the reward item name <c>xp_boost</c>, which reaches
+        /// <c>verifyAdCallback</c> as <c>itemName</c> — one of the three fields
+        /// <c>namedPlacement</c> accepts. Nothing is granted for this placement regardless
+        /// (<c>adCurrencyOf</c> answers null: a window is not currency), so the callback is
+        /// identification only.
+        /// </para>
+        /// </summary>
+        public const string AndroidXpBoost = "w1rzfmmmyrfhhv9r";
+        public const string IosXpBoost = "hr9lakpd3gn0rhur";
+
+        /// <summary>
         /// Whether real identifiers have been filled in.
         ///
         /// The app key alone is checked: without it nothing initialises at all, so a missing
@@ -106,6 +127,13 @@ namespace GlimmerGrove.Ads
         ///
         /// Built by <c>Boot</c> and handed to the provider, so the provider never has to
         /// know which platform it is on — one more thing kept out of the SDK-facing half.
+        ///
+        /// <para>
+        /// <b>Every id in <see cref="AdPlacement.All"/> must appear here</b>, whether or not the
+        /// dashboard has a unit for it yet, and <c>RewardedAdTests.EveryPlacementHasAnAdUnitEntry</c>
+        /// holds the two together. A placement the provider is never told about cannot load, cannot
+        /// warn and cannot be told apart from a market with no demand.
+        /// </para>
         /// </summary>
         public static Dictionary<string, string> AdUnits()
         {
@@ -116,6 +144,7 @@ namespace GlimmerGrove.Ads
                 { AdPlacement.CoinBonus, Real(IosCoinBonus) },
                 { AdPlacement.WinBonus, Real(IosWinBonus) },
                 { AdPlacement.HintRefill, Real(IosHintRefill) },
+                { AdPlacement.XpBoost, Real(IosXpBoost) },
             };
 #else
             return new Dictionary<string, string>
@@ -124,6 +153,7 @@ namespace GlimmerGrove.Ads
                 { AdPlacement.CoinBonus, Real(AndroidCoinBonus) },
                 { AdPlacement.WinBonus, Real(AndroidWinBonus) },
                 { AdPlacement.HintRefill, Real(AndroidHintRefill) },
+                { AdPlacement.XpBoost, Real(AndroidXpBoost) },
             };
 #endif
         }

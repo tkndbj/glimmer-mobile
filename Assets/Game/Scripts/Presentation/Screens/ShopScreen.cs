@@ -386,6 +386,29 @@ namespace GlimmerGrove
             // store first answers — which is the exact case this comparison exists for. Its
             // gem-priced half never moves, so the count still only changes for the reason
             // described above.
+            Restock();
+        }
+
+        /// <summary>
+        /// Rebuild the shelf when its <em>membership</em> changed, repaint when only its faces
+        /// did.
+        ///
+        /// <para>
+        /// The distinction is invariant 16d's, said about a storefront: <c>Reload</c> is a new
+        /// list and animates, <c>Repaint</c> is the same list redrawn and does not. A purchase
+        /// settling is usually the second — a price arriving, a card going grey — and was
+        /// handled as the second unconditionally, which was right until a card could leave the
+        /// shelf. It cannot be the second then: the grid is still sized to the cell that has
+        /// gone, so the bundle stayed on screen marked YOURS until the player left the shop and
+        /// came back.
+        /// </para>
+        /// <para>
+        /// Counted rather than rebuilt, so the common case costs a walk of the catalog and no
+        /// allocation and never disturbs the cells somebody is reading.
+        /// </para>
+        /// </summary>
+        void Restock()
+        {
             if (ShelfCount() != _products.Count) Reload();
             else Repaint();
         }
@@ -403,10 +426,48 @@ namespace GlimmerGrove
             foreach (var product in StoreRules.Catalog.Products)
             {
                 if (product.Shelf != _shelf) continue;
-                if (StoreService.OfferFor(product).State == StoreOfferState.Missing) continue;
+                if (!Stocked(product)) continue;
                 count++;
             }
             return count;
+        }
+
+        /// <summary>
+        /// Whether a product belongs on a shelf at all right now.
+        ///
+        /// <para>
+        /// <b>One predicate, asked by the list and by the count.</b> They were the same two
+        /// lines written three times, and the failure that costs is already described in
+        /// <see cref="Reload"/>: a count that disagrees with the list sizes the grid to a cell
+        /// the list never fills, so the shelf draws a hole and the hole still answers taps.
+        /// Reading them apart is what lets them drift, so they do not read apart.
+        /// </para>
+        /// <para>
+        /// <b>A one-time product that has been bought leaves the shelf.</b> The welcome bundle
+        /// is sold once per account and can never be sold again, so a card marked YOURS is a
+        /// cell that answers a tap with a refusal for the life of the account — the same thing
+        /// the Missing guard above exists to prevent, arrived at from the other direction. It
+        /// is derived from <c>OfferFor</c> on every ask rather than remembered, so a refund
+        /// puts it straight back (<c>HeartContainerLedger.WasRevoked</c> is what flips that
+        /// state, and nothing here has to know it happened).
+        /// </para>
+        /// <para>
+        /// <b>A heart container is the exception, and it is not a special case so much as a
+        /// different shape.</b> The three vessels are a ladder a player reads as one: owning
+        /// the 10 is what makes the 20 legible, and <c>Included</c> is a sentence about the
+        /// rung above. Hiding a held rung would leave a two-card ladder whose remaining prices
+        /// mean nothing — so a container stays and says what it is, which is why this asks
+        /// <c>IsContainer</c> and not <c>IsOneTime</c>.
+        /// </para>
+        /// </summary>
+        static bool Stocked(StoreProduct product)
+        {
+            var state = StoreService.OfferFor(product).State;
+
+            if (state == StoreOfferState.Missing) return false;
+            if (state == StoreOfferState.Owned && !product.IsContainer) return false;
+
+            return true;
         }
 
         // ---------------------------------------------------------------- header
@@ -1012,7 +1073,7 @@ namespace GlimmerGrove
                 foreach (var product in catalog.Products)
                 {
                     if (product.Shelf != StoreShelf.Supplies) continue;
-                    if (StoreService.OfferFor(product).State == StoreOfferState.Missing) continue;
+                    if (!Stocked(product)) continue;
                     _products.Add(product);
                 }
 
@@ -1034,7 +1095,7 @@ namespace GlimmerGrove
                 foreach (var product in catalog.Products)
                 {
                     if (product.Shelf != _shelf) continue;
-                    if (StoreService.OfferFor(product).State == StoreOfferState.Missing) continue;
+                    if (!Stocked(product)) continue;
                     _products.Add(product);
                 }
 
@@ -1209,7 +1270,12 @@ namespace GlimmerGrove
         /// A purchase landed. Only the repaint belongs here; the panel is <c>Boot</c>'s, so
         /// that a grant arriving on the hub or the map is celebrated too.
         /// </summary>
-        void OnGranted(StoreGrant grant) => Repaint();
+        /// <summary>
+        /// <c>Restock</c> rather than <c>Repaint</c>, because this is the one event that can
+        /// take a card <em>off</em> the shelf: a one-time product settles here and is never
+        /// offered again (<see cref="Stocked"/>). Everything else about a grant is a face.
+        /// </summary>
+        void OnGranted(StoreGrant grant) => Restock();
 
         /// <summary>
         /// A purchase attempt ended without a transaction.

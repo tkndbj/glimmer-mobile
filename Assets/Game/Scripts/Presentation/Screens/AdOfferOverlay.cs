@@ -362,8 +362,16 @@ namespace GlimmerGrove
 
             UIKit.Halo(card.transform, tint, CardSize * 1.1f, .30f);
 
+            // **The box is the shape of the widest mark rather than a square**, and the height
+            // and the position are untouched, so the optical centre is exactly where the square
+            // one sat. `preserveAspect` fits a sprite *inside* this rect and centres it there,
+            // so a square mark — a coin, a heart, a hint — still draws at 114 in the middle of
+            // it and nothing about those three moves. What changes is the one mark that is not
+            // square: the XP wordmark is 1.55:1, so in a square box it drew at 114 x 74 with a
+            // third of the box empty above and below it, small in the one panel whose whole job
+            // is to say what the video pays. At 176 wide it fills the box it is centred in.
             var icon = UIKit.Img("Icon", card.transform, RewardArt.Icon(kind, null), Color.white,
-                                 new Vector2(114f, 114f), new Vector2(.5f, 1f), new Vector2(0f, -68f));
+                                 new Vector2(176f, 114f), new Vector2(.5f, 1f), new Vector2(0f, -68f));
             icon.preserveAspect = true;
             RewardArt.Glyph(icon, kind, 11f);
             Tween.Breathe(icon.transform, .05f, 2.2f);

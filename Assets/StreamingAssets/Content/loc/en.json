@@ -5686,6 +5686,10 @@
       "text": "Double XP"
     },
     {
+      "key": "ui.shop.xp_boost_card",
+      "text": "{0}% XP Boost for {1}h"
+    },
+    {
       "key": "ui.shop.xp_boost_explain",
       "text": "Every glade, watch and wave pays {0}% more XP while this is running. It stacks with the boost you can watch for free."
     },

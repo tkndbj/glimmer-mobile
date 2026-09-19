@@ -325,6 +325,40 @@ namespace GlimmerGrove.Tests
             AssertSame(a, b);
         }
 
+        // ------------------------------------------------------------- ad units
+        /// <summary>
+        /// Every placement this build knows is listed in <see cref="AdConfig.AdUnits"/>.
+        ///
+        /// <para>
+        /// The one fault in this loop that is completely silent. A placement the provider is
+        /// never handed creates no rewarded unit, so <c>IsReady</c> answers false for ever,
+        /// <c>ShowAsync</c> answers <c>Unavailable</c> and <b>nothing is logged at all</b> —
+        /// the provider's "no ad unit id for this platform" warning only fires for a
+        /// placement that is in the dictionary with an empty id. From the screen it is
+        /// indistinguishable from a market with no demand, which is where it hid: the XP
+        /// boost card shipped, offered a video, and sat at "finding a video" for ever.
+        /// </para>
+        /// <para>
+        /// The id being <see cref="AdConfig.Unset"/> is not a failure here. An unfilled
+        /// dashboard is an honest state that says so at start-up; an absent key is not.
+        /// This holds the branch the running Editor compiles, which is the Android one.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryPlacementHasAnAdUnitEntry()
+        {
+            var units = AdConfig.AdUnits();
+
+            foreach (var placement in AdPlacement.All)
+                Assert.IsTrue(units.ContainsKey(placement),
+                    $"placement '{placement}' has no AdConfig.AdUnits entry, so the provider is " +
+                    "never told about it and the offer can never load");
+
+            foreach (var key in units.Keys)
+                Assert.IsTrue(AdPlacement.IsKnown(key),
+                    $"AdConfig.AdUnits names '{key}', which is not a placement this build knows");
+        }
+
         // --------------------------------------------------------------- helpers
         static AdStateDto State(int dayKey, params (string placement, int count)[] counts)
         {

@@ -217,9 +217,14 @@ namespace GlimmerGrove
                 case ChestDropKind.HeartBoost: return "Ui/ic_heart_boost";
                 case ChestDropKind.Hints: return "Ui/ic_hint";
 
-                // The keeper ladder's own mark, which is what a boost multiplies. Resident in
-                // `AssetManifest`, so it cannot arrive late and be drawn as a white rectangle.
-                case ChestDropKind.XpBoost: return "Ui/ic_star3d";
+                // The boost's own wordmark rather than the keeper ladder's star, which is what
+                // it *multiplies* and not what it is: a star beside "50% XP Boost for 2h" reads
+                // as a rung being paid out. Resident in `AssetManifest`, so it cannot arrive
+                // late and be drawn as a white rectangle (invariant 7b) — and it is the same
+                // picture the shelf's own card draws, so the panel and the card that opened it
+                // agree. It is wide where every other mark here is square, which is a fact the
+                // callers size their box against; see `AdOfferOverlay.BuildRewardCard`.
+                case ChestDropKind.XpBoost: return "Ui/ic_xp_boost";
 
                 // The item's own picture, which is the one the action bar and the shelf already
                 // draw (`UtilityItem.Art`) — and `AssetManifest` names all four, so it is

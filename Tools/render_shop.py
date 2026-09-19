@@ -86,6 +86,10 @@ BANNER_FILL = 0.90
 # ProductCard / ProductCardBadges
 PLATE_X, PLATE_Y = 34.0, 40.0
 PLATEW, PLATEH = CELLW - PLATE_X, CELLH - PLATE_Y
+
+# What every shrinkable headline settled on, printed at the end. A figure equal to the
+# floor (24) is a caption that did not fit, which is the only way this screen says so.
+SETTLED = []
 ART, ART_DROP = 300.0, 168.0
 AMOUNT_RISE, SUB_RISE, FACE_RISE = 196.0, 150.0, 74.0
 FACEW, FACEH = CELLW - 110.0, 96.0
@@ -136,7 +140,7 @@ AD_PICTURE = {"credits": "ad_coin", "hearts": "ad_heart", "xp_boost": "ad_xp"}
 # mirror asks the same question the shelf does. Anything not named here is a supply.
 GOOD_SHELF = {"xp_boost": "utilities"}
 
-AD_TOKEN = {"credits": "Coin/f0", "hearts": "ic_heart", "xp_boost": "ic_star3d"}
+AD_TOKEN = {"credits": "Coin/f0", "hearts": "ic_heart", "xp_boost": "ic_xp_boost"}
 AD_UNIT = {"credits": "Coins", "hearts": "Hearts", "xp_boost": "XP boost"}
 AD_TINT = {"credits": K.GOLD, "hearts": K.ROSE, "xp_boost": K.AQUA}
 
@@ -216,6 +220,21 @@ def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, l
         K.paste(sheet, seal, plate_cx + PLATEW / 2 - SEAL_INSET, ptop + SEAL_DROP)
 
 
+# `ui.shop.xp_boost_card` — the one headline on either shelf that is a sentence rather than a
+# figure, so it is the one that can outgrow its plate. Both cards build it, from the percentage
+# in `xpBoost` and the window's own length, exactly as `ProductCard` does.
+def xp_headline(percent, hours):
+    return f"{percent}% XP Boost for {hours}h"
+
+
+# `_amount`: `UIKit.Shrinkable(UIKit.Titled(... Font(46) ...), Font(24))` over a box of
+# `look.Width - 80` by 58. Drawn through `K.shrunk` rather than `K.text` because a sentence is
+# the only thing here that can need it, and **Best Fit settling at its floor is the tell**
+# (invariant 19n) — the caller prints what it settled on.
+def headline(sheet, s, cx, cy, tint):
+    return K.shrunk(sheet, s, cx, cy, PLATEW - 80, 58, 46, 24, fill=tint, outline=4)
+
+
 def ad_card(sheet, x, top, shelf, kind, amount):
     """The shelf's first spot: `ProductCard.Draw(AdOffer, StoreShelf)`.
 
@@ -267,8 +286,19 @@ def ad_card(sheet, x, top, shelf, kind, amount):
                             (ART * .17, ART * .17)), K.CREAM)
         K.paste(sheet, play, plate_cx + ART * .012, ptop + ART_DROP + ART * .24)
 
-    K.text(sheet, f"{amount:,}", plate_cx, pbot - AMOUNT_RISE, 46, fill=AD_TINT[kind], outline=4)
-    K.text(sheet, AD_UNIT[kind], plate_cx, pbot - SUB_RISE, 26, fill=(255, 245, 225), outline=2)
+    if kind == "xp_boost":
+        said = xp_headline(rules().get("xpBoost", {}).get("watchedPercent", 50), amount)
+        SETTLED.append(("ad " + kind, said,
+                        headline(sheet, said, plate_cx, pbot - AMOUNT_RISE, AD_TINT[kind])))
+        unit = ""
+    else:
+        K.text(sheet, f"{amount:,}", plate_cx, pbot - AMOUNT_RISE, 46,
+               fill=AD_TINT[kind], outline=4)
+        unit = AD_UNIT[kind]
+
+    # **Blank under the XP boost**, whose headline is a sentence — `ProductCard.Draw(AdOffer)`.
+    if unit:
+        K.text(sheet, unit, plate_cx, pbot - SUB_RISE, 26, fill=(255, 245, 225), outline=2)
 
     # `Skins.Affirm`, which is the same green the watch button on `AdOfferOverlay` wears.
     K.paste(sheet, K.skin("btn_green", FACEW, FACEH), plate_cx, pbot - FACE_RISE)
@@ -312,11 +342,12 @@ def good_card(sheet, x, top, kind, amount, gems):
         # already has and there is no object to draw. The letters say what is multiplied.
         mark = K.fit(Image.open(UI / "ic_xp_boost.png").convert("RGBA"), (ART * .74, ART * .74))
         K.paste(sheet, mark, plate_cx, ptop + ART_DROP)
-        headline, unit, tint = f"{amount}h", "Double XP", K.AQUA
+        said, unit, tint = xp_headline(
+            rules().get("xpBoost", {}).get("boughtPercent", 100), amount), "", K.AQUA
     elif kind == "heart_boost":
         boost = K.fit(Image.open(UI / "ic_heart_boost.png").convert("RGBA"), (ART * .74, ART * .74))
         K.paste(sheet, boost, plate_cx, ptop + ART_DROP)
-        headline, unit, tint = f"{amount}h", "Faster hearts", K.SUN
+        said, unit, tint = f"{amount}h", "Faster hearts", K.SUN
     else:
         shown = 1 if amount <= 5 else 3 if amount <= 20 else 5
         token = ART * (.68 if shown == 1 else .44 if shown == 3 else .36)
@@ -324,10 +355,12 @@ def good_card(sheet, x, top, kind, amount, gems):
         for dx, dy, tilt in pile(shown, token):
             one = K.fit(heart, (token, token)).rotate(tilt, Image.BICUBIC, expand=True)
             K.paste(sheet, one, plate_cx + dx, ptop + ART_DROP - dy)
-        headline, unit, tint = f"{amount:,}", "Hearts", K.ROSE
+        said, unit, tint = f"{amount:,}", "Hearts", K.ROSE
 
-    K.text(sheet, headline, plate_cx, pbot - AMOUNT_RISE, 46, fill=tint, outline=4)
-    K.text(sheet, unit, plate_cx, pbot - SUB_RISE, 26, fill=(255, 245, 225), outline=2)
+    SETTLED.append(("good " + kind, said,
+                    headline(sheet, said, plate_cx, pbot - AMOUNT_RISE, tint)))
+    if unit:
+        K.text(sheet, unit, plate_cx, pbot - SUB_RISE, 26, fill=(255, 245, 225), outline=2)
 
     K.paste(sheet, K.skin("btn_violet", FACEW, FACEH), plate_cx, pbot - FACE_RISE)   # Skins.Gem
     glyph = FACEH * .34
@@ -422,9 +455,29 @@ def rules():
                       .read_text(encoding="utf8"))
 
 
+# Set by `--sold`: the shelf a returning payer sees. `ShopScreen.Stocked` drops a bought
+# one-time product that is not a heart container, so the bundles shelf loses a card and the two
+# under it move up. Off by default, because the default reading of this mirror is a fresh
+# account — but the *other* state is now a real one and this is the only way to look at it.
+SOLD = False
+
+
 def products(shelf):
+    """`ShopScreen.Reload`'s list for a real-money shelf.
+
+    **`ShopScreen.Stocked` is mirrored here**, not the Missing half of it (nothing offline can
+    know what a storefront answered) but the ownership half, which is content plus one flag: a
+    `nonconsumable` that is not a heart container is sold once and then gone. Drawn without it
+    this mirror would keep reporting three bundles to a shelf that draws two, which is the one
+    thing invariant 44d says a mirror must never do.
+    """
     store = rules()["store"]
     on = [p for p in store["products"] if p.get("shelf") == shelf]
+
+    if SOLD:
+        on = [p for p in on
+              if not (p.get("kind") == "nonconsumable" and not p.get("heartCapacity", 0))]
+
     on.sort(key=lambda p: p.get("referenceUsdCents", 0))
     return on
 
@@ -793,10 +846,15 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--shelf", default="gems", choices=SHELVES)
     ap.add_argument("--all", action="store_true")
+    ap.add_argument("--sold", action="store_true",
+                    help="the shelf after the one-time bundle has been bought")
     ap.add_argument("--offline", action="store_true",
                     help="the store never answered - what an unreachable shelf says")
     ap.add_argument("--out", type=Path, default=Path("shop.png"))
     args = ap.parse_args()
+
+    global SOLD
+    SOLD = args.sold
 
     if args.all:
         shelves = [s for s in SHELVES if s in LADDER or s == "supplies"]
@@ -809,6 +867,10 @@ def main():
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
+    for what, said, px in SETTLED:
+        print(f"  {what}: {said!r} at {px}px"
+              + ("   <-- FLOOR: it did not fit" if px <= 24 else ""))
+
     print(f"  wrote {args.out}  {out.width}x{out.height}  - look at it")
 
 
