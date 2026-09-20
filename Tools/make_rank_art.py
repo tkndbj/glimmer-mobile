@@ -204,7 +204,16 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for (rid, _), frame in zip(RUNGS, frames):
         (OUT / f"{rid}.png").write_bytes(png_bytes(frame))
-        (OUT / f"{rid}.png.meta").write_text(meta(rid), encoding="utf8", newline="\n")
+
+        # **An existing `.meta` is left alone.** The template is `ic_update`'s, which carries a
+        # cap of 1024 and an ordinary compression grade; the Editor stamps the folder rule (256,
+        # the high grade) over it on import, and that stamp lives nowhere else (invariant 7d).
+        # A re-cut that rewrote the meta would silently un-grade all seven badges, with the
+        # preprocessor firing on first import only to put it back. The guid is derived, so a
+        # meta already on disk already carries the right one.
+        side = OUT / f"{rid}.png.meta"
+        if not side.exists():
+            side.write_text(meta(rid), encoding="utf8", newline="\n")
 
     print(f"ranks: wrote {len(RUNGS)} badge(s) to {OUT} at {SIZE}x{SIZE}, each with its .meta")
     return 0
