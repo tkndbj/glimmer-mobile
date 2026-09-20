@@ -1086,6 +1086,68 @@ namespace GlimmerGrove.Content
         /// whatever that level gated (invariant 19a).
         /// </summary>
         public XpBoostDto xpBoost;
+
+        /// <summary>
+        /// The rank ladder. Optional; see <see cref="Ranks.RankLadder"/>.
+        ///
+        /// <para>
+        /// <b>Reaches no server</b>, like <see cref="notifications"/> and for a sharper reason: a
+        /// rank is <em>derived</em> from records the server already validates and pays nothing at
+        /// all, so there is nothing to adjudicate, nothing to clamp and nothing to publish. The
+        /// day a rung pays a currency, this block joins <c>seed-config.mjs</c> and invariant 13
+        /// starts applying to it.
+        /// </para>
+        /// </summary>
+        public RanksDto ranks;
+    }
+
+    /// <summary>
+    /// The rank ladder: every rung, humblest first. Read by <c>RankLadder.Resolve</c>.
+    ///
+    /// <para>
+    /// <b>Authored order is the ladder</b>, exactly as it is for <see cref="TaskTableDto.tiers"/>
+    /// — a rung carries no number of its own, so reordering the array reorders the ladder and
+    /// there is no second place for a position to be written down and disagree.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class RanksDto
+    {
+        public RankRungDto[] rungs;
+
+        /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
+        public bool IsAuthored => rungs != null && rungs.Length > 0;
+    }
+
+    /// <summary>
+    /// One rung. <c>id</c> is permanent in the way a chest tier's is — it names the badge on disk
+    /// (<c>Ui/Rank/{id}</c>) and the loc keys (<c>rank.{id}.name</c>, <c>.blurb</c>), all derived
+    /// — and <c>requires</c> is every line that has to be met, all of them.
+    /// </summary>
+    [Serializable]
+    public sealed class RankRungDto
+    {
+        public string id;
+        public RankRequirementDto[] requires;
+    }
+
+    /// <summary>
+    /// One line of a rung: a <c>RankMeasures</c> id, optionally what it is about, and how much.
+    ///
+    /// <para>
+    /// <c>measure</c> is either one of the derived readings (<c>levels_cleared</c>, <c>stars</c>,
+    /// <c>three_stars</c>, <c>keeper_level</c>, <c>best_wave</c>) or any <c>TaskGoals</c> id
+    /// counted for ever — so a verb added for a task slate is a rank requirement the same day,
+    /// with no code. <c>scope</c> names a chapter for the first three, a level for
+    /// <c>best_wave</c>, and must be absent for everything else; empty means the whole account.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class RankRequirementDto
+    {
+        public string measure;
+        public string scope;
+        public int target;
     }
 
     /// <summary>

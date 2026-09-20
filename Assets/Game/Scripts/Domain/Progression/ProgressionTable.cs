@@ -10,6 +10,7 @@ using GlimmerGrove.Wards;
 using UnityEngine;
 using TaskTable = GlimmerGrove.Tasks.TaskTable;   // the property below is also called Tasks
 using ReferralTable = GlimmerGrove.Referral.ReferralTable;   // and Referral
+using RankLadder = GlimmerGrove.Ranks.RankLadder;             // and Ranks
 
 namespace GlimmerGrove.Progression
 {
@@ -91,7 +92,8 @@ namespace GlimmerGrove.Progression
                          AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
                          ContinueTable carryOn, UtilityCatalog utilities,
                          WardCatalog wards, TaskTable tasks, ReferralTable referral,
-                         EndlessRewardTable endless, XpBoostTable xpBoost)
+                         EndlessRewardTable endless, XpBoostTable xpBoost,
+                         RankLadder ranks)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -112,6 +114,7 @@ namespace GlimmerGrove.Progression
             Referral = referral ?? ReferralTable.Default;
             Endless = endless ?? EndlessRewardTable.Default;
             XpBoost = xpBoost ?? XpBoostTable.Default;
+            Ranks = ranks ?? RankLadder.Empty;
         }
 
         /// <summary>
@@ -164,6 +167,24 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public XpBoostTable XpBoost { get; }
+
+        /// <summary>
+        /// The rank ladder, published with the curve for the reason every block here is and one
+        /// of its own.
+        ///
+        /// <para>
+        /// A rung asks about keeper levels, stars and waves, and every one of those is decided by
+        /// a number in this same file. A ladder fetched apart from the curve would be a set of
+        /// goals measured against a game that had moved underneath them — the window the chest
+        /// table and the ad payouts are published here to close, asked about a badge.
+        /// </para>
+        /// <para>
+        /// Unlike every other block, <see cref="RankLadder.Empty"/> is a legal and complete
+        /// answer: a game with no chest odds cannot be played, and a game with no ranks can. See
+        /// <see cref="RankLadder"/> for why there is no built-in ladder to fall back to.
+        /// </para>
+        /// </summary>
+        public RankLadder Ranks { get; }
 
         /// <summary>
         /// The utilities a player may hold, published with the curve for the chest table's
@@ -314,7 +335,8 @@ namespace GlimmerGrove.Progression
             tasks: TaskTable.Default,
             referral: ReferralTable.Default,
             endless: EndlessRewardTable.Default,
-            xpBoost: XpBoostTable.Default);
+            xpBoost: XpBoostTable.Default,
+            ranks: RankLadder.Empty);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -594,10 +616,16 @@ namespace GlimmerGrove.Progression
             // no server — see `NotificationsDto`.
             Notifications.NotificationTable.Resolve(dto.notifications, problems);
 
+            // And the rank ladder. Read last because it is the one block that is about all the
+            // others: a rung asks for stars this table's rules pay for, a keeper level its curve
+            // decides and a wave its Infinite rate is measured in. An unreadable ladder costs the
+            // badges and never the game — there is no built-in one, deliberately (`RankLadder`).
+            var ranks = RankLadder.Resolve(dto.ranks, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
                           store, prompts, chapterGate, carryOn, utilities, wards, tasks, referral,
-                          endless, xpBoost);
+                          endless, xpBoost, ranks);
             return true;
         }
 
@@ -612,7 +640,7 @@ namespace GlimmerGrove.Progression
                                       ContinueTable carryOn, UtilityCatalog utilities,
                                       WardCatalog wards, TaskTable tasks,
                                       ReferralTable referral, EndlessRewardTable endless,
-                                      XpBoostTable xpBoost)
+                                      XpBoostTable xpBoost, RankLadder ranks)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -632,7 +660,7 @@ namespace GlimmerGrove.Progression
             return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
                                         golden, hearts, hints, store, prompts,
                                         chapterGate, carryOn, utilities, wards, tasks, referral,
-                                        endless, xpBoost);
+                                        endless, xpBoost, ranks);
         }
     }
 }

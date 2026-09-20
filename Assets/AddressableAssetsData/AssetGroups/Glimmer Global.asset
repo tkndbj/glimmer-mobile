@@ -7742,6 +7742,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/wildBulwark_g
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 30bfc42384f4fc307b395f2da4bca452
+    m_Address: Art/Ui/Rank/gemfire
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 30ca9e70d6012ae4093f3e7a84ddc390
     m_Address: Art/Fx/Siege/hit_apex_r/f07
     m_ReadOnly: 0
@@ -13948,6 +13953,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5770c60d51694ac4b92f32b67bda3ec8
     m_Address: Art/Siege/Wards/leech_r
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 577606059d3382726af206807cb2e094
+    m_Address: Art/Ui/Rank/frostheart
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -28051,6 +28061,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/muzzle_glacier_r
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ad60f3acd1bdc3995ee064fd2fa2ea24
+    m_Address: Art/Ui/Rank/silverwatch
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ad6ab34ac9a80774eba3e7adec820144
     m_Address: Art/Fx/Siege/pop/f00
     m_ReadOnly: 0
@@ -29179,6 +29194,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b4458caddab419e49ea87f0efb932696
+    m_Address: Art/Ui/Rank/duskcrown
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b44760a8da6f6ea4fb4c00a483731253
     m_Address: Art/Siege/Wards/glacier_g_fire/f05
     m_ReadOnly: 0
@@ -30009,6 +30029,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/hit_leech_g
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b9b06a1096414201ae0f69a87cdf4f1b
+    m_Address: Art/Ui/Rank/auroracrest
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b9b50c03b53c046419683378c2f4dc8c
     m_Address: Art/Siege/wildMon_y/f10
@@ -36468,6 +36493,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/Wards/ember_r_fire
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e1d35d879b591f7c2453896634de11db
+    m_Address: Art/Ui/Rank/goldbrand
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e1d7ccff0c6d8c941bd438ffe13fbc5a
     m_Address: Art/Fx/Siege/muzzle_prism_g/f00
     m_ReadOnly: 0
@@ -39287,6 +39317,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f2a955c306edb3144becfb7ba8f93aa4
     m_Address: Art/Siege/gem_r
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f2ac0dae3866b3dcc140e2bc4beb7e42
+    m_Address: Art/Ui/Rank/cinderling
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

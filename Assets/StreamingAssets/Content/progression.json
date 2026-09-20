@@ -1204,5 +1204,73 @@
       { "kind": "board_climb",   "slot": "evening",   "priority": 20,  "minDaysBetween": 4 },
       { "kind": "grove_idle",    "slot": "any",       "priority": 10,  "minDaysBetween": 2 }
     ]
+  },
+  "ranks": {
+    "rungs": [
+      {
+        "id": "cinderling",
+        "requires": [
+          { "measure": "levels_cleared", "scope": "s01_thornwatch", "target": 8 },
+          { "measure": "runs", "target": 15 }
+        ]
+      },
+      {
+        "id": "silverwatch",
+        "requires": [
+          { "measure": "levels_cleared", "scope": "s01_thornwatch", "target": 10 },
+          { "measure": "stars", "scope": "s01_thornwatch", "target": 22 },
+          { "measure": "runs", "target": 50 }
+        ]
+      },
+      {
+        "id": "goldbrand",
+        "requires": [
+          { "measure": "levels_cleared", "scope": "s03_broodmarch", "target": 10 },
+          { "measure": "stars", "target": 60 },
+          { "measure": "keeper_level", "target": 12 },
+          { "measure": "raiders", "target": 2500 }
+        ]
+      },
+      {
+        "id": "duskcrown",
+        "requires": [
+          { "measure": "levels_cleared", "scope": "s04_barrowfell", "target": 10 },
+          { "measure": "stars", "target": 95 },
+          { "measure": "three_stars", "target": 20 },
+          { "measure": "runs", "target": 200 },
+          { "measure": "best_wave", "scope": "s02_endless", "target": 20 }
+        ]
+      },
+      {
+        "id": "frostheart",
+        "requires": [
+          { "measure": "levels_cleared", "scope": "s05_ashenhold", "target": 10 },
+          { "measure": "stars", "target": 125 },
+          { "measure": "three_stars", "target": 35 },
+          { "measure": "bosses", "target": 30 },
+          { "measure": "best_wave", "scope": "s02_endless", "target": 30 }
+        ]
+      },
+      {
+        "id": "auroracrest",
+        "requires": [
+          { "measure": "levels_cleared", "scope": "s06_thundercrag", "target": 10 },
+          { "measure": "stars", "target": 155 },
+          { "measure": "runs", "target": 450 },
+          { "measure": "charms", "target": 300 },
+          { "measure": "best_wave", "scope": "s02_endless", "target": 45 }
+        ]
+      },
+      {
+        "id": "gemfire",
+        "requires": [
+          { "measure": "levels_cleared", "scope": "s07_dustcrown", "target": 10 },
+          { "measure": "stars", "target": 175 },
+          { "measure": "three_stars", "target": 55 },
+          { "measure": "bosses", "target": 60 },
+          { "measure": "best_wave", "scope": "s02_endless", "target": 60 }
+        ]
+      }
+    ]
   }
 }

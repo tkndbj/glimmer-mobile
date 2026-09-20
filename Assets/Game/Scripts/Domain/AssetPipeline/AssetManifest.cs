@@ -242,6 +242,38 @@ namespace GlimmerGrove.AssetPipeline
 
             return list;
         }
+        // ---------------------------------------------------------------- ranks
+        /// <summary>
+        /// Every rank badge, derived from the ladder rather than listed.
+        ///
+        /// <para>
+        /// <b>Built from the rung's id</b> (<c>RankDefinition.Icon</c>) for <c>ChestTier</c>'s
+        /// reason: anything holding a rank can draw it without reading the ladder. The price is
+        /// that <c>artnames.py</c> cannot see one of these — a built address is invisible to a
+        /// call-site scan — so <c>check_ranks</c> in <c>content.py</c> is what holds every rung's
+        /// badge to disk, and the Editor's own audit picks them up here.
+        /// </para>
+        /// <para>
+        /// <b>Global rather than scoped</b>, and the map decides it, exactly as it decides the
+        /// Infinite hub's three marks: the badge is drawn in the map's chrome, which is one of the
+        /// first screens a session touches, and it changes while that screen is standing — an
+        /// account that crosses a rung on the run it just finished comes back to a map that has to
+        /// draw the new badge on the frame it arrives. A scope would be a white rectangle there
+        /// (invariant 7b), and seven 256-pixel badges are not worth a scope's two failure modes.
+        /// </para>
+        /// </summary>
+        public static List<AssetRequest> RankAssets(Ranks.RankLadder ladder)
+        {
+            var list = new List<AssetRequest>(8);
+            if (ladder == null) return list;
+
+            foreach (var rung in ladder.Rungs)
+                if (rung != null && !string.IsNullOrEmpty(rung.Id))
+                    list.Add(AssetRequest.Sprite(ArtRoot + rung.Icon));
+
+            return list;
+        }
+
         public static string MapArt(string key) => MapRoot + key;
         public static string Ui(string key) => UiRoot + key;
         public static string Sfx(string key) => SfxRoot + key;
@@ -551,6 +583,13 @@ namespace GlimmerGrove.AssetPipeline
             foreach (var u in UiSprites) list.Add(AssetRequest.Sprite(Ui(u)));
             foreach (var m in MapSprites) list.Add(AssetRequest.Sprite(MapArt(m)));
             foreach (var s in Sfxs) list.Add(AssetRequest.Clip(Sfx(s)));
+
+            // The rank badges, off the live ladder. Here rather than in `UiSprites` because the
+            // ladder is content and the addresses are built from it, which is what lets a rung
+            // added by a content push be addressed, audited and preloaded without anyone editing
+            // this file — the bargain `ChestAssets` makes, applied to the global set. What a
+            // content push still cannot do is ship the picture, which is `check_ranks`' job.
+            list.AddRange(RankAssets(Progression.ProgressionRules.Table.Ranks));
 
             list.Add(AssetRequest.Font(FontAddress));
             return list;

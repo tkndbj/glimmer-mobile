@@ -162,7 +162,7 @@ NUDGE = {
         # do, and which part of a mesa a disc looks right on is the question no measurement in
         # this file answers.
         #
-        # **Seven rounds, folded into one figure each**, for `map5`'s reason: a seat is one
+        # **Eight rounds, folded into one figure each**, for `map5`'s reason: a seat is one
         # number, and a running total of corrections is a thing that can disagree with itself.
         # Only the sum is kept; the rounds survive in the comments because they are the record
         # of an eye converging, not a second source of truth.
@@ -185,7 +185,7 @@ NUDGE = {
         4: (190, 0),          # level 54, 30+40+40+30+50 px right
         5: (-8, 0),           # level 55, 4 px left twice over
         6: (15, 0),           # level 56, 5 px right three times over
-        7: (-290, 0),         # level 57, 30+40+40+40+80+30+30 px left
+        7: (-305, 0),         # level 57, 30+40+40+40+80+30+30+15 px left
         8: (170, 0),          # level 58, 20+20+20+20+40+30+20 px right
         9: (15, 0),           # level 59, 5 px right three times over
         10: (-85, 0),         # level 60, 10+15+15+15+20+10 px left

@@ -1127,9 +1127,20 @@ namespace GlimmerGrove
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", Vector2.one * CornerSize,
                              new Vector2(0f, 1f), new Vector2(CornerX, CornerY), () => Flow.Go<HomeScreen>());
 
-            // The XP boost's clock, directly under the back key and on both tracks — this screen
-            // draws the chapter map and the Infinite hub, and the chrome is deliberately the same
-            // for both, so one call covers the pair. It takes itself off screen when no boost is
+            // The rank this keeper holds, directly under the back key and on both tracks — this
+            // screen draws the chapter map and the Infinite hub, and the chrome is deliberately
+            // the same for both, so one call covers the pair. It is the way to the page that
+            // says what every rank asks for, which is the one question a badge invites and the
+            // only place on the map it can be asked.
+            //
+            // **First in the column because it is the one that is always there.** The boost
+            // clock takes itself off screen when no window is running, so putting it above this
+            // would leave a hole between the back key and the badge on every session where
+            // nobody has watched a video — a gap that reads as a layout fault rather than as an
+            // absence. Stable things above transient ones.
+            RankBadge.Attach(this, Safe, new Vector2(0f, 1f), new Vector2(CornerX, RankY));
+
+            // The XP boost's clock, under the badge. It takes itself off screen when no boost is
             // running (`BoostReadout`), which is why it is attached unconditionally rather than
             // behind a test here: a screen that decided for itself would have to be rebuilt when
             // a window opens under it.
@@ -1327,7 +1338,21 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         const float BoostGap = 18f;
-        const float BoostY = CornerY - CornerSize * .5f - BoostGap - BoostReadout.Height * .5f;
+
+        /// <summary>
+        /// Where the rank badge sits: under the back key, and the first thing in the left column
+        /// because it is the only one of the three that is always drawn.
+        ///
+        /// Half the key's height plus half the badge's, which is <see cref="BoostY"/>'s
+        /// arithmetic and for its reason — `UIKit.Box` always pivots at centre, so a gap between
+        /// two controls of different sizes is only a gap between their *faces* once both halves
+        /// are in it. The height is read from <see cref="RankBadge.Height"/> rather than typed,
+        /// so re-cutting the widget cannot leave the map placing it against the size it used to
+        /// be.
+        /// </summary>
+        const float RankY = CornerY - CornerSize * .5f - BoostGap - RankBadge.Height * .5f;
+
+        const float BoostY = RankY - RankBadge.Height * .5f - BoostGap - BoostReadout.Height * .5f;
 
         /// <summary>
         /// Where the chapter's star count sits: under the "i", right-aligned with it, measured

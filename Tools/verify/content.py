@@ -2588,6 +2588,195 @@ def check_tasks(progression, keys, utilities, art, warnings):
                     "marks": worth, "marksPerDay": per_day}
 
 
+# ---------------------------------------------------------------------------- the ranks
+#: Every measure a rung may name: the five derived readings, then every counted verb.
+#: Mirrors `RankMeasures.All()` - held to it by `RankTests.EveryMeasureIsKnownToTheGate`,
+#: because a measure added in C# and not here is a rung this gate waves through.
+RANK_DERIVED = {"levels_cleared", "stars", "three_stars", "keeper_level", "best_wave"}
+RANK_MEASURES = RANK_DERIVED | TASK_GOALS
+
+#: What a scope may name, per measure. Anything absent takes no scope at all - and a scope on
+#: one of those is refused rather than ignored, because a requirement that reads "clear ten
+#: battles of the Barrowfell" and is met anywhere is a rung that lies on its own page.
+RANK_SCOPES = {"levels_cleared": "chapter", "stars": "chapter", "three_stars": "chapter",
+               "best_wave": "level"}
+
+#: `LifetimeTally.Ceiling`. A target above it could never be met.
+RANK_CEILING = 999999999
+
+
+def check_ranks(manifest, progression, keys, art, keeper_reach, warnings):
+    """The rank ladder. `ContentValidation.ValidateRanks`, offline.
+
+    A rank is *derived* and stored nowhere (invariant 52), so nothing here can corrupt a save
+    and everything here can quietly make a badge unearnable - which is why this is the longest
+    gate for the smallest block. Five things, and the last two are the ones only a gate holding
+    both files at once can see.
+
+    * **Every rung has its badge on disk and its two strings.** The address is *built* from the
+      id (`RankDefinition.Icon`), so `artnames.py` cannot see one of them, and the name and the
+      blurb are derived, so `loc.py` cannot see those either (invariant 5a). A missing badge is
+      a white rectangle on the map's chrome (invariant 7b).
+    * **Every requirement resolves its sentence**, which is derived from the measure and is
+      therefore invisible to `loc.py` for the same reason.
+    * **A scope is honoured or refused.** A chapter scope has to name a chapter this manifest
+      ships and has not disabled; a level scope has to name a level in it, and a wave has to be
+      asked of an Infinite track. A hidden chapter is the sharp case: everything validates, the
+      rung draws, and nobody can ever meet it.
+    * **The ladder rises.** Two rungs asking about the same thing must ask for more of it going
+      up, or the page draws a grander badge for less - and `RankLadder.Held` walks upward, so
+      the easier rung is unreachable until the harder one is met, which nothing on the screen
+      explains.
+    * **Every target is reachable against the content that ships.** Stars, three-stars and
+      clears are bounded by the catalog; a keeper level is bounded by what three stars on
+      everything pays (`reachable_keeper_level`). A rung asking for 200 stars out of 183 is a
+      badge nobody can ever wear, and no other file in this repo can see it.
+    """
+    errors = []
+    block = progression.get("ranks")
+    if not block:
+        warnings.append("progression.json has no 'ranks' block; no badges are drawn")
+        return errors, {}
+
+    rungs = block.get("rungs") or []
+    if not rungs:
+        errors.append("ranks block lists no rungs")
+        return errors, {}
+
+    # The catalog, as the ladder is measured against it. Disabled chapters are *out*: a rung
+    # scoped to one is unmeetable however correct the file looks.
+    live = [c for c in manifest.get("chapters", []) if not c.get("disabled")]
+    chapters = {c["id"]: c for c in live}
+    levels = {lid: c["id"] for c in live for lid in (c.get("levels") or [])}
+    infinite = {lid for c in live if c.get("track") == "infinite"
+                for lid in (c.get("levels") or [])}
+    all_glades = sum(len(c.get("levels") or []) for c in live)
+
+    seen_ids = set()
+    ladder = []
+    floors = {}          # (measure, scope) -> what the rung below asked for
+
+    for index, rung in enumerate(rungs):
+        rid = rung.get("id") or ""
+        if not TASK_ID.match(rid):
+            errors.append(f"ranks rung {index} has a bad id '{rid}'")
+            continue
+        if rid in seen_ids:
+            errors.append(f"ranks rung '{rid}' is listed twice; the badge and the name are "
+                          "derived from the id, so two rungs sharing one are one rung drawn twice")
+        seen_ids.add(rid)
+
+        address = f"Ui/Rank/{rid}"
+        if address not in art:
+            errors.append(f"ranks rung '{rid}' draws '{address}', which is not on disk; run "
+                          "Tools/make_rank_art.py - a picture is not content")
+
+        for suffix in ("name", "blurb"):
+            key = f"rank.{rid}.{suffix}"
+            if key not in keys:
+                errors.append(f"ranks rung '{rid}' needs loc key '{key}'")
+
+        lines = rung.get("requires") or []
+        if not lines:
+            errors.append(f"ranks rung '{rid}' asks for nothing; a rung with no requirement is "
+                          "a badge every account already holds")
+            continue
+
+        drawn = []
+        for line in lines:
+            measure = line.get("measure") or ""
+            scope = line.get("scope") or ""
+            target = line.get("target", 0)
+            named = measure + ("@" + scope if scope else "")
+
+            if measure not in RANK_MEASURES:
+                errors.append(f"ranks rung '{rid}' names unknown measure '{measure}'; the "
+                              "reader drops the whole rung rather than the line")
+                continue
+
+            if not isinstance(target, int) or target < 1:
+                errors.append(f"ranks rung '{rid}' asks for {target} of '{measure}'; a target "
+                              "below one is met by every account")
+                continue
+            if target > RANK_CEILING:
+                errors.append(f"ranks rung '{rid}' asks for {target} of '{measure}', above the "
+                              f"{RANK_CEILING} a counter may ever reach")
+                continue
+
+            takes = RANK_SCOPES.get(measure)
+            if scope and not takes:
+                errors.append(f"ranks rung '{rid}' scopes '{measure}' to '{scope}', and that "
+                              "measure is about the whole account; the reader refuses it rather "
+                              "than drawing a sentence the ladder does not mean")
+                continue
+
+            key = f"rank.req.{measure}" + (".in" if scope else "")
+            if key not in keys:
+                errors.append(f"ranks rung '{rid}' needs loc key '{key}' for its "
+                              f"'{measure}' line")
+
+            # What the shipped catalog can ever pay against this line.
+            ceiling = None
+            if takes == "chapter" and scope:
+                chapter = chapters.get(scope)
+                if chapter is None:
+                    errors.append(f"ranks rung '{rid}' asks about chapter '{scope}', which this "
+                                  "manifest does not ship or has disabled; the rung would be "
+                                  "unmeetable with every other gate green")
+                else:
+                    n = len(chapter.get("levels") or [])
+                    ceiling = n if measure in ("levels_cleared", "three_stars") else n * 3
+            elif takes == "level" and scope:
+                if scope not in levels:
+                    errors.append(f"ranks rung '{rid}' asks about level '{scope}', which this "
+                                  "manifest does not ship or has disabled")
+                elif measure == "best_wave" and scope not in infinite:
+                    errors.append(f"ranks rung '{rid}' asks for a wave on '{scope}', which is "
+                                  "not on an Infinite track; a laddered glade has a last wave, "
+                                  "so the rung would cap out below any target above it")
+            elif not scope:
+                if measure in ("levels_cleared", "three_stars"):
+                    ceiling = all_glades
+                elif measure == "stars":
+                    ceiling = all_glades * 3
+                elif measure == "keeper_level":
+                    ceiling = keeper_reach
+
+            if ceiling is not None and target > ceiling:
+                where = f" of '{scope}'" if scope else " in the whole catalog"
+                errors.append(f"ranks rung '{rid}' asks for {target} of '{measure}'{where}, and "
+                              f"the content that ships tops out at {ceiling}; nobody could ever "
+                              "wear this badge")
+
+            # The ladder has to rise on anything it asks about twice.
+            below = floors.get((measure, scope))
+            if below is not None and target <= below:
+                errors.append(f"ranks rung '{rid}' asks for {target} of '{named}' against "
+                              f"{below} on the rung below; a ladder that does not rise draws a "
+                              "grander badge for less, and `RankLadder.Held` walks upward so "
+                              "the easier rung is unreachable anyway")
+            floors[(measure, scope)] = target
+
+            drawn.append((named, target))
+
+        ladder.append((rid, drawn))
+
+    # The sentence table, kept whole rather than only where it is used. A live-ops retune that
+    # pointed a rung at a measure nobody had authored a sentence for would ship a missing string
+    # to whichever language nobody tested, and content is exactly the surface that moves without
+    # a build - so the table is expected complete, and a hole is a warning now rather than a
+    # blank line on somebody's screen later.
+    for measure in sorted(RANK_MEASURES):
+        if f"rank.req.{measure}" not in keys:
+            warnings.append(f"no sentence for rank measure '{measure}' (rank.req.{measure}); a "
+                            "content push naming it would ship a missing string")
+        if measure in RANK_SCOPES and f"rank.req.{measure}.in" not in keys:
+            warnings.append(f"no scoped sentence for rank measure '{measure}' "
+                            f"(rank.req.{measure}.in)")
+
+    return errors, {"rungs": ladder, "glades": all_glades, "stars": all_glades * 3}
+
+
 def check_streak(progression, tasks, keys, warnings):
     """The streak ladder and the shield, and what one lap is worth in marks.
 
@@ -4429,6 +4618,14 @@ def main():
     wall_errors, keeper_walls, keeper_reach = check_keeper_walls(manifest, progression, warnings)
     errors.extend(wall_errors)
 
+    # The rank ladder. Read after the keeper walls because a rung may ask for a keeper level and
+    # what the shipped content pays for is the ceiling that has just been worked out - and after
+    # the art sweep, because every badge address is *built* from a rung's id and is therefore
+    # invisible to `artnames.py`, exactly as a turret's is.
+    rank_errors, ranks = check_ranks(manifest, progression, keys, art_on_disk(), keeper_reach,
+                                     warnings)
+    errors.extend(rank_errors)
+
     if utilities:
         # Printed rather than merely checked, because a cooldown is a number nobody can read off
         # a running game and the whole bar's pacing is four of them side by side.
@@ -4503,6 +4700,19 @@ def main():
                 print(f"       that is {coins / colour:.2f}x the {colour:,} credits the "
                       f"{len(models) - len(legends) - 1} colour turrets cost across all "
                       f"{len(WARD_COLOURS)} colours")
+
+    if ranks:
+        print("")
+        print(f"ranks: {len(ranks['rungs'])} rung(s), every one derived from records the save "
+              f"already keeps - measured against {ranks['glades']} shipped glade(s) "
+              f"({ranks['stars']} stars) and keeper level {keeper_reach}")
+
+        for order, (rid, lines) in enumerate(ranks["rungs"], start=1):
+            asks = ", ".join(f"{named} x{target}" for named, target in lines)
+            print(f"       {order}. {rid:<13} {asks}")
+
+        print("       a rank is a badge and pays nothing, so nothing here reaches a server "
+              "(invariant 52)")
 
     if tasks:
         slates = ", ".join(f"{n} {period}" for period, n in sorted(tasks["slates"].items()))

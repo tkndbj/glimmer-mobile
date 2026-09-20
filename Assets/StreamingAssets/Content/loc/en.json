@@ -3343,7 +3343,7 @@
     },
     {
       "key": "ui.nav.ranks",
-      "text": "RANKS"
+      "text": "BOARDS"
     },
     {
       "key": "ui.nav.shop",
@@ -5820,6 +5820,190 @@
     {
       "key": "level.s07_thelongwalk.tagline",
       "text": "The longest climb in the mode"
+    },
+    {
+      "key": "rank.cinderling.name",
+      "text": "Cinderling"
+    },
+    {
+      "key": "rank.cinderling.blurb",
+      "text": "The first sparks of a keeper."
+    },
+    {
+      "key": "rank.silverwatch.name",
+      "text": "Silverwatch"
+    },
+    {
+      "key": "rank.silverwatch.blurb",
+      "text": "You have stood your ground once already."
+    },
+    {
+      "key": "rank.goldbrand.name",
+      "text": "Goldbrand"
+    },
+    {
+      "key": "rank.goldbrand.blurb",
+      "text": "The line holds because you hold it."
+    },
+    {
+      "key": "rank.duskcrown.name",
+      "text": "Duskcrown"
+    },
+    {
+      "key": "rank.duskcrown.blurb",
+      "text": "A hundred battles behind you, and the dark still breaks."
+    },
+    {
+      "key": "rank.frostheart.name",
+      "text": "Frostheart"
+    },
+    {
+      "key": "rank.frostheart.blurb",
+      "text": "Nothing that comes over the hill moves you now."
+    },
+    {
+      "key": "rank.auroracrest.name",
+      "text": "Auroracrest"
+    },
+    {
+      "key": "rank.auroracrest.blurb",
+      "text": "Six chapters held, and the sky knows your name."
+    },
+    {
+      "key": "rank.gemfire.name",
+      "text": "Gemfire"
+    },
+    {
+      "key": "rank.gemfire.blurb",
+      "text": "The last light on the last hill. There is nothing above this."
+    },
+    {
+      "key": "rank.req.levels_cleared",
+      "text": "Clear {0} different battles"
+    },
+    {
+      "key": "rank.req.levels_cleared.in",
+      "text": "Clear {0} battles of {1}"
+    },
+    {
+      "key": "rank.req.stars",
+      "text": "Earn {0} stars"
+    },
+    {
+      "key": "rank.req.stars.in",
+      "text": "Earn {0} stars in {1}"
+    },
+    {
+      "key": "rank.req.three_stars",
+      "text": "Three-star {0} battles"
+    },
+    {
+      "key": "rank.req.three_stars.in",
+      "text": "Three-star {0} battles in {1}"
+    },
+    {
+      "key": "rank.req.keeper_level",
+      "text": "Reach keeper level {0}"
+    },
+    {
+      "key": "rank.req.best_wave",
+      "text": "Reach wave {0}"
+    },
+    {
+      "key": "rank.req.best_wave.in",
+      "text": "Reach wave {0} on {1}"
+    },
+    {
+      "key": "rank.req.runs",
+      "text": "Play {0} battles"
+    },
+    {
+      "key": "rank.req.wins",
+      "text": "Win {0} battles"
+    },
+    {
+      "key": "rank.req.matches",
+      "text": "Make {0} matches"
+    },
+    {
+      "key": "rank.req.raiders",
+      "text": "Defeat {0} raiders"
+    },
+    {
+      "key": "rank.req.bosses",
+      "text": "Defeat {0} bosses"
+    },
+    {
+      "key": "rank.req.charms",
+      "text": "Set off {0} charms"
+    },
+    {
+      "key": "rank.req.cogs",
+      "text": "Collect {0} cogs"
+    },
+    {
+      "key": "rank.req.bombs",
+      "text": "Set off {0} bombs"
+    },
+    {
+      "key": "rank.req.utilities",
+      "text": "Use {0} utilities"
+    },
+    {
+      "key": "rank.req.waves",
+      "text": "Hold the line through {0} waves"
+    },
+    {
+      "key": "rank.req.streak",
+      "text": "Collect {0} streak nights"
+    },
+    {
+      "key": "ui.ranks.title",
+      "text": "Ranks"
+    },
+    {
+      "key": "ui.ranks.subtitle",
+      "text": "Every badge is earned. Here is what each one asks."
+    },
+    {
+      "key": "ui.ranks.mark",
+      "text": "YOUR RANK"
+    },
+    {
+      "key": "ui.ranks.unranked",
+      "text": "Unranked"
+    },
+    {
+      "key": "ui.ranks.unranked_blurb",
+      "text": "Clear your first battles and the first badge is yours."
+    },
+    {
+      "key": "ui.ranks.earned",
+      "text": "Earned"
+    },
+    {
+      "key": "ui.ranks.next",
+      "text": "Next rank"
+    },
+    {
+      "key": "ui.ranks.fraction",
+      "text": "{0} / {1}"
+    },
+    {
+      "key": "ui.ranks.top",
+      "text": "You hold every rank there is."
+    },
+    {
+      "key": "ui.ranks.held_count",
+      "text": "{0} of {1} ranks earned"
+    },
+    {
+      "key": "ui.ranks.promoted",
+      "text": "{0} earned"
+    },
+    {
+      "key": "ui.ranks.ordinal",
+      "text": "RANK {0}"
     }
   ]
 }

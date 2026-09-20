@@ -210,6 +210,15 @@ namespace GlimmerGrove.EditorTools
             ("/Art/Siege/hill", 1024),
             ("/Art/Siege/", 512),       // Thornwatch: its ward line, its gems and the raid
             ("/Art/Fx/", 512),          // explosions, drawn at ~2 cells and mostly soft
+            // **Before the rest of the folder, because the loop takes the first match** - the
+            // hill's rule, one folder over. A rank badge is drawn at 96 in the map's chrome and
+            // at 132 down the ranks page, so 256 is already a comfortable margin; at the
+            // folder's own 1024 the seven of them would be 3.3 MB of resident global art for
+            // pictures nothing ever draws larger than a thumb. The PNGs are cut at 256 by
+            // `Tools/make_rank_art.py`, so this rule binds nothing today and is what stops a
+            // re-cut at source size shipping quietly (invariant 7d).
+            ("/Art/Ui/Rank/", 256),
+
             ("/Art/Ui/", 1024),
         };
 
@@ -269,6 +278,16 @@ namespace GlimmerGrove.EditorTools
 
             ("/Art/Critters/", TextureImporterCompression.CompressedHQ),
             ("/Art/Companions/", TextureImporterCompression.CompressedHQ),
+
+            // **The worst-measuring folder in the game, and it is not close.** The rank badges
+            // are faceted gemstones: saturated, high-contrast, and made almost entirely of the
+            // hard specular edges block compression is least able to hold.
+            // `compare_texture_formats.py --measure` puts them at **30.3 dB** RGB at ASTC 6x6,
+            // against 39.4 for the turrets and 33.8 for `Critters`, which was already judged
+            // visibly blocky on a contact sheet. At 4x4 they come back at 36.4. Seven textures
+            // capped at 256 is 448 KB at 4x4 against 200 KB at 6x6, so the grade costs a quarter
+            // of a megabyte for the one picture on the map a player is invited to look at.
+            ("/Art/Ui/Rank/", TextureImporterCompression.CompressedHQ),
         };
 
         internal static TextureImporterCompression GradeFor(string path)

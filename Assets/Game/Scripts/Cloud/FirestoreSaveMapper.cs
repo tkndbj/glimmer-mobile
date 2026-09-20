@@ -913,7 +913,34 @@ namespace GlimmerGrove.Cloud
             {
                 { "daily", Period(tasks?.daily) },
                 { "weekly", Period(tasks?.weekly) },
+
+                // The lifetime tally, in the same rows-of-maps shape and with no period key
+                // around it — the window never ends, so there is nothing to date it by. It
+                // rides inside this map deliberately (invariant 12a): `hasOnly` is an
+                // allow-list over the document's own keys, so a sub-key costs no rules release
+                // and has no deploy ordering. A rank is derived from it, so it has to travel or
+                // a battle played on one phone is a rung the other will not agree to.
+                { "lifetime", Counts(tasks?.lifetime) },
             };
+
+        /// <summary>A bare list of per-goal counts, the shape a period's `counts` already takes.</summary>
+        static List<object> Counts(TaskCountDto[] rows)
+        {
+            var list = new List<object>();
+            if (rows == null) return list;
+
+            foreach (var row in rows)
+            {
+                if (row == null || string.IsNullOrEmpty(row.goal) || row.count <= 0) continue;
+                list.Add(new Dictionary<string, object>
+                {
+                    { "goal", row.goal },
+                    { "count", (long)row.count },
+                });
+            }
+
+            return list;
+        }
 
         static Dictionary<string, object> Period(TaskPeriodDto period)
         {
@@ -948,11 +975,17 @@ namespace GlimmerGrove.Cloud
 
         static TaskStateDto ReadTasks(IDictionary<string, object> doc)
         {
-            var tasks = new TaskStateDto { daily = ReadPeriod(null), weekly = ReadPeriod(null) };
+            var tasks = new TaskStateDto
+            {
+                daily = ReadPeriod(null),
+                weekly = ReadPeriod(null),
+                lifetime = new TaskCountDto[0],
+            };
             if (!(Map(doc, "tasks") is IDictionary<string, object> map)) return tasks;
 
             tasks.daily = ReadPeriod(Map(map, "daily") as IDictionary<string, object>);
             tasks.weekly = ReadPeriod(Map(map, "weekly") as IDictionary<string, object>);
+            tasks.lifetime = ReadCounts(map, "lifetime");
             return tasks;
         }
 
@@ -986,6 +1019,33 @@ namespace GlimmerGrove.Cloud
             period.counts = counts.ToArray();
             period.claimed = StrList(map, "claimed");
             return period;
+        }
+
+        /// <summary>Drops exactly what <c>Counts</c> drops, so a round trip is a fixed point.</summary>
+        static TaskCountDto[] ReadCounts(IDictionary<string, object> map, string field)
+        {
+            if (map == null || !map.TryGetValue(field, out object raw)
+                || !(raw is IEnumerable<object> rows))
+                return new TaskCountDto[0];
+
+            var list = new List<TaskCountDto>();
+
+            foreach (object item in rows)
+            {
+                if (!(item is IDictionary<string, object> row)) continue;
+
+                string goal = Str(row, "goal");
+                long count = Long(row, "count", 0L);
+                if (string.IsNullOrEmpty(goal) || count <= 0L) continue;
+
+                list.Add(new TaskCountDto
+                {
+                    goal = goal,
+                    count = count > int.MaxValue ? int.MaxValue : (int)count,
+                });
+            }
+
+            return list.ToArray();
         }
 
         static UtilityStockDto[] ReadUtilities(IDictionary<string, object> doc)

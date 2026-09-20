@@ -360,6 +360,7 @@ namespace GlimmerGrove.Tests
                 ("levels",        "d.levels",        FirestoreSaveMapper.MaxLevelsPerDocument),
                 ("tasks.counts",  "p.counts",        Tasks.TaskLedger.MaxGoals),
                 ("tasks.claimed", "p.claimed",       Tasks.TaskLedger.MaxClaimed),
+                ("tasks.lifetime","d.tasks.lifetime", Tasks.LifetimeTally.MaxGoals),
             };
 
             foreach (var (field, expression, clientCap) in pairs)

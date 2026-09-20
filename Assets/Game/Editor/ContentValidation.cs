@@ -272,6 +272,7 @@ namespace GlimmerGrove.EditorTools
             ValidateDailyChests(table.Daily, table.Hearts, result, verbose);
             ValidateUtilities(table.Utilities, table.Daily, result, verbose);
             ValidateTasks(table.Tasks, table.Utilities, table.Hearts, result, verbose);
+            ValidateRanks(table.Ranks, index, result, verbose);
             ValidateWards(table.Wards, result, verbose);
             ValidateStreak(table.Streak, result, verbose);
             ValidateGolden(table.Golden, table, index, result, verbose);
@@ -985,6 +986,122 @@ namespace GlimmerGrove.EditorTools
         /// authored file.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// The rank ladder. The offline mirror is <c>check_ranks</c> in <c>content.py</c>, and
+        /// this is the half that can read the asset database and the catalog index.
+        ///
+        /// <para>
+        /// <b>Every rung's badge is on disk.</b> The address is built from the id
+        /// (<c>RankDefinition.Icon</c>), so <c>artnames.py</c> cannot see one of them and a rung
+        /// renamed without its picture moving is a white rectangle on the map (invariant 7b).
+        /// Whether anything <em>loads</em> it is the Addressables audit's question, not this
+        /// one — <c>AssetManifest.GlobalAssets</c> derives the list from the live ladder, so
+        /// there is no list here that could fall out of step.
+        /// </para>
+        /// <para>
+        /// <b>Every scope names something this catalog ships.</b> A chapter disabled after the
+        /// ladder was authored is the sharp case: the file parses, the rung draws, and nobody
+        /// can ever meet it.
+        /// </para>
+        /// <para>
+        /// <b>And every derived string resolves.</b> A rung's name, its blurb and each line's
+        /// sentence are built from ids, so <c>loc.py</c> can see none of them (invariant 5a).
+        /// <b>The table is read here rather than asked of <c>Loc</c></b>, and that is not a
+        /// nicety: the runtime localisation table is never loaded in the Editor, so
+        /// <c>Loc.Has</c> answers false for every key in the game and a validator built on it
+        /// reports the whole file missing. It was, on the first run.
+        /// </para>
+        /// </summary>
+        static void ValidateRanks(Ranks.RankLadder ranks, CatalogIndex index,
+                                  ContentValidationResult result, bool verbose)
+        {
+            if (ranks == null) { result.Errors.Add("progression.json produced no rank ladder"); return; }
+
+            if (ranks.IsEmpty)
+            {
+                // Legal and complete: a game with no ranks is a game (`RankLadder`). Said out
+                // loud because the alternative reading — "the block failed to parse" — is
+                // reported as an error by the reader itself, so silence here would be ambiguous.
+                if (verbose) Debug.Log("[Glimmer] no rank ladder authored; no badges are drawn");
+                return;
+            }
+
+            var onDisk = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var path in AssetDatabase.GetAllAssetPaths())
+            {
+                if (!path.StartsWith("Assets/Game/Art/", StringComparison.Ordinal)) continue;
+                string address = "Art/" + path.Substring("Assets/Game/Art/".Length);
+                int dot = address.LastIndexOf('.');
+                if (dot > 0) address = address.Substring(0, dot);
+                onDisk.Add(address);
+            }
+
+            // Null only when the file itself is missing, which `ValidateLocalisation` reports on
+            // its own — one missing file must not also read as every string being absent.
+            var strings = LocalisationTable();
+
+            foreach (var rung in ranks.Rungs)
+            {
+                if (!onDisk.Contains(AssetManifest.ArtRoot + rung.Icon))
+                    result.Errors.Add($"rank '{rung.Id}' needs '{rung.Icon}' on disk; run " +
+                                      "Tools/make_rank_art.py");
+
+                if (strings != null)
+                {
+                    Require(strings, rung.NameKey, $"rank '{rung.Id}'", result);
+                    Require(strings, rung.BlurbKey, $"rank '{rung.Id}'", result);
+                }
+
+                foreach (var line in rung.Requirements)
+                {
+                    if (strings != null)
+                        Require(strings, Ranks.RankMeasures.SentenceKey(line.Measure, line.IsScoped),
+                                $"rank '{rung.Id}' line '{line.Measure.Id}'", result);
+
+                    if (!line.IsScoped || index == null) continue;
+
+                    // Asked of the catalog rather than of the scope's *name*, which is a
+                    // different fact: a chapter that ships with no string is a localisation bug
+                    // and is reported as one, while a chapter that does not ship at all is a
+                    // rung nobody can ever meet.
+                    bool known =
+                        line.Measure.Scope == Ranks.RankScopeKind.Chapter
+                            ? ChapterId.TryParse(line.Scope, out var cid, out _)
+                              && index.ContainsChapter(cid)
+                        : line.Measure.Scope == Ranks.RankScopeKind.Level
+                            && LevelId.TryParse(line.Scope, out var lid, out _)
+                            && index.Contains(lid);
+
+                    if (!known)
+                        result.Errors.Add($"rank '{rung.Id}' asks about '{line.Scope}', which this " +
+                                          "catalog does not ship or has disabled; the rung would " +
+                                          "be unmeetable with every other gate green");
+                }
+            }
+
+            if (!verbose) return;
+
+            Debug.Log($"[Glimmer] rank ladder verified: {ranks.Count} rung(s), " +
+                      $"{ranks.Rungs[0].Id} to {ranks.Rungs[ranks.Count - 1].Id}, all derived");
+        }
+
+        /// <summary>
+        /// The fallback language's strings, or null when the file is missing.
+        ///
+        /// <b>Read rather than asked of <see cref="Loc"/>.</b> Nothing loads the runtime table in
+        /// the Editor, so <c>Loc.Has</c> is false for every key in the game — a validator built
+        /// on it does not under-report, it reports everything as missing, which is how this was
+        /// found. <see cref="ValidateLocalisation"/> parses its own copy for the same reason.
+        /// </summary>
+        static LocTable LocalisationTable()
+        {
+            var source = new BundledContentSource();
+            var fetch = source.FetchAsync(ContentPaths.Localisation(Loc.FallbackLanguage), default)
+                              .GetAwaiter().GetResult();
+
+            return fetch.Success ? LocTable.Parse(fetch.Text, out _) : null;
+        }
+
         static void ValidateWards(WardCatalog wards, ContentValidationResult result, bool verbose)
         {
             if (wards == null)

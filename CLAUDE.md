@@ -672,6 +672,36 @@ is where they are written down, not what they mean.
    a referral that reads contacts is the one shape that costs a permission and a review question on both
    stores. The share sheet costs neither, and the Android chooser needs no plugin.
 
+### Ranks
+
+52. **A rank is derived and stored nowhere, and that is only sound because every measure behind
+   it is monotone.** A badge over a reading that could fall is a badge taken from somebody who
+   did nothing wrong. Adding a measure means arguing that case before writing it.
+52a. **A measure is code and a requirement is content** — `RankMeasure` says what can be read, a
+   row of `progression.json` says how much of it. A whole ladder retunes without a build, and
+   only a new *kind* of fact costs one.
+52b. **The measure registry is the counted-verb registry.** Anything in `TaskGoals` is a measure
+   by its own id with no code, so a verb added for a future mode is a rank requirement the same
+   day. `stars` and `three_stars` are deliberately shadowed by the *held* reading, which is
+   retroactive and cannot be inflated by replaying an easy glade.
+52c. **The lifetime tally is those same counters at a window that never closes** — one hook in
+   `TaskLedger.Note` feeds all three, and the reading is floored by what the rest of the save
+   already proves (a cleared glade is a run played and won), so an account older than the feature
+   reads correctly on its first launch instead of starting again from nought. It rides inside the
+   `tasks` map, so it cost no rules release and has **no deploy ordering at all** (12a).
+52d. **The held rung is the top of an unbroken run from the bottom, never the highest met** — an
+   authoring slip would otherwise hand out a badge over unmet lines, and both gates still error
+   on the slip rather than absorbing it.
+52e. **A rank pays nothing**, because it is a reading of play that has already been paid for. The
+   day a rung pays a currency, invariant 13 starts applying to it and the ladder joins
+   `seed-config.mjs`; until then no server has heard of it.
+52f. **A rung's badge and its two strings are derived from its id**, so `artnames.py` and `loc.py`
+   see none of them and `check_ranks` walks the table instead. A rung renamed moves its picture in
+   the same change.
+52g. **Two things here are called a rank** — the percentile band a map node wears
+   (`Social.RankTier`, 19c) and this ladder — so the nav bar's board tab reads **BOARDS** now and
+   the fixture is `RankLadderTests` beside the older `RankTests`.
+
 ### Art credits
 
 46. **An art credit belongs wherever its licence says, and for this game that is nowhere in the app.**
@@ -768,7 +798,7 @@ being kept, because that chapter never left the working tree.
 Assets/Game/Scripts/Domain/        GlimmerGrove.Domain       (no UnityEngine.UI)
   Board/ Content/ Modes/ Wards/ Utilities/ Persistence/ Progression/ Homestead/ Cloud/
   Localization/ Analytics/ AssetPipeline/ Store/ Ads/ Daily/ Events/ Social/
-  Notifications/ Release/
+  Notifications/ Release/ Ranks/ Tasks/
 Assets/Game/Scripts/Notifications/  GlimmerGrove.Notifications (Domain; the mobile-notifications binding)
 Assets/Game/Scripts/Presentation/  GlimmerGrove.Presentation (Domain + UnityEngine.UI)
 Assets/Game/Authoring/             GlimmerGrove.Authoring    (Editor-only; Domain)
@@ -809,6 +839,17 @@ guess — verify offline.
 - **Map seats:** `python Tools/make_map_seats.py --check` proves the seats are still what the paintings say;
   `--contact` draws every map with its chain on it, which is the gate that matters. `content.py` proves the
   seats clear each other. Re-run `--write` and then every chapter generator after any map painting change.
+- **The rank badges:** `python Tools/make_rank_art.py --check` proves the seven shipped PNGs are
+  what the tool cuts; `--contact` is the sheet, and it is the only thing that can answer whether
+  the ladder reads as a ladder rather than as seven unrelated badges.
+- **The ranks page:** `python Tools/render_ranks.py` (`--held 0`, `--held 7`, `--tall`,
+  `--scroll`, `--map`, `--contact`). **`--tall` draws the whole scrolling page**, and it is the
+  one that matters: every state but the first two is below the fold on a phone, so a sheet
+  without it answers "do the earned rows look right" and nothing else (invariant 44l). It draws off the shipped ladder, and it **measures every caption it can say
+  against the box it is drawn in** — a rank ladder is content, so a retune that lengthens a
+  sentence is one push away at all times. It caught two faults nothing else could: the progress
+  bar printing through the last requirement line, and an unmet line marked with a star on a page
+  whose own lines say "Earn 45 stars".
 - **The charm stones:** `python Tools/make_charm_gems.py --check` holds the twelve owner-drawn gems to
   their size, their room and **their own colour** — a stone filed under the wrong letter draws
   perfectly, validates green everywhere and pays the wrong ward, and nothing else here could see it.
@@ -1060,7 +1101,7 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **Content pipeline** — levels as data, stable `LevelId`s, manifest-built `CatalogIndex`, lazy chapter
   bodies, `Content ▸ Sync Manifest`, build gate.
 - **Save** — versioned atomic file with checksum, backup rotation, corrupt-file recovery, tested
-  migrations, monotonic merge. **Save schema v31.** Content schema: manifest and chapter bodies **v2**,
+  migrations, monotonic merge. **Save schema v32.** Content schema: manifest and chapter bodies **v2**,
   grove body **v3**.
 - **Cloud** — Firebase (Firestore + Auth + Functions), anonymous by default, Apple/Google linking,
   per-account local archive for switching, debounce/backoff.
@@ -1069,6 +1110,13 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   to fail (24).
 - **Retention** — tasks and the chest ladder (45), the recurring bloom season (47), the streak (48), golden
   levels, percentile standings, per-level records.
+- **Ranks** (52) — a seven-rung badge ladder, **derived and stored nowhere**: Cinderling,
+  Silverwatch, Goldbrand, Duskcrown, Frostheart, Auroracrest, **Gemfire**. Every rung is a set of
+  thresholds over readings the save already keeps, authored in `progression.json`, so the whole
+  ladder retunes without a build. It is drawn twice — a watched badge under the map's back key on
+  both tracks, and `RanksScreen`, which prints every line of every rung with the player's own
+  figure against it. The one thing it cost the save is a lifetime tally of the counted verbs
+  (v32), riding inside the existing `tasks` map. It pays nothing.
 - **One live mode, three hidden.** **Thornwatch**: `s01_thornwatch`, `s03_broodmarch`, `s04_barrowfell`,
   `s05_ashenhold`, `s06_thundercrag`, `s07_dustcrown` (ten rungs each) on the ordinary ladder, and
   `s02_endlesswatch` on an **Infinite** track beside it. The map draws no *mode* switcher and does draw the
@@ -1200,6 +1248,56 @@ the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-18),
 on a fresh clone).
 
 ## Owed
+
+**The rank ladder shipped on 2026-09-20.** Seven rungs (52), every one derived and stored
+nowhere, drawn as a badge under the map's back key and as `RanksScreen`.
+
+**The badges are addressed.** All seven landed in `Glimmer Global` through the importer hook on
+the first import — invariant 7a working rather than a fault — so `Sync All Assets` is *not*
+owed and `artnames.py` reads 7,490 registered. What is still owed is the rest of the standing
+discipline (`Audit Addresses` → `Validate Content` → `Validate Art` → EditMode).
+
+**`Validate Content` came back with 53 errors on its first run and every one was the validator's,
+not the content's.** Two faults, both fixed, and both worth knowing about because they will bite
+the next Editor-side rule that is written:
+
+* **`Loc.Has` is false for every key in the game inside the Editor.** Nothing loads the runtime
+  localisation table there, so a validator built on it does not under-report — it reports the
+  whole file missing. Every other derived-key check in `ContentValidation` parses its own
+  `LocTable`, and `ValidateRanks` now does the same through `LocalisationTable()`.
+* **`ProgressionRules.Table` is the built-in default inside the Editor, not the shipped file.**
+  `ValidateProgression` reads its own table and never publishes it, so anything reaching for the
+  published one sees `ProgressionTable.Default`. Chest tiers survive this by coincidence — the
+  default carries the same four ids — and an empty rank ladder did not. The "is this badge
+  preloaded" question moved to `RankLadderTests.EveryRungsBadgeIsInTheGlobalPreloadSet`, which
+  publishes a table deliberately. **The coincidence is still there for the tiers**; nothing has
+  been done about it.
+
+**What is owed after that is an eye.** `render_ranks.py` answers the layout and measures every
+caption; what it cannot answer is whether the ladder reads as *worth climbing*, and whether the
+one row that shines reads as the row to chase rather than as the row that is broken.
+
+**The ladder was made harder on 2026-09-20, at the owner's instruction, and none of it is
+measured.** Three figures are guesses and all of them are content. `best_wave` at 20 / 30 / 45 /
+60 stands against star lines that are themselves guesses until somebody plays the Infinite lane.
+`runs` at 15 / 50 / 200 / 450 paces the middle. And **the three un-floored lines are the ones to
+watch**: `raiders` 2,500, `bosses` 30 and 60, `charms` 300 have no derived floor under them
+(52c), so they count from the day the build ships and nothing anybody has already done counts
+toward them — which is the whole reason the backbone of the ladder is stars, clears and waves,
+which are retroactive. Rank 7 asks 175 of the 183 stars that ship and 55 of 61 three-stars; both
+gates refuse anything past those, so **the top of this ladder cannot be raised again without more
+content**.
+
+**One rules clause is written and not released.** `firestore.rules` now bounds `tasks.lifetime`
+at 32 rows against `LifetimeTally.MaxGoals`. **It is the one field here with no deploy ordering**:
+the tally rides inside the `tasks` map, whose sub-keys `hasOnly` does not allow-list, so the
+ruleset already deployed accepts the field and the new one merely bounds it (12a). Nothing else
+about ranks touches the server — no function deploy, no re-seed — because a rank is derived
+from records the server already validates and pays nothing (52e).
+
+**The nav bar's board tab now reads BOARDS.** One string (`ui.nav.ranks`), no id and no code:
+two things in this game were called RANKS and one of them had to stop (52g).
+
 
 **The boards went live on 2026-09-20, and the client half needs a build.** No real device had called
 `publishGrove` since the Grovement hold (19s): the publish gate waited on the homestead catalog and the

@@ -46,6 +46,7 @@ GROUPS = [
     ("portraits", ART + "/Companions/*.png"),
     ("turrets",   ART + "/Siege/Wards/*/*.png"),
     ("ui",        ART + "/Ui/*.png"),
+    ("ranks",     ART + "/Ui/Rank/*.png"),
     ("reels",     ART + "/Fx/Siege/*/*.png"),
     ("backdrops", ART + "/Bg/*.png"),
 ]

@@ -213,9 +213,20 @@ service cloud.firestore {
                // The list bounds match `TaskLedger.MaxGoals` and `MaxClaimed` (32), and have
                // to: `hasOnly` is an allow-list over the whole document, so a save these rules
                // refuse loses *every* write rather than the extra rows (12a).
+               //
+               // `lifetime` is the third row of the same map (save v32): one count per goal,
+               // no period key and nothing claimed, because the window never ends and a rank
+               // is derived and pays nothing. It rides *inside* this map on purpose — `hasOnly`
+               // is an allow-list over the document's own keys, so this clause is the only
+               // thing that had to change and the ruleset already deployed accepts the field:
+               // client and rules may go out in either order, which no other field here can
+               // say (invariant 12a). The bound matches `LifetimeTally.MaxGoals` (32), held
+               // to it offline by `CloudWireTests`.
                && (!('tasks' in d) || (d.tasks is map
                                        && (!('daily' in d.tasks) || taskPeriod(d.tasks.daily))
-                                       && (!('weekly' in d.tasks) || taskPeriod(d.tasks.weekly))))
+                                       && (!('weekly' in d.tasks) || taskPeriod(d.tasks.weekly))
+                                       && (!('lifetime' in d.tasks) || (d.tasks.lifetime is list
+                                                                        && d.tasks.lifetime.size() <= 32))))
 
                // The turrets the player bought and the line they stand in. Client-owned and
                // forgeable, and accounted for the way the companion set is: a forged turret buys

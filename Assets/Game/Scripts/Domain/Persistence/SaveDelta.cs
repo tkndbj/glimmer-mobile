@@ -473,7 +473,32 @@ namespace GlimmerGrove.Persistence
         }
 
         static bool SameTasks(TaskStateDto a, TaskStateDto b)
-            => SamePeriod(a?.daily, b?.daily) && SamePeriod(a?.weekly, b?.weekly);
+            => SamePeriod(a?.daily, b?.daily)
+            && SamePeriod(a?.weekly, b?.weekly)
+            && SameCounts(a?.lifetime, b?.lifetime);
+
+        /// <summary>
+        /// The lifetime tally, walked in order like every other id-keyed list here — both sides
+        /// are written sorted (<c>LifetimeTally.Write</c>), so a walk is enough and a set
+        /// comparison would only hide an unsorted writer.
+        ///
+        /// It has to travel: a rank is derived from it, so a battle played on one phone that
+        /// never reached the document is a rung the other phone will not agree the player is on.
+        /// </summary>
+        static bool SameCounts(TaskCountDto[] a, TaskCountDto[] b)
+        {
+            int na = a?.Length ?? 0, nb = b?.Length ?? 0;
+            if (na != nb) return false;
+
+            for (int i = 0; i < na; i++)
+            {
+                var p = a[i] ?? new TaskCountDto();
+                var q = b[i] ?? new TaskCountDto();
+                if (!Same(p.goal, q.goal) || p.count != q.count) return false;
+            }
+
+            return true;
+        }
 
         static bool SamePeriod(TaskPeriodDto a, TaskPeriodDto b)
         {

@@ -516,8 +516,43 @@ namespace GlimmerGrove.Persistence
         ///      <see cref="SaveChecksum"/> hashes the serialised object and a v30 file can never
         ///      match a v31 hash.
         ///      </para>
+        /// v32 — the lifetime tally (<see cref="TaskStateDto.lifetime"/>): how many of each
+        ///      counted verb this account has ever done, for the rank ladder to read.
+        ///      <para>
+        ///      <b>The same registry as the task counters, at a window that never closes.</b>
+        ///      A day and a week deal a slate and reset; "for ever" does neither, so it is not a
+        ///      <c>TaskPeriod</c> and carries no key and no claims — one row per
+        ///      <c>TaskGoals</c> id and nothing else. One hook in <c>TaskLedger.Note</c> feeds
+        ///      all three, so there is one list of counted verbs in this game rather than two
+        ///      that drift, and a verb added for a future mode is countable for ever the day it
+        ///      is countable for a task.
+        ///      </para>
+        ///      <para>
+        ///      <b>Monotonic, so it merges by a per-goal <c>max</c></b> — invariant 11b's
+        ///      storable-count exception for the fourth time (<see cref="WardStarDto"/>,
+        ///      <see cref="EndlessBestDto.waves"/>, <see cref="WalletDto.xpBoostEarned"/>), and
+        ///      the simplest of them: there is no key to decide and nothing to lose.
+        ///      </para>
+        ///      <para>
+        ///      <b>It buys nothing, which is what makes a client-written count safe here.</b> A
+        ///      rank is a badge; currency still derives from the star ledger alone (invariant 9),
+        ///      so a forged row moves a picture and never a balance — invariant 13's fourth
+        ///      clause, with <c>LifetimeTally.Ceiling</c> as the bound.
+        ///      </para>
+        ///      <para>
+        ///      <b>No migration and no deploy ordering.</b> Absent is nought, which is what every
+        ///      earlier file means and what a rolled-back client writes — and the reading is
+        ///      floored by what the rest of the save already proves
+        ///      (<c>LifetimeTally.FloorFor</c>), so an account older than the feature reads
+        ///      correctly on its first launch rather than starting again from zero. The row rides
+        ///      inside the existing <c>tasks</c> map, whose sub-keys <c>firestore.rules</c> does
+        ///      not allow-list, so the current ruleset already accepts it and the new one merely
+        ///      bounds it: client and rules may deploy in either order (12a). The version moves
+        ///      because <see cref="SaveChecksum"/> hashes the serialised object and a v31 file
+        ///      can never match a v32 hash.
+        ///      </para>
         /// </summary>
-        public const int Version = 31;
+        public const int Version = 32;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -978,6 +1013,26 @@ namespace GlimmerGrove.Persistence
     {
         public TaskPeriodDto daily;
         public TaskPeriodDto weekly;
+
+        /// <summary>
+        /// What this account has ever done, one row per <c>TaskGoals</c> id with a non-zero
+        /// count, sorted by goal. Added in v32; see <c>Tasks.LifetimeTally</c>.
+        ///
+        /// <para>
+        /// <b>A bare list rather than a third <see cref="TaskPeriodDto"/></b>, because it has
+        /// neither of the other two fields: there is no period key — the window never ends —
+        /// and there is nothing to claim, since a rank is derived and pays nothing. A row shaped
+        /// like a period would have carried a nought key, which <c>TaskLedger.Read</c> treats as
+        /// "no period" and clears.
+        /// </para>
+        /// <para>
+        /// <b>Inside this map rather than at the top level</b>, which is invariant 12a's other
+        /// half and is why this cost no <c>firestore.rules</c> release to ship: <c>hasOnly</c> is
+        /// an allow-list over the document's own keys, so a key added inside a map already on
+        /// that list is accepted by the ruleset that is already deployed.
+        /// </para>
+        /// </summary>
+        public TaskCountDto[] lifetime;
     }
 
     /// <summary>

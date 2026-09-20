@@ -226,6 +226,13 @@ namespace GlimmerGrove.Tasks
             if (goal == TaskGoal.None || amount <= 0) return;
             Sync();
 
+            // **Before the period loop, because that loop can decline the note.** A goal already
+            // at its slate's ceiling moves nothing below and returns early; for ever, it still
+            // happened. This is the one hook the lifetime tally has, and it is enough because
+            // every counted verb in this game is reported through this method — which is what
+            // makes a future mode's goal a rank requirement with no code (`LifetimeTally`).
+            LifetimeTally.Note(goal, amount);
+
             bool moved = false;
             var finished = new List<TaskDefinition>();
 
@@ -445,6 +452,7 @@ namespace GlimmerGrove.Tasks
         {
             Read(_daily, dto?.tasks?.daily);
             Read(_weekly, dto?.tasks?.weekly);
+            LifetimeTally.LoadFrom(dto?.tasks?.lifetime);
             Raise();
         }
 
@@ -485,7 +493,12 @@ namespace GlimmerGrove.Tasks
         internal static void WriteInto(SaveFileDto dto)
         {
             if (dto == null) return;
-            dto.tasks = new TaskStateDto { daily = Write(_daily), weekly = Write(_weekly) };
+            dto.tasks = new TaskStateDto
+            {
+                daily = Write(_daily),
+                weekly = Write(_weekly),
+                lifetime = LifetimeTally.Write(),
+            };
         }
 
         /// <summary>
@@ -527,6 +540,10 @@ namespace GlimmerGrove.Tasks
             {
                 daily = JoinPeriod(mine?.daily, other?.daily),
                 weekly = JoinPeriod(mine?.weekly, other?.weekly),
+
+                // No key to compare and nothing to claim: a per-goal `max` and nothing else.
+                // See `LifetimeTally.Join`.
+                lifetime = LifetimeTally.Join(mine?.lifetime, other?.lifetime),
             };
 
         static TaskPeriodDto JoinPeriod(TaskPeriodDto a, TaskPeriodDto b)
@@ -553,6 +570,7 @@ namespace GlimmerGrove.Tasks
         {
             _daily.Clear(0);
             _weekly.Clear(0);
+            LifetimeTally.Reset();
         }
     }
 }
