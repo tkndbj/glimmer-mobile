@@ -82,7 +82,13 @@ ITEM_NAME_SIZE = 34
 CELLH = 470.0
 
 # The band header belongs to the row rather than to a card, so it keeps its units.
-TIER_H, TIER_GAP = 64.0, 26.0
+TIER_H, TIER_GAP = 84.0, 26.0
+TIER_SIZE, TIER_PAD = 46, 34.0
+
+# `LoadoutScreen.NeonWarm` / `.NeonTube` / `.NeonCool` / `.NeonHalo` — the ramp graded across
+# the legendary band's caption, and the halo behind it.
+NEON_RAMP = ((255, 61, 240), (200, 108, 255), (77, 240, 255))
+NEON_HALO = (200, 28, 224)
 
 #: Filled in by `fit()`: the row, the column count, the cell and how far the card is from the
 #: one it was designed as.
@@ -321,18 +327,74 @@ def item_cell(sheet, item, at, cw, names, level):
 
 
 def tier_badge(sheet, tier, y, cw, columns):
-    """`LoadoutScreen.TierBadge` — a caption between two rules, never a plate."""
+    """`LoadoutScreen.TierBadge` — a caption between two rules, never a plate.
+
+    **The clearance is measured here exactly as the screen measures it** (`Text.preferredWidth`
+    against `draw.textlength`), so this is one of the few things the mirror can actually answer:
+    whether the rules clear the longest heading the band can say. It could not answer it while
+    the number was a constant on both sides — two copies of a guess agree with each other.
+    """
     span = columns * cw + (columns - 1) * CELL_GAP_X
     mid = y + TIER_H / 2
-    reach = (span - 280.0) * .5
+    name = TIER_NAMES[tier]
+    neon = tier == len(TIER_OPENS)
     d = ImageDraw.Draw(sheet, "RGBA")
 
-    for side in (-1, 1):
-        x = W / 2 + side * (140.0 + reach * .5)
-        d.rounded_rectangle([x - reach / 2, mid - 1, x + reach / 2, mid + 2],
-                            radius=1, fill=(255, 243, 220, 56))
+    half = d.textlength(name, font=K.font(TIER_SIZE)) / 2 + TIER_PAD
+    reach = max(0.0, span / 2 - half)
 
-    K.text(sheet, TIER_NAMES[tier], W / 2, mid, 30, fill=K.CREAM, outline=2)
+    if neon:
+        # `Art.Glow(128, 1.6f)` stretched to the word's own box, under everything.
+        w, h = int(half * 2 + 120), int(TIER_H + 36)
+        halo = K.glow(256, 1.6, NEON_HALO, .34).resize((w, h), Image.LANCZOS)
+        sheet.alpha_composite(halo, (int(W / 2 - w / 2), int(mid - h / 2)))
+
+    for side in (-1, 1):
+        # Each rule takes the end of the ramp that reaches it, as the screen does.
+        ink = (*(NEON_RAMP[0] if side < 0 else NEON_RAMP[-1]), 102) if neon             else (255, 243, 220, 56)
+        x = W / 2 + side * (half + reach * .5)
+        d.rounded_rectangle([x - reach / 2, mid - 1, x + reach / 2, mid + 2],
+                            radius=1, fill=ink)
+
+    if neon:
+        # Unity's `Outline` draws the glyphs again at the four corners; in the neon's own hue
+        # that is a bleed round every stem rather than the dark border every other caption has.
+        f = K.font(TIER_SIZE)
+        w = d.textlength(name, font=f)
+        x, ty = W / 2 - w / 2, mid - TIER_SIZE * 0.62
+        for dx in (-4, 4):
+            for dy in (-4, 4):
+                d.text((x + dx, ty + dy), name, font=f, fill=(*NEON_HALO, 179))
+
+        # `TextGradient` — the ramp runs across the *word's* own extent, so it is drawn here
+        # as the letters' alpha cut out of a ramp exactly that wide. Nothing in PIL is a mesh
+        # modifier, and a flat fill here would be a mirror telling the comfortable lie.
+        h = int(TIER_SIZE * 2)
+        mask = Image.new("L", (int(w) + 2, h), 0)
+        ImageDraw.Draw(mask).text((0, 0), name, font=f, fill=255)
+        sheet.alpha_composite(ramp(mask.size, NEON_RAMP, mask), (int(x), int(ty)))
+    else:
+        K.text(sheet, name, W / 2, mid, TIER_SIZE, fill=K.CREAM, outline=2)
+
+
+def ramp(size, stops, mask):
+    """`TextGradient` — evenly spaced stops lerped left to right, cut out by `mask`."""
+    w, h = size
+    im = Image.new("RGBA", size, (0, 0, 0, 0))
+    px = im.load()
+    span = max(1, w - 1)
+
+    for x in range(w):
+        t = x / span * (len(stops) - 1)
+        i = min(int(t), len(stops) - 2)
+        k = t - i
+        a, b = stops[i], stops[i + 1]
+        col = tuple(int(a[c] + (b[c] - a[c]) * k) for c in range(3))
+        for y in range(h):
+            px[x, y] = (*col, 255)
+
+    im.putalpha(mask)
+    return im
 
 
 # --------------------------------------------------------------------------- the screen

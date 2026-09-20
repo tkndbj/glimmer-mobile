@@ -425,7 +425,15 @@ namespace GlimmerGrove
             bool lit = Paint(row.Free, rung, SeasonTrack.Free, reached, rebound)
                      | Paint(row.Pass, rung, SeasonTrack.Pass, reached, rebound);
 
-            if (lit != row.Lit || rebound) Shine(row, lit);
+            // **On the state changing and never on the rebind**, which is this type's own
+            // rule (see the class note) and was broken here. `rebound` is true for *every*
+            // visible row each time the list crosses a rung, so scrolling re-entered `Shine`
+            // eleven times a pitch: each call kills the loop and starts it again at its
+            // dimmest, so every lit card on the screen dipped and rose together — read as a
+            // flicker, and the faster the scroll the more of them. A light that is already
+            // breathing on a row that is still lit wants nothing done to it, whichever rung
+            // the row is now showing.
+            if (lit != row.Lit) Shine(row, lit);
             row.Lit = lit;
         }
 
@@ -464,9 +472,13 @@ namespace GlimmerGrove
 
             if (face == Face.Ready)
             {
-                Tween.Tint(cell.Halo, Pal.A(Pal.Gold, .55f), .35f);
-                if (!wasReady || rebound)
+                // Both on the *change* into Ready, for the reason above: a rebind that found
+                // the cell already ready restarted the breathe from scale one and started a
+                // second tint toward a colour the halo was already wearing — a jump on every
+                // chest that could be opened, once per rung scrolled.
+                if (!wasReady)
                 {
+                    Tween.Tint(cell.Halo, Pal.A(Pal.Gold, .55f), .35f);
                     Tween.KillChannel(cell.Chest.transform, "breathe");
                     Tween.Breathe(cell.Chest.transform, .07f, 1.5f);
                 }

@@ -165,7 +165,46 @@ namespace GlimmerGrove
         }
 
         /// <summary>How tall a band's header is, and the air above it.</summary>
-        const float TierH = 64f, TierGap = 26f;
+        /// <remarks>
+        /// <b>The height follows the type rather than the other way round.</b> A 46pt display
+        /// face sets a line a shade over 55 units tall, so the 64 this carried while the caption
+        /// was 30pt would have left a heading touching the cards above and below it.
+        /// </remarks>
+        const float TierH = 84f, TierGap = 26f;
+
+        /// <summary>The caption's size, and the air the rules leave either side of it.</summary>
+        const int TierSize = 46;
+        const float TierPad = 34f;
+
+        /// <summary>
+        /// The legendary band's tube: a ramp across the word, and the halo it burns onto the
+        /// wall behind it.
+        ///
+        /// <para>
+        /// <b>Neon is two things, not a bright colour.</b> One is the bleed — the same light
+        /// spilled round the letters and pooled behind the word, so the core reads as the thing
+        /// lighting the rest rather than as a caption in a loud ink. The other is that a real
+        /// tube is never one hue along its length, which is what the ramp is: magenta into
+        /// violet into cyan, the synthwave three, graded across the word by
+        /// <see cref="TextGradient"/>.
+        /// </para>
+        /// <para>
+        /// <b>The halo is the middle of the ramp rather than a fourth colour.</b> A bleed in a
+        /// hue the letters never wear reads as two lights, and the violet is already what the
+        /// two ends average to.
+        /// </para>
+        /// <para>
+        /// <b>And no seat's colour is in it.</b> Four of this shelf's seats are red, green,
+        /// blue and yellow and every card is worn in the colour of the seat being filled; the
+        /// one band that wears <em>no</em> colour is the one that may own hues none of the
+        /// seats can take. The cyan end is the closest call and is far lighter than the blue
+        /// any seat draws.
+        /// </para>
+        /// </summary>
+        static readonly Color NeonWarm = Pal.Hex("#FF3DF0");
+        static readonly Color NeonTube = Pal.Hex("#C86CFF");
+        static readonly Color NeonCool = Pal.Hex("#4DF0FF");
+        static readonly Color NeonHalo = Pal.Hex("#C81CE0");
 
         /// <summary>
         /// The header over one band: its name, with a rule running out to either side.
@@ -186,21 +225,62 @@ namespace GlimmerGrove
             var row = UIKit.Box("Tier" + tier, _grid, new Vector2(span, TierH),
                                 new Vector2(.5f, 1f), new Vector2(0f, midY));
 
-            var name = UIKit.Label("Name", row, Loc.Get(WardTier.NameKey(tier)), 30,
-                                   Pal.A(Pal.Cream, .92f), TextAnchor.MiddleCenter,
-                                   new Vector2(240f, TierH), new Vector2(.5f, .5f), Vector2.zero,
+            // **The one band that is also a rule gets the one heading that is also a light.**
+            // A legendary turret wears no colour and stands on any seat, which is the shelf's
+            // central rule suspended; the heading over it says so before a card is read.
+            bool neon = tier == WardTier.Count;
+
+            // White under the ramp, because `TextGradient` multiplies: a tinted graphic would
+            // darken every stop by its own colour, which is 44g's fault said about text.
+            var name = UIKit.Label("Name", row, Loc.Get(WardTier.NameKey(tier)), TierSize,
+                                   neon ? Color.white : Pal.A(Pal.Cream, .92f),
+                                   TextAnchor.MiddleCenter,
+                                   new Vector2(span, TierH), new Vector2(.5f, .5f), Vector2.zero,
                                    FontStyle.Bold);
             name.raycastTarget = false;
 
-            // The rules stop short of the caption on both sides, so the line never runs under the
-            // letters however wide the grid is drawn.
-            float reach = (span - 280f) * .5f;
+            // **Measured rather than assumed.** The clearance either side used to be a constant
+            // that happened to clear a 30pt "LEGENDARY" — the longest thing any of these
+            // headings says — so the caption growing, or a translation being wider than the
+            // English, would have run the rules through the letters with nothing able to see it.
+            // uGUI answers `preferredWidth` from the font's cached character info in the same
+            // frame (`UIKit.Arc` rides the same fact), so the line is fitted to the word that is
+            // really there.
+            float half = name.preferredWidth * .5f + TierPad;
+            float reach = Mathf.Max(0f, span * .5f - half);
+
+            if (neon)
+            {
+                // The ramp, added before the bleed so the bleed keeps its own colour (see
+                // `TextGradient`), and graded across the word rather than across its box.
+                name.gameObject.AddComponent<TextGradient>()
+                    .Paint(NeonWarm, NeonTube, NeonCool);
+
+                // The bleed: Unity's `Outline` draws the glyphs again at the four corners, which
+                // at this distance is a halo round every stem rather than a border on it.
+                var bleed = name.gameObject.AddComponent<Outline>();
+                bleed.effectColor = Pal.A(NeonHalo, .70f);
+                bleed.effectDistance = new Vector2(4f, 4f);
+                bleed.useGraphicAlpha = true;
+
+                // And the pool behind the word, drawn under it because it is added first.
+                var halo = UIKit.Img("Halo", row, Art.Glow(128, 1.6f), Pal.A(NeonHalo, .34f),
+                                     new Vector2(half * 2f + 120f, TierH + 36f),
+                                     new Vector2(.5f, .5f), Vector2.zero);
+                halo.raycastTarget = false;
+                halo.transform.SetAsFirstSibling();
+            }
 
             for (int side = -1; side <= 1; side += 2)
             {
-                var rule = UIKit.Img("Rule", row, Art.Round(2), Pal.A(Pal.Cream, .22f),
+                // Each rule takes the end of the ramp that reaches it, so the line reads as the
+                // same tube running out either side of the word rather than as two wires.
+                var ink = !neon ? Pal.A(Pal.Cream, .22f)
+                        : Pal.A(side < 0 ? NeonWarm : NeonCool, .40f);
+
+                var rule = UIKit.Img("Rule", row, Art.Round(2), ink,
                                      new Vector2(reach, 3f), new Vector2(.5f, .5f),
-                                     new Vector2(side * (140f + reach * .5f), 0f));
+                                     new Vector2(side * (half + reach * .5f), 0f));
                 rule.raycastTarget = false;
             }
         }

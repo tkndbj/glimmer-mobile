@@ -531,9 +531,12 @@ def play(sheet):
     rather than at the third-of-the-height a pill gives a small mark. This drew a green PLAY key
     and a NEXT UP trough under it for as long as it existed, and neither has been on the screen
     since the siege became the game (invariant 44d).
+
+    **And the halo under it went on 2026-09-20**, at the owner's instruction — it was the one
+    thing on this screen that read as a light rather than as a control, and a mirror is the
+    only place its size could ever be judged against the wall it lit.
     """
     cy = H - PLAY_Y
-    K.paste(sheet, K.glow(760, 2.1, K.SUN, .26), W / 2, cy)
     K.paste(sheet, K.skin("Hud/btn_gold", PLAY_W, PLAY_H), W / 2, cy)
 
     # UIKit.FitLabel: the glyph and the caption are centred as one block, the glyph leading.

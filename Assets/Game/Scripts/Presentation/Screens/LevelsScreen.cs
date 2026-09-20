@@ -1176,10 +1176,20 @@ namespace GlimmerGrove
             // in the same stack — which leaves the centre line a control column, plaque then
             // switcher, with nothing standing between the name and the thing that changes
             // what the name is naming.
-            Scenery.Pill(Safe,
-                         $"{PlayerProgress.TotalStars(_entry)} / {PlayerProgress.MaxStars(_entry)}",
-                         36, new Vector2(StarsWidth, StarsHeight), new Vector2(1f, 1f),
-                         new Vector2(StarsX, StarsY), null, "ic_star");
+            //
+            // **And only on a laddered lane, because a count is a reading of *progress through
+            // a chapter*.** The Infinite lane is one level that never ends, so its chapter
+            // total is three and its count never moves off whatever the best run scored — a
+            // pill saying "2 / 3" for the life of the account, on the one lane whose whole
+            // reading is the wave number the hub already draws two hundred units high. The
+            // guard is `Laddered` rather than a test on the level count for that type's own
+            // reason: a lane with one level is also what a mode's first chapter looks like
+            // while its second is being authored.
+            if (Lane.Laddered)
+                Scenery.Pill(Safe,
+                             $"{PlayerProgress.TotalStars(_entry)} / {PlayerProgress.MaxStars(_entry)}",
+                             36, new Vector2(StarsWidth, StarsHeight), new Vector2(1f, 1f),
+                             new Vector2(StarsX, StarsY), null, "ic_star");
 
             BuildChapterArrows();
 

@@ -1423,7 +1423,13 @@ namespace GlimmerGrove
                 play.Icon.color = Color.white;
                 UIKit.FitLabel(play);
             }
-            UIKit.Halo(play.transform, Pal.Sun, 760f, .26f);
+            // **No pool of light under the key**, at the owner's instruction. A 760-unit halo
+            // on a 620-wide button is a light the size of a third of the screen, and on a
+            // ground that is one flat pattern it does not read as the key being lit — it reads
+            // as the wall being brighter in the middle, which is a picture nothing on this
+            // screen is composed around. What says "this is the control" is still here: the
+            // key is the only gold thing on the hub, it is the widest, it pops in last and it
+            // breathes.
             play.transform.localScale = Vector3.zero;
             Tween.Pop(play.transform, 0f, .7f, .62f).OnDone(() =>
             {

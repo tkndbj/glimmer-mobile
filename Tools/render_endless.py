@@ -14,7 +14,7 @@ whether what replaced it is better - `EndlessHubTests` proves the column clears 
 furniture and says nothing about whether it reads as a *place*.
 
 So this mirrors `EndlessHub` and the half of `LevelsScreen` that stands around it - the plaque,
-both switcher pills, the corner keys, the star count and the loadout shelf - because the whole
+both switcher pills, the corner keys and the loadout shelf - because the whole
 question is whether the column sits well *between* two pieces of furniture that were sized
 without it. Drawing the column alone would answer the easy half.
 
@@ -111,7 +111,8 @@ BOOST_H = BOOST_MARK + BOOST_CLOCK + 2.0
 # in the screen's own shape rather than as the top edge the drawing wants, so a change to either
 # side of the pair is a change to one expression.
 BOOST_Y = CORNER_Y - CORNER_SIZE / 2 - BOOST_GAP - BOOST_H / 2
-STARS_W, STARS_H, STARS_GAP = 196.0, 78.0, 22.0
+# `LevelsScreen`'s star count is deliberately absent: it is drawn on a laddered lane only, so
+# on this one the space under the "i" is empty and the mirror has to say so.
 PILL_W, PILL_H, MODES_GAP = 372.0, 116.0, 20.0
 MODES_Y = BANNER_Y - BANNER_H / 2 - MODES_GAP - PILL_H / 2
 LANE_Y = MODES_Y - PILL_H - MODES_GAP
@@ -188,16 +189,6 @@ def boost_readout(sheet, left):
     clock = f"{hours}h {minutes:02d}m" if left >= 3600 else f"{left // 60}:{left % 60:02d}"
     K.text(sheet, clock, cx, top + BOOST_MARK + BOOST_CLOCK / 2 + 2, 30,
            fill=K.CREAM, outline=2)
-
-
-def rounded(w, h, radius, fill, edge=None):
-    """`Art.Round` / `Art.RoundOutline` - the pill `Scenery.Pill` is drawn on."""
-    im = Image.new("RGBA", (int(w), int(h)), (0, 0, 0, 0))
-    d = ImageDraw.Draw(im)
-    d.rounded_rectangle([0, 0, w - 1, h - 1], radius=radius, fill=fill)
-    if edge:
-        d.rounded_rectangle([0, 0, w - 1, h - 1], radius=radius, outline=edge, width=3)
-    return im
 
 
 # --------------------------------------------------------------- the ground
@@ -384,11 +375,6 @@ def header(sheet, modes, boost=0):
 
     K.paste(sheet, K.fit(K.load("Hud/title")[0], (BANNER_W, BANNER_H)), W / 2, -BANNER_Y)
     K.text(sheet, "ENDLESS WATCH", W / 2, -BANNER_Y - 4, 40, fill=(92, 61, 41), outline=0)
-
-    sx = W - (CORNER_X - CORNER_SIZE / 2 + STARS_W / 2)
-    sy = -(CORNER_Y - CORNER_SIZE / 2 - STARS_GAP - STARS_H / 2)
-    K.paste(sheet, rounded(STARS_W, STARS_H, 28, (15, 31, 43, 184), (255, 255, 255, 33)), sx, sy)
-    K.text(sheet, "0 / 3", sx + 14, sy, 36, fill=K.CREAM)
 
     if modes:
         K.paste(sheet, K.skin("btn_violet", PILL_W, PILL_H), W / 2, -MODES_Y)
