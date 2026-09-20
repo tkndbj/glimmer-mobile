@@ -162,13 +162,13 @@ NUDGE = {
         # do, and which part of a mesa a disc looks right on is the question no measurement in
         # this file answers.
         #
-        # **Six rounds, folded into one figure each**, for `map5`'s reason: a seat is one
+        # **Seven rounds, folded into one figure each**, for `map5`'s reason: a seat is one
         # number, and a running total of corrections is a thing that can disagree with itself.
         # Only the sum is kept; the rounds survive in the comments because they are the record
         # of an eye converging, not a second source of truth.
         #
         # **They are large, and that is the borrow being paid for rather than a nudge being
-        # abused.** Rung 7 is now a quarter of the screen from where the crag stands
+        # abused.** Rung 7 is now better than a quarter of the screen from where the crag stands
         # it: `map5`'s road runs up the middle and the wasteland's crosses from mesa to mesa, so
         # a transferred chain is right about the *route* and wrong about the ledge, by about the
         # width of a plateau. `GROUND[6]` cannot say so (it lists the sand, not the trail), which
@@ -185,10 +185,10 @@ NUDGE = {
         4: (190, 0),          # level 54, 30+40+40+30+50 px right
         5: (-8, 0),           # level 55, 4 px left twice over
         6: (15, 0),           # level 56, 5 px right three times over
-        7: (-260, 0),         # level 57, 30+40+40+40+80+30 px left
-        8: (150, 0),          # level 58, 20+20+20+20+40+30 px right
+        7: (-290, 0),         # level 57, 30+40+40+40+80+30+30 px left
+        8: (170, 0),          # level 58, 20+20+20+20+40+30+20 px right
         9: (15, 0),           # level 59, 5 px right three times over
-        10: (-75, 0),         # level 60, 10+15+15+15+20 px left
+        10: (-85, 0),         # level 60, 10+15+15+15+20+10 px left
     },
 }
 

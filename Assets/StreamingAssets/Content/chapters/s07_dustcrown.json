@@ -207,7 +207,7 @@
   },
   {
    "id": "s07_glassridge",
-   "mapX": 0.353,
+   "mapX": 0.325,
    "mapY": 0.57,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -239,7 +239,7 @@
   },
   {
    "id": "s07_duststorm",
-   "mapX": 0.459,
+   "mapX": 0.477,
    "mapY": 0.653,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -305,7 +305,7 @@
   },
   {
    "id": "s07_crownfall",
-   "mapX": 0.521,
+   "mapX": 0.511,
    "mapY": 0.792,
    "afloat": false,
    "budgetFactor": -1.0,
