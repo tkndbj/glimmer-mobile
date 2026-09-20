@@ -228,6 +228,36 @@ def text(sheet, s, cx, cy, size, fill=CREAM, outline=3, anchor="c"):
     return w
 
 
+def one_line(sheet, s, cx, cy, room, size, floor, fill=CREAM, what=None, outline=2):
+    """`UIKit.OneLineLabel` - the largest size between `floor` and `size` at which the string
+    fits on ONE line in `room`.
+
+    **Not `shrunk`, and the difference is the whole point.** `shrunk` mirrors Unity's Best Fit,
+    which is allowed to *wrap* - so it takes a two-word caption onto two lines and keeps the
+    type big, where a label fitted by `OneLineLabel` stays on one line and gives up size
+    instead. A mirror that wrapped where the screen does not would report room that does not
+    exist, which is the comfortable lie a render may never tell (invariant 44d).
+
+    **It always measures from `size`, never from the last result**, because the thing it is
+    mirroring does too: `OneLineLabel` takes the design size as an argument precisely so a
+    caption that gets shorter grows back, and a mirror that ratcheted would be drawing a screen
+    the game does not.
+
+    `what` names the widget in the TIGHT report, which fires when a line lands on the floor -
+    "23 against a floor of 14" and "14 against a floor of 14" are the difference between a
+    caption that fits and one Unity will not clip (invariants 19n, 37n).
+    """
+    while size > floor and font(size).getlength(s) > room:
+        size -= 1
+
+    if what and font(size).getlength(s) > room:
+        print("  TIGHT  %s needs %.0f units and has %.0f: '%s'"
+              % (what, font(size).getlength(s), room, s))
+
+    text(sheet, s, cx, cy, size, fill=fill, outline=outline)
+    return size
+
+
 def shrunk(sheet, s, cx, cy, box_w, box_h, size, floor, fill=CREAM, outline=3):
     """`UIKit.Shrinkable` over `UIKit.Titled` - Unity's Best Fit, mirrored.
 

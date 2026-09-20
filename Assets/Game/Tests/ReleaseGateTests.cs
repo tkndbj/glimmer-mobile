@@ -1,6 +1,8 @@
+using System.Text.RegularExpressions;
 using GlimmerGrove.Release;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace GlimmerGrove.Tests
 {
@@ -121,6 +123,7 @@ namespace GlimmerGrove.Tests
             // no later build and no later seed could be proved to open from the player's side,
             // which is the one failure in this feature with no recovery short of a reinstall.
             // Applying it has to be the same as applying nothing.
+            ExpectTheDoorlessAlarm();
             ReleaseGate.Apply(Wall(10300, string.Empty));
 
             Assert.AreEqual(0, ReleaseGate.Held.MinimumBuild);
@@ -139,6 +142,8 @@ namespace GlimmerGrove.Tests
             // turns the wall off rather than making it stale, which is loud in the log and is
             // repaired by the same re-seed that caused it.
             ReleaseGate.Apply(Wall(10300));
+
+            ExpectTheDoorlessAlarm();
             ReleaseGate.Apply(Wall(10400, string.Empty));
 
             Assert.IsFalse(ReleaseGate.IsShut);
@@ -146,6 +151,26 @@ namespace GlimmerGrove.Tests
         }
 
         // ------------------------------------------------------------------------- helpers
+        /// <summary>
+        /// Declares the error a doorless requirement is supposed to raise.
+        ///
+        /// <para>
+        /// <b>The log line is part of the rule rather than noise beside it</b> — 49a says a
+        /// requirement naming no usable link is neither enforced nor cached, and the whole
+        /// reason that is safe is that it is <em>loud</em>: the mistake is a re-seed, and a
+        /// wall that silently switched itself off would be indistinguishable from a wall
+        /// nobody asked for. So it is declared with <c>LogAssert.Expect</c> rather than
+        /// waved through with <c>ignoreFailingMessages</c>, which would also swallow any
+        /// other error these cases provoke.
+        /// </para>
+        /// <para>
+        /// Matched on a fragment, because the sentence carries an em dash that does not
+        /// survive every console encoding — and these two cases had been red in the Editor
+        /// ever since, on a suite where a red test hides the next real one.
+        /// </para>
+        /// </summary>
+        static void ExpectTheDoorlessAlarm()
+            => LogAssert.Expect(LogType.Error, new Regex("no usable store link"));
         /// <summary>
         /// Everything this device remembers, read back the way a cold start reads it.
         ///

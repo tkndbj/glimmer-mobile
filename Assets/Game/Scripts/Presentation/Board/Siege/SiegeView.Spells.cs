@@ -1091,7 +1091,6 @@ namespace GlimmerGrove
 
             _waveLabel.text = text;
             _waveLabel.color = colour;
-            _waveLabel.fontSize = Mathf.RoundToInt(Cell * size);
 
             // **Fitted to the board every time it is said, because the string is not the same
             // length twice** - "WAVE 3 OF 8" is five cells and "THE BLIGHTCALLER FALLS" is nine
@@ -1099,9 +1098,16 @@ namespace GlimmerGrove
             // it leaving the screen (`Captions.Room`). Fitted against the room a *swelling*
             // banner still has to open into, so the pop below is never bought with a frame drawn
             // off the sides.
+            //
+            // `size` is handed to the fit rather than written on the label first, which matters
+            // here more than anywhere on the hill: this one label says every caption a siege
+            // has, and the room it is fitted against *changes* between calls (a swelling banner
+            // gets less). Measured from where the last caption left it, a long boss name would
+            // hold every short one after it down for the rest of the run.
             float room = CaptionRoom;
 
             UIKit.OneLineLabel(_waveLabel, swell ? room / WavePopFloor : room,
+                               Mathf.RoundToInt(Cell * size),
                                Mathf.RoundToInt(Cell * CaptionFloor));
 
             var ladder = Caption;

@@ -162,28 +162,33 @@ NUDGE = {
         # do, and which part of a mesa a disc looks right on is the question no measurement in
         # this file answers.
         #
-        # **Three rounds, folded into one figure each**, for `map5`'s reason: a seat is one
+        # **Six rounds, folded into one figure each**, for `map5`'s reason: a seat is one
         # number, and a running total of corrections is a thing that can disagree with itself.
-        # The first round left rungs 5 and 6 where the crag put them and the second moved all
-        # ten; the third repeated the second. So what is written is the sum, with the rounds it
-        # came from in the comment.
+        # Only the sum is kept; the rounds survive in the comments because they are the record
+        # of an eye converging, not a second source of truth.
         #
         # **They are large, and that is the borrow being paid for rather than a nudge being
-        # abused.** Rungs 4 and 7 are a tenth of the screen from where the crag stands them:
-        # `map5`'s road runs up the middle and the wasteland's crosses from mesa to mesa, so a
-        # transferred chain is right about the *route* and wrong about the ledge, by about the
+        # abused.** Rung 7 is now a quarter of the screen from where the crag stands
+        # it: `map5`'s road runs up the middle and the wasteland's crosses from mesa to mesa, so
+        # a transferred chain is right about the *route* and wrong about the ledge, by about the
         # width of a plateau. `GROUND[6]` cannot say so (it lists the sand, not the trail), which
-        # is why an eye is doing it. Re-list `GROUND[6]` as the road and most of this goes.
-        1: (-30, 0),          # level 51, 10 px left three times over
-        2: (55, 0),           # level 52, 15 px right then 20 px more, twice
-        3: (28, 20),          # level 53, 8 px right then 10 px more twice, and 20 px up
-        4: (110, 0),          # level 54, 30 px right then 40 px more, twice
+        # is why an eye is doing it. **At this size the borrow has stopped paying**: re-list
+        # `GROUND[6]` as the trail and let the search seat this map on its own picture, and most
+        # of this table goes with it.
+        #
+        # **Every round has moved the same way**, which is a scale error rather than indecision:
+        # a figure read off a phone is in *device* pixels, and a canvas unit is only a device
+        # pixel on a 1080-wide screen. On a 1440-wide one a 40 px move arrives as 30.
+        1: (-45, 0),          # level 51, 10+10+10+15 px left
+        2: (90, 0),           # level 52, 15+20+20+15+20 px right
+        3: (58, 20),          # level 53, 8+10+10+15+15 px right, and 20 px up
+        4: (190, 0),          # level 54, 30+40+40+30+50 px right
         5: (-8, 0),           # level 55, 4 px left twice over
-        6: (10, 0),           # level 56, 5 px right twice over
-        7: (-110, 0),         # level 57, 30 px left then 40 px more, twice
-        8: (60, 0),           # level 58, 20 px right three times over
+        6: (15, 0),           # level 56, 5 px right three times over
+        7: (-260, 0),         # level 57, 30+40+40+40+80+30 px left
+        8: (150, 0),          # level 58, 20+20+20+20+40+30 px right
         9: (15, 0),           # level 59, 5 px right three times over
-        10: (-40, 0),         # level 60, 10 px left then 15 px more, twice
+        10: (-75, 0),         # level 60, 10+15+15+15+20 px left
     },
 }
 

@@ -302,6 +302,14 @@ namespace GlimmerGrove.Store
                 new StoreGood("hearts_forty", StoreGoodKind.Hearts, 40, 280),
                 new StoreGood("boost_day", StoreGoodKind.HeartBoost, 24, 30),
                 new StoreGood("boost_three_day", StoreGoodKind.HeartBoost, 72, 75),
+
+                // The XP boost's bought window. It reached `progression.json`, the shelf and the
+                // server's clamp when it was built and never reached this list, so a device that
+                // fell back to the built-in catalog — no cached content, or a content file it
+                // could not read — drew a UTILITIES shelf with the free watch on it and nothing
+                // to buy. `StoreTests.TheBuiltInLadderMatchesTheShippedContent` says so and runs
+                // only in the Editor, which is why it sat red rather than being noticed.
+                new StoreGood("xp_boost_day", StoreGoodKind.XpBoost, 24, 120),
             });
 
         /// <summary>A catalog with nothing in it, which is what a deployment with no shop has.</summary>

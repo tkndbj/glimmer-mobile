@@ -295,6 +295,26 @@ namespace GlimmerGrove
         public const float StatusY = 308f, StatusHeight = 96f;
         public const float StatusTop = StatusY - StatusHeight * .5f;
 
+        /// <summary>
+        /// The two counter pills in the status row, and the room <see cref="Scenery.Pill"/>
+        /// really leaves their figures: the glyph's lane comes off the height and sixteen units
+        /// come off the right, which is 145 of the 230.
+        ///
+        /// <para>
+        /// <b>The lamp pill says <c>lit/total</c>, and how big those get is <em>content</em>.</b>
+        /// Two digits each fits at 40; three each needs 161 units of the 145 there are, and a
+        /// <c>Text</c> that overflows is not clipped — so a board authored with a hundred lamps
+        /// would have drawn its count out through the side of the pill and across the board,
+        /// with nothing in the build gates able to see it. A widget a chapter can break is a
+        /// code change hiding inside a content change (invariant 4), so the figures are fitted
+        /// on write instead, from <see cref="CountType"/> each time
+        /// (<see cref="UIKit.OneLineLabel"/>).
+        /// </para>
+        /// </summary>
+        const float CountW = 230f, CountH = 84f;
+        const int CountType = 40, CountLeast = 22;
+        const float CountRoom = CountW - CountH * .82f - 16f;
+
         /// <summary>Where the blending chart sits, when the board has one.</summary>
         const float ColourKeyY = 392f;
 
@@ -354,10 +374,10 @@ namespace GlimmerGrove
             row.anchorMin = new Vector2(0f, 1f); row.anchorMax = new Vector2(1f, 1f);
             row.sizeDelta = new Vector2(0f, StatusHeight);
 
-            _moves = Scenery.Pill(row, "0", 40, new Vector2(230f, 84f), new Vector2(0f, .5f),
-                                  new Vector2(160f, 0f), null, "ic_restart");
-            _lamps = Scenery.Pill(row, "0/0", 40, new Vector2(230f, 84f), new Vector2(1f, .5f),
-                                  new Vector2(-160f, 0f), null, "ic_check");
+            _moves = Scenery.Pill(row, "0", CountType, new Vector2(CountW, CountH),
+                                  new Vector2(0f, .5f), new Vector2(160f, 0f), null, "ic_restart");
+            _lamps = Scenery.Pill(row, "0/0", CountType, new Vector2(CountW, CountH),
+                                  new Vector2(1f, .5f), new Vector2(-160f, 0f), null, "ic_check");
             _pips = StarRow.Create(row, new Vector2(.5f, .5f), Vector2.zero, 62f, 66f, 3);
 
             BuildColourKey();
@@ -566,6 +586,10 @@ namespace GlimmerGrove
                 bool changed = _moves.text != text;
                 _moves.text = text;
 
+                // Fitted only when it moved, because this runs every frame of a run. From
+                // `CountType` each time, so a figure that gets shorter grows back.
+                if (changed) UIKit.OneLineLabel(_moves, CountRoom, CountType, CountLeast);
+
                 if (_puzzle.HasBudget)
                 {
                     int left = _puzzle.MovesLeft;
@@ -581,7 +605,12 @@ namespace GlimmerGrove
             if (_lamps)
             {
                 string s = $"{_puzzle.LampsLit}/{_puzzle.LampCount}";
-                if (_lamps.text != s) { _lamps.text = s; Tween.Punch(_lamps.transform, .25f, .34f); }
+                if (_lamps.text != s)
+                {
+                    _lamps.text = s;
+                    UIKit.OneLineLabel(_lamps, CountRoom, CountType, CountLeast);
+                    Tween.Punch(_lamps.transform, .25f, .34f);
+                }
             }
             // The stars already earned here, not what this run is currently on track
             // for. A fresh board is nought moves in, which projects to three stars and

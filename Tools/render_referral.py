@@ -49,6 +49,14 @@ OFFER_H = 196.0
 HEADING_H = 62.0
 WIDTH = 1000.0
 ROW_H, ROW_GAP = 196.0, 12.0
+
+#: `ReferralScreen.KeyW`, `KeyH`, `MarkH`, `MarkType`, `MarkLeast` and `MarkRoom` - the streak
+#: board's numbers, because this is the streak board's row: the COLLECT key and the pill that
+#: stands in the same place share one width, and the pill's line is fitted on write from its
+#: design size rather than drawn at whatever it was built at.
+KEY_W, KEY_H, MARK_H = 212.0, 84.0, 62.0
+MARK_TYPE, MARK_LEAST = 23, 14
+MARK_ROOM = KEY_W - 20.0 - 16.0
 SEAT_SIZE, SEAT_X, REWARD_TALL = 160.0, 118.0, 124.0
 TEXT_X, TEXT_W = 220.0, 450.0
 CODE_W, CODE_H, SHARE_W, SHARE_H = 470.0, 96.0, 300.0, 104.0
@@ -311,21 +319,24 @@ def row(sheet, cx, cy, h, plate, tier, count, title, sub, state, mark, flat=Fals
 
     if waiting:
         bx = cx + WIDTH / 2 - 130
-        K.paste(sheet, K.skin("btn_green", 212, 84), bx, cy)
-        K.shrunk(sheet, txt("ui.referral.collect").upper(), bx, cy - 84 * 0.0231, 176, 52, 34, 20)
+        K.paste(sheet, K.skin("btn_green", KEY_W, KEY_H), bx, cy)
+        K.shrunk(sheet, txt("ui.referral.collect").upper(), bx, cy - KEY_H * 0.0231,
+                 KEY_W - 36, 52, 34, 20)
     elif paid:
         sxx = cx + WIDTH / 2 - 146
         K.paste(sheet, K.fit(Image.open(K.UI / "seal_gold.png").convert("RGBA"), (84, 84)), sxx, cy)
         K.paste(sheet, K.tint(icon("ic_check", (44, 44)), K.CREAM), sxx, cy)
     else:
         bx = cx + WIDTH / 2 - 130
-        pill = Image.new("RGBA", (196, 62), (0, 0, 0, 0))
+        pill = Image.new("RGBA", (int(KEY_W), int(MARK_H)), (0, 0, 0, 0))
         dd = ImageDraw.Draw(pill)
-        dd.rounded_rectangle([0, 0, 195, 61], radius=28, fill=(13, 23, 46, 179))
-        dd.rounded_rectangle([1, 1, 194, 60], radius=28, outline=(255, 255, 255, 33), width=3)
+        dd.rounded_rectangle([0, 0, KEY_W - 1, MARK_H - 1], radius=28, fill=(13, 23, 46, 179))
+        dd.rounded_rectangle([1, 1, KEY_W - 2, MARK_H - 2], radius=28,
+                             outline=(255, 255, 255, 33), width=3)
         K.paste(sheet, pill, bx, cy)
-        K.shrunk(sheet, mark.upper(), bx, cy, 164, 44, 23, 14,
-                 fill=K.AQUA if mark == txt("ui.referral.settling").upper() else K.CREAM, outline=2)
+        K.one_line(sheet, mark.upper(), bx, cy, MARK_ROOM, MARK_TYPE, MARK_LEAST,
+                   K.AQUA if mark == txt("ui.referral.settling").upper() else K.CREAM,
+                   "a friend's pill")
 
 
 def board(sheet, top, finished, paid):

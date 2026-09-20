@@ -741,9 +741,9 @@ namespace GlimmerGrove
         void CountBeat(int i, float step)
         {
             string say = i > 0 ? i.ToString() : Loc.Get("mode.siege.go");
+            int type = Mathf.RoundToInt(Cell * (i > 0 ? 1.5f : 1.1f));
 
-            var label = UIKit.Label("Count", _fx, say,
-                                    Mathf.RoundToInt(Cell * (i > 0 ? 1.5f : 1.1f)),
+            var label = UIKit.Label("Count", _fx, say, type,
                                     i > 0 ? Pal.Cream : Pal.Gold, TextAnchor.MiddleCenter,
                                     new Vector2(Span.x, Cell * 2f));
             label.rectTransform.anchoredPosition =
@@ -752,7 +752,8 @@ namespace GlimmerGrove
             // Fitted for the same reason the banners are: "GO!" is three characters in English
             // and a word in most other languages, drawn here at more than a cell of type and
             // opened at 2.1 on top of that.
-            UIKit.OneLineLabel(label, CaptionRoom / 2.1f, Mathf.RoundToInt(Cell * CaptionFloor));
+            UIKit.OneLineLabel(label, CaptionRoom / 2.1f, type,
+                               Mathf.RoundToInt(Cell * CaptionFloor));
 
             var mark = label;
             mark.transform.localScale = Vector3.one * 2.1f;

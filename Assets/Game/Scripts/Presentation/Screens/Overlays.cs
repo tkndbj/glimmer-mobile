@@ -135,9 +135,11 @@ namespace GlimmerGrove
         /// two layouts drift and a line of text ends up printed through a button.
         /// </para>
         /// <para>
-        /// Hides each child before destroying it. <c>Destroy</c> lands at the end of the frame,
-        /// so without that the outgoing panel is drawn over its replacement for one frame — the
-        /// house rule five screens had to learn one at a time.
+        /// Emptying the panel is <see cref="View.ClearContent"/>'s, which hides each child
+        /// before destroying it — <c>Destroy</c> lands at the end of the frame, so without that
+        /// the outgoing panel is drawn over its replacement for one frame — and drops the
+        /// cached safe-area layer, which is the half four hand-written copies of this loop all
+        /// forgot.
         /// </para>
         /// </summary>
         protected void Rebuild()
@@ -147,13 +149,7 @@ namespace GlimmerGrove
             Rebuilding = true;
             try
             {
-                for (int i = Content.childCount - 1; i >= 0; i--)
-                {
-                    var child = Content.GetChild(i).gameObject;
-                    child.SetActive(false);
-                    Destroy(child);
-                }
-
+                ClearContent();
                 Build();
             }
             finally

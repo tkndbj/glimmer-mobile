@@ -66,8 +66,17 @@ namespace GlimmerGrove
         /// the call site because the clock is re-fitted on every tick and the two have to
         /// agree — a fitter shrinking against a width the pill does not have is a fitter that
         /// lets the text spill anyway.
+        ///
+        /// <para>
+        /// <see cref="ClockType"/> is beside it because a fit that is re-run has to start from
+        /// the size the pill was designed at rather than from the size the last line left it
+        /// at: this one changes between "41d 23h", "23:59:07" and "the season has ended", so
+        /// every long line filed the type down a point that no short one gave back. See
+        /// <see cref="UIKit.OneLineLabel"/>.
+        /// </para>
         /// </summary>
         const float ClockRoom = 300f - 50f * .82f - 16f;
+        const int ClockType = 22, ClockLeast = 14;
 
         static readonly Color BarOrange = new Color(1f, .588f, .118f, 1f);
         static readonly Color BarFull = new Color(.376f, .922f, .275f, 1f);
@@ -336,14 +345,14 @@ namespace GlimmerGrove
             const float ClockW = 300f, ClockH = 50f;
 
             _clock = UIKit.OneLineLabel(
-                Scenery.Pill(plate.transform, string.Empty, 22, new Vector2(ClockW, ClockH),
+                Scenery.Pill(plate.transform, string.Empty, ClockType, new Vector2(ClockW, ClockH),
                              new Vector2(1f, 1f),
                              UIKit.Corner(new Vector2(ClockW, ClockH), new Vector2(1f, 1f), 28f, 22f),
                              new Color(.05f, .09f, .18f, .78f), "ic_restart"),
                 // What `Scenery.Pill` really leaves the words: the glyph's lane and the
                 // right-hand padding come off the 300. Measured rather than guessed, or the
                 // fitter is shrinking against a width the pill does not have.
-                ClockRoom, 14);
+                ClockRoom, ClockType, ClockLeast);
 
             plate.transform.localScale = Vector3.zero;
             Tween.Pop(plate.transform, 0f, .5f, .10f);
@@ -715,8 +724,9 @@ namespace GlimmerGrove
 
             // Re-fitted on every write, because the size was chosen for the words that were in
             // it at the time: "41d 23h" and "23:59:07" are different lengths, and a countdown
-            // spends its life changing between them.
-            UIKit.OneLineLabel(_clock, ClockRoom, 14);
+            // spends its life changing between them. **From `ClockType` rather than from
+            // wherever the last line left it**, or the fit only ever runs downhill.
+            UIKit.OneLineLabel(_clock, ClockRoom, ClockType, ClockLeast);
         }
 
         /// <summary>

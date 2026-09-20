@@ -323,7 +323,7 @@ namespace GlimmerGrove
                 UIKit.Titled("Title", ribbon.transform, text, fontSize, Pal.Cream,
                              TextAnchor.MiddleCenter, new Vector2(room, size.y * .5f),
                              new Vector2(.5f, .5f), Vector2.zero, 4f, 4f),
-                room, Mathf.RoundToInt(floor));
+                room, fontSize, Mathf.RoundToInt(floor));
 
             return ribbon;
         }

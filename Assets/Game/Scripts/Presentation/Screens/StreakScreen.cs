@@ -113,6 +113,53 @@ namespace GlimmerGrove
         /// <summary>Where the sentence starts, and how much of the row it may have.</summary>
         const float TextX = 206f, TextW = 450f;
 
+        /// <summary>
+        /// The radius the row's plate is rounded to.
+        ///
+        /// Written once because three things have to agree about it: the rim drawn on the
+        /// card's edge, the mask that keeps a waiting row's light inside that edge
+        /// (<see cref="Aura"/>), and the render mirror. A mask a few units off the shape it is
+        /// clipping to is light outside the plate, which is the fault it exists to stop.
+        /// </summary>
+        const int CardRound = 30;
+
+        /// <summary>
+        /// The <b>COLLECT</b> key at the right end of a row, and the pill that stands in the
+        /// same place when there is nothing to collect yet.
+        ///
+        /// <para>
+        /// <b>One width, because they are one answer in two moods</b> — the right end carries
+        /// exactly one of them at a time, so two footprints would be the row changing shape
+        /// according to what it had to say. The pill was the narrower of the two by sixteen
+        /// units for no reason anybody wrote down, and those sixteen units are what the longest
+        /// line it can say needed.
+        /// </para>
+        /// </summary>
+        const float KeyW = 212f, KeyH = 84f;
+
+        /// <summary>
+        /// The room <see cref="Scenery.Pill"/> really leaves its words: twenty units off the
+        /// left of the plate and sixteen off the right.
+        ///
+        /// <para>
+        /// <b>It is written down because the line is re-fitted on every repaint and the two have
+        /// to agree</b> — a fitter measuring against a width the pill does not have is a fitter
+        /// that lets the text spill anyway, which is the hero clock's rule (<see cref="ClockRoom"/>)
+        /// said about the other pill on this page. This one spends its life changing between
+        /// <c>TONIGHT</c>, <c>TOMORROW NIGHT</c>, <c>IN 5 NIGHTS</c> and <c>CONNECT ONCE</c>, and
+        /// the longest of those is half again the shortest: built at 23 for one of them, it was
+        /// drawn straight out through the side of the plate for another, because a <c>Text</c>
+        /// that overflows is not clipped and nothing says so.
+        /// </para>
+        /// <para>
+        /// The floor is the headroom a translation gets. English settles the longest line at 17
+        /// of a possible 23, so a language needing a fifth more room than ours still fits.
+        /// </para>
+        /// </summary>
+        const float MarkH = 62f;
+        const int MarkType = 23, MarkLeast = 14;
+        const float MarkRoom = KeyW - 20f - 16f;
+
         static readonly Vector2 Top = new Vector2(.5f, 1f);
         static readonly Vector2 Left = new Vector2(0f, .5f);
         static readonly Vector2 Right = new Vector2(1f, .5f);
@@ -129,13 +176,22 @@ namespace GlimmerGrove
         const float BarH = 26f;
 
         /// <summary>
-        /// What <see cref="Scenery.Pill"/> really leaves its words at 300 wide: the glyph's
+        /// What <see cref="Scenery.Pill"/> really leaves its words at 340 wide: the glyph's
         /// lane comes off the height and sixteen units come off the right. Written here
         /// rather than at the call site because the clock is re-fitted on every tick and the
         /// two have to agree — a fitter shrinking against a width the pill does not have is a
         /// fitter that lets the text spill anyway (the season's rule).
+        ///
+        /// <para>
+        /// <see cref="ClockType"/> is beside it because a fit that is re-run has to start from
+        /// the size the pill was designed at, not from the size the last line left it at — this
+        /// pill says "a night is waiting", "2 nights are waiting", a countdown and "safe for 4
+        /// more days", and each long one filed the type down a point that no short one gave
+        /// back. See <see cref="UIKit.OneLineLabel"/>.
+        /// </para>
         /// </summary>
         const float ClockRoom = 340f - 54f * .82f - 16f;
+        const int ClockType = 23, ClockLeast = 14;
 
         // --------------------------------------------------------------- state
         StreakTable _ladder;
@@ -311,43 +367,82 @@ namespace GlimmerGrove
         /// </summary>
         void OnChanged()
         {
-            if (this == null || Content == null || _collecting) return;
+            if (_collecting) return;
+            Settle();
+        }
 
-            // The board is a window onto one lap. Taking the last night of a lap moves that
-            // window, which is a different set of tiles rather than different words on the
-            // same ones — the only case here a redraw is the honest answer to.
-            if (DailyStreak.BoardFirstNight != _first || DailyStreak.Days != _days ||
-                DailyStreak.PlayedToday != _playedToday)
-            {
-                Rebuild();
-                return;
-            }
+        /// <summary>
+        /// Whether the page is drawing a state the ledger has left behind — the one question
+        /// that decides between a repaint and a redraw, asked from every place that has to
+        /// decide it.
+        ///
+        /// <para>
+        /// <b>It is one predicate because it was three, and they disagreed.</b> A night being
+        /// taken asked only whether the lap had moved; the clock asked only whether the day
+        /// had; and neither asked whether the ladder underneath them was still the same
+        /// object. Every combination they each missed is a page that keeps drawing the old
+        /// lap — the board is a <em>window</em> onto one lap of the ladder, so when the window
+        /// moves the page is a different set of rows rather than different words on the same
+        /// ones, and no repaint can get there.
+        /// </para>
+        /// <para>
+        /// The four facts are the four the build reads: which lap is shown, how long the
+        /// streak is, whether today is already kept, and which ladder is being drawn. The
+        /// ladder is compared by <em>identity</em> rather than by length, because a content
+        /// push can hand back a table of the same length paying different rungs.
+        /// </para>
+        /// </summary>
+        bool Stale
+            => DailyStreak.BoardFirstNight != _first
+            || DailyStreak.Days != _days
+            || DailyStreak.PlayedToday != _playedToday
+            || !ReferenceEquals(DailyStreak.Ladder, _ladder);
 
-            Repaint();
+        /// <summary>
+        /// Brings the page up to date by whichever of the two means is honest, and is the only
+        /// way anything here answers a change.
+        ///
+        /// <para>
+        /// Every path that finishes a night — a chest ceremony, a currency flight, a flight
+        /// that had nothing to throw — ends here rather than making the same choice for
+        /// itself. That is what makes the lap roll over <b>on the night it rolls over on</b>:
+        /// taking night seven while the streak stands at eight moves the window to nights
+        /// 8–14, and the page that was showing 1–7 has to become a different page.
+        /// </para>
+        /// </summary>
+        void Settle()
+        {
+            if (this == null || Content == null) return;
+
+            if (Stale) Rebuild();
+            else Repaint();
         }
 
         /// <summary>
         /// Draws the page again from scratch.
         ///
-        /// The old children are hidden before they are destroyed: <c>Destroy</c> is deferred
-        /// to the end of the frame, so without this the outgoing board draws over the
-        /// incoming one for one frame.
+        /// <para>
+        /// <see cref="View.ClearContent"/> empties the page and drops the base class's own
+        /// handle into it; what is left here is this screen's handles. They are cleared rather
+        /// than left to <c>Build</c> to overwrite because not every one of them is written on
+        /// every path — the shield row builds nothing when the ladder sells no shield — so a
+        /// field left alone is a field still pointing at a destroyed widget that a repaint
+        /// will happily write to.
+        /// </para>
         /// </summary>
         void Rebuild()
         {
             if (Content == null) return;
 
-            for (int i = Content.childCount - 1; i >= 0; i--)
-            {
-                var child = Content.GetChild(i).gameObject;
-                child.SetActive(false);
-                Destroy(child);
-            }
+            ClearContent();
 
             _count = _caption = _state = _lap = _shieldHint = _shieldName = null;
             _bar = _shieldCrest = null;
             _fill = _flame = _heroHost = null;
             _shieldBtn = null;
+            _nights = null;
+            _scroll = null;
+            _tiles.Clear();
 
             Build();
         }
@@ -373,7 +468,7 @@ namespace GlimmerGrove
             if (_clockTick < 1f) return;
             _clockTick = 0f;
 
-            if (DailyStreak.Days != _days || DailyStreak.PlayedToday != _playedToday)
+            if (Stale)
             {
                 Rebuild();
                 return;
@@ -563,11 +658,11 @@ namespace GlimmerGrove
             const float ClockW = 340f, ClockH = 54f;
 
             _state = UIKit.OneLineLabel(
-                Scenery.Pill(plate.transform, string.Empty, 23, new Vector2(ClockW, ClockH),
+                Scenery.Pill(plate.transform, string.Empty, ClockType, new Vector2(ClockW, ClockH),
                              new Vector2(1f, 1f),
                              UIKit.Corner(new Vector2(ClockW, ClockH), new Vector2(1f, 1f), 28f, 20f),
                              new Color(.05f, .09f, .18f, .78f), "ic_streak"),
-                ClockRoom, 14);
+                ClockRoom, ClockType, ClockLeast);
 
             plate.transform.localScale = Vector3.zero;
             Tween.Pop(plate.transform, 0f, .5f, .10f);
@@ -868,13 +963,13 @@ namespace GlimmerGrove
             // is an instruction, and on a page whose one action is this tap the instruction is
             // worth the eighty units it costs.
             var collect = UIKit.Img("Collect", entry.Root, Art.S("Ui/" + Skins.Affirm), Color.white,
-                                    new Vector2(212f, 84f), Right, new Vector2(-130f, 0f));
+                                    new Vector2(KeyW, KeyH), Right, new Vector2(-130f, 0f));
 
             UIKit.Shrinkable(
                 UIKit.Titled("CollectText", collect.transform,
                              Loc.Get("ui.streak.collect").ToUpperInvariant(), 34, Pal.Cream,
-                             TextAnchor.MiddleCenter, new Vector2(176f, 52f), Centre,
-                             new Vector2(0f, 84f * UIKit.PillFaceLift), 4f, 4f), 20);
+                             TextAnchor.MiddleCenter, new Vector2(KeyW - 36f, 52f), Centre,
+                             new Vector2(0f, KeyH * UIKit.PillFaceLift), 4f, 4f), 20);
 
             entry.Collect = (RectTransform)collect.transform;
             entry.Collect.gameObject.SetActive(false);
@@ -882,7 +977,7 @@ namespace GlimmerGrove
             // What a night still ahead says: the day it lands on, quietly, so a row that can do
             // nothing still answers the question a player is asking of it.
             entry.Mark = (RectTransform)Scenery.Pill(
-                entry.Root, string.Empty, 23, new Vector2(196f, 62f), Right,
+                entry.Root, string.Empty, MarkType, new Vector2(KeyW, MarkH), Right,
                 new Vector2(-130f, 0f), new Color(.05f, .09f, .18f, .70f)).transform.parent;
             entry.Mark.gameObject.SetActive(false);
 
@@ -900,7 +995,7 @@ namespace GlimmerGrove
             // The rim, on the card's own edge and over everything on it — the half of the
             // light that has to be a child, because a light drawn *behind* a card the kit cuts
             // opaque is a light with a hole in the middle of it.
-            entry.Rim = UIKit.Img("Rim", entry.Root, Art.RoundOutline(30, 7f), Pal.A(Pal.Sun, 0f));
+            entry.Rim = UIKit.Img("Rim", entry.Root, Art.RoundOutline(CardRound, 7f), Pal.A(Pal.Sun, 0f));
             UIKit.StretchTo((RectTransform)entry.Rim.transform, 0f, 0f, 0f, 0f);
 
             // The whole row is the button, and the COLLECT key is a label on it. A key that was
@@ -1089,8 +1184,9 @@ namespace GlimmerGrove
 
             // Re-fitted on every write, because the size was chosen for the words that were in
             // it at the time: "2 nights are waiting" and "23:59:07" are different lengths, and
-            // this pill spends its life changing between them.
-            UIKit.OneLineLabel(_state, ClockRoom, 14);
+            // this pill spends its life changing between them. **From `ClockType` rather than
+            // from wherever the last line left it**, or the fit only ever runs downhill.
+            UIKit.OneLineLabel(_state, ClockRoom, ClockType, ClockLeast);
         }
 
         /// <summary>
@@ -1207,6 +1303,13 @@ namespace GlimmerGrove
 
                     text.color = blocked ? Pal.Sun
                                : state == Night.Tonight ? Pal.Aqua : Pal.A(Pal.Cream, .60f);
+
+                    // **Measured from `MarkType` rather than from whatever the last line left
+                    // behind**, which is why `OneLineLabel` asks for it: the fit only ever
+                    // shrinks, so a pill that said TOMORROW NIGHT and then says TONIGHT would
+                    // keep the smaller type for the life of the screen and walk itself down a
+                    // point every time a longer line came through.
+                    UIKit.OneLineLabel(text, MarkRoom, MarkType, MarkLeast);
                 }
             }
 
@@ -1282,8 +1385,26 @@ namespace GlimmerGrove
         {
             if (seat == null) return null;
 
-            var host = UIKit.Box("Aura", seat.parent, Vector2.zero, Left,
-                                 new Vector2(SeatX, 0f));
+            // <b>The light is held inside the card, and the card's own shape is what holds
+            // it.</b> A fan 2.15 wells across is 318 units on a row 184 tall, so two thirds of
+            // what a player could see of it was drawn *outside* the plate — over the night above
+            // and the night below, which on a list is a light belonging to no row. The pieces
+            // are not shrunk to fit, because they cannot be: `Art.Rays` is hollow in the middle
+            // so the eye only ever sees the band between a quarter and three quarters of its
+            // radius, and at any size that band clears a 148-unit well it is already past a
+            // 184-unit row. So the fan keeps its reach and the plate keeps it in.
+            //
+            // A <c>RectMask2D</c> would be the cheap answer and it is the wrong one: it clips to
+            // a *rectangle* where this plate is rounded, so each corner leaks a square nub of
+            // light outside the silhouette (44i's rule about measuring against the corner that
+            // is really there — a render found both of them). A <see cref="Mask"/> over
+            // <see cref="Art.Round"/> clips to the shape itself. It is safe here for the one
+            // reason a mask usually is not: the sprite is <em>generated</em>, so the compression
+            // that speckles a masked texture (see the publisher card) cannot reach it.
+            var clip = UIKit.Img("AuraClip", seat.parent, Art.Round(CardRound), Color.white);
+            clip.gameObject.AddComponent<Mask>().showMaskGraphic = false;
+
+            var gate = (RectTransform)clip.transform;
 
             // <b>Directly under the well, and *not* first.</b> The card is an opaque plate the
             // kit cuts, and a sibling before it is a light with a card drawn on top of it — the
@@ -1291,7 +1412,9 @@ namespace GlimmerGrove
             // the ring after the card and so could not see it, which is 44d's rule about a mirror
             // with its own idea of the order.) Inserting at the well's own index puts every ray
             // over the plate and every one of them under the reward.
-            host.SetSiblingIndex(seat.GetSiblingIndex());
+            gate.SetSiblingIndex(seat.GetSiblingIndex());
+
+            var host = UIKit.Box("Aura", gate, Vector2.zero, Left, new Vector2(SeatX, 0f));
 
             UIKit.Halo(host, Pal.Gold, SeatSize * 2.4f, .46f);
 
@@ -1302,7 +1425,9 @@ namespace GlimmerGrove
                       t => { if (rrt) rrt.localRotation = Quaternion.Euler(0f, 0f, t * 360f); },
                       rays).Loop(-1, false);
 
-            return host;
+            // The clip rather than the host, so one <c>Destroy</c> still takes the whole light
+            // away when the row stops being the one on offer.
+            return gate;
         }
 
         /// <summary>
@@ -1412,9 +1537,7 @@ namespace GlimmerGrove
             // by _collecting so the tile did not turn grey under the ceremony. Let it through
             // now, while the scrim covers it.
             _collecting = false;
-
-            if (DailyStreak.BoardFirstNight != _first) Rebuild();
-            else Repaint();
+            Settle();
         }
 
         /// <summary>
@@ -1433,7 +1556,7 @@ namespace GlimmerGrove
             if (!DailyStreak.TryCollect(night, out var drops))
             {
                 _collecting = false;
-                Repaint();
+                Settle();
                 return;
             }
 
@@ -1474,10 +1597,7 @@ namespace GlimmerGrove
             void Finish()
             {
                 _collecting = false;
-                if (this == null || Content == null) return;
-
-                if (DailyStreak.BoardFirstNight != _first) Rebuild();
-                else Repaint();
+                Settle();
             }
         }
 

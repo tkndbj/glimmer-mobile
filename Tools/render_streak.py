@@ -64,6 +64,25 @@ TEXT_X, TEXT_W = 206.0, 450.0
 CHEST_FILL, CHEST_LIFT = 155.0 / 244.0, 38.5 / 155.0
 PER_ROW = 4
 
+#: `StreakScreen.CardRound` - what the row's plate is rounded to, and what the rim and the
+#: waiting row's light are both clipped to. One number here as there, for the reason it is one
+#: number there: a mask a few units off the shape it clips is light outside the plate.
+CARD_ROUND = 30
+
+#: `StreakScreen.KeyW`, `KeyH`, `MarkH`, `MarkType`, `MarkLeast` and `MarkRoom` - the COLLECT
+#: key at the right end of a row and the pill that stands in the same place when there is
+#: nothing to collect yet. **One width**, because they are one answer in two moods; the room
+#: `Scenery.Pill` really leaves its words is twenty units off the left and sixteen off the right.
+KEY_W, KEY_H = 212.0, 84.0
+MARK_H = 62.0
+MARK_TYPE, MARK_LEAST = 23, 14
+MARK_ROOM = KEY_W - 20.0 - 16.0
+
+#: `StreakScreen.ClockType` and `ClockLeast` - the hero pill's design size and its floor. Every
+#: fit starts from the design size, never from what the last line left behind, because the
+#: screen's fitter does too (`UIKit.OneLineLabel`).
+CLOCK_TYPE, CLOCK_LEAST = 23, 14
+
 BAR_ORANGE = (255, 150, 30)
 BAR_FULL = (96, 235, 70)
 BAR_H = 26
@@ -211,20 +230,8 @@ def pill(sheet, cx, cy, w, h, label, colour, glyph):
     except FileNotFoundError:
         pass
 
-    # `UIKit.OneLineLabel` — the largest size between the floor and 23 at which the string
-    # fits on ONE line in the room the glyph leaves it. Reported when it lands on the floor,
-    # because "23 against a floor of 14" and "14 against a floor of 14" are the difference
-    # between a caption that fits and one Unity will not clip (invariants 19n, 37n).
-    room = w - h * .82 - 16
-    size = 23
-    while size > 14 and K.font(size).getlength(label) > room:
-        size -= 1
-
-    if K.font(size).getlength(label) > room:
-        print("  TIGHT  the hero pill's line needs %.0f units and has %.0f: '%s'"
-              % (K.font(size).getlength(label), room, label))
-
-    K.text(sheet, label, cx + h * .30, cy, size, fill=colour, outline=2)
+    K.one_line(sheet, label, cx + h * .30, cy, w - h * .82 - 16,
+               CLOCK_TYPE, CLOCK_LEAST, colour, "the hero pill")
 
 
 def shield_row(sheet, y, held, days_left):
@@ -274,12 +281,19 @@ def heading(sheet, y, cycle):
 
 
 # ------------------------------------------------------------------- the board
-def aura(sheet, cx, cy, size):
-    """`StreakScreen.Aura` - the halo and the turning fan over it.
+def aura(sheet, left, cy, size):
+    """`StreakScreen.Aura` - the halo and the turning fan, clipped to the card.
 
     Drawn at one instant, which is what a mirror can say about a loop: whether the light is
     *there* and whether the reward survives being inside it. Whether it reads as travelling is
     a question only a device answers.
+
+    **What it can say, and did not, is where the light went.** The fan is 318 units across on a
+    row 184 tall, so two thirds of it was drawn over the night above and the night below - and
+    this drew it that way faithfully, which is the mirror doing its job and nobody reading it.
+    The screen clips it now with a `Mask` over `Art.Round`, so the light is cut to the plate's
+    own rounded shape; a rectangular clip leaks a square nub of light at each corner, which is
+    the thing to look for here if the radius ever drifts (invariant 44i).
 
     **A gold ring scaling out of the seat was the third piece and is gone**, at the owner's
     instruction - so this drew it too, and a mirror still drawing a piece the screen has
@@ -287,12 +301,21 @@ def aura(sheet, cx, cy, size):
     It is `aura` rather than `ring` for the same reason: the name said which of the three it
     was about, and it was the one that went.
     """
-    K.paste(sheet, K.glow(int(size * 2.4), 1.7, K.GOLD, .46), cx, cy)
+    cell = Image.new("RGBA", (int(WIDTH), int(ROW_H)), (0, 0, 0, 0))
+    K.paste(cell, K.glow(int(size * 2.4), 1.7, K.GOLD, .46), SEAT_X, ROW_H / 2)
 
     fan = K.rays(256, 14).resize((int(size * 2.15), int(size * 2.15)), Image.LANCZOS)
     lit = Image.new("RGBA", fan.size, (*K.SUN, 0))
     lit.putalpha(fan.point(lambda v: int(v * .34)))
-    sheet.alpha_composite(lit, (int(cx - fan.width / 2), int(cy - fan.height / 2)))
+    cell.alpha_composite(lit, (int(SEAT_X - fan.width / 2), int(ROW_H / 2 - fan.height / 2)))
+
+    shape = Image.new("L", cell.size, 0)
+    ImageDraw.Draw(shape).rounded_rectangle([0, 0, cell.width - 1, cell.height - 1],
+                                            radius=CARD_ROUND, fill=255)
+    cell.putalpha(Image.composite(cell.getchannel("A"),
+                                  Image.new("L", cell.size, 0), shape))
+
+    sheet.alpha_composite(cell, (int(left), int(cy - ROW_H / 2)))
 
 
 def row(sheet, cx, cy, night, rung, state, days):
@@ -327,17 +350,11 @@ def row(sheet, cx, cy, night, rung, state, days):
         card = K.tint(card, (230, 240, 255))
     K.paste(sheet, card, cx, cy)
 
-    if lit:
-        d = ImageDraw.Draw(sheet)
-        d.rounded_rectangle([cx - WIDTH / 2 + 3, cy - ROW_H / 2 + 3,
-                             cx + WIDTH / 2 - 3, cy + ROW_H / 2 - 3],
-                            radius=30, outline=(255, 244, 206, 255), width=7)
-
     left = cx - WIDTH / 2
     sx = left + SEAT_X
 
     if lit:
-        aura(sheet, sx, cy, SEAT_SIZE)
+        aura(sheet, left, cy, SEAT_SIZE)
 
     K.paste(sheet, K.skin("Hud/slot", SEAT_SIZE, SEAT_SIZE), sx, cy)
 
@@ -360,9 +377,9 @@ def row(sheet, cx, cy, night, rung, state, days):
     # --- the right end: one answer at a time
     if waiting:
         bx = cx + WIDTH / 2 - 130
-        K.paste(sheet, K.skin("btn_green", 212, 84), bx, cy)
-        K.shrunk(sheet, txt("ui.streak.collect").upper(), bx, cy - 84 * 0.0231,
-                 176, 52, 34, 20)
+        K.paste(sheet, K.skin("btn_green", KEY_W, KEY_H), bx, cy)
+        K.shrunk(sheet, txt("ui.streak.collect").upper(), bx, cy - KEY_H * 0.0231,
+                 KEY_W - 36, 52, 34, 20)
     elif kept:
         sxx = cx + WIDTH / 2 - 146
         seal = Image.open(K.UI / "seal_gold.png").convert("RGBA")
@@ -381,12 +398,22 @@ def row(sheet, cx, cy, night, rung, state, days):
         else:
             words, fill = txt("ui.streak.in_many", away), (255, 243, 220)
 
-        plate = Image.new("RGBA", (196, 62), (0, 0, 0, 0))
+        plate = Image.new("RGBA", (int(KEY_W), int(MARK_H)), (0, 0, 0, 0))
         dd = ImageDraw.Draw(plate)
-        dd.rounded_rectangle([0, 0, 195, 61], radius=28, fill=(13, 23, 46, 179))
-        dd.rounded_rectangle([1, 1, 194, 60], radius=28, outline=(255, 255, 255, 33), width=3)
+        dd.rounded_rectangle([0, 0, KEY_W - 1, MARK_H - 1], radius=28, fill=(13, 23, 46, 179))
+        dd.rounded_rectangle([1, 1, KEY_W - 2, MARK_H - 2], radius=28,
+                             outline=(255, 255, 255, 33), width=3)
         K.paste(sheet, plate, bx, cy)
-        K.shrunk(sheet, words.upper(), bx, cy, 164, 44, 23, 14, fill=fill, outline=2)
+        K.one_line(sheet, words.upper(), bx, cy, MARK_ROOM, MARK_TYPE, MARK_LEAST, fill,
+                   "night %d's pill" % night)
+
+    # The rim, last, because on the screen it is the last child of the row but one and draws
+    # over everything on it - including the light, whose cut edge it covers.
+    if lit:
+        d = ImageDraw.Draw(sheet)
+        d.rounded_rectangle([cx - WIDTH / 2 + 3, cy - ROW_H / 2 + 3,
+                             cx + WIDTH / 2 - 3, cy + ROW_H / 2 - 3],
+                            radius=CARD_ROUND, outline=(255, 244, 206, 255), width=7)
 
 
 def says(rung):
@@ -437,12 +464,22 @@ def shot(state):
     """One page. The states are the six a player can actually be in."""
     n = len(RUNGS)
 
+    # `played` is `StreakScreen._playedToday`, and it decides what the night above the streak
+    # is called: **tonight** while today is still to be finished, **tomorrow night** once it
+    # has. This mirror had no such flag and drew "tonight" in every state, so TOMORROW NIGHT -
+    # half again the length of TONIGHT, and the longest thing either pill on this page ever
+    # says - was the one string it could not reach. It was spilling out of the side of its
+    # plate on a device the whole time, and nothing here could be asked about it (44d).
+    played = True
+
     if state == "none":
         days, first, lit, kept, held, line, colour = 0, 1, -1, 0, False, \
             txt("ui.streak.explain_none"), (255, 243, 220)
+        played = False
     elif state == "risk":
         days, first, lit, kept, held, line, colour = 4, 1, -1, 4, False, \
             txt("ui.streak.explain_risk_clock", "3h 21m"), (255, 158, 128)
+        played = False
     elif state == "shield":
         days, first, lit, kept, held, line, colour = 9, 8, -1, 2, True, \
             txt("ui.streak.shield_left_many", 4), K.MINT
@@ -466,7 +503,7 @@ def shot(state):
             rows.append("blocked" if state == "offline" else "lit")
         elif night <= days and i < kept:
             rows.append("kept")
-        elif night == days + 1:
+        elif night == days + 1 and not played:
             rows.append("tonight")
         else:
             rows.append("ahead")

@@ -69,6 +69,24 @@ namespace GlimmerGrove
         const float RowGap = 12f;
 
         /// <summary>
+        /// The <b>COLLECT</b> key at the right end of a row, the pill that stands in the same
+        /// place when there is nothing to collect yet, and the room <see cref="Scenery.Pill"/>
+        /// really leaves that pill's words.
+        ///
+        /// <para>
+        /// The streak board's numbers, because this is the streak board's row — one width for
+        /// the two, since the right end carries exactly one of them at a time, and the line is
+        /// fitted on write from <see cref="MarkType"/> rather than drawn at whatever size it was
+        /// built at. English fits either way here; a translation of <c>ui.referral.settling</c>
+        /// half again as long is what the fit is for, and a <c>Text</c> that overflows is not
+        /// clipped and says nothing (<see cref="UIKit.OneLineLabel"/>).
+        /// </para>
+        /// </summary>
+        const float KeyW = 212f, KeyH = 84f, MarkH = 62f;
+        const int MarkType = 23, MarkLeast = 14;
+        const float MarkRoom = KeyW - 20f - 16f;
+
+        /// <summary>
         /// The offer band between the hero and the board.
         ///
         /// <b>The same height as a row, because in one of its two shapes it <em>is</em> one</b> —
@@ -202,12 +220,7 @@ namespace GlimmerGrove
         {
             if (Content == null) return;
 
-            for (int i = Content.childCount - 1; i >= 0; i--)
-            {
-                var child = Content.GetChild(i).gameObject;
-                child.SetActive(false);
-                Destroy(child);
-            }
+            ClearContent();
 
             _codeText = _tally = null;
             _codeTap = _shareBtn = null;
@@ -614,16 +627,17 @@ namespace GlimmerGrove
                              new Vector2(TextW, 36f), Left, new Vector2(TextX + TextW * .5f, -28f), 3f, 3f), 15);
 
             var collect = UIKit.Img("Collect", tile.Root, Art.S("Ui/" + Skins.Affirm), Color.white,
-                                    new Vector2(212f, 84f), Right, new Vector2(-130f, 0f));
+                                    new Vector2(KeyW, KeyH), Right, new Vector2(-130f, 0f));
             UIKit.Shrinkable(
                 UIKit.Titled("CollectText", collect.transform, Loc.Get("ui.referral.collect").ToUpperInvariant(),
-                             34, Pal.Cream, TextAnchor.MiddleCenter, new Vector2(176f, 52f), Centre,
-                             new Vector2(0f, 84f * UIKit.PillFaceLift), 4f, 4f), 20);
+                             34, Pal.Cream, TextAnchor.MiddleCenter, new Vector2(KeyW - 36f, 52f), Centre,
+                             new Vector2(0f, KeyH * UIKit.PillFaceLift), 4f, 4f), 20);
             tile.Collect = (RectTransform)collect.transform;
             tile.Collect.gameObject.SetActive(false);
 
-            tile.MarkText = Scenery.Pill(tile.Root, string.Empty, 23, new Vector2(196f, 62f), Right,
-                                         new Vector2(-130f, 0f), new Color(.05f, .09f, .18f, .70f));
+            tile.MarkText = Scenery.Pill(tile.Root, string.Empty, MarkType, new Vector2(KeyW, MarkH),
+                                         Right, new Vector2(-130f, 0f),
+                                         new Color(.05f, .09f, .18f, .70f));
             tile.Mark = (RectTransform)tile.MarkText.transform.parent;
             tile.Mark.gameObject.SetActive(false);
 
@@ -741,6 +755,10 @@ namespace GlimmerGrove
                                                     Mathf.Min(_state.Finished, tile.Goal), tile.Goal);
                     tile.MarkText.color = Pal.Cream;
                 }
+
+                // Fitted from `MarkType` on every write, because the pill says a word in one
+                // state and a pair of figures in another and neither is a fixed width.
+                UIKit.OneLineLabel(tile.MarkText, MarkRoom, MarkType, MarkLeast);
             }
 
             if (tile.Title) tile.Title.color = lit ? Pal.Gold : done ? Pal.Mint : Pal.Cream;

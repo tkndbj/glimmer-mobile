@@ -15,7 +15,7 @@
  "levels": [
   {
    "id": "s07_firstdune",
-   "mapX": 0.422,
+   "mapX": 0.408,
    "mapY": 0.066,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -47,7 +47,7 @@
   },
   {
    "id": "s07_bonefield",
-   "mapX": 0.528,
+   "mapX": 0.56,
    "mapY": 0.129,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -79,7 +79,7 @@
   },
   {
    "id": "s07_saltpan",
-   "mapX": 0.767,
+   "mapX": 0.795,
    "mapY": 0.205,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -111,7 +111,7 @@
   },
   {
    "id": "s07_dryreach",
-   "mapX": 0.662,
+   "mapX": 0.736,
    "mapY": 0.285,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -175,7 +175,7 @@
   },
   {
    "id": "s07_sunscour",
-   "mapX": 0.612,
+   "mapX": 0.617,
    "mapY": 0.457,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -207,7 +207,7 @@
   },
   {
    "id": "s07_glassridge",
-   "mapX": 0.492,
+   "mapX": 0.353,
    "mapY": 0.57,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -239,7 +239,7 @@
   },
   {
    "id": "s07_duststorm",
-   "mapX": 0.376,
+   "mapX": 0.459,
    "mapY": 0.653,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -305,7 +305,7 @@
   },
   {
    "id": "s07_crownfall",
-   "mapX": 0.553,
+   "mapX": 0.521,
    "mapY": 0.792,
    "afloat": false,
    "budgetFactor": -1.0,

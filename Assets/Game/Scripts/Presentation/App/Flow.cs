@@ -120,6 +120,47 @@ namespace GlimmerGrove
         /// </summary>
         protected virtual SafeArea.Edges SafeEdges => SafeArea.Edges.All;
 
+        /// <summary>
+        /// Empties <see cref="Content"/> so the screen can be drawn again, and forgets every
+        /// handle into what was emptied.
+        ///
+        /// <para>
+        /// <b>It lives here because of the one handle a screen cannot forget for itself.</b>
+        /// <see cref="Safe"/> is cached on this class and is private to it, so a screen that
+        /// destroyed <see cref="Content"/>'s children and called <c>Build</c> again kept a
+        /// reference to the old safe-area layer — and <c>Destroy</c> lands at the <em>end of
+        /// the frame</em>, so within the rebuild that reference is still non-null and still
+        /// answers as a live object. Everything the screen then built went into a node that
+        /// had just been switched off and was about to be collected, and one frame later the
+        /// page was blank: the ground, the fireflies and the nav bar (which go into
+        /// <see cref="Content"/>) survived, and every control, plate and board (which go into
+        /// <see cref="Safe"/>) did not. Leaving the screen and coming back was the only
+        /// repair, because only a fresh view had a null cache.
+        /// </para>
+        /// <para>
+        /// Four screens wrote that loop out by hand and every one of them had it. A rule that
+        /// four call sites have to remember is a rule three of them will forget, so the loop
+        /// is <b>expressed once</b> and the cache is dropped where it is owned.
+        /// </para>
+        /// <para>
+        /// Each child is hidden before it is destroyed, for the same deferral: without it the
+        /// outgoing page draws over the incoming one for a frame.
+        /// </para>
+        /// </summary>
+        protected void ClearContent()
+        {
+            if (Content == null) return;
+
+            for (int i = Content.childCount - 1; i >= 0; i--)
+            {
+                var child = Content.GetChild(i).gameObject;
+                child.SetActive(false);
+                Destroy(child);
+            }
+
+            _safe = null;
+        }
+
         Lifeline _life;
 
         /// <summary>

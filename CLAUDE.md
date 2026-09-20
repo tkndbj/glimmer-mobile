@@ -427,6 +427,15 @@ is where they are written down, not what they mean.
    wallet does not move during a test. The cue is **attached rather than written** (`WalletWatch.Attach`),
    repaints through `ResourceSlots.Repaint` and never onto a label, and `compile.py` refuses a file that
    registers a readout and attaches no watch. **`ResourceSlots.Register` is the only way one is built.**
+44k. **A screen that redraws itself empties `Content` through `View.ClearContent` and nowhere else**, because
+   `Destroy` lands at the *end of the frame*: the cached `Safe` layer every control is built into still
+   answers as live during the rebuild, so the page is redrawn into a node that is collected a moment later
+   and goes **blank** — repaired only by leaving and coming back. Four screens wrote the loop by hand and all
+   four had it; `compile.py` refuses a file that reaches into `Content`'s children.
+44l. **A mirror that cannot reach a state cannot be asked about it, and that is the state the fault is
+   in.** `render_streak.py` had no "played today" flag, so it drew the night above the streak as *tonight*
+   in all six states and never once drew `TOMORROW NIGHT` — the longest line either pill on the page can
+   say, and the only one spilling out of its plate on a device. Add the flag before trusting the sheet.
 
 ### Tasks and the chest ladder
 

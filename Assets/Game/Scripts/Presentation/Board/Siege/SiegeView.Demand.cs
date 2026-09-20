@@ -268,9 +268,8 @@ namespace GlimmerGrove
             if (say != _forecastSaid)
             {
                 _forecastSaid = say;
-                _forecastTitle.fontSize = Mathf.RoundToInt(Cell * (boss ? .52f : .34f));
-
                 UIKit.OneLineLabel(_forecastTitle, CaptionRoom,
+                                   Mathf.RoundToInt(Cell * (boss ? .52f : .34f)),
                                    Mathf.RoundToInt(Cell * CaptionFloor));
             }
 

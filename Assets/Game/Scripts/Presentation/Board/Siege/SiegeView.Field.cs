@@ -518,13 +518,16 @@ namespace GlimmerGrove
 
             // Bigger with depth as well as hotter, so a five reads as more than a two across the
             // room rather than only up close.
-            _chain.fontSize = Mathf.RoundToInt(Cell * (.72f + Mathf.Min(depth, 6) * .05f));
             _chain.text = Loc.Format("mode.siege.chain", depth);
             _chain.color = heat;
 
             // Fitted like every other caption on this hill: it grows with depth and it is a
-            // translated sentence with a number in it, so nothing here is a fixed width.
-            UIKit.OneLineLabel(_chain, CaptionRoom, Mathf.RoundToInt(Cell * CaptionFloor));
+            // translated sentence with a number in it, so nothing here is a fixed width. The
+            // size the depth asks for is handed to the fit rather than written on the label
+            // first, so a deeper chain can never inherit a shallower one's shrink.
+            UIKit.OneLineLabel(_chain, CaptionRoom,
+                               Mathf.RoundToInt(Cell * (.72f + Mathf.Min(depth, 6) * .05f)),
+                               Mathf.RoundToInt(Cell * CaptionFloor));
 
             var solid = _chain.color;
             solid.a = 1f;

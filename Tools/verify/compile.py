@@ -641,6 +641,56 @@ def check_wallet_watch(files):
     return problems
 
 
+# A screen may not empty itself by hand. `View.ClearContent` is the only way.
+#
+# The fault this is here for was a blank page, and it was bought on the streak screen: a player
+# on night eight collected the night seven they were still owed, the board's window moved to the
+# next lap of the ladder, the page redrew itself - and everything on it vanished. Leaving the
+# screen and coming back repaired it, which is the tell.
+#
+# `View.Safe` is the safe-area layer every control, plate and board on these pages is built into,
+# it is created inside `Content`, and it is **cached on the base class**. A screen that destroys
+# `Content`'s children and calls `Build` again has thrown that layer away and still holds the
+# reference - and `Destroy` lands at the *end of the frame*, so for the whole of the rebuild the
+# reference is non-null and answers as a live object. So the page was rebuilt into a node that
+# had just been switched off and was collected a moment later. What survived were the few things
+# built into `Content` itself: the ground, the fireflies and the nav bar. Hence "completely
+# blank" rather than "half drawn".
+#
+# **Nothing else here could see it.** It compiles, every gate is green, the render mirror draws a
+# *state* and this is a *sequence* (invariant 48l), and a fixture cannot see it because edit mode
+# never reaches the end of a frame. Four screens had written the same loop out by hand and every
+# one of them carried it; the streak was simply the only one whose rebuild a player meets often.
+#
+# The rule is therefore a source rule, and it is the narrowest one that holds: reaching into
+# `Content`'s children in a file that also destroys things is the wipe, wherever it is spelled,
+# and the wipe belongs to the base class that owns the cache it has to drop.
+WIPES = re.compile(r"\bContent\s*\.\s*GetChild\s*\(")
+DESTROYS = re.compile(r"\bDestroy(Immediate)?\s*\(")
+
+
+def check_content_wipe(files):
+    problems = []
+
+    for path in files:
+        name = path.replace("\\", "/")
+        if name.endswith("/Flow.cs"):
+            continue
+
+        text = without_comments(io.open(path, encoding="utf-8", errors="replace").read())
+
+        hit = WIPES.search(text)
+        if not hit or not DESTROYS.search(text):
+            continue
+
+        line = text[:hit.start()].count("\n") + 1
+        problems.append("%s:%d  empties Content by hand - use View.ClearContent, which is the "
+                        "only thing that drops the cached Safe layer with it"
+                        % (name, line))
+
+    return problems
+
+
 def main():
     wanted = [a.lower() for a in sys.argv[1:]]
     print("Unity: %s" % DATA)
@@ -673,7 +723,11 @@ def main():
         for line in wallets:
             print("  wallet  FAILED  " + line)
 
-        if problems or boards or dtos or wallets:
+        wipes = check_content_wipe(every)
+        for line in wipes:
+            print("  rebuild FAILED  " + line)
+
+        if problems or boards or dtos or wallets or wipes:
             ok = False
 
     print("OK" if ok else "FAILED")

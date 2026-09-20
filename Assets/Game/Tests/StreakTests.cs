@@ -1114,6 +1114,47 @@ namespace GlimmerGrove.Tests
             Assert.Less(first - board, Rungs, "and night seven must fall inside that lap");
         }
 
+        /// <summary>
+        /// The board's window moves on the tap that empties the lap, and that is the fact the
+        /// screen keys its redraw on.
+        ///
+        /// <para>
+        /// The reported case, exactly: a player standing on night eight who had not taken
+        /// night seven. Before the tap the window is lap one, because that is where the oldest
+        /// thing owed is; after it the window is lap two, because night eight is now the
+        /// oldest. It is a different set of rows rather than different words on the same ones,
+        /// which is why <c>StreakScreen</c> asks this question rather than repainting — a page
+        /// that only repainted would leave the player looking at seven collected nights with
+        /// nothing to tap and their reward apparently gone.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TakingTheLastNightOfALapMovesTheBoardOntoTheNext()
+        {
+            int rungs = Ladder.Length;
+            int start = StartOf(rungs + 1);                    // a streak one night into lap two
+            int before = DailyStreak.DayOfRung(start, rungs - 1);   // everything but the crest taken
+
+            Assert.AreEqual(rungs, First(start, Day, before, Day, Ladder),
+                            "the crest of the first lap is what is owed");
+            Assert.AreEqual(1, DailyStreak.CycleStart(First(start, Day, before, Day, Ladder), rungs),
+                            "so the board is still showing the first lap");
+
+            // The tap. TryCollect moves the floor to the night's own calendar day, which is
+            // the whole of what collecting a night writes down.
+            int after = DailyStreak.DayOfRung(start, rungs);
+
+            int next = First(start, Day, after, Day, Ladder);
+            Assert.AreEqual(rungs + 1, next, "the first night of lap two is now the oldest owed");
+            Assert.AreEqual(rungs + 1, DailyStreak.CycleStart(next, rungs),
+                            "and the board has to move with it");
+
+            Assert.IsTrue(Can(start, Day, after, Day, rungs + 1, Ladder),
+                          "the night the new board opens on is takeable at once");
+            Assert.IsTrue(Ladder.Rung(rungs + 1).IsValid,
+                          "and it pays, because the ladder laps rather than running out");
+        }
+
         [Test]
         public void AStreakPastTheLadderKeepsPaying()
         {

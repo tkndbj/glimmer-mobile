@@ -73,7 +73,18 @@ namespace GlimmerGrove.Tests
 
             ChapterChoice.Write(index.FindChapter(ChapterId.Parse("c02_two")));
 
-            Assert.AreEqual("c02_two", PlayerPrefs.GetString(GladeKey, string.Empty));
+            // The **key** is the device's and names the mode, which is what this case is for.
+            Assert.AreNotEqual(string.Empty, PlayerPrefs.GetString(GladeKey, string.Empty),
+                               "the mode's own key is the one that was written");
+
+            // The **value** carries the account that wrote it, so the chapter comes back
+            // through `MapMemory` rather than off the preference: a view preference is right
+            // for the account that wrote it and wrong for every other, which is why a phone
+            // that switched account used to open the map where the previous one left it.
+            // Asserting the bare string here was true before that stamp existed, and this case
+            // had been red in the Editor ever since — a suite nobody can run green is a suite
+            // that hides the next real failure.
+            Assert.AreEqual("c02_two", MapMemory.Read(GladeKey));
         }
 
         [Test]

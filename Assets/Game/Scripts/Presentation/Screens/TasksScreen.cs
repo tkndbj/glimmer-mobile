@@ -223,13 +223,7 @@ namespace GlimmerGrove
 
         void Rebuild()
         {
-            for (int i = Content.childCount - 1; i >= 0; i--)
-            {
-                var child = Content.GetChild(i).gameObject;
-                child.SetActive(false);
-                Destroy(child);
-            }
-
+            ClearContent();
             Build();
         }
 

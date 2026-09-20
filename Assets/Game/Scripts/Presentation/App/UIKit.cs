@@ -540,17 +540,37 @@ namespace GlimmerGrove
         /// <para>
         /// So the size is worked out directly from <see cref="Text.preferredWidth"/>, which uGUI
         /// answers from cached glyph metrics in the same frame the caption was set — one ratio,
-        /// then a re-measure to catch the rounding. Unlike the button's version this is a
-        /// one-off rather than a property, because nothing rewrites a heading after it is drawn.
+        /// then a re-measure to catch the rounding.
+        /// </para>
+        /// <para>
+        /// <b><paramref name="from"/> is the size the caption was <em>designed</em> at, and it
+        /// has no default on purpose.</b> This shrinks and never grows, so a label re-fitted
+        /// against whatever the last string left behind is a ratchet: the streak's state pill
+        /// spends its life changing between "a night is waiting" and a countdown, and the
+        /// season's does between "41d 23h" and "23:59:07", so each long line filed the type down
+        /// a point or two and no short one ever gave it back. Nothing could see it — the label
+        /// fits, the mirror redraws from scratch every render, and a fixture's clock does not
+        /// tick — and the tell was a pill whose words got smaller the longer you sat on the page.
+        /// </para>
+        /// <para>
+        /// <b>It is required rather than optional because the compiler is the only gate that
+        /// cannot be forgotten.</b> Four callers on the siege hill already reset the size by
+        /// hand on the line above; two screens did not, and there was nothing in the signature
+        /// to say which was right. A parameter with no default makes the omission unwritable —
+        /// which is <c>Btn.Squeeze</c>'s rule (it measures from <see cref="Btn.LabelSize"/> so
+        /// the ad button's caption grows back as its countdown shortens) said to a bare label.
         /// </para>
         /// </summary>
-        public static Text OneLineLabel(Text label, float room, int minSize = 16)
+        public static Text OneLineLabel(Text label, float room, int from, int minSize)
         {
             if (label == null) return label;
 
             label.resizeTextForBestFit = false;
             label.horizontalOverflow = HorizontalWrapMode.Overflow;
             label.verticalOverflow = VerticalWrapMode.Overflow;
+
+            // Every fit starts from the design size, so a caption that gets shorter grows back.
+            if (from > 0) label.fontSize = from;
 
             if (room <= 0f || string.IsNullOrEmpty(label.text)) return label;
 
