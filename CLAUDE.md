@@ -215,7 +215,11 @@ Grove, and the bundle id can never move.
    **entitlement** (union-joined id sets), an arrangement is an **instruction** (merged by recency with a
    stamp per slot), and the fourth is the hall's seat (16q). Deliberately absent: any count of tiles. A slot
    id is written into the save, so invariant 1 applies to it.
-16a. **A resident is a companion, and the roster is written down once.**
+16a. **A resident is a companion, and the roster is written down once** — which is why the
+   companions taken off the front of the game on 2026-09-20 could not simply be deleted: the
+   roster is the grove's residents, the residents are in `groveWorth`, and `groveWorth` is a
+   published, server-adjudicated number. Nothing a player can reach draws a companion now; every
+   rule, id, price and the whole server half still stand, exactly as the Grovement does.
 16b. **The grove is a tile floor, and a tile is a slot** — hand-authored slots made the player's only
    decision which pre-placed dot got which sticker.
 16c. **A shop shelf is one idea used three times** (tab, browse atlas, asset scope), so the division is
@@ -339,7 +343,10 @@ Grove, and the bundle id can never move.
    threshold counts distinct reporters rather than taps.
 19j. **A card is asked for after the sync, never after the change, and the reply is proved.** Only
    `Settled` asks, and the card judged is built over the receipt's save, never the live ledgers.
-19k. **A board is one published document ordered on one field the card already carries, and adding one is a
+19k. **A board row carries what it is *ordered* on and what it *draws*, and a badge is the
+   second kind** — `rung` is on every row and orders nothing, so `sameRow` compares it or a
+   keeper wears yesterday's badge until some other field moves. **A board is one published
+   document ordered on one field the card already carries, and adding one is a
    row in a table.** The field must be one a card is ordered on *and* one the row prints; **a nought is
    absent rather than written**, because Firestore indexes a field only on documents carrying it; a board is
    about the *lane*, never a level; and **a retired board is worse than a missing one**, so
@@ -693,11 +700,21 @@ is where they are written down, not what they mean.
    authoring slip would otherwise hand out a badge over unmet lines, and both gates still error
    on the slip rather than absorbing it.
 52e. **A rank pays nothing**, because it is a reading of play that has already been paid for. The
-   day a rung pays a currency, invariant 13 starts applying to it and the ladder joins
-   `seed-config.mjs`; until then no server has heard of it.
+   day a rung pays a currency, invariant 13 starts applying to it. **The ladder is published
+   anyway, since 2026-09-20** — not because it pays, but because the badge went public (52h).
 52f. **A rung's badge and its two strings are derived from its id**, so `artnames.py` and `loc.py`
    see none of them and `check_ranks` walks the table instead. A rung renamed moves its picture in
    the same change.
+52h. **A badge on a stranger's screen is adjudicated, so the ladder is climbed twice.** A rank
+   stayed derived-and-stored-nowhere when it went public; what changed is *who* derives it —
+   `rungOf` recomputes the rung from the save the server already reads (19a), and the client's
+   own reading exists only so that reaching a rung marks the card as owing a publish, because a
+   rung reached by felling raiders moves no other field a visitor can see. The walk is written
+   once per side over a **source** (`IRankSource`: ledgers, or a save file), never twice; the
+   halves are held by `rankCases`; and a ladder the server cannot read is **truncated** at the
+   fault rather than dropped-and-continued, which would hand out the rung above it. A rung id is
+   not a spent id — nothing stores one — but an unknown one must draw as *nothing*, never as a
+   rectangle (`RankArt`, invariant 7b).
 52g. **Two things here are called a rank** — the percentile band a map node wears
    (`Social.RankTier`, 19c) and this ladder — so the nav bar's board tab reads **BOARDS** now and
    the fixture is `RankLadderTests` beside the older `RankTests`.
@@ -842,6 +859,15 @@ guess — verify offline.
 - **The rank badges:** `python Tools/make_rank_art.py --check` proves the seven shipped PNGs are
   what the tool cuts; `--contact` is the sheet, and it is the only thing that can answer whether
   the ladder reads as a ladder rather than as seven unrelated badges.
+- **The boards:** `python Tools/render_boards.py` (`--row`, `--mixed`, `--unranked`, `--empty`,
+  `--contact`). **`--row` is the one that matters** — a rank badge's whole meaning is its
+  silhouette, and the question "can you tell bronze from gold in a list" is only answerable at
+  1:1. `--unranked` is the state every board is in until the deploy lands, and `--empty` draws
+  all five refusals against the plate they are said on.
+- **Rank vectors:** `python Tools/make_rank_vectors.py --check` proves the committed `rankCases`
+  block is what the tool draws. The rule runs **offline on both sides** — `RankVectorTests`
+  through `TestJson` (29e) and `firebase/functions/test/grove.mjs`. It caught two real faults on
+  its first runs; do not let it become Editor-only.
 - **The ranks page:** `python Tools/render_ranks.py` (`--held 0`, `--held 7`, `--tall`,
   `--scroll`, `--map`, `--contact`). **`--tall` draws the whole scrolling page**, and it is the
   one that matters: every state but the first two is below the fold on a phone, so a sheet
@@ -924,6 +950,15 @@ guess — verify offline.
   `make_notification_icons.py` and `make_chest_art.py` each have `--check` (reproducibility) and `--contact`
   (whether it reads). **`--check` proves reproducibility and says nothing about quality.** Every art tool
   passes with the licensed pack absent, because the PNGs are committed.
+- **That a badge reaches a card and a board:** `node firebase/e2e/rank-badge.mjs` publishes the
+  same account twice, once below the first rung and once on it, and compares the two published
+  rungs. **Differential for `endless-xp.mjs`'s reason** — a `publishGrove` that has never heard
+  of `rungOf`, and a server whose `config/progression` carries no `ranks` block, both answer 200
+  and write a valid card with no badge on it, which on the device is indistinguishable from a
+  broken screen. It reads the ladder, the chapter and the glade count off the *published* config
+  so a retune cannot turn it red with a correct answer, and it asserts the **lifetime floor**,
+  which is the clause most likely to be missing and least likely to be noticed. **10/10 live**
+  (2026-09-20).
 - **That a copy is counted on the live server:** `node firebase/e2e/ward-copies.mjs` publishes
   one account's one loadout several times over, with one copy row and with four, and compares the
   seat counts. **Differential for `endless-xp.mjs`'s reason** — a `publishGrove` that has never
@@ -1113,10 +1148,13 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **Ranks** (52) — a seven-rung badge ladder, **derived and stored nowhere**: Cinderling,
   Silverwatch, Goldbrand, Duskcrown, Frostheart, Auroracrest, **Gemfire**. Every rung is a set of
   thresholds over readings the save already keeps, authored in `progression.json`, so the whole
-  ladder retunes without a build. It is drawn twice — a watched badge under the map's back key on
-  both tracks, and `RanksScreen`, which prints every line of every rung with the player's own
-  figure against it. The one thing it cost the save is a lifetime tally of the counted verbs
-  (v32), riding inside the existing `tasks` map. It pays nothing.
+  ladder retunes without a build. It is drawn **everywhere a player used to see a companion**:
+  a watched badge under the map's back key on both tracks, `RanksScreen`, the hub's top-bar seat,
+  the profile's medallion, every board row and every public profile. The one thing it cost the
+  save is a lifetime tally of the counted verbs (v32), riding inside the existing `tasks` map. It
+  pays nothing — and since **2026-09-20 it is also published**: `rungOf` derives the rung
+  server-side from the save it already reads, because a badge a stranger sees is adjudicated
+  (52h, 19a).
 - **One live mode, three hidden.** **Thornwatch**: `s01_thornwatch`, `s03_broodmarch`, `s04_barrowfell`,
   `s05_ashenhold`, `s06_thundercrag`, `s07_dustcrown` (ten rungs each) on the ordinary ladder, and
   `s02_endlesswatch` on an **Infinite** track beside it. The map draws no *mode* switcher and does draw the
@@ -1248,6 +1286,68 @@ the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-18),
 on a fresh clone).
 
 ## Owed
+
+**The badge went public on 2026-09-20 and the server half is live.** A rank used to be a
+private reading; it is on every board row and every public profile now, so it is adjudicated
+(52h). `rungOf` climbs the ladder over the save `publishGrove` already reads, `buildCard` writes
+`rung`, and `rowOf`/`topOf`/`readRows` carry it onto a board with `sameRow` comparing it.
+**Deployed and proved**: `publishGrove` **and `publishGroveBoards`**, by name (the CLI's
+analysis step times out at 10s on a first attempt and succeeds on a retry — the bundle itself
+loads in 444ms, so that is the tool, not the code), artifact read back for
+`rungOf`/`readLadder`/`lifetimeRows`; `config/progression` re-seeded and **diffed against a byte
+snapshot — exactly one field added, `ranks`, nothing removed and nothing changed**. No
+`firestore.rules` release: the rung is server-written on a server-written document and rides in
+no save key. Live green afterwards: `smoke-test.mjs` **172/172**, `ward-copies.mjs` 19/19,
+`endless-xp.mjs` 12/12, `delete-account.mjs` 14/14, and `rank-badge.mjs` **10/10**.
+
+**Both functions, and the second one is the lesson.** `rowOf` and `topOf` are the row
+projections and they live in `grove.ts` beside `buildCard` — so deploying `publishGrove` alone
+looks complete and is not: the *rebuild* runs inside `publishGroveBoards`, its own deployed
+function with its own bundle, which went on copying rows with no `rung` on them. The cards were
+right, the board was bare, and nothing anywhere said so. **A field added to a row shape is a
+deploy of every function that writes a row**, which is `publishGrove` (live placement) and
+`publishGroveBoards` (the fifteen-minute net).
+
+**What a green deploy still does not buy is a badge on a screen, and three separate things
+decide that.** (1) **A card only gains a rung when its owner next publishes** — nothing
+backfills, because the rung is derived at publish time from that save. (2) **A card is only
+published at all when `GrovePublishPolicy.WorthPublishing` says so**: grove worth ≥ 1 *or* a best
+wave > 0. With the Grovement held there is no way to build grove worth, so **the Infinite lane is
+now the only route onto any board**, and an account that has never run it has no card at all —
+which is the state the owner's own `Tekoworld` account is in (99 glades played, 0 endless rows,
+no card). (3) **The first rung is demanding against the live population**: run read-only over the
+nine real saves on 2026-09-20, only three would publish anything — `cinderling` for one,
+`silverwatch` for two, nothing for the other six. All three are content and retunable without a
+build; the second is the one worth thinking about.
+
+**The nine real cards were repaired by hand on 2026-09-20** rather than waiting for their owners
+to sync, the value in each case being exactly what the deployed `rungOf` computes from the same
+save and the same published config (`updateMask.fieldPaths=rung`, so nothing else on the
+document was touched, and the owner's next real publish overwrites it). Three earned one —
+`silverwatch`, `silverwatch`, `cinderling` — and six earned nothing, which is the ladder saying
+what it means rather than a fault. The Endless Watch board now draws three badges and two honest
+blanks.
+
+**Companions are off the front of the game as of 2026-09-20, and deliberately not deleted.** The
+hub's top-bar seat, the profile's medallion, every board row and every public profile wear a rank
+badge now; the profile's companions card and the public profile's are gone; `CompanionScreen`,
+`UnlockGoal` and the hub's companion goal box are deleted, and the splash no longer pins a
+portrait into the global set for the life of the process. **What still stands is the grove's
+half**, and invariant 16a is why: a resident *is* a companion, residents are counted into
+`groveWorth`, and `groveWorth` is a published server-adjudicated number — deleting the roster
+would have moved every card's score and reordered a live board. So `AvatarCatalog`,
+`CompanionLedger`, `CompanionArt`, `CompanionUnlockOverlay`, `CompanionRevealOverlay`, the
+`companions` block in `manifest.json`, `Art/Companions/` and the whole server half are untouched
+and unreachable, exactly as the Grovement is. **Two things owed**: `wear.wav` now has no caller
+(`sfxnames.py` warns; deleting audio without the Editor is how a dead Addressables entry fails
+`BuildPlayer`), and the retired `ui.profile.*` companion strings are left where they are, which
+is deliberate — a loc key names a sentence and may be re-minted (5f).
+
+**The boards screen grew a render mirror it never had.** `Tools/render_boards.py`, and the row
+went 132 units tall to 176 with the badge at 132 — a portrait is a face and reads at any size, a
+rank badge is a silhouette and at 84 the seven of them are one smudge. **What no mirror can
+answer** is whether a hundred of these scroll pleasantly, and whether a row with no badge reads
+as unranked rather than as unfinished — which is every row until the re-seed lands.
 
 **The rank ladder shipped on 2026-09-20.** Seven rungs (52), every one derived and stored
 nowhere, drawn as a badge under the map's back key and as `RanksScreen`.

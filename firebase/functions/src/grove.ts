@@ -51,6 +51,7 @@ import {
   MAX_STARS, MAX_LEVEL_ID_LENGTH, earnedCredits,
 } from "./progression";
 import { PreparedBlocklist, judgeName } from "./profanity";
+import { rungOf } from "./ranks";
 import { builtInBlocklist } from "./blocklist";
 
 // --------------------------------------------------------------------------- config
@@ -1197,6 +1198,21 @@ export interface GroveCardDoc {
   hallFacing?: number;
 
   /**
+   * The rank this keeper holds, as a rung id — the badge a board row and a public profile draw.
+   *
+   * **Derived here and never believed** (`rungOf`). The client publishes its own reading of the
+   * same save, but only so that reaching a rung marks the card as owing a publish; a rank is
+   * something strangers see, so invariant 19a governs it and what a stranger gets is what this
+   * server worked out from the document it read itself.
+   *
+   * **Absent rather than empty for an unranked keeper**, and absent is what every card written
+   * before this deployment says — so a client reads the two identically and draws no badge for
+   * either. It is also, deliberately, not indexed and not ordered on: no board sorts by rank,
+   * nothing pays for one, and the day either changes this stops being a picture.
+   */
+  rung?: string;
+
+  /**
    * The furthest wave this keeper has held out to on the Infinite lane — what the `endless`
    * board is ordered on. See `bestWave` for why it is bounded rather than recomputed.
    *
@@ -1268,6 +1284,7 @@ export function buildCard(
   uid: string,
   save: Record<string, unknown>,
   grove: GroveConfig,
+  progression: ProgressionConfig,
   worth: GroveWorth,
   level: number,
   nowUnix: number,
@@ -1370,6 +1387,17 @@ export function buildCard(
   const companions = heldCompanions(idSet(save.companionsOwned, 256), grove, level);
   const line = publishedLine(save, grove);
 
+  // The badge, derived from this same save rather than read off it (invariant 19a). The two
+  // figures handed in are ones this function's caller already recomputed — the keeper level
+  // from XP the save's own claim was refused on, and the lifetime waves from `endlessWaves`,
+  // whose two clamps are a trap worth owning in one place. Spread for Firestore's reason and
+  // omitted when empty for the document's: a keeper below the first rung publishes no rung,
+  // and so does every card written before this deployment.
+  const rung = rungOf(save, progression, {
+    keeperLevel: level,
+    lifetimeWaves: endlessWaves(save),
+  });
+
   return {
     name: boardName(confirmedName, uid, list),
     avatar: typeof wallet.avatarId === "string" ? wallet.avatarId.slice(0, 64) : "",
@@ -1381,6 +1409,7 @@ export function buildCard(
     placed,
     ...hallSeat(save),
     ...(wave > 0 ? { wave } : {}),
+    ...(rung.length > 0 ? { rung } : {}),
     ...(companions.length > 0 ? { companions } : {}),
     ...(line.length > 0 ? { line } : {}),
     builtUnix: nowUnix,
@@ -1452,6 +1481,16 @@ export interface RankedGrove {
    * and unlike the card's own field it is not in an index.
    */
   wave: number;
+
+  /**
+   * The badge this keeper wears, copied off their card. Absent for an unranked keeper and for
+   * every row written before the server derived one; both read as "no badge" on the client.
+   *
+   * Omitted rather than written as `""` for the reason the card omits it — a row is copied into
+   * a hundred-row document and an empty string in every one of them is a hundred keys buying
+   * nothing.
+   */
+  rung?: string;
 }
 
 /**
@@ -1652,6 +1691,7 @@ async function topOf(db: FirebaseFirestore.Firestore, boardId: string): Promise<
       score,
       stars: typeof data.stars === "number" ? Math.floor(data.stars) : 0,
       wave,
+      ...(typeof data.rung === "string" && data.rung.length > 0 ? { rung: data.rung } : {}),
     });
   }
 
@@ -1721,6 +1761,11 @@ export function rowOf(uid: string, card: GroveCardDoc): RankedGrove {
     score: typeof card.score === "number" ? Math.floor(card.score) : 0,
     stars: typeof card.stars === "number" ? Math.floor(card.stars) : 0,
     wave: typeof card.wave === "number" ? Math.floor(card.wave) : 0,
+
+    // Spread rather than written, for the card's own reason: Firestore refuses `undefined`,
+    // and an unranked keeper's row carries no key at all rather than an empty string in every
+    // one of a hundred rows.
+    ...(typeof card.rung === "string" && card.rung.length > 0 ? { rung: card.rung } : {}),
   };
 }
 
@@ -1756,6 +1801,7 @@ export function readRows(raw: unknown): RankedGrove[] {
       score: typeof row.score === "number" ? Math.floor(row.score) : 0,
       stars: typeof row.stars === "number" ? Math.floor(row.stars) : 0,
       wave: typeof row.wave === "number" ? Math.floor(row.wave) : 0,
+      ...(typeof row.rung === "string" && row.rung.length > 0 ? { rung: row.rung } : {}),
     });
   }
   return rows;
@@ -1824,7 +1870,12 @@ export function mergeRow(rows: RankedGrove[], row: RankedGrove, field: "score" |
 }
 
 function sameRow(a: RankedGrove, b: RankedGrove): boolean {
+  // The badge is compared like every other drawn field. Left out, a keeper who reached a rung
+  // without moving the figure their board is ordered on would go on wearing the old badge until
+  // something else about them changed — the same fault `GroveCard.Fingerprint` carries the note
+  // for, arriving one layer further down.
   return a.uid === b.uid && a.name === b.name && a.avatar === b.avatar && a.level === b.level
+    && (a.rung ?? "") === (b.rung ?? "")
       && a.score === b.score && a.stars === b.stars && a.wave === b.wave;
 }
 

@@ -4259,5 +4259,1212 @@
       "maxPercent": 1000,
       "bonus": 1000000000
     }
+  ],
+  "_rankComment": [
+    "What rank a save holds, derived twice and pinned here.",
+    "",
+    "A rank used to be a private badge derived on the device and stored nowhere (invariant",
+    "52). It is on a public board now, which is what invariant 19a is about: a number that",
+    "goes public stops being derived-and-trusted and becomes adjudicated. So the ladder is",
+    "climbed in two places — RankLadder.Held over a SaveRankSource in C#, and rungOf in",
+    "functions/src/ranks.ts — and the two are drawn side by side: the player's own map shows",
+    "the client's answer, every board row and public profile shows the server's.",
+    "",
+    "**A disagreement between them is silent.** Nothing throws, nothing is refused and no gate",
+    "goes red; a keeper simply wears one badge on their own screen and another on everybody",
+    "else's. These cases are the only instrument that can see it.",
+    "",
+    "`rankChapters` is the catalog a case is measured against and `rankLadder` the ladder it",
+    "climbs; a case may carry its own `ladder` instead. `levels`, `endless` and `lifetime` are",
+    "the save's rows in whichever shape each side stores them, `keeperLevel` and",
+    "`lifetimeWaves` are the two figures both sides are handed rather than derive, and `held`",
+    "is the rung id both must answer — empty for an account below the first rung.",
+    "",
+    "Written by Tools/make_rank_vectors.py — a third implementation, so a passing case has",
+    "been agreed by three copies that never read each other. Do not hand-edit."
+  ],
+  "rankChapters": [
+    {
+      "id": "ch_one",
+      "levels": [
+        "one_a",
+        "one_b",
+        "one_c"
+      ]
+    },
+    {
+      "id": "ch_two",
+      "levels": [
+        "two_a",
+        "two_b"
+      ]
+    }
+  ],
+  "rankLadder": [
+    {
+      "id": "first",
+      "requires": [
+        {
+          "measure": "levels_cleared",
+          "scope": "ch_one",
+          "target": 2
+        }
+      ]
+    },
+    {
+      "id": "second",
+      "requires": [
+        {
+          "measure": "stars",
+          "target": 8
+        },
+        {
+          "measure": "keeper_level",
+          "target": 5
+        }
+      ]
+    },
+    {
+      "id": "third",
+      "requires": [
+        {
+          "measure": "three_stars",
+          "scope": "ch_two",
+          "target": 2
+        },
+        {
+          "measure": "best_wave",
+          "scope": "two_a",
+          "target": 30
+        },
+        {
+          "measure": "raiders",
+          "target": 100
+        },
+        {
+          "measure": "runs",
+          "target": 5
+        }
+      ]
+    }
+  ],
+  "rankCases": [
+    {
+      "name": "an empty save holds no rung",
+      "levels": [],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "lifetimeWaves": 0,
+      "held": ""
+    },
+    {
+      "name": "a save with rows worth nothing holds no rung",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 0
+        },
+        {
+          "level": "one_b",
+          "stars": 0
+        }
+      ],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "lifetimeWaves": 0,
+      "held": ""
+    },
+    {
+      "name": "one glade is not two",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 1
+        }
+      ],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "lifetimeWaves": 0,
+      "held": ""
+    },
+    {
+      "name": "two glades of the named chapter take the first rung",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 1
+        },
+        {
+          "level": "one_b",
+          "stars": 1
+        }
+      ],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "lifetimeWaves": 0,
+      "held": "first"
+    },
+    {
+      "name": "two glades of the wrong chapter do not",
+      "levels": [
+        {
+          "level": "two_a",
+          "stars": 3
+        },
+        {
+          "level": "two_b",
+          "stars": 3
+        }
+      ],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "lifetimeWaves": 0,
+      "held": ""
+    },
+    {
+      "name": "a record naming a level no chapter ships counts for nothing",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "ghost_level",
+          "stars": 3
+        }
+      ],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "lifetimeWaves": 0,
+      "held": ""
+    },
+    {
+      "name": "a forged star count is worth three",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 99
+        },
+        {
+          "level": "one_b",
+          "stars": 99
+        }
+      ],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 9,
+      "lifetimeWaves": 0,
+      "held": "first"
+    },
+    {
+      "name": "and a third glade takes the line honestly, at three stars each",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 99
+        },
+        {
+          "level": "one_b",
+          "stars": 99
+        },
+        {
+          "level": "one_c",
+          "stars": 99
+        }
+      ],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 9,
+      "lifetimeWaves": 0,
+      "held": "second"
+    },
+    {
+      "name": "eight stars and the keeper level take the second",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        },
+        {
+          "level": "one_c",
+          "stars": 2
+        }
+      ],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 5,
+      "lifetimeWaves": 0,
+      "held": "second"
+    },
+    {
+      "name": "eight stars without the keeper level do not",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        },
+        {
+          "level": "one_c",
+          "stars": 2
+        }
+      ],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 4,
+      "lifetimeWaves": 0,
+      "held": "first"
+    },
+    {
+      "name": "nor the keeper level without the stars",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        }
+      ],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 40,
+      "lifetimeWaves": 0,
+      "held": "first"
+    },
+    {
+      "name": "a rung whose own lines are met is not held while the one below it is unmet",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 1
+        },
+        {
+          "level": "one_b",
+          "stars": 1
+        },
+        {
+          "level": "two_a",
+          "stars": 3
+        },
+        {
+          "level": "two_b",
+          "stars": 3
+        }
+      ],
+      "endless": [
+        {
+          "level": "two_a",
+          "wave": 60
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 900
+        },
+        {
+          "goal": "runs",
+          "count": 90
+        }
+      ],
+      "keeperLevel": 1,
+      "lifetimeWaves": 60,
+      "held": "first"
+    },
+    {
+      "name": "every line of every rung met takes the top",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        },
+        {
+          "level": "one_c",
+          "stars": 3
+        },
+        {
+          "level": "two_a",
+          "stars": 3
+        },
+        {
+          "level": "two_b",
+          "stars": 3
+        }
+      ],
+      "endless": [
+        {
+          "level": "two_a",
+          "wave": 30
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 100
+        }
+      ],
+      "keeperLevel": 12,
+      "lifetimeWaves": 30,
+      "held": "third"
+    },
+    {
+      "name": "one wave short of the line holds at the second",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        },
+        {
+          "level": "one_c",
+          "stars": 3
+        },
+        {
+          "level": "two_a",
+          "stars": 3
+        },
+        {
+          "level": "two_b",
+          "stars": 3
+        }
+      ],
+      "endless": [
+        {
+          "level": "two_a",
+          "wave": 29
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 100
+        }
+      ],
+      "keeperLevel": 12,
+      "lifetimeWaves": 29,
+      "held": "second"
+    },
+    {
+      "name": "a wave on the wrong level does not count for a scoped line",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        },
+        {
+          "level": "one_c",
+          "stars": 3
+        },
+        {
+          "level": "two_a",
+          "stars": 3
+        },
+        {
+          "level": "two_b",
+          "stars": 3
+        }
+      ],
+      "endless": [
+        {
+          "level": "one_a",
+          "wave": 900
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 100
+        }
+      ],
+      "keeperLevel": 12,
+      "lifetimeWaves": 900,
+      "held": "second"
+    },
+    {
+      "name": "one raider short holds at the second",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        },
+        {
+          "level": "one_c",
+          "stars": 3
+        },
+        {
+          "level": "two_a",
+          "stars": 3
+        },
+        {
+          "level": "two_b",
+          "stars": 3
+        }
+      ],
+      "endless": [
+        {
+          "level": "two_a",
+          "wave": 30
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 99
+        }
+      ],
+      "keeperLevel": 12,
+      "lifetimeWaves": 30,
+      "held": "second"
+    },
+    {
+      "name": "five cleared glades are five runs with no tally at all",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        },
+        {
+          "level": "one_c",
+          "stars": 3
+        },
+        {
+          "level": "two_a",
+          "stars": 3
+        },
+        {
+          "level": "two_b",
+          "stars": 3
+        }
+      ],
+      "endless": [
+        {
+          "level": "two_a",
+          "wave": 30
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 100
+        }
+      ],
+      "keeperLevel": 12,
+      "lifetimeWaves": 30,
+      "held": "third"
+    },
+    {
+      "name": "a tally under the floor does not lower it",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        },
+        {
+          "level": "one_c",
+          "stars": 3
+        },
+        {
+          "level": "two_a",
+          "stars": 3
+        },
+        {
+          "level": "two_b",
+          "stars": 3
+        }
+      ],
+      "endless": [
+        {
+          "level": "two_a",
+          "wave": 30
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 100
+        },
+        {
+          "goal": "runs",
+          "count": 1
+        }
+      ],
+      "keeperLevel": 12,
+      "lifetimeWaves": 30,
+      "held": "third"
+    },
+    {
+      "name": "a verb the save cannot prove counts only what was counted",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        },
+        {
+          "level": "one_c",
+          "stars": 3
+        },
+        {
+          "level": "two_a",
+          "stars": 3
+        },
+        {
+          "level": "two_b",
+          "stars": 3
+        }
+      ],
+      "endless": [
+        {
+          "level": "two_a",
+          "wave": 30
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 99
+        }
+      ],
+      "keeperLevel": 12,
+      "lifetimeWaves": 30,
+      "held": "second"
+    },
+    {
+      "name": "a forged wave is capped at the published ceiling",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        },
+        {
+          "level": "one_c",
+          "stars": 3
+        },
+        {
+          "level": "two_a",
+          "stars": 3
+        },
+        {
+          "level": "two_b",
+          "stars": 3
+        }
+      ],
+      "endless": [
+        {
+          "level": "two_a",
+          "wave": 1000000000
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 100
+        }
+      ],
+      "keeperLevel": 12,
+      "lifetimeWaves": 9999,
+      "held": "third"
+    },
+    {
+      "name": "a negative wave is nought and does not subtract",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        },
+        {
+          "level": "one_c",
+          "stars": 3
+        },
+        {
+          "level": "two_a",
+          "stars": 3
+        },
+        {
+          "level": "two_b",
+          "stars": 3
+        }
+      ],
+      "endless": [
+        {
+          "level": "two_a",
+          "wave": -9
+        },
+        {
+          "level": "two_a",
+          "wave": 30
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 100
+        }
+      ],
+      "keeperLevel": 12,
+      "lifetimeWaves": 30,
+      "held": "third"
+    },
+    {
+      "name": "a level id longer than a catalog could ship is refused",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        },
+        {
+          "level": "one_c",
+          "stars": 3
+        },
+        {
+          "level": "two_a",
+          "stars": 3
+        },
+        {
+          "level": "two_b",
+          "stars": 3
+        }
+      ],
+      "endless": [
+        {
+          "level": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "wave": 900
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 100
+        }
+      ],
+      "keeperLevel": 12,
+      "lifetimeWaves": 0,
+      "held": "second"
+    },
+    {
+      "name": "a refused row still spends one of the sixty-four",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        },
+        {
+          "level": "one_c",
+          "stars": 3
+        },
+        {
+          "level": "two_a",
+          "stars": 3
+        },
+        {
+          "level": "two_b",
+          "stars": 3
+        }
+      ],
+      "endless": [
+        {
+          "level": "",
+          "wave": 1
+        },
+        {
+          "level": "lane00",
+          "wave": 1
+        },
+        {
+          "level": "lane01",
+          "wave": 1
+        },
+        {
+          "level": "lane02",
+          "wave": 1
+        },
+        {
+          "level": "lane03",
+          "wave": 1
+        },
+        {
+          "level": "lane04",
+          "wave": 1
+        },
+        {
+          "level": "lane05",
+          "wave": 1
+        },
+        {
+          "level": "lane06",
+          "wave": 1
+        },
+        {
+          "level": "lane07",
+          "wave": 1
+        },
+        {
+          "level": "lane08",
+          "wave": 1
+        },
+        {
+          "level": "lane09",
+          "wave": 1
+        },
+        {
+          "level": "lane10",
+          "wave": 1
+        },
+        {
+          "level": "lane11",
+          "wave": 1
+        },
+        {
+          "level": "lane12",
+          "wave": 1
+        },
+        {
+          "level": "lane13",
+          "wave": 1
+        },
+        {
+          "level": "lane14",
+          "wave": 1
+        },
+        {
+          "level": "lane15",
+          "wave": 1
+        },
+        {
+          "level": "lane16",
+          "wave": 1
+        },
+        {
+          "level": "lane17",
+          "wave": 1
+        },
+        {
+          "level": "lane18",
+          "wave": 1
+        },
+        {
+          "level": "lane19",
+          "wave": 1
+        },
+        {
+          "level": "lane20",
+          "wave": 1
+        },
+        {
+          "level": "lane21",
+          "wave": 1
+        },
+        {
+          "level": "lane22",
+          "wave": 1
+        },
+        {
+          "level": "lane23",
+          "wave": 1
+        },
+        {
+          "level": "lane24",
+          "wave": 1
+        },
+        {
+          "level": "lane25",
+          "wave": 1
+        },
+        {
+          "level": "lane26",
+          "wave": 1
+        },
+        {
+          "level": "lane27",
+          "wave": 1
+        },
+        {
+          "level": "lane28",
+          "wave": 1
+        },
+        {
+          "level": "lane29",
+          "wave": 1
+        },
+        {
+          "level": "lane30",
+          "wave": 1
+        },
+        {
+          "level": "lane31",
+          "wave": 1
+        },
+        {
+          "level": "lane32",
+          "wave": 1
+        },
+        {
+          "level": "lane33",
+          "wave": 1
+        },
+        {
+          "level": "lane34",
+          "wave": 1
+        },
+        {
+          "level": "lane35",
+          "wave": 1
+        },
+        {
+          "level": "lane36",
+          "wave": 1
+        },
+        {
+          "level": "lane37",
+          "wave": 1
+        },
+        {
+          "level": "lane38",
+          "wave": 1
+        },
+        {
+          "level": "lane39",
+          "wave": 1
+        },
+        {
+          "level": "lane40",
+          "wave": 1
+        },
+        {
+          "level": "lane41",
+          "wave": 1
+        },
+        {
+          "level": "lane42",
+          "wave": 1
+        },
+        {
+          "level": "lane43",
+          "wave": 1
+        },
+        {
+          "level": "lane44",
+          "wave": 1
+        },
+        {
+          "level": "lane45",
+          "wave": 1
+        },
+        {
+          "level": "lane46",
+          "wave": 1
+        },
+        {
+          "level": "lane47",
+          "wave": 1
+        },
+        {
+          "level": "lane48",
+          "wave": 1
+        },
+        {
+          "level": "lane49",
+          "wave": 1
+        },
+        {
+          "level": "lane50",
+          "wave": 1
+        },
+        {
+          "level": "lane51",
+          "wave": 1
+        },
+        {
+          "level": "lane52",
+          "wave": 1
+        },
+        {
+          "level": "lane53",
+          "wave": 1
+        },
+        {
+          "level": "lane54",
+          "wave": 1
+        },
+        {
+          "level": "lane55",
+          "wave": 1
+        },
+        {
+          "level": "lane56",
+          "wave": 1
+        },
+        {
+          "level": "lane57",
+          "wave": 1
+        },
+        {
+          "level": "lane58",
+          "wave": 1
+        },
+        {
+          "level": "lane59",
+          "wave": 1
+        },
+        {
+          "level": "lane60",
+          "wave": 1
+        },
+        {
+          "level": "lane61",
+          "wave": 1
+        },
+        {
+          "level": "lane62",
+          "wave": 1
+        },
+        {
+          "level": "two_a",
+          "wave": 30
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 100
+        }
+      ],
+      "keeperLevel": 12,
+      "lifetimeWaves": 63,
+      "held": "second"
+    },
+    {
+      "name": "the waves verb is floored by what the lane proves",
+      "levels": [],
+      "endless": [
+        {
+          "level": "two_a",
+          "wave": 50
+        }
+      ],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "lifetimeWaves": 50,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "waves",
+              "target": 50
+            }
+          ]
+        }
+      ],
+      "held": "only"
+    },
+    {
+      "name": "and a tally over it still wins",
+      "levels": [],
+      "endless": [
+        {
+          "level": "two_a",
+          "wave": 10
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "waves",
+          "count": 50
+        }
+      ],
+      "keeperLevel": 1,
+      "lifetimeWaves": 10,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "waves",
+              "target": 50
+            }
+          ]
+        }
+      ],
+      "held": "only"
+    },
+    {
+      "name": "neither reaching the line holds no rung",
+      "levels": [],
+      "endless": [
+        {
+          "level": "two_a",
+          "wave": 10
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "waves",
+          "count": 20
+        }
+      ],
+      "keeperLevel": 1,
+      "lifetimeWaves": 10,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "waves",
+              "target": 50
+            }
+          ]
+        }
+      ],
+      "held": ""
+    },
+    {
+      "name": "a tally at the ceiling meets a line asking for the ceiling",
+      "levels": [],
+      "endless": [],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 999999999
+        }
+      ],
+      "keeperLevel": 1,
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "raiders",
+              "target": 999999999
+            }
+          ]
+        }
+      ],
+      "held": "only"
+    },
+    {
+      "name": "and one above it is clamped down to exactly the ceiling",
+      "levels": [],
+      "endless": [],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 2000000000
+        }
+      ],
+      "keeperLevel": 1,
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "raiders",
+              "target": 999999999
+            }
+          ]
+        }
+      ],
+      "held": "only"
+    },
+    {
+      "name": "an empty ladder holds nothing, which is a build with no ranks in its content",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 3
+        },
+        {
+          "level": "one_c",
+          "stars": 3
+        },
+        {
+          "level": "two_a",
+          "stars": 3
+        },
+        {
+          "level": "two_b",
+          "stars": 3
+        }
+      ],
+      "endless": [
+        {
+          "level": "two_a",
+          "wave": 30
+        }
+      ],
+      "lifetime": [
+        {
+          "goal": "raiders",
+          "count": 100
+        }
+      ],
+      "keeperLevel": 99,
+      "lifetimeWaves": 30,
+      "ladder": [],
+      "held": ""
+    }
   ]
 }

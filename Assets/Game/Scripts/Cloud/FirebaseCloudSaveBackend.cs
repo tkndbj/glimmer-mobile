@@ -1228,7 +1228,8 @@ namespace GlimmerGrove.Cloud
                         rows.Add(new Social.LeaderboardEntry(
                             rank, ownerId, Text(entry, "name"), Text(entry, "avatar"),
                             (int)ReadLong(entry, "level"), ReadLong(entry, "score"),
-                            (int)ReadLong(entry, "stars"), (int)ReadLong(entry, "wave")));
+                            (int)ReadLong(entry, "stars"), (int)ReadLong(entry, "wave"),
+                            Text(entry, "rung")));
 
                         if (rows.Count >= Social.LeaderboardBoard.MaxRows) break;
                     }
@@ -1432,7 +1433,13 @@ namespace GlimmerGrove.Cloud
                 (int)ReadLong(document, "hallFacing"),
                 companions,
                 line,
-                rungs);
+                rungs,
+
+                // The rank the server derived, not the one this card's owner claimed — see
+                // `rungOf` in functions/src/grove.ts. Absent on every card written before that
+                // deployment and on any keeper below the first rung, and both read as empty,
+                // which every drawing path already takes as "no badge".
+                Text(document, "rung"));
         }
 
         static IDictionary<string, object> ReadMap(IDictionary<string, object> reply, string key)

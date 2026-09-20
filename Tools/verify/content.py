@@ -4711,8 +4711,14 @@ def main():
             asks = ", ".join(f"{named} x{target}" for named, target in lines)
             print(f"       {order}. {rid:<13} {asks}")
 
-        print("       a rank is a badge and pays nothing, so nothing here reaches a server "
-              "(invariant 52)")
+        # This line said "nothing here reaches a server" until the badge went onto a board.
+        # It does now: `seed-config.mjs` publishes this ladder and `rungOf` climbs it, because
+        # a number that goes public becomes adjudicated (invariant 19a). What is still true is
+        # the half that matters - it pays nothing, which is what keeps invariant 13 off it.
+        print("       a rank pays nothing, so no currency here is adjudicated (invariant 52e) - "
+              "but the ladder is published, because the badge is")
+        print("       re-seed after any change here, or a board draws the badge the last seed "
+              "described (invariant 19a)")
 
     if tasks:
         slates = ", ".join(f"{n} {period}" for period, n in sorted(tasks["slates"].items()))

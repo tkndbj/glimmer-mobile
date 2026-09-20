@@ -1478,7 +1478,7 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
   // flag anywhere but through the predicate is how a takedown gets undone by this player's very
   // next sync with nothing anywhere noticing. The wallet is already open, so it costs no read.
   const card = buildCard(
-    uid, save, groveConfig, worth, level, nowUnix, publishableName(holding), list,
+    uid, save, groveConfig, config, worth, level, nowUnix, publishableName(holding), list,
     isGroveDenied(heldGrove(walletDoc as Record<string, unknown> | undefined))
   );
 

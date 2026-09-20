@@ -364,6 +364,12 @@ function buildProgressionConfig() {
         };
       })(),
       keeper: readKeeperCurve(progression),
+
+      // Read last because it is the only block that has to be proved against the *catalog*
+      // this same run derived: a rung scoped to a chapter nobody ships is a line that can
+      // never be met, which is a badge nobody can ever earn, and there is no other file in
+      // this project that can see both halves.
+      ranks: readRanks(progression, levelChapters),
     },
     products: readStore(progression),
     levelCount,
@@ -1403,6 +1409,122 @@ async function writeDoc(token, path, data, options = {}) {
 }
 
 // ------------------------------------------------------------------------- main
+/**
+ * The rank ladder, published so the server can derive a keeper's badge rather than believe one.
+ *
+ * **Why the server needs this at all.** A rank was a private badge derived on the device and
+ * stored nowhere (invariant 52), and nothing here had ever heard of it. It is drawn on a public
+ * board now, and invariant 19a is unambiguous about what that changes: a number that goes public
+ * stops being derived-and-trusted and becomes adjudicated. `rungOf` in `functions/src/ranks.ts`
+ * is the server's own reading, and this is what it reads the ladder from.
+ *
+ * **Refused rather than degraded, which is the opposite of what the client does with the same
+ * block.** `RankLadder.Resolve` drops a rung naming a measure it cannot read, because that is a
+ * newer content pack reaching an older client and taking the whole ladder off their screen would
+ * be worse. Nothing reaches this script that it did not read off the working tree a moment ago,
+ * so an unreadable rung here is an authoring mistake and the seeder's job is to stop it leaving
+ * the building — the same stance `readStreak` and `readEvents` take about a chest tier.
+ *
+ * **What it proves that no other gate can.** A scope names a chapter, and whether that chapter
+ * ships is decided by the manifest — which this run has already walked into `levelChapters`. A
+ * rung scoped to a withdrawn chapter is a line with no levels behind it: permanently unmeetable,
+ * so the rung above it is permanently unreachable, so the top of the ladder quietly stops
+ * existing. `content.py`'s `check_ranks` walks the same ladder against the same manifest, and
+ * the two are deliberately both there — that one gates the build, this one gates the deploy, and
+ * a re-seed from a shadow tree is exactly the path that skips the first.
+ */
+function readRanks(progression, levelChapters) {
+  const ID = /^[a-z0-9_]{1,32}$/;
+
+  // Mirrors `RankMeasures`' five derived ids. Everything else a rung may name is a counted
+  // verb read out of the lifetime tally by its own id, which is what makes a future mode's
+  // verb a rank requirement with no code anywhere — so an unknown measure cannot be refused
+  // here without refusing that, and is deliberately allowed through.
+  const SCOPED_TO_CHAPTER = new Set(["levels_cleared", "stars", "three_stars"]);
+  const SCOPED_TO_LEVEL = new Set(["best_wave"]);
+  const UNSCOPED = new Set(["keeper_level"]);
+
+  // Mirrors `LifetimeTally.Ceiling`. A target above it could never be met by anybody.
+  const CEILING = 999999999;
+  const MAX_RUNGS = 24;
+  const MAX_REQUIREMENTS = 8;
+
+  const ranks = progression.ranks;
+  if (!ranks || !Array.isArray(ranks.rungs) || ranks.rungs.length === 0) {
+    // Absent is legal and publishes nothing: no badge on any card, no badge on any row, and
+    // every client reads that exactly as it reads a card written before this deployment.
+    console.log("  ranks: no ladder in progression.json; no badge will be published");
+    return [];
+  }
+
+  if (ranks.rungs.length > MAX_RUNGS) {
+    throw new Error(`ranks lists ${ranks.rungs.length} rung(s), more than the supported ${MAX_RUNGS}`);
+  }
+
+  const chapters = new Set(Object.values(levelChapters));
+  const levels = new Set(Object.keys(levelChapters));
+  const seen = new Set();
+  const out = [];
+
+  for (const [index, rung] of ranks.rungs.entries()) {
+    if (!rung || !ID.test(rung.id ?? "")) {
+      throw new Error(`ranks rung ${index} has a bad id '${rung?.id}'`);
+    }
+    if (seen.has(rung.id)) throw new Error(`ranks rung '${rung.id}' is listed twice`);
+    seen.add(rung.id);
+
+    if (!Array.isArray(rung.requires) || rung.requires.length === 0) {
+      throw new Error(`ranks rung '${rung.id}' asks for nothing; every account would hold it`);
+    }
+    if (rung.requires.length > MAX_REQUIREMENTS) {
+      throw new Error(`ranks rung '${rung.id}' has ${rung.requires.length} requirement(s), ` +
+                      `more than the supported ${MAX_REQUIREMENTS}`);
+    }
+
+    const requires = rung.requires.map((line, at) => {
+      const measure = line?.measure ?? "";
+      if (!ID.test(measure)) {
+        throw new Error(`ranks rung '${rung.id}' requirement ${at} names no measure`);
+      }
+
+      const target = Math.floor(Number(line?.target ?? 0));
+      if (!Number.isFinite(target) || target < 1) {
+        throw new Error(`ranks rung '${rung.id}' asks for ${line?.target} of '${measure}'; ` +
+                        "a target below one is met by every account");
+      }
+      if (target > CEILING) {
+        throw new Error(`ranks rung '${rung.id}' asks for ${target} of '${measure}', above the ` +
+                        `${CEILING} a counter may ever reach; it could never be met`);
+      }
+
+      const scope = line?.scope ?? "";
+      if (scope.length > 0) {
+        if (UNSCOPED.has(measure)) {
+          throw new Error(`ranks rung '${rung.id}' scopes '${measure}' to '${scope}', and that ` +
+                          "measure is about the whole account; a scope it cannot honour would " +
+                          "be a sentence the ladder does not mean");
+        }
+        if (SCOPED_TO_CHAPTER.has(measure) && !chapters.has(scope)) {
+          throw new Error(`ranks rung '${rung.id}' scopes '${measure}' to chapter '${scope}', ` +
+                          "which this catalog does not ship; the line could never be met and " +
+                          "every rung above it would be unreachable");
+        }
+        if (SCOPED_TO_LEVEL.has(measure) && !levels.has(scope)) {
+          throw new Error(`ranks rung '${rung.id}' scopes '${measure}' to level '${scope}', ` +
+                          "which this catalog does not ship");
+        }
+      }
+
+      return scope.length > 0 ? { measure, scope, target } : { measure, target };
+    });
+
+    out.push({ id: rung.id, requires });
+  }
+
+  console.log(`  ranks: ${out.length} rung(s), every scope proved against the shipped catalog`);
+  return out;
+}
+
 const { config, levelCount, products } = buildProgressionConfig();
 
 // A season's pass price is one number in the manifest with nothing on the other side of it

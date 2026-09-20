@@ -21,6 +21,20 @@ namespace GlimmerGrove.Social
         public readonly int Stars;
 
         /// <summary>
+        /// The rank this keeper holds, as a rung id — the badge the row draws. Empty for a
+        /// keeper below the first rung, and for every row a server wrote before it derived one.
+        ///
+        /// <para>
+        /// <b>Called a rung and not a rank, deliberately.</b> <see cref="Rank"/> on this very
+        /// struct is the row's <em>position</em>, and invariant 52g is the note that two things
+        /// in this game are called a rank; one field away from the other is the last place that
+        /// ambiguity should be allowed to live. The wire spelling is <c>rung</c> for the same
+        /// reason.
+        /// </para>
+        /// </summary>
+        public readonly string RungId;
+
+        /// <summary>
         /// The furthest wave this keeper has held out to on the Infinite lane, or nought.
         ///
         /// <para>
@@ -34,8 +48,10 @@ namespace GlimmerGrove.Social
         public readonly int Wave;
 
         public LeaderboardEntry(int rank, string ownerId, string name, string avatarId,
-                                int keeperLevel, long score, int stars, int wave = 0)
+                                int keeperLevel, long score, int stars, int wave = 0,
+                                string rungId = null)
         {
+            RungId = rungId ?? string.Empty;
             Rank = rank < 1 ? 1 : rank;
             OwnerId = ownerId ?? string.Empty;
             Name = name ?? string.Empty;

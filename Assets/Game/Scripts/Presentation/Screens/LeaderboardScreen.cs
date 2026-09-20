@@ -1,8 +1,5 @@
-using GlimmerGrove.AssetPipeline;
-using System.Collections.Generic;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
-using GlimmerGrove.Progression;
 using GlimmerGrove.Social;
 using UnityEngine;
 using UnityEngine.UI;
@@ -55,9 +52,6 @@ namespace GlimmerGrove
     {
         public override string Track => "mus_menu";
 
-        /// <summary>The roster's portraits, kept alive for exactly as long as this screen is.</summary>
-        AssetHold _portraits;
-
         /// <summary>
         /// Everything above the list: the banner, and nothing else now. It was 470 while a
         /// standing box stood under the banner and 312 while two board tabs did; each removal
@@ -65,7 +59,29 @@ namespace GlimmerGrove
         /// begins in a strip of empty sky.
         /// </summary>
         const float HeaderHeight = 208f;
-        const float RowHeight = 132f;
+
+        /// <summary>
+        /// How tall a row is, and the badge is what decides it.
+        ///
+        /// <para>
+        /// <b>132 while a row carried a companion's head, 176 now.</b> A portrait is a face and
+        /// reads at any size; a rank badge is a piece of shaped metal whose whole meaning is in
+        /// its silhouette — bronze against silver against gold, wings against spikes — and at
+        /// 84 units the seven of them are one smudge. The badge is cut at 256 and drawn at 132
+        /// on the map and the ranks page (<c>RankBadge.MarkSize</c>, <c>RanksScreen</c>), so a
+        /// row that draws it smaller than every other screen in the game is the one place a
+        /// player cannot tell two ranks apart.
+        /// </para>
+        /// <para>
+        /// A taller row is fewer rows on a screen, which is the cost and is worth paying here:
+        /// this list is scrolled rather than scanned, and it is a hundred rows long however
+        /// many of them are visible at once.
+        /// </para>
+        /// </summary>
+        const float RowHeight = 176f;
+
+        /// <summary>The plate inside a row, and the badge on it. See <see cref="RowHeight"/>.</summary>
+        const float PlateWidth = 940f, PlateHeight = 160f, BadgeSize = 132f;
 
         /// <summary>
         /// Breathing room between the last row and the nav bar. The boards are a tab now, so
@@ -104,9 +120,12 @@ namespace GlimmerGrove
             BuildHeader();
             NavBar.Build(Content, NavBar.Tab.Ranks);
 
-            // Portraits, for the row avatars. Arriving from the profile or the roster the
-            // scope is usually warm and this repaints immediately.
-            _portraits = CompanionArt.Open(this, () => { if (Living) Repaint(); });
+            // **Nothing is opened for the badges, and that is the point of them being badges.**
+            // A row used to draw a companion, whose art is a scope this screen had to hold open
+            // for its whole life and repaint when it arrived (invariant 7b). The seven rank
+            // badges are small and global — they are already resident for the map's own readout
+            // — so a hundred rows cost no scope, no hold, no arrival repaint and no white
+            // rectangle while a load is in flight.
 
             // Asked for on arrival rather than at boot, so a player who never opens this
             // screen never pays for the read. Nothing here draws it any more — the profile is
@@ -122,8 +141,6 @@ namespace GlimmerGrove
         void OnDestroy()
         {
             GroveBoard.Published -= OnPublished;
-
-            _portraits?.Dispose();
         }
 
         /// <summary>Opens straight onto a particular board. Used by nothing yet; kept for a deep link.</summary>
@@ -239,11 +256,6 @@ namespace GlimmerGrove
             Fetch();
         }
 
-        void Repaint()
-        {
-            _grid?.Refresh();
-        }
-
         // ------------------------------------------------------------------ copy
         /// <summary>
         /// Six ways for a list to be empty, and each says which one it is.
@@ -302,7 +314,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// One row: place, portrait, name, worth.
+        /// One row: place, badge, name, figure.
         ///
         /// <para>
         /// Built once and rebound as it scrolls (<see cref="GridView"/>), so a hundred-row
@@ -314,7 +326,7 @@ namespace GlimmerGrove
         sealed class Row : IGridCell
         {
             readonly LeaderboardScreen _screen;
-            readonly Image _plate, _portrait;
+            readonly Image _plate, _badge;
             readonly Text _place, _name, _worth;
             readonly Btn _button;
 
@@ -337,30 +349,36 @@ namespace GlimmerGrove
                 // face and its own highlight, and none of those survives being multiplied by a
                 // colour.
                 _button = UIKit.Button("Hit", Root, Art.S("Ui/" + Skins.PlateBlue),
-                                       new Vector2(940f, 118f),
+                                       new Vector2(PlateWidth, PlateHeight),
                                        new Vector2(.5f, .5f), Vector2.zero, Open);
                 _plate = _button.GetComponent<Image>();
 
                 _place = UIKit.Shrinkable(
-                    UIKit.Titled("Place", _plate.transform, string.Empty, 34,
+                    UIKit.Titled("Place", _plate.transform, string.Empty, 40,
                                  Pal.Cream, TextAnchor.MiddleCenter,
-                                 new Vector2(110f, 60f), new Vector2(0f, .5f), new Vector2(74f, 0f),
-                                 3f, 2f), 18);
+                                 new Vector2(120f, 66f), new Vector2(0f, .5f), new Vector2(78f, 0f),
+                                 3f, 2f), 20);
 
-                _portrait = UIKit.Img("Portrait", _plate.transform, null, Color.white,
-                                      new Vector2(84f, 84f), new Vector2(0f, .5f), new Vector2(180f, 0f));
-                _portrait.preserveAspect = true;
+                // The badge. `preserveAspect`, because the seven are not one shape: a crowned
+                // one is wider than it is tall and a plain hexagon is not, and a set stretched
+                // to a square box is a ladder whose rungs are different animals. It never draws
+                // a raycast, so the whole plate stays one target.
+                _badge = UIKit.Img("Badge", _plate.transform, null, Color.white,
+                                   new Vector2(BadgeSize, BadgeSize), new Vector2(0f, .5f),
+                                   new Vector2(214f, 0f));
+                _badge.preserveAspect = true;
+                _badge.raycastTarget = false;
 
                 _name = UIKit.Shrinkable(
-                    UIKit.Titled("Name", _plate.transform, string.Empty, 30,
+                    UIKit.Titled("Name", _plate.transform, string.Empty, 34,
                                  new Color(1f, .97f, .90f), TextAnchor.MiddleLeft,
-                                 new Vector2(400f, 44f), new Vector2(0f, .5f), new Vector2(440f, 16f),
-                                 3f, 2f), 18);
+                                 new Vector2(430f, 50f), new Vector2(0f, .5f), new Vector2(515f, 24f),
+                                 3f, 2f), 20);
 
                 _worth = UIKit.Shrinkable(
-                    UIKit.Titled("Worth", _plate.transform, string.Empty, 26, Pal.Gold,
-                                 TextAnchor.MiddleLeft, new Vector2(400f, 34f),
-                                 new Vector2(0f, .5f), new Vector2(440f, -26f), 3f, 0f), 16);
+                    UIKit.Titled("Worth", _plate.transform, string.Empty, 28, Pal.Gold,
+                                 TextAnchor.MiddleLeft, new Vector2(430f, 40f),
+                                 new Vector2(0f, .5f), new Vector2(515f, -26f), 3f, 0f), 18);
             }
 
             public void Bind(int index)
@@ -381,7 +399,13 @@ namespace GlimmerGrove
                     : Loc.Format("ui.board.row_worth", Compact.Number(_entry.Score),
                                  _entry.KeeperLevel);
 
-                CompanionArt.Paint(_portrait, AvatarCatalog.Resolve(_entry.AvatarId));
+                // **The badge is the server's answer, and an absent one draws nothing.** Below
+                // the first rung is an ordinary state and so is a card published before this
+                // server learned to derive a rung, and neither may be drawn as a greyed picture
+                // of somebody else's badge — that would be a sentence the row does not mean.
+                // `RankArt` switches the node off rather than handing it a null sprite, which
+                // is a white rectangle (invariant 7b) and would be one on every row at once.
+                RankArt.Paint(_badge, _entry.RungId);
 
                 // The player's own row is lit rather than merely present. A list somebody is
                 // on and cannot find is a list that did not answer the question they opened it

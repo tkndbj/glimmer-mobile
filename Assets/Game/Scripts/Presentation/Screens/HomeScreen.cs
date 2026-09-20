@@ -165,20 +165,37 @@ namespace GlimmerGrove
                                  new Vector2(620f, 138f), new Vector2(0f, .5f), new Vector2(352f, 0f));
 
             // The kit's inset slot — the one piece in it that reads as a hole rather than as a
-            // thing standing on the screen, which is what an avatar wants to sit in.
-            var frame = UIKit.Img("Avatar", card.transform, Art.S("Ui/" + Skins.Slot), Color.white,
+            // thing standing on the screen, which is what a seal wants to sit in.
+            var frame = UIKit.Img("Seat", card.transform, Art.S("Ui/" + Skins.Slot), Color.white,
                                   new Vector2(116f, 116f), new Vector2(0f, .5f), new Vector2(70f, 0f));
-            var face = UIKit.Img("Face", frame.transform, null, Color.white,
-                                 new Vector2(84f, 84f), new Vector2(.5f, .5f), new Vector2(0f, 2f));
+            var face = UIKit.Img("Badge", frame.transform, null, Color.white,
+                                 new Vector2(88f, 88f), new Vector2(.5f, .5f), new Vector2(0f, 2f));
             face.preserveAspect = true;
+            face.raycastTarget = false;
 
-            // The companion the player chose, not a hardcoded critter. Animated when it
-            // has frames, which the boot preload has already warmed.
-            CompanionArt.Paint(face, Profile.Avatar, animate: true);
-            var fb = face.GetComponent<Flipbook>();
-            if (fb) fb.Offset = 3;
+            // **The rank this keeper holds**, where the companion they were wearing used to be.
+            // Drawn rather than watched, which is the exception `RankBadge` is not: this bar is
+            // rebuilt whenever the hub is entered and a rank cannot move while the hub is
+            // standing — every reading behind one is recorded by finishing a run, and finishing
+            // a run leaves this screen. The keeper level beside it has always been drawn the
+            // same way, for the same reason.
+            //
+            // The first rung dimmed for an account below it, exactly as the map's badge and the
+            // profile's medallion draw it: a player who has not reached Cinderling is the player
+            // it is for, and an empty seat invites nobody. Alpha and never a tint — a multiply
+            // takes bronze to mud (invariant 44g).
+            var ladder = Ranks.RankLedger.Ladder;
+            var heldRung = Ranks.RankLedger.Held;
+            var shownRung = heldRung ?? ladder.At(1);
 
-            var rank = UIKit.Img("RankBadge", frame.transform, Art.Disc(64), Pal.Gold,
+            if (shownRung == null) face.enabled = false;
+            else
+            {
+                face.sprite = Art.S(shownRung.Icon);
+                face.color = heldRung != null ? Color.white : new Color(1f, 1f, 1f, .38f);
+            }
+
+            var rank = UIKit.Img("LevelDisc", frame.transform, Art.Disc(64), Pal.Gold,
                                  new Vector2(50f, 50f), new Vector2(1f, 0f), new Vector2(-4f, 4f));
             UIKit.Titled("N", rank.transform, Profile.Rank.ToString(), 30, new Color(.32f, .21f, .06f),
                          TextAnchor.MiddleCenter, outline: 0f, shadow: 0f);
@@ -1316,57 +1333,72 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The next companion the keeper level will unlock, and how far along the way the
-        /// player already is. False when the roster holds nothing further, which is what
-        /// hands the whole row to the streak.
+        /// The rung being climbed: its badge, its name, how many of its lines are met and a bar
+        /// across the lot.
         ///
         /// <para>
-        /// The rank bar in the card at the top measures progress <em>through</em> the current
-        /// rank, which has a specific weakness: it empties every time it fills, and it never
-        /// says what any of it is for. This measures the span between the unlock just earned
-        /// and the one coming, and names it. A player four ranks into a five-rank span sees a
-        /// bar four fifths full because it is four fifths full — the endowed-progress effect
-        /// used honestly, as a change of framing rather than a fabricated head start. See
-        /// <see cref="UnlockGoal"/>.
+        /// <b>This box used to be the next companion the keeper level would hand over.</b> The
+        /// roster is gone, and what replaced it is the thing that was always the better answer:
+        /// a rank is the game's own ladder, it is named, it has a picture, and — unlike a rank
+        /// bar — it does not empty every time it fills, because a rung asks for several things
+        /// at once and the bar is the mean of them (<see cref="Ranks.RankLedger.Progress01"/>).
+        /// That is the endowed-progress framing the companion version was written for, kept, and
+        /// now pointed at something the player is actually working toward.
+        /// </para>
+        /// <para>
+        /// <b>It only ever draws when the catalog has no season at all</b> — see
+        /// <see cref="BuildFocusBox"/>. The shipped season recurs, so this is the state a build
+        /// standing before the first window opens is in, and the one a content push leaves
+        /// behind for good. It is kept rather than deleted because that state is real and a box
+        /// with a gap in it is worse than either of them.
+        /// </para>
+        /// <para>
+        /// Drawn once per navigation and not repainted, exactly as the event box beside it is: a
+        /// rank cannot move while this screen is up, because every reading behind one is recorded
+        /// by finishing a run and finishing a run leaves the hub.
         /// </para>
         /// </summary>
         bool BuildGoalBox(float w)
         {
-            var goal = UnlockGoal.Next(Profile.Level);
+            var next = Ranks.RankLedger.Next;
 
-            // Nothing left to unlock. Drawing an empty box would be worse than drawing none:
-            // a goal bar with no goal reads as something the game forgot to fill in.
-            if (!goal.IsValid) return false;
+            // Nothing left to climb, or no ladder at all in this build's content. Drawing an
+            // empty box would be worse than drawing none — a goal bar with no goal reads as
+            // something the game forgot to fill in — and `RankLadder` answers an empty ladder
+            // honestly rather than standing a built-in one in for it.
+            if (next == null) return false;
 
             float gx = -w * .5f + 115f;
 
-            // The meta says the condition rather than the state — "at rank 8" rather than
-            // "locked" — which is the same job the event's countdown does on the other box:
-            // both name what the player is waiting on, and only one of the two is useful.
-            var card = FeatureCard(_focusBox, w, Skins.PlateViolet, Pal.Cream, .38f, () => Flow.Go<ProfileScreen>());
-            FeatureHeader(card, w, Loc.Get(goal.NameKey), Pal.Bloom,
-                          Loc.Format("ui.home.at_rank", goal.AtLevel));
+            var card = FeatureCard(_focusBox, w, Skins.PlateViolet, Pal.Cream, .38f,
+                                   () => Flow.Go<RanksScreen>());
 
-            var portrait = UIKit.Img("Face", card, null, Color.white,
-                                     new Vector2(132f, 132f), new Vector2(.5f, .5f),
-                                     new Vector2(gx, 4f));
-            portrait.preserveAspect = true;
-            CompanionArt.Paint(portrait, AvatarCatalog.Find(goal.AvatarId), animate: false);
+            // The meta names what is being climbed rather than the state of it, which is the
+            // job the event's countdown does on the other box.
+            FeatureHeader(card, w, Loc.Get(next.NameKey), Pal.Bloom,
+                          Loc.Get("ui.home.next_rank"));
 
-            // Locked, and shown as such. The picture is the reason to care; dimming it is
-            // what makes it a thing to earn rather than a thing already owned.
-            //
-            // Only once the art has actually arrived, though: CompanionArt hides the frame
-            // by dropping alpha to zero when a portrait is missing, and an Image with no
-            // sprite draws a white rectangle rather than a blank. Overwriting that alpha
-            // unconditionally is how a locked companion becomes a grey slab on a slow load.
-            if (portrait.sprite != null) portrait.color = new Color(.42f, .48f, .54f, .95f);
+            var badge = UIKit.Img("Badge", card, Art.S(next.Icon), Color.white,
+                                  new Vector2(132f, 132f), new Vector2(.5f, .5f),
+                                  new Vector2(gx, 4f));
+            badge.preserveAspect = true;
+            badge.raycastTarget = false;
 
-            FeatureValue(card, w, goal.RanksToGo.ToString(), Pal.Cream,
-                         Loc.Get(goal.RanksToGo == 1 ? "ui.home.rank_left" : "ui.home.ranks_left"),
-                         Pal.Bloom);
+            // Unearned, and shown as such. Alpha rather than a tint, because `Image.color` is a
+            // multiply and would take the badge toward black along its own hue — every one of
+            // these is saturated metal and a multiply turns bronze to mud (invariant 44g).
+            badge.color = new Color(1f, 1f, 1f, .55f);
 
-            FeatureBar(FeatureStrip(card, w), w, goal.Progress01, Pal.Bloom);
+            // Lines met out of lines asked, which is the one figure that is honest for every
+            // rung whatever it asks about: a rung wanting ten glades and two hundred and fifty
+            // battles has no single number behind it, which is the same reason the bar is the
+            // mean of its lines rather than a sum.
+            int met = next.MetCount(GlimmerGrove.Content.GameContent.Index);
+
+            FeatureValue(card, w, Loc.Format("ui.home.fraction", met, next.Requirements.Count),
+                         Pal.Cream, Loc.Get("ui.home.lines_met"), Pal.Bloom);
+
+            FeatureBar(FeatureStrip(card, w), w, Ranks.RankLedger.Progress01, Pal.Bloom);
             return true;
         }
 

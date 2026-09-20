@@ -28,24 +28,24 @@ namespace GlimmerGrove
     /// <para>
     /// <b>It draws a <see cref="GroveCard"/> and nothing else</b>, which is what makes it
     /// read-only by construction rather than by discipline: there is nothing here to write to.
-    /// Everything it shows is a field the server published, and the two fields it added for this
-    /// screen — the companions bought and the line arranged — are the same facts the score was
-    /// computed from, so the portraits and the number under them cannot disagree.
+    /// Everything it shows is a field the server published, and the rank on the medallion is the
+    /// one the server <em>derived</em> from the same save the score came from (invariant 19a), so
+    /// the badge and the figures under it cannot disagree.
     /// </para>
     /// <para>
     /// <b>Ids this build does not know are drawn as nothing rather than as an error</b>, exactly
-    /// as a visited grove's unknown pieces are. A visitor one content drop behind meets
-    /// companions and turrets that do not exist for them yet:
-    /// <see cref="AvatarCatalog.Resolve"/> falls back to the starter and
-    /// <see cref="WardLine.Resolve"/> to the roster's, so a slightly plainer profile is what
-    /// arrives rather than a refusal.
+    /// as a visited grove's unknown pieces are. A visitor one content drop behind meets a rung
+    /// and turrets that do not exist for them yet: <see cref="RankArt.Paint"/> draws no badge
+    /// and <see cref="WardLine.Resolve"/> falls back to the roster's starter, so a slightly
+    /// plainer profile is what arrives rather than a refusal.
     /// </para>
     /// <para>
-    /// <b>Two scopes, both released with the screen.</b> The companion roster's portraits and
-    /// the four turret bodies this keeper stands — never the roster's twenty, which is what the
-    /// shelf's atlas is for (invariants 7b and 16c). Both arrive asynchronously, so every cell
-    /// they fill is repainted when they land and every <c>Image</c> begins with no sprite and
-    /// disabled: an <c>Image</c> with no sprite is a white rectangle, not a blank.
+    /// <b>One scope, released with the screen:</b> the four turret bodies this keeper stands —
+    /// never the roster's thirty, which is what the shelf's atlas is for (invariants 7b and
+    /// 16c). It arrives asynchronously, so every cell it fills is repainted when it lands and
+    /// every <c>Image</c> begins with no sprite and disabled: an <c>Image</c> with no sprite is
+    /// a white rectangle, not a blank. <b>The badge needs no scope at all</b> — the seven are
+    /// small and global, and already resident for the map's own readout.
     /// </para>
     /// </summary>
     public sealed class PublicProfileScreen : View
@@ -75,7 +75,7 @@ namespace GlimmerGrove
         bool _reporting;
 
         BusyVeil _busy;
-        AssetHold _portraits, _turrets;
+        AssetHold _turrets;
 
         /// <summary>The turret cells, in colour order, painted when the scope lands.</summary>
         readonly List<Image> _bodies = new List<Image>(WardLine.Colours.Length);
@@ -111,15 +111,11 @@ namespace GlimmerGrove
 
             _busy = BusyVeil.Attach(Safe, looking);
 
-            // Arriving from a board the scope is usually warm and this repaints immediately.
-            _portraits = CompanionArt.Open(this, () => { if (Living) BuildBody(); });
-
             Open();
         }
 
         void OnDestroy()
         {
-            _portraits?.Dispose();
             _turrets?.Dispose();
         }
 
@@ -222,7 +218,6 @@ namespace GlimmerGrove
             {
                 BuildKeeperCard();
                 BuildWatchCard();
-                BuildCompanionCard();
                 BuildLineCard();
 
                 // **The grove card is held**, with the feature it was a door into. It carried
@@ -301,11 +296,20 @@ namespace GlimmerGrove
             var ring = UIKit.Img("Ring", medallion.transform, Art.Ring(256, 13f), Pal.A(Pal.Gold, .92f));
             UIKit.StretchTo((RectTransform)ring.transform, 0, 0, 0, 0);
 
-            var face = UIKit.Img("Critter", medallion.transform, null, Color.white,
-                                 new Vector2(186f, 186f), new Vector2(.5f, .5f), new Vector2(0f, 6f));
+            // **The badge the server derived for them, and nothing if it derived none.** A
+            // rung this build has never heard of draws nothing rather than a rectangle — that
+            // is `RankArt`'s whole reason, and it matters more here than on a board row: a
+            // visitor may be a content drop behind the keeper they are looking at.
+            //
+            // An unranked keeper leaves the medallion empty rather than drawing the first rung
+            // dimmed. On the player's own profile that dimmed badge is an invitation; here it
+            // would be a sentence about what somebody else has not done, which is exactly what
+            // this screen refuses to draw anywhere else (nothing unheld is drawn at all).
+            var face = UIKit.Img("Badge", medallion.transform, null, Color.white,
+                                 new Vector2(186f, 186f), new Vector2(.5f, .5f), new Vector2(0f, 4f));
             face.preserveAspect = true;
-            CompanionArt.Paint(face, _card.Companion());
-            Tween.Bob((RectTransform)face.transform, 7f, 3.2f);
+            face.raycastTarget = false;
+            RankArt.Paint(face, _card.RungId);
 
             var badge = UIKit.Img("LevelBadge", medallion.transform, Art.Disc(128), Pal.Gold,
                                   new Vector2(92f, 92f), new Vector2(1f, 0f), new Vector2(-6f, 6f));
@@ -388,106 +392,6 @@ namespace GlimmerGrove
                              new Vector2(0f, .5f), new Vector2(WatchTextX, -44f), 3f, 0f), 18);
         }
 
-        // ---------------------------------------------------------- the companions
-        /// <summary>
-        /// Which companions this keeper has gathered.
-        ///
-        /// <para>
-        /// <b>Held is asked of the card, not of the catalog</b> — <see cref="GroveCard.Holds"/>
-        /// composes the same two halves the player's own profile composes
-        /// (<see cref="CompanionLedger.IsHeld(AvatarDefinition, int, System.Func{string, bool})"/>),
-        /// over *their* purchases and *their* keeper level. Asking
-        /// <see cref="AvatarCatalog.ReachedBy"/> here would answer half the rule under a name
-        /// promising all of it, which is invariant 15a's trap said about somebody else's screen.
-        /// </para>
-        /// <para>
-        /// <b>Nothing here is a control, and nothing unheld is drawn at all.</b> No prices, no
-        /// padlocks and no tap: a padlock on a stranger's profile says "they have not bought
-        /// this", which is not a fact this screen has any business drawing attention to — and a
-        /// grid of thirty-one discs with nine lit reads as an inventory of somebody else's gaps
-        /// rather than as their collection. The count in the corner says how far along they are;
-        /// the grid says what they have.
-        /// </para>
-        /// </summary>
-        void BuildCompanionCard()
-        {
-            var roster = AvatarCatalog.All;
-
-            // **What they hold, not what the roster is.** Every companion drawn dim is a
-            // sentence about what somebody else has *not* bought, on a screen with no control to
-            // do anything about it — thirty-one discs of which nine are lit reads as an
-            // inventory of their gaps rather than as a collection. Held-only reads as theirs,
-            // and it is also what keeps the card proportional to what they have done: a keeper
-            // who has gathered two draws two, and the count in the corner says the rest.
-            var held = new List<AvatarDefinition>();
-            foreach (var avatar in roster) if (_card.Holds(avatar)) held.Add(avatar);
-
-            const int PerRow = 6;
-            const float Cell = 148f, Step = 156f, RowGap = 26f;
-            const float TitleRoom = 96f, Foot = 24f;
-
-            int rows = Mathf.Max(1, (held.Count + PerRow - 1) / PerRow);
-
-            // A keeper with none draws one short line rather than an empty grid, because an
-            // empty grid says the same thing a failed load says — `AdOfferState`'s rule, which
-            // this screen follows everywhere else.
-            float height = held.Count > 0
-                ? TitleRoom + rows * Cell + (rows - 1) * RowGap + Foot
-                : TitleRoom + 70f;
-
-            var card = Section("Companions", height, 2);
-            CardTitle(card, "ui.profile.companions");
-
-            UIKit.Shrinkable(
-                UIKit.Titled("Count", card,
-                             Loc.Format("ui.profile.unlocked", held.Count, roster.Count),
-                             26, new Color(1f, .96f, .88f, .60f), TextAnchor.MiddleRight,
-                             new Vector2(300f, 36f), new Vector2(1f, 1f), new Vector2(-190f, -44f),
-                             3f, 0f), 18);
-
-            if (held.Count == 0)
-            {
-                UIKit.Shrinkable(
-                    UIKit.Titled("None", card, Loc.Get("ui.profile.public_no_companions"), 26,
-                                 new Color(1f, .96f, .88f, .55f), TextAnchor.MiddleCenter,
-                                 new Vector2(CardWidth - 160f, 40f), new Vector2(.5f, 1f),
-                                 new Vector2(0f, -(TitleRoom + 20f)), 3f, 0f), 18);
-                return;
-            }
-
-            for (int i = 0; i < held.Count; i++)
-            {
-                int row = i / PerRow;
-                int col = i % PerRow;
-
-                // Each row is centred on its own count, so a final short row does not lean left.
-                int inRow = Mathf.Min(PerRow, held.Count - row * PerRow);
-                float x = (col - (inRow - 1) * .5f) * Step;
-                float y = -(TitleRoom + row * (Cell + RowGap) + Cell * .5f);
-
-                var disc = UIKit.Img("A_" + held[i].Id, card, Art.Disc(160),
-                                     Pal.A(Pal.Hex("#08333C"), .92f),
-                                     new Vector2(Cell, Cell), new Vector2(.5f, 1f),
-                                     new Vector2(x, y));
-
-                // The one they are wearing is ringed in gold, which is the only distinction
-                // this card draws — it is the companion on their row on the board, and a
-                // profile that could not say which is the one thing the row already said.
-                bool worn = string.Equals(held[i].Id, _card.AvatarId,
-                                          System.StringComparison.Ordinal);
-
-                var ring = UIKit.Img("Ring", disc.transform, Art.Ring(160, worn ? 9f : 6f),
-                                     worn ? Pal.A(Pal.Gold, .95f) : new Color(1f, 1f, 1f, .22f));
-                UIKit.StretchTo((RectTransform)ring.transform, 0, 0, 0, 0);
-
-                var portrait = UIKit.Img("Face", disc.transform, null, Color.white,
-                                         new Vector2(Cell - 44f, Cell - 44f),
-                                         new Vector2(.5f, .5f), new Vector2(0f, 4f));
-                portrait.preserveAspect = true;
-                portrait.raycastTarget = false;
-                CompanionArt.Paint(portrait, held[i]);
-            }
-        }
 
         // ---------------------------------------------------------------- the line
         /// <summary>

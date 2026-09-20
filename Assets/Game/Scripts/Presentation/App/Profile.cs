@@ -240,14 +240,16 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Keeps the worn companion's art resident. Called at boot and on every change;
-        /// one 45 KB portrait, and its flipbook only if it has one.
+        /// Keeps the worn companion's art resident — <b>for the grove alone</b>, which is held.
         ///
-        /// Pinned before it is warmed, because on a change the portrait is usually
-        /// already loaded — into the picker's scope, which is about to be released. Pin
-        /// moves it to the global set so closing the picker cannot free the companion
-        /// the hub is about to draw. For art nothing has loaded yet the pin does
-        /// nothing and the preload does the work.
+        /// <para>
+        /// <b>No longer called from the boot path.</b> It pinned one portrait into the global
+        /// set, which is to say never freed it, so that the hub's first frame had a companion
+        /// on it. Nothing a player can reach draws one now. It is kept because the grove's
+        /// residents *are* companions (invariant 16a) and that whole half of the game is held
+        /// rather than deleted; a grove screen that comes back wants this doing exactly what it
+        /// did.
+        /// </para>
         /// </summary>
         public static void WarmWornAvatar()
         {

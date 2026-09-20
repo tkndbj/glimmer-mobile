@@ -404,7 +404,7 @@ NAV_TABS = [("home", "ic_home"), ("shop", "ic_chest"),
 #: `hudkit` is the kit and loads no content - so it has to be kept in step by hand, and the
 #: profile tab said YOU here for as long as the game has said PROFILE (invariant 44d).
 NAV_WORDS = {"home": "HOME", "shop": "SHOP", "grovement": "GROOVEMENT",
-             "ranks": "RANKS", "profile": "PROFILE"}
+             "ranks": "BOARDS", "profile": "PROFILE"}
 
 
 def navbar(sheet, active):

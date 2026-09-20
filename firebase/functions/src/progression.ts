@@ -19,6 +19,7 @@
  */
 
 import { logger } from "firebase-functions";
+import type { RankRungConfig } from "./ranks";
 
 import type { ReferralConfig } from "./referral";
 import { Rolls, subjectSeed } from "./random";
@@ -85,6 +86,26 @@ export interface ProgressionConfig {
    * payment is `xpPerWave: 0`, which is authored and therefore visible in a diff.
    */
   endless?: EndlessConfig;
+
+  /**
+   * The rank ladder, if the seeder has published it — every rung in authored order with the
+   * lines it asks for.
+   *
+   * **Absent publishes no rung at all rather than falling back to anything**, which is
+   * `referral`'s stance and the opposite of `endless`'s above it. The difference is what a
+   * missing block costs: an absent `endless` would make this server derive a *lower keeper
+   * level* than the device and silently drop whatever that level gated, so agreeing with the
+   * client matters more than failing closed. An absent ladder costs a picture beside a name.
+   * There is no built-in ladder here for the same reason `RankLadder.Empty` is the client's
+   * default — a hard-coded copy would be a second answer nobody maintains and the first thing
+   * to go stale the moment content moved.
+   *
+   * It rides on `config/progression` rather than in a document of its own because a rung asks
+   * about keeper levels, stars and waves, every one of which is decided by a number in this
+   * same table — a ladder loaded separately from the curve would be a set of goals measured
+   * against a game that had moved.
+   */
+  ranks?: RankRungConfig[];
 
   /**
    * What an XP boost multiplies and how far it may go.

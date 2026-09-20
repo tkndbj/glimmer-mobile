@@ -81,13 +81,26 @@ namespace GlimmerGrove.Ranks
         /// 52), so the run of met rungs only ever grows.
         /// </para>
         /// </summary>
-        public RankDefinition Held(CatalogIndex index)
+        public RankDefinition Held(CatalogIndex index) => Held(new LedgerRankSource(index));
+
+        /// <summary>
+        /// The same walk over a source — the live ledgers, or the save file a card is built
+        /// from.
+        ///
+        /// <para>
+        /// <b>This is the one place the ladder is climbed, and that is what makes a published
+        /// rank the same rank the player's own map draws.</b> The server derives its own answer
+        /// from the same save (invariant 19a), and the two are held together by the shared
+        /// vectors rather than by anybody remembering.
+        /// </para>
+        /// </summary>
+        public RankDefinition Held(IRankSource source)
         {
             RankDefinition held = null;
 
             for (int i = 0; i < _rungs.Length; i++)
             {
-                if (!_rungs[i].IsMet(index)) break;
+                if (!_rungs[i].IsMet(source)) break;
                 held = _rungs[i];
             }
 

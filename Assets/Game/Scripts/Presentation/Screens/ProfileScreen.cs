@@ -35,9 +35,6 @@ namespace GlimmerGrove
     {
         public override string Track => "mus_menu";
 
-        /// <summary>The roster's portraits, kept alive for exactly as long as this screen is.</summary>
-        AssetHold _portraits;
-
         const float CardWidth = 980f;
 
         /// <summary>
@@ -58,9 +55,6 @@ namespace GlimmerGrove
         const float Gap = 28f;
         const float HeaderHeight = 250f;
 
-        /// <summary>Companions shown on the profile itself; the rest live behind See All.</summary>
-        const int PreviewCount = 4;
-
         RectTransform _viewport, _stack;
         float _cursor;                       // top of the next card, negative and falling
 
@@ -77,10 +71,9 @@ namespace GlimmerGrove
         /// </summary>
         bool _entered;
 
-        Image _portrait;
+        Image _badge;
+        Text _badgeName;
         Text _nameLabel;
-        Transform _companionRow;
-        Text _companionCount;
 
         protected override void Build()
         {
@@ -91,21 +84,14 @@ namespace GlimmerGrove
             BuildHeader();
             NavBar.Build(Content, NavBar.Tab.Profile);
 
-            // The preview row draws a handful of portraits, so the roster's art is
-            // wanted here too — and released the moment this screen goes away. Requested
-            // after the row exists so the repaint has something to paint.
-            _portraits = CompanionArt.Open(this, () => { if (Living) PaintCompanions(); });
-
-            // See CompanionScreen for why this is an event and not a callback: the unlock
-            // panel has three exits and only one of them used to report a purchase.
-            Progression.CompanionLedger.Changed += RepaintCompanions;
-
-            // And on the worn companion separately, because a purchase records the two one
-            // after the other and the ledger's event arrives before the wear — see
-            // Profile.AvatarChanged. The medallion showed the old friend until this existed.
-            Profile.AvatarChanged += RepaintCompanions;
-
-            AvatarCatalog.Changed += RepaintCompanions;
+            // **The medallion is a readout, so it is watched rather than drawn** (invariant
+            // 44j, about a rank rather than a balance — `RankBadge` carries the argument in
+            // full). A rank moves while this page is standing: a merge lands another device's
+            // battles, a content push retunes the ladder under somebody looking at it. Built as
+            // a snapshot it would be a photograph, correct when the profile opened and quietly
+            // wrong from then on — which compiles, draws, and passes every fixture, because
+            // nothing moves during a test.
+            Ranks.RankLedger.Changed += PaintBadge;
 
             // The account card is the one place in the game that says "your progress is saved
             // online", so it has to follow the account rather than whatever was true when the
@@ -123,35 +109,52 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The row, the count and the hero portrait, which move together when the held set
-        /// changes — buying a companion also wears it.
+        /// Draws the rank the player holds into the medallion: the badge and its name.
+        ///
+        /// <para>
+        /// <b>The first rung, unearned, for an account below it</b> — <c>RankBadge</c>'s stance
+        /// and for its reason: a player who has not reached Cinderling is exactly the player
+        /// this is for, and an empty medallion invites nobody. The badge is dimmed with
+        /// <em>alpha</em> and never with a tint, because <c>Image.color</c> is a multiply and
+        /// takes a colour toward black along its own hue (invariant 44g) — these badges are
+        /// saturated metal and a multiply turns bronze to mud.
+        /// </para>
+        /// <para>
+        /// <b>An empty ladder draws nothing at all</b>, which is the honest answer to content
+        /// carrying no <c>ranks</c> block (<see cref="Ranks.RankLadder"/>): no built-in ladder
+        /// stands in for it, so there is nothing true to put here.
+        /// </para>
         /// </summary>
-        void RepaintCompanions()
+        void PaintBadge()
         {
-            if (!this) return;
+            if (!this || _badge == null) return;
 
-            PaintCompanions();
+            var ladder = Ranks.RankLedger.Ladder;
+            var held = Ranks.RankLedger.Held;
+            var rung = held ?? ladder.At(1);
 
-            if (_companionCount)
-                _companionCount.text = Loc.Format("ui.profile.unlocked", Profile.CompanionsHeld,
-                                                  AvatarCatalog.All.Count);
+            bool drawn = rung != null;
+            if (_badge.enabled != drawn) _badge.enabled = drawn;
+            if (_badgeName) _badgeName.enabled = drawn;
+            if (!drawn) return;
 
-            if (_portrait) CompanionArt.Paint(_portrait, Profile.Avatar, animate: true);
+            _badge.sprite = Art.S(rung.Icon);
+            _badge.color = held != null ? Color.white : UnearnedBadge;
+
+            if (!_badgeName) return;
+
+            _badgeName.text = held != null ? rung.Name : Loc.Get("ui.ranks.unranked");
+            _badgeName.color = held != null ? Pal.Gold : Pal.A(Pal.Cream, .62f);
         }
 
-        /// <summary>
-        /// Drops the roster's portraits, unless the showcase is what we are leaving for
-        /// — it wants the very same set and would only reload it.
-        /// </summary>
+        /// <summary>How a badge nobody has earned yet is drawn. See <see cref="PaintBadge"/>.</summary>
+        static readonly Color UnearnedBadge = new Color(1f, 1f, 1f, .38f);
+
         void OnDestroy()
         {
-            Progression.CompanionLedger.Changed -= RepaintCompanions;
-            Profile.AvatarChanged -= RepaintCompanions;
-            AvatarCatalog.Changed -= RepaintCompanions;
+            Ranks.RankLedger.Changed -= PaintBadge;
             CloudSaveService.IdentityChanged -= BuildBody;
             PlayerProgression.Changed -= PaintRecord;
-
-            _portraits?.Dispose();
         }
 
         // -------------------------------------------------------------- scroller
@@ -160,16 +163,16 @@ namespace GlimmerGrove
         /// reaches more than one card.
         ///
         /// <para>
-        /// <b>Rebuilt wholesale rather than patched</b>, which is <c>PaintCompanions</c>' call
-        /// one level up: a card's position is the running cursor rather than a number written
+        /// <b>Rebuilt wholesale rather than patched</b>: a card's position is the running
+        /// cursor rather than a number written
         /// down, so a card that changes height moves every card below it. Redrawing five cards
         /// is far cheaper than the bugs of keeping their offsets in step by hand.
         /// </para>
         /// <para>
         /// <b>The outgoing body is hidden before it is destroyed.</b> <c>Destroy</c> lands at
         /// the end of the frame, so a region replaced in place is drawn over its replacement
-        /// until then. This screen already followed that rule in <c>PaintCompanions</c> and did
-        /// not follow it here — and here it was worse than a flicker, because the old viewport
+        /// until then. This screen followed that rule where it redrew a row and did not follow
+        /// it here — and here it was worse than a flicker, because the old viewport
         /// was neither hidden nor destroyed: every rebuild left one behind, stacked over the
         /// live one, still carrying its invisible drag catcher. So the toggle leaked a whole
         /// page each time it was tapped and the page underneath stopped scrolling properly.
@@ -213,7 +216,6 @@ namespace GlimmerGrove
             BuildAccountCard();
             BuildRecordCard();
             BuildInviteCard();
-            BuildCompanionCard();
             BuildBoardCard();
             BuildDeleteRow();
             _stack.sizeDelta = new Vector2(0f, -_cursor + Gap);
@@ -316,22 +318,57 @@ namespace GlimmerGrove
             var card = Section("Keeper", 440f, 0);
             var level = Profile.Level;
 
-            // portrait
-            var medallion = UIKit.Img("Medallion", card, Art.Disc(256), Pal.A(Pal.Hex("#08333C"), .95f),
-                                      new Vector2(268f, 268f), new Vector2(.5f, .5f), new Vector2(-300f, 34f));
-            UIKit.Halo(medallion.transform, Pal.Gold, 340f, .26f);
-            var ring = UIKit.Img("Ring", medallion.transform, Art.Ring(256, 13f), Pal.A(Pal.Gold, .92f));
-            UIKit.StretchTo((RectTransform)ring.transform, 0, 0, 0, 0);
+            // **The medallion, and what stands where it was is the rank.** It held the
+            // companion the player was wearing; the roster is gone from this game, and what
+            // belongs in the one place a profile says "this is who you are" is the thing a
+            // profile is actually about.
+            //
+            // **The disc and the ring went with the companion.** A rank badge is a *seal*: it
+            // carries its own rim and its own contrast (invariant 16v), which is why the map
+            // draws it bare — and a disc with a gold ring around one is two frames fighting for
+            // the same job. Taking the frame away is also what lets the hero picture be a hero:
+            // 258 where it was 196 inside the ring.
+            //
+            // **What the ring was not is broken, and that is worth writing down**, because the
+            // first reading of it said otherwise. Measured against the badges' bounding boxes
+            // the old 196 reached 110–115% of the ring's inner radius and looked like a
+            // collision; measured against their *alpha* — which is the only measurement that
+            // means anything for seven hexagons with wings — it was five lit pixels on
+            // frostheart and one on auroracrest. Four of the seven sat between 94% and 101%,
+            // which is tight rather than wrong. A box corner is not a picture (invariant 44d's
+            // lesson, arriving through a checker rather than through a mirror).
+            //
+            // The halo stays and is what makes this block the hero of the card, and the keeper
+            // level keeps its seat by hanging off the badge's own box rather than off a disc
+            // that is no longer there.
+            var medallion = UIKit.Box("Medallion", card, new Vector2(268f, 268f),
+                                      new Vector2(.5f, .5f), new Vector2(-300f, 34f));
+            UIKit.Halo(medallion, Pal.Gold, 340f, .26f);
 
-            _portrait = UIKit.Img("Critter", medallion.transform, null, Color.white,
-                                  new Vector2(198f, 198f), new Vector2(.5f, .5f), new Vector2(0f, 6f));
-            _portrait.preserveAspect = true;
-            CompanionArt.Paint(_portrait, Profile.Avatar, animate: true);
-            Tween.Bob((RectTransform)_portrait.transform, 7f, 3.2f);
+            _badge = UIKit.Img("Badge", medallion, null, Color.white,
+                               new Vector2(258f, 258f), new Vector2(.5f, .5f), new Vector2(0f, 4f));
+            _badge.preserveAspect = true;
+            _badge.raycastTarget = false;
 
-            var badge = UIKit.Img("LevelBadge", medallion.transform, Art.Disc(128), Pal.Gold,
-                                  new Vector2(92f, 92f), new Vector2(1f, 0f), new Vector2(-6f, 6f));
-            UIKit.Titled("N", badge.transform, level.Level.ToString(), 44, new Color(.30f, .20f, .05f),
+            // The name under the disc rather than inside it: a rung is called something and a
+            // badge that cannot be read is a puzzle — the same argument `RankBadge` makes for
+            // carrying its name on the map.
+            // **Below the keeper level's disc, not beside it.** At -122 this box ran from
+            // -450 to -150 and the disc hangs at -218 to -126, so a long rung name printed
+            // straight through it — measured, not eyed. -166 clears the disc's own bottom edge
+            // by eight units and still leaves 36 of margin above the card's.
+            _badgeName = UIKit.Shrinkable(
+                UIKit.Titled("BadgeName", card, string.Empty, 28, Pal.Gold, TextAnchor.MiddleCenter,
+                             new Vector2(300f, 36f), new Vector2(.5f, .5f), new Vector2(-300f, -166f),
+                             3f, 2f), 16);
+
+            PaintBadge();
+
+            // Still on the medallion's own box, which is the same 268 it always was — so the
+            // keeper level sits exactly where it sat, whatever happened inside it.
+            var levelBadge = UIKit.Img("LevelBadge", medallion, Art.Disc(128), Pal.Gold,
+                                       new Vector2(92f, 92f), new Vector2(1f, 0f), new Vector2(-6f, 6f));
+            UIKit.Titled("N", levelBadge.transform, level.Level.ToString(), 44, new Color(.30f, .20f, .05f),
                          TextAnchor.MiddleCenter, outline: 0f, shadow: 0f);
 
             // name, and the pencil that changes it
@@ -567,175 +604,6 @@ namespace GlimmerGrove
             UIKit.Titled("L", bg.transform, Loc.Get(labelKey), 24, new Color(1f, .96f, .88f, .58f),
                          TextAnchor.MiddleCenter, new Vector2(266f, 32f), new Vector2(.5f, 0f),
                          new Vector2(0f, 26f), 3f, 0f);
-        }
-
-        // -------------------------------------------------------- the companions
-        void BuildCompanionCard()
-        {
-            var card = Section("Companions", 340f, 3);
-            int level = Profile.Rank;
-
-            CardTitle(card, "ui.profile.companions", CardWidth);
-            _companionCount = UIKit.Titled("Count", card,
-                         Loc.Format("ui.profile.unlocked", CompanionLedger.HeldCount(level),
-                                    AvatarCatalog.All.Count),
-                         26, new Color(1f, .96f, .88f, .60f), TextAnchor.MiddleRight,
-                         new Vector2(300f, 36f), new Vector2(1f, 1f), new Vector2(-190f, -44f), 3f, 0f);
-
-            _companionRow = UIKit.Box("Row", card, new Vector2(CardWidth, 220f), new Vector2(.5f, .5f),
-                                      new Vector2(0f, -34f));
-            PaintCompanions();
-        }
-
-        /// <summary>
-        /// Rebuilt wholesale rather than patched, because choosing one changes the
-        /// selected ring, the portrait and the caption together, and a redraw of eleven
-        /// images is far cheaper than the bugs of keeping three of them in step.
-        /// </summary>
-        void PaintCompanions()
-        {
-            if (_companionRow == null) return;
-            for (int i = _companionRow.childCount - 1; i >= 0; i--)
-            {
-                var old = _companionRow.GetChild(i).gameObject;
-                old.SetActive(false);        // Destroy only lands at end of frame
-                Destroy(old);
-            }
-
-            int level = Profile.Rank;
-            string worn = Profile.Avatar.Id;
-            var preview = Preview(worn, PreviewCount);
-
-            // Always PreviewCount + 1 slots wide, so the See All tile sits in the same
-            // place whether the roster is five companions or a hundred.
-            const float Step = 186f;
-            float left = -(PreviewCount) * Step * .5f;
-
-            for (int i = 0; i < preview.Count; i++)
-                // The whole rule — reached by level or bought. See CompanionLedger.
-                Companion(preview[i], left + i * Step, CompanionLedger.IsHeld(preview[i], level),
-                          string.Equals(preview[i].Id, worn, StringComparison.Ordinal));
-
-            SeeAllTile(left + PreviewCount * Step, AvatarCatalog.All.Count - preview.Count);
-        }
-
-        /// <summary>
-        /// The few companions worth showing on the profile itself: the one being worn,
-        /// then the rest in roster order. The worn one leads because the card is about
-        /// the player, not about the catalogue — the catalogue is what See All is for.
-        /// </summary>
-        static List<AvatarDefinition> Preview(string worn, int count)
-        {
-            var picked = new List<AvatarDefinition>(count);
-
-            var current = AvatarCatalog.Find(worn);
-            if (current.IsValid) picked.Add(current);
-
-            foreach (var avatar in AvatarCatalog.All)
-            {
-                if (picked.Count >= count) break;
-                if (string.Equals(avatar.Id, worn, StringComparison.Ordinal)) continue;
-                picked.Add(avatar);
-            }
-
-            return picked;
-        }
-
-        /// <summary>The door to the showcase, sized and placed like a companion.</summary>
-        void SeeAllTile(float x, int remaining)
-        {
-            var cell = UIKit.Button("SeeAll", _companionRow, Art.Pixel, new Vector2(168f, 210f),
-                                    new Vector2(.5f, .5f), new Vector2(x, 0f),
-                                    () => Flow.Go<CompanionScreen>());
-            cell.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
-
-            var disc = UIKit.Img("Disc", cell.transform, Art.Disc(160), Pal.A(Pal.Hex("#0B4C55"), .95f),
-                                 new Vector2(148f, 148f), new Vector2(.5f, .5f), new Vector2(0f, 22f));
-            var ring = UIKit.Img("Ring", disc.transform, Art.Ring(160, 6f), Pal.A(Pal.Mint, .55f));
-            UIKit.StretchTo((RectTransform)ring.transform, 0, 0, 0, 0);
-
-            UIKit.Titled("N", disc.transform, remaining > 0 ? "+" + remaining : "…", 46, Pal.Cream,
-                         TextAnchor.MiddleCenter, new Vector2(140f, 60f), new Vector2(.5f, .5f),
-                         new Vector2(0f, 2f), 3f, 3f);
-
-            UIKit.Titled("L", cell.transform, Loc.Get("ui.profile.see_all"), 24, Pal.Mint,
-                         TextAnchor.MiddleCenter, new Vector2(180f, 32f), new Vector2(.5f, 0f),
-                         new Vector2(0f, 22f), 3f, 0f);
-        }
-
-        void Companion(AvatarDefinition avatar, float x, bool unlocked, bool worn)
-        {
-            var cell = UIKit.Button("A_" + avatar.Id, _companionRow, Art.Pixel, new Vector2(168f, 210f),
-                                    new Vector2(.5f, .5f), new Vector2(x, 0f), () => Choose(avatar, unlocked));
-            cell.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
-
-            var disc = UIKit.Img("Disc", cell.transform, Art.Disc(160),
-                                 unlocked ? Pal.A(Pal.Hex("#08333C"), .92f) : new Color(.02f, .06f, .08f, .70f),
-                                 new Vector2(148f, 148f), new Vector2(.5f, .5f), new Vector2(0f, 22f));
-
-            if (worn) UIKit.Halo(cell.transform, Pal.Gold, 200f, .34f);
-
-            var ring = UIKit.Img("Ring", disc.transform, Art.Ring(160, worn ? 11f : 6f),
-                                 worn ? Pal.A(Pal.Gold, .95f) : new Color(1f, 1f, 1f, unlocked ? .22f : .10f));
-            UIKit.StretchTo((RectTransform)ring.transform, 0, 0, 0, 0);
-
-            var face = UIKit.Img("Face", disc.transform, null,
-                                 unlocked ? Color.white : new Color(.16f, .22f, .26f, .95f),
-                                 new Vector2(110f, 110f), new Vector2(.5f, .5f), new Vector2(0f, 4f));
-            face.preserveAspect = true;
-            CompanionArt.Paint(face, avatar);
-
-            if (!unlocked)
-            {
-                // **Over the companion rather than under it, and never tinted.** It hung at the
-                // foot of the disc, which reads as a badge sitting beside a portrait rather than
-                // as the portrait being shut away — and the padlock is a painted picture, so
-                // anything but white is a multiply that eats the gold it is drawn in.
-                //
-                // Built after the face, so it draws over it: uGUI paints in sibling order and
-                // there is nothing else here that decides it.
-                var lockIcon = UIKit.Img("Lock", disc.transform, Art.S("Ui/ic_padlock"), Color.white,
-                                         new Vector2(78f, 78f), new Vector2(.5f, .5f), new Vector2(0f, 4f));
-                lockIcon.preserveAspect = true;
-                lockIcon.raycastTarget = false;
-            }
-
-            UIKit.Shrinkable(
-                UIKit.Titled("L", cell.transform,
-                             unlocked ? Loc.Get(avatar.NameKey)
-                                      : avatar.IsForSale
-                                          ? Loc.Format("ui.profile.cost", Compact.Number(avatar.UnlockCost))
-                                          : Loc.Format("ui.profile.locked_at", avatar.UnlockLevel),
-                             24, unlocked ? (worn ? Pal.Cream : new Color(1f, .96f, .88f, .66f))
-                                          : avatar.IsForSale ? Pal.A(Pal.Sun, .88f)
-                                                             : new Color(1f, .8f, .7f, .55f),
-                             TextAnchor.MiddleCenter, new Vector2(180f, 32f), new Vector2(.5f, 0f),
-                             new Vector2(0f, 22f), 3f, 0f), 18);
-
-            if (worn) Tween.Breathe(disc.transform, .03f, 2.6f);
-        }
-
-        void Choose(AvatarDefinition avatar, bool unlocked)
-        {
-            if (!unlocked)
-            {
-                // The panel, not a toast naming a level the catalog cannot reach. See
-                // CompanionUnlockOverlay.
-                Audio.Sfx("chime", .45f);
-                Flow.Modal<CompanionUnlockOverlay>(v => v.Avatar = avatar);
-                return;
-            }
-
-            // The row, the count and the medallion are repainted by Profile.AvatarChanged.
-            // What stays here is only what belongs to the *tap* rather than to the state —
-            // a sound, a bump and the sparks off the medallion.
-            if (!Profile.TryWearAvatar(avatar.Id)) return;
-
-            // **Its own slot rather than `chime2`.** That bell is the confirmation three other
-            // things ring, and one of them is `ToggleBoardVisibility` two cards down this very
-            // screen - so wearing a friend and joining a leaderboard said exactly the same thing.
-            Audio.Sfx("wear", .5f);
-            if (_portrait) Burst.Sparks(_portrait.transform, Vector2.zero, Pal.Gold, 12, 190f, 26f, .6f);
         }
 
         // ----------------------------------------------------------- the account

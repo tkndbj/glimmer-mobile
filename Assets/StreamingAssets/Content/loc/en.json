@@ -2854,6 +2854,14 @@
       "text": "{0}/{1}"
     },
     {
+      "key": "ui.home.next_rank",
+      "text": "the next rank"
+    },
+    {
+      "key": "ui.home.lines_met",
+      "text": "lines met"
+    },
+    {
       "key": "ui.home.marks",
       "text": "marks"
     },

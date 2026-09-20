@@ -240,80 +240,34 @@ namespace GlimmerGrove.Ranks
         /// </para>
         /// </summary>
         public static long Read(RankMeasure measure, string scope, CatalogIndex index)
-        {
-            switch (measure.Kind)
-            {
-                case RankMeasureKind.LevelsCleared: return ClearedIn(scope, index);
-                case RankMeasureKind.Stars: return StarsIn(scope, index);
-                case RankMeasureKind.ThreeStars: return ThreeStarsIn(scope, index);
-                case RankMeasureKind.KeeperLevel: return PlayerProgression.Level.Level;
-                case RankMeasureKind.BestWave: return BestWaveOn(scope);
-                case RankMeasureKind.Lifetime: return LifetimeTally.Count(measure.Goal);
-                default: return 0L;
-            }
-        }
-
-        static long ClearedIn(string scope, CatalogIndex index)
-        {
-            if (string.IsNullOrEmpty(scope)) return PlayerProgress.ClearedCount;
-
-            var chapter = ChapterOf(scope, index);
-            if (chapter == null) return 0L;
-
-            long cleared = 0;
-            var ids = chapter.LevelIds;
-            for (int i = 0; i < ids.Count; i++)
-                if (PlayerProgress.IsCleared(ids[i])) cleared++;
-
-            return cleared;
-        }
-
-        static long StarsIn(string scope, CatalogIndex index)
-        {
-            if (string.IsNullOrEmpty(scope)) return PlayerProgress.TotalStars(index);
-
-            var chapter = ChapterOf(scope, index);
-            return chapter == null ? 0L : PlayerProgress.TotalStars(chapter);
-        }
-
-        static long ThreeStarsIn(string scope, CatalogIndex index)
-        {
-            if (string.IsNullOrEmpty(scope))
-            {
-                if (index == null) return 0L;
-
-                long all = 0;
-                foreach (var id in index.LevelIds)
-                    if (PlayerProgress.Stars(id) >= 3) all++;
-                return all;
-            }
-
-            var chapter = ChapterOf(scope, index);
-            if (chapter == null) return 0L;
-
-            long full = 0;
-            var ids = chapter.LevelIds;
-            for (int i = 0; i < ids.Count; i++)
-                if (PlayerProgress.Stars(ids[i]) >= 3) full++;
-
-            return full;
-        }
+            => Read(measure, scope, new LedgerRankSource(index));
 
         /// <summary>
-        /// The best wave on one Infinite level, or across every one of them when no level is
-        /// named — which is what makes a second Infinite lane cost this nothing.
+        /// The same reading taken off whichever <see cref="IRankSource"/> is in hand — the live
+        /// ledgers for the player's own screens, a save file for the card that goes public.
+        ///
+        /// <para>
+        /// <b>This switch is the whole of what a measure <em>is</em>, and it exists once.</b>
+        /// Everything that made it two readings lives behind the source, which is what keeps a
+        /// published badge and the badge on the player's own map the same badge — see
+        /// <see cref="IRankSource"/> for why a second copy of this walk would have been a rank
+        /// handed out for less than it asks for, invisibly.
+        /// </para>
         /// </summary>
-        static long BestWaveOn(string scope)
+        public static long Read(RankMeasure measure, string scope, IRankSource source)
         {
-            if (string.IsNullOrEmpty(scope)) return EndlessLedger.Best;
+            if (source == null) return 0L;
 
-            return LevelId.TryParse(scope, out var level, out _) ? EndlessLedger.BestFor(level) : 0L;
-        }
-
-        static ChapterIndexEntry ChapterOf(string scope, CatalogIndex index)
-        {
-            if (index == null) return null;
-            return ChapterId.TryParse(scope, out var id, out _) ? index.FindChapter(id) : null;
+            switch (measure.Kind)
+            {
+                case RankMeasureKind.LevelsCleared: return source.Cleared(scope);
+                case RankMeasureKind.Stars: return source.Stars(scope);
+                case RankMeasureKind.ThreeStars: return source.ThreeStars(scope);
+                case RankMeasureKind.KeeperLevel: return source.KeeperLevel;
+                case RankMeasureKind.BestWave: return source.BestWave(scope);
+                case RankMeasureKind.Lifetime: return source.Lifetime(measure.Goal);
+                default: return 0L;
+            }
         }
 
         // ------------------------------------------------------------------ the sentence

@@ -46,6 +46,11 @@ namespace GlimmerGrove.Ranks
 
         public bool IsMet(CatalogIndex index) => Held(index) >= Target;
 
+        /// <summary>The same line read off a source — a save file, or the live ledgers.</summary>
+        public long Held(IRankSource source) => RankMeasures.Read(Measure, Scope, source);
+
+        public bool IsMet(IRankSource source) => Held(source) >= Target;
+
         /// <summary>
         /// The line as the player reads it.
         ///
@@ -162,10 +167,13 @@ namespace GlimmerGrove.Ranks
         /// the one below it — see <see cref="RankLadder.Held"/>, which is where that is decided
         /// so it cannot be decided differently twice.
         /// </summary>
-        public bool IsMet(CatalogIndex index)
+        public bool IsMet(CatalogIndex index) => IsMet(new LedgerRankSource(index));
+
+        /// <summary>The same question asked of a save file. See <see cref="IRankSource"/>.</summary>
+        public bool IsMet(IRankSource source)
         {
             for (int i = 0; i < Requirements.Count; i++)
-                if (!Requirements[i].IsMet(index)) return false;
+                if (!Requirements[i].IsMet(source)) return false;
 
             return Requirements.Count > 0;
         }

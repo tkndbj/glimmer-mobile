@@ -42,6 +42,9 @@ const {
   xpBoostXp, DEFAULT_XP_BOOST, HARD_MAX_BOOST_XP,
 } = await import(pathToFileURL(compiled).href);
 
+const ranksModule = join(REPO, "firebase", "functions", "lib", "ranks.js");
+const { rungOf } = await import(pathToFileURL(ranksModule).href);
+
 const namesModule = join(REPO, "firebase", "functions", "lib", "names.js");
 const { nameKey, isNameClaimable, MAX_KEY_LENGTH } =
   await import(pathToFileURL(namesModule).href);
@@ -107,6 +110,14 @@ function groveConfig() {
 }
 
 // ------------------------------------------------------------------- grove worth
+/**
+ * A progression config with no rank ladder on it, which is what these blocks want: they are
+ * about the grove half of a card, and a server that has never been seeded with a `ranks` block
+ * publishes no rung at all. `rankCases` in the shared vectors is where the ladder itself is
+ * exercised, on both sides of the wire.
+ */
+const NO_RANKS = { version: 1, rewards: {}, chapterRewards: {}, levelChapters: {} };
+
 console.log("\ngrove worth");
 {
   const config = groveConfig();
@@ -761,21 +772,21 @@ console.log("\nthe card a public profile reads");
     homesteadPlaced: [{ slot: "4,4", piece: "bench" }],
   };
 
-  const card = buildCard("uid-1", save, config, worth, 99, 1_700_000_000, "Fern Willow");
+  const card = buildCard("uid-1", save, config, NO_RANKS, worth, 99, 1_700_000_000, "Fern Willow");
   check("a card carries the companions", Array.isArray(card.companions) && card.companions.length > 0);
   check("and the line", Array.isArray(card.line) && card.line.length === 1);
   equal("and the arrangement", Object.keys(card.placed).length, 1);
 
   // Absent rather than empty, which is what every card written before this deployment says and
   // is the same answer. Firestore refuses `undefined`, so these are spread rather than written.
-  const bare = buildCard("uid-2", {}, config, worth, 1, 1_700_000_000, null);
+  const bare = buildCard("uid-2", {}, config, NO_RANKS, worth, 1, 1_700_000_000, null);
   check("a keeper who has bought nothing carries no companions", !("companions" in bare));
   check("and one who has arranged no line carries none", !("line" in bare));
 
   // The whole of what a grove takedown does. `publishableName`'s fall-through wearing different
   // clothes: read here rather than at the call site, so the report path and `publishGrove`
   // cannot come to disagree about what a denial means.
-  const denied = buildCard("uid-1", save, config, worth, 99, 1_700_000_000, "Fern Willow",
+  const denied = buildCard("uid-1", save, config, NO_RANKS, worth, 99, 1_700_000_000, "Fern Willow",
                            undefined, true);
   equal("a denied arrangement publishes no arrangement", Object.keys(denied.placed).length, 0);
   equal("and keeps the name", denied.name, "Fern Willow");
@@ -814,7 +825,7 @@ console.log("\na keeper standing a legendary");
     wardStars: [{ ward: "pyroclast", stars: 5 }],
   };
 
-  const line = buildCard("uid-16", save, config, worth, 16, 1_700_000_000, null).line;
+  const line = buildCard("uid-16", save, config, NO_RANKS, worth, 16, 1_700_000_000, null).line;
 
   equal("every seat they arranged is published", line.map((s) => s.c).join(""), "rgby");
   equal("and the legendary is the turret on red", line[0].w, "pyroclast");
@@ -823,7 +834,7 @@ console.log("\na keeper standing a legendary");
   // The three clauses that *are* asked still are, at the same keeper level — this fix widened
   // one gate and none of the others.
   equal("a turret nobody bought is still dropped",
-        buildCard("uid-16", { ...save, wardsOwned: [] }, config, worth, 16, 1, null)
+        buildCard("uid-16", { ...save, wardsOwned: [] }, config, NO_RANKS, worth, 16, 1, null)
           .line.map((s) => s.c).join(""), "b");        // `bolt` is free; the rest were not
 
   equal("and a second copy of the legendary is still one payment short",
@@ -831,7 +842,7 @@ console.log("\na keeper standing a legendary");
                   { ...save,
                     wardLoadout: save.wardLoadout.map(({ colour }) =>
                       ({ colour, ward: "pyroclast" })) },
-                  config, worth, 16, 1, null)
+                  config, NO_RANKS, worth, 16, 1, null)
           .line.map((s) => s.c).join(""), "r");
 }
 
@@ -847,7 +858,7 @@ console.log("\nthe home a card draws");
   const paid = rungs.filter((id) => config.pieces[id] > 0);
 
   const at = (save, level = 99) =>
-    buildCard("uid-home", save, config, worth, level, 1_700_000_000, null).dwelling;
+    buildCard("uid-home", save, config, NO_RANKS, worth, level, 1_700_000_000, null).dwelling;
 
   equal("a keeper who has bought no home draws the free rung", at({}), free);
 
@@ -984,6 +995,84 @@ console.log("\nplacing a card on a board as it is published");
 
   // Every row the merge writes is something Firestore will take.
   check("a merged board is writable", writable(over.rows));
+}
+
+// The rank a save holds, which is the newest thing on a card a stranger can see.
+//
+// A rank was a private badge derived on the device and stored nowhere (invariant 52). It is on
+// a public board now, and invariant 19a says what that changes: it becomes adjudicated. So the
+// ladder is climbed here as well as in C#, and the two answers are drawn *side by side* — the
+// player's own map draws theirs, every board row draws this one.
+//
+// A disagreement is silent. Nothing throws and no gate goes red; a keeper simply wears one badge
+// on their own screen and another on everybody else's. Assets/Game/Tests/RankVectorTests.cs runs
+// these same cases against `RankLadder.Held` over a `SaveRankSource`.
+console.log("\nranks");
+{
+  // The save's level rows are a map here and an array in the file, which is exactly why the
+  // vector carries neither shape: each side builds its own from the same rows.
+  const saveOf = (c) => ({
+    levels: Object.fromEntries((c.levels ?? []).map((r) => [r.level, { stars: r.stars }])),
+    endlessBest: c.endless ?? [],
+    tasks: { lifetime: c.lifetime ?? [] },
+  });
+
+  const levelChapters = {};
+  for (const chapter of vectors.rankChapters ?? []) {
+    for (const level of chapter.levels ?? []) levelChapters[level] = chapter.id;
+  }
+
+  const cases = vectors.rankCases ?? [];
+  check("the vector file carries rank cases", cases.length > 0);
+
+  for (const c of cases) {
+    const config = {
+      version: 1,
+      rewards: {},
+      chapterRewards: {},
+      levelChapters,
+      ranks: c.ladder ?? vectors.rankLadder,
+    };
+
+    equal(c.name, rungOf(saveOf(c), config, {
+      keeperLevel: c.keeperLevel,
+      lifetimeWaves: c.lifetimeWaves,
+    }), c.held);
+  }
+
+  // Not in the vector file because they are about *absence*, which a case cannot carry. A
+  // server that has never been seeded with a ladder publishes no rung at all rather than
+  // guessing at one — see `ProgressionConfig.ranks` for why this fails closed where `endless`
+  // deliberately does not.
+  const anybody = saveOf({ levels: [{ level: "one_a", stars: 3 }] });
+  const base = { version: 1, rewards: {}, chapterRewards: {}, levelChapters };
+
+  equal("a config with no ranks block publishes no rung",
+        rungOf(anybody, base, { keeperLevel: 99, lifetimeWaves: 0 }), "");
+  equal("a null ladder publishes no rung",
+        rungOf(anybody, { ...base, ranks: null }, { keeperLevel: 99, lifetimeWaves: 0 }), "");
+  equal("a ladder that is not a list publishes no rung",
+        rungOf(anybody, { ...base, ranks: "lots" }, { keeperLevel: 99, lifetimeWaves: 0 }), "");
+
+  // A rung whose lines cannot be read is dropped *whole*, and dropping it stops the walk. The
+  // alternative is a rung asking for less than it was authored to ask for, which is a badge
+  // handed out cheap and nothing anywhere to say so.
+  const broken = [
+    { id: "ok", requires: [{ measure: "levels_cleared", scope: "ch_one", target: 1 }] },
+    { id: "bad", requires: [{ measure: "stars", target: 0 }] },
+    { id: "above", requires: [{ measure: "levels_cleared", scope: "ch_one", target: 1 }] },
+  ];
+  equal("a rung with an unreadable line is dropped, and the walk stops there",
+        rungOf(anybody, { ...base, ranks: broken }, { keeperLevel: 99, lifetimeWaves: 0 }), "ok");
+
+  // The publish must never fail over a badge, so every shape that is not a ladder answers
+  // rather than throwing.
+  equal("a rung with no id is skipped",
+        rungOf(anybody, { ...base, ranks: [{ requires: [] }] },
+               { keeperLevel: 9, lifetimeWaves: 0 }), "");
+  equal("a save with nothing in it holds nothing",
+        rungOf({}, { ...base, ranks: vectors.rankLadder },
+               { keeperLevel: 99, lifetimeWaves: 0 }), "");
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

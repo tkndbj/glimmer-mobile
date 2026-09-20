@@ -664,11 +664,12 @@ namespace GlimmerGrove
             while (!task.IsCompleted) yield return null;
             if (task.IsFaulted) Debug.LogException(task.Exception);
 
-            // The worn companion, and only that one. The rest of the roster is loaded
-            // by the screens that show it and dropped when they close, which is what
-            // keeps launch costing the same whether there are five companions or a
-            // hundred. Warmed here rather than lazily so the hub's first frame has it.
-            Profile.WarmWornAvatar();
+            // **Nothing else is warmed here, and what used to be is the worn companion.** It
+            // was one 45 KB portrait *pinned* into the global set — which is to say never
+            // freed — so that the hub's first frame had it. No reachable screen draws a
+            // companion now: the hub's seat, the profile's medallion and every board row wear
+            // a rank badge, and those are already in `GlobalAssets` above for the map's own
+            // readout. Warming it would be resident memory bought and never spent.
         }
 
         /// <summary>

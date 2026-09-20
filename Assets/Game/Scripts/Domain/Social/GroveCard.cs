@@ -69,6 +69,30 @@ namespace GlimmerGrove.Social
         /// <summary>The companion the keeper is wearing, for the row's portrait.</summary>
         public readonly string AvatarId;
 
+        /// <summary>
+        /// The rank this keeper holds, as a rung id — the badge a board row and a public
+        /// profile draw. Empty for a keeper below the first rung, which is an ordinary state.
+        ///
+        /// <para>
+        /// <b>Derived on both sides and trusted on neither.</b> This is the client's own
+        /// reading, taken off the same save file the server will read, and it is here for one
+        /// reason only: <see cref="Fingerprint"/>. A rank reached by felling raiders moves
+        /// nothing else a visitor can see, so a card that did not carry it would never be
+        /// republished and the board would show the old badge for ever — invariant 19j's fault
+        /// arriving through a field, which is exactly how the hall's seat and the endless wave
+        /// got onto that list. What the board actually shows is the server's own answer:
+        /// <c>rungOf</c> in <c>functions/src/grove.ts</c> recomputes it from the save it reads
+        /// itself, because a number that goes public becomes adjudicated (invariant 19a).
+        /// </para>
+        /// <para>
+        /// <b>A rung id is not a spent id.</b> Nothing in a save holds one, so a retired rung
+        /// costs a picture and a string rather than a permanent name — but an unknown one
+        /// arriving from a newer server has to draw as <em>nothing</em> rather than as a
+        /// rectangle (invariant 7b), which is <c>RankArt.Badge</c>'s job.
+        /// </para>
+        /// </summary>
+        public readonly string RungId;
+
         /// <summary>Keeper level, for the honorific beside the name.</summary>
         public readonly int KeeperLevel;
 
@@ -140,11 +164,13 @@ namespace GlimmerGrove.Social
                          string hallSlot = null, int hallFacing = 0,
                          IReadOnlyList<string> companions = null,
                          IReadOnlyList<Wards.WardSlot> line = null,
-                         IReadOnlyList<int> rungs = null)
+                         IReadOnlyList<int> rungs = null,
+                         string rungId = null)
         {
             OwnerId = ownerId ?? string.Empty;
             Name = name ?? string.Empty;
             AvatarId = avatarId ?? string.Empty;
+            RungId = rungId ?? string.Empty;
             KeeperLevel = keeperLevel < 1 ? 1 : keeperLevel;
             Score = score < 0L ? 0L : score;
             Stars = stars < 0 ? 0 : stars;
@@ -450,9 +476,14 @@ namespace GlimmerGrove.Social
             // `HallSlot` rather than a resolved seat: this and `OfSave` have to produce the
             // same fingerprint for the same grove, and only one of them can see the floor's
             // fallback. Absent is the answer for a grove nobody has rearranged, on both sides.
+            // The live ladder for the live card: this is the grove as it stands on the device,
+            // so the rank is read the way the map's own badge reads it. `OfSave` takes the same
+            // rung off the file instead, and the two answer identically for a settled save —
+            // which is what stops a publish being asked for on every sync.
             return Build(catalog, LedgerHoldings.Instance, ownerId, name, avatarId, keeperLevel,
                          EndlessLedger.Best, nowUnix, placed,
-                         HomesteadLayout.HallSlot, HomesteadLayout.HallFacing, line, rungs);
+                         HomesteadLayout.HallSlot, HomesteadLayout.HallFacing, line, rungs,
+                         Ranks.RankLedger.Held?.Id);
         }
 
         /// <summary>
@@ -529,10 +560,18 @@ namespace GlimmerGrove.Social
                         ? at : Wards.WardStars.Least,
                     out var line, out var rungs);
 
+            // The rung the *file* says, never the ledger's — this card is what decides whether a
+            // publish is owed, and a rank read off the device would mark a card published that
+            // the server has not seen the play behind. It is also the exact reading the server
+            // will take, which is what keeps the fingerprint honest rather than merely stable.
+            var rung = Ranks.RankLedger.Ladder.Held(
+                new Ranks.SaveRankSource(save, Content.GameContent.Index, keeperLevel));
+
             return Build(catalog, new SaveHoldings(save, keeperLevel), ownerId, name,
                          save?.wallet?.avatarId ?? string.Empty, keeperLevel,
                          EndlessLedger.BestIn(save), nowUnix, placed,
-                         save?.groveHall, save?.groveHallFacing ?? 0, line, rungs);
+                         save?.groveHall, save?.groveHallFacing ?? 0, line, rungs,
+                         rung?.Id);
         }
 
         /// <summary>The one builder both readings go through, so they cannot drift.</summary>
@@ -541,7 +580,8 @@ namespace GlimmerGrove.Social
                                long nowUnix,
                                IReadOnlyDictionary<string, Placement> placed,
                                string hallSlot, int hallFacing,
-                               IReadOnlyList<Wards.WardSlot> line, IReadOnlyList<int> rungs)
+                               IReadOnlyList<Wards.WardSlot> line, IReadOnlyList<int> rungs,
+                               string rungId)
         {
             catalog = catalog ?? HomesteadCatalog.Empty;
 
@@ -566,7 +606,8 @@ namespace GlimmerGrove.Social
                                  hallFacing,
                                  Bought(catalog, held),
                                  line,
-                                 rungs);
+                                 rungs,
+                                 rungId);
         }
 
         /// <summary>
@@ -683,6 +724,15 @@ namespace GlimmerGrove.Social
                 "d:" + DwellingId,
                 "n:" + Name,
                 "a:" + AvatarId,
+
+                // The badge is on every board row, so reaching a rung is a change a visitor
+                // sees and owes a publish. It has to be here rather than left to ride on
+                // something else moving, because a rung can be reached by a reading nothing
+                // else on this card mentions — two and a half thousand raiders felled moves no
+                // score, no wave, no bench and no name, and the keeper would wear the old badge
+                // on every board for ever. Same fault as the hall's seat and the endless wave,
+                // arriving through a third field.
+                "r:" + RungId,
 
                 // Where the house stands is something a visitor sees, so moving it owes a
                 // publish exactly as moving a bench does. Left out, a player could rearrange
