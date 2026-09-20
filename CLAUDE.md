@@ -1146,7 +1146,7 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **Retention** — tasks and the chest ladder (45), the recurring bloom season (47), the streak (48), golden
   levels, percentile standings, per-level records.
 - **Ranks** (52) — a seven-rung badge ladder, **derived and stored nowhere**: Cinderling,
-  Silverwatch, Goldbrand, Duskcrown, Frostheart, Auroracrest, **Gemfire**. Every rung is a set of
+  Silverwatch, Goldbrand, Duskcrown, Fireheart, Frozencrest, **Gemfire**. Every rung is a set of
   thresholds over readings the save already keeps, authored in `progression.json`, so the whole
   ladder retunes without a build. It is drawn **everywhere a player used to see a companion**:
   a watched badge under the map's back key on both tracks, `RanksScreen`, the hub's top-bar seat,

@@ -54,8 +54,8 @@ RUNGS = [
     ("silverwatch", "rank2.png"),
     ("goldbrand", "rank3.png"),
     ("duskcrown", "rank4.png"),
-    ("frostheart", "rank5.png"),
-    ("auroracrest", "rank6.png"),
+    ("fireheart", "rank5.png"),
+    ("frozencrest", "rank6.png"),
     ("gemfire", "rank7.png"),
 ]
 

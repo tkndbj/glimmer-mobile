@@ -38,6 +38,30 @@ namespace GlimmerGrove
         const float CardWidth = 980f;
 
         /// <summary>
+        /// How far a card's own furniture stays inside its plate.
+        ///
+        /// <para>
+        /// A plate this wide has a rounded, lit border of its own, and anything that stops
+        /// within a handful of units of it reads as having been clipped rather than as having
+        /// been placed. <see cref="CardTitle"/> has always sat 40 in; this is the same idea for
+        /// the right-hand side, a little tighter because what stands there is a control rather
+        /// than a sentence and a control wants to look reachable.
+        /// </para>
+        /// </summary>
+        const float Gutter = 26f;
+
+        /// <summary>
+        /// Where the keeper card's name stops, which is a hair short of the pencil beside it.
+        ///
+        /// <para>
+        /// The label is left-aligned, so its box's left edge is where the sentence begins and
+        /// its right edge is purely how much room a long name is given. Derived rather than
+        /// typed, so pulling the pencil in pulls this in with it.
+        /// </para>
+        /// </summary>
+        const float NameRight = CardWidth * .5f - Gutter - 96f - 10f;
+
+        /// <summary>
         /// What the account card is made of, top to bottom.
         ///
         /// <para>
@@ -372,11 +396,22 @@ namespace GlimmerGrove
                          TextAnchor.MiddleCenter, outline: 0f, shadow: 0f);
 
             // name, and the pencil that changes it
-            _nameLabel = UIKit.Titled("Name", card, Profile.Name, 52, Pal.Cream, TextAnchor.MiddleLeft,
-                                      new Vector2(500f, 62f), new Vector2(.5f, .5f), new Vector2(140f, 126f), 4f, 4f);
+            //
+            // **Everything on this side of the card stops at `Inside`.** The pencil and the XP
+            // track both used to end at 484 against a plate whose edge is 490, which is six
+            // units — a gap that does not read as a gap, it reads as the plate having been cut
+            // short. One constant now, so the two cannot drift apart again; the name's box
+            // gives up its right edge to make room, because its text is left-aligned and the
+            // box's other end is where the sentence actually starts.
+            const float Inside = CardWidth * .5f - Gutter;
+            const float PencilW = 96f, PencilX = Inside - PencilW * .5f;
 
-            UIKit.IconButton("Rename", card, Skins.Aside, "ic_pencil", new Vector2(96f, 96f),
-                             new Vector2(.5f, .5f), new Vector2(436f, 126f),
+            _nameLabel = UIKit.Titled("Name", card, Profile.Name, 52, Pal.Cream, TextAnchor.MiddleLeft,
+                                      new Vector2(NameRight + 110f, 62f), new Vector2(.5f, .5f),
+                                      new Vector2((NameRight - 110f) * .5f, 126f), 4f, 4f);
+
+            UIKit.IconButton("Rename", card, Skins.Aside, "ic_pencil", new Vector2(PencilW, PencilW),
+                             new Vector2(.5f, .5f), new Vector2(PencilX, 126f),
                              () => Flow.Modal<RenameOverlay>(v => v.OnRenamed = Refresh), .48f);
 
             var ribbon = UIKit.Img("Title", card, Art.S("Ui/ribbon_flat"), Color.white,
@@ -390,10 +425,10 @@ namespace GlimmerGrove
             // badge hangs off the medallion's bottom-right corner, so its right edge lands at
             // -126 while this column used to start at -128: the XP figure and the next-title
             // line both began *inside* the disc, and both sit squarely in its vertical band.
-            // The column keeps its right edge (484) and gives up its left, which is the only
-            // half that collides — widening the card or moving the badge would move something
-            // that is already where it belongs.
-            const float XpLeft = -64f, XpRight = 484f;
+            // The column keeps its right edge (`Inside`, the same gutter the pencil stands in)
+            // and gives up its left, which is the only half that collides — widening the card
+            // or moving the badge would move something that is already where it belongs.
+            const float XpLeft = -64f, XpRight = Inside;
             const float XpW = XpRight - XpLeft, XpX = (XpLeft + XpRight) * .5f;
 
             var track = UIKit.Img("XpTrack", card, Art.S("Ui/" + Skins.Trough), Color.white,

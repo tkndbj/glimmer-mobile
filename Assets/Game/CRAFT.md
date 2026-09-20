@@ -833,6 +833,24 @@ Presentation and are invisible in a compile, a validator and a screenshot of the
 - **A `switch` inside a `MonoBehaviour` is the one place here nothing can be proved.** The branching decisions
   live in Domain and are pinned offline: `HintPrompt`, `RenameRules`, `AccountPromptPolicy`, `GroveUnveil`,
   `GroveGrowth`, `AccountGate`.
+- **A state that is not available yet recedes by *value*, never by alpha, and a locked card taught it three
+  times.** The reflex for "not yet" is to fade the thing, and every version of it is the same fault: a
+  half-drawn plate reads as art that failed to load rather than as a reward not yet won (invariant 7b's
+  neighbour, and `ProductCard` has been here too). The `RanksScreen` cut of 2026-09-20 drew four of its seven
+  rungs at 38% and the whole bottom of the page — the only reason anybody scrolls it — read as broken. What
+  replaced it is three solid things instead of one faint one: a **different, darker plate**
+  (`Skins.Panel` where a live row gets `Skins.PlateNavy`), an **opaque steel ink**, and a padlock in the
+  kit's own "not a control" chip. **And the picture is never dimmed at all** — the badge, the product, the
+  turret is the thing being worked toward, and a page of bright ones down a list is a trophy case.
+- **An accent colour belongs on furniture, not as a wash over a plate.** Giving each rank its own metal was
+  first tried as a tint across the card's head and it is invisible: `PlateNavy` is a bright saturated blue,
+  so a pale steel over it moves nothing and a copper over it comes out a grey-blue smudge (invariant 44g
+  arriving through the *alpha* rather than the tint). The same colour spent on a **hard edge against a dark
+  hole** — the badge seat's rim, a chip behind the ordinal, the mark in a trough, the link between two cards
+  — reads at a glance at every value in the ramp. Two corollaries met the same day: the kit's starburst has
+  a hard rim, so at any size that reads as rays it overhangs the plate and lands on the wall, where
+  `Art.Rays` fades to nothing and may be drawn larger than what it sits on; and a **bar is read for its
+  length**, so it stays the one gold thing on the page however the rest is coloured.
 - **Timing rules live in Domain and are tested** — `Cue`, `TweenCycle`, `GroveGrowth`, `GroveUnveil`,
   `BudTempo`, `BudStage`, `GladeFanfare`, `KeeperTempo`, `FallTempo`, `CoachStroke`. Every sequence is bounded
   and **the rate gives way**, so a bigger board is never a longer wait. Motion is the one subsystem whose

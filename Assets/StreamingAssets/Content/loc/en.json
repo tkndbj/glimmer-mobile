@@ -5862,19 +5862,19 @@
       "text": "A hundred battles behind you, and the dark still breaks."
     },
     {
-      "key": "rank.frostheart.name",
-      "text": "Frostheart"
+      "key": "rank.fireheart.name",
+      "text": "Fireheart"
     },
     {
-      "key": "rank.frostheart.blurb",
+      "key": "rank.fireheart.blurb",
       "text": "Nothing that comes over the hill moves you now."
     },
     {
-      "key": "rank.auroracrest.name",
-      "text": "Auroracrest"
+      "key": "rank.frozencrest.name",
+      "text": "Frozencrest"
     },
     {
-      "key": "rank.auroracrest.blurb",
+      "key": "rank.frozencrest.blurb",
       "text": "Six chapters held, and the sky knows your name."
     },
     {
@@ -6012,6 +6012,10 @@
     {
       "key": "ui.ranks.ordinal",
       "text": "RANK {0}"
+    },
+    {
+      "key": "ui.ranks.percent",
+      "text": "{0}%"
     }
   ]
 }

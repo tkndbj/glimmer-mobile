@@ -1242,7 +1242,7 @@
         ]
       },
       {
-        "id": "frostheart",
+        "id": "fireheart",
         "requires": [
           { "measure": "levels_cleared", "scope": "s05_ashenhold", "target": 10 },
           { "measure": "stars", "target": 125 },
@@ -1252,7 +1252,7 @@
         ]
       },
       {
-        "id": "auroracrest",
+        "id": "frozencrest",
         "requires": [
           { "measure": "levels_cleared", "scope": "s06_thundercrag", "target": 10 },
           { "measure": "stars", "target": 155 },

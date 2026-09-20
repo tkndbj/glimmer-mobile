@@ -78,6 +78,12 @@ namespace GlimmerGrove
         bool _closing;
 
         /// <summary>
+        /// What holds this panel above the keyboard, kept only so the exit can switch it off.
+        /// See <see cref="Close"/>.
+        /// </summary>
+        KeyboardLift _lift;
+
+        /// <summary>
         /// True from the first frame of the exit animation. See <see cref="View.IsLeaving"/>
         /// for what reads it and why a closing panel must not block its own successor.
         /// </summary>
@@ -91,6 +97,20 @@ namespace GlimmerGrove
             Backing = UIKit.Img("Panel", Content, Art.S("Ui/panel_main"), Color.white,
                                 size, new Vector2(.5f, .5f), offset);
             Panel = (RectTransform)Backing.transform;
+
+            // **Every panel is held above the keyboard, not just the two that type.** A panel
+            // centred on the display sits squarely under the soft keyboard on a phone: the
+            // rename panel's Save and Cancel keys and the redeem panel's field were all behind
+            // it, which is a screen with nothing on it a player can reach. Lifting is
+            // <see cref="SoftKeyboard"/>'s, measured off the keyboard's own reported height
+            // rather than off a constant.
+            //
+            // Attached here rather than by the two panels that hold a field, because the room a
+            // keyboard takes is nought on every display where there is no keyboard up — the
+            // Editor, every desktop build, every panel in the game that is not being typed into
+            // — so the fitter is free where it is not needed, and a rule that call sites have to
+            // remember is a rule they forget (View.ClearContent's lesson, one layer up).
+            _lift = SoftKeyboard.Lift(Panel);
 
             if (title != null)
             {
@@ -173,6 +193,12 @@ namespace GlimmerGrove
         {
             if (_closing) return;
             _closing = true;
+
+            // The keyboard goes down when this panel does, so without this the panel would slide
+            // back to its resting place while it faded — a drop underneath the exit, which reads
+            // as the panel falling rather than as the panel leaving. Held where it is instead.
+            if (_lift) _lift.enabled = false;
+
             if (!quiet) Audio.SfxVaried("back", .5f);
             var cg = UIKit.Group(Content);
             Tween.Fade(cg, 0f, .22f);
