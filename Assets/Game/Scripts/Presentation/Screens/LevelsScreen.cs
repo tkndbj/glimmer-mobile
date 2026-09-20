@@ -1127,25 +1127,35 @@ namespace GlimmerGrove
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", Vector2.one * CornerSize,
                              new Vector2(0f, 1f), new Vector2(CornerX, CornerY), () => Flow.Go<HomeScreen>());
 
-            // The rank this keeper holds, directly under the back key and on both tracks — this
-            // screen draws the chapter map and the Infinite hub, and the chrome is deliberately
-            // the same for both, so one call covers the pair. It is the way to the page that
-            // says what every rank asks for, which is the one question a badge invites and the
-            // only place on the map it can be asked.
+            // **The rank this keeper holds, directly under the back key — and on the ranked lane
+            // only**, at the owner's instruction. This screen draws the chapter map and the
+            // Infinite hub with one set of chrome, so it used to cover both with one call; what
+            // that got wrong is that the ordinary ladder is a chapter map, and a rank is not a
+            // thing a chapter map says anything about. The ranked lane is where a standing is
+            // the subject, so that is where the badge and the way to its page belong.
             //
-            // **First in the column because it is the one that is always there.** The boost
-            // clock takes itself off screen when no window is running, so putting it above this
-            // would leave a hole between the back key and the badge on every session where
-            // nobody has watched a video — a gap that reads as a layout fault rather than as an
-            // absence. Stable things above transient ones.
-            RankBadge.Attach(this, Safe, new Vector2(0f, 1f), new Vector2(CornerX, RankY));
+            // **The lane is asked here rather than inside the widget** (`RankBadge`): a rank is
+            // fed by every lane and there is nothing per-lane about the readout, so what is
+            // per-lane is the corner it sits in, which is this screen's business.
+            //
+            // **First in the column because it is the one that is always there** — on this lane.
+            // The boost clock takes itself off screen when no window is running, so putting it
+            // above this would leave a hole between the back key and the badge on every session
+            // where nobody has watched a video — a gap that reads as a layout fault rather than
+            // as an absence. Stable things above transient ones.
+            bool ranked = !Lane.IsMain;
+            if (ranked)
+                RankBadge.Attach(this, Safe, new Vector2(0f, 1f), new Vector2(CornerX, RankY));
 
-            // The XP boost's clock, under the badge. It takes itself off screen when no boost is
-            // running (`BoostReadout`), which is why it is attached unconditionally rather than
-            // behind a test here: a screen that decided for itself would have to be rebuilt when
-            // a window opens under it.
+            // The XP boost's clock, under the badge — or in the badge's own seat on a lane that
+            // draws no badge, because a control that hangs where a missing neighbour used to be
+            // is the hole the paragraph above is about, from the other end.
+            //
+            // It takes itself off screen when no boost is running (`BoostReadout`), which is why
+            // it is attached unconditionally rather than behind a test here: a screen that
+            // decided for itself would have to be rebuilt when a window opens under it.
             BoostReadout.Attach(this, Safe, new Vector2(0f, 1f),
-                                new Vector2(CornerX, BoostY));
+                                new Vector2(CornerX, ranked ? BoostY : ColumnOnlyY));
 
             // What a glade pays, and under what rule — the one thing this screen is full of
             // and cannot draw. A node shows its stars and says nothing about what the stars
@@ -1340,19 +1350,35 @@ namespace GlimmerGrove
         const float BoostGap = 18f;
 
         /// <summary>
-        /// Where the rank badge sits: under the back key, and the first thing in the left column
-        /// because it is the only one of the three that is always drawn.
+        /// The top of the left-hand column: one gap under the back key's own bottom edge.
         ///
-        /// Half the key's height plus half the badge's, which is <see cref="BoostY"/>'s
-        /// arithmetic and for its reason — `UIKit.Box` always pivots at centre, so a gap between
-        /// two controls of different sizes is only a gap between their *faces* once both halves
-        /// are in it. The height is read from <see cref="RankBadge.Height"/> rather than typed,
-        /// so re-cutting the widget cannot leave the map placing it against the size it used to
-        /// be.
+        /// Half the key's height plus the gap, which is every other seat's arithmetic and for
+        /// its reason — `UIKit.Box` always pivots at centre, so a gap between two controls of
+        /// different sizes is only a gap between their <em>faces</em> once both halves are in
+        /// it. Every height below is read from the widget rather than typed, so re-cutting one
+        /// cannot leave the map placing it against the size it used to be.
         /// </summary>
-        const float RankY = CornerY - CornerSize * .5f - BoostGap - RankBadge.Height * .5f;
+        const float ColumnTop = CornerY - CornerSize * .5f - BoostGap;
+
+        /// <summary>
+        /// Where the rank badge sits when it is drawn at all: at the top of the column, because
+        /// it is the stable one of the pair. It is drawn on the ranked lane only, which is
+        /// <see cref="ColumnOnlyY"/>'s reason for existing.
+        /// </summary>
+        const float RankY = ColumnTop - RankBadge.Height * .5f;
 
         const float BoostY = RankY - RankBadge.Height * .5f - BoostGap - BoostReadout.Height * .5f;
+
+        /// <summary>
+        /// Where the boost clock sits on a lane that draws no rank badge: the top of the column,
+        /// which is the badge's own seat.
+        ///
+        /// <b>Written down rather than folded into <see cref="BoostY"/> with a ternary at the
+        /// call site</b>, for the reason the rest of this block exists: the two seats are one
+        /// column measured downwards from the back key, and a caller doing the arithmetic itself
+        /// is a second copy of it that stops agreeing the first time a widget is re-cut.
+        /// </summary>
+        const float ColumnOnlyY = ColumnTop - BoostReadout.Height * .5f;
 
         /// <summary>
         /// Where the chapter's star count sits: under the "i", right-aligned with it, measured

@@ -775,8 +775,8 @@ namespace GlimmerGrove.Tests
 
             for (int i = 0; i < 500; i++)
             {
-                char a = plain.Deal(out var none);
-                char b = charmed.Deal(out var charm);
+                char a = plain.Deal(0, out var none);
+                char b = charmed.Deal(0, out var charm);
 
                 Assert.AreEqual(a, b,
                                 $"gem {i} of the deal differs between a charmed field and a plain "
@@ -826,7 +826,7 @@ namespace GlimmerGrove.Tests
 
             for (int i = 0; i < Gems; i++)
             {
-                board.Deal(out var charm);
+                board.Deal(0, out var charm);
                 since++;
 
                 if (charm == SiegeCharm.None) continue;
@@ -934,7 +934,7 @@ namespace GlimmerGrove.Tests
                     // the broken roll passed a clean walk.
                     if (i % 7 == 0) board.Reshuffle();
 
-                    board.Deal(out var charm);
+                    board.Deal(0, out var charm);
                     if (charm != SiegeCharm.None) found++;
                 }
 
@@ -994,7 +994,7 @@ namespace GlimmerGrove.Tests
                 // that is over it is caught rather than merely not observed.
                 for (int i = 0; i <= within; i++)
                 {
-                    board.Deal(out var charm);
+                    board.Deal(0, out var charm);
                     if (charm == SiegeCharm.None) continue;
 
                     first = i;
@@ -1112,7 +1112,7 @@ namespace GlimmerGrove.Tests
             var board = SiegeBoard.Build(layout);
             for (int i = 0; i < 2000; i++)
             {
-                board.Deal(out var charm);
+                board.Deal(0, out var charm);
                 Assert.AreEqual(SiegeCharm.None, charm);
             }
         }

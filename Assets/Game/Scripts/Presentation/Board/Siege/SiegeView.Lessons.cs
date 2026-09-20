@@ -13,6 +13,52 @@ namespace GlimmerGrove
     /// <summary>The one-off lessons this mode shows, and what each of them points at.</summary>
     public sealed partial class SiegeView
     {
+        /// <summary>
+        /// Whether something outside this board is already pointing at it.
+        ///
+        /// <para>
+        /// <b>It stands the idle nudge down, and it exists for exactly one caller.</b> The nudge
+        /// (<c>SiegeView.Hint</c>) rings a swap after five seconds of untouched board, which is
+        /// the right answer on a rung and the wrong one under a tutorial: the tutorial is already
+        /// ringing a pair and holding a hand over it, so the nudge would put a second highlight
+        /// on the same two gems and then take it away again after 2.6 seconds, which reads as the
+        /// board changing its mind.
+        /// </para>
+        /// <para>
+        /// <b>A latch rather than a check on who is showing the board</b>, because the board must
+        /// not learn about screens. It is false everywhere except <c>TutorialScreen</c>, so every
+        /// shipped rung nudges exactly as it did.
+        /// </para>
+        /// </summary>
+        public bool Coached { get; set; }
+
+        /// <summary>
+        /// The gem standing in <paramref name="cell"/>, for a scripted lesson to ring or trace
+        /// between, or null when the field is not drawn.
+        ///
+        /// <para>
+        /// <b>The gem itself rather than an anchor over it.</b> <c>ProtoView</c> mints empty
+        /// anchors for its two declared lessons because those are cells a mode <em>names</em>;
+        /// this is a cell a script <em>chose</em>, and the thing it wants ringed is the object the
+        /// player is about to drag. A real widget also cannot drift from what is drawn there, and
+        /// it is never cached, so a board dealt again hands back the new gem rather than a
+        /// destroyed one.
+        /// </para>
+        /// <para>
+        /// Asked at the moment a panel goes up rather than remembered, which is
+        /// <see cref="ArmedWard"/>'s rule and for the same reason: a gem mid-cascade is a gem in
+        /// the air.
+        /// </para>
+        /// </summary>
+        public RectTransform GemAt(int cell)
+        {
+            if (cell < 0 || cell >= _gems.Count) return null;
+
+            var gem = _gems[cell];
+            return gem == null || gem.Img == null ? null : gem.Img.rectTransform;
+        }
+
+
         // ------------------------------------------------------------------ the lessons
         /// <summary>The gem a lesson about the verb rings: one whose ward is on the line.</summary>
         public override int VerbCell

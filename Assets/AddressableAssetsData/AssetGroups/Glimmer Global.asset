@@ -13957,7 +13957,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 577606059d3382726af206807cb2e094
-    m_Address: Art/Ui/Rank/frostheart
+    m_Address: Art/Ui/Rank/fireheart
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -30031,7 +30031,7 @@ MonoBehaviour:
     - Art/Fx/Siege/hit_leech_g
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b9b06a1096414201ae0f69a87cdf4f1b
-    m_Address: Art/Ui/Rank/auroracrest
+    m_Address: Art/Ui/Rank/frozencrest
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -989,6 +989,71 @@ namespace GlimmerGrove.Modes
             return hit;
         }
 
+        /// <summary>
+        /// Whether the gem standing at <paramref name="at"/> is already in a run.
+        ///
+        /// <para>
+        /// <b>The same question <see cref="Runs"/> answers, asked about one cell</b>, and it
+        /// exists because the refill has to ask it forty times a collapse: a dealt gem may not
+        /// land already matched (invariant 37eo), and building the whole set to find out whether
+        /// one cell is in it is a full-field scan and a <c>HashSet</c> per candidate colour.
+        /// </para>
+        /// <para>
+        /// <b>A second reading of one rule is the shape invariant 5b refuses</b>, so it is not
+        /// left to agree by inspection: <c>SiegeFieldTests.OneCellReadsTheSameAsTheWholeField</c>
+        /// walks random fields, charms and all, and fails the moment the two disagree about any
+        /// cell. What keeps that honest is that this is written as the <em>same</em> definition —
+        /// a maximal block of <em>c</em>-or-wild holding at least one real <em>c</em>, walked for
+        /// each colour in turn — rather than as a cheaper procedure that happens to agree today.
+        /// </para>
+        /// </summary>
+        internal static bool Lined(char[] cells, int width, int height, SiegeCharm[] charms, int at)
+        {
+            if (at < 0 || at >= cells.Length || !IsGem(cells[at])) return false;
+
+            int x0 = at % width, y0 = at / width;
+
+            bool Wild(int i) => charms != null && SiegeCharms.IsWild(charms[i]);
+            bool Joins(int i, char colour) => IsGem(cells[i]) && (Wild(i) || cells[i] == colour);
+
+            for (int c = 0; c < Letters.Length; c++)
+            {
+                char colour = Letters[c];
+                if (!Joins(at, colour)) continue;
+
+                if (Reaches(1, 0, colour) || Reaches(0, 1, colour)) return true;
+            }
+
+            return false;
+
+            // The maximal block of this colour through `at`, walked both ways from it — which is
+            // the same block `Runs` finds when it scans the whole line, because a maximal block is
+            // maximal from wherever inside it you start.
+            bool Reaches(int dx, int dy, char colour)
+            {
+                int run = 1, real = Wild(at) ? 0 : 1;
+
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    int x = x0 + dx * side, y = y0 + dy * side;
+
+                    while (x >= 0 && x < width && y >= 0 && y < height)
+                    {
+                        int i = y * width + x;
+                        if (!Joins(i, colour)) break;
+
+                        run++;
+                        if (!Wild(i)) real++;
+
+                        x += dx * side;
+                        y += dy * side;
+                    }
+                }
+
+                return run >= SiegeTuning.MinRun && real > 0;
+            }
+        }
+
         /// <summary>Which ward carries this colour, or -1.</summary>
         public int WardOf(char colour) => Array.IndexOf(Wards, colour);
 

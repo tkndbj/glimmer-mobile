@@ -159,15 +159,7 @@ namespace GlimmerGrove.Modes
                         var shaken = _wards[w];
                         if (!shaken.Alive) continue;
 
-                        shaken.Health -= shook;
-
-                        bool down = shaken.Health <= 0;
-                        if (down)
-                        {
-                            shaken.Health = 0;
-                            shaken.Alive = false;
-                            shaken.Fuel = 0f;
-                        }
+                        bool down = Bear(shaken, shook);
 
                         // One record per ward, so the view draws a hit on each of them from the
                         // same list every other spell arrives on. The roar itself is drawn off the
@@ -222,15 +214,7 @@ namespace GlimmerGrove.Modes
                           ? SiegeSpell.Smite : spell.Craft;
 
                 int cast = SiegeTuning.CastOf(caster.Kind) + taken * SiegeTuning.ThundererDrain;
-                ward.Health -= cast;
-
-                bool felled = ward.Health <= 0;
-                if (felled)
-                {
-                    ward.Health = 0;
-                    ward.Alive = false;
-                    ward.Fuel = 0f;
-                }
+                bool felled = Bear(ward, cast);
 
                 _report.Spells.Add(new SiegeSpellLanded(spell.Raider, spell.Ward, craft,
                                                         cast, felled, sundered, taken));
@@ -640,14 +624,15 @@ namespace GlimmerGrove.Modes
                     if (ward.Sealed <= 0f)
                     {
                         ward.Absolve();
-                        ward.Health = 0;
-                        ward.Alive = false;
-                        ward.Fuel = 0f;
-                        ward.Charges = 0;
 
-                        _report.Spells.Add(
-                            new SiegeSpellLanded(-1, w, SiegeSpell.Doom, 0, true));
-                        continue;
+                        if (Topple(ward))
+                        {
+                            ward.Charges = 0;
+
+                            _report.Spells.Add(
+                                new SiegeSpellLanded(-1, w, SiegeSpell.Doom, 0, true));
+                            continue;
+                        }
                     }
                 }
 
@@ -1098,6 +1083,48 @@ namespace GlimmerGrove.Modes
             return best;
         }
 
+        /// <summary>
+        /// What a ward bears, and the only place its health is taken. Answers whether it fell.
+        ///
+        /// <para>
+        /// <b>Three things take a ward's health and every one of them used to do it in full</b> —
+        /// a raider's blow, a boss's cast and a warbringer's roar — with the clamp, the flag and
+        /// the emptied tube written out three times. They agreed, which is luck rather than
+        /// design: it is one operation, so it is one method, and a fourth thing that hurts the
+        /// line now inherits the whole of what falling means.
+        /// </para>
+        /// <para>
+        /// <b>And it is the one place <see cref="Sheltered"/> can be honoured.</b> A guarantee
+        /// the line cannot fall has to live where a ward is hurt; anywhere else it is a repair
+        /// applied after the fact, which is a state the rest of the model has already seen.
+        /// </para>
+        /// </summary>
+        bool Bear(SiegeWard ward, int damage)
+        {
+            if (Sheltered) return false;
+
+            ward.Health -= damage;
+            return ward.Health <= 0 && Topple(ward);
+        }
+
+        /// <summary>
+        /// Takes a ward off the line: the one place one stops standing, and the one place
+        /// <see cref="Sheltered"/> refuses.
+        ///
+        /// Separate from <see cref="Bear"/> because a sunlord's seal takes a ward without
+        /// hurting it — the clock runs out and the ward is simply gone — so "fell by damage" and
+        /// "fell" are two different sentences with one consequence.
+        /// </summary>
+        bool Topple(SiegeWard ward)
+        {
+            if (Sheltered) return false;
+
+            ward.Health = 0;
+            ward.Alive = false;
+            ward.Fuel = 0f;
+            return true;
+        }
+
         void Swing(float dt)
         {
             for (int i = 0; i < _raiders.Count; i++)
@@ -1125,15 +1152,7 @@ namespace GlimmerGrove.Modes
 
                 var ward = _wards[w];
                 int damage = raider.Surge.Blow(SiegeTuning.BlowOf(raider.Kind));
-                ward.Health -= damage;
-
-                bool felled = ward.Health <= 0;
-                if (felled)
-                {
-                    ward.Health = 0;
-                    ward.Alive = false;
-                    ward.Fuel = 0f;
-                }
+                bool felled = Bear(ward, damage);
 
                 _report.Blows.Add(new SiegeBlow(w, raider.Id, damage, felled));
             }

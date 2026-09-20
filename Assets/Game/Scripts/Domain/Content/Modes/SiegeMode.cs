@@ -22,7 +22,24 @@ namespace GlimmerGrove.Content
     {
         public readonly SiegeLayout Layout;
 
-        public SiegeRules(SiegeLayout layout) : base(0) => Layout = layout;
+        /// <summary>
+        /// The line this board stands, or null for the player's own.
+        ///
+        /// <b>It exists for the one run that is not the player's</b>: the opening tutorial
+        /// (<see cref="SiegeTutorial"/>) plays the starter line deliberately, because a loadout
+        /// is something a first-timer has not met and the starter is the only line whose art is
+        /// certain to be resident. Null is every authored level, so nothing that shipped before
+        /// it reads any differently.
+        /// </summary>
+        readonly Wards.WardLine _line;
+
+        public SiegeRules(SiegeLayout layout) : this(layout, null) { }
+
+        public SiegeRules(SiegeLayout layout, Wards.WardLine line) : base(0)
+        {
+            Layout = layout;
+            _line = line;
+        }
 
         public override GameMode Mode => GameMode.Siege;
         public override ProtoGrid Grid => Layout.Grid;
@@ -37,7 +54,7 @@ namespace GlimmerGrove.Content
         /// never come to depend on whatever loadout the developer running it happens to have.
         /// </para>
         /// </summary>
-        public override IProtoBoard Fresh() => SiegeBoard.Build(Layout, Wards.WardLoadout.Line);
+        public override IProtoBoard Fresh() => SiegeBoard.Build(Layout, _line ?? Wards.WardLoadout.Line);
 
         /// <summary>
         /// Nothing to search.

@@ -275,6 +275,29 @@ namespace GlimmerGrove.Modes
         /// over an empty hill would otherwise buy a quiet nobody paid for, which is invariant 5d
         /// asked of the one charm whose decision is <em>when</em>.
         /// </summary>
+        /// <summary>
+        /// Whether this line may be taken at all. <b>False on every board a player is graded
+        /// on</b>, and true only on the opening tutorial.
+        ///
+        /// <para>
+        /// <b>A property of the board rather than a repair applied to it, and that is the whole
+        /// of why it is here.</b> The tutorial's guarantee began as a screen topping every
+        /// turret up sixty times a second, which works and is the wrong shape twice over: the
+        /// model is briefly in a state it should never have reached, and the rule lives in a
+        /// <c>MonoBehaviour</c> where nothing in Domain can see or test it. Read by
+        /// <see cref="Bear"/> and <see cref="Topple"/> — the two doors a ward can lose through —
+        /// so a ward under it is never hurt in the first place and never has to be put back.
+        /// </para>
+        /// <para>
+        /// <b>What it does not touch is the hill.</b> Raiders walk, arrive, swing and are
+        /// reported swinging; the blows simply take nothing. So the mode a first-timer is shown
+        /// is the mode they will play, at its own pace, with the one consequence they are not
+        /// ready for removed — rather than a slower hill, which would teach a pace that does not
+        /// exist.
+        /// </para>
+        /// </summary>
+        public bool Sheltered { get; set; }
+
         public bool Stilled => _still > 0f;
 
         /// <summary>Seconds the hill has left standing still, for a readout. Nought when it walks.</summary>

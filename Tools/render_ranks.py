@@ -99,7 +99,10 @@ METALS = [
 
 #: `LevelsScreen.CornerSize` / `CornerX` / `CornerY`, and `RankBadge`'s own block.
 CORNER, CORNER_X, CORNER_Y = 118.0, 96.0, 132.0
-MARK_SIZE, NAME_H, BADGE_W = 92.0, 30.0, 168.0
+#: `RankBadge`'s own block, twice the size it was cut at. The width is what bounds it: the
+#: block is centred on `CornerX`, 96 from the safe area's edge, so a box wider than 192 hangs a
+#: centred rank name off the side of the screen.
+MARK_SIZE, NAME_H, BADGE_W = 184.0, 44.0, 192.0
 BOOST_GAP = 18.0
 
 #: Every settled font size this run measured, so the floors can be reported in one place.
@@ -505,6 +508,17 @@ def map_corner(held):
     **The other half of the change, and the half with a neighbour.** The page can be judged on
     its own; the badge cannot, because what can be wrong with it is where it sits against the
     two controls it shares a column with.
+
+    **Nothing here is ghosted, in either state.** The map's badge is drawn solid even for an
+    account below the first rung (`RankBadge`'s class remarks): a faded stand-in read as art
+    that had failed to load, and what says *not yet* is the word under it. The hero on the page
+    still ghosts its own, which is why `badge(ghost=...)` is still a parameter.
+
+    **It is drawn on the ranked lane only**, so this is a picture of the Infinite hub's corner
+    and of no other. On the ordinary ladder there is no badge and the boost clock takes its seat
+    at the top of the column; nothing draws that, because nothing in this repo mirrors the
+    chapter map. `render_endless.py` draws this same corner inside the whole hub, which is the
+    sheet to look at for whether it sits well against its neighbours.
     """
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
     K.plain(sheet)
@@ -516,13 +530,13 @@ def map_corner(held):
     rank_y = CORNER_Y + CORNER / 2 + BOOST_GAP + (MARK_SIZE + NAME_H) / 2
     rid = RUNGS[held - 1]["id"] if held else RUNGS[0]["id"]
 
-    K.paste(sheet, badge(rid, MARK_SIZE, ghost=not held),
+    K.paste(sheet, badge(rid, MARK_SIZE),
             CORNER_X, rank_y - (MARK_SIZE + NAME_H) / 2 + MARK_SIZE / 2)
 
     name = txt("rank.%s.name" % rid) if held else txt("ui.ranks.unranked")
     px = K.shrunk(sheet, name, CORNER_X, rank_y - (MARK_SIZE + NAME_H) / 2 + MARK_SIZE + NAME_H / 2,
-                  BADGE_W, NAME_H, 24, 14, fill=K.GOLD if held else (255, 243, 220), outline=0)
-    MEASURED.append(("map badge '%s'" % name, px, 14))
+                  BADGE_W, NAME_H, 32, 18, fill=K.GOLD if held else (255, 243, 220), outline=0)
+    MEASURED.append(("map badge '%s'" % name, px, 18))
 
     # The boost clock's seat, so the column reads as a column. Drawn as an outline rather than
     # as a clock, because what is being judged here is the *gap*: the badge is above the clock

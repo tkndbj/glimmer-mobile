@@ -147,6 +147,12 @@ namespace GlimmerGrove
 
             if (_nudges >= MostHints || _still < HintAfter) return;
 
+            // **And nothing is offered over a board somebody else is already pointing at.** The
+            // clock above still runs, so this is a nudge withheld rather than a feature switched
+            // off: the frame a scripted lesson lets go, the board is back to answering for
+            // itself. See `SiegeView.Coached`.
+            if (Coached) return;
+
             Nudge();
         }
 

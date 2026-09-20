@@ -237,9 +237,30 @@ namespace GlimmerGrove.Modes
         // measured against. The rule itself is untouched: what a bulwark's shield does is
         // `SiegeTuning.DamageTo`, and every rung that sent one still sends one.
 
-        /// <summary>Gravity, then a refill, both written into the beat for the view to animate.</summary>
+        /// <summary>
+        /// Gravity, then a refill, both written into the beat for the view to animate.
+        ///
+        /// <para>
+        /// <b>Two passes over the field rather than one pass per column, and the split is what
+        /// makes a settled refill possible at all.</b> A dealt gem is chosen by asking the field
+        /// whether it would land already matched (<see cref="Settled"/>), and that question only
+        /// has a true answer once every gem a run could reach is where it is going to stay. While
+        /// a column was collapsed and refilled before the next one fell, a fresh gem was asked
+        /// about neighbours still floating above their holes — so it would settle against a board
+        /// that no longer existed a moment later.
+        /// </para>
+        /// <para>
+        /// <b>Within a column both passes keep the order they had</b>, which is what the view
+        /// relies on: it moves a falling gem out of <c>_gems[from]</c> and into <c>_gems[to]</c>,
+        /// and a source is always read before anything is written over it only because the drops
+        /// of one column arrive lowest-first. Columns never touch each other's cells, so
+        /// interleaving them costs nothing and re-ordering inside one would cost a gem.
+        /// </para>
+        /// </summary>
         void Collapse(SiegeBeat beat)
         {
+            var empty = new int[Width];
+
             for (int x = 0; x < Width; x++)
             {
                 int write = Height - 1;
@@ -270,12 +291,19 @@ namespace GlimmerGrove.Modes
                     write--;
                 }
 
-                // Everything above the write head is new, and it falls in from above the field.
+                empty[x] = write;
+            }
+
+            // Everything above each column's write head is new, and it falls in from above the
+            // field.
+            for (int x = 0; x < Width; x++)
+            {
                 int fresh = 0;
-                for (int y = write; y >= 0; y--)
+
+                for (int y = empty[x]; y >= 0; y--)
                 {
-                    char c = Deal(out var charm);
                     int to = IndexOf(x, y);
+                    char c = Deal(to, out var charm);
 
                     _cells[to] = c;
                     _charms[to] = charm;
@@ -378,15 +406,14 @@ namespace GlimmerGrove.Modes
         /// costing a draw.
         /// </para>
         /// </summary>
-        internal char Deal(out SiegeCharm charm)
+        internal char Deal(int at, out SiegeCharm charm)
         {
             uint drawn = Next();
-            char cell = Layout.Deal[(int)(drawn % (uint)Layout.Deal.Length)];
 
             charm = SiegeCharm.None;
 
             var charms = Layout.Charms;
-            if (charms == null || charms.Length == 0) return cell;
+            if (charms == null || charms.Length == 0) return Settled(at, drawn);
 
             uint mixed = Avalanche(drawn);
 
@@ -407,7 +434,81 @@ namespace GlimmerGrove.Modes
                 _charmAt = (int)((mixed & 0xFFFFu) % SiegeTuning.CharmWithin);
             }
 
-            return cell;
+            return Settled(at, drawn);
+        }
+
+        /// <summary>
+        /// The gem this draw deals into <paramref name="at"/>: the one it picked, unless that one
+        /// would land already matched, in which case the next colour in the bag that would not.
+        ///
+        /// <para>
+        /// <b>A dealt gem may never land in a run (invariant 37eo), and that is a rule about
+        /// agency rather than about difficulty.</b> Nothing used to stop one: a refill was a free
+        /// draw per cell, so on every collapse the board rolled itself a fresh chance of three
+        /// alike, and the chains that followed were the board's work rather than the player's.
+        /// Measured over ninety runs a chapter before this rule, <b>39% of every match cascaded</b>
+        /// and the deepest reached <b>x15</b> — on the three-colour opening rungs a match cleared
+        /// <b>13 gems</b> against par's assumed 5.5 and chained 2.7 deep on average. A cascade
+        /// that arrives because the deal happened to agree with itself is the free payoff
+        /// invariant 5d refuses: it rejects no play, so it says nothing about any.
+        /// </para>
+        /// <para>
+        /// <b>What is left is the cascade a player earns</b> — gravity dropping gems that were
+        /// already on the field into line with each other. That one is caused by the move, it is
+        /// readable before it is taken, and it is the only kind this mode pays for now.
+        /// </para>
+        /// <para>
+        /// <b>Still exactly one <see cref="Next"/>, which is the whole reason it is a rotation of
+        /// the bag rather than a re-roll.</b> A rejection loop would draw again, and a stream
+        /// drawn a different number of times deals a different field from the same seed
+        /// (invariant 41) — so this walks the bag from where the draw landed and takes the first
+        /// gem that settles, which keeps the draw's own choice whenever that choice is legal and
+        /// keeps an author's weighting (a bag may write a letter twice) as nearly as a skip can.
+        /// </para>
+        /// <para>
+        /// <b>Every colour matching is a real state and is dealt anyway</b>, rather than left to a
+        /// fallback nobody chose: on a three-colour field a cell with two alike above it and two
+        /// alike beside it has no settled answer at all. The drawn gem is what lands, which is
+        /// exactly today's behaviour for that cell and nothing worse.
+        /// </para>
+        /// <para>
+        /// <b>The charm riding in is deliberately not consulted, so the letter this deals stays a
+        /// function of the draw and the field alone.</b> A prism is wild, so a cell that settles
+        /// as an ordinary gem may still line up as a prism — rare, and the right way round: a
+        /// charm is a payoff and one that arrives having already done something is not a fault.
+        /// What it buys is that a charmed field and a plain one deal the same letters from the
+        /// same seed, which is the one proof that a charm roll costs no draw
+        /// (<c>SiegeCharmTests.DealingACharmCostsNoExtraDraw</c>).
+        /// </para>
+        /// <para>
+        /// <b>It is asked of the field as it stands</b>, so it is only sound while every gem a
+        /// run could reach is already in its final place — which is what splits
+        /// <see cref="Collapse"/> into gravity for the whole field and then the refill, rather
+        /// than both a column at a time.
+        /// </para>
+        /// </summary>
+        char Settled(int at, uint drawn)
+        {
+            string bag = Layout.Deal;
+            int from = (int)(drawn % (uint)bag.Length);
+
+            char was = _cells[at];
+            char dealt = bag[from];
+
+            for (int i = 0; i < bag.Length; i++)
+            {
+                char gem = bag[(from + i) % bag.Length];
+
+                _cells[at] = gem;
+                if (SiegeLayout.Lined(_cells, Width, Height, _charms, at)) continue;
+
+                dealt = gem;
+                break;
+            }
+
+            _cells[at] = was;
+
+            return dealt;
         }
 
         /// <summary>

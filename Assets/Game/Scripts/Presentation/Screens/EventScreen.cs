@@ -46,7 +46,14 @@ namespace GlimmerGrove
         // The stack, in canvas units from the top of the safe area.
         const float ChromeSize = 92f;
         const float HeroH = 240f;
-        const float PassH = 132f;
+        /// <summary>
+        /// The pass row is the one thing on this page that is for sale, and at 132 it was the
+        /// shortest plate on a page whose hero is 240 and whose rung cards are 192 — the offer
+        /// read as a footnote between them. Grown at the owner's instruction; everything inside
+        /// it is measured off the new height rather than left where the short plate put it, so
+        /// the crest, the two lines and the key all grow with the box.
+        /// </summary>
+        const float PassH = 176f;
         const float HeadingH = 62f;
         const float Width = 1000f;
 
@@ -399,35 +406,43 @@ namespace GlimmerGrove
                                   new Vector2(Width, PassH), Top, new Vector2(0f, -(y + PassH * .5f)));
 
             UIKit.Img("Glow", plate.transform, Art.Glow(128, 2f), Pal.A(Pal.Bloom, .22f),
-                      new Vector2(230f, 230f), Left, new Vector2(104f, 0f));
+                      new Vector2(300f, 300f), Left, new Vector2(116f, 0f));
 
             // Gold rather than the kit's own white. `Skins.Badge` is a plain burst, and a white
             // one on a violet plate reads as a shape somebody forgot to fill in; gold is what
             // this UI already means by "the good one", and it is the one mark on the page that
             // is about a purchase.
             var crest = UIKit.Img("Crest", plate.transform, Art.S("Ui/" + Skins.Badge), Pal.Gold,
-                                  new Vector2(96f, 96f), Left, new Vector2(104f, 0f));
+                                  new Vector2(128f, 128f), Left, new Vector2(116f, 0f));
             crest.preserveAspect = true;
 
             var seal = UIKit.Img("Seal", crest.transform, Art.S("Ui/ic_gem"), Pal.Cream,
-                                 new Vector2(44f, 44f), Centre, Vector2.zero);
+                                 new Vector2(58f, 58f), Centre, Vector2.zero);
             seal.preserveAspect = true;
 
-            // The room between the crest and the button, measured rather than guessed: the
-            // crest ends at 152 and the button's near edge is at 1000 - 152 - 134 = 714. A
-            // Unity label that overflows is not clipped and nothing says so (invariant 37n),
-            // so the box is the gap and the fitter does the rest.
-            const float HintW = 520f;
+            // The room between the crest and the button, measured rather than guessed, and
+            // re-measured when the plate grew: the crest ends at 116 + 64 = 180, the words
+            // start at `TextX` and the button's near edge is at 1000 - 166 - 150 = 684. A Unity
+            // label that overflows is not clipped and nothing says so (invariant 37n), so the
+            // box is the gap less a hair and the fitter does the rest.
+            const float TextX = 200f;
+            const float HintW = 470f;
 
             _passCaption = UIKit.Shrinkable(
-                UIKit.Titled("Name", plate.transform, Loc.Get("ui.mark.pass"), 32, Pal.Cream,
-                             TextAnchor.MiddleLeft, new Vector2(HintW, 40f), Left,
-                             new Vector2(176f + HintW * .5f, 20f), 3f, 4f), 19);
+                UIKit.Titled("Name", plate.transform, Loc.Get("ui.mark.pass"), 38, Pal.Cream,
+                             TextAnchor.MiddleLeft, new Vector2(HintW, 46f), Left,
+                             new Vector2(TextX + HintW * .5f, 38f), 3f, 4f), 22);
 
+            // <b>The sentence is given two lines rather than one, which is what the taller
+            // plate is for.</b> `UIKit.Shrinkable` wraps and then truncates, so a one-line box
+            // makes a long sentence *smaller*, not wider — on a narrower column it came out at
+            // its floor and clipped. Both hints here wrap to two lines at 26 and stand 62 units
+            // tall, which is the box; the offer is now read at 26 where it used to be read at
+            // 15, and it is the line the purchase is decided on.
             _passHint = UIKit.Shrinkable(
-                UIKit.Titled("Hint", plate.transform, string.Empty, 22, Pal.A(Pal.Cream, .80f),
-                             TextAnchor.MiddleLeft, new Vector2(HintW, 32f), Left,
-                             new Vector2(176f + HintW * .5f, -20f), 0f, 0f), 14);
+                UIKit.Titled("Hint", plate.transform, string.Empty, 26, Pal.A(Pal.Cream, .80f),
+                             TextAnchor.MiddleLeft, new Vector2(HintW, 64f), Left,
+                             new Vector2(TextX + HintW * .5f, -32f), 0f, 0f), 17);
 
             // <b>`UIKit.Button` makes no label, so `SetCaption` had nothing to write into</b> —
             // the button drew as an empty box for as long as it existed. `TextButton` is the
@@ -435,9 +450,9 @@ namespace GlimmerGrove
             // *unit* on the number a caption ends with (`Btn.IconTrails`), which is how every
             // other price in this game says which currency it is. So the caption is the figure
             // and the gem beside it is the word, and neither has to fit the other in.
-            _passBtn = UIKit.TextButton("Buy", plate.transform, Skins.Gem, string.Empty, 34,
-                                        new Vector2(268f, 88f), new Vector2(1f, .5f),
-                                        new Vector2(-152f, 0f), BuyPass,
+            _passBtn = UIKit.TextButton("Buy", plate.transform, Skins.Gem, string.Empty, 38,
+                                        new Vector2(300f, 104f), new Vector2(1f, .5f),
+                                        new Vector2(-166f, 0f), BuyPass,
                                         Art.S("Ui/ic_gem"), iconTrails: true);
 
             Sheen.Attach((RectTransform)plate.transform, 4.6f);

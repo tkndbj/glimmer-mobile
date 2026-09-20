@@ -28,10 +28,20 @@ namespace GlimmerGrove
     /// <para>
     /// <b>It draws the first rung, unearned, for an account below it</b> rather than an empty
     /// seat. A player who has not reached Cinderling is exactly the player this is for, and a
-    /// blank corner invites nobody. The badge is dimmed with <em>alpha</em> and never with a
-    /// tint, because <c>Image.color</c> is a multiply and takes a colour toward black along its
-    /// own hue (invariant 44g) — every one of these badges is saturated metal, and a multiply
-    /// turns bronze to mud.
+    /// blank corner invites nobody. <b>It draws it solid</b>, at the owner's instruction: the
+    /// faded stand-in read as art that had failed to load rather than as a rank not yet earned,
+    /// which is the very reading <see cref="RankLook.Ghost"/>'s own remark makes about a faded
+    /// card. What says <em>not yet</em> here is the word under it — <c>Unranked</c>, in a
+    /// quieter cream than a rank's gold — which is one solid thing instead of one faint one.
+    /// The profile's medallion and the ranks page's hero still ghost theirs; only the map's
+    /// corner changed.
+    /// </para>
+    /// <para>
+    /// <b>The map draws it on the ranked lane only.</b> <see cref="LevelsScreen"/> decides that,
+    /// not this type: a rank is a reading of play and every lane feeds it, but the corner it
+    /// sits in belongs to whichever ladder is being looked at, and on the ordinary one it was a
+    /// badge beside a chapter map that says nothing about ranks. Nothing here is per-lane, so a
+    /// second caller that wants it somewhere else costs one line.
     /// </para>
     /// <para>
     /// <b>It shows nothing at all when the ladder is empty</b>, which is the honest answer to a
@@ -78,7 +88,7 @@ namespace GlimmerGrove
         ///
         /// <b>A toast may not be parented to the badge.</b> `Scenery.Toast` anchors at the foot
         /// of whatever it is given and is drawn at its own full width, so hung off this
-        /// 168-unit block it would be a screen-wide bar centred on the left margin. The layer
+        /// 192-unit block it would be a screen-wide bar centred on the left margin. The layer
         /// is the screen's safe area, which is what every other toast in the game is given.
         /// </summary>
         RectTransform _layer;
@@ -111,13 +121,13 @@ namespace GlimmerGrove
             _mark.preserveAspect = true;
             _mark.raycastTarget = false;
 
-            _name = UIKit.Titled("Name", _root, string.Empty, 24, Pal.Gold,
+            _name = UIKit.Titled("Name", _root, string.Empty, 32, Pal.Gold,
                                  TextAnchor.MiddleCenter,
                                  new Vector2(Width, NameHeight), new Vector2(.5f, 1f),
                                  new Vector2(0f, -(MarkSize + NameHeight * .5f)),
                                  outline: 0f, shadow: 2f);
             _name.raycastTarget = false;
-            UIKit.Shrinkable(_name, 14);
+            UIKit.Shrinkable(_name, 18);
         }
 
         static void Open()
@@ -196,7 +206,6 @@ namespace GlimmerGrove
             _shown = state;
 
             _mark.sprite = Art.S(rung.Icon);
-            _mark.color = held != null ? Color.white : Unearned;
 
             _name.text = held != null ? rung.Name : Loc.Get("ui.ranks.unranked");
             _name.color = held != null ? Pal.Gold : Pal.A(Pal.Cream, .62f);
@@ -207,8 +216,17 @@ namespace GlimmerGrove
         /// Written down rather than scattered, for <c>BoostReadout</c>'s reason: absolute offsets
         /// inside a build method are how two blocks come to print through one another.
         /// </summary>
-        const float MarkSize = 92f, NameHeight = 30f;
-        const float Width = 168f;
+        /// <summary>
+        /// <b>Twice the size it was cut at, at the owner's instruction.</b> A rank badge is a
+        /// silhouette rather than a face — the argument <c>LeaderboardScreen</c> makes for a
+        /// 132-unit badge on a 176-unit row — so at 92 in a corner the seven of them were one
+        /// smudge, and the one thing the map could say about a keeper said nothing. The width is
+        /// what bounds the growth: the block is centred on <c>LevelsScreen.CornerX</c>, which is
+        /// 96 from the safe area's own edge, so a box wider than 192 hangs a centred rank name
+        /// off the side of the screen.
+        /// </summary>
+        const float MarkSize = 184f, NameHeight = 44f;
+        const float Width = 192f;
 
         /// <summary>
         /// The whole block's height, public for <c>BoostReadout.Height</c>'s reason: whoever
@@ -217,15 +235,5 @@ namespace GlimmerGrove
         /// </summary>
         public const float Height = MarkSize + NameHeight;
 
-        /// <summary>
-        /// How a badge nobody has earned yet is drawn: the same picture at a lower alpha.
-        ///
-        /// <b>Alpha and never a tint.</b> <c>Image.color</c> is a multiply, so any grey written
-        /// here would take the badge toward black along its own hue (invariant 44g) and bronze
-        /// would arrive as mud — the fault that scaled with area on the shop's amber. Alpha
-        /// leaves the hue alone and lets the map show through, which is what "not yet" looks
-        /// like.
-        /// </summary>
-        static readonly Color Unearned = new Color(1f, 1f, 1f, .38f);
     }
 }

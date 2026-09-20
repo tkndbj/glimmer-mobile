@@ -652,7 +652,21 @@ namespace GlimmerGrove
                    || _shown < .999f) yield return null;
 
             yield return new WaitForSecondsRealtime(FinaleHold);
-            Flow.Go<HomeScreen>();
+
+            // **Where a launch lands, and the only place in the game that decides it.** Almost
+            // every launch goes to the hub; a launch by somebody who has never played anything
+            // goes to the tutorial instead, which is the one screen that teaches this game's verb
+            // before asking for it. The question is asked here rather than by the hub for the
+            // reason every routing decision in this project is made once: a hub that raised a
+            // tutorial over itself would be a hub drawing its whole self behind a screen nobody
+            // is looking at, and it would have to know when to stop.
+            //
+            // It is asked *now* rather than at the top of the load, because the save has been
+            // read by then and a cloud sync may have put a returning player's records back.
+            // See `TutorialGate.Owed`, which answers false for everybody who has ever opened a
+            // level and for everybody who has already been through this.
+            if (TutorialGate.Owed) Flow.Go<TutorialScreen>();
+            else Flow.Go<HomeScreen>();
         }
 
         /// <summary>Shared chrome: buttons, icons, critters, sounds, the font.</summary>

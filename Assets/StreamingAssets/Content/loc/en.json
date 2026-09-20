@@ -5075,7 +5075,7 @@
     },
     {
       "key": "ui.tip.siege_brim.body",
-      "text": "This turret is full.\n\nTap the bolt on it to throw the whole lot at once. It hits any colour."
+      "text": "This turret is full.\n\nTap it to throw the whole charge at once. It hits any colour."
     },
     {
       "key": "ui.tip.siege_brim.title",
@@ -5083,11 +5083,11 @@
     },
     {
       "key": "ui.tip.siege_fuel.body",
-      "text": "Match three gems of a colour and that colour's turret opens fire.\n\nIt goes for raiders of its own colour, so match the colour that is coming."
+      "text": "Slide a gem to line up three of a colour.\n\nThat colour's turret opens fire, and it only hits raiders of its own colour."
     },
     {
       "key": "ui.tip.siege_fuel.title",
-      "text": "TURRETS SHOOT THEIR OWN COLOUR"
+      "text": "SLIDE TO MATCH THREE"
     },
     {
       "key": "ui.tip.siege_lance.body",
@@ -5172,6 +5172,22 @@
     {
       "key": "ui.title.warden",
       "text": "Lightwarden"
+    },
+    {
+      "key": "ui.tutorial.go",
+      "text": "Continue"
+    },
+    {
+      "key": "ui.tutorial.skip",
+      "text": "Skip"
+    },
+    {
+      "key": "ui.tutorial.title",
+      "text": "Welcome to Gemfire"
+    },
+    {
+      "key": "ui.tutorial.win",
+      "text": "The battle awaits!"
     },
     {
       "key": "ui.utility.bought",

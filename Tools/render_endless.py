@@ -40,6 +40,7 @@ REPO = K.REPO
 SIEGE = REPO / "Assets" / "Game" / "Art" / "Siege"
 BG = REPO / "Assets" / "Game" / "Art" / "Bg"
 LOC = REPO / "Assets" / "StreamingAssets" / "Content" / "loc" / "en.json"
+TABLE = REPO / "Assets" / "StreamingAssets" / "Content" / "progression.json"
 
 W = K.W
 
@@ -102,15 +103,25 @@ ICON_PACK = Path(r"C:\Users\Digikey\Downloads\craftpix-net-629015-100-skill-icon
 BANNER_W, BANNER_H, BANNER_Y = 476.0, 138.0, -142.0
 CORNER_SIZE, CORNER_X, CORNER_Y = 118.0, 96.0, -132.0
 
-# `LevelsScreen.BoostGap` and `BoostReadout`'s own block. The clock hangs under the back
-# key on both tracks, because this screen draws the map and the hub with one set of chrome.
+# `LevelsScreen.BoostGap` and the left-hand column it measures. The column hangs off the back
+# key's bottom edge; what is in it is the rank badge and then the boost clock.
 BOOST_GAP = 18.0
+COLUMN_TOP = CORNER_Y - CORNER_SIZE / 2 - BOOST_GAP
+
+#: `RankBadge`'s own block, and **the reason this mirror grew one**: the badge is drawn on the
+#: ranked lane only now, so this hub is the only screen in the game that carries it and the
+#: only place its neighbours can be judged. Twice the size it was first cut at.
+RANK_MARK, RANK_NAME_H, RANK_W = 184.0, 44.0, 192.0
+RANK_H = RANK_MARK + RANK_NAME_H
+RANK_Y = COLUMN_TOP - RANK_H / 2
+
 BOOST_MARK, BOOST_LABEL, BOOST_CLOCK = 46.0, 48.0, 34.0
 BOOST_H = BOOST_MARK + BOOST_CLOCK + 2.0
 # `LevelsScreen.BoostY` — the block's *centre*, because `UIKit.Box` always pivots there. Written
 # in the screen's own shape rather than as the top edge the drawing wants, so a change to either
-# side of the pair is a change to one expression.
-BOOST_Y = CORNER_Y - CORNER_SIZE / 2 - BOOST_GAP - BOOST_H / 2
+# side of the pair is a change to one expression. Under the badge on this lane; on the ordinary
+# ladder it takes the badge's seat, which this file cannot draw and `render_ranks.py --map` can.
+BOOST_Y = RANK_Y - RANK_H / 2 - BOOST_GAP - BOOST_H / 2
 # `LevelsScreen`'s star count is deliberately absent: it is drawn on a laddered lane only, so
 # on this one the space under the "i" is empty and the mirror has to say so.
 PILL_W, PILL_H, MODES_GAP = 372.0, 116.0, 20.0
@@ -165,6 +176,39 @@ def ring(size, thickness, colour, alpha):
     d.ellipse([1, 1, size - 2, size - 2], outline=(*colour, int(255 * alpha)),
               width=int(thickness))
     return im
+
+
+def rank_badge(sheet, held):
+    """`RankBadge` under the back key — the picture, and the rank's name under it.
+
+    **Solid in both states.** An account below the first rung is shown the first rung with the
+    word *Unranked* under it rather than an empty corner, and it is drawn at full alpha: the
+    faded stand-in read as art that had failed to load (`RankBadge`'s class remarks). What says
+    *not yet* is the word, in cream rather than a rank's gold.
+
+    Reads the shipped ladder and the shipped badges, so a retune redraws rather than going
+    stale — a mirror with its own list answers questions about a screen the game does not draw
+    (invariant 44d).
+    """
+    rungs = (json.loads(TABLE.read_text(encoding="utf-8")).get("ranks") or {}).get("rungs") or []
+    if not rungs:
+        return
+
+    rung = rungs[held - 1] if 0 < held <= len(rungs) else rungs[0]
+    art = REPO / "Assets" / "Game" / "Art" / "Ui" / "Rank" / ("%s.png" % rung["id"])
+    if not art.exists():
+        return
+
+    top = -RANK_Y - RANK_H / 2
+    K.paste(sheet, K.fit(Image.open(art).convert("RGBA"), (RANK_MARK, RANK_MARK)),
+            CORNER_X, top + RANK_MARK / 2)
+
+    earned = 0 < held <= len(rungs)
+    name = loc("rank.%s.name" % rung["id"], rung["id"]) if earned else loc("ui.ranks.unranked",
+                                                                          "Unranked")
+    px = K.shrunk(sheet, name, CORNER_X, top + RANK_MARK, RANK_W, RANK_NAME_H, 32, 18,
+                  fill=K.GOLD if earned else K.CREAM, outline=0)
+    print("  rank name '%s': settled at %dpx against a floor of 18" % (name, px))
 
 
 def boost_readout(sheet, left):
@@ -359,7 +403,7 @@ def battle(sheet, top, wall=0):
 
 
 # --------------------------------------------------------------- the furniture
-def header(sheet, modes, boost=0):
+def header(sheet, modes, boost=0, rank=3):
     """`LevelsScreen.BuildHeader` - what stands above the column and is unchanged by it."""
     fade = Image.new("RGBA", (W, 300), (0, 0, 0, 0))
     d = ImageDraw.Draw(fade)
@@ -369,6 +413,8 @@ def header(sheet, modes, boost=0):
 
     K.paste(sheet, K.skin("sq_blue", CORNER_SIZE, CORNER_SIZE), CORNER_X, -CORNER_Y)
     K.paste(sheet, K.skin("sq_orange", CORNER_SIZE, CORNER_SIZE), W - CORNER_X, -CORNER_Y)
+
+    rank_badge(sheet, rank)
 
     if boost:
         boost_readout(sheet, boost)
@@ -404,7 +450,7 @@ def shelf(sheet, h):
 
 
 # --------------------------------------------------------------- the screen
-def screen(h, played=True, modes=False, wall=0, standing=0, boost=0):
+def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3):
     sheet = Image.new("RGBA", (W, h), (*K.GROUND, 255))
 
     plain(sheet, h)
@@ -417,7 +463,7 @@ def screen(h, played=True, modes=False, wall=0, standing=0, boost=0):
     points(sheet, top)
     battle(sheet, top, wall)
 
-    header(sheet, modes, boost)
+    header(sheet, modes, boost, rank)
     shelf(sheet, h)
 
     print("  canvas %dx%d   band %.0f   column %.0f   air %.0f above, %.0f below"
@@ -446,6 +492,9 @@ def main():
                     help="the squarest canvas this game lays out for, where the band is tightest")
     ap.add_argument("--boost", type=int, default=0, metavar="SECONDS",
                     help="draw the XP boost clock under the back key, with this long left")
+    ap.add_argument("--rank", type=int, default=3, metavar="RUNGS",
+                    help="how many rank rungs are held; 0 draws the unranked corner, which is "
+                         "the state every account is in until it has earned one")
     ap.add_argument("--out", type=Path, default=Path("endless.png"))
     args = ap.parse_args()
 
@@ -456,7 +505,8 @@ def main():
                  played=not args.unplayed and args.locked <= 0,
                  modes=args.modeswitch, wall=max(0, args.locked),
                  standing=max(0, min(99, args.standing)),
-                 boost=max(0, args.boost))
+                 boost=max(0, args.boost),
+                 rank=max(0, args.rank))
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
     print("  wrote %s  %dx%d  - look at it" % (args.out, out.width, out.height))

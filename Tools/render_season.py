@@ -49,7 +49,7 @@ OUT = K.REPO / "Tools" / "out"
 CHROME = 92.0
 BANNER_H = 138.0
 HERO_H = 240.0
-PASS_H = 132.0
+PASS_H = 176.0
 HEADING_H = 62.0
 WIDTH = 1000.0
 
@@ -79,15 +79,14 @@ BAR_H = 26
 
 NAVBAR_H = 190.0
 
-#: `EventScreen.HintW` — the gap between the pass crest and its button.
-HINT_W = 520.0
+#: `EventScreen.TextX` / `HintW` — where the pass row's two lines start, and the room they
+#: have between the crest and the button. Both moved when the plate grew to 176.
+TEXT_X = 200.0
+HINT_W = 470.0
 
-
-def fitted(line, width, size, floor):
-    """The point size `UIKit.Shrinkable` would settle on: the largest that fits, down to a floor."""
-    while size > floor and K.font(size).getlength(line) > width:
-        size -= 1
-    return size
+#: The hint's box is two lines tall on purpose — `UIKit.Shrinkable` wraps and then truncates, so
+#: a one-line box shrinks a long sentence instead of widening it.
+HINT_H = 64.0
 
 
 def strings():
@@ -261,49 +260,51 @@ def pass_banner(sheet, y, owned):
     K.paste(sheet, K.skin("Hud/plate_violet", WIDTH, PASS_H), W / 2, cy)
 
     left = W / 2 - WIDTH / 2
-    K.paste(sheet, K.glow(128, 2.0, K.BLOOM, .22), left + 104, cy)
-    K.paste(sheet, K.tint(K.fit(Image.open(K.UI / "Hud" / "burst.png").convert("RGBA"), (96, 96)),
-                          K.GOLD), left + 104, cy)
-    K.paste(sheet, K.tint(K.fit(Image.open(K.UI / "ic_gem.png").convert("RGBA"), (44, 44)),
-                          K.CREAM), left + 104, cy)
+    K.paste(sheet, K.glow(128, 2.0, K.BLOOM, .22), left + 116, cy)
+    K.paste(sheet, K.tint(K.fit(Image.open(K.UI / "Hud" / "burst.png").convert("RGBA"), (128, 128)),
+                          K.GOLD), left + 116, cy)
+    K.paste(sheet, K.tint(K.fit(Image.open(K.UI / "ic_gem.png").convert("RGBA"), (58, 58)),
+                          K.CREAM), left + 116, cy)
 
-    K.text(sheet, txt("ui.mark.pass"), left + 176, cy - 20, 32,
+    K.text(sheet, txt("ui.mark.pass"), left + TEXT_X, cy - 38, 38,
            fill=K.MINT if owned else K.CREAM, anchor="l")
 
-    # Drawn at the size `UIKit.Shrinkable` would land on rather than at the authored one,
-    # because the room between the crest and the button is the whole question here: a mirror
-    # that let the line run under the button would be answering it about a screen the game
-    # does not draw (invariant 44d), and a Unity label that overflows is not clipped and
-    # nothing says so (37n).
-    K.text(sheet, txt("ui.mark.owned_hint" if owned else "ui.mark.purchase_hint"),
-           left + 176, cy + 20, fitted(txt("ui.mark.owned_hint" if owned
-                                           else "ui.mark.purchase_hint"), HINT_W, 22, 14),
-           fill=(255, 243, 220), outline=0, anchor="l")
+    # Wrapped and best-fitted exactly as `UIKit.Shrinkable` does it, rather than drawn at the
+    # authored size, because the room between the crest and the button is the whole question
+    # here: a mirror that let the line run under the button would be answering it about a
+    # screen the game does not draw (invariant 44d), and a Unity label that overflows is not
+    # clipped and nothing says so (37n). The settled size is printed for the same reason the
+    # connect banner prints its own — a sentence sitting on its floor is one push from being
+    # truncated.
+    px = K.shrunk_left(sheet, txt("ui.mark.owned_hint" if owned else "ui.mark.purchase_hint"),
+                       left + TEXT_X, cy, HINT_W, HINT_H, 26, 17,
+                       fill=(255, 243, 220), outline=0)
+    print("  pass hint: settled at %dpx against a floor of 17" % px)
 
-    btn = K.skin("btn_violet", 268, 88)
+    btn = K.skin("btn_violet", 300, 104)
     plate = Image.new("RGBA", btn.size, (0, 0, 0, 0))
     plate.alpha_composite(btn)
     # The caption and its trailing glyph, in both states: a gem on a price, a tick on the
     # word that replaces one. See `EventScreen.RefreshPass`.
     if owned:
         caption, mark = txt("ui.mark.unlocked"), "ic_check.png"
-        glyph = 34
-        run = K.font(34).getlength(caption) + 10 + glyph
+        glyph = 35
+        run = K.font(38).getlength(caption) + 10 + glyph
         left = plate.width / 2 - run / 2
-        K.text(plate, caption, left, plate.height / 2 - 6, 34, anchor="l")
+        K.text(plate, caption, left, plate.height / 2 - 6, 38, anchor="l")
         K.paste(plate, K.tint(K.fit(Image.open(K.UI / mark).convert("RGBA"), (glyph, glyph)),
                               K.CREAM), left + run - glyph / 2, plate.height / 2 - 6)
     else:
         # The caption and its trailing gem, as `Btn.IconTrails` lays them out: the pair is
         # centred together, so the words sit left of middle by half the glyph and its gap.
         price = txt("ui.mark.buy", "{:,}".format(SEASON.get("passGems", 0)))
-        glyph = 34
-        run = K.font(34).getlength(price) + 10 + glyph
+        glyph = 35
+        run = K.font(38).getlength(price) + 10 + glyph
         left = plate.width / 2 - run / 2
-        K.text(plate, price, left, plate.height / 2 - 6, 34, anchor="l")
+        K.text(plate, price, left, plate.height / 2 - 6, 38, anchor="l")
         K.paste(plate, K.fit(Image.open(K.UI / "ic_gem.png").convert("RGBA"), (glyph, glyph)),
                 left + run - glyph / 2, plate.height / 2 - 6)
-    K.paste(sheet, plate, W / 2 + WIDTH / 2 - 152, cy)
+    K.paste(sheet, plate, W / 2 + WIDTH / 2 - 166, cy)
 
     return y + PASS_H + 14
 

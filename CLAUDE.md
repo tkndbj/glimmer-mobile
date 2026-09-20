@@ -719,6 +719,45 @@ is where they are written down, not what they mean.
    (`Social.RankTier`, 19c) and this ladder — so the nav bar's board tab reads **BOARDS** now and
    the fixture is `RankLadderTests` beside the older `RankTests`.
 
+### The tutorial
+
+53. **The tutorial is the live mode with a script beside it, and it teaches exactly two things.**
+   `TutorialScreen` stands a real `SiegeView` over a real `SiegeBoard` dealt from `SiegeTutorial`
+   — one wave, no boss, no cog, no charm — so nothing a first-timer learns has to be translated
+   onto a different-looking board afterwards, and nothing here re-implements a rule.
+53a. **It teaches the level's own two lessons rather than new ones, and that is what takes them
+   off the level.** `siege_fuel` and `siege_brim` are shown here now; `TipLedger` already refuses
+   a lesson twice, so `SiegeScreen` is untouched and no id was minted or spent. **Skipping marks
+   both**, or a player who says they know this meets them again on the first rung.
+53b. **It stores nothing new** (`TutorialGate`). The gate is "has `siege_brim` been seen, and has
+   this account ever opened a level" — a union-joined set already on the wire against a derived
+   reading — so it cost no schema version, no `hasOnly` line and no rules release. Reading the
+   *second* lesson is what makes an interrupted tutorial replay whole instead of half.
+53c. **It cannot be lost, and the guarantee is a property of the board rather than a repair
+   applied to it.** `SiegeBoard.Sheltered` is read by `Bear` and `Topple` — the two doors a ward
+   can lose through — so a turret under it is never hurt, rather than hurt and put back sixty
+   times a second by a screen. **That is what made the three ward-damage sites one**: a blow, a
+   cast and a roar each wrote the clamp, the flag and the emptied tube out in full, agreed by
+   luck, and a guarantee cannot be honoured in a place that does not exist. The hill is *not*
+   slowed or softened — `TutorialTests.WithoutTheGuaranteeTheSameBoardIsLost` is the differential.
+53d. **The board is code and is the one place invariant 4 does not reach**, because it is not a
+   chapter: no `LevelId`, no record, no manifest entry, and a script that points at particular
+   cells of it. It therefore passes through **no content gate at all**, which is why
+   `TutorialTests` plays the whole script end to end rather than asserting about its parts.
+53e. **A tube holds fourteen gems and the second sentence a player is ever told cannot wait for
+   five matches, but it must not arrive on one either.** Filling it from a single match reads as
+   *instant* — an overcharge becomes something that happens to you rather than something you
+   build — so a feed is worth a third of a tube and the tube climbs about three times
+   (`MatchesToArm`). **That count is a target and never a contract**: the match's own fuel lands
+   beside the tutorial's share, so a tube can brim a feed early, and the loop therefore ends on
+   `Charged` rather than on a count it keeps. Ended on a count, a player who brims early and then
+   matches that same colour again waits for ever, because `Fed` skips a ward that has banked.
+53f. **The second panel waits for a *crowd*, not for the first body**, or the mode's biggest
+   payoff is spent on its smallest target — with a ceiling on the wait, because a wave somebody
+   later shortens must not strand the script. Every scripted change goes through a door the board
+   or the ward already owns (`SiegeBoard.Pour`/`.Kindle`/`.Sheltered`, `SiegeWard.Stoke`);
+   `SiegeTutorial` writes to nothing.
+
 ### Art credits
 
 46. **An art credit belongs wherever its licence says, and for this game that is nowhere in the app.**
@@ -876,6 +915,14 @@ guess — verify offline.
   sentence is one push away at all times. It caught two faults nothing else could: the progress
   bar printing through the last requirement line, and an unmet line marked with a star on a page
   whose own lines say "Earn 45 stars".
+- **The tutorial:** `python Tools/verify/tests.py TutorialTests` plays the whole script against
+  the real rules — the taught swap, the pour, the overcharge, the sweep — and proves it ends with
+  the line intact; its board reaches **no content gate**, so this is the only thing that would
+  ever say it had stopped being a board (53d). `python Tools/render_tutorial.py` (`--opening`,
+  `--charged`, `--finale`, `--contact`, `--captions`) draws the screen over `render_siege`'s own
+  board and reads the field out of `SiegeTutorial.cs` rather than retyping it. **`--finale` is the
+  one that matters** — it found the closing line and its key seated across the ward line, which is
+  the middle of this screen. It does not draw the coaching hand, deliberately (44d).
 - **The charm stones:** `python Tools/make_charm_gems.py --check` holds the twelve owner-drawn gems to
   their size, their room and **their own colour** — a stone filed under the wrong letter draws
   perfectly, validates green everywhere and pays the wrong ward, and nothing else here could see it.
@@ -1208,6 +1255,12 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   face is Titan One shipped as **Gemfire Display** (46a). The hub's foot is one stack measured up from the
   nav bar: the turret line as a readout, the Battle key, and a painted **Daily Challenges** banner that
   opens a screen with nothing in it yet. No companion stands on the hub.
+- **The tutorial** (53) — the splash lands a first-timer on `TutorialScreen` instead of the hub: a real
+  Thornwatch board of one wave, the two lessons the first rung used to teach, a ringed gem with a
+  coaching hand over it, a turret that fills over about three matches and asks to be tapped, and
+  **The battle awaits!** over the cleared hill. A worded SKIP key in the corner leaves at any point
+  between panels and closes the gate exactly as finishing does. It cannot be lost, it stores nothing
+  new, and it is drawn by `render_tutorial.py` and played end to end by `TutorialTests`.
 - **Reminders** — two to three local notifications a day, scheduled on the device and costing the server
   nothing at any player count (50). Ten kinds; three local slots (09:30 / 13:30 / 19:30) for a week, then
   one a day out to **twenty-one**, re-armed every time the app is backgrounded.
@@ -1286,6 +1339,24 @@ the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-18),
 on a fresh clone).
 
 ## Owed
+
+**The tutorial shipped on 2026-09-20 and has never been in the Editor or on a device.** Four new
+files (`SiegeTutorial`, `TutorialGate`, `TutorialScreen`, `TutorialTests`) and one new tool
+(`Tools/render_tutorial.py`), all written with the Editor closed — so the **`.meta` files do not
+exist yet** and Unity mints them on the next focus. **It touches no art and no address**, which
+is the one piece of standing discipline it does *not* owe: everything it draws is the siege
+cast, the interface kit and `Bg/plain`, all already registered — and the ground is the global
+blue wall rather than a chapter's sky, so it is resident before the screen exists. It touches no content file but
+`loc/en.json` (four new keys, and both siege tip bodies reworded), and **nothing on the server** —
+no rules release, no function deploy, no re-seed, because the gate rides in `tipsSeen` (53b).
+Offline green: `compile.py`, `TutorialTests` 9/9, the full suite at its baseline, all three
+content gates, `render_tutorial.py --captions`. **What is owed is the Editor's three and an
+eye** — and the eye has two questions no render can answer. Does the coaching hand over a gem
+read as *slide this one* rather than as decoration; and does the beat between the overcharge
+landing and the line sweeping the hill (`TutorialScreen.Applause`) leave the player in any doubt
+about which of the two was theirs. **Then play it as a new install**: delete the app's data,
+launch, and check the splash lands on it — `TutorialGate.Owed` is the only routing decision in
+the game and nothing offline exercises it.
 
 **The badge went public on 2026-09-20 and the server half is live.** A rank used to be a
 private reading; it is on every board row and every public profile now, so it is adjudicated

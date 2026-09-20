@@ -363,6 +363,28 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
+        /// Fills the tube to the brim and banks <em>nothing</em>: the opposite end of
+        /// <see cref="Snuff"/>, and deliberately not <see cref="Fill"/>.
+        ///
+        /// <para>
+        /// <b>Fuel and never a charge, which is the whole difference.</b> <see cref="Fill"/> is
+        /// the door fuel arrives through and it banks a charge for every whole tube, because
+        /// that is what a match earning one means. This is a tube handed over full so the ward
+        /// keeps firing — the tutorial's closing sweep is its only caller — and a banked charge
+        /// there would be a lit button on a board nobody is playing any more.
+        /// </para>
+        /// <para>
+        /// A fallen ward takes nothing, for <see cref="Fill"/>'s reason: fuel poured into a hole
+        /// is the cost of losing one.
+        /// </para>
+        /// </summary>
+        public void Stoke()
+        {
+            if (!Alive) return;
+            if (Fuel < Capacity) Fuel = Capacity;
+        }
+
+        /// <summary>
         /// Chains this ward: what a shackler's spell does when it lands.
         ///
         /// <b>One line, and what it does <em>not</em> do is the mechanic.</b> Beside
