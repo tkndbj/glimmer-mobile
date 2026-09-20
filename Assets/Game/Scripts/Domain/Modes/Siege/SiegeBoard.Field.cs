@@ -492,6 +492,15 @@ namespace GlimmerGrove.Modes
             string bag = Layout.Deal;
             int from = (int)(drawn % (uint)bag.Length);
 
+            // **How strictly the rule applies is one number** - see
+            // `SiegeTuning.RefillSettlesPercent`, which is the only dial on how freely this board
+            // chains. Salted and avalanched rather than sliced off `drawn` directly: the charm
+            // roll already spends both halves of the mixed word, and a decision taken from bits
+            // another decision is reading is two rolls that agree with each other (which is the
+            // bug the charm roll itself shipped with for a day).
+            if (Avalanche(drawn ^ SettleSalt) % 100u >= (uint)SiegeTuning.RefillSettlesPercent)
+                return bag[from];
+
             char was = _cells[at];
             char dealt = bag[from];
 
@@ -520,6 +529,12 @@ namespace GlimmerGrove.Modes
         /// xorshift word is not</em>. Anything else in this mode that ever needs a second
         /// independent decision out of one draw goes through it.
         /// </summary>
+        /// <summary>
+        /// Keeps the settle roll out of the charm roll's bits. Any odd constant would do; this is
+        /// the one written down.
+        /// </summary>
+        const uint SettleSalt = 0x632BE5ABu;
+
         static uint Avalanche(uint x)
         {
             unchecked

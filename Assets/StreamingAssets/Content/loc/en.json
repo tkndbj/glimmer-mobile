@@ -2459,7 +2459,7 @@
     },
     {
       "key": "ui.event.ends_in",
-      "text": "ends in {0}"
+      "text": "Ends in {0}"
     },
     {
       "key": "ui.season.0.name",
@@ -2847,7 +2847,7 @@
     },
     {
       "key": "ui.home.event_waiting",
-      "text": "tap to collect"
+      "text": "Tap to collect"
     },
     {
       "key": "ui.home.fraction",
@@ -2891,7 +2891,7 @@
     },
     {
       "key": "ui.home.streak_next",
-      "text": "tomorrow  {0}"
+      "text": "Tomorrow  {0}"
     },
     {
       "key": "ui.home.streak_waiting",
@@ -4615,7 +4615,7 @@
     },
     {
       "key": "ui.streak.day",
-      "text": "day streak"
+      "text": "Day streak"
     },
     {
       "key": "ui.streak.day_n",
@@ -4623,7 +4623,7 @@
     },
     {
       "key": "ui.streak.days",
-      "text": "day streak"
+      "text": "Day streak"
     },
     {
       "key": "ui.streak.done_today",

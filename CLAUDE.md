@@ -1296,9 +1296,21 @@ block again.
 ### The numbers
 
 **Every figure lives in `manifest.json`, `homestead.json` or `progression.json` and both content gates
-derive and print the totals — read them there, never from here.** Free play collects about **936 credits and
-12 gems a day**. Everything except the shop ladder is content and retunable without an app update; **re-seed
-after any change**. Only the shapes that are not obvious from the files are worth recording:
+derive and print the totals — read them there, never from here.** Everything except the shop ladder is
+content and retunable without an app update; **re-seed after any change**. Only the shapes that are not
+obvious from the files are worth recording:
+
+- **Daily income is two figures and quoting the first as the whole is a mistake this file made.**
+  `content.py` prints **936 credits and 12 gems a day** for free play and prints the adverts on their own
+  lines below it, because an advert is opt-in. Read together, a player who watches everything collects
+  about **7,160 credits a day**: 936 from chests, tasks, the streak and the season, **3,600** from
+  `coin_bonus` (300 x 12) and **2,628** from `win_bonus` (200 x 6 through the wheel's 219% mean). The 936
+  on its own under-reads free income by nearly eight times, which is how the turret shelf came to be
+  called a thousand-day sink when it is closer to a hundred and thirty.
+- **Content pays its credits once.** 80 a level and 40 a star (`rewards`), so all 61 levels three-starred
+  is **12,200 credits, ever** — 1.3% of the colour shelf. Every repeatable credit in this game comes from
+  the adverts, the chests and the ladders, which is why the daily figure above is the one that decides
+  whether a price is reachable.
 
 - **Stars** — gold `par x 1.20`, silver `par x 1.40`, the run ends at `par x 1.60`, **except a siege, which
   authors its own per chapter** (37ca) from that chapter's own sweep.

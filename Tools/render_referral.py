@@ -79,8 +79,6 @@ PER = REFERRAL.get("perInvitee") or {"tier": "royal", "count": 2}
 INVITEE_TIER = INVITEE.get("tier") or "royal"
 PER_TIER = PER.get("tier") or "royal"
 
-#: `ReferralScreen.Ahead` - rows past the last finished friend, so the board says what is next.
-AHEAD = 3
 MILESTONE = REFERRAL.get("milestoneChapter") or ""
 TIERS = [t["id"] for t in (TABLE_JSON.get("tasks") or {}).get("tiers") or []]
 
@@ -214,9 +212,9 @@ def offer_row(sheet, y):
     K.paste(sheet, icon("ic_key", (132, 132)), left + SEAT_X, cy)
 
     hint_w = TEXT_W
-    K.text(sheet, txt("ui.referral.offer_title"), left + TEXT_X, cy - 30, 36, anchor="l")
+    K.text(sheet, txt("ui.referral.offer_title"), left + TEXT_X, cy - 54, 36, anchor="l")
     K.shrunk(sheet, txt("ui.referral.offer_hint", CHAPTER_NAME), left + TEXT_X + hint_w / 2, cy + 28,
-             hint_w, 34, 23, 14, fill=(255, 243, 220), outline=0)
+             hint_w, 96, 26, 16, fill=(255, 243, 220), outline=0)
 
     bx = W / 2 + WIDTH / 2 - 150
     K.paste(sheet, K.skin("btn_blue", 272, 104), bx, cy)
@@ -340,13 +338,13 @@ def row(sheet, cx, cy, h, plate, tier, count, title, sub, state, mark, flat=Fals
 
 
 def board(sheet, top, finished, paid):
-    """`ReferralScreen.BuildBoard` - one row a friend, every finished one plus the next few.
+    """`ReferralScreen.BuildBoard` - one row a friend, every friend the cap allows.
 
     `paid` maps a friend number to how many of its chests are paid. The lit row is the first
     finished friend with a chest still unpaid (`ReferralLedger.FirstClaimableFriend`).
     """
     count = PER.get("count", 1)
-    rows = max(1, min(MAX_BOUND, min(finished, MAX_BOUND) + AHEAD))
+    rows = max(1, MAX_BOUND)  # `ReferralScreen.RowCount` - the whole board, always.
     tall = rows * (ROW_H + ROW_GAP) - ROW_GAP
     bottom = K.NAV_HEIGHT + 20
     band = H - top - bottom

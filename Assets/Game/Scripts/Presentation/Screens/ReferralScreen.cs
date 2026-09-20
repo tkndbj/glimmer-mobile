@@ -104,9 +104,6 @@ namespace GlimmerGrove
         /// <summary>The code well and the share key on the hero, side by side.</summary>
         const float CodeW = 470f, CodeH = 96f, ShareW = 300f, ShareH = 104f;
 
-        /// <summary>How many rows past the last finished friend are drawn, so the board always shows what is next.</summary>
-        const int Ahead = 3;
-
         static readonly Vector2 Top = new Vector2(.5f, 1f);
         static readonly Vector2 Left = new Vector2(0f, .5f);
         static readonly Vector2 Right = new Vector2(1f, .5f);
@@ -250,15 +247,24 @@ namespace GlimmerGrove
             }
         }
 
-        /// <summary>Every finished friend, plus the next few, never past the cap.</summary>
-        int RowCount
-        {
-            get
-            {
-                int finished = Mathf.Min(ReferralLedger.State.Finished, _table.MaxBound);
-                return Mathf.Clamp(finished + Ahead, 1, _table.MaxBound);
-            }
-        }
+        /// <summary>
+        /// Every friend the cap allows, always — the whole board, at the owner's instruction
+        /// (2026-09-20).
+        ///
+        /// <para>
+        /// It used to draw the finished ones plus the next three, which is the right shape for
+        /// a ladder whose rungs differ and the wrong one for this board: the payment is flat
+        /// (invariant 51b), so the three rows a new player met said FRIEND 1, FRIEND 2,
+        /// FRIEND 3 and nothing said there was a fourth. A list that ends at three <em>is</em>
+        /// a cap of three to the person reading it, whatever the tally line above it says.
+        /// </para>
+        /// <para>
+        /// <b>It costs no new maximum.</b> The board already built <see cref="ReferralTable.MaxBound"/>
+        /// rows for anybody with that many finished friends, and it already scrolls; what
+        /// changes is when it does, not how big it can get.
+        /// </para>
+        /// </summary>
+        int RowCount => Mathf.Max(1, _table.MaxBound);
 
         // --------------------------------------------------------------- header
         float BuildHeader(float y)
@@ -442,13 +448,31 @@ namespace GlimmerGrove
                 const float HintW = TextW;
                 float hx = TextX + HintW * .5f;
 
+                // **The hint was drawn at 14 and 23 was never possible**, which is invariant
+                // 44l's tell exactly: a `Shrinkable` settling on its floor is a box too small
+                // for its sentence, not a sentence that wanted to be small. This one wraps to
+                // two lines at any size, and two lines of 23 is 55 units in a box 34 tall — so
+                // Best Fit walked all the way down to the floor and drew the page's only
+                // explanation of what a code is for at half the size of everything round it.
+                //
+                // **What buys the size is height, not width.** The column keeps `TextW`, which
+                // is the row's own and is why the sentence starts where a friend's name starts;
+                // 96 units takes three lines, and the sentence settles at 26 — measured through
+                // `render_referral.py`'s mirror of Best Fit, not eyed. The floor goes 14 to 16
+                // for the same reason it exists: a translation half again as long still has two
+                // lines of room above the floor before it truncates.
+                //
+                // The heading rises to 54 so the pair stays centred on the band: 44 + 12 + 96
+                // is 152 of a 196 plate, which is 22 of margin top and bottom.
+                const float HintH = 96f;
+
                 UIKit.Shrinkable(
                     UIKit.Titled("Title", plate.transform, Loc.Get("ui.referral.offer_title"), 36, Pal.Cream,
-                                 TextAnchor.MiddleLeft, new Vector2(HintW, 44f), Left, new Vector2(hx, 30f), 3f, 3f), 20);
+                                 TextAnchor.MiddleLeft, new Vector2(HintW, 44f), Left, new Vector2(hx, 54f), 3f, 3f), 20);
                 UIKit.Shrinkable(
-                    UIKit.Titled("Hint", plate.transform, Loc.Format("ui.referral.offer_hint", _chapterName), 23,
-                                 Pal.A(Pal.Cream, .82f), TextAnchor.MiddleLeft, new Vector2(HintW, 34f), Left,
-                                 new Vector2(hx, -28f), 3f, 0f), 14);
+                    UIKit.Titled("Hint", plate.transform, Loc.Format("ui.referral.offer_hint", _chapterName), 26,
+                                 Pal.A(Pal.Cream, .82f), TextAnchor.MiddleLeft, new Vector2(HintW, HintH), Left,
+                                 new Vector2(hx, -28f), 3f, 0f), 16);
 
                 var enter = UIKit.TextButton("Enter", plate.transform, Skins.Alternate, Loc.Get("ui.referral.enter"), 30,
                                              new Vector2(272f, 104f), Right, new Vector2(-150f, 0f), EnterCode);

@@ -406,18 +406,30 @@ namespace GlimmerGrove
             const float Inside = CardWidth * .5f - Gutter;
             const float PencilW = 96f, PencilX = Inside - PencilW * .5f;
 
+            // **The honorific ribbon is gone from this card**, at the owner's instruction
+            // (2026-09-20). Nothing was deleted with it: `KeeperTitle` is a Domain rule rather
+            // than a decoration, `PublicProfileScreen` still wears the ribbon, and the line
+            // under the XP bar still says which honorific is coming. Only this card's copy of
+            // it went.
+            //
+            // **Taking a band out leaves a hole unless the column re-centres**, which is all
+            // the arithmetic below is. The ribbon stood 74 tall at 52, so it and its two gaps
+            // ran from the name's bottom edge at 95 down to the track's top at -14 - 109 units
+            // of nothing between two rows where there used to be four. The XP group keeps its
+            // own spacing, because a bar, its figure and what is next are one reading and must
+            // not be spread; what moves is the group as a whole (-34 to -17) and the name down
+            // to it (126 to 80). That centres the column on -8, which is where the medallion
+            // and its badge name centre on the other side of the card, so the two halves of
+            // the plate sit level rather than the right one riding high.
+            const float NameY = 80f;
+
             _nameLabel = UIKit.Titled("Name", card, Profile.Name, 52, Pal.Cream, TextAnchor.MiddleLeft,
                                       new Vector2(NameRight + 110f, 62f), new Vector2(.5f, .5f),
-                                      new Vector2((NameRight - 110f) * .5f, 126f), 4f, 4f);
+                                      new Vector2((NameRight - 110f) * .5f, NameY), 4f, 4f);
 
             UIKit.IconButton("Rename", card, Skins.Aside, "ic_pencil", new Vector2(PencilW, PencilW),
-                             new Vector2(.5f, .5f), new Vector2(PencilX, 126f),
+                             new Vector2(.5f, .5f), new Vector2(PencilX, NameY),
                              () => Flow.Modal<RenameOverlay>(v => v.OnRenamed = Refresh), .48f);
-
-            var ribbon = UIKit.Img("Title", card, Art.S("Ui/ribbon_flat"), Color.white,
-                                   new Vector2(380f, 74f), new Vector2(.5f, .5f), new Vector2(80f, 52f));
-            UIKit.Titled("T", ribbon.transform, Loc.Get(KeeperTitle.KeyFor(level.Level)), 32,
-                         new Color(.34f, .22f, .12f), TextAnchor.MiddleCenter, outline: 0f, shadow: 2f);
 
             // experience toward the next keeper level
             //
@@ -432,7 +444,7 @@ namespace GlimmerGrove
             const float XpW = XpRight - XpLeft, XpX = (XpLeft + XpRight) * .5f;
 
             var track = UIKit.Img("XpTrack", card, Art.S("Ui/" + Skins.Trough), Color.white,
-                                  new Vector2(XpW, 40f), new Vector2(.5f, .5f), new Vector2(XpX, -34f));
+                                  new Vector2(XpW, 40f), new Vector2(.5f, .5f), new Vector2(XpX, -17f));
             var fill = UIKit.Img("XpFill", track.transform, Art.S("Ui/" + Skins.Fill), Pal.Mint,
                                  new Vector2(0f, 30f), new Vector2(0f, .5f), new Vector2(5f, 0f));
             var fillRT = (RectTransform)fill.transform;
@@ -454,7 +466,7 @@ namespace GlimmerGrove
                              ? Loc.Get("ui.profile.xp_max")
                              : Loc.Format("ui.profile.xp", level.XpIntoLevel, level.XpForNextLevel),
                          27, Color.white, TextAnchor.MiddleLeft,
-                         new Vector2(XpW, 34f), new Vector2(.5f, .5f), new Vector2(XpX, -84f), 0f, 2f);
+                         new Vector2(XpW, 34f), new Vector2(.5f, .5f), new Vector2(XpX, -67f), 0f, 2f);
 
             int nextTier = KeeperTitle.NextTierLevel(level.Level);
             if (nextTier > 0)
@@ -462,7 +474,7 @@ namespace GlimmerGrove
                 UIKit.Titled("NextTitle", card,
                              Loc.Format("ui.profile.next_title", Loc.Get(KeeperTitle.KeyFor(nextTier)), nextTier),
                              25, Color.white, TextAnchor.MiddleLeft,
-                             new Vector2(XpW, 32f), new Vector2(.5f, .5f), new Vector2(XpX, -128f), 0f, 2f);
+                             new Vector2(XpW, 32f), new Vector2(.5f, .5f), new Vector2(XpX, -111f), 0f, 2f);
             }
         }
 

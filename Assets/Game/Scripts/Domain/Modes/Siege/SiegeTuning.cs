@@ -21,6 +21,35 @@ namespace GlimmerGrove.Modes
         public const int MinRun = 3;
 
         /// <summary>
+        /// How often a refilled gem is made to <em>settle</em> — to land somewhere it is not
+        /// already part of a run — in hundredths. <b>The one dial on how freely this board
+        /// chains.</b>
+        ///
+        /// <para>
+        /// At <b>100</b> a dealt gem never lands already matched, so the only cascade left is the
+        /// one the player caused: gravity dropping gems that were already on the field into line
+        /// with each other. At <b>0</b> the refill is a free draw per cell and the board matches
+        /// itself, which is where this mode shipped and what was reported as <em>one match and
+        /// CHAIN x15 every time</em>.
+        /// </para>
+        /// <para>
+        /// <b>A dial rather than a switch, because both ends are wrong.</b> Measured over a played
+        /// field: at 0 the board chains on <b>39%</b> of matches and clears 6.4 gems on each; at
+        /// 100 it chains on <b>8%</b> and clears 3.7. The first is a payoff nobody earned
+        /// (invariant 5d — it rejects no play, so it says nothing about any); the second is a mode
+        /// with nothing to set up.
+        /// </para>
+        /// <para>
+        /// <b>Turning it down is the only honest way to make this board chain more.</b> A chain is
+        /// gems, gems are fuel and fuel is bolts, so every other route to the same feeling —
+        /// heavier bolts, weaker raiders — changes what a match <em>delivers</em> rather than what
+        /// it <em>does</em>, and moves par, both star lines and every utility's charge with it.
+        /// This number moves none of them.
+        /// </para>
+        /// </summary>
+        public const int RefillSettlesPercent = 60;
+
+        /// <summary>
         /// Fuel a matched gem is worth, in tenths.
         ///
         /// <para>
