@@ -1036,13 +1036,33 @@ if (wardIds.length > 0) {
   const freeWard = wardIds.find(
     (id) => wardRoster[id]?.mapValue?.fields?.free?.booleanValue === true);
 
-  // And one behind a gate this account cannot have reached, held on a seat it did not buy.
-  const gatedWard = wardIds.find(
+  // One behind a gate this account is nowhere near - and *bought*, which is the whole point:
+  // a gate is permission to pay (invariant 15a), asked once, where money changes hands. A
+  // publish that re-asked it took every legendary off every card in the game and drew the
+  // starter in its place, so a five-star Pyroclast reached visitors as `bolt` (invariant 19t).
+  //
+  // **Sorted, and never a colourless turret.** `Object.keys` over a Firestore map is not an
+  // order, so an unsorted pick makes this block answer differently on different runs; and a
+  // legendary is bought *bare* (`WardHolding.Row`), so the `{id}:{colour}` row written below
+  // is a shape no client produces and `copiesOf` reads it as nothing bought - a drop with the
+  // right answer for the wrong reason, which is what this check must never accept. The copy
+  // rule has its own live probe (`ward-copies.mjs`).
+  const colourWards = wardIds
+    .filter((id) => wardRoster[id]?.mapValue?.fields?.legendary?.booleanValue !== true)
+    .sort();
+
+  const gatedWard = colourWards.find(
     (id) => Number(wardRoster[id]?.mapValue?.fields?.level?.integerValue ?? 0) >= 20);
 
-  check(!!freeWard && !!gatedWard,
-        "the roster has a free turret and a gated one to test against",
-        `${freeWard} / ${gatedWard}`);
+  // And a third the save claims on a seat it never paid for, so the clause that *is* asked
+  // still has something to refuse in the same publish.
+  const unboughtWard = colourWards.find(
+    (id) => id !== freeWard && id !== gatedWard
+         && wardRoster[id]?.mapValue?.fields?.free?.booleanValue !== true);
+
+  check(!!freeWard && !!gatedWard && !!unboughtWard,
+        "the roster has a free turret, a gated one and one to leave unbought",
+        `${freeWard} / ${gatedWard} / ${unboughtWard}`);
 
   const lineWrite = await fetch(
     `${FS}/players/${uid}?updateMask.fieldPaths=wardLoadout` +
@@ -1055,8 +1075,10 @@ if (wardIds.length > 0) {
                                   ward: { stringValue: freeWard } } } },
           { mapValue: { fields: { colour: { stringValue: "g" },
                                   ward: { stringValue: gatedWard } } } },
+          { mapValue: { fields: { colour: { stringValue: "b" },
+                                  ward: { stringValue: unboughtWard } } } },
         ] } },
-        // Held on green, so the only thing that can drop it is the keeper gate.
+        // Held on green and on green alone. Nothing holds the blue seat's turret at all.
         wardsOwned: { arrayValue: { values: [{ stringValue: `${gatedWard}:g` }] } },
         wardStars: { arrayValue: { values: [
           { mapValue: { fields: { ward: { stringValue: `${gatedWard}:g` },
@@ -1074,17 +1096,26 @@ if (wardIds.length > 0) {
   const seats = (lined?.fields?.line?.arrayValue?.values ?? [])
     .map((v) => v.mapValue?.fields ?? {});
 
-  check(seats.length === 1, "a line is published with only the seats the server can vouch for",
+  check(seats.length === 2, "a line is published with only the seats the server can vouch for",
         JSON.stringify(seats));
 
   check(seats[0]?.c?.stringValue === "r" && seats[0]?.w?.stringValue === freeWard,
         "the free turret needs no holding, so its seat stands", JSON.stringify(seats[0]));
 
-  // The one forgery about a line a visitor could catch as a lie: a level-1 keeper standing a
-  // turret whose rung opens at twenty. Dropped outright rather than drawn, and the visiting
-  // client fills the gap with its own roster's starter.
-  check(!seats.some((s) => s?.w?.stringValue === gatedWard),
-        "a turret above this keeper's level is not published", JSON.stringify(seats));
+  // **The turret they bought, at a keeper level that could not buy it today.** Re-asking the
+  // gate here is confiscation, and the seat it drops is indistinguishable on screen from a
+  // deliberate choice of the starter - which is the whole reason this line is asserted live.
+  const stood = seats.find((s) => s?.c?.stringValue === "g");
+  check(stood?.w?.stringValue === gatedWard,
+        "a turret held above this keeper's level is still published", JSON.stringify(seats));
+  check(Number(stood?.s?.integerValue ?? 0) === 4,
+        "at the rung its own holding records", JSON.stringify(stood));
+
+  // The clause that is asked, and the one place a stored choice could otherwise put a turret
+  // on a seat nobody paid for. Dropped outright rather than drawn, and the visiting client
+  // fills the gap with its own roster's starter.
+  check(!seats.some((s) => s?.w?.stringValue === unboughtWard),
+        "a turret on a seat nobody bought is not published", JSON.stringify(seats));
 }
 
 // Placed after the forged-grove assertions rather than before them, and that is not

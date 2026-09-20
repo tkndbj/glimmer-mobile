@@ -362,9 +362,9 @@ Grove, and the bundle id can never move.
    names a collection); **a callable's name is not**, which is why a rename cost a deploy, an invoker
    binding and a delete rather than a migration.
 19p. **What a public profile draws is what the score counted, and that is one walk** — not a second filter
-   over the same save. The **keeper gate is asked** and ownership is not, and a seat the server cannot vouch
-   for is **omitted rather than corrected**. A free turret is in nobody's `wardsOwned`, so the published
-   roster carries `free` beside the gate. A stale seed publishes no line, never an unvouched one.
+   over the same save. A seat the server cannot vouch for is **omitted rather than corrected**. A free
+   turret is in nobody's `wardsOwned`, so the published roster carries `free` beside the gate. A stale seed
+   publishes no line, never an unvouched one.
 19q. **A row on a board leads to two places, so it opens a chooser**, holding no art of its own. **Every
    thing a profile says, it says about somebody else**: no prices, no padlocks, no taps, and **nothing
    unheld is drawn at all**.
@@ -379,6 +379,13 @@ Grove, and the bundle id can never move.
    homestead catalog and trusted a grove screen to load it; the day the Grovement was held no device loaded it
    again, every settled sync parked its receipt, and no card was published for four days with every gate green.
    Pinned by `EndlessBoardTests.AReceiptParkedForTheCatalogAsksForTheCatalog`.
+19t. **A keeper gate is asked of what is *counted* and never of what is merely *drawn*.**
+   `heldCompanions` asks it (a companion feeds `groveWorth`, so 19a governs it); `publishedLine` may not —
+   a seat feeds no score, no ordering and no currency, so re-asking it there was **15a's confiscation on a
+   stranger's screen**: the legendary band is gated at keeper 45–60, nobody is there, and the dropped seat
+   drew as the starter, so a real five-star Pyroclast published as `bolt` with every gate green. Nothing
+   here compares a published card against the board its owner plays, and the live probe forged a tally *to
+   clear the gate*. **The day a line pays anything, the gate comes back.**
 
 ### Modes — in `Assets/Game/MODES.md`
 

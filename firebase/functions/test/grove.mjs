@@ -609,7 +609,7 @@ console.log("\nthe turret line a card publishes");
     },
   };
 
-  const line = (save, level = 99, cfg = config) => publishedLine(save, cfg, level);
+  const line = (save, cfg = config) => publishedLine(save, cfg);
 
   const full = {
     wardLoadout: [
@@ -644,13 +644,20 @@ console.log("\nthe turret line a card publishes");
   equal("a bare holding covers every colour",
         line({ wardLoadout: [{ colour: "b", ward: "siphon" }], wardsOwned: ["siphon"] }).length, 1);
 
-  // The gate, and the one forgery about a line a visitor could actually catch as a lie.
-  equal("a turret above this keeper's level is not published",
-        line({ wardLoadout: [{ colour: "y", ward: "spectrum" }], wardsOwned: ["spectrum:y"] },
-             20).length, 0);
-  equal("and is published once they reach it",
-        line({ wardLoadout: [{ colour: "y", ward: "spectrum" }], wardsOwned: ["spectrum:y"] },
-             40).length, 1);
+  // **The keeper gate is not asked, and this is the case that says so.** `spectrum` opens at
+  // keeper 40; a save holding it is a save that bought it, and re-asking the gate on something
+  // already bought is invariant 15a's confiscation — it took every legendary off every card in
+  // the game, and the dropped seat drew as the starter, so a real five-star Pyroclast published
+  // as `bolt`. A gate is permission to pay, asked once, where money changes hands.
+  const bought = { wardLoadout: [{ colour: "y", ward: "spectrum" }], wardsOwned: ["spectrum:y"] };
+
+  equal("a turret held above this keeper's level is still published", line(bought).length, 1);
+  equal("and it is the turret they bought, never the starter", line(bought)[0].w, "spectrum");
+
+  // The same seat asked of the same walk with no level in sight: there is no parameter left to
+  // pass, which is what stops the gate being restored by somebody reading only the call site.
+  equal("the walk mirrors `WardLine.Resolve`, which takes no level",
+        publishedLine.length, 2);
 
   // Omitted rather than corrected, which is what lets this function know nothing about which
   // turret is the starter: a visiting client resolves a missing seat through `WardLine.Resolve`
@@ -681,7 +688,7 @@ console.log("\nthe turret line a card publishes");
   // an unvouched one. Absent has to keep meaning what it meant.
   const stale = { ...config };
   delete stale.wards;
-  equal("a stale seed publishes no line", line(full, 99, stale).length, 0);
+  equal("a stale seed publishes no line", line(full, stale).length, 0);
 }
 
 console.log("\ncopies of a colourless turret");
@@ -706,7 +713,7 @@ console.log("\ncopies of a colourless turret");
   });
 
   const stood = (owned) =>
-    publishedLine({ ...everywhere("eclipse"), wardsOwned: owned }, config, 99)
+    publishedLine({ ...everywhere("eclipse"), wardsOwned: owned }, config)
       .map((s) => s.c).join("");
 
   // The hole this closed: one payment, four Eclipses, and nothing anywhere said so.
@@ -726,7 +733,7 @@ console.log("\ncopies of a colourless turret");
   // colours existed: it means all four, somebody paid for them, and reading it as a single copy
   // would take three seats off their card.
   equal("a bare row on an ordinary turret still covers every seat",
-        publishedLine({ ...everywhere("siphon"), wardsOwned: ["siphon"] }, config, 99).length, 4);
+        publishedLine({ ...everywhere("siphon"), wardsOwned: ["siphon"] }, config).length, 4);
 
   // Absent means false, which is what a `config/grove` seeded before this field says — and the
   // direction that never confiscates.
@@ -735,7 +742,7 @@ console.log("\ncopies of a colourless turret");
     wards: { ...config.wards, eclipse: { level: 45, free: false } },
   };
   equal("a config with no legendary flag caps nothing",
-        publishedLine({ ...everywhere("eclipse"), wardsOwned: ["eclipse"] }, old, 99).length, 4);
+        publishedLine({ ...everywhere("eclipse"), wardsOwned: ["eclipse"] }, old).length, 4);
 }
 
 console.log("\nthe card a public profile reads");
@@ -775,6 +782,57 @@ console.log("\nthe card a public profile reads");
   equal("the score", denied.score, worth.score);
   check("the companions", Array.isArray(denied.companions) && denied.companions.length > 0);
   check("and the line", Array.isArray(denied.line) && denied.line.length === 1);
+}
+
+console.log("\na keeper standing a legendary");
+{
+  // **The account this block is copied from**, read off the live database on 2026-09-20: keeper
+  // level 16, `pyroclast` (gate 48) bought outright and standing on red, with `ember`, `bolt`
+  // and `cleaver` beside it. The published card carried three seats and no red, so the profile
+  // drew the *starter* on it — a five-star legendary shown to every visitor as `bolt`, which is
+  // the fault the owner reported. Every offline gate was green, because nothing in this project
+  // ever compares a published card against the board its owner plays.
+  const config = {
+    ...groveConfig(),
+    wards: {
+      bolt: { level: 0, free: true },
+      ember: { level: 6, free: false },
+      cleaver: { level: 10, free: false },
+      pyroclast: { level: 48, free: false, legendary: true },
+    },
+  };
+  const worth = groveWorth({}, config, 1, 0);
+
+  const save = {
+    wardLoadout: [
+      { colour: "r", ward: "pyroclast" },
+      { colour: "g", ward: "ember" },
+      { colour: "b", ward: "bolt" },
+      { colour: "y", ward: "cleaver" },
+    ],
+    wardsOwned: ["pyroclast", "ember:g", "cleaver:y"],
+    wardStars: [{ ward: "pyroclast", stars: 5 }],
+  };
+
+  const line = buildCard("uid-16", save, config, worth, 16, 1_700_000_000, null).line;
+
+  equal("every seat they arranged is published", line.map((s) => s.c).join(""), "rgby");
+  equal("and the legendary is the turret on red", line[0].w, "pyroclast");
+  equal("at the rung its bare row records", line[0].s, WARD_STARS_MOST);
+
+  // The three clauses that *are* asked still are, at the same keeper level — this fix widened
+  // one gate and none of the others.
+  equal("a turret nobody bought is still dropped",
+        buildCard("uid-16", { ...save, wardsOwned: [] }, config, worth, 16, 1, null)
+          .line.map((s) => s.c).join(""), "b");        // `bolt` is free; the rest were not
+
+  equal("and a second copy of the legendary is still one payment short",
+        buildCard("uid-16",
+                  { ...save,
+                    wardLoadout: save.wardLoadout.map(({ colour }) =>
+                      ({ colour, ward: "pyroclast" })) },
+                  config, worth, 16, 1, null)
+          .line.map((s) => s.c).join(""), "r");
 }
 
 console.log("\nthe home a card draws");

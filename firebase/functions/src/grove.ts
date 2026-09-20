@@ -840,14 +840,17 @@ function starsOf(save: Record<string, unknown>, id: string, colour: string): num
  * takes for a turret that was renamed, retired or never held — so an omitted seat draws the
  * starter, which is exactly what its owner's own game draws.
  *
+ * <b>That last sentence is the whole specification, and it is why this walk mirrors
+ * `WardLine.Resolve` clause for clause and asks nothing else.</b> Every refusal here has to be
+ * one the owner's own board makes too, or the card is not a plainer drawing of their line — it
+ * is a different line, and the difference is invisible on both screens.
+ *
  * Three refusals, in the order they are asked:
  *
  *   * the roster has never heard of the id (a retired turret, or a save from a newer drop);
  *   * the save does not hold it **on that colour** — a turret is bought per colour
  *     (`WardHolding`), and this is the one place a stored choice could otherwise put one on a
  *     seat nobody paid for;
- *   * the keeper level has not reached its rung, which is `groveWorth`'s companion clause and
- *     the one forgery about a line a visitor could catch as a lie;
  *   * **every copy of it is already standing on an earlier seat.** A colourless turret is held
  *     on all four by one purchase (`WardHolding.Row`), so ownership alone cannot say how many
  *     Eclipses a line may stand — four of them is four payments (`copiesOf`), and a save
@@ -855,11 +858,28 @@ function starsOf(save: Record<string, unknown>, id: string, colour: string): num
  *     client caps this before it is ever written (`WardLoadout.CanStand`), so an honest save
  *     never reaches the clause; what it refuses is a hand-edited one.
  *
+ * <b>There was a fourth, and it was the keeper level — `entry.level` is deliberately not read
+ * here.</b> That gate is *permission to pay* (invariant 15a) and re-asking it on something
+ * already bought is the confiscation that invariant names: it took every legendary turret off
+ * every card in the game, because the band is gated at keeper 45–60 and nobody alive is there,
+ * and the seat it dropped drew as the starter — a real account standing a five-star Pyroclast
+ * published as `bolt`, with every gate in this project green. A retune that raised any rung
+ * would have done the same to whoever had already bought it. The gate belongs where money
+ * changes hands (`WardLedger.OfferFor`), and the client's own `IsHeld` has never asked it.
+ *
+ * <b>Why `heldCompanions` keeps its gate and this does not.</b> A companion is counted into
+ * `groveWorth`, so it is a *number that goes public* and invariant 19a applies to it —
+ * adjudicated, and dropped rather than cut down. A seat is counted into nothing: no score, no
+ * board ordering, no currency. It is a picture on somebody else's screen, which is the sentence
+ * `firestore.rules` already uses to justify letting the client write `wardsOwned` at all — and
+ * the rung beside it (`starsOf`) has only ever been clamped, never proven, for the same reason.
+ * <b>The day a line pays anything, this gate comes back.</b>
+ *
  * Emitted in colour order rather than in the save's row order, so two devices that arranged the
  * same line publish byte-identical cards.
  */
 export function publishedLine(
-  save: Record<string, unknown>, grove: GroveConfig, level: number
+  save: Record<string, unknown>, grove: GroveConfig
 ): CardSeat[] {
   const roster = grove.wards;
   if (!roster || typeof roster !== "object") return [];
@@ -901,7 +921,6 @@ export function publishedLine(
     const entry = roster[ward];
     if (!entry || typeof entry !== "object") continue;      // not on the roster we published
     if (!ownsWard(owned, entry, ward, colour)) continue;    // not held on this seat
-    if (level < Math.floor(entry.level ?? 0)) continue;     // not reached
 
     const already = stood.get(ward) ?? 0;
     if (already >= copiesOf(owned, entry, ward)) continue;  // more seats than copies bought
@@ -1349,7 +1368,7 @@ export function buildCard(
   // no companions and no line is what every card written before this deployment is, and absent
   // has to keep meaning exactly that.
   const companions = heldCompanions(idSet(save.companionsOwned, 256), grove, level);
-  const line = publishedLine(save, grove, level);
+  const line = publishedLine(save, grove);
 
   return {
     name: boardName(confirmedName, uid, list),

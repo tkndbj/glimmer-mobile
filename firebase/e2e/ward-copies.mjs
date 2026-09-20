@@ -266,6 +266,43 @@ const oneColour = await seatsFor(ORDINARY, [`${ORDINARY}:g`]);
 check(oneColour?.length === 1 && oneColour?.[0] === "g",
       "and a per-colour row is still exactly its own seat", JSON.stringify(oneColour));
 
+// ------------------------------------- the gate this walk must not ask
+console.log("\na turret bought stays bought, whatever the keeper level is now");
+
+// **The case every check above was blind to, and the one a player reported.** Everything so
+// far runs on an account whose endless tally was forged *precisely* to clear the legendary's
+// gate - so a `publishGrove` that re-asked that gate on a turret already bought passed all of
+// it, and the fault only ever showed on a real account, which is at keeper 16 and nowhere near
+// 45. A probe that arranges to satisfy a condition cannot see a bug in that condition.
+//
+// So the tally comes off and the same line goes up again. A gate is permission to pay
+// (invariant 15a); re-asking it on a holding is confiscation, and the seat it drops draws as
+// the *starter* - which is how a five-star Pyroclast came to be published as `bolt`.
+//
+// Differential on purpose, for this suite's own reason: a bundle that predates the fix
+// publishes no seat here and a perfectly valid card beside it, so only the two readings
+// together say which bundle is running.
+const dropped = await fetch(
+  `${FS}/${SAVE_PATH}/${uid}?updateMask.fieldPaths=endlessBest`,
+  { method: "PATCH", headers: json,
+    body: JSON.stringify({ fields: { endlessBest: { arrayValue: {} } } }) });
+
+check(dropped.ok, "the forged tally comes off the save", String(dropped.status));
+
+const junior = await seatsFor(LEGEND, [LEGEND]);
+check(junior?.length === 1,
+      `**a keeper below ${LEGEND}'s gate still stands the one they bought**`,
+      JSON.stringify(junior));
+
+// And the level really did fall - otherwise the line above proves nothing, because the account
+// would still be clearing the gate it is meant to be under.
+const under = await (await fetch(`${FS}/groves/${uid}`, { headers: bearer })).json();
+const level = Number(under?.fields?.level?.integerValue ?? 0);
+
+check(level > 0 && level < GATE,
+      "on a card whose own keeper level is below that gate",
+      `keeper ${level} against a gate of ${GATE}`);
+
 // ------------------------------------------------------------------ cleaning up
 console.log("\ncleaning up after itself");
 
