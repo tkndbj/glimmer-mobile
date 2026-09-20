@@ -170,6 +170,12 @@ namespace GlimmerGrove.Social
         }
 
         /// <summary>
+        /// Test seam: judges a receipt exactly as a settled sync would, without the
+        /// <c>PlayerPrefs</c> read that <see cref="OnSettled"/> does first.
+        /// </summary>
+        internal static void ConsiderForTests(SyncReceipt receipt) => Consider(receipt);
+
+        /// <summary>
         /// Decides whether the save the server now holds is worth a card, and asks for one.
         ///
         /// <para>
@@ -192,7 +198,22 @@ namespace GlimmerGrove.Social
 
             // Nothing can be scored against an empty catalog, and "worth nothing" would be
             // the wrong answer; the receipt is kept and judged when the catalog is published.
-            if (!HomesteadCatalog.IsLoaded) return;
+            //
+            // **And the catalog is asked for here, because nothing else is going to.** This
+            // gate used to trust that some screen would load it, and for a year one always
+            // had: the Grovement, the grove shop and a visit all call `EnsureAsync` on the
+            // way in. The day the Grovement was held (2026-09-15) those three screens left the
+            // nav, the catalog was never loaded on any device again, and every settled sync
+            // parked its receipt here for ever — no card, no row, and the boards stood at
+            // whatever the last device to open a grove had put on them. A gate that waits on
+            // something has to be the thing that asks for it, or it is a gate that waits on a
+            // coincidence. `EnsureAsync` is a once-per-session local file read shared by every
+            // caller, and `Reconsider` runs on the `Changed` it raises.
+            if (!HomesteadCatalog.IsLoaded)
+            {
+                _ = HomesteadService.EnsureAsync();
+                return;
+            }
 
             var card = GroveCard.OfSave(HomesteadCatalog.Current, receipt.Save, CloudState.UserId,
                                         PlayerProgression.Level.Level, SaveSchema.NowUnix());

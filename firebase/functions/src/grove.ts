@@ -1636,6 +1636,9 @@ async function topOf(db: FirebaseFirestore.Firestore, boardId: string): Promise<
     });
   }
 
+  // The index already handed these back in order; sorting again through the one comparison
+  // the live merge uses is what makes the two paths provably agree about a tie.
+  rows.sort((a, b) => compareRows(field, a, b));
   return rows;
 }
 
@@ -1680,6 +1683,318 @@ async function pruneRetiredBoards(db: FirebaseFirestore.Firestore): Promise<stri
   return stale.map((ref) => ref.id);
 }
 
+// ------------------------------------------------------------- placing a card live
+
+/**
+ * The row a card contributes to a board. One shape for both boards — see `RankedGrove`.
+ *
+ * Built from the card the server has just written rather than from the save, so a row on a
+ * board can never say anything the card does not: the same sanitised name, the same clamped
+ * score, the same bounded wave. `topOf` reads the identical fields back off the document,
+ * which is what keeps the live path and the rebuild from ever disagreeing about a row.
+ */
+export function rowOf(uid: string, card: GroveCardDoc): RankedGrove {
+  return {
+    uid,
+    name: typeof card.name === "string" ? card.name : "",
+    avatar: typeof card.avatar === "string" ? card.avatar : "",
+    level: typeof card.level === "number" ? Math.floor(card.level) : 1,
+    score: typeof card.score === "number" ? Math.floor(card.score) : 0,
+    stars: typeof card.stars === "number" ? Math.floor(card.stars) : 0,
+    wave: typeof card.wave === "number" ? Math.floor(card.wave) : 0,
+  };
+}
+
+/**
+ * The order every board is in, whichever path wrote it.
+ *
+ * Best first, and a tie broken by uid *descending* — which is what Firestore does for
+ * `orderBy(field, "desc")`: it appends the document id as the final ordering key in the same
+ * direction as the last clause. The two paths that write a board, the live merge here and the
+ * rebuild's query, must agree on ties or a board would reorder itself every fifteen minutes for
+ * no reason anybody could see — and `topOf` sorts its rows through this comparison as well, so
+ * the agreement does not rest on remembering that rule.
+ */
+export function compareRows(field: "score" | "wave", a: RankedGrove, b: RankedGrove): number {
+  if (a[field] !== b[field]) return b[field] - a[field];
+  return a.uid > b.uid ? -1 : a.uid < b.uid ? 1 : 0;
+}
+
+/** The rows a board document carries, bounded and typed. Anything malformed is dropped. */
+export function readRows(raw: unknown): RankedGrove[] {
+  if (!Array.isArray(raw)) return [];
+
+  const rows: RankedGrove[] = [];
+  for (const entry of raw.slice(0, BOARD_ROWS)) {
+    const row = entry as Partial<RankedGrove> | null;
+    if (!row || typeof row !== "object" || typeof row.uid !== "string" || row.uid.length === 0) continue;
+
+    rows.push({
+      uid: row.uid,
+      name: typeof row.name === "string" ? row.name : "",
+      avatar: typeof row.avatar === "string" ? row.avatar : "",
+      level: typeof row.level === "number" ? Math.floor(row.level) : 1,
+      score: typeof row.score === "number" ? Math.floor(row.score) : 0,
+      stars: typeof row.stars === "number" ? Math.floor(row.stars) : 0,
+      wave: typeof row.wave === "number" ? Math.floor(row.wave) : 0,
+    });
+  }
+  return rows;
+}
+
+/**
+ * The population a board can state without counting anything.
+ *
+ * While a board has room, every card carrying its figure is on it, so the row count *is* the
+ * population and writing it costs nothing. Once the board is full the population is whatever
+ * the nightly `count()` found, and this answers nothing so that `merge` leaves that figure
+ * standing. It is what keeps the document from ever saying "population 1" over five rows
+ * between one night and the next — a small lie, but one every reader of the document would
+ * have to know about.
+ */
+export function populationOf(rows: RankedGrove[], limit = BOARD_ROWS): { population?: number } {
+  return rows.length < limit ? { population: rows.length } : {};
+}
+
+/**
+ * The value below which a card cannot enter a board. Nought while the board has room.
+ *
+ * Read off the rows rather than stored, so it can never drift from the list it describes.
+ */
+export function cutoffOf(rows: RankedGrove[], field: "score" | "wave", limit = BOARD_ROWS): number {
+  if (rows.length < limit) return 0;
+  return rows[rows.length - 1][field];
+}
+
+/**
+ * Whether a card is worth opening a transaction for.
+ *
+ * True when the keeper is already on the board (their row has to be refreshed, re-sorted or
+ * removed whatever the new figure is), or when the figure would reach the cutoff. A tie at the
+ * cutoff answers true and lets `mergeRow` decide exactly — the cost of a wrong "yes" is one
+ * transaction that writes nothing, where the cost of a wrong "no" is a keeper who earned a row
+ * and did not get one until the next rebuild.
+ */
+export function qualifies(rows: RankedGrove[], uid: string, value: number,
+                          field: "score" | "wave", limit = BOARD_ROWS): boolean {
+  if (rows.some((row) => row.uid === uid)) return true;
+  if (!(value > 0)) return false;
+  return value >= cutoffOf(rows, field, limit);
+}
+
+/**
+ * Merges one keeper's row into a board. Pure, and the whole of the live path's arithmetic.
+ *
+ * The keeper's old row goes whatever happens; the new one enters only if it carries a figure
+ * (a card whose wave is nought has no business on the endless board, and a card whose row
+ * used to be there is taken off it); the list is re-sorted by the board's own order and cut to
+ * `limit`. `changed` is false when the result is the input row for row, which is what lets the
+ * transaction skip its write — a republish that moved nothing a visitor can see costs a read
+ * and no write.
+ */
+export function mergeRow(rows: RankedGrove[], row: RankedGrove, field: "score" | "wave",
+                         limit = BOARD_ROWS): { rows: RankedGrove[]; changed: boolean } {
+  const kept = rows.filter((existing) => existing.uid !== row.uid);
+  if (row[field] > 0) kept.push(row);
+
+  kept.sort((a, b) => compareRows(field, a, b));
+  const merged = kept.slice(0, limit);
+
+  const same = merged.length === rows.length && merged.every((a, i) => sameRow(a, rows[i]));
+  return { rows: merged, changed: !same };
+}
+
+function sameRow(a: RankedGrove, b: RankedGrove): boolean {
+  return a.uid === b.uid && a.name === b.name && a.avatar === b.avatar && a.level === b.level
+      && a.score === b.score && a.stars === b.stars && a.wave === b.wave;
+}
+
+/**
+ * What this instance last saw of each board, so a publish that cannot reach a board skips the
+ * read as well as the write.
+ *
+ * **This is the whole of what keeps the live path cheap at scale.** Every publish asks "would
+ * this card make the board?", and past a few thousand keepers the answer is nearly always no.
+ * Answering it from a document read is two reads per publish for ever; answering it from a
+ * copy this process fetched within the last minute is nothing. The copy is only ever a
+ * *gate*: the transaction that writes re-reads the board under a lock and merges into that,
+ * never into the cache, so a stale copy can cost a wasted transaction (a "yes" that turns out
+ * to write nothing) or, in one direction only, a skipped row.
+ *
+ * That direction is a cutoff that has *fallen* — a scrub, a withdrawal or a rebuild that
+ * found fewer keepers — read as still standing for up to `CUTOFF_TTL_MS`. A keeper who
+ * publishes into that minute with a figure between the old and new cutoffs waits for the next
+ * rebuild (`rebuildBoards`, every fifteen minutes), which is the only reason that rebuild
+ * still runs. A cutoff never rises without a write going through this process or another, and
+ * a rise this process has not seen only makes it open a transaction it need not have.
+ */
+const CUTOFF_TTL_MS = 60_000;
+const boardCache = new Map<string, { rows: RankedGrove[]; at: number }>();
+
+/** Test seam, and what the rebuilds call so a board written wholesale is not gated on a stale copy. */
+export function forgetBoardCache(): void {
+  boardCache.clear();
+}
+
+/**
+ * Puts a freshly published card on every board it belongs on, immediately.
+ *
+ * **This is what makes a board live rather than a tally.** The card is the truth and the
+ * rebuild reads it, so a board was never *wrong* under the nightly design — it was a day late,
+ * and a keeper who beat their record at breakfast and opened the boards at lunch read that as
+ * broken. Now the same call that writes the card merges its row into the board document, so
+ * the list a player opens after their run already has them on it.
+ *
+ * **Bounded on both sides.** A board is a hundred rows, so the merge is arithmetic over a
+ * hundred small objects; a card that cannot reach the cutoff costs one cached comparison and
+ * no database work at all (`boardCache`); and a card that can costs one transaction on one
+ * document. The board document is the only thing here that could be *hot*, and it is written
+ * only by a card that enters or moves the top hundred — which is the one kind of publish that
+ * gets rarer as the game grows. Firestore's guidance of one sustained write a second per
+ * document is therefore a bound on how fast the top hundred can churn, not on how many people
+ * can play, and a transaction that loses a race retries under the SDK's own policy.
+ *
+ * **Never load-bearing.** It runs after the card is written and its failure is logged rather
+ * than thrown: the card is what the rebuild reads, so a placement that fails is a row that
+ * arrives within fifteen minutes instead of at once.
+ *
+ * Returns the ids of the boards whose document changed, for the log.
+ */
+export async function placeOnBoards(db: FirebaseFirestore.Firestore, uid: string,
+                                    card: GroveCardDoc, nowUnix: number): Promise<string[]> {
+  const row = rowOf(uid, card);
+  const changedBoards: string[] = [];
+  const nowMs = Date.now();
+
+  for (const boardId of BOARD_IDS) {
+    const field = BOARD_FIELD[boardId];
+    if (!field) continue;
+
+    const cached = boardCache.get(boardId);
+    if (cached && nowMs - cached.at < CUTOFF_TTL_MS
+        && !qualifies(cached.rows, uid, row[field], field)) {
+      continue;
+    }
+
+    const ref = db.doc(GROVE_PATHS.board(boardId));
+
+    const changed = await db.runTransaction(async (tx) => {
+      const snapshot = await tx.get(ref);
+      const rows = readRows(snapshot.exists ? snapshot.data()?.entries : undefined);
+      const merged = mergeRow(rows, row, field);
+
+      boardCache.set(boardId, { rows: merged.rows, at: Date.now() });
+      if (!merged.changed) return false;
+
+      if (snapshot.exists) {
+        // `builtUnix` is the rebuilds' to own — it says when the *whole* list was last read
+        // off the cards, which this write does not do. `population` is exact for free while
+        // the board has room (every card carrying the figure is on it), and only once the
+        // board is full does it become the nightly count's (`populationOf`).
+        tx.update(ref, { entries: merged.rows, ...populationOf(merged.rows) });
+      } else {
+        // The first keeper on a board that has never been built. Written whole, so a client
+        // reading it finds every field it expects — `topOf` would write the same shape at the
+        // next rebuild, with the count filled in.
+        tx.set(ref, { entries: merged.rows, population: merged.rows.length, builtUnix: nowUnix });
+      }
+      return true;
+    });
+
+    if (changed) changedBoards.push(boardId);
+  }
+
+  return changedBoards;
+}
+
+/**
+ * Takes one keeper's row off every board it is standing on.
+ *
+ * Walks the collection rather than `BOARD_IDS`, for the reason `account.ts` gives where this
+ * used to live: what a name is standing on is whatever documents are actually there, which
+ * after a board is retired is a superset of the list until the next prune. It is a transaction
+ * per board rather than one batch because the rebuilds write them in batches of their own, and
+ * read-filter-write under a transaction is what makes a collision a retry rather than a lost
+ * write. A handful of reads and at most a handful of small writes, once per withdrawal.
+ */
+export async function scrubBoards(db: FirebaseFirestore.Firestore, uid: string): Promise<number> {
+  let scrubbed = 0;
+
+  for (const ref of await db.collection("leaderboards").listDocuments()) {
+    const changed = await db.runTransaction(async (tx) => {
+      const snapshot = await tx.get(ref);
+      if (!snapshot.exists) return false;
+
+      const entries = snapshot.data()?.entries;
+      if (!Array.isArray(entries)) return false;
+
+      // Filtered by uid, never by position or by name. Two players may share a display
+      // name — a handle derived from a uid cannot collide, but a claimed one is unique only
+      // by fold — and a row index means nothing across a rebuild.
+      const kept = entries.filter((row: unknown) => (row as { uid?: string })?.uid !== uid);
+      if (kept.length === entries.length) return false;
+
+      const rows = kept.slice(0, BOARD_ROWS);
+      tx.update(ref, { entries: rows, ...populationOf(rows) });
+      return true;
+    });
+
+    if (changed) scrubbed++;
+  }
+
+  // Whatever this process believed about the boards, one of them may now have room.
+  forgetBoardCache();
+  return scrubbed;
+}
+
+/**
+ * Rewrites the boards alone — the top hundred of each, straight off the index — and nothing
+ * else.
+ *
+ * **This is the safety net under `placeOnBoards`, and it is cheap enough to run every fifteen
+ * minutes for ever.** Two queries at a hundred rows and a prune that lists two document names:
+ * about two hundred reads a run, twenty thousand a day, at any population — nothing here grows
+ * with the player count, because a board is ordered on a field the card already carries and
+ * Firestore indexes it. What it repairs is everything the live path can miss: a placement
+ * that lost its transaction, a cutoff the cache read as higher than it was, a row whose figure
+ * fell below the hundredth (the grove's worth can, a wave cannot) and a card withdrawn while a
+ * rebuild was mid-flight.
+ *
+ * `population` is written only while the board has room (`populationOf`), where it is the row
+ * count and free. Past that it is a `count()` aggregation billed against every card on the
+ * board's index, which at ten million keepers is ten thousand reads a run — a figure worth
+ * taking once a night (`rebuildGroveRanks`) and not ninety-six times a day. `set` with `merge`
+ * leaves the nightly count standing on a full board.
+ */
+export async function rebuildBoards(): Promise<{ boards: number; pruned: string[] }> {
+  const db = getFirestore();
+
+  const [tops, pruned] = await Promise.all([
+    Promise.all(BOARD_IDS.map((id) => topOf(db, id))),
+    pruneRetiredBoards(db),
+  ]);
+
+  if (pruned.length > 0) logger.info("removed retired boards", { boards: pruned });
+
+  const builtUnix = Math.floor(Date.now() / 1000);
+  const batch = db.batch();
+
+  BOARD_IDS.forEach((boardId, i) => {
+    batch.set(db.doc(GROVE_PATHS.board(boardId)),
+              { entries: tops[i], builtUnix, ...populationOf(tops[i]) }, { merge: true });
+  });
+
+  await batch.commit();
+  forgetBoardCache();
+
+  logger.info("rebuilt boards", {
+    boards: BOARD_IDS.length,
+    rows: Object.fromEntries(BOARD_IDS.map((id, i) => [id, tops[i].length])),
+  });
+
+  return { boards: BOARD_IDS.length, pruned };
+}
+
 /**
  * Rewrites every board, the population counts and the distribution.
  *
@@ -1708,6 +2023,11 @@ async function pruneRetiredBoards(db: FirebaseFirestore.Firestore): Promise<stri
  * the morning - a fraction of a penny. **Nothing here grows with the player count except the
  * counts, and those grow at a thousandth of it**; adding a board adds a hundred reads a night
  * and one aggregation, which is the whole reason a board is a document rather than a query.
+ *
+ * **Since the boards went live this is the nightly half only** — `placeOnBoards` puts a card
+ * on a board as it is published and `rebuildBoards` re-reads the top hundred every fifteen
+ * minutes; what is left for four in the morning is the two things worth taking once a day:
+ * the counts and the distribution.
  *
  * Every board is written whether or not anything is on it, so a board that emptied stops
  * showing yesterday's rows rather than keeping them for ever, and one that has been *retired*
@@ -1754,6 +2074,7 @@ export async function rebuildGroveRanks(): Promise<{ ranked: number; boards: num
   });
 
   await batch.commit();
+  forgetBoardCache();
 
   // `waveSamples` and `waveDeciles` are **additive**, and that is what makes this deployable
   // in either order: a client that has never heard of them reads the document exactly as it
@@ -1812,7 +2133,15 @@ export function saveRevision(save: Record<string, unknown>): number {
 }
 
 export async function withdrawCard(uid: string): Promise<void> {
-  await getFirestore().doc(GROVE_PATHS.card(uid)).delete();
+  const db = getFirestore();
+  await db.doc(GROVE_PATHS.card(uid)).delete();
+
+  // The row goes with the card. While a board was a nightly tally this was left to the
+  // rebuild — the player still existed and the row was stale for at most a day — but a board
+  // that places a card the moment it is published has to take one down the moment it is
+  // withdrawn, or "hide me from the boards" is a switch that visibly does nothing for a
+  // quarter of an hour. Two reads and at most two small writes, once per opt-out.
+  await scrubBoards(db, uid);
 }
 
 /** Marks a save as having been published, for support. Never read by any rule. */

@@ -68,10 +68,6 @@ BAR_ORANGE = (255, 150, 30)
 BAR_FULL = (96, 235, 70)
 BAR_H = 26
 
-#: `StreakScreen.FooterTop` — the CTA's band, taken out of the board only when it is drawn.
-FOOTER_H = 176.0
-
-
 def strings():
     table = json.loads(LOC.read_text(encoding="utf-8"))
     return {e["key"]: e["text"] for e in table["entries"]}
@@ -409,7 +405,10 @@ def says(rung):
 def board(sheet, top, first, states, days):
     """`StreakScreen.BuildBoard` - the list, and the fold it opens on."""
     tall = len(RUNGS) * (ROW_H + ROW_GAP) - ROW_GAP
-    bottom = K.NAV_HEIGHT + 20 + (FOOTER_H if states.get("cta") else 0)
+    # `StreakScreen.BoardFoot` - nothing stands under the board, so the clearance is the
+    # nav bar and a margin in every state (invariant 48i: the mirror drops a withdrawn piece
+    # in the same change).
+    bottom = K.NAV_HEIGHT + 20
     band = H - top - bottom
 
     # `StreakScreen.FocusOnPending` - the board opens on the night that can be taken, not on
@@ -433,38 +432,31 @@ def board(sheet, top, first, states, days):
     return tall > band
 
 
-def footer(sheet):
-    cy = H - K.NAV_HEIGHT - 32 - 132 / 2
-    K.paste(sheet, K.glow(640, 1.7, K.MINT, .24), W / 2, cy)
-    K.paste(sheet, K.skin("btn_green", 560, 132), W / 2, cy)
-    K.text(sheet, txt("ui.streak.cta"), W / 2, cy - 132 * 0.0231, 44)
-
-
 # ------------------------------------------------------------------- the states
 def shot(state):
     """One page. The states are the six a player can actually be in."""
     n = len(RUNGS)
 
     if state == "none":
-        days, first, lit, kept, cta, held, line, colour = 0, 1, -1, 0, True, False, \
+        days, first, lit, kept, held, line, colour = 0, 1, -1, 0, False, \
             txt("ui.streak.explain_none"), (255, 243, 220)
     elif state == "risk":
-        days, first, lit, kept, cta, held, line, colour = 4, 1, -1, 4, True, False, \
+        days, first, lit, kept, held, line, colour = 4, 1, -1, 4, False, \
             txt("ui.streak.explain_risk_clock", "3h 21m"), (255, 158, 128)
     elif state == "shield":
-        days, first, lit, kept, cta, held, line, colour = 9, 8, -1, 2, False, True, \
+        days, first, lit, kept, held, line, colour = 9, 8, -1, 2, True, \
             txt("ui.streak.shield_left_many", 4), K.MINT
     elif state == "offline":
         # A chest night waiting on an account id. Rung index 2 is the silver chest, so
         # this is the pending night being a chest rather than a figure - which is the
         # only way the state is reachable at all.
-        days, first, lit, kept, cta, held, line, colour = 2, 1, 2, 2, False, False, \
+        days, first, lit, kept, held, line, colour = 2, 1, 2, 2, False, \
             txt("ui.streak.waiting_one"), K.GOLD
     elif state == "week2":
-        days, first, lit, kept, cta, held, line, colour = 11, 8, 3, 3, False, False, \
+        days, first, lit, kept, held, line, colour = 11, 8, 3, 3, False, \
             txt("ui.streak.waiting_one"), K.GOLD
     else:
-        days, first, lit, kept, cta, held, line, colour = 5, 1, 4, 4, False, False, \
+        days, first, lit, kept, held, line, colour = 5, 1, 4, 4, False, \
             txt("ui.streak.waiting_one"), K.GOLD
 
     rows = []
@@ -488,10 +480,7 @@ def shot(state):
     y = hero(sheet, y, days, max(0, min(n, days - first + 1)), n, line, colour)
     y = shield_row(sheet, y, held, 4)
     y = heading(sheet, y, 1 + (first - 1) // n)
-    scrolls = board(sheet, y, first, {"rows": rows, "cta": cta}, days)
-
-    if cta:
-        footer(sheet)
+    scrolls = board(sheet, y, first, {"rows": rows}, days)
 
     K.navbar(sheet, "home")
     return sheet.convert("RGB")

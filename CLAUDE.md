@@ -368,9 +368,17 @@ Grove, and the bundle id can never move.
 19q. **A row on a board leads to two places, so it opens a chooser**, holding no art of its own. **Every
    thing a profile says, it says about somebody else**: no prices, no padlocks, no taps, and **nothing
    unheld is drawn at all**.
-19r. **A board is a tally taken once a day, and the screen cannot say so by drawing itself.** The cadence
-   mirrors the cron, affordable only because nothing waits on it — and the panel prints what the job that
-   wrote *this* board recorded, dropped when nought.
+19r. **A board is live, and the thing that makes it live is the publish itself.** `publishGrove` merges the
+   card's row into each board document in the same call (`placeOnBoards`), gated by a cached cutoff so a card
+   that cannot reach the top hundred costs no read; `rebuildBoards` re-reads the hundred off the index every
+   fifteen minutes as the net (~200 reads a run at any population), and the counts and deciles stay nightly.
+   **A withdrawal scrubs the row in the same call**, or "hide me" visibly does nothing for a quarter of an
+   hour. The screen cannot say any of this by drawing itself: the panel prints the cadence
+   (`LeaderboardBoard.RebuildMinutes`, mirroring the cron) and what the job that wrote *this* board recorded.
+19s. **A gate that waits on something must be the thing that asks for it.** The publish path waited for the
+   homestead catalog and trusted a grove screen to load it; the day the Grovement was held no device loaded it
+   again, every settled sync parked its receipt, and no card was published for four days with every gate green.
+   Pinned by `EndlessBoardTests.AReceiptParkedForTheCatalogAsksForTheCatalog`.
 
 ### Modes — in `Assets/Game/MODES.md`
 
@@ -1084,9 +1092,10 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   civic buildings, walls, gates, trees and props. A piece stands on an authored footprint (1x1 to 4x4) and
   can be turned.
 - **Boards** — **one drawn, two published**: **Finest grooves** (held with the Grovement) and the **Endless
-  Watch**. A hundred rows each, one document each, rebuilt at 04:00 — about fifteen thousand reads a night
-  at ten million cards. Plus **two published distributions** off the same five-thousand-card sample, each
-  refusing to answer under 200 samples. The nine league boards are gone.
+  Watch**. A hundred rows each, one document each, **live** — a card's row is merged into the board by the
+  publish that wrote it (19r) — re-read whole every fifteen minutes (~20,000 reads a day) and counted at
+  04:00 (~15,000 reads a night at ten million cards). Plus **two published distributions** off the same
+  five-thousand-card sample, each refusing to answer under 200 samples. The nine league boards are gone.
 - **A keeper seen from outside** *(profile and name reporting live; the chooser, the grove card and the
   grovement report subject are held)* — a read-only profile built from the published card: keeper level and
   honorific, the Endless Watch with a percentile, companions **gathered** (held only), the four turrets
@@ -1162,10 +1171,10 @@ after any change**. Only the shapes that are not obvious from the files are wort
 
 ### Backend
 
-Firebase project `glimmer-groove-1cd60`, Firestore `eur3`, Node 22 in `europe-west1`. **Seventeen
+Firebase project `glimmer-groove-1cd60`, Firestore `eur3`, Node 22 in `europe-west1`. **Eighteen
 functions**: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`, `adReward`, `appleNotification`,
 `sweepVoidedPurchases`, `publishGroveStats`, `publishGrove`, `withdrawGrove`, `publishGroveRanks`,
-`claimName`, `reportKeeper`, `deleteAccount`, and the three referral callables `getReferral`,
+`publishGroveBoards` (every 15 minutes, 2026-09-20), `claimName`, `reportKeeper`, `deleteAccount`, and the three referral callables `getReferral`,
 `redeemReferral`, `claimReferral` (deployed 2026-09-17). **`firebase functions:list` is the authority** — a fifteenth,
 `eventPass`, was deployed and later deleted while never appearing in any list here. `firebase/README.md` is
 the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-18),
@@ -1175,6 +1184,16 @@ the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-18),
 on a fresh clone).
 
 ## Owed
+
+**The boards went live on 2026-09-20, and the client half needs a build.** No real device had called
+`publishGrove` since the Grovement hold (19s): the publish gate waited on the homestead catalog and the
+three screens that loaded it had left the nav. The server half is deployed (`publishGrove`,
+`withdrawGrove`, `publishGroveRanks`, `deleteAccount` and the new `publishGroveBoards`, smoke test
+170/170, endless-xp 12/12, delete-account 14/14) and the five stale real cards were republished by hand
+through the ordinary callable. **Until a build carrying the `GroveBoard.Consider` fix ships, a new best on
+a device still reaches no card** — the save syncs, the receipt parks, and the board holds the last
+republish. The owner's `Tekoworld` account has an empty `endlessBest` on the server: it has never synced a
+wave, so the runs it is expected to show are not on it.
 
 **The referral drop went live on 2026-09-17**: rules released, the three callables and `deleteAccount`
 deployed by name with invoker bindings, re-seeded, smoke test 166/166 and delete-account 14/14 live,

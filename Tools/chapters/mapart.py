@@ -100,11 +100,15 @@ XS = (0.70, 0.28, 0.74, 0.30, 0.72, 0.26, 0.70, 0.32, 0.74, 0.28)
 #: height of the map could affect it; these are facts about four particular pictures, and two
 #: paintings cut into six strips have nothing else in common.
 #:
-#: `map5` and `map6` carry the **same ten seats**, and that is a decision rather than a
+#: `map5` and `map6` carry the **same chain**, and that is a decision rather than a
 #: coincidence: they are the two `|`-joined sources, both cut at four strips, both drawn to one
 #: plan - a route up the middle of a stack of plateaus crossing on bridges - so the chain that
 #: follows the lava crag's road follows the wasteland's too. `make_map_seats.BORROWS` holds the
 #: decision, says what the search made of `map6` alone, and what the borrow costs.
+#:
+#: They no longer carry the same ten *seats*: `map6` borrows the chain and then moves eight of
+#: its rungs by hand (`make_map_seats.NUDGE[6]`), because the route is shared and the slabs
+#: laid along it are not. Both tables are generated; neither is typed.
 SEATS = {
     1: (
         (0.220, 0.094, True),
@@ -167,16 +171,16 @@ SEATS = {
         (0.590, 0.792, False),
     ),
     6: (
-        (0.450, 0.066, False),
-        (0.477, 0.129, False),
-        (0.741, 0.201, False),
-        (0.560, 0.285, False),
-        (0.551, 0.386, False),
-        (0.603, 0.457, False),
-        (0.594, 0.570, False),
-        (0.320, 0.653, False),
-        (0.567, 0.736, False),
-        (0.590, 0.792, False),
+        (0.422, 0.066, False),
+        (0.528, 0.129, False),
+        (0.767, 0.205, False),
+        (0.662, 0.285, False),
+        (0.544, 0.386, False),
+        (0.612, 0.457, False),
+        (0.492, 0.570, False),
+        (0.376, 0.653, False),
+        (0.581, 0.736, False),
+        (0.553, 0.792, False),
     ),
 }
 

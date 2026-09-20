@@ -18,8 +18,8 @@
  * a retune must not turn this red with an answer that is entirely correct.
  *
  * <b>It cleans up after itself, and that is a counted check rather than a best-effort tidy.</b>
- * This probe publishes a card, and a published card is a row on the Endless Watch board from
- * the next 04:00 rebuild onwards. Because the last case below forges a tally of 999,999,999 on
+ * This probe publishes a card, and a published card is a row on the Endless Watch board the
+ * moment it is written (the boards are live). Because the last case below forges a tally of 999,999,999 on
  * purpose, the row it leaves reads "wave 40, keeper 146" — the ceiling doing its job, and
  * indistinguishable to anyone opening the leaderboard in the game from a cheating stranger on
  * an unpublished title with one real player. One survived the 2026-09-17 run and had to be

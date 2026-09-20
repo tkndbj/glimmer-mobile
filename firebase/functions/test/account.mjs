@@ -144,13 +144,25 @@ console.log("\nthe boards a deleted keeper is scrubbed from");
 // a board nothing rewrites any more are permanent, so that is exactly when "your name is off
 // the boards" would quietly stop being true. Reading the collection makes the rule hold
 // without anybody remembering it (invariant 7a), and this proves the source still does it.
+//
+// The scrub itself moved to grove.ts (`scrubBoards`) when the boards went live, because a
+// withdrawal needs the same one — so the gate follows it there, and also proves the deletion
+// still goes through it rather than growing a list of its own.
 {
-  const source = readFileSync(join(HERE, "..", "lib", "account.js"), "utf8");
-  const scrub = source.slice(source.indexOf("function removeFromPublicView"));
-  const body = scrub.slice(0, scrub.indexOf("\nasync function"));
+  const account = readFileSync(join(HERE, "..", "lib", "account.js"), "utf8");
+  const removal = account.slice(account.indexOf("function removeFromPublicView"));
+  const removalBody = removal.slice(0, removal.indexOf("\nasync function"));
 
-  check("the scrub reads the collection", body.includes("listDocuments()"), body.length);
-  check("and keys on no list of board ids", !body.includes("BOARD_IDS"));
+  check("the deletion scrubs through the shared scrub", removalBody.includes("scrubBoards"),
+        removalBody.length);
+  check("and keys on no list of board ids", !removalBody.includes("BOARD_IDS"));
+
+  const grove = readFileSync(join(HERE, "..", "lib", "grove.js"), "utf8");
+  const scrub = grove.slice(grove.indexOf("function scrubBoards"));
+  const scrubBody = scrub.slice(0, scrub.indexOf("\nasync function"));
+
+  check("the scrub reads the collection", scrubBody.includes("listDocuments()"), scrubBody.length);
+  check("and it keys on no list of board ids either", !scrubBody.includes("BOARD_IDS"));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

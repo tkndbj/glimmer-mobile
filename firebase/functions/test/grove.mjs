@@ -36,6 +36,7 @@ const {
   groveWorth, keeperLevel, starsFor, bestWave, MAX_WAVE,
   sanitiseName, isNameAllowed, publicName, boardName, fallbackName,
   BOARD_IDS, deciles, optedIn, saveRevision,
+  BOARD_ROWS, rowOf, compareRows, readRows, cutoffOf, qualifies, mergeRow,
   buildCard, heldCompanions, publishedLine, WARD_STARS_LEAST, WARD_STARS_MOST,
   endlessWaves, endlessXp, DEFAULT_ENDLESS, HARD_MAX_LIFETIME_WAVES,
   xpBoostXp, DEFAULT_XP_BOOST, HARD_MAX_BOOST_XP,
@@ -843,6 +844,89 @@ equal("a cloud block with no revision reports nought", saveRevision({ cloud: {} 
 equal("a negative revision reports nought", saveRevision({ cloud: { revision: -3 } }), 0);
 equal("an unreadable revision reports nought", saveRevision({ cloud: { revision: "later" } }), 0);
 equal("a cloud block that is not an object reports nought", saveRevision({ cloud: 7 }), 0);
+
+// ------------------------------------------------------------ the live boards
+console.log("\nplacing a card on a board as it is published");
+{
+  const row = (uid, wave, score = 0, extra = {}) =>
+    ({ uid, name: uid.toUpperCase(), avatar: "", level: 1, score, stars: 0, wave, ...extra });
+
+  // A board is one order whichever path wrote it. Firestore's `orderBy(field, "desc")` breaks
+  // a tie on the document id in the *same* direction, so the live merge has to as well, or the
+  // fifteen-minute rebuild would reorder tied rows the live path had just placed.
+  const tied = [row("a", 5), row("c", 5), row("b", 5)].sort((x, y) => compareRows("wave", x, y));
+  equal("a tie is broken by uid descending, as the index breaks it",
+        tied.map((r) => r.uid).join(""), "cba");
+  equal("and the figure comes first", [row("a", 4), row("z", 9)]
+        .sort((x, y) => compareRows("wave", x, y))[0].uid, "z");
+
+  // An empty board takes anybody who carries the figure.
+  const first = mergeRow([], row("p", 3), "wave");
+  check("the first keeper on a board is placed", first.changed && first.rows.length === 1);
+
+  // A card with no wave has no business on the endless board — and a card whose wave was
+  // there before and is not now is taken off it (that cannot happen to a wave, which only
+  // rises, but the grove's worth can fall to nought when a purchase is refunded).
+  const none = mergeRow([], row("p", 0), "wave");
+  check("a card carrying nought is not placed", !none.changed && none.rows.length === 0);
+  const gone = mergeRow([row("p", 3)], row("p", 0), "wave");
+  check("and a row whose figure fell to nought is removed", gone.changed && gone.rows.length === 0);
+
+  // Republishing an unchanged card writes nothing. That is what keeps the transaction free on
+  // the commonest publish of all: a name or a grove that moved, on a keeper already listed at
+  // the same wave.
+  const same = mergeRow([row("p", 3)], row("p", 3), "wave");
+  check("an identical row changes nothing", !same.changed);
+  const renamed = mergeRow([row("p", 3)], { ...row("p", 3), name: "Q" }, "wave");
+  check("but a renamed keeper's row is rewritten", renamed.changed && renamed.rows[0].name === "Q");
+
+  // A keeper who beats their record moves, and their old row goes with them.
+  const moved = mergeRow([row("a", 9), row("p", 3), row("b", 2)], row("p", 12), "wave");
+  equal("a new best moves the row up", moved.rows.map((r) => r.uid).join(""), "pab");
+  equal("and leaves no second row behind", moved.rows.filter((r) => r.uid === "p").length, 1);
+
+  // The board is a hundred rows. The hundred-and-first is the one that drops, and the cutoff
+  // is what the last row holds.
+  const full = Array.from({ length: BOARD_ROWS }, (_, i) => row("k" + String(i).padStart(3, "0"), 200 - i));
+  equal("a full board's cutoff is its last row", cutoffOf(full, "wave"), 200 - (BOARD_ROWS - 1));
+  equal("a board with room has no cutoff", cutoffOf(full.slice(0, 5), "wave"), 0);
+
+  const under = mergeRow(full, row("z", 50), "wave");
+  check("a figure under the cutoff does not enter a full board",
+        !under.changed && under.rows.length === BOARD_ROWS);
+  const over = mergeRow(full, row("z", 150), "wave");
+  check("a figure over it enters and the last row drops",
+        over.changed && over.rows.length === BOARD_ROWS
+        && over.rows.some((r) => r.uid === "z") && !over.rows.some((r) => r.uid === "k099"));
+
+  // The gate in front of the transaction. Anybody already listed qualifies whatever they carry
+  // (the row has to be refreshed or removed); a stranger qualifies at the cutoff or above.
+  check("a listed keeper always qualifies", qualifies(full, "k050", 0, "wave"));
+  check("a stranger under the cutoff does not", !qualifies(full, "z", 100, "wave"));
+  check("a stranger at the cutoff does", qualifies(full, "z", 200 - (BOARD_ROWS - 1), "wave"));
+  check("a stranger with nothing never does, even on an empty board", !qualifies([], "z", 0, "wave"));
+  check("anybody carrying a figure qualifies for a board with room", qualifies([], "z", 1, "wave"));
+
+  // The row is the card, field for field, so a board can never say what the card does not.
+  const built = rowOf("u", { name: "Fern", avatar: "coral", level: 7, score: 4200, stars: 3, wave: 17 });
+  equal("the row carries the card's name", built.name, "Fern");
+  equal("its level", built.level, 7);
+  equal("its score", built.score, 4200);
+  equal("and its wave", built.wave, 17);
+  equal("a card with no wave contributes a row with nought",
+        rowOf("u", { name: "F", level: 1, score: 1, stars: 0 }).wave, 0);
+
+  // What comes back off the document is bounded and typed, and anything malformed is dropped
+  // rather than trusted — the same discipline `topOf` keeps over the cards.
+  const read = readRows([row("a", 3), null, { name: "no uid" }, { uid: "b", wave: "7" }, 5]);
+  equal("rows without a uid are dropped", read.length, 2);
+  equal("and a wave that is not a number reads as nought", read[1].wave, 0);
+  check("the reader keeps at most a board's worth",
+        readRows(Array.from({ length: BOARD_ROWS + 20 }, (_, i) => row("r" + i, 1))).length === BOARD_ROWS);
+
+  // Every row the merge writes is something Firestore will take.
+  check("a merged board is writable", writable(over.rows));
+}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

@@ -1484,18 +1484,31 @@ namespace GlimmerGrove
         /// around a small picture on a big plate; with the picture covering the plate there is
         /// nothing of the glow left to see, and the art carries its own.
         /// </para>
+        /// <para>
+        /// <b>The door is shut, and it says so.</b> <see cref="DailyChallengesScreen"/> is an
+        /// empty room, so the card is <c>Interactable = false</c> and carries a COMING SOON tag
+        /// on its top corner. The two go together on purpose: a card that swallows a tap and
+        /// explains nothing is a broken button (invariant 16o), and a tag on a card that still
+        /// opened an empty screen would be a label contradicting the thing it is labelling.
+        /// Nothing about the picture changes — the banner is the advertisement for a mode that
+        /// is coming, and the tag is what makes it an advertisement rather than an offer.
+        /// </para>
         /// </summary>
         void BuildChallenges()
         {
             var card = UIKit.Button("Challenges", Content, Art.S("Ui/" + Skins.PlateBlue),
                                     new Vector2(ChallengeW, ChallengeH), new Vector2(.5f, 0f),
-                                    new Vector2(0f, ChallengeY),
-                                    () => Flow.Go<DailyChallengesScreen>());
+                                    new Vector2(0f, ChallengeY), null);
 
             // A press-scale that squashes a plate this wide reads as the screen flinching
             // rather than as a key going down — the same reason the loadout shelf and the
-            // tasks card both hold theirs near one.
+            // tasks card both hold theirs near one. Kept through the shut state so the number
+            // does not have to be found again the day the door opens.
             card.PressScale = .985f;
+
+            // Shut: no tap, no press, no click. The plate greys with it, which is the only
+            // part of the card the picture does not cover.
+            card.Interactable = false;
 
             // The window. `showMaskGraphic` is false, so the plate is not painted twice; the
             // near-nothing alpha is what writes the stencil (`Sheen` cuts its own the same way).
@@ -1529,6 +1542,17 @@ namespace GlimmerGrove
                                 new Vector2(drawnW, drawnH), new Vector2(.5f, .5f), Vector2.zero);
             art.raycastTarget = false;
             art.enabled = aspect > 0f;
+
+            // The tag, built after the window so it draws over the picture rather than
+            // under it — the banner is inside a Mask and this is its sibling.
+            //
+            // `UIKit.Corner` rather than the margin typed straight in: Box always pivots at
+            // centre, so a corner-anchored tag given its margin directly hangs half of itself
+            // off the plate (invariant 44d, and it has shipped twice).
+            var tagSize = new Vector2(310f, 62f);
+            Scenery.Pill(card.transform, Loc.Get("ui.home.coming_soon"), 28, tagSize,
+                         new Vector2(1f, 1f), UIKit.Corner(tagSize, new Vector2(1f, 1f), 22f, 20f),
+                         new Color(.05f, .09f, .16f, .88f));
 
             card.transform.localScale = Vector3.zero;
             Tween.Pop(card.transform, 0f, .7f, .70f).OnDone(() =>

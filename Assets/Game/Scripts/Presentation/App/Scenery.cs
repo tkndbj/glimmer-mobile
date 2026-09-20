@@ -155,11 +155,27 @@ namespace GlimmerGrove
         /// something a dim of .22 to .26 was mostly hiding anyway.
         /// </para>
         /// </summary>
-        public static RectTransform Plain(Transform parent)
+        /// <summary>
+        /// The two walls <see cref="Plain"/> can be asked for: the blue one every list screen
+        /// in the game stands on, and the Infinite lane's purple one.
+        ///
+        /// <para>
+        /// <b>Named rather than passed as a literal</b>, because an address typed at a call
+        /// site is invisible to <c>artnames.py</c> the moment anything builds it (invariant 7)
+        /// — and because these are the two ends of a decision rather than two strings: a
+        /// second ground is the only thing that separates the ranked lane from the ladder
+        /// beside it, so the day there is a third it wants to be in this list and not spread
+        /// across three screens.
+        /// </para>
+        /// </summary>
+        public const string WallPlain = "Bg/plain";
+        public const string WallRanked = "Bg/plain_ranked";
+
+        public static RectTransform Plain(Transform parent, string wall = WallPlain)
         {
             var host = UIKit.Node("Plain", parent);
 
-            var s = Art.S("Bg/plain");
+            var s = Art.S(wall);
             if (s == null)
             {
                 // The frame between a cold boot and the bundle arriving. An `Image` with no
@@ -188,6 +204,12 @@ namespace GlimmerGrove
             // full-screen texture resident twice, which is about two thirds of a megabyte.
             // What distinguishes the two is the *treatment* rather than the art:
             // `Room` carries a dim, a vignette and a parallax and this carries none.
+            //
+            // **`Bg/plain_ranked` is the same wall in the Infinite lane's purple**, scattered
+            // with crowns instead of the blue one's confetti, and it is drawn through this
+            // same call for that reason: the ranked lane is not a different *kind* of screen,
+            // it is the same list furniture on a ground that says which track you are on. See
+            // `WallRanked` and `EndlessHub.Build`.
             return host;
         }
 

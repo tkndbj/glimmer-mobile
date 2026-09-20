@@ -34,7 +34,7 @@ namespace GlimmerGrove
     /// <b>Every number is read rather than written into the copy</b>, for
     /// <see cref="StreakInfoOverlay"/>'s reason — a panel that explains the game is the first
     /// thing to go stale when the game is retuned. The row count comes off
-    /// <c>LeaderboardBoard</c> and the cadence off <c>LeaderboardBoard.RebuildHours</c>; when
+    /// <c>LeaderboardBoard</c> and the cadence off <c>LeaderboardBoard.RebuildMinutes</c>; when
     /// the screen has a board in hand, <em>when this one was actually built</em> comes off the
     /// document itself, which is the one figure here that cannot drift at all.
     /// </para>
@@ -145,12 +145,12 @@ namespace GlimmerGrove
         {
             long built = Board?.BuiltUnix ?? 0L;
             if (built <= 0L)
-                return Loc.Format("ui.board.info_tally_body", LeaderboardBoard.RebuildHours);
+                return Loc.Format("ui.board.info_tally_body", LeaderboardBoard.RebuildMinutes);
 
             long age = GameClock.NowUnix() - built;
             if (age < 0L) age = 0L;
 
-            return Loc.Format("ui.board.info_tally_built", LeaderboardBoard.RebuildHours,
+            return Loc.Format("ui.board.info_tally_built", LeaderboardBoard.RebuildMinutes,
                               Profile.LongCountdown(age));
         }
 

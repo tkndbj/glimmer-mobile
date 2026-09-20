@@ -35,9 +35,8 @@ namespace GlimmerGrove
     /// <b>The shield is bought here and nowhere else.</b> A gem debit is an ordinary spend
     /// (invariant 18), so there is no store sheet, no receipt and nothing to wait on: the
     /// purchase is <see cref="DailyStreak.TryBuyShield"/> and the page repaints. What it buys
-    /// is a window of days the streak survives without being played — which is why a
-    /// protected page stops asking the player to hurry, and why the row that sells it turns
-    /// into a row that reports it.
+    /// is a window of days the streak survives without being played — which is why the row
+    /// that sells it turns into a row that reports it.
     /// </para>
     /// <para>
     /// <b>Nothing here ends.</b> The count above the board climbs for ever and the ladder
@@ -163,18 +162,6 @@ namespace GlimmerGrove
         float _boardH, _bandH;
 
         /// <summary>
-        /// Whether the page was built with something to ask for, so a repaint can notice that
-        /// it no longer is.
-        ///
-        /// The footer is the one part of this page whose <em>shape</em> depends on the state
-        /// rather than its words — it takes height out of the board — so when the answer
-        /// moves the honest response is a redraw. It moves for three reasons and only one of
-        /// them is midnight: finishing a glade, and buying a shield, both take the ask away
-        /// while the page is open.
-        /// </summary>
-        bool _asking;
-
-        /// <summary>
         /// True while a night is being handed over. The page is mid-animation and describes
         /// state it is in the middle of changing, so a rebuild underneath it would destroy
         /// the tiles the sequence is still animating.
@@ -271,15 +258,12 @@ namespace GlimmerGrove
             Scenery.Plain(Content);
             Fireflies.Spawn(Content, 22, new Color(1f, .93f, .70f), 6f, 22f);
 
-            _asking = Asking;
-
             float y = 22f;
             y = BuildHeader(y);
             y = BuildHero(y);
             y = BuildShield(y);
             y = BuildHeading(y);
             BuildBoard(y);
-            BuildFooter();
 
             NavBar.Build(Content, NavBar.Tab.Home);
             HoldReels();
@@ -744,7 +728,7 @@ namespace GlimmerGrove
         /// </summary>
         void BuildBoard(float top)
         {
-            float bottom = FooterTop;
+            float bottom = BoardFoot;
 
             var band = UIKit.Node("Board", Safe);
             UIKit.StretchTo(band, 0f, bottom, 0f, top);
@@ -1047,11 +1031,6 @@ namespace GlimmerGrove
             RefreshShield();
 
             foreach (var tile in _tiles) Paint(tile);
-
-            // The footer takes height out of the board, so when the page stops (or starts)
-            // having something to ask for, a repaint is not enough. Checked last, so the
-            // words are right for the frame before the redraw lands.
-            if (_asking != Asking) Rebuild();
         }
 
         /// <summary>
@@ -1517,51 +1496,16 @@ namespace GlimmerGrove
                  .OnDone(() => { if (tile.Root) Tween.Punch(tile.Root, .10f, .26f); });
         }
 
-        // --------------------------------------------------------------- footer
+        // ----------------------------------------------------------------- foot
         /// <summary>
-        /// Whether the page has something to ask for.
+        /// How much room the board leaves under itself.
         ///
-        /// A night already kept does not: an instruction to do a thing that has been done is
-        /// worse than no button. A <em>protected</em> streak does not either, which is the
-        /// whole of what the shield was bought for — a page that sold somebody a week away
-        /// and then spent that week telling them to play would be selling one thing and
-        /// saying another.
+        /// The page used to stand a PLAY A LEVEL button here whenever the flame was out or at
+        /// risk, which made the board's height a function of the state and cost a redraw
+        /// every time the answer moved. Nothing is drawn under the board now, so the clearance
+        /// is the nav bar and a margin, and the board is the same height in every state.
         /// </summary>
-        bool Asking => _days <= 0 || DailyStreak.AtRisk;
-
-        /// <summary>
-        /// How much room the footer needs above the nav bar, which is what the board's band
-        /// is measured against. Derived rather than written twice, so the board cannot
-        /// overlap the button on the one state that has one.
-        /// </summary>
-        float FooterTop => NavBar.Height + 20f + (_asking ? 176f : 0f);
-
-        /// <summary>
-        /// The way out, on the one page whose subject is a thing that runs out.
-        ///
-        /// It is on this page rather than left to the nav bar because the page that says the
-        /// flame is going out is the page that should carry the thing that stops it — a
-        /// player who has to find their own way back to the map has been told about a
-        /// problem and handed no answer.
-        /// </summary>
-        void BuildFooter()
-        {
-            if (!_asking) return;
-
-            var play = UIKit.TextButton("Play", Safe, Skins.Affirm, Loc.Get("ui.streak.cta"), 44,
-                                        new Vector2(560f, 132f), new Vector2(.5f, 0f),
-                                        new Vector2(0f, NavBar.Height + 32f),
-                                        () => Flow.Go<LevelsScreen>());
-            UIKit.Halo(play.transform, Pal.Mint, 640f, .24f);
-
-            play.transform.localScale = Vector3.zero;
-            Tween.Pop(play.transform, 0f, .55f, .34f).OnDone(() =>
-            {
-                if (!play) return;
-                play.Rehome();
-                Sheen.Attach((RectTransform)play.transform, 3.4f);
-            });
-        }
+        float BoardFoot => NavBar.Height + 20f;
 
         public override bool OnBack() { Flow.Go<HomeScreen>(); return true; }
     }

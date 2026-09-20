@@ -502,6 +502,13 @@ namespace GlimmerGrove.AssetPipeline
             // the storefront, the boards, the profile, the grove's shop and the tasks page.
             // See `Scenery.Plain`.
             "plain",
+
+            // The same wall in the Infinite lane's colours, which is the one place in the
+            // game a track has a ground of its own. Global beside `plain` rather than scoped
+            // to the lane: it is one file that does not grow with the catalog, and the track
+            // switcher moves both ways on a screen that is already standing, so a scope would
+            // spend a frame loading on a tap a player makes to look at two things at once.
+            "plain_ranked",
         };
 
         static readonly string[] Sfxs =

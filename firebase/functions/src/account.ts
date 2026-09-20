@@ -62,7 +62,7 @@ import { getFirestore, Firestore, Transaction } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 
 import { PATHS } from "./config";
-import { GROVE_PATHS, BOARD_ROWS } from "./grove";
+import { GROVE_PATHS, scrubBoards } from "./grove";
 import { NAME_PATHS, NameDoc, heldName, isDenied } from "./names";
 import { REPORT_PATHS, REPORT_SUBJECTS } from "./reports";
 import { deleteReferral } from "./referral";
@@ -146,26 +146,12 @@ function emptyReport(): DeletionReport {
 /**
  * Removes the published card, and takes the account's row off every board it is standing on.
  *
- * <b>The scrub is not what `withdrawGrove` does, and the difference is the point.</b> A
- * withdrawal deletes the card and lets the nightly rebuild drop the row, which is right there:
- * the player still exists, the row is stale for at most a day, and paying ten transactions to
- * shave a few hours off a cache is not worth it. Deletion cannot make that trade. "Your name
- * is off the boards" has to be true when this call returns, because the account it named will
- * not exist to correct it, and a card cannot be withdrawn twice.
- *
- * <b>It walks the collection rather than `BOARD_IDS`, and that is the difference between a
- * scrub and a scrub that is true.</b> `BOARD_IDS` is what this build *publishes*; what a
- * deleted keeper's name is standing on is whatever documents are actually there, which after a
- * board is retired is a superset of it until the next nightly prune. Reading the list is a few
- * document-name reads once in the life of an account, and it is what makes this rule hold
- * without anybody having to remember it on the day a board is withdrawn (invariant 7a) — which
- * is precisely the day it would matter, because the rows on a board nothing rewrites any more
- * are permanent.
- *
- * A handful of reads and at most a handful of small writes, once in the life of an account. It
- * is a transaction per board rather than one batch because `rebuildGroveRanks` rewrites them
- * all in a batch of its own: read-filter-write under a transaction is what makes a collision
- * with the 04:00 job a retry instead of one of the two writes disappearing.
+ * <b>"Your name is off the boards" has to be true when this call returns</b>, because the
+ * account it named will not exist to correct it, and a card cannot be withdrawn twice. The
+ * scrub itself is `scrubBoards` in grove.ts — the same one a withdrawal runs now that the
+ * boards are live — which walks the `leaderboards` collection rather than `BOARD_IDS`, so a
+ * retired board's leftover rows are scrubbed as well as the live ones' (invariant 7a's
+ * reason: the day a board is withdrawn is the day it would matter, and nobody has to remember).
  */
 async function removeFromPublicView(db: Firestore, uid: string): Promise<{
   cardRemoved: boolean;
@@ -176,35 +162,7 @@ async function removeFromPublicView(db: Firestore, uid: string): Promise<{
 
   if (card.exists) await cardRef.delete();
 
-  let boardsScrubbed = 0;
-
-  for (const ref of await db.collection("leaderboards").listDocuments()) {
-    const changed = await db.runTransaction(async (tx: Transaction) => {
-      const snapshot = await tx.get(ref);
-      if (!snapshot.exists) return false;
-
-      const entries = snapshot.data()?.entries;
-      if (!Array.isArray(entries)) return false;
-
-      // Filtered by uid, never by position or by name. Two players may share a display
-      // name — a handle derived from a uid cannot collide, but a claimed one is unique only
-      // by fold — and a row index means nothing across a rebuild.
-      const kept = entries.filter(
-        (row: unknown) => (row as { uid?: string })?.uid !== uid
-      );
-
-      if (kept.length === entries.length) return false;
-
-      // Only `entries` is written. `population` and `builtUnix` are the rebuild's to own:
-      // decrementing a sampled population by one here would be arithmetic on a number that
-      // is an estimate by construction, and rewriting `builtUnix` would tell every client
-      // the board is newer than the data in it.
-      tx.update(ref, { entries: kept.slice(0, BOARD_ROWS) });
-      return true;
-    });
-
-    if (changed) boardsScrubbed++;
-  }
+  const boardsScrubbed = await scrubBoards(db, uid);
 
   return { cardRemoved: card.exists, boardsScrubbed };
 }

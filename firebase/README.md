@@ -75,7 +75,7 @@ firebase.json            deploy config
 functions/src/
   index.ts               getWallet, submitSpends, claimAwards, redeemPurchase,
                          adReward, appleNotification, sweepVoidedPurchases, publishGroveStats,
-                         publishGrove, withdrawGrove, publishGroveRanks, claimName,
+                         publishGrove, withdrawGrove, publishGroveRanks, publishGroveBoards, claimName,
                          getReferral, redeemReferral, claimReferral
   progression.ts         server-side derivation — mirrors ProgressionLedger.cs
   daily.ts               daily chest generator — mirrors DailyChestTable.cs
@@ -168,12 +168,15 @@ self-punishing and therefore the right shape for a trigger a client controls. Th
 alternative — a Firestore trigger on `players/{uid}` — is a function invocation per player
 per sync, for ever, for a card that changes a handful of times a week.
 
-**Ranking is sampled, not sorted.** `publishGroveRanks` runs at 04:00 UTC (an hour after
-`publishGroveStats`, so the two heaviest reads never overlap), reads a bounded sample of
-cards and writes ten board documents plus `config/groveRanks`. One document read per screen
-open, at any player count. With more than `RANK_SAMPLE_SIZE` participants the global
-hundred becomes the best hundred *seen* — which is why the client leads with a percentile,
-and the fix when it matters is a scored index and a query inside `summarise`.
+**The boards are live; the ranks are nightly.** `publishGrove` merges the card's row into each
+board document in the same call (`placeOnBoards` in grove.ts, gated by a per-instance cached
+cutoff so a card that cannot reach the top hundred costs no read), and `withdrawGrove` scrubs
+the row in the same call. `publishGroveBoards` re-reads the top hundred of each board off the
+index every fifteen minutes as the net under that (about two hundred reads a run at any
+population). `publishGroveRanks` runs at 04:00 UTC (an hour after `publishGroveStats`, so the
+two heaviest reads never overlap), takes the two `count()`s and a bounded sample of cards for
+the deciles, and writes the boards again plus `config/groveRanks`. One document read per
+screen open, at any player count.
 
 **Names are sanitised here and only here.** `sanitiseName` strips the bidirectional
 controls and the zero-width family — U+202E re-orders the text that *follows* it, so one
@@ -306,8 +309,8 @@ by a script has no picker to guarantee it; and it reserves each keeper's name in
 exactly as `claimName` would, so a real player cannot stand on the boards beside a
 synthetic namesake.
 
-Run `gcloud scheduler jobs run firebase-schedule-publishGroveRanks-europe-west1` after
-writing them, or wait for 04:00 UTC.
+Run `gcloud scheduler jobs run firebase-schedule-publishGroveBoards-europe-west1` after
+writing them, or wait up to fifteen minutes; the counts follow at 04:00 UTC.
 
 ### Two things only the deploy could catch
 

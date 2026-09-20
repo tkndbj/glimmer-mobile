@@ -201,9 +201,14 @@ def rounded(w, h, radius, fill, edge=None):
 
 
 # --------------------------------------------------------------- the ground
-def plain(sheet, h):
-    """`Scenery.Plain` - the quiet patterned ground every screen that is not the hub stands on."""
-    p = BG / "plain.png"
+def plain(sheet, h, wall="plain_ranked"):
+    """`Scenery.Plain` - the quiet patterned ground every screen that is not the hub stands on.
+
+    Defaulted to the **ranked** wall here, because this file only ever draws the Infinite lane
+    and `EndlessHub.Build` reads the wall off `lane` (`Scenery.WallRanked`). A mirror drawing
+    the blue one would be drawing a screen the game does not build (invariant 44d).
+    """
+    p = BG / ("%s.png" % wall)
     if not p.exists():
         return
     im = Image.open(p).convert("RGBA")

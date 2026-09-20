@@ -129,17 +129,23 @@ namespace GlimmerGrove.Social
         public const int MaxRows = 100;
 
         /// <summary>
-        /// How often the boards are rebuilt, in hours.
+        /// How often the boards are re-read whole, in minutes.
         ///
         /// <para>
-        /// <b>A mirror of <c>publishGroveRanks</c>' own schedule</b> — <c>"0 4 * * *"</c> in
+        /// <b>The boards are live</b>: a keeper's row is placed by the same server call that
+        /// publishes their card, so their own run is on the list the moment the sync that
+        /// carried it settles. What this number describes is the net under that — the job that
+        /// re-reads the top hundred off the cards and repairs anything the live placement
+        /// missed. It is what the panel says when it explains why a list might lag.
+        /// </para>
+        /// <para>
+        /// <b>A mirror of <c>publishGroveBoards</c>' own schedule</b> — <c>"*/15 * * * *"</c> in
         /// <c>functions/src/index.ts</c> — and the only copy of it on this side. It is a
         /// <em>sentence's</em> number rather than a rule's: nothing here waits on it, caches
         /// against it or refuses anything because of it, so the worst a drift costs is a panel
         /// that over- or under-states the wait. That is the same bargain <c>EndlessLedger.MaxWave</c>
         /// strikes with <c>MAX_WAVE</c>, and it is affordable for the same reason — the two are
-        /// one idea with one place to change it on each side, and a job that is not daily is a
-        /// different feature rather than a retune.
+        /// one idea with one place to change it on each side.
         /// </para>
         /// <para>
         /// The panel that prints it also prints <see cref="BuiltUnix"/>, which is not a mirror
@@ -147,7 +153,7 @@ namespace GlimmerGrove.Social
         /// half of the sentence cannot go stale however this constant drifts.
         /// </para>
         /// </summary>
-        public const int RebuildHours = 24;
+        public const int RebuildMinutes = 15;
 
         public readonly string BoardId;
 

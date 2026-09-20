@@ -214,7 +214,13 @@ namespace GlimmerGrove
             var art = UIKit.Node("HubArt", ground);
             art.SetAsFirstSibling();
 
-            Scenery.Plain(art);
+            // **The one place a track has a ground of its own.** The ladder draws its
+            // chapter's painted map; this lane has no map to draw, so the wall is what says
+            // which of the two you are standing in — and it has to be read off `lane` rather
+            // than assumed, because this screen is reached through a switcher that moves both
+            // ways and nothing here would notice if it were ever built for the ladder.
+            Scenery.Plain(art, lane == GameTrack.Infinite ? Scenery.WallRanked
+                                                          : Scenery.WallPlain);
 
             float band = Band(headerFoot);
             float top = headerFoot + EndlessHubLayout.HeadClear + EndlessHubLayout.TopIn(band);

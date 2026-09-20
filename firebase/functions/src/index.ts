@@ -50,7 +50,8 @@ import { rebuildStats } from "./stats";
 import {
   DEFAULT_KEEPER_CURVE, GROVE_PATHS, GroveCardDoc, KeeperCurve,
   assertUsableGroveConfig, buildCard, derivedXp, endlessXp, xpBoostXp, groveWorth, keeperLevel,
-  optedIn, heldGrove, isGroveDenied, rebuildGroveRanks, saveRevision, withdrawCard,
+  optedIn, heldGrove, isGroveDenied, rebuildGroveRanks, rebuildBoards, placeOnBoards,
+  saveRevision, withdrawCard,
 } from "./grove";
 import {
   ClaimOutcome, NameHolding, RENAME_COOLDOWN_SECONDS, claimName as claimName_, heldName, nameKey, publishableName,
@@ -1483,6 +1484,17 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
 
   await db.doc(GROVE_PATHS.card(uid)).set(card);
 
+  // Onto the boards in the same call, so the list a player opens after their run already
+  // has them on it. After the card and never before: the card is the truth, the rebuild reads
+  // it, and a placement that fails is a row that arrives within fifteen minutes rather than
+  // at once — which is why this is logged and not thrown.
+  try {
+    const placed = await placeOnBoards(db, uid, card, nowUnix);
+    if (placed.length > 0) logger.info("card placed on boards", { uid, boards: placed });
+  } catch (error) {
+    logger.warn("could not place the card on the boards", { uid, error: String(error) });
+  }
+
   if (worth.clamped) {
     // Not an accusation and not an error: a stale seed produces it too, and so does a
     // player mid-refund. It is logged because a sudden run of them is the signal that
@@ -1748,7 +1760,7 @@ function reply(outcome: ReportOutcome): "reported" | "duplicate" | "throttled" {
 }
 
 /**
- * Takes this account's card down.
+ * Takes this account's card down, and its row off every board.
  *
  * Separate from publishing an empty one, because they are different acts and only one of
  * them is what somebody asked for when they turned the boards off. Deleting a card that is
@@ -1810,20 +1822,42 @@ export const deleteAccount = onCall(
 );
 
 /**
- * Rebuilds the boards and the published distribution of grove worth.
+ * Re-reads the top hundred of every board, every fifteen minutes.
+ *
+ * **The boards are live — `publishGrove` places a card the moment it is written — and this is
+ * the net under that.** It repairs whatever the live path can miss (a lost transaction, a
+ * cutoff read as higher than it was, a row whose grove worth fell, a withdrawal that raced a
+ * rebuild) by doing the one thing the live path cannot afford to: reading the whole top
+ * hundred off the index and writing it down. About two hundred reads a run at any population,
+ * because a board is ordered on a field the card already carries.
+ *
+ * **The cadence is mirrored on the client as `LeaderboardBoard.RebuildMinutes`**, which is the
+ * number the boards screen's own panel prints. Nothing over there waits on it or caches
+ * against it, so a drift costs a sentence rather than a feature — but the two still move
+ * together. It is the bargain `MAX_WAVE` and `EndlessLedger.MaxWave` already strike.
+ *
+ * No retry policy and no alerting, like every other schedule here: a run that never happens
+ * leaves the last list standing, and the next one is a quarter of an hour away.
+ */
+export const publishGroveBoards = onSchedule(
+  { region: REGION, schedule: "*/15 * * * *", timeZone: "Etc/UTC", timeoutSeconds: 120 },
+  async () => {
+    const { boards, pruned } = await rebuildBoards();
+    logger.info("grove boards rebuilt", { boards, pruned: pruned.length });
+  }
+);
+
+/**
+ * Rebuilds the population counts and the published distributions, once a night — and the
+ * boards with them, as the fifteen-minute job does.
  *
  * Four in the morning UTC, an hour after `publishGroveStats`, so the two heaviest reads in
  * the deployment never overlap — and late enough that a card published anywhere in the
- * world during the previous day is in the sample. Like the stats job it has no retry policy
- * and no alerting: a day with no run leaves yesterday's boards standing, every client reads
- * them exactly as it read them yesterday, and nothing in the game behaves differently.
- *
- * **The cadence is mirrored on the client as `LeaderboardBoard.RebuildHours`**, which is the
- * number the boards screen's own panel prints when it tells a keeper that what they built
- * today counts in the next tally. Nothing over there waits on it or caches against it, so a
- * drift costs a sentence rather than a feature - but the two still move together, and a job
- * that stops being daily is a different feature rather than a retune. It is the bargain
- * `MAX_WAVE` and `EndlessLedger.MaxWave` already strike one file along.
+ * world during the previous day is in the sample. Everything here is what is worth taking
+ * once a day and not ninety-six times: a `count()` billed against every card on a board's
+ * index, and a five-thousand-card sample for the deciles. Like the stats job it has no retry
+ * policy and no alerting: a night with no run leaves yesterday's distribution standing, and
+ * the boards themselves are kept by the job above.
  */
 export const publishGroveRanks = onSchedule(
   { region: REGION, schedule: "0 4 * * *", timeZone: "Etc/UTC", timeoutSeconds: 540 },

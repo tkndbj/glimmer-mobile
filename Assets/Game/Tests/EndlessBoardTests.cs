@@ -202,6 +202,89 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(GrovePublishPolicy.WorthPublishing(grove));
         }
 
+        /// <summary>
+        /// The fourth joint, and the one that actually broke.
+        ///
+        /// <para>
+        /// A settled sync is judged against the homestead catalog, and a receipt that arrives
+        /// before the catalog is parked until it is published. For a year something always
+        /// published it — the three grove screens load it on the way in — and the day those
+        /// screens left the nav (the Grovement hold, 2026-09-15) no device loaded it again, so
+        /// every receipt was parked for ever: no publish, no card, no row, and the boards
+        /// stood at whatever the last grove visit had put on them. No test saw it because every
+        /// fixture that reached <c>Consider</c> loaded a catalog first. The gate has to be the
+        /// thing that asks for what it is waiting on.
+        /// </para>
+        /// <para>
+        /// The content source is absent on the machine this runs on, so the load cannot
+        /// complete; what is asserted is that it was <em>asked for</em>, which is the half that
+        /// was missing.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AReceiptParkedForTheCatalogAsksForTheCatalog()
+        {
+            HomesteadService.ResetForTests();
+            GroveBoard.Forget();
+            CloudSaveService.UseBackend(new BoardsOnlyBackend());
+
+            try
+            {
+                Assert.IsTrue(GroveBoard.IsAvailable, "the fixture's backend must count as available");
+                Assert.IsFalse(HomesteadCatalog.IsLoaded);
+                Assert.AreEqual(0, HomesteadService.LoadsAsked);
+
+                GroveBoard.ConsiderForTests(new SyncReceipt(new SaveFileDto(), 7L, pushed: true));
+
+                Assert.AreEqual(1, HomesteadService.LoadsAsked,
+                                "a receipt held back for want of a catalog must ask for the catalog, " +
+                                "or it is held back for the life of the process");
+            }
+            finally
+            {
+                CloudSaveService.UseBackend(null);
+                GroveBoard.Forget();
+                HomesteadService.ResetForTests();
+            }
+        }
+
+        /// <summary>
+        /// A backend that exists and nothing more. Every call is a fault, because the test
+        /// above must never reach one: it stops at the catalog gate, and a call that got past
+        /// it is the assertion failing in a different voice.
+        /// </summary>
+        sealed class BoardsOnlyBackend : ICloudSaveBackend, IGroveBoardBackend
+        {
+            static System.Threading.Tasks.Task<T> Never<T>() => throw new NotSupportedException("not reached");
+
+            public bool IsAvailable => true;
+            public CloudIdentity CurrentIdentity => new CloudIdentity("uid-boards", false);
+
+            public System.Threading.Tasks.Task<(CloudResult result, CloudIdentity identity)> SignInAsync(System.Threading.CancellationToken c = default) => Never<(CloudResult, CloudIdentity)>();
+            public System.Threading.Tasks.Task<(CloudResult result, CloudIdentity identity)> ResumeAsync(System.Threading.CancellationToken c = default) => Never<(CloudResult, CloudIdentity)>();
+            public System.Threading.Tasks.Task<(CloudResult result, CloudIdentity identity)> LinkAsync(LinkCredential cr, System.Threading.CancellationToken c = default) => Never<(CloudResult, CloudIdentity)>();
+            public System.Threading.Tasks.Task<(CloudResult result, CloudIdentity identity)> SignInWithCredentialAsync(LinkCredential cr, System.Threading.CancellationToken c = default) => Never<(CloudResult, CloudIdentity)>();
+            public System.Threading.Tasks.Task<(CloudResult result, CloudSnapshot snapshot)> PullAsync(string u, System.Threading.CancellationToken c = default) => Never<(CloudResult, CloudSnapshot)>();
+            public System.Threading.Tasks.Task<CloudResult> PushAsync(string u, SaveFileDto s, SaveDelta d, System.Threading.CancellationToken c = default) => Never<CloudResult>();
+            public System.Threading.Tasks.Task<(CloudResult result, System.Collections.Generic.List<CloudWalletState> wallets)> ReadWalletAsync(string u, System.Threading.CancellationToken c = default) => Never<(CloudResult, System.Collections.Generic.List<CloudWalletState>)>();
+            public System.Threading.Tasks.Task<(CloudResult result, System.Collections.Generic.List<CloudWalletState> wallets)> SubmitSpendsAsync(string u, System.Collections.Generic.IReadOnlyList<SpendEntryDto> s, System.Threading.CancellationToken c = default) => Never<(CloudResult, System.Collections.Generic.List<CloudWalletState>)>();
+            public System.Threading.Tasks.Task<(CloudResult result, System.Collections.Generic.List<CloudWalletState> wallets)> SubmitAwardsAsync(string u, System.Collections.Generic.IReadOnlyList<GrantEntryDto> a, System.Threading.CancellationToken c = default) => Never<(CloudResult, System.Collections.Generic.List<CloudWalletState>)>();
+            public System.Threading.Tasks.Task<(CloudResult result, System.Collections.Generic.List<CloudWalletState> wallets, CloudRedemption redemption)> RedeemPurchaseAsync(string u, PurchaseReceipt r, System.Threading.CancellationToken c = default) => Never<(CloudResult, System.Collections.Generic.List<CloudWalletState>, CloudRedemption)>();
+            public System.Threading.Tasks.Task<(CloudResult result, System.Collections.Generic.Dictionary<LevelId, LevelStats> stats)> ReadGroveStatsAsync(System.Threading.CancellationToken c = default) => Never<(CloudResult, System.Collections.Generic.Dictionary<LevelId, LevelStats>)>();
+            public System.Threading.Tasks.Task<(CloudResult result, Release.ReleaseRequirement requirement)> ReadReleaseAsync(string p, System.Threading.CancellationToken c = default) => Never<(CloudResult, Release.ReleaseRequirement)>();
+            public System.Threading.Tasks.Task<(CloudResult result, string appleAuthorizationCode)> ReauthenticateAsync(LinkCredential cr, System.Threading.CancellationToken c = default) => Never<(CloudResult, string)>();
+            public System.Threading.Tasks.Task<CloudResult> DeleteAccountAsync(string u, string code = null, System.Threading.CancellationToken c = default) => Never<CloudResult>();
+
+            public System.Threading.Tasks.Task<(CloudResult result, GrovePublication published)> PublishGroveAsync(string u, System.Threading.CancellationToken c = default) => Never<(CloudResult, GrovePublication)>();
+            public System.Threading.Tasks.Task<CloudResult> WithdrawGroveAsync(string u, System.Threading.CancellationToken c = default) => Never<CloudResult>();
+            public System.Threading.Tasks.Task<(CloudResult result, string holderId)> ReadNameHolderAsync(string k, System.Threading.CancellationToken c = default) => Never<(CloudResult, string)>();
+            public System.Threading.Tasks.Task<(CloudResult result, NameClaim claim)> ClaimNameAsync(string n, System.Threading.CancellationToken c = default) => Never<(CloudResult, NameClaim)>();
+            public System.Threading.Tasks.Task<(CloudResult result, NameReportOutcome outcome)> ReportKeeperAsync(string k, ReportSubject s, System.Threading.CancellationToken c = default) => Never<(CloudResult, NameReportOutcome)>();
+            public System.Threading.Tasks.Task<(CloudResult result, GroveCard card)> ReadGroveCardAsync(string o, System.Threading.CancellationToken c = default) => Never<(CloudResult, GroveCard)>();
+            public System.Threading.Tasks.Task<(CloudResult result, LeaderboardBoard board)> ReadLeaderboardAsync(string b, System.Threading.CancellationToken c = default) => Never<(CloudResult, LeaderboardBoard)>();
+            public System.Threading.Tasks.Task<(CloudResult result, GroveRankPublication published)> ReadGroveRanksAsync(System.Threading.CancellationToken c = default) => Never<(CloudResult, GroveRankPublication)>();
+        }
+
         // ------------------------------------------------------------ the standing
         /// <summary>
         /// Nine wave counts and a sample big enough to mean them — what a night's job publishes.

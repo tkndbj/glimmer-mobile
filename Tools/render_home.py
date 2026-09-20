@@ -54,6 +54,11 @@ LINE_H = LINE_PAD + LINE_HEAD_H + LINE_HEAD_GAP + LINE_CELL + LINE_FOOT
 LINE_CELL_Y = LINE_H / 2 - LINE_PAD - LINE_HEAD_H - LINE_HEAD_GAP - LINE_CELL / 2
 
 CHALLENGE_Y = K.NAV_HEIGHT + FOOT_GAP + CHALLENGE_H / 2
+
+#: `Btn.Interactable` false, and the COMING SOON tag it goes with. See `coming_soon`.
+SHUT_PLATE = (158, 168, 179)
+TAG_W, TAG_H = 310.0, 62.0
+TAG_MARGIN_X, TAG_MARGIN_Y = 22.0, 20.0
 LINE_Y = CHALLENGE_Y + CHALLENGE_H / 2 + FOOT_GAP + LINE_H / 2
 PLAY_Y = LINE_Y + LINE_H / 2 + FOOT_GAP + PLAY_H / 2
 
@@ -454,11 +459,16 @@ def challenges(sheet):
     question uGUI asks — so this is the only picture that can answer whether the crop lands
     somewhere the art can afford, and whether the rounded corners still read.
 
+    **The door is shut.** `card.Interactable = false`, which is `Image.color` taken to
+    `Btn`'s grey - so the plate greys and the picture over it does not, which is the whole of
+    what the state looks like on a card whose plate is covered. The COMING SOON tag is the rest
+    of it, and it is drawn last because it is the Mask's sibling rather than its child.
+
     The shine is deliberately absent: `Sheen` is a tween, and this file draws furniture rather
     than motion (its own header says so).
     """
     cy = H - CHALLENGE_Y
-    plate = K.skin("Hud/plate_blue", CHALLENGE_W, CHALLENGE_H)
+    plate = K.tint(K.skin("Hud/plate_blue", CHALLENGE_W, CHALLENGE_H), SHUT_PLATE, .85)
     K.paste(sheet, plate, W / 2, cy)
 
     try:
@@ -488,6 +498,25 @@ def challenges(sheet):
          * _np().array(mask.split()[3], dtype="uint16") // 255).astype("uint8")))
 
     K.paste(sheet, window, W / 2, cy)
+    coming_soon(sheet, cy)
+
+
+def coming_soon(sheet, cy):
+    """`Scenery.Pill` on the plate's top corner, placed by `UIKit.Corner`.
+
+    Box always pivots at centre, so the margin is the margin *plus half the tag* on both
+    axes - the trap that has shipped twice (invariant 44d).
+    """
+    x = W / 2 + CHALLENGE_W / 2 - (TAG_MARGIN_X + TAG_W / 2)
+    y = cy - CHALLENGE_H / 2 + (TAG_MARGIN_Y + TAG_H / 2)
+
+    K.paste(sheet, K.round_rect(TAG_W, TAG_H, 28, (13, 23, 41), .88), x, y)
+    K.paste(sheet, K.round_rect(TAG_W, TAG_H, 28, (255, 255, 255), .13, width=3), x, y)
+
+    # `Scenery.Pill` stretches its label with 20 left, 16 right and 4 of bottom pad, which is
+    # two units off centre - not nothing at this size, and the kind of thing this mirror
+    # exists to be able to answer.
+    K.shrunk(sheet, txt("ui.home.coming_soon"), x - 2, y + 2, TAG_W - 36, TAG_H - 4, 28, 18)
 
 
 def _np():

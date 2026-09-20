@@ -486,7 +486,7 @@ def ranks_info(built_ago="6h 12m"):
         ("ic_trophy", "ui.board.info_boards_title",
          say("ui.board.info_boards_body", say("ui.board.endless"))),
         ("ic_restart", "ui.board.info_tally_title",
-         say("ui.board.info_tally_built", 24, built_ago)),
+         say("ui.board.info_tally_built", 15, built_ago)),
         # `ic_profile`, not `ic_rank`: the sentence sends the reader to their own profile for
         # the percentile, and the rank badge is a coloured emblem that fights the two flat
         # white glyphs above it - which is a thing only this picture could say.

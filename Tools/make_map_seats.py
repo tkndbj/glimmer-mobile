@@ -82,6 +82,12 @@ PRECISION = 3
 #: refused, loudly, rather than shipped. And **it is per map rather than per chapter**, like
 #: the seats themselves, because a map is drawn by every mode's chapter at that ordinal.
 #:
+#: A **borrowed** map (`BORROWS`) nudges the chain it borrowed, after the transfer and before
+#: its footing is reported, so what is checked and what is printed are both the seats that
+#: ship. It is the one case where a nudge moves a seat this picture's own search did not find
+#: — nothing found it, the borrow asserted it — which is why the two maps' entries are kept
+#: apart: moving the wasteland must never move the crag.
+#:
 #: Rungs are 1-based, matching the numbers a player reads on the map. `"marker"` is the
 #: end-of-chapter signpost.
 NUDGE = {
@@ -145,6 +151,40 @@ NUDGE = {
         9: (-9, 0),
         10: (0, 0),            # right is blocked by the marker’s own mark
     },
+    6: {
+        # **The owner's, in pixels, off a phone**, and a pixel is a canvas unit for `map5`'s
+        # reason: `Boot` scales the canvas on width alone against a reference width of
+        # `ChapterMap.Width`, so 1080 units *is* the screen whatever the phone. Down is -y.
+        #
+        # `map6` **borrows** `map5`'s chain (`BORROWS`) and then moves it, and that is the whole
+        # reason a borrowed map applies nudges at all. The two paintings are drawn to one plan,
+        # so the chain transfers; but the wasteland's slabs do not fall exactly where the crag's
+        # do, and which part of a mesa a disc looks right on is the question no measurement in
+        # this file answers.
+        #
+        # **Three rounds, folded into one figure each**, for `map5`'s reason: a seat is one
+        # number, and a running total of corrections is a thing that can disagree with itself.
+        # The first round left rungs 5 and 6 where the crag put them and the second moved all
+        # ten; the third repeated the second. So what is written is the sum, with the rounds it
+        # came from in the comment.
+        #
+        # **They are large, and that is the borrow being paid for rather than a nudge being
+        # abused.** Rungs 4 and 7 are a tenth of the screen from where the crag stands them:
+        # `map5`'s road runs up the middle and the wasteland's crosses from mesa to mesa, so a
+        # transferred chain is right about the *route* and wrong about the ledge, by about the
+        # width of a plateau. `GROUND[6]` cannot say so (it lists the sand, not the trail), which
+        # is why an eye is doing it. Re-list `GROUND[6]` as the road and most of this goes.
+        1: (-30, 0),          # level 51, 10 px left three times over
+        2: (55, 0),           # level 52, 15 px right then 20 px more, twice
+        3: (28, 20),          # level 53, 8 px right then 10 px more twice, and 20 px up
+        4: (110, 0),          # level 54, 30 px right then 40 px more, twice
+        5: (-8, 0),           # level 55, 4 px left twice over
+        6: (10, 0),           # level 56, 5 px right twice over
+        7: (-110, 0),         # level 57, 30 px left then 40 px more, twice
+        8: (60, 0),           # level 58, 20 px right three times over
+        9: (15, 0),           # level 59, 5 px right three times over
+        10: (-40, 0),         # level 60, 10 px left then 15 px more, twice
+    },
 }
 
 
@@ -162,7 +202,9 @@ NUDGE = {
 #: colliding *by accident*.
 #:
 #: `map6` is here only because it **borrows** `map5`'s chain (`BORROWS`), so it inherits that
-#: chain's overlaps along with its seats. It is the same decision, not a second one.
+#: chain's overlaps along with its seats — and goes on inheriting them once its own `NUDGE`
+#: entries have moved eight of the ten, because those moves are tens of units against a rule
+#: measured in hundreds. It is the same decision, not a second one.
 ACCEPTED_OVERLAPS = {5, 6}
 
 
@@ -175,6 +217,10 @@ ACCEPTED_OVERLAPS = {5, 6}
 #: next on a bridge. So the chain that follows `map5`'s road follows `map6`'s too, and it was
 #: looked at before it was believed (`--contact`, which is the gate here).
 #:
+#: **A borrow is a starting point rather than a copy.** `map6`'s own `NUDGE` entries are applied
+#: on top of the transferred chain, so the two maps no longer stand their nodes in the same ten
+#: places; what they share is the route, which is what was decided here.
+#:
 #: **What the search made of `map6` on its own is why.** `GROUND[6]` lists the map's two sand
 #: planes rather than its road, for the reason written there - the road is a *scatter* of
 #: stepping slabs and `DESPECKLE` throws a scatter away - so on this one painting the whole
@@ -185,10 +231,11 @@ ACCEPTED_OVERLAPS = {5, 6}
 #:
 #: **And it is paid for in the check, not hidden from it.** Because `GROUND[6]` is the sand, a
 #: seat on the slabs or on a bridge deck is *off* ground by that list, so `borrowed` reports
-#: eight of the ten as seats this map's own footing test would refuse - loudly, every run,
-#: rather than quietly passing. That report is the honest state: the numbers say no, the
-#: picture says yes, and the picture was looked at. Re-list `GROUND[6]` as the road and this
-#: whole entry can go.
+#: most of the ten - seven of them today - as seats this map's own footing test would refuse,
+#: loudly, every run, rather than quietly passing. The count moves when a nudge moves, which is
+#: the report doing its job rather than a figure to hold anything to. That report is the honest
+#: state: the numbers say no, the picture says yes, and the picture was looked at. Re-list
+#: `GROUND[6]` as the road and this whole entry can go.
 BORROWS = {6: 5}
 
 
@@ -835,12 +882,17 @@ def apply_nudges(which: int, places, marker, height: float):
 
 def borrowed(which: int, source: int, score: np.ndarray):
     """
-    Another map's chain, stood on this one, checked against this one and reported.
+    Another map's chain, stood on this one, nudged, checked against this one and reported.
 
     A borrow is an assertion where a search is a derivation, so the two things that made the
     search trustworthy are kept: every seat is re-checked for clearance on *this* map, and
     every seat is asked this map's own footing question and the answer is **printed** rather
     than swallowed. `BORROWS` says why the answer is expected to be no.
+
+    The chain is checked as it transfers and **then** given this map's own `NUDGE` entries, so
+    the two failures stay apart: a chain that does not transfer is one thing, a hand correction
+    that collides is another, and each says so in its own words. The footing is reported after
+    the nudge, because the seat that was moved is the seat that ships.
 
     Refused outright if the two maps are not cut to the same height. A seat is a fraction, so
     the same pair of numbers on a map with a different strip count is a different place in
@@ -862,6 +914,8 @@ def borrowed(which: int, source: int, score: np.ndarray):
                 raise SystemExit(
                     f"  map{which}: rung {i + 1} of map{source}'s chain overlaps a neighbour - "
                     f"the chain does not transfer, seat this map on its own picture")
+
+    places, marker = apply_nudges(which, places, marker, height)
 
     off = [str(i + 1) for i, seat in enumerate(places)
            if score[max(0, min(int(height) - 1, int(round((1.0 - seat[1]) * height)))),

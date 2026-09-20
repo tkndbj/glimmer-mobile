@@ -14338,6 +14338,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/storm
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5a0f773210c85c94c886bc135c0bbd22
+    m_Address: Art/Bg/plain_ranked
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5a2b8db4109e15f4585bbf6ebf02b0a5
     m_Address: Art/Siege/gem_furnace_b
     m_ReadOnly: 0

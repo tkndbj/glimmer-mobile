@@ -122,13 +122,38 @@ namespace GlimmerGrove.Layout
         public const float Face = .538f, FaceShift = -.009f, FaceRise = .021f;
 
         /// <summary>
-        /// How much of that field a two-line caption may use. Kept well inside it, because the
-        /// field is round and a box is not: the corners of the caption are what touch the rim.
+        /// How much of that field a two-line caption may use.
+        ///
+        /// <para>
+        /// <b>Raising <see cref="TextSize"/> alone does nothing, and that is the whole of why
+        /// this moved instead.</b> Best Fit picks the largest size that fits the box, so the
+        /// box is the ceiling and the point size is only ever an upper bound on it: at .82/.48
+        /// MOST POPULAR settled at 14 and BEST VALUE at 17, and they settled there at a stated
+        /// 18, a 22 and a 26 alike. What the owner asked for was bigger words, so what had to
+        /// grow was the box.
+        /// </para>
+        /// <para>
+        /// <b>The old pair were sized for a disc and the badge is a star</b> — <c>Hud/burst</c>,
+        /// whose flat middle is wider than the inscribed square a round rim would allow, which
+        /// is the room this takes. Measured rather than argued (invariant 19n): the three
+        /// shipped captions now settle at 17, 20 and 17, and all three are drawn inside the
+        /// star's flat field with the points clear. <c>render_shop.py</c> prints what each one
+        /// settled on, and a figure equal to <see cref="TextFloor"/> is the tell that a string
+        /// has outgrown the badge.
+        /// </para>
         /// </summary>
-        public const float FaceTextWidth = .82f, FaceTextHeight = .48f;
+        public const float FaceTextWidth = 1.00f, FaceTextHeight = .64f;
 
-        /// <summary>The caption's size, and the floor best-fit may shrink a long one to.</summary>
-        public const int TextSize = 18, TextFloor = 10;
+        /// <summary>
+        /// The caption's size, and the floor best-fit may shrink a long one to.
+        ///
+        /// <b>The floor stays at 10.</b> It is not a taste, it is what a translation longer
+        /// than any of the three English strings falls back to — and below the floor Best Fit
+        /// stops shrinking and the label simply overflows, unclipped and unreported
+        /// (invariant 19n). Raising it with the ceiling would have narrowed the one margin
+        /// this badge has against a language nobody has typed yet.
+        /// </summary>
+        public const int TextSize = 20, TextFloor = 10;
 
         /// <summary>How far the badge reaches from its centre, in any direction.</summary>
         public static float SealReach => SealSize * SealDisc * .5f;

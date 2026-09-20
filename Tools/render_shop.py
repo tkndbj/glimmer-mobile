@@ -84,11 +84,23 @@ BANNER_INSET, BANNER_SWELL = 8.0, .03
 BANNER_FILL = 0.90
 
 # ProductCard / ProductCardBadges
+#: `ProductCardBadges.Face`, `.FaceShift`, `.FaceRise`, `.FaceTextWidth`, `.FaceTextHeight`,
+#: `.TextSize` and `.TextFloor`. The caption is `UIKit.Shrinkable` and **wraps**, so it is
+#: drawn here through `K.shrunk` and its settled size reported: a single line typed at a fixed
+#: size - which this drew for as long as it has existed - cannot answer the one question the
+#: badge is ever asked, which is whether the words still fit it (invariants 44d, 19n).
+SEAL_FACE, SEAL_SHIFT, SEAL_RISE = .538, -.009, .021
+SEAL_TEXT_W, SEAL_TEXT_H = 1.00, .64
+SEAL_TEXT, SEAL_FLOOR = 20, 10
+
 PLATE_X, PLATE_Y = 34.0, 40.0
 PLATEW, PLATEH = CELLW - PLATE_X, CELLH - PLATE_Y
 
-# What every shrinkable headline settled on, printed at the end. A figure equal to the
-# floor (24) is a caption that did not fit, which is the only way this screen says so.
+# What every shrinkable caption settled on, printed at the end. A figure equal to **its own
+# floor** is a caption that did not fit, which is the only way this screen says so - so the
+# floor travels with the entry: the headlines' is 24 and the badge's is `SEAL_FLOOR`, and one
+# number for both would have called every badge a failure the day the badge was first drawn
+# honestly.
 SETTLED = []
 ART, ART_DROP = 300.0, 168.0
 AMOUNT_RISE, SUB_RISE, FACE_RISE = 196.0, 150.0, 74.0
@@ -214,7 +226,7 @@ def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, l
         # here it said the badge was upright however far the disc had been leant over, which
         # is the one thing this picture is being asked about.
         face = Image.new("RGBA", (int(SEAL), int(SEAL)), (0, 0, 0, 0))
-        K.text(face, badge, SEAL / 2, SEAL / 2, 22, outline=2)
+        seal_caption(face, badge)
         seal.alpha_composite(face)
         seal = seal.rotate(SEAL_TILT, Image.BICUBIC, expand=True)
         K.paste(sheet, seal, plate_cx + PLATEW / 2 - SEAL_INSET, ptop + SEAL_DROP)
@@ -289,7 +301,7 @@ def ad_card(sheet, x, top, shelf, kind, amount):
     if kind == "xp_boost":
         said = xp_headline(rules().get("xpBoost", {}).get("watchedPercent", 50), amount)
         SETTLED.append(("ad " + kind, said,
-                        headline(sheet, said, plate_cx, pbot - AMOUNT_RISE, AD_TINT[kind])))
+                        headline(sheet, said, plate_cx, pbot - AMOUNT_RISE, AD_TINT[kind], 24), 24))
         unit = ""
     else:
         K.text(sheet, f"{amount:,}", plate_cx, pbot - AMOUNT_RISE, 46,
@@ -358,7 +370,7 @@ def good_card(sheet, x, top, kind, amount, gems):
         said, unit, tint = f"{amount:,}", "Hearts", K.ROSE
 
     SETTLED.append(("good " + kind, said,
-                    headline(sheet, said, plate_cx, pbot - AMOUNT_RISE, tint)))
+                    headline(sheet, said, plate_cx, pbot - AMOUNT_RISE, tint), 24))
     if unit:
         K.text(sheet, unit, plate_cx, pbot - SUB_RISE, 26, fill=(255, 245, 225), outline=2)
 
@@ -405,7 +417,7 @@ def container_card(sheet, x, top, rung_at, cap, price, badge):
     if badge:
         seal = K.tint(K.fit(K.load("Hud/burst")[0], (SEAL, SEAL)), K.ROSE)
         face = Image.new("RGBA", (int(SEAL), int(SEAL)), (0, 0, 0, 0))
-        K.text(face, badge, SEAL / 2, SEAL / 2, 22, outline=2)
+        seal_caption(face, badge)
         seal.alpha_composite(face)
         seal = seal.rotate(SEAL_TILT, Image.BICUBIC, expand=True)
         K.paste(sheet, seal, plate_cx + PLATEW / 2 - SEAL_INSET, ptop + SEAL_DROP)
@@ -433,6 +445,28 @@ LOCS = strings()
 
 def txt(key):
     return LOCS.get(key, key)
+
+
+def seal_words(badge):
+    """`StoreTap.Badge` through `ProductCard`: the shipped sentence, uppercased.
+
+    It was a table of three short words typed in this file - BEST, POPULAR, STARTER - so the
+    mirror was measuring strings the game never says. The real ones are half again as long and
+    wrap to two lines, which is the whole of what this badge is tight on.
+    """
+    key = {"best_value": "ui.shop.badge_best", "popular": "ui.shop.badge_popular",
+           "starter": "ui.shop.badge_starter"}.get(badge)
+    return txt(key).upper() if key else None
+
+
+def seal_caption(face, badge):
+    """`ProductCard`'s `ST` label: wrapped, best-fit, and centred on the *field* rather than on
+    the sprite - the flat middle is drawn a little high and a little left of its own texture."""
+    px = K.shrunk(face, badge,
+                  SEAL / 2 + SEAL * SEAL_SHIFT, SEAL / 2 - SEAL * SEAL_RISE,
+                  SEAL * SEAL_FACE * SEAL_TEXT_W, SEAL * SEAL_FACE * SEAL_TEXT_H,
+                  SEAL_TEXT, SEAL_FLOOR, outline=2)
+    SETTLED.append(("badge", badge, px, SEAL_FLOOR))
 
 
 def store_news(shelf, offline):
@@ -546,8 +580,7 @@ def supplies(sheet, top, shift):
             continue
 
         p = cans[n - len(goods)]
-        badge = {"best_value": "BEST", "popular": "POPULAR",
-                 "starter": "STARTER"}.get(p.get("badge"))
+        badge = seal_words(p.get("badge"))
         container_card(sheet, x, y, n - len(goods), p["heartCapacity"],
                        f"${p['referenceUsdCents'] / 100:.2f}", badge)
 
@@ -821,7 +854,7 @@ def screen(shelf, offline=False):
         # — so a mirror that did made every card here disagree with the phone by a letter case,
         # which is exactly the sort of difference somebody then "fixes" on the screen.
         unit = "Gems" if p.get("gems") else "Coins" if p.get("credits") else "Hearts"
-        badge = {"best_value": "BEST", "popular": "POPULAR", "starter": "STARTER"}.get(p.get("badge"))
+        badge = seal_words(p.get("badge"))
 
         # `ProductCard.PaintRibbon` shows one at 5% or better; the figure is arithmetic over
         # the ladder, so the widest string on a shelf is what has to fit.
@@ -867,9 +900,9 @@ def main():
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
-    for what, said, px in SETTLED:
-        print(f"  {what}: {said!r} at {px}px"
-              + ("   <-- FLOOR: it did not fit" if px <= 24 else ""))
+    for what, said, px, floor in SETTLED:
+        print(f"  {what}: {said!r} at {px}px (floor {floor})"
+              + ("   <-- FLOOR: it did not fit" if px <= floor else ""))
 
     print(f"  wrote {args.out}  {out.width}x{out.height}  - look at it")
 

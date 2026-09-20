@@ -1987,15 +1987,15 @@
     },
     {
       "key": "ui.board.info_tally_body",
-      "text": "The board is a tally taken every {0} hours, not a live reading. Any wave you beat today counts in the next one."
+      "text": "Your row is placed the moment your run is saved. The whole list is re-read every {0} minutes, so a change can take that long to settle."
     },
     {
       "key": "ui.board.info_tally_built",
-      "text": "The board is a tally taken every {0} hours, not a live reading. This one was taken {1} ago; anything you have done since counts in the next."
+      "text": "Your row is placed the moment your run is saved. The whole list is re-read every {0} minutes; this one was last re-read {1} ago."
     },
     {
       "key": "ui.board.info_tally_title",
-      "text": "Counted once a day"
+      "text": "Kept live"
     },
     {
       "key": "ui.board.info_title",
@@ -2842,6 +2842,10 @@
       "text": "unlocks at rank {0}"
     },
     {
+      "key": "ui.home.coming_soon",
+      "text": "COMING SOON"
+    },
+    {
       "key": "ui.home.event_waiting",
       "text": "tap to collect"
     },
@@ -3327,23 +3331,23 @@
     },
     {
       "key": "ui.nav.grovement",
-      "text": "groovement"
+      "text": "GROOVEMENT"
     },
     {
       "key": "ui.nav.home",
-      "text": "home"
+      "text": "HOME"
     },
     {
       "key": "ui.nav.profile",
-      "text": "profile"
+      "text": "PROFILE"
     },
     {
       "key": "ui.nav.ranks",
-      "text": "ranks"
+      "text": "RANKS"
     },
     {
       "key": "ui.nav.shop",
-      "text": "shop"
+      "text": "SHOP"
     },
     {
       "key": "ui.notify.channel",
@@ -4600,10 +4604,6 @@
     {
       "key": "ui.streak.at_risk",
       "text": "{0} left today"
-    },
-    {
-      "key": "ui.streak.cta",
-      "text": "PLAY A LEVEL"
     },
     {
       "key": "ui.streak.day",

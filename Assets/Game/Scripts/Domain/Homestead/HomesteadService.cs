@@ -90,8 +90,16 @@ namespace GlimmerGrove.Homestead
             if (HomesteadCatalog.IsLoaded)
                 return Task.FromResult(new HomesteadLoadResult(HomesteadCatalog.Current, Problems));
 
+            LoadsAsked++;
             return _running ?? (_running = LoadAsync(CancellationToken.None));
         }
+
+        /// <summary>
+        /// How many times a load has been asked for while nothing was loaded. A test seam:
+        /// it is what lets a fixture prove that a gate waiting on the catalog also asked for
+        /// it, on a machine where the content source is absent and no load can complete.
+        /// </summary>
+        internal static int LoadsAsked { get; private set; }
 
         static async Task<HomesteadLoadResult> LoadAsync(CancellationToken cancellation)
         {
@@ -134,6 +142,7 @@ namespace GlimmerGrove.Homestead
         internal static void ResetForTests()
         {
             _running = null;
+            LoadsAsked = 0;
             Problems = Array.Empty<string>();
             HomesteadCatalog.ResetForTests();
         }

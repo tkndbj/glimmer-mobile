@@ -984,6 +984,25 @@ check(Number(card?.fields?.wave?.integerValue ?? 0) === 23,
 check(card?.fields?.league === undefined,
       "and no longer carries a league", JSON.stringify(card?.fields?.league));
 
+// **The boards are live, and this is the only place that can prove the deployed one is.** The
+// same call that wrote the card merges its row into `leaderboards/endless` — no rebuild, no
+// wait. A `publishGrove` from before the live path answers 200 and writes an identical card,
+// so an absolute check on the card cannot tell the two deployments apart; the row on the board
+// can. (The e2e accounts carry the best wave in the world on a title with a handful of real
+// players, so the row is always inside the top hundred; at a real population this assertion
+// would need a wave above the cutoff, which is what `cutoffOf` reads off the last row.)
+const liveEndless = await (await fetch(`${FS}/leaderboards/endless`, { headers: bearer })).json();
+const liveRows = liveEndless?.fields?.entries?.arrayValue?.values ?? [];
+const liveMine = liveRows.find((row) => row?.mapValue?.fields?.uid?.stringValue === uid);
+check(liveMine !== undefined,
+      "**the row is on the endless board the moment the card is published**",
+      `${liveRows.length} rows, none for ${uid}`);
+check(Number(liveMine?.mapValue?.fields?.wave?.integerValue ?? 0) === 23,
+      "and it carries the card's wave", JSON.stringify(liveMine?.mapValue?.fields?.wave));
+check(liveRows.every((row, i) => i === 0
+        || Number(row.mapValue.fields.wave.integerValue) <= Number(liveRows[i - 1].mapValue.fields.wave.integerValue)),
+      "and the board is still best first");
+
 // ------------------------------------------------------- what a public profile reads
 //
 // Two fields the card grew for `PublicProfileScreen`, and the whole reason they are checked
@@ -1528,6 +1547,14 @@ check(republish.body?.result?.withdrawn === true,
 
 const afterOptOut = await fetch(`${FS}/groves/${uid}`, { headers: bearer });
 check(afterOptOut.status === 404, "and the card is gone", String(afterOptOut.status));
+
+// And so is the row, in the same call. A live board that placed a card the moment it was
+// published has to take it down the moment it is withdrawn, or "hide me" is a switch that
+// visibly does nothing for a quarter of an hour.
+const scrubbedEndless = await (await fetch(`${FS}/leaderboards/endless`, { headers: bearer })).json();
+check(!(scrubbedEndless?.fields?.entries?.arrayValue?.values ?? [])
+        .some((row) => row?.mapValue?.fields?.uid?.stringValue === uid),
+      "and the row is off the endless board with it");
 
 // Twice is a success, not an error. A withdrawal that could fail permanently is a device
 // retrying it for the life of the account — invariant 13a.
