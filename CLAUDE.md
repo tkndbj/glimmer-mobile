@@ -1385,10 +1385,11 @@ not difficulty. Every siege authors `budgetFactor: -1`. Chapter art is generated
 (7c): **seven maps** and forty skies serve every chapter of every mode — `map5` is the lava crag, `map6`
 the wasteland mesas and `map7` the dead lands, cut for ordinals 5, 6 and 7, and the three sources here
 that are **tiled** (two boards joined end to end). The skies wrap at forty where the maps no longer do, so
-a sixth chapter draws the second block again and a seventh the third. **`map7` is the one map whose
-end-of-chapter marker cannot be placed legally**, and that is arithmetic rather than a preference — see
-`make_map_seats.ACCEPTED_OVERLAPS`, which carries the proof; it ships with **one** warning against
-`map5`'s and `map6`'s nine each.
+a sixth chapter draws the second block again and a seventh the third. **`map7` draws no path at all** —
+it is floating plateaus joined by rope bridges, so `GROUND` is the rock itself and the eye does all the
+work that a road does elsewhere (8g, `make_map_seats.NUDGE[7]`). It ships with **no** warning against
+`map5`'s and `map6`'s nine each; the proof that its marker *could not* be placed is kept at
+`make_map_seats.ACCEPTED_OVERLAPS` because it was sound arithmetic over a bad reading of the painting.
 
 ### The numbers
 

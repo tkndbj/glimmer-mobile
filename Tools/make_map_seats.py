@@ -190,6 +190,40 @@ NUDGE = {
         9: (15, 0),           # level 59, 5 px right three times over
         10: (-85, 0),         # level 60, 10+15+15+15+20+10 px left
     },
+    7: {
+        # **The dead lands draw no road at all**, and that is what these are for. `map1` to
+        # `map6` each paint a way across themselves - a path, a trail, a line of stepping slabs
+        # - so `GROUND` can be read as *the route* and the search's answer is already most of
+        # the way to a chain that reads like one. This painting is a stack of floating plateaus
+        # joined by rope bridges: the only thing under a node is rock, every part of a plateau
+        # top is as good as every other part by every number in this file, and **which part of
+        # it a node looks right on is the whole question**. That is invariant 8g's second half
+        # doing all the work rather than some of it.
+        #
+        # So each of these takes its rung to the **middle of the open rock on the plateau its
+        # rung belongs to**, read off the distance transform of the seatable mask - the point
+        # furthest from any edge, crack or drop - and then off a picture. Three of them are
+        # about a *prop* rather than about the ground: rung 9 stood on the crystal outcrop
+        # (and, once the fissures were healed, on the bare rim to the right of it), rung 1 was
+        # drawn through the great skull at the foot of the map, and the marker stood on rung
+        # nine's own record mark.
+        #
+        # **They are large because the search's answer is an edge, not because a nudge is being
+        # abused.** `candidates` keeps the two *ends* of every row it looks at, which is exactly
+        # right on a road - both ends of a road are road - and exactly wrong on a plateau, where
+        # both ends are the lip. Every entry here moves inward.
+        1: (-78, 91),         # level 61, off the great skull and onto the rock beside it
+        2: (-32, -29),
+        3: (89, 154),         # the right lobe's own middle, not its rim
+        4: (-22, 130),
+        5: (-23, 34),
+        6: (55, 72),          # the foot of the bridge, which is what the plateau is for
+        7: (23, 0),
+        8: (-139, 5),
+        9: (-367, -125),      # off the crystal outcrop and onto the open top west of it
+        10: (68, -5),
+        "marker": (138, 0),   # see `ACCEPTED_OVERLAPS`: this is what stopped being impossible
+    },
 }
 
 
@@ -210,19 +244,19 @@ NUDGE = {
 #: chain's overlaps along with its seats — and goes on inheriting them once its own `NUDGE`
 #: entries have moved eight of the ten, because those moves are tens of units against a rule
 #: measured in hundreds. It is the same decision, not a second one.
-#: `map7` is here for **one** overlap rather than ten, and it is the only entry whose reason is
-#: arithmetic rather than a preference - so it is a proof rather than a sign-off. The marker's
-#: height is not ours (`nudged`): it is the top rung plus `TEASER_GAP`, capped at the ceiling,
-#: which on this painting puts it 125 units above rung ten and 394 above rung nine. Both are
-#: under the 529 of drop the crown rule wants, so the marker must clear **both** by 384 units
-#: across the map - and rungs nine and ten are on opposite sides, 529 apart. A point 384 from
-#: each of two points 529 apart needs 1152 units of map and this one is 1080 wide, so no
-#: `teaserX` exists; `_clear_of` says the same thing by falling back to `TEASER_X`. Moving the
-#: rungs does not help either: nine can only come down to where the marker clears it
-#: (y <= 0.744) by crossing to the left of the map, where it lands on rung ten. What ships is
-#: therefore the marker standing on rung nine's record mark, which `ChapterMapValidator` warns
-#: about exactly as it does for the two maps above.
-ACCEPTED_OVERLAPS = {5, 6, 7}
+#: **`map7` was the third entry and is not one any more, and that is worth keeping written
+#: down.** Its marker provably could not be placed: a marker's height is not ours (`nudged`),
+#: and at the ceiling it stood 125 units above rung ten and 394 above rung nine, both under the
+#: 529 of drop the crown rule wants - so it had to clear *both* by 384 units across the map,
+#: and those two rungs were themselves 529 apart on opposite sides. A point 384 from each of
+#: two points 529 apart needs 1152 units of map and this one is 1080 wide. The arithmetic was
+#: right and the *premise* was not: rungs nine and ten were where they were because the search
+#: had almost nowhere to put them (see `HEAL`), and once this painting's fissures stopped being
+#: read as holes in the world the chain could be stood on the plateau tops instead, which put
+#: rung ten at 0.343 and left the marker the whole right-hand half of its plateau. It ships
+#: with **no** warning now, against `map5`'s and `map6`'s nine each. **An impossibility proof is
+#: only ever as good as the inputs it is run on.**
+ACCEPTED_OVERLAPS = {5, 6}
 
 
 #: Maps that stand their chain exactly where another map's chain stands, rather than searching
@@ -384,7 +418,9 @@ VOID = {
     # (56, 37, 50) and the shadowed navy (25, 34, 51) without coming within 58 of either
     # ground colour. It also takes in the **cliff faces** (45, 51, 58), which is wanted rather
     # than tolerated on this painting: a plateau's side is where the drop starts, so the broad
-    # "is there land all round" test should refuse a seat that hangs over one.
+    # "is there land all round" test should refuse a seat that hangs over one. **And it takes
+    # in the fissures painted across the tops, which is not wanted at all and cannot be argued
+    # away in colour** — see `HEAL`, which closes them by shape instead.
     7: [(12, 23, 41)],
 }
 
@@ -433,6 +469,33 @@ VOID_TOLERANCE = 48
 #: Speckle smaller than this many pixels across is not ground — it is a pebble, a flower or
 #: the gap between two dashes of a dotted trail.
 DESPECKLE = 9
+
+#: How wide a crack a painting draws **on** its own ground, in pixels — and the one figure in
+#: this file that is a fact about a drawing *style* rather than about a colour.
+#:
+#: `DESPECKLE` closes the gap between two dashes of a dotted trail, and nine pixels is the size
+#: of that gap on a road map. `map7` is not drawn that way. Its plateau tops are lit rock with
+#: **fissures painted across them** — forty pixels wide, running the whole width of a table, and
+#: drawn in (45, 51, 58), which is the colour of the cliff *faces*. Nothing about the colour can
+#: separate the two, and nothing ever will: that same (45, 51, 58) is **fifteen** from this
+#: painting's own nebula (44, 36, 51), so there is no `VOID_TOLERANCE` that keeps the sky out
+#: and the fissures in. A crack is rock you can stand on; so it is closed by **shape** instead,
+#: on the ground mask and on the land mask alike, before anything is measured.
+#:
+#: **What it bought, and why the seats were wrong without it.** At nine, 5.3% of `map7` could
+#: take a node, in fifteen smudges lying wherever the fissures happened not to cross — and
+#: `candidates` keeps the two *ends* of a row, so every rung landed on the rim of one. The chain
+#: read as ten discs falling off ten ledges, with rung 9 standing on the crystal outcrop and
+#: rung 10 out on a side ledge. At forty-one it is 13.9%, and it is the plateau tops themselves.
+#:
+#: Absent means `DESPECKLE`, so **no other painting moves by a pixel** — checked, the six other
+#: maps' seats reproduce byte for byte.
+HEAL = {7: 41}
+
+
+def heal_of(which: int) -> int:
+    """How wide a crack this painting draws on its own ground. See `HEAL`."""
+    return HEAL.get(which, DESPECKLE)
 
 #: How much ground a seat needs directly under it, as a radius in canvas units and the share
 #: of that disc that has to be ground.
@@ -543,12 +606,24 @@ def land_mask(image: Image.Image, which: int) -> np.ndarray:
         areas = np.bincount(labels.ravel())
         areas[0] = 0
         land = np.isin(labels, np.flatnonzero(areas >= MIN_LANDMASS))
+
+    # A fissure painted across a plateau is not a hole in the world. See `HEAL` — and note it
+    # is done **after** the landmass filter, so healing can never resurrect a rock the sea test
+    # has already thrown away; it only closes a crack inside land that is already a place.
+    heal = heal_of(which)
+    if heal > DESPECKLE:
+        land = ndimage.binary_closing(land, np.ones((heal, heal)))
     return land
 
 
-def _tidy(mask: np.ndarray) -> np.ndarray:
-    """A dotted trail is ground with holes in it and a meadow is ground with flowers on it."""
-    mask = ndimage.binary_closing(mask, np.ones((DESPECKLE, DESPECKLE)))
+def _tidy(mask: np.ndarray, heal: int = DESPECKLE) -> np.ndarray:
+    """A dotted trail is ground with holes in it and a meadow is ground with flowers on it.
+
+    The closing is what fills a hole and the opening is what throws a speck away, so they are
+    **not** one number: `heal` widens only the first (see `HEAL`), and a pebble is still a
+    pebble at any of them.
+    """
+    mask = ndimage.binary_closing(mask, np.ones((heal, heal)))
     return ndimage.binary_opening(mask, np.ones((DESPECKLE, DESPECKLE)))
 
 
@@ -558,7 +633,8 @@ def ground_mask(image: Image.Image, which: int) -> np.ndarray:
     # The subtraction is at the *narrow* tolerance, deliberately: at `VOID_TOLERANCE` the
     # lava would take `map4`'s orange stone with it, and the stone is the road.
     tol = tolerance_of(which)
-    return _tidy(_near(pixels, GROUND[which], tol) & ~_near(pixels, VOID[which], tol))
+    return _tidy(_near(pixels, GROUND[which], tol) & ~_near(pixels, VOID[which], tol),
+                 heal_of(which))
 
 
 def stream_mask(image: Image.Image, which: int) -> np.ndarray:
