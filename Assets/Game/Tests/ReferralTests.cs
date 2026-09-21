@@ -264,6 +264,94 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(string.Empty, back.Code);
         }
 
+        // --------------------------------------------------- the state's own equality
+        //
+        // `Matches` is what stops the invite page redrawing itself under the player: the page
+        // reads the server on every visit, the answer is almost always what the device already
+        // had, and the ledger raises a change only when this says one happened. So a false
+        // "different" is the whole bug back, and a false "same" is a page that has stopped
+        // listening. Both directions are held here.
+
+        static ReferralState State(string[] paid, long fetched = 1700000000L,
+                                   string code = "ABCDEFGH", int bound = 3, int finished = 2,
+                                   bool referred = true, bool milestone = true, bool canRedeem = false)
+            => new ReferralState(code, bound, finished, paid, referred, milestone, canRedeem, fetched);
+
+        [Test]
+        public void ARereadThatBringsBackTheSameAnswerMatches()
+        {
+            var paid = new[] { "rung:1:1", "rung:1:2" };
+
+            // A different array, a different instance and — the point — a later fetch stamp,
+            // which is the one field that moves on every single read.
+            Assert.IsTrue(State(paid).Matches(State(new[] { "rung:1:1", "rung:1:2" }, 1700009999L)));
+        }
+
+        [Test]
+        public void AReorderedPaidListIsTheSameAnswer()
+        {
+            // The server filters rather than sorts (`referral.ts`), so nothing promises the
+            // order. Comparing position by position would report a reshuffle as a change.
+            Assert.IsTrue(State(new[] { "rung:1:1", "rung:2:1", "invitee:1" })
+                          .Matches(State(new[] { "invitee:1", "rung:1:1", "rung:2:1" })));
+        }
+
+        [Test]
+        public void AChestThatHasBeenPaidIsADifferentAnswer()
+        {
+            Assert.IsFalse(State(new[] { "rung:1:1" }).Matches(State(new[] { "rung:1:1", "rung:1:2" })));
+            Assert.IsFalse(State(new[] { "rung:1:1", "rung:1:2" }).Matches(State(new[] { "rung:1:1" })));
+        }
+
+        [Test]
+        public void ASwappedChestIsADifferentAnswer()
+        {
+            // Equal lengths and every entry accounted for on one side only. Caught by the
+            // second walk; with one direction alone this reads as a match.
+            Assert.IsFalse(State(new[] { "rung:1:1", "rung:1:1" })
+                           .Matches(State(new[] { "rung:1:1", "rung:1:2" })));
+        }
+
+        [Test]
+        public void EveryFieldAPageDrawsIsCompared()
+        {
+            var paid = new[] { "rung:1:1" };
+            var baseline = State(paid);
+
+            // One per field, so a field added to the state and forgotten here fails rather
+            // than silently stopping the page from noticing it.
+            Assert.IsFalse(baseline.Matches(State(paid, code: "ZZZZZZZZ")), "code");
+            Assert.IsFalse(baseline.Matches(State(paid, bound: 4)), "bound");
+            Assert.IsFalse(baseline.Matches(State(paid, finished: 3)), "finished");
+            Assert.IsFalse(baseline.Matches(State(paid, referred: false)), "referred");
+            Assert.IsFalse(baseline.Matches(State(paid, milestone: false)), "milestoneReached");
+            Assert.IsFalse(baseline.Matches(State(paid, canRedeem: true)), "canRedeem");
+        }
+
+        [Test]
+        public void NothingMatchesNothingAndEverythingMatchesItself()
+        {
+            Assert.IsTrue(ReferralState.Empty.Matches(ReferralState.Empty));
+            Assert.IsFalse(ReferralState.Empty.Matches(null));
+
+            var state = State(new[] { "invitee:1" });
+            Assert.IsTrue(state.Matches(state));
+        }
+
+        [Test]
+        public void AFirstAnswerIsNeverMistakenForNothing()
+        {
+            // The one case `Matches` cannot carry on its own, and the reason `Adopt` tests
+            // `IsKnown` beside it: the server's first reply to a brand new account says
+            // exactly what `Empty` says, and the page still has to hear about it — that flip
+            // is what moves the offer row off the device's guess and onto the server's word.
+            var first = new ReferralState(string.Empty, 0, 0, new string[0], false, false, false, 1700000000L);
+
+            Assert.IsTrue(ReferralState.Empty.Matches(first), "the answer itself says nothing new");
+            Assert.IsFalse(ReferralState.Empty.IsKnown);
+            Assert.IsTrue(first.IsKnown, "but it is the first one that is known, and that is the change");
+        }
+
         // ------------------------------------------------------------- plumbing
         [System.Serializable]
         sealed class Vectors

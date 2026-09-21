@@ -29,11 +29,21 @@ namespace GlimmerGrove.Referral
     {
         readonly ReferralReply _reply;
         readonly string _subject;
+
+        /// <summary>
+        /// Who this was rolled for. <see cref="Land"/> refuses if somebody else is signed in by
+        /// the time the ceremony runs it — a payout is currency and hearts moving into a
+        /// wallet, and there is no undo for putting them in the wrong one (invariant 17's
+        /// reason). The account keeps its in-flight note, so it banks on its own next tap.
+        /// </summary>
+        readonly string _owner;
+
         List<ChestDrop> _landed;
 
         internal ReferralPayout(ReferralClaimKind kind, int goal, int index, ChestTier tier, ReferralReply reply,
                                 ReferralLanding.Verdict verdict, CloudResult result)
         {
+            _owner = CloudState.UserId ?? string.Empty;
             Kind = kind;
             Goal = goal;
             Index = index;
@@ -69,6 +79,7 @@ namespace GlimmerGrove.Referral
         {
             if (_landed != null) return _landed;
             if (!Opens) return null;
+            if (!string.Equals(_owner, CloudState.UserId ?? string.Empty, StringComparison.Ordinal)) return null;
 
             var drops = new List<ChestDrop>(_reply.Drops.Count);
             foreach (var drop in _reply.Drops)
@@ -120,7 +131,39 @@ namespace GlimmerGrove.Referral
 
         static ReferralState _state = ReferralState.Empty;
         static string _stateFor;
-        static int _busy;
+
+        /// <summary>
+        /// Two gates rather than one, and the split is what stops a background read from
+        /// refusing the player's own tap.
+        ///
+        /// <para>
+        /// One gate over all three calls meant the read <see cref="RefreshAsync"/> fires the
+        /// moment the invite page opens refused the redeem the player typed a second later —
+        /// reported to them as <em>unavailable</em>, which is a lie about a call that was never
+        /// made. A read and a write do not conflict: the read asks a question, and if a write
+        /// lands first the read's answer is simply out of date. So a read is skipped while
+        /// another read is out (there is nothing to gain from two), a write is refused only by
+        /// another write (which is a double tap), and the ordering between them is held by
+        /// <see cref="_generation"/> rather than by a lock.
+        /// </para>
+        /// </summary>
+        static int _reading, _writing;
+
+        /// <summary>
+        /// Bumped by every <see cref="Adopt"/>, so a slow read cannot overwrite a fresh write.
+        ///
+        /// <para>
+        /// Without it: the page opens and asks for the state; the player types a code; the
+        /// redeem lands and the state becomes <em>referred</em>; the read that was already in
+        /// flight comes back with the pre-redeem answer and adopts it, and the page goes back
+        /// to offering the code the player has just used. Every claim has the same shape. A
+        /// read captures this before it calls and drops its reply if anything moved meanwhile,
+        /// which is correct rather than merely safe — the thing it would be writing is known
+        /// to be older than what is already held.
+        /// </para>
+        /// </summary>
+        static int _generation;
+
         static bool _attached;
         static long _askedRevision = -1;
 
@@ -137,7 +180,10 @@ namespace GlimmerGrove.Referral
         /// <summary>Whether the feature exists on this build and this backend.</summary>
         public static bool IsAvailable => CloudSaveService.IsAvailable && Backend != null && Table.Offers;
 
-        public static bool IsBusy => Volatile.Read(ref _busy) != 0;
+        public static bool IsBusy => Volatile.Read(ref _writing) != 0 || Volatile.Read(ref _reading) != 0;
+
+        /// <summary>Whether a redeem or a claim is out. A read is not a reason to refuse a tap.</summary>
+        public static bool IsWriting => Volatile.Read(ref _writing) != 0;
 
         /// <summary>The last thing the server said about this account, or <see cref="ReferralState.Empty"/>.</summary>
         public static ReferralState State
@@ -217,8 +263,42 @@ namespace GlimmerGrove.Referral
         {
             _stateFor = null;
             _askedRevision = -1;
+
+            // Anything in flight belongs to the account that has just been left. Bumping here
+            // is what makes `Reply` drop it; without it a read, a redeem or a claim issued as
+            // one player could land as another — and `Adopt` would cache the first player's
+            // code and counts under the second player's key. Invariant 17's shape, one layer
+            // down: an answer may only ever be adopted by the account that asked for it.
+            Interlocked.Increment(ref _generation);
+
             EnsureLoaded();
             Raise();
+        }
+
+        /// <summary>
+        /// A call's claim on the answer it is waiting for: which account asked, and what the
+        /// ledger had adopted at the time.
+        ///
+        /// <para>
+        /// Taken before the call and tested after it. It fails closed — an answer that cannot
+        /// prove it is still wanted is dropped rather than applied — and dropping one costs
+        /// nothing, because whatever moved the ledger underneath it is by definition newer.
+        /// </para>
+        /// </summary>
+        readonly struct Claim
+        {
+            readonly string _uid;
+            readonly int _generation;
+
+            Claim(string uid, int generation) { _uid = uid; _generation = generation; }
+
+            public static Claim Take()
+                => new Claim(CloudState.UserId ?? string.Empty, Volatile.Read(ref ReferralLedger._generation));
+
+            /// <summary>Whether this answer may still be adopted.</summary>
+            public bool Holds
+                => string.Equals(_uid, CloudState.UserId ?? string.Empty, StringComparison.Ordinal)
+                   && Volatile.Read(ref ReferralLedger._generation) == _generation;
         }
 
         /// <summary>
@@ -243,21 +323,25 @@ namespace GlimmerGrove.Referral
         public static async Task<CloudResult> RefreshAsync(CancellationToken cancellation = default)
         {
             if (!IsAvailable) return CloudResult.Failed(CloudFailure.Offline, "no referral backend");
-            if (Interlocked.Exchange(ref _busy, 1) != 0)
-                return CloudResult.Failed(CloudFailure.Busy, "a referral call is already out");
+            if (Interlocked.Exchange(ref _reading, 1) != 0)
+                return CloudResult.Failed(CloudFailure.Busy, "a referral read is already out");
 
             try
             {
+                // Taken before the call, not after: anything that lands while this is out is
+                // newer than what comes back, and may be a different account's entirely.
+                var claim = Claim.Take();
+
                 var authorised = await CloudSaveService.AuthoriseForCallAsync(cancellation);
                 if (!authorised.Ok) return authorised;
 
                 var (result, reply) = await Backend.ReadReferralAsync(cancellation);
-                if (result.Ok && reply != null) Adopt(reply.State);
+                if (result.Ok && reply != null && claim.Holds) Adopt(reply.State);
                 return result;
             }
             finally
             {
-                Interlocked.Exchange(ref _busy, 0);
+                Interlocked.Exchange(ref _reading, 0);
             }
         }
 
@@ -273,24 +357,32 @@ namespace GlimmerGrove.Referral
             if (!ReferralCode.IsValid(code)) return ReferralRedeemOutcome.BadCode;
 
             if (!IsAvailable) return ReferralRedeemOutcome.Unavailable;
-            if (Interlocked.Exchange(ref _busy, 1) != 0) return ReferralRedeemOutcome.Unavailable;
+
+            // Only another *write* refuses this, which on one device is a double tap the panel
+            // has already blocked. A read in flight is no longer a reason to say no.
+            if (Interlocked.Exchange(ref _writing, 1) != 0) return ReferralRedeemOutcome.Unavailable;
 
             try
             {
+                var claim = Claim.Take();
+
                 var authorised = await CloudSaveService.AuthoriseForCallAsync(cancellation);
                 if (!authorised.Ok) return ReferralRedeemOutcome.Unavailable;
 
                 var (result, reply) = await Backend.RedeemReferralAsync(code, cancellation);
                 if (!result.Ok || reply == null) return ReferralRedeemOutcome.Unavailable;
 
-                Adopt(reply.State);
+                // The bind itself stands whatever happened here — it is the server's, and
+                // it is keyed on the account that asked. What must not happen is *this*
+                // account's state being written over whoever is signed in now.
+                if (claim.Holds) Adopt(reply.State);
 
                 Telemetry.Track("referral_redeemed", "outcome", reply.Redeem.ToString());
                 return reply.Redeem;
             }
             finally
             {
-                Interlocked.Exchange(ref _busy, 0);
+                Interlocked.Exchange(ref _writing, 0);
             }
         }
 
@@ -310,14 +402,16 @@ namespace GlimmerGrove.Referral
                 return new ReferralPayout(kind, goal, index, tier, null, ReferralLanding.Verdict.Nothing,
                                           CloudResult.Failed(CloudFailure.Offline, "no referral backend"));
 
-            if (Interlocked.Exchange(ref _busy, 1) != 0)
+            if (Interlocked.Exchange(ref _writing, 1) != 0)
                 return new ReferralPayout(kind, goal, index, tier, null, ReferralLanding.Verdict.Nothing,
-                                          CloudResult.Failed(CloudFailure.Busy, "a referral call is already out"));
+                                          CloudResult.Failed(CloudFailure.Busy, "a referral write is already out"));
 
             string subject = ReferralLanding.Subject(kind, goal, index);
 
             try
             {
+                var claim = Claim.Take();
+
                 var authorised = await CloudSaveService.AuthoriseForCallAsync(cancellation);
                 if (!authorised.Ok)
                     return new ReferralPayout(kind, goal, index, tier, null, ReferralLanding.Verdict.Nothing, authorised);
@@ -329,6 +423,13 @@ namespace GlimmerGrove.Referral
 
                 var (result, reply) = await Backend.ClaimReferralAsync(kind, goal, index, cancellation);
                 if (!result.Ok || reply == null)
+                    return new ReferralPayout(kind, goal, index, tier, null, ReferralLanding.Verdict.Nothing, result);
+
+                // Somebody else is signed in now. The server has paid the account that asked
+                // and the note is still standing on it, so the right thing is to do nothing
+                // here: this player banks it the next time they sign in and tap. Opening a
+                // ceremony would apply one account's hearts to another's wallet.
+                if (!claim.Holds)
                     return new ReferralPayout(kind, goal, index, tier, null, ReferralLanding.Verdict.Nothing, result);
 
                 var verdict = ReferralLanding.Decide(reply.Claim, inFlightHere);
@@ -350,7 +451,7 @@ namespace GlimmerGrove.Referral
             }
             finally
             {
-                Interlocked.Exchange(ref _busy, 0);
+                Interlocked.Exchange(ref _writing, 0);
             }
         }
 
@@ -363,16 +464,49 @@ namespace GlimmerGrove.Referral
         }
 
         // ---------------------------------------------------------------- state
+        /// <summary>
+        /// Takes the server's answer as the truth about this account.
+        ///
+        /// <para>
+        /// <b>It raises <see cref="Changed"/> only when the answer says something new</b>, and
+        /// that is load-bearing rather than tidy. Every visit to the invite page fires a read,
+        /// and the overwhelmingly common reply is the state the device already had; raising on
+        /// it told the page a change had happened, and the page — which cannot tell a real
+        /// change from a null one — redrew itself a network round-trip after it had drawn,
+        /// replaying the entrance on all fifty rows and throwing away the scroll position. The
+        /// comparison is <see cref="ReferralState.Matches"/>, which ignores the fetch stamp for
+        /// exactly this reason.
+        /// </para>
+        /// <para>
+        /// <b>The cache is written on the same test</b>, because <see cref="DevicePrefs"/>
+        /// compares the serialised string and the fetch stamp is inside it — so an unconditional
+        /// write is a whole-store <c>PlayerPrefs</c> flush on every screen entry, for a file
+        /// whose content did not change. The first known answer is always written, or a device
+        /// that read once and learned nothing new would never cache anything at all.
+        /// </para>
+        /// </summary>
         static void Adopt(ReferralState state)
         {
             if (state == null) return;
             EnsureLoaded();
 
             var before = _state;
-            _state = state;
-            _stateFor = CloudState.UserId;
+            bool moved = !before.Matches(state);
+            bool firstKnown = state.IsKnown && !before.IsKnown;
 
-            if (CloudState.IsSignedIn)
+            _state = state;
+
+            // `?? string.Empty` because `EnsureLoaded` compares against the same coalescing:
+            // a null here against an empty string there is "a different account", and the very
+            // next read of `State` would wipe what was just adopted back to `Empty`.
+            _stateFor = CloudState.UserId ?? string.Empty;
+
+            // Bumped whatever the answer said, including one that said nothing new: a read that
+            // was in flight across this call is still older than this, and dropping it costs
+            // nothing because it can only be carrying what is already held.
+            Interlocked.Increment(ref _generation);
+
+            if (CloudState.IsSignedIn && (moved || firstKnown))
                 DevicePrefs.WriteString(CacheKey + ":" + CloudState.UserId, JsonUtility.ToJson(state.ToDto()));
 
             if (state.Finished > before.Finished)
@@ -381,7 +515,7 @@ namespace GlimmerGrove.Referral
             if (state.MilestoneReached && !before.MilestoneReached && state.Referred)
                 Telemetry.Track("referral_milestone");
 
-            Raise();
+            if (moved || firstKnown) Raise();
         }
 
         static void EnsureLoaded()
@@ -422,12 +556,29 @@ namespace GlimmerGrove.Referral
 
         static bool IsInFlight(string subject) => InFlight().Contains(subject);
 
+        /// <summary>
+        /// The most notes one account may carry, and why there is a ceiling at all.
+        ///
+        /// <para>
+        /// A note is written before a claim and cleared when its drops land, so a reply lost on
+        /// the way back leaves one standing for ever — that is the design (see
+        /// <see cref="ReferralLanding"/>), and it is what makes the retry bank rather than skip.
+        /// The list is naturally bounded because a subject is only ever noted once, and the
+        /// subject space is <c>maxBound * count + count</c>; the ceiling is a guard on a
+        /// <em>retune</em> raising <c>maxBound</c>, not on the ordinary path, and it exists
+        /// because this string is written to device storage and nothing else would ever bound
+        /// it. The oldest goes, which is the note least likely to still be owed.
+        /// </para>
+        /// </summary>
+        const int MaxNotes = 256;
+
         static void NoteInFlight(string subject)
         {
             if (!CloudState.IsSignedIn) return;
             var list = InFlight();
             if (list.Contains(subject)) return;
             list.Add(subject);
+            while (list.Count > MaxNotes) list.RemoveAt(0);
             DevicePrefs.WriteString(InFlightFor, string.Join(",", list));
         }
 
@@ -445,7 +596,9 @@ namespace GlimmerGrove.Referral
             _state = ReferralState.Empty;
             _stateFor = null;
             _askedRevision = -1;
-            Interlocked.Exchange(ref _busy, 0);
+            Interlocked.Exchange(ref _reading, 0);
+            Interlocked.Exchange(ref _writing, 0);
+            Interlocked.Exchange(ref _generation, 0);
         }
     }
 }

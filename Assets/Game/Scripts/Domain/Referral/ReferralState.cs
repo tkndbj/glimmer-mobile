@@ -96,6 +96,46 @@ namespace GlimmerGrove.Referral
             return false;
         }
 
+        /// <summary>
+        /// Whether this says the same thing about the account as <paramref name="other"/>.
+        ///
+        /// <para>
+        /// <b><see cref="FetchedUnix"/> is deliberately not compared.</b> It moves on every
+        /// read, so a comparison including it would answer "different" every single time and
+        /// be worth nothing — which is the whole reason this method exists. A server read that
+        /// brings back what the device already had must be able to say so, or every visit to
+        /// the invite page raises a change nobody made and the page redraws itself underneath
+        /// the player.
+        /// </para>
+        /// <para>
+        /// <b>The paid list is compared as a set, both ways.</b> The server answers an array
+        /// and nothing promises its order (<c>referral.ts</c> filters rather than sorts), so
+        /// comparing position by position would report a reordering as a change. Both
+        /// directions rather than one plus equal lengths, because a duplicate on one side
+        /// would otherwise read as a match. The list is bounded by
+        /// <c>maxBound * count + count</c> server-side — about a hundred entries at the
+        /// shipped ceiling — so the quadratic walk is cheap and allocates nothing.
+        /// </para>
+        /// </summary>
+        public bool Matches(ReferralState other)
+        {
+            if (ReferenceEquals(this, other)) return true;
+            if (other == null) return false;
+
+            if (!string.Equals(Code, other.Code, StringComparison.Ordinal)) return false;
+            if (Bound != other.Bound || Finished != other.Finished) return false;
+            if (Referred != other.Referred || MilestoneReached != other.MilestoneReached) return false;
+            if (CanRedeem != other.CanRedeem) return false;
+            if (_paid.Length != other._paid.Length) return false;
+
+            for (int i = 0; i < _paid.Length; i++)
+                if (!other.HasPaid(_paid[i])) return false;
+            for (int i = 0; i < other._paid.Length; i++)
+                if (!HasPaid(other._paid[i])) return false;
+
+            return true;
+        }
+
         /// <summary>How many of a payment's chests have been paid: the count of its subjects in the list.</summary>
         public int PaidCount(ReferralClaimKind kind, int goal, int count)
         {

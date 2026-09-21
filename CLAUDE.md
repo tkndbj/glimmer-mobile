@@ -423,6 +423,21 @@ is where they are written down, not what they mean.
    in.** `render_streak.py` had no "played today" flag, so it drew the night above the streak as *tonight*
    in all six states and never once drew `TOMORROW NIGHT` — the longest line either pill on the page can
    say, and the only one spilling out of its plate on a device. Add the flag before trusting the sheet.
+44m. **A change event has to mean a change, or every page listening redraws itself for nothing.**
+   `ReferralLedger.Adopt` raised on *every* server read, including the overwhelmingly common one that
+   brought back what the device already held — so the invite page, which asks on open, threw its board
+   away a round-trip after drawing it, replayed the entrance on fifty rows and lost the scroll. The
+   comparison must **ignore the fetch stamp** (`ReferralState.Matches`) or it can never answer "the
+   same", and it must still fire on the *first known* answer, which is a change in what the page may
+   trust rather than in what it says. The other half is the screen's: **a redraw that is not a first
+   draw makes no noise and keeps its place** — `ModalView.Rebuilding`'s rule, owed by a `View` too.
+44n. **A background read must not refuse the player's own tap, and must not overwrite it either.** One
+   busy flag across a referral read, redeem and claim told a player typing a code that it was
+   *unavailable* — about a call never made. Reads and writes get separate gates; the ordering between
+   them is a **generation stamp** taken before a call and tested after it, so a slow read cannot land
+   the pre-redeem answer on top of the redeem. The stamp carries the **account** too: bumped on an
+   identity change, so an answer issued as one player can never be adopted, cached or banked as
+   another (invariant 17, one layer down).
 
 ### Tasks and the chest ladder
 
@@ -509,6 +524,11 @@ is where they are written down, not what they mean.
 47m. **A closed season holding an unopened chest has to be reachable.** `Featured` answers the **oldest
    season still owing anything**, falling back to live. **And `GroveEvents.All` is no longer the authored
    calendar** — it joins the ids the save holds onto it, skipping a season this build has never heard of.
+47n. **What is *waiting* is the claim rule asked early, never a second count over the same ladder.** The
+   paid column was counted for somebody who had never bought the pass, so the hub's box lit its rim, wore a
+   badge and said *collect* over a page that refused every one of them — and `Featured` would have moored
+   that box on a closed season for ever. `EventLedger.Opens` is the one predicate and both readings run it;
+   `Reached` is deliberately left ungated, because how far up a column a player climbed is true either way.
 
 ### The streak
 

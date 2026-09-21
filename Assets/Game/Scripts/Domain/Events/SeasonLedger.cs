@@ -217,18 +217,18 @@ namespace GlimmerGrove.Events
             if (season == null) return EventProgress.None;
 
             var state = StateOf(season.Id);
-            return EventLedger.ProgressOf(season, state.Marks, state.FreeGoal, state.PassGoal);
+            return EventLedger.ProgressOf(season, state.Marks, state.FreeGoal, state.PassGoal,
+                                          state.Pass);
         }
 
         /// <summary>True when tapping this rung on this track would hand something over.</summary>
         public static bool IsClaimable(GroveEvent season, EventMilestone rung, SeasonTrack track)
         {
             if (season == null) return false;
-            if (track == SeasonTrack.Pass && !OwnsPass(season.Id)) return false;
 
             var state = StateOf(season.Id);
             int floor = track == SeasonTrack.Pass ? state.PassGoal : state.FreeGoal;
-            return EventLedger.IsClaimable(season, rung, track, state.Marks, floor);
+            return EventLedger.IsClaimable(season, rung, track, state.Marks, floor, state.Pass);
         }
 
         /// <summary>True when this rung's chest is already in the player's hands.</summary>
@@ -393,12 +393,15 @@ namespace GlimmerGrove.Events
             // differently must not be claimable through any path, and a guard that lives only
             // in a screen is a guard the next screen forgets.
             if (!CanClaim) return false;
-            if (track == SeasonTrack.Pass && !OwnsPass(season.Id)) return false;
 
             var state = Mutable(season.Id);
             int floor = track == SeasonTrack.Pass ? state.PassGoal : state.FreeGoal;
 
-            if (!EventLedger.IsClaimable(season, rung, track, state.Marks, floor)) return false;
+            // The entitlement goes in with the floors rather than being asked separately, so
+            // this refuses a paid rung nobody bought by the same rule that stops the badge
+            // counting one (`EventLedger.Opens`).
+            if (!EventLedger.IsClaimable(season, rung, track, state.Marks, floor, state.Pass))
+                return false;
 
             var rolled = tier.Chest.Roll(SeedFor(season.Id, track, rung.Goal));
 

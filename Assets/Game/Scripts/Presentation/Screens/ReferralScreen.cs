@@ -6,6 +6,7 @@ using GlimmerGrove.Cloud;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
+using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using GlimmerGrove.Referral;
 using GlimmerGrove.Tasks;
@@ -35,11 +36,22 @@ namespace GlimmerGrove
     /// says so between the taps.
     /// </para>
     /// <para>
-    /// <b>The board is one row per friend who has finished, plus the next few</b>, so a page
-    /// with fifty possible rows never draws fifty empty ones. The row count moves with the
-    /// server's count, and when it does the page is rebuilt; the offer row has three shapes
-    /// and rebuilds the same way. Everything else is a repaint (<c>CRAFT.md</c>: Show
-    /// animates, Refresh does not).
+    /// <b>The board is every row the cap allows, always</b> (the owner's instruction,
+    /// 2026-09-20; see <see cref="RowCount"/>). So the row count is a property of the content
+    /// table rather than of the player, and it moves only when <c>progression.json</c> is
+    /// retuned. The offer row has three shapes and is the one thing on the page that can
+    /// change shape under the player.
+    /// </para>
+    /// <para>
+    /// <b>A change redraws in place; only a change of shape restages, and a restage is
+    /// silent</b> (<c>CRAFT.md</c>: Show animates, Refresh does not — and invariant 47g's
+    /// "bind writes everything and never animates"). Replaying the entrance on a page the
+    /// player is already looking at reads as the page reloading, which is what it looked like:
+    /// the ledger used to raise a change on every server read whether or not the answer said
+    /// anything new, so every visit redrew the board a round-trip after it had drawn.
+    /// <see cref="ReferralLedger.Adopt"/> owns that half; this screen owns the other, which is
+    /// that even a real restage keeps the scroll position and skips the ceremony
+    /// (<see cref="_restaging"/>), exactly as <c>ModalView.Rebuilding</c> does for a panel.
     /// </para>
     /// </summary>
     public sealed class ReferralScreen : View
@@ -129,8 +141,61 @@ namespace GlimmerGrove
         ScrollRect _scroll;
         float _boardH, _bandH;
 
-        /// <summary>True while a chest is being asked for or handed over; a rebuild underneath would destroy the tiles.</summary>
+        /// <summary>Where the player had the board when a restage took it away. See <see cref="RestoreScroll"/>.</summary>
+        float _keptScroll;
+        bool _hasKeptScroll;
+
+        /// <summary>
+        /// True from the tap on a row until the ceremony it opened is standing in front of the
+        /// player; a restage underneath would destroy the tiles the ceremony was launched from.
+        ///
+        /// <para>
+        /// <b>It has to outlast the claim call, and it did not.</b> It was cleared before
+        /// <c>Flow.Modal</c> was called, and <see cref="ChestOverlay"/> runs its claim inside
+        /// its own <c>Build</c> — so <c>payout.Land()</c> adopted the new state, raised
+        /// <see cref="OnChanged"/>, and found the guard already down, on the frame the chest
+        /// was opening. It is cleared after the panel is up and the page is repainted.
+        /// </para>
+        /// </summary>
         bool _collecting;
+
+        /// <summary>
+        /// True while <see cref="Restage"/> is drawing the page again for a shape it did not
+        /// have before.
+        ///
+        /// <para>
+        /// Two jobs, and the second is the one that matters in production. It tells
+        /// <see cref="Build"/> to bind without the entrance — the page is already in front of
+        /// the player, and popping fifty cards in again is the "it reloaded" everybody reports.
+        /// And it is the re-entrancy guard: <c>Build</c> asks the server, an answer can arrive
+        /// synchronously on a completed task, and <see cref="OnChanged"/> would then restage a
+        /// page that is halfway through being restaged.
+        /// </para>
+        /// </summary>
+        bool _restaging;
+
+        /// <summary>
+        /// Seconds between the polls that keep a friend's progress live while the page stands.
+        ///
+        /// <para>
+        /// <b>This page is the one screen in the game whose subject is somebody else's play.</b>
+        /// Nothing about a friend clearing a chapter reaches this device on its own — the
+        /// ledger's own refresh is driven by <em>this</em> account's sync (<c>OnSettled</c>),
+        /// which says nothing about an invitee's — so without a poll a referrer sitting on the
+        /// page watches a board that cannot move, and a friend who finished is only ever
+        /// discovered by leaving and coming back.
+        /// </para>
+        /// <para>
+        /// The cost is bounded by somebody choosing to sit here: one <c>getReferral</c> per
+        /// thirty seconds per open page, and the call is a transaction over two documents.
+        /// Nought when the page is shut, which is almost always. It is skipped while a chest is
+        /// being taken and while a read is already out, and a reply that says nothing new now
+        /// raises nothing at all (<see cref="ReferralLedger.Adopt"/>), so a quiet poll costs the
+        /// page no redraw.
+        /// </para>
+        /// </summary>
+        const float PollSeconds = 30f;
+        float _poll;
 
         /// <summary>The reels, so the first tap on a lit row finds its lid already loaded (7b).</summary>
         AssetHold _reels;
@@ -178,20 +243,73 @@ namespace GlimmerGrove
             HoldReels();
 
             Repaint();
-            FocusOnPending();
+
+            // A restage is the same page in a new state: it keeps the place the player had
+            // scrolled to, where a first draw opens on the row that can be taken.
+            if (_restaging) RestoreScroll();
+            else FocusOnPending();
 
             // The cache paints first and the server replaces it. Nothing waits on this: a
             // failed read leaves the cached page standing, which is what a cache is for.
+            Refresh();
+        }
+
+        /// <summary>
+        /// Asks the server for a fresh copy. Safe to call at any time and from any path: the
+        /// ledger skips a read while one is already out, and drops a reply that a write
+        /// overtook.
+        /// </summary>
+        void Refresh()
+        {
+            _poll = 0f;
             Run(async token => { await ReferralLedger.RefreshAsync(token); });
         }
 
-        void OnEnable() { ReferralLedger.Changed += OnChanged; }
-        void OnDisable() { ReferralLedger.Changed -= OnChanged; }
+        void OnEnable()
+        {
+            ReferralLedger.Changed += OnChanged;
+
+            // The row count, the tiers a row pays and the milestone chapter are all content
+            // (invariant 4), and content can be replaced under a standing screen by a remote
+            // push. `ShopScreen` watches the same event for the same reason.
+            ProgressionRules.Changed += OnChanged;
+
+            // The welcome row's progress line and `MilestoneClearedHere` are read off *this*
+            // device's save, so a cloud merge that brings in levels cleared on another phone
+            // moves what this page says without any referral call happening at all.
+            PlayerProgress.Reloaded += OnChanged;
+        }
+
+        void OnDisable()
+        {
+            ReferralLedger.Changed -= OnChanged;
+            ProgressionRules.Changed -= OnChanged;
+            PlayerProgress.Reloaded -= OnChanged;
+        }
 
         void OnDestroy()
         {
             _reels?.Dispose();
             _reels = null;
+        }
+
+        /// <summary>
+        /// Keeps a friend's progress live while somebody is looking at it. See
+        /// <see cref="PollSeconds"/> for why this page polls when no other one does.
+        /// </summary>
+        void Update()
+        {
+            if (_collecting || _restaging || Flow.HasModal) return;
+
+            _poll += Time.unscaledDeltaTime;
+            if (_poll < PollSeconds) return;
+
+            // The clock is reset whether or not the ask goes out, so a page held offline asks
+            // once every thirty seconds rather than on every frame after the first thirty.
+            _poll = 0f;
+            if (Net.Offline || ReferralLedger.IsBusy) return;
+
+            Refresh();
         }
 
         void HoldReels() => Run(async token =>
@@ -201,30 +319,98 @@ namespace GlimmerGrove
         });
 
         /// <summary>
-        /// Redraws on any change the page did not make itself. A payout raises this too and
-        /// must not act on it: the page is halfway through a ceremony that already shows the
-        /// new state.
+        /// Anything the page did not do itself: the ledger adopting a new answer, a remote
+        /// content push, or a cloud merge bringing in levels cleared on another device. All
+        /// three are the same question — is this still the page it was — so all three go to
+        /// <see cref="Settle"/>.
         /// </summary>
         void OnChanged()
         {
-            if (this == null || Content == null || _collecting) return;
+            if (this == null || Content == null || !Living) return;
 
-            if (OfferShape != _offer || RowCount != _rowCount) { Rebuild(); return; }
+            // A chest is being taken: the ceremony is standing on tiles this would destroy, and
+            // it already shows the state that raised this. The repaint at the end of `Take`
+            // catches up.
+            if (_collecting || _restaging) return;
+
+            Settle();
+        }
+
+        /// <summary>
+        /// Brings the page up to date with whatever the ledger now holds: in place if it is
+        /// still the same page, from scratch if it is not.
+        ///
+        /// <para>
+        /// <b>Every path that changes the state ends here</b> rather than choosing for itself —
+        /// the ledger's event, a content push, a save merge, and the end of a collect. That
+        /// last one is why this is a method and not two lines inside <see cref="OnChanged"/>:
+        /// a change that arrives while a chest is being taken is deliberately ignored
+        /// (<see cref="_collecting"/>), so the collect has to ask the same question when it
+        /// lets go, or a shape that changed under the ceremony is never drawn.
+        /// </para>
+        /// </summary>
+        void Settle()
+        {
+            if (this == null || Content == null || _restaging) return;
+
+            if (OfferShape != _offer || ContentMoved) { Restage(); return; }
             Repaint();
         }
 
-        void Rebuild()
+        /// <summary>
+        /// Draws the page again because it is a different page — a different offer row, or a
+        /// retuned cap — keeping the player's place and making no noise about it.
+        ///
+        /// <para>
+        /// <b>Every handle into what was emptied is dropped here rather than left to
+        /// <c>Build</c>.</b> Not all of them are written on every path: <see cref="_welcome"/>
+        /// is built only by the welcome shape and <see cref="_codeText"/> only when there is a
+        /// hero, so a field left alone is a field still pointing at a destroyed widget that the
+        /// next repaint writes to. <see cref="View.ClearContent"/> owns the other half — the
+        /// cached safe-area layer, which is the one four hand-written copies of this loop all
+        /// forgot.
+        /// </para>
+        /// </summary>
+        void Restage()
         {
-            if (Content == null) return;
+            if (Content == null || _restaging) return;
 
-            ClearContent();
+            _keptScroll = _board ? _board.anchoredPosition.y : 0f;
+            _hasKeptScroll = _board != null;
 
-            _codeText = _tally = null;
-            _codeTap = _shareBtn = null;
-            _board = null;
-            _scroll = null;
+            _restaging = true;
+            try
+            {
+                ClearContent();
 
-            Build();
+                _codeText = _tally = null;
+                _codeTap = _shareBtn = null;
+                _welcome = null;
+                _board = null;
+                _scroll = null;
+                _rows.Clear();
+
+                Build();
+            }
+            finally
+            {
+                _restaging = false;
+                _hasKeptScroll = false;
+            }
+        }
+
+        /// <summary>
+        /// Puts the board back where the player had it. Clamped to the board it is being put
+        /// back into rather than to the one it came off: a restage can change the page's height
+        /// — the offer row is 196 units and appears and disappears — so the offset that was
+        /// legal a moment ago need not be.
+        /// </summary>
+        void RestoreScroll()
+        {
+            if (_board == null || !_hasKeptScroll) return;
+
+            float most = Mathf.Max(0f, _boardH - _bandH);
+            _board.anchoredPosition = new Vector2(0f, Mathf.Clamp(_keptScroll, 0f, most));
         }
 
         // ------------------------------------------------------------- reading
@@ -266,6 +452,29 @@ namespace GlimmerGrove
         /// </summary>
         int RowCount => Mathf.Max(1, _table.MaxBound);
 
+        /// <summary>
+        /// Whether the content this page was drawn from is still the content that is live.
+        ///
+        /// <para>
+        /// <b>The comparison it replaces could never be true.</b> <see cref="OnChanged"/> asked
+        /// <c>RowCount != _rowCount</c>, and both sides read <see cref="_table"/> — snapshotted
+        /// at the top of <see cref="Build"/> — so the guard the comment described did not
+        /// exist. A leftover from the shape this board had before 2026-09-20, when the count
+        /// moved with the server's tally rather than with the cap.
+        /// </para>
+        /// <para>
+        /// <b>Identity rather than the row count</b>, because the count is not the only thing
+        /// on this table a page draws: the tier a row pays, how many chests it pays and which
+        /// chapter the milestone is are all here too, and a retune of any of them leaves a
+        /// standing page drawing the old one. <c>ProgressionRules.Table</c> is a field replaced
+        /// whole by <c>Publish</c> and <c>Referral</c> is one instance hanging off it, so this
+        /// is false exactly when a new table has been published and never otherwise — it cannot
+        /// loop. A push that happens to carry an identical block costs one silent restage,
+        /// which is the right way round to be wrong.
+        /// </para>
+        /// </summary>
+        bool ContentMoved => !ReferenceEquals(_table, ReferralLedger.Table);
+
         // --------------------------------------------------------------- header
         float BuildHeader(float y)
         {
@@ -280,8 +489,11 @@ namespace GlimmerGrove
 
             var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.referral.title").ToUpperInvariant(),
                                              new Vector2(720f, BannerH), Top, new Vector2(0f, cy), 42);
-            ribbon.transform.localScale = Vector3.zero;
-            Tween.Pop(ribbon.transform, 0f, .5f, .06f);
+            if (!_restaging)
+            {
+                ribbon.transform.localScale = Vector3.zero;
+                Tween.Pop(ribbon.transform, 0f, .5f, .06f);
+            }
             y += BannerH + 4f;
 
             UIKit.Shrinkable(
@@ -607,6 +819,12 @@ namespace GlimmerGrove
 
             Furnish(tile, Loc.Format("ui.referral.friend_n", friend).ToUpperInvariant());
 
+            // The entrance, and only on a first draw. A restage is the same page in a new
+            // state — `ModalView.MakePanel` draws the same distinction for a panel, and for the
+            // same reason: a player who is already looking at this board must not watch it
+            // arrive a second time.
+            if (_restaging) return;
+
             tile.Root.localScale = Vector3.zero;
             Tween.Pop(tile.Root, 0f, .46f, .20f + Mathf.Min(index, 8) * .04f);
         }
@@ -863,36 +1081,58 @@ namespace GlimmerGrove
                     payout = null;
                 }
 
-                if (!Living) return;
-                _collecting = false;
+                // The screen is gone. The guard goes with it rather than being left set on a
+                // dead object, and the payout is dropped: its drops bank when the ledger's own
+                // in-flight note is redeemed on the next tap (`ReferralLanding`), never here.
+                if (!Living) { _collecting = false; return; }
 
-                if (payout != null && payout.Opens)
+                // Held right through the ceremony being raised, because `ChestOverlay` runs its
+                // claim inside its own `Build` — so `payout.Land` adopts the state and raises
+                // `OnChanged` on this very frame. Cleared in the `finally`, after the page has
+                // caught up with whatever landed.
+                try
                 {
-                    if (tile.Icon) Burst.Sparks(tile.Icon.transform, Vector2.zero, Pal.Gold, 18, 320f, 26f, .6f);
-                    Flow.Modal<ChestOverlay>(v => v.Claim = ChestClaim.ForReferral(payout.Tier, payout.Land));
-                    Repaint();
-                    return;
+                    if (payout != null && payout.Opens)
+                    {
+                        if (tile.Icon && tile.Icon.transform)
+                            Burst.Sparks(tile.Icon.transform, Vector2.zero, Pal.Gold, 18, 320f, 26f, .6f);
+                        Flow.Modal<ChestOverlay>(v => v.Claim = ChestClaim.ForReferral(payout.Tier, payout.Land));
+                        return;
+                    }
+
+                    switch (payout?.Outcome ?? ReferralClaimOutcome.Unavailable)
+                    {
+                        case ReferralClaimOutcome.AlreadyPaid:
+                            // Banked elsewhere. The state was adopted by the ledger; the seal says it.
+                            break;
+
+                        case ReferralClaimOutcome.NotYet:
+                            // The server's count has not reached this row. It is the one refusal
+                            // that says the page was ahead of the truth, so take the truth: the
+                            // claim adopted it, and the repaint below draws the row as it really is.
+                            Scenery.Toast(Content, Loc.Get("ui.referral.not_yet"), Pal.Gold, 3f);
+                            break;
+
+                        case ReferralClaimOutcome.Unknown:
+                            Scenery.Toast(Content, Loc.Get("ui.referral.unknown_rung"), Pal.Rose, 3f);
+                            break;
+
+                        default:
+                            // Nothing was adopted, so nothing about the page has changed — but
+                            // the row must come back out of its pressed state and go on offering
+                            // the tap, which is what the repaint below does.
+                            Scenery.Toast(Content, Loc.Get("ui.chest.needs_connection"), Pal.Rose, 3f);
+                            break;
+                    }
                 }
-
-                switch (payout?.Outcome ?? ReferralClaimOutcome.Unavailable)
+                finally
                 {
-                    case ReferralClaimOutcome.AlreadyPaid:
-                        // Banked elsewhere. The state was adopted by the ledger; the seal says it.
-                        Repaint();
-                        break;
+                    _collecting = false;
 
-                    case ReferralClaimOutcome.NotYet:
-                        Scenery.Toast(Content, Loc.Get("ui.referral.not_yet"), Pal.Gold, 3f);
-                        Repaint();
-                        break;
-
-                    case ReferralClaimOutcome.Unknown:
-                        Scenery.Toast(Content, Loc.Get("ui.referral.unknown_rung"), Pal.Rose, 3f);
-                        break;
-
-                    default:
-                        Scenery.Toast(Content, Loc.Get("ui.chest.needs_connection"), Pal.Rose, 3f);
-                        break;
+                    // `Settle` rather than `Repaint`: anything that arrived while the guard was
+                    // down was skipped by `OnChanged`, and one of the things it could have been
+                    // is a change of shape.
+                    if (Living) Settle();
                 }
             });
         }

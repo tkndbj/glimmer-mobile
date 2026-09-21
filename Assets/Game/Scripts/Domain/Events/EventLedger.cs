@@ -3,21 +3,47 @@ namespace GlimmerGrove.Events
     /// <summary>How far up one track a player is, and how much of it is still waiting.</summary>
     public readonly struct SeasonTrackProgress
     {
-        /// <summary>Rungs reached by play, claimed or not.</summary>
+        /// <summary>Rungs reached by play, claimed or not, whoever may take them.</summary>
         public readonly int Reached;
 
         /// <summary>Rungs reached and claimed.</summary>
         public readonly int Claimed;
 
-        /// <summary>Rungs reached and not yet claimed. What a badge counts.</summary>
-        public readonly int Waiting;
+        /// <summary>
+        /// Whether this account may take anything off this track at all.
+        ///
+        /// Always true of the free track. True of the paid one only for somebody holding the
+        /// season's pass — see <see cref="EventLedger.Opens"/>, which is where that is decided
+        /// for every reading in the game.
+        /// </summary>
+        public readonly bool Open;
 
-        public SeasonTrackProgress(int reached, int claimed, int waiting)
+        public SeasonTrackProgress(int reached, int claimed, bool open)
         {
             Reached = reached;
             Claimed = claimed;
-            Waiting = waiting;
+            Open = open;
         }
+
+        /// <summary>
+        /// Rungs a tap would hand over right now. What a badge counts.
+        ///
+        /// <para>
+        /// <b>Derived rather than counted, so it cannot drift from the other two.</b> The
+        /// rungs are sorted by goal and the floor is the goal of the highest one taken, so
+        /// every reached rung is either at or below the floor (claimed) or above it (waiting)
+        /// and the subtraction is exact.
+        /// </para>
+        /// <para>
+        /// <b>Nought on a track this account cannot claim from</b>, which is the whole reason
+        /// <see cref="Open"/> exists. A count of rungs nobody may take is not a count of
+        /// anything a player can act on: it lit the hub's event box, put a number on its
+        /// corner and told the player to collect something no screen would hand over, and it
+        /// kept <see cref="GroveEvents.Featured"/> pointing at a season that would never
+        /// settle.
+        /// </para>
+        /// </summary>
+        public int Waiting => Open ? Reached - Claimed : 0;
 
         public bool AnyWaiting => Waiting > 0;
     }
@@ -65,6 +91,9 @@ namespace GlimmerGrove.Events
         /// <summary>
         /// Rungs waiting on <em>either</em> track. What the hub's badge counts, and what keeps
         /// a closed season's box on the hub.
+        ///
+        /// A track this account cannot claim from contributes nothing, so for a player without
+        /// the pass this is the free column alone — see <see cref="SeasonTrackProgress.Waiting"/>.
         /// </summary>
         public int Waiting => Free.Waiting + Pass.Waiting;
 
@@ -90,7 +119,7 @@ namespace GlimmerGrove.Events
     }
 
     /// <summary>
-    /// The arithmetic of a season: what a mark count and two claim floors add up to.
+    /// The arithmetic of a season: what a mark count, two claim floors and a pass add up to.
     ///
     /// <para>
     /// <b>A pure function of its arguments, and that is the point.</b> Nothing here reads the
@@ -109,6 +138,13 @@ namespace GlimmerGrove.Events
     /// see <c>firebase/functions/src/season.ts</c> and invariant 13.
     /// </para>
     /// <para>
+    /// <b>Whether the paid track is open is an argument like the floors are, and every
+    /// reading takes it.</b> It was once asked only at the moment of claiming, so
+    /// <see cref="ProgressOf"/> reported rungs waiting on a track the same type would refuse
+    /// to pay from — two answers to one question, and the drawing read the wrong one. There is
+    /// one predicate now (<see cref="Opens"/>) and both entry points run it.
+    /// </para>
+    /// <para>
     /// Rungs are assumed sorted by goal, which the reader guarantees: an out-of-order ladder
     /// is refused there rather than sorted here, because a ladder whose rungs were silently
     /// reordered is a ladder paying different rewards than the one that was authored.
@@ -117,13 +153,25 @@ namespace GlimmerGrove.Events
     public static class EventLedger
     {
         /// <summary>
+        /// Whether a track is open to an account, which for the paid one means holding the
+        /// season's pass.
+        ///
+        /// <b>The one place that decides it</b> (invariant 47n). Both readings below run it, and
+        /// <see cref="SeasonLedger"/> supplies the entitlement rather than asking the question
+        /// itself, so "can this be taken" has exactly one answer however it is reached.
+        /// </summary>
+        public static bool Opens(SeasonTrack track, bool passHeld)
+            => track != SeasonTrack.Pass || passHeld;
+
+        /// <summary>
         /// The whole state of one season for one player.
         /// </summary>
         /// <param name="marks">Marks grown inside the window.</param>
         /// <param name="freeFloor">The largest free-track goal already claimed.</param>
         /// <param name="passFloor">The largest pass-track goal already claimed.</param>
+        /// <param name="passHeld">Whether this account bought the season's pass.</param>
         public static EventProgress ProgressOf(GroveEvent season, int marks,
-                                               int freeFloor, int passFloor)
+                                               int freeFloor, int passFloor, bool passHeld)
         {
             if (season == null || !season.IsValid) return EventProgress.None;
 
@@ -132,8 +180,8 @@ namespace GlimmerGrove.Events
             int pass = Clamp(passFloor, grown);
 
             int rungs = 0, nextGoal = 0, lastGoal = 0;
-            int freeReached = 0, freeClaimed = 0, freeWaiting = 0;
-            int passReached = 0, passClaimed = 0, passWaiting = 0;
+            int freeReached = 0, freeClaimed = 0;
+            int passReached = 0, passClaimed = 0;
 
             for (int i = 0; i < season.Milestones.Count; i++)
             {
@@ -151,13 +199,13 @@ namespace GlimmerGrove.Events
                 if (rung.Pays(SeasonTrack.Free))
                 {
                     freeReached++;
-                    if (rung.Goal <= free) freeClaimed++; else freeWaiting++;
+                    if (rung.Goal <= free) freeClaimed++;
                 }
 
                 if (rung.Pays(SeasonTrack.Pass))
                 {
                     passReached++;
-                    if (rung.Goal <= pass) passClaimed++; else passWaiting++;
+                    if (rung.Goal <= pass) passClaimed++;
                 }
             }
 
@@ -165,18 +213,22 @@ namespace GlimmerGrove.Events
 
             return new EventProgress(
                 grown, rungs, toNext < 0 ? 0 : toNext, nextGoal, lastGoal,
-                new SeasonTrackProgress(freeReached, freeClaimed, freeWaiting),
-                new SeasonTrackProgress(passReached, passClaimed, passWaiting));
+                new SeasonTrackProgress(freeReached, freeClaimed,
+                                        Opens(SeasonTrack.Free, passHeld)),
+                new SeasonTrackProgress(passReached, passClaimed,
+                                        Opens(SeasonTrack.Pass, passHeld)));
         }
 
         /// <summary>
-        /// Whether tapping this rung on this track would hand something over: reached by
-        /// play, paid on that track, and not already claimed.
+        /// Whether tapping this rung on this track would hand something over: the track is
+        /// open to this account, the rung is reached by play, it is paid on that track, and it
+        /// has not already been taken.
         /// </summary>
         public static bool IsClaimable(GroveEvent season, EventMilestone rung, SeasonTrack track,
-                                       int marks, int floor)
+                                       int marks, int floor, bool passHeld)
         {
             if (season == null || !season.IsValid) return false;
+            if (!Opens(track, passHeld)) return false;
             if (!rung.Pays(track)) return false;
             if (marks < rung.Goal) return false;
 

@@ -3,6 +3,7 @@
 
     python Tools/render_home.py
     python Tools/render_home.py --no-event      # the row with no event running
+    python Tools/render_home.py --quiet         # the event box with nothing to collect
     python Tools/render_home.py --out home.png
 
 **Why this exists.** Nothing in this project can open a PNG on the way to a build, and the
@@ -266,7 +267,7 @@ def tasks(sheet, ready=("silver",), verbose=False):
     K.text(sheet, "+2", W / 2 - ROW_WIDTH / 2 + 46, top + 42, 30, fill=(43, 28, 5), outline=0)
 
 
-def feature(sheet, paired=True):
+def feature(sheet, paired=True, waiting=True):
     """`HomeScreen.BuildFeature` — the streak, and whatever the player is working toward.
 
     **This drew two empty boxes with a "3" in them for as long as it existed, and that was a
@@ -283,6 +284,15 @@ def feature(sheet, paired=True):
     mirror that paints both navy cannot answer a single question about what a *dark* piece
     of furniture looks like standing on one. The trough's own drop-shadow read as a brown
     ring round every bar in this row and this render showed nothing at all.
+
+    **And for as long as it existed it drew one state of the event box and drew it wrong.**
+    The badge was a constant `3` sitting over the caption a box with *nothing* waiting says,
+    which is a pair the screen cannot produce — so the sheet answered neither question. A box
+    with something waiting lights a rim (`FeatureBeacon`), says COLLECT in gold and wears the
+    count; a settled one wears none of the three and its countdown moves 70 units right,
+    because `FeatureHeader`'s `badged` inset is what keeps the clock out from under the disc.
+    `waiting` picks between them (`--quiet`), which is invariant 44l: the state the fault was
+    in was the state no sheet could reach.
     """
     half = (ROW_WIDTH - ROW_GAP) * .5
     cy = ROW_TOP + ROW_HEIGHT * .5
@@ -291,18 +301,37 @@ def feature(sheet, paired=True):
     # plate, lamp alpha, title colour, caption colour — `BuildStreakBox` passes `Pal.Cream`
     # as its tint and `BuildEventBox` `Pal.Bloom`, and the lamp is white at `edge * .55` in
     # both, not the box's colour.
+    # `BuildEventBox` reads `progress.AnyWaiting` three times — for the beacon, for the
+    # header's inset and for the caption — so the mirror derives all three from one flag too.
+    event_badge = 3 if waiting else 0
+    event_caption = ("COLLECT", K.GOLD) if waiting else ("MARKS", K.BLOOM)
+
     boxes = [(-x if paired else 0.0, half if paired else ROW_WIDTH,
               "plate_orange", .30, K.CREAM, K.CREAM, "STREAK", "",
               "4", "4 NIGHTS", "ic_gift", "KEEP IT UP - 5 GEMS", 2),
-             (x, half, "plate_violet", .50, K.BLOOM, K.BLOOM, "THE FIRST WATCH", "2d 14h",
-              "7/12", "MARKS", None, None, 3)]
+             (x, half, "plate_violet", .50, K.BLOOM, event_caption[1],
+              "THE FIRST WATCH", "2d 14h",
+              "7/12", event_caption[0], None, None, event_badge)]
     if not paired:
         boxes = boxes[:1]
 
     for (bx, bw, plate, edge, colour, capcol, title, meta,
          value, caption, icon, line, badge) in boxes:
         cx = W / 2 + bx
+
+        # `FeatureBeacon`, built before the card because it sits behind it: a gold glow
+        # reaching 48 past every edge, plus a lit outline on the border. Drawn at the middle
+        # of its tween rather than at an end, which is what a still can say about a pulse.
+        if badge:
+            K.paste(sheet, K.glow(max(bw, ROW_HEIGHT) + 96, 1.7, K.GOLD, .22),
+                    cx, cy)
+
         K.paste(sheet, K.skin("Hud/" + plate, bw, ROW_HEIGHT), cx, cy)
+
+        if badge:
+            K.ImageDraw.Draw(sheet).rounded_rectangle(
+                [cx - bw / 2 + 2, cy - ROW_HEIGHT / 2 + 2, cx + bw / 2 - 2, cy + ROW_HEIGHT / 2 - 2],
+                radius=28, outline=(*K.GOLD, 150), width=4)
 
         # the lamp along the top edge — white, and the box's own colour is the plate
         K.paste(sheet, K.glow(max(bw * .78, 86), 1.9, (255, 255, 255), edge * .55),
@@ -311,7 +340,11 @@ def feature(sheet, paired=True):
         K.text(sheet, title, cx - bw / 2 + 30, cy - ROW_HEIGHT / 2 + 36, 25,
                fill=colour, outline=0, anchor="l")
         if meta:
-            K.text(sheet, meta, cx + bw / 2 - 30 - 70, cy - ROW_HEIGHT / 2 + 36, 23,
+            # `FeatureHeader`'s `badged` inset: 70 units of clearance so a countdown never
+            # runs under the corner disc — and nothing, so it does not sit oddly short, on a
+            # box with no disc on it.
+            K.text(sheet, meta, cx + bw / 2 - 30 - (70 if badge else 0),
+                   cy - ROW_HEIGHT / 2 + 36, 23,
                    fill=(255, 242, 214), outline=0, anchor="r")
 
         # the streak's calendar or the season's crest, on its own glow.
@@ -574,7 +607,7 @@ def clearance():
     return top, foot, shortest - top - foot
 
 
-def screen(paired=True, verbose=False):
+def screen(paired=True, verbose=False, waiting=True):
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
     K.room(sheet)
     K.rail(sheet, top=True)
@@ -582,7 +615,7 @@ def screen(paired=True, verbose=False):
     top_bar(sheet)
     resources(sheet)
     tasks(sheet, verbose=verbose)
-    feature(sheet, paired)
+    feature(sheet, paired, waiting)
     play(sheet)
     loadout(sheet)
     challenges(sheet)
@@ -594,10 +627,12 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--no-event", action="store_true",
                     help="the feature row with nothing running, so the streak takes the width")
+    ap.add_argument("--quiet", action="store_true",
+                    help="the event box with nothing waiting: no rim, no badge, no COLLECT")
     ap.add_argument("--out", type=Path, default=Path("home.png"))
     args = ap.parse_args()
 
-    out = screen(paired=not args.no_event, verbose=True)
+    out = screen(paired=not args.no_event, verbose=True, waiting=not args.quiet)
 
     top, foot, spare = clearance()
     print(f"  stack: {top:.0f} from the top, {foot:.0f} from the nav bar, "

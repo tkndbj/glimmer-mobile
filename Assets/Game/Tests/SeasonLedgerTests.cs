@@ -39,6 +39,20 @@ namespace GlimmerGrove.Tests
             return new SaveFileDto { events = seasons };
         }
 
+        /// <summary>One season's row, with the pass entitlement on it.</summary>
+        static SaveFileDto Held(string id, int marks, int free, int pass)
+            => new SaveFileDto
+            {
+                events = new[]
+                {
+                    new EventStateDto
+                    {
+                        id = id, marks = marks, collectedGoal = free,
+                        premiumGoal = pass, pass = true,
+                    },
+                },
+            };
+
         [SetUp]
         public void Reset() => SeasonLedger.ResetForTests();
 
@@ -300,6 +314,66 @@ namespace GlimmerGrove.Tests
 
             Assert.IsFalse(SeasonLedger.IsClaimable(season, season.Milestones[0], SeasonTrack.Pass));
             Assert.IsFalse(SeasonLedger.TryClaim(season, season.Milestones[0], SeasonTrack.Pass, out _));
+        }
+
+        /// <summary>
+        /// <b>And the reading has to agree with the refusal.</b> The hub's event box lights its
+        /// border, swaps its caption to <em>collect</em> and pins a count to its corner off
+        /// <c>EventProgress.Waiting</c>, while the page it opens refuses every one of them —
+        /// so a player on eight marks who had taken the only free rung they had reached was
+        /// shown a badge reading one with nothing behind it.
+        ///
+        /// <para>
+        /// The season here is the shipped shape: rungs that pay both columns, the free one
+        /// settled and the paid one untouched. Both readings now come off
+        /// <see cref="EventLedger.Opens"/>, so there is no arrangement in which they differ.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void NothingIsWaitingOnAPaidColumnNobodyBought()
+        {
+            var season = new GroveEvent("vector_watch", 100, 200,
+                                        new[]
+                                        {
+                                            new EventMilestone(5, "wood", "silver"),
+                                            new EventMilestone(10, "wood", "gold"),
+                                        },
+                                        passGems: 250);
+
+            SeasonLedger.LoadFrom(File(("vector_watch", 8, 5, 0)));
+
+            var unbought = SeasonLedger.ProgressOf(season);
+            Assert.AreEqual(1, unbought.Pass.Reached, "the rung was reached by play either way");
+            Assert.AreEqual(0, unbought.Pass.Waiting, "and it is not waiting for somebody who cannot take it");
+            Assert.AreEqual(0, unbought.Waiting, "so the box wears no badge");
+            Assert.IsFalse(unbought.AnyWaiting);
+
+            SeasonLedger.LoadFrom(Held("vector_watch", 8, 5, 0));
+
+            var bought = SeasonLedger.ProgressOf(season);
+            Assert.AreEqual(1, bought.Pass.Waiting, "and it is waiting the moment the pass is held");
+            Assert.AreEqual(1, bought.Waiting);
+        }
+
+        /// <summary>
+        /// The consequence that is worse than the badge. <see cref="GroveEvents.Featured"/> is
+        /// the oldest season still owing something, so a season owing only a paid column
+        /// nobody bought would hold the hub's box — and the page it opens — on a closed season
+        /// for ever, with no way to reach the live one (invariant 47m).
+        /// </summary>
+        [Test]
+        public void AClosedSeasonOwingOnlyThePaidColumnDoesNotHoldTheBox()
+        {
+            var closed = new GroveEvent("vector_watch", 100, 200,
+                                        new[] { new EventMilestone(5, null, "silver") },
+                                        passGems: 250);
+
+            SeasonLedger.LoadFrom(File(("vector_watch", 30, 0, 0)));
+            Assert.IsFalse(SeasonLedger.ProgressOf(closed).AnyWaiting);
+
+            SeasonLedger.LoadFrom(Held("vector_watch", 30, 0, 0));
+            Assert.IsTrue(SeasonLedger.ProgressOf(closed).AnyWaiting,
+                          "a paid chest that really was bought still holds it");
         }
 
         /// <summary>

@@ -41,14 +41,14 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ARungIsReachedWhenTheBloomsReachIt()
         {
-            var none = EventLedger.ProgressOf(Season(), 9, 0, 0);
+            var none = EventLedger.ProgressOf(Season(), 9, 0, 0, passHeld: true);
             Assert.AreEqual(0, none.Rungs);
             Assert.AreEqual(10, none.NextGoal);
             Assert.AreEqual(1, none.ToNext);
             Assert.AreEqual(0, none.LastGoal);
             Assert.IsFalse(none.IsComplete);
 
-            var one = EventLedger.ProgressOf(Season(), 10, 0, 0);
+            var one = EventLedger.ProgressOf(Season(), 10, 0, 0, passHeld: true);
             Assert.AreEqual(1, one.Rungs);
             Assert.AreEqual(20, one.NextGoal);
             Assert.AreEqual(10, one.ToNext);
@@ -58,7 +58,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ATopppedLadderHasNoNextRung()
         {
-            var all = EventLedger.ProgressOf(Season(), 30, 0, 0);
+            var all = EventLedger.ProgressOf(Season(), 30, 0, 0, passHeld: true);
             Assert.AreEqual(3, all.Rungs);
             Assert.AreEqual(0, all.NextGoal);
             Assert.AreEqual(0, all.ToNext);
@@ -73,26 +73,91 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheBarMeasuresTheRunBetweenTwoRungs()
         {
-            Assert.AreEqual(.5f, EventLedger.ProgressOf(Season(), 5, 0, 0).ToNext01, 1e-5f);
-            Assert.AreEqual(.5f, EventLedger.ProgressOf(Season(), 15, 0, 0).ToNext01, 1e-5f);
-            Assert.AreEqual(0f, EventLedger.ProgressOf(Season(), 10, 0, 0).ToNext01, 1e-5f);
+            Assert.AreEqual(.5f, EventLedger.ProgressOf(Season(), 5, 0, 0, passHeld: true).ToNext01, 1e-5f);
+            Assert.AreEqual(.5f, EventLedger.ProgressOf(Season(), 15, 0, 0, passHeld: true).ToNext01, 1e-5f);
+            Assert.AreEqual(0f, EventLedger.ProgressOf(Season(), 10, 0, 0, passHeld: true).ToNext01, 1e-5f);
         }
 
         // ---------------------------------------------------------------- the tracks
         [Test]
         public void EachTrackCountsItsOwnClaims()
         {
-            var fresh = EventLedger.ProgressOf(Season(), 30, 0, 0);
+            var fresh = EventLedger.ProgressOf(Season(), 30, 0, 0, passHeld: true);
             Assert.AreEqual(3, fresh.Free.Reached);
             Assert.AreEqual(0, fresh.Free.Claimed);
             Assert.AreEqual(3, fresh.Free.Waiting);
             Assert.AreEqual(3, fresh.Pass.Waiting);
             Assert.AreEqual(6, fresh.Waiting, "a badge counts both columns");
 
-            var half = EventLedger.ProgressOf(Season(), 30, 20, 0);
+            var half = EventLedger.ProgressOf(Season(), 30, 20, 0, passHeld: true);
             Assert.AreEqual(2, half.Free.Claimed);
             Assert.AreEqual(1, half.Free.Waiting);
             Assert.AreEqual(3, half.Pass.Waiting, "claiming the free column takes nothing from the paid one");
+        }
+
+        /// <summary>
+        /// <b>A track nobody may claim from has nothing waiting on it.</b> The count is what a
+        /// badge draws, what lights the hub's box and what decides which season that box
+        /// points at, so counting a rung the paid column would refuse to hand over is an
+        /// instruction to collect something no screen will give.
+        ///
+        /// <para>
+        /// <see cref="SeasonTrackProgress.Reached"/> is deliberately left alone — the page
+        /// draws the paid column whether or not it is held, and how far up it the player has
+        /// climbed is a true fact about the ladder. It is only <em>waiting</em>, which means
+        /// "a tap would hand this over", that the entitlement decides.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ThePaidColumnCountsNothingWaitingWithoutThePass()
+        {
+            var without = EventLedger.ProgressOf(Season(), 30, 30, 0, passHeld: false);
+            Assert.AreEqual(3, without.Pass.Reached, "reached by play, whoever may take it");
+            Assert.AreEqual(0, without.Pass.Claimed);
+            Assert.AreEqual(0, without.Pass.Waiting);
+            Assert.IsFalse(without.Pass.Open);
+            Assert.AreEqual(0, without.Waiting, "the free column is settled, so the badge is gone");
+
+            var with = EventLedger.ProgressOf(Season(), 30, 30, 0, passHeld: true);
+            Assert.AreEqual(3, with.Pass.Waiting);
+            Assert.AreEqual(3, with.Waiting);
+        }
+
+        /// <summary>
+        /// The free column is open to everybody, and a pass nobody bought takes nothing off
+        /// it. The failure this guards is an over-correction — gating the wrong track would
+        /// hide a chest a player has genuinely earned.
+        /// </summary>
+        [Test]
+        public void TheFreeColumnIsOpenWithoutAnything()
+        {
+            var progress = EventLedger.ProgressOf(Season(), 30, 10, 0, passHeld: false);
+            Assert.IsTrue(progress.Free.Open);
+            Assert.AreEqual(2, progress.Free.Waiting);
+            Assert.AreEqual(2, progress.Waiting);
+
+            Assert.IsTrue(EventLedger.Opens(SeasonTrack.Free, passHeld: false));
+            Assert.IsFalse(EventLedger.Opens(SeasonTrack.Pass, passHeld: false));
+            Assert.IsTrue(EventLedger.Opens(SeasonTrack.Pass, passHeld: true));
+        }
+
+        /// <summary>
+        /// The same predicate decides both, which is the whole repair: the count and the
+        /// claim used to answer this question separately and one of them said yes.
+        /// </summary>
+        [Test]
+        public void APaidRungIsNotClaimableWithoutThePass()
+        {
+            var season = Season();
+            var rung = season.Milestones[0];        // 10 marks, pays both columns
+
+            Assert.IsFalse(EventLedger.IsClaimable(season, rung, SeasonTrack.Pass, 10, 0,
+                                                   passHeld: false));
+            Assert.IsTrue(EventLedger.IsClaimable(season, rung, SeasonTrack.Pass, 10, 0,
+                                                  passHeld: true));
+            Assert.IsTrue(EventLedger.IsClaimable(season, rung, SeasonTrack.Free, 10, 0,
+                                                  passHeld: false),
+                          "and the free column is untouched by it");
         }
 
         /// <summary>
@@ -104,14 +169,14 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AFloorIsNeverTrustedAboveTheBloomsBehindIt()
         {
-            var forged = EventLedger.ProgressOf(Season(), 10, int.MaxValue, int.MaxValue);
+            var forged = EventLedger.ProgressOf(Season(), 10, int.MaxValue, int.MaxValue, passHeld: true);
             Assert.AreEqual(1, forged.Rungs);
             Assert.AreEqual(1, forged.Free.Claimed);
             Assert.AreEqual(0, forged.Free.Waiting);
             Assert.AreEqual(1, forged.Pass.Claimed, "a clamp, not a refusal — the rung was reached");
 
             Assert.IsFalse(EventLedger.IsClaimable(Season(), Season().Milestones[0],
-                                                   SeasonTrack.Free, 10, int.MaxValue));
+                                                   SeasonTrack.Free, 10, int.MaxValue, passHeld: true));
         }
 
         [Test]
@@ -120,11 +185,11 @@ namespace GlimmerGrove.Tests
             var season = Season();
             var rung = season.Milestones[1];        // 20 marks
 
-            Assert.IsFalse(EventLedger.IsClaimable(season, rung, SeasonTrack.Free, 19, 0),
+            Assert.IsFalse(EventLedger.IsClaimable(season, rung, SeasonTrack.Free, 19, 0, passHeld: true),
                            "not reached");
-            Assert.IsTrue(EventLedger.IsClaimable(season, rung, SeasonTrack.Free, 20, 10),
+            Assert.IsTrue(EventLedger.IsClaimable(season, rung, SeasonTrack.Free, 20, 10, passHeld: true),
                           "reached, and the floor is below it");
-            Assert.IsFalse(EventLedger.IsClaimable(season, rung, SeasonTrack.Free, 20, 20),
+            Assert.IsFalse(EventLedger.IsClaimable(season, rung, SeasonTrack.Free, 20, 20, passHeld: true),
                            "already taken");
         }
 
@@ -136,7 +201,7 @@ namespace GlimmerGrove.Tests
 
             Assert.IsTrue(free.Milestones[0].Pays(SeasonTrack.Free));
             Assert.IsFalse(free.Milestones[0].Pays(SeasonTrack.Pass));
-            Assert.AreEqual(0, EventLedger.ProgressOf(free, 10, 0, 0).Pass.Reached);
+            Assert.AreEqual(0, EventLedger.ProgressOf(free, 10, 0, 0, passHeld: true).Pass.Reached);
         }
 
         [Test]
