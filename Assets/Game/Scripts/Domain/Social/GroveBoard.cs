@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GlimmerGrove.Cloud;
-using GlimmerGrove.Homestead;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 
@@ -79,18 +78,6 @@ namespace GlimmerGrove.Social
         static bool _attached;
         static bool _ranksAsked;
 
-        /// <summary>
-        /// The last receipt a sync handed over, kept so it can be judged again.
-        ///
-        /// A receipt arriving before the grove catalog has loaded cannot be scored — every
-        /// piece is worth nothing against an empty catalog — so it is held here and evaluated
-        /// again when the catalog is published. Without that, a rename made before the player
-        /// ever opened their grove would wait for the next sync that happened to run with the
-        /// catalog loaded. Judging an old receipt again is safe: what it proves is that the
-        /// server holds at least that revision, which only becomes more true.
-        /// </summary>
-        static SyncReceipt _receipt;
-
         /// <summary>Raised when this account's published card changed, so a screen can repaint.</summary>
         public static event Action Published;
 
@@ -147,9 +134,6 @@ namespace GlimmerGrove.Social
             // raised by the change itself was the bug this file's header describes.
             CloudSaveService.Settled += OnSettled;
 
-            // A receipt held back for want of a catalog is judged when the catalog arrives.
-            HomesteadCatalog.Changed += Reconsider;
-
             // Turning the board off takes the card down; turning it on has to reach the
             // server's copy of the setting first, so it asks for a sync rather than a card.
             GameSettings.Changed += OnSettingsChanged;
@@ -159,14 +143,8 @@ namespace GlimmerGrove.Social
         {
             if (!receipt.IsValid) return;
 
-            _receipt = receipt;
             Remember();
             Consider(receipt);
-        }
-
-        static void Reconsider()
-        {
-            if (_receipt.IsValid) Consider(_receipt);
         }
 
         /// <summary>
@@ -196,26 +174,7 @@ namespace GlimmerGrove.Social
                 return;
             }
 
-            // Nothing can be scored against an empty catalog, and "worth nothing" would be
-            // the wrong answer; the receipt is kept and judged when the catalog is published.
-            //
-            // **And the catalog is asked for here, because nothing else is going to.** This
-            // gate used to trust that some screen would load it, and for a year one always
-            // had: the Grovement, the grove shop and a visit all call `EnsureAsync` on the
-            // way in. The day the Grovement was held (2026-09-15) those three screens left the
-            // nav, the catalog was never loaded on any device again, and every settled sync
-            // parked its receipt here for ever — no card, no row, and the boards stood at
-            // whatever the last device to open a grove had put on them. A gate that waits on
-            // something has to be the thing that asks for it, or it is a gate that waits on a
-            // coincidence. `EnsureAsync` is a once-per-session local file read shared by every
-            // caller, and `Reconsider` runs on the `Changed` it raises.
-            if (!HomesteadCatalog.IsLoaded)
-            {
-                _ = HomesteadService.EnsureAsync();
-                return;
-            }
-
-            var card = GroveCard.OfSave(HomesteadCatalog.Current, receipt.Save, CloudState.UserId,
+            var card = GroveCard.OfSave(receipt.Save, CloudState.UserId,
                                         PlayerProgression.Level.Level, SaveSchema.NowUnix());
 
             _policy.Request(card.Fingerprint(), receipt.ServerRevision,
@@ -259,8 +218,16 @@ namespace GlimmerGrove.Social
         /// account at any population, or leaving it to chance. This costs one publish per
         /// account, once, on the launch after the update, and nothing at all thereafter.
         /// </para>
+        /// <para>
+        /// <b>Bumped to 4 when the Grovement was removed (2026-09-21).</b>
+        /// <see cref="GroveCard.Fingerprint"/> lost the worth, the land, the placements, the
+        /// hall's seat and the companions, so every note taken under key 3 describes a card
+        /// shape that no longer exists. The shape change alone would force the republish — no
+        /// old note can match a new fingerprint — so this is belt and braces rather than the
+        /// mechanism, and it costs the same one publish per account that every other bump has.
+        /// </para>
         /// </remarks>
-        const string PublishedKey = "grove.published.3.";
+        const string PublishedKey = "grove.published.4.";
 
         static void Remember()
         {
@@ -325,10 +292,6 @@ namespace GlimmerGrove.Social
             KeeperReports.Forget();
             Mine = GroveCard.Empty;
             _ranksAsked = false;
-
-            // A receipt describes an account's save on the server; the next account's
-            // arrives with its own sync.
-            _receipt = default;
         }
 
         // ------------------------------------------------------------------- ticking
@@ -365,10 +328,8 @@ namespace GlimmerGrove.Social
 
         // ---------------------------------------------------------------- publishing
         static GroveCard BuildMine()
-            => GroveCard.OfPlayer(HomesteadCatalog.Current,
-                                  CloudState.UserId,
+            => GroveCard.OfPlayer(CloudState.UserId,
                                   Wallet.DisplayName,
-                                  Wallet.AvatarId,
                                   PlayerProgression.Level.Level,
                                   SaveSchema.NowUnix());
 

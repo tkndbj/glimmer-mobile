@@ -155,27 +155,6 @@ namespace GlimmerGrove.Tests
                 heartContainersOwned = new[] { "gg_heart_vessel_1", "gg_heart_vessel_2" },
                 heartContainersRevoked = new[] { "gg_heart_vessel_1" },
 
-                // Both grove sections, and the mirror has to agree with the stock it is
-                // derived from or the round trip is comparing the fixture against itself.
-                homesteadStock = new[]
-                {
-                    new HomesteadStockDto { id = "bench_oak", copies = 3 },
-                    new HomesteadStockDto { id = "lantern_post", copies = 20 },
-                },
-                homesteadOwned = new[] { "bench_oak", "lantern_post" },
-                groveLandOwned = new[] { "r_north", "r_east" },
-                groveEpoch = Homestead.GroveEpoch.Current,
-                groveHall = "t_009_004",
-                groveHallFacing = 2,
-                groveHallSetUnix = 1_699_100_000,
-                homesteadPlaced = new[]
-                {
-                    new HomesteadPlacementDto { slot = "t_006_006", piece = "bench_oak", setUnix = 1_699_000_000 },
-                    new HomesteadPlacementDto
-                    {
-                        slot = "t_007_006", piece = "lantern_post", setUnix = 1_699_000_500, facing = 3,
-                    },
-                },
                 utilityStock = new[]
                 {
                     // Both counters, and one row where they differ, because the pair is what the
@@ -330,8 +309,14 @@ namespace GlimmerGrove.Tests
         /// </para>
         /// <para>
         /// Lists with no constant of their own are bounded by content — the companion roster,
-        /// the heart-container products, the ad placements, the grove's regions and floor — and
-        /// their bounds are generous by an order of magnitude against what ships.
+        /// the heart-container products and the ad placements — and their bounds are generous
+        /// by an order of magnitude against what ships.
+        /// </para>
+        /// <para>
+        /// <b>The grove's four lists are deliberately absent from this table and still bounded
+        /// in the rules.</b> Nothing in this build writes them, so there is no client cap to
+        /// pair — but the keys stay allow-listed, because dropping a key a rolled-back client
+        /// still writes costs that client every save write (invariant 12a).
         /// </para>
         /// </summary>
         [Test]
@@ -349,8 +334,6 @@ namespace GlimmerGrove.Tests
             var pairs = new (string field, string expression, int clientCap)[]
             {
                 ("tipsSeen",      "d.tipsSeen",      TipLedger.MaxIds),
-                ("homesteadStock","d.homesteadStock", Homestead.GroveStock.MaxIds),
-                ("homesteadOwned","d.homesteadOwned", Homestead.GroveStock.MaxIds),
                 ("utilityStock",  "d.utilityStock",  Utilities.UtilityStock.MaxIds),
                 ("wardsOwned",    "d.wardsOwned",    Wards.WardCatalog.MaxModels * Wards.WardLine.Colours.Length),
                 ("wardLoadout",   "d.wardLoadout",   Wards.WardLine.Colours.Length),
@@ -504,47 +487,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual("second_bloom", restored.events[1].id);
             Assert.AreEqual(1, restored.events[1].collectedGoal);
 
-            // The grove. Land is the one that was missing, and the failure it caused is the
-            // reason the guard below this test exists: it reached SaveFileDto and SaveDelta
-            // and never reached the wire, so a floor bought with credits stayed on one phone
-            // and the first thing that replaced a local save — switching accounts — brought
-            // the grove back as the free starter square, with everything standing outside it
-            // invisible because the ground under it was gone.
             CollectionAssert.AreEqual(new[] { "coral", "puff" }, restored.companionsOwned);
-            Assert.AreEqual(2, restored.homesteadStock.Length);
-            Assert.AreEqual("bench_oak", restored.homesteadStock[0].id);
-            Assert.AreEqual(3, restored.homesteadStock[0].copies);
-            Assert.AreEqual("lantern_post", restored.homesteadStock[1].id);
-            Assert.AreEqual(20, restored.homesteadStock[1].copies,
-                            "copies are what a grove is worth; losing them is losing the purchase");
-
-            // The v19 mirror travels too, so a rolled-back client and a server that has not
-            // been redeployed both still see what this player owns. See GroveStock.Mirror.
-            CollectionAssert.AreEqual(new[] { "bench_oak", "lantern_post" }, restored.homesteadOwned);
-            CollectionAssert.AreEqual(new[] { "r_north", "r_east" }, restored.groveLandOwned);
-
-            // Which generation of the catalogue the grove belongs to. It has to reach the
-            // server or the reset does not stick: a device that discarded an older grove
-            // pushes an empty one, and without the stamp beside it the server's copy still
-            // claims the older epoch and wins the next join back. See GroveEpoch.
-            Assert.AreEqual(Homestead.GroveEpoch.Current, restored.groveEpoch);
-
-            // Where the player moved their home. An instruction rather than an
-            // achievement, so the stamp travels with it or the merge has nothing to
-            // decide by and every seat loses to whichever file was written last.
-            Assert.AreEqual("t_009_004", restored.groveHall);
-            Assert.AreEqual(2, restored.groveHallFacing);
-            Assert.AreEqual(1_699_100_000, restored.groveHallSetUnix);
-
-            Assert.AreEqual(2, restored.homesteadPlaced.Length);
-            Assert.AreEqual("t_006_006", restored.homesteadPlaced[0].slot);
-            Assert.AreEqual("bench_oak", restored.homesteadPlaced[0].piece);
-            Assert.AreEqual(1_699_000_000, restored.homesteadPlaced[0].setUnix);
-            Assert.AreEqual(0, restored.homesteadPlaced[0].facing);
-
-            // A piece that comes back facing the other way is the same loss as one that comes
-            // back missing, only quieter.
-            Assert.AreEqual(3, restored.homesteadPlaced[1].facing);
 
             CollectionAssert.AreEqual(new[] { "duskcap", "taproot" }, restored.tipsSeen);
         }
@@ -552,10 +495,11 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// Every field of the save is carried by the fixture above, so that adding one to
         /// <see cref="SaveFileDto"/> and forgetting the wire fails here instead of in a
-        /// player's grove.
+        /// player's save.
         ///
         /// <para>
-        /// This is the test that was missing. <c>groveLandOwned</c> shipped in save schema v17,
+        /// This is the test that was missing. <c>groveLandOwned</c> (a grove field, removed
+        /// with the Grovement in v33) shipped in save schema v17,
         /// reached <c>SaveDelta</c> — which is the half everybody remembers, because it decides
         /// what a sync sends — and never reached <see cref="FirestoreSaveMapper"/> or
         /// <c>firestore.rules</c>. Every existing wire test passed, because a field the fixture

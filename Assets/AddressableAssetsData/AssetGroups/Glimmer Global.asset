@@ -6467,11 +6467,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/rabbleMon_g
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2845a169409b38917ff22c7efbe3e09e
-    m_Address: Art/Bg/grove_far
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2846f4d5eafbe0b4bb792e51f49349fe
     m_Address: Art/Fx/Siege/muzzle_siphon_r/f07
     m_ReadOnly: 0
@@ -8492,11 +8487,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_cleaver_y
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 345607d4d2b5fde2c5e03b1101e441a3
-    m_Address: Art/Ui/ic_nav_grove
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 34625942917406c44b5d3b05ab420d8e
     m_Address: Art/Fx/Siege/muzzle_sunderer/f00
@@ -14220,11 +14210,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/Wards/lance_b_fire
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5734dfacd66864499da251920e5d22b0
-    m_Address: Art/Bg/grove_light
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 573c312fe53957c4590476e08a45f31c
     m_Address: Art/Fx/Siege/muzzle_leech_r/f03
@@ -25949,11 +25934,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/hit_prism_r
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9c9c7ade1261a4f326ad707e07c31f13
-    m_Address: Art/Bg/grove_near
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9ce39e2eed9159a43a67d0407be92b47
     m_Address: Art/Siege/wildBulwark_r/f04

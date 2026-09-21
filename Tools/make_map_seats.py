@@ -50,7 +50,7 @@ sys.path.insert(0, str(REPO / "Tools"))
 from chapters import mapart  # noqa: E402
 
 # ---------------------------------------------------------------- mirrored geometry
-# `ChapterMap`, in canvas units. Mirrored rather than imported for `render_grove.py`'s
+# `ChapterMap`, in canvas units. Mirrored rather than imported for the same
 # reason: this runs with no Unity anywhere. `Tools/verify/content.py` is what holds the
 # shipped table to the real rules; these are here so a seat is not *proposed* in a place
 # the validator is only going to refuse.

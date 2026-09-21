@@ -1450,686 +1450,6 @@ def check_chapter_map(chapter, cid, ordered):
                             "chapter on the other side of the map from the marker")
 
 
-SLOT_KINDS = ("ground", "hearth", "structure", "bed", "path", "edge", "canopy")
-
-
-# The five creatures the grove used to author, and the companion each was rewritten to.
-# The mirror of GroveResidents.Retired - a save holding an old id has its placement
-# rewritten at load, for ever, so a target that leaves the roster empties somebody's slot.
-RESIDENT_PREFIX = "friend_"
-
-#: The most a piece may stand on, a side - GroveFootprint.MaxSide.
-MAX_FOOTPRINT = 4
-
-#: One hit-mask cell every this many art pixels - GroveHitMask.CellPx.
-HIT_CELL = 16
-
-#: GroveFloor.TileWidth and HomesteadScreen.PieceScale, for the overhang reading below.
-TILE_WIDTH = 220.0
-PIECE_SCALE = 1.15
-
-def painted_width(piece):
-    """How wide a piece's *paint* is, in art pixels, at its widest facing.
-
-    Read off the hit mask rather than the art's rectangle, and that distinction is the whole
-    reason this reading is trustworthy. A piece with four facings is rendered into one square
-    box sized to the envelope its rotations sweep — so a fence, which stands at the edge of
-    its tile rather than in the middle, gets a box twice as wide as the fence with the rest
-    transparent. Measured by the box, every fence in the catalogue reported as painting twice
-    the ground it holds; measured by the ink, they paint 0.84 of it, which is correct and
-    always was.
-    """
-    w, h = int(piece.get("w") or 0), int(piece.get("h") or 0)
-    if w <= 0 or h <= 0:
-        return 0
-
-    cols = -(-w // HIT_CELL)
-    rows = -(-h // HIT_CELL)
-    masks = piece.get("hits") or ([piece.get("hit")] if piece.get("hit") else [])
-
-    widest = 0
-    for hexmask in masks:
-        if not hexmask:
-            continue
-        bits = "".join(bin(int(ch, 16))[2:].zfill(4) for ch in hexmask)
-        lo, hi = cols, -1
-        for r in range(rows):
-            row = bits[r * cols:(r + 1) * cols]
-            for c, bit in enumerate(row):
-                if bit == "1":
-                    if c < lo:
-                        lo = c
-                    if c > hi:
-                        hi = c
-        if hi >= lo:
-            widest = max(widest, (hi - lo + 1) * HIT_CELL)
-    return widest
-
-
-#: How much wider than its own footprint a piece may be drawn before it is worth saying so.
-#:
-#: Not 1.0: most pieces paint a little beyond the ground they hold and that is what makes a
-#: village look built rather than laid out on a grid - the median across the shipped
-#: catalogue is 0.88, and the largest honest ones sit near 1.2. This is the point past which
-#: a piece is covering tiles another piece can still be built on.
-FOOTPRINT_OVERHANG = 1.30
-
-
-def hit_length(w, h):
-    """How long a hit mask is for a picture this size - GroveHitMask.HexLengthFor."""
-    side = lambda px: 0 if not px or px <= 0 else (px + HIT_CELL - 1) // HIT_CELL
-    return (side(w) * side(h) + 3) // 4
-
-
-def png_size(path):
-    """A PNG's pixel size from its header alone, so no image library is needed here."""
-    if not path or not os.path.isfile(path):
-        return (None, None)
-    with open(path, "rb") as f:
-        head = f.read(24)
-    if len(head) < 24 or head[:8] != b"\x89PNG\r\n\x1a\n" or head[12:16] != b"IHDR":
-        return (None, None)
-    return (int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big"))
-
-RETIRED_RESIDENTS = {
-    "sunmote": "puff",
-    "ripple": "timber",
-    "prism": "sprocket",
-    "burr": "thistle",
-    "dusk": "monarch",
-}
-
-
-def land_price(region):
-    """What a stretch of ground costs, as (credits, gems).
-
-    Mirrors GroveRegion.Cost/Gems. A region is sold in one currency or the other; both
-    zero is starter land. Nothing here converts one into the other, deliberately - the
-    only credit figure ever read off a region is the grove's worth, and gem-priced land
-    is worth nothing there (see GroveRegionDto.gems).
-    """
-    return int(region.get("cost", 0) or 0), int(region.get("gems", 0) or 0)
-
-
-def is_starter_land(region):
-    """Land nothing gates - what a new player builds on.
-
-    Mirrors GroveRegion.IsStarter, *including* the correction that shipped with the gem
-    prices: this is both prices and not just credits. The narrow reading was the whole
-    rule while credits priced the whole floor and becomes "every gem-priced region is
-    free" the moment they do not, which would have handed over half the floor at launch
-    and read as correct in every file.
-    """
-    cost, gems = land_price(region)
-    return cost <= 0 and gems <= 0
-
-
-def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None, companion_rows=None):
-    """The grove catalog: its land, its residents and its shop.
-
-    The offline half of ContentValidation.ValidateHomestead. It matters more than the
-    usual parity here, because the shipped-catalog tests in HomesteadTests reach
-    Application.dataPath and are therefore Editor-only - without this, nothing offline
-    would look at homestead.json at all.
-
-    Two things are errors and everything else warns, which is the line the Editor
-    validator draws: a validator may not overrule an economy decision, but it may refuse
-    a rule violation and a grove nobody can use.
-    """
-    path = os.path.join(ROOT, "homestead.json")
-    if not os.path.exists(path):
-        warnings.append("no homestead.json; the Grovement will have nothing to show")
-        return None
-
-    grove = json.load(open(path, encoding="utf-8"))
-
-    if grove.get("schemaVersion") != 3:
-        errors.append(f"homestead.json is schema v{grove.get('schemaVersion')}, this build reads v3 "
-                      "- the grove is a tile floor now, not floating islands")
-
-    floor = grove.get("floor") or {}
-    pieces = grove.get("pieces") or []
-
-    art_root = os.path.abspath(os.path.join(os.path.dirname(ROOT), "..", "Game", "Art"))
-
-    def art_file(key, animated):
-        full = os.path.join(art_root, key.replace("/", os.sep))
-        if not animated:
-            return full + ".png"
-        frames = sorted(f for f in os.listdir(full) if f.lower().endswith(".png")) if os.path.isdir(full) else []
-        return os.path.join(full, frames[0]) if frames else None
-
-    def art_exists(key, animated):
-        full = os.path.join(art_root, key.replace("/", os.sep))
-        return os.path.isdir(full) if animated else os.path.exists(full + ".png")
-
-    def art_paths(key, animated, facings=1):
-        """Every picture an art key stands for — `grove_art_facts.art_paths`'s three shapes.
-
-        A turnable piece is a folder of `f0..f3` and every one of them is a real picture
-        with a mask of its own; an animated one is a folder whose first frame speaks for
-        the reel; anything else is one PNG.
-        """
-        full = os.path.join(art_root, key.replace("/", os.sep))
-        if facings > 1:
-            out = [os.path.join(full, "f%d.png" % k) for k in range(facings)]
-            return out if all(os.path.isfile(f) for f in out) else []
-        if animated:
-            frames = sorted(f for f in os.listdir(full)
-                            if f.lower().endswith(".png")) if os.path.isdir(full) else []
-            return [os.path.join(full, frames[0])] if frames else []
-        return [full + ".png"] if os.path.isfile(full + ".png") else []
-
-    cols = int(floor.get("cols") or 0)
-    rows = int(floor.get("rows") or 0)
-    regions = floor.get("regions") or []
-
-    if cols <= 0 or rows <= 0:
-        errors.append("the grove floor has no size; there is nowhere to build")
-        return None
-
-    # Which region owns each tile, built once. The same map answers overlap, holes and the
-    # two named tiles, and walking the regions per question would be four passes over a
-    # field that can be forty thousand tiles.
-    owner = {}
-    region_ids = set()
-    starters = 0
-    land_total = 0
-    land_gems = 0
-    rungs = {}
-    sellable = 0
-
-    for region in regions:
-        rid = region.get("id", "")
-        if not rid:
-            errors.append("a grove region has no id")
-            continue
-        if rid in region_ids:
-            errors.append(f"grove lists region '{rid}' twice")
-        region_ids.add(rid)
-
-        rc, rr = int(region.get("col", 0)), int(region.get("row", 0))
-        rw, rh = int(region.get("cols", 0)), int(region.get("rows", 0))
-        cost, gems = land_price(region)
-        order = int(region.get("order", 0))
-
-        if rw <= 0 or rh <= 0:
-            errors.append(f"grove region '{rid}' is {rw}x{rh}; it holds no tiles")
-            continue
-
-        if rc < 0 or rr < 0 or rc + rw > cols or rr + rh > rows:
-            errors.append(f"grove region '{rid}' runs off a {cols}x{rows} field")
-            continue
-
-        # One currency or the other. Both is the mistake with no safe reading: the shop
-        # cannot draw a button for a stretch that costs 5,000 credits and 600 gems, and
-        # whichever half the code picked would be a price nobody authored.
-        if cost > 0 and gems > 0:
-            errors.append(f"grove region '{rid}' is priced in both credits ({cost}) and gems "
-                          f"({gems}); a region is sold in one currency or the other")
-
-        if is_starter_land(region):
-            starters += 1
-            # Starter land is not sold, so it is not on the ladder. A rung on it pushes every
-            # real rung one place down and makes the free ground look like something to buy.
-            if order > 0:
-                errors.append(f"grove region '{rid}' is free but sits on ladder rung {order}; "
-                              "starter land is not sold, so it is not on the ladder")
-        else:
-            land_total += cost
-            land_gems += gems
-            sellable += 1
-
-            # GroveLand.NextForSale offers the lowest unowned rung and nothing else, so a
-            # missing rung strands the stretch *and everything behind it*, and a duplicate
-            # one is a tie broken by authoring order, which nobody thinks of as a decision.
-            if order <= 0:
-                errors.append(f"grove region '{rid}' is for sale but has no ladder rung "
-                              "('order'); it would never be offered, and nothing behind it "
-                              "would be either")
-            elif order in rungs:
-                errors.append(f"grove regions '{rungs[order]}' and '{rid}' both sit on ladder "
-                              f"rung {order}; only one can be offered and which is decided by "
-                              "authoring order")
-            else:
-                rungs[order] = rid
-
-        if f"ui.land.{rid}" not in keys:
-            errors.append(f"grove region '{rid}' missing string 'ui.land.{rid}'")
-
-        for c in range(rc, rc + rw):
-            for r in range(rr, rr + rh):
-                tid = "t_%03d_%03d" % (c, r)
-                if tid in owner:
-                    errors.append(f"grove regions '{owner[tid]}' and '{rid}' both hold tile "
-                                  f"{tid}; who owns it would depend on the order of the file")
-                    continue
-                owner[tid] = rid
-
-    for rung in range(1, sellable + 1):
-        if rung not in rungs:
-            errors.append(f"the grove's land ladder has no rung {rung}; the rungs must be 1 to "
-                          f"{sellable} with no gaps")
-
-    # An error, because it is the one that ships a broken first launch: a floor with no free
-    # region opens the Grovement onto a screen the player owns nothing on.
-    if not starters:
-        errors.append("no grove region is free from the first launch; a new player would open "
-                      "the Grovement owning none of it")
-
-    loose = cols * rows - len(owner)
-    if loose:
-        warnings.append(f"{loose} grove tile(s) belong to no region, so nobody can ever own "
-                        "them; they are drawn locked for ever")
-
-    # The hall has to be reachable on the first launch or the feature opens onto a padlock
-    # where the house should be. Both of these look perfectly authored in the file.
-    def named_tile(field, what, required):
-        tid = floor.get(field) or ""
-        if not tid:
-            (errors if required else warnings).append(
-                f"the grove floor names no tile for the {what}")
-            return None
-        if tid not in owner:
-            errors.append(f"the grove's {what} stands on {tid}, which belongs to no region "
-                          "and can never be owned")
-            return None
-        rid = owner[tid]
-        held = next((x for x in regions if x.get("id") == rid), None)
-        if held is not None and not is_starter_land(held):
-            cost, gems = land_price(held)
-            errors.append(f"the grove's {what} stands on {tid}, in region '{rid}', which costs "
-                          f"{cost or gems}; a new player would see it behind a padlock")
-        return tid
-
-    hall = named_tile("hallTile", "hall", True)
-    starter_tile = named_tile("starterTile", "starter companion", False)
-
-    # The hall's footprint is a fact about the floor (GroveFloor.HallFootprint): every
-    # dwelling has to author the same one, or buying a bigger home would take ground.
-    hall_cols = int(floor.get("hallCols") or 1)
-    hall_rows = int(floor.get("hallRows") or 1)
-    if not (1 <= hall_cols <= MAX_FOOTPRINT and 1 <= hall_rows <= MAX_FOOTPRINT):
-        errors.append(f"the grove's hall is {hall_cols}x{hall_rows}; a footprint is 1..{MAX_FOOTPRINT} a side")
-
-    hall_tiles = set()
-    if hall:
-        hc, hr = int(hall[2:5]), int(hall[6:9])
-        for c in range(hc, hc + hall_cols):
-            for r in range(hr, hr + hall_rows):
-                tid = "t_%03d_%03d" % (c, r)
-                hall_tiles.add(tid)
-                if tid not in owner:
-                    errors.append(f"the grove's hall ({hall_cols}x{hall_rows} from {hall}) covers {tid}, "
-                                  "which belongs to no region")
-                elif not is_starter_land(
-                        next((x for x in regions if x.get("id") == owner[tid]), {})):
-                    errors.append(f"the grove's hall covers {tid}, which is in a region that is "
-                                  "for sale; a new player would see their home behind a padlock")
-        if starter_tile in hall_tiles:
-            errors.append(f"the grove's starter companion on {starter_tile} stands under the hall; "
-                          "the game drops the companion")
-
-    tile_art = floor.get("tileArt") or ""
-    if tile_art and not art_exists(tile_art, False):
-        errors.append(f"the grove floor names tile art at Art/{tile_art}.png, which is not there")
-
-    hearths = [hall] if hall else []
-
-    piece_ids = set()
-    piece_starters = for_sale = earned = bundled = 0
-    total = 0
-    dwellings = []
-    decor_kinds = set()
-    bundle_kinds = {}
-
-    for piece in pieces:
-        pid = piece.get("id", "")
-        if not pid:
-            errors.append("a grove piece has no id")
-            continue
-        if pid in piece_ids:
-            errors.append(f"grove lists piece '{pid}' twice")
-        piece_ids.add(pid)
-
-        kind = (piece.get("kind") or "decor").lower()
-        cost = piece.get("cost", 0)
-        needs = bool(piece.get("requiresLevel") or piece.get("requiresChapter"))
-
-        # Residents are the companion roster now, projected in by GroveResidents rather
-        # than authored here — so a row claiming to be one is a second creature list with
-        # its own price and its own gate, which is the duplication projection removed.
-        # HomesteadMapper drops it; this is the same refusal one file earlier.
-        if kind == "resident":
-            errors.append(f"grove piece '{pid}' is authored as a resident; residents are the "
-                          "companion roster in manifest.json and are projected in, so this "
-                          "row is ignored by the game — delete it")
-
-        if kind == "dwelling":
-            dwellings.append((piece.get("tier", 0), pid, cost,
-                              int(piece.get("requiresKeeperLevel", 0) or 0)))
-        elif kind != "resident":
-            slot_kind = piece.get("slot") or "ground"
-            if slot_kind not in SLOT_KINDS or slot_kind == "hearth":
-                errors.append(f"grove piece '{pid}' belongs in slot kind '{slot_kind}', "
-                              "which is not a kind anything can be placed in")
-            decor_kinds.add(slot_kind)
-
-        # A bundle is how many copies one purchase grants (save v20, HomesteadPiece.Bundle).
-        #
-        # THE DIVISIBILITY CHECK IS AN ERROR AND HAS TO BE. A copy is worth cost/bundle, so a
-        # fence costing 95 in tens makes every copy worth 9 and a player who buys the bundle is
-        # scored 90 for 95 credits spent. It looks perfectly authored, it cannot be seen on a
-        # device, and the server derives the same short figure — so nothing anywhere would
-        # disagree and report it, on the one number that reaches a public leaderboard.
-        bundle = int(piece.get("bundle", 1) or 1)
-        if bundle < 1:
-            errors.append(f"grove piece '{pid}' is sold in bundles of {bundle}; "
-                          "a purchase grants at least one copy")
-            bundle = 1
-        elif bundle > 1:
-            if cost <= 0:
-                errors.append(f"grove piece '{pid}' has no price but is sold in bundles of "
-                              f"{bundle}; an unpriced piece is an entitlement and is never "
-                              "counted in copies")
-            elif kind != "decor":
-                errors.append(f"grove piece '{pid}' is a {kind} sold in bundles of {bundle}; "
-                              "only decor is bought by the copy")
-            elif cost % bundle:
-                errors.append(f"grove piece '{pid}' costs {cost} in bundles of {bundle}, which "
-                              f"does not divide it - a copy would be worth {cost // bundle} and "
-                              f"the bundle {(cost // bundle) * bundle}, so the grove's worth "
-                              "would silently fall short of what was paid")
-            elif bundle > MAX_COPIES:
-                errors.append(f"grove piece '{pid}' is sold in bundles of {bundle}, above the "
-                              f"{MAX_COPIES} copies a player may hold")
-
-        if cost > 0:
-            for_sale += 1
-            total += cost
-            if bundle > 1:
-                bundled += 1
-                bundle_kinds[piece.get("slot") or "ground"] = bundle
-        if needs:
-            earned += 1
-        if not needs and cost <= 0:
-            piece_starters += 1
-
-        art = piece.get("art") or f"Homestead/{pid}"
-        animated = piece.get("animated", False)
-        facings = int(piece.get("facings") or 1)
-
-        # A piece drawn at four facings and one that animates both live in a folder, for
-        # different reasons, so a piece claiming both has two readings of one folder and the
-        # reader would silently take one. Refused rather than salvaged (HomesteadPiece.Facings).
-        if facings not in (1, 4):
-            errors.append(f"grove piece '{pid}' asks for {facings} facings; only 1 and 4 exist")
-        if facings > 1 and animated:
-            errors.append(f"grove piece '{pid}' is both animated and turnable, and both are "
-                          "drawn from the same frames; it can only be one")
-
-        found = art_paths(art, animated, facings)
-        if not found:
-            errors.append(f"grove piece '{pid}' has no art at Art/{art}"
-                          f"{'/' if animated or facings > 1 else '.png'}"
-                          + (f" (it is turned {facings} ways, so it wants f0..f{facings - 1})"
-                             if facings > 1 else ""))
-        else:
-            # The picture's own facts, authored so the layout never waits for the sprite and a
-            # tap tests paint rather than air (HomesteadPiece.ArtWidth, GroveHitMask). Written
-            # by import_grove_art.py; the size is re-read off the PNG header here, and each
-            # mask's shape is checked - their content is the generator's own --check.
-            sizes = [png_size(f) for f in found]
-            pw, ph = sizes[0]
-            if len(set(sizes)) != 1:
-                errors.append(f"grove piece '{pid}' has facings of different sizes {sizes}; the "
-                              "catalogue carries one box for all of them, so three of the four "
-                              "would be drawn in the wrong one")
-            if piece.get("w") != pw or piece.get("h") != ph:
-                errors.append(f"grove piece '{pid}' authors art size {piece.get('w')}x{piece.get('h')} "
-                              f"and the PNG is {pw}x{ph}; run Tools/import_grove_art.py")
-
-            masks = piece.get("hits") if facings > 1 else [piece.get("hit") or ""]
-            masks = masks if isinstance(masks, list) else []
-            if len(masks) != facings:
-                errors.append(f"grove piece '{pid}' is turned {facings} ways and carries "
-                              f"{len(masks)} hit mask(s); run Tools/import_grove_art.py")
-            for k, hit in enumerate(masks):
-                where = f"grove piece '{pid}'" + (f" facing {k}" if facings > 1 else "")
-                if len(hit or "") != hit_length(pw, ph) or any(ch not in "0123456789abcdef" for ch in hit):
-                    errors.append(f"{where} has no {hit_length(pw, ph)}-character hit mask for "
-                                  f"a {pw}x{ph} picture; run Tools/import_grove_art.py")
-                elif set(hit) == {"0"}:
-                    errors.append(f"{where} has an empty hit mask, so nothing about it can "
-                                  "be tapped; is the art blank?")
-
-        # What the piece stands on. A judgement, so only its shape is checked here; the hall's
-        # is the floor's and every dwelling must agree with it (GroveFloor.HallFootprint).
-        fcols = int(piece.get("cols") or 1)
-        frows = int(piece.get("rows") or 1)
-        if not (1 <= fcols <= MAX_FOOTPRINT and 1 <= frows <= MAX_FOOTPRINT):
-            errors.append(f"grove piece '{pid}' has a footprint of {fcols}x{frows}; a side is "
-                          f"1..{MAX_FOOTPRINT}")
-        if kind == "dwelling" and (fcols, frows) != (hall_cols, hall_rows):
-            errors.append(f"grove home '{pid}' is {fcols}x{frows} and the hall is "
-                          f"{hall_cols}x{hall_rows}; buying it would take or leave ground")
-
-        # **How much of what a piece paints it actually occupies**, which is the one thing about
-        # a footprint that nothing else could report. A footprint is a judgement (invariant 16i)
-        # — a tree's is its trunk and it is *supposed* to overhang — so this warns rather than
-        # refusing, and the canopy shelf is exempt because overhang is that shelf's whole point.
-        #
-        # It exists because the alternative is an eye. Shipped once: a wall five tiles long was
-        # authored 3x1 and a three-tile fence gate 1x1, so they painted up to four times the
-        # ground they held. Every gate was green — the piece is valid, the art is on disk, the
-        # mask matches, the price divides — and what a player met was a starter plot with two
-        # objects lying across each other.
-        if piece.get("slot") != "canopy" and piece.get("w") and piece.get("scale"):
-            ink = painted_width(piece)
-            drawn = ink * piece["scale"] * PIECE_SCALE
-            span = (fcols + frows) / 2.0 * TILE_WIDTH
-            if ink and span > 0 and drawn / span > FOOTPRINT_OVERHANG:
-                warnings.append(
-                    f"grove piece '{pid}' paints {drawn:.0f} wide and occupies {span:.0f} "
-                    f"({drawn / span:.2f}x); it covers tiles it does not hold, so things can "
-                    "be built underneath it. Widen cols/rows, or say why not")
-
-        if f"ui.piece.{pid}" not in keys:
-            errors.append(f"grove piece '{pid}' missing string 'ui.piece.{pid}'")
-
-        lvl = piece.get("requiresLevel")
-        if lvl and lvl not in level_ids:
-            warnings.append(f"grove piece '{pid}' is earned by clearing '{lvl}', which the "
-                            "catalog does not carry")
-
-        chap = piece.get("requiresChapter")
-        if chap and chap not in chapter_ids:
-            warnings.append(f"grove piece '{pid}' is earned by finishing chapter '{chap}', "
-                            "which the catalog does not carry")
-
-    if not piece_starters:
-        errors.append("no grove piece is free from the first launch; a new player would open "
-                      "the picker onto an empty list")
-
-    # The masks' *content* - whether each one is what the PNG would produce today - is the
-    # generator's own question, asked here so a re-cut sprite fails offline rather than only
-    # when somebody remembers to run the tool. It needs Pillow, which every art tool in
-    # Tools/ already needs; a machine without it cannot verify content and is told so.
-    try:
-        sys.path.insert(0, os.path.join(os.path.dirname(ROOT), "..", "..", "Tools"))
-        import grove_art_facts
-    except ImportError as e:
-        errors.append(f"the grove's hit masks could not be checked ({e}); install Pillow")
-    else:
-        stale = 0
-        for piece in pieces:
-            facings = int(piece.get("facings") or 1)
-            art, animated = grove_art_facts.piece_art(piece)
-            facts = grove_art_facts.facts_for(art, animated, facings)
-            if facts is None:
-                continue
-            w, h, masks = facts
-            authored = piece.get("hits") if facings > 1 else [piece.get("hit")]
-            if (piece.get("w"), piece.get("h")) != (w, h) or list(authored or []) != masks:
-                stale += 1
-                if stale <= 3:
-                    errors.append(f"grove piece '{piece.get('id')}' has art facts that differ from "
-                                  "its PNG; run Tools/import_grove_art.py")
-        # A resident is a companion, and the grove draws its art too: the same facts live on
-        # the manifest's companion entries (groveW / groveH / groveHit) under the same check.
-        for companion in companion_rows or []:
-            cid = companion.get("id", "")
-            facts = grove_art_facts.facts_for(*grove_art_facts.companion_art(companion))
-            if facts is None:
-                errors.append(f"companion '{cid}' has no art for the grove to draw")
-                continue
-            facts = (facts[0], facts[1], facts[2][0])
-            if (companion.get("groveW"), companion.get("groveH"), companion.get("groveHit")) != facts:
-                stale += 1
-                if stale <= 3:
-                    errors.append(f"companion '{cid}' has grove art facts that differ from its "
-                                  "PNG; run Tools/grove_art_facts.py")
-        if stale > 3:
-            errors.append(f"{stale} grove pieces or companions have art facts that differ from their PNGs")
-
-    if not companions:
-        warnings.append("the manifest carries no companions; the grove's residents shelf is "
-                        "the roster, so an empty roster empties a whole shelf of the shop")
-
-    # The prefix is reserved. Companion ids and piece ids were minted independently and
-    # already collided once ('pebble' is a rock and a companion), which is why a resident's
-    # piece id is the companion's id prefixed - so the two spaces can never meet. An
-    # authored piece wearing the prefix would put them back together.
-    taken = {p for p in piece_ids if p.startswith(RESIDENT_PREFIX)}
-    if taken:
-        errors.append(f"'{RESIDENT_PREFIX}' is reserved for residents projected from the "
-                      "companion roster; these authored pieces use it: " + ", ".join(sorted(taken)))
-
-    # The five creatures the grove used to author, and the companion each was rewritten to.
-    # It must stay in step with GroveResidents.Retired: a target that has left the roster
-    # empties every slot holding the old id.
-    for retired, became in RETIRED_RESIDENTS.items():
-        if became not in companions:
-            errors.append(f"the retired grove resident '{retired}' is rewritten to companion "
-                          f"'{became}', which the roster no longer carries")
-
-    # The home ladder. Every failure here is invisible in the game: a catalog with dwellings
-    # and no hearth draws no home and looks exactly like one with no dwellings, and two rungs
-    # on one tier make "the best one owned" depend on the order of the file.
-    if dwellings and not hearths:
-        errors.append(f"the grove has {len(dwellings)} home(s) and no hearth slot to draw one "
-                      "on; they would be bought and never seen")
-    if hearths and not dwellings:
-        errors.append("the grove has a hearth and no home to stand on it")
-    if len(hearths) > 1:
-        warnings.append(f"{len(hearths)} hearth slots ({', '.join(hearths)}); the same home "
-                        "draws on every one of them")
-
-    tiers = {}
-    for tier, pid, _cost, _level in dwellings:
-        if tier <= 0:
-            errors.append(f"grove home '{pid}' has no tier; the ladder cannot be ordered")
-        if tier in tiers:
-            errors.append(f"grove homes '{tiers[tier]}' and '{pid}' are both tier {tier}")
-        tiers[tier] = pid
-
-    if dwellings:
-        first = min(dwellings)
-        first_rows = [p for p in pieces if p.get("id") == first[1]]
-        if first[2] > 0 or first[3] > 0 or (first_rows and (first_rows[0].get("requiresLevel") or first_rows[0].get("requiresChapter"))):
-            errors.append(f"the first home '{first[1]}' is not free; a new grove would open "
-                          "with nothing on its hearth")
-
-    # The keeper gates up the home ladder. Both failures below are invisible in the game.
-    #
-    # A rung asking for a level an earlier rung already demanded parses, validates, draws a
-    # price and simply refuses nobody - invariant 5d's decoration arriving on the one purchase
-    # the whole grove is composed around. And a gated rung with no price can never be held at
-    # all: the gate is permission to pay rather than a route of its own (invariant 15a), so
-    # nothing grants it, and the ladder silently ends one step early with every file correct.
-    below, under = 0, None
-    for tier, pid, cost, level in sorted(dwellings):
-        if level > 0 and cost <= 0:
-            errors.append(f"grove home '{pid}' opens at keeper level {level} and has no price; "
-                          "the gate is permission to pay rather than a way of paying, so nothing "
-                          "would ever grant it and the ladder would end there")
-        if level <= 0:
-            if below > 0:
-                warnings.append(f"grove home '{pid}' is tier {tier} and opens at no keeper "
-                                f"level, while '{under}' below it asks for {below}; the ladder "
-                                "stops climbing there")
-            continue
-        if level <= below:
-            errors.append(f"grove home '{pid}' opens at keeper level {level}, which '{under}' "
-                          "below it has already passed; a gate that refuses nobody is not a gate")
-        below, under = level, pid
-
-    # ---------------------------------------------------------------- star ladder
-    # What a grove has to be worth to earn each star. Content rather than constants
-    # because the catalog grows with every drop, so a rung that reads as "you have built
-    # nearly everything" today reads as "you have made a start" in a year - see
-    # GroveScoreTable. Mirrored here because the Editor's own check needs a Unity session.
-    MAX_STARS = 8
-
-    ladder = ((grove.get("score") or {}).get("stars"))
-    if ladder is None:
-        ladder = [10000, 20000, 50000, 100000, 200000]
-        warnings.append("the grove names no star ladder, so the built-in one stands; author "
-                        "one in homestead.json so a drop can retune it")
-
-    if not ladder:
-        errors.append("the grove's star ladder has no rungs; the score would show no stars "
-                      "at any value")
-    if len(ladder) > MAX_STARS:
-        errors.append(f"the grove's star ladder has {len(ladder)} rungs, more than the "
-                      f"{MAX_STARS} the readout can draw")
-
-    previous = 0
-    for at in ladder:
-        if not isinstance(at, int) or at <= 0:
-            errors.append(f"the grove's star ladder holds {at!r}; no score is below it, so the "
-                          "star is awarded to an empty grove")
-        elif at <= previous:
-            errors.append(f"the grove's star ladder does not rise: {at} comes after {previous}, "
-                          "so two stars land at once")
-        else:
-            previous = at
-
-    # Everything with a price, which is what a complete grove is worth. A rung above it is
-    # a star nobody in the world can ever win, and nothing about reading the file says so.
-    #
-    # The companions are in it because a resident *is* a companion (invariant 16a) and the
-    # grove's own shop sells them on a shelf of their own - GroveScore walks the composed
-    # catalog, which is the authored pieces with the roster projected in, so leaving them
-    # out here would make this disagree with both the game and the build gate.
-    roster = sum((companion_costs or {}).values())
-
-    # land_total and not the gems beside it: gem-priced land is worth nothing to a grove's
-    # score, so counting it here would put a star rung above what credits can ever reach.
-    # See GroveRegionDto.gems for why the leaderboard cannot price a gem.
-    everything = total + land_total + roster
-
-    if everything <= 0:
-        warnings.append("nothing in the grove has a price, so its score can never leave zero "
-                        "and no star is reachable")
-    elif ladder and isinstance(ladder[-1], int) and ladder[-1] > everything:
-        warnings.append(f"the grove's last star asks for {ladder[-1]} credits and the whole "
-                        f"catalog is worth {everything}; nobody can ever win it")
-
-    return {
-        "homes": len(dwellings), "ladder": sum(c for _t, _p, c, _l in dwellings),
-        "home_rungs": [(p, c, l) for _t, p, c, l in sorted(dwellings)],
-        "cols": cols, "rows": rows, "regions": len(regions), "free_regions": starters,
-        "owned_tiles": len(owner), "land": land_total, "land_gems": land_gems,
-        "ladder_names": " -> ".join(rungs[r] for r in sorted(rungs)),
-        "slots": cols * rows, "pieces": len(pieces),
-        "residents": len(companions),
-        "for_sale": for_sale, "earned": earned, "starters": piece_starters, "total": total,
-        "bundled": bundled, "bundle_kinds": bundle_kinds,
-        "stars": ladder, "worth": everything, "roster": roster,
-    }
-
-
 # ---------------------------------------------------------------------------- the shop
 # What a card may promise, mirrored from StoreLimits so a content push cannot exceed what
 # the reader and the server will both accept.
@@ -2142,12 +1462,6 @@ MIN_CAPACITY = 6
 MAX_CAPACITY = 50
 STORE_KINDS = {"consumable", "nonconsumable"}
 HINT_DEFAULTS = {"refillCap": 3, "ceiling": 3, "refillSeconds": 8 * 60 * 60}
-
-# Mirrors GroveStock.MaxCopies — the structural ceiling on how many copies of one piece a
-# save may hold. A permanent const on both sides rather than anything published, for
-# HeartLimits.HardCeiling's reason: lowering a published one would cut a counter the merge
-# proof requires to be monotonic.
-MAX_COPIES = 9999
 
 
 def hint_pool(progression):
@@ -2761,6 +2075,61 @@ def check_ranks(manifest, progression, keys, art, keeper_reach, warnings):
 
         ladder.append((rid, drawn))
 
+    # ------------------------------------------------------------- the ladder's own gate
+    # **The ladder may not open before the lane it ranks does** (invariant 52i). A rank is
+    # this game's competitive readout - it is on a board row and on a stranger's profile - and the
+    # competitive mode is the Infinite lane, which stands behind a keeper wall. A badge worn
+    # by somebody who cannot yet open that lane is the feature contradicting itself, and it
+    # shipped: Cinderling was reachable at keeper level 7 against a lane that opens at 10.
+    #
+    # **The gate is one ordinary `keeper_level` line on the first rung, and that is the whole
+    # mechanism.** Both readings of this ladder walk up from the bottom and stop at the first
+    # rung they cannot meet (`RankLadder.Held`, `rungOf` in `functions/src/ranks.ts`), so one
+    # line closes every rung, every badge, every board row and every public profile - with no
+    # new code on either side of the wire, and so with nothing that could disagree.
+    #
+    # **What this check is for is the other half.** The wall is authored in `manifest.json` and
+    # the gate is authored in `progression.json`: two numbers, in two files, that would drift in
+    # silence the day the lane is retuned - and drift *open*, which is the bad direction. There
+    # is no shape that lets both sides share one number, because the server never reads the
+    # manifest; so the two are held together by being checked in all three places that can see
+    # both files (here, `ContentValidation.ValidateRanks`, and `readRanks` in
+    # `seed-config.mjs`), which is the standing answer here to a figure that has to exist twice.
+    #
+    # A build shipping no Infinite lane at all has nothing to anchor to and is left alone.
+    walls = [c.get("minKeeperLevel") or 0 for c in live if c.get("track") == "infinite"]
+    wall = min(walls) if walls else 0
+    opens_at = 0
+
+    if rungs:
+        for line in (rungs[0].get("requires") or []):
+            if (line.get("measure") or "") != "keeper_level" or (line.get("scope") or ""):
+                continue
+            target = line.get("target", 0)
+            if isinstance(target, int) and target > opens_at:
+                opens_at = target
+
+    first = rungs[0].get("id") if rungs else "?"
+
+    if wall > 0 and opens_at < wall:
+        errors.append(
+            f"the Infinite lane opens at keeper level {wall} and the ladder's first rung "
+            f"('{first}') opens at {opens_at or 'nothing'}; a rank is what a board row and a "
+            "stranger's profile draw, so it may not be worn by somebody who cannot yet open "
+            "the lane it ranks - give that rung a 'keeper_level' line of at least "
+            f"{wall}, and move it with the wall")
+    elif wall > 0 and opens_at > wall:
+        # **The other direction, and a warning rather than an error.** A ladder opening *after*
+        # its lane hands nobody a badge they should not have, so it is not the fault this gate
+        # is for - but it is a ladder that has quietly stopped opening *with* the thing it
+        # ranks, which is a decision somebody may genuinely want and which nothing else in this
+        # repo would ever mention. `ValidateKeeperWalls` splits error from warning on the same
+        # line: unreachable by arithmetic is a mistake, a deliberate wall is a decision.
+        warnings.append(
+            f"the rank ladder's first rung ('{first}') opens at keeper level {opens_at} and the "
+            f"Infinite lane opens at {wall}, so the ladder no longer opens with the lane it "
+            "ranks; legal, and worth being sure it was meant")
+
     # The sentence table, kept whole rather than only where it is used. A live-ops retune that
     # pointed a rung at a measure nobody had authored a sentence for would ship a missing string
     # to whichever language nobody tested, and content is exactly the surface that moves without
@@ -2774,7 +2143,8 @@ def check_ranks(manifest, progression, keys, art, keeper_reach, warnings):
             warnings.append(f"no scoped sentence for rank measure '{measure}' "
                             f"(rank.req.{measure}.in)")
 
-    return errors, {"rungs": ladder, "glades": all_glades, "stars": all_glades * 3}
+    return errors, {"rungs": ladder, "glades": all_glades, "stars": all_glades * 3,
+                    "opensAt": opens_at, "wall": wall}
 
 
 def check_streak(progression, tasks, keys, warnings):
@@ -4466,13 +3836,6 @@ def main():
     live_companions = [c for c in (manifest.get("companions") or [])
                        if c.get("id") and not c.get("disabled")]
 
-    grove = check_grove(keys,
-                        {lv for e in manifest["chapters"] for lv in (e.get("levels") or [])},
-                        {e["id"] for e in manifest["chapters"] if e.get("id")},
-                        {c["id"] for c in live_companions},
-                        {c["id"]: int(c.get("unlockCost") or 0) for c in live_companions},
-                        live_companions)
-
     others = [x for x in summaries if x.get("mode")]
     if others:
         print()
@@ -4521,42 +3884,6 @@ def main():
                   f"{c['par']:<5}{c['gold']:<5}{c['silver']:<5}"
                   f"{str(c['budget'] or 'free'):<8}{c['ways']:<6}{str(greedy):<8}"
                   f"{c['nodes']:<8}{held}")
-
-    if grove:
-        print(f"\ngrove: {grove['cols']}x{grove['rows']} floor, {grove['slots']} tile(s), "
-              f"{grove['pieces']} piece(s) - {grove['residents']} resident(s) from the roster, "
-              f"{grove['starters']} free, {grove['earned']} earned, {grove['for_sale']} for sale "
-              f"({grove['total']} credits in all)")
-        gem_land = f" and {grove['land_gems']} gem(s)" if grove["land_gems"] else ""
-        print(f"       land: {grove['regions']} region(s), {grove['free_regions']} free, "
-              f"{grove['owned_tiles']} tile(s) sellable - {grove['land']} credits{gem_land} "
-              "to own it all")
-        print(f"       land ladder: {grove['ladder_names']}")
-        if grove["land_gems"]:
-            print("       gem-priced land is worth nothing to a grove's score - the score is "
-                  "the credits' worth of what is held (16g) and the server's clamp is "
-                  "denominated in credits (19a)")
-        print(f"       home ladder: {grove['homes']} rung(s), {grove['ladder']} credits to the top")
-        # The rungs written out, because a gate is the half of this ladder that no other line
-        # reports and the half most likely to be wrong: a level and a price together are what
-        # make a rung a goal rather than a shelf (15a), and only the two side by side say so.
-        for pid, cost, level in grove["home_rungs"]:
-            gate = f"keeper level {level}" if level > 0 else "no gate"
-            price = f"{cost} credits" if cost > 0 else "free"
-            print(f"           {pid:<16} {price:>14}, {gate}")
-        if grove["bundled"]:
-            shelves = ", ".join(f"{k} x{n}" for k, n in sorted(grove["bundle_kinds"].items()))
-            print(f"       bundles: {grove['bundled']} of {grove['for_sale']} priced piece(s) "
-                  f"are sold by the bundle ({shelves}) - a copy is worth cost/bundle, so a "
-                  "bundle is worth what was paid for it")
-        else:
-            print("       bundles: every priced piece sells one copy at a time")
-        if grove["worth"] > 0:
-            rungs = ", ".join(f"{n + 1}@{at} ({round(at * 100 / grove['worth'])}%)"
-                              for n, at in enumerate(grove["stars"]))
-            print(f"       score: {grove['worth']} credits for everything "
-                  f"({grove['total']} decor and homes, {grove['land']} land, "
-                  f"{grove['roster']} residents) - stars at {rungs}")
 
     progression_path = os.path.join(ROOT, "progression.json")
     progression = json.load(open(progression_path, encoding="utf-8")) \
@@ -4711,6 +4038,12 @@ def main():
             asks = ", ".join(f"{named} x{target}" for named, target in lines)
             print(f"       {order}. {rid:<13} {asks}")
 
+        if ranks["wall"]:
+            print(f"       the ladder opens at keeper level "
+                  f"{ranks['opensAt'] or 'nothing'}, against the "
+                  f"{ranks['wall']} the Infinite lane opens at - no badge is worn before the "
+                  "lane it ranks can be played")
+
         # This line said "nothing here reaches a server" until the badge went onto a board.
         # It does now: `seed-config.mjs` publishes this ladder and `rungOf` climbs it, because
         # a number that goes public becomes adjudicated (invariant 19a). What is still true is
@@ -4783,14 +4116,6 @@ def main():
                                for cap, cents in shop["vessels"])
             print(f"      heart containers: {ladder} (free cap "
                   f"{(progression.get('hearts') or {}).get('refillCap', 5)})")
-
-        if grove and per_day_credits:
-            # `worth` rather than a sum written out here: the home ladder is already inside
-            # the pieces total, so adding it again double-counted 49,500 credits, and the
-            # companion roster - the largest sink in the game - was missing altogether.
-            sinks = grove["worth"]
-            print(f"      every credit sink in the game is {sinks} credits, "
-                  f"about {sinks // per_day_credits} day(s) of play")
 
     wheel = bonus_wheel(progression)
     if wheel:

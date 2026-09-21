@@ -1213,6 +1213,7 @@
       {
         "id": "cinderling",
         "requires": [
+          { "measure": "keeper_level", "target": 10 },
           { "measure": "levels_cleared", "scope": "s01_thornwatch", "target": 8 },
           { "measure": "runs", "target": 15 }
         ]

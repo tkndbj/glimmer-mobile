@@ -49,7 +49,7 @@ namespace GlimmerGrove
         /// </summary>
         public const float Height = 236f;
 
-        public enum Tab { None, Home, Shop, Grove, Ranks, Profile }
+        public enum Tab { None, Home, Shop, Ranks, Profile }
 
         /// <summary>
         /// Tab order, left to right. Home leads because it is the way back: it is the
@@ -58,13 +58,10 @@ namespace GlimmerGrove
         /// sixth tab re-spaces the bar rather than needing new coordinates.
         ///
         /// <para>
-        /// <b><see cref="Tab.Grove"/> is held, and this list is the whole of the hold.</b> The
-        /// Grovement is being rebuilt from the ground up, and until it is there is nothing
-        /// worth putting a permanent control in front of — so the tab is taken out of the
-        /// order and everything else about it is left standing: its caption, its cap, its
-        /// destination and every screen under it. Putting it back is this one entry, which is
-        /// deliberately cheaper than a flag somebody has to find. The bar re-spaces itself
-        /// because the slot width is derived from the length rather than typed.
+        /// <b>There were five tabs until 2026-09-21.</b> The Grovement held its own from
+        /// 2026-09-15 and was removed outright on the 21st, so the entry, the caption, the
+        /// glyph and the destination are all gone rather than commented out. The bar re-spaces
+        /// itself because the slot width is derived from the length rather than typed.
         /// </para>
         /// </summary>
         static readonly Tab[] Order = { Tab.Home, Tab.Shop, Tab.Ranks, Tab.Profile };
@@ -82,7 +79,7 @@ namespace GlimmerGrove
         /// strip rather than as a console. <see cref="Gutter"/> is the air a cap is entitled to
         /// and the rest belongs to the cap — so a five-tab bar still <em>draws</em> exactly what
         /// shipped (216 - 16 = the old 200; the hit cell gains two units it was leaving dead)
-        /// and re-spaces itself if the Grovement tab comes back.
+        /// and re-spaces itself if a fifth tab ever comes back.
         /// </para>
         /// <para>
         /// <b><see cref="MaxBtnW"/> is why it is a clamp rather than a share.</b> Four tabs would
@@ -231,7 +228,6 @@ namespace GlimmerGrove
             {
                 case Tab.Home: return "ui.nav.home";
                 case Tab.Shop: return "ui.nav.shop";
-                case Tab.Grove: return "ui.nav.grovement";
                 case Tab.Ranks: return "ui.nav.ranks";
                 default: return "ui.nav.profile";
             }
@@ -263,7 +259,6 @@ namespace GlimmerGrove
             {
                 case Tab.Home: return Art.S("Ui/ic_nav_home");
                 case Tab.Shop: return Art.S("Ui/ic_nav_shop");
-                case Tab.Grove: return Art.S("Ui/ic_nav_grove");
                 case Tab.Ranks: return Art.S("Ui/ic_nav_ranks");
                 default: return Art.S("Ui/ic_nav_profile");
             }
@@ -290,13 +285,10 @@ namespace GlimmerGrove
                 case Tab.Home: return () => Flow.Go<HomeScreen>();
 
                 // The shop is a screen. It stays a tab rather than becoming a button on the
-                // hub because it is one of the two places a player goes deliberately rather
-                // than being taken — the Grovement is the other — and because a shop reached
-                // only from an out-of-hearts prompt is a shop that is only ever seen at the
-                // worst moment to be sold anything.
+                // hub because it is a place a player goes deliberately rather than being
+                // taken, and because a shop reached only from an out-of-hearts prompt is a
+                // shop that is only ever seen at the worst moment to be sold anything.
                 case Tab.Shop: return () => Flow.Go<ShopScreen>();
-
-                case Tab.Grove: return () => Flow.Go<HomesteadScreen>();
 
                 // The boards. It was the last tab that opened a panel saying "soon", which is
                 // the worst thing to leave in a row of permanent controls — every other one

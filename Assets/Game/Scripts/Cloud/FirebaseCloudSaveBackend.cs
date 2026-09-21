@@ -1333,63 +1333,24 @@ namespace GlimmerGrove.Cloud
         /// Turns a card document into a <see cref="Social.GroveCard"/>.
         ///
         /// <para>
-        /// Sanitising rather than trusting, which is <c>HomesteadMapper</c>'s stance and is
-        /// wanted twice over here: this document was built from another player's save, and a
-        /// visitor may be a content drop behind the keeper they are visiting. A malformed row
-        /// is skipped rather than poisoning the card, and an id this build has never heard of
-        /// is carried through — <see cref="Social.GroveCard.PieceAt"/> resolves it to an
-        /// invalid piece, which every drawing path already skips.
+        /// Sanitising rather than trusting, and wanted twice over here: this document was
+        /// built from another player's save, and a visitor may be a content drop behind the
+        /// keeper they are visiting. A malformed row is skipped rather than poisoning the card,
+        /// and an id this build has never heard of is carried through — <c>WardLine.Resolve</c>
+        /// falls back to this build's own starter, which every drawing path already handles.
+        ///
+        /// <para>
+        /// <b>Fields the Grovement used to write are simply not read.</b> The server still puts
+        /// <c>score</c>, <c>land</c>, <c>placed</c>, <c>companions</c>, <c>dwelling</c> and
+        /// <c>hall</c> on a card it publishes for an account whose save still carries a grove;
+        /// nothing draws them any more, so they are ignored here rather than parsed into a
+        /// shape with no reader.
+        /// </para>
         /// </para>
         /// </summary>
         static Social.GroveCard ReadCard(string ownerId, IDictionary<string, object> document)
         {
             if (document == null) return Social.GroveCard.Empty;
-
-            var land = new List<string>();
-            if (document.TryGetValue("land", out object rawLand) && rawLand is IEnumerable<object> landList)
-                foreach (var id in landList)
-                    if (id is string text && text.Length > 0) land.Add(text);
-
-            var placed = new Dictionary<string, Homestead.Placement>(StringComparer.Ordinal);
-            if (document.TryGetValue("placed", out object rawPlaced) &&
-                rawPlaced is IDictionary<string, object> rows)
-            {
-                foreach (var pair in rows)
-                {
-                    if (string.IsNullOrEmpty(pair.Key)) continue;
-
-                    // Two shapes, because a turned piece is the exception: a bare string is
-                    // the piece id, and a map carries the facing with it. That keeps the
-                    // common row to a single value and the document to about a third of what
-                    // a uniform map would cost across a full floor. See `CardPlacement` in
-                    // functions/src/grove.ts, which is the writer.
-                    switch (pair.Value)
-                    {
-                        case string pieceId when pieceId.Length > 0:
-                            placed[pair.Key] = new Homestead.Placement(pieceId, 0L, 0);
-                            break;
-
-                        case IDictionary<string, object> entry:
-                            string id = Text(entry, "piece");
-                            if (id.Length == 0) break;
-                            placed[pair.Key] = new Homestead.Placement(id, 0L, (int)ReadLong(entry, "facing"));
-                            break;
-                    }
-                }
-            }
-
-            // The priced companions this keeper bought, as the server counted them. Sanitised
-            // exactly as `land` is: ids this build has never heard of are *kept*, because a
-            // visitor one content drop behind must not quietly show a keeper as owning fewer
-            // friends than they do — `AvatarCatalog.Find` resolves the unknown ones to nothing
-            // and the count says how many were published.
-            var companions = new List<string>();
-            if (document.TryGetValue("companions", out object rawFriends) &&
-                rawFriends is IEnumerable<object> friendList)
-            {
-                foreach (var id in friendList)
-                    if (id is string text && text.Length > 0) companions.Add(text);
-            }
 
             // The turret line, as slots plus the rung each seat stands at. A malformed row is
             // skipped rather than poisoning the line, and a missing seat is simply missing —
@@ -1420,18 +1381,9 @@ namespace GlimmerGrove.Cloud
             return new Social.GroveCard(
                 ownerId,
                 Text(document, "name"),
-                Text(document, "avatar"),
                 (int)ReadLong(document, "level"),
-                ReadLong(document, "score"),
-                (int)ReadLong(document, "stars"),
                 (int)ReadLong(document, "wave"),
                 ReadLong(document, "builtUnix"),
-                Text(document, "dwelling"),
-                land,
-                placed,
-                Text(document, "hall"),
-                (int)ReadLong(document, "hallFacing"),
-                companions,
                 line,
                 rungs,
 

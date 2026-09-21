@@ -132,29 +132,7 @@ namespace GlimmerGrove.Persistence
             if (!SameSet(remote.heartContainersOwned, merged.heartContainersOwned)) return true;
             if (!SameSet(remote.heartContainersRevoked, merged.heartContainersRevoked)) return true;
 
-            // The grove. Its purchases travel for exactly the companions' reason, and its
-            // arrangement travels because it is the one thing here the player can see on
-            // another device and notice missing — a grove that stayed on one phone is an
-            // evening's work lost on reinstall. Both are written sorted, so both compare as
-            // an ordered walk.
-            if (!SameStock(remote.homesteadStock, merged.homesteadStock)) return true;
-            if (!SameSet(remote.groveLandOwned, merged.groveLandOwned)) return true;
-            if (!SamePlacements(remote.homesteadPlaced, merged.homesteadPlaced)) return true;
-
-            // The generation of the catalogue the grove belongs to. It has to be compared
-            // even though the three sections above cover what is *in* the grove, because a
-            // device that cleared an old grove and has not placed anything since differs
-            // from the server in this field alone — and until it is pushed, the server's
-            // copy still claims the older epoch and will not lose the join.
-            if (remote.groveEpoch != merged.groveEpoch) return true;
-
-            // Where the house stands is a decision, and a device that has made one differs from
-            // the server in these three fields alone until it is pushed.
-            if (remote.groveHallSetUnix != merged.groveHallSetUnix) return true;
-            if (remote.groveHallFacing != merged.groveHallFacing) return true;
-            if ((remote.groveHall ?? string.Empty) != (merged.groveHall ?? string.Empty)) return true;
-
-            // The utilities. These travel for the grove stock's reason with one addition: a
+            // The utilities. These travel for the companions' reason with one addition: a
             // utility can be bought with gems, so a row that stayed on one phone is a purchase
             // the player made and cannot see on their other device — and *spent* has to travel
             // with *earned*, or the two devices would each hand back what the other used.
@@ -291,45 +269,9 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
-        /// The grove's arrangement, compared as an ordered walk for <see cref="SameSet"/>'s
-        /// reason: <c>HomesteadLayout</c> writes rows sorted by slot id and deduplicated, so
-        /// equal content is byte-equal content.
-        ///
-        /// The stamp is compared along with the piece, deliberately. Two devices can hold the
-        /// same arrangement having reached it at different moments, and the later stamp is
-        /// what decides the next merge — dropping it here would let the newer decision sit
-        /// unsent until something else changed, and a third device would then take the stale
-        /// one.
-        /// </summary>
-        /// <summary>
-        /// Whether two stock sections say the same thing.
-        ///
-        /// Compared row by row rather than as a set, for <see cref="SamePlacements"/>'s reason:
-        /// <c>GroveStock.Write</c> emits rows sorted by id with no duplicates and no zero
-        /// counts, so equal contents are equal sequences and a walk is exact as well as cheap.
-        /// </summary>
-        static bool SameStock(HomesteadStockDto[] a, HomesteadStockDto[] b)
-        {
-            int an = a?.Length ?? 0;
-            int bn = b?.Length ?? 0;
-            if (an != bn) return false;
-
-            for (int i = 0; i < an; i++)
-            {
-                var x = a[i] ?? new HomesteadStockDto();
-                var y = b[i] ?? new HomesteadStockDto();
-
-                if (!string.Equals(x.id, y.id, StringComparison.Ordinal)) return false;
-                if (x.copies != y.copies) return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// The utility ledgers, as an ordered walk. Both sides are written sorted by
         /// <c>UtilityStock.Write</c>, so order is part of the comparison rather than something
-        /// this has to normalise — the rule <see cref="SameStock"/> already follows.
+        /// this has to normalise — the rule <see cref="SameUtilities"/> already follows.
         /// </summary>
         /// <summary>
         /// Whether two ward lines are the same arrangement.
@@ -401,28 +343,6 @@ namespace GlimmerGrove.Persistence
 
                 if (!string.Equals(x.id, y.id, StringComparison.Ordinal)) return false;
                 if (x.earned != y.earned || x.spent != y.spent) return false;
-            }
-
-            return true;
-        }
-
-        static bool SamePlacements(HomesteadPlacementDto[] a, HomesteadPlacementDto[] b)
-        {
-            int na = a?.Length ?? 0, nb = b?.Length ?? 0;
-            if (na != nb) return false;
-
-            for (int i = 0; i < na; i++)
-            {
-                var x = a[i] ?? new HomesteadPlacementDto();
-                var y = b[i] ?? new HomesteadPlacementDto();
-
-                if (!Same(x.slot, y.slot)) return false;
-                if (!Same(x.piece, y.piece)) return false;
-                if (x.setUnix != y.setUnix) return false;
-
-                // Without this a turn on its own reads as "nothing changed" and is never
-                // pushed, so it survives until something else on the row moves.
-                if (x.facing != y.facing) return false;
             }
 
             return true;

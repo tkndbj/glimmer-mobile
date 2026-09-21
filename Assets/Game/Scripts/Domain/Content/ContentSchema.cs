@@ -26,14 +26,13 @@ namespace GlimmerGrove.Content
         /// change made after a CDN goes live is a migration under live players.
         /// </summary>
         /// <summary>
-        /// v3 turned the grove's floating islands into a tile floor. Raised rather than made
-        /// optional for v2's reason: a v2 grove body describes islands with hand-authored
-        /// slots, and a build that reads a floor has no way to draw one — so a client a drop
-        /// behind must refuse the file rather than open the Grovement onto no ground at all.
-        ///
-        /// Only the grove body moved. The manifest and the chapter bodies still say v2 and
-        /// still read, because <see cref="MinimumSupported"/> did not change — which is the
-        /// whole point of having two numbers.
+        /// v3 turned the grove's floating islands into a tile floor. The grove went on
+        /// 2026-09-21 and this number stays where it is: a content schema version is a
+        /// statement about what a client can read, and lowering one would tell every client
+        /// that a file it has already cached is from the future. Only the grove body ever
+        /// said v3; the manifest and the chapter bodies still say v2 and still read, because
+        /// <see cref="MinimumSupported"/> did not change — which is the whole point of having
+        /// two numbers.
         /// </summary>
         public const int Version = 3;
 

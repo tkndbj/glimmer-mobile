@@ -278,39 +278,17 @@ Deployed and verified live on 2026-08-15:
 - `firebase/e2e/smoke-test.mjs` is **64/64 live**, of which 21 are the boards and 15 the
   keeper names
 
-### Showcase groves
+### Showcase groves — removed
 
-`node firebase/seed/seed-showcase.mjs` writes ten designed villages so the boards are not
-empty on launch day. They are **not permanent**: every account is a `showcase-` id, every
-card carries `synthetic: true`, and `--remove` takes the lot down in one command — the
-name reservations with it. Take them down when there are real groves worth visiting.
+`seed-showcase.mjs` and `showcase-villages.json` wrote ten designed villages so the boards
+would not be empty on launch day. They went with the Grovement on 2026-09-21. **If any were
+ever written to the live project, they are still there** — every one is a `showcase-` account
+id with `synthetic: true` on its card, and `reset-groves.mjs` or a hand delete is what takes
+them down now. They were never seeded to production as far as this file records.
 
-**The villages are authored, not generated.** `firebase/seed/showcase-villages.json` holds
-each one as a fourteen-line plan, one character per tile, with a legend per village; the
-script compiles, proves and writes it. Two generations of procedural composer came before
-it, and both produced groves the owner called random, because design is a decision about
-where each thing goes rather than a probability over where it may. To change a village,
-edit its plan, then `--dry-run --dump out/` and `python Tools/render_grove.py --layout`
-to look at it before writing anything. The header of the script lists the four facts about
-the art a plan has to respect (which fences join into a line, and along which diagonal).
-
-They span the four- and five-star leagues (roughly 100,000 to 250,000 credits' worth; the
-dry run prints each), so the global top ten is synthetic until real players catch up. That
-is the trade, and it is why they are one command to remove.
-
-Each card is built by `buildCard`/`groveWorth` out of the compiled functions, so it is
-exactly what `publishGrove` would have written from the same save — including the keeper
-level, derived from the star ledger the way the server derives it, which is what bounds
-how far up the companion ladder a showcase account can honestly have bought. Writing one
-by hand would put a number on the board that the server's own derivation disagrees with.
-The script also refuses to place a piece its keeper does not hold — bought by the copy in
-`homesteadStock`, free, earned, or a resident on their roster — because a village assembled
-by a script has no picker to guarantee it; and it reserves each keeper's name in `names/`
-exactly as `claimName` would, so a real player cannot stand on the boards beside a
-synthetic namesake.
-
-Run `gcloud scheduler jobs run firebase-schedule-publishGroveBoards-europe-west1` after
-writing them, or wait up to fifteen minutes; the counts follow at 04:00 UTC.
+The lesson they bought is worth keeping and is not about groves: **design is a decision about
+where each thing goes, not a probability over where it may.** Two generations of procedural
+composer came before the authored plans and both produced layouts the owner called random.
 
 ### Two things only the deploy could catch
 

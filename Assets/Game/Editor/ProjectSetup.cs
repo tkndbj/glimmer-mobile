@@ -107,7 +107,6 @@ namespace GlimmerGrove.EditorTools
             var expected = AssetManifest.GlobalAssets();
             expected.AddRange(AssetManifest.AllChapterAssets(content.Bodies));
             expected.AddRange(AssetManifest.CompanionAssets(content.Index.Companions));
-            expected.AddRange(AssetManifest.AllGroveAssets(content.Homestead));
             expected.AddRange(AssetManifest.ChestAssets(ProgressionRules.Table.Tasks));
 
             var present = IndexAssetsByAddress();
@@ -127,8 +126,6 @@ namespace GlimmerGrove.EditorTools
             Debug.Log(missing.Count == 0
                 ? $"[Glimmer] all {expected.Count} expected asset(s) present"
                 : $"[Glimmer] {missing.Count} of {expected.Count} expected asset(s) missing");
-
-            GroveBrowseAtlases.Audit(content.Homestead);
 
             // The import rules as well as the addresses. An asset can be present, addressed and
             // loadable and still be three times the texture memory it should be, which no other
@@ -197,7 +194,6 @@ namespace GlimmerGrove.EditorTools
         /// <summary>Folder under <c>Art/</c> to the largest texture it may import at.</summary>
         static readonly (string Folder, int Max)[] Caps =
         {
-            ("/Art/Homestead/", 512),   // props on an island, ~500px at most
             ("/Art/Companions/", 512),  // portraits, drawn at 320
             ("/Art/Critters/", 256),    // flipbook frames, drawn small and there are many
             ("/Art/Prism/", 512),       // Prismvale: its floor, its gems, its lanterns and its cast
@@ -391,12 +387,8 @@ namespace GlimmerGrove.EditorTools
         /// screenshot, a compile or a content validation.
         /// </para>
         /// <para>
-        /// Deliberately scoped to <c>Assets/Game/Art</c>. The grove shop's atlas *sources* live
-        /// under <c>Assets/Game/Generated/GroveThumbs</c> and are uncompressed on purpose — see
-        /// <c>GroveBrowseAtlases.Configure</c>, where compressing a source would be decompressed
-        /// into the atlas and compressed again for one extra round of artefacts. They are
-        /// outside this walk and outside the preprocessor's, which is why neither needs to know
-        /// about the other.
+        /// Deliberately scoped to <c>Assets/Game/Art</c>, so anything generated under
+        /// <c>Assets/Game/Generated</c> is outside this walk and outside the preprocessor's.
         /// </para>
         /// </summary>
         public static List<string> Audit()

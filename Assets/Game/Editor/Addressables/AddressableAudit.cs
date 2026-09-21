@@ -109,14 +109,7 @@ namespace GlimmerGrove.EditorTools
             // audited without anyone editing this.
             expected.AddRange(AssetManifest.CompanionAssets(content.Index.Companions));
 
-            // The grove, for the same reason and with a sharper edge: its art is requested by
-            // a scope on one screen, and it is the set that grows at every content drop. An
-            // audit blind to it would call a new decor piece unused and then say nothing when
-            // somebody shipped a manifest row whose sprite never made it into the project —
-            // which draws a white rectangle, because that is what an Image with no sprite is.
-            expected.AddRange(AssetManifest.AllGroveAssets(content.Homestead));
-
-            // The turret roster, for the grove's reason with a sharper edge. A run loads the four
+            // The turret roster, for the companions' reason with a sharper edge. A run loads the four
             // a player stood on the line and the shelf loads twenty thumbnails, so an audit built
             // only from the global and chapter sets would call eighty sprites unused - and then
             // say nothing at all when one went missing, which draws a white rectangle two cells
@@ -128,12 +121,6 @@ namespace GlimmerGrove.EditorTools
             // nothing when a tier's reel went missing — which is a white rectangle over the
             // one ceremony in the game that is entirely a picture.
             expected.AddRange(AssetManifest.ChestAssets(ProgressionRules.Table.Tasks));
-
-            // The browse atlases, which are generated rather than authored — so the failure
-            // they guard against is not a missing file but a step nobody ran. A shop whose
-            // atlas was never rebuilt draws a grid of nothing, and it draws it only on the
-            // device, because in the Editor the previous atlas is still sitting there.
-            expected.AddRange(AssetManifest.AllBrowseAtlases());
 
             result.Expected = expected.Count;
 

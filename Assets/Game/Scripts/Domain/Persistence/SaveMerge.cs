@@ -42,10 +42,6 @@ namespace GlimmerGrove.Persistence
             var line = Wards.WardLoadout.Join(mine.wardLoadout, mine.wardLoadoutSetUnix,
                                               other.wardLoadout, other.wardLoadoutSetUnix);
 
-            var hall = Homestead.HomesteadLayout.JoinHall(
-                mine.groveHall, mine.groveHallFacing, mine.groveHallSetUnix,
-                other.groveHall, other.groveHallFacing, other.groveHallSetUnix);
-
             var merged = new SaveFileDto
             {
                 schemaVersion = Math.Max(mine.schemaVersion, other.schemaVersion),
@@ -120,41 +116,10 @@ namespace GlimmerGrove.Persistence
                 heartContainersRevoked = HeartContainerLedger.Join(mine.heartContainersRevoked,
                                                                    other.heartContainersRevoked),
 
-                // The grove's two halves, and they are joined differently on purpose. What
-                // was bought is a union, for the reason directly above. Where things stand
-                // is the only part of this file merged by *recency* other than the keeper's
-                // name and their worn companion — an arrangement is an instruction rather
-                // than an achievement, so the most recent one is the one the player meant.
-                // Invariant 11c is what keeps that from losing a grove: the stamp travels
-                // per slot rather than being read off this file's updatedUnix, and an
-                // untouched slot writes nothing at all.
-                // Read through GroveStock.In on both sides rather than off the field, so a
-                // v19 document — on this disk, or in the cloud under a device that has not
-                // updated — brings its purchases into the join instead of arriving as nothing.
-                //
-                // **And the join is skipped entirely when the two sides' groves are different
-                // generations.** See GroveEpoch: a union has no way to express "this is gone",
-                // so the only way to clear one is for the newer epoch's grove to replace the
-                // older one's rather than absorb it. The epoch itself merges by max like
-                // every other monotonic number here, so the two converge either way round.
-                // homesteadStock is set below rather than here, through GroveStock.Record,
-                // because the v19 mirror beside it is derived from these very rows and this
-                // initializer once set the rows alone — see GroveStock.Record for the card
-                // that drew the wrong house for every keeper in the game as a result.
-                groveLandOwned = GroveOf(mine, other,
-                                         m => m.groveLandOwned,
-                                         Homestead.GroveLand.Join),
-                homesteadPlaced = GroveOf(mine, other,
-                                          m => m.homesteadPlaced,
-                                          Homestead.HomesteadLayout.Join),
-                groveEpoch = Math.Max(Homestead.GroveEpoch.Of(mine), Homestead.GroveEpoch.Of(other)),
-
-                // The utilities, as two monotonic counters per id joined by max on each. The
-                // grove's stock could store purchases alone because the other half of its
-                // subtraction is already in this file; a utility is consumed and leaves no
-                // trace, so both halves travel. The join is lossless the way that one is: more
-                // earned is a chest the other device missed, more spent is a siege it missed,
-                // and there is nothing here for a stale snapshot to overwrite.
+                // The utilities, as two monotonic counters per id joined by max on each. A
+                // utility is consumed and leaves no trace, so both halves travel. The join is
+                // lossless: more earned is a chest the other device missed, more spent is a
+                // siege it missed, and there is nothing here for a stale snapshot to overwrite.
                 utilityStock = Utilities.UtilityStock.Join(mine.utilityStock, other.utilityStock),
 
                 // The turrets bought, as a union: buying is irreversible, so between them the
@@ -167,10 +132,6 @@ namespace GlimmerGrove.Persistence
                 wardLoadout = line.Rows,
                 wardLoadoutSetUnix = line.At,
 
-                groveHall = hall.Slot,
-                groveHallFacing = hall.Facing,
-                groveHallSetUnix = hall.At,
-
                 // How deep an endless run got, as a per-level max. A best only ever rises, so
                 // there is nothing here to decide (invariant 14a).
                 endlessBest = Progression.EndlessLedger.Join(mine.endlessBest, other.endlessBest),
@@ -179,17 +140,6 @@ namespace GlimmerGrove.Persistence
                 // whichever device is asking - invariant 11b's one legal shape for a count.
                 wardStars = Wards.WardStarLedger.Join(mine.wardStars, other.wardStars),
             };
-
-            // The grove's purchases, and the v19 mirror that is derived from them, written
-            // together so neither can be set without the other. Read through GroveStock.In on
-            // both sides rather than off the field, so a v19 document — on this disk, or in the
-            // cloud under a device that has not updated — brings its purchases into the join
-            // instead of arriving as nothing; and skipped entirely when the two sides' groves
-            // are different generations, which is GroveEpoch's rule for the reason given above.
-            Homestead.GroveStock.Record(merged,
-                GroveOf(mine, other,
-                        m => Homestead.GroveStock.In(m),
-                        (a, b) => Homestead.HomesteadLedger.Join(a, b)));
 
             return merged;
         }
@@ -553,29 +503,6 @@ namespace GlimmerGrove.Persistence
                 xpHighWater = Math.Max(mine.xpHighWater, other.xpHighWater),
                 levelHighWater = Math.Max(mine.levelHighWater, other.levelHighWater),
             };
-        }
-
-        // --------------------------------------------------------------- grove
-        /// <summary>
-        /// One section of the grove, joined when both sides belong to the same generation of
-        /// the catalogue and taken whole from the newer one when they do not.
-        ///
-        /// <para>
-        /// Written once and used for all three sections rather than three times, because the
-        /// rule has to be the *same* rule on each: a merge that joined the placements while
-        /// replacing the purchases would leave a grove standing on pieces nobody owned. The
-        /// sections are read through a selector so a caller can reach a field or a derived
-        /// view of one — the stock is the second, since a document written before v20 carries
-        /// its purchases somewhere else (see <c>GroveStock.In</c>).
-        /// </para>
-        /// </summary>
-        static T GroveOf<T>(SaveFileDto mine, SaveFileDto other,
-                            Func<SaveFileDto, T> read, Func<T, T, T> join)
-        {
-            int order = Homestead.GroveEpoch.Compare(mine, other);
-            if (order < 0) return read(mine);
-            if (order > 0) return read(other);
-            return join(read(mine), read(other));
         }
 
         // --------------------------------------------------------------- cloud

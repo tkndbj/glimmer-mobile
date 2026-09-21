@@ -27,7 +27,7 @@ namespace GlimmerGrove
     /// <b>The copy is the feature.</b> Everything here is written to be read by somebody who
     /// is about to lose years of play, so it names what goes rather than gesturing at it, and
     /// every failure sentence ends with "nothing has been deleted" — which is a promise
-    /// <c>CloudSaveService.DeleteAccountAsync</c> actually keeps: the local grove is not
+    /// <c>CloudSaveService.DeleteAccountAsync</c> actually keeps: the local save is not
     /// touched until the server has confirmed, so every outcome except
     /// <see cref="AccountDeletion.Outcome.Deleted"/> genuinely changed nothing. That is
     /// <see cref="AccountDeletion.Untouched"/>, and it is why the panel can say so without
@@ -43,9 +43,10 @@ namespace GlimmerGrove
     /// right to object to.
     /// </para>
     /// <para>
-    /// <b>The second tap is spent only where there is something to lose</b>, which is
+    /// <b>The second tap is spent only where there is something to lose</b> — a cleared glade,
+    /// read off <c>PlayerProgress.ClearedCount</c> — which is
     /// <c>AccountOverlay.ConfirmAdopt</c>'s rule word for word: arming a button over an empty
-    /// grove is what teaches a player to tap through it on a full one.
+    /// account is what teaches a player to tap through it on a full one.
     /// </para>
     /// </summary>
     public sealed class DeleteAccountOverlay : ModalView
@@ -314,7 +315,7 @@ namespace GlimmerGrove
                 // keeper, the record, the companions, the boards, the account — belongs to an
                 // account that no longer exists, and rebuilding it in place would be five
                 // cards quietly resetting themselves in front of somebody. The hub is where a
-                // fresh grove starts.
+                // fresh save starts.
                 Tween.After(1.8f, () =>
                 {
                     if (this == null) return;

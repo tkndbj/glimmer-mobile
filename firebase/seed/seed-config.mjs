@@ -112,125 +112,25 @@ function readKeeperCurve(progression) {
 }
 
 /**
- * The grove catalog, derived from `homestead.json` and the manifest's roster.
+ * `config/grove` — what is left of it after the Grovement was removed on 2026-09-21.
  *
- * This is `readStore`'s argument for a second feature. The server has to be able to answer
- * "what is this grove worth" without believing the client, which means it needs every
- * price the client uses — and a price list maintained beside the content file is two files
- * edited on different days, which is how a leaderboard ends up ranking people against a
- * catalog that no longer exists. Invariant 9a: derived into the second place, never typed
- * there.
+ * **It is the turret roster now, and the name is the only grove left in it.** The document
+ * is `groves/{uid}`'s config and the collection spelling is permanent (invariant 19o), so
+ * the document keeps its name; what it holds is `wards`, read by `buildCard` and by nothing
+ * else. The piece, bundle, region, dwelling, companion and star tables went with
+ * `homestead.json` — they existed so the server could score a grove without believing a
+ * client, and there is no grove to score.
  *
- * Only *priced* things are published. A free piece is worth nothing (invariant 16g), so it
- * has no entry and needs no exclusion rule on the far side — the same reason starter land
- * is absent rather than zero.
+ * **`groveWorth` is still deployed and is not being removed here.** It reads these tables and
+ * will now find them empty, so every published card scores nought — which is correct and
+ * invisible: the finest-groves board has not been drawn since 2026-09-15, and the Endless
+ * Watch is ordered on waves. Re-seeding is therefore safe in either order with the client.
  */
 function buildGroveConfig() {
-  const homestead = readJson(join(CONTENT, "homestead.json"));
   const manifest = readJson(join(CONTENT, "manifest.json"));
 
-  // The shelf is authored in `progression.json`, so the card's turret roster is read from there
-  // even though everything else on this document comes out of the grove's own files.
+  // The shelf is authored in `progression.json`, which is where the roster is read from.
   const progression = readJson(join(CONTENT, "progression.json"));
-
-  const pieces = {};
-  const bundles = {};
-  const dwellings = {};
-  const dwellingLevels = {};
-
-  for (const piece of homestead.pieces ?? []) {
-    if (!piece?.id) continue;
-
-    const cost = Math.floor(piece.cost ?? 0);
-    if (cost > 0) pieces[piece.id] = cost;
-
-    // How many copies one purchase grants, so the boards can score a grove by what was
-    // paid for it rather than by how the shop happened to package it. Only written when
-    // it is not one: an absent entry means "sells singly", which is what a config seeded
-    // before bundles existed already meant, so this stayed additive.
-    const bundle = Math.floor(piece.bundle ?? 1);
-    if (cost > 0 && bundle > 1) {
-      if (cost % bundle !== 0) {
-        throw new Error(
-          `grove piece '${piece.id}' costs ${cost} in bundles of ${bundle}, which does not ` +
-          "divide it — a copy would be worth less than a tenth of the bundle and every " +
-          "grove holding one would score short on the boards"
-        );
-      }
-      bundles[piece.id] = bundle;
-    }
-
-    // Every rung, priced or not: the first is free and still has to be findable, because
-    // the hall draws the best rung *held* and a free one is held by everybody.
-    if (piece.kind === "dwelling") {
-      dwellings[piece.id] = Math.floor(piece.tier ?? 0);
-
-      // And the keeper level that opens it, written only when there is one — `bundles`'
-      // rule, for its reason: an absent entry means "ungated", which is exactly what a
-      // config seeded before the ladder was gated already meant, so this stays additive in
-      // both directions and neither the server nor the seeder has to go first.
-      //
-      // A gated rung must also be *priced*, or reaching the level would be the only thing
-      // between a player and the home and nothing would ever grant it. `ContentValidation`
-      // and `content.py` both refuse that; this refuses it again, because the seeder sees
-      // the file first and a published table that disagreed with the game would be a home
-      // the server scores and the client cannot sell.
-      const level = Math.floor(piece.requiresKeeperLevel ?? 0);
-      if (level > 0) {
-        if (cost <= 0) {
-          throw new Error(
-            `grove home '${piece.id}' opens at keeper level ${level} and has no price — the ` +
-            "gate is permission to pay rather than a way of paying, so nothing would ever " +
-            "grant it and the ladder would end there"
-          );
-        }
-        dwellingLevels[piece.id] = level;
-      }
-    }
-  }
-
-  // Every region that is *sold*, at its worth in credits — which is nought for the ones
-  // priced in gems.
-  //
-  // Two jobs, and only the first is obvious. `groveWorth` sums this to score the bought half
-  // of a grove, and a zero adds nothing, which is the whole of invariant 16g's answer for gem
-  // land: the score is the credits' worth of what is held and the server's clamp is
-  // denominated in credits, so a gem cannot be priced into it. But `buildCard` also filters
-  // the published `land[]` through this table — as a sanity check that the catalog vouches for
-  // the id — and `GroveVisitScreen` draws only the ground the card says is owned. So a gem
-  // region left *out* would score correctly and quietly delete eight of the floor's fourteen
-  // columns from every visitor's view, with everything standing on them floating over nothing.
-  // Present at zero says both things at once; absent says one of them wrong.
-  //
-  // Starter land stays absent, and that is not the same case: it is never written into
-  // `groveLandOwned` at all (invariant 16e), so nothing ever looks it up here.
-  const regions = {};
-  for (const region of homestead.floor?.regions ?? []) {
-    if (!region?.id) continue;
-
-    const cost = Math.floor(region.cost ?? 0);
-    const gems = Math.floor(region.gems ?? 0);
-
-    if (cost > 0 && gems > 0) {
-      throw new Error(
-        `grove region '${region.id}' is priced in both credits (${cost}) and gems (${gems}); ` +
-        "a region is sold in one currency or the other, and a card built from two prices " +
-        "would score whichever this file happened to read first"
-      );
-    }
-
-    if (cost > 0 || gems > 0) regions[region.id] = cost;
-  }
-
-  const companions = {};
-  for (const companion of manifest.companions ?? []) {
-    if (!companion?.id || companion.disabled) continue;
-
-    const cost = Math.floor(companion.unlockCost ?? 0);
-    if (cost <= 0) continue;                      // the starter, and anything else given away
-
-    companions[companion.id] = { cost, level: Math.floor(companion.unlockLevel ?? 0) };
-  }
 
   // The turret roster, as id -> the keeper level that opens its rung, read out of
   // `progression.json` rather than out of `homestead.json` because that is where the shelf is
@@ -282,29 +182,22 @@ function buildGroveConfig() {
                     "an empty line and every public profile would draw four starters");
   }
 
-  const stars = (homestead.score?.stars ?? [])
-    .map(Math.floor)
-    .filter((at) => at > 0)
-    .sort((a, b) => a - b);
-
-  if (stars.length === 0) {
-    throw new Error("homestead.json has no score ladder; every grove would be published wearing no stars");
-  }
-
-  if (Object.keys(dwellings).length === 0) {
-    throw new Error("homestead.json has no dwelling; a published card could name no home");
-  }
-
+  // The tables the Grovement used to fill are written **empty rather than omitted**. An
+  // absent key and an empty map read the same to `groveWorth`, but a deployed reader that
+  // indexes one without checking would throw on the first and score nought on the second —
+  // and scoring nought is the answer this change wants. The same reasoning keeps `version`:
+  // it is the only field the deployed code compares, and dropping it would make a re-seeded
+  // document look older than the one it replaced.
   return {
-    version: Math.floor(manifest.groveVersion ?? 1),
-    pieces,
-    bundles,
-    regions,
-    companions,
-    dwellings,
-    dwellingLevels,
+    version: 1,
+    pieces: {},
+    bundles: {},
+    regions: {},
+    companions: {},
+    dwellings: {},
+    dwellingLevels: {},
     wards,
-    stars,
+    stars: [],
   };
 }
 
@@ -369,7 +262,7 @@ function buildProgressionConfig() {
       // this same run derived: a rung scoped to a chapter nobody ships is a line that can
       // never be met, which is a badge nobody can ever earn, and there is no other file in
       // this project that can see both halves.
-      ranks: readRanks(progression, levelChapters),
+      ranks: readRanks(progression, levelChapters, manifest),
     },
     products: readStore(progression),
     levelCount,
@@ -1466,7 +1359,7 @@ async function writeDoc(token, path, data, options = {}) {
  * the two are deliberately both there — that one gates the build, this one gates the deploy, and
  * a re-seed from a shadow tree is exactly the path that skips the first.
  */
-function readRanks(progression, levelChapters) {
+function readRanks(progression, levelChapters, manifest) {
   const ID = /^[a-z0-9_]{1,32}$/;
 
   // Mirrors `RankMeasures`' five derived ids. Everything else a rung may name is a counted
@@ -1552,6 +1445,60 @@ function readRanks(progression, levelChapters) {
     });
 
     out.push({ id: rung.id, requires });
+  }
+
+  // ------------------------------------------------------------- the ladder's own gate
+  // **The ladder may not open before the lane it ranks does** (invariant 52i). A rank is drawn
+  // on a board row and on a stranger's public profile (52h), and the mode those two are about
+  // is the Infinite lane, which stands behind a keeper wall. A badge worn by somebody who
+  // cannot yet open that lane is the feature contradicting itself, and it shipped: Cinderling
+  // was reachable at keeper level 7 against a lane that opens at 10.
+  //
+  // The gate itself is one ordinary `keeper_level` line on the first rung, and that is the whole
+  // mechanism - `rungOf` and `RankLadder.Held` both walk up from the bottom and stop at the first
+  // rung they cannot meet, so one line closes every rung on both sides of the wire with no code
+  // that could disagree.
+  //
+  // **This is the deploy's half of holding the two numbers together.** The wall is authored in
+  // `manifest.json` and the gate in `progression.json`, and nothing lets them share one figure,
+  // because this server never reads a manifest - it reads what this script publishes. So the pair
+  // is checked in all three places that can see both files: here, `check_ranks` in `content.py`,
+  // and `ContentValidation.ValidateRanks`. **This one is the gate that matters**, because a
+  // re-seed from a shadow tree is exactly the path that skips the build.
+  const walls = (manifest?.chapters ?? [])
+    .filter((c) => !c?.disabled && c?.track === "infinite")
+    .map((c) => Math.floor(Number(c?.minKeeperLevel ?? 0)) || 0)
+    .filter((wall) => wall > 0);
+
+  const wall = walls.length > 0 ? Math.min(...walls) : 0;
+
+  if (wall > 0) {
+    const first = out[0];
+    const opens = first.requires.reduce(
+      (high, line) => (line.measure === "keeper_level" && !line.scope && line.target > high
+        ? line.target
+        : high),
+      0);
+
+    if (opens < wall) {
+      throw new Error(
+        `the Infinite lane opens at keeper level ${wall} and the rank ladder's first rung ` +
+        `('${first.id}') opens at ${opens || "nothing"}; a rank is what a board row and a ` +
+        "stranger's profile draw, so it may not be worn by somebody who cannot yet open the " +
+        `lane it ranks - give that rung a 'keeper_level' line of at least ${wall}, and move it ` +
+        "with the wall");
+    }
+
+    if (opens > wall) {
+      // The other direction. Not refused - a ladder opening *after* its lane hands nobody a
+      // badge they should not have - but it has stopped opening *with* the thing it ranks, and
+      // a seeder that said nothing would be the last chance anybody had to notice.
+      console.log(`  ranks: NOTE the ladder opens at keeper level ${opens} and the Infinite ` +
+                  `lane opens at ${wall}, so it no longer opens with the lane it ranks`);
+    } else {
+      console.log(`  ranks: the ladder opens at keeper level ${opens}, against the ${wall} ` +
+                  "the Infinite lane opens at");
+    }
   }
 
   console.log(`  ranks: ${out.length} rung(s), every scope proved against the shipped catalog`);
@@ -1659,27 +1606,18 @@ if (products) {
   console.log("config/products: skipped, progression.json has no store block — purchases stay inert");
 }
 
-// The grove catalog, so the boards can be scored without believing any client. Written as
-// a full replacement rather than a merge, for `config/products`' reason: a piece removed
-// from the content file must stop being worth anything, and a merge would leave the server
-// valuing groves against a catalog nobody ships.
+// The turret roster the boards publish a line from. Written as a full replacement rather
+// than a merge, for `config/products`' reason: a turret removed from the content file must
+// stop being vouched for, and a merge would leave the server publishing seats nobody ships.
+// Since 2026-09-21 the grove half of this document is written empty — see
+// `buildGroveConfig`.
 const grove = buildGroveConfig();
 await writeDoc(token, "config/grove", grove, { replace: true });
 
-const groveTotal =
-  Object.values(grove.pieces).reduce((sum, cost) => sum + cost, 0) +
-  Object.values(grove.regions).reduce((sum, cost) => sum + cost, 0) +
-  Object.values(grove.companions).reduce((sum, entry) => sum + entry.cost, 0);
-
 console.log(
-  `config/grove: v${grove.version} — ${Object.keys(grove.pieces).length} priced piece(s), ` +
-  `${Object.keys(grove.regions).length} region(s), ` +
-  `${Object.keys(grove.companions).length} companion(s), ` +
-  `${Object.keys(grove.dwellings).length} home rung(s) ` +
-  `(${Object.keys(grove.dwellingLevels).length} gated), ` +
-  `${Object.keys(grove.wards).length} turret(s), ` +
-  `${grove.stars.length} star(s) up to ${grove.stars[grove.stars.length - 1].toLocaleString()}, ` +
-  `a complete grove worth ${groveTotal.toLocaleString()}`
+  `config/grove: v${grove.version} — ${Object.keys(grove.wards).length} turret(s); ` +
+  "the grove tables are empty (the Grovement was removed on 2026-09-21), so every " +
+  "published card now scores nought"
 );
 
 // ------------------------------------------------------------------- keeper names
@@ -1729,10 +1667,6 @@ console.log(
   `${blocklist.exact.length} whole-word across ${blocklist.languages.length} language(s), ` +
   `${blocklist.reserved.length} reserved, ${blocklist.allow.length} allowed`
 );
-
-if (grove.stars[grove.stars.length - 1] > groveTotal) {
-  console.log("warning: the top star asks for more than the whole catalog is worth — nobody can reach it");
-}
 
 // Sanity: a chapter file on disk that nobody lists is usually a mistake worth naming.
 const onDisk = readdirSync(join(CONTENT, "chapters")).filter((f) => f.endsWith(".json")).length;

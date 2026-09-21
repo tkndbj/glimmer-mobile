@@ -68,11 +68,6 @@ VISIT_W, VISIT_INSET = 340.0, 104.0
 STAR_SIZE, STAR_STEP = 34.0, 40.0
 
 # KeeperOverlay
-KEEPER_W = 860.0
-KEEPER_TITLE_ROW = 150.0
-KEEPER_PORTRAIT_H, KEEPER_AFTER_PORTRAIT = 250.0, 6.0
-KEEPER_NAME_H, KEEPER_LINE_H, KEEPER_AFTER_NAME = 62.0, 40.0, 26.0
-KEEPER_BUTTON_H, KEEPER_BETWEEN, KEEPER_FOOT = 132.0, 20.0, 34.0
 
 # ReportOverlay
 REPORT_W = 880.0
@@ -434,8 +429,9 @@ def draw_panel(sheet, width, height, title):
 
 
 def report(sent=False):
-    # `ReportSubjects.All`, which holds the grovement subject while that feature is
-    # rebuilt — and the panel's height is the sum of what it draws, so the picture shrinks
+    # `ReportSubjects.All`, which does not offer the grovement subject — the feature was
+    # removed on 2026-09-21 and the enum member stays only because a subject names a server
+    # collection (19o). The panel's height is the sum of what it draws, so the picture shrinks
     # with it rather than leaving a gap where the second key was.
     subjects = ["ui.report.name"]
 
@@ -536,51 +532,6 @@ def ranks_info(built_ago="6h 12m"):
     return sheet
 
 
-def keeper(level=24, name="Fern Willow", worth=48200):
-    height = (KEEPER_TITLE_ROW + KEEPER_PORTRAIT_H + KEEPER_AFTER_PORTRAIT
-              + KEEPER_NAME_H + KEEPER_LINE_H + KEEPER_AFTER_NAME
-              + KEEPER_BUTTON_H + KEEPER_BETWEEN + KEEPER_BUTTON_H + KEEPER_FOOT)
-
-    sheet = panel(height, say("ui.keeper.title"))
-    top = draw_panel(sheet, KEEPER_W, height, say("ui.keeper.title"))
-
-    cursor = top + KEEPER_TITLE_ROW
-    my = cursor + KEEPER_PORTRAIT_H / 2
-
-    K.paste(sheet, disc(KEEPER_PORTRAIT_H - 24, (8, 51, 60), .95), W / 2, my)
-    K.paste(sheet, ring(KEEPER_PORTRAIT_H - 24, 11, K.GOLD, .92), W / 2, my)
-
-    face = portrait(ROSTER[0]["id"]) if ROSTER else None
-    if face:
-        K.paste(sheet, K.fit(face, (KEEPER_PORTRAIT_H - 100, KEEPER_PORTRAIT_H - 100)), W / 2, my + 4)
-
-    bx = W / 2 + (KEEPER_PORTRAIT_H - 24) / 2 - 41
-    by = my + (KEEPER_PORTRAIT_H - 24) / 2 - 41
-    K.paste(sheet, disc(78, K.GOLD), bx, by)
-    K.text(sheet, str(level), bx, by, 38, fill=(77, 51, 13), outline=0)
-
-    cursor += KEEPER_PORTRAIT_H + KEEPER_AFTER_PORTRAIT
-    K.shrunk(sheet, name, W / 2, cursor + KEEPER_NAME_H / 2, KEEPER_W - 160, KEEPER_NAME_H,
-             46, 26, fill=(77, 54, 36), outline=0)
-
-    cursor += KEEPER_NAME_H
-    K.shrunk(sheet, say("ui.board.row_worth", f"{worth:,}", level),
-             W / 2, cursor + KEEPER_LINE_H / 2, KEEPER_W - 160, KEEPER_LINE_H, 28, 19,
-             fill=(112, 84, 61), outline=0)
-
-    cursor += KEEPER_LINE_H + KEEPER_AFTER_NAME
-
-    for skin, key in (("btn_green", "ui.keeper.see_grove"), ("btn_orange", "ui.keeper.see_profile")):
-        K.paste(sheet, K.skin(skin, int(KEEPER_W - 220), int(KEEPER_BUTTON_H)),
-                W / 2, cursor + KEEPER_BUTTON_H / 2)
-        K.shrunk(sheet, say(key), W / 2 + 22, cursor + KEEPER_BUTTON_H / 2 - 8,
-                 KEEPER_W - 300, 70, 38, 22, fill=K.CREAM, outline=3)
-        cursor += KEEPER_BUTTON_H + KEEPER_BETWEEN
-
-    fit_note(sheet, height)
-    return sheet
-
-
 def fit_note(sheet, height):
     """Prints the one number a panel can silently get wrong. `PanelStack.TallestPanel`."""
     verdict = "fits" if height <= TALLEST else f"TOO TALL by {height - TALLEST:.0f}"
@@ -598,11 +549,10 @@ def save(sheet, name):
 
 
 def contact():
-    # **The chooser is not on the sheet, because a board row no longer opens one.** With the
-    # grovement held there is one door left, so `LeaderboardScreen.Visit` walks straight into
-    # the profile — and a contact sheet carrying a panel the game never raises is the fault
-    # invariant 44d names. `--keeper` still draws it, which is a deliberate ask rather than
-    # something the gate shows you every run.
+    # **There is no chooser any more.** `KeeperOverlay` was deleted with the Grovement on
+    # 2026-09-21 — a board row had one door left, so `LeaderboardScreen.Visit` walks straight
+    # into the profile — and this mirror went with it, because a mirror still drawing a panel
+    # the game cannot raise is the fault invariant 44d names.
     sheets = [profile(), report(), ranks_info()]
     pad = 24
     strip = Image.new("RGB", (len(sheets) * W + (len(sheets) + 1) * pad, H + 2 * pad), (16, 18, 22))
@@ -613,8 +563,6 @@ def contact():
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--keeper", action="store_true",
-                    help="the chooser a board row used to open (held with the grovement)")
     ap.add_argument("--report", action="store_true", help="the report panel")
     ap.add_argument("--sent", action="store_true", help="…with one subject already spent")
     ap.add_argument("--unplayed", action="store_true",
@@ -625,10 +573,6 @@ def main():
 
     if args.contact:
         save(contact(), "keeper_contact.png")
-        return
-
-    if args.keeper:
-        save(keeper(), "keeper_panel.png")
         return
 
     if args.report:

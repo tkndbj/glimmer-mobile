@@ -45,32 +45,19 @@ Everything here runs without Unity unless it says otherwise.
   thing about it whose quality is only visible as a picture. It found four faults in one pass: near-black
   wedges, a ramp putting five of eight slices on one colour, two warm rungs darkening to olive, and a
   jackpot the same gold as the rim.
-- `Tools/grove_art_facts.py` — writes each grove piece's `w`/`h` and its `hit` mask (a cell per sixteen
-  art pixels) into `homestead.json`, and each companion's into `manifest.json`, from the shipped PNGs;
-  `--check` proves the content still describes the art it ships, and `content.py` runs it. Run it after
-  any re-cut of grove or companion art. **It took `facings` everywhere except in the one caller that
-  had to pass it**, so for a year every turnable piece was reported as having no art at all and the
-  writer left its `hits` alone — `--check` red over a perfectly correct catalogue, hidden because
-  `content.py` is the gate that actually runs and reads the row's facings itself. A repair tool is run
-  exactly when something is already wrong, which is the worst moment for it to be the thing that is.
-  `Tools/render_grove.py` draws a grove exactly as the game does — ground layer under piece layer,
-  footprints, authored sizes — and is the fast loop for anything judged by eye; re-verify it against a
-  play-mode screenshot after touching `GroveTileArt` or `GroveFieldView`. **`--screen` draws the
-  Grovement rather than the grove**: `home_sky` enveloped at `Cover`'s own 1.06, the vignette as the
-  *ellipse* a square sprite stretched over a phone really becomes, `Scenery.Sun`'s three layers to the
-  pixel, and the header fade over all of it, with `--notch` adding what a cutout takes. Without the
-  fade it would be drawing a screen this game does not have, and the number it settles — is the sun
-  under the banner — is exactly the one that needs it.
-- `Tools/make_grove_art.py` — the catalogue itself, rendered from the committed CC0 models.
-  **The light is a sun and a sky rather than one grey** (invariant 16u): `SUN` is over-unity so a lit
-  face is drawn brighter than the pack painted it, `SHADE` is three per cent cool and no more, and
-  `PIECE_CHROMA` pays for the lift in saturation. The ground is **turned** toward grass by `FLOOR_HUE`
-  / `FLOOR_TURN` before it is lifted, because the pack's green is a yellow one and brightness cannot
-  answer a hue. Every one of those touches the three colour channels and never alpha, so a full re-cut
-  moves no size, no footing and no hit mask — which `Tools/grove_art_facts.py --check` is what proves.
-- `Tools/grove_art.tsv` + `import_grove_art.py` — one row per grove piece (source, permanent id, slot kind,
-  price, scale, lift, name). Copies the art, writes the loc string, regenerates the catalog, bumps
-  `groveVersion`. It **refuses to remove an id it imported before**, because a piece id is in save files.
+- **The grove's tools are gone** (2026-09-21, with the Grovement): `grove_art_facts.py`,
+  `make_grove_art.py`, `render_grove.py`, `import_grove_art.py` + `grove_art.tsv`,
+  `make_grove_animation.py`, `make_waterfall.py` and `grove_retired.txt`. Two lessons in them are
+  worth keeping because neither is about groves. **A repair tool is run exactly when something is
+  already wrong, which is the worst moment for it to be the thing that is** — `grove_art_facts.py`
+  dropped `facings` in the one caller that had to pass it, so for a year every turnable piece was
+  reported as having no art at all, `--check` was red over a correct catalogue, and nothing noticed
+  because `content.py` was the gate that actually ran and read the facings itself. And **a render
+  mirror must say which of two things it is drawing**: that tool's `--screen` drew the *screen*
+  (backdrop enveloped at `Cover`'s own 1.06, the vignette as the ellipse a square sprite stretched
+  over a phone really becomes, `Scenery.Sun`'s three layers to the pixel, the header fade over all
+  of it, `--notch` for what a cutout takes) where its default drew the *contents*, and without the
+  fade it would have been drawing a screen this game does not have.
 - `Tools/make_chapter_art.py` + `chapter_art.tsv` — the map strips of **one ordinal's** map, cut bottom
   upward out of one tall painting. `-` in the source column says this chapter draws a map some other row
   cut, which is what almost every row says now: a map is cut once and drawn by every mode's chapter at
@@ -88,9 +75,6 @@ Everything here runs without Unity unless it says otherwise.
   lies along one axis in RGB. The edge threshold finding a silhouette is **deliberately low** — a silhouette
   open anywhere is not one, the fill drains out through the gap and the whole interior is lost, which is far
   worse than a little speckle, and it is safe because a smooth halo carries brightness but no gradient.
-- `Tools/make_waterfall.py`, `Tools/make_grove_animation.py` — generated decor flipbooks. Rows they own are
-  marked `_generated` rather than `_imported`, or the next import run warns forever about a row it no longer
-  owns.
 - `Tools/make_name_blocklist.py` — vendors LDNOOBW (27 languages, CC-BY-4.0).
 - `Tools/make_sfx.py` + `sfx.tsv` + `sfx_dsp.py` — the twenty sound effects, cut from a licensed pack; one
   row per name the code plays. The DSP is split out so the cut can be proved without a 384 MB pack on disk.
@@ -1221,8 +1205,9 @@ of the supersampled buffer at half the stride and changed no picture while repor
 committed PNGs are what the tool writes, and `--contact` sheets that are the gate that actually matters
 — **`--check` proves reproducibility and says nothing about quality**. The exceptions are the particle
 bakes, which are Editor menu items because no Python can rasterise a particle system, and which need
-the gitignored packs; and the grove's renderer, which rasterises static meshes on the CPU from
-committed CC0 models and so runs on any checkout. Licensed packs are read from two or three roots and
+the gitignored packs. (The grove's renderer was a third exception — it rasterised static meshes on the
+CPU from committed CC0 models and so ran on any checkout — and went with the Grovement on 2026-09-21.)
+Licensed packs are read from two or three roots and
 every tool **passes when they are absent**, because copying a pack so that one path works is a second
 copy nothing keeps in step.
 
@@ -1313,8 +1298,8 @@ copy nothing keeps in step.
   a hill anybody can read?* A flame is drawn over the body and under the gem and the health bar,
   which is the board's own order and is not a nicety — fire may cover a raider and may never cover
   the two readouts on it. `SiegeView.BlazeWide` is the dial and the direction is down.
-- `Tools/render_grove.py`, `render_prism.py`, `render_home.py`, `render_shop.py` —
-  the same job for the map, the grove, Prismvale and the two chrome screens. `hudkit.py` mirrors
+- `render_prism.py`, `render_home.py`, `render_shop.py` —
+  the same job for the map, Prismvale and the two chrome screens. `hudkit.py` mirrors
   `UIKit` and `Skins` for the last two.
   <br>**`render_shop.py --shelf supplies` draws a shelf nothing could photograph until the free
   spot went onto it.** This mirror only ever knew how to draw a *painted* ladder, and the hearts

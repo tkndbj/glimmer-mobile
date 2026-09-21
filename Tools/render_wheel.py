@@ -8,7 +8,7 @@ Draw the bonus wheel exactly as the game draws it, without Unity.
 
 ## Why this exists
 
-`render_grove.py`'s argument, for the one other object in this game whose quality is only
+The same argument, for the one other object in this game whose quality is only
 visible as a picture. Everything about the wheel that can be proved is proved — where it
 comes to rest, which slice the seed picked, what the slice pays, that both runtimes agree
 about all three (`BonusWheelTests`, `RewardVectorTests`, `firebase/functions/test`). None

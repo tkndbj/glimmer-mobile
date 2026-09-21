@@ -163,8 +163,7 @@ namespace GlimmerGrove.Content
                               $"({entry.unlockCost}); treated as not for sale");
 
             _companions.Add(new AvatarDefinition(entry.id, entry.portrait, entry.animated,
-                                                 entry.unlockLevel, entry.unlockCost,
-                                                 entry.groveW, entry.groveH, entry.groveHit));
+                                                 entry.unlockLevel, entry.unlockCost));
             return true;
         }
 

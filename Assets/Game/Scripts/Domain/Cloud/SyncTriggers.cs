@@ -1,4 +1,3 @@
-using GlimmerGrove.Homestead;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 
@@ -15,15 +14,14 @@ namespace GlimmerGrove.Cloud
     /// is the least reliable moment there is to start a network call, since the process is
     /// being frozen as it goes out. And two things the server derives are built from the
     /// pushed save rather than from the device — the public card and the name reservation —
-    /// so until one of these has been pushed, what a stranger sees is the grove as it was.
+    /// so until one of these has been pushed, what a stranger sees is the keeper as they were.
     /// </para>
     /// <para>
     /// <b>Intents, never <c>Changed</c>.</b> Every ledger raises <c>Changed</c> when a save is
     /// loaded, and a save is loaded by every sync that adopts a merge — so a sync asked for on
     /// <c>Changed</c> is a sync every three seconds for the life of the process. The events
-    /// here are raised only by the player's own act: <see cref="HomesteadLayout.Edited"/>,
-    /// the three <c>Bought</c>s, <see cref="Wallet.ProfileChanged"/> and
-    /// <see cref="EndlessLedger.Beaten"/>. A new act that
+    /// here are raised only by the player's own act: <see cref="Wallet.ProfileChanged"/>,
+    /// <see cref="CompanionLedger.Bought"/> and <see cref="EndlessLedger.Beaten"/>. A new act that
     /// forgets to be listed here degrades gracefully — the change still goes up when the app
     /// is backgrounded — which is why this is a list and not a rule every call site has to
     /// remember.
@@ -44,21 +42,17 @@ namespace GlimmerGrove.Cloud
             _attached = true;
 
             Wallet.ProfileChanged += CloudSaveService.RequestSync;
-            HomesteadLayout.Edited += CloudSaveService.RequestSync;
-            HomesteadLedger.Bought += OnBought;
-            GroveLand.Bought += OnBought;
             CompanionLedger.Bought += OnBought;
 
-            // A new endless best is on the public card (`GroveCard.BestWave`), so it is one of
-            // the things a stranger sees and belongs on this list for the reason a placement
-            // does — without it a keeper could hold out further than anybody alive and never
-            // reach the board they did it for. `Beaten` and never `Changed`: the latter fires on
-            // every save load, which is this type's whole warning.
+            // A new endless best is on the public card (`GroveCard.BestWave`), and since the
+            // Grovement went it is the *only* thing that puts a keeper on a board
+            // (`GrovePublishPolicy.WorthPublishing`) — so without this a keeper could hold out
+            // further than anybody alive and never reach the board they did it for. `Beaten`
+            // and never `Changed`: the latter fires on every save load, which is this type's
+            // whole warning.
             EndlessLedger.Beaten += CloudSaveService.RequestSync;
         }
 
-        static void OnBought(HomesteadPiece piece) => CloudSaveService.RequestSync();
-        static void OnBought(GroveRegion region) => CloudSaveService.RequestSync();
         static void OnBought(AvatarDefinition companion) => CloudSaveService.RequestSync();
     }
 }

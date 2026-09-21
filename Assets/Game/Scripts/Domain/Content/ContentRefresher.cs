@@ -58,14 +58,6 @@ namespace GlimmerGrove.Content
             int localProgressionVersion = localManifest?.progressionVersion ?? 0;
             bool wantProgression = remoteManifest.progressionVersion > localProgressionVersion;
 
-            // The grove catalog, versioned in the manifest exactly as the reward table is —
-            // a body with no chapter to belong to. The cache check is not redundant with the
-            // version: a client that has never downloaded content has neither, and a version
-            // comparison alone would call the missing file up to date.
-            int localGroveVersion = localManifest?.groveVersion ?? 0;
-            bool wantGrove = remoteManifest.groveVersion > localGroveVersion
-                          || (remoteManifest.groveVersion > 0 && !_cache.Has(ContentPaths.Homestead));
-
             foreach (var entry in remoteManifest.chapters)
             {
                 if (entry == null || entry.disabled) continue;
@@ -79,7 +71,7 @@ namespace GlimmerGrove.Content
                 wanted.Add(entry);
             }
 
-            if (wanted.Count == 0 && !wantProgression && !wantGrove) return false;
+            if (wanted.Count == 0 && !wantProgression) return false;
 
             int written = 0;
             foreach (var entry in wanted)
@@ -102,18 +94,11 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
-            if (wantGrove && !await FetchGroveAsync(cancellation))
-            {
-                Debug.LogWarning("[Content] grove catalog could not be refreshed; " +
-                                 "keeping the previous manifest");
-                return false;
-            }
-
             // Only now is it safe to say the cache holds this manifest's world.
             bool ok = await _cache.WriteAsync(ContentPaths.Manifest, remoteFetch.Text, cancellation);
             if (ok) Debug.Log($"[Content] cached {written} updated chapter(s)" +
                               (wantProgression ? " and a new reward table" : "") +
-                              (wantGrove ? " and a new grove catalog" : "") + ", live next launch");
+                              ", live next launch");
             return ok;
         }
 
@@ -140,31 +125,6 @@ namespace GlimmerGrove.Content
             }
 
             return await _cache.WriteAsync(ContentPaths.Progression, fetch.Text, cancellation);
-        }
-
-        /// <summary>
-        /// Pulls a retuned grove catalog. Parsed before it is cached, exactly as a chapter and
-        /// the reward table are, so a malformed download can never reach the disk and be read
-        /// back on a launch where nothing is around to notice.
-        /// </summary>
-        async Task<bool> FetchGroveAsync(CancellationToken cancellation)
-        {
-            var fetch = await _remote.FetchAsync(ContentPaths.Homestead, cancellation);
-            if (!fetch.Success)
-            {
-                Debug.LogWarning("[Content] could not download the grove catalog: " + fetch.Error);
-                return false;
-            }
-
-            var problems = new List<string>();
-            if (!Homestead.HomesteadMapper.TryRead(fetch.Text, problems, out _))
-            {
-                Debug.LogWarning("[Content] downloaded grove catalog is malformed, discarding: " +
-                                 string.Join("; ", problems));
-                return false;
-            }
-
-            return await _cache.WriteAsync(ContentPaths.Homestead, fetch.Text, cancellation);
         }
 
         async Task<bool> FetchChapterAsync(ManifestChapterDto entry, CancellationToken cancellation)

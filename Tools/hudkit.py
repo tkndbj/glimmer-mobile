@@ -393,17 +393,17 @@ def rail(sheet, top):
     sheet.alpha_composite(im, (0, 0 if top else int(H - h)))
 
 
-# `NavBar.Order`, and it is the order rather than the enum: the Grovement tab is **held**
-# while that feature is rebuilt, and the hold is the entry being taken out of the list on
-# both sides. A mirror still drawing a cap the game does not would answer the wrong
-# question about the spacing of every other cap, because the slot width is derived from
-# the length (44d).
+# `NavBar.Order`. The Grovement tab was held on 2026-09-15 and the feature was removed on
+# 2026-09-21, so `Tab.Grove` is out of the enum as well as out of the order — nothing here
+# changed at either date, because this list has always mirrored the *order*. A mirror still
+# drawing a cap the game does not would answer the wrong question about the spacing of every
+# other cap, because the slot width is derived from the length (44d).
 NAV_TABS = [("home", "ic_home"), ("shop", "ic_chest"),
             ("ranks", "ic_trophy"), ("profile", "ic_profile")]
 #: `NavBar.LabelKey` through `loc/en.json`. Written out rather than looked up because
 #: `hudkit` is the kit and loads no content - so it has to be kept in step by hand, and the
 #: profile tab said YOU here for as long as the game has said PROFILE (invariant 44d).
-NAV_WORDS = {"home": "HOME", "shop": "SHOP", "grovement": "GROOVEMENT",
+NAV_WORDS = {"home": "HOME", "shop": "SHOP",
              "ranks": "BOARDS", "profile": "PROFILE"}
 
 

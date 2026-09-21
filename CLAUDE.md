@@ -220,79 +220,39 @@ Grove, and the bundle id can never move.
    poor is told about the wall credits cannot climb; and `IsHeld` must never re-check the gate on something
    already bought, or a retune confiscates it. The same shape gates homes (16s) and turrets (42c).
 
-### The grove
+### The grove — REMOVED 2026-09-21
 
-> **The Grovement is HELD as of 2026-09-15, and nothing below has been deleted.** This build does not
-> *draw* it: the nav tab is out of `NavBar.Order`, the finest-groves board is out of `LeaderboardScreen`,
-> the public profile's grove card and worth line are gone, the board-row chooser is bypassed, and
-> `ReportSubjects.Held` carries the grovement subject. **Every screen, rule, id and the whole server half
-> still stand.** Putting it back is a handful of table entries.
+> **Invariants 16–16x are spent.** The Grovement — the village a player built — was held on
+> 2026-09-15 and removed outright on 2026-09-21: `homestead.json`, `Art/Homestead/`, the generated
+> browse atlases, the `Glimmer Grove Homestead` bundle, the whole `Homestead` namespace, five
+> screens, five save fields and ~165 loc keys. **The ids are not renumbered and never will be** —
+> ~1,500 comments cite them, and several invariants elsewhere in this file are still argued *by
+> reference to* 16a, 16e, 16g, 16j, 16l and 16s, which is why the numbers stay spent rather than
+> being reused. `Assets/Game/CONTENT.md` carries what was removed and what deliberately was not.
 
-16. **A grove is built, and only four facts about it are stored**, split by *shape*: a purchase is an
-   **entitlement** (union-joined id sets), an arrangement is an **instruction** (merged by recency with a
-   stamp per slot), and the fourth is the hall's seat (16q). Deliberately absent: any count of tiles. A slot
-   id is written into the save, so invariant 1 applies to it.
-16a. **A resident is a companion, and the roster is written down once** — which is why the
-   companions taken off the front of the game on 2026-09-20 could not simply be deleted: the
-   roster is the grove's residents, the residents are in `groveWorth`, and `groveWorth` is a
-   published, server-adjudicated number. Nothing a player can reach draws a companion now; every
-   rule, id, price and the whole server half still stand, exactly as the Grovement does.
-16b. **The grove is a tile floor, and a tile is a slot** — hand-authored slots made the player's only
-   decision which pre-placed dot got which sticker.
-16c. **A shop shelf is one idea used three times** (tab, browse atlas, asset scope), so the division is
-   expressed once. Browsing packs *copies*, because a sprite may belong to exactly one atlas.
-16d. **Anything unbounded keeps only what you can see.** **`Show` is a new list and animates; `Refresh` is
-   the same list redrawn and does not, and anything raised by an event is a `Refresh`.**
-16e. **Land is a union-joined set of *regions* rather than tiles** — both are legal and only one stays
-   small. Starter land has no price and is never written down; the hall stands on starter land.
-16f. **The starter companion is shown, never stored** — writing that placement at first launch would stamp
-   it with *now* on every fresh install. Clearing it is a real instruction that does get a row.
-16g. **A grove's score is what it is worth, and worth is what is *held*** — derived, cloud-safe, monotonic.
-   Counting placements would be won by standing one expensive piece everywhere; storing it would be the
-   count 11b refuses. The reading is market value, not spend.
-16h. **Priced decor is bought by the copy, and the count is representable only because it counts
-   purchases** — copies ever bought only rise, so the join is a per-id `max`.
-16i. **A piece occupies a footprint, the ground is a layer under everything, and a tap tests paint.**
-16j. **Before pricing anything in a second currency, grep for the predicate that means "free" and read
-   every caller.** `IsStarter` was `Cost <= 0`, so every gem-priced region read as free and half the world
-   was handed over at launch. **The ladder is authored and never derived from price.**
-16k. **A `Refresh` that restarts an animation is a `Show` wearing a `Refresh`'s name** — a *bind* restarts
-   things of its own.
-16l. **Two screens offering one catalog draw one card**, as a builder rather than a table of numbers.
-16m. **The grove is a village rendered from models, and what that bought is that a piece can be *turned*.**
-   `Turn` steps by one and answers `NoRoom` rather than skipping to the facing that would have fitted.
-16n. **A union-joined set cannot be cleared by clearing it, so a reset is an epoch.**
-16o. **Placing something is a draft.** `GroveDraft` (Domain) answers `Fits`, `Stand` and `Footprint` from
-   one place: the lit tiles come from the plan the drop executes; moving is centred, clamped and **never
-   relocates**; **turning is allowed even where it will not fit**, because a refusal the player can see is a
-   control and one that is swallowed is a broken button; and nothing is written until Confirm.
-16p. **Every dwelling matches the hall's footprint**, so the plot is reserved up front and a bigger home
-   never evicts what stood beside the smaller one. A tile id is its absolute coordinate.
-16q. **The hall's seat lives in the save**, as an instruction joined by recency with the default never
-   written down. **Every runtime question about where the hall is goes through one accessor** — the old
-   constant is still correct and has stopped being the answer, so a stale reader is a home drawn on one tile
-   and hit-tested on another.
-16r. **A model named after a building is not evidence that it is one** — two `building_*` models are
-   hexagons, which cannot tile a square grid. A render answered it in one picture.
-16s. **The home ladder is gated on keeper level as well as price**, because credits alone were a poor clock.
-   A gated rung must also be priced, and the gate is asked before the price.
-16t. **Removing a grove piece is four things**: the roster row goes, the id goes into
-   `Tools/grove_retired.txt` **in the same change**, the importer rewrites the catalogue and drops its
-   strings, and the art comes off disk.
-16u. **One grey lamp cannot say outdoors** — the render takes a warm sun and a barely-cool shade and falls
-   back to the scalar, which let the refactor be proved byte-identical first. Brightness cannot answer a
-   hue, so the floor is **turned** toward grass as well as lifted. Every grade runs on the three colour
-   channels and **never on alpha**.
-16v. **A screen whose backdrop is daylight is darkened by nothing** — every element already earned its
-   contrast. **And the sun is drawn where the models were lit from**, off the render rig.
-16w. **Nothing stands on the hall's plot, and a content change that grows the plot is a migration.**
-   `GroveOccupancy` refuses any stand touching a hall; `HomesteadLayout.Settle` writes the refused rows
-   *empty* (a real instruction with a stamp), because a row merely skipped springs back when the hall moves.
-16x. **A derived copy is written by whoever writes what it derives from, in the same call — and no reader
-   may ever prefer the copy.** `homesteadOwned` had two writers and only one knew, so every synced save
-   carried a full stock beside an empty array and the one reader that asked the mirror alone published every
-   keeper standing in the free cottage. The pair is set by one call and the fixture is asserted over **the
-   merge's own output**; **the repair is bumping the publish note**, because nothing a visitor sees changed.
+**Four things survived the removal on purpose, and each is a rule that still binds.**
+
+16y. **The wire spellings stay.** `groves/{uid}`, `GroveCard`, `GroveBoard`, `GroveNames`,
+   `config/grove`, `ReportSubject.Grove` and the nine `grove*`/`homestead*` save keys all keep their
+   names: a collection or a document field is a wire spelling and those are permanent (19o). A card
+   is a *keeper* now and `config/grove` is the *turret roster*; only the names are grove-shaped.
+16z. **The five save keys stay in `hasOnly`, and that is the whole reason they are mentioned at
+   all.** No build writes them and `SaveFileDto` (v33) no longer declares them — but `hasOnly` is an
+   allow-list over the whole document, so dropping a key a rolled-back client still writes costs that
+   client **every** save write, silently (12a). An allow-list entry for a field nobody sends costs
+   nothing. Their rules bounds stay for the same reason: an old client still has to pass them.
+16aa. **A removal is a schema bump, for invariant 12 read backwards.** `SaveChecksum` hashes the
+   serialised object, so a build whose object has *fewer* fields than every stored file fails every
+   checksum at once — exactly the failure 12 warns about, arriving from the other direction.
+   `SaveSchema.Version` 32 → **33** is what buys the one-time amnesty, because `Verify` trusts a file
+   whose version is not this build's. Nothing is destroyed server-side: an incremental push is a
+   field-masked `UpdateAsync`, which cannot delete a key it does not name.
+16ab. **The companion roster is now inert rather than load-bearing.** 16a said a resident *is* a
+   companion and residents are counted into `groveWorth`, which is why the companions taken off the
+   front of the game on 2026-09-20 could not be deleted. That reason is gone with the grove: nothing
+   counts a companion now. The ids are still in `manifest.json` and still on the wire, and deleting
+   them is a separate decision with no rule holding it back.
+
 17. **A save may only ever be pushed to the account it says it belongs to.** `AccountGate`, five lines, and
    the only rule here whose failure has no undo: aimed at the wrong account, a monotonic join takes the
    better half of two strangers' groves and writes it over one of them.
@@ -402,9 +362,12 @@ Grove, and the bundle id can never move.
 19s. **A gate that waits on something must be the thing that asks for it.** The publish path waited for the
    homestead catalog and trusted a grove screen to load it; the day the Grovement was held no device loaded it
    again, every settled sync parked its receipt, and no card was published for four days with every gate green.
-   Pinned by `EndlessBoardTests.AReceiptParkedForTheCatalogAsksForTheCatalog`.
+   **The gate is gone with the Grovement (2026-09-21) and so is its fixture** — a publish now waits on
+   nothing — so what is left here is the rule rather than the guard: the cheapest fix for a gate that waits
+   on a coincidence is usually to find that it need not wait at all.
 19t. **A keeper gate is asked of what is *counted* and never of what is merely *drawn*.**
-   `heldCompanions` asks it (a companion feeds `groveWorth`, so 19a governs it); `publishedLine` may not —
+   `heldCompanions` asks it (a companion fed `groveWorth`, so 19a governed it — the grove is gone and
+   nothing counts a companion now, but the shape is the point); `publishedLine` may not —
    a seat feeds no score, no ordering and no currency, so re-asking it there was **15a's confiscation on a
    stranger's screen**: the legendary band is gated at keeper 45–60, nobody is there, and the dropped seat
    drew as the starter, so a real five-star Pyroclast published as `bolt` with every gate green. Nothing
@@ -735,6 +698,16 @@ is where they are written down, not what they mean.
 52g. **Two things here are called a rank** — the percentile band a map node wears
    (`Social.RankTier`, 19c) and this ladder — so the nav bar's board tab reads **BOARDS** now and
    the fixture is `RankLadderTests` beside the older `RankTests`.
+52i. **The ladder may not open before the lane it ranks does**, and the whole mechanism is one
+   `keeper_level` line on the **first** rung: both readings walk up from the bottom and stop at
+   the first rung they cannot meet, so one line closes every badge, board row and public profile
+   with nothing new that could disagree. Cinderling was reachable at keeper 7 against an Infinite
+   lane that opens at 10. The wall is in `manifest.json` and the gate in `progression.json`, and
+   nothing can share one number because the server never reads a manifest — so the pair is held
+   by the three gates that see both files (`RankGate` in **Authoring**, `check_ranks`,
+   `seed-config.mjs`), **error below the wall and warning above it**: below is a badge for a mode
+   nobody can open, above is a ladder that has quietly stopped opening *with* its lane. The wall
+   is the **lowest** Infinite chapter's, read off the lane rather than authored a second time.
 
 ### The tutorial
 
@@ -801,9 +774,10 @@ is where they are written down, not what they mean.
 
 ## Spent ids — never reuse any of these
 
-**Enforced by a machine** (add the id in the same change as the removal; the tool refuses it): grove piece
-ids in `Tools/grove_retired.txt`; lesson ids in `Mechanic.Retired`, held to the live set by
-`TipTests.EveryMechanicIsEitherLiveOrRetired`; level block names in `content.py`'s `RETIRED_BLOCKS`.
+**Enforced by a machine** (add the id in the same change as the removal; the tool refuses it): lesson ids
+in `Mechanic.Retired`, held to the live set by `TipTests.EveryMechanicIsEitherLiveOrRetired`; level block
+names in `content.py`'s `RETIRED_BLOCKS`. (`Tools/grove_retired.txt` held the grove piece ids and went with
+the Grovement — nothing stores one any more, so they are not spent.)
 
 **Enforced by nothing but this table.** A chapter or level id can be re-authored by accident, and a real
 save may hold a record against any of them — which is why `ProgressionStore`'s floors exist (9).
@@ -869,7 +843,7 @@ being kept, because that chapter never left the working tree.
 
 ```
 Assets/Game/Scripts/Domain/        GlimmerGrove.Domain       (no UnityEngine.UI)
-  Board/ Content/ Modes/ Wards/ Utilities/ Persistence/ Progression/ Homestead/ Cloud/
+  Board/ Content/ Modes/ Wards/ Utilities/ Persistence/ Progression/ Cloud/
   Localization/ Analytics/ AssetPipeline/ Store/ Ads/ Daily/ Events/ Social/
   Notifications/ Release/ Ranks/ Tasks/
 Assets/Game/Scripts/Notifications/  GlimmerGrove.Notifications (Domain; the mobile-notifications binding)
@@ -877,7 +851,7 @@ Assets/Game/Scripts/Presentation/  GlimmerGrove.Presentation (Domain + UnityEngi
 Assets/Game/Authoring/             GlimmerGrove.Authoring    (Editor-only; Domain)
 Assets/Game/Editor/                GlimmerGrove.Editor
 Assets/Game/Tests/                 GlimmerGrove.Tests        (EditMode)
-Assets/StreamingAssets/Content/    manifest.json, chapters/, homestead.json, loc/
+Assets/StreamingAssets/Content/    manifest.json, chapters/, progression.json, loc/
 ```
 
 **`GlimmerGrove.Authoring` is the home for a rule that decides whether content is fit to ship and that no
@@ -1200,8 +1174,9 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **Content pipeline** — levels as data, stable `LevelId`s, manifest-built `CatalogIndex`, lazy chapter
   bodies, `Content ▸ Sync Manifest`, build gate.
 - **Save** — versioned atomic file with checksum, backup rotation, corrupt-file recovery, tested
-  migrations, monotonic merge. **Save schema v32.** Content schema: manifest and chapter bodies **v2**,
-  grove body **v3**.
+  migrations, monotonic merge. **Save schema v33** (v33 removed the Grovement's five fields —
+  16aa). Content schema: manifest and chapter bodies **v2**; `ContentSchema.Version` stays at **3**,
+  which only the retired grove body ever used.
 - **Cloud** — Firebase (Firestore + Auth + Functions), anonymous by default, Apple/Google linking,
   per-account local archive for switching, debounce/backoff.
 - **Progression** — derived XP, keeper levels and credits from the star ledger; high-water floors only.
@@ -1255,19 +1230,16 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   firing at everything on the hill, and **bought by the copy** (42k): four Eclipses on a line is four
   purchases. They are cut from a second turret pack and their thirty
   effect reels are **drawn** rather than baked (`Tools/make_legend_fx.py`).
-- **The grove** *(held — see the note under **The grove**)* — a village on a 28x28 isometric tile floor
-  (784 tiles), 86 pieces rendered from one CC0 pack: a four-rung home ladder ending in a castle, houses,
-  civic buildings, walls, gates, trees and props. A piece stands on an authored footprint (1x1 to 4x4) and
-  can be turned.
-- **Boards** — **one drawn, two published**: **Finest grooves** (held with the Grovement) and the **Endless
-  Watch**. A hundred rows each, one document each, **live** — a card's row is merged into the board by the
-  publish that wrote it (19r) — re-read whole every fifteen minutes (~20,000 reads a day) and counted at
-  04:00 (~15,000 reads a night at ten million cards). Plus **two published distributions** off the same
-  five-thousand-card sample, each refusing to answer under 200 samples. The nine league boards are gone.
-- **A keeper seen from outside** *(profile and name reporting live; the chooser, the grove card and the
-  grovement report subject are held)* — a read-only profile built from the published card: keeper level and
-  honorific, the Endless Watch with a percentile, companions **gathered** (held only), the four turrets
-  carried with their rungs.
+- **Boards** — **one drawn, one still published**: the **Endless Watch**. A hundred rows, one document,
+  **live** — a card's row is merged into the board by the publish that wrote it (19r) — re-read whole every
+  fifteen minutes (~20,000 reads a day) and counted at 04:00 (~15,000 reads a night at ten million cards).
+  Plus **two published distributions** off the same five-thousand-card sample, each refusing to answer under
+  200 samples. The nine league boards are gone; **Finest grooves** went with the Grovement on 2026-09-21 —
+  its board id `global` is still in `BOARD_IDS` server-side and still written, and scores nought for
+  everybody now, which nothing draws.
+- **A keeper seen from outside** *(profile and name reporting live)* — a read-only profile built from the
+  published card: keeper level and honorific, the rank badge, the Endless Watch with a percentile, and the
+  four turrets carried with their rungs.
 - **Economy** — real-money shop (Unity IAP 5.4.2), gems as the soft sink, rewarded ads, refund sweeps,
   server-adjudicated grants, a gem-priced doubling continue (23c) and a bonus wheel (25).
 - **The front of the game** — one bought interface kit (44), cut by `Tools/make_hud_kit_art.py`; the display
@@ -1318,7 +1290,7 @@ end-of-chapter marker cannot be placed legally**, and that is arithmetic rather 
 
 ### The numbers
 
-**Every figure lives in `manifest.json`, `homestead.json` or `progression.json` and both content gates
+**Every figure lives in `manifest.json` or `progression.json` and both content gates
 derive and print the totals — read them there, never from here.** Everything except the shop ladder is
 content and retunable without an app update; **re-seed after any change**. Only the shapes that are not
 obvious from the files are worth recording:
@@ -1382,6 +1354,73 @@ the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-18),
 on a fresh clone).
 
 ## Owed
+
+**The Grovement was removed on 2026-09-21 and none of it has been in the Editor.** The village a
+player built is gone in full — **1,096 files deleted**: 64 C# (`Domain/Homestead/`'s 23, nine
+Presentation views, six screens, `KeeperOverlay`, `GroveVisitScreen`, fifteen test fixtures), 424
+PNGs at **16.7 MB** (`Art/Homestead/`'s 291, `Generated/GroveThumbs/`' 129, four dead global
+sprites), nine browse atlases, the `Glimmer Grove Homestead` group and its two schemas, seven
+Python tools, `homestead.json`, `seed-showcase.mjs` + `showcase-villages.json`, ~165 loc keys and
+five save fields. 301 Addressables entries and 68 labels came out of the settings with them, so the
+**whole bundle stops being built**. **Offline green**: `compile.py` (all eight assemblies),
+`content.py` (0 errors, the same 19 pre-existing map warnings), `loc.py` (0 missing),
+`artnames.py` (0/0), `rungs.py`, `names.py` (57 vectors), `seed-config.mjs --check`, 72 function
+tests, every render mirror.
+
+**Four things are owed, and the first is the only one with teeth.**
+
+1. **The Editor's standing discipline, and one step of it is not optional.**
+   `▸ Addressables ▸ Sync All Assets` **and save** → `Audit Addresses` → `Validate Content` →
+   `Validate Art` → EditMode. **`Audit Addresses` is the one that matters here**, because this is a
+   *deletion*: 301 Addressables entries were removed by editing the group asset and the settings
+   asset as text, and a dead entry fails `BuildPlayer` rather than the game. The four `.meta` files
+   for the deleted `Art/Bg/grove_*` and `Art/Ui/ic_nav_grove` went with their PNGs; Unity will also
+   want to drop the `Homestead`, `Grove` and `GroveThumbs` folder metas on its next focus.
+2. **Save schema v33 has never been round-tripped by the real reader.** The offline suite proves
+   `SaveMerge`, `SaveDelta` and `FirestoreSaveMapper` agree, and `CloudWireTests` still holds
+   `firestore.rules` to the client — but the one path nothing offline exercises is **loading a real
+   v32 file on a device**. `SaveChecksum.Verify` trusts a file whose version is not this build's
+   (16aa), so the first load is an amnesty and the first write stamps v33. **Launch once on a
+   device with a real save and check nothing else was lost.**
+3. **Two server-side things are written and not deployed, and neither is urgent.**
+   `firestore.rules` gained only comments (every grove key is still allow-listed and still bounded,
+   16z) — **no release is needed**. `seed-config.mjs` now writes `config/grove` with the grove
+   tables empty and the turret roster intact; until it is re-seeded the server keeps the old price
+   tables and `groveWorth` keeps scoring saves that still carry a grove, which nothing draws. **A
+   re-seed is safe in either order with the client** and is the only server action this drop wants.
+4. **Three more sounds have no caller**, and they are left on disk on purpose. `sfxnames.py` now warns
+   about `arrive.wav`, `lift.wav` and `stow.wav` (the grove's arrival and its pick-up/put-down) beside
+   the `wear.wav` companions left behind. Deleting audio with the Editor closed is how a dead
+   Addressables entry fails `BuildPlayer` rather than the game — so they come off in the Editor or not
+   at all. They are ~4 preloaded clips of dead weight until then.
+5. **Nothing visible moved on the nav bar, and that is worth saying out loud.** `Tab.Grove` came out
+   of the enum, but it had already been out of `NavBar.Order` since the hold — the bar has drawn four
+   tabs since 2026-09-15 and still draws four. `render_home.py` is green and unchanged.
+
+**What it does not touch**: no function deploy, no `firestore.rules` release, no content schema
+version, no chapter, no mode, no charm, no cast, no board id and no spent id. The two grove lesson
+ids are retired by name in `Mechanic.Retired` (5f) and the nine save keys stay on the wire (16z).
+
+**The obvious next bundle win is the companion roster** — 4.4 MB and 62 files that nothing draws
+and, since the grove went, nothing counts either (16ab). Deliberately not taken here.
+
+
+**Two fixtures are red at HEAD and neither is the Grovement's doing.** Found by the full offline
+suite on 2026-09-21 — the first run of it since Bonereach and the rank gate landed. Both the test
+and every input it reads are byte-identical to HEAD in each case, which is how they were told apart
+from the removal's own breakage.
+
+* **`SiegeArtTests.EveryBossIsClassifiedByBothAimingRules`** — asserts *exactly one* boss reaches
+  the line without aiming at a ward (the warbringer's rally). Bonereach's **hollowking** makes two:
+  `SiegeTuning.AimsAtAWard` already says so in as many words — *"a wane is the second spell here
+  aimed at no ward"* — so the **rule** was updated when the chapter shipped and the **fixture** was
+  not. **Do not simply bump the 1 to a 2.** The failure message is the warning: a second one means
+  "every clause that says 'the warbringer' now has two answers", so what is owed is an audit of
+  those clauses, not a number. This is the *first* thing the Bonereach sweep was going to find.
+* **`ProductCardBadgeTests.TheCaptionFitsInsideTheSealsFace`** — the caption's corner reaches 52.38
+  of a seal face 44.12 across, so a product card's badge text overflows its disc by ~19%. Pure
+  arithmetic over constants in `ProductCardBadges`, which is unmodified, so it is a shop-art
+  regression from some earlier drop that nothing has drawn since. `render_shop.py` is the eye.
 
 **Bonereach shipped on 2026-09-20 and none of it has been in the Editor, on a device, or through
 a sweep.** The seventh chapter (`s08_bonereach`, ordinal 7, manifest order 152) brings a map, two
@@ -1517,6 +1556,49 @@ about which of the two was theirs. **Then play it as a new install**: delete the
 launch, and check the splash lands on it — `TutorialGate.Owed` is the only routing decision in
 the game and nothing offline exercises it.
 
+**The ladder was gated on the Infinite lane on 2026-09-21** (52i), at the owner's instruction
+after earning Cinderling at keeper 7 against a lane that opens at 10. It is **one content line** —
+a `keeper_level` target of 10 on `cinderling` — plus the three gates that hold it to
+`manifest.json`'s own wall, and it costs **no C# and no TypeScript**: both walks already stop at
+the first rung they cannot meet, so one line on the *first* rung closes every badge, board row and
+public profile. No rules release and no function deploy, for the same reason.
+**The re-seed is done** — `config/progression` v**8**, all four documents read back and diffed
+against a snapshot taken before it: the ranks array shifted by one and `version` moved, **nothing
+else changed in any of the four**, and `config/products`, `config/grove` and `config/names` came
+back field-for-field identical. Live green after it: `rank-badge.mjs` **11/11**,
+`smoke-test.mjs` **172/172**, `ward-copies.mjs` 19/19, `endless-xp.mjs` 12/12,
+`delete-account.mjs` 14/14.
+**No live badge fell, and that is now a reading rather than an argument** — all 19 cards were
+walked, and the three carrying one stand at keeper 12, 14 and 16 (`cinderling`, `silverwatch`,
+`silverwatch`), every one of them above the new line.
+**What the probe cost is worth knowing**: a save meeting a `keeper_level` line has to clear the
+whole catalog, because working out the minimum would mean a third copy of the reward rules and
+the level curve in an e2e file — so `rank-badge.mjs` now asserts **a rung of the published
+ladder** rather than `first.id` exactly (it reaches `silverwatch`), and checks the *card's own
+`level`* against the line so the shortcut cannot hide a target the catalog can no longer pay.
+**The rule lives in `GlimmerGrove.Authoring` and is tested.** Its first cut was written inside
+`ContentValidation`, where the suite cannot reach it — so it would have shipped compiled and never
+once executed, which is a gate that cannot fail. `RankGate` is the rule, `ValidateRankGate` is the
+build gate asking it, and **`RankGateTests` drives every branch** (11, including that the gate
+alone shuts a ladder whose every other line is met many times over, asserted against
+`RankLadder.Held` rather than argued). Proved by mutation: breaking the comparison turns it red.
+**The e2e probe climbs the published ladder** rather than naming a rung. A save meeting a
+`keeper_level` line has to clear the whole catalog, which ordinarily reaches the *second* rung —
+so `rank-badge.mjs` now predicts the rung from the published ladder and the save it wrote and
+holds the server to it exactly, which is sharper than the `=== first.id` it replaced. It falls
+back to recognising a rung, and says so out loud, only if a future ladder asks a shape it cannot
+climb.
+**What is still owed is the client.** Its half is bundled content, so it reaches nobody until
+**the next build** ships; until then a keeper below 10 sees a badge on their own map that no
+stranger sees, which is cosmetic only (a rank pays nothing, 52e). Two new C# files
+(`Authoring/RankGate.cs`, `Tests/RankGateTests.cs`) were written with the Editor closed, so their
+**`.meta` files do not exist yet** and Unity mints them on the next focus; nothing else about this
+touches art, an address or the server.
+Offline green: `compile.py` (Domain still builds without `Authoring`, so nothing shipped reaches
+the rule), the EditMode suite, `content.py` and `seed-config.mjs --check` — both proved to go red
+below the wall and to warn above it — `loc.py`, 72 function tests, `render_ranks.py` at every
+state, the first rung drawing three lines and still fitting.
+
 **The badge went public on 2026-09-20 and the server half is live.** A rank used to be a
 private reading; it is on every board row and every public profile now, so it is adjudicated
 (52h). `rungOf` climbs the ladder over the save `publishGrove` already reads, `buildCard` writes
@@ -1541,9 +1623,9 @@ deploy of every function that writes a row**, which is `publishGrove` (live plac
 **What a green deploy still does not buy is a badge on a screen, and three separate things
 decide that.** (1) **A card only gains a rung when its owner next publishes** — nothing
 backfills, because the rung is derived at publish time from that save. (2) **A card is only
-published at all when `GrovePublishPolicy.WorthPublishing` says so**: grove worth ≥ 1 *or* a best
-wave > 0. With the Grovement held there is no way to build grove worth, so **the Infinite lane is
-now the only route onto any board**, and an account that has never run it has no card at all —
+published at all when `GrovePublishPolicy.WorthPublishing` says so**: a best wave > 0, and since
+2026-09-21 that is the whole test — the grove-worth clause went with the Grovement, so **the
+Infinite lane is the only route onto any board**, and an account that has never run it has no card at all —
 which is the state the owner's own `Tekoworld` account is in (99 glades played, 0 endless rows,
 no card). (3) **The first rung is demanding against the live population**: run read-only over the
 nine real saves on 2026-09-20, only three would publish anything — `cinderling` for one,
@@ -1562,13 +1644,19 @@ blanks.
 hub's top-bar seat, the profile's medallion, every board row and every public profile wear a rank
 badge now; the profile's companions card and the public profile's are gone; `CompanionScreen`,
 `UnlockGoal` and the hub's companion goal box are deleted, and the splash no longer pins a
-portrait into the global set for the life of the process. **What still stands is the grove's
-half**, and invariant 16a is why: a resident *is* a companion, residents are counted into
-`groveWorth`, and `groveWorth` is a published server-adjudicated number — deleting the roster
-would have moved every card's score and reordered a live board. So `AvatarCatalog`,
-`CompanionLedger`, `CompanionArt`, `CompanionUnlockOverlay`, `CompanionRevealOverlay`, the
-`companions` block in `manifest.json`, `Art/Companions/` and the whole server half are untouched
-and unreachable, exactly as the Grovement is. **Two things owed**: `wear.wav` now has no caller
+portrait into the global set for the life of the process. **What still stands is the roster
+itself** — `AvatarCatalog`, `CompanionLedger`, `CompanionArt`, `CompanionUnlockOverlay`,
+`CompanionRevealOverlay`, the `companions` block in `manifest.json`, `Art/Companions/` (4.4 MB, 62
+files) and the whole server half — untouched and unreachable.
+
+**What held it there was invariant 16a, and that reason expired on 2026-09-21.** A resident *was* a
+companion, residents were counted into `groveWorth`, and `groveWorth` is a published
+server-adjudicated number, so deleting the roster would have moved every card's score and reordered
+a live board. The grove is gone; nothing counts a companion now, and nothing draws one. **Deleting
+the roster is a separate decision with no rule left holding it back** — the ids are still on the
+wire in `companionsOwned` and in `manifest.json`, so it would cost a manifest change and the same
+retire-in-place treatment the grove's save keys got (16z). It is the obvious next bundle win and is
+deliberately not taken here. **Two things owed**: `wear.wav` now has no caller
 (`sfxnames.py` warns; deleting audio without the Editor is how a dead Addressables entry fails
 `BuildPlayer`), and the retired `ui.profile.*` companion strings are left where they are, which
 is deliberate — a loc key names a sentence and may be re-minted (5f).
@@ -1636,8 +1724,9 @@ three screens that loaded it had left the nav. The server half is deployed (`pub
 170/170, endless-xp 12/12, delete-account 14/14) and the five stale real cards were republished by hand
 through the ordinary callable. **Until a build carrying the `GroveBoard.Consider` fix ships, a new best on
 a device still reaches no card** — the save syncs, the receipt parks, and the board holds the last
-republish. The owner's `Tekoworld` account has an empty `endlessBest` on the server: it has never synced a
-wave, so the runs it is expected to show are not on it.
+republish. **Removing the Grovement on 2026-09-21 deleted that gate outright** rather than repairing it,
+so the same build now carries both fixes. The owner's `Tekoworld` account has an empty `endlessBest` on
+the server: it has never synced a wave, so the runs it is expected to show are not on it.
 
 **The referral drop went live on 2026-09-17**: rules released, the three callables and `deleteAccount`
 deployed by name with invoker bindings, re-seeded, smoke test 166/166 and delete-account 14/14 live,
@@ -1933,8 +2022,8 @@ restart gate's floor. The bonus wheel against its cap.
 
 `ForfeitOverlay` (a committed run being abandoned), `ReportOverlay` (an act against another person that
 cannot be retracted) and `DeleteAccountOverlay` (27), which earns one more completely than either. Its
-second tap is armed only when there is a grove to lose — **arming a button over an empty grove is what
-teaches a player to tap through it on a full one**. `ContinueOverlay` is not a fourth: it is an offer whose
+second tap is armed only when there is something to lose — a cleared glade — and **arming a button over an
+empty account is what teaches a player to tap through it on a full one**. `ContinueOverlay` is not a fourth: it is an offer whose
 default answer is the free one. Everything else either costs nothing to undo or is confirmed by the store's
 own payment sheet. **`ReportOverlay` is the chooser *and* the confirmation, and that is what keeps the count
 at three** — each affirmative names its own subject and its own consequence, so picking one *is* the

@@ -83,11 +83,13 @@ namespace GlimmerGrove
         /// A sun, high and a little to the right, for a screen whose backdrop is daylight.
         ///
         /// <para>
-        /// <b>It is drawn where the art was lit from, not where it looks nice.</b> Every piece
-        /// in the grove is rendered by one rig in <c>Tools/make_grove_art.py</c>, and that
-        /// rig's key projects onto this screen's axes as .996 up and .078 right — all but
-        /// straight overhead, leaning a hair right. So the offset here is that ratio and not a
-        /// taste: a sun drawn on the opposite side from the one the models are lit by is the
+        /// <b>It is drawn where the art was lit from, not where it looks nice.</b> The grove's
+        /// pieces were all rendered by one rig (<c>Tools/make_grove_art.py</c>, deleted with the
+        /// Grovement on 2026-09-21), and that rig's key projected onto this screen's axes as
+        /// .996 up and .078 right — all but straight overhead, leaning a hair right. **The
+        /// number outlived the tool and is still the right one**, because it is what every other
+        /// piece of art on this screen was lit to match. So the offset here is that ratio and
+        /// not a taste: a sun drawn on the opposite side from the one the models are lit by is the
         /// fault <c>37aj</c> names, where the shape is right and the sign is wrong and no
         /// numeric gate can see it. If <c>KEY</c> ever moves, this moves with it.
         /// </para>

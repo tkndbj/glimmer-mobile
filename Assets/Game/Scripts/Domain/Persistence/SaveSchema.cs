@@ -126,9 +126,9 @@ namespace GlimmerGrove.Persistence
         ///      file needs no migration — see <see cref="Wallet.LoadFrom"/> for the one
         ///      ambiguity it does have to resolve.
         /// v16 — the grove the player builds: the pieces they bought
-        ///      (<c>homesteadOwned</c>, since v20 <see cref="SaveFileDto.homesteadStock"/>)
+        ///      (<c>homesteadOwned</c>, since v20 <c>homesteadStock</c>)
         ///      and where everything stands
-        ///      (<see cref="SaveFileDto.homesteadPlaced"/>). Two fields for a whole screen,
+        ///      (<c>homesteadPlaced</c>). Two fields for a whole screen,
         ///      because the rest of it is derived: the land from chapters finished, the
         ///      residents from glades cleared, and neither leaves a trace on disk. What
         ///      cannot be derived is split by shape rather than by feature. A purchase is an
@@ -140,9 +140,9 @@ namespace GlimmerGrove.Persistence
         ///      deliberately absent: any count of how many benches a player owns. Holding a
         ///      piece is permission to draw it in as many slots as they like, because a
         ///      stored count is the one shape invariant 11b forbids and hearts already spent
-        ///      a schema version proving it. See <see cref="Homestead.HomesteadLayout"/>.
+        ///      a schema version proving it. See <c>HomesteadLayout</c>.
         /// v17 — the grove stands on a floor rather than on floating islands, and the floor
-        ///      is bought (<see cref="SaveFileDto.groveLandOwned"/>). This is the one thing
+        ///      is bought (<c>groveLandOwned</c>). This is the one thing
         ///      the change cost: land used to be <em>derived</em> from chapters finished, so
         ///      it recomputed everywhere, survived every merge and left nothing on disk
         ///      (invariant 14). Land paid for with credits cannot be derived from anything
@@ -151,16 +151,16 @@ namespace GlimmerGrove.Persistence
         ///      set of <em>regions</em> rather than of tiles on purpose: both are legal
         ///      shapes and only one stays small, since a filled floor is several hundred
         ///      tiles and a set that size is merged and checksummed on every sync for ever.
-        ///      Note what did <em>not</em> change: <see cref="SaveFileDto.homesteadPlaced"/>
+        ///      Note what did <em>not</em> change: <c>homesteadPlaced</c>
         ///      is untouched, because a tile is a slot and its id is permanent, so an empty
         ///      floor still costs nothing and a floor with two things on it costs two rows.
         /// v18 — which way a placed piece faces
-        ///      (<see cref="HomesteadPlacementDto.flipped"/>), so the grove can be edited
+        ///      (<c>HomesteadPlacementDto.flipped</c>), so the grove can be edited
         ///      rather than only filled. It is a <em>mirror</em> and not a rotation because the
         ///      art cannot be rotated: every one of the catalog's pieces is a single drawing
         ///      from one fixed isometric angle, and the packs they were cut from ship no
         ///      directional variants, so there is no second sprite to turn to — see
-        ///      <see cref="Homestead.Placement.Flipped"/>. It costs a bool on a row that
+        ///      <c>Placement.Flipped</c>. It costs a bool on a row that
         ///      already exists rather than a section of its own, and it needs no stamp of its
         ///      own because the facing and the piece are one decision about one slot, dated by
         ///      the stamp the row already carries (invariant 11c). It needs no migration
@@ -188,7 +188,7 @@ namespace GlimmerGrove.Persistence
         ///      from <see cref="Content.LevelTuning"/> entirely — a glade has no opinion
         ///      about how much of a player's own pool they may spend on it.
         /// v20 — grove decor is bought <b>by the copy</b>
-        ///      (<see cref="SaveFileDto.homesteadStock"/> replaces <c>homesteadOwned</c>).
+        ///      (<c>homesteadStock</c> replaces <c>homesteadOwned</c>).
         ///      Read v16's entry above and then this one, because this is that decision
         ///      reversed and the reversal needs its reasons written down.
         ///      <para>
@@ -218,7 +218,7 @@ namespace GlimmerGrove.Persistence
         ///      free, every resident and every home rung is held exactly as it was before —
         ///      an entitlement, unlimited, derived where it can be. So the twelve starter
         ///      pieces and the eight earned ones behave identically to v19 and the stock is
-        ///      purely the shop's half. See <see cref="Homestead.GroveStock"/>.
+        ///      purely the shop's half. See <c>GroveStock</c>.
         ///      </para>
         ///      <para>
         ///      A v19 file is migrated by <c>HomesteadLedger.LoadFrom</c> rather than by a
@@ -279,7 +279,7 @@ namespace GlimmerGrove.Persistence
         ///      and the shape follows from that in one step. Hearts and hints come back by
         ///      themselves, so they are <see cref="RegenLedger"/>: three counters and a deadline.
         ///      Grove decor is bought and then <em>stands somewhere</em>, so
-        ///      <see cref="SaveFileDto.homesteadStock"/> stores purchases alone and derives what
+        ///      <c>homesteadStock</c> stores purchases alone and derives what
         ///      is left from the placements already in this file. A utility is granted, used, and
         ///      gone — nothing else in the save implies it ever existed — so both halves have to
         ///      be written down: <c>earned</c> and <c>spent</c>, each monotonic, joined by a
@@ -335,8 +335,8 @@ namespace GlimmerGrove.Persistence
         ///      a v22 file needs no migration and no sentinel.
         ///      </para>
         /// v24 — the grove is a village, so a piece can be <em>turned</em>
-        ///      (<see cref="HomesteadPlacementDto.facing"/>) and a grove belongs to a
-        ///      generation of the catalogue (<see cref="SaveFileDto.groveEpoch"/>).
+        ///      (<c>HomesteadPlacementDto.facing</c>) and a grove belongs to a
+        ///      generation of the catalogue (<c>groveEpoch</c>).
         ///      <para>
         ///      <b>The facing is v18's mirror widened, and what changed is the art.</b> Every
         ///      grove piece used to be one drawing cut from a flat isometric sheet, so the only
@@ -359,7 +359,7 @@ namespace GlimmerGrove.Persistence
         ///      merged by <c>max</c> says it, because the rule is that the lower epoch's grove
         ///      is discarded rather than joined. It was needed because the whole catalogue was
         ///      replaced on 2026-09-11 and not one piece id survived, so every stored grove
-        ///      named pieces that no longer exist. See <see cref="Homestead.GroveEpoch"/> for
+        ///      named pieces that no longer exist. See <c>GroveEpoch</c> for
         ///      why it must never be used to take things away from players.
         ///      </para>
         /// v25 — a turret can be upgraded, so how far each one has been taken is stored
@@ -551,8 +551,32 @@ namespace GlimmerGrove.Persistence
         ///      because <see cref="SaveChecksum"/> hashes the serialised object and a v31 file
         ///      can never match a v32 hash.
         ///      </para>
+        /// v33 — the Grovement is gone, and with it the eight fields that described it:
+        ///      <c>homesteadStock</c>, <c>homesteadOwned</c>, <c>homesteadPlaced</c>,
+        ///      <c>groveLandOwned</c>, <c>groveEpoch</c>, <c>groveHall</c>,
+        ///      <c>groveHallFacing</c> and <c>groveHallSetUnix</c>, together with
+        ///      <c>HomesteadStockDto</c> and <c>HomesteadPlacementDto</c>.
+        ///      <para>
+        ///      <b>This is a removal, so it moves the version for invariant 12's reason read
+        ///      backwards.</b> <see cref="SaveChecksum"/> hashes the serialised object, and this
+        ///      build's object no longer has fields every stored file still carries — so every
+        ///      v32 file on every device would fail its checksum at once. It does not, because
+        ///      <see cref="SaveChecksum.Verify"/> trusts a file whose <c>schemaVersion</c> is not
+        ///      this one; the bump is what buys that, and the next write stamps a v33 hash.
+        ///      </para>
+        ///      <para>
+        ///      <b>Nothing is destroyed and there is no rules release.</b> The eight keys stay in
+        ///      <c>hasOnly</c> in <c>firestore.rules</c> deliberately — dropping a key a
+        ///      rolled-back client still writes costs that client <em>every</em> save write
+        ///      (12a), and an allow-list entry for a field nobody sends costs nothing. The
+        ///      server's copy of a player's grove is left where it is: an incremental push is a
+        ///      field-masked <c>UpdateAsync</c>, which cannot delete a key it does not name, and
+        ///      the one wholesale <c>SetAsync</c> runs only for a document that does not exist
+        ///      yet. What a device drops is its own local copy, on its next write, which is what
+        ///      removing a feature means.
+        ///      </para>
         /// </summary>
-        public const int Version = 32;
+        public const int Version = 33;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -680,148 +704,6 @@ namespace GlimmerGrove.Persistence
         public string[] companionsOwned;
 
         /// <summary>
-        /// How many copies of each priced grove piece this player has <b>bought</b>, sorted
-        /// by id.
-        ///
-        /// <para>
-        /// <b>A count, and v16 said this could never be one.</b> It said a number of copies
-        /// held is the stored count invariant 11b forbids, because two devices showing 3 and 1
-        /// are equally consistent with "one bought two more" and "one has not heard about a
-        /// purchase" — and that is exactly right about a count of copies <em>remaining</em>.
-        /// It is not true of a count of copies <em>ever bought</em>, which only rises, so the
-        /// join is a per-id <c>max</c> and the larger value is always the one that knows more.
-        /// What is left to place is derived: <c>bought − placed</c>, and the placements are
-        /// already in this file. Hearts and hints reached the same shape from the same
-        /// mistake; this is the third time, and the first where it was seen before shipping.
-        /// </para>
-        /// <para>
-        /// <b>Absent is "bought nothing".</b> A row is written only for an id with copies, so
-        /// a v19 file's empty array and a fresh install say the same true thing and no
-        /// sentinel is needed — the property that makes every other id set here mergeable.
-        /// </para>
-        /// <para>
-        /// <b>Only priced decor appears.</b> A resident is a companion and lives in
-        /// <see cref="companionsOwned"/>; a home rung and a piece earned by playing are
-        /// entitlements and are unlimited by design, exactly as they were in v19. Writing an
-        /// unlimited thing down as a count would be a second answer for a retune to put out of
-        /// step with the derived one.
-        /// </para>
-        /// <para>
-        /// Unknown ids are carried through untouched, for <see cref="tipsSeen"/>'s reason: a
-        /// piece bought on a newer build must not be confiscated by a trip through an older
-        /// one. See <see cref="Homestead.GroveStock"/>.
-        /// </para>
-        /// </summary>
-        public HomesteadStockDto[] homesteadStock;
-
-        /// <summary>
-        /// <b>v19 and earlier.</b> The ids of the grove pieces this player bought, when owning
-        /// one was permission to draw it rather than possession of a copy.
-        ///
-        /// <para>
-        /// <b>A derived mirror since v20, and never authoritative.</b> It is written on every
-        /// save as the ids in <see cref="homesteadStock"/> that have at least one copy, and it
-        /// is read only when that section is empty — which identifies a file written before
-        /// v20, exactly as a zero in <see cref="WalletDto.heartsProduced"/> identifies a
-        /// pre-v8 one. <c>GroveStock.In</c> is the one door both readings go through.
-        /// </para>
-        /// <para>
-        /// Keeping it costs a few hundred bytes and buys two things worth more than that. A
-        /// client rolled back to a build before v20 finds the section it understands and keeps
-        /// its pieces. And the <em>deployed</em> <c>groveWorth</c> reads this field, so a
-        /// client that ships before the functions are redeployed still scores its grove on the
-        /// boards rather than dropping to nothing — invariant 12a's ordering hazard removed
-        /// rather than merely written down.
-        /// </para>
-        /// </summary>
-        public string[] homesteadOwned;
-
-        /// <summary>
-        /// What the player has put in each slot of their grove.
-        ///
-        /// <para>
-        /// An array on the wire and a map everywhere else, keyed by the slot's permanent id —
-        /// invariant 11a, for <see cref="levels"/> and <see cref="events"/>'s reason: a
-        /// duplicated row is a malformed file rather than two things in one place, and a sync
-        /// can write one slot without re-uploading the grove.
-        /// </para>
-        /// <para>
-        /// The one section in this file merged by recency rather than joined by value, and
-        /// therefore the one that can lose something. Invariant 11c is what keeps that
-        /// bounded: every row carries <see cref="HomesteadPlacementDto.setUnix"/>, its own
-        /// stamp, so the answer does not depend on when the question was asked; and a slot
-        /// nobody has touched has no row, so a device with no opinion cannot outrank one that
-        /// has. See <see cref="Homestead.HomesteadLayout"/>.
-        /// </para>
-        /// </summary>
-        public HomesteadPlacementDto[] homesteadPlaced;
-
-        /// <summary>
-        /// Which regions of the grove floor the player has bought.
-        ///
-        /// <para>
-        /// An entitlement, so a set of permanent ids joined by union — invariant 15, and the
-        /// same shape as <see cref="companionsOwned"/>.
-        /// Buying is irreversible, so between two devices the player owns whatever either
-        /// bought, and the join is idempotent and order-independent without trying.
-        /// </para>
-        /// <para>
-        /// Regions rather than tiles, and starter land is <b>absent rather than listed</b>:
-        /// a region with no price is owned by everyone from the first launch, so writing it
-        /// down would be a stored default that says nothing. Absent and "bought nothing" are
-        /// the same fact, which is what makes this mergeable with no sentinel.
-        /// </para>
-        /// <para>
-        /// Unknown ids are carried through untouched, for <see cref="tipsSeen"/>'s reason —
-        /// land bought on a newer build must not be confiscated by a trip through an older
-        /// one. See <see cref="Homestead.GroveLand"/>.
-        /// </para>
-        /// </summary>
-        public string[] groveLandOwned;
-
-        /// <summary>
-        /// Which generation of the grove catalogue this file's grove belongs to. Added in v24.
-        ///
-        /// <para>
-        /// <b>The one field here that lets something be taken away.</b> Everything else about
-        /// the grove is joined so nothing is ever lost — purchases and land are unions,
-        /// placements take the later stamp — which is invariant 11's promise and also means a
-        /// grove cannot be <em>cleared</em>: clear it locally and the next pull joins the
-        /// server's copy back, wipe the server and an unsynced device pushes it back up.
-        /// This is a monotonic integer, merged by <c>max</c> like every other mergeable number
-        /// (invariant 11b), and the grove belonging to the lower epoch is discarded rather than
-        /// joined. Two devices converge on the higher one whatever order they merge in.
-        /// </para>
-        /// <para>
-        /// Absent reads as 0, which is exactly right: every file written before this existed
-        /// belongs to the generation before this one. See <see cref="Homestead.GroveEpoch"/>
-        /// for what raising it means and why it must not be used to take things away.
-        /// </para>
-        /// </summary>
-        public int groveEpoch;
-
-        /// <summary>
-        /// Where the player has moved their hall, and which way they turned it. Empty means
-        /// wherever the floor says, which is what every grove starts as.
-        ///
-        /// <para>
-        /// An <b>instruction</b> rather than an achievement, so it is merged by recency against
-        /// its own stamp (invariant 11c) and never joined on value — two devices cannot both be
-        /// right about where a house is, and the later decision is the one to keep. The stamp is
-        /// its own field for 11c's other half: read off the file's <c>updatedUnix</c> it would
-        /// lose every time, because <c>SaveService.Snapshot</c> stamps that with <em>now</em>.
-        /// </para>
-        /// <para>
-        /// <b>And the default is never written.</b> Nothing is stored until somebody moves the
-        /// hall, so a grove that has never been rearranged and one deliberately put back are
-        /// different facts — the second carries a stamp and can win a merge, the first cannot.
-        /// </para>
-        /// </summary>
-        public string groveHall;
-        public int groveHallFacing;
-        public long groveHallSetUnix;
-
-        /// <summary>
         /// The heart containers this account has bought, sorted.
         ///
         /// <para>
@@ -877,7 +759,7 @@ namespace GlimmerGrove.Persistence
         /// siege" — so what is stored is everything ever granted and everything ever used, and
         /// what is in hand is the difference, clamped at nought. The subtraction may briefly go
         /// negative when two devices each spend the last one before syncing, and nothing is taken
-        /// back to balance it: that is <see cref="homesteadStock"/>'s rule and for its reason.
+        /// back to balance it: that is <c>homesteadStock</c>'s rule and for its reason.
         /// </para>
         /// <para>
         /// <b>Account-wide, and shared by every level of every mode that offers them.</b> A stock
@@ -1669,43 +1551,6 @@ namespace GlimmerGrove.Persistence
         /// </summary>
         public bool pass;
     }
-
-    /// <summary>
-    /// One slot of the grove, and what the player last decided about it.
-    ///
-    /// <para>
-    /// A row exists only because somebody made a choice. There is no row for a slot nobody
-    /// has touched, which is invariant 11c's second half and the reason a fresh install
-    /// cannot flatten a grove arranged on another device: absence means "no opinion", and a
-    /// device with no opinion never wins a recency comparison. A slot the player deliberately
-    /// <em>emptied</em> keeps its row with an empty <see cref="piece"/>, because taking a
-    /// tree down is a choice too and deleting the row would let a stale device put it back.
-    /// </para>
-    /// </summary>
-    /// <summary>
-    /// One priced grove piece and how many copies of it the player has ever bought.
-    ///
-    /// <para>
-    /// An array on the wire and a map everywhere else, keyed by the piece's permanent id —
-    /// invariant 11a, for <see cref="SaveFileDto.levels"/>'s reason: a duplicated row would be
-    /// two answers to one question rather than a malformed file, and a sync can write one id
-    /// without re-uploading the shop.
-    /// </para>
-    /// </summary>
-    [Serializable]
-    public sealed class HomesteadStockDto
-    {
-        /// <summary>The piece's permanent id, as authored in the grove catalog.</summary>
-        public string id;
-
-        /// <summary>
-        /// Copies ever bought. <b>It only ever rises</b>, which is the whole reason a count is
-        /// representable here at all — see <see cref="SaveFileDto.homesteadStock"/>. What is
-        /// left to place is this minus what is standing in the grove, clamped at zero.
-        /// </summary>
-        public int copies;
-    }
-
     /// <summary>
     /// One utility, and the double-entry ledger of it: everything ever granted, everything ever
     /// used.
@@ -1814,61 +1659,6 @@ namespace GlimmerGrove.Persistence
         /// <summary>Every one ever used on a board. Only ever rises.</summary>
         public int spent;
     }
-
-    [Serializable]
-    public sealed class HomesteadPlacementDto
-    {
-        /// <summary>The slot's permanent id, as authored in the grove catalog.</summary>
-        public string slot;
-
-        /// <summary>The piece standing here, or empty for a slot cleared on purpose.</summary>
-        public string piece;
-
-        /// <summary>
-        /// When this slot was last set, as a Unix timestamp.
-        ///
-        /// Its own stamp rather than the file's <see cref="SaveFileDto.updatedUnix"/>, which
-        /// <see cref="SaveService.Snapshot"/> writes as <em>now</em> every time a sync asks
-        /// for a snapshot — so merging on it would mean "whichever device is syncing wins",
-        /// which is exactly how the keeper's name was lost for a year. Zero is unreachable
-        /// for a real choice, so it reads as "written by something that did not stamp".
-        /// </summary>
-        public long setUnix;
-
-        /// <summary>
-        /// Which quarter turn it is drawn at, 0 to 3. Added in v24; see
-        /// <see cref="Homestead.Placement.Facing"/>.
-        ///
-        /// <para>
-        /// This is one of the few fields in the save file whose "absent" state is a value a
-        /// real one can also hold, and it is one of the cases where that is harmless rather
-        /// than the mistake invariant 11b warns about. <see cref="JsonUtility"/> writes 0 into
-        /// a field an older file never had — and 0 is exactly what every earlier row meant,
-        /// because nothing could be turned before this existed. There is no third state to
-        /// confuse it with: the row's own <see cref="setUnix"/> already carries the "has the
-        /// player decided" question, so this never has to answer it.
-        /// </para>
-        /// </summary>
-        public int facing;
-
-        /// <summary>
-        /// <b>Retired in place at v24 and still carried, never read.</b> It said a piece was
-        /// drawn mirrored, which was the only facing a flat cut-out could have; every piece is
-        /// rendered from a model now, so <see cref="facing"/> replaced it.
-        ///
-        /// <para>
-        /// Kept rather than deleted for invariant 12a's reason, narrowed to where it actually
-        /// bites: a rolled-back client still writes this field, and a mapper that dropped it
-        /// would quietly discard whatever that client had said. It costs one bool on a row
-        /// that already exists. Nothing reads it, because there is no honest reading — a
-        /// mirror and a quarter turn are not the same transform, and every grove that could
-        /// have held one was reset with the catalogue that made them (see
-        /// <see cref="SaveFileDto.groveEpoch"/>).
-        /// </para>
-        /// </summary>
-        public bool flipped;
-    }
-
     [Serializable]
     public sealed class ProgressionStateDto
     {

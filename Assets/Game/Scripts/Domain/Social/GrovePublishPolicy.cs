@@ -51,11 +51,12 @@ namespace GlimmerGrove.Social
     /// have.
     /// </para>
     /// <para>
-    /// <b>An empty grove is never published.</b> On the day this ships most accounts hold
-    /// nothing, and a card for each of them is a document, a write and a row in a sample for
-    /// a grove with nothing on it. <see cref="Worth"/> gates it, which also keeps the
-    /// published distribution to keepers who have built something — see
-    /// <see cref="GroveRankTable"/> for why that population is the one that means anything.
+    /// <b>A keeper with nothing to show is never published.</b> Most accounts have never
+    /// opened the Infinite lane, and a card for each of them is a document, a write and a row
+    /// in a sample for a keeper with nothing on it. <see cref="WorthPublishing"/> gates it,
+    /// which also keeps the published distribution to keepers who have actually played the
+    /// lane — see <see cref="GroveRankTable"/> for why that population is the one that means
+    /// anything.
     /// </para>
     /// <para>
     /// It holds no clock, no socket and no Unity types: it is handed elapsed time and told
@@ -103,37 +104,31 @@ namespace GlimmerGrove.Social
         /// </summary>
         public const int MaxStaleRetries = 2;
 
-        /// <summary>
-        /// The least a grove may be worth before it is published at all.
-        ///
-        /// One credit: the bar is "has this player put anything into the place", not a
-        /// threshold anybody has to tune. Free pieces are worth nothing (invariant 16g), so a
-        /// brand-new grove with its starter furniture scores zero and stays off the board
-        /// until its owner buys something — which is the first moment there is anything to
-        /// show.
-        /// </summary>
-        public const long Worth = 1L;
 
         /// <summary>
         /// Whether a card is worth putting on a board at all.
         ///
         /// <para>
-        /// <b>Two boards, so two ways to qualify</b>, and the rule lives here rather than at the
-        /// call site because it has to agree with <c>BOARD_IDS</c>: a keeper the client declines
-        /// to publish is a keeper no board can ever draw, whichever of them they would have
-        /// belonged on. The endless lane is the case that made this a method — somebody can hold
-        /// out forty waves having never bought a single fence, and under the worth test alone
-        /// they would have been kept off the one board they had earned a place on, silently and
-        /// for ever.
+        /// <b>One way to qualify, since the Grovement went.</b> This used to be two clauses —
+        /// a grove worth at least a credit, or a wave on the Infinite lane — and the second was
+        /// added because somebody could hold out forty waves having never bought a single fence.
+        /// The first clause is now unreachable by construction rather than merely unmet: there
+        /// is no grove to be worth anything, so it has been removed instead of left standing as
+        /// a test nothing can pass. The lane is the only route onto a board.
         /// </para>
         /// <para>
-        /// It stays a <em>bar</em> rather than being dropped: on the day this ships most accounts
-        /// hold nothing and have played nothing, and a card for each of them is a document, a
-        /// write and a row in a sample for a keeper with nothing to show.
+        /// It stays a <em>bar</em> rather than being dropped: most accounts have never opened
+        /// the lane, and a card for each of them is a document, a write and a row in a sample
+        /// for a keeper with nothing to show.
+        /// </para>
+        /// <para>
+        /// The rule lives here rather than at the call site because it has to agree with
+        /// <c>BOARD_IDS</c>: a keeper the client declines to publish is a keeper no board can
+        /// ever draw.
         /// </para>
         /// </summary>
         public static bool WorthPublishing(GroveCard card)
-            => card != null && (card.Score >= Worth || card.BestWave > 0);
+            => card != null && card.BestWave > 0;
 
         string _publishedFingerprint = string.Empty;
         string _wantedFingerprint = string.Empty;

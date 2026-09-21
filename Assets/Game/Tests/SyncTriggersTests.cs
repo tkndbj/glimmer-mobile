@@ -1,7 +1,7 @@
 using GlimmerGrove.Cloud;
 using GlimmerGrove.Content;
-using GlimmerGrove.Homestead;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Progression;
 using NUnit.Framework;
 
 namespace GlimmerGrove.Tests
@@ -14,25 +14,23 @@ namespace GlimmerGrove.Tests
     /// is loaded, and a sync adopts a merge by loading one — so a sync asked for on
     /// <c>Changed</c> is a sync every three seconds for the life of the process, invisible
     /// on any screen and paid for in battery and document writes by every player. The
-    /// triggers therefore hang on <see cref="HomesteadLayout.Edited"/> and the
-    /// <c>Bought</c> events, which only the player raises.
+    /// triggers therefore hang on <see cref="Wallet.ProfileChanged"/>,
+    /// <see cref="CompanionLedger.Bought"/> and <see cref="EndlessLedger.Beaten"/>, which only
+    /// the player raises.
+    /// </para>
+    /// <para>
+    /// <b>This fixture used to be about the grove</b> — a placement, a purchase and a region
+    /// were the three acts it proved, and all three went with the Grovement on 2026-09-21. The
+    /// rule did not, so it is asked here of the triggers that are left rather than deleted with
+    /// the ones that are not: the trap is a property of <c>Changed</c>, not of the grove.
     /// </para>
     /// </summary>
     public sealed class SyncTriggersTests
     {
-        sealed class NoProgress : IHomesteadProgress
-        {
-            public bool IsCleared(LevelId level) => false;
-            public bool IsChapterFinished(ChapterId chapter) => false;
-        }
-
         [SetUp]
         public void Reset()
         {
-            HomesteadProgress.Set(new NoProgress());
-            HomesteadLayout.ResetForTests();
-            HomesteadLedger.ResetForTests();
-            GroveLand.ResetForTests();
+            CompanionLedger.ResetForTests();
             CloudSaveService.ForgetSyncRequestForTests();
             SyncTriggers.Attach();
         }
@@ -40,45 +38,40 @@ namespace GlimmerGrove.Tests
         [TearDown]
         public void Restore()
         {
-            HomesteadProgress.Set(null);
-            HomesteadLayout.ResetForTests();
-            HomesteadLedger.ResetForTests();
-            GroveLand.ResetForTests();
+            CompanionLedger.ResetForTests();
             CloudSaveService.ForgetSyncRequestForTests();
         }
 
-        static string T(int col, int row) => GroveFloor.TileId(col, row);
-
         [Test]
-        public void APlacementAsksForASync()
+        public void ANewEndlessBestAsksForASync()
         {
             Assert.IsFalse(CloudSaveService.IsSyncPending);
 
-            HomesteadLayout.Place(T(2, 2), "fence");
+            EndlessLedger.Record(LevelId.Parse("s02_endlesswatch"), 12);
 
             Assert.IsTrue(CloudSaveService.IsSyncPending);
         }
 
         [Test]
-        public void ClearingAPlacementAsksForASync()
+        public void ARunThatBeatNothingAsksForNothing()
         {
-            HomesteadLayout.Place(T(2, 2), "fence");
+            EndlessLedger.Record(LevelId.Parse("s02_endlesswatch"), 12);
             CloudSaveService.ForgetSyncRequestForTests();
 
-            HomesteadLayout.Clear(T(2, 2));
+            // Under the best already held, so nothing a stranger can see has moved.
+            EndlessLedger.Record(LevelId.Parse("s02_endlesswatch"), 5);
 
-            Assert.IsTrue(CloudSaveService.IsSyncPending);
+            Assert.IsFalse(CloudSaveService.IsSyncPending);
         }
 
         [Test]
-        public void APlacementThatChangesNothingAsksForNothing()
+        public void ARenameAsksForASync()
         {
-            HomesteadLayout.Place(T(2, 2), "fence");
-            CloudSaveService.ForgetSyncRequestForTests();
-
-            HomesteadLayout.Place(T(2, 2), "fence");
-
             Assert.IsFalse(CloudSaveService.IsSyncPending);
+
+            Wallet.SetDisplayName("Fern", 1_000L);
+
+            Assert.IsTrue(CloudSaveService.IsSyncPending);
         }
 
         [Test]
@@ -86,16 +79,17 @@ namespace GlimmerGrove.Tests
         {
             var save = new SaveFileDto
             {
-                homesteadPlaced = new[] { new HomesteadPlacementDto { slot = T(2, 2), piece = "fence" } },
-                homesteadStock = new[] { new HomesteadStockDto { id = "fence", copies = 1 } },
-                groveLandOwned = new[] { "east" },
+                companionsOwned = new[] { "monarch" },
+                endlessBest = new[]
+                {
+                    new EndlessBestDto { level = "s02_endlesswatch", wave = 40, waves = 200 },
+                },
             };
 
-            // The three doors a merge comes through. Each raises Changed, and none may raise
-            // a request — or every sync would schedule the next.
-            HomesteadLayout.LoadFrom(save);
-            HomesteadLedger.LoadFrom(save);
-            GroveLand.LoadFrom(save);
+            // The doors a merge comes through. Each raises Changed, and none may raise a
+            // request — or every sync would schedule the next.
+            CompanionLedger.LoadFrom(save);
+            EndlessLedger.LoadFrom(save);
 
             Assert.IsFalse(CloudSaveService.IsSyncPending);
         }

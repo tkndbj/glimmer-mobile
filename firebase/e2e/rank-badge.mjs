@@ -119,6 +119,11 @@ const rungOf = (v) => {
   };
 };
 
+// Every rung in order. The ladder is climbed below against the save this probe wrote, so the
+// answer can be *predicted* rather than merely recognised.
+const ladder = rungs.map(rungOf);
+const ladderIds = ladder.map((r) => r.id);
+
 const first = rungOf(rungs[0]);
 console.log(`  the first rung is '${first.id}', asking for ` +
             first.requires.map((r) => `${r.measure}${r.scope ? "@" + r.scope : ""} x${r.target}`)
@@ -139,15 +144,29 @@ for (const list of Object.values(byChapter)) list.sort();
  * `runs` is deliberately satisfied by the *floor* (a cleared glade is a run that happened)
  * rather than by writing a tally, because the floor is the half a server can most easily be
  * missing, and missing it is invisible from every other angle.
+ *
+ * **A `keeper_level` line is satisfied by clearing the whole catalog** (invariant 52i put one on
+ * the first rung, so the ladder cannot open before the Infinite lane does). A keeper level is
+ * derived from XP this server recomputes from the star ledger, so the only honest way to reach
+ * one here is to three-star enough glades — and working out *how many* would mean mirroring the
+ * reward rules and the level curve in this file, which is a third copy of two rules and exactly
+ * what this suite exists to avoid. Clearing everything is the maximum the catalog can ever pay,
+ * both content gates already refuse a rung asking for more keeper level than that, and the
+ * assumption is not left as one: the published card's own `level` is checked against the line
+ * after the publish, so a retune that put the target out of reach says so in a sentence rather
+ * than as a mystifying blank badge.
  */
 function gladesMeeting(rung) {
   const wanted = new Set();
+  let everything = false;
 
   for (const line of rung.requires) {
     if (line.measure === "levels_cleared" && line.scope) {
       const list = byChapter[line.scope] ?? [];
       if (list.length < line.target) return null;
       for (const l of list.slice(0, line.target)) wanted.add(l);
+    } else if (line.measure === "keeper_level" && !line.scope) {
+      everything = true;
     } else if (line.measure === "levels_cleared" || line.measure === "runs" ||
                line.measure === "wins") {
       // Topped up below, once the scoped clauses have had their say.
@@ -157,7 +176,7 @@ function gladesMeeting(rung) {
   }
 
   const floorTarget = Math.max(
-    0,
+    everything ? Object.keys(levelMap).length : 0,
     ...rung.requires.filter((r) => ["runs", "wins", "levels_cleared"].includes(r.measure) && !r.scope)
                     .map((r) => r.target));
 
@@ -180,7 +199,91 @@ if (glades === null) {
   process.exit(1);
 }
 
-console.log(`  a save clearing ${glades.length} glade(s) should reach '${first.id}'\n`);
+console.log(`  a save clearing ${glades.length} glade(s) should reach '${first.id}' or ` +
+            "better\n");
+
+/**
+ * The rung a save of `cleared` three-starred glades and no tally should reach, or null when the
+ * ladder asks something this probe cannot work out.
+ *
+ * **Why this is computed rather than compared to `first.id`.** A save built to meet a
+ * `keeper_level` line clears the whole catalog (see `gladesMeeting`), which is far more play than
+ * the first rung asks for and ordinarily meets the second as well — so pinning the answer to the
+ * first rung would fail against a server that is entirely correct, which is the one thing this
+ * suite may never do. Recognising the answer as "some rung of the ladder" was the cheap way out
+ * and is a materially weaker check: it passes for a server that hands out the *top* rung to
+ * anybody. So the ladder is climbed here instead, and the published answer is held to it exactly.
+ *
+ * **It is a fourth reading of one rule and that is deliberate**, exactly as
+ * `Tools/make_rank_vectors.py` is a third: written from the prose rule (walk up from the bottom,
+ * a rung is met when every line is, a line is `reading >= target`) rather than from either
+ * implementation, so an agreement is three people who never read each other's arithmetic.
+ *
+ * **Every reading here is a fact about the save this file wrote**, which is what makes it honest:
+ * every named glade is at three stars, the tally is absent so every counted verb reads its floor,
+ * and the keeper level is the one the server itself just derived rather than one worked out here.
+ *
+ * **A measure this file has never heard of reads nought, deliberately, and that is the one place
+ * this can go red over a correct server.** The floors are a closed set — `runs`/`wins` on cleared
+ * glades, `waves` on endless rows, nothing else — so with no tally every other counted verb really
+ * is nought, and mirroring that exactly is what lets the answer be predicted instead of merely
+ * recognised. If a floor is ever *added* on the server, this predicts a lower rung than the server
+ * derives and the check fails loudly, which is the direction to fail in: the alternative is a
+ * probe that quietly stops asserting the thing it is named after. A *scope* this cannot resolve
+ * answers null instead, because that is a shape rather than a value, and the caller falls back to
+ * recognising the rung and says so.
+ */
+function expectedRung(cleared, keeperLevel) {
+  const inChapter = (chapter) => cleared.filter((l) => levelMap[l]?.stringValue === chapter).length;
+
+  const read = (line) => {
+    switch (line.measure) {
+      // Every glade the save names is cleared at three stars, so all three walks are counts of
+      // the same set — scoped by the published catalog, never by a list written here.
+      case "levels_cleared":
+      case "three_stars":
+        return line.scope ? inChapter(line.scope) : cleared.length;
+      case "stars":
+        return (line.scope ? inChapter(line.scope) : cleared.length) * 3;
+
+      // The server's own answer, so the probe cannot disagree with it about the curve.
+      case "keeper_level":
+        return line.scope ? null : keeperLevel;
+
+      // The save carries no endless rows at all.
+      case "best_wave":
+        return 0;
+
+      // No tally is written, so a counted verb is exactly its floor — which is the clause this
+      // probe was built to prove in the first place. `waves` floors on endless rows (none);
+      // everything else floors on nothing.
+      case "runs":
+      case "wins":
+        return line.scope ? null : cleared.length;
+      case "waves":
+        return line.scope ? null : 0;
+      default:
+        return line.scope ? null : 0;
+    }
+  };
+
+  let held = "";
+
+  for (const rung of ladder) {
+    let met = true;
+
+    for (const line of rung.requires) {
+      const have = read(line);
+      if (have === null) return null;              // a shape this probe cannot work out
+      if (have < line.target) { met = false; break; }
+    }
+
+    if (!met) break;
+    held = rung.id;
+  }
+
+  return held;
+}
 
 // ------------------------------------------------------------------ the save
 const saveFields = (levels) => ({
@@ -218,7 +321,9 @@ const writeSave = async (levels) => {
   return r.ok;
 };
 
-const publishedRung = async () => {
+// The rung, and the keeper level the same card carries — read together because the second is
+// what makes the first's `keeper_level` line checkable rather than assumed. See `gladesMeeting`.
+const publishedCard = async () => {
   const published = await call("publishGrove", {});
   if (published.status !== 200) {
     console.log(`    (publishGrove ${published.status}: ` +
@@ -226,8 +331,13 @@ const publishedRung = async () => {
     return null;
   }
   const card = await (await fetch(`${FS}/groves/${uid}`, { headers: bearer })).json();
-  return card?.fields?.rung?.stringValue ?? "";
+  return {
+    rung: card?.fields?.rung?.stringValue ?? "",
+    level: Number(card?.fields?.level?.integerValue ?? 0),
+  };
 };
+
+const publishedRung = async () => (await publishedCard())?.rung ?? null;
 
 // -------------------------------------------------- below the first rung, then on it
 console.log("the card's badge");
@@ -240,11 +350,47 @@ check(without === "",
       `got '${without}'`);
 
 check(await writeSave(glades), `a save clearing ${glades.length} glade(s) is accepted`);
-const with_ = await publishedRung();
+const withCard = await publishedCard();
+const with_ = withCard?.rung ?? null;
 
-check(with_ === first.id,
-      "**the deployed publishGrove derives the rank and writes it onto the card**",
-      `got '${with_}', expected '${first.id}'`);
+// **The keeper line, proved rather than assumed.** `gladesMeeting` answers "clear everything"
+// for a `keeper_level` line because working out the minimum would mean a third copy of the
+// reward rules and the level curve. What keeps that honest is this: the card the server just
+// wrote carries the level it derived, so a target the shipped catalog cannot pay says so here
+// instead of arriving as a badge that never appears.
+const keeperLine = first.requires.find((r) => r.measure === "keeper_level" && !r.scope);
+if (keeperLine) {
+  check(withCard !== null && withCard.level >= keeperLine.target,
+        `and clearing the catalog reaches the keeper level '${first.id}' asks for ` +
+        `(${keeperLine.target})`,
+        `the card says level ${withCard?.level ?? "(none)"} - the ladder now asks for more ` +
+        "than three stars on every shipped glade pays");
+}
+
+// **Held to the rung this save has actually earned**, climbed here from the published ladder
+// rather than assumed to be the first one - see `expectedRung`. When the ladder asks something
+// this probe cannot work out, it falls back to recognising the answer as a rung of the ladder
+// and says so, rather than quietly asserting less than it appears to.
+const expected = expectedRung(glades, withCard?.level ?? 0);
+const held = ladderIds.indexOf(with_);
+
+if (expected === null) {
+  console.log("  --   the ladder asks something this probe cannot climb, so the answer is " +
+              "only checked for being a rung of it");
+  check(held >= 0,
+        "**the deployed publishGrove derives the rank and writes it onto the card**",
+        `got '${with_}', which is no rung of the published ladder (${ladderIds.join(" -> ")})`);
+} else {
+  check(with_ === expected,
+        "**the deployed publishGrove derives the rank and writes it onto the card**",
+        `got '${with_}', and this save earns '${expected || "(nothing)"}' ` +
+        `against the published ladder (${ladderIds.join(" -> ")})`);
+
+  if (expected !== first.id) {
+    console.log(`  --   '${expected}' rather than '${first.id}': clearing the catalog is more ` +
+                "play than the first rung asks for, which a `keeper_level` line forces");
+  }
+}
 
 // The differential. If the running bundle predates the fix — or the ladder never reached the
 // server — both publishes answer "", which is exactly the silent failure this probe is for and
@@ -259,9 +405,9 @@ check(with_ !== without && with_ !== "",
 // likely to be missing and the least likely to be noticed.
 const wantsRuns = first.requires.some((r) => ["runs", "wins"].includes(r.measure));
 if (wantsRuns) {
-  check(with_ === first.id,
+  check(held >= 0,
         "and the lifetime floor is applied — cleared glades count as runs with no tally",
-        `'${first.id}' needs runs and the save carries none`);
+        `'${first.id}' needs runs, the save carries no tally, and nothing was published`);
 }
 
 // ------------------------------------------------------------------ onto the board

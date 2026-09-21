@@ -454,7 +454,7 @@ namespace GlimmerGrove.AssetPipeline
             "Hud/add", "Hud/burst", "Hud/btn_gold",
             "Hud/plate_blue", "Hud/plate_orange", "Hud/plate_violet", "Hud/plate_gold",
             "Hud/plate_navy",
-            "ic_nav_home", "ic_nav_shop", "ic_nav_grove",
+            "ic_nav_home", "ic_nav_shop",
             "ic_nav_ranks", "ic_nav_profile", "ic_battle", "ic_chest_wood", "ic_streak", "ic_padlock",
             "Hud/lander", "Hud/beam", "Hud/room",
 
@@ -509,10 +509,10 @@ namespace GlimmerGrove.AssetPipeline
         /// <summary>
         /// Backdrops that belong to screens rather than to any chapter.
         ///
-        /// The <c>streak_*</c> trio is the grove after dark — the same islands the hub
-        /// stands on, lit by a moon. The <c>event_*</c> trio is the ground those islands
-        /// float above, at first light: a different place rather than a third grade of the
-        /// same one, because two re-lights of one landscape is a mood and three is a filter.
+        /// The <c>streak_*</c> trio is the hub's own ground after dark, lit by a moon. The
+        /// <c>event_*</c> trio is that ground at first light: a different place rather than a
+        /// third grade of the same one, because two re-lights of one landscape is a mood and
+        /// three is a filter.
         /// Both are global rather than scoped like chapter art, for the reason the flame is:
         /// a fixed handful of files that does not grow with the catalog, on pages one tap off
         /// the hub, where a scope would spend a frame loading on a navigation players make
@@ -520,7 +520,6 @@ namespace GlimmerGrove.AssetPipeline
         /// </summary>
         static readonly string[] ScreenBackdrops =
         {
-            "grove_far", "grove_near", "grove_light",
             "home_sky", "home_ground", "home_deco",
             "map_sky", "map_ground", "map_deco",
             "streak_sky", "streak_ground", "streak_deco",
@@ -531,7 +530,7 @@ namespace GlimmerGrove.AssetPipeline
             "hub_room",
 
             // And the quiet ground behind every screen that is a list rather than a place —
-            // the storefront, the boards, the profile, the grove's shop and the tasks page.
+            // the storefront, the boards, the profile and the tasks page.
             // See `Scenery.Plain`.
             "plain",
 
@@ -645,247 +644,6 @@ namespace GlimmerGrove.AssetPipeline
             list.Add(AssetRequest.Sprite(Companion(companion.Portrait)));
             if (companion.HasAnimation) list.Add(AssetRequest.SpriteSet($"{ArtRoot}Critters/{companion.Animated}"));
             return list;
-        }
-
-        // ------------------------------------------------------------- homestead
-        /// <summary>
-        /// Every plot and every piece of decor the grove can draw.
-        ///
-        /// <para>
-        /// Derived from the catalog, never hand-listed — the rule this file exists to state.
-        /// A drop that adds twenty decor pieces is twenty rows in <c>homestead.json</c> and
-        /// no code at all, which is the same bargain <see cref="ChapterAssets"/> makes and
-        /// the reason the splash screen no longer names backdrops.
-        /// </para>
-        /// <para>
-        /// Residents are included and cost nothing: their art keys point at
-        /// <c>Art/Critters/</c>, which <see cref="GlobalAssets"/> already warmed, and
-        /// <see cref="AssetHold.LoadAsync"/> leaves an address that is already
-        /// global exactly where it is. Asking for them anyway is what keeps this method a
-        /// statement about the catalog rather than a statement about which folder a piece's
-        /// art happens to sit in today.
-        /// </para>
-        /// </summary>
-        /// <summary>
-        /// Every address the grove could ever ask for.
-        ///
-        /// <b>For the Editor only.</b> The build gate has to prove that every piece in the
-        /// catalog is addressable and present, which is a question about the catalog rather
-        /// than about any one screen — <c>AddressableAudit</c> and <c>Validate Art</c> both
-        /// ask it. Nothing at runtime should call this: loading the whole catalog to draw one
-        /// screen is the thing the split below exists to stop.
-        /// </summary>
-        public static List<AssetRequest> AllGroveAssets(Homestead.HomesteadCatalog catalog)
-        {
-            var list = new List<AssetRequest>(128);
-            if (catalog == null) return list;
-
-            var seen = new HashSet<string>();
-
-            void Add(AssetRequest request)
-            {
-                if (!string.IsNullOrEmpty(request.Address) && seen.Add(request.Address))
-                    list.Add(request);
-            }
-
-            AddFloor(catalog, Add);
-
-            foreach (var piece in catalog.Pieces) AddPiece(piece, Add);
-
-            return list;
-        }
-
-        /// <summary>
-        /// What the grove <em>screen</em> needs: the islands, the home ladder, and whatever
-        /// the player has actually put down.
-        ///
-        /// <para>
-        /// <b>Bounded by the grove, not by the catalog.</b> This used to be every piece that
-        /// exists, which was fine at forty and is wrong at four hundred: opening the
-        /// Grovement would load the whole shop to draw a screen showing at most one piece per
-        /// slot. The islands and the home ladder are unavoidable — they are always on screen —
-        /// but everything else here is a function of <paramref name="placed"/>, so the cost of
-        /// this screen is the size of the player's grove and stays there however large the
-        /// catalog grows. That is the difference between a feature that scales with content
-        /// and one that scales with the shop.
-        /// </para>
-        /// <para>
-        /// The whole home ladder rather than the rung in use, because it is five sprites and
-        /// buying one has to redraw the house in the same frame — see
-        /// <c>HomesteadLedger.BestDwelling</c>.
-        /// </para>
-        /// </summary>
-        public static List<AssetRequest> GroveAssets(Homestead.HomesteadCatalog catalog,
-                                                     IEnumerable<string> placed)
-        {
-            var list = new List<AssetRequest>(48);
-            if (catalog == null) return list;
-
-            var seen = new HashSet<string>();
-
-            void Add(AssetRequest request)
-            {
-                if (!string.IsNullOrEmpty(request.Address) && seen.Add(request.Address))
-                    list.Add(request);
-            }
-
-            AddFloor(catalog, Add);
-
-            foreach (var piece in catalog.Pieces)
-                if (piece.IsDwelling) AddPiece(piece, Add);
-
-            if (placed != null)
-                foreach (var id in placed)
-                    AddPiece(catalog.Find(id), Add);
-
-            return list;
-        }
-
-        /// <summary>
-        /// One shelf's worth of art for a screen that <em>browses</em>: a shop tab, or the
-        /// picker's list for one slot.
-        ///
-        /// <para>
-        /// <b>This is a thumbnail atlas and one sprite per tab, not the shelf's real art.</b>
-        /// A browse grid draws a piece at about 170 points; the piece itself is a 512-pixel
-        /// texture cut for an island. Loading the real thing to fill a grid means paying, per
-        /// tab, sixteen times the pixels the screen can show — and then paying it again in
-        /// draw calls, because forty separate textures cannot batch. One atlas per shelf is
-        /// therefore both the memory answer and the batching answer, and it is the reason a
-        /// shelf is a concept at all (see <c>GroveShelf</c>): the tab, the atlas and this scope
-        /// are three mechanisms that have to agree, so they are keyed on one division.
-        /// </para>
-        /// <para>
-        /// The tab row is drawn from the emblem of every shelf, so all eight atlases would be
-        /// wanted at once if the tabs used piece art — they do not; a tab draws its emblem out
-        /// of the <em>thumbnail</em> atlas it belongs to, and the row therefore costs one extra
-        /// sprite per shelf rather than eight atlases. Which is why the emblem sweep that used
-        /// to live here is gone.
-        /// </para>
-        /// </summary>
-        public static List<AssetRequest> GroveShelfAssets(Homestead.GroveShelf shelf)
-            => new List<AssetRequest>(1)
-            {
-                AssetRequest.Atlas(BrowseAtlas(Homestead.GroveShelves.HasAtlas(shelf)
-                                                   ? shelf
-                                                   : Homestead.GroveShelf.Ground)),
-            };
-
-        /// <summary>
-        /// The tab row's eight emblems, packed together.
-        ///
-        /// <para>
-        /// Their own tiny atlas rather than eight shelf atlases, because a tab has to be drawn
-        /// before it is chosen and a row of blank plates is a row nobody can navigate by
-        /// (invariant 7b) — and pulling in every shelf to draw eight little pictures would undo
-        /// the whole point of paging.
-        /// </para>
-        /// <para>
-        /// <b>Its own request list rather than a line in <see cref="GroveShelfAssets"/>, which
-        /// is where it used to be.</b> A shelf's assets are swapped whenever the shelf changes
-        /// and the emblems are not — they belong to the row, which outlives every shelf shown
-        /// in it. See <c>GroveArtLoader.Tabs</c> for what that cost when the two
-        /// shared a lifetime.
-        /// </para>
-        /// </summary>
-        public static List<AssetRequest> GroveTabAssets()
-            => new List<AssetRequest>(1) { AssetRequest.Atlas(TabAtlas) };
-
-        /// <summary>
-        /// What the picker draws: every shelf, because every tile of the floor takes everything.
-        ///
-        /// It used to be two — the slot's own kind and the residents — back when a slot had a
-        /// role. Still bounded by the number of shelves rather than by the size of the catalog,
-        /// which is the property paging exists to hold, and these are thumbnail pages rather
-        /// than shelves of real art.
-        /// </summary>
-        public static List<AssetRequest> GrovePickerAssets()
-        {
-            var list = new List<AssetRequest>(9);
-            foreach (var shelf in Homestead.GroveShelves.All)
-                if (Homestead.GroveShelves.HasAtlas(shelf))
-                    list.Add(AssetRequest.Atlas(BrowseAtlas(shelf)));
-
-            return list;
-        }
-
-        /// <summary>The tab row's emblems, packed as one. See <see cref="GroveShelfAssets"/>.</summary>
-        public static readonly string TabAtlas = GroveRoot + "thumbs_tabs";
-
-        /// <summary>
-        /// The address of a shelf's browse atlas: one texture holding every thumbnail on it.
-        ///
-        /// <para>
-        /// Under <c>Art/Grove/</c> rather than <c>Art/Homestead/</c> because it is
-        /// <em>generated</em> — rebuilt from the catalog by an Editor step and audited by the
-        /// build gate, never edited by hand — and because the residents' shelf packs companion
-        /// portraits, which live in a different folder and a different bundle from anything
-        /// under Homestead. A generated asset in the same folder as the art it was generated
-        /// from is a file somebody eventually edits.
-        /// </para>
-        /// </summary>
-        public static string BrowseAtlas(Homestead.GroveShelf shelf)
-            => GroveRoot + "thumbs_" + Homestead.GroveShelves.Key(shelf);
-
-        /// <summary>Where the grove's generated art lives. See <see cref="BrowseAtlas"/>.</summary>
-        public const string GroveRoot = ArtRoot + "Grove/";
-
-        /// <summary>
-        /// Every browse atlas there is, for the build gate and the Editor's generator.
-        ///
-        /// <b>Not for runtime.</b> Nothing on a device should hold all of these at once — that
-        /// is the thing paging exists to prevent — which is why the two runtime lists above ask
-        /// for two apiece.
-        /// </summary>
-        public static List<AssetRequest> AllBrowseAtlases()
-        {
-            var list = new List<AssetRequest>(9) { AssetRequest.Atlas(TabAtlas) };
-
-            foreach (var shelf in Homestead.GroveShelves.All)
-                if (Homestead.GroveShelves.HasAtlas(shelf))
-                    list.Add(AssetRequest.Atlas(BrowseAtlas(shelf)));
-
-            return list;
-        }
-
-        /// <summary>One piece's art, for a screen claiming a single thing it has just drawn.</summary>
-        public static List<AssetRequest> PieceAssets(Homestead.HomesteadPiece piece)
-        {
-            var list = new List<AssetRequest>(1);
-            AddPiece(piece, list.Add);
-            return list;
-        }
-
-        /// <summary>
-        /// The ground itself: one tile sprite for the whole field.
-        ///
-        /// <b>One address however large the floor is</b>, which is the quiet win of a tile field
-        /// over the islands it replaced - ten islands were ten textures that grew with the
-        /// chapter list, where a thousand tiles are one texture drawn a thousand times. A floor
-        /// that names no art draws a generated diamond instead, so the grove is never a screenful
-        /// of white rectangles while art is still being cut (invariant 7b).
-        /// </summary>
-        static void AddFloor(Homestead.HomesteadCatalog catalog, System.Action<AssetRequest> add)
-        {
-            string art = catalog?.Floor?.TileArt;
-            if (!string.IsNullOrEmpty(art)) add(AssetRequest.Sprite(ArtRoot + art));
-        }
-
-        static void AddPiece(Homestead.HomesteadPiece piece, System.Action<AssetRequest> add)
-        {
-            if (!piece.IsValid || string.IsNullOrEmpty(piece.Art)) return;
-
-            string address = ArtRoot + piece.Art;
-
-            // A piece that can be *turned* draws its facings out of a folder, exactly as an
-            // animated one draws its frames — so it is a sprite set for the same reason and
-            // with a sharper edge: a folder of frames has no notion of being a folder, it is
-            // addressed by a label its frames share, and one that never gets that label is
-            // addressed, audited green and completely unloadable (invariant 37at, which cost a
-            // device build of raiders with no bodies). Asking here is what puts it in
-            // `AddressableAddresses.FrameFolders`.
-            bool folder = piece.Animated || piece.Facings > 1;
-            add(folder ? AssetRequest.SpriteSet(address) : AssetRequest.Sprite(address));
         }
 
         // --------------------------------------------------------------- chapter

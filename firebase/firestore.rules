@@ -146,34 +146,25 @@ service cloud.firestore {
                                                       && d.heartContainersOwned.size() <= 32))
                && (!('heartContainersRevoked' in d) || (d.heartContainersRevoked is list
                                                         && d.heartContainersRevoked.size() <= 32))
-               // The grove: what the player bought for it, and where they put it. Both are
-               // client-owned and forgeable, and both are still accounted for the same way
-               // the companion set above is, with one addition that used to be unnecessary.
-               // These three sets are what a grove's public worth is derived from, so since
-               // the boards exist a forged entry no longer only buys a picture — it would
-               // buy a place on a public list. That is adjudicated in `publishGrove`, which
-               // recomputes the score from this document and clamps its bought half to
-               // currency the server derived itself, so nothing forged here reaches a board
-               // (see functions/src/grove.ts and the `groves` rule below). The money half is
-               // defended where money always is, by `submitSpends` refusing a debit the
-               // server-derived balance cannot cover. Note what is deliberately
-               // Since v20 a priced piece is bought by the copy, so `homesteadStock` is a
-               // list of {id, copies} rather than a set of ids. That is a stored count and
-               // invariant 11b permits exactly one kind: copies *ever bought*, which only
-               // rises, so the merge is a per-id max. What is left to place is derived
-               // against the placements and is never written down.
+               // The grove, RETIRED on 2026-09-21 — the Grovement was removed from the game
+               // and nothing this build writes emits any of these five keys.
                //
-               // `homesteadOwned` is the v19 field and is still allowed here deliberately.
-               // Nothing this build writes emits it, but `hasOnly` is an allow-list over the
-               // whole document, so a client that has not updated and still sends it would
-               // lose *every* save write rather than that one field — which is invariant
-               // 12a from the direction with teeth, and why these rules can be deployed
-               // before the client that stops sending it.
+               // **They stay allow-listed, and that is the whole point of leaving them here.**
+               // `hasOnly` is an allow-list over the *whole* document, so a client that has
+               // not updated and still sends `homesteadPlaced` would lose **every** save write
+               // rather than that one field — invariant 12a from the direction with teeth. An
+               // allow-list entry for a key nobody sends costs nothing; removing one costs a
+               // rolled-back player their whole save path, silently, with no screen saying so.
+               // The bounds are kept for the same reason: an old client still has to pass them.
                //
-               // All three are bounded because the client controls their length. The
-               // placement bound is generous against the shipped floor on purpose: it has to
-               // hold for every future content drop as well, and rows naming slots an older
-               // build does not know are carried through rather than dropped.
+               // Nothing reads them either. `publishGrove` still derives a grove's worth from
+               // this document for accounts whose saves already carry one, which is harmless:
+               // no board in the game draws that number any more.
+               //
+               // `homesteadOwned` was already retired in place once (it is the v19 field that
+               // `homesteadStock` replaced in v20), so this is the second layer of the same
+               // rule on the same key.
+               //
                && (!('homesteadStock' in d) || (d.homesteadStock is list
                                                 && d.homesteadStock.size() <= 512))
                && (!('homesteadOwned' in d) || (d.homesteadOwned is list
@@ -181,19 +172,12 @@ service cloud.firestore {
                && (!('homesteadPlaced' in d) || (d.homesteadPlaced is list
                                                  && d.homesteadPlaced.size() <= 1024))
 
-               // Regions, not tiles — a filled floor is a couple of hundred tiles and a set
-               // that size is merged and checksummed on every sync for ever, which is why
-               // invariant 16e stores the coarser thing. The cap is generous against that.
+               // Land. Retired with the four keys above and kept for their reason.
                && (!('groveLandOwned' in d) || (d.groveLandOwned is list
                                                 && d.groveLandOwned.size() <= 128))
 
-               // Which generation of the grove catalogue this save's grove belongs to. It is
-               // the one grove field that lets something be taken away — a union has no way to
-               // say "this is gone", so the newer epoch's grove replaces the older one's rather
-               // than absorbing it (see Homestead/GroveEpoch.cs). Bounded well above anything
-               // a build will ask for, because the only failure worth guarding is a corrupt
-               // value winning every merge for ever: a save claiming epoch 2^31 would discard
-               // the grove of every device it ever met, and no repair could reach it.
+               // Which generation of the grove catalogue this save's grove belonged to.
+               // Retired with the keys above and kept for their reason.
                && (!('groveEpoch' in d) || (d.groveEpoch is int
                                             && d.groveEpoch >= 0 && d.groveEpoch <= 64))
 

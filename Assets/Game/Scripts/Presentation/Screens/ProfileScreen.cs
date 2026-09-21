@@ -2,7 +2,6 @@ using GlimmerGrove.AssetPipeline;
 using System;
 using System.Collections.Generic;
 using GlimmerGrove.Cloud;
-using GlimmerGrove.Homestead;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Social;

@@ -179,12 +179,12 @@ namespace GlimmerGrove.Tests
         public void ArtHandedFromOneScreenToTheNextIsNeverFreed()
         {
             var outgoing = AssetLibrary.Hold("outgoing");
-            Load(outgoing, One("Art/Homestead/bench"));
+            Load(outgoing, One("Art/Props/bench"));
 
             // The incoming screen builds and takes its hold first; the outgoing one's OnDestroy
             // runs afterwards, in the same frame.
             var incoming = AssetLibrary.Hold("incoming");
-            Load(incoming, One("Art/Homestead/bench"));
+            Load(incoming, One("Art/Props/bench"));
             outgoing.Dispose();
 
             PastGrace();
@@ -202,14 +202,14 @@ namespace GlimmerGrove.Tests
         public void AnAddressComingStraightBackIsNeverReloaded()
         {
             var first = AssetLibrary.Hold("grove");
-            Load(first, One("Art/Homestead/bench"));
+            Load(first, One("Art/Props/bench"));
             first.Dispose();
 
             // A moment passes — less than the grace — and the player comes back.
             AssetLibrary.Tick(1f);
 
             var second = AssetLibrary.Hold("grove");
-            Load(second, One("Art/Homestead/bench"));
+            Load(second, One("Art/Props/bench"));
 
             PastGrace();
 
@@ -372,7 +372,7 @@ namespace GlimmerGrove.Tests
             AssetLibrary.UseProvider(gated);
 
             var hold = AssetLibrary.Hold("visit");
-            var loading = hold.LoadAsync(One("Art/Homestead/bench"));
+            var loading = hold.LoadAsync(One("Art/Props/bench"));
 
             hold.Dispose();
             AssetLibrary.FlushIdle();
@@ -384,7 +384,7 @@ namespace GlimmerGrove.Tests
 
             // The load's answer must not be sitting in a cache. Asking again has to reach the
             // provider; answered from a cached miss it never would, for ever.
-            AssetLibrary.Get<Sprite>("Art/Homestead/bench");
+            AssetLibrary.Get<Sprite>("Art/Props/bench");
             Assert.AreEqual(1, gated.SyncLoads, "a released hold's load left a cached miss behind");
         }
 
@@ -392,7 +392,7 @@ namespace GlimmerGrove.Tests
         /// Frame folders are the bulk of this game's art — sixty-eight of the eighty-six grove
         /// pieces, every turret reel, every baked effect — and warming one used to go through the
         /// synchronous path, so a screen's whole art set landed inside one frame however
-        /// carefully the batching was written. The Grovement opening on a decorated grove was
+        /// carefully the batching was written. A busy screen opening on a full scope was
         /// that stall.
         /// </summary>
         [Test]
@@ -402,7 +402,7 @@ namespace GlimmerGrove.Tests
             AssetLibrary.UseProvider(gated);
 
             var hold = AssetLibrary.Hold("grove");
-            var loading = hold.LoadAsync(new[] { AssetRequest.SpriteSet("Art/Homestead/home_cottage") });
+            var loading = hold.LoadAsync(new[] { AssetRequest.SpriteSet("Art/Props/cottage") });
 
             Assert.IsFalse(loading.IsCompleted, "a frame folder was warmed synchronously");
             Assert.AreEqual(0, gated.SyncSetLoads, "the blocking LoadAll was used to preload");

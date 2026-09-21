@@ -639,10 +639,14 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static readonly Mechanic LuckySpin = new Mechanic("lucky_spin");
 
-        /// <summary>What the Grovement is, shown once on the player's first visit.</summary>
+        /// <summary>
+        /// <b>Retired: no screen raises this and its id must never be reused.</b> It was what
+        /// the Grovement is, shown once on the player's first visit. The Grovement went on
+        /// 2026-09-21; the id stays here for ever because it has travelled in <c>tipsSeen</c>.
+        /// </summary>
         public static readonly Mechanic Grove = new Mechanic("grove");
 
-        /// <summary>Where the things a grove is built from are bought.</summary>
+        /// <summary><b>Retired with <see cref="Grove"/>.</b> Where a grove was built from.</summary>
         public static readonly Mechanic GroveShop = new Mechanic("grove_shop");
 
         // ------------------------------------------------------------------ the map
@@ -834,8 +838,8 @@ namespace GlimmerGrove.Progression
             SiegeBomber,
             SiegePrism, SiegeLance, SiegeStorm, SiegeFurnace, SiegeHourglass, SiegeAnvil,
             SiegeRubble,
-            ModeSwitch, LuckySpin, Grove,
-            GroveShop,
+            ModeSwitch, LuckySpin,
+            // Grove and GroveShop are retired and deliberately absent. See the remarks above.
             MapLoadout, MapChapterGate, MapTrack,
             LoadoutSeats, LoadoutKit,
         };
@@ -864,6 +868,7 @@ namespace GlimmerGrove.Progression
             SiegeLine, SiegeShield, SiegeBank,
             SiegeWeaver, SiegeThief,
             SiegeCog,
+            Grove, GroveShop,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);

@@ -398,14 +398,12 @@ namespace GlimmerGrove.Tests
         /// Both live on <see cref="Mechanic"/> because everything about a lesson is already
         /// there — a permanent id, strings derived from it, and a union-joined ledger that
         /// reaches the cloud with no new save field. What separates them is the queue:
-        /// <see cref="Mechanic.TeachingOrder"/> is what a glade walks, and a grove tip
-        /// appearing on a board would be a modal about a shop over a puzzle.
+        /// <see cref="Mechanic.TeachingOrder"/> is what a glade walks, and a lesson about a
+        /// screen appearing on a board would be a modal about a shop over a puzzle.
         /// </summary>
         [Test]
         public void AScreensLessonIsNeverQueuedByAGlade()
         {
-            Assert.IsFalse(InOrder(Mechanic.Grove));
-            Assert.IsFalse(InOrder(Mechanic.GroveShop));
             Assert.IsFalse(InOrder(Mechanic.ModeSwitch));
         }
 
@@ -478,8 +476,6 @@ namespace GlimmerGrove.Tests
                 Assert.IsTrue(ids.Contains(m.Id), $"'{m}' is taught and is not in All, so nothing " +
                                                   "proves it has strings");
 
-            Assert.IsTrue(ids.Contains(Mechanic.Grove.Id));
-            Assert.IsTrue(ids.Contains(Mechanic.GroveShop.Id));
             Assert.IsTrue(ids.Contains(Mechanic.ModeSwitch.Id));
         }
 

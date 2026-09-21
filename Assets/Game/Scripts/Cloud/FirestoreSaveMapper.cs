@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using GlimmerGrove.Homestead;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Utilities;
 
@@ -124,15 +123,7 @@ namespace GlimmerGrove.Cloud
                 { "heartContainersOwned", new List<object>(dto.heartContainersOwned ?? new string[0]) },
                 { "heartContainersRevoked", new List<object>(dto.heartContainersRevoked ?? new string[0]) },
 
-                // The grove. Its purchases travel for exactly the companions' reason; its
-                // arrangement travels because it is the one thing in this file a player would
-                // notice missing on a second device, and an evening spent laying out a grove
-                // that never left the phone is the worst kind of loss — invisible until a
-                // reinstall. Neither is adjudicated: a piece is a cosmetic, and the money half
-                // is already defended by submitSpends. See HomesteadLedger.
-                { "homesteadStock", Stock(dto.homesteadStock) },
-
-                // The utilities, both counters per row. They travel for the grove stock's
+                // The utilities, both counters per row. They travel for the companions'
                 // reason with one addition: a utility can be bought with gems, so a row that
                 // stayed on one phone is a purchase the player cannot see on their other
                 // device. Nothing here is adjudicated and invariant 39 is why that is safe —
@@ -156,32 +147,6 @@ namespace GlimmerGrove.Cloud
                 // How far each turret has been upgraded. A count that may be stored only
                 // because it cannot fall, so the merge is a per-key max (invariant 11b).
                 { "wardStars", Stars(dto.wardStars) },
-
-                // The v19 mirror, derived by HomesteadLedger and carried so a rolled-back
-                // client and a not-yet-redeployed groveWorth both keep working.
-                { "homesteadOwned", new List<object>(dto.homesteadOwned ?? new string[0]) },
-                { "homesteadPlaced", Placements(dto.homesteadPlaced) },
-
-                // Land, and it is the reason the two lines above are not enough. It arrived a
-                // schema version after them and reached SaveFileDto and SaveDelta but not this
-                // map, so a floor bought with credits stayed on the phone that bought it — and
-                // nothing showed it, because a device that never replaces its local save never
-                // reads back what it failed to write. Switching accounts is what replaces it,
-                // and the grove came back as the free starter square with everything standing
-                // outside it invisible: the placements had survived, the ground under them had
-                // not. Adding a field to the save is not done until it is on this map, in the
-                // reader below, and in firestore.rules — where an unlisted key does not fail
-                // the field, it fails the whole write.
-                { "groveLandOwned", new List<object>(dto.groveLandOwned ?? new string[0]) },
-
-                // Which generation of the catalogue this grove belongs to. It has to reach the
-                // server or the reset does not stick: a device that discarded an older grove
-                // pushes an empty one, and without the stamp beside it the server's copy still
-                // claims the older epoch and wins the next join back. See GroveEpoch.
-                { "groveEpoch", (long)dto.groveEpoch },
-                { "groveHall", dto.groveHall ?? string.Empty },
-                { "groveHallFacing", (long)dto.groveHallFacing },
-                { "groveHallSetUnix", dto.groveHallSetUnix },
 
                 { "checksum", dto.checksum ?? string.Empty },
 
@@ -384,42 +349,6 @@ namespace GlimmerGrove.Cloud
 
             return list;
         }
-
-        /// <summary>
-        /// The grove's arrangement, as a list of small maps.
-        ///
-        /// A list rather than a map keyed by slot id, for <see cref="EventFloors"/>'s reason:
-        /// a slot id is content and a Firestore field name is not, so an id carrying a dot
-        /// would silently become a nested path. Already sorted by
-        /// <c>HomesteadLayout.WriteInto</c>, so the walk back is ordered.
-        /// </summary>
-        /// <summary>
-        /// The stock rows, as a list of maps.
-        ///
-        /// A list rather than a map keyed by piece id, for <see cref="Placements"/>'s reason: a
-        /// piece id is content and a Firestore field name is not, so an id carrying a dot would
-        /// silently become a nested path. Already sorted by <c>GroveStock.Write</c>, so the walk
-        /// back is ordered and <see cref="SaveDelta"/> can compare it row by row.
-        /// </summary>
-        static List<object> Stock(HomesteadStockDto[] rows)
-        {
-            var list = new List<object>();
-            if (rows == null) return list;
-
-            foreach (var row in rows)
-            {
-                if (row == null || string.IsNullOrEmpty(row.id) || row.copies <= 0) continue;
-
-                list.Add(new Dictionary<string, object>
-                {
-                    { "id", row.id },
-                    { "copies", (long)row.copies },
-                });
-            }
-
-            return list;
-        }
-
         /// <summary>
         /// The utility ledgers, dropping any row that says nothing.
         ///
@@ -519,37 +448,6 @@ namespace GlimmerGrove.Cloud
 
             return list;
         }
-
-        static List<object> Placements(HomesteadPlacementDto[] rows)
-        {
-            var list = new List<object>();
-            if (rows == null) return list;
-
-            foreach (var row in rows)
-            {
-                if (row == null || string.IsNullOrEmpty(row.slot)) continue;
-
-                list.Add(new Dictionary<string, object>
-                {
-                    { "slot", row.slot },
-                    { "piece", row.piece ?? string.Empty },
-                    { "setUnix", row.setUnix },
-
-                    // Part of the arrangement, so it travels with it. A piece that comes back
-                    // facing the other way is the same loss as one that comes back missing,
-                    // only quieter.
-                    { "facing", row.facing },
-
-                    // Retired at v24 and still carried: a rolled-back client writes it, and a
-                    // mapper that dropped it would quietly discard what that client said. See
-                    // HomesteadPlacementDto.flipped.
-                    { "flipped", row.flipped },
-                });
-            }
-
-            return list;
-        }
-
         // ----------------------------------------------------------- from cloud
         /// <summary>
         /// Reads a document back. Treats every field as missing until proven otherwise,
@@ -571,19 +469,6 @@ namespace GlimmerGrove.Cloud
                 companionsOwned = StrList(doc, "companionsOwned"),
                 heartContainersOwned = StrList(doc, "heartContainersOwned"),
                 heartContainersRevoked = StrList(doc, "heartContainersRevoked"),
-                // Read as well as written, and it is the v19 field. A document written by a
-                // device that has not updated carries the old id set and no stock at all, and
-                // GroveStock.In is what turns one into the other — so leaving this out would
-                // mean a sync from an older phone arrived as a grove with nothing bought.
-                homesteadOwned = StrList(doc, "homesteadOwned"),
-                groveLandOwned = StrList(doc, "groveLandOwned"),
-
-                // Absent on a document written before the village replaced the grove, which
-                // reads back as 0 — exactly the generation such a document belongs to.
-                groveEpoch = (int)Long(doc, "groveEpoch", 0),
-                groveHall = Str(doc, "groveHall"),
-                groveHallFacing = (int)Long(doc, "groveHallFacing", 0),
-                groveHallSetUnix = Long(doc, "groveHallSetUnix", 0),
                 checksum = Str(doc, "checksum"),
                 settings = new SettingsDto(),
                 wallet = WalletDto.Unwritten(),
@@ -675,8 +560,6 @@ namespace GlimmerGrove.Cloud
             // Absent on a document written before the grove existed, which reads back as no
             // rows — and no rows is "this device has no opinion about any slot", so the join
             // takes the local side whole. Nothing has to detect the upgrade.
-            dto.homesteadStock = ReadStock(doc);
-            dto.homesteadPlaced = ReadPlacements(doc);
 
             // Absent on a document written before utilities existed, which reads back as no
             // rows — the same fact as "granted none", so the join takes the local side whole
@@ -764,51 +647,11 @@ namespace GlimmerGrove.Cloud
 
             return floors.ToArray();
         }
-
-        /// <summary>
-        /// The grove's arrangement, tolerating anything that is not one — the rule
-        /// <see cref="ReadEventFloors"/> follows and for the same reason.
-        /// </summary>
-        /// <summary>
-        /// The stock rows out of a cloud document, dropping anything malformed.
-        ///
-        /// A row with no id or a count that is not positive is skipped rather than repaired:
-        /// <c>GroveStock</c> would drop it a moment later anyway, and letting it through would
-        /// make the round trip write back a row it did not receive, which is exactly the
-        /// difference <see cref="SaveDelta"/> would then read as a change on every launch.
-        /// </summary>
-        static HomesteadStockDto[] ReadStock(IDictionary<string, object> doc)
-        {
-            if (!doc.TryGetValue("homesteadStock", out object raw) || !(raw is IEnumerable<object> items))
-                return new HomesteadStockDto[0];
-
-            var rows = new List<HomesteadStockDto>();
-
-            foreach (object item in items)
-            {
-                if (!(item is IDictionary<string, object> map)) continue;
-
-                string id = Str(map, "id");
-                if (string.IsNullOrEmpty(id)) continue;
-
-                long copies = Long(map, "copies", 0L);
-                if (copies <= 0L) continue;
-
-                rows.Add(new HomesteadStockDto
-                {
-                    id = id,
-                    copies = copies > GroveStock.MaxCopies ? GroveStock.MaxCopies : (int)copies,
-                });
-            }
-
-            return rows.ToArray();
-        }
-
         /// <summary>
         /// The utility ledgers out of a cloud document, dropping anything malformed.
         ///
         /// A row with no id or with both counters at nought is skipped rather than repaired, for
-        /// <see cref="ReadStock"/>'s reason: <c>UtilityStock</c> would drop it a moment later
+        /// <see cref="ReadUtilities"/>'s reason: <c>UtilityStock</c> would drop it a moment later
         /// anyway, and letting it through would make the round trip write back a row it did not
         /// receive.
         /// </summary>
@@ -1081,39 +924,6 @@ namespace GlimmerGrove.Cloud
             => value < 0L ? 0
              : value > UtilityStock.MaxHeld ? UtilityStock.MaxHeld
              : (int)value;
-
-        static HomesteadPlacementDto[] ReadPlacements(IDictionary<string, object> doc)
-        {
-            if (!doc.TryGetValue("homesteadPlaced", out object raw) || !(raw is IEnumerable<object> items))
-                return new HomesteadPlacementDto[0];
-
-            var rows = new List<HomesteadPlacementDto>();
-
-            foreach (var item in items)
-            {
-                if (!(item is IDictionary<string, object> entry)) continue;
-
-                string slot = Str(entry, "slot");
-                if (string.IsNullOrEmpty(slot)) continue;
-
-                rows.Add(new HomesteadPlacementDto
-                {
-                    slot = slot,
-                    piece = Str(entry, "piece"),
-                    setUnix = Long(entry, "setUnix", 0),
-
-                    // Absent on a document written before pieces could be turned, which reads
-                    // back as 0 — the facing a piece that was never turned already holds.
-                    facing = (int)Long(entry, "facing", 0),
-
-                    // Retired at v24. See HomesteadPlacementDto.flipped.
-                    flipped = Bool(entry, "flipped"),
-                });
-            }
-
-            return rows.ToArray();
-        }
-
         static LevelRecordDto[] ReadLevels(IDictionary<string, object> doc)
         {
             if (!doc.TryGetValue("levels", out object raw) || !(raw is IDictionary<string, object> map))

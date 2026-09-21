@@ -1,7 +1,6 @@
 using System;
 using GlimmerGrove.Cloud;
 using GlimmerGrove.Content;
-using GlimmerGrove.Homestead;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using GlimmerGrove.Social;
@@ -31,12 +30,6 @@ namespace GlimmerGrove.Tests
     /// </summary>
     public sealed class EndlessBoardTests
     {
-        sealed class NoProgress : IHomesteadProgress
-        {
-            public bool IsCleared(LevelId level) => false;
-            public bool IsChapterFinished(ChapterId chapter) => false;
-        }
-
         static readonly LevelId Watch = LevelId.Parse("s02_endlesswatch");
         static readonly LevelId Other = LevelId.Parse("s09_elsewhere");
 
@@ -44,10 +37,6 @@ namespace GlimmerGrove.Tests
         public void Reset()
         {
             GroveRanks.Clear();
-            HomesteadProgress.Set(new NoProgress());
-            HomesteadLayout.ResetForTests();
-            HomesteadLedger.ResetForTests();
-            GroveLand.ResetForTests();
 
             // No `ResetForTests` of its own: reading an empty file is what clears this ledger
             // in the game too, so the test uses the door the game uses.
@@ -61,10 +50,6 @@ namespace GlimmerGrove.Tests
         public void Restore()
         {
             GroveRanks.Clear();
-            HomesteadProgress.Set(null);
-            HomesteadLayout.ResetForTests();
-            HomesteadLedger.ResetForTests();
-            GroveLand.ResetForTests();
             EndlessLedger.LoadFrom(new SaveFileDto());
             CloudSaveService.ForgetSyncRequestForTests();
         }
@@ -131,8 +116,7 @@ namespace GlimmerGrove.Tests
             EndlessLedger.Record(Watch, int.MaxValue);
             Assert.AreEqual(EndlessLedger.MaxWave, EndlessLedger.Best);
 
-            var card = new GroveCard("uid", "Fern", "coral", 4, 0L, 0, int.MaxValue, 1L,
-                                     string.Empty, null, null);
+            var card = new GroveCard("uid", "Fern", 4, int.MaxValue, 1L);
             Assert.AreEqual(EndlessLedger.MaxWave, card.BestWave);
         }
 
@@ -173,10 +157,8 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheWaveIsPartOfWhatAVisitorCanSee()
         {
-            var bare = new GroveCard("uid", "Fern", "coral", 4, 0L, 0, 0, 1L,
-                                     string.Empty, null, null);
-            var held = new GroveCard("uid", "Fern", "coral", 4, 0L, 0, 17, 1L,
-                                     string.Empty, null, null);
+            var bare = new GroveCard("uid", "Fern", 4, 0, 1L);
+            var held = new GroveCard("uid", "Fern", 4, 17, 1L);
 
             // If the fingerprint does not move, the publish policy believes the card it
             // already sent is current and the new best never leaves the phone.
@@ -184,105 +166,18 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void AKeeperWithNothingButAWaveIsStillWorthPublishing()
+        public void AWaveIsTheOnlyThingWorthPublishing()
         {
-            var nothing = new GroveCard("uid", "Fern", "coral", 4, 0L, 0, 0, 1L,
-                                        string.Empty, null, null);
-            var wave = new GroveCard("uid", "Fern", "coral", 4, 0L, 0, 17, 1L,
-                                     string.Empty, null, null);
-            var grove = new GroveCard("uid", "Fern", "coral", 4, GrovePublishPolicy.Worth, 0, 0, 1L,
-                                      string.Empty, null, null);
+            var nothing = new GroveCard("uid", "Fern", 4, 0, 1L);
+            var wave = new GroveCard("uid", "Fern", 4, 17, 1L);
 
-            // The bar is still a bar — an account that has built nothing and played nothing
-            // is a document, a write and a row in the decile sample for a keeper with nothing
-            // to show — but it has two ways over it now, one per board.
+            // The bar is still a bar — an account that has played nothing is a document, a
+            // write and a row in the decile sample for a keeper with nothing to show. What
+            // changed on 2026-09-21 is that there is one way over it rather than two: the
+            // grove's worth used to be the other, and there is no grove.
             Assert.IsFalse(GrovePublishPolicy.WorthPublishing(nothing));
             Assert.IsFalse(GrovePublishPolicy.WorthPublishing(null));
             Assert.IsTrue(GrovePublishPolicy.WorthPublishing(wave));
-            Assert.IsTrue(GrovePublishPolicy.WorthPublishing(grove));
-        }
-
-        /// <summary>
-        /// The fourth joint, and the one that actually broke.
-        ///
-        /// <para>
-        /// A settled sync is judged against the homestead catalog, and a receipt that arrives
-        /// before the catalog is parked until it is published. For a year something always
-        /// published it — the three grove screens load it on the way in — and the day those
-        /// screens left the nav (the Grovement hold, 2026-09-15) no device loaded it again, so
-        /// every receipt was parked for ever: no publish, no card, no row, and the boards
-        /// stood at whatever the last grove visit had put on them. No test saw it because every
-        /// fixture that reached <c>Consider</c> loaded a catalog first. The gate has to be the
-        /// thing that asks for what it is waiting on.
-        /// </para>
-        /// <para>
-        /// The content source is absent on the machine this runs on, so the load cannot
-        /// complete; what is asserted is that it was <em>asked for</em>, which is the half that
-        /// was missing.
-        /// </para>
-        /// </summary>
-        [Test]
-        public void AReceiptParkedForTheCatalogAsksForTheCatalog()
-        {
-            HomesteadService.ResetForTests();
-            GroveBoard.Forget();
-            CloudSaveService.UseBackend(new BoardsOnlyBackend());
-
-            try
-            {
-                Assert.IsTrue(GroveBoard.IsAvailable, "the fixture's backend must count as available");
-                Assert.IsFalse(HomesteadCatalog.IsLoaded);
-                Assert.AreEqual(0, HomesteadService.LoadsAsked);
-
-                GroveBoard.ConsiderForTests(new SyncReceipt(new SaveFileDto(), 7L, pushed: true));
-
-                Assert.AreEqual(1, HomesteadService.LoadsAsked,
-                                "a receipt held back for want of a catalog must ask for the catalog, " +
-                                "or it is held back for the life of the process");
-            }
-            finally
-            {
-                CloudSaveService.UseBackend(null);
-                GroveBoard.Forget();
-                HomesteadService.ResetForTests();
-            }
-        }
-
-        /// <summary>
-        /// A backend that exists and nothing more. Every call is a fault, because the test
-        /// above must never reach one: it stops at the catalog gate, and a call that got past
-        /// it is the assertion failing in a different voice.
-        /// </summary>
-        sealed class BoardsOnlyBackend : ICloudSaveBackend, IGroveBoardBackend
-        {
-            static System.Threading.Tasks.Task<T> Never<T>() => throw new NotSupportedException("not reached");
-
-            public bool IsAvailable => true;
-            public CloudIdentity CurrentIdentity => new CloudIdentity("uid-boards", false);
-
-            public System.Threading.Tasks.Task<(CloudResult result, CloudIdentity identity)> SignInAsync(System.Threading.CancellationToken c = default) => Never<(CloudResult, CloudIdentity)>();
-            public System.Threading.Tasks.Task<(CloudResult result, CloudIdentity identity)> ResumeAsync(System.Threading.CancellationToken c = default) => Never<(CloudResult, CloudIdentity)>();
-            public System.Threading.Tasks.Task<(CloudResult result, CloudIdentity identity)> LinkAsync(LinkCredential cr, System.Threading.CancellationToken c = default) => Never<(CloudResult, CloudIdentity)>();
-            public System.Threading.Tasks.Task<(CloudResult result, CloudIdentity identity)> SignInWithCredentialAsync(LinkCredential cr, System.Threading.CancellationToken c = default) => Never<(CloudResult, CloudIdentity)>();
-            public System.Threading.Tasks.Task<(CloudResult result, CloudSnapshot snapshot)> PullAsync(string u, System.Threading.CancellationToken c = default) => Never<(CloudResult, CloudSnapshot)>();
-            public System.Threading.Tasks.Task<CloudResult> PushAsync(string u, SaveFileDto s, SaveDelta d, System.Threading.CancellationToken c = default) => Never<CloudResult>();
-            public System.Threading.Tasks.Task<(CloudResult result, System.Collections.Generic.List<CloudWalletState> wallets)> ReadWalletAsync(string u, System.Threading.CancellationToken c = default) => Never<(CloudResult, System.Collections.Generic.List<CloudWalletState>)>();
-            public System.Threading.Tasks.Task<(CloudResult result, System.Collections.Generic.List<CloudWalletState> wallets)> SubmitSpendsAsync(string u, System.Collections.Generic.IReadOnlyList<SpendEntryDto> s, System.Threading.CancellationToken c = default) => Never<(CloudResult, System.Collections.Generic.List<CloudWalletState>)>();
-            public System.Threading.Tasks.Task<(CloudResult result, System.Collections.Generic.List<CloudWalletState> wallets)> SubmitAwardsAsync(string u, System.Collections.Generic.IReadOnlyList<GrantEntryDto> a, System.Threading.CancellationToken c = default) => Never<(CloudResult, System.Collections.Generic.List<CloudWalletState>)>();
-            public System.Threading.Tasks.Task<(CloudResult result, System.Collections.Generic.List<CloudWalletState> wallets, CloudRedemption redemption)> RedeemPurchaseAsync(string u, PurchaseReceipt r, System.Threading.CancellationToken c = default) => Never<(CloudResult, System.Collections.Generic.List<CloudWalletState>, CloudRedemption)>();
-            public System.Threading.Tasks.Task<(CloudResult result, System.Collections.Generic.Dictionary<LevelId, LevelStats> stats)> ReadGroveStatsAsync(System.Threading.CancellationToken c = default) => Never<(CloudResult, System.Collections.Generic.Dictionary<LevelId, LevelStats>)>();
-            public System.Threading.Tasks.Task<(CloudResult result, Release.ReleaseRequirement requirement)> ReadReleaseAsync(string p, System.Threading.CancellationToken c = default) => Never<(CloudResult, Release.ReleaseRequirement)>();
-            public System.Threading.Tasks.Task<(CloudResult result, string appleAuthorizationCode)> ReauthenticateAsync(LinkCredential cr, System.Threading.CancellationToken c = default) => Never<(CloudResult, string)>();
-            public System.Threading.Tasks.Task<CloudResult> DeleteAccountAsync(string u, string code = null, System.Threading.CancellationToken c = default) => Never<CloudResult>();
-
-            public System.Threading.Tasks.Task<(CloudResult result, GrovePublication published)> PublishGroveAsync(string u, System.Threading.CancellationToken c = default) => Never<(CloudResult, GrovePublication)>();
-            public System.Threading.Tasks.Task<CloudResult> WithdrawGroveAsync(string u, System.Threading.CancellationToken c = default) => Never<CloudResult>();
-            public System.Threading.Tasks.Task<(CloudResult result, string holderId)> ReadNameHolderAsync(string k, System.Threading.CancellationToken c = default) => Never<(CloudResult, string)>();
-            public System.Threading.Tasks.Task<(CloudResult result, NameClaim claim)> ClaimNameAsync(string n, System.Threading.CancellationToken c = default) => Never<(CloudResult, NameClaim)>();
-            public System.Threading.Tasks.Task<(CloudResult result, NameReportOutcome outcome)> ReportKeeperAsync(string k, ReportSubject s, System.Threading.CancellationToken c = default) => Never<(CloudResult, NameReportOutcome)>();
-            public System.Threading.Tasks.Task<(CloudResult result, GroveCard card)> ReadGroveCardAsync(string o, System.Threading.CancellationToken c = default) => Never<(CloudResult, GroveCard)>();
-            public System.Threading.Tasks.Task<(CloudResult result, LeaderboardBoard board)> ReadLeaderboardAsync(string b, System.Threading.CancellationToken c = default) => Never<(CloudResult, LeaderboardBoard)>();
-            public System.Threading.Tasks.Task<(CloudResult result, GroveRankPublication published)> ReadGroveRanksAsync(System.Threading.CancellationToken c = default) => Never<(CloudResult, GroveRankPublication)>();
         }
 
         // ------------------------------------------------------------ the standing
@@ -367,8 +262,7 @@ namespace GlimmerGrove.Tests
             // built from what it is looking at.
             EndlessLedger.Record(Watch, 99);
 
-            var card = GroveCard.OfSave(HomesteadCatalog.Empty, Saved(("s02_endlesswatch", 40)),
-                                        "uid", 4, 1L);
+            var card = GroveCard.OfSave(Saved(("s02_endlesswatch", 40)), "uid", 4, 1L);
 
             Assert.AreEqual(40, card.BestWave);
         }
