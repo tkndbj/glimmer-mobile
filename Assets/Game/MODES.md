@@ -821,6 +821,28 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    (`WardModel.BurnFor`), because what a burn has to say is which of the four turrets is being paid
    for.
 
+37el. **A dealt gem does not land already matched, and how often that rule is waived is one
+   number.** Nothing used to stop it: a refill was a free draw per cell, so every collapse rolled
+   the board a fresh chance of three alike and the chain that followed was the deal agreeing with
+   itself rather than anything the player did. Measured over ninety runs a chapter, **39% of every
+   match cascaded** and the deepest reached **x15** — on the three-colour opening rungs a match
+   cleared **13 gems** against a par crediting 5.5. A cascade nobody set up rejects no play, so it
+   says nothing about any (invariant 5d), and the owner's report was *one match and CHAIN x15 all
+   the time*. `SiegeLayout.Lined` asks whether one cell is in a run — the same definition
+   `Runs` uses, held to it by a differential over random fields, because a second reading of one
+   rule is what 5b refuses — and `SiegeBoard.Settled` walks the bag from where the draw landed and
+   takes the first gem that settles. **Still exactly one `Next()`**, which is why it is a rotation
+   rather than a re-roll: a stream drawn a different number of times deals a different field from
+   the same seed (41). **`Collapse` is two passes for this** — gravity over the whole field, then
+   the refill — because the question has no true answer until every gem is in its final place.
+   **Both ends of the dial are wrong**, so `SiegeTuning.RefillSettlesPercent` is a dial and not a
+   switch: at 100 the board chains on 17% of matches and at 0 on 48%, and it ships at **60**. What
+   is left at any setting is the chain the player caused — gravity dropping gems that were already
+   there into line. **The lever for making this mode easier is this number and nothing else**: a
+   chain is gems, gems are fuel and fuel is bolts, so every other route changes what a match
+   *delivers* rather than what it *does*, and moves par, both star lines and every utility's charge
+   with it.
+
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` on rung five or ten, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds
 it to the body); **add the chapter to `SiegeRuleTests.ShippedChapters` if it is not there** — that one

@@ -78,6 +78,49 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public const int DefaultMaxWaves = 99990;
+
+        // ------------------------------------------------------------------ credits
+        /// <summary>
+        /// The most a content file may pay in credits for one wave.
+        ///
+        /// <b>A typo guard, and a much more serious one than <see cref="MaxXpPerWave"/>.</b> XP
+        /// buys a keeper level and a keeper level buys nothing; a credit buys a turret. A
+        /// misplaced nought here is the whole shelf handed to everybody at once, so this is set
+        /// close to the figure that ships rather than generously.
+        /// </summary>
+        public const int MaxCreditsPerWave = 200;
+
+        /// <summary>
+        /// The most a content file may let the lane pay in one day.
+        ///
+        /// <para>
+        /// <b>This is the whole of the security, so it is bounded twice.</b> A wave count comes
+        /// out of a run no server saw, so credits from this lane fall to invariant 13's fourth
+        /// clause alone: bound the payment so tightly that forging the count buys nothing worth
+        /// having. The published cap is checked against this, and the *server* holds the real
+        /// ceiling in the wallet document it owns - a client figure is a hint about what to draw
+        /// and never a permission to pay.
+        /// </para>
+        /// <para>
+        /// Set against what the rest of the game pays a day (about 7,160 credits for a player who
+        /// watches every advert), so a content push cannot quietly make this lane the only source
+        /// of money in the game.
+        /// </para>
+        /// </summary>
+        public const int MaxDailyCreditCap = 25000;
+
+        /// <summary>
+        /// Thirty, which at the twenty waves a good run sees off is 600 credits - about a
+        /// sixteenth of the daily ceiling, so the cap is a day of play rather than a session.
+        /// </summary>
+        public const int DefaultCreditsPerWave = 30;
+
+        /// <summary>
+        /// Ten thousand: sixteen runs of twenty waves, which is more than a heart allowance buys
+        /// in a day. <b>A cheater gets the same ten thousand an honest player does</b>, which is
+        /// the sentence this number exists to make true.
+        /// </summary>
+        public const int DefaultDailyCreditCap = 10000;
     }
 
     /// <summary>
@@ -114,10 +157,12 @@ namespace GlimmerGrove.Progression
     /// </summary>
     public sealed class EndlessRewardTable
     {
-        EndlessRewardTable(int xpPerWave, int maxWaves)
+        EndlessRewardTable(int xpPerWave, int maxWaves, int creditsPerWave, int dailyCreditCap)
         {
             XpPerWave = xpPerWave;
             MaxWaves = maxWaves;
+            CreditsPerWave = creditsPerWave;
+            DailyCreditCap = dailyCreditCap;
         }
 
         /// <summary>
@@ -136,10 +181,29 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public int MaxWaves { get; }
 
+        /// <summary>
+        /// Credits for one wave seen off. Nought withdraws the payment without withdrawing the
+        /// lane, exactly as <see cref="XpPerWave"/> does.
+        /// </summary>
+        public int CreditsPerWave { get; }
+
+        /// <summary>
+        /// The most credits this lane may pay in one day, whatever the waves say.
+        ///
+        /// <b>A ceiling on the money rather than on the waves, and the difference is the point.</b>
+        /// Capping waves would let a forged run mint the cap every time it was replayed; capping
+        /// the day means the forger and the honest player are paid the same figure and forging buys
+        /// nothing. Enforced by the server against the wallet it owns - this copy exists so the
+        /// client can stop drawing money it will not be paid.
+        /// </summary>
+        public int DailyCreditCap { get; }
+
         /// <summary>The numbers that ship inside the build, and the floor under any content mistake.</summary>
         public static readonly EndlessRewardTable Default = new EndlessRewardTable(
             EndlessLimits.DefaultXpPerWave,
-            EndlessLimits.DefaultMaxWaves);
+            EndlessLimits.DefaultMaxWaves,
+            EndlessLimits.DefaultCreditsPerWave,
+            EndlessLimits.DefaultDailyCreditCap);
 
         /// <summary>Whether this table pays anything at all.</summary>
         public bool Pays => XpPerWave > 0 && MaxWaves > 0;
@@ -164,6 +228,37 @@ namespace GlimmerGrove.Progression
 
         /// <summary>The most this table could ever pay. Printed by both content gates.</summary>
         public long MaxXp => (long)MaxWaves * XpPerWave;
+
+        /// <summary>Whether this table pays credits at all.</summary>
+        public bool PaysCredits => CreditsPerWave > 0 && DailyCreditCap > 0;
+
+        /// <summary>
+        /// What one run's waves are worth in credits, given what the day has already paid.
+        ///
+        /// <para>
+        /// <b>Takes the day so far rather than answering a rate</b>, because every caller has to
+        /// apply the ceiling and a rate that leaves that to the caller is a ceiling somebody
+        /// forgets. Answers nought once the day is spent, which is what the hub draws and what
+        /// stops a claim being raised for money the server would refuse.
+        /// </para>
+        /// <para>
+        /// <b>It is a reading and not a permission.</b> The server holds the real ceiling against
+        /// the wallet document it owns; this is the client agreeing with it so that what a player
+        /// sees is what they are paid.
+        /// </para>
+        /// </summary>
+        public int CreditsFor(int waves, int paidToday)
+        {
+            if (waves <= 0 || !PaysCredits) return 0;
+            if (paidToday >= DailyCreditCap) return 0;
+
+            int room = DailyCreditCap - (paidToday < 0 ? 0 : paidToday);
+
+            // `long` on the way in, because a forged wave count times the rate overflows an int
+            // and a wrapped negative would read as nothing owed rather than as everything owed.
+            long earned = (long)waves * CreditsPerWave;
+            return earned >= room ? room : (int)earned;
+        }
 
         // ------------------------------------------------------------------ building
         /// <summary>
@@ -206,7 +301,19 @@ namespace GlimmerGrove.Progression
             // direction for a number that cannot be taken back once floored
             // (<see cref="ProgressionStore"/>). Both content gates print the effective figures, so
             // a lane that has quietly stopped paying is visible rather than inferred.
-            return new EndlessRewardTable(xpPerWave, maxWaves);
+            int creditsPerWave = Read(dto.creditsPerWave, EndlessLimits.DefaultCreditsPerWave, 0,
+                                      EndlessLimits.MaxCreditsPerWave, "endless creditsPerWave",
+                                      problems);
+
+            int dailyCreditCap = Read(dto.dailyCreditCap, EndlessLimits.DefaultDailyCreditCap, 0,
+                                      EndlessLimits.MaxDailyCreditCap, "endless dailyCreditCap",
+                                      problems);
+
+            // The credit pair is read exactly as the XP pair above and repaired exactly as
+            // little, for the same reason: a nought in either field is a lane that pays no money,
+            // which is authored and visible, and a guess at what a typo meant is two halves of a
+            // wire disagreeing about a balance.
+            return new EndlessRewardTable(xpPerWave, maxWaves, creditsPerWave, dailyCreditCap);
         }
 
         /// <summary>

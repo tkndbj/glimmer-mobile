@@ -995,7 +995,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The same question <see cref="Runs"/> answers, asked about one cell</b>, and it
         /// exists because the refill has to ask it forty times a collapse: a dealt gem may not
-        /// land already matched (invariant 37eo), and building the whole set to find out whether
+        /// land already matched (invariant 37el), and building the whole set to find out whether
         /// one cell is in it is a full-field scan and a <c>HashSet</c> per candidate colour.
         /// </para>
         /// <para>

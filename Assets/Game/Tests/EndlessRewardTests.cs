@@ -512,5 +512,120 @@ namespace GlimmerGrove.Tests
 
             Assert.LessOrEqual(dto.endlessBest.Length, EndlessLedger.MaxRows);
         }
+
+        // ------------------------------------------------------------------ the credits
+        /// <summary>
+        /// A wave is worth credits, and the day's ceiling is what a run is really paid.
+        ///
+        /// <b>The one payment in this game the server cannot recompute</b>, so the ceiling is
+        /// the whole of the security rather than a tuning (invariants 13 and 19l). These cases
+        /// are the client half of `firebase/functions/test/endless.mjs`, which holds the same
+        /// arithmetic on the server - the two have to agree or a player is shown money the
+        /// wallet then declines.
+        /// </summary>
+        [Test]
+        public void AWaveIsWorthCreditsUpToTheDaysCeiling()
+        {
+            var table = EndlessRewardTable.Resolve(
+                new EndlessRewardDto { creditsPerWave = 30, dailyCreditCap = 10000 },
+                new List<string>());
+
+            Assert.IsTrue(table.PaysCredits);
+
+            Assert.AreEqual(600, table.CreditsFor(20, 0), "a first run is paid in full");
+            Assert.AreEqual(600, table.CreditsFor(20, 1200), "and so is a later one");
+
+            Assert.AreEqual(300, table.CreditsFor(20, 9700),
+                            "a run that would cross the ceiling is cut to what is left");
+
+            Assert.AreEqual(0, table.CreditsFor(20, 10000), "a spent day pays nothing");
+            Assert.AreEqual(0, table.CreditsFor(20, 99999), "and an over-spent one pays nothing");
+
+            Assert.AreEqual(0, table.CreditsFor(0, 0), "no waves is no money");
+            Assert.AreEqual(0, table.CreditsFor(-5, 0), "nor is a negative count");
+
+            // **The forged case, and the reason the cap is a figure about money.** A save
+            // claiming every wave the XP ceiling allows is worth three million credits at this
+            // rate; the day's ceiling pays it what an honest evening pays and no more.
+            Assert.AreEqual(10000, table.CreditsFor(99990, 0),
+                            "a forged wave count is paid the ceiling and nothing beyond it");
+
+            // `long` on the way in, because the published maximum times the rate overflows an
+            // int - and a wrapped negative would read as nothing owed rather than as the cap.
+            Assert.AreEqual(10000, table.CreditsFor(int.MaxValue, 0),
+                            "and so is a count that would overflow the arithmetic");
+        }
+
+        /// <summary>
+        /// Either credit field at nought withdraws the money without withdrawing the lane, and
+        /// is an authored decision rather than a mistake to report.
+        /// </summary>
+        [Test]
+        public void ANoughtInEitherCreditFieldWithdrawsThePayment()
+        {
+            var problems = new List<string>();
+
+            var noRate = EndlessRewardTable.Resolve(
+                new EndlessRewardDto { creditsPerWave = 0, dailyCreditCap = 10000 }, problems);
+
+            var noCap = EndlessRewardTable.Resolve(
+                new EndlessRewardDto { creditsPerWave = 30, dailyCreditCap = 0 }, problems);
+
+            Assert.IsFalse(noRate.PaysCredits);
+            Assert.IsFalse(noCap.PaysCredits);
+            Assert.AreEqual(0, noRate.CreditsFor(20, 0));
+            Assert.AreEqual(0, noCap.CreditsFor(20, 0));
+
+            // The XP half is untouched by either, which is what keeps the two payments separable.
+            Assert.IsTrue(noRate.Pays);
+            Assert.IsTrue(noCap.Pays);
+
+            Assert.IsEmpty(problems, "a nought is authored, not a mistake");
+        }
+
+        /// <summary>
+        /// An unwritten credit field inherits, so a rate with no daily ceiling is unreachable -
+        /// which is the one shape that would pay unbounded currency against a count nothing can
+        /// recompute.
+        /// </summary>
+        [Test]
+        public void ACreditRateCanNeverBePublishedWithNoDailyCeiling()
+        {
+            var problems = new List<string>();
+            var table = EndlessRewardTable.Resolve(
+                new EndlessRewardDto { creditsPerWave = 30, dailyCreditCap = -1 }, problems);
+
+            Assert.AreEqual(EndlessLimits.DefaultDailyCreditCap, table.DailyCreditCap);
+            Assert.IsTrue(table.PaysCredits);
+            Assert.IsEmpty(problems);
+        }
+
+        /// <summary>
+        /// The shipped figures are the ones the build falls back to, so a server that has never
+        /// been seeded with the block and a client reading a file written before it existed
+        /// agree rather than drifting.
+        /// </summary>
+        [Test]
+        public void TheBuiltInCreditFiguresAreTheOnesShipped()
+        {
+            Assert.AreEqual(30, EndlessLimits.DefaultCreditsPerWave);
+            Assert.AreEqual(10000, EndlessLimits.DefaultDailyCreditCap);
+
+            Assert.AreEqual(EndlessLimits.DefaultCreditsPerWave,
+                            EndlessRewardTable.Default.CreditsPerWave);
+            Assert.AreEqual(EndlessLimits.DefaultDailyCreditCap,
+                            EndlessRewardTable.Default.DailyCreditCap);
+
+            // A published figure over the bound is clamped and named rather than honoured -
+            // a misplaced nought here is the whole turret shelf handed out at once.
+            var problems = new List<string>();
+            var loud = EndlessRewardTable.Resolve(
+                new EndlessRewardDto { creditsPerWave = 999999, dailyCreditCap = 999999 },
+                problems);
+
+            Assert.AreEqual(EndlessLimits.MaxCreditsPerWave, loud.CreditsPerWave);
+            Assert.AreEqual(EndlessLimits.MaxDailyCreditCap, loud.DailyCreditCap);
+            Assert.AreEqual(2, problems.Count, "both figures are named when they are clamped");
+        }
     }
 }

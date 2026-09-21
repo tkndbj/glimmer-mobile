@@ -275,6 +275,27 @@ namespace GlimmerGrove.Cloud
         public int WheelDay;
 
         /// <summary>
+        /// The day the Infinite lane's credit ceiling is counting, and what it has already
+        /// paid this account.
+        ///
+        /// Carried for <see cref="WheelDay"/>'s reason: it is a per-day figure the server owns
+        /// and every device has to agree about, and the cost of disagreeing is a claim refused
+        /// after the credits were already drawn.
+        /// </summary>
+        public int EndlessDay;
+
+        public int EndlessPaid;
+
+        /// <summary>
+        /// Whether the reply carried the lane's figure at all.
+        ///
+        /// <b>Asked separately for <c>CarriesWheel</c>'s reason</b>: a fresh account's honest
+        /// answer is nought and a deployment that predates the field also sends nothing, and
+        /// only one of those two means the client should believe it.
+        /// </summary>
+        public bool CarriesEndless;
+
+        /// <summary>
         /// How many <c>win_bonus</c> views this server has granted the account today, and
         /// therefore which spin of the wheel the next one is.
         ///

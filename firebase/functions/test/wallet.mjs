@@ -274,5 +274,29 @@ console.log("\nthe reply always names the wheel, and rolls it over");
         "every currency row carries the same position");
 }
 
+// ------------------------------------------------- the endless day survives a write
+console.log("\nthe Infinite lane's day survives a whole-document write");
+{
+  // **The field this document can least afford to drop.** Every writer sets the wallet
+  // whole, so a field `readWallet` does not copy is one the next spend or claim deletes -
+  // and deleting this one hands the day's credit ceiling back to an account that has
+  // already spent it, once per sync, in silence. That is the cap failing open, which is
+  // the whole of the security behind a payment no server can recompute (`endless.ts`).
+  const written = wholeDocumentWrite({
+    credits: { granted: 1250, spent: 0 },
+    endless: { day: 20420, paid: 4200 },
+  });
+
+  equal("the day and its tally are carried", written.endless, { day: 20420, paid: 4200 });
+
+  const none = wholeDocumentWrite({ credits: { granted: 1250, spent: 0 } });
+  check(none.endless === undefined, "an account that never played the lane carries nothing");
+
+  // A second round trip, because a field that survives once and not twice is a field being
+  // read from the raw document rather than from what the reader wrote.
+  const again = wholeDocumentWrite(written);
+  equal("and survives a second write", again.endless, { day: 20420, paid: 4200 });
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

@@ -4816,15 +4816,38 @@ def main():
         print("       the ceiling is the cap, so a granted hint at a full pool is refused "
               "rather than banked - nothing may offer one there")
 
+    #: `ChapterGateLimits.MaxStars` - the loose half of the flat gate's bound. The tight half
+    #: is the clamp to the stars a chapter really pays, applied in `gate_for` below.
+    CHAPTER_GATE_MAX_STARS = 999
+
     gate = progression.get("chapterGate") or {}
     stars_per_level = gate.get("starsPerLevel", 2)
     if stars_per_level < 0:
         stars_per_level = 2
+
+    # A flat total wins over the rate when both are written, and is cut down to the stars the
+    # chapter behind really pays - `ChapterGateTable.RequiredStars`, mirrored. Written because
+    # a rate can only ask a ten-glade chapter for 10, 20 or 30, and 16 was wanted.
+    flat = gate.get("stars", -1)
+    if flat is None or flat < 0:
+        flat = 0
+    if flat > CHAPTER_GATE_MAX_STARS:
+        errors.append(
+            "progression chapterGate stars is %s, above the supported maximum %s"
+            % (flat, CHAPTER_GATE_MAX_STARS))
+        flat = CHAPTER_GATE_MAX_STARS
+
+    def gate_for(levels):
+        wanted = flat if flat > 0 else stars_per_level * levels
+        return min(wanted, levels * 3)
+
     print()
-    if stars_per_level <= 0:
+    if flat <= 0 and stars_per_level <= 0:
         print("chapter gate: off - every chapter stands open from a new player's first launch")
     else:
-        print(f"chapter gate: {stars_per_level} star(s) a level of the chapter behind it")
+        print(f"chapter gate: {flat} star(s) of the chapter behind it, flat"
+              if flat > 0
+              else f"chapter gate: {stars_per_level} star(s) a level of the chapter behind it")
 
         # Per **lane** - a mode and a track together - because a gate counts the chapter before
         # this one on the same ladder. The ladders never chain (invariant 20a), so the last
@@ -4841,10 +4864,12 @@ def main():
                 levels = len(chapter.get("levels") or [])
                 if not levels:
                     continue
+                need = gate_for(levels)
+                cut = "" if (flat <= 0 or need >= flat) else f" (cut from {flat})"
                 print(f"       {lane[i + 1].get('id')} opens at "
-                      f"{stars_per_level * levels} of the {levels * 3} stars "
-                      f"in {chapter.get('id')}")
-        if stars_per_level >= 3:
+                      f"{need} of the {levels * 3} stars "
+                      f"in {chapter.get('id')}{cut}")
+        if flat <= 0 and stars_per_level >= 3:
             print("       that is every star a level can pay - no room for a single "
                   "two-star clear anywhere")
 
@@ -5024,6 +5049,15 @@ def main():
     ENDLESS_MAX_RATE = 1000
     ENDLESS_HARD_CEILING = 1000000
 
+    #: `EndlessLimits`, the credit half. The rate's ceiling is far tighter than the XP rate's
+    #: because a credit buys a turret and a keeper level buys nothing, and the daily cap has a
+    #: ceiling at all so that a content push cannot quietly make this lane the only source of
+    #: money in the game.
+    ENDLESS_DEFAULT_COINS = 30
+    ENDLESS_MAX_COINS = 200
+    ENDLESS_DEFAULT_DAY_CAP = 10000
+    ENDLESS_MAX_DAY_CAP = 25000
+
     endless_block = progression.get("endless") or {}
 
     def endless_number(key, fallback, ceiling):
@@ -5044,6 +5078,9 @@ def main():
 
     endless_rate = endless_number("xpPerWave", ENDLESS_DEFAULT_RATE, ENDLESS_MAX_RATE)
     endless_ceiling = endless_number("maxWaves", ENDLESS_DEFAULT_CEILING, ENDLESS_HARD_CEILING)
+    endless_coins = endless_number("creditsPerWave", ENDLESS_DEFAULT_COINS, ENDLESS_MAX_COINS)
+    endless_day_cap = endless_number("dailyCreditCap", ENDLESS_DEFAULT_DAY_CAP,
+                                     ENDLESS_MAX_DAY_CAP)
 
     print()
     if endless_rate <= 0 or endless_ceiling <= 0:
@@ -5090,6 +5127,44 @@ def main():
         # about play, and nothing offline can know it.
         print("       a watch is bought at the gate, so hearts pace this and not the ceiling - "
               "the ceiling is only ever a bound on a forged save")
+
+    # ------------------------------------------------------------ the lane's credits
+    #
+    # **Printed apart from the XP above and bounded harder, because only one of the two is
+    # money.** XP off this lane is derived from a monotonic tally, so a forged one moves a
+    # keeper level and never a balance (invariant 9d). A credit is spendable, and a wave count
+    # is the one reading this server cannot recompute - so the daily cap is the entire defence
+    # (invariant 13's fourth clause, and 19l), and a cap nobody has read against a day of
+    # honest play is a number chosen blind.
+    if endless_coins <= 0 or endless_day_cap <= 0:
+        print()
+        print("endless credits: withdrawn - the Infinite lane pays no credits")
+    else:
+        free_credits, _ = daily_income(progression)
+
+        ad_credits = 0
+        for advert in (progression.get("ads") or {}).get("placements") or []:
+            if advert.get("kind") != "credits":
+                continue
+            ad_credits += int(advert.get("amount") or 0) * int(advert.get("dailyCap") or 0)
+
+        waves_to_cap = (endless_day_cap + endless_coins - 1) // endless_coins
+        elsewhere = free_credits + ad_credits
+
+        print()
+        print(f"endless credits: {endless_coins} credit(s) a wave, capped at "
+              f"{endless_day_cap:,} a day ({waves_to_cap} wave(s) to reach the cap)")
+
+        if elsewhere > 0:
+            print(f"       against about {elsewhere:,} a day from everything else "
+                  f"({free_credits} free play, {ad_credits:,} adverts before the wheel) - "
+                  f"the lane is worth up to {endless_day_cap * 100 // elsewhere}% of it")
+
+        # **What a forged save is worth, said out loud.** Nothing offline can refuse a cap the
+        # owner has chosen; what it can do is make sure nobody chooses one without reading what
+        # it hands somebody who never plays.
+        print(f"       a forged save is bounded to {endless_day_cap:,} a day, "
+              f"{endless_day_cap * 365:,} a year")
 
     # ------------------------------------------------------------------ the XP boost
     #

@@ -208,6 +208,36 @@ namespace GlimmerGrove.Persistence
 
         public const string MarkChestReason = "mark_chest";
 
+        /// <summary>
+        /// One run of the Infinite lane, in credits: <c>endless:{dayKey}:{paidBefore}:{currency}</c>.
+        ///
+        /// <para>
+        /// <b>The running total is part of the identity, and that is the whole design.</b> Every
+        /// other id here names a thing the server can re-price for itself - a chest, a night, a
+        /// rung - and this one cannot, because a wave count comes out of a run no server saw
+        /// (invariant 13's fourth clause, and 19l). So the id states what the day had already
+        /// paid when this run ended, which lets the server bound the claim by reading it: a
+        /// payment is only honoured while <c>paidBefore + amount</c> stays inside the day's
+        /// ceiling, and the ceiling it is checked against is the server's own copy rather than
+        /// this one.
+        /// </para>
+        /// <para>
+        /// <b>It is still derived from what earned it</b>, so two devices banking the same run on
+        /// the same day mint the same string and are paid once (invariant 10a). They can also be
+        /// paid <em>less</em> than the two runs were worth, which is the deliberate direction:
+        /// this shape can never pay twice and can occasionally pay once.
+        /// </para>
+        /// <para>
+        /// Parsed back by <c>parseEndlessClaim</c> on the server. The format is a wire contract;
+        /// changing it re-opens every run a player has already been paid for.
+        /// </para>
+        /// </summary>
+        public static string EndlessWavesId(int dayKey, int paidBefore, string currency)
+            => $"endless:{dayKey}:{paidBefore}:{currency}";
+
+        /// <summary>What every Infinite-lane grant records as its cause.</summary>
+        public const string EndlessWavesReason = "endless_waves";
+
         public GrantEntryDto ToDto()
             => new GrantEntryDto { id = Id, amount = Amount, unix = Unix, reason = Reason };
 

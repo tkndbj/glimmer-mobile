@@ -1833,6 +1833,17 @@ namespace GlimmerGrove.Cloud
                     state.WheelDay = (int)ReadLong(entry, "wheelDay");
                 }
 
+                // The Infinite lane's spent day, read exactly as the wheel's is and for the
+                // same reason: "did the key arrive" first, the number second, because a
+                // deployment that predates the field sends nothing and a fresh account
+                // honestly answers nought.
+                if (entry.TryGetValue("endlessPaid", out object lane) && lane != null)
+                {
+                    state.CarriesEndless = true;
+                    state.EndlessPaid = (int)ReadLong(entry, "endlessPaid");
+                    state.EndlessDay = (int)ReadLong(entry, "endlessDay");
+                }
+
                 states.Add(state);
             }
 

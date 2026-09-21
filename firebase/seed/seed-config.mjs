@@ -790,12 +790,27 @@ function readEndless(progression) {
   const HARD_MAX_WAVES = 1000000;
   const MAX_XP_PER_WAVE = 1000;
 
+  // `EndlessLimits`, the credit half. Tighter ceilings than the XP pair carries, because a
+  // credit is spendable and a keeper level is not - and the daily cap is the entire defence
+  // behind a payment no server can recompute (`endless.ts`, invariants 13 and 19l).
+  const DEFAULT_CREDITS_PER_WAVE = 30;
+  const MAX_CREDITS_PER_WAVE = 200;
+  const DEFAULT_DAILY_CREDIT_CAP = 10000;
+  const MAX_DAILY_CREDIT_CAP = 25000;
+
   const endless = progression.endless;
 
   // Absent is legitimate and means the built-in figures, which is what a client with no block
   // also does — see `EndlessRewardTable.Resolve` for why this one agrees rather than failing
   // closed. Published explicitly so the two halves cannot drift apart on a stale deploy.
-  if (!endless) return { xpPerWave: DEFAULT_XP_PER_WAVE, maxWaves: DEFAULT_MAX_WAVES };
+  if (!endless) {
+    return {
+      xpPerWave: DEFAULT_XP_PER_WAVE,
+      maxWaves: DEFAULT_MAX_WAVES,
+      creditsPerWave: DEFAULT_CREDITS_PER_WAVE,
+      dailyCreditCap: DEFAULT_DAILY_CREDIT_CAP,
+    };
+  }
 
   const read = (raw, fallback, max, name) => {
     if (raw === undefined || raw === null || Math.floor(Number(raw)) < 0) return fallback;
@@ -820,7 +835,25 @@ function readEndless(progression) {
   // repaired: `EndlessRewardTable.Resolve` says the same, and the two halves disagreeing about a
   // keeper level is worse than any guess at what a typo meant (invariant 19a). An *unwritten*
   // field is -1 and inherits above, so a rate with no bound at all cannot be expressed.
-  return { xpPerWave, maxWaves };
+  const creditsPerWave = read(endless.creditsPerWave, DEFAULT_CREDITS_PER_WAVE,
+                             MAX_CREDITS_PER_WAVE, "creditsPerWave");
+
+  const dailyCreditCap = read(endless.dailyCreditCap, DEFAULT_DAILY_CREDIT_CAP,
+                              MAX_DAILY_CREDIT_CAP, "dailyCreditCap");
+
+  // **A rate with no ceiling is the one shape this block may never publish.** Every other
+  // field here errs toward paying less; this pair errs toward paying an unbounded amount of
+  // spendable currency against a wave count nothing can recompute, so it is refused outright
+  // rather than repaired. Withdrawing the payment is `creditsPerWave: 0`, which is authored.
+  if (creditsPerWave > 0 && dailyCreditCap <= 0) {
+    throw new Error(
+      `endless creditsPerWave is ${creditsPerWave} with no dailyCreditCap; a credit rate with ` +
+      "no daily ceiling is a wave count nothing can recompute paying unbounded currency " +
+      "(invariants 13 and 19l). Set a cap, or set the rate to 0 to withdraw the payment"
+    );
+  }
+
+  return { xpPerWave, maxWaves, creditsPerWave, dailyCreditCap };
 }
 
 function readGolden(progression) {
@@ -1554,7 +1587,12 @@ if (process.argv.includes("--check")) {
   console.log(
     lane.xpPerWave > 0 && lane.maxWaves > 0
       ? `  endless: ${lane.xpPerWave} xp a wave, capped at ${lane.maxWaves.toLocaleString("en-GB")} ` +
-        `lifetime wave(s) (${(lane.xpPerWave * lane.maxWaves).toLocaleString("en-GB")} xp)`
+        `lifetime wave(s) (${(lane.xpPerWave * lane.maxWaves).toLocaleString("en-GB")} xp)` +
+        (lane.creditsPerWave > 0 && lane.dailyCreditCap > 0
+          ? `\n  endless credits: ${lane.creditsPerWave} a wave, capped at ` +
+            `${lane.dailyCreditCap.toLocaleString("en-GB")} a day ` +
+            `(${Math.ceil(lane.dailyCreditCap / lane.creditsPerWave)} wave(s) to the cap)`
+          : "\n  endless credits: withdrawn")
       : "  endless: withdrawn - the Infinite lane pays no XP"
   );
   console.log(

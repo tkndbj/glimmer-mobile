@@ -29,6 +29,7 @@ namespace GlimmerGrove
             public RectTransform Node;
             public Image Body;
             public Image Glow;
+            public Image Ring;
         }
 
         readonly List<Fuse> _fuses = new List<Fuse>(4);
@@ -69,6 +70,17 @@ namespace GlimmerGrove
             fuse.Glow = UIKit.Img("Glow", fuse.Node, Art.Glow(96, 2.1f), Pal.A(tint, .0f),
                                   new Vector2(Cell * 2.0f, Cell * 2.0f));
             fuse.Glow.raycastTarget = false;
+
+            // **The ring is what makes it findable**, and it is the cog's ring for the reason the
+            // cog is drawn the way the bomb is: the two things on this hill a finger does anything
+            // to wear one mark between them. It is <b>gold rather than the bomb's own colour</b> -
+            // a cog's ring is the ward's colour and means *this is the turret it ranks*, so a
+            // coloured ring here would be a sentence about a colour that decides nothing. And it
+            // is <b>steady</b>, because a bomb has no clock: it stands until it is tapped, and a
+            // ring that shrank would promise a countdown nothing is running.
+            fuse.Ring = UIKit.Img("Ring", fuse.Node, Art.Ring(96, 9f), Pal.A(Pal.Gold, .85f),
+                                  new Vector2(Cell * 1.2f, Cell * 1.2f));
+            fuse.Ring.raycastTarget = false;
 
             fuse.Body = UIKit.Img("Bomb", fuse.Node, Art.S("Ui/Utility/firepot"), Color.white,
                                   new Vector2(Cell * .92f, Cell * .92f));

@@ -244,6 +244,11 @@ HEAVE_FRONT = 1.5
 #: picture would be a second name for one thing.
 BOMB_ART = "firepot"
 
+#: `Pal.Gold` - the colour of the ring a standing bomb wears. Not `TINTS`, deliberately: a cog's
+#: ring is the colour of the ward it ranks and a bomb ranks nothing, so it wears the one colour
+#: this palette keeps for "a thing to take".
+BOMB_RING = (255, 194, 60)
+
 
 def utility(name):
     """A picture out of the action bar's own folder, which is where the firepot lives."""
@@ -2397,6 +2402,13 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         ImageDraw.Draw(glow).ellipse([cx - cell, cy - cell, cx + cell, cy + cell],
                                      fill=(255, 190, 90, 60))
         sheet.alpha_composite(glow)
+
+        # The ring, which is the whole of how a bomb is found (`SiegeView.Dropped`). Gold and
+        # steady, where a cog's is the ward's colour and shrinks: a bomb names no ward and runs no
+        # clock, so the only thing its ring says is *here, and tap it*.
+        ring = cell * 0.6
+        draw_on.ellipse([cx - ring, cy - ring, cx + ring, cy + ring],
+                        outline=BOMB_RING + (216,), width=max(2, int(cell * 0.05)))
 
         put(sheet, utility(BOMB_ART), cx, cy, cell * 0.92, cell * 0.92)
 

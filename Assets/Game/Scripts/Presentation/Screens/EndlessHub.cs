@@ -70,7 +70,8 @@ namespace GlimmerGrove
         /// nothing, which invariant 8d says is a withdrawal owed rather than a state to leave.
         /// </para>
         /// </summary>
-        public static readonly string[] Marks = { "Ui/ic_endless", "Ui/ic_surge", "Ui/ic_heart" };
+        public static readonly string[] Marks =
+            { "Ui/ic_endless", "Ui/ic_surge", "Ui/ic_heart", "Ui/ad_coin" };
 
         /// <summary>Seconds the starburst takes to turn once. Slow enough to be motion, not spin.</summary>
         const float BurstTurn = 26f;
@@ -409,17 +410,34 @@ namespace GlimmerGrove
                 float textX = seatX + EndlessHubLayout.SlotSize * .5f + 26f;
                 float room = EndlessHubLayout.PanelWidth * .5f - EndlessHubLayout.PanelPad - textX;
 
-                var says = UIKit.Titled("Says" + i, plate, Loc.Get(lane.PointKey(i + 1)), 34,
+                // **Every line is offered the two coloured words and only one takes them.**
+                // `Loc.Format` returns the pattern untouched when it holds no placeholder, so a
+                // lane whose lines name nothing is unaffected - and the alternative, markup
+                // inside the loc file, hands a translator a hex code to preserve and hides the
+                // colour from the palette that owns every other one on this screen.
+                var says = UIKit.Titled("Says" + i, plate,
+                                        Loc.Format(lane.PointKey(i + 1), Worth("xp", Pal.Mint),
+                                                   Worth("coins", Pal.Amber)), 34,
                                         Pal.Cream, TextAnchor.MiddleLeft,
                                         new Vector2(room * 2f, EndlessHubLayout.RowHeight),
                                         new Vector2(.5f, .5f),
-                                        new Vector2(textX + room, y), 3f, 3f);
+                                        new Vector2(textX + room, y), 3f, 3f, rich: true);
                 UIKit.Shrinkable(says, 22);
             }
 
             plate.localScale = Vector3.zero;
             Tween.Pop(plate, 0f, .55f, .18f);
         }
+
+        /// <summary>
+        /// One of the two currencies this lane pays, in its own colour.
+        ///
+        /// <b>A tag rather than a second label</b>, because the words sit inside a sentence and
+        /// the sentence has to stay one translatable string. The colour comes off <c>Pal</c> like
+        /// every other on this screen, so a palette change reaches it (invariant 44).
+        /// </summary>
+        static string Worth(string word, Color tint)
+            => $"<color=#{ColorUtility.ToHtmlStringRGB(tint)}>{Loc.Get("ui.endless." + word)}</color>";
 
         // ------------------------------------------------------------------ the way in
         /// <summary>

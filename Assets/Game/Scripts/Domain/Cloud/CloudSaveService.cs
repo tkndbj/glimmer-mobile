@@ -1368,6 +1368,12 @@ namespace GlimmerGrove.Cloud
                 // index), so the index has to come from the side that grants the views. See
                 // WheelStand.
                 WheelStand.ApplyServerState(state.CarriesWheel, state.WheelDay, state.WheelSpins);
+
+                // The Infinite lane's ceiling, folded in beside the wheel's position for the
+                // same reason it sits next to it on the wire: both are per-day figures the
+                // server owns and every device has to agree about.
+                Progression.EndlessCoins.ApplyServerState(
+                    state.CarriesEndless, state.EndlessDay, state.EndlessPaid);
             }
 
             SaveService.MarkDirty();

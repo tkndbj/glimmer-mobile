@@ -140,6 +140,21 @@ export interface EndlessConfig {
   xpPerWave: number;
   /** The most lifetime waves ever paid for, across every endless level. */
   maxWaves: number;
+
+  /** Credits per wave cleared. 0 stops paying. Mirrors `EndlessRewardTable.CreditsPerWave`. */
+  creditsPerWave?: number;
+
+  /**
+   * The most credits the lane may pay one account in a day.
+   *
+   * **The only field in this block that is a security bound rather than a tuning.** XP off
+   * this lane is derived from a tally the server can at least re-read; a credit is spendable
+   * and a wave count cannot be recomputed at all, so this ceiling is the whole of what stops a
+   * forged save minting the turret shelf (`endless.ts`, invariants 13 and 19l). Absent or 0
+   * leaves an endless claim **unconfirmed** rather than paid, so a server that has not been
+   * seeded with it pays nothing and throws nothing away.
+   */
+  dailyCreditCap?: number;
 }
 
 /**

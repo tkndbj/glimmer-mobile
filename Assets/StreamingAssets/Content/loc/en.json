@@ -1578,6 +1578,18 @@
       "text": "A heart to enter. Losing costs none."
     },
     {
+      "key": "track.infinite.point4",
+      "text": "Gain {0} and {1} per wave cleared."
+    },
+    {
+      "key": "ui.endless.xp",
+      "text": "XP"
+    },
+    {
+      "key": "ui.endless.coins",
+      "text": "Coins"
+    },
+    {
       "key": "track.infinite.tagline",
       "text": "the waves never stop"
     },

@@ -35,9 +35,10 @@ namespace GlimmerGrove.Layout
         /// <b>A constant rather than a count of whatever resolves</b>, because the keys are
         /// derived (<c>GameTrack.PointKey</c>) and a missing string resolves to something: a hub
         /// that sized itself by asking would quietly draw two rows on the day one was mistyped.
-        /// Three is what the band holds; a fourth fails <see cref="IsClear"/> rather than a phone.
+        /// <see cref="PanelHeight"/> is derived from this, so the plate grows with it and
+        /// <see cref="IsClear"/> is what refuses one row too many rather than a phone.
         /// </summary>
-        public const int Points = 3;
+        public const int Points = 4;
 
         // ------------------------------------------------------------------ the medal
         /// <summary>
@@ -88,10 +89,17 @@ namespace GlimmerGrove.Layout
         public const float PanelWidth = 840f, PanelPad = 16f;
 
         /// <summary>One line's row, and the air between two of them.</summary>
-        public const float RowHeight = 90f, RowGap = 6f;
+        /// <b>Seventy rather than ninety, and the fourth line is what bought it.</b> The plate is
+        /// derived from <see cref="Points"/>, so a fourth row grew the column by 96 units and
+        /// <c>EndlessHubTests.TheColumnFitsTheShortestCanvasTheMapLeavesIt</c> refused it at once:
+        /// the squarest phone this game supports leaves the column 20 units of air and no more.
+        /// Four rows at seventy grow it by sixteen, which fits with room still spare - and the
+        /// seat and its mark come down with the row, because a seat as tall as its row is what
+        /// <see cref="IsClear"/> refuses next.
+        public const float RowHeight = 70f, RowGap = 6f;
 
         /// <summary>The framed seat a row's mark sits in, and the mark inside it.</summary>
-        public const float SlotSize = 88f, IconSize = 68f;
+        public const float SlotSize = 68f, IconSize = 52f;
 
         /// <summary>How tall the plate has to be to hold <see cref="Points"/> rows. Derived.</summary>
         public static float PanelHeight

@@ -15,6 +15,7 @@ import { assertUsableConfig, earnedCredits, ProgressionConfig } from "./progress
 import { readFloor, StreakFloor } from "./streak";
 import { readWheelPosition } from "./wheel";
 import { readTaskPaid, TaskPaid } from "./tasks";
+import { EndlessDay, readEndlessDay } from "./endless";
 
 export interface CurrencyState {
   granted: number;
@@ -45,6 +46,18 @@ export type WalletDoc = Record<CurrencyId, CurrencyState> & {
    * moving with it. See `streak.ts`.
    */
   streak?: StreakFloor;
+
+  /**
+   * What the Infinite lane has paid this account in credits today, and the day it counts.
+   *
+   * It rides here for `streak`'s reason and with more force: this is the document no client
+   * can write, and this figure is the **entire** defence behind a payment no server can
+   * recompute (`endless.ts`, invariants 13 and 19l). The client keeps its own copy so the hub
+   * can stop offering money that would be refused, but that copy is a hint on a phone; this
+   * one is the ceiling. Read and raised in the same transaction that moves the money, so a
+   * wave cannot be paid without the day's tally moving with it.
+   */
+  endless?: EndlessDay;
 
   /**
    * The keeper name this account holds, and the key it is reserved under.
@@ -150,6 +163,19 @@ export interface WalletReply {
    */
   wheelDay: number;
   wheelSpins: number;
+
+  /**
+   * The day the Infinite lane's credit ceiling is counting, and what it has already paid.
+   *
+   * **Reported for the wheel's reason, and with more at stake.** The ceiling itself has
+   * always been enforced here (`endless.ts`); what the client could not do was *agree* with
+   * it. A second device kept its own tally, so it would offer credits this server had already
+   * paid out — and a refused claim is dropped by the client together with the balance it
+   * inflated, which is money shown and then taken back. Sending the figure makes the two
+   * halves agree before a claim is ever raised.
+   */
+  endlessDay: number;
+  endlessPaid: number;
 }
 
 export function emptyCurrency(): CurrencyState {
@@ -220,6 +246,14 @@ export function readWallet(
   const paid = readTaskPaid(raw?.tasks);
   if (Object.keys(paid).length > 0) wallet.tasks = paid;
 
+  // The Infinite lane's day, carried through for exactly the reason every field above it is:
+  // every writer of this document writes it *whole*, so a field this function does not copy is
+  // a field the next spend or claim silently deletes - and deleting this one hands the day's
+  // ceiling back to an account that has already spent it, which is the cap failing open once
+  // per sync. Assigned only when there is one, for the `undefined` reason above.
+  const endless = readEndlessDay(raw?.endless);
+  if (endless) wallet.endless = endless;
+
   // Whether this server has ever recorded currency for the account, which is what "brand new"
   // has always meant here. It used to be read off `snapshot.exists`, and that stopped being
   // the same question the moment a second feature wrote to this document: a name claimed
@@ -279,6 +313,13 @@ export function toReply(
   // grant that is about to be computed from today's.
   const wheel = readWheelPosition(wallet.wheel, today);
 
+  // Rolled over here as well, for the wheel's reason one line up: a reply taken on a day with
+  // no runs yet has to answer (today, 0) rather than yesterday's spent ceiling, or every
+  // device would believe the day was already gone until the first claim of it landed.
+  const lane = wallet.endless && wallet.endless.day === today
+    ? wallet.endless
+    : { day: today, paid: 0 };
+
   return CURRENCIES.map((currency) => ({
     currency,
     grantedBaseline: wallet[currency].granted,
@@ -290,6 +331,8 @@ export function toReply(
     containersRevoked: wallet.containersRevoked ?? [],
     wheelDay: wheel.day,
     wheelSpins: wheel.spins,
+    endlessDay: lane.day,
+    endlessPaid: lane.paid,
   }));
 }
 

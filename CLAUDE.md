@@ -150,6 +150,23 @@ Grove, and the bundle id can never move.
    maxPercent%`, which is `groveWorth`'s "clamped to what the account could afford" (19a) said about
    a multiplier, and far tighter than any flat ceiling. Mirrored by `xpBoostXp` in `grove.ts` and
    held by `xpBoostCases`.
+9f. **The Infinite lane pays credits as well as XP, and the two are paid in opposite shapes.**
+   XP is derived from the monotonic lifetime tally and needs no claim (9d); a credit cannot copy
+   that, because a lifetime tally times a rate is a number a forged save mints once and keeps —
+   three million at the XP ceiling, which is the colour shelf and the legendary band together, and
+   exactly what 19l warns about. So credits fall to **13's fourth clause**: 30 a wave bounded by
+   **10,000 a day**, which pays a cheater precisely what it pays somebody who played all evening.
+   The bound is a figure about *money* rather than about waves, because a cap on waves is minted
+   again by every replayed run. It is enforced **on the wallet document no client can write**
+   (`endless.ts`), so it cost no schema version and no rules release; `EndlessCoins` keeps a copy
+   only so the hub never offers money the server would refuse. **The claim id carries the day's
+   running total** (`endless:{day}:{paidBefore}:{currency}`), so two devices banking one run are
+   paid once (10a) — and the *server's* figure rides back on the wallet reply and is folded in by
+   `ApplyServerState`, upward only, which is the bonus wheel's shape (`WheelStand`) and the whole
+   of what makes the ceiling cross-device. Without that half, a second phone offered credits the
+   day had already spent, the claim was refused, and **the client dropped the balance it had
+   already shown** (45d) — money seen and taken back, which is the one thing this game may not do.
+
 10. **The client never raises `grantedBaseline`.** Currency given rather than earned is server-owned,
    enforced by Firestore rules. Receipt validation is idempotent on the store transaction id.
 10a. **An award reaches the player as a claim, not as a balance**, with an id **derived from what earned
@@ -1314,8 +1331,12 @@ obvious from the files are worth recording:
 
 - **Stars** — gold `par x 1.20`, silver `par x 1.40`, the run ends at `par x 1.60`, **except a siege, which
   authors its own per chapter** (37ca) from that chapter's own sweep.
-- **Chapter gate** — 2 stars a level of the chapter behind it, per mode; the first chapter of every mode is
-  always open, and a chapter may also carry a `minKeeperLevel`.
+- **Chapter gate** — **16 stars of the chapter behind it, flat** (of the 30 a ten-glade chapter pays),
+  per mode; the first chapter of every mode is always open, and a chapter may also carry a
+  `minKeeperLevel`. The per-level rate (2 a level) is still the shape a file falls back to and is what
+  a build with no published table uses — the flat figure was added because a rate can only ask a
+  ten-glade chapter for 10, 20 or 30, and **a flat figure is always cut down to the stars the chapter
+  behind really pays**, so it can never be a gate no play could open.
 - **Hearts** — refill cap 5, ceiling 50, 8h refill (4h boosted); a heart container raises the cap to 10, 20
   or 50 permanently. **Hints** — pool of 3, one back every 8h, spent in the glade and nowhere else.
 - **Continue** — 20 gems doubling within a run, topping out at the 5,000-gem ceiling on the ninth.
@@ -1327,6 +1348,10 @@ obvious from the files are worth recording:
 - **Endless XP** — 15 XP a wave, capped at 99,990 lifetime waves (1,499,850 XP, keeper 146). Ten
   waves is one three-starred glade. A watch is bought at the gate, so **hearts pace this, not the
   ceiling** — the ceiling only ever bounds a forged save. All three gates print the figures.
+- **Endless credits** (9f) — **30 a wave, capped at 10,000 a day**, which is 334 waves or about
+  sixteen good runs. Against ~7,160 a day from everything else, so the lane is worth up to **174%**
+  of the whole rest of the game's income — the owner's call, and the figure to revisit first if the
+  economy reads wrong. A forged save is bounded to the same 10,000. `content.py` prints all of it.
 - **XP boost** (9e) — **+50% for 2h, watched, once every 4h**; **+100% for 24h, 120 gems**; they add,
   capped at **+150%**. So a run paying 150 XP pays 375 with both running. The gem window is a
   `store.goods` row (`xp_boost_day`) and the watched one an ad placement (`xp_boost`), so both are
@@ -1351,6 +1376,46 @@ the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-18),
 on a fresh clone).
 
 ## Owed
+
+**The board was re-cut on 2026-09-20 and nobody has looked at any of it.** Three changes went in
+together, all with the Editor closed. (1) **A dealt gem no longer lands already matched** (37el), at
+`RefillSettlesPercent` **60** — chains fell from 39% of matches to about a quarter, and what is left
+is the chain the player caused. (2) **The Infinite lane pays 30 credits a wave, capped at 10,000 a
+day** (9f) — the server half is **deployed and re-seeded**, artifact read back, but **not one real
+coin has been paid end to end**: every gate here writes the save over REST or calls the rule
+directly, so what is proved is that the *server* honours a claim and never that the *game* raises
+one. Play one endless run on a device and watch the balance. (3) **The chapter gate is 16 flat.**
+
+**What is owed is an eye, and the questions no gate can answer.** Does the board still *feel* like a
+match-three when a quarter of matches chain rather than two in five; the hub's **fourth line** and
+its green **XP** / orange **Coins** have never been drawn, and that row cost every row on the plate
+20 units of height (90 → 70, with the seat and mark down with it) because
+`EndlessHubTests.TheColumnFitsTheShortestCanvasTheMapLeavesIt` refused a taller column — so look at
+the hub on the squarest phone before believing the sheet.
+
+**Three gaps in the credit drop, named rather than left to be discovered.** `EndlessCoins.Bank`
+itself is untested — only the arithmetic under it is, because the tally is `PlayerPrefs` and the
+offline runner cannot reach it. There are **no shared vectors** between the C# `CreditsFor` and the
+TypeScript `endlessGrant`, which is the pairing invariant 9a asks for and the two are held apart by
+two separate suites instead. And the lane is worth **up to 174% of the whole rest of the game's
+income**, which is the owner's decision and the first figure to revisit if the economy reads wrong.
+
+**The siege chapter gates are stale and will be red.** `SiegeRuleTests`' floors still encode the old
+rule — *the line a player arrives with clears every chapter*, with Thornwatch at 76 of 90 and
+Dustcrown at 30 — which the owner deliberately replaced on 2026-09-20: a free bolt clearing the sixth
+chapter at 40 of 90 was judged wrong, and players should have to spend on the shelf. Measured at the
+shipped dial, nine rhythms, of 90: on the **starter** 46 / 26 / 4 / 11 / 3 / 0, on **siphon**
+Thornwatch 61 and Broodmarch 47, on **ember** (keeper 6, the best line today's content can reach)
+Broodmarch 74, Barrowfell 52, Ashenhold 48, Thundercrag 32, Dustcrown 42. Five rungs are held at no
+rhythm at all on ember — `s04_barrowheart`, `s06_frostline`, `s06_glacierwall`, `s06_cragheart`,
+`s07_saltpan` — **accepted by the owner** on the grounds that the model stands four identical turrets
+and never spends a utility. Re-pointing each gate at the line its chapter now expects, and re-deriving
+the per-chapter star factors, is the job; it is hours and it is not a blocker.
+
+**And `mortar` and `breaker` are unreachable.** They are gated at keeper 16 and 26 against content
+that pays for about keeper 13, so the best line anybody can actually buy is `ember`. Three reachable
+rungs also read *worse* than the cheaper rung under them (beacon, rime, prism) — partly 37bw's
+ordering-by-reach, partly a player model that cannot use a utility ability, and worth an eye.
 
 **The tutorial shipped on 2026-09-20 and has never been in the Editor or on a device.** Four new
 files (`SiegeTutorial`, `TutorialGate`, `TutorialScreen`, `TutorialTests`) and one new tool

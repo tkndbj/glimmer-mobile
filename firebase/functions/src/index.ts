@@ -80,6 +80,11 @@ import {
   isReferralGrantId, redeemReferral as redeemReferral_, usableReferralConfig,
 } from "./referral";
 import {
+  MAX_ENDLESS_DAYS_AHEAD, MAX_ENDLESS_DAYS_BEHIND, endlessGrant, isEndlessGrantId,
+  parseEndlessClaim,
+} from "./endless";
+import type { EndlessClaim } from "./endless";
+import {
   deriveEarned,
   loadProgressionConfig,
   readWallet,
@@ -412,7 +417,8 @@ type CleanAward =
   | (CleanCommon & { kind: "daily"; claim: DailyClaim })
   | (CleanCommon & { kind: "streak"; claim: StreakClaim })
   | (CleanCommon & { kind: "task"; claim: TaskClaim })
-  | (CleanCommon & { kind: "mark"; claim: MarkClaim });
+  | (CleanCommon & { kind: "mark"; claim: MarkClaim })
+  | (CleanCommon & { kind: "endless"; claim: EndlessClaim });
 
 export const claimAwards = onCall(callOptions, async (request): Promise<{
   wallets: WalletReply[];
@@ -512,6 +518,29 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       if (!CURRENCIES.includes(mark.currency as CurrencyId)) { rejected.push(id); return []; }
 
       return [{ ...common, kind: "mark", claim: mark, currency: mark.currency as CurrencyId }];
+    }
+
+    // The Infinite lane, in credits. **The one claim here this server cannot re-price**, so
+    // it is taken at the client's figure and cut down to what the day's ceiling leaves - see
+    // `endless.ts` for why that bound is the whole of the security. Windowed like a streak
+    // night and refused rather than left pending outside it, because a window will not become
+    // true again tomorrow and a pending claim is resubmitted for the life of the account.
+    if (isEndlessGrantId(id)) {
+      const lane = parseEndlessClaim(id);
+      if (!lane) { rejected.push(id); return []; }
+
+      if (!CURRENCIES.includes(lane.currency as CurrencyId)) { rejected.push(id); return []; }
+
+      if (lane.dayKey > today + MAX_ENDLESS_DAYS_AHEAD ||
+          lane.dayKey < today - MAX_ENDLESS_DAYS_BEHIND) {
+        logger.warn("refused an endless claim dated outside the window", {
+          uid, id, claimedDay: lane.dayKey, today,
+        });
+        rejected.push(id);
+        return [];
+      }
+
+      return [{ ...common, kind: "endless", claim: lane, currency: lane.currency as CurrencyId }];
     }
 
     const claim = parseDailyClaim(id);
@@ -725,6 +754,45 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
         amount = taskCurrencyValue(tier.chest, uid, award.claim.period, award.claim.key,
                                    award.claim.taskId, award.currency);
         detail = { period: award.claim.period, task: award.claim.taskId, tier: tier.id };
+      } else if (award.kind === "endless") {
+        // **Taken from the client and bounded, which is the one place in this function that
+        // happens.** Every other branch above re-prices the claim from a published table; a
+        // wave count has no table, so what protects the balance is the ceiling rather than the
+        // arithmetic. `endlessGrant` resets the tally when the day turns, clamps to what is
+        // left and answers nought once the day is spent.
+        if (award.currency !== "credits") {
+          logger.warn("refused an endless claim in a currency the lane does not pay",
+                      { uid, id: award.id, currency: award.currency });
+          rejected.push(award.id);
+          continue;
+        }
+
+        const cap = config.endless?.dailyCreditCap ?? 0;
+        if (cap <= 0) {
+          // Either a server that predates the block or one seeded without it. Unconfirmed
+          // rather than refused, exactly as a missing chest table is: granting a guess would
+          // be inventing money, and refusing throws away a reward the player earned (13a).
+          logger.error("config/progression has no endless dailyCreditCap; leaving the claim " +
+                       "unconfirmed rather than granting or discarding it", { uid, id: award.id });
+          continue;
+        }
+
+        const lane = endlessGrant(award.claimedAmount, today, cap, state.endless ?? null);
+
+        if (lane.amount <= 0) {
+          logger.info("the Infinite lane has paid its ceiling for the day", {
+            uid, id: award.id, day: today, cap,
+          });
+          rejected.push(award.id);
+          continue;
+        }
+
+        // Raised here rather than after the grant, inside the one transaction that moves the
+        // money, so a paid wave and a spent ceiling cannot come apart.
+        state.endless = lane.day;
+
+        amount = lane.amount;
+        detail = { day: today, paidToday: lane.day.paid, cap };
       } else {
         if (award.claim.chestIndex >= daily!.chests.length) {
           rejected.push(award.id);

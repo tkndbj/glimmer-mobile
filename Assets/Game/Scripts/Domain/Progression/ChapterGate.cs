@@ -47,6 +47,19 @@ namespace GlimmerGrove.Progression
         /// gate no amount of play could open. Three itself is legal and means perfect play.
         /// </summary>
         public const int MaxStarsPerLevel = LevelRecord.MaxStars;
+
+        /// <summary>
+        /// The most a flat gate may ask for, before it is cut down to what the chapter behind
+        /// can actually pay.
+        ///
+        /// <para>
+        /// <b>A typo guard rather than a design opinion</b>, and it is the loose half of the
+        /// rule: the tight half is the clamp in <see cref="ChapterGateTable.RequiredStars"/>,
+        /// which knows how many stars are really on offer and is the thing that makes a flat
+        /// figure safe. This only catches a number that was never meant.
+        /// </para>
+        /// </summary>
+        public const int MaxStars = 999;
     }
 
     /// <summary>
@@ -75,13 +88,42 @@ namespace GlimmerGrove.Progression
     /// </summary>
     public sealed class ChapterGateTable
     {
-        ChapterGateTable(int starsPerLevel) => StarsPerLevel = starsPerLevel;
+        ChapterGateTable(int starsPerLevel, int stars = 0)
+        {
+            StarsPerLevel = starsPerLevel;
+            Stars = stars;
+        }
 
         /// <summary>Stars per level of the chapter behind it. 0 opens everything, 3 is perfect play.</summary>
         public int StarsPerLevel { get; }
 
-        /// <summary>True when the gate asks for nothing, so every chapter stands open.</summary>
-        public bool IsOpenToAll => StarsPerLevel <= 0;
+        /// <summary>
+        /// True when the gate asks for nothing, so every chapter stands open.
+        ///
+        /// <b>Both halves, for invariant 15a's reason</b>: a flat figure standing over a rate
+        /// of nought is still a gate, and a reading that asked only the rate would report every
+        /// chapter open while the map kept them shut.
+        /// </summary>
+        public bool IsOpenToAll => Stars <= 0 && StarsPerLevel <= 0;
+
+        /// <summary>
+        /// A flat number of stars, or 0 to use <see cref="StarsPerLevel"/> instead.
+        ///
+        /// <para>
+        /// <b>Added because the per-level shape could not express the figure that was
+        /// wanted.</b> Two stars a level is the same sentence whatever a chapter holds, which
+        /// is why it was the only shape for a year - but it can only ever ask a ten-glade
+        /// chapter for 10, 20 or 30, and the number the owner wanted was 16. A total says less
+        /// about a chapter of another size, and it says exactly what was meant about this one.
+        /// </para>
+        /// <para>
+        /// <b>It is always cut down to the stars really on offer</b>
+        /// (<see cref="RequiredStars"/>), so the danger a total carries and a rate does not -
+        /// asking a five-glade chapter for sixteen of its fifteen stars - is unreachable
+        /// rather than merely unlikely.
+        /// </para>
+        /// </summary>
+        public int Stars { get; }
 
         /// <summary>The gate that ships inside the build.</summary>
         public static readonly ChapterGateTable Default =
@@ -98,7 +140,18 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public int RequiredStars(int levelCount)
-            => levelCount <= 0 ? 0 : StarsPerLevel * levelCount;
+        {
+            if (levelCount <= 0) return 0;
+
+            // Everything a chapter of this size could ever pay. The clamp below is what lets a
+            // flat figure be authored at all: without it, a total larger than the chapter
+            // behind can give is a chapter nobody opens, and the symptom is a player sent back
+            // to glades they have already three-starred.
+            int available = levelCount * LevelRecord.MaxStars;
+
+            int wanted = Stars > 0 ? Stars : StarsPerLevel * levelCount;
+            return wanted > available ? available : wanted;
+        }
 
         // ------------------------------------------------------------------ building
         /// <summary>
@@ -111,8 +164,25 @@ namespace GlimmerGrove.Progression
             problems ??= new List<string>();
             if (dto == null) return Default;                  // absent is not an error
 
+            int flat = dto.stars;
+
+            if (flat > ChapterGateLimits.MaxStars)
+            {
+                problems.Add($"chapterGate stars is {flat}, above the " +
+                             $"{ChapterGateLimits.MaxStars} this reader will carry; clamped");
+                flat = ChapterGateLimits.MaxStars;
+            }
+
+            if (flat < 0) flat = 0;                           // unset, the file's own convention
+
             int stars = dto.starsPerLevel;
-            if (stars < 0) return Default;                    // unset, the file's own convention
+
+            // **Unset means the built-in rate, and that has to survive a flat figure being
+            // written beside it.** The first version returned `Default` here whenever the rate
+            // was unwritten, which threw the flat figure away in the one file that would ever
+            // author it alone - a gate silently back at two a level, and nothing anywhere
+            // saying so.
+            if (stars < 0) stars = ChapterGateLimits.DefaultStarsPerLevel;
 
             if (stars > ChapterGateLimits.MaxStarsPerLevel)
             {
@@ -122,7 +192,7 @@ namespace GlimmerGrove.Progression
                 stars = ChapterGateLimits.MaxStarsPerLevel;
             }
 
-            return new ChapterGateTable(stars);
+            return new ChapterGateTable(stars, flat);
         }
     }
 

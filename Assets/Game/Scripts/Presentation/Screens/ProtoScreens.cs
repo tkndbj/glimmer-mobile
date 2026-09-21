@@ -396,7 +396,16 @@ namespace GlimmerGrove
             EndlessLedger.Record(Level.Id, count);
 
             var board = _siege != null ? _siege.Siege : null;
-            if (board != null) EndlessLedger.Bank(Level.Id, board.WavesCleared);
+            if (board == null) return;
+
+            EndlessLedger.Bank(Level.Id, board.WavesCleared);
+
+            // **And the credits, which are a claim rather than a derivation.** The XP above is a
+            // pure function of the tally just banked and needs nothing here; money cannot work
+            // that way, because a wave count is the one reading the server cannot recompute
+            // (`EndlessCoins`, invariants 13 and 19l). Banked from the same `WavesCleared` and in
+            // the same place, so the two payments can never disagree about what a run was.
+            EndlessCoins.Bank(board.WavesCleared);
         }
 
         /// <summary>

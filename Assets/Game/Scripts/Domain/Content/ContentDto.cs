@@ -1223,6 +1223,19 @@ namespace GlimmerGrove.Content
         /// </summary>
         public int maxWaves = -1;
 
+        /// <summary>Credits per wave cleared. Unwritten reads as -1 and inherits; 0 stops paying.</summary>
+        public int creditsPerWave = -1;
+
+        /// <summary>
+        /// The most credits this lane may pay in one day. Unwritten inherits; 0 stops paying.
+        ///
+        /// <b>A bound rather than a tuning.</b> A wave count cannot be recomputed by the server,
+        /// so this ceiling is the entire defence against a forged one (invariant 13's fourth
+        /// clause) - see <c>EndlessLimits.MaxDailyCreditCap</c>, which is what this is checked
+        /// against, and the server's own copy in the wallet, which is what actually enforces it.
+        /// </summary>
+        public int dailyCreditCap = -1;
+
         /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
         public bool IsAuthored => xpPerWave >= 0 || maxWaves >= 0;
     }
@@ -1742,6 +1755,16 @@ namespace GlimmerGrove.Content
     {
         /// <summary>Stars per level of the chapter behind it. 3 means perfect play.</summary>
         public int starsPerLevel = -1;
+
+        /// <summary>
+        /// A flat number of stars, whatever the chapter holds. Unwritten reads as -1 and the
+        /// per-level figure decides instead; 0 opens every chapter at once.
+        ///
+        /// <b>It wins over <see cref="starsPerLevel"/> when both are written</b>, because a
+        /// total is the more specific statement — and it is clamped to the stars the chapter
+        /// behind actually pays, so a flat figure can never be a gate no play could open.
+        /// </summary>
+        public int stars = -1;
     }
 
     /// <summary>

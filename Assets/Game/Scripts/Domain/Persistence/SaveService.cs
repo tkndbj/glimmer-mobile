@@ -81,6 +81,12 @@ namespace GlimmerGrove.Persistence
             // lost: a swap is followed by a sync, and until it lands the wheel is not offered.
             Ads.WheelStand.Forget();
 
+            // And the Infinite lane's spent day, for exactly that reason: it is the other
+            // per-day figure a device holds on an account's behalf, and carrying one across a
+            // replacement would spend the incoming player's ceiling out of the outgoing
+            // player's evening.
+            Progression.EndlessCoins.Forget();
+
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);
 
@@ -227,6 +233,12 @@ namespace GlimmerGrove.Persistence
             // outgoing player's place in the day, which is invariant 17 in miniature. Nothing is
             // lost: a swap is followed by a sync, and until it lands the wheel is not offered.
             Ads.WheelStand.Forget();
+
+            // And the Infinite lane's spent day, for exactly that reason: it is the other
+            // per-day figure a device holds on an account's behalf, and carrying one across a
+            // replacement would spend the incoming player's ceiling out of the outgoing
+            // player's evening.
+            Progression.EndlessCoins.Forget();
 
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);

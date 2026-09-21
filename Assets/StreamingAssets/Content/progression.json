@@ -25,7 +25,9 @@
   },
   "endless": {
     "xpPerWave": 15,
-    "maxWaves": 99990
+    "maxWaves": 99990,
+    "creditsPerWave": 30,
+    "dailyCreditCap": 10000
   },
   "xpBoost": {
     "watchedPercent": 50,
@@ -219,7 +221,8 @@
     "refillSeconds": 28800
   },
   "chapterGate": {
-    "starsPerLevel": 2
+    "starsPerLevel": 2,
+    "stars": 16
   },
   "continueRun": {
     "enabled": 1,

@@ -442,7 +442,7 @@ namespace GlimmerGrove.Modes
         /// would land already matched, in which case the next colour in the bag that would not.
         ///
         /// <para>
-        /// <b>A dealt gem may never land in a run (invariant 37eo), and that is a rule about
+        /// <b>A dealt gem may never land in a run (invariant 37el), and that is a rule about
         /// agency rather than about difficulty.</b> Nothing used to stop one: a refill was a free
         /// draw per cell, so on every collapse the board rolled itself a fresh chance of three
         /// alike, and the chains that followed were the board's work rather than the player's.

@@ -460,5 +460,138 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(LevelUnlock.IsChapterHead(index, LevelId.Parse("two_a")));
             Assert.IsFalse(LevelUnlock.IsChapterHead(index, LevelId.Parse("two_c")));
         }
+
+        // ------------------------------------------------------------------ the flat gate
+        /// <summary>
+        /// A chapter may name a flat number of stars, and it wins over the per-level rate.
+        ///
+        /// <b>Added because the rate could not say sixteen.</b> Two stars a level can only ask
+        /// a ten-glade chapter for 10, 20 or 30, so the figure the owner wanted was not
+        /// expressible at all - which is the one thing a content lever must never be.
+        /// </summary>
+        [Test]
+        public void AFlatStarGateWinsOverThePerLevelRate()
+        {
+            var problems = new List<string>();
+            var table = ChapterGateTable.Resolve(
+                new ChapterGateDto { starsPerLevel = 2, stars = 16 }, problems);
+
+            Assert.AreEqual(16, table.Stars);
+            Assert.AreEqual(16, table.RequiredStars(10), "ten glades ask for the flat figure");
+            Assert.IsFalse(table.IsOpenToAll);
+            Assert.IsEmpty(problems);
+        }
+
+        /// <summary>
+        /// An unwritten flat figure leaves the rate deciding, which is every chapter authored
+        /// before this shape existed.
+        /// </summary>
+        [Test]
+        public void AnUnwrittenFlatFigureLeavesTheRateDeciding()
+        {
+            var problems = new List<string>();
+            var table = ChapterGateTable.Resolve(
+                new ChapterGateDto { starsPerLevel = 2, stars = -1 }, problems);
+
+            Assert.AreEqual(0, table.Stars);
+            Assert.AreEqual(20, table.RequiredStars(10));
+            Assert.IsEmpty(problems);
+        }
+
+        /// <summary>
+        /// A flat figure authored beside an <em>unwritten</em> rate still stands.
+        ///
+        /// <b>The case the first cut of this got wrong.</b> The reader returned the built-in
+        /// table whenever the rate was unwritten, which threw the flat figure away in the one
+        /// file that would ever author it alone - a gate silently back at two a level with
+        /// nothing anywhere saying so.
+        /// </summary>
+        [Test]
+        public void AFlatFigureStandsEvenWithNoRateBesideIt()
+        {
+            var problems = new List<string>();
+            var table = ChapterGateTable.Resolve(new ChapterGateDto { stars = 16 }, problems);
+
+            Assert.AreEqual(16, table.RequiredStars(10));
+            Assert.IsEmpty(problems);
+        }
+
+        /// <summary>
+        /// A flat figure is always cut down to the stars the chapter behind really pays.
+        ///
+        /// <b>This is what makes a total safe to author at all.</b> A rate cannot ask for more
+        /// than a chapter holds; a total can, and a gate larger than the chapter behind can
+        /// give is a chapter nobody opens - with the player sent back to glades they have
+        /// already three-starred, and nothing on the screen explaining it.
+        /// </summary>
+        [Test]
+        public void AFlatGateIsCutDownToTheStarsOnOffer()
+        {
+            var table = ChapterGateTable.Resolve(
+                new ChapterGateDto { starsPerLevel = 2, stars = 16 }, new List<string>());
+
+            Assert.AreEqual(15, table.RequiredStars(5),
+                            "five glades pay fifteen stars, so that is the most it may ask");
+
+            Assert.AreEqual(3, table.RequiredStars(1));
+            Assert.AreEqual(0, table.RequiredStars(0), "a chapter of nothing gates nothing");
+
+            var loud = ChapterGateTable.Resolve(
+                new ChapterGateDto { stars = 999999 }, new List<string>());
+
+            Assert.AreEqual(ChapterGateLimits.MaxStars, loud.Stars, "the typo guard clamps it");
+            Assert.AreEqual(30, loud.RequiredStars(10), "and the chapter cuts it the rest of the way");
+        }
+
+        /// <summary>
+        /// Nought in both halves opens every chapter, which is the emergency lever the gate has
+        /// always carried - and a flat figure over a rate of nought is still a gate.
+        /// </summary>
+        [Test]
+        public void TheGateIsOnlyOffWhenBothHalvesAreNought()
+        {
+            var off = ChapterGateTable.Resolve(
+                new ChapterGateDto { starsPerLevel = 0, stars = 0 }, new List<string>());
+
+            Assert.IsTrue(off.IsOpenToAll);
+            Assert.AreEqual(0, off.RequiredStars(10));
+
+            var flat = ChapterGateTable.Resolve(
+                new ChapterGateDto { starsPerLevel = 0, stars = 16 }, new List<string>());
+
+            Assert.IsFalse(flat.IsOpenToAll,
+                           "a flat figure over a rate of nought is still a gate, and a reading "
+                           + "that asked only the rate would report every chapter open while "
+                           + "the map kept them shut");
+            Assert.AreEqual(16, flat.RequiredStars(10));
+        }
+
+        /// <summary>
+        /// A build with no published table still gates the way it always did.
+        ///
+        /// <para>
+        /// <b>The built-in figures are what a client falls back to</b>, so the flat shape must
+        /// not change them: a player on a device that has not fetched a table, and every
+        /// chapter authored before the shape existed, still meet two stars a level.
+        /// </para>
+        /// <para>
+        /// <b>What the shipped file asks for is deliberately not asserted here.</b>
+        /// <c>ProgressionRules.Table</c> is the built-in default inside the offline runner and
+        /// inside the Editor - nothing publishes the shipped block there - so a fixture reading
+        /// it would be asserting the default under another name. The shipped sixteen is
+        /// <c>Tools/verify/content.py</c>'s to prove, and it prints it.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ABuildWithNoPublishedTableGatesAsItAlwaysDid()
+        {
+            Assert.AreEqual(0, ChapterGateTable.Default.Stars,
+                            "the built-in gate names no flat figure");
+
+            Assert.AreEqual(20, ChapterGateTable.Default.RequiredStars(10),
+                            "and still asks two stars a level of a ten-glade chapter");
+
+            Assert.IsFalse(ChapterGateTable.Default.IsOpenToAll);
+        }
     }
 }

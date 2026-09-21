@@ -7,7 +7,7 @@ namespace GlimmerGrove.Tests
 {
     /// <summary>
     /// What the refill may deal, and the one rule that decides it: <b>a dealt gem does not land
-    /// already matched</b> (invariant 37eo), as often as
+    /// already matched</b> (invariant 37el), as often as
     /// <see cref="SiegeTuning.RefillSettlesPercent"/> says.
     ///
     /// <para>
@@ -178,7 +178,7 @@ namespace GlimmerGrove.Tests
             Assert.LessOrEqual(share, waived,
                                $"{share}% of dealt gems landed already matched against the "
                                + $"{waived}% {nameof(SiegeTuning.RefillSettlesPercent)} waives - "
-                               + "the settle rule is not being applied (invariant 37eo)");
+                               + "the settle rule is not being applied (invariant 37el)");
 
             // A settled field never boxes a cell in - every neighbour pair it holds is already
             // broken up, which is what settled means. The state only arises mid-collapse, so it
@@ -284,7 +284,7 @@ namespace GlimmerGrove.Tests
                                $"{share}% of matches chain and a match clears {each / 100f:0.00} "
                                + "gems, against the 48% and 6.4 the rule was written to stop - the "
                                + "refill is dealing matches again, so a chain is the board's work "
-                               + "rather than the player's (invariant 37eo)");
+                               + "rather than the player's (invariant 37el)");
 
             Assert.GreaterOrEqual(share, 8,
                                   $"only {share}% of matches chain - gravity has stopped dropping "
