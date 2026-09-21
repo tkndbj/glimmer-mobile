@@ -13,6 +13,12 @@ namespace GlimmerGrove.Wards
     /// and it collapses the only thing that made the shelf a choice rather than a ladder
     /// (invariant 26h's test, asked of a purchase). Red and green are separate ownings, separate
     /// prices and separate ladders.
+    ///
+    /// <b>On every rung, with no band exempt.</b> The legendary band was the one exception for
+    /// three days — bought outright, because a colourless turret is not bought *for* a colour —
+    /// and that is a rule about a purchase riding on a fact about a picture (invariant 42k). What
+    /// a player chooses when they put a turret on red is which seat it guards, and that is as
+    /// true of one that fires at every colour as of one that fires at one.
     /// </para>
     /// <para>
     /// <b>A bare id — one with no colour on it — means every colour, and that is a reading rather
@@ -42,28 +48,31 @@ namespace GlimmerGrove.Wards
         public const char Mark = ':';
 
         /// <summary>
-        /// What separates a turret's id from <em>which copy of it</em> this row is.
+        /// What separated a turret's id from <em>which copy of it</em> a row was — <b>retired in
+        /// place on the wire</b> (invariant 42k), and kept for exactly two jobs.
         ///
         /// <para>
-        /// <b>A second copy is a second row, which is the whole of how a legendary is counted.</b>
-        /// A colourless turret stands on any seat (<see cref="WardModel.Legendary"/>), so one
-        /// purchase used to fill all four — and four Eclipses on a line was one payment. Owning
-        /// is per <em>copy</em> now: the first is the bare id, the second is <c>eclipse#2</c>, and
-        /// a line may stand as many as have been bought.
+        /// <b>A legendary was bought by the copy for three days and is bought by the seat now.</b>
+        /// A colourless turret's row was the bare id, which means every colour, so one payment
+        /// stood four Eclipses; the answer was a second row, <c>eclipse#2</c>. It is the wrong
+        /// answer — it gave the band a shape no other turret on the shelf has, it hid the second
+        /// purchase behind a key on a panel, and it left one star ladder under four turrets,
+        /// because a copy is not a seat and only a seat has a ladder. <b>A legendary is now
+        /// bought per colour like everything else</b> (<see cref="Row"/>), which is the rule the
+        /// other twenty have always obeyed, at the same price for the same four seats.
         /// </para>
         /// <para>
-        /// <b>It cost the save nothing, exactly as the bare row did (42h).</b> A copy row is
-        /// another permanent string in a union-joined set, so two devices that each bought a
-        /// second copy offline land on <em>one</em> second copy — which is the per-id <c>max</c>
-        /// invariant 16h gives priced decor, arrived at by the set union rather than by a count.
-        /// There is no schema version, no <c>hasOnly</c> release and no migration, and the rules'
-        /// bound does not move: a legendary now occupies at most four rows, which is what every
-        /// per-colour turret has always occupied.
+        /// <b>The two jobs.</b> A rolled-back client can still write a copy row into
+        /// <c>wardsOwned</c>, which is a union-joined set nothing may prune — so
+        /// <see cref="IdOf"/> still reads one as being about its turret, and it covers no seat by
+        /// itself, exactly as it never did. And an id carrying this character would still make
+        /// every row about it ambiguous, so <see cref="Spellable"/> still refuses one and both
+        /// content gates still ask.
         /// </para>
         /// <para>
-        /// <b>A character an id may never contain</b>, held by both content gates beside
-        /// <see cref="Mark"/> and for the same reason — an id carrying one would make every row
-        /// about it ambiguous, and a save is not the place to find that out.
+        /// <b>Nothing writes one.</b> A player who bought copies keeps the bare row beside them,
+        /// which means all four seats — so the retirement hands back more than it takes, which is
+        /// the only direction a rule about somebody's purchases may ever move.
         /// </para>
         /// </summary>
         public const char CopyMark = '#';
@@ -73,53 +82,43 @@ namespace GlimmerGrove.Wards
             => string.IsNullOrEmpty(id) ? string.Empty : id + Mark + colour;
 
         /// <summary>
-        /// The row saying this is the <paramref name="copy"/>th of this turret the player owns,
-        /// counting from one.
-        ///
-        /// <b>The first copy is the bare id and carries no number</b>, which is what makes this
-        /// additive: every legendary bought before copies existed is copy one, already written,
-        /// already read by <see cref="Covers"/>, and nothing rewrites it.
-        /// </summary>
-        public static string Copy(string id, int copy)
-            => string.IsNullOrEmpty(id) ? string.Empty
-             : copy <= 1 ? id
-             : id + CopyMark + copy.ToString(System.Globalization.CultureInfo.InvariantCulture);
-
-        /// <summary>
-        /// The row this turret is written down under, on this seat — and the one place the
-        /// per-colour rule has an exception.
+        /// The row this turret is written down under, on this seat — and there is no exception
+        /// to it any more.
         ///
         /// <para>
-        /// <b>A legendary is written bare</b> (<see cref="WardModel.Legendary"/>): it wears no
-        /// colour, so what it is bought for is not a seat. That needs no new spelling and no
-        /// schema version, because a bare id has always meant <em>every colour</em> here — it is
-        /// what a build that owned turrets outright wrote, and it is the only reading a union
-        /// merge could safely give one. <see cref="Covers"/> already honours it, so a legendary is
-        /// held on all four seats by the rule that was written for a file from 2026.
+        /// <b>Every turret is bought per seat, the legendary band included</b> (invariant 42k).
+        /// The band had its own spelling for three days — a bare row, because a colourless turret
+        /// is not bought *for* a colour — and the bare row means every colour, so one payment
+        /// stood four Eclipses and the fix was a second row per copy. Both are gone: what a
+        /// player is choosing when they put a turret on red is which seat it guards, and that is
+        /// true of a turret that fires at every colour exactly as it is of one that fires at one.
+        /// Four Eclipses is four purchases because four seats always were.
         /// </para>
         /// <para>
-        /// <b>Held on every seat is not the same as standing on every seat, and that is the
-        /// distinction copies buy.</b> This row says the player owns one; how many they own is
-        /// <see cref="Copy"/>, and how many may stand at once is <c>WardLedger.Copies</c>. Four
-        /// Eclipses on a line is four purchases.
+        /// <b>Wearing no colour was three facts and is two.</b> A legendary is cut
+        /// once rather than four times (<c>WardModel.ArtFor</c>) and fires at everything on the
+        /// hill (<c>SiegeWard.Unbound</c>); what it no longer is, is bought once.
+        /// </para>
+        /// <para>
+        /// <b>The bare row is still read and is now only ever legacy.</b> <see cref="Covers"/>
+        /// reads one as every colour — it is what a build from before colours wrote, and what
+        /// every legendary bought before this change holds — so nothing is confiscated and
+        /// nothing is rewritten. A player who paid for copies keeps all four seats.
         /// </para>
         /// <para>
         /// <b>Every writer goes through this and no writer spells <see cref="Key"/> itself</b>,
         /// which is invariant 15a's lesson about a rule with two halves: a purchase written one
         /// way and a star ledger keyed the other is a turret somebody paid for whose upgrades
-        /// belong to a row nothing reads.
+        /// belong to a row nothing reads. That is also what makes this change one line — the star
+        /// ladder became per seat for the whole shelf because the row did.
         /// </para>
         /// </summary>
         public static string Row(WardModel model, char colour)
-            => model == null ? string.Empty
-             : model.Colourless ? model.Id
-             : Key(model.Id, colour);
+            => model == null ? string.Empty : Key(model.Id, colour);
 
         /// <summary>The same row for a colour index (0..3).</summary>
         public static string Row(WardModel model, int colour)
-            => model == null ? string.Empty
-             : model.Colourless ? model.Id
-             : Key(model.Id, colour);
+            => model == null ? string.Empty : Key(model.Id, colour);
 
         /// <summary>The row saying this turret is held on this colour index (0..3).</summary>
         public static string Key(string id, int colour)

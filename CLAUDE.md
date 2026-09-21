@@ -1132,12 +1132,14 @@ guess — verify offline.
   so a retune cannot turn it red with a correct answer, and it asserts the **lifetime floor**,
   which is the clause most likely to be missing and least likely to be noticed. **10/10 live**
   (2026-09-20).
-- **That a copy is counted on the live server:** `node firebase/e2e/ward-copies.mjs` publishes
-  one account's one loadout several times over, with one copy row and with four, and compares the
+- **That a seat is counted on the live server:** `node firebase/e2e/ward-seats.mjs` publishes
+  one account's one loadout several times over, with one seat row and with four, and compares the
   seat counts. **Differential for `endless-xp.mjs`'s reason** — a `publishGrove` that has never
-  heard of copies answers 200 and writes a valid card with four Eclipses on it. It asserts the
-  other direction in the same run: a **bare row on a per-colour turret still means all four
-  seats**, which is the clause a copy rule could break in silence. **16/16 live** (2026-09-18).
+  heard of this answers 200 and writes a valid card with four Eclipses on it. It asserts the
+  other direction in the same run: a **bare row still means all four seats**, on either band,
+  which is the clause this rule could break in silence. Written for the copy rule (42k) and
+  outlived it; **not run since the rewrite of 2026-09-21** — last green as `ward-copies.mjs`,
+  16/16 (2026-09-18).
 - **That a deploy really carries a fix:** `node firebase/e2e/endless-xp.mjs` publishes the same
   account twice, with and without a lifetime tally, and compares the two keeper levels against the
   **published** config. Differential on purpose — a `publishGrove` that has never heard of
@@ -1369,8 +1371,9 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **The turret loadout** — **thirty** turrets on a four-band shelf, upgraded to five stars, previewed
   firing before purchase, carried in from a readout on the map. Twenty are bought **per colour** behind a
   keeper level; the ten of the **LEGENDARY** band (42g) wear no colour at all — stood on any seat and
-  firing at everything on the hill, and **bought by the copy** (42k): four Eclipses on a line is four
-  purchases. They are cut from a second turret pack and their thirty
+  firing at everything on the hill. **They are bought per seat too, since 2026-09-21** (42k): four
+  Eclipses on a line is four purchases and four star ladders, which is the rule the twenty under them
+  have always obeyed. They are cut from a second turret pack and their thirty
   effect reels are **drawn** rather than baked (`Tools/make_legend_fx.py`).
 - **Boards** — **one drawn, one still published**: the **Endless Watch**. A hundred rows, one document,
   **live** — a card's row is merged into the board by the publish that wrote it (19r) — re-read whole every
@@ -1492,7 +1495,8 @@ functions**: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`, `adRe
 `eventPass`, was deployed and later deleted while never appearing in any list here. `firebase/README.md` is
 the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-18),
 `firebase/e2e/delete-account.mjs` **14/14**, `firebase/e2e/endless-xp.mjs` **12/12** and
-`firebase/e2e/ward-copies.mjs` **16/16**. Client half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
+`firebase/e2e/ward-seats.mjs` **16/16** as `ward-copies.mjs`, before its 2026-09-21 rewrite. Client
+half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 13.15.0 as vendored UPM tarballs under `GooglePackages/` (gitignored — run `pwsh GooglePackages/fetch.ps1`
 on a fresh clone).
 
@@ -1754,7 +1758,7 @@ public profile. No rules release and no function deploy, for the same reason.
 against a snapshot taken before it: the ranks array shifted by one and `version` moved, **nothing
 else changed in any of the four**, and `config/products`, `config/grove` and `config/names` came
 back field-for-field identical. Live green after it: `rank-badge.mjs` **11/11**,
-`smoke-test.mjs` **172/172**, `ward-copies.mjs` 19/19, `endless-xp.mjs` 12/12,
+`smoke-test.mjs` **172/172**, `ward-copies.mjs` 19/19 (now `ward-seats.mjs`), `endless-xp.mjs` 12/12,
 `delete-account.mjs` 14/14.
 **No live badge fell, and that is now a reading rather than an argument** — all 19 cards were
 walked, and the three carrying one stand at keeper 12, 14 and 16 (`cinderling`, `silverwatch`,
@@ -2069,18 +2073,28 @@ loadout's preview stage and `render_siege.py`, so it wants an eye on a device �
 look for is the crop's straight edge at the barrel**, which is covered by the muzzle flash and by the
 trail's own fade. If it ever shows, `SiegeView.HeadRoom` is the dial and the direction is down.
 
-**A legendary is bought by the copy as of 2026-09-18, and the server half is live.** One bare row is
-held on all four seats, so one payment stood four Eclipses (42k); the cap is a count of copy rows
-(`eclipse#2`) in the same union-joined set, so it cost **no schema version and no `firestore.rules`
-release**. `publishGrove` was deployed by name and the artifact read back (`copiesOf`,
-`WARD_COPY_MARK`, `entry.legendary` all in the running bundle), `config/grove` was re-seeded and
-**diffed against a snapshot taken before it — exactly 30 fields added, one `legendary` per turret,
-`true` on precisely the ten of the band, nothing else moved**. Offline green (2,214 tests, three
-content gates, 72 function tests, `render_loadout.py`); live green (`ward-copies.mjs` 16/16,
-`smoke-test.mjs` 166/166, `delete-account.mjs` 14/14, `endless-xp.mjs` 12/12).
-**What is left is an eye.** The preview panel's keys have **no render mirror** — the lower one now
-carries a price and a coin — so look at it on a device with a legendary owned and standing, from a
-seat it is not on. And nothing has played a line with two Eclipses on it.
+**A legendary is bought per seat as of 2026-09-21, and the copy rule is retired.** The band was
+bought outright, so one payment stood four Eclipses (42k); the copy row that answered that on
+2026-09-18 was right about the money and wrong about everything else — it hid the second purchase
+behind a key on a panel instead of a price on a card, and it left **one star ladder under four
+turrets**. The owner reported all three as one complaint. Buying per seat is the bound the shelf
+already had, so this **deletes** rather than repairs: `WardLedger.Copies`, `OfferAnother`,
+`TryBuyAnother`, `WardLine.Resolve`'s cap, `WardPreviewKeys.Buys`, the shelf's corner chip, the
+server's `copiesOf` and two loc keys all go, and the per-seat star ladder falls out of
+`WardHolding.Row` with no line written about it. **No schema version, no `firestore.rules` release,
+no re-seed** — `config/grove.wards` still publishes `legendary` and the server no longer reads it,
+which is what makes the deploy safe in either order with the client.
+Offline green: `compile.py` (all fifteen assemblies), the EditMode suite, `content.py` (0 errors),
+`loc.py` (0 missing), 72 function tests, `seed-config.mjs --check`, `render_loadout.py`.
+**Two things are owed.** `publishGrove` and `publishGroveBoards` want deploying **by name** — the
+row projections live beside `buildCard`, so a field's *meaning* changing is a deploy of every
+function that writes a row (the 2026-09-20 lesson, read again) — and `firebase/e2e/ward-seats.mjs`
+(renamed from `ward-copies.mjs`) has never been run against a live server. **Until that deploy
+lands, a card publishes four Eclipses off one purchase**, which is cosmetic and on nobody's card:
+the band is gated at keeper 45–60 and the highest live account is 16.
+**And an eye.** Nothing has played a line with two Eclipses on it, and the preview panel's keys
+still have no render mirror — though they are simpler than they were, because the lower one no
+longer carries a price.
 
 **The legendary band is cut and has never been in the Editor.** Its art was written with the Editor
 closed, so every one of its pictures is **unaddressed** until `▸ Addressables ▸ Sync All Assets` — which
@@ -2147,8 +2161,9 @@ honest state rather than a fault to chase. No season rollover has ever happened.
   colour, stand on any seat and fire at everything, at **45,000–150,000 credits** behind keeper 45–60
   (gems until 2026-09-18, at the owner's instruction; a flat **x25** on the authored gem ladder, so its
   shape is unchanged and one multiplier retunes the band). It is the
-  largest thing this mode has ever sold, it is **bought by the copy** since 2026-09-18 (so a line of
-  four of one is four payments, and 885,000 buys the band once rather than a line of it), and it
+  largest thing this mode has ever sold, it is **bought per seat** since 2026-09-21 (so a line of
+  four of one is four payments and four star ladders, and 885,000 buys the band once rather than a
+  line of it — by the copy from 2026-09-18, which priced the same and read wrong, 42k), and it
   **suspends the colour lock**, which is the mode's central decision — deliberately, at the top of the shelf, where a player has already made that decision a
   hundred times. It cannot move a star line (42i), so what it can be wrong about is *feel*: four of them
   is a line with no wrong answer in it. **Play a rung with four and say whether the mode is still the

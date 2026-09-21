@@ -1041,12 +1041,14 @@ if (wardIds.length > 0) {
   // publish that re-asked it took every legendary off every card in the game and drew the
   // starter in its place, so a five-star Pyroclast reached visitors as `bolt` (invariant 19t).
   //
-  // **Sorted, and never a colourless turret.** `Object.keys` over a Firestore map is not an
-  // order, so an unsorted pick makes this block answer differently on different runs; and a
-  // legendary is bought *bare* (`WardHolding.Row`), so the `{id}:{colour}` row written below
-  // is a shape no client produces and `copiesOf` reads it as nothing bought - a drop with the
-  // right answer for the wrong reason, which is what this check must never accept. The copy
-  // rule has its own live probe (`ward-copies.mjs`).
+  // **Sorted, and still never a colourless turret.** `Object.keys` over a Firestore map is not
+  // an order, so an unsorted pick makes this block answer differently on different runs. The
+  // second half is now belt and braces rather than load-bearing: a legendary used to be bought
+  // *bare*, so the `{id}:{colour}` row written below was a shape no client produced and the
+  // copy rule read it as nothing bought - a drop with the right answer for the wrong reason,
+  // which is what this check must never accept. Every turret is bought per seat now (invariant
+  // 42k), so the row would be honest on either band; the band keeps its own live probe
+  // (`ward-seats.mjs`) and this block keeps its own subject.
   const colourWards = wardIds
     .filter((id) => wardRoster[id]?.mapValue?.fields?.legendary?.booleanValue !== true)
     .sort();

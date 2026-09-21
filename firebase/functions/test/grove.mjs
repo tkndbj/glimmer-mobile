@@ -702,11 +702,11 @@ console.log("\nthe turret line a card publishes");
   equal("a stale seed publishes no line", line(full, stale).length, 0);
 }
 
-console.log("\ncopies of a colourless turret");
+console.log("\nthe seats a legendary is bought for");
 {
-  // `eclipse` is colourless, so one purchase holds it on all four seats and how many may stand
-  // is a count of copies (`WardLedger.Copies`). `siphon` beside it is an ordinary turret, whose
-  // bare row has meant *every colour* since colours shipped and may never be read as one copy.
+  // `eclipse` is colourless — one picture, and it fires at everything on the hill — but it is
+  // bought per seat like everything else on the shelf (invariant 42k). `siphon` beside it is an
+  // ordinary turret, whose bare row has meant *every colour* since colours shipped.
   const config = {
     ...groveConfig(),
     wards: {
@@ -728,32 +728,41 @@ console.log("\ncopies of a colourless turret");
       .map((s) => s.c).join("");
 
   // The hole this closed: one payment, four Eclipses, and nothing anywhere said so.
-  equal("one copy stands on one seat", stood(["eclipse"]), "r");
-  equal("two copies stand on two", stood(["eclipse", "eclipse#2"]), "rg");
-  equal("three on three", stood(["eclipse", "eclipse#2", "eclipse#3"]), "rgb");
+  equal("one seat bought stands on one seat", stood(["eclipse:r"]), "r");
+  equal("two seats bought stand on two", stood(["eclipse:r", "eclipse:g"]), "rg");
+  equal("three on three", stood(["eclipse:r", "eclipse:g", "eclipse:b"]), "rgb");
   equal("and four fill the line",
-        stood(["eclipse", "eclipse#2", "eclipse#3", "eclipse#4"]), "rgby");
+        stood(["eclipse:r", "eclipse:g", "eclipse:b", "eclipse:y"]), "rgby");
   equal("a turret nobody bought stands nowhere", stood([]), "");
 
-  // The seats kept are the earliest colours, which is `WardLine.Resolve`'s own tie-break: the
-  // client and the server have to drop the *same* seat or a card and the board disagree.
-  equal("a fifth copy buys no fifth seat",
-        stood(["eclipse", "eclipse#2", "eclipse#3", "eclipse#4", "eclipse#5"]), "rgby");
+  // A seat is a seat, so the ones kept are the ones paid for rather than the earliest — which
+  // is a sharper answer than the copy rule could give, and the same one the client's own
+  // `WardLine.Resolve` gives out of the same save.
+  equal("the seats kept are the seats bought", stood(["eclipse:g", "eclipse:y"]), "gy");
 
-  // And the clause that must not bind. A bare row on a per-colour turret is a file from before
-  // colours existed: it means all four, somebody paid for them, and reading it as a single copy
-  // would take three seats off their card.
+  // And the clause that must not bind, on either band. A bare row is a file from before colours
+  // existed — and, on a legendary, one bought while the band was bought outright. It means all
+  // four, somebody paid for them, and taking three seats off their card is the one thing this
+  // may not do.
   equal("a bare row on an ordinary turret still covers every seat",
         publishedLine({ ...everywhere("siphon"), wardsOwned: ["siphon"] }, config).length, 4);
+  equal("a legendary bought outright still covers every seat", stood(["eclipse"]), "rgby");
+  equal("and a copy row beside it changes nothing",
+        stood(["eclipse", "eclipse#2"]), "rgby");
 
-  // Absent means false, which is what a `config/grove` seeded before this field says — and the
-  // direction that never confiscates.
+  // A copy row on its own covers no seat, exactly as it never did — what a rolled-back client
+  // writes cannot conjure a seat nobody paid for.
+  equal("a copy row alone stands nowhere", stood(["eclipse#2"]), "");
+
+  // The flag is published and no longer read here, so a config seeded without it publishes the
+  // same line — which is what makes removing the reader free of a re-seed.
   const old = {
     ...config,
     wards: { ...config.wards, eclipse: { level: 45, free: false } },
   };
-  equal("a config with no legendary flag caps nothing",
-        publishedLine({ ...everywhere("eclipse"), wardsOwned: ["eclipse"] }, old).length, 4);
+  equal("a config with no legendary flag publishes the same seats",
+        publishedLine({ ...everywhere("eclipse"), wardsOwned: ["eclipse:r"] }, old)
+          .map((s) => s.c).join(""), "r");
 }
 
 console.log("\nthe card a public profile reads");
@@ -821,8 +830,8 @@ console.log("\na keeper standing a legendary");
       { colour: "b", ward: "bolt" },
       { colour: "y", ward: "cleaver" },
     ],
-    wardsOwned: ["pyroclast", "ember:g", "cleaver:y"],
-    wardStars: [{ ward: "pyroclast", stars: 5 }],
+    wardsOwned: ["pyroclast:r", "ember:g", "cleaver:y"],
+    wardStars: [{ ward: "pyroclast", stars: 5 }],   // a bare ladder, bought outright (42k)
   };
 
   const line = buildCard("uid-16", save, config, NO_RANKS, worth, 16, 1_700_000_000, null).line;
@@ -837,7 +846,7 @@ console.log("\na keeper standing a legendary");
         buildCard("uid-16", { ...save, wardsOwned: [] }, config, NO_RANKS, worth, 16, 1, null)
           .line.map((s) => s.c).join(""), "b");        // `bolt` is free; the rest were not
 
-  equal("and a second copy of the legendary is still one payment short",
+  equal("and a legendary bought on one seat stands on one seat",
         buildCard("uid-16",
                   { ...save,
                     wardLoadout: save.wardLoadout.map(({ colour }) =>

@@ -1,22 +1,27 @@
 #!/usr/bin/env node
 /**
- * Proves the *deployed* `publishGrove` counts copies of a colourless turret — run after
- * deploying it and after re-seeding `config/grove`.
+ * Proves the *deployed* `publishGrove` holds a colourless turret to the seats it was bought
+ * for — run after deploying it.
  *
- *     node firebase/e2e/ward-copies.mjs
+ *     node firebase/e2e/ward-seats.mjs
  *
  * **Why this exists as its own probe**, which is `endless-xp.mjs`'s argument arriving at a
- * second fix with the same shape. A `publishGrove` that has never heard of copies answers 200
+ * second fix with the same shape. A `publishGrove` that has never heard of this answers 200
  * and writes a perfectly valid card — with four Eclipses on it, off one purchase. Nothing
  * throws and nothing logs, so an absolute check cannot tell the fix from a card that happens
  * to have four seats. The test is **differential**: one account, one loadout, published twice
- * with a different number of copy rows, and the seat counts compared.
+ * with a different number of seat rows, and the seat counts compared.
  *
- * **It is also differential about the half that must not have moved.** A bare row on a
- * *per-colour* turret is what a build from before colours existed wrote; it means all four
- * seats, somebody paid for them, and a copy rule that read it as a single copy would take
- * three seats off their card with nothing saying so. That case is here beside the other one,
- * because the two are the same line of code read in opposite directions.
+ * **It was written for the copy rule and outlived it.** A legendary was bought outright and
+ * bounded by a count of copy rows (`eclipse#2`) for three days; it is bought per colour like
+ * every other turret now (invariant 42k), so the same differential asks a simpler question and
+ * the copy rows are here as *legacy* — a save that holds them must not lose a seat.
+ *
+ * **It is also differential about the half that must not have moved.** A bare row is what a
+ * build from before colours existed wrote, and what a legendary bought outright holds; it means
+ * all four seats, somebody paid for them, and a reader that took it for one seat would take
+ * three off their card with nothing saying so. That case is here beside the other one, because
+ * the two are the same line of code read in opposite directions.
  *
  * **Two things are read off the published config rather than written down here** — which is
  * this suite's oldest lesson: the legendary is whichever turret `config/grove` flags, and the
@@ -97,11 +102,12 @@ const gateOf = (id) => Number(entry(id).level?.integerValue ?? 0);
 const isFree = (id) => entry(id).free?.booleanValue === true;
 const isLegend = (id) => entry(id).legendary?.booleanValue === true;
 
-// **The whole point of the re-seed, asserted first.** `copiesOf` reads an absent flag as
-// false, which caps nothing — so a stale `config/grove` leaves this probe green on a server
-// that is still publishing four Eclipses for one purchase. The flag has to be there.
+// **How this probe finds its subject, and nothing more than that.** The server stopped reading
+// this flag when a legendary became per-seat like everything else — what it decides here is
+// which turret to point the differential at, so an absent flag is a probe that cannot run
+// rather than a server that is wrong.
 const LEGEND = wardIds.filter(isLegend).sort()[0];
-check(!!LEGEND, "and it flags the colourless band (re-seed if this is red)",
+check(!!LEGEND, "and it flags the colourless band, which is how this probe picks its subject",
       `${wardIds.filter(isLegend).length} of ${wardIds.length} legendary`);
 
 // The other direction: an ordinary priced turret, whose bare row must keep meaning all four.
@@ -166,7 +172,7 @@ const base = {
   updatedUnix: { integerValue: "1700000000" },
   legacyImportDone: { booleanValue: true },
   lastPlayedLevelId: { stringValue: glade },
-  checksum: { stringValue: "ward-copies-probe" },
+  checksum: { stringValue: "ward-seats-probe" },
   levels: { mapValue: { fields: {
     [glade]: { mapValue: { fields: {
       stars: { integerValue: "3" },
@@ -229,33 +235,34 @@ async function seatsFor(ward, owned) {
 }
 
 // ------------------------------------------------- one purchase, one seat
-console.log("a colourless turret stands once per copy bought");
+console.log("a colourless turret stands on the seats it was bought for");
 
-const one = await seatsFor(LEGEND, [LEGEND]);
-check(one?.length === 1, "**one copy stands on one seat, not four**", JSON.stringify(one));
-check(one?.[0] === "r", "and it is the first colour, which is the order the client drops in",
-      JSON.stringify(one));
+const one = await seatsFor(LEGEND, [`${LEGEND}:r`]);
+check(one?.length === 1, "**one purchase stands on one seat, not four**", JSON.stringify(one));
+check(one?.[0] === "r", "and it is the seat it was bought for", JSON.stringify(one));
 
-const two = await seatsFor(LEGEND, [LEGEND, `${LEGEND}#2`]);
-check(two?.length === 2, "two copies stand on two", JSON.stringify(two));
+const two = await seatsFor(LEGEND, [`${LEGEND}:r`, `${LEGEND}:g`]);
+check(two?.length === 2, "two purchases stand on two", JSON.stringify(two));
 check(two?.join("") === "rg", "in colour order, so a card and the board agree",
       JSON.stringify(two));
 
-const four = await seatsFor(LEGEND, [LEGEND, `${LEGEND}#2`, `${LEGEND}#3`, `${LEGEND}#4`]);
+// **The seats bought rather than the earliest**, which is sharper than the copy rule it
+// replaced could ever be: it knows *which* Eclipse the player paid for.
+const skipped = await seatsFor(LEGEND, [`${LEGEND}:g`, `${LEGEND}:y`]);
+check(skipped?.join("") === "gy", "and they are the seats paid for, not the first two",
+      JSON.stringify(skipped));
+
+const four = await seatsFor(LEGEND, ["r", "g", "b", "y"].map((c) => `${LEGEND}:${c}`));
 check(four?.length === 4, "and four fill the line", JSON.stringify(four));
 
-// The differential. A bundle that predates the fix answers four to all three, which is
+// The differential. A bundle that predates the fix answers four to all of them, which is
 // exactly the silent failure this probe exists for.
 check(one?.length < four?.length,
-      "and the copies are what moved it, not the loadout",
-      `${one?.length} with one copy, ${four?.length} with four`);
-
-const five = await seatsFor(LEGEND, [LEGEND, `${LEGEND}#2`, `${LEGEND}#3`, `${LEGEND}#4`,
-                                     `${LEGEND}#5`]);
-check(five?.length === 4, "a fifth copy buys no fifth seat", JSON.stringify(five));
+      "and the seats bought are what moved it, not the loadout",
+      `${one?.length} with one, ${four?.length} with four`);
 
 // ------------------------------------------------- the half that must not have moved
-console.log("\na bare row on an ordinary turret still means every colour");
+console.log("\na bare row still means every colour, on either band");
 
 const bare = await seatsFor(ORDINARY, [ORDINARY]);
 check(bare?.length === 4,
@@ -265,6 +272,18 @@ check(bare?.length === 4,
 const oneColour = await seatsFor(ORDINARY, [`${ORDINARY}:g`]);
 check(oneColour?.length === 1 && oneColour?.[0] === "g",
       "and a per-colour row is still exactly its own seat", JSON.stringify(oneColour));
+
+// A legendary bought while the band was bought outright holds a bare row, with copy rows
+// beside it. It paid for every seat it stands on and may not lose one.
+const outright = await seatsFor(LEGEND, [LEGEND, `${LEGEND}#2`]);
+check(outright?.length === 4,
+      "**and a legendary bought outright keeps all four**", JSON.stringify(outright));
+
+// A copy row on its own is what a rolled-back client could still write. It never covered a
+// seat by itself and still does not, or an old spelling would conjure a seat nobody paid for.
+const copyAlone = await seatsFor(LEGEND, [`${LEGEND}#2`]);
+check(copyAlone?.length === 0, "while a copy row alone stands nowhere",
+      JSON.stringify(copyAlone));
 
 // ------------------------------------- the gate this walk must not ask
 console.log("\na turret bought stays bought, whatever the keeper level is now");
@@ -289,7 +308,7 @@ const dropped = await fetch(
 
 check(dropped.ok, "the forged tally comes off the save", String(dropped.status));
 
-const junior = await seatsFor(LEGEND, [LEGEND]);
+const junior = await seatsFor(LEGEND, [`${LEGEND}:r`]);
 check(junior?.length === 1,
       `**a keeper below ${LEGEND}'s gate still stands the one they bought**`,
       JSON.stringify(junior));

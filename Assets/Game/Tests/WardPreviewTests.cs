@@ -24,8 +24,14 @@ namespace GlimmerGrove.Tests
     public sealed class WardPreviewTests
     {
         /// <summary>
-        /// <b>A turret the player owns can always be put on the line.</b> That is the clause that
-        /// was missing, and it may not depend on whether a star happens to be for sale.
+        /// <b>A turret the player owns on this seat can always be put on the line.</b> That is the
+        /// clause that was missing, and it may not depend on whether a star happens to be for
+        /// sale.
+        ///
+        /// <b>It is unconditional again.</b> While the legendary band was bought outright, held
+        /// stopped implying standable — a turret could be owned on a seat with no copy free for
+        /// it — and the lower key had to be able to sell that copy (invariant 42k). A turret is
+        /// bought per seat again, so owning one here <em>is</em> owning this seat.
         /// </summary>
         [Test]
         public void AHeldTurretCanAlwaysBeEquipped()
@@ -33,7 +39,7 @@ namespace GlimmerGrove.Tests
             foreach (bool standing in new[] { false, true })
                 foreach (bool rises in new[] { false, true })
                 {
-                    var keys = WardPreviewKeys.For(true, standing, rises, spare: true);
+                    var keys = WardPreviewKeys.For(true, standing, rises);
 
                     Assert.IsTrue(keys.Lower,
                                   $"a held turret (standing {standing}, a star to sell {rises}) "
@@ -41,50 +47,7 @@ namespace GlimmerGrove.Tests
 
                     Assert.AreEqual(standing, keys.Equipped,
                                     "the lower key says where the turret stands");
-
-                    Assert.IsFalse(keys.Buys,
-                                   "a copy is free for this seat, so the lower key equips it "
-                                   + "rather than selling another");
                 }
-        }
-
-        /// <summary>
-        /// <b>A turret the player owns whose every copy is standing elsewhere is offered the copy
-        /// that would put it here</b> — which is the clause copies cost this rule.
-        ///
-        /// A colourless turret is held on all four seats by one purchase
-        /// (<c>WardHolding.Row</c>), so "held" stopped implying "can be stood": the seat is real,
-        /// the entitlement is real, and there is no spare. EQUIP over that is a key that does
-        /// nothing, which is this fixture's own bug wearing a different hat.
-        /// </summary>
-        [Test]
-        public void AHeldTurretWithNoSpareCopyIsSoldAnother()
-        {
-            foreach (bool rises in new[] { false, true })
-            {
-                var keys = WardPreviewKeys.For(true, standing: false, rises: rises, spare: false);
-
-                Assert.IsTrue(keys.Lower, "no key at all over a turret that cannot be stood");
-                Assert.IsTrue(keys.Buys, "the lower key has to be the way onto this seat");
-                Assert.IsFalse(keys.Equipped, "a price is not the settled state");
-                Assert.AreEqual(rises, keys.Upper, "the star is still for sale above it");
-            }
-        }
-
-        /// <summary>
-        /// <b>A seat already standing the turret never asks for another copy</b>, however the
-        /// spare count came out — it is not asking for one.
-        /// </summary>
-        [Test]
-        public void AStandingTurretIsNeverSoldAnother()
-        {
-            foreach (bool spare in new[] { false, true })
-            {
-                var keys = WardPreviewKeys.For(true, standing: true, rises: false, spare: spare);
-
-                Assert.IsTrue(keys.Equipped);
-                Assert.IsFalse(keys.Buys, "the turret is already on this seat");
-            }
         }
 
         /// <summary>Every state offers something to tap, whatever else it does.</summary>
@@ -94,21 +57,19 @@ namespace GlimmerGrove.Tests
             foreach (bool held in new[] { false, true })
                 foreach (bool standing in new[] { false, true })
                     foreach (bool rises in new[] { false, true })
-                        foreach (bool spare in new[] { false, true })
-                        {
-                            var keys = WardPreviewKeys.For(held, standing, rises, spare);
+                    {
+                        var keys = WardPreviewKeys.For(held, standing, rises);
 
-                            Assert.IsTrue(keys.Upper || keys.Lower,
-                                          $"held {held}, standing {standing}, rises {rises}, "
-                                          + $"spare {spare} draws no key at all");
+                        Assert.IsTrue(keys.Upper || keys.Lower,
+                                      $"held {held}, standing {standing}, rises {rises} "
+                                      + "draws no key at all");
 
-                            Assert.IsFalse(keys.Buys && keys.Equipped,
-                                           "the lower key cannot be a price and a settled state "
-                                           + "at once");
+                        Assert.IsFalse(keys.Equipped && !held,
+                                       "a turret nobody owns cannot be the settled state");
 
-                            Assert.IsFalse(keys.Buys && !held,
-                                           "a turret nobody owns is sold by the upper key");
-                        }
+                        Assert.IsFalse(keys.Lower && !held,
+                                       "a turret nobody owns is sold by the upper key");
+                    }
         }
 
         /// <summary>
@@ -120,7 +81,7 @@ namespace GlimmerGrove.Tests
         {
             foreach (bool rises in new[] { false, true })
             {
-                var keys = WardPreviewKeys.For(false, false, rises, spare: false);
+                var keys = WardPreviewKeys.For(false, false, rises);
 
                 Assert.IsTrue(keys.Upper);
                 Assert.IsFalse(keys.Lower, "a turret nobody owns was offered a way onto the line");
@@ -135,7 +96,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AHeldTurretWithAStarLeftOffersBoth()
         {
-            var keys = WardPreviewKeys.For(true, false, true, spare: true);
+            var keys = WardPreviewKeys.For(true, false, true);
 
             Assert.IsTrue(keys.Upper, "no upgrade key");
             Assert.IsTrue(keys.Lower, "no equip key - this is the bug this fixture is named for");
@@ -149,7 +110,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AMaxedHeldTurretOffersTheEquipKeyAlone()
         {
-            var keys = WardPreviewKeys.For(true, false, false, spare: true);
+            var keys = WardPreviewKeys.For(true, false, false);
 
             Assert.IsFalse(keys.Upper, "a turret with no star left was offered one");
             Assert.IsTrue(keys.Lower);

@@ -959,19 +959,23 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    being asked.** The prices **continue the credit ladder rather than converting at the shop's rate**, or
    the shelf would get cheaper halfway up. It cost no code and no re-seed. **What it does cost is the gem
    sink.**
-42g. **A legendary turret wears no colour, and that one fact is three rules at once** — it is bought once
-   rather than once per seat, it is cut once rather than four times, and it fires at **everything** on the
-   hill. Spelled three times they could drift, so it is **one authored flag** (`WardModel.Legendary`) and
-   never a reading of the rung: `WardTier` is punctuation over the shelf's order, so a band that decided
-   what a turret *does* would make a re-rung shelf silently change four turrets' rules. What holds the
-   flag to the LEGENDARY header is `WardCatalog.LadderProblem`, in **both directions**.
-42h. **It cost the save nothing, and that is the whole reason the shape was chosen.** A legendary's row in
-   `wardsOwned` is the **bare id**, which has meant *every colour* since colours shipped — it is what a
+42g. **A legendary turret wears no colour, and that one fact is two rules at once** — it is cut once
+   rather than four times, and it fires at **everything** on the hill. Spelled twice they could drift, so
+   it is **one authored flag** (`WardModel.Legendary`) and never a reading of the rung: `WardTier` is
+   punctuation over the shelf's order, so a band that decided what a turret *does* would make a re-rung
+   shelf silently change four turrets' rules. What holds the flag to the LEGENDARY header is
+   `WardCatalog.LadderProblem`, in **both directions**. **There was a third and it is spent** (42k): it
+   was bought once rather than once per seat, which is a rule about a *purchase* riding on a fact about a
+   picture.
+42h. **It cost the save nothing, and the shape it was chosen for is spent.** A legendary's row in
+   `wardsOwned` was the **bare id**, which has meant *every colour* since colours shipped — it is what a
    build that owned turrets outright wrote and the only reading a union merge could safely give one — so
-   there is no schema version, no `hasOnly` release and no migration. The **star ledger had to learn the
-   same clause**, on the client and on the server, or a five-star legendary publishes at one star on all
-   four seats with nothing saying so. **And one ladder is still all a legendary has** (42k): copies are
-   how many may *stand*, never four things to upgrade.
+   there was no schema version, no `hasOnly` release and no migration. **A legendary is written
+   `{id}:{colour}` like everything else now** (42k) and it still costs the save nothing, for the plainer
+   reason that it is the row every other turret already had. **Both readers keep the bare clause as
+   legacy**, on the client and on the server, or a five-star legendary bought under the old rule publishes
+   at one star on all four seats with nothing saying so — and a bare row still means all four seats, so
+   nobody loses what they paid for.
 42i. **It is still strictly an addition, and that is arithmetic rather than an argument.** Par is the
    hill's health over a perfect match computed against the baseline bolt, so a turret reaching every
    colour only ever fires bolts that would otherwise not have been fired: a run ends sooner and par
@@ -988,28 +992,43 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    (`Tools/make_legend_fx.py`, numpy and Pillow, offline with `--check` and `--contact`), which also buys
    what a bake cannot: a legendary can be a **behaviour** rather than a shape — lightning that forks
    differently every frame, a shot that visibly bounces, a jet whose turbulence scrolls.
-42k. **Held on every seat is not the same as standing on every seat, and a legendary is bought by the
-   copy.** One bare row is held on all four (42h), so one payment stood four Eclipses — the line was four
-   turrets and a quarter of the price, and **every gate was green**, because the ledger, the holding and
-   the line are each right and nothing anywhere asked how many of one turret a line may stand. The cap is
-   a **count of copies** (`WardLedger.Copies`), the second is another row in the same union-joined set
-   (`WardHolding.Copy`, `eclipse#2`), and it is the per-id `max` of 16h arrived at by a set union — so
-   again no schema version, no `hasOnly` release and no migration, and the rules' bound does not move: a
-   legendary now occupies at most four rows, which is what every per-colour turret has always occupied.
-   **Only a colourless turret is counted**, because a bare row on any other is a file from before colours
-   existed, means all four and is somebody's purchase. Three places ask: `CanStand` before a seat is
-   stored, `WardLine.Resolve` before the board plays it, and `publishedLine` before a card vouches for it
-   — all three in **colour order**, or two devices and the server drop different seats out of one save.
-   **What it deliberately does not take away is the band's own rule**: which seats the copies stand on is
-   still the player's, so a legendary is still bought for no colour at all.
-42l. **A key that cannot act is worse than one that is not drawn, and owning stopped implying standing.**
-   The panel's lower key was EQUIP over anything held, which is now a button that does nothing on the
-   one band it matters for — so it becomes **the price of the copy that would put it here**
-   (`WardPreviewKeys.Buys`), and buying it stands it in the same tap, because nobody buys a fourth
-   Eclipse to leave it in a drawer. **Not the reveal ceremony**, which says *joined your line* and is a
-   lie about a turret owned for weeks. The shelf says the count in a **corner chip** and not a strip:
-   the strip's band is where the star row already is, drawn together for the first time here, and only
-   `render_loadout.py` could see it.
+42k. **A legendary is bought for a seat, exactly like every other turret on the shelf — and that is the
+   *second* answer to one hole.** A colourless turret's row was the bare id, which means every colour, so
+   one payment stood four Eclipses: the line was four turrets at a quarter of the price and **every gate
+   was green**, because the ledger, the holding and the line are each right and nothing anywhere asked how
+   many of one turret a line may stand. The first answer was a **copy row** (`eclipse#2`) counted against
+   the seats already standing it — correct about the money and wrong about everything else. It gave the
+   band a shape no other rung has, it hid the second purchase behind a key on a panel rather than putting
+   a price on the card, and it left **one star ladder under four turrets**, because a copy is not a seat
+   and only a seat has a ladder: four Eclipses paid for separately climbed together. The owner reported
+   all three as one complaint.
+   **Buying per seat is the same bound arrived at by the rule that was already there**, so it *deletes*
+   rather than repairs — `WardLedger.Copies`, `OfferAnother`, `TryBuyAnother`, `WardLine.Resolve`'s cap,
+   `WardPreviewKeys.Buys`, the shelf's corner chip and the server's `copiesOf` all go, and the star ladder
+   becomes per seat with **no line written about it**, because `WardHolding.Row` is the one place a
+   holding is spelled (15a). It costs no schema version, no `hasOnly` release and no migration, and the
+   rules' bounds do not move: a legendary occupies at most four rows, which is what every per-colour
+   turret has always occupied.
+   **The copy mark is retired in place on the wire** — nothing writes one, `IdOf` still reads one and
+   `Spellable` still refuses one in an id, because a rolled-back client can still write a row into a
+   union-joined set nothing may prune. **A legendary bought under either old rule keeps all four seats**,
+   through the bare row, which is the only direction a rule about somebody's purchases may move.
+   **What it deliberately does not take away is the band's own rule**: which seats a player buys is still
+   theirs, and a legendary still ignores the colour lock on the hill.
+   **The one thing that got tighter** is the star ledger's headroom: thirty turrets on four seats is 120
+   rows against `MaxRows` 128, where the band used to carry one row each. It is a fixture rather than a
+   comment (`WardLoadoutTests.TheStarLedgerHoldsTheWholeShelf`), because the failure is the quiet kind —
+   truncation drops upgrades somebody paid for.
+42l. **A key that cannot act is worse than one that is not drawn, and the cheapest fix for one is a rule
+   that stops producing the state.** The panel's lower key was EQUIP over anything held, which became a
+   button that did nothing the moment a turret could be *owned here and standable nowhere* — so it learned
+   to say the price of the copy that would put it here, which is a fourth state on a panel that had three.
+   Buying per seat (42k) means held implies standable again for the whole shelf, so the key is EQUIP or
+   EQUIPPED and **never carries a price**, and the shelf says what a seat costs on the **card**, where
+   every other price on this screen is said. **The corner chip is gone with it** — and it was placed by
+   `render_loadout.py` and by nothing else: written as a strip, which is where every other number on a
+   cell goes, it drew straight through the star row, because a held cell drew stars and no strip and an
+   unheld one drew a strip and no stars, so the two had never been drawn together.
 43. **A mode may have a second ladder, and it is a *track* rather than a mode or a chapter.** `GameTrack`
    is one level finer than `GameMode`, the index lanes on the **pair**, and `ChaptersIn(mode)` answers the
    **main** track alone.

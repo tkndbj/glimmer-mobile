@@ -171,14 +171,6 @@ namespace GlimmerGrove
         Image _standPill;
         Text _standLabel;
 
-        /// <summary>
-        /// The glyph beside the lower key's price, on the one state where it carries one.
-        ///
-        /// <b>Its own image rather than the upper key's moved down</b>, because both keys can
-        /// want one at the same time: a held legendary with every copy standing offers the next
-        /// star above and the next copy below.
-        /// </summary>
-        Image _standCoin;
         Text _label;
         Image _coin;
         Image _pill;
@@ -292,11 +284,6 @@ namespace GlimmerGrove
                                        new Vector2(.5f, .5f), new Vector2(0f, _lift), 0f, 3f);
             UIKit.Shrinkable(_standLabel, 22);
 
-            _standCoin = UIKit.Img("Coin", _stand.transform, null, Color.white,
-                                   new Vector2(46f, 46f), new Vector2(.5f, .5f),
-                                   new Vector2(-118f, _lift));
-            _standCoin.preserveAspect = true;
-
             _label = UIKit.Titled("Label", _act.transform, string.Empty, 38, Pal.Cream,
                                   TextAnchor.MiddleCenter, new Vector2(320f, 62f),
                                   new Vector2(.5f, .5f), new Vector2(PriceShift, _lift), 0f, 3f);
@@ -351,8 +338,9 @@ namespace GlimmerGrove
         /// has is a refusal. What the player needs is on the status line above it either way:
         /// the shortfall, in figures.
         ///
-        /// <b>Said once because three keys ask it</b> — the turret's price, the star's, and
-        /// another copy's.
+        /// <b>Said once because two keys ask it</b> — the turret's price and the star's. It
+        /// was three while the lower key could sell a copy of a legendary (invariant 42k); that
+        /// key never carries a price now, and a turret is bought per seat like everything else.
         /// </summary>
         static bool Shut(long shortfall, string currency)
             => shortfall > 0 && currency != Currency.Gems;
@@ -368,7 +356,7 @@ namespace GlimmerGrove
         /// </summary>
         void Coin(bool gems = false) => Coin(_coin, gems);
 
-        /// <summary>The same glyph on either key — see <see cref="_standCoin"/>.</summary>
+        /// <summary>The glyph itself, on whichever key is carrying a price.</summary>
         static void Coin(Image on, bool gems)
         {
             if (on == null) return;
@@ -448,16 +436,10 @@ namespace GlimmerGrove
             // be in (`WardPreviewTests`) — because what went wrong here was not a wrong branch, it
             // was two correct branches whose union left a state with no answer at all.
             //
-            // **`CanStand` rather than `IsHeld`**, which is the copy rule reaching the panel: a
-            // colourless turret is held on every seat by one purchase, and may stand in only as
-            // many places as have been paid for (`WardLedger.Copies`).
-            var keys = WardPreviewKeys.For(held, Standing, rises,
-                                           WardLoadout.CanStand(Model, Colour));
-
-            // What another copy costs, on the one state that asks. Nought elsewhere, so the
-            // lower key's furniture is written from one place whatever it is saying.
-            var copy = keys.Buys ? WardLedger.OfferAnother(Model, PlayerProgression.Level.Level)
-                                 : default;
+            // **Held on this seat is the whole question again.** It carried a fourth state while
+            // a legendary was bought outright — held here and standable nowhere — and a turret is
+            // bought per seat again, so owning one on this colour is owning the seat (42k).
+            var keys = WardPreviewKeys.For(held, Standing, rises);
 
             // **The equip key is the second answer, and it is shown for every turret the player
             // owns.** It is what says where this turret already stands, and it is the only way to
@@ -466,52 +448,26 @@ namespace GlimmerGrove
             //
             // EQUIPPED pays nothing, moves nothing and only closes the panel, so it wears the one
             // pill on this panel that is not an offer; EQUIP wears the orange, which keeps the
-            // affirmative green for the thing that costs.
-
-            // **Shut on the one state that costs**, and set on every repaint in both directions:
-            // the copy price is the only thing this key ever asks money for, so EQUIP and
-            // EQUIPPED are always live (see `Skin` for why the tap moves with the mould).
-            bool copyShut = keys.Buys && Shut(copy.Shortfall, copy.Currency);
-
+            // affirmative green for the thing that costs. **Neither of them ever asks for money**
+            // — it carried the price of a copy while a legendary was bought outright (42k) — so
+            // both are always live, where the upper key greys on a shortfall.
             if (_stand != null)
             {
                 _stand.gameObject.SetActive(keys.Lower);
-                _stand.Interactable = !copyShut;
-
-                // Cleared before the branch rather than in two of its three: this repaints on
-                // every purchase and every arrangement, so a glyph left from the last pass is a
-                // coin beside the word EQUIPPED.
-                if (_standCoin != null)
-                {
-                    Flipbook.Detach(_standCoin);
-                    _standCoin.enabled = false;
-                }
+                _stand.Interactable = true;
 
                 if (keys.Lower)
                 {
-                    // **The number rather than a word for buying**, which is this panel's rule
-                    // for every other price on it: what the player is deciding about is the
-                    // figure, and the status line above says what it is the price of.
-                    _standLabel.text = keys.Buys
-                        ? copy.Cost.ToString("N0")
-                        : Loc.Get(keys.Equipped ? "ui.loadout.standing" : "ui.loadout.stand");
+                    _standLabel.text =
+                        Loc.Get(keys.Equipped ? "ui.loadout.standing" : "ui.loadout.stand");
 
                     if (_standPill != null)
                         _standPill.sprite = Art.S("Ui/" + (keys.Equipped ? Skins.Settled
-                                                         : copyShut ? Skins.Shut
-                                                         : keys.Buys ? Skins.Affirm
-                                                         : Skins.Buy));
+                                                                         : Skins.Buy));
 
-                    if (keys.Buys && _standCoin != null)
-                    {
-                        _standCoin.enabled = true;
-                        Coin(_standCoin, copy.Currency == Currency.Gems);
-                    }
-
-                    // Centred unless there is a coin to leave room for — `PriceShift`'s own
-                    // note, which this key now needs for the same reason the upper one does.
-                    _standLabel.rectTransform.anchoredPosition =
-                        new Vector2(keys.Buys ? PriceShift : 0f, _lift);
+                    // Centred, because there is no coin on this key to leave room for — see
+                    // `PriceShift`, which the upper one still needs.
+                    _standLabel.rectTransform.anchoredPosition = new Vector2(0f, _lift);
                 }
             }
 
@@ -597,24 +553,6 @@ namespace GlimmerGrove
                     break;
             }
 
-            // **The lower key's sentence wins when it is a price**, and it is written after the
-            // switch rather than inside the held branch: the upper key says UPGRADE, which is a
-            // word that explains itself, where a bare number under a turret the player already
-            // owns explains nothing at all. A shortfall outranks the note, exactly as it does
-            // above — what stops a purchase is more use than what it would be for.
-            if (keys.Buys)
-            {
-                _status.text = copy.Shortfall > 0
-                    ? Loc.Format(copy.Currency == Currency.Gems ? "ui.shop.short_gems"
-                                                                : "ui.shop.short_coins",
-                                 copy.Shortfall)
-                    : copy.State == WardPurchaseState.LevelLocked
-                        ? Loc.Format("ui.loadout.level_note", copy.RequiredLevel)
-                        : Loc.Get("ui.loadout.copy_note");
-
-                _status.color = Short;
-            }
-
             // Centred unless there is a coin to leave room for - see `PriceShift`.
             _label.rectTransform.anchoredPosition =
                 new Vector2(_coin.enabled ? PriceShift : 0f, _lift);
@@ -631,30 +569,6 @@ namespace GlimmerGrove
         void Stand()
         {
             if (Standing) { Close(); return; }
-
-            // **Every copy is standing elsewhere, so the way onto this seat is another one.**
-            // The purchase and the arrangement are one tap because they are one intent: nobody
-            // buys a fourth Eclipse to leave it in a drawer, and the seat they bought it from is
-            // in front of them. It is deliberately *not* `WardRevealOverlay` — that ceremony is
-            // a turret joining the line for the first time ("joined your line"), and playing it
-            // again over a turret the player has owned for weeks reads as a bug.
-            if (!WardLoadout.CanStand(Model, Colour))
-            {
-                if (!WardLedger.TryBuyAnother(Model, PlayerProgression.Level.Level))
-                {
-                    var copy = WardLedger.OfferAnother(Model, PlayerProgression.Level.Level);
-
-                    // A gem shortfall has a shelf to open and a credit one has nothing to sell,
-                    // which is `Act`'s own split and its reason.
-                    if (copy.Shortfall > 0 && copy.Currency == Currency.Gems)
-                        Flow.Modal<GemShopOverlay>();
-                    else Audio.Sfx("blocked", .4f);
-
-                    return;
-                }
-
-                Audio.Sfx("coin", .6f);
-            }
 
             // **A mechanism rather than a bell**, which is the shelf's own note: standing a turret
             // is an action a player takes several times in a row and one tap to undo, where

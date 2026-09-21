@@ -387,31 +387,20 @@ namespace GlimmerGrove
                                     0f, 2f);
             UIKit.Shrinkable(name, Pt(22f * Scale));
 
-            // **Only on a turret this seat actually holds.** A ladder over a card that is still
-            // for sale would read as a promise about what buying it gives you; what a player owns
-            // is what has a place on the ladder at all, and an unheld card's own strip already
-            // says what it costs.
+            // **Only on a turret this seat actually holds, and the stars are this seat's.** A
+            // ladder over a card that is still for sale would read as a promise about what buying
+            // it gives you; what a player owns is what has a place on the ladder at all, and an
+            // unheld card's own strip already says what it costs.
+            //
+            // **Which is now true of the legendary band too** (invariant 42k). It was bought
+            // outright, so it drew held-and-starred on all four seats off one payment and wore a
+            // corner chip counting its copies; it is bought per seat like the twenty under it,
+            // so the chip is gone and this cell says the same thing about every rung of the
+            // shelf — bought here, this far up here.
             if (held)
                 WardStarRow.Build(cell, new Vector2(0f, -StarsY),
                                   WardStarLedger.StarsOf(model, WardLine.Colours[_slot]),
                                   StarSize);
-
-            // **Only a legendary is counted, and it is counted in the corner.** Every other
-            // turret on this shelf is one to a seat by construction — it is bought for red and
-            // red is where it stands — so "held" is the whole story about it. A colourless one
-            // is held on all four seats by a single purchase and may stand in only as many
-            // places as were paid for (`WardLedger.Copies`), which is the one fact a player
-            // needs *before* they tap: four Eclipses is four purchases, and finding that out at
-            // the fourth seat is finding it out too late.
-            //
-            // **The corner because the footer's band is taken.** It was a strip at first, which
-            // is where every other number on this cell goes — and `render_loadout.py` drew it
-            // straight through the star row: the strip spans 374 to 452 of a 470-tall cell and
-            // the stars sit at 395. The two never met before, because a held cell drew stars
-            // and no strip and an unheld one drew a strip and no stars, so nothing had ever
-            // asked whether they fit together. Nothing else here could have seen it.
-            if (held && model.Colourless && !model.IsStarter)
-                CopyChip(cell, WardLedger.Copies(model));
 
             Footer(cell, model, offer, standing);
 
@@ -421,40 +410,6 @@ namespace GlimmerGrove
             // tapped - must not replay the entrance, or the screen reads as reloading itself
             // (invariant 16d).
             if (!_shown) Tween.Pop(cell, Mathf.Min(index, 9) * .022f, .3f);
-        }
-
-        /// <summary>How big the copy chip is, and how far its centre sits off the corner.</summary>
-        const float ChipW = 104f, ChipH = 56f, ChipInset = 14f;
-
-        /// <summary>
-        /// How many of this turret the player owns, in the cell's top-right corner.
-        ///
-        /// <b>The corner is the one part of this cell nothing draws in.</b> The picture is
-        /// centred and reaches from <see cref="IconTop"/> down, the name and the stars are
-        /// centred bands, and the strip is the foot — so a chip up here collides with nothing
-        /// whatever the cell is doing, which is what a count has to be able to say in the same
-        /// breath as five stars and a lit plate.
-        /// </summary>
-        void CopyChip(RectTransform cell, int copies)
-        {
-            float w = ChipW * Scale, h = ChipH * Scale, inset = ChipInset * Scale;
-
-            // **Placed by its centre**, because `UIKit.Box` pivots at the middle whatever it is
-            // anchored to (invariant 44d) — written as a corner offset it would hang half of
-            // itself off two edges of its own cell.
-            var box = UIKit.Box("Copies", cell, new Vector2(w, h), new Vector2(1f, 1f),
-                                new Vector2(-(inset + w * .5f), -(inset + h * .5f)));
-
-            var seat = UIKit.Img("Seat", box, Art.Round(Pt(h * .5f)), new Color(0f, 0f, 0f, .42f));
-            UIKit.StretchTo((RectTransform)seat.transform, 0, 0, 0, 0);
-            seat.raycastTarget = false;
-
-            var label = UIKit.Titled("T", box, Loc.Format("ui.loadout.copies", copies),
-                                     Pt(34f * Scale), Pal.Cream, TextAnchor.MiddleCenter,
-                                     new Vector2(w, h), new Vector2(.5f, .5f), Vector2.zero,
-                                     0f, 2f);
-            UIKit.Shrinkable(label, Pt(18f * Scale));
-            label.raycastTarget = false;
         }
 
         /// <summary>
@@ -474,9 +429,10 @@ namespace GlimmerGrove
             switch (offer.State)
             {
                 case WardPurchaseState.AlreadyHeld:
-                    // A turret already held draws no strip — the copy count a legendary carries
-                    // is a corner chip and not a footer, because the footer's band is where the
-                    // star row already is. See `CopyChip`.
+                    // A turret already held on this seat draws no strip at all: the star row is
+                    // what this band says about it, and the two were drawn together for the
+                    // first time when a legendary's copy count went here — `render_loadout.py`
+                    // drew the strip straight through the stars, and nothing else could see it.
                     return;
 
                 case WardPurchaseState.LevelLocked:

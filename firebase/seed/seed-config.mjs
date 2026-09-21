@@ -156,12 +156,12 @@ function buildGroveConfig() {
   // reason it is read *here* rather than over there is that a second currency makes the
   // predicate ambiguous exactly once, and this is where the file is in hand.
   //
-  // `legendary` rides beside it for a sharper version of the same reason. A colourless turret is
-  // bought by the *copy* (`WardHolding.Copy`) and so may stand on only as many seats as were
-  // paid for, where every other turret is bound one to a seat by its own colour row — and the
-  // server cannot tell the two apart from a price. Absent has to mean false, and does
-  // (`copiesOf`): a config seeded before this field caps nothing, which is the direction that
-  // never confiscates.
+  // `legendary` rides beside it and **nothing on the server reads it any more**. It was
+  // published so the copy rule could be derived — a colourless turret was bought outright and
+  // bounded by a count of copy rows — and a legendary is bought per seat like every other turret
+  // now (invariant 42k), so `ownsWard` answers the seat for the whole roster. It stays because
+  // it is true, because `config/grove` describing the roster honestly costs nothing, and because
+  // dropping it would be a re-seed bought with no answer that changes. Absent still means false.
   const wards = {};
   for (const model of progression.wards?.models ?? []) {
     if (!model?.id) continue;

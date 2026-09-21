@@ -15,13 +15,19 @@ namespace GlimmerGrove.Wards
     /// at is already "this turret, on this seat", and the stars on it are that seat's.
     /// </para>
     /// <para>
-    /// <b>And that is why a bare row is read here exactly as <c>wardsOwned</c> reads one.</b> A
-    /// legendary turret is bought once rather than once per seat (<c>WardModel.Legendary</c>), so
-    /// its row carries no colour — and a reader that asked only for <c>{id}:{colour}</c> would
-    /// hand a legendary somebody had taken to five stars back at one, on all four seats, with
-    /// nothing saying so. <see cref="StarsOf(string, char)"/> falls back to the bare row and
-    /// <see cref="Raise"/> writes whichever <c>WardHolding.Row</c> says, which is one rule with
-    /// the writing and the reading on the same side of it.
+    /// <b>Every turret on the shelf, with no band exempt — which is what a seat being the unit
+    /// of purchase buys.</b> A legendary was bought outright for three days (invariant 42k), so
+    /// its row carried no colour and its four seats shared one ladder: upgrading the Eclipse on
+    /// red upgraded the Eclipse on blue, which is not what a player who paid four times for four
+    /// turrets is owed. It is bought per seat now, so <c>WardHolding.Row</c> hands this the
+    /// keyed row for the whole roster and each seat climbs on its own. <b>Nothing here changed to
+    /// make that true</b>: the writing and the reading were already on the same side of one rule,
+    /// which is the whole reason invariant 15a asks for that shape.
+    ///
+    /// <b>The bare row is still read, and is now only ever legacy.</b> A file from before colours
+    /// existed holds one, and so does a legendary bought under the old rule — so
+    /// <see cref="StarsOf(string, char)"/> falls back to it, and a five-star Eclipse keeps five
+    /// stars on all four seats rather than being handed back at one.
     /// </para>
     /// <para>
     /// <b>A star count only ever rises, which is the whole reason it is storable.</b> Invariant 11b
@@ -48,9 +54,24 @@ namespace GlimmerGrove.Wards
     public static class WardStarLedger
     {
         /// <summary>
-        /// The most rows carried. Twenty turrets times four seats is eighty; a hundred and
-        /// twenty-eight leaves room for two more drops without a schema change, and bounds what a
-        /// hand-edited file can push through the merge.
+        /// The most rows carried, and <b>the tightest bound in this feature now</b>: a shelf of
+        /// thirty turrets times four seats is a hundred and twenty, eight short of this.
+        ///
+        /// <para>
+        /// <b>It was thirty-eight short, and what spent the headroom was the legendary band
+        /// becoming per-seat</b> (invariant 42k): ten turrets that carried one row each now carry
+        /// four. Nothing about that is unsafe today, and the failure if it ever stops being safe
+        /// is the quiet kind — <see cref="Write"/> truncates, so the rows past the bound are
+        /// upgrades a player paid for that stop being written down. <b>So it is a fixture rather
+        /// than a comment</b>: <c>WardLoadoutTests.TheStarLedgerHoldsTheWholeShelf</c> fails the
+        /// day a roster outgrows this, which is the day to raise both this and the rules' bound
+        /// together (12b, in that order).
+        /// </para>
+        /// <para>
+        /// The rules cap the array at the same figure, which is what makes this the client's own
+        /// cap rather than a suggestion, and bounds what a hand-edited file can push through the
+        /// merge.
+        /// </para>
         /// </summary>
         public const int MaxRows = 128;
 
@@ -94,8 +115,9 @@ namespace GlimmerGrove.Wards
         {
             if (string.IsNullOrEmpty(id)) return WardStars.Least;
 
-            // The seat's own row first, then the bare one — which is a legendary's row and is
-            // also what a file written before colours existed holds. Taking the seat's first
+            // The seat's own row first, then the bare one — a file written before colours
+            // existed, or a legendary bought while the band was bought outright (invariant 42k,
+            // `WardHolding.CopyMark`). Taking the seat's first
             // means a per-colour row always wins where both somehow exist, which is the reading
             // that can never confiscate an upgrade somebody bought for one seat.
             if (Stars.TryGetValue(WardHolding.Key(id, colour), out int stars))
@@ -122,10 +144,11 @@ namespace GlimmerGrove.Wards
         /// chances to charge for one thing (invariant 23's argument about the continue).
         /// </para>
         /// <para>
-        /// <b>It takes the model rather than its id, because only the model knows which row it
-        /// owns</b> — a legendary is written bare (<see cref="WardHolding.Row"/>). Every writer
-        /// takes this overload; the id one is kept for a caller that has nothing else, and writes
-        /// the per-colour row.
+        /// <b>It takes the model rather than its id, because <see cref="WardHolding.Row"/> is
+        /// where a holding's spelling is decided</b> — it answered differently for the legendary
+        /// band while that band was bought outright, and the day it does so again this writer
+        /// follows it without being told. Every writer takes this overload; the id one is kept
+        /// for a caller that has nothing else, and writes the per-colour row.
         /// </para>
         /// </summary>
         public static bool Raise(WardModel model, char colour, int stars)

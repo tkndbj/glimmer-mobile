@@ -136,15 +136,16 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------- the legendary band
         /// <summary>
-        /// <b>A legendary is written down once, and the row it is written down under is the one
-        /// every reader already honoured.</b>
+        /// <b>A legendary is written down exactly as every other turret is, and a bare row is now
+        /// only ever a file from the past.</b>
         ///
         /// <para>
-        /// A turret is bought per colour, so its row is <c>{id}:{colour}</c>; a legendary wears
-        /// none, so its row is the bare id — which has meant <em>every colour</em> in this file
-        /// since colours shipped, because that is what a build that owned turrets outright wrote
-        /// and the only reading a union merge could safely give one (<c>WardHolding</c>). That is
-        /// the whole reason the band cost the save no schema version and the rules no release.
+        /// A turret is bought per colour, so its row is <c>{id}:{colour}</c> — the legendary band
+        /// included since invariant 42k. Its row was the bare id for three days, which has meant
+        /// <em>every colour</em> in this file since colours shipped, because that is what a build
+        /// that owned turrets outright wrote and the only reading a union merge could safely give
+        /// one (<c>WardHolding</c>). <b>Both halves are asserted here</b>: nothing writes a bare
+        /// row any more, and every reader still honours one.
         /// </para>
         /// <para>
         /// <b>Asked of the ledger's own predicate rather than of a string</b>, because the thing
@@ -154,7 +155,7 @@ namespace GlimmerGrove.Tests
         /// </para>
         /// </summary>
         [Test]
-        public void ALegendaryIsHeldOnEverySeatFromOneRow()
+        public void ALegendaryIsWrittenDownLikeEveryOtherTurret()
         {
             var legend = Legendary();
             var ordinary = WardCatalog.Default.Find("cleaver");
@@ -162,32 +163,53 @@ namespace GlimmerGrove.Tests
             Assert.IsNotNull(ordinary);
             Assert.IsFalse(ordinary.Legendary);
 
-            Assert.AreEqual(legend.Id, WardHolding.Row(legend, 'r'), "a legendary carries a seat");
+            Assert.AreEqual(legend.Id + ":r", WardHolding.Row(legend, 'r'),
+                            "a legendary is bought for a seat like everything else");
             Assert.AreEqual("cleaver:r", WardHolding.Row(ordinary, 'r'));
 
-            var bought = new HashSet<string>(StringComparer.Ordinal) { WardHolding.Row(legend, 'r') };
+            // One purchase, one seat — on the band and off it alike.
+            var bought = new HashSet<string>(StringComparer.Ordinal)
+            {
+                WardHolding.Row(legend, 'r'),
+            };
 
             for (int i = 0; i < WardLine.Colours.Length; i++)
             {
                 char colour = WardLine.Colours[i];
 
-                Assert.IsTrue(WardLedger.IsHeld(legend, colour, bought.Contains),
-                              $"a legendary bought once is not held on '{colour}'");
+                Assert.AreEqual(colour == 'r', WardLedger.IsHeld(legend, colour, bought.Contains),
+                                $"a legendary bought on red reads wrong on '{colour}'");
                 Assert.IsFalse(WardLedger.IsHeld(ordinary, colour, bought.Contains),
                                $"a turret nobody bought is held on '{colour}'");
             }
+
+            // **And the bare row is still every colour**, which is what a file written before
+            // colours existed holds, and what a legendary bought outright holds.
+            var legacy = new HashSet<string>(StringComparer.Ordinal) { legend.Id };
+
+            for (int i = 0; i < WardLine.Colours.Length; i++)
+                Assert.IsTrue(WardLedger.IsHeld(legend, WardLine.Colours[i], legacy.Contains),
+                              $"a bare row stopped covering '{WardLine.Colours[i]}'");
         }
 
         /// <summary>
-        /// <b>A legendary's upgrades are one ladder rather than four, and every seat reads it.</b>
+        /// <b>A legendary carries a star ladder per seat, like every other turret — and a bare
+        /// ladder is still read by every seat.</b>
         ///
+        /// <para>
         /// The star ledger keys on the holding (<c>WardStarLedger</c>), so this is the same fact
-        /// as the row above asked of the other half of the feature — and it is the half that
-        /// could fail silently, because a reader that missed the bare row would show a five-star
-        /// legendary at one star on all four seats with nothing saying so.
+        /// as the row above asked of the other half of the feature. It is also the half a player
+        /// complains about: while the band was bought outright, four Eclipses paid for separately
+        /// shared one ladder, so upgrading the one on red upgraded the one on blue.
+        /// </para>
+        /// <para>
+        /// The legacy clause is the half that could fail <em>silently</em> — a reader that missed
+        /// the bare row would show a five-star legendary at one star on all four seats with
+        /// nothing saying so.
+        /// </para>
         /// </summary>
         [Test]
-        public void ALegendaryCarriesOneStarLadderForTheWholeLine()
+        public void ALegendaryCarriesAStarLadderPerSeat()
         {
             var legend = Legendary();
 
@@ -196,9 +218,24 @@ namespace GlimmerGrove.Tests
                 new WardStarDto { ward = WardHolding.Row(legend, 'r'), stars = 4 },
             });
 
+            Assert.AreEqual(4, WardStarLedger.StarsOf(legend, 'r'),
+                            "the seat that was upgraded lost its ladder");
+
+            for (int i = 1; i < WardLine.Colours.Length; i++)
+                Assert.AreEqual(WardStars.Least,
+                                WardStarLedger.StarsOf(legend, WardLine.Colours[i]),
+                                $"seat '{WardLine.Colours[i]}' was handed red's upgrades");
+
+            // **A bare ladder is read by every seat**, which is a legendary upgraded while the
+            // band was bought outright — confiscating it is the one thing this may not do.
+            WardStarLedger.LoadFrom(new[]
+            {
+                new WardStarDto { ward = legend.Id, stars = 5 },
+            });
+
             for (int i = 0; i < WardLine.Colours.Length; i++)
-                Assert.AreEqual(4, WardStarLedger.StarsOf(legend, WardLine.Colours[i]),
-                                $"seat '{WardLine.Colours[i]}' lost the legendary's ladder");
+                Assert.AreEqual(5, WardStarLedger.StarsOf(legend, WardLine.Colours[i]),
+                                $"seat '{WardLine.Colours[i]}' lost a ladder bought outright");
 
             // And an ordinary turret is still per seat, or the fallback above would have quietly
             // widened every holding in the game.
@@ -263,112 +300,132 @@ namespace GlimmerGrove.Tests
 
         /// <summary>The first legendary on the shelf, and an assertion that there is one.</summary>
         /// <summary>
-        /// <b>One legendary stands on one seat, and a line of four of them is four purchases.</b>
+        /// <b>A legendary is bought for one seat, and a line of four of them is four purchases —
+        /// which is the rule every other turret on this shelf has always obeyed.</b>
         ///
         /// <para>
-        /// This is the hole the copy rule closed. A colourless turret is written into
-        /// <c>wardsOwned</c> as a bare id (<c>WardHolding.Row</c>), which has meant <em>every
-        /// colour</em> since colours shipped - so <c>IsHeld</c> answered true on all four seats
-        /// off one payment, and the most expensive thing in the game furnished a whole line for
-        /// the price of a quarter of it. Every gate was green: the ledger is right, the holding
-        /// is right, and nothing anywhere asked how many of one turret a line may stand.
+        /// This seat is the hole, and it has been closed twice. A colourless turret was written
+        /// into <c>wardsOwned</c> as a bare id, which has meant <em>every colour</em> since
+        /// colours shipped — so one payment furnished a whole line, and every gate was green
+        /// because the ledger, the holding and the line are each right and nothing asked how many
+        /// of one turret a line may stand. The first answer was a second row per copy; the second
+        /// and current one is that a legendary is bought per seat like everything else (invariant
+        /// 42k), which also gives each seat its own star ladder.
         /// </para>
         /// <para>
-        /// <b>Asked of the count rather than of the spelling</b>, because the spelling is not
-        /// what could break: a reader that took a copy row for a different turret, or one that
-        /// took a <em>bare</em> row on a colour turret for a single copy, would both leave the
-        /// arithmetic looking exactly like this.
+        /// <b>Asked of the seats rather than of the spelling</b>, because the spelling is not what
+        /// could break: what matters is that paying once buys one seat and that the other three
+        /// are still for sale.
         /// </para>
         /// </summary>
         [Test]
-        public void ALegendaryStandsOnOneSeatPerCopyBought()
+        public void ALegendaryIsHeldOnlyOnTheSeatsItWasBoughtFor()
         {
             var legend = Legendary();
             var ordinary = WardCatalog.Default.Find("cleaver");
 
             var bought = new HashSet<string>(StringComparer.Ordinal);
 
-            Assert.AreEqual(0, WardLedger.Copies(legend, bought.Contains),
-                            "a turret nobody bought is owned nought times");
-
-            bought.Add(WardHolding.Row(legend, 'r'));
-            Assert.AreEqual(1, WardLedger.Copies(legend, bought.Contains),
-                            "the bare row is the first copy");
-
-            for (int copy = 2; copy <= WardLedger.MaxCopies; copy++)
-            {
-                bought.Add(WardHolding.Copy(legend.Id, copy));
-                Assert.AreEqual(copy, WardLedger.Copies(legend, bought.Contains),
-                                $"copy {copy} was bought and is not counted");
-            }
-
-            // **And still held on every seat throughout**, which is the half that must not have
-            // moved: owning is the entitlement and copies are how many may stand at once.
             for (int i = 0; i < WardLine.Colours.Length; i++)
-                Assert.IsTrue(WardLedger.IsHeld(legend, WardLine.Colours[i], bought.Contains));
+                Assert.IsFalse(WardLedger.IsHeld(legend, WardLine.Colours[i], bought.Contains),
+                               "a turret nobody bought is held nowhere");
 
-            // **A per-colour turret answers the ceiling and is never capped by this**, because
-            // the seat it was bought for is already its cap - and a bare row on one is a file
-            // from before colours existed, which means all four and may not be confiscated.
-            Assert.AreEqual(WardLedger.MaxCopies, WardLedger.Copies(ordinary, _ => false));
-            Assert.AreEqual(WardLedger.MaxCopies, WardLedger.Copies(ordinary, _ => true));
+            // **Written down exactly as every other turret is**, which is the whole change: the
+            // spelling is where the band used to be an exception.
+            Assert.AreEqual(WardHolding.Key(legend.Id, 'r'), WardHolding.Row(legend, 'r'));
+            Assert.AreEqual(WardHolding.Key(ordinary.Id, 'g'), WardHolding.Row(ordinary, 'g'));
+
+            // Bought on red, and red is the only seat it stands on.
+            bought.Add(WardHolding.Row(legend, 'r'));
+
+            for (int i = 0; i < WardLine.Colours.Length; i++)
+                Assert.AreEqual(i == 0,
+                                WardLedger.IsHeld(legend, WardLine.Colours[i], bought.Contains),
+                                $"seat {WardLine.Colours[i]} after one purchase");
+
+            // And the other three are bought one at a time, exactly as a colour turret's are.
+            for (int i = 1; i < WardLine.Colours.Length; i++)
+            {
+                bought.Add(WardHolding.Row(legend, WardLine.Colours[i]));
+
+                for (int seat = 0; seat < WardLine.Colours.Length; seat++)
+                    Assert.AreEqual(seat <= i,
+                                    WardLedger.IsHeld(legend, WardLine.Colours[seat],
+                                                      bought.Contains),
+                                    $"seat {WardLine.Colours[seat]} after {i + 1} purchases");
+            }
         }
 
         /// <summary>
-        /// <b>A copy row is a row about the same turret and nothing else reads it as one.</b>
-        ///
-        /// A copy is spelled with its own mark (<c>WardHolding.CopyMark</c>) precisely so that
-        /// every reader written for a colour holding refuses it rather than guessing: a copy row
-        /// covers no seat by itself, names no colour, and is refused as a turret id by both
-        /// content gates.
-        /// </summary>
-        [Test]
-        public void ACopyRowIsSpelledSoNothingElseMisreadsIt()
-        {
-            Assert.AreEqual("eclipse", WardHolding.Copy("eclipse", 1), "the first copy is bare");
-            Assert.AreEqual("eclipse#2", WardHolding.Copy("eclipse", 2));
-
-            Assert.AreEqual("eclipse", WardHolding.IdOf("eclipse#3"),
-                            "a copy row is about the turret it names");
-            Assert.AreEqual("eclipse", WardHolding.IdOf("eclipse:r"));
-
-            Assert.IsFalse(WardHolding.TryRead("eclipse#2", out _, out _),
-                           "a copy row is not a colour holding");
-            Assert.IsFalse(WardHolding.Covers("eclipse#2", "eclipse", 'r'),
-                           "a copy row covers a seat only through the bare row beside it");
-
-            Assert.IsFalse(WardHolding.Spellable("bad#id"), "the copy mark is refused in an id");
-            Assert.IsFalse(WardHolding.Spellable("bad:id"), "the colour mark is refused in an id");
-            Assert.IsTrue(WardHolding.Spellable("eclipse"));
-
-            // A union of two devices' purchases is a per-turret `max` over the copies, which is
-            // what makes a copy storable at all (invariant 16h, arrived at by the set union).
-            var joined = WardLedger.Join(new[] { "eclipse", "eclipse#2" },
-                                         new[] { "eclipse", "eclipse#2", "eclipse#3" });
-
-            Assert.AreEqual(new[] { "eclipse", "eclipse#2", "eclipse#3" }, joined);
-        }
-
-        /// <summary>
-        /// <b>The board stands no more of a turret than was paid for, and which seats keep it is
-        /// the same on every device.</b>
+        /// <b>A legendary bought under the old rule keeps every seat it paid for.</b>
         ///
         /// <para>
-        /// <c>WardLoadout.Choose</c> will not store a seat there is no copy for, so an honest
-        /// file never reaches this - but a merge that dropped a copy row and a hand-edited file
-        /// both have to land on a line that plays. The fallback is the starter, which is what
-        /// every other refusal here falls back to.
+        /// The band was bought outright for three days, so a real file can hold a bare
+        /// <c>eclipse</c> row with copy rows beside it (<c>WardHolding.CopyMark</c>). A bare row
+        /// has meant every colour since colours shipped and is read that way still, so the
+        /// retirement hands back <em>more</em> than it takes — which is the only direction a rule
+        /// about somebody's purchases may move. A copy row covers nothing by itself, exactly as
+        /// it never did.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ALegendaryBoughtUnderTheOldRuleKeepsEverySeat()
+        {
+            var legend = Legendary();
+
+            var bought = new HashSet<string>(StringComparer.Ordinal)
+            {
+                legend.Id,                  // the bare row a purchase used to write
+                legend.Id + "#2",           // and a copy bought beside it
+            };
+
+            for (int i = 0; i < WardLine.Colours.Length; i++)
+                Assert.IsTrue(WardLedger.IsHeld(legend, WardLine.Colours[i], bought.Contains),
+                              $"seat {WardLine.Colours[i]} was confiscated from a file that "
+                              + "bought the legendary outright");
+
+            Assert.AreEqual(legend.Id, WardHolding.IdOf(legend.Id + "#2"),
+                            "a copy row is still about the turret it names");
+
+            Assert.IsFalse(WardHolding.Covers(legend.Id + "#2", legend.Id, 'r'),
+                           "a copy row covers a seat only through the bare row beside it");
+
+            Assert.IsFalse(WardHolding.TryRead(legend.Id + "#2", out _, out _),
+                           "a copy row is not a colour holding");
+
+            // Both marks are still refused in an id, because a row carrying either would be
+            // ambiguous whether or not anything writes one any more.
+            Assert.IsFalse(WardHolding.Spellable("bad#id"), "the copy mark is refused in an id");
+            Assert.IsFalse(WardHolding.Spellable("bad:id"), "the colour mark is refused in an id");
+            Assert.IsTrue(WardHolding.Spellable(legend.Id));
+
+            // A union of two devices' purchases carries a copy row through untouched rather than
+            // pruning it: nothing may drop a row from a union-joined set (invariant 11b).
+            var joined = WardLedger.Join(new[] { "eclipse", "eclipse#2" },
+                                         new[] { "eclipse", "eclipse:r" });
+
+            Assert.AreEqual(new[] { "eclipse", "eclipse#2", "eclipse:r" }, joined);
+        }
+
+        /// <summary>
+        /// <b>The board stands a turret on the seats it was bought for and nowhere else, and the
+        /// seat it drops is the same on every device.</b>
+        ///
+        /// <para>
+        /// <c>WardLoadout.Choose</c> will not store a seat that is not held, so an honest file
+        /// never reaches this — but a merge that dropped a row, a roster that retired a turret and
+        /// a hand-edited file all have to land on a line that plays. The fallback is the starter,
+        /// which is what every other refusal here falls back to.
         /// </para>
         /// <para>
         /// <b>Colour order, and that is not a detail.</b> The stored arrangement is a dictionary
-        /// on the way here, so a cap applied in walk order would drop a different seat on two
-        /// devices holding the same save - and the seat the server drops
-        /// (<c>publishedLine</c>) walks the colours. The two have to agree, or a card and the
-        /// board behind it show different lines.
+        /// on the way here, and the seats the server keeps (<c>publishedLine</c>) are walked in
+        /// colour order. The two have to agree, or a card and the board behind it show different
+        /// lines.
         /// </para>
         /// </summary>
         [Test]
-        public void ALineStandsNoMoreCopiesThanWereBought()
+        public void ALineStandsATurretOnlyOnTheSeatsItWasBoughtFor()
         {
             var catalog = WardCatalog.Default;
             var legend = Legendary();
@@ -377,29 +434,49 @@ namespace GlimmerGrove.Tests
             for (int i = 0; i < WardLine.Colours.Length; i++)
                 chosen.Add(new WardSlot(WardLine.Colours[i], legend.Id));
 
-            for (int copies = 0; copies <= WardLine.Colours.Length; copies++)
+            for (int seats = 0; seats <= WardLine.Colours.Length; seats++)
             {
-                int owned = copies;
-                var line = WardLine.Resolve(catalog, chosen, (_, __) => true, null, _ => owned);
+                var bought = new HashSet<string>(StringComparer.Ordinal);
+                for (int i = 0; i < seats; i++)
+                    bought.Add(WardHolding.Row(legend, WardLine.Colours[i]));
 
-                int stood = 0;
+                var line = WardLine.Resolve(
+                    catalog, chosen,
+                    (model, colour) => WardLedger.IsHeld(model, colour, bought.Contains));
+
                 for (int i = 0; i < WardLine.Colours.Length; i++)
-                    if (line.At(i).Id == legend.Id) stood++;
-
-                Assert.AreEqual(copies, stood,
-                                $"{copies} copies bought and {stood} stood on the line");
-
-                // The earliest colours keep it, and the rest fall back to the starter.
-                for (int i = 0; i < WardLine.Colours.Length; i++)
-                    Assert.AreEqual(i < copies ? legend.Id : catalog.Starter.Id, line.At(i).Id,
-                                    $"seat {WardLine.Colours[i]} with {copies} copies bought");
+                    Assert.AreEqual(i < seats ? legend.Id : catalog.Starter.Id, line.At(i).Id,
+                                    $"seat {WardLine.Colours[i]} with {seats} seats bought");
             }
 
-            // **No cap asked is no cap applied**, which is what every rule test, content gate and
-            // offline mirror plays against, and what a visitor's card resolves through.
-            var uncapped = WardLine.Resolve(catalog, chosen, (_, __) => true);
+            // **No ownership asked is no ownership applied**, which is what every rule test,
+            // content gate and offline mirror plays against, and what a visitor's card resolves
+            // through — the server has already refused every seat it could not vouch for.
+            var uncapped = WardLine.Resolve(catalog, chosen, null);
             for (int i = 0; i < WardLine.Colours.Length; i++)
                 Assert.AreEqual(legend.Id, uncapped.At(i).Id);
+        }
+
+        /// <summary>
+        /// <b>The star ledger has a row for every seat of every turret on the shelf.</b>
+        ///
+        /// <para>
+        /// <c>WardStarLedger</c> truncates at <c>MaxRows</c> on its way into a save, so a roster
+        /// that outgrows it stops writing down upgrades a player paid for and says nothing. The
+        /// headroom was thirty-eight rows and is eight: a legendary carried one row while the
+        /// band was bought outright and carries four now (invariant 42k). Raising this means
+        /// raising <c>firestore.rules</c>' own bound first, in that order (12a, 12b).
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheStarLedgerHoldsTheWholeShelf()
+        {
+            int rows = WardCatalog.Default.Models.Count * WardLine.Colours.Length;
+
+            Assert.LessOrEqual(rows, WardStarLedger.MaxRows,
+                               $"{WardCatalog.Default.Models.Count} turrets on four seats is "
+                               + $"{rows} rows against a ledger that writes "
+                               + $"{WardStarLedger.MaxRows}");
         }
 
         static WardModel Legendary()

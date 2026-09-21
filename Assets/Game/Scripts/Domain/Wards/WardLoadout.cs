@@ -53,46 +53,26 @@ namespace GlimmerGrove.Wards
         public static string IdFor(char colour)
             => _chosen.TryGetValue(colour, out string id) ? id : string.Empty;
 
-        /// <summary>How many seats other than this one are already standing this turret.</summary>
-        static int StandingElsewhere(string wardId, char colour)
-        {
-            int count = 0;
-
-            foreach (var pair in _chosen)
-                if (pair.Key != colour
-                    && string.Equals(pair.Value, wardId, StringComparison.Ordinal))
-                    count++;
-
-            return count;
-        }
-
         /// <summary>
-        /// Whether this turret may stand on this seat: the player holds it, and they have a copy
-        /// of it that is not already standing somewhere else.
+        /// Whether this turret may stand on this seat: the player holds it <em>on this seat</em>,
+        /// and that is the whole question.
         ///
         /// <para>
-        /// <b>Two halves and both are required</b>, which is invariant 15a's shape said about an
-        /// arrangement rather than a purchase. Holding is the entitlement
-        /// (<c>WardLedger.IsHeld</c>) and it answers <em>yes on every seat</em> for a colourless
-        /// turret, which is correct and is not the whole question: one Eclipse may be stood
-        /// anywhere, and it may be stood in only one place at a time
-        /// (<c>WardLedger.Copies</c>). Four of them on a line is four purchases.
+        /// <b>One half again, because a purchase is a seat again.</b> This carried a second
+        /// clause for three days — a count of copies against how many seats were already standing
+        /// the turret — which is what the legendary band cost while it was bought outright
+        /// (invariant 42k). A legendary is bought per colour now, so <c>WardLedger.IsHeld</c>
+        /// answers the seat exactly as it does for the twenty under it, and a second gate over
+        /// that would be a rule with nothing left to catch.
         /// </para>
         /// <para>
-        /// <b>A seat already standing it passes</b>, because it is not asking for a second copy —
-        /// which is what makes this safe to ask of the turret a panel is already showing as
-        /// equipped.
-        /// </para>
-        /// <para>
-        /// <b>It never binds on a per-colour turret</b>, whose copies answer the ceiling
-        /// (<c>WardLedger.Copies</c>): the seat it was bought for is the whole of its cap, and a
-        /// second gate over that would confiscate the bare rows written before colours existed.
+        /// <b>Kept as a named rule rather than folded into <see cref="Choose"/></b>, because the
+        /// panel asks it too: what a screen may offer and what a store may hold have to be one
+        /// answer, which is invariant 15a's shape said about an arrangement.
         /// </para>
         /// </summary>
         public static bool CanStand(WardModel model, char colour)
-            => model != null
-            && WardLedger.IsHeld(model, colour)
-            && WardLedger.Copies(model) > StandingElsewhere(model.Id, colour);
+            => model != null && WardLedger.IsHeld(model, colour);
 
         /// <summary>The same question about a colour index (0..3).</summary>
         public static bool CanStand(WardModel model, int colour)
@@ -119,12 +99,8 @@ namespace GlimmerGrove.Wards
 
                 // The stars too, or a player's upgrades stop at the shelf: a line is what a
                 // board stands, so it has to carry how far each seat has been taken.
-                //
-                // **And the copies, or one Eclipse stands on four seats.** A colourless turret
-                // is held on every colour by one purchase, so ownership alone cannot bound the
-                // line — see `WardLine.Resolve` and `CanStand`.
                 return WardLine.Resolve(catalog, slots, WardLedger.IsHeld,
-                                        WardStarLedger.StarsOf, WardLedger.Copies);
+                                        WardStarLedger.StarsOf);
             }
         }
 
@@ -151,12 +127,8 @@ namespace GlimmerGrove.Wards
             var model = WardLedger.Catalog.Find(wardId);
 
             // Held **on this seat**, not merely owned: a turret is bought per colour
-            // (`WardHolding`), so this is the one place a stored choice could otherwise put one
-            // on a colour nobody paid for.
-            //
-            // **And held *spare*, which is the clause a colourless turret needs.** One bare row
-            // is held on all four seats, so `IsHeld` alone let one purchase stand four Eclipses
-            // — the line was four turrets and one payment. `CanStand` asks the second half.
+            // (`WardHolding`), the legendary band included, so this is the one place a stored
+            // choice could otherwise put one on a colour nobody paid for.
             if (!CanStand(model, colour)) return false;
 
             if (_chosen.TryGetValue(colour, out string held)

@@ -138,16 +138,24 @@ namespace GlimmerGrove.Wards
         public readonly int Order;
 
         /// <summary>
-        /// Whether this turret wears no colour: it stands on any seat, it was bought once rather
-        /// than once per seat, and it fires at everything on the hill.
+        /// Whether this turret wears no colour: it is drawn once rather than once per seat, and
+        /// it fires at everything on the hill.
         ///
         /// <para>
-        /// <b>Three consequences of one fact, which is why it is one field.</b> Every other turret
-        /// is bought for a colour, drawn in that colour and fires only at that colour
-        /// (<see cref="WardHolding"/>, <see cref="ArtFor"/>, <c>SiegeWard.ReachTenths</c>). A
-        /// legendary is the negation of all three at once, and spelling it three times is three
-        /// predicates that can come to disagree — which is precisely how <c>IsStarter</c> was got
-        /// wrong (invariant 16j: "free" was <c>Cost &lt;= 0</c> until a second currency arrived).
+        /// <b>Two consequences of one fact, which is why it is one field.</b> Every other turret
+        /// is drawn in its seat's colour and fires only at that colour (<see cref="ArtFor"/>,
+        /// <c>SiegeWard.ReachTenths</c>); a legendary is the negation of both at once, and
+        /// spelling it twice is two predicates that can come to disagree — which is precisely how
+        /// <c>IsStarter</c> was got wrong (invariant 16j: "free" was <c>Cost &lt;= 0</c> until a
+        /// second currency arrived).
+        /// </para>
+        /// <para>
+        /// <b>There was a third and it is gone: it was bought once rather than once per seat</b>
+        /// (invariant 42k). That was a rule about a <em>purchase</em> riding on a fact about a
+        /// picture, and it read across as the band standing free on seats nobody had paid for —
+        /// then, patched with copies, as four turrets sharing one star ladder. A legendary is
+        /// bought for a seat like everything else on the shelf (<see cref="WardHolding.Row"/>);
+        /// what it still ignores is the colour lock on the hill, which is what the band is for.
         /// </para>
         /// <para>
         /// <b>Authored rather than read off the band, and the band is the reason.</b>
@@ -174,7 +182,9 @@ namespace GlimmerGrove.Wards
         /// <b>Named apart from <see cref="Legendary"/> even though it answers the same today</b>,
         /// because what a reader at an address wants to know is "is this one picture or four" and
         /// what a reader at the hill wants to know is "does the colour lock hold". Two names, one
-        /// fact, and the day they stop being one fact there is a place to say so.
+        /// fact, and the day they stop being one fact there is a place to say so. <b>A third
+        /// reader used to ask it and no longer does</b> — a holding's spelling, which was the
+        /// wrong question for this field to be answering (invariant 42k).
         /// </summary>
         public bool Colourless => Legendary;
 

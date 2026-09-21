@@ -84,13 +84,17 @@ export interface GroveWardEntry {
   /**
    * True when the turret wears no colour. Mirrors `WardModel.Legendary`.
    *
-   * <b>Published because the copy rule cannot be derived without it, and absent must mean
-   * false.</b> A colourless turret is written into `wardsOwned` as a bare id and is bought by
-   * the *copy* (`WardHolding.Copy`), so how many seats it may fill is a count rather than a
-   * membership test. Every other turret is bound one to a seat by its own colour row — and a
-   * bare row on one of *those* is a file from before colours existed, which means all four and
-   * may never be read as a single copy. So a config seeded before this field existed has to
-   * read as "nothing is colourless", which caps nothing and confiscates nothing.
+   * <b>Still published and no longer read here, deliberately.</b> It was published so the copy
+   * rule could be derived: a colourless turret was written into `wardsOwned` as a bare id and
+   * bought by the *copy*, so how many seats it might fill was a count rather than a membership
+   * test. A legendary is bought per colour like everything else now (invariant 42k), so
+   * `ownsWard` answers the seat for the whole roster and nothing on this side asks which band a
+   * turret is in.
+   *
+   * <b>It stays because it is true and because removing it would cost a re-seed for nothing.</b>
+   * The band is legendary in the *game* — it fires at everything on the hill — and a config
+   * field describing the roster honestly is the cheapest thing in this file. Absent still means
+   * false, which is what a config seeded before the field existed says.
    */
   legendary?: boolean;
 }
@@ -753,6 +757,13 @@ export interface CardSeat {
  * that owned turrets outright wrote, and under a per-colour rule the honest reading is "on all
  * four" — a reader that checked only the exact key would quietly confiscate every holding
  * written before colours existed, which on a card is a line that silently loses seats.
+ *
+ * <b>And it is the whole of the seat question now, on every band.</b> A legendary was bought
+ * outright for three days, so one row stood four Eclipses and a second walk counted copy rows
+ * (`eclipse#2`) to bound it; a legendary is bought per colour like everything else (invariant
+ * 42k, `WardHolding.Row`), so this is one rule over the whole roster again. A copy row in an old
+ * save covers no seat by itself, exactly as it never did — and the bare row beside it covers all
+ * four, so nobody loses what they paid for.
  */
 function ownsWard(
   owned: Set<string>, entry: GroveWardEntry, id: string, colour: string
@@ -764,36 +775,6 @@ function ownsWard(
   return owned.has(id) || owned.has(id + WARD_HOLDING_MARK + colour);
 }
 
-/** What separates a turret's id from which copy of it a row is. Mirrors `WardHolding.CopyMark`. */
-const WARD_COPY_MARK = "#";
-
-/** The most copies of one turret worth owning: one per seat. Mirrors `WardLedger.MaxCopies`. */
-const WARD_MAX_COPIES = WARD_COLOURS.length;
-
-/**
- * How many of this turret the save may stand on the line at once. Mirrors `WardLedger.Copies`.
- *
- * <b>Only a colourless turret is counted, and everything else answers the ceiling.</b> A
- * per-colour turret is already bound one to a seat by `ownsWard`, so a count over it would be a
- * second cap on a rule that already holds — and it would bind on the one shape it must not, the
- * bare row a build from before colours wrote, which means all four seats and is somebody's
- * purchase.
- */
-function copiesOf(owned: Set<string>, entry: GroveWardEntry, id: string): number {
-  if (entry.free) return WARD_MAX_COPIES;
-  if (!entry.legendary) return WARD_MAX_COPIES;
-
-  let copies = 0;
-
-  // From one, because the first copy is the bare id — which is every legendary bought before
-  // copies shipped, and is why this needed no migration on either side.
-  for (let copy = 1; copy <= WARD_MAX_COPIES; copy++) {
-    if (owned.has(copy <= 1 ? id : id + WARD_COPY_MARK + copy)) copies++;
-  }
-
-  return copies;
-}
-
 /** The rung a save claims for one holding. Mirrors `WardStarLedger.StarsOf` and its clamp. */
 function starsOf(save: Record<string, unknown>, id: string, colour: string): number {
   const rows = save.wardStars;
@@ -803,11 +784,12 @@ function starsOf(save: Record<string, unknown>, id: string, colour: string): num
   // upgraded per seat — `WardStarDto.ward` is `{id}:{colour}`. The rules cap the array at 128;
   // walking no further is belt and braces against a document written before that cap existed.
   //
-  // <b>And a bare row counts, which is `ownsWard`'s clause arriving here.</b> A legendary turret
-  // is bought once rather than once per seat, so its ladder is written under the id alone
-  // (`WardHolding.Row`) — a reader that asked only for `{id}:{colour}` would publish a
-  // five-star legendary at one star on all four seats, with nothing saying so. The per-colour
-  // row is preferred where both somehow exist, which is `WardStarLedger.StarsOf`'s own order.
+  // <b>And a bare row counts, which is `ownsWard`'s clause arriving here.</b> A legendary was
+  // bought outright for three days, so its ladder was written under the id alone — a reader that
+  // asked only for `{id}:{colour}` would publish a five-star legendary at one star on all four
+  // seats, with nothing saying so. Every turret is bought and upgraded per seat now (invariant
+  // 42k), so this is legacy on both bands; the per-colour row is preferred where both somehow
+  // exist, which is `WardStarLedger.StarsOf`'s own order.
   const key = id + WARD_HOLDING_MARK + colour;
   let bare: number | null = null;
 
@@ -846,18 +828,18 @@ function starsOf(save: Record<string, unknown>, id: string, colour: string): num
  * one the owner's own board makes too, or the card is not a plainer drawing of their line — it
  * is a different line, and the difference is invisible on both screens.
  *
- * Three refusals, in the order they are asked:
+ * Two refusals, in the order they are asked:
  *
  *   * the roster has never heard of the id (a retired turret, or a save from a newer drop);
- *   * the save does not hold it **on that colour** — a turret is bought per colour
- *     (`WardHolding`), and this is the one place a stored choice could otherwise put one on a
- *     seat nobody paid for;
- *   * **every copy of it is already standing on an earlier seat.** A colourless turret is held
- *     on all four by one purchase (`WardHolding.Row`), so ownership alone cannot say how many
- *     Eclipses a line may stand — four of them is four payments (`copiesOf`), and a save
- *     claiming more than it bought has the extra seats dropped rather than corrected. The
- *     client caps this before it is ever written (`WardLoadout.CanStand`), so an honest save
- *     never reaches the clause; what it refuses is a hand-edited one.
+ *   * the save does not hold it **on that colour** — every turret is bought per colour
+ *     (`WardHolding`), the legendary band included, and this is the one place a stored choice
+ *     could otherwise put one on a seat nobody paid for.
+ *
+ * <b>There were three, and the third was a count of copies.</b> While a legendary was bought
+ * outright it was held on four seats by one payment, so ownership alone could not say how many
+ * Eclipses a line might stand and a second walk counted `eclipse#2` rows to bound it. Buying per
+ * seat is the same bound arrived at by the rule that was already here (invariant 42k), so the
+ * clause is gone rather than repaired — which is the cheapest kind of fix and the rarest.
  *
  * <b>There was a fourth, and it was the keeper level — `entry.level` is deliberately not read
  * here.</b> That gate is *permission to pay* (invariant 15a) and re-asking it on something
@@ -910,11 +892,9 @@ export function publishedLine(
 
   const out: CardSeat[] = [];
 
-  // How many seats each turret has taken so far. Colour order, which is `WardLine.Resolve`'s
-  // own tie-break and for its reason: the client and the server have to drop the *same* seat,
-  // or a card and the board behind it show different lines.
-  const stood = new Map<string, number>();
-
+  // Colour order, which is `WardLine.Resolve`'s own walk and for its reason: the client and the
+  // server have to refuse the *same* seat, or a card and the board behind it show different
+  // lines.
   for (const colour of WARD_COLOURS) {
     const ward = chosen.get(colour);
     if (!ward) continue;
@@ -922,10 +902,6 @@ export function publishedLine(
     const entry = roster[ward];
     if (!entry || typeof entry !== "object") continue;      // not on the roster we published
     if (!ownsWard(owned, entry, ward, colour)) continue;    // not held on this seat
-
-    const already = stood.get(ward) ?? 0;
-    if (already >= copiesOf(owned, entry, ward)) continue;  // more seats than copies bought
-    stood.set(ward, already + 1);
 
     out.push({ c: colour, w: ward, s: starsOf(save, ward, colour) });
   }

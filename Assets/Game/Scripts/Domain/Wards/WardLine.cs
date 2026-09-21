@@ -142,40 +142,6 @@ namespace GlimmerGrove.Wards
         public static WardLine Resolve(WardCatalog catalog, IReadOnlyList<WardSlot> chosen,
                                        Func<WardModel, char, bool> held,
                                        Func<WardModel, char, int> stars)
-            => Resolve(catalog, chosen, held, stars, null);
-
-        /// <summary>
-        /// The same, told how many of each turret the player owns.
-        ///
-        /// <para>
-        /// <b>A cap on how many seats one turret may fill, and it is the board's half of the copy
-        /// rule</b> (<c>WardLedger.Copies</c>). A colourless turret is held on every seat by one
-        /// purchase (<c>WardHolding.Row</c>), so ownership alone cannot say how many Eclipses may
-        /// stand — a line standing four of them is four purchases, and this is where a stored
-        /// arrangement that claims more than was paid for falls back to the starter.
-        /// </para>
-        /// <para>
-        /// <b>Re-asked here rather than trusted from the save, for the clause above's reason.</b>
-        /// <c>WardLoadout.Choose</c> refuses to store a seat there is no copy for, so an honest
-        /// file never trips this — but a merge that dropped a copy row, a roster that retired one
-        /// and a hand-edited file all have to land on a line that plays.
-        /// </para>
-        /// <para>
-        /// <b>Seats are filled in colour order and the earliest win</b>, which is the only
-        /// tie-break that gives two devices the same line out of one file: a dictionary's walk
-        /// order is not a fact about a save. It is the order the server's own walk takes
-        /// (<c>publishedLine</c>), so a card and the board behind it drop the same seat.
-        /// </para>
-        /// <para>
-        /// <paramref name="copies"/> may be null, which is no cap at all — what every rule test,
-        /// content gate and offline mirror plays against, and what a visitor's card resolves
-        /// through, since the server has already refused every seat it could not vouch for.
-        /// </para>
-        /// </summary>
-        public static WardLine Resolve(WardCatalog catalog, IReadOnlyList<WardSlot> chosen,
-                                       Func<WardModel, char, bool> held,
-                                       Func<WardModel, char, int> stars,
-                                       Func<WardModel, int> copies)
         {
             catalog = catalog ?? WardCatalog.Default;
 
@@ -192,8 +158,10 @@ namespace GlimmerGrove.Wards
             if (chosen == null) return new WardLine(line, ladder);
 
             // Flattened onto the colours first, so what follows walks in colour order however
-            // the rows arrived — see the tie-break note above. The later row for one colour
-            // wins, which is `WardLoadout.LoadFrom`'s own reading of a duplicated colour.
+            // the rows arrived: a stored arrangement is a dictionary on the way here, and a
+            // dictionary's walk order is not a fact about a save. The later row for one colour
+            // wins, which is `WardLoadout.LoadFrom`'s own reading of a duplicated colour, and
+            // it is the order the server's own walk takes (`publishedLine`).
             var want = new string[Colours.Length];
 
             for (int i = 0; i < chosen.Count; i++)
@@ -202,8 +170,6 @@ namespace GlimmerGrove.Wards
                 if (at >= 0) want[at] = chosen[i].Ward;
             }
 
-            var stood = copies == null ? null : new Dictionary<string, int>(StringComparer.Ordinal);
-
             for (int at = 0; at < want.Length; at++)
             {
                 if (string.IsNullOrEmpty(want[at])) continue;
@@ -211,13 +177,6 @@ namespace GlimmerGrove.Wards
                 var model = catalog.Find(want[at]);
                 if (model == null) continue;
                 if (held != null && !held(model, Colours[at])) continue;
-
-                if (stood != null)
-                {
-                    stood.TryGetValue(model.Id, out int already);
-                    if (already >= copies(model)) continue;      // more seats than copies bought
-                    stood[model.Id] = already + 1;
-                }
 
                 line[at] = model;
                 ladder[at] = Rung(stars, model, Colours[at]);
@@ -243,8 +202,9 @@ namespace GlimmerGrove.Wards
             var list = new List<AssetPipeline.AssetRequest>(Colours.Length * 5);
 
             // **Four seats and never four of anything else.** A line may stand the same turret
-            // twice and, since the legendary band, may stand one whose four colours are one
-            // address (`WardModel.Colourless`) - so the same request can arrive up to four times.
+            // twice — on two seats it was bought for — and, since the legendary band, may stand
+            // one whose four colours are one address (`WardModel.Colourless`), so the same
+            // request can arrive up to four times.
             // That is a duplicate claim on a scope rather than four things loading, and it is
             // dropped here rather than relied on being dropped downstream.
             var asked = new HashSet<string>(StringComparer.Ordinal);

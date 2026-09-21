@@ -2862,14 +2862,6 @@
       "text": "From chests"
     },
     {
-      "key": "ui.loadout.copies",
-      "text": "x{0}"
-    },
-    {
-      "key": "ui.loadout.copy_note",
-      "text": "Every one you own is on the line. Buy another for this slot."
-    },
-    {
       "key": "ui.loadout.held",
       "text": "{0} of {1} on this colour"
     },
@@ -2891,7 +2883,7 @@
     },
     {
       "key": "ui.loadout.legendary",
-      "text": "Wears no colour. Stands on any slot and fires at every raider."
+      "text": "Wears no colour. Fires at every raider, whichever slot it guards."
     },
     {
       "key": "ui.loadout.level",
