@@ -691,6 +691,50 @@ def check_content_wipe(files):
     return problems
 
 
+# ------------------------------------------- a run's ending goes through the rank ceremony
+# A rank is derived and stored nowhere (invariant 52), so there is no "unclaimed promotion"
+# anywhere for a screen to notice later: the only moment a rung reached can be celebrated is
+# the moment the run that earned it ends. `RankCeremony.Before` owns that moment - it drains
+# whatever is owed and then raises the panel, exactly once, whether a ceremony was owed,
+# skipped, or never raised at all.
+#
+# **A mode that raises its own ending panel cannot be trusted to remember this**, which is the
+# same shape as the wallet rule above and has the same tell: nothing else here can see it. The
+# file compiles, the run records correctly, the badge on the map is right, every fixture passes
+# - and the player simply never sees the ceremony on that mode. Three screens raise these two
+# panels today and a fourth is one new mode away (`MODES.md`), so the rule is that raising one
+# and never naming the ceremony is the mistake, wherever it is spelled.
+#
+# Deliberately per-file and deliberately weak: it asks that the file knows the ceremony exists,
+# not that any particular call is wrapped. A scanner finds a wrong name and can never find a
+# missing case (invariant 39l), and the strong half of this is `RankCeremony.Before` being the
+# only thing in the game that raises these two panels - which is worth keeping true.
+ENDINGS = re.compile(r"\bFlow\s*\.\s*Modal\s*<\s*(WinOverlay|DefeatOverlay)\s*>")
+CEREMONY = re.compile(r"\bRankCeremony\s*\.")
+
+
+def check_run_ceremony(files):
+    problems = []
+
+    for path in files:
+        name = path.replace("\\", "/")
+        if name.endswith("/RankCeremony.cs"):
+            continue
+
+        text = without_comments(io.open(path, encoding="utf-8", errors="replace").read())
+
+        hit = ENDINGS.search(text)
+        if not hit or CEREMONY.search(text):
+            continue
+
+        line = text[:hit.start()].count("\n") + 1
+        problems.append("%s:%d  raises %s without going through RankCeremony - a rank reached "
+                        "by this run would never be celebrated on this mode"
+                        % (name, line, hit.group(1)))
+
+    return problems
+
+
 def main():
     wanted = [a.lower() for a in sys.argv[1:]]
     print("Unity: %s" % DATA)
@@ -727,7 +771,11 @@ def main():
         for line in wipes:
             print("  rebuild FAILED  " + line)
 
-        if problems or boards or dtos or wallets or wipes:
+        endings = check_run_ceremony(every)
+        for line in endings:
+            print("  rank    FAILED  " + line)
+
+        if problems or boards or dtos or wallets or wipes or endings:
             ok = False
 
     print("OK" if ok else "FAILED")

@@ -878,7 +878,10 @@ namespace GlimmerGrove
                                      Time.unscaledTime - _startedAt, HintsSpent, _route,
                                      _puzzle.LampsLit, _puzzle.LampCount);
 
-            Flow.Modal<WinOverlay>(v =>
+            // A rank reached by this run is celebrated before the run is talked about at all,
+            // and the panel is raised by the ceremony finishing. See RankCeremony: the panel
+            // arrives exactly once whether a ceremony was owed, skipped or never raised.
+            RankCeremony.Before(() => Flow.Modal<WinOverlay>(v =>
             {
                 v.Run = done.Run;
                 v.Streak = done.Streak;
@@ -897,7 +900,7 @@ namespace GlimmerGrove
                 // News rather than a reward, and it can only be told by the ledger - see
                 // RunLedger.WinRecord.ChapterOpened.
                 v.ChapterOpened = done.ChapterOpened;
-            });
+            }));
         }
 
         /// <summary>Hints spent on the run so far. See <see cref="_hintsThisRun"/>.</summary>
@@ -1002,7 +1005,9 @@ namespace GlimmerGrove
                                       _puzzle.LampsLit, _puzzle.LampCount,
                                       price: Price);
 
-            Flow.Modal<DefeatOverlay>(v =>
+            // Before the defeat panel as readily as before the victory one: a rank counts runs
+            // played, not runs won, so a rung earned on a lost board is a rung earned.
+            RankCeremony.Before(() => Flow.Modal<DefeatOverlay>(v =>
             {
                 v.Screen = this;
                 v.Run = done.Run;
@@ -1010,7 +1015,7 @@ namespace GlimmerGrove
                 v.HeartsLeft = done.HeartsLeft;
                 v.HeartWasCharged = done.HeartCharged;
                 v.Price = done.Price;
-            });
+            }));
         }
 
         /// <summary>

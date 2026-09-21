@@ -39,6 +39,21 @@ namespace GlimmerGrove.Ranks
         static bool _dirty = true;
         static bool _hooked;
 
+        /// <summary>
+        /// Which account <see cref="_heldOrdinal"/> describes, so a rise under a <em>different</em>
+        /// one cannot be announced as a promotion.
+        ///
+        /// <para>
+        /// <b>An account switch is local, ordinary and reversible</b> (<c>SaveService.SwitchTo</c>),
+        /// so somebody stepping from a Goldbrand account to a fresh one and back again reads
+        /// 3 → 0 → 3 here. The first move is not a promotion because ranks cannot fall and the
+        /// guard below is one-directional; the second one is arithmetically indistinguishable
+        /// from earning Goldbrand, and was announced as such. What tells them apart is the only
+        /// thing that actually differs: whose save is underneath.
+        /// </para>
+        /// </summary>
+        static string _account = string.Empty;
+
         /// <summary>Raised when the held rank may have moved. Screens repaint on this.</summary>
         public static event Action Changed;
 
@@ -150,10 +165,18 @@ namespace GlimmerGrove.Ranks
             _heldOrdinal = _held == null ? 0 : _held.Ordinal;
             _dirty = false;
 
+            // The account this reading belongs to, taken here rather than at the top: the walk
+            // above cannot move it, and a swap lands through `Reloaded`, which has already
+            // invalidated this cache by the time anything reads it.
+            string account = Persistence.CloudState.UserId ?? string.Empty;
+            bool sameAccount = string.Equals(account, _account, StringComparison.Ordinal);
+            _account = account;
+
             // `before < 0` is the first read of the session, which is not a promotion however
             // high the account stands — every launch would otherwise announce the rank the
-            // player already had.
-            if (before >= 0 && _heldOrdinal > before && _held != null)
+            // player already had. Nor is a rise that belongs to somebody else's save; see
+            // <see cref="_account"/>.
+            if (before >= 0 && sameAccount && _heldOrdinal > before && _held != null)
             {
                 Analytics.Telemetry.Track("rank_reached", "rank", _held.Id, "ordinal", _held.Ordinal);
 
@@ -167,6 +190,7 @@ namespace GlimmerGrove.Ranks
         {
             _held = null;
             _heldOrdinal = -1;
+            _account = string.Empty;
             _dirty = true;
         }
     }

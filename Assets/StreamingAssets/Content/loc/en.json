@@ -5484,6 +5484,14 @@
     {
       "key": "ui.ranks.percent",
       "text": "{0}%"
+    },
+    {
+      "key": "ui.rankup.title",
+      "text": "RANK EARNED"
+    },
+    {
+      "key": "ui.rankup.onward",
+      "text": "ONWARD"
     }
   ]
 }

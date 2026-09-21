@@ -117,6 +117,15 @@ namespace GlimmerGrove
             // one marker can only describe one run. See RunGuard.
             RunGuard.Claim();
 
+            // The rank ceremony's watch, installed now and taking its reading later. A rank is
+            // derived and stored nowhere (invariant 52), so the only way to know a rung was
+            // *just* reached is to have known what was held a moment ago - and the moment that
+            // baseline may first be taken is after the content has published, which happens on
+            // the splash. `Begin` hooks that cue rather than reading anything here; see
+            // RankCeremony, which says what a baseline taken too early would congratulate
+            // somebody for.
+            RankCeremony.Begin();
+
             ContentConfig.AppVersion = Release.AppVersion.Parse(Application.version);
 
             // Asset delivery is chosen once, here, before anything loads. Everything

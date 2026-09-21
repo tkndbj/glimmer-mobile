@@ -771,6 +771,28 @@ is where they are written down, not what they mean.
    `seed-config.mjs`), **error below the wall and warning above it**: below is a badge for a mode
    nobody can open, above is a ladder that has quietly stopped opening *with* its lane. The wall
    is the **lowest** Infinite chapter's, read off the lane rather than authored a second time.
+52j. **A rung reached is celebrated at the end of the run that earned it, win or lose — and what
+   decides "reached" is a baseline, never an event.** `RankLedger.Promoted` fires lazily from
+   inside whichever repaint reads `Held` first, so a ceremony hung on it plays or does not
+   depending on what else happens to be on screen; `RankCeremony` differences one ordinal per
+   session instead, which has no such ordering. It **re-takes** that baseline rather than
+   differencing it whenever the account or the ladder has changed — a switch is local and
+   reversible (17a) and a retune moves every ordinal under a player standing still (52a), so both
+   would otherwise announce a rank nobody earned, full screen, with a fanfare. The price is that a
+   rung reached in a session the player then kills is never shown, which is what storing nothing
+   costs (52e) and is the right way round: a missing ceremony is a shrug. **`RankCeremony.Before`
+   raises the run's own panel exactly once** — on close, on destroy, and on any failure to raise a
+   ceremony at all — because a panel that never arrives is a player on a finished board with
+   nothing to press; `compile.py` refuses a file that raises `WinOverlay` or `DefeatOverlay`
+   without naming it, so a mode added later cannot quietly skip it.
+52k. **The ceremony is generated from the ladder and keyed on nothing.** One mote of light per
+   line of the rung, a rail of one pip per rung of the ladder, the metal off the ordinal (7c's
+   shape) and the badge, the name and the blurb off the id (52f) — so a retune, a renamed rung or
+   a ladder twice as long redraws with no table to keep in step. **A rung this build cannot
+   resolve draws as light and no name** rather than as a white rectangle over a raw loc key
+   (7b), which is reachable the day a content push adds a rung ahead of the client reading it.
+   It cuts **no art and claims no address**, deliberately: every sprite is procedural or already
+   in the global preload set, which is the one class of fault this project has paid for most.
 
 ### The tutorial
 
@@ -969,6 +991,16 @@ guess — verify offline.
   sentence is one push away at all times. It caught two faults nothing else could: the progress
   bar printing through the last requirement line, and an unmet line marked with a star on a page
   whose own lines say "Earn 45 stars".
+- **The rank ceremony:** `python Tools/render_rank_ceremony.py` (`--rung n`, `--gather`,
+  `--strike`, `--long`, `--bare`, `--captions`, `--contact`). **`--contact` is the one that
+  matters**, because the three states nobody may ever see are on it: a 24-rung ladder
+  (`RankLadder.MaxRungs`), the first rank — climbed from nothing, so no badge rises up the shaft
+  — and a rung whose badge and strings this build has never heard of. It found two faults before
+  the screen was ever drawn: the eyebrow's band was its own type's height, so Best Fit settled a
+  fifth smaller than written (19n), and a **gold** rung drew its room **green**, because a hue a
+  fifth of a turn from gold is green and the scheme was copied off a reveal built around a
+  *primary*. **What it cannot answer** is whether the breath before the strike lands, whether the
+  motes read as the things you did, or whether the rail lighting bottom-to-top reads as a climb.
 - **The tutorial:** `python Tools/verify/tests.py TutorialTests` plays the whole script against
   the real rules — the taught swap, the pour, the overcharge, the sweep — and proves it ends with
   the line intact; its board reaches **no content gate**, so this is the only thing that would
@@ -1257,6 +1289,13 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   pays nothing — and since **2026-09-20 it is also published**: `rungOf` derives the rung
   server-side from the save it already reads, because a badge a stranger sees is adjudicated
   (52h, 19a).
+- **The rank ceremony** (52j, 52k) — a run ending stops for the rung it just earned, win or
+  lose, and the victory or defeat panel is raised by the ceremony finishing. `RankUpOverlay` is a
+  climb rather than a reveal: a shaft of light falling past the frame, the badge below rising
+  into it and being spent, one mote per line of the rung gathering into a core, a strike, and a
+  rail at the foot lighting from the bottom to the rung reached. `RankCeremony` is the gate — one
+  baseline ordinal per session, re-taken on an account switch or a ladder retune — and is proved
+  offline by `RankCeremonyTests`.
 - **One live mode, three hidden.** **Thornwatch**: `s01_thornwatch`, `s03_broodmarch`, `s04_barrowfell`,
   `s05_ashenhold`, `s06_thundercrag`, `s07_dustcrown`, `s08_bonereach` (ten rungs each) on the ordinary
   ladder, and `s02_endlesswatch` on an **Infinite** track beside it. The map draws no *mode* switcher and
@@ -1417,6 +1456,41 @@ the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-18),
 on a fresh clone).
 
 ## Owed
+
+**The rank ceremony shipped on 2026-09-21 and has never been in the Editor or on a device.**
+Three new files (`Presentation/App/RankCeremony.cs`, `Presentation/Screens/RankUpOverlay.cs`,
+`Tests/RankCeremonyTests.cs`) and one new tool (`Tools/render_rank_ceremony.py`), all written
+with the Editor closed — so their **`.meta` files do not exist yet** and Unity mints them on the
+next focus. **It touches no art and no address**, which is the one piece of standing discipline
+it does *not* owe: every sprite it draws is procedural (`Art`) or already in the global preload
+set, so `Sync All Assets` buys it nothing. It touches no content file but `loc/en.json` (two new
+keys, `ui.rankup.title` and `ui.rankup.onward`) and **nothing on the server** — no rules release,
+no function deploy, no re-seed, because a rank is derived and pays nothing (52e).
+
+Offline green: `compile.py` (all fifteen assemblies, and the new source rule proved by mutation),
+`RankCeremonyTests` 11/11 with its three rebase guards each proved by mutation, `loc.py` (0
+missing), `content.py` (0 errors, the same 19 pre-existing map warnings), `artnames.py` (0/0),
+`sfxnames.py`, `rungs.py`, and `render_rank_ceremony.py` at every state.
+
+**Two faults it already cost, both found by the render mirror and neither visible to anything
+else**: the eyebrow's band was its own type's height, so Best Fit would have settled a fifth
+smaller than written (19n); and a **gold** rung drew its room **green**, because the colour
+scheme was copied off a reveal built around one of the line's four primaries and a hue a fifth of
+a turn from gold is green. Two more were found reading the code back: the rail's fill grew from
+its centre (`UIKit.Box` always pivots at centre), and the core's punch and the breath that
+follows it wrote `localScale` from two different channels, so the core would never have
+contracted — which is the beat the whole strike is paid for out of.
+
+**What is owed is the Editor's three and an eye**, and the eye has four questions no render can
+answer. Does the breath before the strike land, or does the ceremony read as an announcement.
+Do the motes read as *the things you did* rather than as sparks — one per line of the rung, so a
+rung asking eight is a swarm and one asking two is a pair. Does the rail lighting bottom-to-top
+read as a **climb** rather than as a progress bar filling. And does the badge rising up the shaft
+read as the rank you are leaving rather than as the wrong badge arriving first. **Then earn one
+on a device**: play to a rung and check the ceremony lands before the victory panel, tap through
+it mid-sequence to check the skip settles rather than snapping, and lose a run on a rung you are
+about to reach — a rank counts runs played, so the defeat panel gets a ceremony too and nothing
+offline has ever drawn that order.
 
 **The Grovement was removed on 2026-09-21 and none of it has been in the Editor.** The village a
 player built is gone in full — **1,096 files deleted**: 64 C# (`Domain/Homestead/`'s 23, nine

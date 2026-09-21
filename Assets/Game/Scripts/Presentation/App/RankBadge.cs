@@ -158,9 +158,27 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// A rung reached while the map is standing, which is the ordinary case: a run finishes,
-        /// the record lands, and the player is put back here. A pop and a halo rather than a
-        /// modal, because nothing was claimed and there is nothing to dismiss.
+        /// A rung reached while the map is standing: a rank moved by something that is not a
+        /// run — a season chest claimed, a merge landing another device's play, a content push.
+        /// A pop and a halo rather than a modal, because nothing was claimed and there is
+        /// nothing to dismiss.
+        ///
+        /// <para>
+        /// <b>The sentence is <see cref="RankCeremony"/>'s when it is going to say it</b>, which
+        /// since the ceremony shipped is nearly always: a rung reached anywhere gets its
+        /// ceremony at the end of the next run. Two announcements of one promotion is one
+        /// announcement too many, and the quieter of the two is the one that gives way — the
+        /// toast would also spoil the ceremony, which is the whole reason the order matters
+        /// rather than merely the count.
+        /// </para>
+        /// <para>
+        /// <b>The pop and the halo stay either way.</b> This is a readout (invariant 44j) and a
+        /// readout draws the truth the moment the truth moves; what it gives up is the
+        /// <em>telling</em>, not the drawing. And when the ceremony is not going to speak — a
+        /// build with nothing hooked, a ladder retune, a reading that belongs to another account
+        /// — the toast is still the only thing that would say so, so it is asked rather than
+        /// deleted.
+        /// </para>
         /// </summary>
         void OnPromoted(RankDefinition rung)
         {
@@ -175,7 +193,7 @@ namespace GlimmerGrove
                 Tween.Tint(_halo, Pal.A(Pal.Sun, 0f), 1.4f);
             }
 
-            if (_layer != null)
+            if (_layer != null && !RankCeremony.Speaks(rung))
                 Scenery.Toast(_layer, Loc.Format("ui.ranks.promoted", rung.Name), Pal.Gold, 2.4f);
         }
 

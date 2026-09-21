@@ -471,7 +471,10 @@ namespace GlimmerGrove
             Flow.Flash(new Color(1f, .99f, .92f), .5f, .5f);
             Burst.Confetti(Content, 60);
 
-            Flow.Modal<WinOverlay>(v =>
+            // A rank reached by this run is celebrated before the run is talked about at all,
+            // and the panel is raised by the ceremony finishing. See RankCeremony: the panel
+            // arrives exactly once whether a ceremony was owed, skipped or never raised.
+            RankCeremony.Before(() => Flow.Modal<WinOverlay>(v =>
             {
                 v.Run = done.Run;
                 v.Streak = done.Streak;
@@ -483,7 +486,7 @@ namespace GlimmerGrove
                 v.BoostXp = done.BoostXp;
                 v.BoostPercent = done.BoostPercent;
                 v.ChapterOpened = done.ChapterOpened;
-            });
+            }));
         }
 
         /// <summary>
@@ -512,7 +515,9 @@ namespace GlimmerGrove
 
             var done = record.Value;
 
-            Flow.Modal<DefeatOverlay>(v =>
+            // Before the defeat panel as readily as before the victory one: a rank counts runs
+            // played, not runs won, so a rung earned on a lost board is a rung earned.
+            RankCeremony.Before(() => Flow.Modal<DefeatOverlay>(v =>
             {
                 v.Screen = this;
                 v.Run = done.Run;
@@ -520,7 +525,7 @@ namespace GlimmerGrove
                 v.HeartsLeft = done.HeartsLeft;
                 v.HeartWasCharged = done.HeartCharged;
                 v.Price = done.Price;
-            });
+            }));
         }
 
         /// <summary>
