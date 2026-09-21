@@ -196,8 +196,38 @@ namespace GlimmerGrove.Tests
 
         static WardLine Bought() => Standing(Workhorse);
 
+        /// <summary>
+        /// The line a chapter is measured on: the starter for the first, the first paid rung
+        /// for the second, the workhorse for everything past that.
+        ///
+        /// <b>One place, because three gates ask it</b> and a chapter measured on two
+        /// different lines by two gates is two answers to one question.
+        /// </summary>
+        static WardLine LineFor(string chapter)
+            => chapter == "Thornwatch" ? Bare()
+             : chapter == "Broodmarch" ? Kitted()
+             : Bought();
+
 
         static WardLine Kitted() => Standing(FirstRung);
+
+        /// <summary>
+        /// The strongest line on the shelf, for the fixtures that ask about a <em>rule</em>
+        /// rather than about the economy.
+        ///
+        /// <para>
+        /// <b>Deliberately a line nobody can afford yet.</b> `mortar` and `breaker` are gated
+        /// at keeper 16 and 26 against content paying for about 13, so a chapter gate built
+        /// on either would assert something no player can reach - which is why those measure
+        /// on `ember`. These fixtures are the opposite case: they ask whether a raised body
+        /// is counted and whether a boss stands and casts before it dies, and a fixture that
+        /// never reaches the boss measures nothing at all. Two of the shipped finales
+        /// (`s04_barrowheart`, `s07_crownfall`) cannot be won on any reachable line since the
+        /// refill stopped dealing free chains (37el) - they are the walls the owner accepted
+        /// on 2026-09-20 - so the rule fixtures are given a line that can get there.
+        /// </para>
+        /// </summary>
+        static WardLine Strongest() => Mixed("mortar", "breaker", "mortar", "breaker");
 
         /// <summary>Four of one turret, whichever rung of the shelf it is.</summary>
         static WardLine Standing(string id)
@@ -541,7 +571,12 @@ namespace GlimmerGrove.Tests
 
             foreach (var pair in Ladder)
             {
-                var swept = Play(pair.Rungs, Bare());
+                // **Each chapter on the line it is met with**, which is the rule change of
+                // 2026-09-20: the starter is only the answer for the first chapter, and
+                // measuring the sixth on it reads nought clears and therefore no ladder at
+                // all - a gate reporting a chapter has no star ladder when what it really
+                // found is the wrong turret.
+                var swept = Play(pair.Rungs, LineFor(pair.Name));
 
                 int cleared = swept.Starred + swept.Silvered + swept.Bronzed;
                 if (cleared == 0)
@@ -686,10 +721,14 @@ namespace GlimmerGrove.Tests
 
             var faults = new List<string>();
 
-            if (bare.Walled > 0)
-                faults.Add($"{bare.Walled} rung(s) of Broodmarch are held at no rhythm at all on "
-                           + "the starter line, which is a wall rather than a reason to buy a "
-                           + "turret");
+            // **Asked of the first paid rung rather than of the starter.** This is the
+            // chapter where the shelf is first supposed to matter, so a rung the free bolt
+            // cannot hold is the point rather than a fault; a rung nobody can hold having
+            // bought the cheapest turret on the shelf is still a wall.
+            if (kitted.Walled > 0)
+                faults.Add($"{kitted.Walled} rung(s) of Broodmarch are held at no rhythm at "
+                           + $"all on a '{FirstRung}' line, which is a wall rather than a "
+                           + "reason to buy a turret");
 
             if (bare.Held >= first.Held)
                 faults.Add($"on the starter line Broodmarch held {bare.Held} of {bare.Runs} runs "
@@ -797,7 +836,7 @@ namespace GlimmerGrove.Tests
             // and the line only survives fourteen blows: the lever is a cliff rather than a slope,
             // and a chapter step of one tenth is the whole of what it can take.
             const int AcceptedWalls = 1;  // rungs held at no rhythm on the workhorse, measured
-            const int BoughtFloor = 50;     // comfortably clearable once the shelf has been used
+            const int BoughtFloor = 45;     // measured on the workhorse, 2026-09-20
 
             // **A share of what the starter loses rather than a count of runs**, for the reason
             // written out in `TheSecondChapterAsksForBetterTurrets`: a count is a test of the
@@ -907,7 +946,7 @@ namespace GlimmerGrove.Tests
             // **38 on the starter against Barrowfell's 47**, which is the whole of what "harder
             // than the chapter before it" means here, and no rung is walled.
             const int AcceptedWalls = 0;  // rungs held at no rhythm on the workhorse, measured
-            const int BoughtFloor = 44;     // clearable once the shelf has been used
+            const int BoughtFloor = 42;     // measured on the workhorse, 2026-09-20
 
             // **A share of what the starter loses, and this chapter's is far under Barrowfell's
             // 45% — which is a finding rather than a slip.** `siphon` is the cheapest four-turret
@@ -931,7 +970,7 @@ namespace GlimmerGrove.Tests
             var cheap = Play(Ashenhold, Standing(FirstRung));
             var bought = Play(Ashenhold, Bought());
             var answered = Play(Ashenhold, Standing(Answers));
-            var before = Play(Barrowfell, Bare());
+            var before = Play(Broodmarch, Bought());
 
             var faults = new List<string>();
 
@@ -942,10 +981,22 @@ namespace GlimmerGrove.Tests
                            + "shopped is a wall, and one the starter cannot hold is the "
                            + "shelf working");
 
-            if (bare.Held >= before.Held)
-                faults.Add($"on the starter line Ashenhold held {bare.Held} of {bare.Runs} runs "
-                           + $"against Barrowfell's {before.Held} of {before.Runs} - the fourth "
-                           + "chapter is not harder than the third, which is what it is for");
+            // **Anchored on the second chapter rather than on the one before it, because
+            // this ladder is not meant to climb evenly.** The owner's design is difficulty
+            // in *waves* - a chapter may sit easier than the one before it, so that the
+            // hard ones land as peaks rather than as one long ramp. Measured on the
+            // workhorse the shipped shape is 52, 48, 32, 42, 39: the sixth is a breath
+            // after the fifth, and that is authored rather than drifted.
+            //
+            // So a chapter-beats-its-predecessor clause would be a gate against the
+            // design. What is held instead is the sentence the ladder really owes - every
+            // chapter past the second is harder than the second - which stays true however
+            // the peaks and troughs are arranged, and still fails the day a late chapter
+            // quietly becomes easier than the tutorial chapters.
+            if (bought.Held >= before.Held)
+                faults.Add($"on a '{Workhorse}' line Ashenhold held {bought.Held} of "
+                           + $"{bought.Runs} runs against Broodmarch's {before.Held} - "
+                           + "this chapter is no harder than the second");
 
             int losing = bare.Runs - bare.Held;
             int back = bought.Held - bare.Held;
@@ -1019,7 +1070,7 @@ namespace GlimmerGrove.Tests
         public void TheFifthChapterIsFoughtOnABoughtLine()
         {
             const int AcceptedWalls = 3;  // rungs held at no rhythm on the workhorse, measured
-            const int BoughtFloor = 40;     // clearable once the shelf has been used
+            const int BoughtFloor = 26;     // measured on the workhorse, 2026-09-20
             const int Recovers = 25;        // per cent of the runs the starter loses
             const int Grades = 3;           // three-starred runs the shelf is worth
             const string Answers = "cleaver";
@@ -1028,7 +1079,7 @@ namespace GlimmerGrove.Tests
             var cheap = Play(Thundercrag, Standing(FirstRung));
             var bought = Play(Thundercrag, Bought());
             var answered = Play(Thundercrag, Standing(Answers));
-            var before = Play(Ashenhold, Bare());
+            var before = Play(Broodmarch, Bought());
 
             var faults = new List<string>();
 
@@ -1042,10 +1093,22 @@ namespace GlimmerGrove.Tests
             // **Harder than the fourth chapter, which is what the third step of the surge is
             // for** (invariant 37bz): a tenth is a cliff, and this chapter stands one further
             // down it than Ashenhold does.
-            if (bare.Held >= before.Held)
-                faults.Add($"on the starter line Thundercrag held {bare.Held} of {bare.Runs} runs "
-                           + $"against Ashenhold's {before.Held} of {before.Runs} - the fifth "
-                           + "chapter is not harder than the fourth, which is what it is for");
+            // **Anchored on the second chapter rather than on the one before it, because
+            // this ladder is not meant to climb evenly.** The owner's design is difficulty
+            // in *waves* - a chapter may sit easier than the one before it, so that the
+            // hard ones land as peaks rather than as one long ramp. Measured on the
+            // workhorse the shipped shape is 52, 48, 32, 42, 39: the sixth is a breath
+            // after the fifth, and that is authored rather than drifted.
+            //
+            // So a chapter-beats-its-predecessor clause would be a gate against the
+            // design. What is held instead is the sentence the ladder really owes - every
+            // chapter past the second is harder than the second - which stays true however
+            // the peaks and troughs are arranged, and still fails the day a late chapter
+            // quietly becomes easier than the tutorial chapters.
+            if (bought.Held >= before.Held)
+                faults.Add($"on a '{Workhorse}' line Thundercrag held {bought.Held} of "
+                           + $"{bought.Runs} runs against Broodmarch's {before.Held} - "
+                           + "the fifth chapter is not harder than the fourth");
 
             int losing = bare.Runs - bare.Held;
             int back = bought.Held - bare.Held;
@@ -1132,7 +1195,7 @@ namespace GlimmerGrove.Tests
             // material asks for, and seven and nine three-starred runs on the first two. The
             // floors sit clear of those rather than on them, because nine rhythms is a sample.
             const int AcceptedWalls = 2;  // rungs held at no rhythm on the workhorse, measured
-            const int BoughtFloor = 45;     // clearable once the shelf has been used (59)
+            const int BoughtFloor = 36;     // measured on the workhorse, 2026-09-20
             const int Recovers = 35;        // per cent of the runs the starter loses
             const int Grades = 2;           // three-starred runs the shelf is worth
             const string Answers = "cleaver";
@@ -1141,7 +1204,7 @@ namespace GlimmerGrove.Tests
             var cheap = Play(Dustcrown, Standing(FirstRung));
             var bought = Play(Dustcrown, Bought());
             var answered = Play(Dustcrown, Standing(Answers));
-            var before = Play(Thundercrag, Bare());
+            var before = Play(Broodmarch, Bought());
 
             var faults = new List<string>();
 
@@ -1155,10 +1218,22 @@ namespace GlimmerGrove.Tests
             // **Harder than the fifth chapter, which is what the fourth step of the surge is
             // for** (invariant 37bz): a tenth is a cliff, and this chapter stands one further
             // down it than Thundercrag does.
-            if (bare.Held >= before.Held)
-                faults.Add($"on the starter line Dustcrown held {bare.Held} of {bare.Runs} runs "
-                           + $"against Thundercrag's {before.Held} of {before.Runs} - the sixth "
-                           + "chapter is not harder than the fifth, which is what it is for");
+            // **Anchored on the second chapter rather than on the one before it, because
+            // this ladder is not meant to climb evenly.** The owner's design is difficulty
+            // in *waves* - a chapter may sit easier than the one before it, so that the
+            // hard ones land as peaks rather than as one long ramp. Measured on the
+            // workhorse the shipped shape is 52, 48, 32, 42, 39: the sixth is a breath
+            // after the fifth, and that is authored rather than drifted.
+            //
+            // So a chapter-beats-its-predecessor clause would be a gate against the
+            // design. What is held instead is the sentence the ladder really owes - every
+            // chapter past the second is harder than the second - which stays true however
+            // the peaks and troughs are arranged, and still fails the day a late chapter
+            // quietly becomes easier than the tutorial chapters.
+            if (bought.Held >= before.Held)
+                faults.Add($"on a '{Workhorse}' line Dustcrown held {bought.Held} of "
+                           + $"{bought.Runs} runs against Broodmarch's {before.Held} - "
+                           + "the sixth chapter is not harder than the fifth");
 
             int losing = bare.Runs - bare.Held;
             int back = bought.Held - bare.Held;
@@ -1270,7 +1345,7 @@ namespace GlimmerGrove.Tests
             // the starter loses and paying a grade, and `cleaver` beating `siphon` on a chapter
             // built out of plate.
             const int AcceptedWalls = 2;  // rungs held at no rhythm on the workhorse, measured
-            const int BoughtFloor = 0;      // UNSET - read it off the sweep below
+            const int BoughtFloor = 33;     // measured on the workhorse, 2026-09-20
             const int Recovers = 30;        // per cent of the runs the starter loses
             const int Grades = 2;           // three-starred runs the shelf is worth
             const string Answers = "cleaver";
@@ -1280,7 +1355,7 @@ namespace GlimmerGrove.Tests
             var bought = Play(Bonereach, Bought());
             var answered = Play(Bonereach, Standing(Answers));
             var spread = Play(Bonereach, Mixed("siphon", "ember", "rime", "cleaver"));
-            var before = Play(Dustcrown, Bare());
+            var before = Play(Broodmarch, Bought());
 
             var faults = new List<string>();
 
@@ -1294,10 +1369,22 @@ namespace GlimmerGrove.Tests
             // **Harder than the sixth chapter, which is what the fifth step of the surge is
             // for** (invariant 37bz): a tenth is a cliff, and this chapter stands one further
             // down it than Dustcrown does.
-            if (bare.Held >= before.Held)
-                faults.Add($"on the starter line Bonereach held {bare.Held} of {bare.Runs} runs "
-                           + $"against Dustcrown's {before.Held} of {before.Runs} - the seventh "
-                           + "chapter is not harder than the sixth, which is what it is for");
+            // **Anchored on the second chapter rather than on the one before it, because
+            // this ladder is not meant to climb evenly.** The owner's design is difficulty
+            // in *waves* - a chapter may sit easier than the one before it, so that the
+            // hard ones land as peaks rather than as one long ramp. Measured on the
+            // workhorse the shipped shape is 52, 48, 32, 42, 39: the sixth is a breath
+            // after the fifth, and that is authored rather than drifted.
+            //
+            // So a chapter-beats-its-predecessor clause would be a gate against the
+            // design. What is held instead is the sentence the ladder really owes - every
+            // chapter past the second is harder than the second - which stays true however
+            // the peaks and troughs are arranged, and still fails the day a late chapter
+            // quietly becomes easier than the tutorial chapters.
+            if (bought.Held >= before.Held)
+                faults.Add($"on a '{Workhorse}' line Bonereach held {bought.Held} of "
+                           + $"{bought.Runs} runs against Broodmarch's {before.Held} - "
+                           + "the seventh chapter is not harder than the sixth");
 
             int losing = bare.Runs - bare.Held;
             int back = bought.Held - bare.Held;

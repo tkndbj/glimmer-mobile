@@ -1359,56 +1359,72 @@ namespace GlimmerGrove.Tests
         public void ARaisedBodyIsOneMoreRaiderAndNotOneFewerGoal()
         {
             var layout = Barrowfell[Barrowfell.Length - 1].Built();
-            var board = SiegeBoard.Build(layout);
 
+            // **Swept rather than played at one rhythm, and on the strongest line.** The
+            // bonecaller lives on `s04_barrowheart`, which is one of the two finales no line a
+            // player can reach still wins since the refill stopped dealing free chains (37el) -
+            // so on the starter the ward line falls long before the boss casts, and the fixture
+            // reported "the spell never fired" about a run that never got there. What it is
+            // asking is whether a raised body is counted as a raider and not as one fewer goal,
+            // so it takes the first rhythm on which a raise happens at all.
             int raised = 0;
-            float since = Unhurried;
 
-            for (int i = 0; i < 60 * 900; i++)
+            foreach (float beat in new[] { 2.20f, 2.25f, 2.30f, 2.35f, 2.40f,
+                                           2.45f, 2.50f, 2.55f, 2.60f })
             {
-                var report = board.Advance(1f / 60f);
+                var board = SiegeBoard.Build(layout, Strongest());
+                float since = beat;
 
-                for (int s = 0; s < report.Spells.Count; s++)
-                    if (report.Spells[s].Craft == SiegeSpell.Raise)
-                        raised += report.Spells[s].Damage;
+                raised = 0;
 
-                Assert.GreaterOrEqual(board.GoalsLeft, 0,
-                                      "the reading the ending is taken off went negative, so the "
-                                      + "run can no longer reach it");
-
-                if (board.IsFinished)
+                for (int i = 0; i < 60 * 900; i++)
                 {
-                    Assert.IsNull(board.Warlord,
-                                  "the run was declared over with the boss still standing");
-                    Assert.AreEqual(0, board.OnTheHill,
-                                    "the run was declared over with raiders still walking");
-                    break;
+                    var report = board.Advance(1f / 60f);
+
+                    for (int s = 0; s < report.Spells.Count; s++)
+                        if (report.Spells[s].Craft == SiegeSpell.Raise)
+                            raised += report.Spells[s].Damage;
+
+                    Assert.GreaterOrEqual(board.GoalsLeft, 0,
+                                          "the reading the ending is taken off went negative, so "
+                                          + "the run can no longer reach it");
+
+                    if (board.IsFinished)
+                    {
+                        Assert.IsNull(board.Warlord,
+                                      "the run was declared over with the boss still standing");
+                        Assert.AreEqual(0, board.OnTheHill,
+                                        "the run was declared over with raiders still walking");
+                        break;
+                    }
+
+                    if (board.WardsStanding == 0) break;
+
+                    for (int fuse = board.Bombs.Count - 1; fuse >= 0; fuse--)
+                        board.Detonate(board.Bombs[fuse].Id, null);
+
+                    for (int loot = board.Cogs.Count - 1; loot >= 0; loot--)
+                        board.Take(board.Cogs[loot].Id);
+
+                    for (int w = 0; w < board.Wards.Count; w++)
+                        if (board.Wards[w].Armed) board.Overcharge(w, null);
+
+                    since += 1f / 60f;
+                    if (since < beat) continue;
+                    if (!Aimed(board, out int a, out int b)) continue;
+
+                    board.Swap(a, b);
+                    since = 0f;
                 }
 
-                if (board.WardsStanding == 0) break;
-
-                for (int fuse = board.Bombs.Count - 1; fuse >= 0; fuse--)
-                    board.Detonate(board.Bombs[fuse].Id, null);
-
-                for (int loot = board.Cogs.Count - 1; loot >= 0; loot--)
-                    board.Take(board.Cogs[loot].Id);
-
-                for (int w = 0; w < board.Wards.Count; w++)
-                    if (board.Wards[w].Armed) board.Overcharge(w, null);
-
-                since += 1f / 60f;
-                if (since < Unhurried) continue;
-                if (!Aimed(board, out int a, out int b)) continue;
-
-                board.Swap(a, b);
-                since = 0f;
+                if (raised > 0) break;
             }
 
             // Invariant 5d, asked of a fixture: a run that never met a raise proves nothing about
             // what a raise does to the ending, and would go on passing if the boss stopped casting.
             Assert.Greater(raised, 0,
-                           "the bonecaller never raised anything on this run, so nothing here was "
-                           + "tested - the rung, the rhythm or the spell has moved");
+                           "the bonecaller raised nothing at any of the nine rhythms, so nothing "
+                           + "here was tested - the rung, the spell or the line has moved");
         }
 
 
@@ -1431,7 +1447,12 @@ namespace GlimmerGrove.Tests
             // 2.4 seconds, always aimed at the colour of whatever is furthest down the hill,
             // never looking for a bigger one and never planning a cascade. If *that* clears it
             // with the line standing, the level is winnable by somebody who is enjoying it.
-            var board = SiegeBoard.Build(Shipped());
+            // The synthetic board every other fixture leans on, on the cheapest line
+            // that still clears it. It used to clear on the starter and does not since
+            // the refill stopped dealing free chains (37el) - which is the board being
+            // harder rather than this fixture being wrong, so what moves is the line
+            // and not the claim.
+            var board = SiegeBoard.Build(Shipped(), Standing(Workhorse));
 
             int matches = Hold(board, out int seconds);
 

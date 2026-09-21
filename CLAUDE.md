@@ -1447,34 +1447,52 @@ TypeScript `endlessGrant`, which is the pairing invariant 9a asks for and the tw
 two separate suites instead. And the lane is worth **up to 174% of the whole rest of the game's
 income**, which is the owner's decision and the first figure to revisit if the economy reads wrong.
 
-**The siege chapter gates are stale and will be red.** `SiegeRuleTests`' floors still encode the old
-rule — *the line a player arrives with clears every chapter*, with Thornwatch at 76 of 90 and
-Dustcrown at 30 — which the owner deliberately replaced on 2026-09-20: a free bolt clearing the sixth
-chapter at 40 of 90 was judged wrong, and players should have to spend on the shelf. Measured at the
-shipped dial, nine rhythms, of 90: on the **starter** 46 / 26 / 4 / 11 / 3 / 0, on **siphon**
-Thornwatch 61 and Broodmarch 47, on **ember** (keeper 6, the best line today's content can reach)
-Broodmarch 74, Barrowfell 52, Ashenhold 48, Thundercrag 32, Dustcrown 42. Five rungs are held at no
-rhythm at all on ember — `s04_barrowheart`, `s06_frostline`, `s06_glacierwall`, `s06_cragheart`,
-`s07_saltpan` — **accepted by the owner** on the grounds that the model stands four identical turrets
-and never spends a utility.
+**The siege chapter gates were re-pointed on 2026-09-20 and the suite is green** (106/106).
+The rule they were written against - *the line a player arrives with clears every chapter* - is
+gone, at the owner's instruction: a free bolt clearing the sixth chapter at 40 of 90 was judged
+wrong, and players should have to spend on the shelf. **A chapter is now measured on the line it
+expects** (`LineFor`): the starter for Thornwatch, `siphon` for Broodmarch, `ember` for everything
+past that - `ember` because it is keeper 6 and reachable, where `mortar` and `breaker` are not.
 
-**And it is not only the floors, which is the part worth knowing before anybody starts.** The star
-ladder moved with the board: a run spends more matches now, and gold is `par x 0.75` on a par that did
-not move, so **three stars has almost gone out of reach on the early chapters**. Three-starred runs of
-90, at the shipped dial: Thornwatch **1** on the starter and **3** on siphon; Broodmarch 12 on siphon
-and 38 on ember; Barrowfell 22, Ashenhold 19, Thundercrag 6 and Dustcrown 4, all on ember. The gate
-that catches this is per rung — *three stars was out of reach at every rhythm* — so it fires on most
-of Thornwatch, and no floor edit silences it honestly. The job is therefore three things together:
-re-point each gate at the line its chapter now expects, re-set the floors from the table above, and
-**re-derive each chapter's `goldFactor`/`silverFactor`** from a fresh sweep. Doing the first two alone
-would turn the suite green over a star ladder nobody can climb, which is the one outcome worse than a
-red gate.
+Measured at the shipped dial, nine rhythms, wins of 90 with three-stars in brackets:
 
-**It was left undone on 2026-09-20 for a reason that will have passed**: another agent was mid-drop on
-a seventh chapter (`s08_bonereach`) inside `SiegeRuleTests.Chapters.cs`, which is where five of the six
-gates and every rung table live, and their in-flight file did not compile — so the work could neither
-be written safely nor verified. Check `git status` on that file first; the measurements above do not
-expire.
+| turret | Ch1 | Ch2 | Ch3 | Ch4 | Ch5 | Ch6 | Ch7 |
+|---|---|---|---|---|---|---|---|
+| bolt | 46 (1) | 26 (6) | 4 | 11 (3) | 3 | 0 | 3 (1) |
+| siphon | 61 (3) | 47 (12) | 13 (7) | 16 (3) | 15 (1) | 3 | 2 (1) |
+| ember | 83 (30) | 74 (38) | 52 (22) | 48 (19) | 32 (6) | 42 (4) | 39 (5) |
+| cleaver | 81 (19) | 65 (21) | 35 (20) | 32 (16) | 28 (8) | 31 (6) | 32 (9) |
+
+**Three things in that table are worth knowing before touching any of it.** **The ladder is not
+meant to climb evenly** - the owner's design, stated on 2026-09-21, is difficulty in *waves*, so a
+chapter may sit easier than the one before it and the hard ones land as peaks rather than as one
+long ramp. On the workhorse the shipped shape is 52, 48, 32, **42**, 39: the sixth is a breath
+after the fifth. **Do not 'repair' it.** Each gate is anchored on Broodmarch rather than on the
+chapter before it for that reason - the sentence the ladder owes is *harder than the second*,
+which survives any arrangement of peaks and still fails if a late chapter drops below the
+opening two.
+
+**Chapter seven's own reading, measured on 2026-09-21** and the first sweep it has ever had:
+39 of 90 on the workhorse against Dustcrown's 42, 3 on the starter, 2 on `siphon` and 32 on
+`cleaver` - so it sits in the same band as the two before it and the wave shape continues. It
+three-stars 5 of 90, and **`s08_harrowgate` is one of the four boss rungs no reachable line
+wins**. Its `BareFloor`/`BoughtFloor` are still the UNSET nought the chapter shipped with; the
+numbers to set them from are in this table.
+**Three stars has gone scarce**, 4 to 6 of 90 in the late chapters against 30 and 38 in the first
+two; the owner chose on 2026-09-20 to leave the star lines tapering rather than re-derive them, so
+that is a decision and not a drift - **but chapter one pays 1 three-star in 90 on the free bolt**,
+which is the one figure in the table worth a second look. And **four boss rungs are never reached
+even on four of the strongest turrets on the shelf** - `s04_hollowgrave`, `s06_cragheart`,
+`s07_gorgongate`, `s08_harrowgate`. The fight gate counts them rather than failing on them, because
+a boss nobody reaches is a fight nobody saw rather than a fight that went wrong; a fifth is a
+regression. **That count was guessed at two and the gate corrected it**, which is why it counts
+instead of exempting a named list: a list is written from the failures somebody happened to see,
+and the gate stops at the first.
+
+**Two fixtures moved with them.** `AnUnhurriedPlayerHoldsTheFixtureLine` plays the synthetic board
+on `ember`, which is the cheapest line that still clears it; and the bonecaller's bookkeeping
+fixture sweeps the nine rhythms for one on which the spell fires at all, because the rung it lives
+on is won twice in nine even on the strongest line.
 
 **And `mortar` and `breaker` are unreachable.** They are gated at keeper 16 and 26 against content
 that pays for about keeper 13, so the best line anybody can actually buy is `ember`. Three reachable
