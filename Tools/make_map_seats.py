@@ -212,15 +212,15 @@ NUDGE = {
         # abused.** `candidates` keeps the two *ends* of every row it looks at, which is exactly
         # right on a road - both ends of a road are road - and exactly wrong on a plateau, where
         # both ends are the lip. Every entry here moves inward.
-        1: (-78, 91),         # level 61, off the great skull and onto the rock beside it
-        2: (-32, -29),
-        3: (89, 154),         # the right lobe's own middle, not its rim
-        4: (-22, 130),
-        5: (-23, 34),
+        1: (-118, 91),        # level 61, off the great skull and onto the rock beside it, then 40 px left
+        2: (48, -29),         # level 62, 80 px right
+        3: (59, 154),         # the right lobe's own middle, not its rim, then 30 px left
+        4: (98, 130),         # level 64, 120 px right
+        5: (-113, 34),        # level 65, 90 px left
         6: (55, 72),          # the foot of the bridge, which is what the plateau is for
         7: (23, 0),
-        8: (-139, 5),
-        9: (-367, -125),      # off the crystal outcrop and onto the open top west of it
+        8: (-119, 5),         # level 68, 20 px right
+        9: (-407, -125),      # off the crystal outcrop and onto the open top west of it, then 40 px left
         10: (68, -5),
         "marker": (138, 0),   # see `ACCEPTED_OVERLAPS`: this is what stopped being impossible
     },

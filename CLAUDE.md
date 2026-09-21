@@ -373,6 +373,11 @@ Grove, and the bundle id can never move.
    drew as the starter, so a real five-star Pyroclast published as `bolt` with every gate green. Nothing
    here compares a published card against the board its owner plays, and the live probe forged a tally *to
    clear the gate*. **The day a line pays anything, the gate comes back.**
+19u. **A collection a client may read grants `get` and never `list`.** A `list` grant is a query
+   billed one read per document in the collection, to whoever asks and as often as they ask — on
+   `groves` that was one anonymous sign-in reading every published card in the game, the only bill in
+   the rules that grew with the collection rather than with the players. Nothing in the client lists
+   anything; the smoke test asks the four readable collections as a client and expects a refusal.
 
 ### Modes — in `Assets/Game/MODES.md`
 
@@ -1138,8 +1143,7 @@ guess — verify offline.
   heard of this answers 200 and writes a valid card with four Eclipses on it. It asserts the
   other direction in the same run: a **bare row still means all four seats**, on either band,
   which is the clause this rule could break in silence. Written for the copy rule (42k) and
-  outlived it; **not run since the rewrite of 2026-09-21** — last green as `ward-copies.mjs`,
-  16/16 (2026-09-18).
+  outlived it; **21/21 live** (2026-09-21), the first run since the rewrite.
 - **That a deploy really carries a fix:** `node firebase/e2e/endless-xp.mjs` publishes the same
   account twice, with and without a lifetime tally, and compares the two keeper levels against the
   **published** config. Differential on purpose — a `publishGrove` that has never heard of
@@ -1297,6 +1301,13 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   only as current as the patches**; diff the block against the tree before seeding from it.
 - **Check `firestore.rules` against the *released* ruleset, not the tree** (`firebaserules.googleapis.com`,
   with an `x-goog-user-project` header), because another agent may have a release in flight.
+- **`spendLog`, `grantLog` and `receipts` are never queried and are exempt from indexing** (a `*`
+  field override in `firestore.indexes.json`, accepted by Firestore and read back with
+  `firebase firestore:indexes`). They are the three collections that grow for the life of every
+  account, so their index bytes were the one server cost rising with player-*days*. **A query over
+  any of them is a deploy of an index first.** And the budget alert is not a code artefact: neither
+  gcloud account on this machine holds a role on the billing account, so it is created in the
+  console by the billing owner (Billing ▸ Budgets & alerts) and nothing in the repo can prove it exists.
 - **The live e2e suite signs in as a new anonymous account every run**, so anything derived from the account
   id varies — **including level ids**. Anything the published catalog decides has to be read off the
   published catalog. It is also sensitive to cold starts: re-run before believing a failure in the first
@@ -1493,7 +1504,9 @@ functions**: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`, `adRe
 `publishGroveBoards` (every 15 minutes, 2026-09-20), `claimName`, `reportKeeper`, `deleteAccount`, and the three referral callables `getReferral`,
 `redeemReferral`, `claimReferral` (deployed 2026-09-17). **`firebase functions:list` is the authority** — a fifteenth,
 `eventPass`, was deployed and later deleted while never appearing in any list here. `firebase/README.md` is
-the guide; `firebase/e2e/smoke-test.mjs` is **166/166 live** (2026-09-18),
+the guide; `firebase/e2e/smoke-test.mjs` is **169/169 live** (2026-09-21, after the grove
+re-seed — its five grove-catalog cases became "scores nought" and "the retired keys are still
+accepted", and it gained the four list refusals of 19u),
 `firebase/e2e/delete-account.mjs` **14/14**, `firebase/e2e/endless-xp.mjs` **12/12** and
 `firebase/e2e/ward-seats.mjs` **16/16** as `ward-copies.mjs`, before its 2026-09-21 rewrite. Client
 half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
@@ -1574,12 +1587,13 @@ tests, every render mirror.
    v32 file on a device**. `SaveChecksum.Verify` trusts a file whose version is not this build's
    (16aa), so the first load is an amnesty and the first write stamps v33. **Launch once on a
    device with a real save and check nothing else was lost.**
-3. **Two server-side things are written and not deployed, and neither is urgent.**
-   `firestore.rules` gained only comments (every grove key is still allow-listed and still bounded,
-   16z) — **no release is needed**. `seed-config.mjs` now writes `config/grove` with the grove
-   tables empty and the turret roster intact; until it is re-seeded the server keeps the old price
-   tables and `groveWorth` keeps scoring saves that still carry a grove, which nothing draws. **A
-   re-seed is safe in either order with the client** and is the only server action this drop wants.
+3. **The server side is done.** `firestore.rules` gained only comments for the removal (every
+   grove key is still allow-listed and still bounded, 16z) and **was released on 2026-09-21
+   anyway**, by the cost audit below, so the tree and the release agree. **The re-seed ran on
+   2026-09-21 too**: `config/grove` was read back and diffed against a snapshot — the six grove
+   tables and the star ladder went to empty, the 30-turret roster came back identical, and
+   `config/progression`, `config/products` and `config/names` did not change by a byte. Every
+   published card scores nought now, which is what nothing drawing the `global` board wants.
 4. **Three more sounds have no caller**, and they are left on disk on purpose. `sfxnames.py` now warns
    about `arrive.wav`, `lift.wav` and `stow.wav` (the grove's arrival and its pick-up/put-down) beside
    the `wear.wav` companions left behind. Deleting audio with the Editor closed is how a dead
@@ -1898,10 +1912,11 @@ which are retroactive. Rank 7 asks 175 of the 183 stars that ship and 55 of 61 t
 gates refuse anything past those, so **the top of this ladder cannot be raised again without more
 content**.
 
-**One rules clause is written and not released.** `firestore.rules` now bounds `tasks.lifetime`
-at 32 rows against `LifetimeTally.MaxGoals`. **It is the one field here with no deploy ordering**:
-the tally rides inside the `tasks` map, whose sub-keys `hasOnly` does not allow-list, so the
-ruleset already deployed accepts the field and the new one merely bounds it (12a). Nothing else
+**One rules clause was written ahead of its release, and released on 2026-09-21** with the cost
+audit's ruleset. `firestore.rules` bounds `tasks.lifetime` at 32 rows against
+`LifetimeTally.MaxGoals`. **It is the one field here with no deploy ordering**: the tally rides
+inside the `tasks` map, whose sub-keys `hasOnly` does not allow-list, so the ruleset deployed
+before it accepted the field and this one merely bounds it (12a). Nothing else
 about ranks touches the server — no function deploy, no re-seed — because a rank is derived
 from records the server already validates and pays nothing (52e).
 
@@ -2086,12 +2101,15 @@ no re-seed** — `config/grove.wards` still publishes `legendary` and the server
 which is what makes the deploy safe in either order with the client.
 Offline green: `compile.py` (all fifteen assemblies), the EditMode suite, `content.py` (0 errors),
 `loc.py` (0 missing), 72 function tests, `seed-config.mjs --check`, `render_loadout.py`.
-**Two things are owed.** `publishGrove` and `publishGroveBoards` want deploying **by name** — the
-row projections live beside `buildCard`, so a field's *meaning* changing is a deploy of every
-function that writes a row (the 2026-09-20 lesson, read again) — and `firebase/e2e/ward-seats.mjs`
-(renamed from `ward-copies.mjs`) has never been run against a live server. **Until that deploy
-lands, a card publishes four Eclipses off one purchase**, which is cosmetic and on nobody's card:
-the band is gated at keeper 45–60 and the highest live account is 16.
+**The deploy is done** (2026-09-21). `publishGrove` and `publishGroveBoards` were deployed
+**by name** — the row projections live beside `buildCard`, so a field's *meaning* changing is a
+deploy of every function that writes a row (the 2026-09-20 lesson, read again) — and the artifact
+was read back on **both**: all 25 files of the deployed `lib/` are byte-identical to the local
+build, `copiesOf` is absent and `ownsWard` is the whole of the seat question. Live green after it:
+`ward-seats.mjs` **21/21** (its first run since the rewrite, and the differential that matters —
+one purchase stands on **one** seat, a bare row still means four, a copy row alone stands
+nowhere), `smoke-test.mjs` **176/176** and `rank-badge.mjs` **11/11**. No rules release and no
+re-seed, for the reasons above.
 **And an eye.** Nothing has played a line with two Eclipses on it, and the preview panel's keys
 still have no render mirror — though they are simpler than they were, because the lower one no
 longer carries a price.

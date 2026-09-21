@@ -877,25 +877,31 @@ if (taskConfig) {
 // is the part worth attacking from the client's side. Everything below runs against the
 // deployed rules and the deployed functions, because neither can be checked anywhere else.
 
-// A grove nobody could possibly have afforded: every priced piece, every region, and a
-// companion the keeper ladder has not reached. This account has cleared one glade.
+// `config/grove` is the turret roster now. The Grovement was removed on 2026-09-21 and the
+// seeder writes its six tables **empty rather than absent** — the deployed reader
+// (`assertUsableGroveConfig`) indexes them without checking, so an absent map throws on every
+// publish where an empty one scores nought, which is the answer wanted. Both halves are asserted:
+// the maps are there, and there is nothing in them. A run that finds pieces in here is reading a
+// document nobody has re-seeded since the removal.
 const groveConfig = await (await fetch(`${FS}/config/grove`, { headers: bearer })).json();
 check(!groveConfig.error, "config/grove is readable by a signed-in player",
       groveConfig.error?.status ?? "");
 
-const pieceIds = Object.keys(groveConfig?.fields?.pieces?.mapValue?.fields ?? {});
-const regionIds = Object.keys(groveConfig?.fields?.regions?.mapValue?.fields ?? {});
-const companionIds = Object.keys(groveConfig?.fields?.companions?.mapValue?.fields ?? {});
+const groveTable = (name) => groveConfig?.fields?.[name]?.mapValue;
+const GROVE_TABLES = ["pieces", "bundles", "regions", "companions", "dwellings", "dwellingLevels"];
+check(GROVE_TABLES.every((name) => groveTable(name) !== undefined),
+      "config/grove still carries every grove table the deployed reader indexes",
+      GROVE_TABLES.filter((name) => groveTable(name) === undefined).join(", "));
+check(GROVE_TABLES.every((name) => Object.keys(groveTable(name)?.fields ?? {}).length === 0),
+      "and every one of them is empty (the Grovement was removed; re-seed if this is red)",
+      GROVE_TABLES.map((name) => `${name}=${Object.keys(groveTable(name)?.fields ?? {}).length}`).join(" "));
 
-check(pieceIds.length > 0 && regionIds.length > 0 && companionIds.length > 0,
-      "the grove catalog has been seeded",
-      `${pieceIds.length} piece(s), ${regionIds.length} region(s), ${companionIds.length} companion(s)`);
-
-const priceTotal =
-  Object.values(groveConfig?.fields?.pieces?.mapValue?.fields ?? {})
-        .reduce((sum, v) => sum + Number(v.integerValue ?? 0), 0) +
-  Object.values(groveConfig?.fields?.regions?.mapValue?.fields ?? {})
-        .reduce((sum, v) => sum + Number(v.integerValue ?? 0), 0);
+// What a forged save claims below. Spelled out rather than read off the catalog, because the
+// catalog is empty now: these are ids the old catalog named and a rolled-back client could still
+// write, which is the shape a real stale save arrives in.
+const pieceIds = ["barrel", "fir", "wall_barbican"];
+const regionIds = ["meadow", "orchard"];
+const companionIds = ["monarch", "ember_fox", "moss_owl"];
 
 const list = (ids) => ({ arrayValue: { values: ids.map((id) => ({ stringValue: id })) } });
 
@@ -934,7 +940,11 @@ const forgedGrove = await fetch(
     } }),
   }
 );
-check(forgedGrove.ok, "a client may write its own grove sets", String(forgedGrove.status));
+// The write itself is the assertion, and it is invariant 16z: no shipping build sends these
+// keys any more, but a rolled-back client still does, and `hasOnly` is an allow-list over the
+// whole document — dropping a key it writes would cost that client *every* save write, silently.
+check(forgedGrove.ok, "the released rules still accept the retired grove keys (16z)",
+      String(forgedGrove.status));
 
 const published = await call("publishGrove", {});
 check(published.status === 200, "publishGrove accepts an honest call", String(published.status));
@@ -951,23 +961,14 @@ const cardScore = Number(card?.fields?.score?.integerValue ?? -1);
 
 check(cardScore >= 0, "a card was published", `score ${cardScore}`);
 
-// The whole point. The save claims the entire catalog; the server pays out only what this
-// account could ever have afforded, which after one cleared glade is the seed plus a few
-// dozen credits. See invariant 19a.
-check(cardScore < priceTotal,
-      "a forged grove is clamped to what the account could afford",
-      `${cardScore} against a catalog worth ${priceTotal}`);
-
-// And the ceiling includes currency the server *granted*, not only currency the ledger
-// derives. This is the assertion that catches the clamp being too tight, which is the
-// failure mode that looks exactly like the clamp working: the first live run read the
-// wallet's reply field name instead of its stored one, got zero, and would have ranked
-// every player who bought coins with real money at the bottom of the board. A unit test
-// cannot see it — the vectors take the ceiling as a parameter.
-const grantedCredits = Number(creditsOf(wallet.body)?.grantedBaseline ?? 0);
-check(cardScore >= grantedCredits,
-      "the ceiling counts currency the server granted, not only what play derived",
-      `score ${cardScore} against ${grantedCredits} granted`);
+// The whole point, since the removal. The save claims pieces, land and companions the old
+// catalog priced, and the card scores **nought**: nothing on the server prices a grove any more,
+// so a stale or forged save moves no board. This used to be a clamp to what the account could
+// afford (19a); the clamp is still in the code and clamps a figure that is always zero now. A
+// positive score here is the one thing that would mean a grove is being scored again.
+check(cardScore === 0,
+      "a forged grove scores nought, whatever the save claims (the Grovement is gone)",
+      `score ${cardScore}`);
 
 check(card?.fields?.name?.stringValue === PUBLIC_NAME,
       "the published name has its bidi override stripped",
@@ -1014,13 +1015,13 @@ check(liveRows.every((row, i) => i === 0
 const cardCompanions = (card?.fields?.companions?.arrayValue?.values ?? [])
   .map((v) => v.stringValue);
 
-// The save above claimed the entire companion catalog and this account has cleared one glade,
-// so the gated ones are dropped outright — `heldCompanions` asks the gate before anything
-// else, exactly as the score does. The set drawn and the set counted are one walk, which is
-// what stops a visitor seeing a portrait the number beside it was never told about.
-check(cardCompanions.length < companionIds.length,
-      "a forged companion set is published gated, not whole",
-      `${cardCompanions.length} of ${companionIds.length}`);
+// The save above claimed three companions and the roster the server publishes against is
+// empty (16ab: nothing counts a companion now, and nothing draws one). `heldCompanions` walks
+// the catalog, so a card carries none — the set drawn and the set counted are still one walk,
+// and that walk now finds nothing. A portrait on a card here is a roster being scored again.
+check(cardCompanions.length === 0,
+      "a forged companion set publishes nothing (the roster is inert, 16ab)",
+      `${cardCompanions.length} of ${companionIds.length} claimed`);
 
 const wardRoster = groveConfig?.fields?.wards?.mapValue?.fields ?? {};
 const wardIds = Object.keys(wardRoster);
@@ -1120,38 +1121,15 @@ if (wardIds.length > 0) {
         "a turret on a seat nobody bought is not published", JSON.stringify(seats));
 }
 
-// Placed after the forged-grove assertions rather than before them, and that is not
-// housekeeping: these cases rewrite the player's grove sets to isolate the arithmetic, so
-// running them first left every assertion above reading a grove this section had emptied.
 // ---------------------------------------------------------------- stock, live
 //
-// WHY THIS IS HERE AND NOT ONLY IN THE VECTORS. Save v20 made priced decor a count of
-// copies, and two things about that can only be seen against the deployed project. The
-// first has teeth: `hasOnly` in firestore.rules is an allow-list over the whole document,
-// so a client writing a key the released rules do not name loses *every* save write rather
-// than that one field — the failure invariant 12a is about, which is invisible until
-// something replaces the local save. The second is that `groveWorth` has to divide by the
-// bundle it reads out of `config/grove`, and a seeder that published no `bundles` block
-// would score every bundled piece at ten times what was paid for it, silently.
-//
-// The account is freshly seeded, so the cheapest bundled piece is chosen deliberately:
-// everything below has to stay under the affordability ceiling or the clamp would hide
-// exactly the arithmetic being proved.
-const bundleFields = groveConfig?.fields?.bundles?.mapValue?.fields ?? {};
-const bundledIds = Object.keys(bundleFields);
-
-check(bundledIds.length > 0,
-      "config/grove carries the bundle sizes",
-      `${bundledIds.length} bundled piece(s)`);
-
-const priceOf = (id) =>
-  Number(groveConfig?.fields?.pieces?.mapValue?.fields?.[id]?.integerValue ?? 0);
-const bundleOf = (id) => Number(bundleFields[id]?.integerValue ?? 1);
-
-const cheapest = bundledIds
-  .filter((id) => priceOf(id) > 0)
-  .sort((a, b) => priceOf(a) - priceOf(b))[0];
-
+// What is left of the v20 stock cases after the removal, and it is the half with teeth: the
+// `homesteadStock` key is one a rolled-back client still writes, and `hasOnly` is an allow-list
+// over the whole document, so a rules release that dropped it would cost that client *every*
+// save write rather than that one field (12a, 16z). The arithmetic the other half used to prove
+// — a bundle worth the bundle, copies multiplying, the v19 mirror, a home the catalog knows — is
+// gone with the catalog, and what replaces it is the one sentence the removal owes: a stock of
+// any size scores nought.
 const stockRows = (id, copies) => ({
   arrayValue: { values: [{ mapValue: { fields: {
     id: { stringValue: id },
@@ -1159,94 +1137,20 @@ const stockRows = (id, copies) => ({
   } } }] },
 });
 
-const writeStock = (body) => fetch(
-  `${FS}/players/${uid}?updateMask.fieldPaths=homesteadStock` +
-  `&updateMask.fieldPaths=homesteadOwned&updateMask.fieldPaths=groveLandOwned` +
-  `&updateMask.fieldPaths=companionsOwned`,
-  { method: "PATCH", headers: json, body: JSON.stringify({ fields: body }) }
+const stocked = await fetch(
+  `${FS}/players/${uid}?updateMask.fieldPaths=homesteadStock`,
+  { method: "PATCH", headers: json,
+    body: JSON.stringify({ fields: { homesteadStock: stockRows(pieceIds[0], 500) } }) }
 );
+check(stocked.ok, "the released rules still accept a homesteadStock write (16z)", String(stocked.status));
 
-const scoreNow = async () => {
-  const r = await call("publishGrove", {});
-  if (r.status !== 200) return -1;
-  const c = await (await fetch(`${FS}/groves/${uid}`, { headers: bearer })).json();
-  return Number(c?.fields?.score?.integerValue ?? -1);
-};
-
-if (cheapest) {
-  const bundle = bundleOf(cheapest);
-  const price = priceOf(cheapest);
-
-  // The write itself is the assertion. A rules deploy that forgot this key answers 403 and
-  // the client silently stops syncing anything at all.
-  const oneBundle = await writeStock({
-    homesteadStock: stockRows(cheapest, bundle),
-    homesteadOwned: { arrayValue: { values: [] } },
-    groveLandOwned: { arrayValue: { values: [] } },
-    companionsOwned: { arrayValue: { values: [] } },
-  });
-  check(oneBundle.ok, "the released rules accept a homesteadStock write", String(oneBundle.status));
-
-  const stockScore = await scoreNow();
-  check(stockScore === price,
-        "one bundle of copies is worth the bundle, not ten of it",
-        `${stockScore} for ${bundle} copies of ${cheapest} at ${price}`);
-
-  // Ten bundles, still inside what a seeded account can afford, so the multiplication is
-  // read rather than clamped away.
-  const tenBundles = await writeStock({
-    homesteadStock: stockRows(cheapest, bundle * 10),
-    homesteadOwned: { arrayValue: { values: [] } },
-    groveLandOwned: { arrayValue: { values: [] } },
-    companionsOwned: { arrayValue: { values: [] } },
-  });
-  check(tenBundles.ok, "and a larger stock write too", String(tenBundles.status));
-
-  const tenScore = await scoreNow();
-  check(tenScore === price * 10,
-        "copies multiply, so buying more is worth more",
-        `${tenScore} against ${price * 10}`);
-
-  // The v19 shape has to keep scoring the same thing, because a device that has not updated
-  // still writes it — that is what the derived mirror on the client is for, and it is the
-  // whole reason this deploy could go out before the client.
-  const legacy = await writeStock({
-    homesteadStock: { arrayValue: { values: [] } },
-    homesteadOwned: { arrayValue: { values: [{ stringValue: cheapest }] } },
-    groveLandOwned: { arrayValue: { values: [] } },
-    companionsOwned: { arrayValue: { values: [] } },
-  });
-  check(legacy.ok, "a v19 client's owned set is still accepted", String(legacy.status));
-
-  const legacyScore = await scoreNow();
-  check(legacyScore === price,
-        "a v19 save reads as one bundle, so it scores exactly what it used to",
-        `${legacyScore} against ${price}`);
-
-  // **A card always names a home, and it is one this deployment's own catalog knows.**
-  //
-  // What this is for is a seed the client has outgrown. The home a card draws is derived
-  // server-side from `config/grove`'s `dwellings` map, and the visiting client then looks that
-  // id up in the catalog it shipped with: a rung renamed in `homestead.json` and not re-seeded
-  // publishes an id nothing can resolve, and a `dwellings` map that never made it into the seed
-  // at all publishes the empty string. Both draw *no house* on every visitor's screen, and both
-  // are invisible to every other gate here — the score is right, the arrangement is right, the
-  // write succeeds and the document is well formed.
-  //
-  // It is asked over the three writes above rather than once, because those are the three
-  // shapes a real save arrives in (stock, larger stock, v19 mirror) and the home is derived
-  // from the same rows the score is. That is the half worth checking live; whether the *best*
-  // rung wins is arithmetic over a fixed catalog, which `functions/test/grove.mjs` pins on both
-  // sides of the keeper gate and which this throwaway account cannot reach in any case.
-  const homed = await (await fetch(`${FS}/groves/${uid}`, { headers: bearer })).json();
-  const drawn = homed?.fields?.dwelling?.stringValue ?? "";
-  const rungs = Object.keys(groveConfig?.fields?.dwellings?.mapValue?.fields ?? {});
-
-  check(rungs.length > 0, "the published catalog names a home ladder", String(rungs.length));
-  check(drawn.length > 0 && rungs.includes(drawn),
-        "a published card names a home the published catalog knows",
-        `drew ${JSON.stringify(drawn)} against ${rungs.join(", ")}`);
-}
+const republished = await call("publishGrove", {});
+const restocked = republished.status === 200
+  ? await (await fetch(`${FS}/groves/${uid}`, { headers: bearer })).json()
+  : null;
+check(Number(restocked?.fields?.score?.integerValue ?? -1) === 0,
+      "and five hundred copies of a retired piece still score nought",
+      `status ${republished.status}, score ${JSON.stringify(restocked?.fields?.score)}`);
 
 
 // Server-written, and that is the rule with teeth: everything on a card is derived from a
@@ -1280,6 +1184,24 @@ check(forgeEndless.status === 403,
 
 const ranksRead = await fetch(`${FS}/config/groveRanks`, { headers: bearer });
 check(ranksRead.ok, "and the published distribution", String(ranksRead.status));
+
+// Every one of those is a `get`, and none of the collections may be *listed*. A `list` grant is
+// a query over the whole collection billed a read per document, to whoever asks and as often
+// as they ask — on `groves` that is a read per published card in the game from one anonymous
+// sign-in, the one bill in the rules that would have grown with the collection rather than
+// with the players. Asked here as the client would ask it, because a rule refusing a query is
+// a thing only Firestore can evaluate (the note under "Deploying" in the README).
+async function listAsClient(collection) {
+  const r = await fetch(`${FS}:runQuery`, {
+    method: "POST", headers: json,
+    body: JSON.stringify({ structuredQuery: { from: [{ collectionId: collection }], limit: 1 } }),
+  });
+  return r.status;
+}
+for (const collection of ["groves", "leaderboards", "config", "names"]) {
+  const status = await listAsClient(collection);
+  check(status === 403, `a signed-in player may not list ${collection}`, String(status));
+}
 
 // A second keeper, because visiting is the feature and one account cannot prove it.
 const second = await (await fetch(

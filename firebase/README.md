@@ -330,6 +330,7 @@ cd firebase
 npm --prefix functions install
 npm --prefix functions run test     # reward vectors: the server must match the client
 firebase deploy --only firestore:rules
+firebase deploy --only firestore:indexes --force   # the index exemptions below; --force drops what the file no longer names
 node seed/seed-config.mjs           # must run before functions serve traffic
 node seed/seed-release.mjs          # the forced-update requirement; harmless when nothing is forced
 firebase deploy --only functions
@@ -352,6 +353,25 @@ system nothing else can check: they are evaluated by Firestore, so a mistake in 
 cannot fail a compile, cannot fail the Unity tests, and behaves perfectly in the Editor.
 It shows up in production as either "cloud save quietly stopped working" or "currency is
 free".
+
+**Three collections are exempt from indexing, and the JSON cannot say why.** `spendLog`,
+`grantLog` and `receipts` carry a `*` field override with no indexes in
+`firestore.indexes.json`. All three are written once per event and read back only by their
+document id — a spend by its client id, a grant by the claim id derived from what earned it, a
+receipt by store and transaction id — and nothing anywhere queries them (`account.ts`'s
+deletion walks them by name). Firestore would otherwise build two single-field indexes per
+field per document, which for a ten-field grant record is more index than record, on the three
+collections that grow for the life of every account and are never pruned. Storage there is
+the one server cost that rises with player-*days* rather than players, so the exemption is
+the cheapest thing in this file. **A query over any of them is now a deploy of an index first**,
+and the CLI will say so by name.
+
+**Every readable collection grants `get` and refuses `list`** (`groves`, `leaderboards`,
+`config`, `names`). Nothing in the client or the e2e suite ever lists one, and a `list` grant
+on `groves` was the one read in the rules whose bill grew with the size of the collection
+rather than with the number of players: one anonymous sign-in, one query, one read per
+published card, as often as it liked. The client-side proof is in the smoke test's shape —
+a fresh anonymous account may `get` a card by id and may not run a query over the collection.
 
 `seed-config.mjs` reads `Assets/StreamingAssets/Content/` and writes `config/progression`.
 **Re-run it after any content change** — a new chapter's glades earn nothing until the
